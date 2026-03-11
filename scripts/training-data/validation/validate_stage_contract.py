@@ -24,7 +24,8 @@ BRACKET_VIDEO_ID_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
 CHUNKS_BASENAME_VIDEO_ID_RE = re.compile(r"^([A-Za-z0-9_-]{11})\.chunks\.json$")
 
 STAGE_ARTIFACTS: Dict[str, Tuple[str, str, bool]] = {
-    "05": ("05.EXT.audio-features", "*.audio_features.json", False),
+    # Stage 06 only consumes canonical clean16k feature artifacts.
+    "05": ("05.EXT.audio-features", "*.audio.asr.clean16k.audio_features.json", False),
     "06": ("06.LLM.video-type", "*.conversations.json", False),
     "06b": ("06b.LLM.verify", "*.verification.json", False),
     "06c": ("06c.DET.patched", "*.conversations.json", False),

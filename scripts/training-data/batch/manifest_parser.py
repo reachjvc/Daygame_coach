@@ -85,7 +85,23 @@ def manifest_filter_dirs(video_dirs: list, manifest_ids: Set[str]) -> list:
     """
     if not manifest_ids:
         return video_dirs
-    return [d for d in video_dirs if extract_video_id(d.name) in manifest_ids]
+
+    filtered = [d for d in video_dirs if extract_video_id(d.name) in manifest_ids]
+    if not filtered:
+        return filtered
+
+    selected_by_video_id: Dict[str, Path] = {}
+    for path in filtered:
+        vid = extract_video_id(path.name)
+        if not vid:
+            continue
+        current = selected_by_video_id.get(vid)
+        if current is None:
+            selected_by_video_id[vid] = path
+            continue
+        selected_by_video_id[vid] = _pick_preferred_path(current, path)
+
+    return sorted(selected_by_video_id.values(), key=lambda p: str(p))
 
 
 def manifest_filter_files(files: list, manifest_ids: Set[str]) -> list:
@@ -100,4 +116,39 @@ def manifest_filter_files(files: list, manifest_ids: Set[str]) -> list:
     """
     if not manifest_ids:
         return files
-    return [f for f in files if extract_video_id(f.name) in manifest_ids]
+
+    filtered = [f for f in files if extract_video_id(f.name) in manifest_ids]
+    if not filtered:
+        return filtered
+
+    # A source can occasionally contain duplicate copies of the same video id
+    # (e.g. mirrored folder trees). Keep exactly one file per video id so
+    # per-video manifests do not fan out into duplicate LLM calls.
+    selected_by_video_id: Dict[str, Path] = {}
+    for path in filtered:
+        vid = extract_video_id(path.name)
+        if not vid:
+            continue
+        current = selected_by_video_id.get(vid)
+        if current is None:
+            selected_by_video_id[vid] = path
+            continue
+        selected_by_video_id[vid] = _pick_preferred_path(current, path)
+
+    return sorted(selected_by_video_id.values(), key=lambda p: str(p))
+
+
+def _pick_preferred_path(path_a: Path, path_b: Path) -> Path:
+    """Pick the preferred candidate between two duplicate-id paths."""
+    try:
+        mtime_a = path_a.stat().st_mtime
+    except OSError:
+        mtime_a = 0.0
+    try:
+        mtime_b = path_b.stat().st_mtime
+    except OSError:
+        mtime_b = 0.0
+
+    if mtime_a == mtime_b:
+        return path_a if str(path_a) >= str(path_b) else path_b
+    return path_a if mtime_a > mtime_b else path_b

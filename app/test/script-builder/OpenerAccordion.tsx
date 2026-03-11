@@ -126,11 +126,16 @@ export default function OpenerAccordion({
 }
 
 function countDescendants(nodeId: string, nodes: Record<string, ConversationNode>): number {
-  const node = nodes[nodeId]
-  if (!node) return 0
-  let count = 0
-  for (const childId of node.children) {
-    count += 1 + countDescendants(childId, nodes)
+  const visited = new Set<string>()
+  const queue = [nodeId]
+  let count = -1 // exclude the node itself
+  while (queue.length > 0) {
+    const id = queue.pop()!
+    if (visited.has(id)) continue
+    visited.add(id)
+    count++
+    const node = nodes[id]
+    if (node?.children) queue.push(...node.children)
   }
-  return count
+  return Math.max(0, count)
 }

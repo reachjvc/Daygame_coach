@@ -1,0 +1,10 @@
+# Sub-batch P003.6 post-06f survivors
+# Generated: 2026-03-07
+# Source manifest: docs/pipeline/batches/P003.6.txt
+# Excludes videos quarantined by data/validation/quarantine/P003.6.json
+
+daily_evolution | Approaching A 10 In Miami [ctts8xePLWA]
+daily_evolution | Approaching Greek Goddess 🥰 (+Daygame Infield) [3igAdpCb-CY]
+daily_evolution | Bang Out Approaches Put Out Testers [4YkYUJ8MAWo]
+daily_evolution | Bootcamp Infield + Coaching Clip [GvoA2AAHJuk]
+daily_evolution | Brutal Daygame Infield Rejection ：( [iKq38U4Gb-o]

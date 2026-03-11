@@ -7,1222 +7,2114 @@
     "root": {
       "id": "root",
       "speaker": "me",
-      "text": { "da": "", "en": "Austen Summers - Approach Patterns" },
+      "text": {
+        "da": "",
+        "en": ""
+      },
       "children": [
-        "opener-direct-compliment",
-        "opener-direct-honest",
-        "opener-observational",
-        "opener-situational",
-        "opener-high-energy",
-        "opener-themed-humor",
-        "opener-nightgame",
-        "opener-swedish-hockey",
-        "opener-casey-neistat",
-        "opener-freckly",
-        "opener-vlogger-frame",
-        "opener-sunflower-girl",
-        "opener-calisthenics",
-        "opener-cosplay",
-        "opener-patriotic",
-        "opener-two-cute",
-        "rembrantplein-phone-opener",
-        "instadate-transition",
-        "physical-leading"
+        "n-390062",
+        "n-771f54",
+        "n-961b76",
+        "n-bd885c",
+        "n-a60862",
+        "n-a11d75",
+        "n-b95799",
+        "n-2086b4",
+        "n-391d5d",
+        "n-a5f7c8",
+        "n-4063ae",
+        "n-66fd45"
       ]
     },
-
-    "opener-direct-compliment": {
-      "id": "opener-direct-compliment",
-      "speaker": "me",
-      "text": { "da": "", "en": "Excuse me, I was walking over there and I saw you and you looked very cute, so I thought I'd come say hi." },
-      "source": "A Basic Daygame Approach [H3_8iPikhDw] (exact: 'I was walking over there and then I saw you and you looked very Italian and very cute so I thought I'd come say hi'), How to Date a Blonde Finnish Girl [jPHmLAZON_s], multiple videos",
-      "children": ["direct-her-positive", "direct-her-shy", "direct-her-boyfriend", "direct-her-busy"]
-    },
-    "direct-her-positive": {
-      "id": "direct-her-positive",
-      "speaker": "her",
-      "text": { "da": "", "en": "Hi! Thank you." },
-      "source": "How to Ask a Girl Out [qWqNDrjfUvc] multiple approach videos",
-      "children": ["direct-introduce-name"]
-    },
-    "direct-her-shy": {
-      "id": "direct-her-shy",
-      "speaker": "her",
-      "text": { "da": "", "en": "Hi, I don't speak English." },
-      "source": "A Basic Daygame Approach [H3_8iPikhDw] (exact: 'Hi, I don't speak English')",
-      "children": ["direct-switch-language"]
-    },
-    "direct-her-boyfriend": {
-      "id": "direct-her-boyfriend",
-      "speaker": "her",
-      "text": { "da": "", "en": "I have a boyfriend." },
-      "source": "Wheelchair [n0smMRCqVmc], Software Developer [x2kk9HoXjnI], How to Ask a Girl Out [qWqNDrjfUvc], Swedish Blonde [D1t_K8hjJzc]",
-      "children": ["boyfriend-goalie", "boyfriend-instagram-pivot", "boyfriend-penalty-box", "boyfriend-graceful-exit"]
-    },
-    "direct-her-busy": {
-      "id": "direct-her-busy",
-      "speaker": "her",
-      "text": { "da": "", "en": "I'm actually in a rush / heading somewhere." },
-      "source": "Barcelona [iOSpNACA9VI] (girl heading to Sonar festival)",
-      "children": ["busy-walk-with"]
-    },
-
-    "direct-introduce-name": {
-      "id": "direct-introduce-name",
-      "speaker": "me",
-      "text": { "da": "", "en": "My name's Austin, by the way. What's your name?" },
-      "source": "A Basic Daygame Approach [H3_8iPikhDw], Shy College Girl [-gg0Ykxalkk] (exact: 'My name's Austin, by the way'), Finnish Girl [jPHmLAZON_s], multiple videos",
-      "children": ["direct-her-gives-name"]
-    },
-    "direct-her-gives-name": {
-      "id": "direct-her-gives-name",
-      "speaker": "her",
-      "text": { "da": "", "en": "I'm [Name]. Nice to meet you." },
-      "source": "Multiple approach videos",
-      "children": ["direct-commonality-where-from", "direct-what-do-you-do", "direct-what-are-you-up-to"]
-    },
-
-    "direct-commonality-where-from": {
-      "id": "direct-commonality-where-from",
-      "speaker": "me",
-      "text": { "da": "", "en": "Where are you from? Are you from here or...?" },
-      "source": "Swedish Blonde [D1t_K8hjJzc] (exact: 'Are you from like the North Pole?'), Basic Daygame [H3_8iPikhDw] (exact: 'No? Where are you from?'), Finnish Girl [jPHmLAZON_s], Barcelona [iOSpNACA9VI]",
-      "children": ["direct-her-from-abroad", "direct-her-local"]
-    },
-    "direct-her-from-abroad": {
-      "id": "direct-her-from-abroad",
-      "speaker": "her",
-      "text": { "da": "", "en": "I'm from Sweden / Chile / Turkey / Finland..." },
-      "source": "Swedish Blonde [D1t_K8hjJzc] (Sweden), Basic Daygame [H3_8iPikhDw] (Chile), Barcelona [iOSpNACA9VI] (Turkey), Finnish Girl [jPHmLAZON_s] (Finland)",
-      "children": ["direct-relate-to-country"]
-    },
-    "direct-her-local": {
-      "id": "direct-her-local",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, I live here." },
-      "source": "Shy College Girl [-gg0Ykxalkk] (from Windsor, studying in Toronto)",
-      "children": ["direct-what-do-you-do"]
-    },
-
-    "direct-relate-to-country": {
-      "id": "direct-relate-to-country",
-      "speaker": "me",
-      "text": { "da": "", "en": "I was in [country]! I was in [city]. I only know a few things in [language]... like lingonberry, meatballs, midsummer." },
-      "source": "A Basic Daygame Approach [H3_8iPikhDw] (exact: 'I was in Chile. I was in Santiago'), Swedish Blonde [D1t_K8hjJzc] (exact: 'I know like lingonberry... and then very typical with meatballs... midsummer')",
-      "children": ["direct-her-impressed"]
-    },
-    "direct-her-impressed": {
-      "id": "direct-her-impressed",
-      "speaker": "her",
-      "text": { "da": "", "en": "Oh really? No way!" },
-      "source": "Swedish Blonde [D1t_K8hjJzc] (exact: 'Oh, really?'), Basic Daygame [H3_8iPikhDw]",
-      "children": ["direct-tease-and-vibe"]
-    },
-
-    "direct-what-do-you-do": {
-      "id": "direct-what-do-you-do",
-      "speaker": "me",
-      "text": { "da": "", "en": "What do you do? Are you a student or...?" },
-      "source": "Shy College Girl [-gg0Ykxalkk] (exact: 'So you're like a new student at U of T trying to get your life together?'), Swedish Blonde [D1t_K8hjJzc] (exact: 'What are you studying?')",
-      "children": ["direct-her-student", "direct-her-working"]
-    },
-    "direct-her-student": {
-      "id": "direct-her-student",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, I study [subject] at [school]." },
-      "source": "Shy College Girl [-gg0Ykxalkk] (English at Ryerson), Swedish Blonde [D1t_K8hjJzc] (diving athlete)",
-      "children": ["direct-tease-and-vibe"]
-    },
-    "direct-her-working": {
-      "id": "direct-her-working",
-      "speaker": "her",
-      "text": { "da": "", "en": "I work as a [job] / I'm a teacher." },
-      "source": "Latina MILF [bzUa2cB61hU] (Spanish teacher at elementary school)",
-      "children": ["direct-tease-and-vibe"]
-    },
-
-    "direct-what-are-you-up-to": {
-      "id": "direct-what-are-you-up-to",
-      "speaker": "me",
-      "text": { "da": "", "en": "What are you up to right now?" },
-      "source": "Wheelchair [n0smMRCqVmc] (exact: 'What are you up to right now?'), Finnish Girl [jPHmLAZON_s] (exact: 'What are you up to right now?'), 7 Minute Pull [nFjdyAHcTgA]",
-      "children": ["direct-her-free", "direct-her-busy"]
-    },
-    "direct-her-free": {
-      "id": "direct-her-free",
-      "speaker": "her",
-      "text": { "da": "", "en": "I just finished my last exam / I'm going back to find some coffee." },
-      "source": "Swedish Blonde [D1t_K8hjJzc] (exact: 'I just finished my last exam'), Finnish Girl [jPHmLAZON_s] (exact: 'I'm gonna go back first to find some coffee')",
-      "children": ["direct-instadate-offer"]
-    },
-
-    "direct-tease-and-vibe": {
-      "id": "direct-tease-and-vibe",
-      "speaker": "me",
-      "text": { "da": "", "en": "You don't skip leg day, that's for sure. You're pretty fun to hang out with." },
-      "source": "Swedish Blonde [D1t_K8hjJzc] (exact: 'You look like you don't skip leg day' and 'You're pretty fun to hang out with'), Software Developer [x2kk9HoXjnI] (exact: 'So you don't skip leg day. Me neither.')",
-      "children": ["direct-her-laughs"]
-    },
-    "direct-her-laughs": {
-      "id": "direct-her-laughs",
-      "speaker": "her",
-      "text": { "da": "", "en": "No, I am! I'm an athlete, so... (laughs)" },
-      "source": "Swedish Blonde [D1t_K8hjJzc] (exact: 'No I am I'm an athlete so wait wait wait... I do diving')",
-      "children": ["direct-date-seed"]
-    },
-
-    "direct-date-seed": {
-      "id": "direct-date-seed",
-      "speaker": "me",
-      "text": { "da": "", "en": "Do you like bubble tea? What are you doing this weekend?" },
-      "source": "Swedish Blonde [D1t_K8hjJzc] (exact: 'Do you like bubble tea... What are you doing this weekend?'), Shy College Girl [-gg0Ykxalkk] (Snakes and Lattes), Basic Daygame [H3_8iPikhDw] (sushi), Pickup Motivation [wHQW1s5FzkY] (boba)",
-      "children": ["direct-her-down-for-date"]
-    },
-    "direct-her-down-for-date": {
-      "id": "direct-her-down-for-date",
-      "speaker": "her",
-      "text": { "da": "", "en": "This is the first weekend for a long time that I'm free." },
-      "source": "Swedish Blonde [D1t_K8hjJzc] (exact: 'I'm actually like this is the first weekend for a long time that I'm free')",
-      "children": ["direct-lock-in-date"]
-    },
-
-    "direct-lock-in-date": {
-      "id": "direct-lock-in-date",
-      "speaker": "me",
-      "text": { "da": "", "en": "Saturday I can pencil you in for a 6pm bubble tea appointment. How do you feel about bubble tea on Saturday at 6pm with a cute American boy?" },
-      "source": "Swedish Blonde [D1t_K8hjJzc] (exact: 'Saturday I can pencil you in for a 6pm bubble tea appointment... how do you feel about bubble tea on Saturday at 6pm with a cute American boy')",
-      "children": ["direct-her-agrees-date"]
-    },
-    "direct-her-agrees-date": {
-      "id": "direct-her-agrees-date",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, sounds good." },
-      "source": "Swedish Blonde [D1t_K8hjJzc]",
-      "children": ["direct-get-number"]
-    },
-
-    "direct-get-number": {
-      "id": "direct-get-number",
-      "speaker": "me",
-      "text": { "da": "", "en": "What's your number? Do you have an American number?" },
-      "source": "Swedish Blonde [D1t_K8hjJzc] (exact: 'Okay wait, what's your number? Do you have an American number?'), How to Ask a Girl Out [qWqNDrjfUvc] (exact: 'What's your number?'), Basic Daygame [H3_8iPikhDw]",
-      "children": ["direct-her-gives-number", "direct-her-gives-instagram"]
-    },
-    "direct-her-gives-number": {
-      "id": "direct-her-gives-number",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, I do. [gives number]" },
-      "source": "Swedish Blonde [D1t_K8hjJzc] (exact: 'Yeah, I do'), How to Ask a Girl Out [qWqNDrjfUvc], Swedish Hockey [KURlBcRF6-M]",
-      "children": ["direct-warm-goodbye"]
-    },
-    "direct-her-gives-instagram": {
-      "id": "direct-her-gives-instagram",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, here's my Instagram." },
-      "source": "Barcelona [iOSpNACA9VI], Casey Neistat [fbRpUOxqWcs]",
-      "children": ["direct-warm-goodbye"]
-    },
-
-    "direct-warm-goodbye": {
-      "id": "direct-warm-goodbye",
-      "speaker": "me",
-      "text": { "da": "", "en": "It was lovely meeting you. I hope you have a wonderful rest of your day." },
-      "source": "Swedish Blonde [D1t_K8hjJzc] (exact: 'Well it was lovely meeting you... I hope you have a wonderful rest of your day'), Basic Daygame [H3_8iPikhDw] (exact: 'Well, it was nice meeting you... have a good day')",
-      "children": []
-    },
-
-    "direct-switch-language": {
-      "id": "direct-switch-language",
-      "speaker": "me",
-      "text": { "da": "", "en": "Do you speak Spanish? Hola, me llamo Austin." },
-      "source": "A Basic Daygame Approach [H3_8iPikhDw] (exact: 'Do you speak Spanish? Yes? Okay'), Latina MILF [bzUa2cB61hU], Pickup Motivation [wHQW1s5FzkY] (exact: 'Hola, me llamo Austin')",
-      "children": ["direct-her-warms-up-spanish"]
-    },
-    "direct-her-warms-up-spanish": {
-      "id": "direct-her-warms-up-spanish",
-      "speaker": "her",
-      "text": { "da": "", "en": "Si!" },
-      "source": "A Basic Daygame Approach [H3_8iPikhDw]",
-      "children": ["direct-spanish-commonality"]
-    },
-    "direct-spanish-commonality": {
-      "id": "direct-spanish-commonality",
-      "speaker": "me",
-      "text": { "da": "", "en": "You're going to teach me Spanish and I'm going to teach you English. Do you like tea or coffee more?" },
-      "source": "A Basic Daygame Approach [H3_8iPikhDw] (exact: 'So you're going to teach me Spanish and I'm going to teach you English. Do you like tea or coffee more?')",
-      "children": ["direct-spanish-date-seed"]
-    },
-    "direct-spanish-date-seed": {
-      "id": "direct-spanish-date-seed",
-      "speaker": "me",
-      "text": { "da": "", "en": "Do you like sushi? Someday we are going for sushi or something with my doggy." },
-      "source": "A Basic Daygame Approach [H3_8iPikhDw] (exact: 'Do you like sushi?... Someday we are going for sushi or something with my doggy. She likes salmon.')",
-      "children": ["direct-spanish-instagram"]
-    },
-    "direct-spanish-instagram": {
-      "id": "direct-spanish-instagram",
-      "speaker": "me",
-      "text": { "da": "", "en": "Do you have an app called Instagram? Does it exist in your country?" },
-      "source": "A Basic Daygame Approach [H3_8iPikhDw] (exact: 'Do you have an app called Instagram?... Does it exist in your country?')",
-      "children": ["direct-her-gives-instagram"]
-    },
-
-    "boyfriend-goalie": {
-      "id": "boyfriend-goalie",
-      "speaker": "me",
-      "text": { "da": "", "en": "Just because there's a goalie doesn't mean you can't score." },
-      "source": "Swedish Hockey Player [KURlBcRF6-M] (exact: 'Just because there's a goalie doesn't mean you can't score')",
-      "children": ["boyfriend-her-amused"]
-    },
-    "boyfriend-instagram-pivot": {
-      "id": "boyfriend-instagram-pivot",
-      "speaker": "me",
-      "text": { "da": "", "en": "I'll grab your Instagram, and that way when the photos of him disappear, then I'll know it's time." },
-      "source": "Software Developer [x2kk9HoXjnI] (exact: 'I just wanted to grab your Instagram, and then when the photos of him disappear, then I'll know it's time to loop back into your DMs'), How to Ask a Girl Out [qWqNDrjfUvc] (exact: 'I'll grab your Instagram and that way when you stop dating him then I'll know it's time')",
-      "children": ["boyfriend-her-gives-ig"]
-    },
-    "boyfriend-penalty-box": {
-      "id": "boyfriend-penalty-box",
-      "speaker": "me",
-      "text": { "da": "", "en": "Even if he was, I'd take two minutes in the penalty box for cheating." },
-      "source": "Swedish Hockey Player [KURlBcRF6-M] (exact: 'Even if he was, I'd take two minutes in the penalty box for cheating')",
-      "children": ["boyfriend-get-number"]
-    },
-    "boyfriend-graceful-exit": {
-      "id": "boyfriend-graceful-exit",
-      "speaker": "me",
-      "text": { "da": "", "en": "No worries. Well, it was nice meeting you. Have a good day." },
-      "source": "How to Ask a Girl Out [qWqNDrjfUvc]",
-      "children": []
-    },
-    "boyfriend-her-amused": {
-      "id": "boyfriend-her-amused",
-      "speaker": "her",
-      "text": { "da": "", "en": "You seem cool." },
-      "source": "Swedish Hockey Player [KURlBcRF6-M] (exact: 'You seem cool')",
-      "children": ["boyfriend-get-number"]
-    },
-    "boyfriend-get-number": {
-      "id": "boyfriend-get-number",
-      "speaker": "me",
-      "text": { "da": "", "en": "Let me grab your number. Later we'll go skating on a lake." },
-      "source": "Swedish Hockey Player [KURlBcRF6-M] (exact: 'Let me grab your number... Later we'll go skating on a lake')",
-      "children": ["boyfriend-her-gives-number"]
-    },
-    "boyfriend-her-gives-number": {
-      "id": "boyfriend-her-gives-number",
-      "speaker": "her",
-      "text": { "da": "", "en": "8-4-7... [gives number]" },
-      "source": "Swedish Hockey Player [KURlBcRF6-M] (exact: '8-4-7')",
-      "children": ["boyfriend-save-name"]
-    },
-    "boyfriend-save-name": {
-      "id": "boyfriend-save-name",
-      "speaker": "me",
-      "text": { "da": "", "en": "We'll save it as Austin Carlson, number one defenseman in Sweden." },
-      "source": "Swedish Hockey Player [KURlBcRF6-M] (exact: 'We'll save it as Austin Carlson, number one defenseman in Sweden')",
-      "children": []
-    },
-    "boyfriend-her-gives-ig": {
-      "id": "boyfriend-her-gives-ig",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, sure. Here's my Instagram." },
-      "source": "How to Ask a Girl Out [qWqNDrjfUvc]",
-      "children": []
-    },
-
-    "busy-walk-with": {
-      "id": "busy-walk-with",
-      "speaker": "me",
-      "text": { "da": "", "en": "I'll walk with you for two minutes, then I have to go." },
-      "source": "Barcelona [iOSpNACA9VI] (Austen teaching: 'I'll walk with you for two minutes then I have to go... these lines should be embedded in your head')",
-      "children": ["busy-her-agrees"]
-    },
-    "busy-her-agrees": {
-      "id": "busy-her-agrees",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, okay." },
-      "source": "Barcelona [iOSpNACA9VI]",
-      "children": ["busy-quick-close"]
-    },
-    "busy-quick-close": {
-      "id": "busy-quick-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "I don't want to hold you up. Let me grab your number real quick and we can continue this another time." },
-      "source": "Wheelchair [n0smMRCqVmc] (pattern: quick number close when girl is busy), Swedish Blonde [D1t_K8hjJzc] (exact: 'I don't want to hold you up by the way')",
-      "children": ["direct-her-gives-number"]
-    },
-
-    "opener-observational": {
-      "id": "opener-observational",
-      "speaker": "me",
-      "text": { "da": "", "en": "Hi, excuse me. I was back there and I saw your very, very colorful backpack. It almost looks like you'd be selling it here like an art festival backpack or something." },
-      "source": "Rembrantplein [srq1OVqxX0E] (exact: 'I was back there and I saw your very, very colorful backpack. It almost looks like you'd be selling it here like an art festival backpack or something.')",
-      "children": ["obs-her-curious", "obs-her-friendly"]
-    },
-    "obs-her-curious": {
-      "id": "obs-her-curious",
-      "speaker": "her",
-      "text": { "da": "", "en": "Oh really?" },
-      "source": "Rembrantplein [srq1OVqxX0E]",
-      "children": ["obs-elaborate"]
-    },
-    "obs-her-friendly": {
-      "id": "obs-her-friendly",
-      "speaker": "her",
-      "text": { "da": "", "en": "Hi! Thank you, that's sweet." },
-      "source": "Casey Neistat [fbRpUOxqWcs]",
-      "children": ["obs-elaborate"]
-    },
-
-    "obs-elaborate": {
-      "id": "obs-elaborate",
-      "speaker": "me",
-      "text": { "da": "", "en": "You look quite adorable. My name is Austin, by the way." },
-      "source": "Rembrantplein [srq1OVqxX0E] (exact: 'You look quite adorable, but Brazilian'), Casey Neistat [fbRpUOxqWcs] (exact: 'you look quite adorable on the ice')",
-      "children": ["obs-her-name-exchange"]
-    },
-    "obs-her-name-exchange": {
-      "id": "obs-her-name-exchange",
-      "speaker": "her",
-      "text": { "da": "", "en": "I'm [Name]." },
-      "source": "Multiple videos",
-      "children": ["obs-transition-banter"]
-    },
-    "obs-transition-banter": {
-      "id": "obs-transition-banter",
-      "speaker": "me",
-      "text": { "da": "", "en": "What are you up to right now? Are you from around here?" },
-      "source": "7 Minute Pull [nFjdyAHcTgA], Casey Neistat [fbRpUOxqWcs]",
-      "children": ["obs-her-chatty", "obs-her-busy"]
-    },
-    "obs-her-chatty": {
-      "id": "obs-her-chatty",
-      "speaker": "her",
-      "text": { "da": "", "en": "Just hanging out / I just finished [activity]." },
-      "source": "7 Minute Pull [nFjdyAHcTgA], Casey Neistat [fbRpUOxqWcs]",
-      "children": ["obs-connection-building"]
-    },
-    "obs-her-busy": {
-      "id": "obs-her-busy",
-      "speaker": "her",
-      "text": { "da": "", "en": "I'm actually heading somewhere." },
-      "source": "Wheelchair [n0smMRCqVmc]",
-      "children": ["busy-quick-close"]
-    },
-    "obs-connection-building": {
-      "id": "obs-connection-building",
-      "speaker": "me",
-      "text": { "da": "", "en": "We should be best friends on Instagram. Do you have this app called Instagram?" },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'Do you have this app called Instagram?'), Wheelchair [n0smMRCqVmc] (exact: 'We're going to be best friends on Facebook')",
-      "children": ["obs-her-gives-contact"]
-    },
-    "obs-her-gives-contact": {
-      "id": "obs-her-gives-contact",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yes, I have it. Here." },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'Yes, I have it')",
-      "children": ["obs-warm-close"]
-    },
-    "obs-warm-close": {
-      "id": "obs-warm-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "I'll visit you when I'm in [city]. We'll get married, we'll have 14 children. It was nice to meet you." },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'I'll visit you when I'm in Turkey. When I'm in Turkey we'll get married, we'll have 14 children')",
-      "children": []
-    },
-
-    "opener-situational": {
-      "id": "opener-situational",
-      "speaker": "me",
-      "text": { "da": "", "en": "There was a bee literally just chasing me like 50 meters. And then I saw you with your dollar bag, and you looked quite cute." },
-      "source": "Shy College Girl [-gg0Ykxalkk] (exact: 'There was a bee literally just chasing me like 50 meters, and I was like holy shit. This bee is gonna eat me. And then I saw you with your dollar bag, and you looked quite cute.')",
-      "children": ["situational-her-engaged"]
-    },
-    "situational-her-engaged": {
-      "id": "situational-her-engaged",
-      "speaker": "her",
-      "text": { "da": "", "en": "(laughs) What did you buy there?" },
-      "source": "Shy College Girl [-gg0Ykxalkk]",
-      "children": ["situational-banter"]
-    },
-    "situational-banter": {
-      "id": "situational-banter",
-      "speaker": "me",
-      "text": { "da": "", "en": "I'm guessing you study marketing... no? You look Russian, that's why." },
-      "source": "Shy College Girl [-gg0Ykxalkk] (exact: 'I'm guessing you study marketing. No. English. Yeah. Where are you from? I look at basic, but I said white girl study. You look Russian, that's why.')",
-      "children": ["situational-her-banters-back"]
-    },
-    "situational-her-banters-back": {
-      "id": "situational-her-banters-back",
-      "speaker": "her",
-      "text": { "da": "", "en": "Fuck off! I don't have an accent." },
-      "source": "Shy College Girl [-gg0Ykxalkk] (exact: 'Fuck off! I don't have an accent.')",
-      "children": ["situational-connection"]
-    },
-    "situational-connection": {
-      "id": "situational-connection",
-      "speaker": "me",
-      "text": { "da": "", "en": "Last time I was up this early, I think Pluto was still a planet. But you do seem cool." },
-      "source": "Shy College Girl [-gg0Ykxalkk] (exact: 'Last time I was up this early, I think Pluto was still a planet' and 'But on the real though, you do seem cool')",
-      "children": ["situational-seed-date"]
-    },
-    "situational-seed-date": {
-      "id": "situational-seed-date",
-      "speaker": "me",
-      "text": { "da": "", "en": "Have you been to Snakes and Lattes? We should go sometime." },
-      "source": "Shy College Girl [-gg0Ykxalkk] (Snakes and Lattes date location, seeded guitar battle at his place)",
-      "children": ["direct-get-number"]
-    },
-
-    "opener-high-energy": {
-      "id": "opener-high-energy",
-      "speaker": "me",
-      "text": { "da": "", "en": "Excuse me, hi! It was like an athletic event to come talk to you guys. I saw you with your red hair and you looked absolutely adorable. What is your name?" },
-      "source": "Wheelchair [n0smMRCqVmc] (exact: 'Excuse me, hi! It was like an athletic event to come talk to you guys... I saw you with your red hair and you looked absolutely adorable. What is your name?')",
-      "children": ["high-her-engaged", "high-her-group-reaction"]
-    },
-    "high-her-engaged": {
-      "id": "high-her-engaged",
-      "speaker": "her",
-      "text": { "da": "", "en": "Oh my god! (laughing)" },
-      "source": "Wheelchair [n0smMRCqVmc]",
-      "children": ["high-playful-command"]
-    },
-    "high-her-group-reaction": {
-      "id": "high-her-group-reaction",
-      "speaker": "her",
-      "text": { "da": "", "en": "This is real smooth. Look at him." },
-      "source": "Wheelchair [n0smMRCqVmc] (exact: 'This is real smooth')",
-      "children": ["high-playful-command"]
-    },
-
-    "high-playful-command": {
-      "id": "high-playful-command",
-      "speaker": "me",
-      "text": { "da": "", "en": "Tell whoever you're talking to that you met a very beautiful young man in a wheelchair. You'll give them a call back." },
-      "source": "Wheelchair [n0smMRCqVmc] (exact: 'Tell whoever you're talking to that you met a very beautiful young man in a wheelchair, and you have to, like, talk for like a minute. You'll give them a call back.')",
-      "children": ["high-her-laughing-along"]
-    },
-    "high-her-laughing-along": {
-      "id": "high-her-laughing-along",
-      "speaker": "her",
-      "text": { "da": "", "en": "(Laughing) Okay, okay." },
-      "source": "Wheelchair [n0smMRCqVmc]",
-      "children": ["high-escalate-fun"]
-    },
-    "high-escalate-fun": {
-      "id": "high-escalate-fun",
-      "speaker": "me",
-      "text": { "da": "", "en": "Come on a coffee date with me right now. Let's get it." },
-      "source": "Wheelchair [n0smMRCqVmc] (exact: 'Come on a coffee date with me right now' and 'Coffee, let's get it')",
-      "children": ["high-her-objection", "high-her-down"]
-    },
-    "high-her-objection": {
-      "id": "high-her-objection",
-      "speaker": "her",
-      "text": { "da": "", "en": "It is 1:30! What are you talking about coffee?" },
-      "source": "Wheelchair [n0smMRCqVmc] (exact: 'It is 1.30! What are you talking about coffee?')",
-      "children": ["high-persist"]
-    },
-    "high-her-down": {
-      "id": "high-her-down",
-      "speaker": "her",
-      "text": { "da": "", "en": "I'm so down." },
-      "source": "Wheelchair [n0smMRCqVmc], 7 Minute Pull [nFjdyAHcTgA]",
-      "children": ["high-lead-instadate"]
-    },
-    "high-persist": {
-      "id": "high-persist",
-      "speaker": "me",
-      "text": { "da": "", "en": "Coffee, let's get it. I just got to sit down for a second." },
-      "source": "Wheelchair [n0smMRCqVmc] (exact: 'Coffee, let's get it')",
-      "children": ["high-her-relents"]
-    },
-    "high-her-relents": {
-      "id": "high-her-relents",
-      "speaker": "her",
-      "text": { "da": "", "en": "Okay, what is your number? Just punch it in." },
-      "source": "Wheelchair [n0smMRCqVmc] (exact: 'Okay, what is your number? Just punch it in.')",
-      "children": ["high-exchange-close"]
-    },
-    "high-exchange-close": {
-      "id": "high-exchange-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "Just punch it in there. It was nice to meet you." },
-      "source": "Wheelchair [n0smMRCqVmc] (exact: 'Just punch it in there')",
-      "children": []
-    },
-    "high-lead-instadate": {
-      "id": "high-lead-instadate",
-      "speaker": "me",
-      "text": { "da": "", "en": "Everybody, let's go! Come on, let's get to it!" },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'Everybody, let's go! Come on, let's get to it!')",
-      "children": ["high-her-group-resistance"]
-    },
-    "high-her-group-resistance": {
-      "id": "high-her-group-resistance",
-      "speaker": "her",
-      "text": { "da": "", "en": "We are pretty tired. We're thinking about going home." },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'We are pretty tired. We're thinking about going home.')",
-      "children": ["high-persistence-pull"]
-    },
-    "high-persistence-pull": {
-      "id": "high-persistence-pull",
-      "speaker": "me",
-      "text": { "da": "", "en": "You won't remember the nights you go home early, but you will remember the nights you party with us. After party, pizza, adventure, come on!" },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'You won't remember the nights you go home early, but you will remember the nights you party with a cool Swedish man' and 'after party, pizza, adventure, come on')",
-      "children": ["high-lead-taxi"]
-    },
-    "high-lead-taxi": {
-      "id": "high-lead-taxi",
-      "speaker": "me",
-      "text": { "da": "", "en": "Vamonos! Come on, vamonos! Lock arms with your girl." },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'Vamonos! Come on, vamonos!' and 'You should lock arms with your girl')",
-      "children": []
-    },
-
-    "opener-themed-humor": {
-      "id": "opener-themed-humor",
-      "speaker": "me",
-      "text": { "da": "", "en": "Hey, excuse me. I've been locked into a coding marathon all day, and I have to say you're still hotter than the bottom of my laptop." },
-      "source": "Software Developer [x2kk9HoXjnI] (exact: 'Hey excuse me I've been locked into like a coding marathon all day and I have to say you're still hotter than the bottom of my laptop')",
-      "children": ["themed-her-amused", "themed-her-confused"]
-    },
-    "themed-her-amused": {
-      "id": "themed-her-amused",
-      "speaker": "her",
-      "text": { "da": "", "en": "(Laughing) Oh my god." },
-      "source": "Software Developer [x2kk9HoXjnI]",
-      "children": ["themed-build-on-theme"]
-    },
-    "themed-her-confused": {
-      "id": "themed-her-confused",
-      "speaker": "her",
-      "text": { "da": "", "en": "Wait, what?" },
-      "source": "Software Developer [x2kk9HoXjnI]",
-      "children": ["themed-build-on-theme"]
-    },
-
-    "themed-build-on-theme": {
-      "id": "themed-build-on-theme",
-      "speaker": "me",
-      "text": { "da": "", "en": "I was chilling with my friend and I was thinking like whoever coded this simulation clearly spent a lot of time on you." },
-      "source": "Software Developer [x2kk9HoXjnI] (exact: 'I was chilling with my friend back there and I was thinking like whoever coded this simulation clearly spent a lot of time on you')",
-      "children": ["themed-her-flattered"]
-    },
-    "themed-her-flattered": {
-      "id": "themed-her-flattered",
-      "speaker": "her",
-      "text": { "da": "", "en": "You're pretty smart then, I guess." },
-      "source": "Software Developer [x2kk9HoXjnI] (exact: 'You're pretty smart then, I guess')",
-      "children": ["themed-deeper-connection"]
-    },
-    "themed-deeper-connection": {
-      "id": "themed-deeper-connection",
-      "speaker": "me",
-      "text": { "da": "", "en": "There's a lot of coding languages, but there's only one universal language. You know what it is? It's body language." },
-      "source": "Software Developer [x2kk9HoXjnI] (exact: 'There's a lot of coding languages, but there's only one universal language. You know what it is? It's body language.')",
-      "children": ["themed-her-oh-my-god"]
-    },
-    "themed-her-oh-my-god": {
-      "id": "themed-her-oh-my-god",
-      "speaker": "her",
-      "text": { "da": "", "en": "Oh my god. (laughs)" },
-      "source": "Software Developer [x2kk9HoXjnI]",
-      "children": ["themed-close-number"]
-    },
-    "themed-close-number": {
-      "id": "themed-close-number",
-      "speaker": "me",
-      "text": { "da": "", "en": "I'd love to give this conversation more runtime, but I have a scrum meeting in like 10 minutes. We could code and chill sometime. I'll grab your number." },
-      "source": "Software Developer [x2kk9HoXjnI] (exact: 'I'd love to give this conversation more runtime, but you do have to go to class. I have a scrum meeting in like 10 minutes. So I'll just, I'll grab your number. We could code and chill sometime.')",
-      "children": ["themed-her-gives-number", "themed-her-boyfriend-objection"]
-    },
-    "themed-her-gives-number": {
-      "id": "themed-her-gives-number",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, yeah, of course." },
-      "source": "Software Developer [x2kk9HoXjnI] (exact: 'Yeah, yeah, of course, of course')",
-      "children": ["themed-fun-close"]
-    },
-    "themed-her-boyfriend-objection": {
-      "id": "themed-her-boyfriend-objection",
-      "speaker": "her",
-      "text": { "da": "", "en": "I have a boyfriend." },
-      "source": "Software Developer [x2kk9HoXjnI]",
-      "children": ["themed-boyfriend-override"]
-    },
-    "themed-fun-close": {
-      "id": "themed-fun-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "Access granted. I'll text you later. Maybe we can play Mario Kart at this cafe near me." },
-      "source": "Software Developer [x2kk9HoXjnI] (exact: 'Access granted' and 'Maybe we can play Mario Kart at this cafe near me. Has like 1,253 positive reviews.')",
-      "children": []
-    },
-    "themed-boyfriend-override": {
-      "id": "themed-boyfriend-override",
-      "speaker": "me",
-      "text": { "da": "", "en": "What's his typing speed? Like how many words a minute can he type? I've got 157 words a minute." },
-      "source": "Software Developer [x2kk9HoXjnI] (exact: 'What's his typing speed? Like how many words a minute can he finger? I have no idea. I've got 157 words a minute.')",
-      "children": ["themed-boyfriend-her-laughs"]
-    },
-    "themed-boyfriend-her-laughs": {
-      "id": "themed-boyfriend-her-laughs",
-      "speaker": "her",
-      "text": { "da": "", "en": "I have no idea. (laughing)" },
-      "source": "Software Developer [x2kk9HoXjnI] (exact: 'I have no idea')",
-      "children": ["themed-boyfriend-ig-close"]
-    },
-    "themed-boyfriend-ig-close": {
-      "id": "themed-boyfriend-ig-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "No worries. I'm not here to execute a man-in-the-middle attack on a two-node network. I just wanted to grab your Instagram." },
-      "source": "Software Developer [x2kk9HoXjnI] (exact: 'No worries. I'm not here to execute a man-in-the-middle attack on a two-node network. I just wanted to grab your Instagram')",
-      "children": []
-    },
-
-    "opener-direct-honest": {
-      "id": "opener-direct-honest",
-      "speaker": "me",
-      "text": { "da": "", "en": "Hey, excuse me. I'm Austin. I don't mean to intrude, but I noticed you and I think you're really beautiful. I wanted to meet you." },
-      "source": "How to Ask a Girl Out [qWqNDrjfUvc] (exact: 'Hey excuse me I'm Austin I don't mean to intrude you guys but I just wanted to say I noticed you're like very beautiful so I just wanted to like come say hi')",
-      "children": ["honest-her-touched", "honest-her-taken"]
-    },
-    "honest-her-touched": {
-      "id": "honest-her-touched",
-      "speaker": "her",
-      "text": { "da": "", "en": "Oh my gosh! That's so sweet. What's your name?" },
-      "source": "How to Ask a Girl Out [qWqNDrjfUvc]",
-      "children": ["honest-ask-out"]
-    },
-    "honest-her-taken": {
-      "id": "honest-her-taken",
-      "speaker": "her",
-      "text": { "da": "", "en": "This is my girlfriend / I have a boyfriend." },
-      "source": "How to Ask a Girl Out [qWqNDrjfUvc] (exact: 'This is my girlfriend')",
-      "children": ["boyfriend-graceful-exit"]
-    },
-    "honest-ask-out": {
-      "id": "honest-ask-out",
-      "speaker": "me",
-      "text": { "da": "", "en": "Do you like coffee, beer, or anything like that? There's this really great restaurant called Bar Taco." },
-      "source": "How to Ask a Girl Out [qWqNDrjfUvc] (exact: 'Do you like coffee, beer, or anything like that?' -- used by the girls' advice, and 'There's this really great restaurant called Bar Taco in Hyde Park')",
-      "children": ["honest-her-agrees"]
-    },
-    "honest-her-agrees": {
-      "id": "honest-her-agrees",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, all of the above. Sure, what's your number?" },
-      "source": "How to Ask a Girl Out [qWqNDrjfUvc] (exact: 'Yeah, both. All of the above... What's your number?')",
-      "children": ["direct-warm-goodbye"]
-    },
-
-    "opener-nightgame": {
-      "id": "opener-nightgame",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Nightgame patterns - Barcelona/Toronto context]" },
-      "source": "Barcelona [iOSpNACA9VI] (Austen teaches nightgame open, vibe, lead, pull), Wheelchair [n0smMRCqVmc] (Toronto night approaches)",
-      "children": ["nightgame-open-front", "nightgame-group-open"]
-    },
-    "nightgame-open-front": {
-      "id": "nightgame-open-front",
-      "speaker": "me",
-      "text": { "da": "", "en": "Hey there, excuse me. I just saw you walking by." },
-      "source": "Barcelona [iOSpNACA9VI] (exact drills: 'Hey there, excuse me. I just saw you walking by' -- taught as approaching from front, giving space, not touching initially)",
-      "children": ["nightgame-her-response"]
-    },
-    "nightgame-her-response": {
-      "id": "nightgame-her-response",
-      "speaker": "her",
-      "text": { "da": "", "en": "Hi! / No speak English." },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'No speak English')",
-      "children": ["nightgame-language-pivot", "nightgame-vibe"]
-    },
-    "nightgame-language-pivot": {
-      "id": "nightgame-language-pivot",
-      "speaker": "me",
-      "text": { "da": "", "en": "What language? Italian? You can teach me." },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'What language? Italian. You can teach me.')",
-      "children": ["nightgame-instagram-close"]
-    },
-    "nightgame-vibe": {
-      "id": "nightgame-vibe",
-      "speaker": "me",
-      "text": { "da": "", "en": "This is the best bar here? Bling bling? Oh, like rappers in the United States. And you are from bling bling? Born here?" },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'This is the best bar club here... Bling bling? Oh, like rappers in the United States. Bling bling. And you are from Bling Bling? Born here?')",
-      "children": ["nightgame-her-engaged"]
-    },
-    "nightgame-her-engaged": {
-      "id": "nightgame-her-engaged",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yes! 23 years old." },
-      "source": "Barcelona [iOSpNACA9VI]",
-      "children": ["nightgame-instagram-close"]
-    },
-    "nightgame-instagram-close": {
-      "id": "nightgame-instagram-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "I have to go, but let's exchange Instagrams." },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'I have to go, but let's exchange Instagrams')",
-      "children": []
-    },
-    "nightgame-group-open": {
-      "id": "nightgame-group-open",
-      "speaker": "me",
-      "text": { "da": "", "en": "Hi, I'm the fourth friend." },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'Hi, I'm the fourth friend')",
-      "children": ["nightgame-group-her"]
-    },
-    "nightgame-group-her": {
-      "id": "nightgame-group-her",
-      "speaker": "her",
-      "text": { "da": "", "en": "You're from England, yes?" },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'You're from England, yes')",
-      "children": ["nightgame-group-banter"]
-    },
-    "nightgame-group-banter": {
-      "id": "nightgame-group-banter",
-      "speaker": "me",
-      "text": { "da": "", "en": "The best way to learn a language is with private, one-on-one lessons with a native speaker. And I'm a native speaker." },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'The best way to learn a language is with private, one-on-one lessons with a native speaker. And I'm a native speaker.')",
-      "children": ["nightgame-group-seed-pull"]
-    },
-    "nightgame-group-seed-pull": {
-      "id": "nightgame-group-seed-pull",
-      "speaker": "me",
-      "text": { "da": "", "en": "I have a new plan. Tonight we have fun, we go out after dinner. You eat with your friends, then we'll get all beautiful and enjoy Barcelona because it's our last night." },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'I have a new plan. Tonight we have fun and we go out after dinner because we're gonna eat with our friends, you eat with your friends and then we'll get all beautiful... and then we go out and we enjoy Barcelona because it's our last night')",
-      "children": []
-    },
-
-    "instadate-transition": {
-      "id": "instadate-transition",
-      "speaker": "me",
-      "text": { "da": "", "en": "Do you want to come get food with me? / Would you be down to escort me to Juice and Java?" },
-      "source": "Latina MILF [bzUa2cB61hU] (exact: 'Do you want to come get food with me?'), Finnish Girl [jPHmLAZON_s] (exact: 'Would you be down to escort me to Juice and Java?'), Software Developer [x2kk9HoXjnI] (ice cream)",
-      "children": ["instadate-her-yes", "instadate-her-hesitant", "instadate-her-trust"]
-    },
-    "instadate-her-yes": {
-      "id": "instadate-her-yes",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yes. / All right, I trust you." },
-      "source": "Latina MILF [bzUa2cB61hU] (exact: 'Yes'), Software Developer [x2kk9HoXjnI] (exact: 'All right, I trust you')",
-      "children": ["instadate-lead"]
-    },
-    "instadate-her-hesitant": {
-      "id": "instadate-her-hesitant",
-      "speaker": "her",
-      "text": { "da": "", "en": "No, I'm not hungry." },
-      "source": "Latina MILF [bzUa2cB61hU] (exact: 'No, I'm sorry I'm not hungry')",
-      "children": ["instadate-downgrade"]
-    },
-    "instadate-her-trust": {
-      "id": "instadate-her-trust",
-      "speaker": "her",
-      "text": { "da": "", "en": "Can I trust you though?" },
-      "source": "Finnish Girl [jPHmLAZON_s] (exact: 'Can I trust you though?')",
-      "children": ["instadate-trust-response"]
-    },
-    "instadate-trust-response": {
-      "id": "instadate-trust-response",
-      "speaker": "me",
-      "text": { "da": "", "en": "No. I heard Finnish guys are very, very shy." },
-      "source": "Finnish Girl [jPHmLAZON_s] (exact: 'No. I heard Finnish guys are very very shy')",
-      "children": ["instadate-lead"]
-    },
-    "instadate-lead": {
-      "id": "instadate-lead",
-      "speaker": "me",
-      "text": { "da": "", "en": "Hold my hand. Look both ways when you cross the street. Let's go." },
-      "source": "Latina MILF [bzUa2cB61hU] (exact: 'Hold my hand. Look both ways when you cross the street.')",
-      "children": ["instadate-during"]
-    },
-    "instadate-downgrade": {
-      "id": "instadate-downgrade",
-      "speaker": "me",
-      "text": { "da": "", "en": "You're not hungry? I'll get you a tea. Do you know Uber? Come on, let's go." },
-      "source": "Latina MILF [bzUa2cB61hU] (exact: 'You're not hungry? I'll get you a tea. Do you know Uber?')",
-      "children": ["instadate-her-yes"]
-    },
-
-    "instadate-during": {
-      "id": "instadate-during",
-      "speaker": "me",
-      "text": { "da": "", "en": "[During instadate: physical, playful, leading to venue changes]" },
-      "source": "Latina MILF [bzUa2cB61hU], Swedish Blonde [D1t_K8hjJzc] (date), Florida Date [9I7JBV15FNM]",
-      "children": ["instadate-venue-seed", "instadate-physical-tease"]
-    },
-    "instadate-venue-seed": {
-      "id": "instadate-venue-seed",
-      "speaker": "me",
-      "text": { "da": "", "en": "We should continue the stimulating conversation over bubble tea. We'll hang out Saturday. Let's get bubble tea and then perhaps afterward we could go on a hike." },
-      "source": "Swedish Blonde [D1t_K8hjJzc] (exact: 'We should we should continue the stimulating conversation over bubble tea' and 'We'll hang out Saturday. Let's get bubble tea and then perhaps afterward we could go on a hike')",
-      "children": []
-    },
-    "instadate-physical-tease": {
-      "id": "instadate-physical-tease",
-      "speaker": "me",
-      "text": { "da": "", "en": "You have nice hands too. Very delicate." },
-      "source": "Latina MILF [bzUa2cB61hU] (exact: 'You have nice hands too. Very delicate.')",
-      "children": ["instadate-her-reciprocates"]
-    },
-    "instadate-her-reciprocates": {
-      "id": "instadate-her-reciprocates",
-      "speaker": "her",
-      "text": { "da": "", "en": "You're fun." },
-      "source": "Latina MILF [bzUa2cB61hU] (exact: 'You're fun')",
-      "children": ["instadate-pull-seed"]
-    },
-    "instadate-pull-seed": {
-      "id": "instadate-pull-seed",
-      "speaker": "me",
-      "text": { "da": "", "en": "I have a cute dog at my place. You want to see a video? We could make some vegan smoothies." },
-      "source": "Swedish Blonde [D1t_K8hjJzc] (Austen narrates: 'I showed her a video of the cute dog at the place I was staying and I told her we could make some vegan smoothies'), Latina MILF [bzUa2cB61hU] (pulled to apartment for 'water')",
-      "children": []
-    },
-
-    "direct-instadate-offer": {
-      "id": "direct-instadate-offer",
-      "speaker": "me",
-      "text": { "da": "", "en": "Would you be down to escort me to [venue]? It's literally the best coffee slash juice place." },
-      "source": "Finnish Girl [jPHmLAZON_s] (exact: 'Would you be down to escort me to Juice and Java? It's literally the best coffee slash juice place')",
-      "children": ["instadate-her-trust", "instadate-her-yes"]
-    },
-
-    "physical-leading": {
-      "id": "physical-leading",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Austen's physical leading patterns]" },
-      "source": "Multiple videos - Austen is notably physical, leads by hand, arm-in-arm, picks girls up",
-      "children": ["physical-hand-hold", "physical-arm-lock", "physical-pick-up", "physical-nose-kiss"]
-    },
-    "physical-hand-hold": {
-      "id": "physical-hand-hold",
-      "speaker": "me",
-      "text": { "da": "", "en": "Just hold my hand, we'll be like an average couple on the street." },
-      "source": "Pickup Motivation [wHQW1s5FzkY] (exact: 'Just hold my hand, we'll be like an average couple on the street')",
-      "children": []
-    },
-    "physical-arm-lock": {
-      "id": "physical-arm-lock",
-      "speaker": "me",
-      "text": { "da": "", "en": "Lock arms with your girl." },
-      "source": "Barcelona [iOSpNACA9VI] (exact: 'You should lock arms with your girl'), Austen teaches: 'when I'm leading oftentimes I'll lead hand in hand, arm in arm'",
-      "children": []
-    },
-    "physical-pick-up": {
-      "id": "physical-pick-up",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Picks her up / puts her on his back to show physical strength playfully]" },
-      "source": "Swedish Blonde [D1t_K8hjJzc] (narration: 'put the girl on your back and you know just show some physical strength without you having to brag about yourself'), Casey Neistat [fbRpUOxqWcs] (UPW: lifts Alexandra)",
-      "children": []
-    },
-    "physical-nose-kiss": {
-      "id": "physical-nose-kiss",
-      "speaker": "me",
-      "text": { "da": "", "en": "In Canada, do you want to see how we say hello and goodbye? We go like this with the nose." },
-      "source": "Latina MILF [bzUa2cB61hU] (exact: 'In Canada, do you want to see how we say hello and goodbye? We go like this with the nose.')",
-      "children": []
-    },
-
-    "opener-swedish-hockey": {
-      "id": "opener-swedish-hockey",
-      "speaker": "me",
-      "text": { "da": "", "en": "Excuse me. Hi. Question. What did the Swede say to the Norwegian at the breakfast table? Hurry up and finish your Danish." },
-      "source": "Swedish Hockey Player [KURlBcRF6-M] (exact: 'Excuse me. Hi. Question. What did the Swede say to the Norwegian at the breakfast table? Hurry up and finish your Danish.')",
-      "children": ["swedish-her-laughs"]
-    },
-    "swedish-her-laughs": {
-      "id": "swedish-her-laughs",
-      "speaker": "her",
-      "text": { "da": "", "en": "(laughs)" },
-      "source": "Swedish Hockey Player [KURlBcRF6-M]",
-      "children": ["swedish-ice-broken"]
-    },
-    "swedish-ice-broken": {
-      "id": "swedish-ice-broken",
-      "speaker": "me",
-      "text": { "da": "", "en": "Ice is broken. Let me help you. I am strong. I'm the number one defenseman in Sweden. You can call me Austin Carlson. You are very pretty, like the sun's fjord in the summer months in Sweden." },
-      "source": "Swedish Hockey Player [KURlBcRF6-M] (exact: 'Ice is broken. Let me help you. I am strong. I help. I'm the number one defenseman in Sweden. You can call me Austin Carson. You are very pretty, like the Sunspouts fjord in the summer months in Sweden.')",
-      "children": ["swedish-her-curious"]
-    },
-    "swedish-her-curious": {
-      "id": "swedish-her-curious",
-      "speaker": "her",
-      "text": { "da": "", "en": "Have you ever been? / Why are you wearing a uniform?" },
-      "source": "Swedish Hockey Player [KURlBcRF6-M] (exact: 'Have you ever been?' and 'Why are you wearing a uniform?')",
-      "children": ["swedish-ancestors"]
-    },
-    "swedish-ancestors": {
-      "id": "swedish-ancestors",
-      "speaker": "me",
-      "text": { "da": "", "en": "Let me know if I'm too forward. My ancestors were Vikings so I tend to be a little bit aggressive." },
-      "source": "Swedish Hockey Player [KURlBcRF6-M] (exact: 'Let me know if I'm too forward. My ancestors were Vikings so I I tend to be a little bit aggressive.')",
-      "children": ["swedish-her-okay"]
-    },
-    "swedish-her-okay": {
-      "id": "swedish-her-okay",
-      "speaker": "her",
-      "text": { "da": "", "en": "That's okay. I'm actually Swedish, so..." },
-      "source": "Swedish Hockey Player [KURlBcRF6-M] (exact: 'That's okay. I'm actually Swedish, so...')",
-      "children": ["swedish-fika"]
-    },
-    "swedish-fika": {
-      "id": "swedish-fika",
-      "speaker": "me",
-      "text": { "da": "", "en": "I will expand your consciousness into the Swedish delights. Lingonberries, mulled wine, meatballs. Would you like to go for a fika with me?" },
-      "source": "Swedish Hockey Player [KURlBcRF6-M] (exact: 'I will expand your consciousness into the Swedish delights, lingonberries, mulled wine, köttbullar' and 'Would you like to go for a fika with me?')",
-      "children": ["swedish-her-yes-fika"]
-    },
-    "swedish-her-yes-fika": {
-      "id": "swedish-her-yes-fika",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yes. Let us go." },
-      "source": "Swedish Hockey Player [KURlBcRF6-M] (exact: 'Yes. Let us go.')",
-      "children": []
-    },
-
-    "opener-casey-neistat": {
-      "id": "opener-casey-neistat",
-      "speaker": "me",
-      "text": { "da": "", "en": "Hi, I didn't mean to interrupt your guys' very important skating date, but you look quite adorable on the ice, so I decided to muster up the courage and come say hello." },
-      "source": "Casey Neistat [fbRpUOxqWcs] (exact: 'Hi, I didn't mean to interrupt your guys' very important skating date, but you look quite adorable on the ice, so I decided to muster up the courage and come say hello.')",
-      "children": ["casey-her-hello"]
-    },
-    "casey-her-hello": {
-      "id": "casey-her-hello",
-      "speaker": "her",
-      "text": { "da": "", "en": "Hello. Hi." },
-      "source": "Casey Neistat [fbRpUOxqWcs]",
-      "children": ["casey-dance-tease"]
-    },
-    "casey-dance-tease": {
-      "id": "casey-dance-tease",
-      "speaker": "me",
-      "text": { "da": "", "en": "Are you from Argentina or like Colombia or Panama? I'll take you to a salsa dancing place. Do you know how to dance?" },
-      "source": "Casey Neistat [fbRpUOxqWcs] (exact: 'Are you from Argentina or like Colombia or Panama? I'll take you to a salsa dancing place. Do you know how to dance?')",
-      "children": []
-    },
-
-    "opener-freckly": {
-      "id": "opener-freckly",
-      "speaker": "me",
-      "text": { "da": "", "en": "You're so freckly, it's so cute. What are you up to right now?" },
-      "source": "Casey Neistat [fbRpUOxqWcs] (exact: 'You're so freckly, it's so cute' and 'What are you up to right now?')",
-      "children": ["freckly-her-response"]
-    },
-    "freckly-her-response": {
-      "id": "freckly-her-response",
-      "speaker": "her",
-      "text": { "da": "", "en": "It's Australian, baby!" },
-      "source": "Casey Neistat [fbRpUOxqWcs] (exact: 'It's Australian, baby!')",
-      "children": ["freckly-facebook-close"]
-    },
-    "freckly-facebook-close": {
-      "id": "freckly-facebook-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "I'll take your Facebook. We can play with my new drone. Lovely meeting you." },
-      "source": "Casey Neistat [fbRpUOxqWcs] (exact: 'I'll take your Facebook... We can play with my new drone. Lovely meeting you.')",
-      "children": []
-    },
-
-    "opener-vlogger-frame": {
-      "id": "opener-vlogger-frame",
-      "speaker": "me",
-      "text": { "da": "", "en": "You seem quite interesting from afar. I'm a daily vlogger, so I vlog my days, go out and meet people. What's your name?" },
-      "source": "Casey Neistat [fbRpUOxqWcs] (exact: 'You seem quite interesting from afar' and 'I'm a daily vlogger, so I vlog my days, go out and meet people')",
-      "children": ["vlogger-her-engaged"]
-    },
-    "vlogger-her-engaged": {
-      "id": "vlogger-her-engaged",
-      "speaker": "her",
-      "text": { "da": "", "en": "Nice to meet you." },
-      "source": "Casey Neistat [fbRpUOxqWcs]",
-      "children": ["vlogger-collab-pitch"]
-    },
-    "vlogger-collab-pitch": {
-      "id": "vlogger-collab-pitch",
-      "speaker": "me",
-      "text": { "da": "", "en": "We could also do like a girlfriend tag someday. I can see us vlogging together sometime. You have really good eye contact though. Do you have a man in your life?" },
-      "source": "Casey Neistat [fbRpUOxqWcs] (exact: 'We could also do like a girlfriend tag someday' and 'I can see us vlogging together sometime' and 'You have really good eye contact though' and 'Do you have a man in your life?')",
-      "children": ["vlogger-her-kind-of"]
-    },
-    "vlogger-her-kind-of": {
-      "id": "vlogger-her-kind-of",
-      "speaker": "her",
-      "text": { "da": "", "en": "Kind of." },
-      "source": "Casey Neistat [fbRpUOxqWcs] (exact: 'Kind of')",
-      "children": ["vlogger-reframe"]
-    },
-    "vlogger-reframe": {
-      "id": "vlogger-reframe",
-      "speaker": "me",
-      "text": { "da": "", "en": "Kind of. So it doesn't even matter. You met a daily vlogger. It's time to step up, right? I'll grab your number before you have to rush off." },
-      "source": "Casey Neistat [fbRpUOxqWcs] (exact: 'Kind of. So it doesn't even matter... You met a daily vlogger. It's time to step up, right? I'll grab your number before you have to rush off.')",
-      "children": ["vlogger-her-number"]
-    },
-    "vlogger-her-number": {
-      "id": "vlogger-her-number",
-      "speaker": "her",
-      "text": { "da": "", "en": "I don't want to give out my number though." },
-      "source": "Casey Neistat [fbRpUOxqWcs] (exact: 'I don't want to give out my number though')",
-      "children": ["vlogger-exception"]
-    },
-    "vlogger-exception": {
-      "id": "vlogger-exception",
-      "speaker": "me",
-      "text": { "da": "", "en": "It's okay, you can make an exception for me, because I'm from New York." },
-      "source": "Casey Neistat [fbRpUOxqWcs] (exact: 'It's okay, you can make an exception for me, because I'm from New York')",
-      "children": ["vlogger-her-gives-number"]
-    },
-    "vlogger-her-gives-number": {
-      "id": "vlogger-her-gives-number",
-      "speaker": "her",
-      "text": { "da": "", "en": "[gives number]" },
-      "source": "Casey Neistat [fbRpUOxqWcs] (she gives Italian phone number)",
-      "children": []
-    },
-
-    "opener-sunflower-girl": {
-      "id": "opener-sunflower-girl",
-      "speaker": "me",
-      "text": { "da": "", "en": "Sunflower Girl, we're going to get boba, so you have to come with us." },
-      "source": "Pickup Motivation [wHQW1s5FzkY] (exact: 'Sunflower Girl, we're going to get boba, so you have to come with us')",
-      "children": ["sunflower-her-okay"]
-    },
-    "sunflower-her-okay": {
-      "id": "sunflower-her-okay",
-      "speaker": "her",
-      "text": { "da": "", "en": "Okay." },
-      "source": "Pickup Motivation [wHQW1s5FzkY] (exact: 'Okay')",
-      "children": []
-    },
-
-    "opener-calisthenics": {
-      "id": "opener-calisthenics",
-      "speaker": "me",
-      "text": { "da": "", "en": "Hi, I was doing some calisthenics on the beach, just wrapped up, and then I saw you, you looked very German and cute." },
-      "source": "Finnish Girl [jPHmLAZON_s] (exact: 'Hi, I was doing some calisthenics on the beach just wrapped up and then I saw you you looked very German and cute')",
-      "children": ["calisthenics-her-response"]
-    },
-    "calisthenics-her-response": {
-      "id": "calisthenics-her-response",
-      "speaker": "her",
-      "text": { "da": "", "en": "I'm not German. I'm from Finland." },
-      "source": "Finnish Girl [jPHmLAZON_s]",
-      "children": ["calisthenics-name-exchange"]
-    },
-    "calisthenics-name-exchange": {
-      "id": "calisthenics-name-exchange",
-      "speaker": "me",
-      "text": { "da": "", "en": "Are you from Helsinki? I'm here for like two weeks teaching some programs. My name's Austin by the way." },
-      "source": "Finnish Girl [jPHmLAZON_s] (exact: 'Are you from Helsinki?... I'm here for like two weeks teaching some programs. My name's Austin by the way.')",
-      "children": ["calisthenics-her-name"]
-    },
-    "calisthenics-her-name": {
-      "id": "calisthenics-her-name",
-      "speaker": "her",
-      "text": { "da": "", "en": "Linda." },
-      "source": "Finnish Girl [jPHmLAZON_s] (exact: 'Linda')",
-      "children": ["calisthenics-availability"]
-    },
-    "calisthenics-availability": {
-      "id": "calisthenics-availability",
-      "speaker": "me",
-      "text": { "da": "", "en": "What are you up to right now? Do you have a man in Finland?" },
-      "source": "Finnish Girl [jPHmLAZON_s] (exact: 'What are you up to right now?' and 'Do you have a man in Finland?')",
-      "children": ["calisthenics-her-no-man"]
-    },
-    "calisthenics-her-no-man": {
-      "id": "calisthenics-her-no-man",
-      "speaker": "her",
-      "text": { "da": "", "en": "I'm gonna go back first to find some coffee. No." },
-      "source": "Finnish Girl [jPHmLAZON_s] (exact: 'I'm gonna go back first to find some coffee' and 'No')",
-      "children": ["direct-instadate-offer"]
-    },
-
-    "opener-cosplay": {
-      "id": "opener-cosplay",
-      "speaker": "me",
-      "text": { "da": "", "en": "My spidey senses were tingling in your general direction, so hi." },
-      "source": "Comic-Con [XDZbqorwGNk] (exact: 'My spidey senses were tingling in your general direction, so hi')",
-      "children": ["cosplay-her-laughs"]
-    },
-    "cosplay-her-laughs": {
-      "id": "cosplay-her-laughs",
-      "speaker": "her",
-      "text": { "da": "", "en": "(laughs)" },
-      "source": "Comic-Con [XDZbqorwGNk]",
-      "children": ["cosplay-question"]
-    },
-    "cosplay-question": {
-      "id": "cosplay-question",
-      "speaker": "me",
-      "text": { "da": "", "en": "What superpower would you want to have in real life? Which superhero would you date and why?" },
-      "source": "Comic-Con [XDZbqorwGNk] (exact: 'What superpower would you want to have in real life, and how would you use it on a day-to-day basis?' and 'Which superhero would you date and why?')",
-      "children": []
-    },
-
-    "opener-patriotic": {
-      "id": "opener-patriotic",
-      "speaker": "me",
-      "text": { "da": "", "en": "Excuse me, I had to approach you because you seem very patriotic." },
-      "source": "Latina MILF [bzUa2cB61hU] (exact: 'Excuse me, I had to approach you because you seem very patriotic')",
-      "children": ["patriotic-her-thanks"]
-    },
-    "patriotic-her-thanks": {
-      "id": "patriotic-her-thanks",
-      "speaker": "her",
-      "text": { "da": "", "en": "Thank you." },
-      "source": "Latina MILF [bzUa2cB61hU]",
-      "children": []
-    },
-
-    "opener-two-cute": {
-      "id": "opener-two-cute",
-      "speaker": "me",
-      "text": { "da": "", "en": "You two are quite adorable. What are you guys rushing along to?" },
-      "source": "Latina MILF [bzUa2cB61hU] (exact: 'You two are quite adorable... What are you guys rushing along to?')",
-      "children": ["two-cute-her-response"]
-    },
-    "two-cute-her-response": {
-      "id": "two-cute-her-response",
-      "speaker": "her",
-      "text": { "da": "", "en": "To pee! To the bathroom." },
-      "source": "Latina MILF [bzUa2cB61hU] (exact: 'To pee. To the bathroom.')",
-      "children": ["two-cute-reframe"]
-    },
-    "two-cute-reframe": {
-      "id": "two-cute-reframe",
-      "speaker": "me",
-      "text": { "da": "", "en": "We can show you where it is, but we're not going to follow you into the bathroom, okay? You can trust us. We're leaders." },
-      "source": "Latina MILF [bzUa2cB61hU] (exact: 'We can show you where it is, but we're not going to, like, follow you into the bathroom, okay?... You can trust us. We're leaders.')",
-      "children": []
-    },
-
-    "rembrantplein-phone-opener": {
-      "id": "rembrantplein-phone-opener",
-      "speaker": "me",
-      "text": { "da": "", "en": "Hi, excuse me. It's like such a beautiful day out, but then you're like on your phone. What's going on? You like sending some business emails?" },
-      "source": "Rembrantplein [srq1OVqxX0E] (exact: 'Hi, excuse me. Hi, it's like such a beautiful day out, but then you're like on your phone. What's going on? You like sending some fucking business emails?')",
-      "children": ["rembrantplein-her-response"]
-    },
-    "rembrantplein-her-response": {
-      "id": "rembrantplein-her-response",
-      "speaker": "her",
-      "text": { "da": "", "en": "(responds)" },
-      "source": "Rembrantplein [srq1OVqxX0E]",
-      "children": ["rembrantplein-name-number"]
-    },
-    "rembrantplein-name-number": {
-      "id": "rembrantplein-name-number",
-      "speaker": "me",
-      "text": { "da": "", "en": "Okay, my name is Austin, by the way. I'm gonna take your number but you have to promise me. Are you using WhatsApp?" },
-      "source": "Rembrantplein [srq1OVqxX0E] (exact: 'Okay, my name is Austin, by the way... I'm gonna take your German number but... you have to promise me. Are you using WhatsApp?')",
-      "children": []
+    "n-390062": {
+      "id": "n-390062",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "This is the best bar club here How do you say it?"
+      },
+      "children": [
+        "n-0cce35"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-0cce35": {
+      "id": "n-0cce35",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Bling bling"
+      },
+      "children": [
+        "n-8cd0a4"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-8cd0a4": {
+      "id": "n-8cd0a4",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Oh, like rappers in the United States Bling bling And you are from Bling Bling Born here? Wow You are 22 years old?"
+      },
+      "children": [
+        "n-7d6277"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-7d6277": {
+      "id": "n-7d6277",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "23"
+      },
+      "children": [
+        "n-7248ad"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-7248ad": {
+      "id": "n-7248ad",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Wow Wow. That's a good number. And me?"
+      },
+      "children": [
+        "n-477183"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-477183": {
+      "id": "n-477183",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "23 tips."
+      },
+      "children": [
+        "n-347a3f"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-347a3f": {
+      "id": "n-347a3f",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Let's get married. Matrimonio."
+      },
+      "children": [
+        "n-2c833f"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-2c833f": {
+      "id": "n-2c833f",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Okay, where's my ring?"
+      },
+      "children": [
+        "n-d80623"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-d80623": {
+      "id": "n-d80623",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You have so much bling. If they don't let you in, you are literally like the definition of bling bling. Do you have this app called Instagram?"
+      },
+      "children": [
+        "n-1045d1"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-1045d1": {
+      "id": "n-1045d1",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yes, I have it."
+      },
+      "children": [
+        "n-0f4194"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-0f4194": {
+      "id": "n-0f4194",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Okay. I'll take your Instagram. Look at these photos."
+      },
+      "children": [
+        "n-2ff8d2"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-2ff8d2": {
+      "id": "n-2ff8d2",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Look at what?"
+      },
+      "children": [
+        "n-6ff151"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-6ff151": {
+      "id": "n-6ff151",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "What a fashionista."
+      },
+      "children": [],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-771f54": {
+      "id": "n-771f54",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Let's see if the group will stop take the mammoth down Hi, I'm the fourth friend"
+      },
+      "children": [
+        "n-0d961f"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-0d961f": {
+      "id": "n-0d961f",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "You're from England, yes"
+      },
+      "children": [
+        "n-65ce0c"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-65ce0c": {
+      "id": "n-65ce0c",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Yeah, I'm only doing this by the way because they're doing I'm using the shy one"
+      },
+      "children": [
+        "n-d6cb4d"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-d6cb4d": {
+      "id": "n-d6cb4d",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, thank you."
+      },
+      "children": [
+        "n-70dd97"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-70dd97": {
+      "id": "n-70dd97",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I'm moisturized like twice a day. I eat only organic food Last Friday was the first time that I can start working out again."
+      },
+      "children": [
+        "n-e5feba"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-e5feba": {
+      "id": "n-e5feba",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I got surgery"
+      },
+      "children": [
+        "n-8e6f03"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-8e6f03": {
+      "id": "n-8e6f03",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Please have sex with me because no I'd have to have someone like I heard it hurts the first time so I want someone like Can be gentle with me I feel like you're kind of like an aggressive lover"
+      },
+      "children": [
+        "n-0353ce"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-0353ce": {
+      "id": "n-0353ce",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, no, no, I can't do this shit."
+      },
+      "children": [
+        "n-51bedd"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-51bedd": {
+      "id": "n-51bedd",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You can't?"
+      },
+      "children": [
+        "n-d860ea"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-d860ea": {
+      "id": "n-d860ea",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "No. Oh, you bitch. You just give up."
+      },
+      "children": [
+        "n-ae3550"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-ae3550": {
+      "id": "n-ae3550",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Is this your attitude toward life?"
+      },
+      "children": [
+        "n-8e4527"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-8e4527": {
+      "id": "n-8e4527",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I have small hands. My thumb is just..."
+      },
+      "children": [
+        "n-4f9b02"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-4f9b02": {
+      "id": "n-4f9b02",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Perfect. Let's see. Oh, my God. You'd have a tiny dick if you were a guy."
+      },
+      "children": [
+        "n-6e3d9a"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-6e3d9a": {
+      "id": "n-6e3d9a",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "No, no, no. Oh, there we go."
+      },
+      "children": [
+        "n-ac561e"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-ac561e": {
+      "id": "n-ac561e",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Now we're seeing some strength."
+      },
+      "children": [
+        "n-3454e7"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-3454e7": {
+      "id": "n-3454e7",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Just because your hands are small."
+      },
+      "children": [
+        "n-2f7c62"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-2f7c62": {
+      "id": "n-2f7c62",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "See, the way that you give up in this game makes me think that you're submissive."
+      },
+      "children": [
+        "n-c285d4"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-c285d4": {
+      "id": "n-c285d4",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Which is not a bad thing. I'm not going to tell you everything."
+      },
+      "children": [
+        "n-3184cf"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-3184cf": {
+      "id": "n-3184cf",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Femininity and submissiveness is a strength for women. You can get literally anything you want with that"
+      },
+      "children": [
+        "n-b7cc25"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-b7cc25": {
+      "id": "n-b7cc25",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "This just seems like you're trying to side with me to win me over and pretend that you're really nice when you give a shit You know"
+      },
+      "children": [
+        "n-b01af6"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-b01af6": {
+      "id": "n-b01af6",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Yes, damn you you play 3d chess. This is like chess not checkers But just read this there's like checkers chess and then you're like up here through like 4d chess"
+      },
+      "children": [
+        "n-876f47"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-876f47": {
+      "id": "n-876f47",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I think I know what you guys do. Are you all recording? You're like chirps it basically"
+      },
+      "children": [
+        "n-163f22"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-163f22": {
+      "id": "n-163f22",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Subscribe to my channel."
+      },
+      "children": [
+        "n-eb39bc"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-eb39bc": {
+      "id": "n-eb39bc",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "You know what?"
+      },
+      "children": [
+        "n-3fe936"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-3fe936": {
+      "id": "n-3fe936",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You're so curious."
+      },
+      "children": [
+        "n-c1cf42"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-c1cf42": {
+      "id": "n-c1cf42",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Here you go. Here you go."
+      },
+      "children": [
+        "n-28587f"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-28587f": {
+      "id": "n-28587f",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You want the channel? You got the channel. You wore me down, okay?"
+      },
+      "children": [],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-961b76": {
+      "id": "n-961b76",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Walking by with a friend and I saw you in your dress and I thought I had to come and say hi to you. You guys are shopping? Okay where are you from?"
+      },
+      "children": [
+        "n-b92839"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-b92839": {
+      "id": "n-b92839",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Turkey."
+      },
+      "children": [
+        "n-6273a6"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-6273a6": {
+      "id": "n-6273a6",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Oh I've been to Turkey. Sorry, I'm late. The bus was — it was delayed by, like, three minutes. But yeah, hi! Austin! Turkey? okay sweatshirts I'm from Florida you know Florida you know Miami have you been let's go we got we have we can make a flight do you have do you have this app called Instagram okay we should be best friends on Instagram I'll visit you"
+      },
+      "children": [
+        "n-239cbb"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-239cbb": {
+      "id": "n-239cbb",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "when I'm in Turkey when I'm in Turkey we'll get married we'll have 14 children"
+      },
+      "children": [
+        "n-17764b"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-17764b": {
+      "id": "n-17764b",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "yeah and wife one of my wives how many husbands would you want three that's reasonable okay three husbands three wives very fair shake what do you look like without the glasses imagine i just leave you like this no i lost one of my husbands i only have two husbands yes like you look very asian you look korean japanese what does your tattoo say very interesting like people they seem scary you know what i mean i'm confused it's from the less miserable this is uh in french so that's sun but it's like oh man nights if you're if you can do that it's so nice yeah i don't know yeah i give up who cares who cares you're only one of my three wives it doesn't even matter so do you have another one right yes i don't know what to do"
+      },
+      "children": [
+        "n-74af15"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-74af15": {
+      "id": "n-74af15",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "It's my grandfather's."
+      },
+      "children": [
+        "n-942aa8"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-942aa8": {
+      "id": "n-942aa8",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Two I can see and then four I'll see later. They're hidden."
+      },
+      "children": [
+        "n-28da7e"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-28da7e": {
+      "id": "n-28da7e",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "No, you can't see them now."
+      },
+      "children": [
+        "n-77305d"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-77305d": {
+      "id": "n-77305d",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Oh, okay."
+      },
+      "children": [
+        "n-33b675"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-33b675": {
+      "id": "n-33b675",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "They express your South English all the time. Well, you know what they say."
+      },
+      "children": [
+        "n-c29fe7"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-c29fe7": {
+      "id": "n-c29fe7",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "The best way to learn a language is with private, one-on-one lessons with a native speaker. And I'm a native speaker."
+      },
+      "children": [
+        "n-8e528e"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-8e528e": {
+      "id": "n-8e528e",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Okay, then we need to talk like Hojun talk every day. Yes. Okay."
+      },
+      "children": [
+        "n-e82565"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-e82565": {
+      "id": "n-e82565",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I've also heard that the second best way is pillow talk with a with a boyfriend girlfriend you just always talking together and you you learn okay I have a new plan I have a new plan this is my plan tonight we have fun and we go out after dinner because we're gonna eat with our friends you eat with your friends and then we'll get all beautiful I'll put on a beautiful dress for you for the night okay yeah and then we go out and we enjoy barcelona because it's our last night"
+      },
+      "children": [
+        "n-bacb48"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-bacb48": {
+      "id": "n-bacb48",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "okay"
+      },
+      "children": [
+        "n-534765"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-534765": {
+      "id": "n-534765",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "i know i like that plan though that sounds good sounds good all right boom okay have a good one"
+      },
+      "children": [],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-bd885c": {
+      "id": "n-bd885c",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "sorry I know it's routine no no I saw you you're very cute and I had to meet you and say hi what's your name"
+      },
+      "children": [
+        "n-b5e60a"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-b5e60a": {
+      "id": "n-b5e60a",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "But I'm in a bit of a rush, so..."
+      },
+      "children": [
+        "n-6b4481"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-6b4481": {
+      "id": "n-6b4481",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Where are you headed?"
+      },
+      "children": [
+        "n-88b151"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-88b151": {
+      "id": "n-88b151",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "To a sonar festival."
+      },
+      "children": [
+        "n-248ede"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-248ede": {
+      "id": "n-248ede",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "To a festival?"
+      },
+      "children": [
+        "n-579f7c"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-579f7c": {
+      "id": "n-579f7c",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah."
+      },
+      "children": [
+        "n-7d57db"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-7d57db": {
+      "id": "n-7d57db",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "What is it, like a music festival?"
+      },
+      "children": [
+        "n-53a97d"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-53a97d": {
+      "id": "n-53a97d",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah."
+      },
+      "children": [
+        "n-ecad5e"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-ecad5e": {
+      "id": "n-ecad5e",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Awesome. You live around here?"
+      },
+      "children": [
+        "n-c247fb"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-c247fb": {
+      "id": "n-c247fb",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah."
+      },
+      "children": [
+        "n-8a3699"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-8a3699": {
+      "id": "n-8a3699",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "So, you're headed this way?"
+      },
+      "children": [
+        "n-707166"
+      ],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-707166": {
+      "id": "n-707166",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah. I have two friends."
+      },
+      "children": [],
+      "source": "Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]"
+    },
+    "n-a60862": {
+      "id": "n-a60862",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Do it! Hey, hey, go, go, go, go, go, go, go, go! Mission Impossible! Let me know if I'm too crazy. I stayed up all night long, yeah. I just thought you were adorable as you're walking toward me, and I was like, this girl seems cool. No, I actually got it on Craigslist for forty dollars. What are you up to right now? I'm waiting for a friend. Oh, okay, you guys are gonna go like eat or something, um."
+      },
+      "children": [
+        "n-1ca3e6"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-1ca3e6": {
+      "id": "n-1ca3e6",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Are you gonna get wasted? Are you married? I have a boyfriend. You do have a boyfriend?"
+      },
+      "children": [
+        "n-7545c9"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-7545c9": {
+      "id": "n-7545c9",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Damn it. Is, is it like a very serious kind of monogamous type of thing?"
+      },
+      "children": [
+        "n-106f71"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-106f71": {
+      "id": "n-106f71",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I'm serious, I'm serious, yeah."
+      },
+      "children": [
+        "n-a1830f"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-a1830f": {
+      "id": "n-a1830f",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Well, I don't want to keep rolling forever, but do you like, what do you like better, coffee or tea?"
+      },
+      "children": [
+        "n-cd6578"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-cd6578": {
+      "id": "n-cd6578",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Tea. I'm going to Eaton Center."
+      },
+      "children": [
+        "n-891555"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-891555": {
+      "id": "n-891555",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Why?"
+      },
+      "children": [
+        "n-21e379"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-21e379": {
+      "id": "n-21e379",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I need to get something. Are you one of those pickup artists I've heard about?"
+      },
+      "children": [
+        "n-6c05f1"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-6c05f1": {
+      "id": "n-6c05f1",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Oh yeah, that's me."
+      },
+      "children": [],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-a11d75": {
+      "id": "n-a11d75",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I just happened to be rolling by. I just happened to be rolling by and I noticed you. Noticing me."
+      },
+      "children": [
+        "n-6cdd62"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-6cdd62": {
+      "id": "n-6cdd62",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Well, I noticed you guys too."
+      },
+      "children": [
+        "n-ff9b3d"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-ff9b3d": {
+      "id": "n-ff9b3d",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "And I happened to be noticing that you noticed me as well. Yeah, what's your name?"
+      },
+      "children": [
+        "n-ca9043"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-ca9043": {
+      "id": "n-ca9043",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Why are you rolling?"
+      },
+      "children": [
+        "n-eaeea1"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-eaeea1": {
+      "id": "n-eaeea1",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You're causing a lot of trouble. Jesus, you have some massive hands. Do you play basketball?"
+      },
+      "children": [
+        "n-492677"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-492677": {
+      "id": "n-492677",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Massive hands."
+      },
+      "children": [
+        "n-879e5f"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-879e5f": {
+      "id": "n-879e5f",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Do you guys need a picture? Come on a coffee date with me right now."
+      },
+      "children": [
+        "n-477da0"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-477da0": {
+      "id": "n-477da0",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "It is 1.30! What are you talking about coffee?"
+      },
+      "children": [
+        "n-7e45f5"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-7e45f5": {
+      "id": "n-7e45f5",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Coffee, let's get it. I did it cause it looks like it's real natural. It looks like spontaneous."
+      },
+      "children": [
+        "n-868611"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-868611": {
+      "id": "n-868611",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Exactly. Okay, what is your number?"
+      },
+      "children": [
+        "n-db5bad"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-db5bad": {
+      "id": "n-db5bad",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Just punch it in. It was nice to meet you."
+      },
+      "children": [
+        "n-cc7e39"
+      ],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-cc7e39": {
+      "id": "n-cc7e39",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Thank you. Me too."
+      },
+      "children": [],
+      "source": "Picking Up Girls in a Wheelchair [n0smMRCqVmc]"
+    },
+    "n-b95799": {
+      "id": "n-b95799",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Day going today? I'm good, pretty well to be honest. My user experience improved significantly after Meeting you. Could you help me debug something real quick? When you walked by, my heart rate just Spiked and I was like, what's going on? And then I was like, oh, it's probably because you're cute. And I want to meet you. I was just heading to a hackathon over there. I saw you, you looked pretty Adorable. Do you study? I'm gonna guess you study pre-med. Exercise science, nice! Ah, so you don't Skip leg day. Me neither. I'm a back-end developer myself. Are you engineering? No, I... I don't go to School actually. I dropped out when I was 19 because it was just getting in the way of my Career, you know? What do I do for work? I'm actually a coder at Duolingo right now. I'm a software Developer for Bumble. I created Uber for dogs. So I was a penetration tester at Google. I don't want To go into it too much since we just met, but some other time I'll teach you about penetration"
+      },
+      "children": [
+        "n-704acf"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-704acf": {
+      "id": "n-704acf",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Testing. I used to code for Netflix actually. Really? Yeah, I got fired from there though. Why?"
+      },
+      "children": [
+        "n-46d36b"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-46d36b": {
+      "id": "n-46d36b",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "My girlfriend at the time, we used to like send each other stupid shit. I scanned my butt and Sent it to her. I thought I sent it to my girlfriend, but I sent it to like my entire division. So like Like 300 tech guys saw my ass. Yeah, what doesn't kill you makes you stronger though right yeah with our looks and intelligence we could create the next great tech company on Thursday I'm flying to Switzerland I'm being granted my Turing award yeah for parallel processing where's the next place you"
+      },
+      "children": [
+        "n-fcae1b"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-fcae1b": {
+      "id": "n-fcae1b",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "want to go what are you doing tomorrow"
+      },
+      "children": [
+        "n-2e8bad"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-2e8bad": {
+      "id": "n-2e8bad",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Tomorrow."
+      },
+      "children": [
+        "n-181fa3"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-181fa3": {
+      "id": "n-181fa3",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Studying probably."
+      },
+      "children": [
+        "n-3823ee"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-3823ee": {
+      "id": "n-3823ee",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I'll just hack into the school's system and I'll put your attendance that you were in the class. Sound good? Boom, then I'll just generate some tickets for us and then we can like get first class tickets. Just hack into the American Airlines and then boom."
+      },
+      "children": [
+        "n-4e4137"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-4e4137": {
+      "id": "n-4e4137",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Hack into the mainframe. Yeah. Hit the firewall, you know, you're in."
+      },
+      "children": [
+        "n-51e929"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-51e929": {
+      "id": "n-51e929",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Yeah, I mean if you keep talking like that you're gonna breach my heart's firewall."
+      },
+      "children": [
+        "n-d82559"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-d82559": {
+      "id": "n-d82559",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh my god."
+      },
+      "children": [],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-2086b4": {
+      "id": "n-2086b4",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Excuse me. I just want to say you're super adorable."
+      },
+      "children": [
+        "n-c50038"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-c50038": {
+      "id": "n-c50038",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, thank you."
+      },
+      "children": [
+        "n-c3639a"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-c3639a": {
+      "id": "n-c3639a",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I don't want to interrupt your whole race because I know you're in the middle one, but do you have a number?"
+      },
+      "children": [
+        "n-efa43c"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-efa43c": {
+      "id": "n-efa43c",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I have a boyfriend. I'm sorry."
+      },
+      "children": [
+        "n-80b959"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-80b959": {
+      "id": "n-80b959",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "How many languages can you code in?"
+      },
+      "children": [
+        "n-05e0d7"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-05e0d7": {
+      "id": "n-05e0d7",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "That's a really good question. I don't think any."
+      },
+      "children": [
+        "n-3aa686"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-3aa686": {
+      "id": "n-3aa686",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Well, if you're not dating a guy who can code during the singularity, you're setting yourself up for failure. Alright, what's your number?"
+      },
+      "children": [
+        "n-889d4f"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-889d4f": {
+      "id": "n-889d4f",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "727."
+      },
+      "children": [
+        "n-ae2b7a"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-ae2b7a": {
+      "id": "n-ae2b7a",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Access granted."
+      },
+      "children": [],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-391d5d": {
+      "id": "n-391d5d",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Let me guess, you have a man in your life?"
+      },
+      "children": [
+        "n-9645a6"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-9645a6": {
+      "id": "n-9645a6",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I do. I do. I'm sorry."
+      },
+      "children": [
+        "n-de998d"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-de998d": {
+      "id": "n-de998d",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "What's his typing speed? Like how many words a minute can he finger?"
+      },
+      "children": [
+        "n-50fa0d"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-50fa0d": {
+      "id": "n-50fa0d",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I have no idea."
+      },
+      "children": [
+        "n-e84e79"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-e84e79": {
+      "id": "n-e84e79",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I mean, then what are we even talking about here? I've got 157 words a minute."
+      },
+      "children": [
+        "n-01a95e"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-01a95e": {
+      "id": "n-01a95e",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I have a boyfriend."
+      },
+      "children": [
+        "n-86daed"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-86daed": {
+      "id": "n-86daed",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Friend, no worries. I'm not here to execute a man-in-the-middle attack on a two-node network. I just Wanted to grab your Instagram, and then when the photos of him disappear, then I'll know it's time To loop back into your DMs. I don't think they're gonna disappear. Are you gonna marry this man? I Think so. Nice. Well, when you have kids, I actually wrote a line of baby books. What are they called? Blockchain for Babies. Quantum Computing for Babies. But I think the one that I'm most known for is is advanced driver assistance systems and autonomous vehicles for babies."
+      },
+      "children": [
+        "n-5b7842"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-5b7842": {
+      "id": "n-5b7842",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, that's cool."
+      },
+      "children": [
+        "n-367b7a"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-367b7a": {
+      "id": "n-367b7a",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "It's a little advanced, but like for the right, you seem smart, so for the right baby, it does wonders, right? It really propels their growth."
+      },
+      "children": [
+        "n-98cdc1"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-98cdc1": {
+      "id": "n-98cdc1",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "You're pretty smart then, I guess. Yeah."
+      },
+      "children": [
+        "n-65d7ad"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-65d7ad": {
+      "id": "n-65d7ad",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You could probably handle some Python."
+      },
+      "children": [
+        "n-4e40f2"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-4e40f2": {
+      "id": "n-4e40f2",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "What is that?"
+      },
+      "children": [
+        "n-bf71a2"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-bf71a2": {
+      "id": "n-bf71a2",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "There's a lot of coding languages, but there's only one universal language. You know what it is? It's body language. Love is kind of like data transfer. So you have your ups, you have your downs, but like the most important thing is a stable connection. I'd love to give this conversation more runtime, but you do have to go to class. I have a scrum meeting in like 10 minutes. So I'll just, I'll grab your number. We could code and chill sometime."
+      },
+      "children": [
+        "n-52b68e"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-52b68e": {
+      "id": "n-52b68e",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, yeah, of course, of course."
+      },
+      "children": [
+        "n-004af5"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-004af5": {
+      "id": "n-004af5",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Give me an approximate window of when you're free, but use Unix time."
+      },
+      "children": [],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-a5f7c8": {
+      "id": "n-a5f7c8",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "It sounds like your user experience is going well right now. So I'll grab your... I'll grab your number and then I'll shoot you a message. Maybe we can play Mario Kart at this cafe near me. Has like 1,253 positive reviews. And get this, the Wi-Fi: 200 up and down."
+      },
+      "children": [
+        "n-fa2a87"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-fa2a87": {
+      "id": "n-fa2a87",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "It's like super fast. Oh, Mario Kart? I'm so down! Okay, I'm gonna kick your ass in Mario Kart. Oh"
+      },
+      "children": [
+        "n-09f8db"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-09f8db": {
+      "id": "n-09f8db",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Yeah, yeah. Do you have a man in your life? No? No? Perfect. Uh, I'll just mark down your number. You just tell it to me. I've got enough RAM to remember all the important details. Okay? Okay, Just tell it to me and I'll text you later. Okay. 724. 724. 863. 863. 845. 845. 407. 407. Do you have Instagram? Okay, I'll get Instagram too, just for quality assurance. Make sure you're not crazy."
+      },
+      "children": [
+        "n-3946b9"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-3946b9": {
+      "id": "n-3946b9",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, sure. You're not a weirdo? Yeah, to hack in and see if I am real or not. You know what's funny?"
+      },
+      "children": [
+        "n-b9d89d"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-b9d89d": {
+      "id": "n-b9d89d",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "It's funny, you look like this AI-generated model."
+      },
+      "children": [
+        "n-9d727d"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-9d727d": {
+      "id": "n-9d727d",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, no, that's not me, no, no, I'm real."
+      },
+      "children": [
+        "n-7a997e"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-7a997e": {
+      "id": "n-7a997e",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Prove it, prove it, let me see. You're very lifelike, I must say."
+      },
+      "children": [
+        "n-1da85e"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-1da85e": {
+      "id": "n-1da85e",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, he worked really hard, I mean."
+      },
+      "children": [
+        "n-7b5385"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-7b5385": {
+      "id": "n-7b5385",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Did you see the other day when Facebook and Instagram servers went down?"
+      },
+      "children": [
+        "n-2852d8"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-2852d8": {
+      "id": "n-2852d8",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I heard about it, I know people lost their shit."
+      },
+      "children": [
+        "n-2bdac4"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-2bdac4": {
+      "id": "n-2bdac4",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Yeah, my servers never go down, but I do."
+      },
+      "children": [
+        "n-f8d3bd"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-f8d3bd": {
+      "id": "n-f8d3bd",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh my God."
+      },
+      "children": [
+        "n-236fd2"
+      ],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-236fd2": {
+      "id": "n-236fd2",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Are you into coding too, or no? No, no, not a techie. No, no, definitely not. Damn. Well, unfortunately your skills aren't quite the Match that I'm looking for, so I'm gonna move forward with other candidates, but I do appreciate"
+      },
+      "children": [],
+      "source": "Software Developer Picks Up Girls [x2kk9HoXjnI]"
+    },
+    "n-4063ae": {
+      "id": "n-4063ae",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Excuse me. Hi. Question. What did the Swede say to the Norwegian at the breakfast table? Ice is broken. Let me help you. I am strong. I help. I'm the number one defenseman in Sweden. You can call me Austin Carson. You are very pretty, like the Sunspouts fjord in the summer months in Sweden. Have you ever been?"
+      },
+      "children": [
+        "n-41bc86"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-41bc86": {
+      "id": "n-41bc86",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "No. Why are you wearing a uniform?"
+      },
+      "children": [
+        "n-f35836"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-f35836": {
+      "id": "n-f35836",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I have a friendly match with the Canadians tomorrow but I'm not very friendly on the ice you know. Let me know if I'm too forward. My ancestors were Vikings so I I tend to be a little bit aggressive."
+      },
+      "children": [
+        "n-548b85"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-548b85": {
+      "id": "n-548b85",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "That's okay. I'm actually Swedish, so..."
+      },
+      "children": [
+        "n-87b580"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-87b580": {
+      "id": "n-87b580",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "My mother in Sweden, she works at Volvo. She's a safety specialist. She always says, safety first, Austin! But to be honest, I don't even like to use condoms. Oh, I got a text."
+      },
+      "children": [
+        "n-d8a589"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-d8a589": {
+      "id": "n-d8a589",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Well, it was nice talking to you."
+      },
+      "children": [
+        "n-6c70d0"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-6c70d0": {
+      "id": "n-6c70d0",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Ciao."
+      },
+      "children": [],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-66fd45": {
+      "id": "n-66fd45",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Do you want some herring?"
+      },
+      "children": [
+        "n-9f9947"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-9f9947": {
+      "id": "n-9f9947",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I'm good, thank you. But what is that?"
+      },
+      "children": [
+        "n-cc48b7"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-cc48b7": {
+      "id": "n-cc48b7",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "It's fish."
+      },
+      "children": [
+        "n-bf30f8"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-bf30f8": {
+      "id": "n-bf30f8",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "No way!"
+      },
+      "children": [
+        "n-e04ea7"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-e04ea7": {
+      "id": "n-e04ea7",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Yeah, it's fish in a jar."
+      },
+      "children": [
+        "n-e72931"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-e72931": {
+      "id": "n-e72931",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I love fish."
+      },
+      "children": [
+        "n-3df443"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-3df443": {
+      "id": "n-3df443",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Try. It's pickles."
+      },
+      "children": [
+        "n-7eed7c"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-7eed7c": {
+      "id": "n-7eed7c",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "No, I'm honestly okay."
+      },
+      "children": [
+        "n-730b87"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-730b87": {
+      "id": "n-730b87",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Take your bite."
+      },
+      "children": [
+        "n-20c800"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-20c800": {
+      "id": "n-20c800",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, I wouldn't be able to. It's good. Weak stomach. I can't do it. Oh, it looks so weird though."
+      },
+      "children": [
+        "n-ad198d"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-ad198d": {
+      "id": "n-ad198d",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "The melody is very different in Swedish. Yeah, we talk like this. Yo elska dej. Yo elska dej. It means I love you."
+      },
+      "children": [
+        "n-0ac500"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-0ac500": {
+      "id": "n-0ac500",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I never watch a hockey game."
+      },
+      "children": [
+        "n-75d199"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-75d199": {
+      "id": "n-75d199",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Really?"
+      },
+      "children": [
+        "n-70c055"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-70c055": {
+      "id": "n-70c055",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, I've been here for years. I always think that one day I would go to a hockey game. It never happened."
+      },
+      "children": [
+        "n-03ae84"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-03ae84": {
+      "id": "n-03ae84",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Maybe today is the day."
+      },
+      "children": [
+        "n-245934"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-245934": {
+      "id": "n-245934",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Very good chatter."
+      },
+      "children": [
+        "n-1e24b3"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-1e24b3": {
+      "id": "n-1e24b3",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I'm a good chatter?"
+      },
+      "children": [
+        "n-7537db"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-7537db": {
+      "id": "n-7537db",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah."
+      },
+      "children": [
+        "n-22824b"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-22824b": {
+      "id": "n-22824b",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Thank you. The IKEA manual. I should, uh, write on how to talk to girls, shouldn't I? Oh no, I think you're writing"
+      },
+      "children": [
+        "n-10155b"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-10155b": {
+      "id": "n-10155b",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Books. I think you should wipe her out quickly. She's only been single for, like, not even a day."
+      },
+      "children": [
+        "n-a92dec"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-a92dec": {
+      "id": "n-a92dec",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Oh, really? Yeah, see, we can go dancing, we can go walking, as long as we're together. Listen to some music, maybe just talking, I know you better. Do you know Snapchat? You know in Sweden 20% of all traffic accidents are caused by moose. I will expand your consciousness into the Swedish delights, lingonberries, mulled wine, köttbullar."
+      },
+      "children": [
+        "n-24476a"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-24476a": {
+      "id": "n-24476a",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I actually have a boyfriend."
+      },
+      "children": [
+        "n-79dbbe"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-79dbbe": {
+      "id": "n-79dbbe",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Just because there's a goalie doesn't mean you can't score. Unless he's Lundqvist. Lundqvist stops all the shots. Do you have a boyfriend?"
+      },
+      "children": [
+        "n-8e9492"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-8e9492": {
+      "id": "n-8e9492",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I wouldn't call him a boyfriend. I don't want to be serious with anything right now."
+      },
+      "children": [
+        "n-f8883f"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-f8883f": {
+      "id": "n-f8883f",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Even if he was, I'd take two minutes in the penalty box for cheating. Let me grab your number."
+      },
+      "children": [
+        "n-6db072"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-6db072": {
+      "id": "n-6db072",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "You seem cool."
+      },
+      "children": [
+        "n-43be60"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-43be60": {
+      "id": "n-43be60",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Later we'll go skating on a lake."
+      },
+      "children": [
+        "n-f201ef"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-f201ef": {
+      "id": "n-f201ef",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "We could do that."
+      },
+      "children": [
+        "n-7c6a22"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-7c6a22": {
+      "id": "n-7c6a22",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You have skates?"
+      },
+      "children": [
+        "n-f22982"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-f22982": {
+      "id": "n-f22982",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I don't, but you can rent them."
+      },
+      "children": [
+        "n-d06a29"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-d06a29": {
+      "id": "n-d06a29",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "We'll save it as Austin Carlson, number one defenseman in Sweden. My love."
+      },
+      "children": [
+        "n-617d68"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-617d68": {
+      "id": "n-617d68",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "8-4-7. 8-0-4."
+      },
+      "children": [
+        "n-304b78"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-304b78": {
+      "id": "n-304b78",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "8-0-4. And what is..."
+      },
+      "children": [
+        "n-31a0ea"
+      ],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
+    },
+    "n-31a0ea": {
+      "id": "n-31a0ea",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "6-4-7. Carlsen!"
+      },
+      "children": [],
+      "source": "Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]"
     }
   },
-  "createdAt": "2026-03-04T12:00:00Z",
-  "updatedAt": "2026-03-04T18:00:00Z"
+  "createdAt": "2026-03-05T00:00:00.000Z",
+  "updatedAt": "2026-03-05T00:00:00.000Z"
 }

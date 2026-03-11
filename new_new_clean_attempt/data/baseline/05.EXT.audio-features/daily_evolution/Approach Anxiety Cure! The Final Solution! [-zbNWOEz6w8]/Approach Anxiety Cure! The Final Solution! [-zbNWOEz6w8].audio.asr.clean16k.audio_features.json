@@ -1,0 +1,5615 @@
+{
+  "source_audio": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+  "audio_sha256": "86025d75bc47efb9c7f061ab4fc70468dbcfe2053a74476ad3095eae0b5bf7a5",
+  "source_timestamps": "/home/jonaswsl/projects/daygame-coach/data/04.EXT.diarize/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].full.json",
+  "processing": {
+    "sample_rate": 22050,
+    "feature_extractor": "librosa",
+    "pitch_range_hz": [
+      65.0,
+      500.0
+    ],
+    "pitch_method": "pyin",
+    "pitch_trim_percentile": 2.0,
+    "embedder": "resemblyzer",
+    "embedder_sample_rate": 16000,
+    "min_embed_raw_sec": 0.8,
+    "min_embed_window_sec": 1.2,
+    "embed_pad_sec": 0.25,
+    "store_embedding_vectors": false
+  },
+  "total_duration_sec": 489.734,
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 1.521,
+      "duration_sec": 1.521,
+      "text": "What?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 76.97395324707031,
+          "std_hz": 7.407237529754639,
+          "range_hz": 17.94982147216797,
+          "direction": -0.5635606220790321
+        },
+        "energy": {
+          "dynamics_db": 18.76180076599121
+        },
+        "tempo": {
+          "syllable_rate": 7.889546351084813
+        },
+        "spectral": {
+          "brightness_hz": 844.6982750704668
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8181818181818182
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 0.0,
+        "end": 1.521
+      }
+    },
+    {
+      "start": 1.541,
+      "end": 2.454,
+      "duration_sec": 0.913,
+      "text": "Approach anxiety.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 230.08477783203125,
+          "std_hz": 14.48249626159668,
+          "range_hz": 45.04071044921875,
+          "direction": -2.0762440376130953
+        },
+        "energy": {
+          "dynamics_db": 5.783416748046875
+        },
+        "tempo": {
+          "syllable_rate": 8.76232201533406
+        },
+        "spectral": {
+          "brightness_hz": 1082.8508778125556
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 1.541,
+        "end": 2.454
+      }
+    },
+    {
+      "start": 2.474,
+      "end": 2.92,
+      "duration_sec": 0.446,
+      "text": "Who struggles with it?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 222.2043914794922,
+          "std_hz": 1.705173373222351,
+          "range_hz": 5.1399078369140625,
+          "direction": -0.8247517177036672
+        },
+        "energy": {
+          "dynamics_db": 4.143324851989746
+        },
+        "tempo": {
+          "syllable_rate": 6.726457399103143
+        },
+        "spectral": {
+          "brightness_hz": 811.4101267771473
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 2.474,
+        "end": 2.92
+      }
+    },
+    {
+      "start": 3.94,
+      "end": 4.741,
+      "duration_sec": 0.801,
+      "text": "Day game?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 81.12674713134766,
+          "std_hz": 6.728393077850342,
+          "range_hz": 14.390060424804688,
+          "direction": 0.8103783248306863
+        },
+        "energy": {
+          "dynamics_db": 2.061966896057129
+        },
+        "tempo": {
+          "syllable_rate": 7.4906367041198525
+        },
+        "spectral": {
+          "brightness_hz": 709.9381016549733
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 3.94,
+        "end": 4.741
+      }
+    },
+    {
+      "start": 4.8,
+      "end": 6.127,
+      "duration_sec": 1.327,
+      "text": "Everyone, right?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 216.55458068847656,
+          "std_hz": 14.555595397949219,
+          "range_hz": 53.66273498535156,
+          "direction": -0.6307767167050622
+        },
+        "energy": {
+          "dynamics_db": 3.806107521057129
+        },
+        "tempo": {
+          "syllable_rate": 5.275056518462698
+        },
+        "spectral": {
+          "brightness_hz": 984.4911868570581
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 4.8,
+        "end": 6.127
+      }
+    },
+    {
+      "start": 6.168,
+      "end": 6.78,
+      "duration_sec": 0.612,
+      "text": "That's just like a thing.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 224.94065856933594,
+          "std_hz": 11.26821517944336,
+          "range_hz": 34.02459716796875,
+          "direction": -0.2816353973115119
+        },
+        "energy": {
+          "dynamics_db": 3.494929313659668
+        },
+        "tempo": {
+          "syllable_rate": 9.80392156862745
+        },
+        "spectral": {
+          "brightness_hz": 1123.7253547477155
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 6.168,
+        "end": 6.78
+      }
+    },
+    {
+      "start": 6.94,
+      "end": 7.736,
+      "duration_sec": 0.796,
+      "text": "Not you.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 245.65968322753906,
+          "std_hz": 14.906905174255371,
+          "range_hz": 42.87309265136719,
+          "direction": -0.899991790793543
+        },
+        "energy": {
+          "dynamics_db": 4.384150505065918
+        },
+        "tempo": {
+          "syllable_rate": 6.281407035175884
+        },
+        "spectral": {
+          "brightness_hz": 1239.3255552650191
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 6.94,
+        "end": 7.736
+      }
+    },
+    {
+      "start": 8.144,
+      "end": 8.98,
+      "duration_sec": 0.836,
+      "text": "You look confident.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 3.443754196166992
+        },
+        "tempo": {
+          "syllable_rate": 4.784688995215309
+        },
+        "spectral": {
+          "brightness_hz": 891.5717837233719
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 8.144,
+        "end": 8.98
+      }
+    },
+    {
+      "start": 9.22,
+      "end": 10.801,
+      "duration_sec": 1.581,
+      "text": "You look fucking confident.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 4.555414199829102
+        },
+        "tempo": {
+          "syllable_rate": 5.69259962049336
+        },
+        "spectral": {
+          "brightness_hz": 631.4137340958275
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9420289855072463
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 9.22,
+        "end": 10.801
+      }
+    },
+    {
+      "start": 10.98,
+      "end": 11.821,
+      "duration_sec": 0.841,
+      "text": "No more AA.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 80.55413818359375,
+          "std_hz": 14.898327827453613,
+          "range_hz": 40.592811584472656,
+          "direction": 2.424835934358484
+        },
+        "energy": {
+          "dynamics_db": 2.6779909133911133
+        },
+        "tempo": {
+          "syllable_rate": 9.512485136741981
+        },
+        "spectral": {
+          "brightness_hz": 610.6026438111493
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 10.98,
+        "end": 11.821
+      }
+    },
+    {
+      "start": 12.12,
+      "end": 13.161,
+      "duration_sec": 1.041,
+      "text": "No more AA.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 73.62630462646484,
+          "std_hz": 0.3851964771747589,
+          "range_hz": 0.8526687622070312,
+          "direction": -0.02201598031180651
+        },
+        "energy": {
+          "dynamics_db": 3.2584476470947266
+        },
+        "tempo": {
+          "syllable_rate": 7.684918347742553
+        },
+        "spectral": {
+          "brightness_hz": 669.590665905755
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 12.12,
+        "end": 13.161
+      }
+    },
+    {
+      "start": 13.42,
+      "end": 15.14,
+      "duration_sec": 1.72,
+      "text": "Only when I hesitate.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 3.3030738830566406
+        },
+        "tempo": {
+          "syllable_rate": 8.139534883720927
+        },
+        "spectral": {
+          "brightness_hz": 778.6643789704074
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9866666666666667
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 13.42,
+        "end": 15.14
+      }
+    },
+    {
+      "start": 16.24,
+      "end": 17.761,
+      "duration_sec": 1.521,
+      "text": "Hesitation will get you killed.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 237.94503784179688,
+          "std_hz": 20.56177520751953,
+          "range_hz": 51.83543395996094,
+          "direction": -4.366098964915559
+        },
+        "energy": {
+          "dynamics_db": 5.057862281799316
+        },
+        "tempo": {
+          "syllable_rate": 9.204470742932276
+        },
+        "spectral": {
+          "brightness_hz": 1109.4688833015027
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 16.24,
+        "end": 17.761
+      }
+    },
+    {
+      "start": 18.28,
+      "end": 19.561,
+      "duration_sec": 1.281,
+      "text": "Paralysis by analysis.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 222.21707153320312,
+          "std_hz": 12.29528522491455,
+          "range_hz": 38.28953552246094,
+          "direction": -0.1675270856625577
+        },
+        "energy": {
+          "dynamics_db": 5.1837310791015625
+        },
+        "tempo": {
+          "syllable_rate": 7.025761124121787
+        },
+        "spectral": {
+          "brightness_hz": 1106.7720851112538
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 18.28,
+        "end": 19.561
+      }
+    },
+    {
+      "start": 20.14,
+      "end": 23.12,
+      "duration_sec": 2.98,
+      "text": "Overthinking and getting paralyzed by your overthinking.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 237.92694091796875,
+          "std_hz": 26.691986083984375,
+          "range_hz": 80.21580505371094,
+          "direction": 0.2198842243957491
+        },
+        "energy": {
+          "dynamics_db": 4.9496965408325195
+        },
+        "tempo": {
+          "syllable_rate": 7.046979865771811
+        },
+        "spectral": {
+          "brightness_hz": 978.1128336518419
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 20.14,
+        "end": 23.12
+      }
+    },
+    {
+      "start": 23.7,
+      "end": 28.6,
+      "duration_sec": 4.9,
+      "text": "Focusing on what could potentially go wrong as opposed to what could go right.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 239.48611450195312,
+          "std_hz": 17.772001266479492,
+          "range_hz": 64.42839050292969,
+          "direction": -0.16854551335653686
+        },
+        "energy": {
+          "dynamics_db": 4.931338310241699
+        },
+        "tempo": {
+          "syllable_rate": 6.938775510204079
+        },
+        "spectral": {
+          "brightness_hz": 1039.2396120827084
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 23.7,
+        "end": 28.6
+      }
+    },
+    {
+      "start": 28.58,
+      "end": 33.14,
+      "duration_sec": 4.56,
+      "text": "so first when I talk about approach anxiety I like to talk about like the",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 240.4265594482422,
+          "std_hz": 19.51802635192871,
+          "range_hz": 80.93048095703125,
+          "direction": -0.040548166975609666
+        },
+        "energy": {
+          "dynamics_db": 4.583504676818848
+        },
+        "tempo": {
+          "syllable_rate": 7.456140350877189
+        },
+        "spectral": {
+          "brightness_hz": 904.9598865545929
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9949238578680203
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 28.58,
+        "end": 33.14
+      }
+    },
+    {
+      "start": 33.12,
+      "end": 38.28,
+      "duration_sec": 5.16,
+      "text": "mindset of it or what everyone likes to talk about it doesn't matter life's not",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 222.08950805664062,
+          "std_hz": 66.55940246582031,
+          "range_hz": 252.8773651123047,
+          "direction": -0.12898896027870327
+        },
+        "energy": {
+          "dynamics_db": 5.402710914611816
+        },
+        "tempo": {
+          "syllable_rate": 6.976744186046506
+        },
+        "spectral": {
+          "brightness_hz": 988.32614315478
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 33.12,
+        "end": 38.28
+      }
+    },
+    {
+      "start": 38.26,
+      "end": 41.92,
+      "duration_sec": 3.66,
+      "text": "real what if in ten years you never made the approval whatever fucking mindset",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 239.75039672851562,
+          "std_hz": 17.345970153808594,
+          "range_hz": 65.02162170410156,
+          "direction": -0.22609308933607444
+        },
+        "energy": {
+          "dynamics_db": 4.930242538452148
+        },
+        "tempo": {
+          "syllable_rate": 6.557377049180321
+        },
+        "spectral": {
+          "brightness_hz": 1124.8621348421211
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 38.26,
+        "end": 41.92
+      }
+    },
+    {
+      "start": 41.9,
+      "end": 44.84,
+      "duration_sec": 2.94,
+      "text": "shit but then I like to get into the technique of it as well when it comes to",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 228.03759765625,
+          "std_hz": 13.428049087524414,
+          "range_hz": 50.36427307128906,
+          "direction": -0.31432496933709697
+        },
+        "energy": {
+          "dynamics_db": 3.471930503845215
+        },
+        "tempo": {
+          "syllable_rate": 7.823129251700667
+        },
+        "spectral": {
+          "brightness_hz": 951.0486688990625
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 41.9,
+        "end": 44.84
+      }
+    },
+    {
+      "start": 44.82,
+      "end": 48.12,
+      "duration_sec": 3.3,
+      "text": "the mindset of the approach anxiety it's focusing so much on what is",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 232.0683135986328,
+          "std_hz": 18.31440544128418,
+          "range_hz": 52.442413330078125,
+          "direction": -0.0037826459821109523
+        },
+        "energy": {
+          "dynamics_db": 5.26595401763916
+        },
+        "tempo": {
+          "syllable_rate": 7.878787878787886
+        },
+        "spectral": {
+          "brightness_hz": 892.2622177438041
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 44.82,
+        "end": 48.12
+      }
+    },
+    {
+      "start": 48.1,
+      "end": 52.02,
+      "duration_sec": 3.92,
+      "text": "potentially gonna go wrong as opposed to what could go right and what is likely",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 223.46099853515625,
+          "std_hz": 15.455609321594238,
+          "range_hz": 63.68836975097656,
+          "direction": -0.03820633882137145
+        },
+        "energy": {
+          "dynamics_db": 3.9031896591186523
+        },
+        "tempo": {
+          "syllable_rate": 7.908163265306119
+        },
+        "spectral": {
+          "brightness_hz": 906.0746929868543
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 48.1,
+        "end": 52.02
+      }
+    },
+    {
+      "start": 52.0,
+      "end": 55.62,
+      "duration_sec": 3.62,
+      "text": "to go right if you've really been practicing this right if you've really",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 3.5419015884399414
+        },
+        "tempo": {
+          "syllable_rate": 7.734806629834259
+        },
+        "spectral": {
+          "brightness_hz": 882.174816354361
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 52.0,
+        "end": 55.62
+      }
+    },
+    {
+      "start": 55.6,
+      "end": 59.84,
+      "duration_sec": 4.24,
+      "text": "been fucking working on this, like, I think about every fucking hot girl I've ever slept",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 73.6607894897461,
+          "std_hz": 10.392412185668945,
+          "range_hz": 21.890670776367188,
+          "direction": 0.3643709903473671
+        },
+        "energy": {
+          "dynamics_db": 3.4840240478515625
+        },
+        "tempo": {
+          "syllable_rate": 6.603773584905658
+        },
+        "spectral": {
+          "brightness_hz": 996.4687907463139
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 55.6,
+        "end": 59.84
+      }
+    },
+    {
+      "start": 59.82,
+      "end": 64.08,
+      "duration_sec": 4.26,
+      "text": "with, dated, that, you know, we fucked once, she became a good friend, whatever, all these",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 232.08799743652344,
+          "std_hz": 19.285659790039062,
+          "range_hz": 69.0340576171875,
+          "direction": -0.07861726468698615
+        },
+        "energy": {
+          "dynamics_db": 4.824706077575684
+        },
+        "tempo": {
+          "syllable_rate": 6.572769953051647
+        },
+        "spectral": {
+          "brightness_hz": 1046.9786589389773
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 59.82,
+        "end": 64.08
+      }
+    },
+    {
+      "start": 64.06,
+      "end": 68.42,
+      "duration_sec": 4.36,
+      "text": "positive experiences I've had with girls, you need to be thinking of that when you go",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.90950775146484,
+          "std_hz": 0.5324833989143372,
+          "range_hz": 1.528106689453125,
+          "direction": 0.01736304673894024
+        },
+        "energy": {
+          "dynamics_db": 4.795337677001953
+        },
+        "tempo": {
+          "syllable_rate": 7.568807339449542
+        },
+        "spectral": {
+          "brightness_hz": 1001.0532521649519
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 64.06,
+        "end": 68.42
+      }
+    },
+    {
+      "start": 68.4,
+      "end": 69.281,
+      "duration_sec": 0.881,
+      "text": "in and talk to a girl.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 201.39004516601562,
+          "std_hz": 8.961973190307617,
+          "range_hz": 27.337860107421875,
+          "direction": -3.538147292770702
+        },
+        "energy": {
+          "dynamics_db": 2.761354446411133
+        },
+        "tempo": {
+          "syllable_rate": 7.945516458569805
+        },
+        "spectral": {
+          "brightness_hz": 920.4520395876046
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 68.4,
+        "end": 69.281
+      }
+    },
+    {
+      "start": 69.54,
+      "end": 73.82,
+      "duration_sec": 4.28,
+      "text": "There's that expression that the brain needs proof, not promises, so once you actually",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 196.545166015625,
+          "std_hz": 55.211570739746094,
+          "range_hz": 160.99160766601562,
+          "direction": 1.6703080218416901
+        },
+        "energy": {
+          "dynamics_db": 5.513578414916992
+        },
+        "tempo": {
+          "syllable_rate": 7.24299065420563
+        },
+        "spectral": {
+          "brightness_hz": 1002.1139539505717
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 69.54,
+        "end": 73.82
+      }
+    },
+    {
+      "start": 73.8,
+      "end": 78.44,
+      "duration_sec": 4.64,
+      "text": "are starting to push yourself to do it no matter the fuck what, clearing your head before",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 230.2129364013672,
+          "std_hz": 15.346662521362305,
+          "range_hz": 60.90362548828125,
+          "direction": 0.09796568830973262
+        },
+        "energy": {
+          "dynamics_db": 4.144556045532227
+        },
+        "tempo": {
+          "syllable_rate": 6.896551724137931
+        },
+        "spectral": {
+          "brightness_hz": 989.994528686227
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 73.8,
+        "end": 78.44
+      }
+    },
+    {
+      "start": 78.42,
+      "end": 82.88,
+      "duration_sec": 4.46,
+      "text": "you go in and just fucking do it, and you start to realize, again, proving to your brain",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 216.65426635742188,
+          "std_hz": 5.044624328613281,
+          "range_hz": 17.68505859375,
+          "direction": 0.03809354184940746
+        },
+        "energy": {
+          "dynamics_db": 4.5997161865234375
+        },
+        "tempo": {
+          "syllable_rate": 7.399103139013463
+        },
+        "spectral": {
+          "brightness_hz": 902.3133474181353
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 78.42,
+        "end": 82.88
+      }
+    },
+    {
+      "start": 82.86,
+      "end": 88.26,
+      "duration_sec": 5.4,
+      "text": "rather than promising it that nothing bad ever happens because anyone ever had anything really",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 246.04261779785156,
+          "std_hz": 20.383567810058594,
+          "range_hz": 56.10792541503906,
+          "direction": 3.2764358126834203
+        },
+        "energy": {
+          "dynamics_db": 3.519473075866699
+        },
+        "tempo": {
+          "syllable_rate": 7.592592592592585
+        },
+        "spectral": {
+          "brightness_hz": 807.1152500802469
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 82.86,
+        "end": 88.26
+      }
+    },
+    {
+      "start": 88.24,
+      "end": 95.84,
+      "duration_sec": 7.6,
+      "text": "bad happen i've been made fun of but like what then i was here i am now oh my god i'm alive",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 158.1331787109375,
+          "std_hz": 92.98501586914062,
+          "range_hz": 195.0,
+          "direction": 0.9459182046153464
+        },
+        "energy": {
+          "dynamics_db": 6.0663299560546875
+        },
+        "tempo": {
+          "syllable_rate": 5.526315789473678
+        },
+        "spectral": {
+          "brightness_hz": 843.9036572529722
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9908536585365854
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 88.24,
+        "end": 95.84
+      }
+    },
+    {
+      "start": 95.82,
+      "end": 102.44,
+      "duration_sec": 6.62,
+      "text": "a girl yelled at you once i've had a guy get a little aggro with me you know like that's",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 231.90750122070312,
+          "std_hz": 14.460928916931152,
+          "range_hz": 46.09349060058594,
+          "direction": -0.1962891468456384
+        },
+        "energy": {
+          "dynamics_db": 4.38507080078125
+        },
+        "tempo": {
+          "syllable_rate": 5.438066465256794
+        },
+        "spectral": {
+          "brightness_hz": 982.235808125406
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 95.82,
+        "end": 102.44
+      }
+    },
+    {
+      "start": 102.42,
+      "end": 109.44,
+      "duration_sec": 7.02,
+      "text": "my girl whatever it is and here you are alive and well the sun's beating down on your",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 248.0390167236328,
+          "std_hz": 4.4510087966918945,
+          "range_hz": 16.915740966796875,
+          "direction": -1.4243195006897424
+        },
+        "energy": {
+          "dynamics_db": 4.293970108032227
+        },
+        "tempo": {
+          "syllable_rate": 5.413105413105416
+        },
+        "spectral": {
+          "brightness_hz": 784.8222471827975
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 102.42,
+        "end": 109.44
+      }
+    },
+    {
+      "start": 109.42,
+      "end": 116.38,
+      "duration_sec": 6.96,
+      "text": "face and we're all having a great time we can't talk about louisville right now okay dude got",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 273.236083984375,
+          "std_hz": 31.908443450927734,
+          "range_hz": 94.51052856445312,
+          "direction": 0.2395678544152004
+        },
+        "energy": {
+          "dynamics_db": 5.839162826538086
+        },
+        "tempo": {
+          "syllable_rate": 7.040229885057477
+        },
+        "spectral": {
+          "brightness_hz": 1044.9805376569054
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.97
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 109.42,
+        "end": 116.38
+      }
+    },
+    {
+      "start": 116.36,
+      "end": 122.88,
+      "duration_sec": 6.52,
+      "text": "punched in the face whatever whatever yeah it was a night tyler club wow so so it's understanding",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 211.27549743652344,
+          "std_hz": 65.21739196777344,
+          "range_hz": 167.05413818359375,
+          "direction": -0.2829128089043344
+        },
+        "energy": {
+          "dynamics_db": 6.410196304321289
+        },
+        "tempo": {
+          "syllable_rate": 7.055214723926385
+        },
+        "spectral": {
+          "brightness_hz": 1234.7417947048627
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9928825622775801
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 116.36,
+        "end": 122.88
+      }
+    },
+    {
+      "start": 122.86,
+      "end": 128.28,
+      "duration_sec": 5.42,
+      "text": "that nothing terrible is going to happen right and that you're going to have a positive experience",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 219.99278259277344,
+          "std_hz": 28.828325271606445,
+          "range_hz": 109.37744140625,
+          "direction": 0.045041838606910634
+        },
+        "energy": {
+          "dynamics_db": 6.119417190551758
+        },
+        "tempo": {
+          "syllable_rate": 6.273062730627304
+        },
+        "spectral": {
+          "brightness_hz": 1311.1234031756558
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9829059829059829
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 122.86,
+        "end": 128.28
+      }
+    },
+    {
+      "start": 128.26,
+      "end": 133.42,
+      "duration_sec": 5.16,
+      "text": "you're going to have a positive experience from it and just saying okay i'm going to go in no",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 212.15426635742188,
+          "std_hz": 13.451892852783203,
+          "range_hz": 56.17240905761719,
+          "direction": -0.04480047225567154
+        },
+        "energy": {
+          "dynamics_db": 5.959415435791016
+        },
+        "tempo": {
+          "syllable_rate": 6.782945736434113
+        },
+        "spectral": {
+          "brightness_hz": 1248.7061713487055
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9955156950672646
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 128.26,
+        "end": 133.42
+      }
+    },
+    {
+      "start": 133.4,
+      "end": 138.54,
+      "duration_sec": 5.14,
+      "text": "matter what right now again that's the mindset of what we're talking about here mindset doesn't",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 141.8597869873047,
+          "std_hz": 57.571502685546875,
+          "range_hz": 157.4547119140625,
+          "direction": -0.14429039797771445
+        },
+        "energy": {
+          "dynamics_db": 5.874520301818848
+        },
+        "tempo": {
+          "syllable_rate": 7.587548638132316
+        },
+        "spectral": {
+          "brightness_hz": 1091.3809367311715
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9954954954954955
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 133.4,
+        "end": 138.54
+      }
+    },
+    {
+      "start": 138.52,
+      "end": 146.02,
+      "duration_sec": 7.5,
+      "text": "always help i can't beat a thought process into your skull right so if you've watched a lot",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 214.41983032226562,
+          "std_hz": 13.013046264648438,
+          "range_hz": 50.27604675292969,
+          "direction": -0.5413875394134071
+        },
+        "energy": {
+          "dynamics_db": 5.708585739135742
+        },
+        "tempo": {
+          "syllable_rate": 6.533333333333333
+        },
+        "spectral": {
+          "brightness_hz": 751.0528385597037
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9845201238390093
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 138.52,
+        "end": 146.02
+      }
+    },
+    {
+      "start": 146.0,
+      "end": 150.48,
+      "duration_sec": 4.48,
+      "text": "of the videos then you've probably heard me talk about this but you've only seen one and you know",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 70.36629486083984,
+          "std_hz": 5.846848011016846,
+          "range_hz": 20.76801300048828,
+          "direction": -0.04761629078453308
+        },
+        "energy": {
+          "dynamics_db": 3.8971776962280273
+        },
+        "tempo": {
+          "syllable_rate": 6.250000000000014
+        },
+        "spectral": {
+          "brightness_hz": 648.1695424035329
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 146.0,
+        "end": 150.48
+      }
+    },
+    {
+      "start": 150.46,
+      "end": 157.08,
+      "duration_sec": 6.62,
+      "text": "whatever i don't care how much you guys have watched it's opening it's not even opening it's",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 278.0824890136719,
+          "std_hz": 74.38013458251953,
+          "range_hz": 228.6135711669922,
+          "direction": 2.5754654114255895
+        },
+        "energy": {
+          "dynamics_db": 6.558494567871094
+        },
+        "tempo": {
+          "syllable_rate": 4.984894259818728
+        },
+        "spectral": {
+          "brightness_hz": 1051.792891592159
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9965034965034965
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 150.46,
+        "end": 157.08
+      }
+    },
+    {
+      "start": 157.06,
+      "end": 164.74,
+      "duration_sec": 7.68,
+      "text": "not even approaching it's speaking to a human being while eliminating intent right so i've got",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 84.04634857177734,
+          "std_hz": 17.853059768676758,
+          "range_hz": 39.379974365234375,
+          "direction": -0.16618625880074542
+        },
+        "energy": {
+          "dynamics_db": 5.044624328613281
+        },
+        "tempo": {
+          "syllable_rate": 6.249999999999995
+        },
+        "spectral": {
+          "brightness_hz": 953.1545426000417
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 157.06,
+        "end": 164.74
+      }
+    },
+    {
+      "start": 164.72,
+      "end": 166.181,
+      "duration_sec": 1.461,
+      "text": "I've got a guy that's on my virtual instruction program",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 3.9978103637695312
+        },
+        "tempo": {
+          "syllable_rate": 7.529089664613213
+        },
+        "spectral": {
+          "brightness_hz": 850.8191196076485
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 164.72,
+        "end": 166.181
+      }
+    },
+    {
+      "start": 166.16,
+      "end": 169.5,
+      "duration_sec": 3.34,
+      "text": "right now who, he told me that he will go out",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 236.1117706298828,
+          "std_hz": 51.66810989379883,
+          "range_hz": 247.86627197265625,
+          "direction": -0.14016409938264476
+        },
+        "energy": {
+          "dynamics_db": 6.912385940551758
+        },
+        "tempo": {
+          "syllable_rate": 5.389221556886222
+        },
+        "spectral": {
+          "brightness_hz": 1094.0628634231844
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9652777777777778
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 166.16,
+        "end": 169.5
+      }
+    },
+    {
+      "start": 169.48,
+      "end": 173.26,
+      "duration_sec": 3.78,
+      "text": "and it will take him two hours to make his first approach.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 222.780517578125,
+          "std_hz": 13.946064949035645,
+          "range_hz": 56.03387451171875,
+          "direction": 0.5506530174842229
+        },
+        "energy": {
+          "dynamics_db": 4.88853645324707
+        },
+        "tempo": {
+          "syllable_rate": 6.084656084656083
+        },
+        "spectral": {
+          "brightness_hz": 961.6792437091423
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 169.48,
+        "end": 173.26
+      }
+    },
+    {
+      "start": 174.1,
+      "end": 176.08,
+      "duration_sec": 1.98,
+      "text": "So, like that's not an exaggeration.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 263.03857421875,
+          "std_hz": 3.0304462909698486,
+          "range_hz": 7.57470703125,
+          "direction": -1.5418761282256104
+        },
+        "energy": {
+          "dynamics_db": 4.8700761795043945
+        },
+        "tempo": {
+          "syllable_rate": 7.575757575757506
+        },
+        "spectral": {
+          "brightness_hz": 955.2153672177487
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 174.1,
+        "end": 176.08
+      }
+    },
+    {
+      "start": 176.16,
+      "end": 178.32,
+      "duration_sec": 2.16,
+      "text": "Like that is a literal, like he will walk around",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 209.10951232910156,
+          "std_hz": 12.603035926818848,
+          "range_hz": 54.443572998046875,
+          "direction": 0.2067162661070275
+        },
+        "energy": {
+          "dynamics_db": 5.346076011657715
+        },
+        "tempo": {
+          "syllable_rate": 6.018518518518528
+        },
+        "spectral": {
+          "brightness_hz": 1027.872352808774
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9574468085106383
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 176.16,
+        "end": 178.32
+      }
+    },
+    {
+      "start": 178.3,
+      "end": 181.48,
+      "duration_sec": 3.18,
+      "text": "and he's in San Francisco, he'll walk around",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 421.1661682128906,
+          "std_hz": 3.308845043182373,
+          "range_hz": 7.298126220703125,
+          "direction": -1.0851616492638168
+        },
+        "energy": {
+          "dynamics_db": 4.094551086425781
+        },
+        "tempo": {
+          "syllable_rate": 6.918238993710739
+        },
+        "spectral": {
+          "brightness_hz": 1068.6842140008332
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 178.3,
+        "end": 181.48
+      }
+    },
+    {
+      "start": 181.46,
+      "end": 183.52,
+      "duration_sec": 2.06,
+      "text": "for what he's clicking to be two hours,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 237.3914031982422,
+          "std_hz": 31.136093139648438,
+          "range_hz": 83.79713439941406,
+          "direction": 0.8532496366459886
+        },
+        "energy": {
+          "dynamics_db": 5.629519462585449
+        },
+        "tempo": {
+          "syllable_rate": 8.25242718446601
+        },
+        "spectral": {
+          "brightness_hz": 1149.5760648744988
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 181.46,
+        "end": 183.52
+      }
+    },
+    {
+      "start": 183.68,
+      "end": 185.321,
+      "duration_sec": 1.641,
+      "text": "looking at every girl thinking like,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 235.37252807617188,
+          "std_hz": 3.747797727584839,
+          "range_hz": 12.147872924804688,
+          "direction": -1.7726979573567674
+        },
+        "energy": {
+          "dynamics_db": 4.567750930786133
+        },
+        "tempo": {
+          "syllable_rate": 7.312614259597845
+        },
+        "spectral": {
+          "brightness_hz": 1032.883835459513
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 183.68,
+        "end": 185.321
+      }
+    },
+    {
+      "start": 185.4,
+      "end": 186.761,
+      "duration_sec": 1.361,
+      "text": "all right, I'm gonna do this one, I'm gonna do this one,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 2.8187828063964844
+        },
+        "tempo": {
+          "syllable_rate": 7.3475385745775705
+        },
+        "spectral": {
+          "brightness_hz": 918.397700705736
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9830508474576272
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 185.4,
+        "end": 186.761
+      }
+    },
+    {
+      "start": 186.82,
+      "end": 188.6,
+      "duration_sec": 1.78,
+      "text": "and then he doesn't end up doing it.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 211.7729034423828,
+          "std_hz": 11.361270904541016,
+          "range_hz": 32.68507385253906,
+          "direction": -1.5132919992180824
+        },
+        "energy": {
+          "dynamics_db": 6.3284454345703125
+        },
+        "tempo": {
+          "syllable_rate": 7.303370786516849
+        },
+        "spectral": {
+          "brightness_hz": 1049.6409192124775
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 186.82,
+        "end": 188.6
+      }
+    },
+    {
+      "start": 188.76,
+      "end": 190.261,
+      "duration_sec": 1.501,
+      "text": "For two fucking hours.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 210.39251708984375,
+          "std_hz": 6.247458457946777,
+          "range_hz": 15.907730102539062,
+          "direction": -1.864870885035376
+        },
+        "energy": {
+          "dynamics_db": 3.9816503524780273
+        },
+        "tempo": {
+          "syllable_rate": 4.66355762824782
+        },
+        "spectral": {
+          "brightness_hz": 1138.4696736312856
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 188.76,
+        "end": 190.261
+      }
+    },
+    {
+      "start": 190.52,
+      "end": 192.96,
+      "duration_sec": 2.44,
+      "text": "And I said to him, I said the reason why that's happening",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 247.30455017089844,
+          "std_hz": 31.853219985961914,
+          "range_hz": 105.15504455566406,
+          "direction": -0.37040196747194676
+        },
+        "energy": {
+          "dynamics_db": 5.909173965454102
+        },
+        "tempo": {
+          "syllable_rate": 6.967213114754105
+        },
+        "spectral": {
+          "brightness_hz": 1240.3337344385866
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9716981132075472
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 190.52,
+        "end": 192.96
+      }
+    },
+    {
+      "start": 192.94,
+      "end": 196.84,
+      "duration_sec": 3.9,
+      "text": "is because you're focusing on 15 steps forward",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 275.850830078125,
+          "std_hz": 2.4948983192443848,
+          "range_hz": 9.547210693359375,
+          "direction": 0.08783158873650325
+        },
+        "energy": {
+          "dynamics_db": 4.180707931518555
+        },
+        "tempo": {
+          "syllable_rate": 4.871794871794864
+        },
+        "spectral": {
+          "brightness_hz": 1166.9880909735975
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 192.94,
+        "end": 196.84
+      }
+    },
+    {
+      "start": 196.82,
+      "end": 198.58,
+      "duration_sec": 1.76,
+      "text": "and all at once, right?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 237.9114990234375,
+          "std_hz": 30.339431762695312,
+          "range_hz": 80.65449523925781,
+          "direction": -1.3861302665752746
+        },
+        "energy": {
+          "dynamics_db": 5.767326354980469
+        },
+        "tempo": {
+          "syllable_rate": 6.818181818181744
+        },
+        "spectral": {
+          "brightness_hz": 1020.4021174743178
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 196.82,
+        "end": 198.58
+      }
+    },
+    {
+      "start": 198.96,
+      "end": 201.06,
+      "duration_sec": 2.1,
+      "text": "So you're so afraid to approach",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 5.194246292114258
+        },
+        "tempo": {
+          "syllable_rate": 5.7142857142857295
+        },
+        "spectral": {
+          "brightness_hz": 1277.513956395038
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 198.96,
+        "end": 201.06
+      }
+    },
+    {
+      "start": 201.72,
+      "end": 205.1,
+      "duration_sec": 3.38,
+      "text": "because you're thinking, you don't trust in your ability",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 255.1611328125,
+          "std_hz": 59.69204330444336,
+          "range_hz": 221.61163330078125,
+          "direction": 0.7198516169429858
+        },
+        "energy": {
+          "dynamics_db": 5.098594665527344
+        },
+        "tempo": {
+          "syllable_rate": 6.80473372781066
+        },
+        "spectral": {
+          "brightness_hz": 1131.1734091801118
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 201.72,
+        "end": 205.1
+      }
+    },
+    {
+      "start": 205.08,
+      "end": 207.2,
+      "duration_sec": 2.12,
+      "text": "to hold your own within the interactions, right?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 215.15438842773438,
+          "std_hz": 18.77602195739746,
+          "range_hz": 74.15147399902344,
+          "direction": -0.5127170357909869
+        },
+        "energy": {
+          "dynamics_db": 4.941408157348633
+        },
+        "tempo": {
+          "syllable_rate": 7.54716981132084
+        },
+        "spectral": {
+          "brightness_hz": 1087.9645579909268
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9239130434782609
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 205.08,
+        "end": 207.2
+      }
+    },
+    {
+      "start": 207.3,
+      "end": 210.16,
+      "duration_sec": 2.86,
+      "text": "To hold the engaging conversation, essentially escalate.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 222.32513427734375,
+          "std_hz": 13.285843849182129,
+          "range_hz": 52.958831787109375,
+          "direction": -0.1558788144317505
+        },
+        "energy": {
+          "dynamics_db": 7.948661804199219
+        },
+        "tempo": {
+          "syllable_rate": 7.6923076923077325
+        },
+        "spectral": {
+          "brightness_hz": 1304.1192614834722
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 207.3,
+        "end": 210.16
+      }
+    },
+    {
+      "start": 210.22,
+      "end": 212.2,
+      "duration_sec": 1.98,
+      "text": "But what happens if things start going well",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 253.20724487304688,
+          "std_hz": 23.15483856201172,
+          "range_hz": 98.13999938964844,
+          "direction": 0.42143505250385643
+        },
+        "energy": {
+          "dynamics_db": 5.918703079223633
+        },
+        "tempo": {
+          "syllable_rate": 7.070707070707107
+        },
+        "spectral": {
+          "brightness_hz": 1296.619278291872
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 210.22,
+        "end": 212.2
+      }
+    },
+    {
+      "start": 212.18,
+      "end": 214.44,
+      "duration_sec": 2.26,
+      "text": "and I don't know how to bounce her or the fuck, whatever?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 237.4392852783203,
+          "std_hz": 15.02426815032959,
+          "range_hz": 61.82093811035156,
+          "direction": 0.0904387110918592
+        },
+        "energy": {
+          "dynamics_db": 4.45904541015625
+        },
+        "tempo": {
+          "syllable_rate": 6.19469026548675
+        },
+        "spectral": {
+          "brightness_hz": 1181.480047971693
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9489795918367347
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 212.18,
+        "end": 214.44
+      }
+    },
+    {
+      "start": 214.74,
+      "end": 215.222,
+      "duration_sec": 0.482,
+      "text": "You know what I mean?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 88.4720458984375,
+          "std_hz": 15.205995559692383,
+          "range_hz": 34.77350616455078,
+          "direction": 2.881832997939166
+        },
+        "energy": {
+          "dynamics_db": 1.6848363876342773
+        },
+        "tempo": {
+          "syllable_rate": 8.298755186722003
+        },
+        "spectral": {
+          "brightness_hz": 1161.0625659008372
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 214.74,
+        "end": 215.222
+      }
+    },
+    {
+      "start": 215.3,
+      "end": 216.881,
+      "duration_sec": 1.581,
+      "text": "You're thinking so far ahead.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 207.98544311523438,
+          "std_hz": 73.92622375488281,
+          "range_hz": 184.0641326904297,
+          "direction": 3.2081267679671783
+        },
+        "energy": {
+          "dynamics_db": 3.0610904693603516
+        },
+        "tempo": {
+          "syllable_rate": 6.32511068943711
+        },
+        "spectral": {
+          "brightness_hz": 988.1855016505817
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 215.3,
+        "end": 216.881
+      }
+    },
+    {
+      "start": 217.1,
+      "end": 219.66,
+      "duration_sec": 2.56,
+      "text": "I view this shit like Halo Checkpoints.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 93.06443786621094,
+          "std_hz": 0.3858186900615692,
+          "range_hz": 1.0742950439453125,
+          "direction": -0.06530249459402641
+        },
+        "energy": {
+          "dynamics_db": 5.587078094482422
+        },
+        "tempo": {
+          "syllable_rate": 7.812499999999993
+        },
+        "spectral": {
+          "brightness_hz": 1074.5975268064792
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 217.1,
+        "end": 219.66
+      }
+    },
+    {
+      "start": 219.64,
+      "end": 225.84,
+      "duration_sec": 6.2,
+      "text": "You ever played a first-person shooter video game anyone Call of Duty or Halo, whatever",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 231.6764373779297,
+          "std_hz": 9.221474647521973,
+          "range_hz": 39.72767639160156,
+          "direction": -0.12280274143802869
+        },
+        "energy": {
+          "dynamics_db": 5.1790008544921875
+        },
+        "tempo": {
+          "syllable_rate": 6.290322580645144
+        },
+        "spectral": {
+          "brightness_hz": 956.5316808759967
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 219.64,
+        "end": 225.84
+      }
+    },
+    {
+      "start": 227.06,
+      "end": 232.9,
+      "duration_sec": 5.84,
+      "text": "Once you make it to that first checkpoint you die and every time you die you go back to that checkpoint, right?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 232.47781372070312,
+          "std_hz": 6.020776748657227,
+          "range_hz": 16.058837890625,
+          "direction": -1.3893447331019737
+        },
+        "energy": {
+          "dynamics_db": 4.912161827087402
+        },
+        "tempo": {
+          "syllable_rate": 5.9931506849315035
+        },
+        "spectral": {
+          "brightness_hz": 911.3033371855323
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.996031746031746
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 227.06,
+        "end": 232.9
+      }
+    },
+    {
+      "start": 233.32,
+      "end": 234.83,
+      "duration_sec": 1.51,
+      "text": "Go right back there.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 3.948359489440918
+        },
+        "tempo": {
+          "syllable_rate": 5.9602649006621755
+        },
+        "spectral": {
+          "brightness_hz": 937.4973814259355
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 233.32,
+        "end": 234.83
+      }
+    },
+    {
+      "start": 235.193,
+      "end": 239.26,
+      "duration_sec": 4.067,
+      "text": "So if the very first checkpoint is just speaking to a girl",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 145.40199279785156,
+          "std_hz": 83.34014129638672,
+          "range_hz": 183.14674377441406,
+          "direction": 2.655761333298643
+        },
+        "energy": {
+          "dynamics_db": 5.212184906005859
+        },
+        "tempo": {
+          "syllable_rate": 5.1635111876076
+        },
+        "spectral": {
+          "brightness_hz": 1121.8433625713144
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 235.193,
+        "end": 239.26
+      }
+    },
+    {
+      "start": 239.24,
+      "end": 242.77,
+      "duration_sec": 3.53,
+      "text": "It's not going in direct and hey, you're fucking hot.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 226.73655700683594,
+          "std_hz": 14.233362197875977,
+          "range_hz": 45.70509338378906,
+          "direction": 0.156564057173052
+        },
+        "energy": {
+          "dynamics_db": 5.7380475997924805
+        },
+        "tempo": {
+          "syllable_rate": 7.082152974504247
+        },
+        "spectral": {
+          "brightness_hz": 1184.2670013500995
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9869281045751634
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 239.24,
+        "end": 242.77
+      }
+    },
+    {
+      "start": 242.79,
+      "end": 244.04,
+      "duration_sec": 1.25,
+      "text": "It's not hey, you want to get out of here?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 217.88829040527344,
+          "std_hz": 13.813405990600586,
+          "range_hz": 47.53330993652344,
+          "direction": -0.5863464109700744
+        },
+        "energy": {
+          "dynamics_db": 5.2272539138793945
+        },
+        "tempo": {
+          "syllable_rate": 8.8
+        },
+        "spectral": {
+          "brightness_hz": 1368.3398685973634
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 242.79,
+        "end": 244.04
+      }
+    },
+    {
+      "start": 244.06,
+      "end": 245.136,
+      "duration_sec": 1.076,
+      "text": "Hey, let me get your number.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 4.4885454177856445
+        },
+        "tempo": {
+          "syllable_rate": 7.434944237918261
+        },
+        "spectral": {
+          "brightness_hz": 1206.4967827735786
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 244.06,
+        "end": 245.136
+      }
+    },
+    {
+      "start": 245.156,
+      "end": 246.008,
+      "duration_sec": 0.852,
+      "text": "It's none of that.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 4.044144630432129
+        },
+        "tempo": {
+          "syllable_rate": 8.215962441314517
+        },
+        "spectral": {
+          "brightness_hz": 1128.0539393337585
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 245.156,
+        "end": 246.008
+      }
+    },
+    {
+      "start": 246.638,
+      "end": 246.82,
+      "duration_sec": 0.182,
+      "text": "It's just",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 2.9491004943847656
+        },
+        "tempo": {
+          "syllable_rate": 10.989010989011717
+        },
+        "spectral": {
+          "brightness_hz": 1604.3711654204062
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 246.638,
+        "end": 246.82
+      }
+    },
+    {
+      "start": 246.8,
+      "end": 248.401,
+      "duration_sec": 1.601,
+      "text": "just speaking to the girl.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 215.8197479248047,
+          "std_hz": 6.2460222244262695,
+          "range_hz": 19.751510620117188,
+          "direction": 0.6475079643995175
+        },
+        "energy": {
+          "dynamics_db": 5.482730865478516
+        },
+        "tempo": {
+          "syllable_rate": 5.621486570893195
+        },
+        "spectral": {
+          "brightness_hz": 1465.4682312020316
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 246.8,
+        "end": 248.401
+      }
+    },
+    {
+      "start": 248.8,
+      "end": 250.321,
+      "duration_sec": 1.521,
+      "text": "Hey, real quick, is that still recording?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 211.1333465576172,
+          "std_hz": 7.738741874694824,
+          "range_hz": 18.462844848632812,
+          "direction": 0.0051054124708296055
+        },
+        "energy": {
+          "dynamics_db": 2.153506278991699
+        },
+        "tempo": {
+          "syllable_rate": 6.574621959237402
+        },
+        "spectral": {
+          "brightness_hz": 950.4662535623318
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 248.8,
+        "end": 250.321
+      }
+    },
+    {
+      "start": 250.86,
+      "end": 251.322,
+      "duration_sec": 0.462,
+      "text": "Yeah.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 4.317929267883301
+        },
+        "tempo": {
+          "syllable_rate": 8.658008658008862
+        },
+        "spectral": {
+          "brightness_hz": 1003.2475353948772
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 250.86,
+        "end": 251.322
+      }
+    },
+    {
+      "start": 251.58,
+      "end": 253.52,
+      "duration_sec": 1.94,
+      "text": "Okay, she was watching, guys, we're gonna make sure.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 69.1014633178711,
+          "std_hz": 0.354239821434021,
+          "range_hz": 1.196807861328125,
+          "direction": 0.005421175197272792
+        },
+        "energy": {
+          "dynamics_db": 4.47121524810791
+        },
+        "tempo": {
+          "syllable_rate": 6.70103092783506
+        },
+        "spectral": {
+          "brightness_hz": 1057.2190370981384
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 251.58,
+        "end": 253.52
+      }
+    },
+    {
+      "start": 253.9,
+      "end": 255.96,
+      "duration_sec": 2.06,
+      "text": "So, if that's the very first step,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 320.4130859375,
+          "std_hz": 105.5418472290039,
+          "range_hz": 246.54254150390625,
+          "direction": 4.475003687382407
+        },
+        "energy": {
+          "dynamics_db": 5.019002914428711
+        },
+        "tempo": {
+          "syllable_rate": 7.281553398058245
+        },
+        "spectral": {
+          "brightness_hz": 1153.279466821709
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 253.9,
+        "end": 255.96
+      }
+    },
+    {
+      "start": 256.14,
+      "end": 258.78,
+      "duration_sec": 2.64,
+      "text": "then just do that and eliminate all intent.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 237.5945281982422,
+          "std_hz": 21.936115264892578,
+          "range_hz": 65.87049865722656,
+          "direction": -0.486669598329209
+        },
+        "energy": {
+          "dynamics_db": 5.163860321044922
+        },
+        "tempo": {
+          "syllable_rate": 8.712121212121257
+        },
+        "spectral": {
+          "brightness_hz": 1080.7639179505345
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 256.14,
+        "end": 258.78
+      }
+    },
+    {
+      "start": 259.18,
+      "end": 262.66,
+      "duration_sec": 3.48,
+      "text": "So you're not gonna be afraid to just compliment a girl,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 87.6463623046875,
+          "std_hz": 0.21890148520469666,
+          "range_hz": 0.5055313110351562,
+          "direction": -0.047724983908913735
+        },
+        "energy": {
+          "dynamics_db": 2.660367965698242
+        },
+        "tempo": {
+          "syllable_rate": 7.471264367816053
+        },
+        "spectral": {
+          "brightness_hz": 987.1896874838482
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 259.18,
+        "end": 262.66
+      }
+    },
+    {
+      "start": 262.76,
+      "end": 265.54,
+      "duration_sec": 2.78,
+      "text": "just to say hello to her, compliment her.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 216.0703125,
+          "std_hz": 31.386686325073242,
+          "range_hz": 109.43798828125,
+          "direction": -3.679760201374535
+        },
+        "energy": {
+          "dynamics_db": 3.663336753845215
+        },
+        "tempo": {
+          "syllable_rate": 6.115107913669
+        },
+        "spectral": {
+          "brightness_hz": 1127.1592214169893
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 262.76,
+        "end": 265.54
+      }
+    },
+    {
+      "start": 265.72,
+      "end": 267.361,
+      "duration_sec": 1.641,
+      "text": "Tom Torero calls it hit and runs.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 219.32058715820312,
+          "std_hz": 18.452638626098633,
+          "range_hz": 66.65695190429688,
+          "direction": 0.46055463139297925
+        },
+        "energy": {
+          "dynamics_db": 4.902047157287598
+        },
+        "tempo": {
+          "syllable_rate": 9.140767824497466
+        },
+        "spectral": {
+          "brightness_hz": 1129.8118810721626
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 265.72,
+        "end": 267.361
+      }
+    },
+    {
+      "start": 267.54,
+      "end": 270.24,
+      "duration_sec": 2.7,
+      "text": "I like to call it hit and runs, touch and goes,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 219.77914428710938,
+          "std_hz": 5.04164457321167,
+          "range_hz": 21.664382934570312,
+          "direction": 0.0212560433414962
+        },
+        "energy": {
+          "dynamics_db": 6.534086227416992
+        },
+        "tempo": {
+          "syllable_rate": 5.9259259259259505
+        },
+        "spectral": {
+          "brightness_hz": 1193.3855719393277
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 267.54,
+        "end": 270.24
+      }
+    },
+    {
+      "start": 270.44,
+      "end": 272.98,
+      "duration_sec": 2.54,
+      "text": "whatever the fuck it is, speaking without intent.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 3.7216110229492188
+        },
+        "tempo": {
+          "syllable_rate": 7.480314960629861
+        },
+        "spectral": {
+          "brightness_hz": 1232.1853134684907
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.990909090909091
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 270.44,
+        "end": 272.98
+      }
+    },
+    {
+      "start": 273.2,
+      "end": 275.42,
+      "duration_sec": 2.22,
+      "text": "So yes, when you're getting better at game",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 221.38121032714844,
+          "std_hz": 17.95743751525879,
+          "range_hz": 79.25532531738281,
+          "direction": -0.6540570322200787
+        },
+        "energy": {
+          "dynamics_db": 5.219809532165527
+        },
+        "tempo": {
+          "syllable_rate": 9.009009009008897
+        },
+        "spectral": {
+          "brightness_hz": 1264.1407782766016
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 273.2,
+        "end": 275.42
+      }
+    },
+    {
+      "start": 275.4,
+      "end": 281.74,
+      "duration_sec": 6.34,
+      "text": "as the conversation progresses escalates then yes you want to be clear about the fact like hey i'm",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 291.8810729980469,
+          "std_hz": 108.28636169433594,
+          "range_hz": 240.2772674560547,
+          "direction": 2.221171142034302
+        },
+        "energy": {
+          "dynamics_db": 5.701414108276367
+        },
+        "tempo": {
+          "syllable_rate": 6.78233438485801
+        },
+        "spectral": {
+          "brightness_hz": 1189.6285363017726
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 275.4,
+        "end": 281.74
+      }
+    },
+    {
+      "start": 281.72,
+      "end": 286.72,
+      "duration_sec": 5.0,
+      "text": "trying to bang you or date you or whatever it is but when you're just trying to get to that first",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 218.20880126953125,
+          "std_hz": 9.48932933807373,
+          "range_hz": 28.81671142578125,
+          "direction": -1.01594420630865
+        },
+        "energy": {
+          "dynamics_db": 5.199353218078613
+        },
+        "tempo": {
+          "syllable_rate": 7.0
+        },
+        "spectral": {
+          "brightness_hz": 1033.6250883524856
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 281.72,
+        "end": 286.72
+      }
+    },
+    {
+      "start": 286.7,
+      "end": 290.16,
+      "duration_sec": 3.46,
+      "text": "checkpoint and you're wandering around san francisco for two hours and you can't get there",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 234.53997802734375,
+          "std_hz": 13.118758201599121,
+          "range_hz": 28.52349853515625,
+          "direction": 0.18420839503301836
+        },
+        "energy": {
+          "dynamics_db": 3.9794578552246094
+        },
+        "tempo": {
+          "syllable_rate": 8.092485549132864
+        },
+        "spectral": {
+          "brightness_hz": 918.0969558548402
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 286.7,
+        "end": 290.16
+      }
+    },
+    {
+      "start": 290.14,
+      "end": 296.34,
+      "duration_sec": 6.2,
+      "text": "then you have to just get there which is just i compliment you i was walking around madison square",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 238.1650390625,
+          "std_hz": 16.78179168701172,
+          "range_hz": 39.05145263671875,
+          "direction": -1.356561422224966
+        },
+        "energy": {
+          "dynamics_db": 4.102012634277344
+        },
+        "tempo": {
+          "syllable_rate": 7.0967741935484
+        },
+        "spectral": {
+          "brightness_hz": 886.4308448970103
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 290.14,
+        "end": 296.34
+      }
+    },
+    {
+      "start": 296.32,
+      "end": 301.68,
+      "duration_sec": 5.36,
+      "text": "park today and i just woke it up and i just went for a walk as soon as i woke up and i wasn't in",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 75.84906005859375,
+          "std_hz": 6.651890277862549,
+          "range_hz": 22.145034790039062,
+          "direction": 0.05125333335326904
+        },
+        "energy": {
+          "dynamics_db": 5.083003997802734
+        },
+        "tempo": {
+          "syllable_rate": 5.783582089552224
+        },
+        "spectral": {
+          "brightness_hz": 837.4142964688191
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 296.32,
+        "end": 301.68
+      }
+    },
+    {
+      "start": 301.66,
+      "end": 303.061,
+      "duration_sec": 1.401,
+      "text": "in my zone, you know what I mean?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 3.6866559982299805
+        },
+        "tempo": {
+          "syllable_rate": 7.8515346181301675
+        },
+        "spectral": {
+          "brightness_hz": 1021.8295401322677
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 301.66,
+        "end": 303.061
+      }
+    },
+    {
+      "start": 303.28,
+      "end": 305.84,
+      "duration_sec": 2.56,
+      "text": "I don't even like to really call it like being in state.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 188.2152862548828,
+          "std_hz": 9.785712242126465,
+          "range_hz": 28.28253173828125,
+          "direction": 0.7824868422288195
+        },
+        "energy": {
+          "dynamics_db": 5.12293815612793
+        },
+        "tempo": {
+          "syllable_rate": 8.203124999999993
+        },
+        "spectral": {
+          "brightness_hz": 1182.6506405119414
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 303.28,
+        "end": 305.84
+      }
+    },
+    {
+      "start": 305.98,
+      "end": 308.68,
+      "duration_sec": 2.7,
+      "text": "I just wasn't in a social mode of mind,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 182.91062927246094,
+          "std_hz": 2.78043270111084,
+          "range_hz": 9.47613525390625,
+          "direction": -0.14723951231108953
+        },
+        "energy": {
+          "dynamics_db": 4.850003242492676
+        },
+        "tempo": {
+          "syllable_rate": 7.4074074074074385
+        },
+        "spectral": {
+          "brightness_hz": 1138.2162319151485
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 305.98,
+        "end": 308.68
+      }
+    },
+    {
+      "start": 308.88,
+      "end": 309.501,
+      "duration_sec": 0.621,
+      "text": "you know what I mean?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 4.212190628051758
+        },
+        "tempo": {
+          "syllable_rate": 8.051529790660473
+        },
+        "spectral": {
+          "brightness_hz": 1193.0553544762495
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 308.88,
+        "end": 309.501
+      }
+    },
+    {
+      "start": 309.52,
+      "end": 310.901,
+      "duration_sec": 1.381,
+      "text": "I didn't want to talk to people.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 218.3812255859375,
+          "std_hz": 0.5036926865577698,
+          "range_hz": 1.2592315673828125,
+          "direction": 0.5376063755580456
+        },
+        "energy": {
+          "dynamics_db": 6.02571964263916
+        },
+        "tempo": {
+          "syllable_rate": 6.517016654597982
+        },
+        "spectral": {
+          "brightness_hz": 1007.4662460292237
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 309.52,
+        "end": 310.901
+      }
+    },
+    {
+      "start": 311.18,
+      "end": 312.781,
+      "duration_sec": 1.601,
+      "text": "So what I do, I just walk by,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 3.9035377502441406
+        },
+        "tempo": {
+          "syllable_rate": 6.246096189881328
+        },
+        "spectral": {
+          "brightness_hz": 1024.5803016567702
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 311.18,
+        "end": 312.781
+      }
+    },
+    {
+      "start": 312.86,
+      "end": 313.861,
+      "duration_sec": 1.001,
+      "text": "hey, I really like your shirt.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 449.7279968261719,
+          "std_hz": 4.268208026885986,
+          "range_hz": 10.399261474609375,
+          "direction": 2.0427082606724194
+        },
+        "energy": {
+          "dynamics_db": 4.619187355041504
+        },
+        "tempo": {
+          "syllable_rate": 7.992007992008181
+        },
+        "spectral": {
+          "brightness_hz": 986.357298483662
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 312.86,
+        "end": 313.861
+      }
+    },
+    {
+      "start": 314.02,
+      "end": 314.801,
+      "duration_sec": 0.781,
+      "text": "And she's like, oh, thanks.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 3.6332950592041016
+        },
+        "tempo": {
+          "syllable_rate": 7.682458386683681
+        },
+        "spectral": {
+          "brightness_hz": 907.0422061458999
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 314.02,
+        "end": 314.801
+      }
+    },
+    {
+      "start": 315.0,
+      "end": 316.76,
+      "duration_sec": 1.76,
+      "text": "You're like making people's day and shit,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 89.31714630126953,
+          "std_hz": 18.33769989013672,
+          "range_hz": 55.59568786621094,
+          "direction": 0.4395932122700629
+        },
+        "energy": {
+          "dynamics_db": 5.207701683044434
+        },
+        "tempo": {
+          "syllable_rate": 7.954545454545496
+        },
+        "spectral": {
+          "brightness_hz": 508.57273534173424
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 315.0,
+        "end": 316.76
+      }
+    },
+    {
+      "start": 316.9,
+      "end": 317.26,
+      "duration_sec": 0.36,
+      "text": "you know what I mean?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 0.8920068740844727
+        },
+        "tempo": {
+          "syllable_rate": 8.333333333333018
+        },
+        "spectral": {
+          "brightness_hz": 524.3674763404722
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 316.9,
+        "end": 317.26
+      }
+    },
+    {
+      "start": 317.44,
+      "end": 319.4,
+      "duration_sec": 1.96,
+      "text": "Some girl was like, oh, I don't really wanna wear",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 3.7839231491088867
+        },
+        "tempo": {
+          "syllable_rate": 9.18367346938785
+        },
+        "spectral": {
+          "brightness_hz": 398.2284499582884
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 317.44,
+        "end": 319.4
+      }
+    },
+    {
+      "start": 319.38,
+      "end": 320.961,
+      "duration_sec": 1.581,
+      "text": "this jacket, and then you compliment her,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 2.970418930053711
+        },
+        "tempo": {
+          "syllable_rate": 8.222643896268094
+        },
+        "spectral": {
+          "brightness_hz": 426.47749707227354
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 319.38,
+        "end": 320.961
+      }
+    },
+    {
+      "start": 320.96,
+      "end": 323.26,
+      "duration_sec": 2.3,
+      "text": "and she's just like, ah, great,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 68.89524841308594,
+          "std_hz": 3.5544607639312744,
+          "range_hz": 8.807785034179688,
+          "direction": -0.8177326328151807
+        },
+        "energy": {
+          "dynamics_db": 4.43784236907959
+        },
+        "tempo": {
+          "syllable_rate": 5.2173913043478
+        },
+        "spectral": {
+          "brightness_hz": 385.2001917768223
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 320.96,
+        "end": 323.26
+      }
+    },
+    {
+      "start": 323.42,
+      "end": 324.461,
+      "duration_sec": 1.041,
+      "text": "I guess it was a good choice.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 77.4334716796875,
+          "std_hz": 11.656820297241211,
+          "range_hz": 36.408477783203125,
+          "direction": -0.6361993271231663
+        },
+        "energy": {
+          "dynamics_db": 4.686853408813477
+        },
+        "tempo": {
+          "syllable_rate": 7.684918347742578
+        },
+        "spectral": {
+          "brightness_hz": 596.6582930642793
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 323.42,
+        "end": 324.461
+      }
+    },
+    {
+      "start": 324.72,
+      "end": 325.861,
+      "duration_sec": 1.141,
+      "text": "You make people feel good,",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 249.34349060058594,
+          "std_hz": 12.39180850982666,
+          "range_hz": 36.67791748046875,
+          "direction": -2.935052724984982
+        },
+        "energy": {
+          "dynamics_db": 7.514847755432129
+        },
+        "tempo": {
+          "syllable_rate": 7.8878177037688815
+        },
+        "spectral": {
+          "brightness_hz": 1063.1968013026124
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 324.72,
+        "end": 325.861
+      }
+    },
+    {
+      "start": 325.9,
+      "end": 327.78,
+      "duration_sec": 1.88,
+      "text": "and by giving that positive energy out,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 4.306949615478516
+        },
+        "tempo": {
+          "syllable_rate": 7.4468085106383155
+        },
+        "spectral": {
+          "brightness_hz": 843.6758836630921
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 325.9,
+        "end": 327.78
+      }
+    },
+    {
+      "start": 327.84,
+      "end": 329.001,
+      "duration_sec": 1.161,
+      "text": "that'll come back to you.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.76737213134766,
+          "std_hz": 1.279550552368164,
+          "range_hz": 4.264030456542969,
+          "direction": -0.25621781782670205
+        },
+        "energy": {
+          "dynamics_db": 3.5946483612060547
+        },
+        "tempo": {
+          "syllable_rate": 6.890611541774325
+        },
+        "spectral": {
+          "brightness_hz": 513.1087856847198
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 327.84,
+        "end": 329.001
+      }
+    },
+    {
+      "start": 328.98,
+      "end": 333.72,
+      "duration_sec": 4.74,
+      "text": "so by doing that smiling looking a stranger in the eyes for the first time that day whatever",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 451.89471435546875,
+          "std_hz": 11.352219581604004,
+          "range_hz": 34.098968505859375,
+          "direction": -0.22176603494273203
+        },
+        "energy": {
+          "dynamics_db": 4.486202239990234
+        },
+        "tempo": {
+          "syllable_rate": 6.751054852320662
+        },
+        "spectral": {
+          "brightness_hz": 855.0386717795506
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9902439024390244
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 328.98,
+        "end": 333.72
+      }
+    },
+    {
+      "start": 333.7,
+      "end": 339.82,
+      "duration_sec": 6.12,
+      "text": "and not again thinking so much about every little step of the way because you get overwhelmed right",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 76.12140655517578,
+          "std_hz": 11.091660499572754,
+          "range_hz": 40.592811584472656,
+          "direction": 0.07706354476911703
+        },
+        "energy": {
+          "dynamics_db": 3.6873722076416016
+        },
+        "tempo": {
+          "syllable_rate": 5.392156862745094
+        },
+        "spectral": {
+          "brightness_hz": 624.873870044356
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9848484848484849
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 333.7,
+        "end": 339.82
+      }
+    },
+    {
+      "start": 339.8,
+      "end": 346.08,
+      "duration_sec": 6.28,
+      "text": "it's like if your house it's like if your house if every room in your house is destroyed your",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 4.682342529296875
+        },
+        "tempo": {
+          "syllable_rate": 7.165605095541433
+        },
+        "spectral": {
+          "brightness_hz": 594.6682178693039
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 339.8,
+        "end": 346.08
+      }
+    },
+    {
+      "start": 346.06,
+      "end": 349.96,
+      "duration_sec": 3.9,
+      "text": "house is completely disheveled and you look at it you're like i gotta clean up this whole",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 4.82762336730957
+        },
+        "tempo": {
+          "syllable_rate": 7.948717948717995
+        },
+        "spectral": {
+          "brightness_hz": 752.1663269680097
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 346.06,
+        "end": 349.96
+      }
+    },
+    {
+      "start": 349.94,
+      "end": 355.06,
+      "duration_sec": 5.12,
+      "text": "fucking place instead of just we'll be also in the bathroom and getting the bathroom done",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 3.696392059326172
+        },
+        "tempo": {
+          "syllable_rate": 7.031249999999994
+        },
+        "spectral": {
+          "brightness_hz": 530.3476513272118
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 349.94,
+        "end": 355.06
+      }
+    },
+    {
+      "start": 355.04,
+      "end": 356.261,
+      "duration_sec": 1.221,
+      "text": "and then I'll do the bedroom.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 79.04442596435547,
+          "std_hz": 9.460793495178223,
+          "range_hz": 30.87065887451172,
+          "direction": -0.4426908405921467
+        },
+        "energy": {
+          "dynamics_db": 2.7419729232788086
+        },
+        "tempo": {
+          "syllable_rate": 5.733005733005716
+        },
+        "spectral": {
+          "brightness_hz": 748.833805906613
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 355.04,
+        "end": 356.261
+      }
+    },
+    {
+      "start": 356.42,
+      "end": 356.84,
+      "duration_sec": 0.42,
+      "text": "You know what I mean?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 5.450225830078125
+        },
+        "tempo": {
+          "syllable_rate": 7.142857142857839
+        },
+        "spectral": {
+          "brightness_hz": 1036.8964831338023
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 356.42,
+        "end": 356.84
+      }
+    },
+    {
+      "start": 356.9,
+      "end": 359.14,
+      "duration_sec": 2.24,
+      "text": "Room by room, step by step.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 73.11140441894531,
+          "std_hz": 3.8602869510650635,
+          "range_hz": 12.371696472167969,
+          "direction": -0.18547357831682332
+        },
+        "energy": {
+          "dynamics_db": 4.802919387817383
+        },
+        "tempo": {
+          "syllable_rate": 6.249999999999974
+        },
+        "spectral": {
+          "brightness_hz": 809.0069432351235
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 356.9,
+        "end": 359.14
+      }
+    },
+    {
+      "start": 360.22,
+      "end": 361.141,
+      "duration_sec": 0.921,
+      "text": "Does that make sense?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 76.42655944824219,
+          "std_hz": 3.933753728866577,
+          "range_hz": 9.898200988769531,
+          "direction": 2.1867768423897878
+        },
+        "energy": {
+          "dynamics_db": 3.1788330078125
+        },
+        "tempo": {
+          "syllable_rate": 6.5146579804560805
+        },
+        "spectral": {
+          "brightness_hz": 666.9226074837346
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 360.22,
+        "end": 361.141
+      }
+    },
+    {
+      "start": 361.34,
+      "end": 361.981,
+      "duration_sec": 0.641,
+      "text": "Is that helpful?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 2.5356521606445312
+        },
+        "tempo": {
+          "syllable_rate": 6.240249609984209
+        },
+        "spectral": {
+          "brightness_hz": 694.840435967032
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 361.34,
+        "end": 361.981
+      }
+    },
+    {
+      "start": 362.52,
+      "end": 364.4,
+      "duration_sec": 1.88,
+      "text": "Like, do you think that that could actually",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 3.0668725967407227
+        },
+        "tempo": {
+          "syllable_rate": 8.510638297872362
+        },
+        "spectral": {
+          "brightness_hz": 914.5447657131434
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 362.52,
+        "end": 364.4
+      }
+    },
+    {
+      "start": 364.38,
+      "end": 366.3,
+      "duration_sec": 1.92,
+      "text": "help you to make approaches,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 4.406339645385742
+        },
+        "tempo": {
+          "syllable_rate": 8.854166666666593
+        },
+        "spectral": {
+          "brightness_hz": 1208.3571686795297
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 364.38,
+        "end": 366.3
+      }
+    },
+    {
+      "start": 366.8,
+      "end": 370.22,
+      "duration_sec": 3.42,
+      "text": "starting off by just talking without any intent at all?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 214.3157196044922,
+          "std_hz": 11.854433059692383,
+          "range_hz": 39.54255676269531,
+          "direction": -0.34532168602224306
+        },
+        "energy": {
+          "dynamics_db": 5.223919868469238
+        },
+        "tempo": {
+          "syllable_rate": 8.771929824561363
+        },
+        "spectral": {
+          "brightness_hz": 1351.2621247696115
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 366.8,
+        "end": 370.22
+      }
+    },
+    {
+      "start": 370.6,
+      "end": 371.881,
+      "duration_sec": 1.281,
+      "text": "It gets you out of your head.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 180.85867309570312,
+          "std_hz": 8.636957168579102,
+          "range_hz": 34.73115539550781,
+          "direction": -0.3548237261463566
+        },
+        "energy": {
+          "dynamics_db": 5.014054298400879
+        },
+        "tempo": {
+          "syllable_rate": 7.8064012490245105
+        },
+        "spectral": {
+          "brightness_hz": 1376.446877508615
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 370.6,
+        "end": 371.881
+      }
+    },
+    {
+      "start": 372.1,
+      "end": 374.7,
+      "duration_sec": 2.6,
+      "text": "If you're thinking about sexually escalating",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 4.881563186645508
+        },
+        "tempo": {
+          "syllable_rate": 9.615384615384741
+        },
+        "spectral": {
+          "brightness_hz": 1291.294395357255
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 372.1,
+        "end": 374.7
+      }
+    },
+    {
+      "start": 374.68,
+      "end": 376.5,
+      "duration_sec": 1.82,
+      "text": "in the bedroom and you can't even approach a girl,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 4.301445007324219
+        },
+        "tempo": {
+          "syllable_rate": 9.340659340659375
+        },
+        "spectral": {
+          "brightness_hz": 1148.4703748049121
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 374.68,
+        "end": 376.5
+      }
+    },
+    {
+      "start": 376.8,
+      "end": 378.361,
+      "duration_sec": 1.561,
+      "text": "you're not gonna go anywhere.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 205.0291290283203,
+          "std_hz": 19.717063903808594,
+          "range_hz": 81.57768249511719,
+          "direction": -0.8072571701544379
+        },
+        "energy": {
+          "dynamics_db": 5.5445404052734375
+        },
+        "tempo": {
+          "syllable_rate": 7.687379884689407
+        },
+        "spectral": {
+          "brightness_hz": 1322.276131120453
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 376.8,
+        "end": 378.361
+      }
+    },
+    {
+      "start": 378.5,
+      "end": 381.32,
+      "duration_sec": 2.82,
+      "text": "And again, too, even when I go on this rant,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 271.34613037109375,
+          "std_hz": 39.769248962402344,
+          "range_hz": 148.46798706054688,
+          "direction": -0.7328681978306932
+        },
+        "energy": {
+          "dynamics_db": 5.3293867111206055
+        },
+        "tempo": {
+          "syllable_rate": 7.4468085106383155
+        },
+        "spectral": {
+          "brightness_hz": 1304.6788108992005
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9672131147540983
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 378.5,
+        "end": 381.32
+      }
+    },
+    {
+      "start": 381.42,
+      "end": 382.461,
+      "duration_sec": 1.041,
+      "text": "because I talk about this to guys",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 217.2693634033203,
+          "std_hz": 3.597522735595703,
+          "range_hz": 12.485427856445312,
+          "direction": -0.13391956503319508
+        },
+        "energy": {
+          "dynamics_db": 5.864250183105469
+        },
+        "tempo": {
+          "syllable_rate": 7.684918347742578
+        },
+        "spectral": {
+          "brightness_hz": 1205.5502133173682
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 381.42,
+        "end": 382.461
+      }
+    },
+    {
+      "start": 382.44,
+      "end": 383.741,
+      "duration_sec": 1.301,
+      "text": "on the virtual instruction program,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 207.56324768066406,
+          "std_hz": 1.5351468324661255,
+          "range_hz": 4.7957000732421875,
+          "direction": -0.31978556874033665
+        },
+        "energy": {
+          "dynamics_db": 6.077234268188477
+        },
+        "tempo": {
+          "syllable_rate": 6.149116064565777
+        },
+        "spectral": {
+          "brightness_hz": 1127.522705789344
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9824561403508771
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 382.44,
+        "end": 383.741
+      }
+    },
+    {
+      "start": 383.72,
+      "end": 386.58,
+      "duration_sec": 2.86,
+      "text": "Instagram, like boot camps I do in Columbus, whatever, I go on this rant all the time.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 211.70590209960938,
+          "std_hz": 20.373613357543945,
+          "range_hz": 77.61427307128906,
+          "direction": -0.19350702354431704
+        },
+        "energy": {
+          "dynamics_db": 5.160650253295898
+        },
+        "tempo": {
+          "syllable_rate": 6.643356643356744
+        },
+        "spectral": {
+          "brightness_hz": 1155.4685022912313
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 383.72,
+        "end": 386.58
+      }
+    },
+    {
+      "start": 386.7,
+      "end": 391.82,
+      "duration_sec": 5.12,
+      "text": "I try to even eliminate the words open and approach when I talk about this.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 4.645827293395996
+        },
+        "tempo": {
+          "syllable_rate": 6.054687499999995
+        },
+        "spectral": {
+          "brightness_hz": 782.4262883524804
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 386.7,
+        "end": 391.82
+      }
+    },
+    {
+      "start": 392.12,
+      "end": 394.4,
+      "duration_sec": 2.28,
+      "text": "It's just speaking without intent.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 72.29248809814453,
+          "std_hz": 5.5371222496032715,
+          "range_hz": 14.5634765625,
+          "direction": -0.6557236609520841
+        },
+        "energy": {
+          "dynamics_db": 6.836661338806152
+        },
+        "tempo": {
+          "syllable_rate": 7.894736842105358
+        },
+        "spectral": {
+          "brightness_hz": 1016.7050107808797
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 392.12,
+        "end": 394.4
+      }
+    },
+    {
+      "start": 394.78,
+      "end": 396.361,
+      "duration_sec": 1.581,
+      "text": "You don't even have to stop.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 66.50025939941406,
+          "std_hz": 1.7812154293060303,
+          "range_hz": 4.264030456542969,
+          "direction": 0.20405667622883866
+        },
+        "energy": {
+          "dynamics_db": 4.468683242797852
+        },
+        "tempo": {
+          "syllable_rate": 7.590132827324395
+        },
+        "spectral": {
+          "brightness_hz": 943.9891018163088
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9710144927536232
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 394.78,
+        "end": 396.361
+      }
+    },
+    {
+      "start": 396.58,
+      "end": 400.7,
+      "duration_sec": 4.12,
+      "text": "Just walking by, hey, I really like your vest, and she'll be like, oh, like, usually you'll",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 452.686279296875,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.26375427246092914
+        },
+        "energy": {
+          "dynamics_db": 5.714488983154297
+        },
+        "tempo": {
+          "syllable_rate": 7.038834951456303
+        },
+        "spectral": {
+          "brightness_hz": 748.7461226399635
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9775280898876404
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 396.58,
+        "end": 400.7
+      }
+    },
+    {
+      "start": 400.68,
+      "end": 402.4,
+      "duration_sec": 1.72,
+      "text": "be like, oh, thanks, and you just keep moving along.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 72.41259765625,
+          "std_hz": 6.238242149353027,
+          "range_hz": 16.71026611328125,
+          "direction": 1.1154036241419165
+        },
+        "energy": {
+          "dynamics_db": 3.615703582763672
+        },
+        "tempo": {
+          "syllable_rate": 8.13953488372107
+        },
+        "spectral": {
+          "brightness_hz": 901.9091662592344
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 400.68,
+        "end": 402.4
+      }
+    },
+    {
+      "start": 402.7,
+      "end": 407.32,
+      "duration_sec": 4.62,
+      "text": "Or with, you know, what Tom Turow does to Egypt with the hit runs, which is he'll actually",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 208.93882751464844,
+          "std_hz": 2.7419276237487793,
+          "range_hz": 8.417144775390625,
+          "direction": 0.04217828488817172
+        },
+        "energy": {
+          "dynamics_db": 6.686236381530762
+        },
+        "tempo": {
+          "syllable_rate": 6.709956709956703
+        },
+        "spectral": {
+          "brightness_hz": 867.971072925992
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9849246231155779
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 402.7,
+        "end": 407.32
+      }
+    },
+    {
+      "start": 407.3,
+      "end": 410.4,
+      "duration_sec": 3.1,
+      "text": "just go up to girls and be like, hey, how are you doing today?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 215.39932250976562,
+          "std_hz": 3.2804694175720215,
+          "range_hz": 9.873123168945312,
+          "direction": -1.1772374933416183
+        },
+        "energy": {
+          "dynamics_db": 4.494528770446777
+        },
+        "tempo": {
+          "syllable_rate": 8.38709677419364
+        },
+        "spectral": {
+          "brightness_hz": 766.626358322131
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9552238805970149
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 407.3,
+        "end": 410.4
+      }
+    },
+    {
+      "start": 410.54,
+      "end": 411.381,
+      "duration_sec": 0.841,
+      "text": "And she'll be like, I'm good.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 2.227457046508789
+        },
+        "tempo": {
+          "syllable_rate": 8.323424494649709
+        },
+        "spectral": {
+          "brightness_hz": 518.8184980807846
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.972972972972973
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 410.54,
+        "end": 411.381
+      }
+    },
+    {
+      "start": 411.36,
+      "end": 413.22,
+      "duration_sec": 1.86,
+      "text": "but once we're to go up, we'll tell you you're really pretty.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 75.08202362060547,
+          "std_hz": 8.274717330932617,
+          "range_hz": 32.57759094238281,
+          "direction": 0.15022928466669425
+        },
+        "energy": {
+          "dynamics_db": 5.559457778930664
+        },
+        "tempo": {
+          "syllable_rate": 9.139784946236492
+        },
+        "spectral": {
+          "brightness_hz": 495.79537440445307
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 411.36,
+        "end": 413.22
+      }
+    },
+    {
+      "start": 413.3,
+      "end": 415.12,
+      "duration_sec": 1.82,
+      "text": "And he'll, like, just run away from there.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 4.639166831970215
+        },
+        "tempo": {
+          "syllable_rate": 4.945054945054964
+        },
+        "spectral": {
+          "brightness_hz": 590.8057806079172
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9873417721518988
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 413.3,
+        "end": 415.12
+      }
+    },
+    {
+      "start": 415.2,
+      "end": 415.62,
+      "duration_sec": 0.42,
+      "text": "You know what I mean?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 3.3219518661499023
+        },
+        "tempo": {
+          "syllable_rate": 7.142857142856872
+        },
+        "spectral": {
+          "brightness_hz": 705.0013658617725
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 415.2,
+        "end": 415.62
+      }
+    },
+    {
+      "start": 416.02,
+      "end": 420.32,
+      "duration_sec": 4.3,
+      "text": "Just to, again, like I said, get into that mode where you're looking a stranger in the eyes,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 73.17743682861328,
+          "std_hz": 7.150267601013184,
+          "range_hz": 20.274024963378906,
+          "direction": -0.35332831298626904
+        },
+        "energy": {
+          "dynamics_db": 4.091474533081055
+        },
+        "tempo": {
+          "syllable_rate": 6.511627906976727
+        },
+        "spectral": {
+          "brightness_hz": 481.29474880537913
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 416.02,
+        "end": 420.32
+      }
+    },
+    {
+      "start": 420.44,
+      "end": 424.1,
+      "duration_sec": 3.66,
+      "text": "you're talking, and you're, you know, just getting into that mode.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 108.84233093261719,
+          "std_hz": 51.29410171508789,
+          "range_hz": 114.648681640625,
+          "direction": -3.4202167406254738
+        },
+        "energy": {
+          "dynamics_db": 5.512099266052246
+        },
+        "tempo": {
+          "syllable_rate": 6.557377049180283
+        },
+        "spectral": {
+          "brightness_hz": 836.2381812910475
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9936708860759493
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 420.44,
+        "end": 424.1
+      }
+    },
+    {
+      "start": 424.56,
+      "end": 426.101,
+      "duration_sec": 1.541,
+      "text": "You slept all night, you know?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 5.517677307128906
+        },
+        "tempo": {
+          "syllable_rate": 7.787151200519159
+        },
+        "spectral": {
+          "brightness_hz": 1077.1346091809692
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9850746268656716
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 424.56,
+        "end": 426.101
+      }
+    },
+    {
+      "start": 426.08,
+      "end": 427.82,
+      "duration_sec": 1.74,
+      "text": "If you're going out during the day, you slept all night.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 70.89974975585938,
+          "std_hz": 6.011397361755371,
+          "range_hz": 14.105224609375,
+          "direction": 0.23170836312430504
+        },
+        "energy": {
+          "dynamics_db": 4.635643005371094
+        },
+        "tempo": {
+          "syllable_rate": 6.896551724137895
+        },
+        "spectral": {
+          "brightness_hz": 846.3891528308043
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 426.08,
+        "end": 427.82
+      }
+    },
+    {
+      "start": 427.9,
+      "end": 431.02,
+      "duration_sec": 3.12,
+      "text": "Maybe you went to your job, your fucking mall center,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.16230773925781,
+          "std_hz": 0.3975791931152344,
+          "range_hz": 1.1361770629882812,
+          "direction": -0.2080533163888124
+        },
+        "energy": {
+          "dynamics_db": 3.481508255004883
+        },
+        "tempo": {
+          "syllable_rate": 5.128205128205121
+        },
+        "spectral": {
+          "brightness_hz": 629.4187014655214
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 427.9,
+        "end": 431.02
+      }
+    },
+    {
+      "start": 431.14,
+      "end": 432.741,
+      "duration_sec": 1.601,
+      "text": "and you've been sitting in that cube all day or something.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 92.36470794677734,
+          "std_hz": 13.06629467010498,
+          "range_hz": 47.742713928222656,
+          "direction": -0.7685393009279771
+        },
+        "energy": {
+          "dynamics_db": 4.503911018371582
+        },
+        "tempo": {
+          "syllable_rate": 6.87070580886946
+        },
+        "spectral": {
+          "brightness_hz": 788.7741142584467
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 431.14,
+        "end": 432.741
+      }
+    },
+    {
+      "start": 432.84,
+      "end": 433.481,
+      "duration_sec": 0.641,
+      "text": "I don't know what you do.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 3.4769067764282227
+        },
+        "tempo": {
+          "syllable_rate": 7.800312012480261
+        },
+        "spectral": {
+          "brightness_hz": 775.4994088454097
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 432.84,
+        "end": 433.481
+      }
+    },
+    {
+      "start": 433.94,
+      "end": 436.9,
+      "duration_sec": 2.96,
+      "text": "But then afterwards, you're fucking not.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 67.99122619628906,
+          "std_hz": 1.454106092453003,
+          "range_hz": 5.538360595703125,
+          "direction": 0.3869408809777509
+        },
+        "energy": {
+          "dynamics_db": 4.016923904418945
+        },
+        "tempo": {
+          "syllable_rate": 7.432432432432484
+        },
+        "spectral": {
+          "brightness_hz": 540.6416296572105
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 433.94,
+        "end": 436.9
+      }
+    },
+    {
+      "start": 437.18,
+      "end": 439.6,
+      "duration_sec": 2.42,
+      "text": "I mean, I've got buddies that are engineers, you know?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 3.3107070922851562
+        },
+        "tempo": {
+          "syllable_rate": 8.677685950413165
+        },
+        "spectral": {
+          "brightness_hz": 755.0733262835798
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 437.18,
+        "end": 439.6
+      }
+    },
+    {
+      "start": 439.58,
+      "end": 468.34,
+      "duration_sec": 28.76,
+      "text": "I've got buddies that are engineers, he knows them, and they talk about how they go to work all day and it's all numbers and fucking drawing shit or whatever they do, and they're just fucking zombied out, and then they're like, if you want me to go talk to a girl in a grocery store, how do I go from cold to hot, you know, cold to warm to hot, warm being just intentless speaking, and that's how it's going, you know.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 132.81382751464844,
+          "std_hz": 66.73290252685547,
+          "range_hz": 165.299560546875,
+          "direction": -0.16956197105110743
+        },
+        "energy": {
+          "dynamics_db": 5.066242218017578
+        },
+        "tempo": {
+          "syllable_rate": 6.536856745479835
+        },
+        "spectral": {
+          "brightness_hz": 719.8606130461216
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9975786924939467
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 439.58,
+        "end": 468.34
+      }
+    },
+    {
+      "start": 480.98,
+      "end": 483.96,
+      "duration_sec": 2.98,
+      "text": "Thanks for watching!",
+      "pyannote_speaker": "UNKNOWN",
+      "features": {
+        "pitch": {
+          "mean_hz": 68.01103210449219,
+          "std_hz": 2.534735918045044,
+          "range_hz": 5.883003234863281,
+          "direction": -0.05105405111707063
+        },
+        "energy": {
+          "dynamics_db": 6.713340759277344
+        },
+        "tempo": {
+          "syllable_rate": 5.369127516778593
+        },
+        "spectral": {
+          "brightness_hz": 2356.9517964909583
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.wav",
+        "start": 480.98,
+        "end": 483.96
+      }
+    }
+  ]
+}

@@ -1,0 +1,252 @@
+You are a senior data analyst for a daygame coaching video pipeline. You will receive a transcript with speaker IDs and timestamps from a coaching video. Your job is to produce a comprehensive analysis in ONE pass that combines classification, speaker labeling, quality assessment, and self-verification.
+
+## YOUR TASKS (all in one pass)
+
+### Task 1: Classify the video type
+- `infield`: Coach doing live approaches on the street (1 approach = infield, even with intro/outro)
+- `talking_head`: Coach explaining concepts to camera (no live interaction with targets)
+- `podcast`: Multiple speakers discussing topics (balanced back-and-forth)
+- `compilation`: Mixed content — multiple approaches with breakdowns between them
+
+Decision rules:
+- Count DISTINCT approaches to different targets: 0 → talking_head/podcast; 1 → infield; 2+ → compilation
+- For 0-approach videos: one speaker >80% → talking_head; balanced multi-speaker → podcast
+- Intro/outro commentary alone does NOT make a video "compilation"
+
+### Task 2: Assign speaker roles PER SEGMENT (not per speaker)
+This is critical. The diarization system sometimes merges multiple real speakers into one speaker ID. Therefore, you must decide the role for EACH segment independently based on what the text actually says.
+
+Roles:
+- `coach`: Teaching, demonstrating, addressing camera ("guys", "as you can see"), leading approaches
+- `student`: A coached participant running an approach (not the instructor)
+- `target`: Woman being approached — short responses, gives name/info when asked, reacts
+- `voiceover`: Post-production narration
+- `other`: Background voices, bystanders
+- `unknown`: Cannot determine with confidence
+
+Per-segment rules:
+- If a segment contains MIXED speakers (e.g., coach question + target answer in same segment), mark it as `mixed` and note the dominant speaker and the approximate split
+- NEVER assign "target" to the person who delivers openers ("excuse me", "I just saw you")
+- The person giving SHORT RESPONSES to personal questions is typically the target
+- If unsure, use `unknown` — do not guess
+
+### Task 3: Detect conversation boundaries
+- Assign each segment a `conversation_id` (0 = non-conversational commentary/transition, 1+ = distinct approaches)
+- A new conversation starts when: direct address to new person, location shift, previous approach ended
+- Use time gaps between segments: >30s gap strongly suggests new conversation
+- A valid conversation must be >=10 seconds and ideally include both approacher and target turns
+- Mark the first segment of each conversation with `is_conversation_start: true`
+
+### Task 4: Assess transcript quality per segment
+For each segment, note any quality issues:
+- `clean`: No issues
+- `missing_punctuation`: Semantically correct but lacks punctuation/capitalization
+- `word_mistranscription`: Context makes the error obvious (provide corrected text)
+- `garbled`: Multiple errors, hard to parse
+- `fragment`: Short fragment split from adjacent segment (note: merge_prev or merge_next)
+- `artifact`: ASR hallucination, music transcribed as speech, repeated noise
+- `unrecoverable`: Cannot determine meaning
+
+For repairable issues, provide `repair_text` with the corrected version (only when you're confident).
+
+### Task 5: Self-verification
+After completing tasks 1-4, review your own work for these common errors:
+- Did you mark any target segments as coach (or vice versa)?
+- Did you mark someone delivering an opener as "target"?
+- Are conversation boundaries contiguous (no gaps in conversation_id sequences)?
+- Did you flag any segment as a conversation when it's really just commentary?
+- Are there segments where you assigned "unknown" that you could resolve by looking at surrounding context?
+- For mixed-speaker segments: did you identify the approximate boundary?
+
+Report any corrections you make during self-verification.
+
+## OUTPUT FORMAT
+
+Use a COMPACT format to stay within output limits. Return a JSON object:
+
+```json
+{
+  "video_type": {
+    "type": "infield|talking_head|podcast|compilation",
+    "confidence": 0.0-1.0,
+    "reasoning": "brief explanation"
+  },
+  "transcript_confidence": {
+    "score": 1-100,
+    "reasoning": "brief quality summary"
+  },
+  "self_verification": {
+    "corrections_made": ["list of any corrections from Task 5"],
+    "remaining_uncertainties": ["list of things you're not sure about"]
+  },
+  "segment_defaults": {
+    "segment_type": "commentary",
+    "conversation_id": 0,
+    "quality": "clean"
+  },
+  "segments": [
+    [0, "coach"],
+    [1, "coach"],
+    [5, "target", {"conv": 1, "type": "approach", "conv_start": true}],
+    [6, "coach", {"conv": 1, "type": "approach", "mixed": "Coach asks question, target gives brief answer. Coach ~70%"}],
+    [10, "coach", {"quality": "missing_punctuation", "repair": "Corrected text here."}],
+    [15, "other", {"quality": "artifact"}]
+  ],
+  "conversations": [
+    {
+      "conversation_id": 1,
+      "description": "brief description",
+      "segment_range": [5, 25],
+      "speakers_involved": ["coach", "target"],
+      "target_participation": "none|minimal|moderate|active"
+    }
+  ]
+}
+```
+
+### Compact segment format rules:
+- Each segment is an array: `[id, role]` for default segments, or `[id, role, {overrides}]` for non-default
+- Default values (from `segment_defaults`): segment_type="commentary", conversation_id=0, quality="clean"
+- Only include the third element (overrides object) when something differs from defaults
+- Override keys: `conv` (conversation_id), `type` (segment_type), `conv_start` (true if conversation start), `mixed` (string detail if mixed speakers), `quality`, `repair` (repair text), `repair_conf` (0-1), `teaser` (true), `teaser_of` (conversation_id)
+- This keeps output small even for 500+ segment videos
+```
+
+## IMPORTANT RULES
+- Return JSON only. No markdown fences, no prose outside JSON.
+- If you cannot determine something, say so explicitly — do not invent.
+- Be conservative: `unknown` is always safer than a wrong guess.
+- For mixed-speaker segments, `is_mixed: true` with a `mixed_detail` string describing the split is FAR better than guessing wrong.
+
+## VIDEO METADATA
+Title: "What to say to a Woman in the 1st Seconds (LIVE DEMO)"
+Channel: coach_kyle_how_to_approach_a_girl
+Duration: 522 seconds
+
+## TRANSCRIPT (124 segments)
+Format: [ID] SPEAKER_XX (start-end): text
+
+[0] SPEAKER_01 (0.0-4.8): i'm about to go and approach this girl right now and i want to show you guys the two easiest lines
+[1] SPEAKER_01 (4.8-12.0): that you can say right now to just get into more interactions let's go hey excuse me hi i actually
+[2] SPEAKER_01 (11.9-16.1): just saw you walking by and i thought you were cute i just wanted to come over and say hi really
+[3] SPEAKER_01 (16.1-24.2): quick is that a fist bump you're very like chill and low-key but if you don't believe in yourself
+[4] SPEAKER_01 (26.2-32.4): yeah it goes hand in hand no i'm gonna have to take a sip is it good okay that's the first
+[5] SPEAKER_01 (32.4-37.9): easiest opener as you can see that can go really well i didn't over complicate the open it was a
+[6] SPEAKER_01 (37.9-44.1): canned opener but when it's delivered well nice and slow looking her deep in her eyes it can go
+[7] SPEAKER_01 (44.0-49.0): well that actually was a that was a half hour interaction that ended up with a green tea and
+[8] SPEAKER_01 (48.9-53.4): i'm just trying to film this video so i actually had to end the interaction now let's get into the
+[9] SPEAKER_01 (53.3-58.6): second canned open which is i saw you walking by and i thought you had an interesting look
+[10] SPEAKER_01 (59.1-65.2): here we go hey excuse me hi i was actually headed that way but i just want to say i thought you had
+[11] SPEAKER_01 (65.2-70.8): a really interesting look hey excuse me hi hi i was actually just walking by and i thought you
+[12] SPEAKER_01 (70.8-75.7): had a really interesting look i just wanted to say hi really quick thanks hi i know you're like on
+[13] SPEAKER_01 (75.7-80.5): the phone and everything yeah it's a tad bit random but yeah i just want to say what's up how's your
+[14] SPEAKER_02 (80.5-85.6): your day going my day's going well i'm on the phone with my boyfriend um but that's really
+[15] SPEAKER_02 (85.5-89.4): sweet and i appreciate it for sure have a great rest of your day you as well okay take care now
+[16] SPEAKER_01 (90.1-95.0): now she was literally on the phone with her boyfriend now at the time of me approaching
+[17] SPEAKER_01 (95.0-99.4): obviously i didn't know that but it just proves the point that you don't know how the woman's
+[18] SPEAKER_01 (99.4-104.0): gonna respond now when i initially went up to her i saw her talking on the phone i was actually
+[19] SPEAKER_01 (104.0-108.8): thinking oh damn like she's actually on the phone but despite that the moment i got her attention
+[20] SPEAKER_01 (108.8-111.6): attention and said something, she just melted.
+[21] SPEAKER_01 (112.0-113.2): Despite her being on the phone with her man,
+[22] SPEAKER_01 (113.3-114.6): she literally was like, oh my God.
+[23] SPEAKER_01 (114.8-116.3): She was like literally taken back for a second.
+[24] SPEAKER_01 (117.2-120.5): And after having five seconds of interaction, she said, I actually am on the phone with my
+[25] SPEAKER_01 (120.5-121.7): boyfriend, but thank you so much.
+[26] SPEAKER_01 (122.0-122.5): Have a great day.
+[27] SPEAKER_01 (122.9-124.9): And then you walk away from that feeling
+[28] SPEAKER_01 (124.9-128.2): confident, feeling good about yourself because it wasn't creepy.
+[29] SPEAKER_01 (128.2-129.2): Yes, she was on the phone,
+[30] SPEAKER_01 (129.2-131.0): but you took the step anyway.
+[31] SPEAKER_01 (131.1-133.0): Now you congratulate yourself for that.
+[32] SPEAKER_01 (133.0-134.1): So don't let a girl talking
+[33] SPEAKER_01 (134.0-140.0): on the phone holds you back from just at least giving a compliment so those are the two easiest
+[34] SPEAKER_01 (140.0-143.7): can openers that you could use to go up and approach women and as you can see with both of
+[35] SPEAKER_01 (143.7-149.0): these there was nothing special there was nothing unique about these opens just very generic very
+[36] SPEAKER_01 (149.0-155.0): canned line nice slow delivery and the girls still respond positively now the reason i wanted to give
+[37] SPEAKER_01 (155.0-158.7): you guys these lines first before we get into a little bit more advanced stuff in this video
+[38] SPEAKER_01 (158.7-163.3): is because initially when you're starting out you want to start out simple you don't want to
+[39] SPEAKER_01 (163.3-168.3): to have some complicated, super genuine, authentic, witty line that you're going to say.
+[40] SPEAKER_01 (168.3-168.5): It's actually
+[41] SPEAKER_01 (168.5-170.7): going to put you in your head more, right?
+[42] SPEAKER_01 (170.8-173.3): So just having these two lines in your back pocket,
+[43] SPEAKER_01 (173.4-177.5): knowing that I could go up to any girl and just say these with good delivery, that's where you
+[44] SPEAKER_01 (177.5-178.2): want to start.
+[45] SPEAKER_01 (178.5-182.0): As you do that over and over and over again, you will then get to a point where
+[46] SPEAKER_01 (182.0-183.5): you feel really comfortable with that.
+[47] SPEAKER_01 (183.5-186.2): And we can get into more advanced concepts, which is what I
+[48] SPEAKER_01 (186.1-190.5): want to talk about in just a minute, because this is the point that I see a lot with my clients.
+[49] SPEAKER_01 (190.5-195.7): when guys come into my program within about a week to two weeks i get them to this point they're very
+[50] SPEAKER_01 (195.6-200.4): comfortable and confident opening with these canned lines some guys even come into my program
+[51] SPEAKER_01 (200.4-205.1): already at that level the next thing that i usually work on them with is how to elaborate on
+[52] SPEAKER_01 (205.1-210.3): the open so after you said the line how can you make it more genuine and authentic to the particular
+[53] SPEAKER_01 (210.3-214.4): woman in front of you and so i want to show you that in just a second but if you're somebody who's
+[54] SPEAKER_01 (214.4-219.0): not already doing what i just showed you in this video on a daily basis if you're not confident
+[55] SPEAKER_01 (219.0-222.4): with that if you're not already doing that consistently with attractive women i'd love
+[56] SPEAKER_01 (222.4-226.7): to help you get to at least that level and then way beyond that so you can click the link down
+[57] SPEAKER_01 (226.6-230.9): below and apply to work with me directly if you want the coaching accountability the structure
+[58] SPEAKER_01 (230.9-236.3): and the push that you need to hit these levels and go beyond that link is in description let's get
+[59] SPEAKER_01 (236.3-240.0): into the next part of this video and so now what i want to discuss with you guys is how to elaborate
+[60] SPEAKER_01 (240.0-245.1): off of the open so i already gave you some can lines you can open with like i think you look cute
+[61] SPEAKER_01 (245.1-246.9): you, I thought you had an interesting look.
+[62] SPEAKER_01 (247.1-249.9): The next step would be to actually explain to the
+[63] SPEAKER_01 (249.8-251.5): woman what you notice about her.
+[64] SPEAKER_01 (251.6-254.7): And I think this is really powerful because it allows you to come
+[65] SPEAKER_01 (254.6-257.4): off a lot more authentic and genuine, right?
+[66] SPEAKER_01 (257.4-259.3): Because the thing about just saying can lines
+[67] SPEAKER_01 (259.2-263.5): over and over and over again is that it's going to start to feel robotic.
+[68] SPEAKER_01 (263.6-264.0): It's going to start to
+[69] SPEAKER_01 (264.0-266.7): feel like inauthentic at a certain point, right?
+[70] SPEAKER_01 (266.8-270.7): And so the women will respond more when they feel
+[71] SPEAKER_01 (270.6-275.8): like it's genuine and authentic so the easiest way to get comfortable doing this in my opinion
+[72] SPEAKER_01 (275.7-280.8): is you have a couple simple adjectives that you could use because most women are gonna have a
+[73] SPEAKER_01 (280.7-288.5): certain look so it's either like classy elegant professional business casual sporty fit or comfy
+[74] SPEAKER_01 (288.5-293.0): comfortable you know cue and like kind of like comfortable sunday type vibe i would still
+[75] SPEAKER_01 (293.0-298.1): recommend picking one of these and you can even just point out the colors that you notice about
+[76] SPEAKER_01 (298.1-301.7): out there like some of my approaches you'll see me say i just saw you walking by i thought you
+[77] SPEAKER_01 (301.6-308.1): look cute in the all black dress just sitting down here enjoying the sun excuse me can i just
+[78] SPEAKER_00 (308.1-313.5): say really quickly i thought you look super cute like sitting in the all black you you look like
+[79] SPEAKER_00 (313.5-318.8): you're just like i don't know you're like dressed up but you're like comfy and like casual at the
+[80] SPEAKER_01 (318.8-327.8): same time hey excuse me can i just say you look very cute today yeah i see you enjoying your food
+[81] SPEAKER_01 (327.7-335.8): just tanning very peaceful Tuesday afternoon so just elaborating on what
+[82] SPEAKER_01 (335.7-340.4): you see and what you notice about the woman I just thought you look cute yeah
+[83] SPEAKER_01 (341.6-346.5): you have like this is like a very yeah you do you do with the beige with the
+[84] SPEAKER_01 (346.5-350.1): jean like it's a it's a good fit with that one in particular she doesn't speak
+[85] SPEAKER_01 (350.1-354.4): good English either way you could see the concept demonstrated right so I just
+[86] SPEAKER_01 (354.4-358.4): went up i said i thought you looked cute and she's like i don't understand i said i thought you
+[87] SPEAKER_01 (358.4-364.2): looked cute like i like your and she said oh style i said yeah like this top the beige with the jean
+[88] SPEAKER_01 (364.2-369.1): shorts like it looks really good i had to dumb it down a little bit for that particular woman so
+[89] SPEAKER_01 (369.1-373.0): that it would make sense but you could start to see that i'm just pointing out her style and i'm
+[90] SPEAKER_01 (373.0-377.1): just talking about the color coordination and the type of material so that's one way you could do
+[91] SPEAKER_01 (377.1-383.2): it she has good style let's get into a couple other ones hey excuse me hi i was actually headed
+[92] SPEAKER_01 (383.2-387.9): that way but i just want to say i thought you had a really interesting look like you look very cute
+[93] SPEAKER_01 (387.9-392.4): with your white and black sporty fit thank you that one right there what i noticed about her
+[94] SPEAKER_01 (392.4-398.3): she just had a sporty fit she had a white top with black gym spandex on and so she looks cute
+[95] SPEAKER_01 (398.2-402.9): with the white and black she got this sporty fit going on and i thought she had an interesting look
+[96] SPEAKER_01 (402.9-408.9): so that's how you can elaborate on that one let's go to another one hey excuse me i was actually
+[97] SPEAKER_01 (408.9-412.6): headed that way but i just want to say i thought you looked really cute you have like a very
+[98] SPEAKER_01 (412.6-417.6): interesting look with your fashion yeah it's just like the I think the way with
+[99] SPEAKER_01 (417.6-422.8): the the beige it's very like I don't almost like like a Zara type fit yeah
+[100] SPEAKER_02 (423.3-435.1): what are you guys up to was that done intentionally actually says a lot about
+[101] SPEAKER_01 (435.1-441.7): you a good thing yeah I mean it means you're independent and you're a little
+[102] SPEAKER_01 (441.7-447.9): adventurous and you like to explore yeah and you're likely fun yeah yeah i mean you seem very
+[103] SPEAKER_01 (447.9-452.6): bubbly yeah so that's cool you don't have any plans for the next week no i don't know what i'm
+[104] SPEAKER_01 (452.6-458.1): gonna do nothing on the nothing does that excite you or scare you or i literally don't even know
+[105] SPEAKER_02 (458.1-464.2): i need a sort of that to be honest wow okay i know you're gonna be here for a week and you have
+[106] SPEAKER_01 (464.2-469.1): no plans yeah i should be free at some point in the week yeah maybe maybe we should keep in touch
+[107] SPEAKER_01 (469.0-473.8): much yeah do you have WhatsApp or what do you have yeah I do that's another instance of how
+[108] SPEAKER_01 (473.8-478.1): you can elaborate off of the open and it doesn't even need to be just on the open like throughout
+[109] SPEAKER_01 (478.0-483.4): the interaction I'm constantly talking about the things I notice about the woman and that's what
+[110] SPEAKER_01 (483.3-488.9): makes the conversation flavorful now that was about uh maybe 12 to 15 minute interaction that
+[111] SPEAKER_01 (488.9-493.0): just shows you the power of what you can do if you have the right open and the right delivery
+[112] SPEAKER_01 (492.9-498.5): now obviously that alone isn't going to land you dates there is skills when it comes to conversations
+[113] SPEAKER_01 (498.5-501.4): conversations and flirting and running the full interaction.
+[114] SPEAKER_01 (501.4-502.3): So if you want to learn more about
+[115] SPEAKER_01 (502.3-505.0): that stuff, you guys could check out this video right here.
+[116] SPEAKER_01 (505.2-506.4): Or if you're somebody who's not really
+[117] SPEAKER_01 (506.4-511.0): approaching, like if you're not doing the things already discussed in this video, then you likely
+[118] SPEAKER_01 (511.0-515.7): need structure, accountability, coaching, and that push to get you to that next level.
+[119] SPEAKER_01 (515.7-515.9): And I would
+[120] SPEAKER_01 (515.9-517.4): love to help you guys get there.
+[121] SPEAKER_01 (517.5-520.0): So click the link down below and apply to work with me one-on-one.
+[122] SPEAKER_01 (520.3-521.6): That's all for this video, guys.
+[123] SPEAKER_01 (521.9-522.1): Peace out.

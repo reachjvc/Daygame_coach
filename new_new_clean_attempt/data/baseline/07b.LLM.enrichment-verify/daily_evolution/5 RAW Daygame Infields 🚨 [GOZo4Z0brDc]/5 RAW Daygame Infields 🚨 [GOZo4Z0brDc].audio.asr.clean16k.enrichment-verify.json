@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "generated_at": "2026-03-05T17:56:51Z",
+  "video_id": "GOZo4Z0brDc",
+  "source": "daily_evolution",
+  "status": "PASS",
+  "gate_decision": "pass",
+  "reason_code": "promotional_talking_head_adequate",
+  "inputs": {
+    "stage07_enriched": "/home/jonaswsl/projects/daygame-coach/data/07.LLM.content/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.enriched.json",
+    "stage06_conversations": "/home/jonaswsl/projects/daygame-coach/data/06c.DET.patched/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.conversations.json",
+    "stage06e_quality_check": "/home/jonaswsl/projects/daygame-coach/data/06e.LLM.quality-check/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.quality-check.json"
+  },
+  "checks": [
+    {
+      "severity": "info",
+      "check": "evidence_alignment",
+      "message": "physical_escalation technique tag is based on coach referencing a make-out in a separate video (segments 7-8), not teaching or demonstrating escalation in this video; tag is traceable but contextually weak",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review"
+    },
+    {
+      "severity": "info",
+      "check": "hallucination_control",
+      "message": "No unsupported concepts invented; physical_escalation has transcript mention albeit as a promotional reference to external content",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review"
+    },
+    {
+      "severity": "info",
+      "check": "phase_coherence",
+      "message": "Single talking_head_section with no phase narrative; no coherence risk",
+      "signal_class": "other_quality"
+    },
+    {
+      "severity": "info",
+      "check": "support_density",
+      "message": "All 17 segments cited as evidence for one promotional section; adequate coverage for a short monologue",
+      "signal_class": "transcript_quality"
+    },
+    {
+      "severity": "info",
+      "check": "hook_rate",
+      "message": "hook_segment_id is null; expected for talking_head promotional content",
+      "signal_class": "other_quality"
+    },
+    {
+      "severity": "info",
+      "check": "low_quality_segments",
+      "message": "4 of 17 segments flagged low-quality (segments 5,8,9,11); these are short fragments typical of sentence-level segmentation, no material impact on enrichment accuracy",
+      "signal_class": "transcript_quality"
+    }
+  ],
+  "issues": [
+    {
+      "issue_code": "evidence_alignment_mismatch",
+      "issue_severity": "minor",
+      "gate_decision": "pass",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review",
+      "message": "physical_escalation technique is attributed to this video but the transcript only references a make-out occurring in a separate linked video; the tag is not wrong per se but overstates this video's instructional content",
+      "conversation_id": null,
+      "segment_id": null,
+      "evidence_segment_ids": [
+        6,
+        7,
+        8
+      ],
+      "confidence": 0.7
+    }
+  ],
+  "waivers_applied": [],
+  "metrics": {
+    "checks_total": 6,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 6,
+    "evidence_coverage_ratio": 1.0,
+    "hallucination_risk_ratio": null
+  },
+  "pipeline_version": "07b.LLM.enrichment-verify-v1.3"
+}

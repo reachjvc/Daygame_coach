@@ -1,0 +1,2072 @@
+{
+  "version": 1,
+  "generated_at": "2026-03-05T18:49:19Z",
+  "pipeline_version": "06h.DET.confidence-propagation-v2.1",
+  "scope": {
+    "manifest": "/tmp/manifest_ctts8xePLWA_h6ij5reb.txt",
+    "video_id": "ctts8xePLWA",
+    "source": null
+  },
+  "segments": [
+    {
+      "segment_id": 0,
+      "conversation_id": 0,
+      "token_weight": 4.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 1,
+      "conversation_id": 0,
+      "token_weight": 2.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 2,
+      "conversation_id": 0,
+      "token_weight": 5.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 3,
+      "conversation_id": 0,
+      "token_weight": 8.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 4,
+      "conversation_id": 0,
+      "token_weight": 21.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 5,
+      "conversation_id": 0,
+      "token_weight": 20.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 6,
+      "conversation_id": 0,
+      "token_weight": 15.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 7,
+      "conversation_id": 0,
+      "token_weight": 11.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 8,
+      "conversation_id": 0,
+      "token_weight": 17.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 9,
+      "conversation_id": 0,
+      "token_weight": 11.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 10,
+      "conversation_id": 0,
+      "token_weight": 11.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 11,
+      "conversation_id": 0,
+      "token_weight": 11.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 12,
+      "conversation_id": 0,
+      "token_weight": 8.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 13,
+      "conversation_id": 0,
+      "token_weight": 7.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 14,
+      "conversation_id": 0,
+      "token_weight": 5.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 15,
+      "conversation_id": 0,
+      "token_weight": 4.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 16,
+      "conversation_id": 0,
+      "token_weight": 10.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 17,
+      "conversation_id": 0,
+      "token_weight": 7.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 18,
+      "conversation_id": 0,
+      "token_weight": 7.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 19,
+      "conversation_id": 0,
+      "token_weight": 19.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 20,
+      "conversation_id": 0,
+      "token_weight": 2.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 21,
+      "conversation_id": 0,
+      "token_weight": 17.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 22,
+      "conversation_id": 0,
+      "token_weight": 19.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 23,
+      "conversation_id": 0,
+      "token_weight": 15.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 24,
+      "conversation_id": 0,
+      "token_weight": 7.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 25,
+      "conversation_id": 0,
+      "token_weight": 12.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 26,
+      "conversation_id": 0,
+      "token_weight": 11.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 27,
+      "conversation_id": 0,
+      "token_weight": 7.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 28,
+      "conversation_id": 0,
+      "token_weight": 12.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 29,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 30,
+      "conversation_id": 0,
+      "token_weight": 3.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 31,
+      "conversation_id": 0,
+      "token_weight": 5.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 32,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9455,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9952,
+          "after": 0.9455
+        }
+      ],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 33,
+      "conversation_id": 0,
+      "token_weight": 18.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.6993,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "transcript",
+          "multiplier": 0.62,
+          "before": 1.0,
+          "after": 0.62
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.8629,
+          "before": 0.62,
+          "after": 0.535
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.9293,
+          "before": 0.99,
+          "after": 0.92
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7361,
+          "after": 0.6993
+        }
+      ],
+      "damage_types": [
+        "seed_low_quality_segment"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 34,
+      "conversation_id": 0,
+      "token_weight": 19.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9455,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9952,
+          "after": 0.9455
+        }
+      ],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 35,
+      "conversation_id": 0,
+      "token_weight": 23.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9455,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9952,
+          "after": 0.9455
+        }
+      ],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 36,
+      "conversation_id": 0,
+      "token_weight": 13.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 37,
+      "conversation_id": 0,
+      "token_weight": 16.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 38,
+      "conversation_id": 0,
+      "token_weight": 16.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 39,
+      "conversation_id": 0,
+      "token_weight": 5.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 40,
+      "conversation_id": 0,
+      "token_weight": 16.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 41,
+      "conversation_id": 0,
+      "token_weight": 18.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 42,
+      "conversation_id": 0,
+      "token_weight": 10.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 43,
+      "conversation_id": 0,
+      "token_weight": 8.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 44,
+      "conversation_id": 0,
+      "token_weight": 3.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 45,
+      "conversation_id": 0,
+      "token_weight": 14.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 46,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 47,
+      "conversation_id": 0,
+      "token_weight": 13.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 48,
+      "conversation_id": 0,
+      "token_weight": 4.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 49,
+      "conversation_id": 0,
+      "token_weight": 12.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 50,
+      "conversation_id": 0,
+      "token_weight": 2.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 51,
+      "conversation_id": 0,
+      "token_weight": 10.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 52,
+      "conversation_id": 0,
+      "token_weight": 9.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 53,
+      "conversation_id": 0,
+      "token_weight": 16.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 54,
+      "conversation_id": 0,
+      "token_weight": 18.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 55,
+      "conversation_id": 0,
+      "token_weight": 14.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 56,
+      "conversation_id": 0,
+      "token_weight": 15.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 57,
+      "conversation_id": 0,
+      "token_weight": 13.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 58,
+      "conversation_id": 0,
+      "token_weight": 16.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 59,
+      "conversation_id": 0,
+      "token_weight": 9.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 60,
+      "conversation_id": 0,
+      "token_weight": 9.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 61,
+      "conversation_id": 0,
+      "token_weight": 8.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 62,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 63,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 64,
+      "conversation_id": 0,
+      "token_weight": 10.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 65,
+      "conversation_id": 0,
+      "token_weight": 7.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 66,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 67,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 68,
+      "conversation_id": 0,
+      "token_weight": 11.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 69,
+      "conversation_id": 0,
+      "token_weight": 9.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 70,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 71,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 72,
+      "conversation_id": 0,
+      "token_weight": 20.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 73,
+      "conversation_id": 0,
+      "token_weight": 2.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 74,
+      "conversation_id": 0,
+      "token_weight": 18.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 75,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 76,
+      "conversation_id": 0,
+      "token_weight": 4.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 77,
+      "conversation_id": 0,
+      "token_weight": 14.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 78,
+      "conversation_id": 0,
+      "token_weight": 3.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 79,
+      "conversation_id": 0,
+      "token_weight": 13.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 80,
+      "conversation_id": 0,
+      "token_weight": 9.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 81,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 82,
+      "conversation_id": 0,
+      "token_weight": 15.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 83,
+      "conversation_id": 0,
+      "token_weight": 14.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 84,
+      "conversation_id": 0,
+      "token_weight": 14.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 85,
+      "conversation_id": 0,
+      "token_weight": 14.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 86,
+      "conversation_id": 0,
+      "token_weight": 15.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 87,
+      "conversation_id": 0,
+      "token_weight": 12.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 88,
+      "conversation_id": 0,
+      "token_weight": 12.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 89,
+      "conversation_id": 0,
+      "token_weight": 16.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 90,
+      "conversation_id": 0,
+      "token_weight": 15.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 91,
+      "conversation_id": 0,
+      "token_weight": 15.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 92,
+      "conversation_id": 0,
+      "token_weight": 12.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 93,
+      "conversation_id": 1,
+      "token_weight": 18.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9455,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9952,
+          "after": 0.9455
+        }
+      ],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 94,
+      "conversation_id": 1,
+      "token_weight": 20.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.5308,
+      "confidence_band": "low",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.48,
+          "before": 0.85,
+          "after": 0.408
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.775,
+          "before": 1.0,
+          "after": 0.775
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.7451,
+          "before": 0.408,
+          "after": 0.304
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.5588,
+          "after": 0.5308
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 95,
+      "conversation_id": 1,
+      "token_weight": 19.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9455,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9952,
+          "after": 0.9455
+        }
+      ],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 96,
+      "conversation_id": 1,
+      "token_weight": 15.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.5083,
+      "confidence_band": "low",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.48,
+          "before": 0.85,
+          "after": 0.408
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.75,
+          "before": 1.0,
+          "after": 0.75
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.6838,
+          "before": 0.408,
+          "after": 0.279
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.535,
+          "after": 0.5083
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 97,
+      "conversation_id": 1,
+      "token_weight": 17.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9455,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9952,
+          "after": 0.9455
+        }
+      ],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 98,
+      "conversation_id": 1,
+      "token_weight": 22.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 99,
+      "conversation_id": 1,
+      "token_weight": 17.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 100,
+      "conversation_id": 1,
+      "token_weight": 17.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 101,
+      "conversation_id": 1,
+      "token_weight": 16.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9455,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9952,
+          "after": 0.9455
+        }
+      ],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 102,
+      "conversation_id": 1,
+      "token_weight": 15.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.5421,
+      "confidence_band": "low",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.48,
+          "before": 0.85,
+          "after": 0.408
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.8,
+          "before": 1.0,
+          "after": 0.8
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.7451,
+          "before": 0.408,
+          "after": 0.304
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.5706,
+          "after": 0.5421
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 103,
+      "conversation_id": 1,
+      "token_weight": 18.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.5196,
+      "confidence_band": "low",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.48,
+          "before": 0.85,
+          "after": 0.408
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.775,
+          "before": 1.0,
+          "after": 0.775
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.6838,
+          "before": 0.408,
+          "after": 0.279
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.5469,
+          "after": 0.5196
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 104,
+      "conversation_id": 1,
+      "token_weight": 18.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9455,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9952,
+          "after": 0.9455
+        }
+      ],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 105,
+      "conversation_id": 1,
+      "token_weight": 18.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 106,
+      "conversation_id": 1,
+      "token_weight": 20.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9455,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9952,
+          "after": 0.9455
+        }
+      ],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 107,
+      "conversation_id": 1,
+      "token_weight": 15.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.6316,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "transcript",
+          "multiplier": 0.62,
+          "before": 1.0,
+          "after": 0.62
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.7419,
+          "before": 0.62,
+          "after": 0.46
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.8535,
+          "before": 0.99,
+          "after": 0.845
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.6649,
+          "after": 0.6316
+        }
+      ],
+      "damage_types": [
+        "seed_low_quality_segment"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 108,
+      "conversation_id": 1,
+      "token_weight": 15.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9455,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9952,
+          "after": 0.9455
+        }
+      ],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 109,
+      "conversation_id": 1,
+      "token_weight": 15.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 110,
+      "conversation_id": 1,
+      "token_weight": 15.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 111,
+      "conversation_id": 1,
+      "token_weight": 4.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 112,
+      "conversation_id": 1,
+      "token_weight": 3.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 113,
+      "conversation_id": 1,
+      "token_weight": 12.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 114,
+      "conversation_id": 1,
+      "token_weight": 8.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 115,
+      "conversation_id": 1,
+      "token_weight": 3.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 116,
+      "conversation_id": 1,
+      "token_weight": 8.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 117,
+      "conversation_id": 1,
+      "token_weight": 8.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 118,
+      "conversation_id": 1,
+      "token_weight": 10.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 119,
+      "conversation_id": 1,
+      "token_weight": 2.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 120,
+      "conversation_id": 1,
+      "token_weight": 1.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 121,
+      "conversation_id": 1,
+      "token_weight": 9.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 122,
+      "conversation_id": 1,
+      "token_weight": 9.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 123,
+      "conversation_id": 1,
+      "token_weight": 3.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9952,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 124,
+      "conversation_id": 1,
+      "token_weight": 7.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9455,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9952,
+          "after": 0.9455
+        }
+      ],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 125,
+      "conversation_id": 1,
+      "token_weight": 5.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.6662,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.48,
+          "before": 0.85,
+          "after": 0.408
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.408,
+          "after": 0.479
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7013,
+          "after": 0.6662
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 126,
+      "conversation_id": 1,
+      "token_weight": 3.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9455,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9952,
+          "after": 0.9455
+        }
+      ],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 127,
+      "conversation_id": 0,
+      "token_weight": 1.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.3753,
+      "confidence_band": "low",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.48,
+          "before": 0.85,
+          "after": 0.408
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "phase",
+          "multiplier": 0.7,
+          "before": 1.0,
+          "after": 0.7
+        },
+        {
+          "issue_code": "repair_credit_06e",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 0.3,
+          "after": 0.95
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.5263,
+          "before": 0.95,
+          "after": 0.5
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.6838,
+          "before": 0.408,
+          "after": 0.279
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.7143,
+          "before": 0.7,
+          "after": 0.5
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.395,
+          "after": 0.3753
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "repair_credit_applied": true
+    },
+    {
+      "segment_id": 128,
+      "conversation_id": 0,
+      "token_weight": 1.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.3753,
+      "confidence_band": "low",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.48,
+          "before": 0.85,
+          "after": 0.408
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "phase",
+          "multiplier": 0.7,
+          "before": 1.0,
+          "after": 0.7
+        },
+        {
+          "issue_code": "repair_credit_06e",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 0.3,
+          "after": 0.95
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.5263,
+          "before": 0.95,
+          "after": 0.5
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.6838,
+          "before": 0.408,
+          "after": 0.279
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.7143,
+          "before": 0.7,
+          "after": 0.5
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.395,
+          "after": 0.3753
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "repair_credit_applied": true
+    },
+    {
+      "segment_id": 129,
+      "conversation_id": 0,
+      "token_weight": 1.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.3753,
+      "confidence_band": "low",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.48,
+          "before": 0.85,
+          "after": 0.408
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "phase",
+          "multiplier": 0.7,
+          "before": 1.0,
+          "after": 0.7
+        },
+        {
+          "issue_code": "repair_credit_06e",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 0.3,
+          "after": 0.95
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.5263,
+          "before": 0.95,
+          "after": 0.5
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.6838,
+          "before": 0.408,
+          "after": 0.279
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.7143,
+          "before": 0.7,
+          "after": 0.5
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.395,
+          "after": 0.3753
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "repair_credit_applied": true
+    },
+    {
+      "segment_id": 130,
+      "conversation_id": 0,
+      "token_weight": 1.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.3753,
+      "confidence_band": "low",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.48,
+          "before": 0.85,
+          "after": 0.408
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "phase",
+          "multiplier": 0.7,
+          "before": 1.0,
+          "after": 0.7
+        },
+        {
+          "issue_code": "repair_credit_06e",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 0.3,
+          "after": 0.95
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.5263,
+          "before": 0.95,
+          "after": 0.5
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.6838,
+          "before": 0.408,
+          "after": 0.279
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.7143,
+          "before": 0.7,
+          "after": 0.5
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.395,
+          "after": 0.3753
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "repair_credit_applied": true
+    }
+  ],
+  "conversations": [
+    {
+      "conversation_id": 1,
+      "segment_count": 34,
+      "impacted_segment_ratio": 0.1765,
+      "final_confidence": 0.9064,
+      "confidence_band": "high",
+      "gate_decision": "pass"
+    }
+  ],
+  "video_summary": {
+    "segment_count": 131,
+    "conversation_count": 1,
+    "final_confidence": 0.9556,
+    "confidence_band": "high",
+    "gate_decision": "pass"
+  }
+}

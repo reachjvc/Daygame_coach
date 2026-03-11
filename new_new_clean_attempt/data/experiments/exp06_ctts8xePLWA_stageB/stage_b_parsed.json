@@ -1,0 +1,331 @@
+{
+  "video_type_received": "infield",
+  "enrichments": [
+    {
+      "type": "commentary",
+      "conversation_id": 0,
+      "description": "Coach introduces himself, shares personal transformation story, promotes live bootcamp coaching programs",
+      "techniques_used": [],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "coaching_promotion",
+        "inner_game",
+        "masculinity"
+      ],
+      "teaching_points": [
+        "Learning game can be a catalyst for broader self-development (weight loss, confidence, lifestyle)",
+        "Cold approach lets you meet women anywhere \u2014 gym, grocery store, coffee shop \u2014 in any city",
+        "Overcoming approach fear and learning basic fundamentals enables repeatable results like quick number closes"
+      ],
+      "evidence_segment_ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88
+      ]
+    },
+    {
+      "type": "approach",
+      "conversation_id": 1,
+      "description": "Coach opens a woman on Miami beach with a restaurant question, teases her, gets her number",
+      "techniques_used": [
+        {
+          "technique": "indirect_opener",
+          "segment_id": 93,
+          "quote": "what's like the best restaurant to grab food over here I feel like all of these are like $5,000 for like a shrimp",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "tease",
+          "segment_id": 95,
+          "quote": "now you are so i feel like you think you're cooler than me",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "tease",
+          "segment_id": 97,
+          "quote": "your fashion's all right yeah this is a chill outfit this is my beach outfit",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "cold_read",
+          "segment_id": 104,
+          "quote": "you're like a little stoner chick",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "grounding",
+          "segment_id": 112,
+          "quote": "I'm from Ohio",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "push_pull",
+          "segment_id": 114,
+          "quote": "you might meet a lot of like trash dudes around here, but I'm like a wholesome ass, you know, real world gentleman",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "disqualification",
+          "segment_id": 117,
+          "quote": "a recovering fuck boy as well",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "number_close",
+          "segment_id": 108,
+          "quote": "give me your number I'll text you and let's fucking let's do some shit some time",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "soft_close",
+          "segment_id": 109,
+          "quote": "let's kick it on the beach",
+          "evidence_strength": "demonstrated"
+        }
+      ],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "food_drinks",
+        "origin",
+        "name",
+        "education",
+        "living_situation",
+        "hobby",
+        "appearance"
+      ],
+      "turn_phases": [
+        {
+          "segment_id": 93,
+          "phase": "open"
+        },
+        {
+          "segment_id": 94,
+          "phase": "open"
+        },
+        {
+          "segment_id": 95,
+          "phase": "pre_hook"
+        },
+        {
+          "segment_id": 96,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 97,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 98,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 99,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 100,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 101,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 102,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 103,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 104,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 105,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 106,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 107,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 108,
+          "phase": "close"
+        },
+        {
+          "segment_id": 109,
+          "phase": "close"
+        },
+        {
+          "segment_id": 110,
+          "phase": "close"
+        },
+        {
+          "segment_id": 111,
+          "phase": "close"
+        },
+        {
+          "segment_id": 112,
+          "phase": "close"
+        },
+        {
+          "segment_id": 113,
+          "phase": "close"
+        },
+        {
+          "segment_id": 114,
+          "phase": "close"
+        },
+        {
+          "segment_id": 115,
+          "phase": "close"
+        },
+        {
+          "segment_id": 116,
+          "phase": "close"
+        },
+        {
+          "segment_id": 117,
+          "phase": "close"
+        },
+        {
+          "segment_id": 118,
+          "phase": "close"
+        },
+        {
+          "segment_id": 119,
+          "phase": "close"
+        },
+        {
+          "segment_id": 120,
+          "phase": "close"
+        },
+        {
+          "segment_id": 121,
+          "phase": "close"
+        },
+        {
+          "segment_id": 122,
+          "phase": "close"
+        },
+        {
+          "segment_id": 123,
+          "phase": "close"
+        },
+        {
+          "segment_id": 124,
+          "phase": "close"
+        },
+        {
+          "segment_id": 125,
+          "phase": "close"
+        },
+        {
+          "segment_id": 126,
+          "phase": "close"
+        }
+      ],
+      "hook_point": {
+        "segment_id": 96,
+        "signal": "Target starts asking coach questions back ('why'd you come here') and volunteering personal info (fashion school), showing active engagement"
+      },
+      "investment_level": "medium",
+      "evidence_segment_ids": [
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126
+      ]
+    }
+  ],
+  "unlisted_concepts": {
+    "techniques": [],
+    "topics": []
+  },
+  "self_verification": {
+    "checks_passed": [
+      "Every technique claim has a specific segment citation and exact quote",
+      "No technique tagged that coach says NOT to do (no negations found in transcript)",
+      "No technique tagged from a different video \u2014 all evidence is from this transcript",
+      "Phase labels progress forward only: open \u2192 pre_hook \u2192 post_hook \u2192 close",
+      "Evidence strength is 'demonstrated' for all approach techniques (coach performed them live)",
+      "Topics match actual conversation content (food, origin, name, education, living situation, hobby, appearance)"
+    ],
+    "corrections_made": [
+      "Initially considered tagging 'DHV' for segments 113-115 (wholesome gentleman), but this maps more precisely to push_pull (contrasting himself against 'trash dudes') and disqualification ('recovering fuck boy'), so used those instead",
+      "Considered tagging 'screening' for segment 104 stoner comment, but it's a cold_read (assumption) not a screening question"
+    ],
+    "remaining_concerns": [
+      "Segments 101 and 107 are marked garbled \u2014 technique citations avoid these but nearby segments reference same conversational flow",
+      "The pre_hook phase is very brief (only segment 95) before target hooks at 96; this seems accurate given the target's immediate engagement but is unusually fast",
+      "Investment level rated 'medium': target shares info and asks questions but coach clearly drives most of the conversation; target gives number without resistance but doesn't show high emotional investment"
+    ]
+  }
+}

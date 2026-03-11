@@ -1,0 +1,496 @@
+You are a senior content analyst for a daygame coaching video pipeline. You receive a classified transcript (with speaker roles, conversation boundaries, and quality flags) and must extract structured enrichment data.
+
+Your job: identify what techniques, topics, and teaching points appear in this video, grounded in specific transcript evidence. You must also self-verify your work to prevent hallucination.
+
+## CRITICAL ANTI-HALLUCINATION RULES
+
+1. **Negation rule**: If the coach describes a technique as something NOT to do ("don't go direct", "that's not what I mean by push-pull"), do NOT tag that technique as used/demonstrated. You may note it under `techniques_discussed_negatively` if relevant.
+2. **This-video rule**: If a technique is only referenced as happening in a DIFFERENT video, situation, or hypothetical, do NOT tag it as demonstrated in THIS video. Tag only what is actually taught, demonstrated, or explained here.
+3. **Evidence-required rule**: Every technique claim MUST cite at least one specific segment ID and an exact short quote from that segment. If you cannot find a specific segment to cite, do not claim the technique.
+4. **Mention vs. teach distinction**: A technique briefly mentioned in passing (1-2 words, no explanation) should be marked `evidence_strength: "mention"`. A technique explained, demonstrated, or analyzed in detail should be marked `evidence_strength: "taught"` or `"demonstrated"`.
+5. **Phase monotonicity**: For approach conversations, turn phases must progress forward only: open → pre_hook → post_hook → close. No segment can regress to an earlier phase.
+6. **Conservative mapping**: When uncertain whether something maps to a taxonomy technique, do NOT force-fit it. Leave it unmapped or note it as a potential `unlisted_concept`.
+
+## TECHNIQUE TAXONOMY (31 techniques)
+
+### Openers — How the approach begins
+- `direct_opener`: Explicitly stating romantic/sexual interest upfront ("I think you're gorgeous, I had to come say hi")
+- `indirect_opener`: Starting conversation without stating interest, using a question or observation ("excuse me, do you know a good restaurant around here?")
+- `situational_opener`: Using something happening in the immediate environment ("that street performer is wild, right?")
+- `observation_opener`: Commenting on something specific about the target ("I noticed your vintage bag, where'd you find that?")
+- `gambit`: Pre-planned conversational routine or story designed to hook attention
+
+### Attraction — Building interest and tension
+- `push_pull`: Alternating between showing interest and pulling away ("you seem cool... for someone who eats pizza with a fork")
+- `tease`: Playful teasing, light mocking, banter that creates emotional spikes
+- `cold_read`: Making an assumption about the target ("you look like you're from somewhere warm")
+- `role_play`: Creating imaginary scenarios together ("we'd be a terrible couple, you'd do X and I'd do Y")
+- `disqualification`: Playfully suggesting you're not interested or she's not your type
+- `DHV`: Demonstration of Higher Value — naturally revealing attractive qualities without bragging
+- `frame_control`: Maintaining or redirecting the conversational frame ("no no, I'm interviewing you, not the other way around")
+- `takeaway`: Threatening to leave or withdraw attention to increase desire
+- `false_time_constraint`: Creating artificial urgency ("I can only stay a minute, I'm meeting friends")
+
+### Connection — Building rapport and deeper engagement
+- `qualification`: Getting target to prove herself/earn your interest ("what's interesting about you beyond looks?")
+- `statement_of_intent`: Directly stating your interest or intentions mid-conversation
+- `grounding`: Sharing personal information to build real connection (hometown, passions, backstory)
+- `storytelling`: Using stories to convey personality, values, or create emotional engagement
+- `vulnerability`: Showing genuine vulnerability or emotion to deepen connection
+- `callback_humor`: Referencing something from earlier in the conversation for comedic/bonding effect
+- `screening`: Asking questions to evaluate compatibility ("are you adventurous?")
+- `appreciation`: Genuine compliments or expressions of appreciation (beyond initial opener)
+
+### Physical — Non-verbal and physical interaction
+- `physical_escalation`: Initiating or increasing physical contact (touch, hug, kiss)
+- `subcommunication`: Using body language, tonality, eye contact, or presence intentionally
+- `calibration`: Adjusting behavior based on the target's reactions and signals
+
+### Compliance
+- `compliance`: Getting target to follow small requests to build investment ("hold this for me", "try this")
+
+### Social
+- `group_dynamics`: Managing interactions with groups (target's friends, mixed sets)
+
+### Closing — Getting contact info or extending the interaction
+- `number_close`: Asking for phone number
+- `instagram_close`: Asking for Instagram/social media
+- `soft_close`: Non-committal close ("we should hang out sometime")
+- `assumptive_close`: Assuming the next step ("so when are we getting coffee?")
+- `instant_date`: Transitioning directly to a date from the approach ("let's grab coffee right now")
+- `bounce`: Moving to a different location together during the interaction
+- `pulling`: Leading target to a private location
+- `pull_talk`: Conversation during the pull that maintains comfort
+- `time_bridge`: Setting up a future meeting ("let's do X next Thursday")
+- `logistics_check`: Checking practical details ("how long are you in town?", "where do you live?")
+
+## TOPIC TAXONOMY (28 topics)
+
+Personal: `name`, `origin`, `career`, `education`, `hobby`, `travel`, `living_situation`, `ambitions`
+Appearance: `appearance`
+Personality: `personality`, `age`, `behavior`, `values`
+Logistics: `plans`, `contact`, `logistics`, `relationship`, `duration`
+Context: `food_drinks`, `location`, `humor`, `flirting`
+Extensions: `tattoos`, `language_learning`, `language_barrier`, `breakthrough_moment`, `coaching_promotion`
+Coaching: `masculinity`, `inner_game`, `gutter_game`
+
+## YOUR TASKS
+
+### For INFIELD / COMPILATION videos (have approach conversations):
+
+For each approach conversation:
+1. **Description**: 10-20 word summary of the interaction
+2. **Techniques used**: Techniques the coach/student ACTUALLY USED during the approach
+   - Each must cite a segment ID and exact quote
+   - Mark `evidence_strength`: "demonstrated" (performed in real-time) or "mention" (referenced but not clearly performed)
+   - Do NOT cite segments marked as low quality/garbled unless you're very confident
+3. **Topics discussed**: From taxonomy — what subjects came up during the approach
+4. **Turn phases**: Label each approach segment with its phase
+   - `open`: Initial contact, greeting, opener delivery
+   - `pre_hook`: Coach building attraction, target passive/short responses
+   - `post_hook`: Target actively engaged — asking questions, sharing, laughing, investing
+   - `close`: Logistics, contact exchange, wrapping up
+   - Phases MUST progress forward only
+5. **Hook point**: If post_hook was reached, describe the moment she "flipped" (segment + signal)
+6. **Investment level**: How much the target invested — `null` (no post_hook), `low`, `medium`, `high`
+
+For each commentary block (coach talking to camera between approaches):
+1. **Description**: 10-20 word summary
+2. **Techniques discussed**: Techniques the coach EXPLAINS or ANALYZES (not necessarily demonstrated)
+3. **Topics discussed**: From taxonomy
+4. **Teaching points**: Key lessons or advice given (1-3 bullets)
+
+### For TALKING_HEAD / PODCAST videos:
+
+Divide the content into logical sections (topic changes, structure shifts):
+1. **Description**: 10-20 word summary of the section
+2. **Techniques discussed**: Techniques explained or referenced
+   - Mark `evidence_strength`: "taught" (explained in depth), "mention" (briefly referenced)
+   - Apply the NEGATION RULE: if coach says "don't do X", that's discussed_negatively, not discussed
+3. **Topics discussed**: From taxonomy
+4. **Teaching points**: Key lessons or advice (1-3 bullets per section)
+
+### Self-verification (REQUIRED)
+
+After completing enrichment, check:
+- [ ] Every technique claim has a specific segment citation and quote
+- [ ] No technique is tagged that the coach explicitly says NOT to do (negation rule)
+- [ ] No technique is tagged based on content from a DIFFERENT video (this-video rule)
+- [ ] Phase labels progress forward only (no regression)
+- [ ] Evidence strength accurately reflects whether technique was demonstrated vs. mentioned
+- [ ] Topics match what was actually discussed, not inferred
+
+Report any corrections in `self_verification`.
+
+## OUTPUT FORMAT
+
+```json
+{
+  "video_type_received": "infield|talking_head|podcast|compilation",
+  "enrichments": [
+    {
+      "type": "approach|commentary|section",
+      "conversation_id": 1,
+      "description": "string",
+      "techniques_used": [
+        {
+          "technique": "taxonomy_name",
+          "segment_id": 42,
+          "quote": "exact short quote from segment",
+          "evidence_strength": "demonstrated|taught|mention"
+        }
+      ],
+      "techniques_discussed_negatively": [
+        {
+          "technique": "taxonomy_name",
+          "segment_id": 42,
+          "quote": "don't do X...",
+          "note": "Coach says NOT to do this"
+        }
+      ],
+      "topics_discussed": ["name", "origin"],
+      "turn_phases": [
+        {"segment_id": 42, "phase": "open|pre_hook|post_hook|close"}
+      ],
+      "hook_point": {
+        "segment_id": 55,
+        "signal": "She started asking questions about his travel plans"
+      },
+      "investment_level": "low|medium|high|null",
+      "teaching_points": ["bullet point 1"],
+      "evidence_segment_ids": [42, 43, 44]
+    }
+  ],
+  "unlisted_concepts": {
+    "techniques": ["concept_name: brief description"],
+    "topics": ["concept_name: brief description"]
+  },
+  "self_verification": {
+    "checks_passed": ["list of checks that passed"],
+    "corrections_made": ["any corrections from self-check"],
+    "remaining_concerns": ["any remaining uncertainties"]
+  }
+}
+```
+
+Notes:
+- `turn_phases` only for approach enrichments
+- `hook_point` and `investment_level` only for approach enrichments
+- `teaching_points` only for commentary/section enrichments
+- `techniques_discussed_negatively` can appear on any enrichment type
+- Return JSON only. No markdown fences, no prose.
+- `unlisted_concepts` should be rare (0-2 per video). Prefer mapping to existing taxonomy.
+
+## INPUT
+
+Video type: talking_head
+Title: "Approach Anxiety Cure! The Final Solution!"
+Channel: daily_evolution
+
+### Stage A Classification (segments with roles and quality):
+[0] role=coach type=commentary conv=0
+[1] role=coach type=commentary conv=0
+[2] role=coach type=commentary conv=0
+[3] role=coach type=commentary conv=0
+[4] role=coach type=commentary conv=0
+[5] role=coach type=commentary conv=0
+[6] role=coach type=commentary conv=0
+[7] role=coach type=commentary conv=0
+[8] role=coach type=commentary conv=0
+[9] role=coach type=commentary conv=0
+[10] role=coach type=commentary conv=0
+[11] role=coach type=commentary conv=0 MIXED
+[12] role=coach type=commentary conv=0
+[13] role=coach type=commentary conv=0
+[14] role=coach type=commentary conv=0
+[15] role=coach type=commentary conv=0
+[16] role=coach type=commentary conv=0 quality=missing_punctuation
+[17] role=coach type=commentary conv=0 quality=missing_punctuation
+[18] role=coach type=commentary conv=0 quality=word_mistranscription
+[19] role=coach type=commentary conv=0 quality=missing_punctuation
+[20] role=coach type=commentary conv=0 quality=missing_punctuation
+[21] role=coach type=commentary conv=0 quality=missing_punctuation
+[22] role=coach type=commentary conv=0 quality=missing_punctuation
+[23] role=coach type=commentary conv=0
+[24] role=coach type=commentary conv=0 quality=missing_punctuation
+[25] role=coach type=commentary conv=0 quality=missing_punctuation
+[26] role=coach type=commentary conv=0
+[27] role=coach type=commentary conv=0 quality=missing_punctuation
+[28] role=coach type=commentary conv=0 quality=missing_punctuation
+[29] role=coach type=commentary conv=0 quality=missing_punctuation
+[30] role=coach type=commentary conv=0 quality=missing_punctuation
+[31] role=coach type=commentary conv=0 quality=missing_punctuation
+[32] role=coach type=commentary conv=0 quality=missing_punctuation
+[33] role=coach type=commentary conv=0 quality=missing_punctuation
+[34] role=coach type=commentary conv=0 quality=missing_punctuation
+[35] role=coach type=commentary conv=0 quality=missing_punctuation
+[36] role=coach type=commentary conv=0 quality=missing_punctuation
+[37] role=coach type=commentary conv=0 quality=missing_punctuation
+[38] role=coach type=commentary conv=0 quality=missing_punctuation
+[39] role=coach type=commentary conv=0 quality=missing_punctuation
+[40] role=coach type=commentary conv=0 quality=missing_punctuation
+[41] role=coach type=commentary conv=0 quality=missing_punctuation
+[42] role=coach type=commentary conv=0 quality=missing_punctuation
+[43] role=coach type=commentary conv=0
+[44] role=coach type=commentary conv=0
+[45] role=coach type=commentary conv=0
+[46] role=coach type=commentary conv=0
+[47] role=coach type=commentary conv=0
+[48] role=coach type=commentary conv=0
+[49] role=coach type=commentary conv=0 quality=word_mistranscription
+[50] role=coach type=commentary conv=0
+[51] role=coach type=commentary conv=0
+[52] role=coach type=commentary conv=0
+[53] role=coach type=commentary conv=0
+[54] role=coach type=commentary conv=0
+[55] role=coach type=commentary conv=0
+[56] role=coach type=commentary conv=0
+[57] role=coach type=commentary conv=0
+[58] role=coach type=commentary conv=0 quality=missing_punctuation
+[59] role=coach type=commentary conv=0
+[60] role=coach type=commentary conv=0
+[61] role=coach type=commentary conv=0
+[62] role=coach type=commentary conv=0
+[63] role=coach type=commentary conv=0
+[64] role=coach type=commentary conv=0
+[65] role=coach type=commentary conv=0
+[66] role=coach type=commentary conv=0
+[67] role=coach type=commentary conv=0
+[68] role=coach type=commentary conv=0
+[69] role=coach type=commentary conv=0
+[70] role=coach type=commentary conv=0
+[71] role=coach type=commentary conv=0
+[72] role=coach type=commentary conv=0
+[73] role=coach type=commentary conv=0
+[74] role=coach type=commentary conv=0 quality=fragment
+[75] role=coach type=commentary conv=0
+[76] role=coach type=commentary conv=0
+[77] role=coach type=commentary conv=0
+[78] role=coach type=commentary conv=0
+[79] role=coach type=commentary conv=0
+[80] role=coach type=commentary conv=0
+[81] role=coach type=commentary conv=0
+[82] role=coach type=commentary conv=0
+[83] role=coach type=commentary conv=0
+[84] role=coach type=commentary conv=0
+[85] role=coach type=commentary conv=0
+[86] role=coach type=commentary conv=0
+[87] role=coach type=commentary conv=0 quality=missing_punctuation
+[88] role=coach type=commentary conv=0 quality=missing_punctuation
+[89] role=coach type=commentary conv=0 quality=missing_punctuation
+[90] role=coach type=commentary conv=0 quality=missing_punctuation
+[91] role=coach type=commentary conv=0 quality=missing_punctuation
+[92] role=coach type=commentary conv=0
+[93] role=coach type=commentary conv=0
+[94] role=coach type=commentary conv=0
+[95] role=coach type=commentary conv=0
+[96] role=coach type=commentary conv=0
+[97] role=coach type=commentary conv=0
+[98] role=coach type=commentary conv=0
+[99] role=coach type=commentary conv=0
+[100] role=coach type=commentary conv=0
+[101] role=coach type=commentary conv=0
+[102] role=coach type=commentary conv=0
+[103] role=coach type=commentary conv=0
+[104] role=coach type=commentary conv=0
+[105] role=coach type=commentary conv=0
+[106] role=unknown type=commentary conv=0
+[107] role=coach type=commentary conv=0 quality=missing_punctuation
+[108] role=coach type=commentary conv=0
+[109] role=coach type=commentary conv=0 quality=missing_punctuation
+[110] role=coach type=commentary conv=0 quality=missing_punctuation
+[111] role=coach type=commentary conv=0 quality=missing_punctuation
+[112] role=coach type=commentary conv=0 quality=missing_punctuation
+[113] role=coach type=commentary conv=0 quality=word_mistranscription
+[114] role=coach type=commentary conv=0
+[115] role=coach type=commentary conv=0
+[116] role=coach type=commentary conv=0
+[117] role=coach type=commentary conv=0
+[118] role=coach type=commentary conv=0
+[119] role=coach type=commentary conv=0
+[120] role=coach type=commentary conv=0
+[121] role=coach type=commentary conv=0
+[122] role=coach type=commentary conv=0
+[123] role=coach type=commentary conv=0
+[124] role=coach type=commentary conv=0
+[125] role=coach type=commentary conv=0
+[126] role=coach type=commentary conv=0
+[127] role=coach type=commentary conv=0
+[128] role=coach type=commentary conv=0
+[129] role=coach type=commentary conv=0
+[130] role=coach type=commentary conv=0
+[131] role=coach type=commentary conv=0
+[132] role=coach type=commentary conv=0
+[133] role=coach type=commentary conv=0 quality=missing_punctuation
+[134] role=coach type=commentary conv=0 quality=missing_punctuation
+[135] role=coach type=commentary conv=0 quality=word_mistranscription
+[136] role=coach type=commentary conv=0
+[137] role=coach type=commentary conv=0
+[138] role=coach type=commentary conv=0 quality=word_mistranscription
+[139] role=coach type=commentary conv=0
+[140] role=coach type=commentary conv=0
+[141] role=coach type=commentary conv=0 quality=missing_punctuation
+[142] role=coach type=commentary conv=0
+[143] role=coach type=commentary conv=0
+[144] role=coach type=commentary conv=0
+[145] role=coach type=commentary conv=0 quality=word_mistranscription
+[146] role=coach type=commentary conv=0
+[147] role=coach type=commentary conv=0
+[148] role=coach type=commentary conv=0
+[149] role=coach type=commentary conv=0
+[150] role=coach type=commentary conv=0 quality=missing_punctuation
+[151] role=unknown type=transition conv=0
+
+### Full Transcript:
+[0] SPEAKER_00 (0.0-1.5): What?
+[1] SPEAKER_00 (1.5-2.5): Approach anxiety.
+[2] SPEAKER_00 (2.5-2.9): Who struggles with it?
+[3] SPEAKER_00 (3.9-4.7): Day game?
+[4] SPEAKER_00 (4.8-6.1): Everyone, right?
+[5] SPEAKER_00 (6.2-6.8): That's just like a thing.
+[6] SPEAKER_00 (6.9-7.7): Not you.
+[7] SPEAKER_00 (8.1-9.0): You look confident.
+[8] SPEAKER_00 (9.2-10.8): You look fucking confident.
+[9] SPEAKER_00 (11.0-11.8): No more AA.
+[10] SPEAKER_00 (12.1-13.2): No more AA.
+[11] SPEAKER_00 (13.4-15.1): Only when I hesitate.
+[12] SPEAKER_00 (16.2-17.8): Hesitation will get you killed.
+[13] SPEAKER_00 (18.3-19.6): Paralysis by analysis.
+[14] SPEAKER_00 (20.1-23.1): Overthinking and getting paralyzed by your overthinking.
+[15] SPEAKER_00 (23.7-28.6): Focusing on what could potentially go wrong as opposed to what could go right.
+[16] SPEAKER_00 (28.6-33.1): so first when I talk about approach anxiety I like to talk about like the
+[17] SPEAKER_00 (33.1-38.3): mindset of it or what everyone likes to talk about it doesn't matter life's not
+[18] SPEAKER_00 (38.3-41.9): real what if in ten years you never made the approval whatever fucking mindset
+[19] SPEAKER_00 (41.9-44.8): shit but then I like to get into the technique of it as well when it comes to
+[20] SPEAKER_00 (44.8-48.1): the mindset of the approach anxiety it's focusing so much on what is
+[21] SPEAKER_00 (48.1-52.0): potentially gonna go wrong as opposed to what could go right and what is likely
+[22] SPEAKER_00 (52.0-55.6): to go right if you've really been practicing this right if you've really
+[23] SPEAKER_00 (55.6-59.8): been fucking working on this, like, I think about every fucking hot girl I've ever slept
+[24] SPEAKER_00 (59.8-64.1): with, dated, that, you know, we fucked once, she became a good friend, whatever, all these
+[25] SPEAKER_00 (64.1-68.4): positive experiences I've had with girls, you need to be thinking of that when you go
+[26] SPEAKER_00 (68.4-69.3): in and talk to a girl.
+[27] SPEAKER_00 (69.5-73.8): There's that expression that the brain needs proof, not promises, so once you actually
+[28] SPEAKER_00 (73.8-78.4): are starting to push yourself to do it no matter the fuck what, clearing your head before
+[29] SPEAKER_00 (78.4-82.9): you go in and just fucking do it, and you start to realize, again, proving to your brain
+[30] SPEAKER_00 (82.9-88.3): rather than promising it that nothing bad ever happens because anyone ever had anything really
+[31] SPEAKER_00 (88.2-95.8): bad happen i've been made fun of but like what then i was here i am now oh my god i'm alive
+[32] SPEAKER_00 (95.8-102.4): a girl yelled at you once i've had a guy get a little aggro with me you know like that's
+[33] SPEAKER_00 (102.4-109.4): my girl whatever it is and here you are alive and well the sun's beating down on your
+[34] SPEAKER_00 (109.4-116.4): face and we're all having a great time we can't talk about louisville right now okay dude got
+[35] SPEAKER_00 (116.4-122.9): punched in the face whatever whatever yeah it was a night tyler club wow so so it's understanding
+[36] SPEAKER_00 (122.9-128.3): that nothing terrible is going to happen right and that you're going to have a positive experience
+[37] SPEAKER_00 (128.3-133.4): you're going to have a positive experience from it and just saying okay i'm going to go in no
+[38] SPEAKER_00 (133.4-138.5): matter what right now again that's the mindset of what we're talking about here mindset doesn't
+[39] SPEAKER_00 (138.5-146.0): always help i can't beat a thought process into your skull right so if you've watched a lot
+[40] SPEAKER_00 (146.0-150.5): of the videos then you've probably heard me talk about this but you've only seen one and you know
+[41] SPEAKER_00 (150.5-157.1): whatever i don't care how much you guys have watched it's opening it's not even opening it's
+[42] SPEAKER_00 (157.1-164.7): not even approaching it's speaking to a human being while eliminating intent right so i've got
+[43] SPEAKER_00 (164.7-166.2): I've got a guy that's on my virtual instruction program
+[44] SPEAKER_00 (166.2-169.5): right now who, he told me that he will go out
+[45] SPEAKER_00 (169.5-173.3): and it will take him two hours to make his first approach.
+[46] SPEAKER_00 (174.1-176.1): So, like that's not an exaggeration.
+[47] SPEAKER_00 (176.2-178.3): Like that is a literal, like he will walk around
+[48] SPEAKER_00 (178.3-181.5): and he's in San Francisco, he'll walk around
+[49] SPEAKER_00 (181.5-183.5): for what he's clicking to be two hours,
+[50] SPEAKER_00 (183.7-185.3): looking at every girl thinking like,
+[51] SPEAKER_00 (185.4-186.8): all right, I'm gonna do this one, I'm gonna do this one,
+[52] SPEAKER_00 (186.8-188.6): and then he doesn't end up doing it.
+[53] SPEAKER_00 (188.8-190.3): For two fucking hours.
+[54] SPEAKER_00 (190.5-193.0): And I said to him, I said the reason why that's happening
+[55] SPEAKER_00 (192.9-196.8): is because you're focusing on 15 steps forward
+[56] SPEAKER_00 (196.8-198.6): and all at once, right?
+[57] SPEAKER_00 (199.0-201.1): So you're so afraid to approach
+[58] SPEAKER_00 (201.7-205.1): because you're thinking, you don't trust in your ability
+[59] SPEAKER_00 (205.1-207.2): to hold your own within the interactions, right?
+[60] SPEAKER_00 (207.3-210.2): To hold the engaging conversation, essentially escalate.
+[61] SPEAKER_00 (210.2-212.2): But what happens if things start going well
+[62] SPEAKER_00 (212.2-214.4): and I don't know how to bounce her or the fuck, whatever?
+[63] SPEAKER_00 (214.7-215.2): You know what I mean?
+[64] SPEAKER_00 (215.3-216.9): You're thinking so far ahead.
+[65] SPEAKER_00 (217.1-219.7): I view this shit like Halo Checkpoints.
+[66] SPEAKER_00 (219.6-225.8): You ever played a first-person shooter video game anyone Call of Duty or Halo, whatever
+[67] SPEAKER_00 (227.1-232.9): Once you make it to that first checkpoint you die and every time you die you go back to that checkpoint, right?
+[68] SPEAKER_00 (233.3-234.8): Go right back there.
+[69] SPEAKER_00 (235.2-239.3): So if the very first checkpoint is just speaking to a girl
+[70] SPEAKER_00 (239.2-242.8): It's not going in direct and hey, you're fucking hot.
+[71] SPEAKER_00 (242.8-244.0): It's not hey, you want to get out of here?
+[72] SPEAKER_00 (244.1-245.1): Hey, let me get your number.
+[73] SPEAKER_00 (245.2-246.0): It's none of that.
+[74] SPEAKER_00 (246.6-246.8): It's just
+[75] SPEAKER_00 (246.8-248.4): just speaking to the girl.
+[76] SPEAKER_00 (248.8-250.3): Hey, real quick, is that still recording?
+[77] SPEAKER_00 (250.9-251.3): Yeah.
+[78] SPEAKER_00 (251.6-253.5): Okay, she was watching, guys, we're gonna make sure.
+[79] SPEAKER_00 (253.9-256.0): So, if that's the very first step,
+[80] SPEAKER_00 (256.1-258.8): then just do that and eliminate all intent.
+[81] SPEAKER_00 (259.2-262.7): So you're not gonna be afraid to just compliment a girl,
+[82] SPEAKER_00 (262.8-265.5): just to say hello to her, compliment her.
+[83] SPEAKER_00 (265.7-267.4): Tom Torero calls it hit and runs.
+[84] SPEAKER_00 (267.5-270.2): I like to call it hit and runs, touch and goes,
+[85] SPEAKER_00 (270.4-273.0): whatever the fuck it is, speaking without intent.
+[86] SPEAKER_00 (273.2-275.4): So yes, when you're getting better at game
+[87] SPEAKER_00 (275.4-281.7): as the conversation progresses escalates then yes you want to be clear about the fact like hey i'm
+[88] SPEAKER_00 (281.7-286.7): trying to bang you or date you or whatever it is but when you're just trying to get to that first
+[89] SPEAKER_00 (286.7-290.2): checkpoint and you're wandering around san francisco for two hours and you can't get there
+[90] SPEAKER_00 (290.1-296.3): then you have to just get there which is just i compliment you i was walking around madison square
+[91] SPEAKER_00 (296.3-301.7): park today and i just woke it up and i just went for a walk as soon as i woke up and i wasn't in
+[92] SPEAKER_00 (301.7-303.1): in my zone, you know what I mean?
+[93] SPEAKER_00 (303.3-305.8): I don't even like to really call it like being in state.
+[94] SPEAKER_00 (306.0-308.7): I just wasn't in a social mode of mind,
+[95] SPEAKER_00 (308.9-309.5): you know what I mean?
+[96] SPEAKER_00 (309.5-310.9): I didn't want to talk to people.
+[97] SPEAKER_00 (311.2-312.8): So what I do, I just walk by,
+[98] SPEAKER_00 (312.9-313.9): hey, I really like your shirt.
+[99] SPEAKER_00 (314.0-314.8): And she's like, oh, thanks.
+[100] SPEAKER_00 (315.0-316.8): You're like making people's day and shit,
+[101] SPEAKER_00 (316.9-317.3): you know what I mean?
+[102] SPEAKER_00 (317.4-319.4): Some girl was like, oh, I don't really wanna wear
+[103] SPEAKER_00 (319.4-321.0): this jacket, and then you compliment her,
+[104] SPEAKER_00 (321.0-323.3): and she's just like, ah, great,
+[105] SPEAKER_00 (323.4-324.5): I guess it was a good choice.
+[106] SPEAKER_01 (324.7-325.9): You make people feel good,
+[107] SPEAKER_00 (325.9-327.8): and by giving that positive energy out,
+[108] SPEAKER_00 (327.8-329.0): that'll come back to you.
+[109] SPEAKER_00 (329.0-333.7): so by doing that smiling looking a stranger in the eyes for the first time that day whatever
+[110] SPEAKER_00 (333.7-339.8): and not again thinking so much about every little step of the way because you get overwhelmed right
+[111] SPEAKER_00 (339.8-346.1): it's like if your house it's like if your house if every room in your house is destroyed your
+[112] SPEAKER_00 (346.1-350.0): house is completely disheveled and you look at it you're like i gotta clean up this whole
+[113] SPEAKER_00 (349.9-355.1): fucking place instead of just we'll be also in the bathroom and getting the bathroom done
+[114] SPEAKER_00 (355.0-356.3): and then I'll do the bedroom.
+[115] SPEAKER_00 (356.4-356.8): You know what I mean?
+[116] SPEAKER_00 (356.9-359.1): Room by room, step by step.
+[117] SPEAKER_00 (360.2-361.1): Does that make sense?
+[118] SPEAKER_00 (361.3-362.0): Is that helpful?
+[119] SPEAKER_00 (362.5-364.4): Like, do you think that that could actually
+[120] SPEAKER_00 (364.4-366.3): help you to make approaches,
+[121] SPEAKER_00 (366.8-370.2): starting off by just talking without any intent at all?
+[122] SPEAKER_00 (370.6-371.9): It gets you out of your head.
+[123] SPEAKER_00 (372.1-374.7): If you're thinking about sexually escalating
+[124] SPEAKER_00 (374.7-376.5): in the bedroom and you can't even approach a girl,
+[125] SPEAKER_00 (376.8-378.4): you're not gonna go anywhere.
+[126] SPEAKER_00 (378.5-381.3): And again, too, even when I go on this rant,
+[127] SPEAKER_00 (381.4-382.5): because I talk about this to guys
+[128] SPEAKER_00 (382.4-383.7): on the virtual instruction program,
+[129] SPEAKER_00 (383.7-386.6): Instagram, like boot camps I do in Columbus, whatever, I go on this rant all the time.
+[130] SPEAKER_00 (386.7-391.8): I try to even eliminate the words open and approach when I talk about this.
+[131] SPEAKER_00 (392.1-394.4): It's just speaking without intent.
+[132] SPEAKER_00 (394.8-396.4): You don't even have to stop.
+[133] SPEAKER_00 (396.6-400.7): Just walking by, hey, I really like your vest, and she'll be like, oh, like, usually you'll
+[134] SPEAKER_00 (400.7-402.4): be like, oh, thanks, and you just keep moving along.
+[135] SPEAKER_00 (402.7-407.3): Or with, you know, what Tom Turow does to Egypt with the hit runs, which is he'll actually
+[136] SPEAKER_00 (407.3-410.4): just go up to girls and be like, hey, how are you doing today?
+[137] SPEAKER_00 (410.5-411.4): And she'll be like, I'm good.
+[138] SPEAKER_00 (411.4-413.2): but once we're to go up, we'll tell you you're really pretty.
+[139] SPEAKER_00 (413.3-415.1): And he'll, like, just run away from there.
+[140] SPEAKER_00 (415.2-415.6): You know what I mean?
+[141] SPEAKER_00 (416.0-420.3): Just to, again, like I said, get into that mode where you're looking a stranger in the eyes,
+[142] SPEAKER_00 (420.4-424.1): you're talking, and you're, you know, just getting into that mode.
+[143] SPEAKER_00 (424.6-426.1): You slept all night, you know?
+[144] SPEAKER_00 (426.1-427.8): If you're going out during the day, you slept all night.
+[145] SPEAKER_00 (427.9-431.0): Maybe you went to your job, your fucking mall center,
+[146] SPEAKER_00 (431.1-432.7): and you've been sitting in that cube all day or something.
+[147] SPEAKER_00 (432.8-433.5): I don't know what you do.
+[148] SPEAKER_00 (433.9-436.9): But then afterwards, you're fucking not.
+[149] SPEAKER_00 (437.2-439.6): I mean, I've got buddies that are engineers, you know?
+[150] SPEAKER_00 (439.6-468.3): I've got buddies that are engineers, he knows them, and they talk about how they go to work all day and it's all numbers and fucking drawing shit or whatever they do, and they're just fucking zombied out, and then they're like, if you want me to go talk to a girl in a grocery store, how do I go from cold to hot, you know, cold to warm to hot, warm being just intentless speaking, and that's how it's going, you know.
+[151] UNKNOWN (481.0-484.0): Thanks for watching!

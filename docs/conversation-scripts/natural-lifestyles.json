@@ -7,1166 +7,1353 @@
     "root": {
       "id": "root",
       "speaker": "me",
-      "text": { "da": "", "en": "Natural Lifestyles - Approach Patterns (James Marshall)" },
+      "text": { "da": "", "en": "" },
       "children": [
-        "opener-direct-compliment",
-        "opener-observational-state",
-        "opener-situational-playful",
-        "opener-walking-approach",
-        "opener-headphones-music",
-        "opener-hippie-observational",
-        "opener-not-selling-anything",
-        "opener-quick-micro-window",
-        "conversation-technique-discord",
-        "conversation-technique-what-and-why",
-        "conversation-technique-twist-meaning",
-        "conversation-technique-mid-compliment",
-        "conversation-technique-phase-shift",
-        "conversation-technique-close-intent",
-        "conversation-technique-always-close",
-        "conversation-technique-rejection-attitude"
+        "conv1-open",
+        "conv2-open",
+        "conv3-open",
+        "conv4-open",
+        "conv5-open",
+        "conv6-open",
+        "conv7-open",
+        "conv8-open",
+        "conv9-open",
+        "conv10-open",
+        "conv11-open",
+        "conv12-open"
       ]
     },
 
-    "opener-direct-compliment": {
-      "id": "opener-direct-compliment",
-      "speaker": "me",
-      "text": { "da": "", "en": "Excuse me. Hi. How are you? I just saw you walking by. I thought you looked really lovely. So here I am to say hi." },
-      "context": "The most common Natural Lifestyles opener. Direct, clear intent. Said with relaxed energy and a pause after the compliment to let her absorb it. From [IS2SoUgqDLE]: 'I saw you walking by. I thought you looked really lovely. So here I am to say hi.'",
-      "children": [
-        "direct-warm-reception",
-        "direct-shy-uncertain",
-        "direct-boyfriend-objection",
-        "direct-scared-backing-away",
-        "approach-i-dont-care"
-      ]
-    },
-    "direct-warm-reception": {
-      "id": "direct-warm-reception",
-      "speaker": "her",
-      "text": { "da": "", "en": "Oh, thank you so much! How about you, what are you doing today?" },
-      "context": "She asks a question back - always a good sign. From [N2UbTTfCfqg]: Irish tourist asks 'How about you?' twice. Let her lead for a bit when she's chatty.",
-      "children": ["direct-warm-sunshine"]
-    },
-    "direct-warm-sunshine": {
-      "id": "direct-warm-sunshine",
-      "speaker": "me",
-      "text": { "da": "", "en": "Getting some sunshine. Yeah, it's lovely, huh? What's your name?" },
-      "context": "From [N2UbTTfCfqg]: 'Getting some sunshine' - give a little evocation of what you're feeling rather than a literal answer. Shows you're someone who enjoys life. Then move to introduction.",
-      "children": ["direct-warm-name-exchange"]
-    },
-    "direct-warm-name-exchange": {
-      "id": "direct-warm-name-exchange",
-      "speaker": "her",
-      "text": { "da": "", "en": "I'm [name]. Nice to meet you." },
-      "children": ["direct-warm-handshake"]
-    },
-    "direct-warm-handshake": {
-      "id": "direct-warm-handshake",
-      "speaker": "me",
-      "text": { "da": "", "en": "How do you do? I'm James. Nice to meet you. Are you a local or are you traveling?" },
-      "context": "From [N2UbTTfCfqg] and [IS2SoUgqDLE]: Offer a proper handshake. Find out basic logistics - is she local, tourist, how long is she here. This information matters for the close.",
-      "children": [
-        "direct-warm-tourist",
-        "direct-warm-local",
-        "direct-warm-student"
-      ]
-    },
-    "direct-warm-tourist": {
-      "id": "direct-warm-tourist",
-      "speaker": "her",
-      "text": { "da": "", "en": "No, I just came here on holidays. Me and my friends tomorrow, but today, yeah, solo." },
-      "context": "From [N2UbTTfCfqg]: Tourist alone today, friends arriving tomorrow. Key logistics: she has free time right now.",
-      "children": ["direct-warm-tourist-qualify"]
-    },
-    "direct-warm-tourist-qualify": {
-      "id": "direct-warm-tourist-qualify",
-      "speaker": "me",
-      "text": { "da": "", "en": "Good on you. Have you been to the bath houses yet? It's pretty much the best thing to do in the city." },
-      "context": "From [N2UbTTfCfqg]: Offer a recommendation. Creates mild discord if she pushes back - don't just agree with everything she says. Stick to your guns lightly.",
-      "children": ["direct-warm-tourist-bathhouse"]
-    },
-    "direct-warm-tourist-bathhouse": {
-      "id": "direct-warm-tourist-bathhouse",
-      "speaker": "her",
-      "text": { "da": "", "en": "I heard mixed reviews, some people say it's not nice, that it's smelly." },
-      "context": "From [N2UbTTfCfqg]: She pushes back on the recommendation. Nice guys would fold; James sticks to his opinion.",
-      "children": ["direct-warm-tourist-discord"]
-    },
-    "direct-warm-tourist-discord": {
-      "id": "direct-warm-tourist-discord",
-      "speaker": "me",
-      "text": { "da": "", "en": "Well, it smells a bit like sulfur because it's natural. But I mean, you get to lie in a hot bath in old Austro-Hungarian surrounds. You will not regret it." },
-      "context": "From [N2UbTTfCfqg]: Don't fold when she pushes back. Have an opinion. Nice guys nod and agree with everything. She says 'that's true' three times - the mild discord worked.",
-      "children": ["direct-warm-tourist-convinced"]
-    },
-    "direct-warm-tourist-convinced": {
-      "id": "direct-warm-tourist-convinced",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, that's true. Thanks, I'll take that into consideration." },
-      "children": ["direct-warm-tourist-qualify-her"]
-    },
-    "direct-warm-tourist-qualify-her": {
-      "id": "direct-warm-tourist-qualify-her",
-      "speaker": "me",
-      "text": { "da": "", "en": "And what are you doing in life? Like back home, what's the story?" },
-      "context": "From [N2UbTTfCfqg]: Swing the conversation to finding out about her. When you talk about yourself, give the WHAT and the WHY - the fact plus your personal relationship to it.",
-      "children": ["direct-warm-tourist-her-life"]
-    },
-    "direct-warm-tourist-her-life": {
-      "id": "direct-warm-tourist-her-life",
-      "speaker": "her",
-      "text": { "da": "", "en": "I'm a product manager. I have a degree in biochemistry and went into the pharmaceutical industry." },
-      "context": "From [N2UbTTfCfqg]: Irish girl works in pharma.",
-      "children": ["direct-warm-tourist-close"]
-    },
-    "direct-warm-tourist-close": {
-      "id": "direct-warm-tourist-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "How long are you here for? ... All right, cool. Would you like to grab a drink sometime?" },
-      "context": "From [N2UbTTfCfqg]: Get logistics, then close directly. State your intent: 'I want to take you out' is stronger than 'can I get your number.' A proper masculine direct offer.",
-      "children": ["direct-warm-tourist-yes"]
-    },
-    "direct-warm-tourist-yes": {
-      "id": "direct-warm-tourist-yes",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, I'm down." },
-      "context": "From [N2UbTTfCfqg]: There was a YES just waiting for him to ask. Don't drift away from good interactions - always go for the close if the vibe is decent.",
-      "children": ["direct-warm-tourist-number"]
-    },
-    "direct-warm-tourist-number": {
-      "id": "direct-warm-tourist-number",
-      "speaker": "me",
-      "text": { "da": "", "en": "All right, cool. Have you got WhatsApp? You will have to remind me of your exotic and exquisite name. Here, you do the honours." },
-      "context": "From [N2UbTTfCfqg]: Hand her the phone to type in her number. Don't make her spell it out. While she types, don't stare at her - gaze out calmly. Shut up while she's entering digits.",
-      "children": []
-    },
-
-    "direct-warm-local": {
-      "id": "direct-warm-local",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yes, I've been living here for a while. I really like it actually." },
-      "children": ["direct-warm-local-differentiate"]
-    },
-    "direct-warm-local-differentiate": {
-      "id": "direct-warm-local-differentiate",
-      "speaker": "me",
-      "text": { "da": "", "en": "Yeah, it's like a little bit dirty, but a little bit beautiful. There's a lot going on. You have a very friendly vibe. A lot of Hungarians can be a bit grumpy, right? But you're not." },
-      "context": "From [IS2SoUgqDLE] and [J02LapVhOyM]: Differentiate her from the cultural stereotype positively. Don't be supplicating - give the good AND the bad about the city. Budapest is 'both gorgeous and filthy, elegant and decaying.'",
-      "children": ["direct-warm-local-responds"]
-    },
-    "direct-warm-local-responds": {
-      "id": "direct-warm-local-responds",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, they can be. I'm from a small town actually, the people there are more friendly." },
-      "context": "From [IS2SoUgqDLE]: Hungarian girl from a village, agrees with the grumpy stereotype.",
-      "children": ["direct-warm-local-qualify"]
-    },
-    "direct-warm-local-qualify": {
-      "id": "direct-warm-local-qualify",
-      "speaker": "me",
-      "text": { "da": "", "en": "So you're a country girl. And you're a naturally friendly person? It's good to be open to the world, right?" },
-      "context": "From [IS2SoUgqDLE]: Qualify her positively on her character, not just her looks. Then share something about yourself - give the WHAT and the WHY.",
-      "children": ["direct-warm-local-close"]
-    },
-    "direct-warm-local-close": {
-      "id": "direct-warm-local-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "All right, well, would you like to get a coffee sometime? You seem very lovely. I could get your contact, I can text you if you're free sometime." },
-      "context": "From [IS2SoUgqDLE]: Wrap it up after about 10 minutes. Be the one to end it. Don't drag interactions beyond their natural length.",
-      "children": ["direct-warm-local-yes"]
-    },
-    "direct-warm-local-yes": {
-      "id": "direct-warm-local-yes",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, sure. You have WhatsApp?" },
-      "children": []
-    },
-
-    "direct-warm-student": {
-      "id": "direct-warm-student",
-      "speaker": "her",
-      "text": { "da": "", "en": "I'm studying here, actually. First year at university." },
-      "context": "From [WSFSpbFCPZo]: Many girls in Budapest are students. Important logistics to discover.",
-      "children": ["direct-warm-student-qualify"]
-    },
-    "direct-warm-student-qualify": {
-      "id": "direct-warm-student-qualify",
-      "speaker": "me",
-      "text": { "da": "", "en": "What are you studying? ... And do you enjoy it? I never finished university. I started, gave up, started a business instead. It worked out for me anyway." },
-      "context": "From [B1UR8q_Dlpo]: 'I never finished university. I started. Yeah, but I gave up. And then I started a business.' Share about yourself honestly, including things that aren't conventionally impressive.",
-      "children": ["direct-warm-student-responds"]
-    },
-    "direct-warm-student-responds": {
-      "id": "direct-warm-student-responds",
-      "speaker": "her",
-      "text": { "da": "", "en": "That's cool. I'm saving up to go to university actually. Working a summer job." },
-      "context": "From [WSFSpbFCPZo]: She's responsible and independent.",
-      "children": ["direct-warm-student-close"]
-    },
-    "direct-warm-student-close": {
-      "id": "direct-warm-student-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "Respect. Independent lady. All right, I've got to head back, but would you like to get a cup of tea sometime? Do you have WhatsApp or something?" },
-      "context": "From [WSFSpbFCPZo]: Compliment her independence. Close simply and directly.",
-      "children": ["direct-warm-student-yes"]
-    },
-    "direct-warm-student-yes": {
-      "id": "direct-warm-student-yes",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, okay. Here, let me type it in." },
-      "children": []
-    },
-
-    "direct-shy-uncertain": {
-      "id": "direct-shy-uncertain",
-      "speaker": "her",
-      "text": { "da": "", "en": "Thank you... I'm just, I'm on my way somewhere." },
-      "context": "She's not fully rejecting, just hedging. Common response - people are going places. From [YEOgoofhe-8]: Multiple examples of this soft objection.",
-      "children": ["direct-shy-walk-offer"]
-    },
-    "direct-shy-walk-offer": {
-      "id": "direct-shy-walk-offer",
-      "speaker": "me",
-      "text": { "da": "", "en": "Do you mind if I walk with you for a couple of minutes? I'm not going to follow you forever." },
-      "context": "From [YEOgoofhe-8]: Polite offer to walk with her. The tonality matters more than the words. Countless times girls say yes to this. If she says no, let her go. 'Do you mind' is not supplicating - it's the tonality and delivery that matters.",
-      "children": [
-        "direct-shy-walk-yes",
-        "direct-shy-walk-no"
-      ]
-    },
-    "direct-shy-walk-yes": {
-      "id": "direct-shy-walk-yes",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, okay. 30 seconds we can do." },
-      "context": "From [YEOgoofhe-8]: Soft acceptance - she gives you a window. Use it to build rapport quickly.",
-      "children": ["direct-shy-walk-rapport"]
-    },
-    "direct-shy-walk-rapport": {
-      "id": "direct-shy-walk-rapport",
-      "speaker": "me",
-      "text": { "da": "", "en": "Cool. How long have you been here? And what are you studying? ... All right, well I won't follow you any longer, but would you like to get a coffee sometime?" },
-      "context": "From [YEOgoofhe-8]: Quick rapport building while walking. Be the one to wrap it up. If she's uncertain, remove pressure: 'I'll text you once, if you decide you want to meet, cool, if not, no problem.'",
-      "children": [
-        "direct-shy-walk-maybe",
-        "direct-shy-walk-situationship"
-      ]
-    },
-    "direct-shy-walk-maybe": {
-      "id": "direct-shy-walk-maybe",
-      "speaker": "her",
-      "text": { "da": "", "en": "I'm not sure, sorry." },
-      "children": ["direct-shy-walk-pressure-release"]
-    },
-    "direct-shy-walk-pressure-release": {
-      "id": "direct-shy-walk-pressure-release",
-      "speaker": "me",
-      "text": { "da": "", "en": "No worries. Do you want me to get your WhatsApp? I'll text you once. If you decide you want to, cool. If not, no problem. I'm not gonna hassle you." },
-      "context": "From [YEOgoofhe-8]: Remove the pressure. Acknowledge her hesitation. Let her know you won't blow up her phone. Often this shifts a 'maybe no' to a 'why not.' Girls' concern giving their contact to a stranger is that he'll send 80 texts in a week.",
-      "children": [
-        "direct-shy-walk-gives-number",
-        "direct-shy-walk-final-no"
-      ]
-    },
-    "direct-shy-walk-gives-number": {
-      "id": "direct-shy-walk-gives-number",
-      "speaker": "her",
-      "text": { "da": "", "en": "Okay, sure. Here's my number." },
-      "children": []
-    },
-    "direct-shy-walk-final-no": {
-      "id": "direct-shy-walk-final-no",
-      "speaker": "her",
-      "text": { "da": "", "en": "I think no, sorry." },
-      "children": ["direct-shy-walk-graceful-exit"]
-    },
-    "direct-shy-walk-graceful-exit": {
-      "id": "direct-shy-walk-graceful-exit",
-      "speaker": "me",
-      "text": { "da": "", "en": "All right. Take it easy. Have a good day. Good luck with the long distance." },
-      "context": "From [YEOgoofhe-8]: As soon as she gives a definitive no, accept it immediately. Walk away like you're in an action movie and shit blows up behind you. Choose when to enter and choose when to exit.",
-      "children": []
-    },
-    "direct-shy-walk-situationship": {
-      "id": "direct-shy-walk-situationship",
-      "speaker": "her",
-      "text": { "da": "", "en": "I have like a situationship, I have a future boyfriend." },
-      "context": "From [YEOgoofhe-8]: Not a hard no - a situationship has wriggle room. She's still smiling and chatting.",
-      "children": ["direct-shy-situationship-challenge"]
-    },
-    "direct-shy-situationship-challenge": {
-      "id": "direct-shy-situationship-challenge",
-      "speaker": "me",
-      "text": { "da": "", "en": "Are you sure it's going to be a future boyfriend if it's a situationship?" },
-      "context": "From [YEOgoofhe-8]: Playful persistence when the 'no' isn't hard. Read body language - if she's friendly and open, push gently.",
-      "children": ["direct-shy-situationship-response"]
-    },
-    "direct-shy-situationship-response": {
-      "id": "direct-shy-situationship-response",
-      "speaker": "her",
-      "text": { "da": "", "en": "No, I'm sure. I will wait for him. We have a problem in distance." },
-      "context": "From [YEOgoofhe-8]: She reveals it's a long distance situation. She's going to wait six months.",
-      "children": ["direct-shy-situationship-downgrade"]
-    },
-    "direct-shy-situationship-downgrade": {
-      "id": "direct-shy-situationship-downgrade",
-      "speaker": "me",
-      "text": { "da": "", "en": "All right, well, if you change your mind, let's stay on Instagram. You can text me in three months when you're like, all right, fuck it." },
-      "context": "From [YEOgoofhe-8]: Downgrade the offer from date to staying in touch on Instagram. Make a joke about it. Keep it light. As soon as she gives a definitive 'I think no,' immediately accept and leave.",
-      "children": []
-    },
-
-    "direct-shy-walk-no": {
-      "id": "direct-shy-walk-no",
-      "speaker": "her",
-      "text": { "da": "", "en": "I'm actually meeting my boyfriend, so..." },
-      "children": ["direct-shy-boyfriend-response"]
-    },
-    "direct-shy-boyfriend-response": {
-      "id": "direct-shy-boyfriend-response",
-      "speaker": "me",
-      "text": { "da": "", "en": "All right, well I better not then. Well anyway, I'm James. Are you German? Okay, excellent. Have a lovely day." },
-      "context": "From [YEOgoofhe-8]: Accept the boyfriend. But stick one or two extra seconds - ask a casual question, shake hands. Condition yourself to not be scared of the boyfriend objection. Walk away with pride. Hot girls have boyfriends a lot of the time. It's not a big deal.",
-      "children": []
-    },
-
-    "direct-boyfriend-objection": {
-      "id": "direct-boyfriend-objection",
-      "speaker": "her",
-      "text": { "da": "", "en": "Thank you, but I have a boyfriend." },
-      "context": "From [IS2SoUgqDLE]: Clear, direct boyfriend objection. Hot girls have boyfriends a lot of the time.",
-      "children": ["direct-boyfriend-graceful"]
-    },
-    "direct-boyfriend-graceful": {
-      "id": "direct-boyfriend-graceful",
-      "speaker": "me",
-      "text": { "da": "", "en": "Cool, no worries. All right, well, have yourself an awesome day. See you later." },
-      "context": "From [IS2SoUgqDLE]: Nothing to be apologetic about. You didn't do anything wrong. Walk away like you're in an action movie and shit blows up behind you.",
-      "children": []
-    },
-
-    "direct-scared-backing-away": {
-      "id": "direct-scared-backing-away",
-      "speaker": "her",
-      "text": { "da": "", "en": "[physically backing away, eyes darting]" },
-      "context": "From [YEOgoofhe-8]: Girl is looking scared, physically moving away, eyes darting from side to side trying to find an escape.",
-      "children": ["direct-scared-release"]
-    },
-    "direct-scared-release": {
-      "id": "direct-scared-release",
-      "speaker": "me",
-      "text": { "da": "", "en": "Are you okay? You're backing away, it's all right. Off you go. Have a nice day." },
-      "context": "From [YEOgoofhe-8]: When a girl is looking scared and physically moving away, be a gentleman and release all pressure immediately. Step out of the way. No point in pushing it. This is the kind of situation where there's zero benefit to persisting.",
-      "children": []
-    },
-
-    "opener-observational-state": {
-      "id": "opener-observational-state",
+    "conv1-open": {
+      "id": "conv1-open",
       "speaker": "me",
       "text": { "da": "", "en": "Excuse me, you look like there's something very serious happening right now." },
-      "context": "From [IS2SoUgqDLE]: Observational opener - comment on what you actually see. Match her energy. If she's low energy, be low energy. 'Seduction should not be state-dependent.' James was deliberately in a low-energy mood for this session.",
-      "children": [
-        "observational-confused",
-        "observational-dreamy"
-      ]
+      "context": "Mongolian backend developer smoking outside. Low-energy day, matching her state. From [IS2SoUgqDLE].",
+      "children": ["conv1-02"]
     },
-    "observational-confused": {
-      "id": "observational-confused",
+    "conv1-02": {
+      "id": "conv1-02",
       "speaker": "her",
-      "text": { "da": "", "en": "No? No." },
-      "context": "From [IS2SoUgqDLE]: She looks confused. Read the situation and make a guess about her state.",
-      "children": ["observational-guess-state"]
+      "text": { "da": "", "en": "No?" },
+      "children": ["conv1-03"]
     },
-    "observational-guess-state": {
-      "id": "observational-guess-state",
+    "conv1-03": {
+      "id": "conv1-03",
       "speaker": "me",
       "text": { "da": "", "en": "Oh, okay, cool. What's up? You've got a very soft voice. Did you party too much last night?" },
-      "context": "From [IS2SoUgqDLE]: Make a guess about what's going on for her based on observation. Drop into her state. If she's chill, be chill.",
-      "children": ["observational-she-explains"]
+      "children": ["conv1-04"]
     },
-    "observational-she-explains": {
-      "id": "observational-she-explains",
+    "conv1-04": {
+      "id": "conv1-04",
       "speaker": "her",
-      "text": { "da": "", "en": "Yeah... I was working all day. I don't look nice. Everybody else does." },
-      "context": "From [IS2SoUgqDLE]: Mongolian girl working as a backend developer, exhausted from long hours.",
-      "children": ["observational-reframe-compliment"]
+      "text": { "da": "", "en": "Yeah. I was working all day. I don't look nice. Everybody else does." },
+      "children": ["conv1-05"]
     },
-    "observational-reframe-compliment": {
-      "id": "observational-reframe-compliment",
+    "conv1-05": {
+      "id": "conv1-05",
       "speaker": "me",
-      "text": { "da": "", "en": "Ah, well, you must look amazing when you've had rest. I just thought you looked nice. What's your name?" },
-      "context": "From [IS2SoUgqDLE]: Reframe her self-deprecation into a future compliment. Then introduce yourself.",
-      "children": ["observational-name-exchange"]
+      "text": { "da": "", "en": "Ah, well, you must look amazing when you've had rest. What's your name?" },
+      "children": ["conv1-06"]
     },
-    "observational-name-exchange": {
-      "id": "observational-name-exchange",
+    "conv1-06": {
+      "id": "conv1-06",
       "speaker": "her",
-      "text": { "da": "", "en": "[Her name]. Nice to meet you." },
-      "children": ["observational-genuine-curiosity"]
+      "text": { "da": "", "en": "I'm from Mongolia." },
+      "children": ["conv1-07"]
     },
-    "observational-genuine-curiosity": {
-      "id": "observational-genuine-curiosity",
+    "conv1-07": {
+      "id": "conv1-07",
       "speaker": "me",
-      "text": { "da": "", "en": "Are you from here? ... And what do you do? ... It's tough to make it, isn't it? No matter where you are." },
-      "context": "From [IS2SoUgqDLE]: Show genuine curiosity. Find out what's going on in her life. Empathize with real things. She says 'It's not so common for me that somebody comes to talk' - acknowledge that people don't do this in some cultures.",
-      "children": ["observational-she-opens-up"]
+      "text": { "da": "", "en": "Are you from Mongolia? The face structure, yeah. And you're studying here, I guess?" },
+      "children": ["conv1-08"]
     },
-    "observational-she-opens-up": {
-      "id": "observational-she-opens-up",
+    "conv1-08": {
+      "id": "conv1-08",
       "speaker": "her",
-      "text": { "da": "", "en": "Yeah, I'm still building my life and that's it. It takes time." },
-      "context": "From [IS2SoUgqDLE]: She opens up about struggling financially, working weekends.",
-      "children": ["observational-age-question"]
+      "text": { "da": "", "en": "No. At this point, I think I prefer home. I can make more money at home. The tax here is really bad, 37%." },
+      "children": ["conv1-09"]
     },
-    "observational-age-question": {
-      "id": "observational-age-question",
+    "conv1-09": {
+      "id": "conv1-09",
+      "speaker": "me",
+      "text": { "da": "", "en": "It's tough to make it, isn't it? No matter where you are. I'm Australian, but I mostly live here and in Portugal." },
+      "children": ["conv1-10"]
+    },
+    "conv1-10": {
+      "id": "conv1-10",
+      "speaker": "her",
+      "text": { "da": "", "en": "It's not so common for me that somebody comes to talk." },
+      "children": ["conv1-11"]
+    },
+    "conv1-11": {
+      "id": "conv1-11",
+      "speaker": "me",
+      "text": { "da": "", "en": "Does that happen in Mongolia at all? Do people talk to each other?" },
+      "children": ["conv1-11b"]
+    },
+    "conv1-11b": {
+      "id": "conv1-11b",
+      "speaker": "her",
+      "text": { "da": "", "en": "Only in the bar." },
+      "children": ["conv1-11c"]
+    },
+    "conv1-11c": {
+      "id": "conv1-11c",
+      "speaker": "me",
+      "text": { "da": "", "en": "Only in the bar, yeah. I think mostly men are a bit scared of women. I don't know why. You don't seem scary." },
+      "children": ["conv1-12"]
+    },
+    "conv1-12": {
+      "id": "conv1-12",
       "speaker": "her",
       "text": { "da": "", "en": "How old are you?" },
-      "context": "From [IS2SoUgqDLE]: She asks his age directly. 20-year age gap (44 and 25).",
-      "children": ["observational-age-honest"]
+      "children": ["conv1-12b"]
     },
-    "observational-age-honest": {
-      "id": "observational-age-honest",
+    "conv1-12b": {
+      "id": "conv1-12b",
       "speaker": "me",
-      "text": { "da": "", "en": "Forty-four. Sometimes people tell me to lie about it, but I am the age that I am. You can be sexy at any age, right?" },
-      "context": "From [IS2SoUgqDLE]: 'I am what I am' - total honesty about age. Never lie. Some girls will think you're too old, others will be fine with it. 'Didn't matter. She volunteers her age, 25, so that's a 20-ish year age gap.'",
-      "children": ["observational-validate-close"]
+      "text": { "da": "", "en": "Forty-four. Do I look older or younger?" },
+      "children": ["conv1-12c"]
     },
-    "observational-validate-close": {
-      "id": "observational-validate-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "Yeah, it takes time. But you seem pretty driven. So, in amongst your very busy schedule, would you like to get a drink sometime when you're rested? Do you have WhatsApp?" },
-      "context": "From [IS2SoUgqDLE]: Validate her character (driven, not just pretty). Then close naturally. About 10 minutes is an ideal day game approach length.",
-      "children": ["observational-she-accepts"]
-    },
-    "observational-she-accepts": {
-      "id": "observational-she-accepts",
+    "conv1-12c": {
+      "id": "conv1-12c",
       "speaker": "her",
-      "text": { "da": "", "en": "Yeah. After six, after work, after I finish at six." },
-      "context": "From [IS2SoUgqDLE]: She gives practical scheduling info. Solid close.",
-      "children": ["observational-number-exchange"]
+      "text": { "da": "", "en": "No, no. Thirty-seven." },
+      "children": ["conv1-13"]
     },
-    "observational-number-exchange": {
-      "id": "observational-number-exchange",
+    "conv1-13": {
+      "id": "conv1-13",
       "speaker": "me",
-      "text": { "da": "", "en": "Cool. I'll just text you now. All right, nice to meet you. Take it easy." },
-      "context": "From [IS2SoUgqDLE]: Send a text right there so she has your number too. Keep the goodbye warm but brief.",
+      "text": { "da": "", "en": "No, thank you. I am the age that I am. You can be sexy at any age, right?" },
+      "children": ["conv1-14"]
+    },
+    "conv1-14": {
+      "id": "conv1-14",
+      "speaker": "her",
+      "text": { "da": "", "en": "Twenty-five. I'm still building my life and that's it. I still have to work on weekends doing part-time jobs. My main job is I'm a backend developer." },
+      "children": ["conv1-15"]
+    },
+    "conv1-15": {
+      "id": "conv1-15",
+      "speaker": "me",
+      "text": { "da": "", "en": "Well, that's useful stuff. That's not going out of style. Do you not worry that AI is going to take your job?" },
+      "children": ["conv1-16"]
+    },
+    "conv1-16": {
+      "id": "conv1-16",
+      "speaker": "her",
+      "text": { "da": "", "en": "I do. And I still use AI at work." },
+      "children": ["conv1-17"]
+    },
+    "conv1-17": {
+      "id": "conv1-17",
+      "speaker": "me",
+      "text": { "da": "", "en": "Oh, you're part of the problem. You're making yourself obsolete. Well, milk it while you can before the machines take over. So, in amongst your very busy schedule, do you have time to have some fun, ever?" },
+      "children": ["conv1-18"]
+    },
+    "conv1-18": {
+      "id": "conv1-18",
+      "speaker": "her",
+      "text": { "da": "", "en": "Not today, but after six, after I finish work. Weekends, I want to go to the gym and sleep." },
+      "children": ["conv1-19"]
+    },
+    "conv1-19": {
+      "id": "conv1-19",
+      "speaker": "me",
+      "text": { "da": "", "en": "All right. Well, would you like to get a drink sometime when you're rested? Do you have WhatsApp?" },
+      "children": ["conv1-20"]
+    },
+    "conv1-20": {
+      "id": "conv1-20",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yeah. I'll just text you now." },
+      "children": ["conv1-21"]
+    },
+    "conv1-21": {
+      "id": "conv1-21",
+      "speaker": "me",
+      "text": { "da": "", "en": "Got it. Cool. All right, well nice to meet you. Take it easy." },
       "children": []
     },
 
-    "observational-dreamy": {
-      "id": "observational-dreamy",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, I slept two hours..." },
-      "context": "She's tired/dreamy. Match her state. Speak slowly.",
-      "children": ["observational-dreamy-compliment"]
-    },
-    "observational-dreamy-compliment": {
-      "id": "observational-dreamy-compliment",
+    "conv2-open": {
+      "id": "conv2-open",
       "speaker": "me",
-      "text": { "da": "", "en": "Two hours. Well, you look great for two hours. I bet with like eight hours you look spectacular. Was it worth it?" },
-      "context": "Give a compliment within the context. Then show curiosity about her night. If there's not enough time for full rapport, go for Instagram instead of a number.",
-      "children": ["observational-dreamy-response"]
+      "text": { "da": "", "en": "Hi. How are you? I saw you walking by. I thought you looked really lovely. So here I am to say hi. What's your name?" },
+      "context": "Direct stop on the street, Budapest. Girl has a boyfriend. From [IS2SoUgqDLE].",
+      "children": ["conv2-02"]
     },
-    "observational-dreamy-response": {
-      "id": "observational-dreamy-response",
+    "conv2-02": {
+      "id": "conv2-02",
       "speaker": "her",
-      "text": { "da": "", "en": "It wasn't worth it. I was studying." },
-      "children": ["observational-dreamy-quick-close"]
+      "text": { "da": "", "en": "Hi." },
+      "children": ["conv2-02b"]
     },
-    "observational-dreamy-quick-close": {
-      "id": "observational-dreamy-quick-close",
+    "conv2-02b": {
+      "id": "conv2-02b",
       "speaker": "me",
-      "text": { "da": "", "en": "Oh, well then that's worth it, right? I like your butterflies. What's your name? ... Would you like to swap Instagrams? I know we just met, but you seem pretty cool." },
-      "context": "For quick interactions where she needs to go, downgrade to Instagram instead of asking for a date. She can check you out later and feel comfortable.",
-      "children": ["observational-dreamy-instagram"]
+      "text": { "da": "", "en": "I'm James. Are you a local person?" },
+      "children": ["conv2-03"]
     },
-    "observational-dreamy-instagram": {
-      "id": "observational-dreamy-instagram",
+    "conv2-03": {
+      "id": "conv2-03",
       "speaker": "her",
-      "text": { "da": "", "en": "I can give you my Instagram." },
+      "text": { "da": "", "en": "Yes. I've been here about 10 years now." },
+      "children": ["conv2-04"]
+    },
+    "conv2-04": {
+      "id": "conv2-04",
+      "speaker": "me",
+      "text": { "da": "", "en": "Okay, that's very local. And what's the plan for your Sunday?" },
+      "children": ["conv2-05"]
+    },
+    "conv2-05": {
+      "id": "conv2-05",
+      "speaker": "her",
+      "text": { "da": "", "en": "Actually, I'm meeting my boyfriend, so..." },
+      "children": ["conv2-06"]
+    },
+    "conv2-06": {
+      "id": "conv2-06",
+      "speaker": "me",
+      "text": { "da": "", "en": "You met with him or you will meet with him? Did you have a big night last night?" },
+      "children": ["conv2-07"]
+    },
+    "conv2-07": {
+      "id": "conv2-07",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yes." },
+      "children": ["conv2-08"]
+    },
+    "conv2-08": {
+      "id": "conv2-08",
+      "speaker": "me",
+      "text": { "da": "", "en": "Yeah. You look a little bit dreamy, just like, am I still high or am I talking to myself? Good. Well, did you have fun? Was it worth it?" },
+      "children": ["conv2-09"]
+    },
+    "conv2-09": {
+      "id": "conv2-09",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yeah." },
+      "children": ["conv2-10"]
+    },
+    "conv2-10": {
+      "id": "conv2-10",
+      "speaker": "me",
+      "text": { "da": "", "en": "Good. Cool. All right, have yourself an awesome day. See you later." },
       "children": []
     },
 
-    "opener-situational-playful": {
-      "id": "opener-situational-playful",
+    "conv3-open": {
+      "id": "conv3-open",
       "speaker": "me",
-      "text": { "da": "", "en": "Hello. That painting is nearly as big as you. Did you steal it from an art gallery?" },
-      "context": "From [03m9yo-ikPc]: Situational and playful. Comment on something she's doing/carrying, but don't use it as the EXCUSE to approach. Plant yourself, project your voice, use the tractor beam of your presence. 'Don't use the thing she's holding as the reason to approach - go and do a bold approach and then refer back to it.'",
-      "children": ["situational-playful-response"]
+      "text": { "da": "", "en": "Hello. You okay? You've got kind of secret agent vibes going on here. Are you a little tired?" },
+      "context": "Hungarian girl with limited English, sitting on a bench. Extended approach leading to number. From [IS2SoUgqDLE].",
+      "children": ["conv3-02"]
     },
-    "situational-playful-response": {
-      "id": "situational-playful-response",
+    "conv3-02": {
+      "id": "conv3-02",
       "speaker": "her",
-      "text": { "da": "", "en": "[laughs] Yes, I can... it's a half-done picture." },
-      "context": "From [03m9yo-ikPc]: She stops and engages. Her English is limited but she's trying. 'Five foot tall with a four foot painting.'",
-      "children": ["situational-genuine-interest"]
+      "text": { "da": "", "en": "I don't understand. I speak a little English." },
+      "children": ["conv3-03"]
     },
-    "situational-genuine-interest": {
-      "id": "situational-genuine-interest",
+    "conv3-03": {
+      "id": "conv3-03",
       "speaker": "me",
-      "text": { "da": "", "en": "What will the other half be? ... Impressionist, surrealist, or something? ... I don't know what symbolism is, explain it to me." },
-      "context": "From [03m9yo-ikPc]: Show ACTUAL interest. Don't pretend to know things you don't. 'If a girl knows something about something and you don't know about it, just say you don't know. Getting caught pretending is worse.'",
-      "children": ["situational-she-tries-explain"]
+      "text": { "da": "", "en": "I'll speak a bit slowly. What is your name? I'm James." },
+      "children": ["conv3-04"]
     },
-    "situational-she-tries-explain": {
-      "id": "situational-she-tries-explain",
+    "conv3-04": {
+      "id": "conv3-04",
       "speaker": "her",
-      "text": { "da": "", "en": "Like little things that are symbolic, yeah, have symbolism..." },
-      "context": "From [03m9yo-ikPc]: She's trying hard to explain despite language barrier. She's animated and delightful while doing it.",
-      "children": ["situational-mid-compliment"]
+      "text": { "da": "", "en": "Hi. Good handshake. Strong." },
+      "children": ["conv3-05"]
     },
-    "situational-mid-compliment": {
-      "id": "situational-mid-compliment",
+    "conv3-05": {
+      "id": "conv3-05",
       "speaker": "me",
-      "text": { "da": "", "en": "You're so cute. Do you know this word? Adorable. Adorable means very cute." },
-      "context": "From [03m9yo-ikPc]: Compliment her in the MIDDLE of conversation about how she IS, not what she looks like. 'Compliments about the way she is are far more powerful than what she looks like.' Notice her delivery, her animated expression, the way she thinks.",
-      "children": [
-        "situational-cute-blush",
-        "situational-cute-confused"
-      ]
+      "text": { "da": "", "en": "And you have the day off today? No work today? What do you usually do?" },
+      "children": ["conv3-06"]
     },
-    "situational-cute-blush": {
-      "id": "situational-cute-blush",
+    "conv3-06": {
+      "id": "conv3-06",
       "speaker": "her",
-      "text": { "da": "", "en": "Oh, thank you!" },
-      "children": ["situational-introduce-eyes"]
+      "text": { "da": "", "en": "Difficult to explain. I don't speak. I understand you a little bit, but I don't speak." },
+      "children": ["conv3-07"]
     },
-    "situational-cute-confused": {
-      "id": "situational-cute-confused",
-      "speaker": "her",
-      "text": { "da": "", "en": "I don't know adorable..." },
-      "children": ["situational-introduce-eyes"]
-    },
-    "situational-introduce-eyes": {
-      "id": "situational-introduce-eyes",
+    "conv3-07": {
+      "id": "conv3-07",
       "speaker": "me",
-      "text": { "da": "", "en": "What is your name? My name is James. Nice to meet you. ... You have very beautiful eyes. Like hypnotic, do you know this word?" },
-      "context": "From [03m9yo-ikPc]: Introduce yourself with a handshake. Hold her hand and relax. If there's electricity, don't rush to let go. Phase shift: lower vocal tonality, look deep into her eyes. 'We're just both looking into each other's eyes and it was just a sexy moment. This goes well beyond day game lines - this is working on an energetic level.'",
-      "children": ["situational-eyes-response"]
+      "text": { "da": "", "en": "I guess you don't have many opportunities to practice with a native speaker, right? Also, I am Australian, so my accent is maybe strong. What is your plan now? You do not have a plan?" },
+      "children": ["conv3-08"]
     },
-    "situational-eyes-response": {
-      "id": "situational-eyes-response",
+    "conv3-08": {
+      "id": "conv3-08",
       "speaker": "her",
-      "text": { "da": "", "en": "Yeah, I think I know hypnotic. And do you like my eyes?" },
-      "context": "From [03m9yo-ikPc]: She's engaged and returning the energy. The vibe is electric.",
-      "children": ["situational-close"]
+      "text": { "da": "", "en": "No plan." },
+      "children": ["conv3-09"]
     },
-    "situational-close": {
-      "id": "situational-close",
+    "conv3-09": {
+      "id": "conv3-09",
       "speaker": "me",
-      "text": { "da": "", "en": "And what time is your class? Okay, well listen, would you like to get a cup of coffee with me sometime? I would like to take you out." },
-      "context": "From [03m9yo-ikPc]: Be the one to wrap it up. About 10 minutes is ideal. You've already had the 'laser moment.' Close with direct intent: 'I would like to take you out' not 'can I get your number.'",
-      "children": ["situational-close-logistics"]
+      "text": { "da": "", "en": "Okay. Well, I will go now to work with my friend. But maybe we can get a drink later. Would you like? You understand?" },
+      "children": ["conv3-10"]
     },
-    "situational-close-logistics": {
-      "id": "situational-close-logistics",
+    "conv3-10": {
+      "id": "conv3-10",
       "speaker": "her",
-      "text": { "da": "", "en": "Okay... maybe. I have Viber and Messenger." },
-      "context": "From [03m9yo-ikPc]: Even a 'maybe' here is fine - just figure out the app logistics. When an interaction is really solid, get a backup contact (Instagram) too.",
-      "children": ["situational-close-figure-out"]
+      "text": { "da": "", "en": "Okay. Yeah, I think we will need Google Translate." },
+      "children": ["conv3-11"]
     },
-    "situational-close-figure-out": {
-      "id": "situational-close-figure-out",
+    "conv3-11": {
+      "id": "conv3-11",
       "speaker": "me",
-      "text": { "da": "", "en": "I think I still have Viber. Let me check. Do you remember my name? ... And maybe we can meet this weekend? ... I will text you and when you come back we meet. All right, bye." },
-      "context": "From [03m9yo-ikPc]: Figure out app logistics calmly. Check if she remembers your name. Propose a specific time. If her schedule is chaotic: 'Don't worry, I'll text you, we'll sort it out.' Be the man who handles logistics calmly.",
+      "text": { "da": "", "en": "We need a chaperone on the date. It doesn't matter. What do you think? We can try. So, if you give me your WhatsApp number, I will text you." },
+      "children": ["conv3-12"]
+    },
+    "conv3-12": {
+      "id": "conv3-12",
+      "speaker": "her",
+      "text": { "da": "", "en": "I have a WhatsApp and Viber." },
+      "children": ["conv3-13"]
+    },
+    "conv3-13": {
+      "id": "conv3-13",
+      "speaker": "me",
+      "text": { "da": "", "en": "Viber I can do, yes. All right, excellent. I will text you later then. Have a good relax. We'll see you soon. Bye." },
       "children": []
     },
 
-    "opener-walking-approach": {
-      "id": "opener-walking-approach",
+    "conv4-open": {
+      "id": "conv4-open",
       "speaker": "me",
-      "text": { "da": "", "en": "Excuse me. Hi. I saw you look so elegant and dreamy. I thought I'd better say hi. How are you?" },
-      "context": "From [YEOgoofhe-8]: Walking approach. If there's no room to stop her (tight sidewalk, crowded), walk alongside. Call out 'excuse me' when in earshot, especially if she might be startled. Raise tonality slightly to sound non-threatening.",
-      "children": [
-        "walking-receptive",
-        "walking-tram-stop",
-        "walking-bicycle",
-        "walking-confident-model"
-      ]
+      "text": { "da": "", "en": "Hello. How are you? I just saw you walk by. You looked lovely and summery. I thought I'd introduce myself. What's your name?" },
+      "context": "Hungarian girl heading to a book festival, brief interaction. From [IS2SoUgqDLE].",
+      "children": ["conv4-02"]
     },
-    "walking-receptive": {
-      "id": "walking-receptive",
+    "conv4-02": {
+      "id": "conv4-02",
       "speaker": "her",
-      "text": { "da": "", "en": "Oh, thank you. I'm good. Where are you from? Australia?" },
-      "context": "From [J02LapVhOyM]: She starts asking questions - she's friendly and interested.",
-      "children": ["walking-receptive-share"]
+      "text": { "da": "", "en": "Hi." },
+      "children": ["conv4-02b"]
     },
-    "walking-receptive-share": {
-      "id": "walking-receptive-share",
+    "conv4-02b": {
+      "id": "conv4-02b",
       "speaker": "me",
-      "text": { "da": "", "en": "Yeah, I'm Australian. But I live here half the time and half the time in Portugal. I have an olive farm there, and then I come here because my team is here. And what are you doing in life?" },
-      "context": "From [J02LapVhOyM] and throughout all transcripts: Share about yourself with the WHAT and the WHY. Show you're a well-rounded human being - job plus side interest/passion. Then swing it back to her.",
-      "children": ["walking-receptive-her-life"]
+      "text": { "da": "", "en": "I'm James. You're not Hungarian then, right?" },
+      "children": ["conv4-03"]
     },
-    "walking-receptive-her-life": {
-      "id": "walking-receptive-her-life",
+    "conv4-03": {
+      "id": "conv4-03",
       "speaker": "her",
-      "text": { "da": "", "en": "I work at a travel agency. I want to live abroad eventually, like Spain or Italy." },
-      "context": "From [J02LapVhOyM]: Hungarian travel agent who wants to live abroad.",
-      "children": ["walking-receptive-twist"]
+      "text": { "da": "", "en": "No, I am. And I'm walking to see if there's still the book festival." },
+      "children": ["conv4-04"]
     },
-    "walking-receptive-twist": {
-      "id": "walking-receptive-twist",
+    "conv4-04": {
+      "id": "conv4-04",
+      "speaker": "me",
+      "text": { "da": "", "en": "There definitely is. I was there before and there are many people. What kind of books do you like to read?" },
+      "children": ["conv4-05"]
+    },
+    "conv4-05": {
+      "id": "conv4-05",
+      "speaker": "her",
+      "text": { "da": "", "en": "Maybe drama. Real stories. I like Paul Auster." },
+      "children": ["conv4-06"]
+    },
+    "conv4-06": {
+      "id": "conv4-06",
+      "speaker": "me",
+      "text": { "da": "", "en": "Paul Auster? I don't know him." },
+      "children": ["conv4-07"]
+    },
+    "conv4-07": {
+      "id": "conv4-07",
+      "speaker": "her",
+      "text": { "da": "", "en": "Well, his books are not really about romance. But actually I have to go see this." },
+      "children": ["conv4-08"]
+    },
+    "conv4-08": {
+      "id": "conv4-08",
+      "speaker": "me",
+      "text": { "da": "", "en": "You're in a big rush for books. Understood. Okay. See you later." },
+      "children": []
+    },
+
+    "conv5-open": {
+      "id": "conv5-open",
+      "speaker": "me",
+      "text": { "da": "", "en": "Hello. How are you? Are you a tourist? This is the first time you've seen the Parisi? It looks lovely." },
+      "context": "Friendly Hungarian student from a small town, studying special needs education. From [IS2SoUgqDLE].",
+      "children": ["conv5-02"]
+    },
+    "conv5-02": {
+      "id": "conv5-02",
+      "speaker": "her",
+      "text": { "da": "", "en": "No, I'm Hungarian. It is nice." },
+      "children": ["conv5-03"]
+    },
+    "conv5-03": {
+      "id": "conv5-03",
+      "speaker": "me",
+      "text": { "da": "", "en": "It's good that even though you live in a city, you can still see the little pieces of beauty everywhere. And what are you doing today?" },
+      "children": ["conv5-04"]
+    },
+    "conv5-04": {
+      "id": "conv5-04",
+      "speaker": "her",
+      "text": { "da": "", "en": "Today I have to study. I go back home and study for my exam." },
+      "children": ["conv5-05"]
+    },
+    "conv5-05": {
+      "id": "conv5-05",
+      "speaker": "me",
+      "text": { "da": "", "en": "So you just had a little shopping break? What are you studying?" },
+      "children": ["conv5-06"]
+    },
+    "conv5-06": {
+      "id": "conv5-06",
+      "speaker": "her",
+      "text": { "da": "", "en": "Special needs education." },
+      "children": ["conv5-07"]
+    },
+    "conv5-07": {
+      "id": "conv5-07",
+      "speaker": "me",
+      "text": { "da": "", "en": "That must be very challenging and also rewarding work. I'm from Australia, but I live here most of the time. What's your name?" },
+      "children": ["conv5-08"]
+    },
+    "conv5-08": {
+      "id": "conv5-08",
+      "speaker": "her",
+      "text": { "da": "", "en": "Hi." },
+      "children": ["conv5-08b"]
+    },
+    "conv5-08b": {
+      "id": "conv5-08b",
+      "speaker": "me",
+      "text": { "da": "", "en": "I'm James. Nice to meet you. You have a very friendly vibe. A lot of Hungarians can be a bit grumpy, right?" },
+      "children": ["conv5-09"]
+    },
+    "conv5-09": {
+      "id": "conv5-09",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yes. I'm from a small town, about 100 kilometres away. I think people in small towns are more friendly." },
+      "children": ["conv5-10"]
+    },
+    "conv5-10": {
+      "id": "conv5-10",
+      "speaker": "me",
+      "text": { "da": "", "en": "You're a country girl. It makes sense when you're young to go explore and take advantage of opportunities in a city. I did the same. Now I live half the time on a farm in Portugal. An olive farm. And why did you decide to study special needs education?" },
+      "children": ["conv5-12"]
+    },
+    "conv5-12": {
+      "id": "conv5-12",
+      "speaker": "her",
+      "text": { "da": "", "en": "Last year I was in Germany as a volunteer, and I worked in a special school. I just like it." },
+      "children": ["conv5-13"]
+    },
+    "conv5-13": {
+      "id": "conv5-13",
+      "speaker": "me",
+      "text": { "da": "", "en": "Yeah, it's fun with people who think differently, who have an unusual way of experiencing life. All right, you're going this way? Would you like to get a coffee sometime? You seem very lovely. Do you have WhatsApp?" },
+      "children": ["conv5-14"]
+    },
+    "conv5-14": {
+      "id": "conv5-14",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yes. I have an exam coming soon." },
+      "children": ["conv5-15"]
+    },
+    "conv5-15": {
+      "id": "conv5-15",
+      "speaker": "me",
+      "text": { "da": "", "en": "Cool. I'm James, if you don't remember. Have a lovely day. Good luck with your studies." },
+      "children": []
+    },
+
+    "conv6-open": {
+      "id": "conv6-open",
+      "speaker": "me",
+      "text": { "da": "", "en": "Hello. How are you? That painting is nearly as big as you. Did you steal it from an art gallery?" },
+      "context": "Adorable Hungarian art student carrying a large painting. Long interaction with hand-holding moment. From [03m9yo-ikPc].",
+      "children": ["conv6-02"]
+    },
+    "conv6-02": {
+      "id": "conv6-02",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yes, I can. It's a half-done picture." },
+      "children": ["conv6-03"]
+    },
+    "conv6-03": {
+      "id": "conv6-03",
+      "speaker": "me",
+      "text": { "da": "", "en": "What will the other half be? What kind of art? Impressionist, surrealist, or something?" },
+      "children": ["conv6-04"]
+    },
+    "conv6-04": {
+      "id": "conv6-04",
+      "speaker": "her",
+      "text": { "da": "", "en": "Symbolism." },
+      "children": ["conv6-05"]
+    },
+    "conv6-05": {
+      "id": "conv6-05",
+      "speaker": "me",
+      "text": { "da": "", "en": "I don't know what symbolism is. Explain it to me. Like little things that are symbolic? So what, for example?" },
+      "children": ["conv6-06"]
+    },
+    "conv6-06": {
+      "id": "conv6-06",
+      "speaker": "her",
+      "text": { "da": "", "en": "It will come to you when you get inspiration. You will get inspiration and then you will choose the symbol. Something like this." },
+      "children": ["conv6-07"]
+    },
+    "conv6-07": {
+      "id": "conv6-07",
+      "speaker": "me",
+      "text": { "da": "", "en": "You're so cute. It's okay, we will speak slowly. You'll remember your English. What is your name? My name is James." },
+      "children": ["conv6-08"]
+    },
+    "conv6-08": {
+      "id": "conv6-08",
+      "speaker": "her",
+      "text": { "da": "", "en": "Nice to meet you." },
+      "children": ["conv6-09"]
+    },
+    "conv6-09": {
+      "id": "conv6-09",
+      "speaker": "me",
+      "text": { "da": "", "en": "You are adorable. Do you know this word? Adorable means very cute." },
+      "children": ["conv6-10"]
+    },
+    "conv6-10": {
+      "id": "conv6-10",
+      "speaker": "her",
+      "text": { "da": "", "en": "Oh. Thank you." },
+      "children": ["conv6-11"]
+    },
+    "conv6-11": {
+      "id": "conv6-11",
+      "speaker": "me",
+      "text": { "da": "", "en": "And you are Hungarian, yeah. You have very beautiful eyes. Like hypnotic, do you know this word?" },
+      "children": ["conv6-12"]
+    },
+    "conv6-12": {
+      "id": "conv6-12",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yeah, I know hypnotic. And do you like my eyes? Are they also hypnotic?" },
+      "children": ["conv6-13"]
+    },
+    "conv6-13": {
+      "id": "conv6-13",
+      "speaker": "me",
+      "text": { "da": "", "en": "I don't know. So where are you going right now?" },
+      "children": ["conv6-14"]
+    },
+    "conv6-14": {
+      "id": "conv6-14",
+      "speaker": "her",
+      "text": { "da": "", "en": "The museum. I have a lesson. An art lesson. I study graphic design and illustration, but now I paint." },
+      "children": ["conv6-15"]
+    },
+    "conv6-15": {
+      "id": "conv6-15",
+      "speaker": "me",
+      "text": { "da": "", "en": "Today you paint? Tomorrow you conquer the world? I'm from Australia, but I live in Budapest. And you like Budapest?" },
+      "children": ["conv6-16"]
+    },
+    "conv6-16": {
+      "id": "conv6-16",
+      "speaker": "her",
+      "text": { "da": "", "en": "I am not from Budapest. I'm from a little town." },
+      "children": ["conv6-17"]
+    },
+    "conv6-17": {
+      "id": "conv6-17",
+      "speaker": "me",
+      "text": { "da": "", "en": "So you think people in the small towns are more friendly? But you're a naturally friendly person, right? You understand 50% of what I say?" },
+      "children": ["conv6-18"]
+    },
+    "conv6-18": {
+      "id": "conv6-18",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yes, 50-50." },
+      "children": ["conv6-19"]
+    },
+    "conv6-19": {
+      "id": "conv6-19",
+      "speaker": "me",
+      "text": { "da": "", "en": "50-50 is all right. We can work on that. What time is your class? Now? Okay well listen, would you like to get a cup of coffee with me sometime? I would like to take you out." },
+      "children": ["conv6-20"]
+    },
+    "conv6-20": {
+      "id": "conv6-20",
+      "speaker": "her",
+      "text": { "da": "", "en": "Maybe." },
+      "children": ["conv6-21"]
+    },
+    "conv6-21": {
+      "id": "conv6-21",
+      "speaker": "me",
+      "text": { "da": "", "en": "All right, well let me solve the maybe. Why don't I get your contact, I can text you, and eventually we'll do the thing. You have WhatsApp?" },
+      "children": ["conv6-22"]
+    },
+    "conv6-22": {
+      "id": "conv6-22",
+      "speaker": "her",
+      "text": { "da": "", "en": "I have Viber and Messenger." },
+      "children": ["conv6-23"]
+    },
+    "conv6-23": {
+      "id": "conv6-23",
+      "speaker": "me",
+      "text": { "da": "", "en": "I think I still have Viber. Do you remember my name?" },
+      "children": ["conv6-24"]
+    },
+    "conv6-24": {
+      "id": "conv6-24",
+      "speaker": "her",
+      "text": { "da": "", "en": "James." },
+      "children": ["conv6-25"]
+    },
+    "conv6-25": {
+      "id": "conv6-25",
+      "speaker": "me",
+      "text": { "da": "", "en": "And maybe we can meet this weekend? Do you also have Instagram? Let's do that as well." },
+      "children": ["conv6-26"]
+    },
+    "conv6-26": {
+      "id": "conv6-26",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yes. This is for you." },
+      "children": ["conv6-27"]
+    },
+    "conv6-27": {
+      "id": "conv6-27",
+      "speaker": "me",
+      "text": { "da": "", "en": "A chocolate egg? All right, well I hope you have a good day and you get inspiration to find your symbols. I will text you and when you come back to Budapest we meet. Bye." },
+      "children": []
+    },
+
+    "conv7-open": {
+      "id": "conv7-open",
+      "speaker": "me",
+      "text": { "da": "", "en": "Hello. How are you? I'm not selling anything. You've got that look of, why am I here? Do you know why I'm here? To tell you you look wonderful today and to meet you." },
+      "context": "Hungarian travel agent with headphones on, listening to YouTube. Leads to dirty talk banter. From [J02LapVhOyM].",
+      "children": ["conv7-02"]
+    },
+    "conv7-02": {
+      "id": "conv7-02",
+      "speaker": "her",
+      "text": { "da": "", "en": "Oh, thank you so much." },
+      "children": ["conv7-03"]
+    },
+    "conv7-03": {
+      "id": "conv7-03",
+      "speaker": "me",
+      "text": { "da": "", "en": "Are you on the phone or you're listening to a podcast? What's your name? How do you do? I'm James." },
+      "children": ["conv7-04"]
+    },
+    "conv7-04": {
+      "id": "conv7-04",
+      "speaker": "her",
+      "text": { "da": "", "en": "James, where are you from?" },
+      "children": ["conv7-05"]
+    },
+    "conv7-05": {
+      "id": "conv7-05",
+      "speaker": "me",
+      "text": { "da": "", "en": "I'm Australian. But I live here, let's say, half the time. I have my own business, so I can work from wherever, but I have my media team here." },
+      "children": ["conv7-06"]
+    },
+    "conv7-06": {
+      "id": "conv7-06",
+      "speaker": "her",
+      "text": { "da": "", "en": "Oh, that's really wonderful. And are you Hungarian?" },
+      "children": ["conv7-07"]
+    },
+    "conv7-07": {
+      "id": "conv7-07",
+      "speaker": "me",
+      "text": { "da": "", "en": "Your eyes are quite similar to mine. Beautiful greeny grey. It's pretty rare to find, right?" },
+      "children": ["conv7-08"]
+    },
+    "conv7-08": {
+      "id": "conv7-08",
+      "speaker": "her",
+      "text": { "da": "", "en": "I've been living here in Budapest for a year. I'm from Western Hungary, but I really like Budapest actually." },
+      "children": ["conv7-09"]
+    },
+    "conv7-09": {
+      "id": "conv7-09",
+      "speaker": "me",
+      "text": { "da": "", "en": "Yeah, it's like, it's a little bit dirty, but a little bit beautiful, there's a lot going on. And what are you doing in life?" },
+      "children": ["conv7-10"]
+    },
+    "conv7-10": {
+      "id": "conv7-10",
+      "speaker": "her",
+      "text": { "da": "", "en": "I work at a travel agency. I study tourism and hospitality. But later, after my 30s, I want to start my own business." },
+      "children": ["conv7-11"]
+    },
+    "conv7-11": {
+      "id": "conv7-11",
+      "speaker": "me",
+      "text": { "da": "", "en": "After your 30s? You've got a specific timeline. In your 20s you want more experience first? In everything? Work, pleasure?" },
+      "children": ["conv7-12"]
+    },
+    "conv7-12": {
+      "id": "conv7-12",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yeah, in everything. I want to travel a lot and see the world. I want to live abroad. Spain, Italy or France." },
+      "children": ["conv7-13"]
+    },
+    "conv7-13": {
+      "id": "conv7-13",
       "speaker": "me",
       "text": { "da": "", "en": "Is that because the Hungarian men are not your style?" },
-      "context": "From [J02LapVhOyM]: Twist the conversation toward flirtation. Take something literal and give it a more personal, spicy interpretation. Always listen for keywords where you can shift the meaning. 'I'm always listening for phrases where there's an opportunity to twist the meaning.'",
-      "children": ["walking-receptive-she-plays"]
+      "children": ["conv7-14"]
     },
-    "walking-receptive-she-plays": {
-      "id": "walking-receptive-she-plays",
+    "conv7-14": {
+      "id": "conv7-14",
       "speaker": "her",
-      "text": { "da": "", "en": "My husband will be Hungarian, you know? ... I just don't like talking to a man in Hungarian." },
-      "context": "From [J02LapVhOyM]: She reveals it's about how the language sounds. Opens the door to escalation.",
-      "children": ["walking-receptive-escalate"]
+      "text": { "da": "", "en": "My husband will be Hungarian, you know? I just don't like talking to a man in Hungarian." },
+      "children": ["conv7-15"]
     },
-    "walking-receptive-escalate": {
-      "id": "walking-receptive-escalate",
+    "conv7-15": {
+      "id": "conv7-15",
       "speaker": "me",
       "text": { "da": "", "en": "What's it like to do dirty talk in Hungarian? Does it sound good?" },
-      "context": "From [J02LapVhOyM]: Escalate to a riskier topic. If the vibe is good and she's playing along, push into flirtatious territory. Nothing sleazy - polite but with a logical transition into sexier topics. 'Not the average conversation a random stranger is going to have.'",
-      "children": ["walking-receptive-she-laughs"]
+      "children": ["conv7-16"]
     },
-    "walking-receptive-she-laughs": {
-      "id": "walking-receptive-she-laughs",
+    "conv7-16": {
+      "id": "conv7-16",
       "speaker": "her",
-      "text": { "da": "", "en": "I don't like dirty talking in Hungarian at all!" },
-      "context": "From [J02LapVhOyM]: She plays along enthusiastically.",
-      "children": ["walking-receptive-compliment-close"]
+      "text": { "da": "", "en": "I don't like dirty talking in Hungarian. At all." },
+      "children": ["conv7-17"]
     },
-    "walking-receptive-compliment-close": {
-      "id": "walking-receptive-compliment-close",
+    "conv7-17": {
+      "id": "conv7-17",
       "speaker": "me",
-      "text": { "da": "", "en": "But you're very friendly and open. You have a nice smile too. It doesn't look fake or anything. ... All right, I'd like to take you out sometime if you'd like that." },
-      "context": "From [J02LapVhOyM]: Switch from banter back to a genuine compliment that differentiates her. 'I'd like to take you out' - not 'can I get your number.' A proper masculine direct offer.",
-      "children": ["walking-receptive-she-says-yes"]
+      "text": { "da": "", "en": "So do you switch to English for dirty talk, even with a Hungarian?" },
+      "children": ["conv7-18"]
     },
-    "walking-receptive-she-says-yes": {
-      "id": "walking-receptive-she-says-yes",
+    "conv7-18": {
+      "id": "conv7-18",
       "speaker": "her",
-      "text": { "da": "", "en": "Okay. Yeah, sure." },
-      "children": ["walking-receptive-number"]
+      "text": { "da": "", "en": "In Hungarian, I don't like these expressions, even from a man. Most young Hungarian girls just want to live abroad. Hungarians are really negative, not welcoming. Cold personality." },
+      "children": ["conv7-19"]
     },
-    "walking-receptive-number": {
-      "id": "walking-receptive-number",
+    "conv7-19": {
+      "id": "conv7-19",
       "speaker": "me",
-      "text": { "da": "", "en": "Can I get your WhatsApp? I will text you and when we have time we can meet." },
-      "context": "From [J02LapVhOyM]: Get the contact. Do the handshake again at the end. Let the last thing she feels be fingertips touching fingertips - a sexy ending.",
+      "text": { "da": "", "en": "Maybe that's a hangover from the Soviet Union days. But you're very friendly and open. You have a nice smile too. It doesn't look fake or anything." },
+      "children": ["conv7-20"]
+    },
+    "conv7-20": {
+      "id": "conv7-20",
+      "speaker": "her",
+      "text": { "da": "", "en": "Thank you. And what are you doing now? I have to go buy some groceries. And after that I have a meeting with my friends. We are girls so we really like..." },
+      "children": ["conv7-21"]
+    },
+    "conv7-21": {
+      "id": "conv7-21",
+      "speaker": "me",
+      "text": { "da": "", "en": "You need to gossip. Do you have any juicy gossip this time?" },
+      "children": ["conv7-22"]
+    },
+    "conv7-22": {
+      "id": "conv7-22",
+      "speaker": "her",
+      "text": { "da": "", "en": "Maybe." },
+      "children": ["conv7-23"]
+    },
+    "conv7-23": {
+      "id": "conv7-23",
+      "speaker": "me",
+      "text": { "da": "", "en": "Excellent. I'd like to take you out sometime if you'd like that. Can I get your WhatsApp?" },
+      "children": ["conv7-24"]
+    },
+    "conv7-24": {
+      "id": "conv7-24",
+      "speaker": "her",
+      "text": { "da": "", "en": "Okay. Yeah, exactly." },
+      "children": ["conv7-25"]
+    },
+    "conv7-25": {
+      "id": "conv7-25",
+      "speaker": "me",
+      "text": { "da": "", "en": "I will text you on WhatsApp and when we have time we can meet. Take it easy. Bye." },
       "children": []
     },
 
-    "walking-tram-stop": {
-      "id": "walking-tram-stop",
-      "speaker": "her",
-      "text": { "da": "", "en": "Hi. Yeah, I'm fine thanks." },
-      "context": "From [WSFSpbFCPZo]: She's waiting for a tram. You have a limited window - use it.",
-      "children": ["walking-tram-time-constraint"]
-    },
-    "walking-tram-time-constraint": {
-      "id": "walking-tram-time-constraint",
+    "conv8-open": {
+      "id": "conv8-open",
       "speaker": "me",
-      "text": { "da": "", "en": "Cool. In that case, we have two minutes to talk. What's your name? ... What about your amazing qualities? Just give me one, we don't have much time. Are you a nice person?" },
-      "context": "From [WSFSpbFCPZo]: Acknowledge the time constraint. It creates urgency and honesty. Ask her to qualify herself in a playful way.",
-      "children": ["walking-tram-she-engages"]
+      "text": { "da": "", "en": "Hello. Are you waiting for a tram? Cool. In that case, we have two minutes to talk. What's your name? I'm James. How are you doing?" },
+      "context": "Hungarian girl at a tram stop. Playful banter about life falling apart, ends with boyfriend reveal. From [WSFSpbFCPZo].",
+      "children": ["conv8-02"]
     },
-    "walking-tram-she-engages": {
-      "id": "walking-tram-she-engages",
+    "conv8-02": {
+      "id": "conv8-02",
+      "speaker": "her",
+      "text": { "da": "", "en": "Hi. What's that accent? Are you French?" },
+      "children": ["conv8-02b"]
+    },
+    "conv8-02b": {
+      "id": "conv8-02b",
+      "speaker": "me",
+      "text": { "da": "", "en": "I wish." },
+      "children": ["conv8-02c"]
+    },
+    "conv8-02c": {
+      "id": "conv8-02c",
+      "speaker": "her",
+      "text": { "da": "", "en": "I'm Hungarian." },
+      "children": ["conv8-03"]
+    },
+    "conv8-03": {
+      "id": "conv8-03",
+      "speaker": "me",
+      "text": { "da": "", "en": "Be proud of your nation. What about your amazing qualities? Just give me one, we don't have much time. Are you a nice person?" },
+      "children": ["conv8-04"]
+    },
+    "conv8-04": {
+      "id": "conv8-04",
       "speaker": "her",
       "text": { "da": "", "en": "Yeah. I can be very nice and I can be very not nice." },
-      "context": "From [WSFSpbFCPZo]: She engages with personality.",
-      "children": ["walking-tram-banter"]
+      "children": ["conv8-05"]
     },
-    "walking-tram-banter": {
-      "id": "walking-tram-banter",
+    "conv8-05": {
+      "id": "conv8-05",
       "speaker": "me",
-      "text": { "da": "", "en": "Very nice and very nasty. Only if somebody deserves it, I hope. ... Is this your tram? Okay, I know we don't know each other. Would you like to get a coffee sometime?" },
-      "context": "From [WSFSpbFCPZo]: Quick banter, then close before the tram arrives. The spontaneity makes it a 'movie moment.' Who does that? The guy who grabs a momentary opportunity.",
-      "children": [
-        "walking-tram-yes",
-        "walking-tram-boyfriend"
-      ]
+      "text": { "da": "", "en": "Very nice and very nasty. Only if somebody deserves it, I hope." },
+      "children": ["conv8-05b"]
     },
-    "walking-tram-yes": {
-      "id": "walking-tram-yes",
+    "conv8-05b": {
+      "id": "conv8-05b",
       "speaker": "her",
-      "text": { "da": "", "en": "Yeah, okay. Here's my number." },
-      "children": []
+      "text": { "da": "", "en": "Where are you from?" },
+      "children": ["conv8-05c"]
     },
-    "walking-tram-boyfriend": {
-      "id": "walking-tram-boyfriend",
+    "conv8-05c": {
+      "id": "conv8-05c",
+      "speaker": "me",
+      "text": { "da": "", "en": "Australia. Yeah, but I live here half the time. Life coaching. Helping people with confidence and public speaking. Do you have your shit together or is it all a mess?" },
+      "children": ["conv8-06"]
+    },
+    "conv8-06": {
+      "id": "conv8-06",
+      "speaker": "her",
+      "text": { "da": "", "en": "I think it's all collapsing right now so I'm going to start working on it." },
+      "children": ["conv8-07"]
+    },
+    "conv8-07": {
+      "id": "conv8-07",
+      "speaker": "me",
+      "text": { "da": "", "en": "The good thing about those times is that they open many possibilities." },
+      "children": ["conv8-08"]
+    },
+    "conv8-08": {
+      "id": "conv8-08",
+      "speaker": "her",
+      "text": { "da": "", "en": "I just got a motivation quote today from this app. Something like when one door closes, everything opens." },
+      "children": ["conv8-09"]
+    },
+    "conv8-09": {
+      "id": "conv8-09",
+      "speaker": "me",
+      "text": { "da": "", "en": "Yeah, it's true. Is this your tram? Okay, I know we don't know each other. Would you like to get a coffee sometime?" },
+      "children": ["conv8-10"]
+    },
+    "conv8-10": {
+      "id": "conv8-10",
       "speaker": "her",
       "text": { "da": "", "en": "Yeah, but I'm in a relationship." },
-      "children": ["walking-tram-boyfriend-exit"]
+      "children": ["conv8-11"]
     },
-    "walking-tram-boyfriend-exit": {
-      "id": "walking-tram-boyfriend-exit",
+    "conv8-11": {
+      "id": "conv8-11",
       "speaker": "me",
-      "text": { "da": "", "en": "Then you shouldn't have a coffee with me. It's very dangerous. Take it easy. I hope the chaos forms into something that was meant to be." },
-      "context": "From [WSFSpbFCPZo]: Playful exit. Self-amused humor even in rejection. Walk away with your head held high.",
+      "text": { "da": "", "en": "Then you shouldn't have a coffee with me. It's very dangerous. Take it easy. I hope the chaos forms into something that was meant to be. Peace out." },
       "children": []
     },
 
-    "walking-bicycle": {
-      "id": "walking-bicycle",
-      "speaker": "her",
-      "text": { "da": "", "en": "[about to ride away] Yeah? Hi." },
-      "context": "From [YEOgoofhe-8]: She's literally on a bicycle. Caught her just before she pedaled off. These micro-window moments are gold.",
-      "children": ["walking-bicycle-fast-close"]
-    },
-    "walking-bicycle-fast-close": {
-      "id": "walking-bicycle-fast-close",
+    "conv9-open": {
+      "id": "conv9-open",
       "speaker": "me",
-      "text": { "da": "", "en": "I can see you're about to ride away but you look lovely. I don't want to keep you... I do want to keep you, actually. Would you like to get a coffee when you're not working? I know that's crazy, we just met. Can I get your WhatsApp?" },
-      "context": "From [YEOgoofhe-8]: Balls-out close with a cheeky flirt. 'I don't want to keep you, I do want to keep you.' She says 'maybe' - don't hear that as rejection. Say 'all right, give me a number' and she does. Grab momentary opportunities that most guys think are impossible.",
-      "children": [
-        "walking-bicycle-maybe-yes",
-        "walking-bicycle-no"
-      ]
+      "text": { "da": "", "en": "Excuse me. Hi. I didn't mean to startle you, but you look lovely. I thought I'd meet you. What's your name? I'm James." },
+      "context": "Young Hungarian university student studying international relations. Cold day, walking approach. Successful number close. From [WSFSpbFCPZo].",
+      "children": ["conv9-02"]
     },
-    "walking-bicycle-maybe-yes": {
-      "id": "walking-bicycle-maybe-yes",
+    "conv9-02": {
+      "id": "conv9-02",
       "speaker": "her",
-      "text": { "da": "", "en": "Maybe... yeah, all right." },
-      "context": "From [YEOgoofhe-8]: She said maybe. Most guys would leave. But push through and ask for the number - she gives it.",
-      "children": []
+      "text": { "da": "", "en": "Australia? Why? It is very far away." },
+      "children": ["conv9-03"]
     },
-    "walking-bicycle-no": {
-      "id": "walking-bicycle-no",
-      "speaker": "her",
-      "text": { "da": "", "en": "No, I'm sorry, I have a boyfriend." },
-      "children": ["walking-bicycle-no-exit"]
-    },
-    "walking-bicycle-no-exit": {
-      "id": "walking-bicycle-no-exit",
+    "conv9-03": {
+      "id": "conv9-03",
       "speaker": "me",
-      "text": { "da": "", "en": "Oh, he probably wouldn't like that. All right, see ya." },
-      "context": "Quick, light exit. No lingering. No apologies needed.",
-      "children": []
+      "text": { "da": "", "en": "And we have lots of cool animals and nice beaches and chill people. No, I live here let's say half the time. I have an online business so I can work wherever I want. You're definitely Hungarian, I can tell from the accent and the name. You don't have the very strong one. Yours is quite sweet and nice." },
+      "children": ["conv9-04"]
     },
-
-    "walking-confident-model": {
-      "id": "walking-confident-model",
+    "conv9-04": {
+      "id": "conv9-04",
       "speaker": "her",
-      "text": { "da": "", "en": "Hi. Thank you. [strong eye contact, confident posture]" },
-      "context": "From [NZk0SPu3HXM]: Tall, model-type girl with confident walk. She gives a firm handshake and looks you directly in the eye.",
-      "children": ["walking-confident-model-banter"]
+      "text": { "da": "", "en": "I spent my summers in the United States, so maybe I picked up some accent there." },
+      "children": ["conv9-05"]
     },
-    "walking-confident-model-banter": {
-      "id": "walking-confident-model-banter",
+    "conv9-05": {
+      "id": "conv9-05",
       "speaker": "me",
-      "text": { "da": "", "en": "Good handshake. You're not Hungarian originally, are you? You don't have the very strong accent. ... What are you doing in life?" },
-      "context": "From [NZk0SPu3HXM] and [J02LapVhOyM]: With confident girls, match their energy. Notice micro-details about them. If she has a nice handshake, call it out. For very attractive girls, don't just say 'you're beautiful' - they hear that daily. Instead notice how she carries herself.",
-      "children": ["walking-confident-model-reveals"]
+      "text": { "da": "", "en": "No, you still have a Hungarian accent, but it's a good one. It's nice. I'm not gonna follow you. I'll let you go shortly. What's the plan, you're going to university? What are you studying?" },
+      "children": ["conv9-06"]
     },
-    "walking-confident-model-reveals": {
-      "id": "walking-confident-model-reveals",
+    "conv9-06": {
+      "id": "conv9-06",
       "speaker": "her",
-      "text": { "da": "", "en": "I'm a bartender, actually doing school for gardening... I also smoke a lot of pot." },
-      "context": "From [NZk0SPu3HXM]: She reveals something unexpected. 'Looks can be deceiving - don't necessarily make assumptions about a woman.' A fancy-looking girl turns out to be a hippie stoner who studies gardening.",
-      "children": ["walking-confident-model-connect"]
+      "text": { "da": "", "en": "International relations. It's my first semester. I found a new place." },
+      "children": ["conv9-07"]
     },
-    "walking-confident-model-connect": {
-      "id": "walking-confident-model-connect",
+    "conv9-07": {
+      "id": "conv9-07",
       "speaker": "me",
-      "text": { "da": "", "en": "You're into gardening? Fucking cool. What kind? Permaculture, organic stuff? ... You don't look like a hippie, but you are a hippie. Yeah, in my soul. I'm the same, I was a hardcore hippie growing up." },
-      "context": "From [NZk0SPu3HXM]: Be genuinely enthusiastic when you connect on something real. Share something about yourself that relates. 'I used to be a hippie and now I'm a capitalist.' Don't be afraid to show authentic excitement.",
-      "children": ["walking-confident-model-engaged"]
+      "text": { "da": "", "en": "So you're still just figuring it out. Are you business or mathematically minded?" },
+      "children": ["conv9-08"]
     },
-    "walking-confident-model-engaged": {
-      "id": "walking-confident-model-engaged",
+    "conv9-08": {
+      "id": "conv9-08",
       "speaker": "her",
-      "text": { "da": "", "en": "I'm actually proposed. I have a rich older guy." },
-      "context": "From [NZk0SPu3HXM]: She's engaged to an older man. Not necessarily the end of the interaction.",
-      "children": [
-        "walking-confident-model-engaged-probe",
-        "walking-confident-model-engaged-exit"
-      ]
+      "text": { "da": "", "en": "I'm trying to be." },
+      "children": ["conv9-09"]
     },
-    "walking-confident-model-engaged-probe": {
-      "id": "walking-confident-model-engaged-probe",
+    "conv9-09": {
+      "id": "conv9-09",
       "speaker": "me",
-      "text": { "da": "", "en": "That's much too young to get married. ... So you're marrying him for the money? ... All right, well, you're super fun. Do you want to stay in touch on Instagram in case things change? I'm not going to blow up your phone. I'm discreet." },
-      "context": "From [NZk0SPu3HXM]: When a girl has a partner but the interaction is fun, propose staying in touch 'in case things change.' 'I'm not going to blow up your phone, I'm discreet' makes it easier for her to say yes.",
-      "children": ["walking-confident-model-instagram"]
+      "text": { "da": "", "en": "All right. Well, I'm gonna head back because it's cold. It's lovely to chat to you. Would you like to get a cup of tea sometime? Do you have a WhatsApp or something?" },
+      "children": ["conv9-10"]
     },
-    "walking-confident-model-instagram": {
-      "id": "walking-confident-model-instagram",
+    "conv9-10": {
+      "id": "conv9-10",
       "speaker": "her",
-      "text": { "da": "", "en": "Yeah, sure. You can add me there." },
-      "children": []
+      "text": { "da": "", "en": "Yeah, okay." },
+      "children": ["conv9-11"]
     },
-    "walking-confident-model-engaged-exit": {
-      "id": "walking-confident-model-engaged-exit",
+    "conv9-11": {
+      "id": "conv9-11",
       "speaker": "me",
-      "text": { "da": "", "en": "All right, well, congratulations. Take it easy. Have a fun day." },
-      "context": "If the vibe doesn't warrant pushing, just exit gracefully.",
+      "text": { "da": "", "en": "All right, cool. Well, I'm gonna be traveling for a week or so but I'll text you when I get back. Take it easy. See you. Bye." },
       "children": []
     },
 
-    "opener-headphones-music": {
-      "id": "opener-headphones-music",
+    "conv10-open": {
+      "id": "conv10-open",
       "speaker": "me",
-      "text": { "da": "", "en": "Excuse me. Hi. What are you listening to?" },
-      "context": "From [jdDdgzdFPfs] and [J02LapVhOyM]: When she has headphones in, call out 'excuse me' before you come into her periphery. She may need time to take headphones out and process what's happening. Give her space to figure out what she's doing. If your first seconds are fumbled, stay cool and move through it.",
-      "children": [
-        "headphones-engaged",
-        "headphones-dismissive"
-      ]
+      "text": { "da": "", "en": "Excuse me lady, hello. You look amazing." },
+      "context": "Curvy Irish tourist visiting Budapest solo. Gems on teeth, Middle Eastern heritage, product manager. From [N2UbTTfCfqg].",
+      "children": ["conv10-02"]
     },
-    "headphones-engaged": {
-      "id": "headphones-engaged",
+    "conv10-02": {
+      "id": "conv10-02",
       "speaker": "her",
-      "text": { "da": "", "en": "[takes headphones out] Oh, hi. Just some YouTube actually." },
-      "context": "From [J02LapVhOyM]: She stops and engages. The start may be glitchy - that's fine.",
-      "children": ["headphones-compliment-reason"]
+      "text": { "da": "", "en": "Oh, thank you so much." },
+      "children": ["conv10-03"]
     },
-    "headphones-compliment-reason": {
-      "id": "headphones-compliment-reason",
+    "conv10-03": {
+      "id": "conv10-03",
       "speaker": "me",
-      "text": { "da": "", "en": "I'm not selling anything. You've got that look of, why am I here? Do you know why I'm here? To tell you you look wonderful today and to meet you." },
-      "context": "From [J02LapVhOyM]: Acknowledge her confusion. 'I'm not selling anything' disarms. Then state your intent clearly. 'Don't worry if your first seconds are a bit fumbly. As long as you stay cool and relaxed and move through it, generally we can get the train back on the tracks.'",
-      "children": ["headphones-she-relaxes"]
+      "text": { "da": "", "en": "Yeah, you're very welcome. What are you doing today?" },
+      "children": ["conv10-04"]
     },
-    "headphones-she-relaxes": {
-      "id": "headphones-she-relaxes",
+    "conv10-04": {
+      "id": "conv10-04",
       "speaker": "her",
-      "text": { "da": "", "en": "Oh, thank you so much! And where are you from?" },
-      "context": "From [J02LapVhOyM]: She relaxes and starts asking questions. She's curious.",
-      "children": ["headphones-chat-close"]
+      "text": { "da": "", "en": "I'm just going to the shopping centre. How about you?" },
+      "children": ["conv10-05"]
     },
-    "headphones-chat-close": {
-      "id": "headphones-chat-close",
+    "conv10-05": {
+      "id": "conv10-05",
       "speaker": "me",
-      "text": { "da": "", "en": "I'm Australian. But I live here and in Portugal. ... Your eyes are quite similar to mine. Beautiful greeny grey. It's pretty rare to find, right? ... And what are you doing in life?" },
-      "context": "From [J02LapVhOyM]: Create rapport through a shared quality. Give both her and yourself a compliment at the same time. Then swing to finding out about her. When she gives the WHAT (her job), listen for the keywords where you can twist the meaning toward flirtation.",
-      "children": ["headphones-she-shares"]
+      "text": { "da": "", "en": "Getting some sunshine. Are you British? Irish? You do not look Irish." },
+      "children": ["conv10-06"]
     },
-    "headphones-she-shares": {
-      "id": "headphones-she-shares",
+    "conv10-06": {
+      "id": "conv10-06",
       "speaker": "her",
-      "text": { "da": "", "en": "I work at a travel agency. In my 20s I want to gain more experience... in everything." },
-      "context": "From [J02LapVhOyM]: She says 'in everything' - keyword for twisting the meaning.",
-      "children": ["headphones-twist-flirt"]
+      "text": { "da": "", "en": "No, because my parents are from the Middle East while I grew up in Ireland." },
+      "children": ["conv10-07"]
     },
-    "headphones-twist-flirt": {
-      "id": "headphones-twist-flirt",
+    "conv10-07": {
+      "id": "conv10-07",
       "speaker": "me",
-      "text": { "da": "", "en": "In everything? Work, pleasure... Good idea." },
-      "context": "From [J02LapVhOyM]: 'I'm not taking what she's saying literally. I'm always listening for keywords where there's an opportunity to twist the meaning to make it flirtatious.' She set herself up, and he adds 'work and pleasure' - she agrees.",
-      "children": ["headphones-close"]
+      "text": { "da": "", "en": "It's interesting hearing that voice coming out of clearly not an Irish face. Do you feel Irish?" },
+      "children": ["conv10-08"]
     },
-    "headphones-close": {
-      "id": "headphones-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "I'd like to take you out sometime if you'd like that." },
-      "context": "From [J02LapVhOyM]: Close with direct intent. 'I want to take you out' is way stronger than 'can I get your number' or 'let's swap contacts.' 'That's a proper masculine direct offer.'",
-      "children": ["headphones-close-yes"]
-    },
-    "headphones-close-yes": {
-      "id": "headphones-close-yes",
+    "conv10-08": {
+      "id": "conv10-08",
       "speaker": "her",
-      "text": { "da": "", "en": "Okay, sure. Can I get your number or WhatsApp?" },
-      "children": ["headphones-close-handshake"]
+      "text": { "da": "", "en": "I do, yeah, because I've been there all my life." },
+      "children": ["conv10-09"]
     },
-    "headphones-close-handshake": {
-      "id": "headphones-close-handshake",
+    "conv10-09": {
+      "id": "conv10-09",
       "speaker": "me",
-      "text": { "da": "", "en": "Let me see if I can guess how to spell your name. ... I will text you on WhatsApp and when we have time we can meet. [handshake with fingertip glide]" },
-      "context": "From [J02LapVhOyM]: As you're pulling away from the goodbye handshake, let the hands have a nice glide so the last thing she feels is fingertips touching fingertips. A sexy ending. Then walk away without looking back.",
+      "text": { "da": "", "en": "Are you funny? Because all Irish people are really funny." },
+      "children": ["conv10-10"]
+    },
+    "conv10-10": {
+      "id": "conv10-10",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yeah, I'd like to think so. The British are funny as well, no?" },
+      "children": ["conv10-11"]
+    },
+    "conv10-11": {
+      "id": "conv10-11",
+      "speaker": "me",
+      "text": { "da": "", "en": "The British tend to be more sarcastic, whereas the Irish are a bit sillier. What are you doing? Do you live here or are you travelling?" },
+      "children": ["conv10-12"]
+    },
+    "conv10-12": {
+      "id": "conv10-12",
+      "speaker": "her",
+      "text": { "da": "", "en": "No, I just came here on holidays. Solo today, my friends come tomorrow." },
+      "children": ["conv10-13"]
+    },
+    "conv10-13": {
+      "id": "conv10-13",
+      "speaker": "me",
+      "text": { "da": "", "en": "Have you been to the bathhouses yet?" },
+      "children": ["conv10-14"]
+    },
+    "conv10-14": {
+      "id": "conv10-14",
+      "speaker": "her",
+      "text": { "da": "", "en": "Not yet. I just landed today. I heard mixed reviews. Some people say it's smelly." },
+      "children": ["conv10-15"]
+    },
+    "conv10-15": {
+      "id": "conv10-15",
+      "speaker": "me",
+      "text": { "da": "", "en": "It smells a bit like sulphur because it's natural. But the Szechenyi one, the outdoor one, is awesome. You get to lie in a hot bath in old Austro-Hungarian surrounds. In this weather it's better to go at sunset." },
+      "children": ["conv10-16"]
+    },
+    "conv10-16": {
+      "id": "conv10-16",
+      "speaker": "her",
+      "text": { "da": "", "en": "Oh, that's true. I'll take that into consideration. It was nice meeting you. I'm going to head home because I have a lot to do today." },
+      "children": ["conv10-17"]
+    },
+    "conv10-17": {
+      "id": "conv10-17",
+      "speaker": "me",
+      "text": { "da": "", "en": "How long are you here for?" },
+      "children": ["conv10-18"]
+    },
+    "conv10-18": {
+      "id": "conv10-18",
+      "speaker": "her",
+      "text": { "da": "", "en": "I'm here until Wednesday." },
+      "children": ["conv10-19"]
+    },
+    "conv10-19": {
+      "id": "conv10-19",
+      "speaker": "me",
+      "text": { "da": "", "en": "All right, cool. Would you like to grab a drink sometime?" },
+      "children": ["conv10-20"]
+    },
+    "conv10-20": {
+      "id": "conv10-20",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yeah, I'm down." },
+      "children": ["conv10-21"]
+    },
+    "conv10-21": {
+      "id": "conv10-21",
+      "speaker": "me",
+      "text": { "da": "", "en": "All right, cool. Have you got WhatsApp? I presume? You will have to remind me of your exotic and exquisite name." },
+      "children": ["conv10-22"]
+    },
+    "conv10-22": {
+      "id": "conv10-22",
+      "speaker": "her",
+      "text": { "da": "", "en": "I'll type it in. There you go." },
+      "children": ["conv10-23"]
+    },
+    "conv10-23": {
+      "id": "conv10-23",
+      "speaker": "me",
+      "text": { "da": "", "en": "All right. Well, I'll text you. Take it easy. Have a wonderful day." },
       "children": []
     },
 
-    "headphones-dismissive": {
-      "id": "headphones-dismissive",
-      "speaker": "her",
-      "text": { "da": "", "en": "Thank you. Bye." },
-      "context": "From [YEOgoofhe-8]: She gives a dismissive 'thank you' and changes direction. Clearly not interested.",
-      "children": ["headphones-dismissive-exit"]
-    },
-    "headphones-dismissive-exit": {
-      "id": "headphones-dismissive-exit",
+    "conv11-open": {
+      "id": "conv11-open",
       "speaker": "me",
-      "text": { "da": "", "en": "Don't worry, I'm actually very nice. See ya." },
-      "context": "From [YEOgoofhe-8]: If a girl says goodbye and changes directions, let her go. Zero point in chasing. Just let her know you're harmless and walk away.",
+      "text": { "da": "", "en": "Hello, you look super cool today. Can I walk with you for one moment? I'm not selling anything." },
+      "context": "Real estate developer going through a divorce. Walking approach, blue outfit banter, number close. From [kyBKT_uIREA].",
+      "children": ["conv11-02"]
+    },
+    "conv11-02": {
+      "id": "conv11-02",
+      "speaker": "her",
+      "text": { "da": "", "en": "Thank you. Okay. What's your name?" },
+      "children": ["conv11-03"]
+    },
+    "conv11-03": {
+      "id": "conv11-03",
+      "speaker": "me",
+      "text": { "da": "", "en": "I'm James. Nice to meet you. Are you dressed up for something specifically or are you just a very colourful person?" },
+      "children": ["conv11-04"]
+    },
+    "conv11-04": {
+      "id": "conv11-04",
+      "speaker": "her",
+      "text": { "da": "", "en": "This week I always use blue." },
+      "children": ["conv11-05"]
+    },
+    "conv11-05": {
+      "id": "conv11-05",
+      "speaker": "me",
+      "text": { "da": "", "en": "Oh, it's blue week? Does your outfit match your mood or are you just experimenting?" },
+      "children": ["conv11-06"]
+    },
+    "conv11-06": {
+      "id": "conv11-06",
+      "speaker": "her",
+      "text": { "da": "", "en": "Sometimes I'm so different each day. And I really like blue." },
+      "children": ["conv11-07"]
+    },
+    "conv11-07": {
+      "id": "conv11-07",
+      "speaker": "me",
+      "text": { "da": "", "en": "I'll walk with you one more block. So you can ask me anything. I'll be very honest." },
+      "children": ["conv11-08"]
+    },
+    "conv11-08": {
+      "id": "conv11-08",
+      "speaker": "her",
+      "text": { "da": "", "en": "Where are you from?" },
+      "children": ["conv11-09"]
+    },
+    "conv11-09": {
+      "id": "conv11-09",
+      "speaker": "me",
+      "text": { "da": "", "en": "I'm Australian. I live in Budapest most of the time. I've been here on and off for eight years. I have a company here. What do you do?" },
+      "children": ["conv11-10"]
+    },
+    "conv11-10": {
+      "id": "conv11-10",
+      "speaker": "her",
+      "text": { "da": "", "en": "I have a real estate company. I work alone. I sell properties. Hotels, actually." },
+      "children": ["conv11-11"]
+    },
+    "conv11-11": {
+      "id": "conv11-11",
+      "speaker": "me",
+      "text": { "da": "", "en": "You're selling hotels? So you're doing big deals. It's cool to be independent, right? To build something by yourself. Are you a good negotiator? You know when to flatter and when to push?" },
+      "children": ["conv11-12"]
+    },
+    "conv11-12": {
+      "id": "conv11-12",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yeah. It's difficult to deal with investors sometimes. A lot of things. That's why I work alone." },
+      "children": ["conv11-13"]
+    },
+    "conv11-13": {
+      "id": "conv11-13",
+      "speaker": "me",
+      "text": { "da": "", "en": "Well, you seem quite interesting. I like your style. Would you like to get a drink sometime when you're not busy?" },
+      "children": ["conv11-14"]
+    },
+    "conv11-14": {
+      "id": "conv11-14",
+      "speaker": "her",
+      "text": { "da": "", "en": "You know, I don't want to tell you this, but I have a hard situation. It's a difficult part of my personal life." },
+      "children": ["conv11-15"]
+    },
+    "conv11-15": {
+      "id": "conv11-15",
+      "speaker": "me",
+      "text": { "da": "", "en": "Are you going through a divorce or something?" },
+      "children": ["conv11-16"]
+    },
+    "conv11-16": {
+      "id": "conv11-16",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yes. It started three years ago and next month it will be finished. My lawyer thinks. And I look like a younger woman, but I'm not 20 years old. I'm 33." },
+      "children": ["conv11-17"]
+    },
+    "conv11-17": {
+      "id": "conv11-17",
+      "speaker": "me",
+      "text": { "da": "", "en": "I'm 45. So, you know, we both look younger than we are. I understand it's a complicated part of your life and you probably want a break from men. I'm actually going away to Portugal for a few weeks. How about I get your number, and when I come back and you've settled things, we can meet for a cup of tea and see how things go?" },
+      "children": ["conv11-18"]
+    },
+    "conv11-18": {
+      "id": "conv11-18",
+      "speaker": "her",
+      "text": { "da": "", "en": "Maybe I can give you my number. But do you have Instagram?" },
+      "children": ["conv11-19"]
+    },
+    "conv11-19": {
+      "id": "conv11-19",
+      "speaker": "me",
+      "text": { "da": "", "en": "I do but that's for kids. I won't blow up your phone. I will text you once when I come back. I'm not the kind of guy that's going to hassle a woman. If you want to meet, good. If not, I respect your decision." },
+      "children": ["conv11-20"]
+    },
+    "conv11-20": {
+      "id": "conv11-20",
+      "speaker": "her",
+      "text": { "da": "", "en": "Okay. Do you remember my name? James. Very good." },
+      "children": ["conv11-21"]
+    },
+    "conv11-21": {
+      "id": "conv11-21",
+      "speaker": "me",
+      "text": { "da": "", "en": "WhatsApp is easiest. Put your number in. I will send you a text. All right, lovely to meet you. Take care." },
       "children": []
     },
 
-    "opener-hippie-observational": {
-      "id": "opener-hippie-observational",
+    "conv12-open": {
+      "id": "conv12-open",
       "speaker": "me",
-      "text": { "da": "", "en": "Hello. How are you? You look cool. Are you a bit stoned right now?" },
-      "context": "From [2h9wq53QIQk]: Observational opener that matches what you actually see. She has flowers in her hair, low energy, chill vibe. 'I'm not stoned, but my name is James. But I'm a previous stoner, so I don't judge.'",
-      "children": ["hippie-she-responds"]
+      "text": { "da": "", "en": "Hello. You look cool. Are you a bit stoned right now?" },
+      "context": "Hungarian hippie girl with flowers in her hair, sitting in a park. Deep conversation about unconditional love, the matrix, art. From [2h9wq53QIQk].",
+      "children": ["conv12-02"]
     },
-    "hippie-she-responds": {
-      "id": "hippie-she-responds",
+    "conv12-02": {
+      "id": "conv12-02",
       "speaker": "her",
-      "text": { "da": "", "en": "Yeah... I had a big fight with someone I love. So now I want to get back to a state of peace. I want to go somewhere in nature." },
-      "context": "From [2h9wq53QIQk]: She opens up about something personal. This is where genuine empathy matters - not performative interest.",
-      "children": ["hippie-walk-together"]
+      "text": { "da": "", "en": "You are? Yeah." },
+      "children": ["conv12-03"]
     },
-    "hippie-walk-together": {
-      "id": "hippie-walk-together",
+    "conv12-03": {
+      "id": "conv12-03",
       "speaker": "me",
-      "text": { "da": "", "en": "I see. So this is for you to arrive back to yourself. Do you want to walk with me? I can walk a little bit." },
-      "context": "From [2h9wq53QIQk]: Offer to walk together toward her destination. Show you understand what she's going through without being a therapist. Be present.",
-      "children": ["hippie-deep-conversation"]
+      "text": { "da": "", "en": "Yeah, I thought so. And you've got flowers in your hair, so you're just enjoying that zone. I'm not stoned, but my name is James. I'm a previous stoner, so I don't judge at all." },
+      "children": ["conv12-04"]
     },
-    "hippie-deep-conversation": {
-      "id": "hippie-deep-conversation",
+    "conv12-04": {
+      "id": "conv12-04",
       "speaker": "her",
-      "text": { "da": "", "en": "I feel like I have an interesting way to learn about unconditional love... Do you think that really exists?" },
-      "context": "From [2h9wq53QIQk]: She goes deep into philosophy. This is the Natural Lifestyles philosophy: authentic connection through real conversation, not scripts.",
-      "children": ["hippie-honest-opinion"]
+      "text": { "da": "", "en": "Good, good. I'm from here. Do you meditate?" },
+      "children": ["conv12-05"]
     },
-    "hippie-honest-opinion": {
-      "id": "hippie-honest-opinion",
+    "conv12-05": {
+      "id": "conv12-05",
       "speaker": "me",
-      "text": { "da": "", "en": "I think there's always some kind of conditions. Humans have agendas. But you can get closer. I love people. I think they're awesome and they're all trying to survive and figure it out." },
-      "context": "From [2h9wq53QIQk]: Give an honest opinion, even if it's not what she wants to hear. Don't pretend to be more spiritual than you are. 'I'm a humanist, you would say.' She thanks him just for saying he loves people.",
-      "children": ["hippie-close"]
+      "text": { "da": "", "en": "Yeah, I run a life coaching business. Meditation, tantra. Do you meditate?" },
+      "children": ["conv12-06"]
     },
-    "hippie-close": {
-      "id": "hippie-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "I would love to walk with you in nature, but I have to go visit my friends now. Would you like to meet some other time? Do you have WhatsApp?" },
-      "context": "From [2h9wq53QIQk]: Close naturally from within the genuine conversation. She agrees warmly.",
-      "children": ["hippie-close-yes"]
-    },
-    "hippie-close-yes": {
-      "id": "hippie-close-yes",
+    "conv12-06": {
+      "id": "conv12-06",
       "speaker": "her",
-      "text": { "da": "", "en": "Yeah. I'm really happy you were my mate for this short meeting. It was beautiful." },
-      "context": "From [2h9wq53QIQk]: A genuine connection moment. She felt the authenticity.",
-      "children": []
+      "text": { "da": "", "en": "My main intention was to get some holiness to myself. Some days ago I had a big fight with my love. So now I want to get back to the state of arriving to myself. I want to go somewhere in nature." },
+      "children": ["conv12-07"]
     },
-
-    "opener-not-selling-anything": {
-      "id": "opener-not-selling-anything",
+    "conv12-07": {
+      "id": "conv12-07",
       "speaker": "me",
-      "text": { "da": "", "en": "Excuse me. Hi. I'm not selling anything, I just thought you looked awesome and I wanted to say hi. I'm James." },
-      "context": "From [LCkyC_QKIJE] and [B1UR8q_Dlpo]: The 'I'm not selling anything' prefix disarms skepticism, especially in cities where girls are wary of promoters and pickpockets. Used extensively in Barcelona and Budapest.",
-      "children": [
-        "not-selling-warm-response",
-        "not-selling-friend-close",
-        "not-selling-not-interested"
-      ]
+      "text": { "da": "", "en": "I see. My grandmother was a Hungarian lady, so I have some part of my blood is Hungarian. But I don't know the language. It's very difficult." },
+      "children": ["conv12-08"]
     },
-    "not-selling-warm-response": {
-      "id": "not-selling-warm-response",
+    "conv12-08": {
+      "id": "conv12-08",
       "speaker": "her",
-      "text": { "da": "", "en": "Oh, that's sweet. Thank you. I'm [name], nice to meet you." },
-      "children": ["not-selling-chat-flow"]
+      "text": { "da": "", "en": "I was living in the Netherlands. But my roots come from this soil, so I had to come back. And now I feel more free here." },
+      "children": ["conv12-09"]
     },
-    "not-selling-chat-flow": {
-      "id": "not-selling-chat-flow",
+    "conv12-09": {
+      "id": "conv12-09",
       "speaker": "me",
-      "text": { "da": "", "en": "Where are you from? ... And what are you doing in life? ... I run an online business. Enjoy myself. I also grow olives in Portugal, that's my side thing." },
-      "context": "From all transcripts: The standard conversational flow. When sharing what you do, always give the WHAT and the WHY. 'Online business, enjoy myself' - shows you're chill. The olive farm shows you're well-rounded. Undersell cool things a little - let her tell you it's cool.",
-      "children": ["not-selling-warm-close"]
+      "text": { "da": "", "en": "You feel more free in Hungary than the Netherlands? Interesting. You would be the first person to say that. So your plan is to go over the bridge and up to the mountain?" },
+      "children": ["conv12-10"]
     },
-    "not-selling-warm-close": {
-      "id": "not-selling-warm-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "All right, well, I've got to get back, but would you like to get a tea sometime? You seem very lovely." },
-      "context": "Be the one to wrap up. About 10 minutes is ideal for day game.",
-      "children": ["not-selling-warm-yes"]
-    },
-    "not-selling-warm-yes": {
-      "id": "not-selling-warm-yes",
+    "conv12-10": {
+      "id": "conv12-10",
       "speaker": "her",
-      "text": { "da": "", "en": "Yeah, I'd like that. Do you have WhatsApp?" },
-      "children": []
+      "text": { "da": "", "en": "Yeah. Do you want to walk with me?" },
+      "children": ["conv12-11"]
     },
-
-    "not-selling-friend-close": {
-      "id": "not-selling-friend-close",
+    "conv12-11": {
+      "id": "conv12-11",
+      "speaker": "me",
+      "text": { "da": "", "en": "I can walk a little bit. I have to go back to my friend soon, but I'll walk with you for a few minutes. What do you like doing in life? What's something you're interested in?" },
+      "children": ["conv12-12"]
+    },
+    "conv12-12": {
+      "id": "conv12-12",
       "speaker": "her",
-      "text": { "da": "", "en": "That's really nice. I have a boyfriend, though." },
-      "context": "From [LCkyC_QKIJE]: Dutch girl in Barcelona has a boyfriend but the conversation was excellent.",
-      "children": ["not-selling-friend-offer"]
+      "text": { "da": "", "en": "Too many ideas. I feel I have an interesting way to learn about unconditional love. Hopefully this brings me somewhere." },
+      "children": ["conv12-13"]
     },
-    "not-selling-friend-offer": {
-      "id": "not-selling-friend-offer",
+    "conv12-13": {
+      "id": "conv12-13",
       "speaker": "me",
-      "text": { "da": "", "en": "Cool. Would you like to go out for tea sometime? ... You've got a boyfriend? Okay, well, in that case, we might do a friend audition. I only have room for one or two new friends a year because I'm serious about my friends." },
-      "context": "From [LCkyC_QKIJE]: Strategic friend close. Hot girl friends have hot friends. 'Get hot girl, comma, friends, because they have hot friends. It's way easier to pick up in peripheral social circles than cold on the street.' Don't make the friend offer easy - 'becoming my friend is harder than becoming my lover.'",
-      "children": ["not-selling-friend-she-agrees"]
+      "text": { "da": "", "en": "Well, it certainly will help. Although unconditional love, do you think that exists really? I think there's always some kind of conditions. Maybe certain saints, but humans have agendas." },
+      "children": ["conv12-14"]
     },
-    "not-selling-friend-she-agrees": {
-      "id": "not-selling-friend-she-agrees",
+    "conv12-14": {
+      "id": "conv12-14",
       "speaker": "her",
-      "text": { "da": "", "en": "Okay, yeah. That would be cool. Do you have WhatsApp?" },
-      "context": "From [LCkyC_QKIJE]: She's still sticking around and wants to give her contact despite having a boyfriend.",
-      "children": []
+      "text": { "da": "", "en": "Thank you. You say you love people and I like to hear it." },
+      "children": ["conv12-15"]
     },
-
-    "not-selling-not-interested": {
-      "id": "not-selling-not-interested",
+    "conv12-15": {
+      "id": "conv12-15",
+      "speaker": "me",
+      "text": { "da": "", "en": "Yeah. I mean, not everyone all the time, but in general I'm a humanist. Are you an artistic person?" },
+      "children": ["conv12-16"]
+    },
+    "conv12-16": {
+      "id": "conv12-16",
       "speaker": "her",
-      "text": { "da": "", "en": "No, thanks. I'm not interested." },
-      "context": "From [WSFSpbFCPZo]: Clear, direct rejection. Happens. It's normal.",
-      "children": ["not-selling-not-interested-exit"]
+      "text": { "da": "", "en": "That brings me joy. But to work in the structure of, you know, the matrix. The matrix makes me nervous." },
+      "children": ["conv12-17"]
     },
-    "not-selling-not-interested-exit": {
-      "id": "not-selling-not-interested-exit",
+    "conv12-17": {
+      "id": "conv12-17",
       "speaker": "me",
-      "text": { "da": "", "en": "Fair enough. All right, well, you have a great day. See you." },
-      "context": "From [WSFSpbFCPZo]: Accept immediately. No arguing, no negotiating, no guilt. Walk away cleanly.",
-      "children": []
+      "text": { "da": "", "en": "The matrix, yes. It's difficult to escape. I think I'm pretty close to escaped. I never worked for anybody else and I always did the things I wanted. If you can't escape it, you can learn to surf the matrix. Use it to your advantage." },
+      "children": ["conv12-18"]
     },
-
-    "opener-quick-micro-window": {
-      "id": "opener-quick-micro-window",
-      "speaker": "me",
-      "text": { "da": "", "en": "Excuse me, hi, I can see you're in a rush. You look lovely. I'm not going to keep you... I do want to keep you, actually." },
-      "context": "From [YEOgoofhe-8] and [LCkyC_QKIJE]: Micro-window approaches. Girl about to ride a bicycle, about to enter a building, boarding a tram. 'These are movie moments. Nobody does that. The guy that has the balls and spontaneity to grab a momentary opportunity.'",
-      "children": [
-        "micro-window-quick-close",
-        "micro-window-walk-along"
-      ]
-    },
-    "micro-window-quick-close": {
-      "id": "micro-window-quick-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "Would you like to get a coffee when you're not busy? I know that's crazy, we just met. Can I get your WhatsApp?" },
-      "context": "From [YEOgoofhe-8]: Balls-out close. No time for rapport building. The boldness IS the attraction. She says 'maybe' - push through and ask for the number.",
-      "children": [
-        "micro-window-she-gives",
-        "micro-window-she-declines"
-      ]
-    },
-    "micro-window-she-gives": {
-      "id": "micro-window-she-gives",
+    "conv12-18": {
+      "id": "conv12-18",
       "speaker": "her",
-      "text": { "da": "", "en": "Maybe... yeah, all right. Here you go." },
-      "context": "Most guys would hear 'maybe' and leave. Push through.",
-      "children": []
+      "text": { "da": "", "en": "What is your business?" },
+      "children": ["conv12-19"]
     },
-    "micro-window-she-declines": {
-      "id": "micro-window-she-declines",
+    "conv12-19": {
+      "id": "conv12-19",
+      "speaker": "me",
+      "text": { "da": "", "en": "I teach tantra and meditation and life coaching. I would love to go for a walk with you in nature, but I actually have to go visit my friends now." },
+      "children": ["conv12-20"]
+    },
+    "conv12-20": {
+      "id": "conv12-20",
       "speaker": "her",
-      "text": { "da": "", "en": "I have a boyfriend, sorry." },
-      "children": ["micro-window-exit"]
+      "text": { "da": "", "en": "I don't have to worry about it because I need some self-time. But I'm really happy you were my companion for this short meeting. It was beautiful." },
+      "children": ["conv12-21"]
     },
-    "micro-window-exit": {
-      "id": "micro-window-exit",
+    "conv12-21": {
+      "id": "conv12-21",
       "speaker": "me",
-      "text": { "da": "", "en": "Oh, he probably wouldn't like that. All right, see ya." },
-      "context": "Quick, light exit. No lingering. No apologies needed.",
-      "children": []
+      "text": { "da": "", "en": "Nice to see you. Would you like to meet some other time? Do you have WhatsApp?" },
+      "children": ["conv12-22"]
     },
-    "micro-window-walk-along": {
-      "id": "micro-window-walk-along",
-      "speaker": "me",
-      "text": { "da": "", "en": "Mind if I walk with you for one minute? Just to chat. I'm not selling anything. ... What's your name? ... Do you want to hang out some other time?" },
-      "context": "From [LCkyC_QKIJE]: Chilean girl in Barcelona. Very quick walking approach. 'Sure. I'm not going to follow you forever. Even if you want me to, I'm not going to.' She says 'sure!' immediately.",
-      "children": ["micro-window-walk-she-agrees"]
-    },
-    "micro-window-walk-she-agrees": {
-      "id": "micro-window-walk-she-agrees",
+    "conv12-22": {
+      "id": "conv12-22",
       "speaker": "her",
-      "text": { "da": "", "en": "Sure!" },
-      "context": "From [LCkyC_QKIJE]: Quick, enthusiastic yes. Sometimes the simplest approaches work best.",
+      "text": { "da": "", "en": "Yeah. We can do WhatsApp." },
+      "children": ["conv12-23"]
+    },
+    "conv12-23": {
+      "id": "conv12-23",
+      "speaker": "me",
+      "text": { "da": "", "en": "All right. I wish you a wonderful, peaceful day. We'll see you soon. Bye." },
       "children": []
-    },
-
-    "approach-i-dont-care": {
-      "id": "approach-i-dont-care",
-      "speaker": "her",
-      "text": { "da": "", "en": "I don't care. [laughs, touches his arm]" },
-      "context": "From [YEOgoofhe-8]: She says 'I don't care' but she's laughing, touching his arm, has good body language. Not a hard no.",
-      "children": ["approach-i-dont-care-challenge"]
-    },
-    "approach-i-dont-care-challenge": {
-      "id": "approach-i-dont-care-challenge",
-      "speaker": "me",
-      "text": { "da": "", "en": "Do you not care about it in general, or you just don't care about handsome interesting strangers coming into your life?" },
-      "context": "From [YEOgoofhe-8]: Cheeky challenge when the rejection is soft. She leaned in, touched his arm, and laughed - that's not a hard no. Playfully test the objection. She then reveals her real reason (boyfriend, busy with work).",
-      "children": [
-        "approach-i-dont-care-boyfriend",
-        "approach-i-dont-care-softens"
-      ]
-    },
-    "approach-i-dont-care-boyfriend": {
-      "id": "approach-i-dont-care-boyfriend",
-      "speaker": "her",
-      "text": { "da": "", "en": "I'm full from 5am. I have a boyfriend who looks after me." },
-      "context": "From [YEOgoofhe-8]: The real reason emerges after the playful challenge.",
-      "children": ["approach-i-dont-care-exit"]
-    },
-    "approach-i-dont-care-exit": {
-      "id": "approach-i-dont-care-exit",
-      "speaker": "me",
-      "text": { "da": "", "en": "I hope he looks after you. I hope he does look after you. He does? All right." },
-      "context": "From [YEOgoofhe-8]: Accept gracefully once the real objection comes out. Don't compete with the boyfriend.",
-      "children": []
-    },
-    "approach-i-dont-care-softens": {
-      "id": "approach-i-dont-care-softens",
-      "speaker": "her",
-      "text": { "da": "", "en": "Well... I'm just tired. Tell me more about yourself." },
-      "context": "Sometimes the initial dismissiveness is just a shield that drops once she sees you're not fazed.",
-      "children": ["not-selling-chat-flow"]
-    },
-
-    "conversation-technique-discord": {
-      "id": "conversation-technique-discord",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Hold your opinion when she pushes back. Don't agree with everything.]" },
-      "context": "Core NL technique from multiple transcripts. When she challenges your recommendation or opinion, don't fold. Nice guys nod and agree with everything. Have a position. From [N2UbTTfCfqg]: Bathhouse debate. From [J02LapVhOyM]: 'I give a bit of good and bad about the city - creating dissonance that shows I'm not supplicating.'",
-      "children": []
-    },
-    "conversation-technique-what-and-why": {
-      "id": "conversation-technique-what-and-why",
-      "speaker": "me",
-      "text": { "da": "", "en": "[When sharing about yourself, give the WHAT and the WHY - the fact plus your personal relationship to it.]" },
-      "context": "Core NL technique from every transcript. Don't just say 'I'm a coach.' Say 'I'm a coach - I teach meditation, social skills. I run workshops around the world and also do online work. And I have an olive farm in Portugal because I come from a farming background and I like nature.' The WHY shows who you are.",
-      "children": []
-    },
-    "conversation-technique-twist-meaning": {
-      "id": "conversation-technique-twist-meaning",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Listen for keywords where you can twist the literal meaning into something flirtatious.]" },
-      "context": "From [J02LapVhOyM]: She says she wants 'more experience in everything' - he adds 'work AND pleasure.' She says she wants to live abroad - he asks 'is that because Hungarian men aren't your style?' Always look for the pivot point to make it more personal and spicy.",
-      "children": []
-    },
-    "conversation-technique-mid-compliment": {
-      "id": "conversation-technique-mid-compliment",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Compliment her on how she IS, not what she looks like, in the middle of conversation.]" },
-      "context": "From [03m9yo-ikPc]: 'You're so cute' said while she's animatedly explaining her art. From [J02LapVhOyM]: 'You're very friendly and open. You have a nice smile. It doesn't look fake.' Compliments about her delivery, her expression, her animated eyes are far more powerful than physical appearance compliments.",
-      "children": []
-    },
-    "conversation-technique-phase-shift": {
-      "id": "conversation-technique-phase-shift",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Phase shift: Lower vocal tonality, hold eye contact, slow down. Create an electric moment.]" },
-      "context": "From [03m9yo-ikPc]: Hold her hand during handshake. Relax. Look into her eyes. Lower your voice. 'You have very beautiful eyes. Like hypnotic.' This is working on an energetic level beyond day game lines. 'We're just both looking into each other's eyes and it was just a sexy moment.'",
-      "children": []
-    },
-    "conversation-technique-close-intent": {
-      "id": "conversation-technique-close-intent",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Close with direct intent. 'I'd like to take you out' - NOT 'can I get your number.']" },
-      "context": "From [J02LapVhOyM] and [03m9yo-ikPc]: 'I want to take you out' is a proper masculine direct offer. 'Can I get your number' or 'let's swap contacts' is a really weak close. State your intent. Also: when she's typing in her number, don't stare at her. Gaze out calmly. Shut up while she enters digits.",
-      "children": []
-    },
-    "conversation-technique-always-close": {
-      "id": "conversation-technique-always-close",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Always go for the close if the vibe is decent. Don't let good interactions drift away.]" },
-      "context": "From [N2UbTTfCfqg] and [J02LapVhOyM]: 'So many times guys drift away when an interaction was going great and there was a YES waiting for them to ask for it.' If the girl says 'well I've got to go' or her friend arrives, that is NOT rejection - it's just life. Jump in: 'Hang on, before you go, can I take you out sometime?'",
-      "children": []
-    },
-    "conversation-technique-rejection-attitude": {
-      "id": "conversation-technique-rejection-attitude",
-      "speaker": "me",
-      "text": { "da": "", "en": "[You're not for everybody. Everybody's not for you. Keep going.]" },
-      "context": "From [WSFSpbFCPZo] and [B1UR8q_Dlpo]: Three or four girls in a row blew him off. He kept going. 'That would have been the end of most guys' day.' This is not a zero-sum game. Bad outcomes are not that bad. 'I feel good because I had little moments shared with people on the street.' Better than sitting at home swiping on apps feeling shit about yourself."
     }
-  },
-  "createdAt": "2026-03-04T12:00:00Z",
-  "updatedAt": "2026-03-04T14:00:00Z"
+  }
 }

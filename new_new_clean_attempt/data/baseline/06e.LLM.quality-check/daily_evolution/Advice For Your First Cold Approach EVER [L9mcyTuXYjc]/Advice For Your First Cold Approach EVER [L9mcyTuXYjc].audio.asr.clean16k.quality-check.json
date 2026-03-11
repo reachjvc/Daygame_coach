@@ -1,0 +1,316 @@
+{
+  "video_id": "L9mcyTuXYjc",
+  "generated_at": "2026-03-05T18:13:10Z",
+  "pipeline_version": "06e.LLM.quality-check-v1.1",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.conversations.json",
+  "model": "opus",
+  "windowing": {
+    "primary_segment_count": 90,
+    "context_segment_count": 10,
+    "window_count": 2,
+    "windows": [
+      {
+        "index": 0,
+        "primary_start_segment_id": 0,
+        "primary_end_segment_id": 89,
+        "primary_segment_count": 90,
+        "context_start_segment_id": 0,
+        "context_end_segment_id": 99,
+        "context_segment_count": 100,
+        "prompt_chars": 11372,
+        "timeout_seconds": 240
+      },
+      {
+        "index": 1,
+        "primary_start_segment_id": 90,
+        "primary_end_segment_id": 110,
+        "primary_segment_count": 21,
+        "context_start_segment_id": 80,
+        "context_end_segment_id": 110,
+        "context_segment_count": 31,
+        "prompt_chars": 7295,
+        "timeout_seconds": 240
+      }
+    ]
+  },
+  "low_quality_segments": [
+    {
+      "segment": 0,
+      "reason": "ASR stuttering: 'so i so i'm i'm' is a disfluency artifact, and run-on with no punctuation",
+      "quality_issue_type": "garbled_speech",
+      "repair_text": "Okay, so I'm inside of my mastermind right now and you gave me a video topic.",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 1,
+      "reason": "Missing punctuation and speaker boundary confusion - student asking coach to repeat topic then coach's words bleed in",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Go ahead and say the video topic again. The mindset of a first approach. Okay, the mindset...",
+      "repair_confidence": 0.85,
+      "action": "replace"
+    },
+    {
+      "segment": 2,
+      "reason": "Missing punctuation, run-on across speaker boundary, repeated word 'give give'",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Of a first approach. Give a little more context. Your first approach ever? First approach...",
+      "repair_confidence": 0.85,
+      "action": "replace"
+    },
+    {
+      "segment": 3,
+      "reason": "Missing punctuation, run-on with multiple questions jammed together",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Of the day? What's more context? First approach ever, or in years, or in eternity? Okay, your brand...",
+      "repair_confidence": 0.8,
+      "action": "replace"
+    },
+    {
+      "segment": 42,
+      "reason": "Orphan fragment split from previous segment mid-sentence ('And not')",
+      "quality_issue_type": "sentence_boundary_fragment",
+      "repair_text": null,
+      "repair_confidence": 0.95,
+      "action": "merge_prev"
+    },
+    {
+      "segment": 44,
+      "reason": "Missing punctuation - long run-on with no sentence boundaries",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Bail. So for anybody that's watching this, if you are so afraid of the social anxiety and the freezing up that could happen from getting really entrenched in an interaction with this girl, like,",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 45,
+      "reason": "Missing punctuation - continues run-on from previous segment",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "\"Damn, I feel like if I have to go do this 10 minute interaction, I'm gonna freeze up, I'm not gonna know what to say,\" whatever.",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 46,
+      "reason": "Missing punctuation - run-on sentence",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Well then, by going indirect and just asking for directions or pretending to recognize her, you now have permission to bail. Which is, \"Okay, I've got the balls up now.\"",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 49,
+      "reason": "Orphan fragment 'All' split from next segment 'right'",
+      "quality_issue_type": "sentence_boundary_fragment",
+      "repair_text": null,
+      "repair_confidence": 0.95,
+      "action": "merge_next"
+    },
+    {
+      "segment": 60,
+      "reason": "Orphan fragment split mid-sentence from previous segment",
+      "quality_issue_type": "sentence_boundary_fragment",
+      "repair_text": null,
+      "repair_confidence": 0.92,
+      "action": "merge_prev"
+    },
+    {
+      "segment": 63,
+      "reason": "Orphan fragment 'Well, we'll have a good' split from next segment",
+      "quality_issue_type": "sentence_boundary_fragment",
+      "repair_text": null,
+      "repair_confidence": 0.93,
+      "action": "merge_next"
+    },
+    {
+      "segment": 64,
+      "reason": "Missing punctuation - long run-on with multiple ideas",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Day. She's like, \"Yeah, you too,\" and you guys just move on. So that can also be easiest for a lot of you guys. And then get into basic conversation, see how long you can stay in there, ask about where she lives, where you're from.",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 65,
+      "reason": "Missing punctuation - run-on continuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Maybe a little story about how you've only lived here for two years and you're not sure if you're liking it. \"What about you, do you like it?\" That kind of thing. Talk about work,",
+      "repair_confidence": 0.87,
+      "action": "replace"
+    },
+    {
+      "segment": 66,
+      "reason": "Missing punctuation - run-on with casual speech",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Talk about, you know, \"Oh, have you ever been to this bar that's over near where you say that you live?\" Bullshit, bullshit, bullshit. And then ideally you go, \"Well hey, I gotta go, um, we should...",
+      "repair_confidence": 0.85,
+      "action": "replace"
+    },
+    {
+      "segment": 67,
+      "reason": "Missing punctuation - run-on continuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Uh, we should grab dinner sometime,\" and just see what happens.",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 71,
+      "reason": "Missing punctuation - run-on with topic shift",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Sounds like a plan. Hell yeah, Bruce Wayne! What did you think about that?",
+      "repair_confidence": 0.92,
+      "action": "replace"
+    },
+    {
+      "segment": 72,
+      "reason": "Missing punctuation - run-on",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Um, yeah, I like that. You just have to kind of go in and just say something,",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 73,
+      "reason": "Missing punctuation - run-on continuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Um, no matter what it is. Like, it doesn't need to be perfect, especially if you're scared and like you're just kind of starting out.",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 74,
+      "reason": "Missing punctuation - long run-on with embedded quote",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "And then also, she's gonna feel that. She's gonna be like, \"Oh, this guy's just trying to get out of his comfort zone.\" Like, I was talking to a girl yesterday who's like...",
+      "repair_confidence": 0.87,
+      "action": "replace"
+    },
+    {
+      "segment": 75,
+      "reason": "Missing punctuation - run-on with nested quotes",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "She's like, \"Yeah, I can see when a guy's just being nice and he wants to talk, but like, I respect that.\"",
+      "repair_confidence": 0.85,
+      "action": "replace"
+    },
+    {
+      "segment": 77,
+      "reason": "Word repetition 'going going' from ASR stutter",
+      "quality_issue_type": "word_mistranscription",
+      "repair_text": "Yeah, and you know what, that's a great point. And one last thing I'm going to say about this as well is that, like you said, shaking that nervousness can be very",
+      "repair_confidence": 0.92,
+      "action": "replace"
+    },
+    {
+      "segment": 85,
+      "reason": "Orphan fragment 'Don't go to where' split from next segment",
+      "quality_issue_type": "sentence_boundary_fragment",
+      "repair_text": null,
+      "repair_confidence": 0.93,
+      "action": "merge_next"
+    },
+    {
+      "segment": 92,
+      "reason": "Short fragment split from following segment; beginning of sentence continued in segment 93",
+      "quality_issue_type": "sentence_boundary_fragment",
+      "repair_text": null,
+      "repair_confidence": 0.92,
+      "action": "merge_next"
+    },
+    {
+      "segment": 93,
+      "reason": "Run-on text missing sentence boundary and punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Whether you really seduce this girl or close or anything, all that matters is that you get some",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 94,
+      "reason": "Run-on text lacking commas and sentence structure",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "form of a conversation going, and any form of a hook, any form of a conversation, just getting into",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 95,
+      "reason": "Missing punctuation around topic shift and proper noun; speaker self-corrects mid-sentence",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "the most basic of conversations with a very pretty girl. Jerry, you filmed — you filmed infield for me at",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 96,
+      "reason": "Run-on text missing punctuation around interjections and questions",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "the mall, remember? Yes. Okay, so even some of the ones where, like, like, let's say, okay, you're sitting",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 97,
+      "reason": "Missing punctuation and sentence boundary before 'So'",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "there holding the camera, but you're seeing me talk to, like, really attractive women. So whether",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 98,
+      "reason": "Missing capitalization on 'i' and missing commas throughout",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "I got her number or not, if you look over and you just see, like, yeah, this dude is just straight up",
+      "repair_confidence": 0.92,
+      "action": "replace"
+    },
+    {
+      "segment": 99,
+      "reason": "Missing sentence boundary before 'Again' and missing comma",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "like having a good conversation with a really hot chick. Again, that now is you taking your biological",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    }
+  ],
+  "transcript_artifacts": [
+    {
+      "segment_index": 0,
+      "artifact_type": "word_repetition",
+      "description": "ASR stutter: 'so i so i'm i'm' - doubled false starts from speech recognition",
+      "repair_text": "Okay, so I'm inside of my mastermind right now and you gave me a video topic.",
+      "repair_confidence": 0.88,
+      "action": "replace",
+      "damage_severity": "low"
+    },
+    {
+      "segment_index": 2,
+      "artifact_type": "word_repetition",
+      "description": "ASR stutter: 'give give' - doubled word",
+      "repair_text": "Of a first approach. Give a little more context. Your first approach ever? First approach...",
+      "repair_confidence": 0.85,
+      "action": "replace",
+      "damage_severity": "low"
+    },
+    {
+      "segment_index": 77,
+      "artifact_type": "word_repetition",
+      "description": "ASR stutter: 'going going' - doubled word from speech recognition",
+      "repair_text": "Yeah, and you know what, that's a great point. And one last thing I'm going to say about this as well is that, like you said, shaking that nervousness can be very",
+      "repair_confidence": 0.92,
+      "action": "replace",
+      "damage_severity": "low"
+    }
+  ],
+  "summary": {
+    "segments_total": 111,
+    "low_quality_count": 30,
+    "artifact_count": 3,
+    "lq_repair_candidates": 29,
+    "artifact_types": {
+      "word_repetition": 3
+    }
+  }
+}

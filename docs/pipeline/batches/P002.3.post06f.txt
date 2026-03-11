@@ -1,0 +1,13 @@
+# Sub-batch P002.3 post-06f survivors
+# Generated: 2026-03-07
+# Source manifest: docs/pipeline/batches/P002.3.txt
+# Excludes videos quarantined by data/validation/quarantine/P002.3.json
+
+coach_kyle_how_to_approach_a_girl | How to say hi to any girl any time & get a date (easiest method) [D07piRLJvIU]
+coach_kyle_how_to_approach_a_girl | I Approached an Older Woman Waiting for a Date and Got SHOCKING Results! [TDxv3HxDYHk]
+coach_kyle_how_to_approach_a_girl | I Coached a Virgin to Finally Hook Up. Here’s How [HXcKUpyFA_c]
+coach_kyle_how_to_approach_a_girl | I Coached an Average Man to Land 40 Dates. Here’s How [X_lqSGwlHpg]
+coach_kyle_how_to_approach_a_girl | I Got REJECTED By 100 BADDIES IN MIAMI! ｜ Here's What I Learned (INFIELD) [TrYfPgzG2Gk]
+coach_kyle_how_to_approach_a_girl | I Tried To ＂Cold Approach＂ For 30 Days STRAIGHT (Here's What I Learned) [QpmMHZXx_0g]
+coach_kyle_how_to_approach_a_girl | I teach an average guy how to cold approach (LIVE DEMO) [0DEnRDZ-sqI]
+coach_kyle_how_to_approach_a_girl | Never Make This 1 Conversation Mistake With Attractive Women [umE0hYExqF4]

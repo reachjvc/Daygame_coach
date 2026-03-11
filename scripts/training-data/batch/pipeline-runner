@@ -21,6 +21,7 @@ import asyncio
 import json
 import os
 import re
+import shutil
 import sys
 import tempfile
 import time
@@ -51,6 +52,37 @@ STAGE06B_FLAG_CONVERSATION_BLOCK_THRESHOLD = 4
 STAGE06B_FLAG_BOUNDARY_BLOCK_THRESHOLD = 2
 STAGE06B_FLAG_MISSING_TARGET_COVERAGE_BLOCK_THRESHOLD = 2
 STAGE06B_FLAG_MAJOR_OTHER_BLOCK_THRESHOLD = 1
+STAGE06B_FLAG_LOW_TRANSCRIPT_SCORE_BLOCK_THRESHOLD = 55.0
+STAGE06_SPEAKER_COLLAPSE_TOTAL_BLOCK_THRESHOLD = 50
+STAGE06F_DAMAGE_SEED_TOTAL_BLOCK_THRESHOLD = 180
+STAGE06F_DAMAGE_SEED_HIGH_BLOCK_THRESHOLD = 120
+# Keep aligned with Stage 06h quality-overload policy to avoid split gating logic.
+STAGE06F_LQ_TOTAL_BLOCK_ABSOLUTE_THRESHOLD = 130
+STAGE06F_LQ_TOTAL_BLOCK_RATIO_THRESHOLD = 0.33
+STAGE06F_LQ_TOTAL_BLOCK_RATIO_MIN_COUNT = 60
+STAGE06F_LQ_TOTAL_BLOCK_EXTREME_RATIO_THRESHOLD = 0.48
+STAGE06F_LQ_TOTAL_BLOCK_EXTREME_RATIO_MIN_COUNT = 25
+
+CLAUDE_PREFLIGHT_PROMPT = "Reply with exactly: ok"
+CLAUDE_PREFLIGHT_MODEL = "opus"
+CLAUDE_PREFLIGHT_TIMEOUT_SECONDS = 120
+CLAUDE_PREFLIGHT_MAX_ATTEMPTS = 2
+CLAUDE_PREFLIGHT_RETRY_DELAY_SECONDS = 5
+CLAUDE_LIMIT_MARKERS = (
+    "you've hit your limit",
+    "hit your limit",
+    "resets ",
+    "rate limit",
+)
+CLAUDE_TIMEOUT_MARKERS = (
+    "claude cli timeout",
+    "timeout after",
+)
+CLAUDE_BINARY_PATHS = [
+    Path.home() / ".vscode-server/extensions/anthropic.claude-code-2.1.17-linux-x64/resources/native-binary/claude",
+    Path.home() / ".vscode/extensions/anthropic.claude-code-2.1.17-linux-x64/resources/native-binary/claude",
+    Path("/usr/local/bin/claude"),
+]
 
 
 # ── Stage registry ──────────────────────────────────────────────────────────
@@ -413,12 +445,16 @@ async def run_subprocess(
     stage: Stage,
     video_id: str,
     log_prefix: str,
-) -> int:
+    env: Optional[Dict[str, str]] = None,
+) -> Tuple[int, Optional[str], str]:
     """Run a stage subprocess and stream its output."""
+    runtime_marker: Optional[str] = None
+    runtime_excerpt = ""
     proc = await asyncio.create_subprocess_exec(
         *cmd,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT,
+        env=env,
     )
     assert proc.stdout is not None
     while True:
@@ -427,8 +463,17 @@ async def run_subprocess(
             break
         text = line.decode("utf-8", errors="replace").rstrip()
         print(f"{log_prefix} [{stage.key}] {text}")
+        if stage.needs_llm and _contains_limit_marker(text):
+            runtime_marker = "limit"
+            if not runtime_excerpt:
+                runtime_excerpt = _excerpt(text, limit=200)
+        elif stage.needs_llm and _contains_timeout_marker(text):
+            if runtime_marker is None:
+                runtime_marker = "timeout"
+            if not runtime_excerpt:
+                runtime_excerpt = _excerpt(text, limit=200)
     await proc.wait()
-    return proc.returncode or 0
+    return proc.returncode or 0, runtime_marker, runtime_excerpt
 
 
 # ── Quarantine check ────────────────────────────────────────────────────────
@@ -668,6 +713,34 @@ def evaluate_06b_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], 
     if verdict != "FLAG":
         return False, None, None
 
+    transcript_score: Optional[float] = None
+    stage06_dir = DATA_DIR / "06.LLM.video-type" / source
+    if stage06_dir.exists():
+        stage06_path = _pick_newest(list(stage06_dir.rglob(f"*{video_id}*.conversations.json")))
+        if stage06_path is not None:
+            try:
+                stage06_payload = json.loads(stage06_path.read_text(encoding="utf-8"))
+                transcript_confidence = stage06_payload.get("transcript_confidence")
+                if isinstance(transcript_confidence, dict):
+                    raw_score = transcript_confidence.get("score")
+                    if isinstance(raw_score, (int, float)) and not isinstance(raw_score, bool):
+                        transcript_score = float(raw_score)
+            except (json.JSONDecodeError, OSError):
+                transcript_score = None
+
+    if (
+        transcript_score is not None
+        and transcript_score <= STAGE06B_FLAG_LOW_TRANSCRIPT_SCORE_BLOCK_THRESHOLD
+    ):
+        return (
+            True,
+            "stage06b_flag_low_transcript_quality",
+            (
+                "Stage 06b FLAG with low Stage 06 transcript score "
+                f"({transcript_score:.1f}<={STAGE06B_FLAG_LOW_TRANSCRIPT_SCORE_BLOCK_THRESHOLD:.1f})."
+            ),
+        )
+
     structured_counts = _stage06b_flag_summary_counts(payload)
 
     misattribution_count = _safe_count_list(payload.get("misattributions"))
@@ -730,9 +803,305 @@ def evaluate_06b_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], 
         f"boundary_major_or_moderate={boundary_major_or_moderate_count}, "
         f"missing_target_coverage={missing_target_coverage_count}, "
         f"major_other={major_other_flag_count}"
+        + (
+            f", transcript_score={transcript_score:.1f}"
+            if transcript_score is not None
+            else ""
+        )
     )
     message = f"Stage 06b severe FLAG ({'; '.join(triggered)}). Metrics: {details}."
     return True, "stage06b_flag_severe", message
+
+
+def evaluate_06_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], Optional[str]]:
+    """Fail-closed gate for severe Stage 06 speaker-collapse outcomes."""
+    stage06_dir = DATA_DIR / "06.LLM.video-type" / source
+    if not stage06_dir.exists():
+        return False, None, None
+
+    stage06_path = _pick_newest(list(stage06_dir.rglob(f"*{video_id}*.conversations.json")))
+    if stage06_path is None:
+        return False, None, None
+
+    try:
+        payload = json.loads(stage06_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return False, None, None
+
+    collapse_meta = payload.get("speaker_collapse")
+    if not isinstance(collapse_meta, dict) or not bool(collapse_meta.get("detected")):
+        return False, None, None
+
+    raw_total_segments = collapse_meta.get("total_segments_affected", 0)
+    if not isinstance(raw_total_segments, (int, float)) or isinstance(raw_total_segments, bool):
+        return False, None, None
+    total_segments_affected = int(raw_total_segments)
+    if total_segments_affected < STAGE06_SPEAKER_COLLAPSE_TOTAL_BLOCK_THRESHOLD:
+        return False, None, None
+
+    reassignment_rate = collapse_meta.get("reassignment_rate", 0.0)
+    if not isinstance(reassignment_rate, (int, float)) or isinstance(reassignment_rate, bool):
+        reassignment_rate = 0.0
+    unknown_count = collapse_meta.get("unknown_count", 0)
+    if not isinstance(unknown_count, (int, float)) or isinstance(unknown_count, bool):
+        unknown_count = 0
+
+    transcript_score_text = ""
+    transcript_confidence = payload.get("transcript_confidence")
+    if isinstance(transcript_confidence, dict):
+        raw_score = transcript_confidence.get("score")
+        if isinstance(raw_score, (int, float)) and not isinstance(raw_score, bool):
+            transcript_score_text = f", transcript_score={int(raw_score)}"
+
+    message = (
+        "Stage 06 speaker collapse overload "
+        f"(affected_segments={total_segments_affected}>="
+        f"{STAGE06_SPEAKER_COLLAPSE_TOTAL_BLOCK_THRESHOLD}, "
+        f"reassignment_rate={float(reassignment_rate):.2f}, "
+        f"unknown_count={int(unknown_count)}"
+        f"{transcript_score_text})."
+    )
+    return True, "stage06_speaker_collapse_overload", message
+
+
+def evaluate_06h_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], Optional[str]]:
+    """Fail-closed gate on Stage 06h confidence/video-quality block decisions."""
+    stage06h_dir = DATA_DIR / "06h.DET.confidence-propagation" / source
+    if not stage06h_dir.exists():
+        return False, None, None
+
+    stage06h_path = _pick_newest(list(stage06h_dir.rglob(f"*{video_id}*.conversations.json")))
+    if stage06h_path is None:
+        return False, None, None
+
+    try:
+        payload = json.loads(stage06h_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return False, None, None
+
+    video_summary = payload.get("video_summary")
+    gate_decision = ""
+    reason_codes: List[str] = []
+    if isinstance(video_summary, dict):
+        gate_decision = str(video_summary.get("gate_decision", "")).strip().lower()
+        raw_reasons = video_summary.get("gate_reason_codes")
+        if isinstance(raw_reasons, list):
+            for row in raw_reasons:
+                reason = str(row).strip()
+                if reason:
+                    reason_codes.append(reason)
+
+    # Backward-compatible fallback: older payloads may only expose confidence_metadata.quality_gate.
+    if not gate_decision:
+        confidence_meta = payload.get("confidence_metadata")
+        if isinstance(confidence_meta, dict):
+            quality_gate = confidence_meta.get("quality_gate")
+            if isinstance(quality_gate, dict) and bool(quality_gate.get("blocked")):
+                gate_decision = "block"
+                raw_reasons = quality_gate.get("reason_codes")
+                if isinstance(raw_reasons, list):
+                    for row in raw_reasons:
+                        reason = str(row).strip()
+                        if reason:
+                            reason_codes.append(reason)
+
+    if gate_decision != "block":
+        return False, None, None
+
+    reason_preview = ", ".join(reason_codes[:3]) if reason_codes else "no reason codes provided"
+    message = f"Stage 06h video gate: block ({reason_preview})"
+    return True, "stage06h_video_gate_block", message
+
+
+def evaluate_06f_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], Optional[str]]:
+    """Fail-closed gate on extreme 06f damage/quality overload."""
+    stage06f_dir = DATA_DIR / "06f.DET.damage-map" / source
+    if not stage06f_dir.exists():
+        return False, None, None
+
+    stage06f_path = _pick_newest(list(stage06f_dir.rglob(f"*{video_id}*.damage-map.json")))
+    if stage06f_path is None:
+        return False, None, None
+
+    try:
+        payload = json.loads(stage06f_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return False, None, None
+
+    segments = payload.get("segments")
+    if not isinstance(segments, list):
+        return False, None, None
+
+    total_seed_count = 0
+    high_seed_count = 0
+    for row in segments:
+        if not isinstance(row, dict):
+            continue
+        segment_id = row.get("segment_id")
+        if isinstance(segment_id, bool):
+            continue
+        if not isinstance(segment_id, int):
+            continue
+        total_seed_count += 1
+        severity = str(row.get("severity", "")).strip().lower()
+        if severity == "high":
+            high_seed_count += 1
+
+    triggered: List[str] = []
+    if total_seed_count >= STAGE06F_DAMAGE_SEED_TOTAL_BLOCK_THRESHOLD:
+        triggered.append(f"total_seeds={total_seed_count}")
+    if high_seed_count >= STAGE06F_DAMAGE_SEED_HIGH_BLOCK_THRESHOLD:
+        triggered.append(f"high_severity_seeds={high_seed_count}")
+
+    # Quality-overload guard from Stage 06e summary, aligned with Stage 06h totals gate.
+    lq_total_count: Optional[int] = None
+    segment_count: Optional[int] = None
+    lq_total_ratio = 0.0
+
+    stage06e_dir = DATA_DIR / "06e.LLM.quality-check" / source
+    stage06e_path = _pick_newest(list(stage06e_dir.rglob(f"*{video_id}*.quality-check.json"))) if stage06e_dir.exists() else None
+    if stage06e_path is not None:
+        try:
+            stage06e_payload = json.loads(stage06e_path.read_text(encoding="utf-8"))
+            summary = stage06e_payload.get("summary")
+            if isinstance(summary, dict):
+                raw_lq_total = summary.get("low_quality_count", 0)
+                raw_segment_count = summary.get("segments_total", 0)
+                if isinstance(raw_lq_total, (int, float)) and not isinstance(raw_lq_total, bool):
+                    lq_total_count = int(raw_lq_total)
+                if isinstance(raw_segment_count, (int, float)) and not isinstance(raw_segment_count, bool):
+                    segment_count = int(raw_segment_count)
+                if segment_count and segment_count > 0 and lq_total_count is not None:
+                    lq_total_ratio = float(lq_total_count) / float(segment_count)
+        except (json.JSONDecodeError, OSError, ValueError, TypeError):
+            lq_total_count = None
+            segment_count = None
+            lq_total_ratio = 0.0
+
+    if lq_total_count is not None:
+        if lq_total_count >= STAGE06F_LQ_TOTAL_BLOCK_ABSOLUTE_THRESHOLD:
+            triggered.append(f"low_quality_total={lq_total_count}")
+        if (
+            lq_total_count >= STAGE06F_LQ_TOTAL_BLOCK_RATIO_MIN_COUNT
+            and lq_total_ratio >= STAGE06F_LQ_TOTAL_BLOCK_RATIO_THRESHOLD
+        ):
+            triggered.append(
+                "low_quality_ratio="
+                f"{lq_total_ratio:.4f}>={STAGE06F_LQ_TOTAL_BLOCK_RATIO_THRESHOLD:.2f}"
+                f"_mincount_{STAGE06F_LQ_TOTAL_BLOCK_RATIO_MIN_COUNT}"
+            )
+        if (
+            lq_total_count >= STAGE06F_LQ_TOTAL_BLOCK_EXTREME_RATIO_MIN_COUNT
+            and lq_total_ratio >= STAGE06F_LQ_TOTAL_BLOCK_EXTREME_RATIO_THRESHOLD
+        ):
+            triggered.append(
+                "low_quality_extreme_ratio="
+                f"{lq_total_ratio:.4f}>={STAGE06F_LQ_TOTAL_BLOCK_EXTREME_RATIO_THRESHOLD:.2f}"
+                f"_mincount_{STAGE06F_LQ_TOTAL_BLOCK_EXTREME_RATIO_MIN_COUNT}"
+            )
+
+    if not triggered:
+        return False, None, None
+
+    details = [
+        f"total_seeds={total_seed_count}",
+        f"high_severity_seeds={high_seed_count}",
+        (
+            "seed_thresholds("
+            f"total>={STAGE06F_DAMAGE_SEED_TOTAL_BLOCK_THRESHOLD}, "
+            f"high>={STAGE06F_DAMAGE_SEED_HIGH_BLOCK_THRESHOLD})"
+        ),
+    ]
+    if lq_total_count is not None:
+        details.extend(
+            [
+                f"low_quality_total={lq_total_count}",
+                f"segment_count={segment_count if segment_count is not None else 0}",
+                f"low_quality_ratio={lq_total_ratio:.4f}",
+                (
+                    "low_quality_thresholds("
+                    f"abs>={STAGE06F_LQ_TOTAL_BLOCK_ABSOLUTE_THRESHOLD}, "
+                    f"ratio>={STAGE06F_LQ_TOTAL_BLOCK_RATIO_THRESHOLD:.2f}, "
+                    f"ratio_mincount>={STAGE06F_LQ_TOTAL_BLOCK_RATIO_MIN_COUNT}, "
+                    f"extreme_ratio>={STAGE06F_LQ_TOTAL_BLOCK_EXTREME_RATIO_THRESHOLD:.2f}, "
+                    "extreme_ratio_mincount="
+                    f"{STAGE06F_LQ_TOTAL_BLOCK_EXTREME_RATIO_MIN_COUNT})"
+                ),
+            ]
+        )
+
+    has_seed_trigger = (
+        total_seed_count >= STAGE06F_DAMAGE_SEED_TOTAL_BLOCK_THRESHOLD
+        or high_seed_count >= STAGE06F_DAMAGE_SEED_HIGH_BLOCK_THRESHOLD
+    )
+    check_key = "stage06f_damage_seed_overload" if has_seed_trigger else "stage06f_low_quality_overload"
+    message = (
+        f"Stage 06f overload gate ({'; '.join(triggered)}). "
+        f"Metrics: {', '.join(details)}."
+    )
+    return True, check_key, message
+
+
+def replay_upstream_gates_for_resume(
+    vs: VideoState,
+    start_stage_key: str,
+    progress: Dict[str, str],
+    log_prefix: str,
+) -> bool:
+    """Replay upstream fail-closed gates when a run resumes after their stage."""
+    start_idx = STAGE_KEY_INDEX.get(start_stage_key)
+    if start_idx is None:
+        return False
+
+    gate_specs = [
+        (
+            "06",
+            evaluate_06_gate,
+            "stage06_speaker_collapse_overload",
+            "Stage 06 speaker-collapse overload blocked this video.",
+        ),
+        (
+            "06b",
+            evaluate_06b_gate,
+            "stage06b_flag_severe",
+            "Stage 06b severe verification failure.",
+        ),
+        (
+            "06f",
+            evaluate_06f_gate,
+            "stage06f_damage_seed_overload",
+            "Stage 06f damage-map overload blocked this video.",
+        ),
+        (
+            "06h",
+            evaluate_06h_gate,
+            "stage06h_video_gate_block",
+            "Stage 06h quality gate blocked this video.",
+        ),
+    ]
+
+    for gate_stage, evaluator, fallback_check, fallback_message in gate_specs:
+        gate_idx = STAGE_KEY_INDEX.get(gate_stage)
+        if gate_idx is None or start_idx <= gate_idx:
+            continue
+        should_quarantine, check_key, message = evaluator(vs.video_id, vs.source)
+        if not should_quarantine:
+            continue
+
+        vs.status = "quarantined"
+        add_quarantine_reason(
+            vs,
+            check_key or fallback_check,
+            message or fallback_message,
+        )
+        print(
+            f"{log_prefix} QUARANTINED: upstream {gate_stage} gate replay -> "
+            f"{message or fallback_message}"
+        )
+        progress[vs.video_id] = "QUARANTINED"
+        return True
+
+    return False
 
 
 def write_quarantine_file(
@@ -796,6 +1165,8 @@ async def run_video(
     stages: List[Stage],
     semaphore: asyncio.Semaphore,
     stage_semaphores: Dict[str, asyncio.Semaphore],
+    llm_outage_event: asyncio.Event,
+    stage_env: Optional[Dict[str, str]],
     quarantine_file: Path | None,
     preexisting_quarantine_ids: Set[str],
     dry_run: bool,
@@ -812,7 +1183,20 @@ async def run_video(
         print(f"{log_prefix} SKIP: already quarantined before run")
         return
 
+    if not dry_run and stages:
+        start_stage_key = stages[0].key
+        if replay_upstream_gates_for_resume(vs, start_stage_key, progress, log_prefix):
+            return
+
     for stage in stages:
+        if llm_outage_event.is_set():
+            vs.status = "failed"
+            vs.error_stage = stage.key
+            vs.error_msg = "global_llm_outage"
+            progress[vs.video_id] = "FAIL(llm_outage)"
+            print(f"{log_prefix} ABORTED: global LLM outage active; stopping remaining stages")
+            return
+
         vs.current_stage = stage.key
         vs.status = "running"
         progress[vs.video_id] = stage.key
@@ -856,14 +1240,71 @@ async def run_video(
                     if stage_semaphore is not None:
                         async with stage_semaphore:
                             progress[vs.video_id] = f"{stage.key}(llm)"
-                            rc = await run_subprocess(cmd, stage, vs.video_id, log_prefix)
+                            rc, runtime_marker, runtime_excerpt = await run_subprocess(
+                                cmd,
+                                stage,
+                                vs.video_id,
+                                log_prefix,
+                                env=stage_env,
+                            )
                     else:
                         progress[vs.video_id] = f"{stage.key}(llm)"
-                        rc = await run_subprocess(cmd, stage, vs.video_id, log_prefix)
+                        rc, runtime_marker, runtime_excerpt = await run_subprocess(
+                            cmd,
+                            stage,
+                            vs.video_id,
+                            log_prefix,
+                            env=stage_env,
+                        )
             else:
-                rc = await run_subprocess(cmd, stage, vs.video_id, log_prefix)
+                rc, runtime_marker, runtime_excerpt = await run_subprocess(
+                    cmd,
+                    stage,
+                    vs.video_id,
+                    log_prefix,
+                    env=stage_env,
+                )
 
             if rc != 0:
+                if stage.needs_llm:
+                    if runtime_marker == "limit":
+                        llm_outage_event.set()
+                        vs.status = "failed"
+                        vs.error_stage = stage.key
+                        vs.error_msg = (
+                            f"claude_limit_exhausted: {runtime_excerpt or 'limit marker detected'}"
+                        )
+                        progress[vs.video_id] = "FAIL(llm_limit)"
+                        print(
+                            f"{log_prefix} ABORTED: Claude limit marker detected during stage {stage.key}; "
+                            "marking as runtime outage (non-quarantine)"
+                        )
+                        return
+                    if runtime_marker == "timeout":
+                        vs.status = "failed"
+                        vs.error_stage = stage.key
+                        vs.error_msg = (
+                            f"llm_timeout_during_stage: {runtime_excerpt or 'timeout marker detected'}"
+                        )
+                        progress[vs.video_id] = "FAIL(llm_timeout)"
+                        print(
+                            f"{log_prefix} ABORTED: stage {stage.key} hit LLM timeout "
+                            f"({runtime_excerpt or 'timeout marker detected'}); "
+                            "marking as runtime failure (non-quarantine)."
+                        )
+                        return
+                    llm_ready, llm_reason = await run_llm_capacity_preflight(stage_env)
+                    if not llm_ready:
+                        llm_outage_event.set()
+                        vs.status = "failed"
+                        vs.error_stage = stage.key
+                        vs.error_msg = f"llm_outage_during_stage: {llm_reason or 'unknown'}"
+                        progress[vs.video_id] = "FAIL(llm_outage)"
+                        print(
+                            f"{log_prefix} ABORTED: stage {stage.key} failed while Claude preflight is unhealthy "
+                            f"({llm_reason or 'unknown'}); not quarantining runtime outage."
+                        )
+                        return
                 vs.status = "quarantined"
                 add_quarantine_reason(
                     vs,
@@ -873,6 +1314,20 @@ async def run_video(
                 print(f"{log_prefix} QUARANTINED: stage {stage.key} execution failure (exit {rc})")
                 progress[vs.video_id] = "QUARANTINED"
                 return
+
+            # Post-06: fail-closed gate on severe speaker-collapse overload.
+            if stage.key == "06":
+                should_quarantine, check_key, message = evaluate_06_gate(vs.video_id, vs.source)
+                if should_quarantine:
+                    vs.status = "quarantined"
+                    add_quarantine_reason(
+                        vs,
+                        check_key or "stage06_speaker_collapse_overload",
+                        message or "Stage 06 speaker-collapse overload blocked this video.",
+                    )
+                    print(f"{log_prefix} QUARANTINED: {message or 'severe 06 speaker-collapse gate trigger'}")
+                    progress[vs.video_id] = "QUARANTINED"
+                    return
 
             # Post-06b: fail-closed gate on REJECT + severe FLAG outcomes.
             if stage.key == "06b":
@@ -885,6 +1340,34 @@ async def run_video(
                         message or "Stage 06b severe verification failure.",
                     )
                     print(f"{log_prefix} QUARANTINED: {message or 'severe 06b gate trigger'}")
+                    progress[vs.video_id] = "QUARANTINED"
+                    return
+
+            # Post-06h: fail-closed gate on confidence/quality block decisions.
+            if stage.key == "06h":
+                should_quarantine, check_key, message = evaluate_06h_gate(vs.video_id, vs.source)
+                if should_quarantine:
+                    vs.status = "quarantined"
+                    add_quarantine_reason(
+                        vs,
+                        check_key or "stage06h_video_gate_block",
+                        message or "Stage 06h quality gate blocked this video.",
+                    )
+                    print(f"{log_prefix} QUARANTINED: {message or '06h block gate trigger'}")
+                    progress[vs.video_id] = "QUARANTINED"
+                    return
+
+            # Post-06f: fail-closed gate on extreme damage-map seed overload.
+            if stage.key == "06f":
+                should_quarantine, check_key, message = evaluate_06f_gate(vs.video_id, vs.source)
+                if should_quarantine:
+                    vs.status = "quarantined"
+                    add_quarantine_reason(
+                        vs,
+                        check_key or "stage06f_damage_seed_overload",
+                        message or "Stage 06f damage-map overload blocked this video.",
+                    )
+                    print(f"{log_prefix} QUARANTINED: {message or '06f overload gate trigger'}")
                     progress[vs.video_id] = "QUARANTINED"
                     return
 
@@ -981,6 +1464,152 @@ async def run_end_of_run_validation(
     return proc.returncode or 0
 
 
+def _contains_limit_marker(text: str) -> bool:
+    low = (text or "").lower()
+    return any(marker in low for marker in CLAUDE_LIMIT_MARKERS)
+
+
+def _contains_timeout_marker(text: str) -> bool:
+    low = (text or "").lower()
+    return any(marker in low for marker in CLAUDE_TIMEOUT_MARKERS)
+
+
+def _excerpt(text: str, limit: int = 240) -> str:
+    cleaned = " ".join((text or "").split())
+    if len(cleaned) <= limit:
+        return cleaned
+    return cleaned[:limit].rstrip() + "..."
+
+
+def resolve_claude_binary() -> Optional[str]:
+    for env_key in ("CLAUDE_BINARY", "CLAUDE_BIN"):
+        raw = str(os.environ.get(env_key, "")).strip()
+        if not raw:
+            continue
+        p = Path(raw)
+        if p.exists() and p.is_file():
+            return str(p)
+
+    resolved = shutil.which("claude")
+    if resolved:
+        return resolved
+
+    nvm_candidates = sorted(
+        Path.home().glob(".nvm/versions/node/*/bin/claude"),
+        key=lambda path: path.stat().st_mtime if path.exists() else 0.0,
+        reverse=True,
+    )
+    for cand in nvm_candidates:
+        if cand.exists() and cand.is_file():
+            return str(cand)
+
+    for cand in CLAUDE_BINARY_PATHS:
+        if cand.exists() and cand.is_file():
+            return str(cand)
+    return None
+
+
+def build_stage_subprocess_env(claude_binary: Optional[str]) -> Dict[str, str]:
+    env = dict(os.environ)
+    if not claude_binary:
+        return env
+
+    resolved = Path(claude_binary).expanduser()
+    if not resolved.is_absolute():
+        found = shutil.which(str(claude_binary))
+        if found:
+            resolved = Path(found)
+    claude_path = str(resolved)
+    env["CLAUDE_BINARY"] = claude_path
+    env["CLAUDE_BIN"] = claude_path
+
+    claude_dir = str(resolved.parent)
+    path_raw = env.get("PATH", "")
+    path_parts = [p for p in path_raw.split(os.pathsep) if p]
+    if claude_dir and claude_dir not in path_parts:
+        env["PATH"] = claude_dir + (os.pathsep + path_raw if path_raw else "")
+    return env
+
+
+async def run_llm_capacity_preflight(env: Optional[Dict[str, str]] = None) -> Tuple[bool, Optional[str]]:
+    """Fail fast when Claude is globally unavailable or quota-exhausted."""
+    claude_bin = resolve_claude_binary()
+    if not claude_bin:
+        return False, "Claude CLI binary not found in PATH, env, NVM, or known install paths."
+
+    cmd = [
+        claude_bin,
+        "--model",
+        CLAUDE_PREFLIGHT_MODEL,
+        "-p",
+        CLAUDE_PREFLIGHT_PROMPT,
+        "--output-format",
+        "text",
+        "--tools",
+        "",
+        "--strict-mcp-config",
+        "--no-session-persistence",
+    ]
+    last_reason = "Claude preflight failed with unknown error."
+    for attempt in range(1, CLAUDE_PREFLIGHT_MAX_ATTEMPTS + 1):
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                env=env,
+            )
+        except FileNotFoundError:
+            return False, "Claude CLI binary not found."
+
+        try:
+            stdout, stderr = await asyncio.wait_for(
+                proc.communicate(),
+                timeout=CLAUDE_PREFLIGHT_TIMEOUT_SECONDS,
+            )
+        except asyncio.TimeoutError:
+            proc.kill()
+            await proc.wait()
+            last_reason = (
+                "Claude CLI preflight timed out after "
+                f"{CLAUDE_PREFLIGHT_TIMEOUT_SECONDS}s (attempt {attempt}/{CLAUDE_PREFLIGHT_MAX_ATTEMPTS})."
+            )
+            if attempt < CLAUDE_PREFLIGHT_MAX_ATTEMPTS:
+                await asyncio.sleep(CLAUDE_PREFLIGHT_RETRY_DELAY_SECONDS * attempt)
+                continue
+            return False, last_reason
+
+        out_text = stdout.decode("utf-8", errors="replace").strip()
+        err_text = stderr.decode("utf-8", errors="replace").strip()
+        combined = "\n".join(part for part in (out_text, err_text) if part).strip()
+        rc = proc.returncode or 0
+
+        if rc == 0 and out_text:
+            return True, None
+
+        if _contains_limit_marker(combined):
+            return False, f"Claude limit exhausted: {_excerpt(combined)}"
+
+        if rc != 0:
+            details = _excerpt(combined) if combined else f"exit {rc} with empty output"
+            last_reason = (
+                f"Claude preflight failed ({details}) "
+                f"(attempt {attempt}/{CLAUDE_PREFLIGHT_MAX_ATTEMPTS})."
+            )
+        else:
+            last_reason = (
+                "Claude preflight returned empty output "
+                f"(attempt {attempt}/{CLAUDE_PREFLIGHT_MAX_ATTEMPTS})."
+            )
+
+        if attempt < CLAUDE_PREFLIGHT_MAX_ATTEMPTS:
+            await asyncio.sleep(CLAUDE_PREFLIGHT_RETRY_DELAY_SECONDS * attempt)
+            continue
+        return False, last_reason
+
+    return False, last_reason
+
+
 # ── Main orchestrator ────────────────────────────────────────────────────────
 
 async def run_pipeline(args: argparse.Namespace) -> int:
@@ -1015,6 +1644,35 @@ async def run_pipeline(args: argparse.Namespace) -> int:
         print(f"ERROR: Invalid stage range: {start_key} → {end_key}", file=sys.stderr)
         return 1
     stages = STAGES[start_idx:end_idx + 1]
+
+    stage_env: Optional[Dict[str, str]] = None
+    if not args.dry_run and any(stage.needs_llm for stage in stages):
+        claude_bin = resolve_claude_binary()
+        if not claude_bin:
+            print(
+                "[pipeline-runner] LLM preflight failed: Claude CLI binary not found in PATH/env/NVM/known paths.",
+                file=sys.stderr,
+            )
+            print(
+                "[pipeline-runner] Aborting before per-video execution to avoid mass execution-error quarantine "
+                "during global LLM outages/limits.",
+                file=sys.stderr,
+            )
+            return 3
+        stage_env = build_stage_subprocess_env(claude_bin)
+        stage_env["STAGE06B_CLAUDE_LOCK"] = "1" if args.stage06b_claude_lock == "on" else "0"
+        llm_ready, llm_reason = await run_llm_capacity_preflight(stage_env)
+        if not llm_ready:
+            print(
+                f"[pipeline-runner] LLM preflight failed: {llm_reason or 'unknown failure'}",
+                file=sys.stderr,
+            )
+            print(
+                "[pipeline-runner] Aborting before per-video execution to avoid mass execution-error quarantine "
+                "during global LLM outages/limits.",
+                file=sys.stderr,
+            )
+            return 3
 
     parallel = args.parallel
     semaphore = asyncio.Semaphore(parallel)
@@ -1067,6 +1725,8 @@ async def run_pipeline(args: argparse.Namespace) -> int:
     print(f"  Videos: {len(videos)}")
     print(f"  Stages: {' → '.join(s.key for s in stages)}")
     print(f"  Parallel LLM calls: {parallel}")
+    if any(stage.key == "06b" for stage in stages):
+        print(f"  Stage 06b Claude lock: {args.stage06b_claude_lock}")
     if stage_parallel_caps:
         caps_text = ", ".join(f"{stage_key}={stage_parallel_caps[stage_key]}" for stage_key in sorted(stage_parallel_caps))
         print(f"  Stage LLM caps: {caps_text}")
@@ -1076,6 +1736,7 @@ async def run_pipeline(args: argparse.Namespace) -> int:
     print()
 
     # Shared progress tracker
+    llm_outage_event = asyncio.Event()
     progress: Dict[str, str] = {v.video_id: "pending" for v in videos}
 
     # Launch all video pipelines + progress reporter
@@ -1086,6 +1747,8 @@ async def run_pipeline(args: argparse.Namespace) -> int:
                 stages,
                 semaphore,
                 stage_semaphores,
+                llm_outage_event,
+                stage_env,
                 quarantine_file,
                 preexisting_quarantine_ids,
                 args.dry_run,
@@ -1140,6 +1803,8 @@ async def run_pipeline(args: argparse.Namespace) -> int:
         for v in videos:
             if v.status == "failed":
                 print(f"    {v.video_id} at stage {v.error_stage}: {v.error_msg}")
+    if llm_outage_event.is_set():
+        print("  LLM outage:  detected during run (runtime failures were not quarantined)")
     print("=" * 56)
     print()
 
@@ -1150,6 +1815,8 @@ async def run_pipeline(args: argparse.Namespace) -> int:
         if validation_rc != 0:
             print(f"[pipeline-runner] End-of-run validation failed (exit {validation_rc})", file=sys.stderr)
 
+    if llm_outage_event.is_set():
+        return 3
     if fail_count > 0:
         return 1
     if validation_rc != 0:
@@ -1216,6 +1883,12 @@ def main() -> None:
         action="append",
         default=[],
         help="Optional per-stage LLM concurrency cap (repeatable, format: STAGE=N)",
+    )
+    parser.add_argument(
+        "--stage06b-claude-lock",
+        choices=("on", "off"),
+        default="on",
+        help="Control Stage 06b global Claude lock (default: on). Set to 'off' to allow true parallel 06b calls.",
     )
     parser.add_argument(
         "--force-stage",

@@ -1,0 +1,46 @@
+{
+  "video_id": "L9mcyTuXYjc",
+  "verified_at": "2026-03-05T19:04:59Z",
+  "pipeline_version": "06b.LLM.verify-v3.1",
+  "verdict": "APPROVE",
+  "video_type_check": {
+    "agrees": true,
+    "suggested_type": null,
+    "confidence": 0.82,
+    "reasoning": "Coach dominates ~85% of content in instructional monologue style. Multiple speakers (mastermind call) could suggest podcast, but the one-sided teaching structure fits talking_head. Borderline but acceptable."
+  },
+  "conversation_verdicts": [],
+  "misattributions": [],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [
+    "Segments 1-3 show possible diarization bleed between coach and student speech within single segments, but roles are correct and all are commentary so no downstream impact"
+  ],
+  "other_flags_detailed": [
+    {
+      "flag_class": "transcript_artifact",
+      "severity": "minor",
+      "segment_id": 1,
+      "conversation_id": null,
+      "speaker_id": "SPEAKER_00",
+      "notes": "Segment 1 may contain mixed coach+student speech in one diarization segment. No impact since both speakers are commentary-only."
+    }
+  ],
+  "summary": "Well-classified talking_head video of a mastermind call. Coach teaches first-approach mindset with brief student interjections. All roles correct, no conversations to boundary-check, no misattributions. Minor diarization artifact in opening segments with no downstream impact.",
+  "metadata": {
+    "input_file": "/home/jonaswsl/projects/daygame-coach/data/06.LLM.video-type/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 55.028090476989746,
+    "llm_calls": 1,
+    "model": "claude-cli",
+    "claude_model": "opus",
+    "flag_summary": {
+      "video_type_agrees": true,
+      "structured_flag_class_counts": {},
+      "other_flag_class_counts": {
+        "transcript_artifact": 1
+      },
+      "other_flag_count": 1,
+      "other_flag_detailed_count": 1
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "video_id": "JKWRj2hwbT4",
+  "generated_at": "2026-03-05T14:25:03Z",
+  "pipeline_version": "06h.DET.confidence-propagation-v2.1",
+  "model_version": "v2.1",
+  "video_type": "compilation",
+  "axis_weights": {
+    "transcript": 0.76,
+    "speaker": 0.19,
+    "phase": 0.05
+  },
+  "damage_type_counts": {
+    "seed_speaker_collapsed": 74,
+    "seed_transcript_artifact": 4,
+    "seed_low_quality_segment": 2
+  },
+  "quality_repairs": {
+    "artifact_accepted": 0,
+    "artifact_rejected": 4,
+    "lq_accepted": 26,
+    "lq_rejected": 2
+  },
+  "summary": {
+    "segments_total": 76,
+    "tier_counts": {
+      "high": 50,
+      "medium": 22,
+      "low": 4
+    },
+    "segments_with_repairs": 26,
+    "segments_repaired_by_06e": 26,
+    "repair_credit_segments": 0,
+    "conversations_total": 1,
+    "band_high_threshold": 0.8,
+    "band_medium_threshold": 0.6
+  },
+  "quality_gate": {
+    "blocked": false,
+    "reason_codes": [],
+    "inputs": {
+      "segment_count": 76,
+      "artifact_total": 4,
+      "low_quality_total": 28,
+      "low_quality_total_ratio": 0.3684,
+      "artifact_unrepaired": 4,
+      "low_quality_unrepaired": 2,
+      "low_quality_unrepaired_ratio": 0.0263,
+      "thresholds": {
+        "lq_total_abs": 140,
+        "lq_total_ratio": 0.4,
+        "lq_total_ratio_min_count": 90,
+        "lq_unrepaired_abs": 120,
+        "lq_unrepaired_ratio": 0.35,
+        "lq_unrepaired_ratio_min_count": 80,
+        "artifact_unrepaired_abs": 30
+      }
+    }
+  },
+  "conversation_summaries": [
+    {
+      "conversation_id": 1,
+      "segment_count": 24,
+      "anchor_segment_count": 10,
+      "conversation_confidence_score": 0.7907
+    }
+  ],
+  "inputs": {
+    "stage06d": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.clean16k.conversations.json",
+    "damage_map": "/home/jonaswsl/projects/daygame-coach/data/06f.DET.damage-map/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.clean16k.damage-map.json",
+    "damage_adjudication": "/home/jonaswsl/projects/daygame-coach/data/06g.LLM.damage-adjudicator/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.clean16k.damage-adjudication.json",
+    "damage_adjudication_skipped": false,
+    "quality_check": "loaded"
+  },
+  "confidence_trace": {
+    "version": 1,
+    "path": "/home/jonaswsl/projects/daygame-coach/data/06h.DET.confidence-propagation/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.clean16k.conversations.confidence.trace.json",
+    "segments": 76,
+    "conversations": 1
+  }
+}

@@ -1,0 +1,1966 @@
+{
+  "video_id": "JKWRj2hwbT4",
+  "generated_at": "2026-03-05T07:07:25Z",
+  "pipeline_version": "06g.LLM.damage-adjudicator-v1.2",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/06f.DET.damage-map/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.clean16k.damage-map.json",
+  "damage_map_file": "/home/jonaswsl/projects/daygame-coach/data/06f.DET.damage-map/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.clean16k.damage-map.json",
+  "context_file": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.clean16k.conversations.json",
+  "video_type": "compilation",
+  "skipped": false,
+  "model": "opus",
+  "batch_size": 8,
+  "thresholds": {
+    "repair_accept_threshold": 0.9,
+    "anchor_allow_threshold": 0.8,
+    "context_left": 4,
+    "context_right": 8,
+    "determinism_n": 1
+  },
+  "summary": {
+    "seeds_total": 74,
+    "llm_calls": 10,
+    "repairs_accepted": 0,
+    "anchor_allowed": 44,
+    "llm_failures": 0,
+    "determinism_mismatches": 0,
+    "contamination_spans": 67
+  },
+  "seeds": [
+    {
+      "seed_segment_id": 0,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 0,
+        "transcript_confidence": 0.4,
+        "speaker_confidence": 0.75,
+        "phase_confidence": 0.5,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 0,
+        "contamination_end_segment_id": 3,
+        "confidence_rationale": "0.8s fragment likely mid-sentence snippet of coach quoting an opener; missing leading 'I'; too short to determine if coach demo or actual approach audio"
+      },
+      "overall_confidence": 0.4715,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 1,
+      "conversation_id": 0,
+      "damage_types": [
+        "low_quality",
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_low_quality_segment",
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 1,
+        "transcript_confidence": 0.35,
+        "speaker_confidence": 0.7,
+        "phase_confidence": 0.5,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 0,
+        "contamination_end_segment_id": 4,
+        "confidence_rationale": "Run-on merging commentary ('lack of certainty') with quoted self-talk ('i got rejected i suck'); sentence boundaries lost; speaker is coach but embedded quotes blur role"
+      },
+      "overall_confidence": 0.424,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 2,
+      "conversation_id": 0,
+      "damage_types": [
+        "low_quality",
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_low_quality_segment",
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 2,
+        "transcript_confidence": 0.35,
+        "speaker_confidence": 0.7,
+        "phase_confidence": 0.5,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 0,
+        "contamination_end_segment_id": 5,
+        "confidence_rationale": "Continues seg1 run-on; mixes coach inner-monologue demo with commentary; no clear sentence boundary at seg start (10.6 overlaps seg1 end 10.62)"
+      },
+      "overall_confidence": 0.424,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 3,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 3,
+        "transcript_confidence": 0.55,
+        "speaker_confidence": 0.75,
+        "phase_confidence": 0.6,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 1,
+        "contamination_end_segment_id": 6,
+        "confidence_rationale": "Content coherent as coach commentary but start overlaps seg2 end (15.98 vs 16.0); transcript readable; speaker ambiguity from embedded demo quote possibility"
+      },
+      "overall_confidence": 0.5905,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 4,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 4,
+        "transcript_confidence": 0.45,
+        "speaker_confidence": 0.65,
+        "phase_confidence": 0.55,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 2,
+        "contamination_end_segment_id": 7,
+        "confidence_rationale": "Merges demo opener ('hey excuse me hi') with commentary ('biggest mistakes'); no boundary between performed speech and analysis; speaker role unclear mid-segment"
+      },
+      "overall_confidence": 0.493,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 5,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 5,
+        "transcript_confidence": 0.6,
+        "speaker_confidence": 0.75,
+        "phase_confidence": 0.65,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 3,
+        "contamination_end_segment_id": 8,
+        "confidence_rationale": "Cleanest of the seeds; consistent coach commentary about delivery mistakes; slight timestamp overlap with seg4; speaker assignment plausible but unverifiable"
+      },
+      "overall_confidence": 0.631,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 6,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 6,
+        "transcript_confidence": 0.5,
+        "speaker_confidence": 0.7,
+        "phase_confidence": 0.6,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 4,
+        "contamination_end_segment_id": 9,
+        "confidence_rationale": "Coach announces demo then performs it ('i thought you'); transcript merges announcement and performance without boundary; role shifts mid-segment"
+      },
+      "overall_confidence": 0.543,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 7,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 7,
+        "transcript_confidence": 0.45,
+        "speaker_confidence": 0.65,
+        "phase_confidence": 0.55,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 5,
+        "contamination_end_segment_id": 10,
+        "confidence_rationale": "Merges demo speech ('i thought you looked nice take care') with meta-commentary ('so you notice'); two distinct speech acts collapsed; speaker role ambiguous mid-segment"
+      },
+      "overall_confidence": 0.493,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 8,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 8,
+        "transcript_confidence": 0.82,
+        "speaker_confidence": 0.85,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 6,
+        "contamination_end_segment_id": 11,
+        "confidence_rationale": "All segments 4-23 are SPEAKER_00/coach commentary. Speaker collapse flag likely false positive—single speaker throughout. Text reads coherently as coach narrating bad approach demos."
+      },
+      "overall_confidence": 0.8247,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 9,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 9,
+        "transcript_confidence": 0.82,
+        "speaker_confidence": 0.85,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 7,
+        "contamination_end_segment_id": 12,
+        "confidence_rationale": "Continuous coach monologue. No second speaker evident in context. Speaker_collapsed flag appears erroneous—coach is quoting himself doing bad demos, not a real dialogue partner."
+      },
+      "overall_confidence": 0.8247,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 10,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 10,
+        "transcript_confidence": 0.8,
+        "speaker_confidence": 0.85,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 8,
+        "contamination_end_segment_id": 13,
+        "confidence_rationale": "Coach quoting example compliments inline. No speaker change detectable. Text coherent as commentary with embedded demo quotes."
+      },
+      "overall_confidence": 0.8095,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 11,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 11,
+        "transcript_confidence": 0.8,
+        "speaker_confidence": 0.85,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 9,
+        "contamination_end_segment_id": 14,
+        "confidence_rationale": "Continuation of coach explaining bad compliment examples. Single speaker throughout. Speaker ambiguity flag likely triggered by quoted speech within monologue."
+      },
+      "overall_confidence": 0.8095,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 12,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 12,
+        "transcript_confidence": 0.78,
+        "speaker_confidence": 0.82,
+        "phase_confidence": 0.78,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 10,
+        "contamination_end_segment_id": 15,
+        "confidence_rationale": "Coach demos a weak opener then narrates result. Embedded quoted speech ('hey excuse me') may have triggered collapse detection. Single speaker confirmed by consistent style."
+      },
+      "overall_confidence": 0.7876,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 13,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 13,
+        "transcript_confidence": 0.8,
+        "speaker_confidence": 0.85,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 11,
+        "contamination_end_segment_id": 16,
+        "confidence_rationale": "Coach narrating the girl's non-verbal reaction to his demo. No actual second speaker. Text coherent as single-speaker commentary."
+      },
+      "overall_confidence": 0.8095,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 14,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 14,
+        "transcript_confidence": 0.82,
+        "speaker_confidence": 0.85,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 12,
+        "contamination_end_segment_id": 17,
+        "confidence_rationale": "Coach analyzing why weak delivery fails. Continuous monologue. Speaker label correct—no interlocutor present in this teaching segment."
+      },
+      "overall_confidence": 0.8247,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 15,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 15,
+        "transcript_confidence": 0.8,
+        "speaker_confidence": 0.85,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 13,
+        "contamination_end_segment_id": 18,
+        "confidence_rationale": "Short segment continues coach's analysis. Flows naturally into seg 16-17 listing what weak delivery communicates. Single speaker confirmed."
+      },
+      "overall_confidence": 0.8095,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 16,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 16,
+        "transcript_confidence": 0.82,
+        "speaker_confidence": 0.88,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 14,
+        "contamination_end_segment_id": 19,
+        "confidence_rationale": "Coach quoting imagined woman's thoughts in commentary. Speaker label correct—continuous SPEAKER_00 narration. Quoted speech triggers false ambiguity."
+      },
+      "overall_confidence": 0.8329,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 17,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 17,
+        "transcript_confidence": 0.83,
+        "speaker_confidence": 0.88,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 15,
+        "contamination_end_segment_id": 20,
+        "confidence_rationale": "Continuation of coach voicing woman's perceived thoughts. Same speaker throughout. Speaker collapse flag is false positive—no actual second speaker."
+      },
+      "overall_confidence": 0.8405,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 18,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 18,
+        "transcript_confidence": 0.82,
+        "speaker_confidence": 0.87,
+        "phase_confidence": 0.84,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 16,
+        "contamination_end_segment_id": 21,
+        "confidence_rationale": "Coach narrating next attempt prediction. Still commentary by SPEAKER_00. Content sounds like inner monologue but speaker is consistent with surrounding segs."
+      },
+      "overall_confidence": 0.8305,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 19,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 19,
+        "transcript_confidence": 0.78,
+        "speaker_confidence": 0.8,
+        "phase_confidence": 0.75,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 17,
+        "contamination_end_segment_id": 22,
+        "confidence_rationale": "Coach quoting his own weak opener 'Nice outfit, guys.' Could be live approach audio but seg 20 confirms commentary mode. Slightly lower confidence due to ambiguity."
+      },
+      "overall_confidence": 0.7823,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 20,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 20,
+        "transcript_confidence": 0.84,
+        "speaker_confidence": 0.9,
+        "phase_confidence": 0.87,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 18,
+        "contamination_end_segment_id": 23,
+        "confidence_rationale": "Coach analyzing lack of response. Clear commentary language ('They didn't even respond'). Speaker and phase labels correct."
+      },
+      "overall_confidence": 0.8529,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 21,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 21,
+        "transcript_confidence": 0.85,
+        "speaker_confidence": 0.9,
+        "phase_confidence": 0.88,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 19,
+        "contamination_end_segment_id": 24,
+        "confidence_rationale": "Self-critique about low volume. Unambiguous coach commentary. Speaker collapse flag is false positive here."
+      },
+      "overall_confidence": 0.861,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 22,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 22,
+        "transcript_confidence": 0.84,
+        "speaker_confidence": 0.91,
+        "phase_confidence": 0.88,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 20,
+        "contamination_end_segment_id": 25,
+        "confidence_rationale": "Meta-reference to camera confirms coach commentary. Speaker label clearly correct. No ambiguity."
+      },
+      "overall_confidence": 0.8553,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 23,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 23,
+        "transcript_confidence": 0.85,
+        "speaker_confidence": 0.91,
+        "phase_confidence": 0.88,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 21,
+        "contamination_end_segment_id": 26,
+        "confidence_rationale": "Coach summarizing reactions. Continuous with surrounding commentary. Speaker and phase correct. No repair needed."
+      },
+      "overall_confidence": 0.8629,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 24,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 24,
+        "transcript_confidence": 0.92,
+        "speaker_confidence": 0.95,
+        "phase_confidence": 0.9,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 22,
+        "contamination_end_segment_id": 27,
+        "confidence_rationale": "Continuous coach monologue commentary. Speaker label consistent with surrounding segments. Text is coherent and flows naturally from seg 23."
+      },
+      "overall_confidence": 0.9247,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 25,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 25,
+        "transcript_confidence": 0.9,
+        "speaker_confidence": 0.95,
+        "phase_confidence": 0.9,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 23,
+        "contamination_end_segment_id": 28,
+        "confidence_rationale": "Continuation of same coach commentary thought from seg 24. Speaker consistent. Text grammatically sound."
+      },
+      "overall_confidence": 0.9095,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 26,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 26,
+        "transcript_confidence": 0.9,
+        "speaker_confidence": 0.95,
+        "phase_confidence": 0.9,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 24,
+        "contamination_end_segment_id": 29,
+        "confidence_rationale": "Completes the sentence started in seg 25. Same speaker, same commentary phase. No ambiguity evident."
+      },
+      "overall_confidence": 0.9095,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 27,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 27,
+        "transcript_confidence": 0.88,
+        "speaker_confidence": 0.92,
+        "phase_confidence": 0.88,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 25,
+        "contamination_end_segment_id": 30,
+        "confidence_rationale": "Coach continues explaining delivery vs words. Coherent with prior segments. Slight overlap timing with seg 28 but same speaker."
+      },
+      "overall_confidence": 0.8876,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 28,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 28,
+        "transcript_confidence": 0.65,
+        "speaker_confidence": 0.85,
+        "phase_confidence": 0.8,
+        "repair_possible": true,
+        "repaired_text": "and get a great response. You could say the same words with a shit delivery and get completely",
+        "contamination_start_segment_id": 26,
+        "contamination_end_segment_id": 31,
+        "confidence_rationale": "ASR lost punctuation/casing mid-segment. Content is coach commentary continuing from seg 27. Speaker consistent but transcript quality drops."
+      },
+      "overall_confidence": 0.6955,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 29,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 29,
+        "transcript_confidence": 0.55,
+        "speaker_confidence": 0.75,
+        "phase_confidence": 0.7,
+        "repair_possible": true,
+        "repaired_text": "ignored. Like how that just happened. So I'll give another one here. This will be kind of shit",
+        "contamination_start_segment_id": 27,
+        "contamination_end_segment_id": 32,
+        "confidence_rationale": "ASR lost casing/punctuation. Coach narrates transitioning to next demo. Possible brief embedded speech but context suggests single speaker commentary."
+      },
+      "overall_confidence": 0.5955,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 30,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 30,
+        "transcript_confidence": 0.4,
+        "speaker_confidence": 0.5,
+        "phase_confidence": 0.55,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 28,
+        "contamination_end_segment_id": 33,
+        "confidence_rationale": "Multiple voices likely collapsed: coach demo line, possible girl non-response, then self-talk. Cannot reliably separate speakers or repair."
+      },
+      "overall_confidence": 0.4265,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 31,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 31,
+        "transcript_confidence": 0.45,
+        "speaker_confidence": 0.5,
+        "phase_confidence": 0.55,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 29,
+        "contamination_end_segment_id": 34,
+        "confidence_rationale": "Appears to contain coach self-dialogue (\"you don't suck dude\") but speaker boundaries unclear. Multiple voice registers collapsed into one label."
+      },
+      "overall_confidence": 0.4645,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 32,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 32,
+        "transcript_confidence": 0.82,
+        "speaker_confidence": 0.88,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 30,
+        "contamination_end_segment_id": 35,
+        "confidence_rationale": "Content is continuous coach monologue narrating between approach demos. Speaker collapse likely correct—single speaker throughout. Text reads naturally."
+      },
+      "overall_confidence": 0.8329,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 33,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 33,
+        "transcript_confidence": 0.83,
+        "speaker_confidence": 0.88,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 31,
+        "contamination_end_segment_id": 36,
+        "confidence_rationale": "Coach planning next demo action ('I could probably still go up'). Consistent voice and topic with surrounding segments. No evidence of second speaker."
+      },
+      "overall_confidence": 0.8405,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 34,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 34,
+        "transcript_confidence": 0.84,
+        "speaker_confidence": 0.88,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 32,
+        "contamination_end_segment_id": 37,
+        "confidence_rationale": "Direct continuation of seg 33 ('and give her a genuine compliment now'). Same speaker, same thought. Collapse flag is false positive here."
+      },
+      "overall_confidence": 0.8481,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 35,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 35,
+        "transcript_confidence": 0.85,
+        "speaker_confidence": 0.9,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 33,
+        "contamination_end_segment_id": 38,
+        "confidence_rationale": "'Let me just show you' — coach addressing audience before demo. Clear coach register, consistent with commentary role."
+      },
+      "overall_confidence": 0.8595,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 36,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 36,
+        "transcript_confidence": 0.83,
+        "speaker_confidence": 0.88,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 34,
+        "contamination_end_segment_id": 39,
+        "confidence_rationale": "Coach self-narrating about prior failed attempt ('she might be creeped out already'). Matches coach commentary pattern in segs 28-31."
+      },
+      "overall_confidence": 0.8405,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 37,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 37,
+        "transcript_confidence": 0.84,
+        "speaker_confidence": 0.88,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 35,
+        "contamination_end_segment_id": 40,
+        "confidence_rationale": "Continuation of seg 36 ('because of what I did'). Same speaker mid-sentence. No ambiguity."
+      },
+      "overall_confidence": 0.8481,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 38,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 38,
+        "transcript_confidence": 0.85,
+        "speaker_confidence": 0.9,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 36,
+        "contamination_end_segment_id": 41,
+        "confidence_rationale": "'Well, let's just see' — coach transitioning to next approach demo. Typical coach narration register."
+      },
+      "overall_confidence": 0.8595,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 39,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 39,
+        "transcript_confidence": 0.85,
+        "speaker_confidence": 0.9,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 37,
+        "contamination_end_segment_id": 42,
+        "confidence_rationale": "'I'll show you guys the difference' — coach addressing audience. Clear coach voice. Collapse appears to be correct single-speaker assignment."
+      },
+      "overall_confidence": 0.8595,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 64,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 64,
+        "transcript_confidence": 0.92,
+        "speaker_confidence": 0.95,
+        "phase_confidence": 0.95,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 62,
+        "contamination_end_segment_id": 67,
+        "confidence_rationale": "Coach monologue summarizing demo. Single speaker throughout, no dialogue partners. Speaker collapse flag is false positive—this is genuine solo commentary."
+      },
+      "overall_confidence": 0.9272,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 65,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 65,
+        "transcript_confidence": 0.9,
+        "speaker_confidence": 0.95,
+        "phase_confidence": 0.95,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 63,
+        "contamination_end_segment_id": 68,
+        "confidence_rationale": "Continuation of coach recap monologue. No second speaker expected. Text coherent and consistent with surrounding segments."
+      },
+      "overall_confidence": 0.912,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 66,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 66,
+        "transcript_confidence": 0.92,
+        "speaker_confidence": 0.95,
+        "phase_confidence": 0.95,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 64,
+        "contamination_end_segment_id": 69,
+        "confidence_rationale": "Coach listing three common mistakes. Clearly single-speaker didactic commentary. No ambiguity in speaker or phase."
+      },
+      "overall_confidence": 0.9272,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 67,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 67,
+        "transcript_confidence": 0.9,
+        "speaker_confidence": 0.95,
+        "phase_confidence": 0.95,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 65,
+        "contamination_end_segment_id": 70,
+        "confidence_rationale": "Enumerating mistake #1 (not smiling). Seamless continuation of coach monologue. Speaker collapse flag is false positive."
+      },
+      "overall_confidence": 0.912,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 68,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 68,
+        "transcript_confidence": 0.91,
+        "speaker_confidence": 0.95,
+        "phase_confidence": 0.95,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 66,
+        "contamination_end_segment_id": 71,
+        "confidence_rationale": "Enumerating mistakes #2-3 (weak voice, bad distance). Single coach voice, coherent list structure. No speaker ambiguity."
+      },
+      "overall_confidence": 0.9196,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 69,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 69,
+        "transcript_confidence": 0.92,
+        "speaker_confidence": 0.95,
+        "phase_confidence": 0.95,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 67,
+        "contamination_end_segment_id": 72,
+        "confidence_rationale": "Completing mistake enumeration. Text flows naturally from seg 68. Unambiguously coach commentary."
+      },
+      "overall_confidence": 0.9272,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 70,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 70,
+        "transcript_confidence": 0.9,
+        "speaker_confidence": 0.95,
+        "phase_confidence": 0.9,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 68,
+        "contamination_end_segment_id": 73,
+        "confidence_rationale": "Transition to CTA. Coach pivoting to pitch. Single speaker, commentary phase. Segment boundary slightly awkward but text intact."
+      },
+      "overall_confidence": 0.9095,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 71,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 71,
+        "transcript_confidence": 0.92,
+        "speaker_confidence": 0.95,
+        "phase_confidence": 0.9,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 69,
+        "contamination_end_segment_id": 74,
+        "confidence_rationale": "CTA pitch segment. Clearly coach solo. Speaker collapse false positive—entire 64-75 block is genuine single-speaker commentary."
+      },
+      "overall_confidence": 0.9247,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 72,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 72,
+        "transcript_confidence": 0.92,
+        "speaker_confidence": 0.95,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 70,
+        "contamination_end_segment_id": 75,
+        "confidence_rationale": "Continuous coach monologue (CTA/outro). Speaker consistent with surrounding segments. No actual speaker collapse evident; all segments are coach commentary."
+      },
+      "overall_confidence": 0.9222,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 73,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 73,
+        "transcript_confidence": 0.93,
+        "speaker_confidence": 0.95,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 71,
+        "contamination_end_segment_id": 75,
+        "confidence_rationale": "CTA segment clearly coach speech. Speaker label consistent. Phase may be 'outro' rather than 'commentary' but transcript text is reliable."
+      },
+      "overall_confidence": 0.9273,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 74,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 74,
+        "transcript_confidence": 0.93,
+        "speaker_confidence": 0.95,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 72,
+        "contamination_end_segment_id": 75,
+        "confidence_rationale": "Short CTA line, speaker clearly coach. No evidence of speaker collapse in context; all segments share same speaker continuously."
+      },
+      "overall_confidence": 0.9273,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 75,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 75,
+        "transcript_confidence": 0.9,
+        "speaker_confidence": 0.95,
+        "phase_confidence": 0.75,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 73,
+        "contamination_end_segment_id": 75,
+        "confidence_rationale": "Brief closing phrase. Speaker consistent. Phase could be outro/transition rather than commentary. No real speaker ambiguity detected."
+      },
+      "overall_confidence": 0.902,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 40,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 40,
+        "transcript_confidence": 0.92,
+        "speaker_confidence": 0.88,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 40,
+        "contamination_end_segment_id": 43,
+        "confidence_rationale": "'Hey excuse me' is a clear coach opener; transcript clean but speaker_id collapsed with target segments nearby"
+      },
+      "overall_confidence": 0.9089,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 41,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 41,
+        "transcript_confidence": 0.85,
+        "speaker_confidence": 0.6,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 40,
+        "contamination_end_segment_id": 43,
+        "confidence_rationale": "Short 'Hi' after opener likely coach continuing, but 3 consecutive 'Hi' segments on same SPEAKER_00 make attribution uncertain"
+      },
+      "overall_confidence": 0.8,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 42,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 42,
+        "transcript_confidence": 0.85,
+        "speaker_confidence": 0.55,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 40,
+        "contamination_end_segment_id": 44,
+        "confidence_rationale": "Labeled target but same SPEAKER_00 as coach; conversational logic supports target response but diarization provides no evidence"
+      },
+      "overall_confidence": 0.7905,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 43,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 43,
+        "transcript_confidence": 0.8,
+        "speaker_confidence": 0.35,
+        "phase_confidence": 0.75,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 41,
+        "contamination_end_segment_id": 44,
+        "confidence_rationale": "Third consecutive 'Hi' on SPEAKER_00; could be coach or target; no diarization signal to disambiguate; very low speaker confidence"
+      },
+      "overall_confidence": 0.712,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 44,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 44,
+        "transcript_confidence": 0.9,
+        "speaker_confidence": 0.82,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 42,
+        "contamination_end_segment_id": 45,
+        "confidence_rationale": "Compliment delivery is strong coach signal; transcript clear; SPEAKER_00 collapse still present but content disambiguates well"
+      },
+      "overall_confidence": 0.8823,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 45,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 45,
+        "transcript_confidence": 0.9,
+        "speaker_confidence": 0.8,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 43,
+        "contamination_end_segment_id": 47,
+        "confidence_rationale": "'Oh thank you so much' is natural target response to compliment; strong conversational evidence despite collapsed SPEAKER_00"
+      },
+      "overall_confidence": 0.8785,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 47,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 47,
+        "transcript_confidence": 0.88,
+        "speaker_confidence": 0.7,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 45,
+        "contamination_end_segment_id": 49,
+        "confidence_rationale": "'Thank you' after outfit compliment (seg 46) fits target; SPEAKER_00 collapsed but seg 46 is SPEAKER_01 providing some boundary signal"
+      },
+      "overall_confidence": 0.8418,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 48,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 48,
+        "transcript_confidence": 0.88,
+        "speaker_confidence": 0.72,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 46,
+        "contamination_end_segment_id": 50,
+        "confidence_rationale": "'No problem' after target's 'Thank you' fits coach; conversational flow supports role but SPEAKER_00 collapse undermines diarization trust"
+      },
+      "overall_confidence": 0.8456,
+      "repair_accepted": false,
+      "anchor_allowed": true,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 49,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 49,
+        "transcript_confidence": 0.85,
+        "speaker_confidence": 0.45,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 48,
+        "contamination_end_segment_id": 57,
+        "confidence_rationale": "'How's your day going?' fits coach role contextually but speaker_id collapsed to SPEAKER_00 across entire window. Cannot reliably distinguish coach vs target from diarization alone."
+      },
+      "overall_confidence": 0.7715,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 50,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 50,
+        "transcript_confidence": 0.8,
+        "speaker_confidence": 0.5,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 48,
+        "contamination_end_segment_id": 57,
+        "confidence_rationale": "'Good' is a plausible target response to 'How's your day going?' but speaker_id is SPEAKER_00 same as surrounding coach segments. Role assignment unreliable."
+      },
+      "overall_confidence": 0.743,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 52,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 52,
+        "transcript_confidence": 0.8,
+        "speaker_confidence": 0.4,
+        "phase_confidence": 0.75,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 48,
+        "contamination_end_segment_id": 57,
+        "confidence_rationale": "'You're beautiful' fits coach compliment pattern but all segments 48-62 collapsed to SPEAKER_00. No diarization signal to disambiguate. Repair unsafe."
+      },
+      "overall_confidence": 0.7215,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 53,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 53,
+        "transcript_confidence": 0.8,
+        "speaker_confidence": 0.45,
+        "phase_confidence": 0.75,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 48,
+        "contamination_end_segment_id": 57,
+        "confidence_rationale": "'Thank you' contextually fits target responding to compliment, but speaker_id indistinguishable from coach segments in collapsed window."
+      },
+      "overall_confidence": 0.731,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 54,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 54,
+        "transcript_confidence": 0.75,
+        "speaker_confidence": 0.35,
+        "phase_confidence": 0.7,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 48,
+        "contamination_end_segment_id": 57,
+        "confidence_rationale": "Content suggests coach teaching/reflecting but seg 54-57 blend direct speech with meta-commentary. Speaker collapse makes role assignment speculative."
+      },
+      "overall_confidence": 0.6715,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 55,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 55,
+        "transcript_confidence": 0.7,
+        "speaker_confidence": 0.35,
+        "phase_confidence": 0.65,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 48,
+        "contamination_end_segment_id": 57,
+        "confidence_rationale": "Coaching meta-commentary tone but no punctuation, run-on ASR. Could be coach narrating to camera. Speaker collapse prevents confident assignment."
+      },
+      "overall_confidence": 0.631,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 56,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 56,
+        "transcript_confidence": 0.65,
+        "speaker_confidence": 0.3,
+        "phase_confidence": 0.6,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 48,
+        "contamination_end_segment_id": 57,
+        "confidence_rationale": "Mixed direct speech and narration in one segment ('what's your name it's a pleasure meeting you'). Likely coach quoting himself but boundaries unclear. High contamination."
+      },
+      "overall_confidence": 0.581,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 57,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 57,
+        "transcript_confidence": 0.55,
+        "speaker_confidence": 0.3,
+        "phase_confidence": 0.55,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 55,
+        "contamination_end_segment_id": 60,
+        "confidence_rationale": "Run-on ASR merges multiple utterances and speakers. Contains both name exchange and post-approach narration. Speaker and segment boundaries unrecoverable."
+      },
+      "overall_confidence": 0.5025,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 58,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 58,
+        "transcript_confidence": 0.7,
+        "speaker_confidence": 0.25,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 56,
+        "contamination_end_segment_id": 63,
+        "confidence_rationale": "Coach narrates failed first attempt to woman; likely her interjections merged in but boundaries unrecoverable from text alone"
+      },
+      "overall_confidence": 0.6195,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 59,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 59,
+        "transcript_confidence": 0.7,
+        "speaker_confidence": 0.3,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 57,
+        "contamination_end_segment_id": 63,
+        "confidence_rationale": "Continuation of coach explaining missed approach; plausibly single-speaker but woman's reactions may be collapsed in"
+      },
+      "overall_confidence": 0.629,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 60,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 60,
+        "transcript_confidence": 0.7,
+        "speaker_confidence": 0.3,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 58,
+        "contamination_end_segment_id": 63,
+        "confidence_rationale": "Coach self-critiquing his weak opener; content consistent with coach but no way to confirm woman didn't interject"
+      },
+      "overall_confidence": 0.629,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 61,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 61,
+        "transcript_confidence": 0.65,
+        "speaker_confidence": 0.25,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 59,
+        "contamination_end_segment_id": 63,
+        "confidence_rationale": "'creepy and weird' is coach self-deprecation; 'you know what let' transitions suggest continuous coach speech but collapsed turns possible"
+      },
+      "overall_confidence": 0.5815,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 62,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 62,
+        "transcript_confidence": 0.65,
+        "speaker_confidence": 0.3,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 60,
+        "contamination_end_segment_id": 63,
+        "confidence_rationale": "Coach describes second approach with smile; 'and then you stopped' confirms addressing woman, but her response likely absorbed into next seg"
+      },
+      "overall_confidence": 0.591,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 63,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 63,
+        "transcript_confidence": 0.6,
+        "speaker_confidence": 0.2,
+        "phase_confidence": 0.7,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 61,
+        "contamination_end_segment_id": 63,
+        "confidence_rationale": "Clear multi-speaker collapse: 'oh thank you again'=woman, 'yeah no problem'=coach, 'okay so there'=coach post-approach debrief; cannot split reliably"
+      },
+      "overall_confidence": 0.529,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    }
+  ]
+}

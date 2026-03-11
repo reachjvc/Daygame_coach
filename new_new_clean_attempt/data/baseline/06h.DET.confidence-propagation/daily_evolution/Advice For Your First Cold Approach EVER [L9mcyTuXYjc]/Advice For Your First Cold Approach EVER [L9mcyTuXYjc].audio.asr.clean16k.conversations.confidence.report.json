@@ -1,0 +1,72 @@
+{
+  "video_id": "L9mcyTuXYjc",
+  "generated_at": "2026-03-05T18:13:10Z",
+  "pipeline_version": "06h.DET.confidence-propagation-v2.1",
+  "model_version": "v2.1",
+  "video_type": "talking_head",
+  "axis_weights": {
+    "transcript": 0.9,
+    "speaker": 0.05,
+    "phase": 0.05
+  },
+  "damage_type_counts": {
+    "seed_transcript_artifact": 3,
+    "seed_low_quality_segment": 1
+  },
+  "quality_repairs": {
+    "artifact_accepted": 3,
+    "artifact_rejected": 0,
+    "lq_accepted": 26,
+    "lq_rejected": 4
+  },
+  "summary": {
+    "segments_total": 111,
+    "tier_counts": {
+      "high": 110,
+      "medium": 1,
+      "low": 0
+    },
+    "segments_with_repairs": 29,
+    "segments_repaired_by_06e": 29,
+    "repair_credit_segments": 3,
+    "conversations_total": 0,
+    "band_high_threshold": 0.8,
+    "band_medium_threshold": 0.6
+  },
+  "quality_gate": {
+    "blocked": false,
+    "reason_codes": [],
+    "inputs": {
+      "segment_count": 111,
+      "artifact_total": 3,
+      "low_quality_total": 30,
+      "low_quality_total_ratio": 0.2703,
+      "artifact_unrepaired": 0,
+      "low_quality_unrepaired": 4,
+      "low_quality_unrepaired_ratio": 0.036,
+      "thresholds": {
+        "lq_total_abs": 140,
+        "lq_total_ratio": 0.4,
+        "lq_total_ratio_min_count": 90,
+        "lq_unrepaired_abs": 120,
+        "lq_unrepaired_ratio": 0.35,
+        "lq_unrepaired_ratio_min_count": 80,
+        "artifact_unrepaired_abs": 30
+      }
+    }
+  },
+  "conversation_summaries": [],
+  "inputs": {
+    "stage06d": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.conversations.json",
+    "damage_map": "/home/jonaswsl/projects/daygame-coach/data/06f.DET.damage-map/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.damage-map.json",
+    "damage_adjudication": "/home/jonaswsl/projects/daygame-coach/data/06g.LLM.damage-adjudicator/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.damage-adjudication.json",
+    "damage_adjudication_skipped": true,
+    "quality_check": "loaded"
+  },
+  "confidence_trace": {
+    "version": 1,
+    "path": "/home/jonaswsl/projects/daygame-coach/data/06h.DET.confidence-propagation/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.conversations.confidence.trace.json",
+    "segments": 111,
+    "conversations": 0
+  }
+}

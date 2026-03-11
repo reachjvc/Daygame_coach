@@ -1,0 +1,2800 @@
+{
+  "source_audio": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+  "audio_sha256": "c88875448279285364b563bacd915c777fca083836861d54b9d77d4e389a5a2f",
+  "source_timestamps": "/home/jonaswsl/projects/daygame-coach/data/04.EXT.diarize/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].full.json",
+  "processing": {
+    "sample_rate": 22050,
+    "feature_extractor": "librosa",
+    "pitch_range_hz": [
+      65.0,
+      500.0
+    ],
+    "pitch_method": "pyin",
+    "pitch_trim_percentile": 2.0,
+    "embedder": "resemblyzer",
+    "embedder_sample_rate": 16000,
+    "min_embed_raw_sec": 0.8,
+    "min_embed_window_sec": 1.2,
+    "embed_pad_sec": 0.25,
+    "store_embedding_vectors": false
+  },
+  "total_duration_sec": 244.814,
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 0.821,
+      "duration_sec": 0.821,
+      "text": "thought you looked really cute",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.05426025390625,
+          "std_hz": 0.28194740414619446,
+          "range_hz": 1.5193023681640625,
+          "direction": -0.025537943722578182
+        },
+        "energy": {
+          "dynamics_db": 7.108719825744629
+        },
+        "tempo": {
+          "syllable_rate": 3.654080389768575
+        },
+        "spectral": {
+          "brightness_hz": 1264.433976846264
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9722222222222222
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 0.0,
+        "end": 0.821
+      }
+    },
+    {
+      "start": 3.08,
+      "end": 10.62,
+      "duration_sec": 7.54,
+      "text": "nice outfit guys the lack of certainty and no smile communicates this dude's creepy this dude's",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 83.63488006591797,
+          "std_hz": 45.45169448852539,
+          "range_hz": 170.68255615234375,
+          "direction": 0.008154782057608946
+        },
+        "energy": {
+          "dynamics_db": 7.738773345947266
+        },
+        "tempo": {
+          "syllable_rate": 5.172413793103449
+        },
+        "spectral": {
+          "brightness_hz": 1419.2574763392392
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9507692307692308
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 3.08,
+        "end": 10.62
+      }
+    },
+    {
+      "start": 10.6,
+      "end": 16.0,
+      "duration_sec": 5.4,
+      "text": "not confident this dude's potentially a threat i got rejected i suck i don't even think she",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 83.49191284179688,
+          "std_hz": 48.78097915649414,
+          "range_hz": 173.42105102539062,
+          "direction": 0.40770491057907454
+        },
+        "energy": {
+          "dynamics_db": 7.5347208976745605
+        },
+        "tempo": {
+          "syllable_rate": 6.111111111111111
+        },
+        "spectral": {
+          "brightness_hz": 1502.3324368546946
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9656652360515021
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 10.6,
+        "end": 16.0
+      }
+    },
+    {
+      "start": 15.98,
+      "end": 20.38,
+      "duration_sec": 4.4,
+      "text": "actually heard me i could probably still go up and give her a genuine compliment now",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 121.11648559570312,
+          "std_hz": 60.398990631103516,
+          "range_hz": 153.63307189941406,
+          "direction": 0.1234677575632369
+        },
+        "energy": {
+          "dynamics_db": 9.045914888381958
+        },
+        "tempo": {
+          "syllable_rate": 6.1363636363636385
+        },
+        "spectral": {
+          "brightness_hz": 1471.6195349624672
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.968421052631579
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 15.98,
+        "end": 20.38
+      }
+    },
+    {
+      "start": 20.36,
+      "end": 26.02,
+      "duration_sec": 5.66,
+      "text": "hey excuse me hi the biggest mistakes i see is that dudes just don't talk loud enough they don't",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 100.12663269042969,
+          "std_hz": 39.510223388671875,
+          "range_hz": 108.5291748046875,
+          "direction": 0.4167015165088349
+        },
+        "energy": {
+          "dynamics_db": 15.328917145729065
+        },
+        "tempo": {
+          "syllable_rate": 5.123674911660777
+        },
+        "spectral": {
+          "brightness_hz": 1354.6806857251865
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9795081967213115
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 20.36,
+        "end": 26.02
+      }
+    },
+    {
+      "start": 26.0,
+      "end": 31.78,
+      "duration_sec": 5.78,
+      "text": "smile or the rhythm and pace that they're talking at is very awkward and creepy so i'm going to give",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 109.76324462890625,
+          "std_hz": 37.905982971191406,
+          "range_hz": 96.908447265625,
+          "direction": 0.13425767580991949
+        },
+        "energy": {
+          "dynamics_db": 8.441818237304688
+        },
+        "tempo": {
+          "syllable_rate": 5.363321799307958
+        },
+        "spectral": {
+          "brightness_hz": 1258.1351396378448
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9196787148594378
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 26.0,
+        "end": 31.78
+      }
+    },
+    {
+      "start": 31.76,
+      "end": 38.54,
+      "duration_sec": 6.78,
+      "text": "a really creepy awkward compliment right now and watch how it doesn't really hit uh i thought you",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 75.31595611572266,
+          "std_hz": 31.689599990844727,
+          "range_hz": 113.61396789550781,
+          "direction": 0.2032359107780858
+        },
+        "energy": {
+          "dynamics_db": 11.170757293701172
+        },
+        "tempo": {
+          "syllable_rate": 5.309734513274338
+        },
+        "spectral": {
+          "brightness_hz": 1021.9515288269932
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9383561643835616
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 31.76,
+        "end": 38.54
+      }
+    },
+    {
+      "start": 38.52,
+      "end": 44.64,
+      "duration_sec": 6.12,
+      "text": "looked nice i thought you looked nice take care so you notice that like i don't know if the camera",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 163.4833526611328,
+          "std_hz": 12.828670501708984,
+          "range_hz": 41.26051330566406,
+          "direction": -0.07515117361837767
+        },
+        "energy": {
+          "dynamics_db": 12.094594955444336
+        },
+        "tempo": {
+          "syllable_rate": 4.248366013071897
+        },
+        "spectral": {
+          "brightness_hz": 1673.1392156499721
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9886363636363636
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 38.52,
+        "end": 44.64
+      }
+    },
+    {
+      "start": 44.62,
+      "end": 49.8,
+      "duration_sec": 5.18,
+      "text": "caught it but the moment i said it she ejected and the reason behind that is because there was",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 103.25985717773438,
+          "std_hz": 42.485836029052734,
+          "range_hz": 128.65806579589844,
+          "direction": 0.7088851683434082
+        },
+        "energy": {
+          "dynamics_db": 6.030360221862793
+        },
+        "tempo": {
+          "syllable_rate": 6.94980694980695
+        },
+        "spectral": {
+          "brightness_hz": 1283.1545423118316
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9196428571428571
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 44.62,
+        "end": 49.8
+      }
+    },
+    {
+      "start": 49.78,
+      "end": 55.42,
+      "duration_sec": 5.64,
+      "text": "just no smile there's no enthusiasm there's no emotion being created when you say i like your",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 127.20392608642578,
+          "std_hz": 42.448883056640625,
+          "range_hz": 122.06137084960938,
+          "direction": 0.0727768707215605
+        },
+        "energy": {
+          "dynamics_db": 6.236745834350586
+        },
+        "tempo": {
+          "syllable_rate": 6.028368794326241
+        },
+        "spectral": {
+          "brightness_hz": 1321.5406472034556
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9176954732510288
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 49.78,
+        "end": 55.42
+      }
+    },
+    {
+      "start": 55.4,
+      "end": 61.1,
+      "duration_sec": 5.7,
+      "text": "look i thought you looked really cute nice jacket so that's an example of delivery but let's",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 108.48152923583984,
+          "std_hz": 46.39545440673828,
+          "range_hz": 112.58523559570312,
+          "direction": 0.06583457771431007
+        },
+        "energy": {
+          "dynamics_db": 7.011218070983887
+        },
+        "tempo": {
+          "syllable_rate": 6.491228070175436
+        },
+        "spectral": {
+          "brightness_hz": 1409.3934527086365
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 55.4,
+        "end": 61.1
+      }
+    },
+    {
+      "start": 61.08,
+      "end": 64.38,
+      "duration_sec": 3.3,
+      "text": "do another example of a bad compliment which would be like i'm not even looking at them they barely",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 161.2401885986328,
+          "std_hz": 20.662357330322266,
+          "range_hz": 96.03857421875,
+          "direction": -0.42392781593607615
+        },
+        "energy": {
+          "dynamics_db": 5.246556282043457
+        },
+        "tempo": {
+          "syllable_rate": 6.969696969696976
+        },
+        "spectral": {
+          "brightness_hz": 1227.0385725959097
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.958041958041958
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 61.08,
+        "end": 64.38
+      }
+    },
+    {
+      "start": 64.36,
+      "end": 73.02,
+      "duration_sec": 8.66,
+      "text": "hear me hey excuse me excuse me i thought you looked really cute because of the distance i",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 114.1190185546875,
+          "std_hz": 43.70252990722656,
+          "range_hz": 117.78887939453125,
+          "direction": -0.31174754306072316
+        },
+        "energy": {
+          "dynamics_db": 26.29891014099121
+        },
+        "tempo": {
+          "syllable_rate": 3.5796766743648973
+        },
+        "spectral": {
+          "brightness_hz": 1098.3137134533672
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9168900804289544
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 64.36,
+        "end": 73.02
+      }
+    },
+    {
+      "start": 73.0,
+      "end": 77.7,
+      "duration_sec": 4.7,
+      "text": "opened that and how weak i opened i don't know if the camera caught it but she was like this",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 111.33344268798828,
+          "std_hz": 51.01093673706055,
+          "range_hz": 119.91278076171875,
+          "direction": -0.6933505102847027
+        },
+        "energy": {
+          "dynamics_db": 7.408982276916504
+        },
+        "tempo": {
+          "syllable_rate": 5.9574468085106345
+        },
+        "spectral": {
+          "brightness_hz": 1295.047547806268
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 73.0,
+        "end": 77.7
+      }
+    },
+    {
+      "start": 78.44,
+      "end": 85.1,
+      "duration_sec": 6.66,
+      "text": "she looked back and she never stopped walking the weakness of my voice the lack of certainty and the",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 99.79474639892578,
+          "std_hz": 60.461605072021484,
+          "range_hz": 172.0478515625,
+          "direction": 0.49970325058253595
+        },
+        "energy": {
+          "dynamics_db": 9.042900085449219
+        },
+        "tempo": {
+          "syllable_rate": 4.654654654654657
+        },
+        "spectral": {
+          "brightness_hz": 1552.0406407413539
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 78.44,
+        "end": 85.1
+      }
+    },
+    {
+      "start": 85.08,
+      "end": 87.48,
+      "duration_sec": 2.4,
+      "text": "that no smile communicates,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 121.61747741699219,
+          "std_hz": 51.2410774230957,
+          "range_hz": 132.04315185546875,
+          "direction": -2.1948640660723258
+        },
+        "energy": {
+          "dynamics_db": 6.505790710449219
+        },
+        "tempo": {
+          "syllable_rate": 5.83333333333332
+        },
+        "spectral": {
+          "brightness_hz": 1492.462741148234
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 85.08,
+        "end": 87.48
+      }
+    },
+    {
+      "start": 88.24,
+      "end": 89.9,
+      "duration_sec": 1.66,
+      "text": "this dude's creepy, this dude's not competent,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 217.62022399902344,
+          "std_hz": 54.62939453125,
+          "range_hz": 229.4387969970703,
+          "direction": -2.0461597790661847
+        },
+        "energy": {
+          "dynamics_db": 5.855396270751953
+        },
+        "tempo": {
+          "syllable_rate": 6.02409638554213
+        },
+        "spectral": {
+          "brightness_hz": 1783.9765217752997
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 88.24,
+        "end": 89.9
+      }
+    },
+    {
+      "start": 90.08,
+      "end": 91.641,
+      "duration_sec": 1.561,
+      "text": "this dude's potentially a threat.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 172.40646362304688,
+          "std_hz": 70.07421112060547,
+          "range_hz": 170.68255615234375,
+          "direction": 2.520070940457658
+        },
+        "energy": {
+          "dynamics_db": 7.570550918579102
+        },
+        "tempo": {
+          "syllable_rate": 7.046764894298494
+        },
+        "spectral": {
+          "brightness_hz": 1672.6173374535229
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 90.08,
+        "end": 91.641
+      }
+    },
+    {
+      "start": 91.88,
+      "end": 93.241,
+      "duration_sec": 1.361,
+      "text": "Here's gonna be another shitty compliment.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 148.66436767578125,
+          "std_hz": 47.09491729736328,
+          "range_hz": 156.6778564453125,
+          "direction": 1.0836667930438517
+        },
+        "energy": {
+          "dynamics_db": 5.128461837768555
+        },
+        "tempo": {
+          "syllable_rate": 7.347538574577494
+        },
+        "spectral": {
+          "brightness_hz": 1469.3073892662283
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9830508474576272
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 91.88,
+        "end": 93.241
+      }
+    },
+    {
+      "start": 93.56,
+      "end": 94.601,
+      "duration_sec": 1.041,
+      "text": "Nice outfit, guys.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 148.24191284179688,
+          "std_hz": 16.61672592163086,
+          "range_hz": 39.263671875,
+          "direction": -2.0621993617007606
+        },
+        "energy": {
+          "dynamics_db": 10.185586929321289
+        },
+        "tempo": {
+          "syllable_rate": 5.763688760806934
+        },
+        "spectral": {
+          "brightness_hz": 1479.8000959213798
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 93.56,
+        "end": 94.601
+      }
+    },
+    {
+      "start": 96.02,
+      "end": 98.08,
+      "duration_sec": 2.06,
+      "text": "They didn't even respond either,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 106.55155944824219,
+          "std_hz": 40.64690399169922,
+          "range_hz": 104.56576538085938,
+          "direction": 1.112691257831388
+        },
+        "energy": {
+          "dynamics_db": 5.808126449584961
+        },
+        "tempo": {
+          "syllable_rate": 6.7961165048543615
+        },
+        "spectral": {
+          "brightness_hz": 1319.0256881920996
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9101123595505618
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 96.02,
+        "end": 98.08
+      }
+    },
+    {
+      "start": 98.14,
+      "end": 99.98,
+      "duration_sec": 1.84,
+      "text": "because I'm talking at a low volume.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 6.105963706970215
+        },
+        "tempo": {
+          "syllable_rate": 7.065217391304334
+        },
+        "spectral": {
+          "brightness_hz": 1227.5549368152163
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.85
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 98.14,
+        "end": 99.98
+      }
+    },
+    {
+      "start": 100.18,
+      "end": 101.821,
+      "duration_sec": 1.641,
+      "text": "Hopefully the camera caught their reactions.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.80348205566406,
+          "std_hz": 2.6276462078094482,
+          "range_hz": 10.532966613769531,
+          "direction": -0.03789329479439207
+        },
+        "energy": {
+          "dynamics_db": 3.1628952026367188
+        },
+        "tempo": {
+          "syllable_rate": 8.531383302864153
+        },
+        "spectral": {
+          "brightness_hz": 1033.9220062482402
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.971830985915493
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 100.18,
+        "end": 101.821
+      }
+    },
+    {
+      "start": 102.12,
+      "end": 104.82,
+      "duration_sec": 2.7,
+      "text": "There was zero acknowledgement, zero reaction,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 116.04700469970703,
+          "std_hz": 45.856876373291016,
+          "range_hz": 126.4337158203125,
+          "direction": 0.2589706580356419
+        },
+        "energy": {
+          "dynamics_db": 4.118565559387207
+        },
+        "tempo": {
+          "syllable_rate": 6.2962962962963225
+        },
+        "spectral": {
+          "brightness_hz": 1368.3522505812225
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9829059829059829
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 102.12,
+        "end": 104.82
+      }
+    },
+    {
+      "start": 104.98,
+      "end": 107.12,
+      "duration_sec": 2.14,
+      "text": "and it's all in the vibe and the delivery",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 6.423988342285156
+        },
+        "tempo": {
+          "syllable_rate": 5.6074766355140175
+        },
+        "spectral": {
+          "brightness_hz": 1178.816572259465
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9032258064516129
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 104.98,
+        "end": 107.12
+      }
+    },
+    {
+      "start": 107.1,
+      "end": 109.06,
+      "duration_sec": 1.96,
+      "text": "and the eye contact and the smile",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 67.48040008544922,
+          "std_hz": 3.5699374675750732,
+          "range_hz": 10.97052001953125,
+          "direction": -0.07719690776745951
+        },
+        "energy": {
+          "dynamics_db": 3.381350517272949
+        },
+        "tempo": {
+          "syllable_rate": 8.673469387755066
+        },
+        "spectral": {
+          "brightness_hz": 1325.3335778290084
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9882352941176471
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 107.1,
+        "end": 109.06
+      }
+    },
+    {
+      "start": 109.04,
+      "end": 111.24,
+      "duration_sec": 2.2,
+      "text": "that creates that emotion within people.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 161.22596740722656,
+          "std_hz": 15.099824905395508,
+          "range_hz": 61.385711669921875,
+          "direction": 0.009209739941809552
+        },
+        "energy": {
+          "dynamics_db": 6.385663986206055
+        },
+        "tempo": {
+          "syllable_rate": 7.272727272727311
+        },
+        "spectral": {
+          "brightness_hz": 1450.4678526648167
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8736842105263158
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 109.04,
+        "end": 111.24
+      }
+    },
+    {
+      "start": 111.36,
+      "end": 113.001,
+      "duration_sec": 1.641,
+      "text": "Because you could say something very simple",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 5.270088195800781
+        },
+        "tempo": {
+          "syllable_rate": 6.093845216331485
+        },
+        "spectral": {
+          "brightness_hz": 1607.3340724525056
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9295774647887324
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 111.36,
+        "end": 113.001
+      }
+    },
+    {
+      "start": 112.98,
+      "end": 119.68,
+      "duration_sec": 6.7,
+      "text": "and get a great response you could say the same words with a shit delivery and get completely",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 143.03863525390625,
+          "std_hz": 132.09259033203125,
+          "range_hz": 411.84210205078125,
+          "direction": 0.7011265949921829
+        },
+        "energy": {
+          "dynamics_db": 8.068132400512695
+        },
+        "tempo": {
+          "syllable_rate": 5.52238805970149
+        },
+        "spectral": {
+          "brightness_hz": 1479.1282144112656
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9204152249134948
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 112.98,
+        "end": 119.68
+      }
+    },
+    {
+      "start": 119.66,
+      "end": 125.04,
+      "duration_sec": 5.38,
+      "text": "ignored like how how that just happened so i'll give another one here this will be kind of shit",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 117.50360107421875,
+          "std_hz": 47.914180755615234,
+          "range_hz": 112.58523559570312,
+          "direction": 0.2833416922933862
+        },
+        "energy": {
+          "dynamics_db": 8.70237922668457
+        },
+        "tempo": {
+          "syllable_rate": 7.434944237918202
+        },
+        "spectral": {
+          "brightness_hz": 1392.9683249207949
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8879310344827587
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 119.66,
+        "end": 125.04
+      }
+    },
+    {
+      "start": 125.02,
+      "end": 133.28,
+      "duration_sec": 8.26,
+      "text": "too i'm barely gonna look at her i like your dress no response i got rejected i suck no you",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.46446990966797,
+          "std_hz": 2.1352131366729736,
+          "range_hz": 13.196624755859375,
+          "direction": -1.3457828649674264e-05
+        },
+        "energy": {
+          "dynamics_db": 11.923381805419922
+        },
+        "tempo": {
+          "syllable_rate": 4.842615012106535
+        },
+        "spectral": {
+          "brightness_hz": 1109.3071744980423
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9887640449438202
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 125.02,
+        "end": 133.28
+      }
+    },
+    {
+      "start": 133.26,
+      "end": 137.58,
+      "duration_sec": 4.32,
+      "text": "don't suck dude it's just your voice is weak i don't even think she actually heard me i don't",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 118.45187377929688,
+          "std_hz": 72.4083480834961,
+          "range_hz": 174.80221557617188,
+          "direction": 2.0150276233985887
+        },
+        "energy": {
+          "dynamics_db": 7.398877143859863
+        },
+        "tempo": {
+          "syllable_rate": 6.94444444444441
+        },
+        "spectral": {
+          "brightness_hz": 1462.8165767555838
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9893048128342246
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 133.26,
+        "end": 137.58
+      }
+    },
+    {
+      "start": 137.56,
+      "end": 139.041,
+      "duration_sec": 1.481,
+      "text": "I don't even think she knows I'm talking to her.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 163.81883239746094,
+          "std_hz": 26.09950828552246,
+          "range_hz": 106.72802734375,
+          "direction": -1.164714114736659
+        },
+        "energy": {
+          "dynamics_db": 4.581384658813477
+        },
+        "tempo": {
+          "syllable_rate": 8.777852802160735
+        },
+        "spectral": {
+          "brightness_hz": 1564.1608274513196
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 137.56,
+        "end": 139.041
+      }
+    },
+    {
+      "start": 139.44,
+      "end": 141.3,
+      "duration_sec": 1.86,
+      "text": "I could probably still go up",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 205.72540283203125,
+          "std_hz": 12.019118309020996,
+          "range_hz": 39.89561462402344,
+          "direction": -0.41777790868629244
+        },
+        "energy": {
+          "dynamics_db": 13.769434928894043
+        },
+        "tempo": {
+          "syllable_rate": 6.451612903225759
+        },
+        "spectral": {
+          "brightness_hz": 1609.881215437157
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9382716049382716
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 139.44,
+        "end": 141.3
+      }
+    },
+    {
+      "start": 141.28,
+      "end": 143.66,
+      "duration_sec": 2.38,
+      "text": "and give her a genuine compliment now.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 164.29055786132812,
+          "std_hz": 20.341800689697266,
+          "range_hz": 69.00765991210938,
+          "direction": -0.11310160656379556
+        },
+        "energy": {
+          "dynamics_db": 8.415351867675781
+        },
+        "tempo": {
+          "syllable_rate": 5.042016806722699
+        },
+        "spectral": {
+          "brightness_hz": 1259.461548443466
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.970873786407767
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 141.28,
+        "end": 143.66
+      }
+    },
+    {
+      "start": 143.84,
+      "end": 144.501,
+      "duration_sec": 0.661,
+      "text": "Let me just show you.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 175.6259765625,
+          "std_hz": 5.301583766937256,
+          "range_hz": 13.07122802734375,
+          "direction": -2.477923722700641
+        },
+        "energy": {
+          "dynamics_db": 2.399629592895508
+        },
+        "tempo": {
+          "syllable_rate": 9.077155824508303
+        },
+        "spectral": {
+          "brightness_hz": 1564.0404985135651
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 143.84,
+        "end": 144.501
+      }
+    },
+    {
+      "start": 145.78,
+      "end": 147.321,
+      "duration_sec": 1.541,
+      "text": "She might be a little creeped out already",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": -4.442956397580986e-16
+        },
+        "energy": {
+          "dynamics_db": 6.048137664794922
+        },
+        "tempo": {
+          "syllable_rate": 6.489292667099299
+        },
+        "spectral": {
+          "brightness_hz": 1262.811671527595
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9552238805970149
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 145.78,
+        "end": 147.321
+      }
+    },
+    {
+      "start": 147.3,
+      "end": 148.081,
+      "duration_sec": 0.781,
+      "text": "because of what I did.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.4665298461914,
+          "std_hz": 1.3995826244354248,
+          "range_hz": 4.665275573730469,
+          "direction": 0.4370556224476235
+        },
+        "energy": {
+          "dynamics_db": 2.9238080978393555
+        },
+        "tempo": {
+          "syllable_rate": 8.962868117797953
+        },
+        "spectral": {
+          "brightness_hz": 1100.7581471177625
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 147.3,
+        "end": 148.081
+      }
+    },
+    {
+      "start": 148.4,
+      "end": 149.341,
+      "duration_sec": 0.941,
+      "text": "Well, let's just see.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 66.12667083740234,
+          "std_hz": 2.116422414779663,
+          "range_hz": 5.4747467041015625,
+          "direction": -0.6774474635268706
+        },
+        "energy": {
+          "dynamics_db": 7.346282958984375
+        },
+        "tempo": {
+          "syllable_rate": 7.438894792773625
+        },
+        "spectral": {
+          "brightness_hz": 1939.62484723578
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.975609756097561
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 148.4,
+        "end": 149.341
+      }
+    },
+    {
+      "start": 149.48,
+      "end": 151.48,
+      "duration_sec": 2.0,
+      "text": "I'll show you guys the difference in responses though.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 66.01811218261719,
+          "std_hz": 1.5302335023880005,
+          "range_hz": 5.883003234863281,
+          "direction": 0.06001013992076915
+        },
+        "energy": {
+          "dynamics_db": 3.8688411712646484
+        },
+        "tempo": {
+          "syllable_rate": 9.5
+        },
+        "spectral": {
+          "brightness_hz": 1332.7707669365254
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9770114942528736
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 149.48,
+        "end": 151.48
+      }
+    },
+    {
+      "start": 151.7,
+      "end": 152.601,
+      "duration_sec": 0.901,
+      "text": "Hey, excuse me.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 131.78367614746094,
+          "std_hz": 55.747379302978516,
+          "range_hz": 125.33114624023438,
+          "direction": 3.4450788087873825
+        },
+        "energy": {
+          "dynamics_db": 5.4714555740356445
+        },
+        "tempo": {
+          "syllable_rate": 6.659267480577059
+        },
+        "spectral": {
+          "brightness_hz": 1591.0256434579971
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 151.7,
+        "end": 152.601
+      }
+    },
+    {
+      "start": 152.8,
+      "end": 153.183,
+      "duration_sec": 0.383,
+      "text": "Hi.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 10.759475708007812
+        },
+        "tempo": {
+          "syllable_rate": 7.832898172324141
+        },
+        "spectral": {
+          "brightness_hz": 1623.785136086654
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 152.8,
+        "end": 153.183
+      }
+    },
+    {
+      "start": 153.56,
+      "end": 153.942,
+      "duration_sec": 0.382,
+      "text": "Hi.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 67.78743743896484,
+          "std_hz": 3.8567769527435303,
+          "range_hz": 12.2984619140625,
+          "direction": -0.5697184618781621
+        },
+        "energy": {
+          "dynamics_db": 10.260066986083984
+        },
+        "tempo": {
+          "syllable_rate": 7.853403141361154
+        },
+        "spectral": {
+          "brightness_hz": 1098.4245724595078
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 153.56,
+        "end": 153.942
+      }
+    },
+    {
+      "start": 154.02,
+      "end": 154.323,
+      "duration_sec": 0.303,
+      "text": "Hi.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 3.136029299059704e-15
+        },
+        "energy": {
+          "dynamics_db": 3.252614974975586
+        },
+        "tempo": {
+          "syllable_rate": 6.60066006600666
+        },
+        "spectral": {
+          "brightness_hz": 1404.666182615382
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 154.02,
+        "end": 154.323
+      }
+    },
+    {
+      "start": 154.3,
+      "end": 156.54,
+      "duration_sec": 2.24,
+      "text": "Can I just say, I thought you looked really nice today.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 476.8580017089844,
+          "std_hz": 3.884052276611328,
+          "range_hz": 8.23931884765625,
+          "direction": 6.8322326660156305
+        },
+        "energy": {
+          "dynamics_db": 5.163885116577148
+        },
+        "tempo": {
+          "syllable_rate": 6.250000000000054
+        },
+        "spectral": {
+          "brightness_hz": 1367.794220619723
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8969072164948454
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 154.3,
+        "end": 156.54
+      }
+    },
+    {
+      "start": 156.84,
+      "end": 157.461,
+      "duration_sec": 0.621,
+      "text": "Oh, thank you so much.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 1.5391552027047564e-15
+        },
+        "energy": {
+          "dynamics_db": 3.9947566986083984
+        },
+        "tempo": {
+          "syllable_rate": 9.661835748792125
+        },
+        "spectral": {
+          "brightness_hz": 1177.4954640686874
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 156.84,
+        "end": 157.461
+      }
+    },
+    {
+      "start": 157.52,
+      "end": 158.821,
+      "duration_sec": 1.301,
+      "text": "Yeah, I really liked the outfit.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 124.52269744873047,
+          "std_hz": 5.439833164215088,
+          "range_hz": 15.968017578125,
+          "direction": -1.5071066720145128
+        },
+        "energy": {
+          "dynamics_db": 4.168689727783203
+        },
+        "tempo": {
+          "syllable_rate": 5.380476556495054
+        },
+        "spectral": {
+          "brightness_hz": 1214.6041214687907
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9122807017543859
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 157.52,
+        "end": 158.821
+      }
+    },
+    {
+      "start": 159.08,
+      "end": 159.344,
+      "duration_sec": 0.264,
+      "text": "Thank you.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": -6.796427480005378e-16
+        },
+        "energy": {
+          "dynamics_db": 5.461854934692383
+        },
+        "tempo": {
+          "syllable_rate": 7.575757575758105
+        },
+        "spectral": {
+          "brightness_hz": 859.8733751900862
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9166666666666666
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 159.08,
+        "end": 159.344
+      }
+    },
+    {
+      "start": 159.66,
+      "end": 160.381,
+      "duration_sec": 0.721,
+      "text": "No problem.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 2.995175690862132e-16
+        },
+        "energy": {
+          "dynamics_db": 2.98931884765625
+        },
+        "tempo": {
+          "syllable_rate": 6.9348127600554434
+        },
+        "spectral": {
+          "brightness_hz": 999.7446634305434
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9375
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 159.66,
+        "end": 160.381
+      }
+    },
+    {
+      "start": 160.54,
+      "end": 161.181,
+      "duration_sec": 0.641,
+      "text": "How's your day going?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 156.33668518066406,
+          "std_hz": 10.642265319824219,
+          "range_hz": 30.574020385742188,
+          "direction": 2.295049747005925
+        },
+        "energy": {
+          "dynamics_db": 4.241062164306641
+        },
+        "tempo": {
+          "syllable_rate": 10.920436817472366
+        },
+        "spectral": {
+          "brightness_hz": 1265.246316656503
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9285714285714286
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 160.54,
+        "end": 161.181
+      }
+    },
+    {
+      "start": 161.38,
+      "end": 161.763,
+      "duration_sec": 0.383,
+      "text": "Good.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": -5.619212733073132e-16
+        },
+        "energy": {
+          "dynamics_db": 2.8854808807373047
+        },
+        "tempo": {
+          "syllable_rate": 7.83289817232356
+        },
+        "spectral": {
+          "brightness_hz": 760.4810655617038
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9411764705882353
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 161.38,
+        "end": 161.763
+      }
+    },
+    {
+      "start": 162.08,
+      "end": 162.662,
+      "duration_sec": 0.582,
+      "text": "Good to see you.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 66.53970336914062,
+          "std_hz": 2.959944248199463,
+          "range_hz": 8.382682800292969,
+          "direction": 0.2665928264682848
+        },
+        "energy": {
+          "dynamics_db": 3.226435661315918
+        },
+        "tempo": {
+          "syllable_rate": 6.872852233677051
+        },
+        "spectral": {
+          "brightness_hz": 963.2142024948682
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 162.08,
+        "end": 162.662
+      }
+    },
+    {
+      "start": 162.88,
+      "end": 163.621,
+      "duration_sec": 0.741,
+      "text": "You're beautiful.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 1.5331380297981518e-16
+        },
+        "energy": {
+          "dynamics_db": 4.070262908935547
+        },
+        "tempo": {
+          "syllable_rate": 5.398110661268455
+        },
+        "spectral": {
+          "brightness_hz": 1062.9550903468808
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 162.88,
+        "end": 163.621
+      }
+    },
+    {
+      "start": 163.78,
+      "end": 164.362,
+      "duration_sec": 0.582,
+      "text": "Thank you.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 4.033115386962891
+        },
+        "tempo": {
+          "syllable_rate": 6.872852233677051
+        },
+        "spectral": {
+          "brightness_hz": 1280.8134184356106
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8846153846153846
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 163.78,
+        "end": 164.362
+      }
+    },
+    {
+      "start": 164.4,
+      "end": 165.921,
+      "duration_sec": 1.521,
+      "text": "That's why it's important to smile, right?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 183.6999969482422,
+          "std_hz": 59.17137145996094,
+          "range_hz": 181.82894897460938,
+          "direction": -3.383299417026544
+        },
+        "energy": {
+          "dynamics_db": 5.944525718688965
+        },
+        "tempo": {
+          "syllable_rate": 6.574621959237402
+        },
+        "spectral": {
+          "brightness_hz": 1459.282477941764
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9545454545454546
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 164.4,
+        "end": 165.921
+      }
+    },
+    {
+      "start": 165.9,
+      "end": 170.08,
+      "duration_sec": 4.18,
+      "text": "right like when you see somebody you gotta you gotta smile and bring a good emotion",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 4.638926444771611e-15
+        },
+        "energy": {
+          "dynamics_db": 4.1689453125
+        },
+        "tempo": {
+          "syllable_rate": 6.459330143540659
+        },
+        "spectral": {
+          "brightness_hz": 1365.9542818129157
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9502762430939227
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 165.9,
+        "end": 170.08
+      }
+    },
+    {
+      "start": 170.06,
+      "end": 173.06,
+      "duration_sec": 3.0,
+      "text": "just wanted to say that what's your name it's a pleasure meeting you",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 155.592041015625,
+          "std_hz": 56.910762786865234,
+          "range_hz": 148.6394805908203,
+          "direction": -0.6063285349352971
+        },
+        "energy": {
+          "dynamics_db": 5.48752498626709
+        },
+        "tempo": {
+          "syllable_rate": 6.666666666666667
+        },
+        "spectral": {
+          "brightness_hz": 1478.9647265785825
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9615384615384616
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 170.06,
+        "end": 173.06
+      }
+    },
+    {
+      "start": 174.18,
+      "end": 179.06,
+      "duration_sec": 4.88,
+      "text": "kyle yes have an awesome day okay you know what's funny is i actually tried to tell you",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 161.3528594970703,
+          "std_hz": 59.46400451660156,
+          "range_hz": 173.42105102539062,
+          "direction": 0.8038446970471366
+        },
+        "energy": {
+          "dynamics_db": 7.997091293334961
+        },
+        "tempo": {
+          "syllable_rate": 6.352459016393449
+        },
+        "spectral": {
+          "brightness_hz": 1572.017613316202
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 174.18,
+        "end": 179.06
+      }
+    },
+    {
+      "start": 179.04,
+      "end": 184.58,
+      "duration_sec": 5.54,
+      "text": "that back there oh my god i thought you rejected me i'm so sorry i was like damn i got rejected",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 284.3266906738281,
+          "std_hz": 100.0949478149414,
+          "range_hz": 264.061279296875,
+          "direction": -1.1603119959826576
+        },
+        "energy": {
+          "dynamics_db": 7.152854919433594
+        },
+        "tempo": {
+          "syllable_rate": 6.317689530685898
+        },
+        "spectral": {
+          "brightness_hz": 1249.7338509464794
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 179.04,
+        "end": 184.58
+      }
+    },
+    {
+      "start": 184.56,
+      "end": 189.02,
+      "duration_sec": 4.46,
+      "text": "but then i was like wait maybe she just didn't even hear me because i wasn't smiling you probably",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 178.44334411621094,
+          "std_hz": 19.35907554626465,
+          "range_hz": 95.55818176269531,
+          "direction": -0.011487865609810067
+        },
+        "energy": {
+          "dynamics_db": 5.9168901443481445
+        },
+        "tempo": {
+          "syllable_rate": 7.174887892376669
+        },
+        "spectral": {
+          "brightness_hz": 1294.4051564651343
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.917098445595855
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 184.56,
+        "end": 189.02
+      }
+    },
+    {
+      "start": 189.0,
+      "end": 193.26,
+      "duration_sec": 4.26,
+      "text": "didn't hear me and i didn't get your attention that well you know i said it's super weak and",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 165.34178161621094,
+          "std_hz": 28.651729583740234,
+          "range_hz": 103.76477813720703,
+          "direction": -0.032499920866657886
+        },
+        "energy": {
+          "dynamics_db": 4.531940460205078
+        },
+        "tempo": {
+          "syllable_rate": 5.164319248826302
+        },
+        "spectral": {
+          "brightness_hz": 1480.8313394967395
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9402173913043478
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 189.0,
+        "end": 193.26
+      }
+    },
+    {
+      "start": 193.24,
+      "end": 197.08,
+      "duration_sec": 3.84,
+      "text": "creepy and weird and that's why you walked by and then when i came back i was like you know what let",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 151.199462890625,
+          "std_hz": 18.184946060180664,
+          "range_hz": 79.63014221191406,
+          "direction": 0.19744112918101211
+        },
+        "energy": {
+          "dynamics_db": 4.8335771560668945
+        },
+        "tempo": {
+          "syllable_rate": 7.29166666666666
+        },
+        "spectral": {
+          "brightness_hz": 1232.8662151507112
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9156626506024096
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 193.24,
+        "end": 197.08
+      }
+    },
+    {
+      "start": 197.06,
+      "end": 203.22,
+      "duration_sec": 6.16,
+      "text": "me put a little bit more of a smile and make sure she could hear me at a safe distance and then you",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 162.5210723876953,
+          "std_hz": 15.355358123779297,
+          "range_hz": 66.2435302734375,
+          "direction": -0.058160727689853274
+        },
+        "energy": {
+          "dynamics_db": 8.822153091430664
+        },
+        "tempo": {
+          "syllable_rate": 4.545454545454548
+        },
+        "spectral": {
+          "brightness_hz": 1442.2706518533498
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.981203007518797
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 197.06,
+        "end": 203.22
+      }
+    },
+    {
+      "start": 203.2,
+      "end": 208.16,
+      "duration_sec": 4.96,
+      "text": "stopped oh thank you again yeah no problem it's a pleasure okay have an awesome day okay so there",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 181.85940551757812,
+          "std_hz": 81.28217315673828,
+          "range_hz": 282.058349609375,
+          "direction": -1.5997201683216762
+        },
+        "energy": {
+          "dynamics_db": 13.919819831848145
+        },
+        "tempo": {
+          "syllable_rate": 5.040322580645153
+        },
+        "spectral": {
+          "brightness_hz": 1339.9513983857244
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9813084112149533
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 203.2,
+        "end": 208.16
+      }
+    },
+    {
+      "start": 208.14,
+      "end": 214.4,
+      "duration_sec": 6.26,
+      "text": "you have it good versus bad literally on the same girl and then i just hammered home the point in",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 100.17058563232422,
+          "std_hz": 51.38878631591797,
+          "range_hz": 142.55758666992188,
+          "direction": -0.19514022756809257
+        },
+        "energy": {
+          "dynamics_db": 6.813401222229004
+        },
+        "tempo": {
+          "syllable_rate": 6.869009584664515
+        },
+        "spectral": {
+          "brightness_hz": 1390.1625672213363
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9444444444444444
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 208.14,
+        "end": 214.4
+      }
+    },
+    {
+      "start": 214.38,
+      "end": 219.14,
+      "duration_sec": 4.76,
+      "text": "conversation to make it really obvious for you guys so hopefully that helps so those are",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.0932846069336,
+          "std_hz": 0.39981305599212646,
+          "range_hz": 3.4684677124023438,
+          "direction": 0.00027922706072373106
+        },
+        "energy": {
+          "dynamics_db": 4.812925338745117
+        },
+        "tempo": {
+          "syllable_rate": 6.512605042016819
+        },
+        "spectral": {
+          "brightness_hz": 1343.1147826658828
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9804878048780488
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 214.38,
+        "end": 219.14
+      }
+    },
+    {
+      "start": 219.12,
+      "end": 222.404,
+      "duration_sec": 3.284,
+      "text": "the three biggest mistakes I see guys not doing consistently.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 134.17803955078125,
+          "std_hz": 52.376277923583984,
+          "range_hz": 183.25881958007812,
+          "direction": -0.5967573290467948
+        },
+        "energy": {
+          "dynamics_db": 9.548770904541016
+        },
+        "tempo": {
+          "syllable_rate": 6.09013398294764
+        },
+        "spectral": {
+          "brightness_hz": 1675.906832684355
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9647887323943662
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 219.12,
+        "end": 222.404
+      }
+    },
+    {
+      "start": 222.424,
+      "end": 224.58,
+      "duration_sec": 2.156,
+      "text": "They're not smiling, they're opening",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 88.02543640136719,
+          "std_hz": 46.929141998291016,
+          "range_hz": 136.64881896972656,
+          "direction": 1.0545734912476168
+        },
+        "energy": {
+          "dynamics_db": 9.963711738586426
+        },
+        "tempo": {
+          "syllable_rate": 5.102040816326516
+        },
+        "spectral": {
+          "brightness_hz": 1596.829862828587
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 222.424,
+        "end": 224.58
+      }
+    },
+    {
+      "start": 224.56,
+      "end": 229.08,
+      "duration_sec": 4.52,
+      "text": "with a really weak voice, or they're opening at like an awkward distance where they're either",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 107.33396911621094,
+          "std_hz": 51.39664077758789,
+          "range_hz": 129.77992248535156,
+          "direction": 0.1648601851344526
+        },
+        "energy": {
+          "dynamics_db": 6.870458602905273
+        },
+        "tempo": {
+          "syllable_rate": 6.194690265486711
+        },
+        "spectral": {
+          "brightness_hz": 1373.4587708339398
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9435897435897436
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 224.56,
+        "end": 229.08
+      }
+    },
+    {
+      "start": 229.06,
+      "end": 232.873,
+      "duration_sec": 3.813,
+      "text": "behind the girl or they're like too close to her or it's just too late.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.004148716177794006
+        },
+        "energy": {
+          "dynamics_db": 7.538150787353516
+        },
+        "tempo": {
+          "syllable_rate": 6.2942564909520256
+        },
+        "spectral": {
+          "brightness_hz": 1256.8631094557984
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8909090909090909
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 229.06,
+        "end": 232.873
+      }
+    },
+    {
+      "start": 232.934,
+      "end": 233.66,
+      "duration_sec": 0.726,
+      "text": "If you're somebody who wants",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 66.62618255615234,
+          "std_hz": 1.8693033456802368,
+          "range_hz": 5.4747467041015625,
+          "direction": -0.13786512102399748
+        },
+        "energy": {
+          "dynamics_db": 4.03757381439209
+        },
+        "tempo": {
+          "syllable_rate": 6.887052341597805
+        },
+        "spectral": {
+          "brightness_hz": 1217.8563215316467
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.96875
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 232.934,
+        "end": 233.66
+      }
+    },
+    {
+      "start": 233.64,
+      "end": 238.2,
+      "duration_sec": 4.56,
+      "text": "to increase their social confidence and achieve the dating life you've always dreamed of, I can",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 130.264404296875,
+          "std_hz": 45.31792068481445,
+          "range_hz": 119.91278076171875,
+          "direction": 0.26903727186012055
+        },
+        "energy": {
+          "dynamics_db": 11.890935897827148
+        },
+        "tempo": {
+          "syllable_rate": 5.921052631578944
+        },
+        "spectral": {
+          "brightness_hz": 1855.4278475405808
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9086294416243654
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 233.64,
+        "end": 238.2
+      }
+    },
+    {
+      "start": 238.18,
+      "end": 239.05,
+      "duration_sec": 0.87,
+      "text": "help you with that.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": -9.655101328102468e-17
+        },
+        "energy": {
+          "dynamics_db": 7.647113800048828
+        },
+        "tempo": {
+          "syllable_rate": 8.04597701149421
+        },
+        "spectral": {
+          "brightness_hz": 1585.9799702195485
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9473684210526315
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 238.18,
+        "end": 239.05
+      }
+    },
+    {
+      "start": 239.494,
+      "end": 241.86,
+      "duration_sec": 2.366,
+      "text": "Click the link in description for an opportunity to work with me personally.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 117.41476440429688,
+          "std_hz": 54.80986022949219,
+          "range_hz": 152.37384033203125,
+          "direction": -0.4807791880420444
+        },
+        "energy": {
+          "dynamics_db": 7.930959701538086
+        },
+        "tempo": {
+          "syllable_rate": 6.7624683009297994
+        },
+        "spectral": {
+          "brightness_hz": 1477.4421320121078
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9411764705882353
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 239.494,
+        "end": 241.86
+      }
+    },
+    {
+      "start": 242.04,
+      "end": 243.85,
+      "duration_sec": 1.81,
+      "text": "Click the link below right now.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.83448028564453,
+          "std_hz": 1.3650463819503784,
+          "range_hz": 4.665275573730469,
+          "direction": -0.005102168782046867
+        },
+        "energy": {
+          "dynamics_db": 7.613960266113281
+        },
+        "tempo": {
+          "syllable_rate": 5.524861878453032
+        },
+        "spectral": {
+          "brightness_hz": 1155.014091863335
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8205128205128205
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 242.04,
+        "end": 243.85
+      }
+    },
+    {
+      "start": 244.317,
+      "end": 244.5,
+      "duration_sec": 0.183,
+      "text": "Let's go.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 65.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": -1.9520470657831495e-15
+        },
+        "energy": {
+          "dynamics_db": 1.6497926712036133
+        },
+        "tempo": {
+          "syllable_rate": 10.928961748634315
+        },
+        "spectral": {
+          "brightness_hz": 1117.2697642929922
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.raw16k.wav",
+        "start": 244.317,
+        "end": 244.5
+      }
+    }
+  ]
+}

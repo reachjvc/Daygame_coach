@@ -1,0 +1,39 @@
+{
+  "video_id": "ctts8xePLWA",
+  "validated_at": "2026-03-05T19:50:04Z",
+  "pipeline_version": "07.LLM.content-v1.16",
+  "prompt_version": "1.9.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 0,
+    "info": 5,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "info",
+      "check": "transcript_artifact_repaired",
+      "message": "Seg 127: nonsense — ASR hallucination loop — identical 'I love you' repeated across segments 127-130, likely background/outro music hallucinated as speech [REPAIRED delete conf=0.98]"
+    },
+    {
+      "severity": "info",
+      "check": "transcript_artifact_repaired",
+      "message": "Seg 128: nonsense — ASR hallucination loop — identical repeated segment from background music [REPAIRED delete conf=0.98]"
+    },
+    {
+      "severity": "info",
+      "check": "transcript_artifact_repaired",
+      "message": "Seg 129: nonsense — ASR hallucination loop — identical repeated segment from background music [REPAIRED delete conf=0.98]"
+    },
+    {
+      "severity": "info",
+      "check": "transcript_artifact_repaired",
+      "message": "Seg 130: nonsense — ASR hallucination loop — identical repeated segment from background music [REPAIRED delete conf=0.98]"
+    },
+    {
+      "severity": "info",
+      "check": "validation_passed",
+      "message": "All checks passed"
+    }
+  ]
+}

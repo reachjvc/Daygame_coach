@@ -1,0 +1,4856 @@
+{
+  "source_audio": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+  "audio_sha256": "1d6e14ed6dc8cf8ce8bdb2005590e4d09489df615a6231adab5601eb67cfe9d4",
+  "source_timestamps": "/home/jonaswsl/projects/daygame-coach/data/04.EXT.diarize/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].full.json",
+  "processing": {
+    "sample_rate": 22050,
+    "feature_extractor": "librosa",
+    "pitch_range_hz": [
+      65.0,
+      500.0
+    ],
+    "pitch_method": "pyin",
+    "pitch_trim_percentile": 2.0,
+    "embedder": "resemblyzer",
+    "embedder_sample_rate": 16000,
+    "min_embed_raw_sec": 0.8,
+    "min_embed_window_sec": 1.2,
+    "embed_pad_sec": 0.25,
+    "store_embedding_vectors": false
+  },
+  "total_duration_sec": 575.212,
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 1.146,
+      "duration_sec": 1.146,
+      "text": "What's going on guys?",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 199.6670684814453,
+          "std_hz": 10.902278900146484,
+          "range_hz": 45.57380676269531,
+          "direction": -0.9549346694803162
+        },
+        "energy": {
+          "dynamics_db": 9.140081405639648
+        },
+        "tempo": {
+          "syllable_rate": 5.235602094240838
+        },
+        "spectral": {
+          "brightness_hz": 963.1938643549537
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 0.0,
+        "end": 1.146
+      }
+    },
+    {
+      "start": 1.207,
+      "end": 2.212,
+      "duration_sec": 1.005,
+      "text": "Welcome back.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 175.5072784423828,
+          "std_hz": 20.983308792114258,
+          "range_hz": 84.14311218261719,
+          "direction": -1.1961702362620794
+        },
+        "energy": {
+          "dynamics_db": 7.70245361328125
+        },
+        "tempo": {
+          "syllable_rate": 3.980099502487562
+        },
+        "spectral": {
+          "brightness_hz": 803.7170202357535
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9545454545454546
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 1.207,
+        "end": 2.212
+      }
+    },
+    {
+      "start": 2.655,
+      "end": 4.847,
+      "duration_sec": 2.192,
+      "text": "My name is Aaron Alexander.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 169.19944763183594,
+          "std_hz": 14.778731346130371,
+          "range_hz": 66.28474426269531,
+          "direction": -0.3914452393435721
+        },
+        "energy": {
+          "dynamics_db": 9.831330299377441
+        },
+        "tempo": {
+          "syllable_rate": 5.018248175182481
+        },
+        "spectral": {
+          "brightness_hz": 1084.1276313460637
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9263157894736842
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 2.655,
+        "end": 4.847
+      }
+    },
+    {
+      "start": 4.908,
+      "end": 7.14,
+      "duration_sec": 2.232,
+      "text": "We've got a fun one for you today.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 157.12057495117188,
+          "std_hz": 15.098943710327148,
+          "range_hz": 56.16436004638672,
+          "direction": 0.1472132717156431
+        },
+        "energy": {
+          "dynamics_db": 13.21695327758789
+        },
+        "tempo": {
+          "syllable_rate": 5.376344086021507
+        },
+        "spectral": {
+          "brightness_hz": 958.888608895347
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9484536082474226
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 4.908,
+        "end": 7.14
+      }
+    },
+    {
+      "start": 7.4,
+      "end": 14.8,
+      "duration_sec": 7.4,
+      "text": "If you're new here to this channel, what I do for a living, what I have done full-time for the last",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 143.02435302734375,
+          "std_hz": 27.934080123901367,
+          "range_hz": 156.1734619140625,
+          "direction": -0.12821532086742923
+        },
+        "energy": {
+          "dynamics_db": 14.599184036254883
+        },
+        "tempo": {
+          "syllable_rate": 5.0
+        },
+        "spectral": {
+          "brightness_hz": 939.6686735006826
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8808777429467085
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 7.4,
+        "end": 14.8
+      }
+    },
+    {
+      "start": 14.78,
+      "end": 23.36,
+      "duration_sec": 8.58,
+      "text": "six years of my life, is I take guys just like you out into the field for an entire weekend",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 146.22933959960938,
+          "std_hz": 38.31705093383789,
+          "range_hz": 146.85781860351562,
+          "direction": 0.1616502474006629
+        },
+        "energy": {
+          "dynamics_db": 13.171730995178223
+        },
+        "tempo": {
+          "syllable_rate": 3.0303030303030303
+        },
+        "spectral": {
+          "brightness_hz": 1174.2108959500756
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8945945945945946
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 14.78,
+        "end": 23.36
+      }
+    },
+    {
+      "start": 23.34,
+      "end": 33.8,
+      "duration_sec": 10.46,
+      "text": "to show you how simple and fun and effective you can make meeting women so",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 158.87623596191406,
+          "std_hz": 50.60837936401367,
+          "range_hz": 163.71148681640625,
+          "direction": -0.11994695817730514
+        },
+        "energy": {
+          "dynamics_db": 14.28344440460205
+        },
+        "tempo": {
+          "syllable_rate": 3.824091778202678
+        },
+        "spectral": {
+          "brightness_hz": 1153.5949650382943
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8891352549889135
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 23.34,
+        "end": 33.8
+      }
+    },
+    {
+      "start": 33.78,
+      "end": 42.0,
+      "duration_sec": 8.22,
+      "text": "many dudes today are struggling with loneliness with depression with porn",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 134.5294952392578,
+          "std_hz": 35.59385299682617,
+          "range_hz": 154.89959716796875,
+          "direction": -0.1532068075645178
+        },
+        "energy": {
+          "dynamics_db": 14.483661651611328
+        },
+        "tempo": {
+          "syllable_rate": 3.771289537712896
+        },
+        "spectral": {
+          "brightness_hz": 1040.4513810738429
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9549295774647887
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 33.78,
+        "end": 42.0
+      }
+    },
+    {
+      "start": 41.98,
+      "end": 50.26,
+      "duration_sec": 8.28,
+      "text": "addiction and so much of this stems from the fact that you can't date any of the",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 162.2877197265625,
+          "std_hz": 31.964679718017578,
+          "range_hz": 156.2742919921875,
+          "direction": -0.0704401471356673
+        },
+        "energy": {
+          "dynamics_db": 14.829687118530273
+        },
+        "tempo": {
+          "syllable_rate": 3.5024154589371976
+        },
+        "spectral": {
+          "brightness_hz": 1331.1983286308334
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8879551820728291
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 41.98,
+        "end": 50.26
+      }
+    },
+    {
+      "start": 50.24,
+      "end": 54.08,
+      "duration_sec": 3.84,
+      "text": "the types of women that you actually want to be dating.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 159.70318603515625,
+          "std_hz": 16.15556526184082,
+          "range_hz": 75.173583984375,
+          "direction": -0.14113220913549443
+        },
+        "energy": {
+          "dynamics_db": 11.018071174621582
+        },
+        "tempo": {
+          "syllable_rate": 4.947916666666671
+        },
+        "spectral": {
+          "brightness_hz": 976.9176278880237
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8674698795180723
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 50.24,
+        "end": 54.08
+      }
+    },
+    {
+      "start": 54.34,
+      "end": 57.48,
+      "duration_sec": 3.14,
+      "text": "Now, when you come to one of my live bootcamp programs,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 148.90219116210938,
+          "std_hz": 35.709415435791016,
+          "range_hz": 129.50888061523438,
+          "direction": 0.4977778014422175
+        },
+        "energy": {
+          "dynamics_db": 11.26429271697998
+        },
+        "tempo": {
+          "syllable_rate": 5.095541401273896
+        },
+        "spectral": {
+          "brightness_hz": 873.409627372107
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.875
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 54.34,
+        "end": 57.48
+      }
+    },
+    {
+      "start": 57.66,
+      "end": 62.06,
+      "duration_sec": 4.4,
+      "text": "I show you how simple we can make all of this,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 161.180419921875,
+          "std_hz": 42.89815902709961,
+          "range_hz": 176.14328002929688,
+          "direction": 0.20192312422584488
+        },
+        "energy": {
+          "dynamics_db": 12.944063186645508
+        },
+        "tempo": {
+          "syllable_rate": 5.22727272727272
+        },
+        "spectral": {
+          "brightness_hz": 1135.6850198874486
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9210526315789473
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 57.66,
+        "end": 62.06
+      }
+    },
+    {
+      "start": 62.08,
+      "end": 63.681,
+      "duration_sec": 1.601,
+      "text": "how fun we can make all of this,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 174.2890167236328,
+          "std_hz": 31.829200744628906,
+          "range_hz": 102.45089721679688,
+          "direction": -0.914491890632698
+        },
+        "energy": {
+          "dynamics_db": 8.721023559570312
+        },
+        "tempo": {
+          "syllable_rate": 5.621486570893195
+        },
+        "spectral": {
+          "brightness_hz": 942.0505257111233
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9130434782608695
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 62.08,
+        "end": 63.681
+      }
+    },
+    {
+      "start": 63.7,
+      "end": 66.28,
+      "duration_sec": 2.58,
+      "text": "and how effective I can show you",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 206.1163330078125,
+          "std_hz": 95.39545440673828,
+          "range_hz": 400.1817626953125,
+          "direction": 1.328539833804762
+        },
+        "energy": {
+          "dynamics_db": 16.01134967803955
+        },
+        "tempo": {
+          "syllable_rate": 3.488372093023258
+        },
+        "spectral": {
+          "brightness_hz": 1196.6162278155784
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9107142857142857
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 63.7,
+        "end": 66.28
+      }
+    },
+    {
+      "start": 66.26,
+      "end": 69.3,
+      "duration_sec": 3.04,
+      "text": "how to really have charismatic,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 198.64227294921875,
+          "std_hz": 51.18620300292969,
+          "range_hz": 229.1390380859375,
+          "direction": -0.4538546980535024
+        },
+        "energy": {
+          "dynamics_db": 12.578474044799805
+        },
+        "tempo": {
+          "syllable_rate": 5.59210526315791
+        },
+        "spectral": {
+          "brightness_hz": 962.0557408430802
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9083969465648855
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 66.26,
+        "end": 69.3
+      }
+    },
+    {
+      "start": 69.86,
+      "end": 71.56,
+      "duration_sec": 1.7,
+      "text": "engaging interactions with women.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 156.81643676757812,
+          "std_hz": 12.762898445129395,
+          "range_hz": 47.585235595703125,
+          "direction": -0.34588964092579483
+        },
+        "energy": {
+          "dynamics_db": 10.106931686401367
+        },
+        "tempo": {
+          "syllable_rate": 4.705882352941169
+        },
+        "spectral": {
+          "brightness_hz": 946.4816326883064
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9594594594594594
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 69.86,
+        "end": 71.56
+      }
+    },
+    {
+      "start": 71.68,
+      "end": 74.56,
+      "duration_sec": 2.88,
+      "text": "You can drop down in any city in the world.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 154.71630859375,
+          "std_hz": 33.46834182739258,
+          "range_hz": 143.14498901367188,
+          "direction": 0.3442825071825788
+        },
+        "energy": {
+          "dynamics_db": 11.3720064163208
+        },
+        "tempo": {
+          "syllable_rate": 4.166666666666673
+        },
+        "spectral": {
+          "brightness_hz": 895.4089511038612
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.904
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 71.68,
+        "end": 74.56
+      }
+    },
+    {
+      "start": 74.68,
+      "end": 77.16,
+      "duration_sec": 2.48,
+      "text": "Your job moves you to another city.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 158.9823455810547,
+          "std_hz": 16.744503021240234,
+          "range_hz": 73.62867736816406,
+          "direction": -0.1535915160506825
+        },
+        "energy": {
+          "dynamics_db": 12.278401374816895
+        },
+        "tempo": {
+          "syllable_rate": 5.241935483870989
+        },
+        "spectral": {
+          "brightness_hz": 1086.694777920412
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8785046728971962
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 74.68,
+        "end": 77.16
+      }
+    },
+    {
+      "start": 77.3,
+      "end": 79.9,
+      "duration_sec": 2.6,
+      "text": "You decide that you wanna go traveling.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 175.14822387695312,
+          "std_hz": 13.80187702178955,
+          "range_hz": 67.71942138671875,
+          "direction": 0.5340411777807386
+        },
+        "energy": {
+          "dynamics_db": 12.250115394592285
+        },
+        "tempo": {
+          "syllable_rate": 5.384615384615367
+        },
+        "spectral": {
+          "brightness_hz": 990.3006119893071
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9285714285714286
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 77.3,
+        "end": 79.9
+      }
+    },
+    {
+      "start": 79.88,
+      "end": 85.04,
+      "duration_sec": 5.16,
+      "text": "You just want to go live somewhere else and I can show you how to literally go out and",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 169.41073608398438,
+          "std_hz": 19.101144790649414,
+          "range_hz": 83.18822479248047,
+          "direction": -0.06842383023799925
+        },
+        "energy": {
+          "dynamics_db": 11.038979530334473
+        },
+        "tempo": {
+          "syllable_rate": 5.03875968992247
+        },
+        "spectral": {
+          "brightness_hz": 997.6011124971882
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8654708520179372
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 79.88,
+        "end": 85.04
+      }
+    },
+    {
+      "start": 85.02,
+      "end": 86.501,
+      "duration_sec": 1.481,
+      "text": "perform alchemy.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 146.2359619140625,
+          "std_hz": 8.071465492248535,
+          "range_hz": 25.464324951171875,
+          "direction": -0.04225627427646532
+        },
+        "energy": {
+          "dynamics_db": 13.682901382446289
+        },
+        "tempo": {
+          "syllable_rate": 5.4017555705604
+        },
+        "spectral": {
+          "brightness_hz": 830.0073540599561
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.859375
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 85.02,
+        "end": 86.501
+      }
+    },
+    {
+      "start": 86.62,
+      "end": 93.9,
+      "duration_sec": 7.28,
+      "text": "I can show you how to turn what would have been complete strangers that you're just walking",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 145.63771057128906,
+          "std_hz": 34.106231689453125,
+          "range_hz": 146.9395751953125,
+          "direction": 0.02975444499454595
+        },
+        "energy": {
+          "dynamics_db": 15.40695858001709
+        },
+        "tempo": {
+          "syllable_rate": 4.395604395604395
+        },
+        "spectral": {
+          "brightness_hz": 1028.4167119437943
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8885350318471338
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 86.62,
+        "end": 93.9
+      }
+    },
+    {
+      "start": 93.88,
+      "end": 99.86,
+      "duration_sec": 5.98,
+      "text": "by in the grocery store, on your way to the gym, at the gym, at the coffee shop, whatever",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 146.495361328125,
+          "std_hz": 22.976184844970703,
+          "range_hz": 117.3960952758789,
+          "direction": -0.008226765285761621
+        },
+        "energy": {
+          "dynamics_db": 11.751333236694336
+        },
+        "tempo": {
+          "syllable_rate": 4.8494983277591945
+        },
+        "spectral": {
+          "brightness_hz": 935.6138350331739
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8837209302325582
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 93.88,
+        "end": 99.86
+      }
+    },
+    {
+      "start": 99.84,
+      "end": 106.62,
+      "duration_sec": 6.78,
+      "text": "it is, how to turn what would be strangers into women that you're sleeping with.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 153.33096313476562,
+          "std_hz": 37.474552154541016,
+          "range_hz": 256.0069885253906,
+          "direction": -0.039277798376133155
+        },
+        "energy": {
+          "dynamics_db": 14.02543830871582
+        },
+        "tempo": {
+          "syllable_rate": 5.604719764011798
+        },
+        "spectral": {
+          "brightness_hz": 1049.877736787398
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.863013698630137
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 99.84,
+        "end": 106.62
+      }
+    },
+    {
+      "start": 106.6,
+      "end": 109.6,
+      "duration_sec": 3.0,
+      "text": "And I'm incredibly, incredibly passionate about this.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 152.2228546142578,
+          "std_hz": 23.66496467590332,
+          "range_hz": 99.95826721191406,
+          "direction": -0.40875730424937246
+        },
+        "energy": {
+          "dynamics_db": 9.299636840820312
+        },
+        "tempo": {
+          "syllable_rate": 5.333333333333333
+        },
+        "spectral": {
+          "brightness_hz": 882.4654245099257
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9153846153846154
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 106.6,
+        "end": 109.6
+      }
+    },
+    {
+      "start": 109.68,
+      "end": 113.78,
+      "duration_sec": 4.1,
+      "text": "If you're new to the channel, watch all of my videos, dude.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 146.91827392578125,
+          "std_hz": 58.54776382446289,
+          "range_hz": 286.0909729003906,
+          "direction": 0.3699690624077697
+        },
+        "energy": {
+          "dynamics_db": 13.379293441772461
+        },
+        "tempo": {
+          "syllable_rate": 4.634146341463421
+        },
+        "spectral": {
+          "brightness_hz": 945.4188930226193
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9887005649717514
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 109.68,
+        "end": 113.78
+      }
+    },
+    {
+      "start": 113.84,
+      "end": 119.06,
+      "duration_sec": 5.22,
+      "text": "I've got hundreds of videos here on the Evolution Daily YouTube",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 148.8571014404297,
+          "std_hz": 45.48605728149414,
+          "range_hz": 167.9755096435547,
+          "direction": 0.1487222528900246
+        },
+        "energy": {
+          "dynamics_db": 11.86663818359375
+        },
+        "tempo": {
+          "syllable_rate": 3.63984674329502
+        },
+        "spectral": {
+          "brightness_hz": 915.8932564887555
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9644444444444444
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 113.84,
+        "end": 119.06
+      }
+    },
+    {
+      "start": 119.04,
+      "end": 122.14,
+      "duration_sec": 3.1,
+      "text": "channel of me not just telling you.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 152.1225128173828,
+          "std_hz": 26.169370651245117,
+          "range_hz": 113.81180572509766,
+          "direction": 0.2721302833273235
+        },
+        "energy": {
+          "dynamics_db": 13.377775192260742
+        },
+        "tempo": {
+          "syllable_rate": 4.838709677419364
+        },
+        "spectral": {
+          "brightness_hz": 972.6161642545225
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8805970149253731
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 119.04,
+        "end": 122.14
+      }
+    },
+    {
+      "start": 122.2,
+      "end": 126.1,
+      "duration_sec": 3.9,
+      "text": "Most guys just kind of give you random advice and you don't",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 149.58453369140625,
+          "std_hz": 32.43780517578125,
+          "range_hz": 152.98895263671875,
+          "direction": 0.11308962347803313
+        },
+        "energy": {
+          "dynamics_db": 10.079561233520508
+        },
+        "tempo": {
+          "syllable_rate": 6.666666666666681
+        },
+        "spectral": {
+          "brightness_hz": 960.5697612055085
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8809523809523809
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 122.2,
+        "end": 126.1
+      }
+    },
+    {
+      "start": 126.08,
+      "end": 127.86,
+      "duration_sec": 1.78,
+      "text": "really know if they have game.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 132.34027099609375,
+          "std_hz": 14.361989974975586,
+          "range_hz": 62.151763916015625,
+          "direction": -0.6144003990826745
+        },
+        "energy": {
+          "dynamics_db": 7.522374153137207
+        },
+        "tempo": {
+          "syllable_rate": 5.6179775280898845
+        },
+        "spectral": {
+          "brightness_hz": 740.4764033021298
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.922077922077922
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 126.08,
+        "end": 127.86
+      }
+    },
+    {
+      "start": 128.04,
+      "end": 129.281,
+      "duration_sec": 1.241,
+      "text": "I show you.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 110.52655029296875,
+          "std_hz": 42.05345916748047,
+          "range_hz": 107.94205474853516,
+          "direction": 1.8814068222039986
+        },
+        "energy": {
+          "dynamics_db": 13.771740913391113
+        },
+        "tempo": {
+          "syllable_rate": 5.640612409347238
+        },
+        "spectral": {
+          "brightness_hz": 1334.0556260410574
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 128.04,
+        "end": 129.281
+      }
+    },
+    {
+      "start": 129.34,
+      "end": 131.34,
+      "duration_sec": 2.0,
+      "text": "Watch all of my infields.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 197.57208251953125,
+          "std_hz": 86.4473876953125,
+          "range_hz": 260.509033203125,
+          "direction": -3.140555955177243
+        },
+        "energy": {
+          "dynamics_db": 15.731914520263672
+        },
+        "tempo": {
+          "syllable_rate": 5.0
+        },
+        "spectral": {
+          "brightness_hz": 880.9218395979183
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8850574712643678
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 129.34,
+        "end": 131.34
+      }
+    },
+    {
+      "start": 131.32,
+      "end": 133.5,
+      "duration_sec": 2.18,
+      "text": "Watch all of these live demonstrations.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 147.8939971923828,
+          "std_hz": 27.157424926757812,
+          "range_hz": 128.45236206054688,
+          "direction": -0.05927963341347471
+        },
+        "energy": {
+          "dynamics_db": 10.931087493896484
+        },
+        "tempo": {
+          "syllable_rate": 5.045871559633012
+        },
+        "spectral": {
+          "brightness_hz": 954.4001538963475
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.851063829787234
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 131.32,
+        "end": 133.5
+      }
+    },
+    {
+      "start": 133.48,
+      "end": 141.8,
+      "duration_sec": 8.32,
+      "text": "frustrations and when you really start to see that I'm the dude who can really change your life",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 159.21975708007812,
+          "std_hz": 34.197566986083984,
+          "range_hz": 136.9502716064453,
+          "direction": -0.0252940237027897
+        },
+        "energy": {
+          "dynamics_db": 13.508849143981934
+        },
+        "tempo": {
+          "syllable_rate": 4.326923076923066
+        },
+        "spectral": {
+          "brightness_hz": 1104.5377330025112
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8802228412256268
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 133.48,
+        "end": 141.8
+      }
+    },
+    {
+      "start": 141.78,
+      "end": 148.54,
+      "duration_sec": 6.76,
+      "text": "forever and I gotta say this man and whatever dude like if you just want to jump straight to",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 128.6492919921875,
+          "std_hz": 34.23595428466797,
+          "range_hz": 182.93301391601562,
+          "direction": 0.10100176175709417
+        },
+        "energy": {
+          "dynamics_db": 15.908720016479492
+        },
+        "tempo": {
+          "syllable_rate": 4.585798816568054
+        },
+        "spectral": {
+          "brightness_hz": 1028.690722218489
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9417808219178082
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 141.78,
+        "end": 148.54
+      }
+    },
+    {
+      "start": 148.52,
+      "end": 154.74,
+      "duration_sec": 6.22,
+      "text": "the video go ahead do your thing but I gotta say this you know I talk to a lot of guys that are",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 137.68434143066406,
+          "std_hz": 32.07773971557617,
+          "range_hz": 161.0355224609375,
+          "direction": 0.1865718267921389
+        },
+        "energy": {
+          "dynamics_db": 11.438701629638672
+        },
+        "tempo": {
+          "syllable_rate": 4.983922829581995
+        },
+        "spectral": {
+          "brightness_hz": 973.4036797708767
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8544776119402985
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 148.52,
+        "end": 154.74
+      }
+    },
+    {
+      "start": 154.72,
+      "end": 166.2,
+      "duration_sec": 11.48,
+      "text": "really struggling mentally and I truly truly believe that a major percentage of",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 137.28041076660156,
+          "std_hz": 38.51143264770508,
+          "range_hz": 151.12185668945312,
+          "direction": 0.10868657411547261
+        },
+        "energy": {
+          "dynamics_db": 14.990159034729004
+        },
+        "tempo": {
+          "syllable_rate": 4.703832752613245
+        },
+        "spectral": {
+          "brightness_hz": 1090.0156639002253
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8868686868686869
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 154.72,
+        "end": 166.2
+      }
+    },
+    {
+      "start": 166.18,
+      "end": 177.32,
+      "duration_sec": 11.14,
+      "text": "men who are down bad who actually even go as far as committing suicide I really",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 123.66466522216797,
+          "std_hz": 35.023651123046875,
+          "range_hz": 136.6807861328125,
+          "direction": -0.05162966477471355
+        },
+        "energy": {
+          "dynamics_db": 18.8770694732666
+        },
+        "tempo": {
+          "syllable_rate": 3.7701974865350136
+        },
+        "spectral": {
+          "brightness_hz": 1000.8005634643516
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9104166666666667
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 166.18,
+        "end": 177.32
+      }
+    },
+    {
+      "start": 177.3,
+      "end": 181.14,
+      "duration_sec": 3.84,
+      "text": "truly believe that if you were to take that same man and you were to insert",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 144.81028747558594,
+          "std_hz": 21.216489791870117,
+          "range_hz": 85.96305847167969,
+          "direction": -0.3332118606311376
+        },
+        "energy": {
+          "dynamics_db": 8.86456298828125
+        },
+        "tempo": {
+          "syllable_rate": 5.729166666666704
+        },
+        "spectral": {
+          "brightness_hz": 1179.421268744228
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8855421686746988
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 177.3,
+        "end": 181.14
+      }
+    },
+    {
+      "start": 181.12,
+      "end": 184.276,
+      "duration_sec": 3.156,
+      "text": "insert love into his life.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 114.67691802978516,
+          "std_hz": 19.095535278320312,
+          "range_hz": 63.2032470703125,
+          "direction": 0.12004038425158821
+        },
+        "energy": {
+          "dynamics_db": 17.427661895751953
+        },
+        "tempo": {
+          "syllable_rate": 4.752851711026607
+        },
+        "spectral": {
+          "brightness_hz": 1076.1459696756242
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9852941176470589
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 181.12,
+        "end": 184.276
+      }
+    },
+    {
+      "start": 184.758,
+      "end": 189.08,
+      "duration_sec": 4.322,
+      "text": "If you were to insert good sex into his life, if you were to insert a",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 126.15133666992188,
+          "std_hz": 32.83293151855469,
+          "range_hz": 101.86286926269531,
+          "direction": 0.0014774347755597138
+        },
+        "energy": {
+          "dynamics_db": 10.081968307495117
+        },
+        "tempo": {
+          "syllable_rate": 5.78435909301249
+        },
+        "spectral": {
+          "brightness_hz": 1381.1772270689746
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9197860962566845
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 184.758,
+        "end": 189.08
+      }
+    },
+    {
+      "start": 189.06,
+      "end": 194.84,
+      "duration_sec": 5.78,
+      "text": "woman that loves him, that provides for him, and that he provides for her, and that they create",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 135.7103271484375,
+          "std_hz": 16.52828598022461,
+          "range_hz": 90.82970428466797,
+          "direction": -0.04469218740230403
+        },
+        "energy": {
+          "dynamics_db": 11.408500671386719
+        },
+        "tempo": {
+          "syllable_rate": 4.844290657439445
+        },
+        "spectral": {
+          "brightness_hz": 854.7685826120072
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8835341365461847
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 189.06,
+        "end": 194.84
+      }
+    },
+    {
+      "start": 194.82,
+      "end": 199.104,
+      "duration_sec": 4.284,
+      "text": "this symbiosis, I really believe that we can save lives.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 136.12167358398438,
+          "std_hz": 15.235445022583008,
+          "range_hz": 56.06938934326172,
+          "direction": -0.20274346274694663
+        },
+        "energy": {
+          "dynamics_db": 9.180461883544922
+        },
+        "tempo": {
+          "syllable_rate": 4.901960784313703
+        },
+        "spectral": {
+          "brightness_hz": 1105.7605073172665
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8756756756756757
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 194.82,
+        "end": 199.104
+      }
+    },
+    {
+      "start": 199.305,
+      "end": 201.92,
+      "duration_sec": 2.615,
+      "text": "And so, you know, this is something that",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 136.30372619628906,
+          "std_hz": 25.68755340576172,
+          "range_hz": 91.81951904296875,
+          "direction": 0.479676741783517
+        },
+        "energy": {
+          "dynamics_db": 11.336756706237793
+        },
+        "tempo": {
+          "syllable_rate": 4.206500956022976
+        },
+        "spectral": {
+          "brightness_hz": 1163.189658079993
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8407079646017699
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 199.305,
+        "end": 201.92
+      }
+    },
+    {
+      "start": 201.9,
+      "end": 202.985,
+      "duration_sec": 1.085,
+      "text": "saved my life.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 148.63729858398438,
+          "std_hz": 14.775726318359375,
+          "range_hz": 51.83076477050781,
+          "direction": 0.3997620683812766
+        },
+        "energy": {
+          "dynamics_db": 7.831694602966309
+        },
+        "tempo": {
+          "syllable_rate": 6.451612903225759
+        },
+        "spectral": {
+          "brightness_hz": 1224.3526595878611
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9148936170212766
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 201.9,
+        "end": 202.985
+      }
+    },
+    {
+      "start": 203.547,
+      "end": 211.54,
+      "duration_sec": 7.993,
+      "text": "Learning game was the absolute catapult for me to start losing weight back when",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 141.42996215820312,
+          "std_hz": 27.495586395263672,
+          "range_hz": 120.6658706665039,
+          "direction": -0.008456811787087402
+        },
+        "energy": {
+          "dynamics_db": 14.313629150390625
+        },
+        "tempo": {
+          "syllable_rate": 3.6281746528212206
+        },
+        "spectral": {
+          "brightness_hz": 1016.5134154577834
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9420289855072463
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 203.547,
+        "end": 211.54
+      }
+    },
+    {
+      "start": 211.52,
+      "end": 213.231,
+      "duration_sec": 1.711,
+      "text": "I was a 300 pound fatty.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 142.25582885742188,
+          "std_hz": 10.06200885772705,
+          "range_hz": 32.45074462890625,
+          "direction": -0.05449949693555797
+        },
+        "energy": {
+          "dynamics_db": 6.272995948791504
+        },
+        "tempo": {
+          "syllable_rate": 6.428988895382876
+        },
+        "spectral": {
+          "brightness_hz": 818.0474219934013
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9594594594594594
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 211.52,
+        "end": 213.231
+      }
+    },
+    {
+      "start": 213.714,
+      "end": 217.7,
+      "duration_sec": 3.986,
+      "text": "You know, it was the catapult for me and my self-development to become",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 142.68174743652344,
+          "std_hz": 16.989227294921875,
+          "range_hz": 81.8921127319336,
+          "direction": -0.019914554829562902
+        },
+        "energy": {
+          "dynamics_db": 10.728001594543457
+        },
+        "tempo": {
+          "syllable_rate": 4.264927245358766
+        },
+        "spectral": {
+          "brightness_hz": 1044.696710539113
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9302325581395349
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 213.714,
+        "end": 217.7
+      }
+    },
+    {
+      "start": 217.68,
+      "end": 219.773,
+      "duration_sec": 2.093,
+      "text": "a stronger, better man.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 149.41293334960938,
+          "std_hz": 14.009170532226562,
+          "range_hz": 51.53223419189453,
+          "direction": -0.04905032658573439
+        },
+        "energy": {
+          "dynamics_db": 11.235422134399414
+        },
+        "tempo": {
+          "syllable_rate": 4.777830864787411
+        },
+        "spectral": {
+          "brightness_hz": 1137.578458204153
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9010989010989011
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 217.68,
+        "end": 219.773
+      }
+    },
+    {
+      "start": 220.215,
+      "end": 223.033,
+      "duration_sec": 2.818,
+      "text": "Sure, it all started stemming with like, I want to get laid.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 164.45111083984375,
+          "std_hz": 21.41381072998047,
+          "range_hz": 95.52616882324219,
+          "direction": -0.6099280425480235
+        },
+        "energy": {
+          "dynamics_db": 9.559415817260742
+        },
+        "tempo": {
+          "syllable_rate": 4.968062455642328
+        },
+        "spectral": {
+          "brightness_hz": 1126.0081735105541
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9016393442622951
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 220.215,
+        "end": 223.033
+      }
+    },
+    {
+      "start": 223.858,
+      "end": 224.26,
+      "duration_sec": 0.402,
+      "text": "But then",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 161.95362854003906,
+          "std_hz": 9.66578483581543,
+          "range_hz": 24.05902099609375,
+          "direction": 1.8209223066057427
+        },
+        "energy": {
+          "dynamics_db": 10.115621566772461
+        },
+        "tempo": {
+          "syllable_rate": 7.462686567164424
+        },
+        "spectral": {
+          "brightness_hz": 828.3831377950703
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 223.858,
+        "end": 224.26
+      }
+    },
+    {
+      "start": 224.24,
+      "end": 226.864,
+      "duration_sec": 2.624,
+      "text": "the game has taken me to so many incredible places.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 157.38311767578125,
+          "std_hz": 13.902421951293945,
+          "range_hz": 57.061370849609375,
+          "direction": -0.24013829830584102
+        },
+        "energy": {
+          "dynamics_db": 6.925107955932617
+        },
+        "tempo": {
+          "syllable_rate": 5.716463414634156
+        },
+        "spectral": {
+          "brightness_hz": 1284.8444342288803
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.956140350877193
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 224.24,
+        "end": 226.864
+      }
+    },
+    {
+      "start": 226.904,
+      "end": 228.72,
+      "duration_sec": 1.816,
+      "text": "And I know that again, if you're a dude",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 134.7834930419922,
+          "std_hz": 24.27763557434082,
+          "range_hz": 81.42045593261719,
+          "direction": 0.13331955166928716
+        },
+        "energy": {
+          "dynamics_db": 9.224065780639648
+        },
+        "tempo": {
+          "syllable_rate": 4.95594713656387
+        },
+        "spectral": {
+          "brightness_hz": 710.3957043583574
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8227848101265823
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 226.904,
+        "end": 228.72
+      }
+    },
+    {
+      "start": 228.7,
+      "end": 234.18,
+      "duration_sec": 5.48,
+      "text": "out there who's struggling I know that I can help you to really elevate your life",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 137.86387634277344,
+          "std_hz": 27.799436569213867,
+          "range_hz": 133.19650268554688,
+          "direction": 0.006292389526605774
+        },
+        "energy": {
+          "dynamics_db": 11.557902336120605
+        },
+        "tempo": {
+          "syllable_rate": 4.562043795620423
+        },
+        "spectral": {
+          "brightness_hz": 809.3050979364581
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9324894514767933
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 228.7,
+        "end": 234.18
+      }
+    },
+    {
+      "start": 234.16,
+      "end": 239.0,
+      "duration_sec": 4.84,
+      "text": "to be able to meet these women to be able to enjoy life to be able to have",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 150.19851684570312,
+          "std_hz": 27.337392807006836,
+          "range_hz": 119.27637481689453,
+          "direction": 0.10726204452927447
+        },
+        "energy": {
+          "dynamics_db": 11.083006858825684
+        },
+        "tempo": {
+          "syllable_rate": 6.404958677685946
+        },
+        "spectral": {
+          "brightness_hz": 901.4603419334129
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8755980861244019
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 234.16,
+        "end": 239.0
+      }
+    },
+    {
+      "start": 238.98,
+      "end": 242.2,
+      "duration_sec": 3.22,
+      "text": "good sex to be able to get that girlfriend or really even get that",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 148.9423065185547,
+          "std_hz": 12.85730266571045,
+          "range_hz": 52.73675537109375,
+          "direction": 0.09707473387051996
+        },
+        "energy": {
+          "dynamics_db": 8.498465538024902
+        },
+        "tempo": {
+          "syllable_rate": 7.142857142857145
+        },
+        "spectral": {
+          "brightness_hz": 930.6846253550668
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9568345323741008
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 238.98,
+        "end": 242.2
+      }
+    },
+    {
+      "start": 242.18,
+      "end": 249.1,
+      "duration_sec": 6.92,
+      "text": "quality woman that you want that's going to raise your children so I just want",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 129.880615234375,
+          "std_hz": 31.049232482910156,
+          "range_hz": 121.4660415649414,
+          "direction": -0.14392338868742258
+        },
+        "energy": {
+          "dynamics_db": 15.214414596557617
+        },
+        "tempo": {
+          "syllable_rate": 3.4682080924855554
+        },
+        "spectral": {
+          "brightness_hz": 985.167431401158
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9264214046822743
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 242.18,
+        "end": 249.1
+      }
+    },
+    {
+      "start": 249.08,
+      "end": 252.14,
+      "duration_sec": 3.06,
+      "text": "this I had to say that because it's just something I'm feeling really passionate",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 168.49374389648438,
+          "std_hz": 16.547494888305664,
+          "range_hz": 63.48640441894531,
+          "direction": -0.3344600609170544
+        },
+        "energy": {
+          "dynamics_db": 9.24984073638916
+        },
+        "tempo": {
+          "syllable_rate": 6.209150326797439
+        },
+        "spectral": {
+          "brightness_hz": 1227.57686683579
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.946969696969697
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 249.08,
+        "end": 252.14
+      }
+    },
+    {
+      "start": 252.12,
+      "end": 256.4,
+      "duration_sec": 4.28,
+      "text": "about lately I'm gonna drop this infield now for you guys I hope you enjoy it",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 145.81671142578125,
+          "std_hz": 17.144649505615234,
+          "range_hz": 95.33255004882812,
+          "direction": 0.024956470929041897
+        },
+        "energy": {
+          "dynamics_db": 10.554566383361816
+        },
+        "tempo": {
+          "syllable_rate": 5.373831775700969
+        },
+        "spectral": {
+          "brightness_hz": 857.0247726961499
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8810810810810811
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 252.12,
+        "end": 256.4
+      }
+    },
+    {
+      "start": 256.38,
+      "end": 259.64,
+      "duration_sec": 3.26,
+      "text": "and you know, if you're really struggling out there,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 153.24685668945312,
+          "std_hz": 32.175682067871094,
+          "range_hz": 131.98355102539062,
+          "direction": 0.5398591233781812
+        },
+        "energy": {
+          "dynamics_db": 11.554113388061523
+        },
+        "tempo": {
+          "syllable_rate": 4.601226993865043
+        },
+        "spectral": {
+          "brightness_hz": 921.0956184033882
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9148936170212766
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 256.38,
+        "end": 259.64
+      }
+    },
+    {
+      "start": 259.7,
+      "end": 261.021,
+      "duration_sec": 1.321,
+      "text": "I want you to click the link down below.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 164.78126525878906,
+          "std_hz": 13.242339134216309,
+          "range_hz": 53.321014404296875,
+          "direction": -0.4100167222798181
+        },
+        "energy": {
+          "dynamics_db": 5.623615264892578
+        },
+        "tempo": {
+          "syllable_rate": 6.813020439061181
+        },
+        "spectral": {
+          "brightness_hz": 777.8952743195272
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9824561403508771
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 259.7,
+        "end": 261.021
+      }
+    },
+    {
+      "start": 261.08,
+      "end": 262.521,
+      "duration_sec": 1.441,
+      "text": "It's in the comments, it's in the description,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 150.04574584960938,
+          "std_hz": 7.284786701202393,
+          "range_hz": 25.760208129882812,
+          "direction": 0.022190482025099663
+        },
+        "energy": {
+          "dynamics_db": 9.829244613647461
+        },
+        "tempo": {
+          "syllable_rate": 9.021512838306538
+        },
+        "spectral": {
+          "brightness_hz": 993.1903163310669
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9365079365079365
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 261.08,
+        "end": 262.521
+      }
+    },
+    {
+      "start": 263.58,
+      "end": 265.72,
+      "duration_sec": 2.14,
+      "text": "evolutiondaily.com where you can actually apply",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 147.9364013671875,
+          "std_hz": 16.43624496459961,
+          "range_hz": 98.01084899902344,
+          "direction": -0.11628991434361102
+        },
+        "energy": {
+          "dynamics_db": 9.104755401611328
+        },
+        "tempo": {
+          "syllable_rate": 5.607476635513906
+        },
+        "spectral": {
+          "brightness_hz": 832.5260419149713
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9139784946236559
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 263.58,
+        "end": 265.72
+      }
+    },
+    {
+      "start": 265.7,
+      "end": 268.2,
+      "duration_sec": 2.5,
+      "text": "to speak with my assistant, Alex,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 145.80331420898438,
+          "std_hz": 22.37123680114746,
+          "range_hz": 88.78968048095703,
+          "direction": 0.22643120377081408
+        },
+        "energy": {
+          "dynamics_db": 11.664976119995117
+        },
+        "tempo": {
+          "syllable_rate": 4.4
+        },
+        "spectral": {
+          "brightness_hz": 1167.666791039355
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9907407407407407
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 265.7,
+        "end": 268.2
+      }
+    },
+    {
+      "start": 268.44,
+      "end": 271.3,
+      "duration_sec": 2.86,
+      "text": "who is going to talk to you about, you know,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 145.3898162841797,
+          "std_hz": 30.20284080505371,
+          "range_hz": 108.5291748046875,
+          "direction": -0.04394819510351899
+        },
+        "energy": {
+          "dynamics_db": 13.794172286987305
+        },
+        "tempo": {
+          "syllable_rate": 4.545454545454524
+        },
+        "spectral": {
+          "brightness_hz": 974.5016492740974
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9435483870967742
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 268.44,
+        "end": 271.3
+      }
+    },
+    {
+      "start": 271.28,
+      "end": 273.92,
+      "duration_sec": 2.64,
+      "text": "potential options for you getting some coaching.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 153.2241668701172,
+          "std_hz": 29.02644920349121,
+          "range_hz": 111.56242370605469,
+          "direction": 0.006279522668584174
+        },
+        "energy": {
+          "dynamics_db": 11.772619247436523
+        },
+        "tempo": {
+          "syllable_rate": 6.439393939393834
+        },
+        "spectral": {
+          "brightness_hz": 978.230687411909
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9210526315789473
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 271.28,
+        "end": 273.92
+      }
+    },
+    {
+      "start": 274.06,
+      "end": 275.181,
+      "duration_sec": 1.121,
+      "text": "You know, if this is something",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 149.0664825439453,
+          "std_hz": 24.302021026611328,
+          "range_hz": 68.16960906982422,
+          "direction": 1.8433980252223598
+        },
+        "energy": {
+          "dynamics_db": 12.446430206298828
+        },
+        "tempo": {
+          "syllable_rate": 5.352363960749422
+        },
+        "spectral": {
+          "brightness_hz": 1351.6233248999733
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 274.06,
+        "end": 275.181
+      }
+    },
+    {
+      "start": 275.16,
+      "end": 276.741,
+      "duration_sec": 1.581,
+      "text": "that you've just always struggled with,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 165.8069305419922,
+          "std_hz": 10.425578117370605,
+          "range_hz": 34.71693420410156,
+          "direction": -0.06032050481097807
+        },
+        "energy": {
+          "dynamics_db": 8.34294319152832
+        },
+        "tempo": {
+          "syllable_rate": 7.590132827324668
+        },
+        "spectral": {
+          "brightness_hz": 1051.7741194899681
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9130434782608695
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 275.16,
+        "end": 276.741
+      }
+    },
+    {
+      "start": 276.76,
+      "end": 280.28,
+      "duration_sec": 3.52,
+      "text": "if you're just not good with chicks and you want that,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 155.7429962158203,
+          "std_hz": 14.645295143127441,
+          "range_hz": 52.484832763671875,
+          "direction": 0.010792109576563721
+        },
+        "energy": {
+          "dynamics_db": 12.930475234985352
+        },
+        "tempo": {
+          "syllable_rate": 5.11363636363639
+        },
+        "spectral": {
+          "brightness_hz": 1102.9948737294058
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.881578947368421
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 276.76,
+        "end": 280.28
+      }
+    },
+    {
+      "start": 280.34,
+      "end": 282.52,
+      "duration_sec": 2.18,
+      "text": "you know, maybe you're on TikTok all the time,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 147.8903350830078,
+          "std_hz": 10.520448684692383,
+          "range_hz": 61.41362762451172,
+          "direction": 0.1765362513717074
+        },
+        "energy": {
+          "dynamics_db": 11.340921401977539
+        },
+        "tempo": {
+          "syllable_rate": 6.422018348623833
+        },
+        "spectral": {
+          "brightness_hz": 877.3057731484658
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9468085106382979
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 280.34,
+        "end": 282.52
+      }
+    },
+    {
+      "start": 282.6,
+      "end": 283.781,
+      "duration_sec": 1.181,
+      "text": "you're on Instagram all the time,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 146.62071228027344,
+          "std_hz": 11.806731224060059,
+          "range_hz": 46.68754577636719,
+          "direction": 0.019089756879370902
+        },
+        "energy": {
+          "dynamics_db": 6.370018005371094
+        },
+        "tempo": {
+          "syllable_rate": 6.7739204064353205
+        },
+        "spectral": {
+          "brightness_hz": 988.1820241491167
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9607843137254902
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 282.6,
+        "end": 283.781
+      }
+    },
+    {
+      "start": 283.78,
+      "end": 284.941,
+      "duration_sec": 1.161,
+      "text": "you see all these beautiful women",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 142.37913513183594,
+          "std_hz": 11.988811492919922,
+          "range_hz": 57.881988525390625,
+          "direction": 0.14832578535289942
+        },
+        "energy": {
+          "dynamics_db": 6.356113433837891
+        },
+        "tempo": {
+          "syllable_rate": 6.029285099052534
+        },
+        "spectral": {
+          "brightness_hz": 948.8431160002901
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9215686274509803
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 283.78,
+        "end": 284.941
+      }
+    },
+    {
+      "start": 284.92,
+      "end": 289.875,
+      "duration_sec": 4.955,
+      "text": "and you're just like, dude, like, I don't even see a path for me to be able to get there.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 124.06321716308594,
+          "std_hz": 28.9713191986084,
+          "range_hz": 98.52030181884766,
+          "direction": 0.0703961983157545
+        },
+        "energy": {
+          "dynamics_db": 13.834512710571289
+        },
+        "tempo": {
+          "syllable_rate": 5.24722502522706
+        },
+        "spectral": {
+          "brightness_hz": 1041.3596168816166
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9299065420560748
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 284.92,
+        "end": 289.875
+      }
+    },
+    {
+      "start": 290.218,
+      "end": 290.54,
+      "duration_sec": 0.322,
+      "text": "That's what",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 10.531026840209961
+        },
+        "tempo": {
+          "syllable_rate": 3.105590062111775
+        },
+        "spectral": {
+          "brightness_hz": 983.4168304146439
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 290.218,
+        "end": 290.54
+      }
+    },
+    {
+      "start": 290.52,
+      "end": 296.916,
+      "duration_sec": 6.396,
+      "text": "I do for a living is I show you this path out in the field live in person.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 125.67057800292969,
+          "std_hz": 16.91014862060547,
+          "range_hz": 88.61102294921875,
+          "direction": -0.1183771765179269
+        },
+        "energy": {
+          "dynamics_db": 13.836935997009277
+        },
+        "tempo": {
+          "syllable_rate": 4.690431519699802
+        },
+        "spectral": {
+          "brightness_hz": 980.2635452157965
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8768115942028986
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 290.52,
+        "end": 296.916
+      }
+    },
+    {
+      "start": 297.197,
+      "end": 297.7,
+      "duration_sec": 0.503,
+      "text": "So I want you to click",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 160.04647827148438,
+          "std_hz": 9.229535102844238,
+          "range_hz": 25.468414306640625,
+          "direction": 0.8718930400070832
+        },
+        "energy": {
+          "dynamics_db": 5.022674560546875
+        },
+        "tempo": {
+          "syllable_rate": 5.964214711729789
+        },
+        "spectral": {
+          "brightness_hz": 788.4569016400419
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9545454545454546
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 297.197,
+        "end": 297.7
+      }
+    },
+    {
+      "start": 297.68,
+      "end": 298.75,
+      "duration_sec": 1.07,
+      "text": "the link down below.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 145.9796142578125,
+          "std_hz": 14.436363220214844,
+          "range_hz": 43.278472900390625,
+          "direction": -1.1051493105681052
+        },
+        "energy": {
+          "dynamics_db": 4.578057289123535
+        },
+        "tempo": {
+          "syllable_rate": 6.542056074766397
+        },
+        "spectral": {
+          "brightness_hz": 676.3711406216619
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9787234042553191
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 297.68,
+        "end": 298.75
+      }
+    },
+    {
+      "start": 299.255,
+      "end": 301.9,
+      "duration_sec": 2.645,
+      "text": "And you'll be able to speak with Alex about some of our upcoming coaching",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 145.98500061035156,
+          "std_hz": 14.257408142089844,
+          "range_hz": 47.503631591796875,
+          "direction": 0.1277407750063525
+        },
+        "energy": {
+          "dynamics_db": 8.853355407714844
+        },
+        "tempo": {
+          "syllable_rate": 6.805293005671125
+        },
+        "spectral": {
+          "brightness_hz": 976.3659789480419
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9473684210526315
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 299.255,
+        "end": 301.9
+      }
+    },
+    {
+      "start": 301.88,
+      "end": 303.29,
+      "duration_sec": 1.41,
+      "text": "opportunities for you.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 145.78060913085938,
+          "std_hz": 11.597643852233887,
+          "range_hz": 46.89727783203125,
+          "direction": 0.07510654131783774
+        },
+        "energy": {
+          "dynamics_db": 7.079750061035156
+        },
+        "tempo": {
+          "syllable_rate": 8.51063829787219
+        },
+        "spectral": {
+          "brightness_hz": 949.313093824786
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9344262295081968
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 301.88,
+        "end": 303.29
+      }
+    },
+    {
+      "start": 303.955,
+      "end": 307.6,
+      "duration_sec": 3.645,
+      "text": "We try to have different programs and options that fit really any budget",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 142.40017700195312,
+          "std_hz": 27.085947036743164,
+          "range_hz": 119.97087860107422,
+          "direction": -0.040910309147534275
+        },
+        "energy": {
+          "dynamics_db": 12.11669635772705
+        },
+        "tempo": {
+          "syllable_rate": 4.938271604938219
+        },
+        "spectral": {
+          "brightness_hz": 867.4142561853455
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8789808917197452
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 303.955,
+        "end": 307.6
+      }
+    },
+    {
+      "start": 307.58,
+      "end": 309.979,
+      "duration_sec": 2.399,
+      "text": "as well as offering payment plans, things like that.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 145.9976043701172,
+          "std_hz": 17.446104049682617,
+          "range_hz": 64.31709289550781,
+          "direction": -0.15018967752313733
+        },
+        "energy": {
+          "dynamics_db": 7.607450485229492
+        },
+        "tempo": {
+          "syllable_rate": 6.25260525218841
+        },
+        "spectral": {
+          "brightness_hz": 800.3859156066313
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9615384615384616
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 307.58,
+        "end": 309.979
+      }
+    },
+    {
+      "start": 309.999,
+      "end": 312.72,
+      "duration_sec": 2.721,
+      "text": "But yeah, dude, just really, really",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 106.12432098388672,
+          "std_hz": 34.61516571044922,
+          "range_hz": 97.84637451171875,
+          "direction": 0.7782093855864026
+        },
+        "energy": {
+          "dynamics_db": 17.17331314086914
+        },
+        "tempo": {
+          "syllable_rate": 2.940095553105472
+        },
+        "spectral": {
+          "brightness_hz": 880.2511211619363
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9491525423728814
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 309.999,
+        "end": 312.72
+      }
+    },
+    {
+      "start": 312.7,
+      "end": 318.0,
+      "duration_sec": 5.3,
+      "text": "passionate about this stuff fired up lately more than ever so this is just a",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 130.78634643554688,
+          "std_hz": 33.55299758911133,
+          "range_hz": 170.68255615234375,
+          "direction": 0.029076076168974438
+        },
+        "energy": {
+          "dynamics_db": 13.52956771850586
+        },
+        "tempo": {
+          "syllable_rate": 4.528301886792443
+        },
+        "spectral": {
+          "brightness_hz": 1037.3338494786879
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8471615720524017
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 312.7,
+        "end": 318.0
+      }
+    },
+    {
+      "start": 317.98,
+      "end": 322.44,
+      "duration_sec": 4.46,
+      "text": "quick number close you know just a good fun little interaction and this is",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 174.43673706054688,
+          "std_hz": 35.37858200073242,
+          "range_hz": 163.031494140625,
+          "direction": -0.364418447792631
+        },
+        "energy": {
+          "dynamics_db": 12.474594116210938
+        },
+        "tempo": {
+          "syllable_rate": 5.381165919282536
+        },
+        "spectral": {
+          "brightness_hz": 1056.0221068082715
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8911917098445595
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 317.98,
+        "end": 322.44
+      }
+    },
+    {
+      "start": 322.42,
+      "end": 325.26,
+      "duration_sec": 2.84,
+      "text": "something that you can replicate over and over and over again when you just",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 159.31192016601562,
+          "std_hz": 23.743379592895508,
+          "range_hz": 71.30642700195312,
+          "direction": -0.5326202201313928
+        },
+        "energy": {
+          "dynamics_db": 8.09615707397461
+        },
+        "tempo": {
+          "syllable_rate": 7.042253521126822
+        },
+        "spectral": {
+          "brightness_hz": 875.2643822980713
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.983739837398374
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 322.42,
+        "end": 325.26
+      }
+    },
+    {
+      "start": 325.24,
+      "end": 329.0,
+      "duration_sec": 3.76,
+      "text": "learn some of the basic fundamentals and especially when you come for a full",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 139.61439514160156,
+          "std_hz": 11.141250610351562,
+          "range_hz": 51.86571502685547,
+          "direction": 0.0016408052849291662
+        },
+        "energy": {
+          "dynamics_db": 7.763896942138672
+        },
+        "tempo": {
+          "syllable_rate": 6.648936170212782
+        },
+        "spectral": {
+          "brightness_hz": 956.285714062606
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9135802469135802
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 325.24,
+        "end": 329.0
+      }
+    },
+    {
+      "start": 328.98,
+      "end": 334.32,
+      "duration_sec": 5.34,
+      "text": "weekend and have me there with you you know holding your hand in this process",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 144.4176483154297,
+          "std_hz": 22.842987060546875,
+          "range_hz": 122.29078674316406,
+          "direction": 0.140651175645354
+        },
+        "energy": {
+          "dynamics_db": 10.268905639648438
+        },
+        "tempo": {
+          "syllable_rate": 5.2434456928839195
+        },
+        "spectral": {
+          "brightness_hz": 749.4160480562583
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8608695652173913
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 328.98,
+        "end": 334.32
+      }
+    },
+    {
+      "start": 334.3,
+      "end": 339.2,
+      "duration_sec": 4.9,
+      "text": "helping you to overcome the fear that you currently have of approaching",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 148.4143524169922,
+          "std_hz": 36.305152893066406,
+          "range_hz": 130.06866455078125,
+          "direction": 0.0316133212239145
+        },
+        "energy": {
+          "dynamics_db": 13.595247268676758
+        },
+        "tempo": {
+          "syllable_rate": 4.897959183673492
+        },
+        "spectral": {
+          "brightness_hz": 942.8729007798853
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9150943396226415
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 334.3,
+        "end": 339.2
+      }
+    },
+    {
+      "start": 339.18,
+      "end": 344.3,
+      "duration_sec": 5.12,
+      "text": "beautiful women of running fun engaging interactions with them and showing you",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 146.1405029296875,
+          "std_hz": 24.8118896484375,
+          "range_hz": 125.14179992675781,
+          "direction": -0.14247835322232075
+        },
+        "energy": {
+          "dynamics_db": 9.833672523498535
+        },
+        "tempo": {
+          "syllable_rate": 4.882812499999996
+        },
+        "spectral": {
+          "brightness_hz": 792.7953065897905
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8642533936651584
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 339.18,
+        "end": 344.3
+      }
+    },
+    {
+      "start": 344.28,
+      "end": 348.26,
+      "duration_sec": 3.98,
+      "text": "how you can turn those into dates so thank you guys so much for tuning in",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 145.87643432617188,
+          "std_hz": 35.07840347290039,
+          "range_hz": 125.5158920288086,
+          "direction": -0.10000307387898974
+        },
+        "energy": {
+          "dynamics_db": 13.618949890136719
+        },
+        "tempo": {
+          "syllable_rate": 5.5276381909547485
+        },
+        "spectral": {
+          "brightness_hz": 1011.0160453934808
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9476744186046512
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 344.28,
+        "end": 348.26
+      }
+    },
+    {
+      "start": 348.24,
+      "end": 354.66,
+      "duration_sec": 6.42,
+      "text": "like this video if you like this video and here's the infield again click the",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 129.8847198486328,
+          "std_hz": 17.611190795898438,
+          "range_hz": 86.49127197265625,
+          "direction": -0.10690576917513471
+        },
+        "energy": {
+          "dynamics_db": 12.954753875732422
+        },
+        "tempo": {
+          "syllable_rate": 4.82866043613706
+        },
+        "spectral": {
+          "brightness_hz": 804.1354173423746
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8916967509025271
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 348.24,
+        "end": 354.66
+      }
+    },
+    {
+      "start": 354.64,
+      "end": 359.98,
+      "duration_sec": 5.34,
+      "text": "link down below to apply so you can speak with my assistant Alex about our",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 127.46590423583984,
+          "std_hz": 19.450077056884766,
+          "range_hz": 98.6827621459961,
+          "direction": -0.07030733765820499
+        },
+        "energy": {
+          "dynamics_db": 13.110183715820312
+        },
+        "tempo": {
+          "syllable_rate": 4.868913857677874
+        },
+        "spectral": {
+          "brightness_hz": 961.8727659550542
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8739130434782608
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 354.64,
+        "end": 359.98
+      }
+    },
+    {
+      "start": 359.96,
+      "end": 364.68,
+      "duration_sec": 4.72,
+      "text": "upcoming coaching programs hopefully I will see you in the field soon",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 119.32088470458984,
+          "std_hz": 28.874767303466797,
+          "range_hz": 111.32174682617188,
+          "direction": 0.0013328429742340238
+        },
+        "energy": {
+          "dynamics_db": 14.336597442626953
+        },
+        "tempo": {
+          "syllable_rate": 5.508474576271155
+        },
+        "spectral": {
+          "brightness_hz": 997.2297830990648
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9313725490196079
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 359.96,
+        "end": 364.68
+      }
+    },
+    {
+      "start": 374.74,
+      "end": 382.08,
+      "duration_sec": 7.34,
+      "text": "excuse me what's like the best restaurant to grab food over here I feel like all of these",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 143.83489990234375,
+          "std_hz": 27.52430534362793,
+          "range_hz": 100.65274810791016,
+          "direction": -0.0348644775570211
+        },
+        "energy": {
+          "dynamics_db": 12.716900825500488
+        },
+        "tempo": {
+          "syllable_rate": 5.449591280653969
+        },
+        "spectral": {
+          "brightness_hz": 961.5598482971109
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 374.74,
+        "end": 382.08
+      }
+    },
+    {
+      "start": 382.06,
+      "end": 396.84,
+      "duration_sec": 14.78,
+      "text": "are like $5,000 for like a shrimp okay I moved here two weeks ago and so usually I'm like the",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 181.8172149658203,
+          "std_hz": 87.2773666381836,
+          "range_hz": 335.9748229980469,
+          "direction": -0.030975948135519276
+        },
+        "energy": {
+          "dynamics_db": 11.392081260681152
+        },
+        "tempo": {
+          "syllable_rate": 4.059539918809209
+        },
+        "spectral": {
+          "brightness_hz": 961.131111775287
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9984301412872841
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 382.06,
+        "end": 396.84
+      }
+    },
+    {
+      "start": 396.82,
+      "end": 402.28,
+      "duration_sec": 5.46,
+      "text": "newest person in miami but now you are so i feel like you think you're cooler than me but",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 135.6002960205078,
+          "std_hz": 21.948089599609375,
+          "range_hz": 83.99517822265625,
+          "direction": 0.20742298731445877
+        },
+        "energy": {
+          "dynamics_db": 9.07215404510498
+        },
+        "tempo": {
+          "syllable_rate": 5.677655677655699
+        },
+        "spectral": {
+          "brightness_hz": 1080.8686279957296
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9152542372881356
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 396.82,
+        "end": 402.28
+      }
+    },
+    {
+      "start": 402.9,
+      "end": 408.84,
+      "duration_sec": 5.94,
+      "text": "no i'm just chilling on the beach oh yeah why'd you come here fashion school",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 196.9056854248047,
+          "std_hz": 73.84211730957031,
+          "range_hz": 221.0712432861328,
+          "direction": -1.3838352824393687
+        },
+        "energy": {
+          "dynamics_db": 13.544800758361816
+        },
+        "tempo": {
+          "syllable_rate": 4.713804713804715
+        },
+        "spectral": {
+          "brightness_hz": 905.8325073578437
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 402.9,
+        "end": 408.84
+      }
+    },
+    {
+      "start": 409.46,
+      "end": 415.64,
+      "duration_sec": 6.18,
+      "text": "okay fashion your fashion's all right yeah this is a chill outfit this is my beach outfit",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 183.3614959716797,
+          "std_hz": 78.0025863647461,
+          "range_hz": 327.1971435546875,
+          "direction": 0.7934275565573641
+        },
+        "energy": {
+          "dynamics_db": 13.018614768981934
+        },
+        "tempo": {
+          "syllable_rate": 4.854368932038829
+        },
+        "spectral": {
+          "brightness_hz": 981.4900724633272
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 409.46,
+        "end": 415.64
+      }
+    },
+    {
+      "start": 415.62,
+      "end": 422.6,
+      "duration_sec": 6.98,
+      "text": "i uh this is okay the fit doesn't go together my bag my bag is like two days delayed i checked a",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 177.82345581054688,
+          "std_hz": 31.852760314941406,
+          "range_hz": 155.34170532226562,
+          "direction": -0.36313210026664994
+        },
+        "energy": {
+          "dynamics_db": 7.765130996704102
+        },
+        "tempo": {
+          "syllable_rate": 5.444126074498553
+        },
+        "spectral": {
+          "brightness_hz": 1198.259676931802
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9269102990033222
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 415.62,
+        "end": 422.6
+      }
+    },
+    {
+      "start": 422.58,
+      "end": 428.96,
+      "duration_sec": 6.38,
+      "text": "bag and it's been like yeah because I had to go back to Ohio and then back",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 129.08090209960938,
+          "std_hz": 14.97681999206543,
+          "range_hz": 63.579376220703125,
+          "direction": 0.03423740866109023
+        },
+        "energy": {
+          "dynamics_db": 9.640419960021973
+        },
+        "tempo": {
+          "syllable_rate": 4.231974921630097
+        },
+        "spectral": {
+          "brightness_hz": 1092.3598345517364
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9563636363636364
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 422.58,
+        "end": 428.96
+      }
+    },
+    {
+      "start": 428.94,
+      "end": 434.58,
+      "duration_sec": 5.64,
+      "text": "again so yeah it's been crazy you ever been to Ohio what's your uh what do you",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 151.58848571777344,
+          "std_hz": 37.274497985839844,
+          "range_hz": 184.32041931152344,
+          "direction": 0.2636241211752359
+        },
+        "energy": {
+          "dynamics_db": 10.648487091064453
+        },
+        "tempo": {
+          "syllable_rate": 4.787234042553203
+        },
+        "spectral": {
+          "brightness_hz": 979.5228472453335
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 428.94,
+        "end": 434.58
+      }
+    },
+    {
+      "start": 434.56,
+      "end": 442.02,
+      "duration_sec": 7.46,
+      "text": "call that what's your name I'm Aaron hello good to meet you yeah so so you'll",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 140.5292510986328,
+          "std_hz": 32.550865173339844,
+          "range_hz": 122.74116516113281,
+          "direction": -0.014275724242870227
+        },
+        "energy": {
+          "dynamics_db": 12.126351356506348
+        },
+        "tempo": {
+          "syllable_rate": 4.423592493297599
+        },
+        "spectral": {
+          "brightness_hz": 956.2143494112461
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9285714285714286
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 434.56,
+        "end": 442.02
+      }
+    },
+    {
+      "start": 442.0,
+      "end": 451.82,
+      "duration_sec": 9.82,
+      "text": "be here for like years for fashion school and shit okay yeah is that like",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 166.2454376220703,
+          "std_hz": 44.667240142822266,
+          "range_hz": 148.91464233398438,
+          "direction": 0.10279358461824133
+        },
+        "energy": {
+          "dynamics_db": 13.925420761108398
+        },
+        "tempo": {
+          "syllable_rate": 4.480651731160899
+        },
+        "spectral": {
+          "brightness_hz": 957.5961436124297
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9905437352245863
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 442.0,
+        "end": 451.82
+      }
+    },
+    {
+      "start": 451.8,
+      "end": 457.08,
+      "duration_sec": 5.28,
+      "text": "my little pony or something uh it's just some horsies that's what's up you gotta you got a",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 184.98899841308594,
+          "std_hz": 67.67227935791016,
+          "range_hz": 251.4208984375,
+          "direction": -0.11252216725913955
+        },
+        "energy": {
+          "dynamics_db": 10.575645446777344
+        },
+        "tempo": {
+          "syllable_rate": 4.734848484848509
+        },
+        "spectral": {
+          "brightness_hz": 991.6633380057375
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 451.8,
+        "end": 457.08
+      }
+    },
+    {
+      "start": 457.06,
+      "end": 462.84,
+      "duration_sec": 5.78,
+      "text": "good vibe you're like a little stoner chick yeah yeah i usually just eat the weed smoking doesn't",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 164.23207092285156,
+          "std_hz": 26.11316680908203,
+          "range_hz": 110.58673095703125,
+          "direction": -0.09040875377390101
+        },
+        "energy": {
+          "dynamics_db": 9.719572067260742
+        },
+        "tempo": {
+          "syllable_rate": 5.017301038062308
+        },
+        "spectral": {
+          "brightness_hz": 1057.990292881527
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9879518072289156
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 457.06,
+        "end": 462.84
+      }
+    },
+    {
+      "start": 462.82,
+      "end": 468.64,
+      "duration_sec": 5.82,
+      "text": "hit the same for me yeah yeah yeah edibles and yeah not just like the flower i'm not",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 160.4528045654297,
+          "std_hz": 21.955862045288086,
+          "range_hz": 76.89032745361328,
+          "direction": 0.059510605562169076
+        },
+        "energy": {
+          "dynamics_db": 8.993989944458008
+        },
+        "tempo": {
+          "syllable_rate": 5.154639175257738
+        },
+        "spectral": {
+          "brightness_hz": 1204.529842161915
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9282868525896414
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 462.82,
+        "end": 468.64
+      }
+    },
+    {
+      "start": 468.62,
+      "end": 476.1,
+      "duration_sec": 7.48,
+      "text": "just gnawing on is there a better way to waste weed than just eating it that would be that would",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 180.3116912841797,
+          "std_hz": 48.95701599121094,
+          "range_hz": 210.64532470703125,
+          "direction": -0.2515546438385672
+        },
+        "energy": {
+          "dynamics_db": 7.421428680419922
+        },
+        "tempo": {
+          "syllable_rate": 5.347593582887687
+        },
+        "spectral": {
+          "brightness_hz": 1172.2372261227438
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8978328173374613
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 468.62,
+        "end": 476.1
+      }
+    },
+    {
+      "start": 476.08,
+      "end": 484.0,
+      "duration_sec": 7.92,
+      "text": "would be insane you said okay I was thinking you were like the Amazon listen",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 167.18502807617188,
+          "std_hz": 51.642616271972656,
+          "range_hz": 224.0089111328125,
+          "direction": -0.040300758486518796
+        },
+        "energy": {
+          "dynamics_db": 42.01102638244629
+        },
+        "tempo": {
+          "syllable_rate": 2.7777777777777724
+        },
+        "spectral": {
+          "brightness_hz": 959.0634177443783
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.7953216374269005
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 476.08,
+        "end": 484.0
+      }
+    },
+    {
+      "start": 485.02,
+      "end": 491.08,
+      "duration_sec": 6.06,
+      "text": "give me your number I'll text you and let's fucking let's do some shit some",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 176.52450561523438,
+          "std_hz": 25.31884765625,
+          "range_hz": 117.83732604980469,
+          "direction": 0.04058160384340814
+        },
+        "energy": {
+          "dynamics_db": 12.166762351989746
+        },
+        "tempo": {
+          "syllable_rate": 3.960396039603959
+        },
+        "spectral": {
+          "brightness_hz": 1081.9926064523804
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9578544061302682
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 485.02,
+        "end": 491.08
+      }
+    },
+    {
+      "start": 491.06,
+      "end": 498.72,
+      "duration_sec": 7.66,
+      "text": "time yeah let's kick it on the beach where from again North Florida so you're",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 187.0481414794922,
+          "std_hz": 54.57075881958008,
+          "range_hz": 185.66168212890625,
+          "direction": -0.06052596863640578
+        },
+        "energy": {
+          "dynamics_db": 15.26518440246582
+        },
+        "tempo": {
+          "syllable_rate": 3.916449086161867
+        },
+        "spectral": {
+          "brightness_hz": 978.9735902582377
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 491.06,
+        "end": 498.72
+      }
+    },
+    {
+      "start": 498.7,
+      "end": 505.4,
+      "duration_sec": 6.7,
+      "text": "like you're like a riffraff Florida born and raised spring breakers okay sick I'm",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 170.33343505859375,
+          "std_hz": 26.433645248413086,
+          "range_hz": 138.39373779296875,
+          "direction": -0.2700417307031682
+        },
+        "energy": {
+          "dynamics_db": 8.337667465209961
+        },
+        "tempo": {
+          "syllable_rate": 5.373134328358218
+        },
+        "spectral": {
+          "brightness_hz": 1121.953765902333
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8754325259515571
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 498.7,
+        "end": 505.4
+      }
+    },
+    {
+      "start": 505.38,
+      "end": 506.041,
+      "duration_sec": 0.661,
+      "text": "I'm gonna text you.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 177.66189575195312,
+          "std_hz": 10.026805877685547,
+          "range_hz": 28.919509887695312,
+          "direction": -0.7224334320464716
+        },
+        "energy": {
+          "dynamics_db": 6.705248832702637
+        },
+        "tempo": {
+          "syllable_rate": 4.538577912254151
+        },
+        "spectral": {
+          "brightness_hz": 1593.760988582298
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 505.38,
+        "end": 506.041
+      }
+    },
+    {
+      "start": 506.52,
+      "end": 507.481,
+      "duration_sec": 0.961,
+      "text": "I'm from Ohio.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 213.5474853515625,
+          "std_hz": 26.802541732788086,
+          "range_hz": 87.09608459472656,
+          "direction": -4.783504978175985
+        },
+        "energy": {
+          "dynamics_db": 10.304726600646973
+        },
+        "tempo": {
+          "syllable_rate": 7.284079084287105
+        },
+        "spectral": {
+          "brightness_hz": 802.2753160397541
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 506.52,
+        "end": 507.481
+      }
+    },
+    {
+      "start": 507.9,
+      "end": 511.26,
+      "duration_sec": 3.36,
+      "text": "So you might meet a lot of like trash dudes around here,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 161.26364135742188,
+          "std_hz": 25.246599197387695,
+          "range_hz": 96.55332946777344,
+          "direction": -0.6101055807239164
+        },
+        "energy": {
+          "dynamics_db": 8.574746131896973
+        },
+        "tempo": {
+          "syllable_rate": 6.547619047619021
+        },
+        "spectral": {
+          "brightness_hz": 1073.1443730050755
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9448275862068966
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 507.9,
+        "end": 511.26
+      }
+    },
+    {
+      "start": 511.42,
+      "end": 514.1,
+      "duration_sec": 2.68,
+      "text": "but I'm like a wholesome ass, you know,",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 144.57418823242188,
+          "std_hz": 14.091955184936523,
+          "range_hz": 57.300018310546875,
+          "direction": -0.5772192503136914
+        },
+        "energy": {
+          "dynamics_db": 10.056739807128906
+        },
+        "tempo": {
+          "syllable_rate": 4.104477611940288
+        },
+        "spectral": {
+          "brightness_hz": 947.5798891596868
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 511.42,
+        "end": 514.1
+      }
+    },
+    {
+      "start": 514.08,
+      "end": 515.001,
+      "duration_sec": 0.921,
+      "text": "real world gentleman.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 141.95005798339844,
+          "std_hz": 9.875203132629395,
+          "range_hz": 38.08869934082031,
+          "direction": -0.43019428775028823
+        },
+        "energy": {
+          "dynamics_db": 4.099800109863281
+        },
+        "tempo": {
+          "syllable_rate": 6.514657980456483
+        },
+        "spectral": {
+          "brightness_hz": 879.1943482111867
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 514.08,
+        "end": 515.001
+      }
+    },
+    {
+      "start": 516.08,
+      "end": 518.2,
+      "duration_sec": 2.12,
+      "text": "So, but I'm a good combo of that",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 145.97080993652344,
+          "std_hz": 27.739208221435547,
+          "range_hz": 83.22614288330078,
+          "direction": 0.7606267734786164
+        },
+        "energy": {
+          "dynamics_db": 9.958426475524902
+        },
+        "tempo": {
+          "syllable_rate": 4.245283018867916
+        },
+        "spectral": {
+          "brightness_hz": 904.1054520514575
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 516.08,
+        "end": 518.2
+      }
+    },
+    {
+      "start": 518.18,
+      "end": 520.04,
+      "duration_sec": 1.86,
+      "text": "and like a recovering fuck boy as well.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 140.7550811767578,
+          "std_hz": 13.725357055664062,
+          "range_hz": 52.166160583496094,
+          "direction": -0.5458860810140336
+        },
+        "energy": {
+          "dynamics_db": 6.773542404174805
+        },
+        "tempo": {
+          "syllable_rate": 6.9892473118279055
+        },
+        "spectral": {
+          "brightness_hz": 944.1941118545528
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9629629629629629
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 518.18,
+        "end": 520.04
+      }
+    },
+    {
+      "start": 520.3,
+      "end": 523.02,
+      "duration_sec": 2.72,
+      "text": "So just kind of like, you know, doing my thing.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 137.68341064453125,
+          "std_hz": 10.283679008483887,
+          "range_hz": 36.49214172363281,
+          "direction": -0.20151477468704948
+        },
+        "energy": {
+          "dynamics_db": 9.549138069152832
+        },
+        "tempo": {
+          "syllable_rate": 5.514705882352886
+        },
+        "spectral": {
+          "brightness_hz": 1050.5431557779355
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 520.3,
+        "end": 523.02
+      }
+    },
+    {
+      "start": 524.2,
+      "end": 525.001,
+      "duration_sec": 0.801,
+      "text": "All right.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 117.57987213134766,
+          "std_hz": 4.287431240081787,
+          "range_hz": 10.769584655761719,
+          "direction": -0.23374772962633064
+        },
+        "energy": {
+          "dynamics_db": 13.583085060119629
+        },
+        "tempo": {
+          "syllable_rate": 2.4968789013734987
+        },
+        "spectral": {
+          "brightness_hz": 921.8834743739495
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 524.2,
+        "end": 525.001
+      }
+    },
+    {
+      "start": 526.24,
+      "end": 526.742,
+      "duration_sec": 0.502,
+      "text": "Sick.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 4.754589080810547
+        },
+        "tempo": {
+          "syllable_rate": 7.968127490040591
+        },
+        "spectral": {
+          "brightness_hz": 748.5245915907425
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 526.24,
+        "end": 526.742
+      }
+    },
+    {
+      "start": 527.64,
+      "end": 529.58,
+      "duration_sec": 1.94,
+      "text": "All right, well, I'm gonna keep doing my thing.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 223.44256591796875,
+          "std_hz": 13.805731773376465,
+          "range_hz": 43.33482360839844,
+          "direction": -0.18136173223890426
+        },
+        "energy": {
+          "dynamics_db": 9.497493743896484
+        },
+        "tempo": {
+          "syllable_rate": 5.154639175257587
+        },
+        "spectral": {
+          "brightness_hz": 998.388378129593
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 527.64,
+        "end": 529.58
+      }
+    },
+    {
+      "start": 529.96,
+      "end": 532.84,
+      "duration_sec": 2.88,
+      "text": "I'm gonna find some food, something chill over here.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 183.47293090820312,
+          "std_hz": 11.712201118469238,
+          "range_hz": 41.86470031738281,
+          "direction": -0.16649808039037328
+        },
+        "energy": {
+          "dynamics_db": 7.208051681518555
+        },
+        "tempo": {
+          "syllable_rate": 4.861111111111119
+        },
+        "spectral": {
+          "brightness_hz": 970.2003233759805
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.96
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 529.96,
+        "end": 532.84
+      }
+    },
+    {
+      "start": 532.92,
+      "end": 534.141,
+      "duration_sec": 1.221,
+      "text": "So, all right.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 148.20932006835938,
+          "std_hz": 21.165149688720703,
+          "range_hz": 68.69798278808594,
+          "direction": -2.067292871640866
+        },
+        "energy": {
+          "dynamics_db": 8.610848426818848
+        },
+        "tempo": {
+          "syllable_rate": 4.9140049140049
+        },
+        "spectral": {
+          "brightness_hz": 1024.529279084444
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 532.92,
+        "end": 534.141
+      }
+    },
+    {
+      "start": 534.12,
+      "end": 536.682,
+      "duration_sec": 2.562,
+      "text": "Well, hey lit good to meet you.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 204.44284057617188,
+          "std_hz": 27.906641006469727,
+          "range_hz": 104.07542419433594,
+          "direction": 0.6633495742127339
+        },
+        "energy": {
+          "dynamics_db": 7.579328536987305
+        },
+        "tempo": {
+          "syllable_rate": 6.245120999219331
+        },
+        "spectral": {
+          "brightness_hz": 947.6535871723188
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9279279279279279
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 534.12,
+        "end": 536.682
+      }
+    },
+    {
+      "start": 536.783,
+      "end": 537.61,
+      "duration_sec": 0.827,
+      "text": "I'll talk to you soon.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 179.91587829589844,
+          "std_hz": 17.285356521606445,
+          "range_hz": 79.19312286376953,
+          "direction": -0.558363467529387
+        },
+        "energy": {
+          "dynamics_db": 6.555475234985352
+        },
+        "tempo": {
+          "syllable_rate": 7.255139056831939
+        },
+        "spectral": {
+          "brightness_hz": 1157.013590027066
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9722222222222222
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 536.783,
+        "end": 537.61
+      }
+    },
+    {
+      "start": 537.832,
+      "end": 538.72,
+      "duration_sec": 0.888,
+      "text": "All right, peace",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 11.715713500976562
+        },
+        "tempo": {
+          "syllable_rate": 3.37837837837825
+        },
+        "spectral": {
+          "brightness_hz": 819.4938254149154
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 537.832,
+        "end": 538.72
+      }
+    },
+    {
+      "start": 565.4,
+      "end": 568.08,
+      "duration_sec": 2.68,
+      "text": "I love you, I love you, I love you",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 71.58868408203125,
+          "std_hz": 11.222312927246094,
+          "range_hz": 34.666343688964844,
+          "direction": -0.04062964735213345
+        },
+        "energy": {
+          "dynamics_db": 2.4307804107666016
+        },
+        "tempo": {
+          "syllable_rate": 5.2238805970148015
+        },
+        "spectral": {
+          "brightness_hz": 876.4447827322455
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 565.4,
+        "end": 568.08
+      }
+    },
+    {
+      "start": 568.06,
+      "end": 568.861,
+      "duration_sec": 0.801,
+      "text": "I love you, I love you, I love you",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 77.07077026367188,
+          "std_hz": 1.5327149629592896,
+          "range_hz": 4.841827392578125,
+          "direction": -0.03177212626994146
+        },
+        "energy": {
+          "dynamics_db": 1.216583251953125
+        },
+        "tempo": {
+          "syllable_rate": 6.242197253432861
+        },
+        "spectral": {
+          "brightness_hz": 1032.024577351527
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 568.06,
+        "end": 568.861
+      }
+    },
+    {
+      "start": 568.84,
+      "end": 569.981,
+      "duration_sec": 1.141,
+      "text": "I love you, I love you, I love you",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 71.50032806396484,
+          "std_hz": 5.549398899078369,
+          "range_hz": 13.649612426757812,
+          "direction": -0.1734526580407556
+        },
+        "energy": {
+          "dynamics_db": 2.165010452270508
+        },
+        "tempo": {
+          "syllable_rate": 6.134969325153575
+        },
+        "spectral": {
+          "brightness_hz": 895.8039598153205
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 568.84,
+        "end": 569.981
+      }
+    },
+    {
+      "start": 569.96,
+      "end": 574.18,
+      "duration_sec": 4.22,
+      "text": "I love you, I love you, I love you",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 89.39257049560547,
+          "std_hz": 23.203205108642578,
+          "range_hz": 54.90110778808594,
+          "direction": -0.2222210079733397
+        },
+        "energy": {
+          "dynamics_db": 3.176013946533203
+        },
+        "tempo": {
+          "syllable_rate": 3.791469194312874
+        },
+        "spectral": {
+          "brightness_hz": 914.1418186574546
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.wav",
+        "start": 569.96,
+        "end": 574.18
+      }
+    }
+  ]
+}

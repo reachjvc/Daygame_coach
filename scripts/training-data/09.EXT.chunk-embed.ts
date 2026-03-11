@@ -1946,6 +1946,11 @@ async function main() {
           phaseMap.set(tp.segment, tp.phase)
         }
       }
+      const convGlobalSegmentIds = new Set<number>(
+        convSegments
+          .map((seg) => seg.id)
+          .filter((id): id is number => typeof id === "number")
+      )
 
       // Stage 07 writes turn_phases[].segment as a global segments[].id (it remaps from
       // conversation-local indices before writing). Older artifacts may still contain
@@ -1955,7 +1960,8 @@ async function main() {
         const globalSegId = seg.id
         const globalPhase =
           globalSegId !== undefined ? phaseMap.get(globalSegId) : undefined
-        const localPhase = phaseMap.get(idx)
+        // Only treat idx as conversation-local when it cannot be a real global id.
+        const localPhase = convGlobalSegmentIds.has(idx) ? undefined : phaseMap.get(idx)
         const phase = globalPhase ?? localPhase
 
         if (globalSegId !== undefined && globalPhase === undefined && localPhase !== undefined) {

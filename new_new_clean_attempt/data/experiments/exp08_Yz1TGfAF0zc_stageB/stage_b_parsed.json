@@ -1,0 +1,761 @@
+{
+  "video_type_received": "compilation",
+  "enrichments": [
+    {
+      "type": "commentary",
+      "conversation_id": null,
+      "description": "Intro: coach announces he will demonstrate two easiest opener lines",
+      "techniques_used": [],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [],
+      "teaching_points": [
+        "Two simple canned openers are all you need to start approaching women"
+      ],
+      "evidence_segment_ids": [
+        0
+      ]
+    },
+    {
+      "type": "approach",
+      "conversation_id": 1,
+      "description": "Direct opener on woman walking by, quick fist bump, she offers sip of drink",
+      "techniques_used": [
+        {
+          "technique": "direct_opener",
+          "segment_id": 2,
+          "quote": "i just saw you walking by and i thought you were cute i just wanted to come over and say hi",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "physical_escalation",
+          "segment_id": 3,
+          "quote": "is that a fist bump",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "subcommunication",
+          "segment_id": 3,
+          "quote": "you're very like chill and low-key",
+          "evidence_strength": "demonstrated"
+        }
+      ],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "appearance",
+        "personality"
+      ],
+      "turn_phases": [
+        {
+          "segment_id": 1,
+          "phase": "open"
+        },
+        {
+          "segment_id": 2,
+          "phase": "open"
+        },
+        {
+          "segment_id": 3,
+          "phase": "pre_hook"
+        },
+        {
+          "segment_id": 4,
+          "phase": "post_hook"
+        }
+      ],
+      "hook_point": {
+        "segment_id": 3,
+        "signal": "Target offers fist bump and engages warmly"
+      },
+      "investment_level": "medium",
+      "evidence_segment_ids": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "type": "commentary",
+      "conversation_id": null,
+      "description": "Debrief on first approach; introduces second canned opener about interesting look",
+      "techniques_used": [
+        {
+          "technique": "direct_opener",
+          "segment_id": 6,
+          "quote": "canned opener but when it's delivered well nice and slow looking her deep in her eyes it can go well",
+          "evidence_strength": "taught"
+        }
+      ],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "appearance"
+      ],
+      "teaching_points": [
+        "Canned openers work well when delivered slowly with strong eye contact",
+        "Second canned opener: 'I thought you had an interesting look'",
+        "Simple delivery matters more than clever words"
+      ],
+      "evidence_segment_ids": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "type": "approach",
+      "conversation_id": 2,
+      "description": "Brief direct approach using interesting look opener on passing woman",
+      "techniques_used": [
+        {
+          "technique": "direct_opener",
+          "segment_id": 10,
+          "quote": "i just want to say i thought you had a really interesting look",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "false_time_constraint",
+          "segment_id": 10,
+          "quote": "i was actually headed that way but i just want to say",
+          "evidence_strength": "demonstrated"
+        }
+      ],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "appearance"
+      ],
+      "turn_phases": [
+        {
+          "segment_id": 10,
+          "phase": "open"
+        }
+      ],
+      "hook_point": null,
+      "investment_level": null,
+      "evidence_segment_ids": [
+        10
+      ]
+    },
+    {
+      "type": "approach",
+      "conversation_id": 3,
+      "description": "Interesting look opener on woman who is on the phone with her boyfriend",
+      "techniques_used": [
+        {
+          "technique": "direct_opener",
+          "segment_id": 12,
+          "quote": "i thought you had a really interesting look i just wanted to say hi really quick",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "false_time_constraint",
+          "segment_id": 11,
+          "quote": "i was actually just walking by",
+          "evidence_strength": "demonstrated"
+        }
+      ],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "appearance",
+        "relationship"
+      ],
+      "turn_phases": [
+        {
+          "segment_id": 11,
+          "phase": "open"
+        },
+        {
+          "segment_id": 12,
+          "phase": "open"
+        },
+        {
+          "segment_id": 13,
+          "phase": "open"
+        },
+        {
+          "segment_id": 14,
+          "phase": "close"
+        },
+        {
+          "segment_id": 15,
+          "phase": "close"
+        }
+      ],
+      "hook_point": null,
+      "investment_level": null,
+      "evidence_segment_ids": [
+        11,
+        12,
+        13,
+        14,
+        15
+      ]
+    },
+    {
+      "type": "commentary",
+      "conversation_id": null,
+      "description": "Debrief on boyfriend rejection; lesson about approaching despite uncertainty",
+      "techniques_used": [],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "inner_game",
+        "relationship"
+      ],
+      "teaching_points": [
+        "You never know how a woman will respond so approach anyway",
+        "Even women on the phone can react positively to a genuine compliment",
+        "Walk away from rejections feeling confident because you took action"
+      ],
+      "evidence_segment_ids": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33
+      ]
+    },
+    {
+      "type": "commentary",
+      "conversation_id": null,
+      "description": "Summary of canned openers; progression from simple to advanced; coaching promo",
+      "techniques_used": [
+        {
+          "technique": "direct_opener",
+          "segment_id": 35,
+          "quote": "nothing special there was nothing unique about these opens just very generic very canned line nice slow delivery",
+          "evidence_strength": "taught"
+        }
+      ],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "inner_game",
+        "coaching_promotion"
+      ],
+      "teaching_points": [
+        "Start simple with canned openers before attempting advanced material",
+        "Overthinking a witty opener puts you in your head and causes hesitation",
+        "Master basic openers first (1-2 weeks), then learn to elaborate on them"
+      ],
+      "evidence_segment_ids": [
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58
+      ]
+    },
+    {
+      "type": "commentary",
+      "conversation_id": null,
+      "description": "Teaching how to elaborate openers with specific adjectives describing her style",
+      "techniques_used": [
+        {
+          "technique": "observation_opener",
+          "segment_id": 63,
+          "quote": "actually explain to the woman what you notice about her",
+          "evidence_strength": "taught"
+        },
+        {
+          "technique": "cold_read",
+          "segment_id": 73,
+          "quote": "classy elegant professional business casual sporty fit or comfy comfortable",
+          "evidence_strength": "taught"
+        }
+      ],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "appearance"
+      ],
+      "teaching_points": [
+        "Elaborate on your opener by describing what specifically you noticed about her look",
+        "Use simple adjectives: classy, elegant, sporty, comfy, professional",
+        "Mention colors and style coordination to make the compliment feel specific and genuine"
+      ],
+      "evidence_segment_ids": [
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ]
+    },
+    {
+      "type": "approach",
+      "conversation_id": 4,
+      "description": "Elaborated opener complimenting woman in all black as dressed up but comfy",
+      "techniques_used": [
+        {
+          "technique": "direct_opener",
+          "segment_id": 78,
+          "quote": "i thought you look super cute like sitting in the all black",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "observation_opener",
+          "segment_id": 79,
+          "quote": "you're like dressed up but you're like comfy and like casual at the same time",
+          "evidence_strength": "demonstrated"
+        }
+      ],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "appearance"
+      ],
+      "turn_phases": [
+        {
+          "segment_id": 77,
+          "phase": "open"
+        },
+        {
+          "segment_id": 78,
+          "phase": "open"
+        },
+        {
+          "segment_id": 79,
+          "phase": "open"
+        }
+      ],
+      "hook_point": null,
+      "investment_level": null,
+      "evidence_segment_ids": [
+        77,
+        78,
+        79
+      ]
+    },
+    {
+      "type": "approach",
+      "conversation_id": 5,
+      "description": "Elaborated opener complimenting woman enjoying food and tanning on a Tuesday",
+      "techniques_used": [
+        {
+          "technique": "direct_opener",
+          "segment_id": 80,
+          "quote": "you look very cute today",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "situational_opener",
+          "segment_id": 81,
+          "quote": "i see you enjoying your food just tanning very peaceful Tuesday afternoon",
+          "evidence_strength": "demonstrated"
+        }
+      ],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "appearance",
+        "food_drinks"
+      ],
+      "turn_phases": [
+        {
+          "segment_id": 80,
+          "phase": "open"
+        },
+        {
+          "segment_id": 81,
+          "phase": "open"
+        }
+      ],
+      "hook_point": null,
+      "investment_level": null,
+      "evidence_segment_ids": [
+        80,
+        81
+      ]
+    },
+    {
+      "type": "approach",
+      "conversation_id": 6,
+      "description": "Elaborated opener on woman with beige and jean outfit; language barrier interaction",
+      "techniques_used": [
+        {
+          "technique": "direct_opener",
+          "segment_id": 82,
+          "quote": "i just thought you look cute",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "observation_opener",
+          "segment_id": 83,
+          "quote": "the beige with the jean like it's a good fit",
+          "evidence_strength": "demonstrated"
+        }
+      ],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "appearance",
+        "language_barrier"
+      ],
+      "turn_phases": [
+        {
+          "segment_id": 82,
+          "phase": "open"
+        },
+        {
+          "segment_id": 83,
+          "phase": "open"
+        },
+        {
+          "segment_id": 84,
+          "phase": "open"
+        }
+      ],
+      "hook_point": null,
+      "investment_level": null,
+      "evidence_segment_ids": [
+        82,
+        83,
+        84
+      ]
+    },
+    {
+      "type": "commentary",
+      "conversation_id": null,
+      "description": "Debrief on language barrier approach; adapted by pointing out style and colors",
+      "techniques_used": [
+        {
+          "technique": "calibration",
+          "segment_id": 88,
+          "quote": "i had to dumb it down a little bit for that particular woman so that it would make sense",
+          "evidence_strength": "taught"
+        }
+      ],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "appearance",
+        "language_barrier"
+      ],
+      "teaching_points": [
+        "When there's a language barrier, simplify to concrete words like colors and clothing items",
+        "Pointing out style and color coordination is a reliable way to elaborate on your opener"
+      ],
+      "evidence_segment_ids": [
+        85,
+        86,
+        87,
+        88,
+        89,
+        90
+      ]
+    },
+    {
+      "type": "approach",
+      "conversation_id": 7,
+      "description": "Elaborated opener complimenting woman on white and black sporty fit",
+      "techniques_used": [
+        {
+          "technique": "direct_opener",
+          "segment_id": 92,
+          "quote": "i thought you had a really interesting look like you look very cute",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "observation_opener",
+          "segment_id": 92,
+          "quote": "with your white and black sporty fit",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "false_time_constraint",
+          "segment_id": 91,
+          "quote": "i was actually headed that way but i just want to say",
+          "evidence_strength": "demonstrated"
+        }
+      ],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "appearance"
+      ],
+      "turn_phases": [
+        {
+          "segment_id": 91,
+          "phase": "open"
+        },
+        {
+          "segment_id": 92,
+          "phase": "open"
+        },
+        {
+          "segment_id": 93,
+          "phase": "open"
+        }
+      ],
+      "hook_point": null,
+      "investment_level": null,
+      "evidence_segment_ids": [
+        91,
+        92,
+        93
+      ]
+    },
+    {
+      "type": "commentary",
+      "conversation_id": null,
+      "description": "Brief debrief explaining the sporty fit observation breakdown",
+      "techniques_used": [],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "appearance"
+      ],
+      "teaching_points": [
+        "Describe the specific outfit elements: colors, style category, and overall vibe"
+      ],
+      "evidence_segment_ids": [
+        94,
+        95
+      ]
+    },
+    {
+      "type": "approach",
+      "conversation_id": 8,
+      "description": "Longest approach: elaborated fashion opener leads to cold read, screening, and WhatsApp close",
+      "techniques_used": [
+        {
+          "technique": "direct_opener",
+          "segment_id": 97,
+          "quote": "i thought you looked really cute you have like a very interesting look with your fashion",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "observation_opener",
+          "segment_id": 98,
+          "quote": "the beige it's very like I don't almost like like a Zara type fit",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "false_time_constraint",
+          "segment_id": 96,
+          "quote": "i was actually headed that way but i just want to say",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "cold_read",
+          "segment_id": 101,
+          "quote": "it means you're independent and you're a little adventurous and you like to explore",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "screening",
+          "segment_id": 102,
+          "quote": "you seem very bubbly yeah so that's cool",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "logistics_check",
+          "segment_id": 103,
+          "quote": "you don't have any plans for the next week",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "logistics_check",
+          "segment_id": 106,
+          "quote": "i know you're gonna be here for a week and you have no plans",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "number_close",
+          "segment_id": 107,
+          "quote": "do you have WhatsApp or what do you have yeah I do",
+          "evidence_strength": "demonstrated"
+        },
+        {
+          "technique": "time_bridge",
+          "segment_id": 106,
+          "quote": "maybe we should keep in touch",
+          "evidence_strength": "demonstrated"
+        }
+      ],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "appearance",
+        "personality",
+        "plans",
+        "travel",
+        "contact",
+        "duration"
+      ],
+      "turn_phases": [
+        {
+          "segment_id": 96,
+          "phase": "open"
+        },
+        {
+          "segment_id": 97,
+          "phase": "open"
+        },
+        {
+          "segment_id": 98,
+          "phase": "open"
+        },
+        {
+          "segment_id": 99,
+          "phase": "pre_hook"
+        },
+        {
+          "segment_id": 100,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 101,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 102,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 103,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 104,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 105,
+          "phase": "post_hook"
+        },
+        {
+          "segment_id": 106,
+          "phase": "close"
+        },
+        {
+          "segment_id": 107,
+          "phase": "close"
+        }
+      ],
+      "hook_point": {
+        "segment_id": 100,
+        "signal": "Target starts asking questions back and engaging actively about her travel"
+      },
+      "investment_level": "medium",
+      "evidence_segment_ids": [
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107
+      ]
+    },
+    {
+      "type": "commentary",
+      "conversation_id": null,
+      "description": "Final debrief: elaborating throughout interaction makes conversation flavorful; coaching CTA",
+      "techniques_used": [
+        {
+          "technique": "observation_opener",
+          "segment_id": 109,
+          "quote": "I'm constantly talking about the things I notice about the woman and that's what makes the conversation flavorful",
+          "evidence_strength": "taught"
+        }
+      ],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "coaching_promotion"
+      ],
+      "teaching_points": [
+        "Elaboration on what you notice should continue throughout the interaction, not just the opener",
+        "Right opener plus right delivery is powerful but full conversational skills are needed for dates",
+        "Structure and accountability through coaching accelerates progress"
+      ],
+      "evidence_segment_ids": [
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123
+      ]
+    }
+  ],
+  "unlisted_concepts": {
+    "techniques": [
+      "opener_elaboration: Extending a generic canned opener with specific observations about the target's style, colors, and outfit to make it feel authentic and personalized"
+    ],
+    "topics": []
+  },
+  "self_verification": {
+    "checks_passed": [
+      "Every technique claim has a specific segment citation and quote",
+      "No technique tagged that coach says NOT to do",
+      "No technique tagged from a different video - all demonstrated in this video's footage",
+      "Phase labels progress forward only in all approaches",
+      "Evidence strength accurately reflects demonstrated (in-approach) vs taught (commentary)",
+      "Topics match what was actually discussed in each segment range"
+    ],
+    "corrections_made": [
+      "Initially considered tagging 'appreciation' for compliments in openers but these are part of direct_opener delivery, not separate mid-conversation appreciation",
+      "Segments 99-100 are garbled quality; used surrounding context from seg 98 and 101 to infer post_hook transition but flagged as lower confidence",
+      "Did not tag 'qualification' for seg 102 'you seem very bubbly' - this is the coach making an observation/cold-read, not asking her to prove herself; tagged as screening instead"
+    ],
+    "remaining_concerns": [
+      "Segments 99-100 are marked garbled - hook point placement at seg 100 is based on partial transcript evidence",
+      "Approach 1 (conv=1) segments 3-4 are mixed and missing_punctuation - the post_hook assessment is based on indirect evidence (fist bump, drink offer mentioned in debrief at seg 7)",
+      "Several short approaches (conv 4-7) only show the open phase; unclear if interaction continued off-camera"
+    ]
+  }
+}

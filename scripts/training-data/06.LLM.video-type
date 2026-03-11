@@ -38,8 +38,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -58,7 +60,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # ---------------------------
 
 SCHEMA_VERSION = "3.5.0"
-PIPELINE_VERSION = "06.LLM.video-type-v3.5.2"  # v3.5.2: add conversation-level target participation labels
+PIPELINE_VERSION = "06.LLM.video-type-v3.5.3"  # v3.5.3: fail-closed validation + hard block for extreme over-segmentation
 PROMPT_VERSION = "3.5.0"
 
 DEBUG_MODE = False
@@ -81,6 +83,13 @@ MAX_DYNAMIC_TIMEOUT_SECONDS = 1800
 TIMEOUT_BUFFER_SECONDS = 120
 TIMEOUT_CHARS_PER_SECOND = 140.0
 TIMEOUT_SECONDS_PER_SEGMENT = 1.2
+MAX_SINGLE_PASS_SEGMENTS = 500
+CHUNKED_ANALYSIS_SEGMENTS = 200
+CHUNK_CONTEXT_OVERLAP = 24
+GLOBAL_ANALYSIS_SAMPLE_SEGMENTS = 260
+INFIELD_MULTI_CONVERSATION_WARNING_THRESHOLD = 2
+INFIELD_MULTI_CONVERSATION_BLOCK_THRESHOLD = 12
+FRAGMENT_CONVERSATION_BLOCK_THRESHOLD = 8
 
 
 # ---------------------------
@@ -113,6 +122,228 @@ def get_schema() -> Optional[Dict]:
     if _CACHED_SCHEMA is None:
         _CACHED_SCHEMA = load_schema()
     return _CACHED_SCHEMA
+
+
+def normalize_speaker_id(value: Any) -> str:
+    if isinstance(value, str):
+        normalized = value.strip()
+        return normalized if normalized else "UNKNOWN"
+    if value is None:
+        return "UNKNOWN"
+    return str(value)
+
+
+def normalize_text(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    return str(value)
+
+
+def normalize_number(value: Any, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def normalize_bool(value: Any, default: bool = False) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered in {"true", "1", "yes"}:
+            return True
+        if lowered in {"false", "0", "no"}:
+            return False
+    if isinstance(value, (int, float)):
+        return bool(value)
+    return default
+
+
+def compact_text_for_prompt(text: str, max_chars: int = 220) -> str:
+    compact = re.sub(r"\s+", " ", normalize_text(text)).strip()
+    if len(compact) <= max_chars:
+        return compact
+    return compact[: max_chars - 3].rstrip() + "..."
+
+
+def build_speaker_stats(segments: List[Dict]) -> Tuple[List[str], str]:
+    speakers = sorted({normalize_speaker_id(seg.get("pyannote_speaker")) for seg in segments})
+    speaker_seg_counts: Dict[str, int] = {}
+    speaker_word_counts: Dict[str, int] = {}
+    speaker_duration: Dict[str, float] = {}
+
+    for seg in segments:
+        spk = normalize_speaker_id(seg.get("pyannote_speaker"))
+        text = normalize_text(seg.get("text", "")).strip()
+        start = normalize_number(seg.get("start", 0), 0.0)
+        end = normalize_number(seg.get("end", 0), start)
+        dur = max(0.0, end - start)
+        speaker_seg_counts[spk] = speaker_seg_counts.get(spk, 0) + 1
+        speaker_word_counts[spk] = speaker_word_counts.get(spk, 0) + len(text.split())
+        speaker_duration[spk] = speaker_duration.get(spk, 0) + dur
+
+    stats_lines = []
+    for spk in sorted(speakers, key=lambda s: speaker_seg_counts.get(s, 0), reverse=True):
+        segs = speaker_seg_counts.get(spk, 0)
+        words = speaker_word_counts.get(spk, 0)
+        dur = speaker_duration.get(spk, 0)
+        stats_lines.append(f"{spk}: {segs} segments, ~{words} words, {dur:.1f}s speaking time")
+
+    return speakers, "\n".join(stats_lines)
+
+
+def build_transcript_lines(
+    segments: List[Dict],
+    ids: List[int],
+    *,
+    target_ids: Optional[Set[int]] = None,
+    max_text_chars: Optional[int] = None,
+) -> str:
+    lines: List[str] = []
+    include_marker = target_ids is not None
+    target_lookup = target_ids or set()
+    for seg_id in ids:
+        if seg_id < 0 or seg_id >= len(segments):
+            continue
+        seg = segments[seg_id]
+        speaker = normalize_speaker_id(seg.get("pyannote_speaker"))
+        raw_text = re.sub(r"\s+", " ", normalize_text(seg.get("text", ""))).strip()
+        if isinstance(max_text_chars, int) and max_text_chars > 0:
+            text = compact_text_for_prompt(raw_text, max_chars=max_text_chars)
+        else:
+            text = raw_text
+        start = normalize_number(seg.get("start", 0), 0.0)
+        end = normalize_number(seg.get("end", 0), start)
+        marker = ""
+        if include_marker:
+            marker = "TARGET " if seg_id in target_lookup else "CONTEXT "
+        if text:
+            lines.append(f"[{seg_id}] {marker}{speaker} ({start:.1f}-{end:.1f}s): \"{text}\"")
+        else:
+            lines.append(f"[{seg_id}] {marker}{speaker} ({start:.1f}-{end:.1f}s): \"\"")
+    return "\n".join(lines)
+
+
+def sample_segment_ids(total_segments: int, max_segments: int) -> List[int]:
+    total_segments = max(0, int(total_segments))
+    max_segments = max(1, int(max_segments))
+    if total_segments <= max_segments:
+        return list(range(total_segments))
+
+    head = max_segments // 3
+    middle = max_segments // 3
+    tail = max_segments - head - middle
+
+    head_ids = list(range(0, min(head, total_segments)))
+    tail_start = max(0, total_segments - tail)
+    tail_ids = list(range(tail_start, total_segments))
+
+    middle_start = max(0, (total_segments - middle) // 2)
+    middle_end = min(total_segments, middle_start + middle)
+    middle_ids = list(range(middle_start, middle_end))
+
+    merged = sorted(set(head_ids + middle_ids + tail_ids))
+    if len(merged) > max_segments:
+        merged = merged[:max_segments]
+    return merged
+
+
+def normalize_segment_classification(item: Any, default_id: int) -> Dict[str, Any]:
+    if not isinstance(item, dict):
+        return {
+            "id": default_id,
+            "segment_type": "commentary",
+            "conversation_id": 0,
+            "is_conversation_start": False,
+        }
+
+    segment_id_raw = item.get("id", default_id)
+    segment_id = default_id
+    if isinstance(segment_id_raw, int):
+        segment_id = segment_id_raw
+    elif isinstance(segment_id_raw, float) and segment_id_raw.is_integer():
+        segment_id = int(segment_id_raw)
+    elif isinstance(segment_id_raw, str):
+        stripped = segment_id_raw.strip()
+        if re.fullmatch(r"-?\d+", stripped):
+            segment_id = int(stripped)
+
+    segment_type = str(item.get("segment_type", "commentary")).strip().lower()
+    if segment_type not in {"approach", "commentary", "transition"}:
+        segment_type = "commentary"
+
+    normalized: Dict[str, Any] = {
+        "id": segment_id,
+        "segment_type": segment_type,
+        "conversation_id": 0,
+        "is_conversation_start": normalize_bool(item.get("is_conversation_start"), False),
+    }
+
+    speaker_role_override = item.get("speaker_role_override")
+    if isinstance(speaker_role_override, str):
+        override = speaker_role_override.strip().lower()
+        if override in {"coach", "student", "target", "unknown"}:
+            normalized["speaker_role_override"] = override
+
+    if normalize_bool(item.get("is_teaser"), False):
+        normalized["is_teaser"] = True
+        teaser_of = item.get("teaser_of_conversation_id")
+        if isinstance(teaser_of, int) and teaser_of >= 0:
+            normalized["teaser_of_conversation_id"] = teaser_of
+        else:
+            normalized["teaser_of_conversation_id"] = None
+
+    return normalized
+
+
+def assign_conversation_ids(
+    classifications: List[Dict[str, Any]],
+    *,
+    video_type: str,
+) -> List[Dict[str, Any]]:
+    if video_type in {"talking_head", "podcast"}:
+        for cls in classifications:
+            cls["segment_type"] = "commentary" if cls.get("segment_type") == "approach" else cls.get("segment_type", "commentary")
+            if cls.get("segment_type") not in {"commentary", "transition"}:
+                cls["segment_type"] = "commentary"
+            cls["conversation_id"] = 0
+            cls["is_conversation_start"] = False
+        return classifications
+
+    next_conv_id = 0
+    in_active_conversation = False
+    for cls in classifications:
+        segment_type = cls.get("segment_type", "commentary")
+        if segment_type == "approach":
+            wants_new = normalize_bool(cls.get("is_conversation_start"), False)
+            if (not in_active_conversation) or wants_new:
+                next_conv_id += 1
+                cls["is_conversation_start"] = True
+            else:
+                cls["is_conversation_start"] = False
+            cls["conversation_id"] = next_conv_id
+            in_active_conversation = True
+        else:
+            cls["conversation_id"] = 0
+            cls["is_conversation_start"] = False
+            in_active_conversation = False
+    return classifications
+
+
+def estimate_llm_calls_from_flags(extra_flags: List[str]) -> int:
+    llm_calls = 1
+    for flag in extra_flags:
+        if not isinstance(flag, str):
+            continue
+        match = re.fullmatch(r"chunked_analysis_(\d+)chunks", flag.strip())
+        if match:
+            chunk_calls = max(1, int(match.group(1)))
+            # 1 global metadata call + N chunk calls
+            llm_calls = max(llm_calls, 1 + chunk_calls)
+    return llm_calls
 
 
 def validate_output(output: Dict, input_segments: List[Dict]) -> List[ValidationResult]:
@@ -166,15 +397,16 @@ def validate_output(output: Dict, input_segments: List[Dict]) -> List[Validation
     # --- 4. Video type ↔ segment type consistency ---
     video_type = output.get("video_type", {}).get("type", "")
     if video_type in ("talking_head", "podcast"):
-        non_commentary = [
+        invalid_non_conversation = [
             s for s in output_segments
-            if s.get("segment_type") != "commentary" or s.get("conversation_id", 0) > 0
+            if s.get("segment_type") not in ("commentary", "transition")
+            or s.get("conversation_id", 0) > 0
         ]
-        if non_commentary:
+        if invalid_non_conversation:
             results.append(ValidationResult(
                 "error", "video_type_segment_mismatch",
-                f"{video_type} video has {len(non_commentary)} non-commentary segments "
-                f"(should all be commentary with conversation_id=0)"
+                f"{video_type} video has {len(invalid_non_conversation)} non-conversation segments "
+                f"(only commentary/transition with conversation_id=0 are allowed)"
             ))
 
     # --- 5. Speaker role sanity ---
@@ -271,6 +503,7 @@ def validate_output(output: Dict, input_segments: List[Dict]) -> List[Validation
 
     # --- 8. Fragment conversation sanity ---
     # Catch common false splits: very short coach-only/student-only fragments.
+    fragment_conversation_count = 0
     if video_type in ("infield", "compilation"):
         for conv_id, seg_ids in conv_segment_ids.items():
             conv_segs = [s for s in output_segments if s.get("conversation_id") == conv_id]
@@ -284,11 +517,18 @@ def validate_output(output: Dict, input_segments: List[Dict]) -> List[Validation
             has_approacher = ("coach" in c_roles) or ("student" in c_roles)
 
             if c_dur < 10.0 and (not has_target or not has_approacher):
+                fragment_conversation_count += 1
                 results.append(ValidationResult(
                     "warning", "fragment_conversation_suspect",
                     f"Conversation {conv_id} is short ({c_dur:.1f}s) with roles={sorted(c_roles)}; "
                     f"likely commentary/fragment split error"
                 ))
+        if fragment_conversation_count >= FRAGMENT_CONVERSATION_BLOCK_THRESHOLD:
+            results.append(ValidationResult(
+                "error", "fragment_conversation_overload",
+                f"{fragment_conversation_count} suspect fragment conversations detected "
+                f"(threshold={FRAGMENT_CONVERSATION_BLOCK_THRESHOLD})"
+            ))
 
     # --- 9. Opener attribution sanity ---
     # If opener-like text is tagged as target, role assignment is likely inverted.
@@ -319,10 +559,16 @@ def validate_output(output: Dict, input_segments: List[Dict]) -> List[Validation
             "warning", "compilation_with_single_conversation",
             f"Video labeled compilation but only {len(conversations)} conversation(s); possible infield"
         ))
-    if video_type == "infield" and len(conversations) >= 2:
+    if video_type == "infield" and len(conversations) >= INFIELD_MULTI_CONVERSATION_WARNING_THRESHOLD:
         results.append(ValidationResult(
             "warning", "infield_with_multiple_conversations",
             f"Video labeled infield with {len(conversations)} conversations; verify not a compilation"
+        ))
+    if video_type == "infield" and len(conversations) >= INFIELD_MULTI_CONVERSATION_BLOCK_THRESHOLD:
+        results.append(ValidationResult(
+            "error", "infield_conversation_count_extreme",
+            f"Video labeled infield with {len(conversations)} conversations "
+            f"(threshold={INFIELD_MULTI_CONVERSATION_BLOCK_THRESHOLD}); likely over-segmentation or wrong video type"
         ))
 
     return results
@@ -568,6 +814,61 @@ OUTPUT: First, briefly reason about the video type, speaker assignments, transcr
 """
 
 
+ANALYZE_VIDEO_GLOBAL_PROMPT = """You are analyzing a daygame coaching video. Determine global metadata only.
+
+Tasks:
+1. Classify video type: infield|talking_head|podcast|compilation
+2. Label each speaker role: coach|student|target|voiceover|other|unknown|collapsed
+3. Assess transcript quality score (1-100)
+
+Rules:
+- If a speaker ID mixes approacher and target behavior, mark that ID as "collapsed".
+- Do not invent speaker IDs.
+- Output only JSON in a ```json code block.
+
+VIDEO TITLE: "{title}"
+TOTAL SEGMENTS: {total_segments}
+
+SPEAKERS FOUND: {speakers}
+
+SPEAKER STATS:
+{speaker_stats}
+
+SAMPLED TRANSCRIPT:
+{transcript}
+
+OUTPUT JSON SCHEMA:
+{{"video_type": {{"type": "infield|talking_head|podcast|compilation", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}, "transcript_confidence": {{"score": 1-100, "reasoning": "brief explanation"}}, "speaker_labels": {{"SPEAKER_XX": {{"role": "coach|student|target|voiceover|other|unknown|collapsed", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}}}}}
+"""
+
+
+ANALYZE_VIDEO_CHUNK_PROMPT = """You are classifying transcript segments for one chunk of a daygame video.
+
+Global metadata (already decided, do not reclassify):
+- video_type: "{video_type}"
+- speaker_labels:
+{speaker_labels_json}
+- collapsed_speaker_ids: {collapsed_speaker_ids}
+
+Instructions:
+1. Classify ONLY segments marked TARGET.
+2. Allowed segment_type: approach|commentary|transition.
+3. Set is_conversation_start=true only when a TARGET segment clearly starts a new approach conversation.
+4. Set conversation_id=0 for all output segments (pipeline will assign final IDs globally).
+5. speaker_role_override is allowed ONLY for TARGET segments whose speaker_id is in collapsed_speaker_ids.
+6. If video_type is talking_head or podcast: do not use approach.
+7. Mark teaser segments when clearly intro-preview content that repeats later.
+8. TARGET IDs for this request: {target_id_list}
+9. Return one object per TARGET id (all IDs required), with exact ids, in ascending order.
+
+Chunk context:
+{transcript}
+
+OUTPUT JSON SCHEMA:
+{{"segments": [{{"id": 123, "segment_type": "approach|commentary|transition", "conversation_id": 0, "is_conversation_start": false, "speaker_role_override": "coach|student|target|unknown (only when needed)", "is_teaser": true (optional), "teaser_of_conversation_id": N or null (optional)}}]}}
+"""
+
+
 # ---------------------------
 # State Management
 # ---------------------------
@@ -606,17 +907,31 @@ def save_state(state_path: Path, state: ProcessingState) -> None:
 
 @lru_cache(maxsize=1)
 def find_claude_binary() -> Optional[str]:
-    for path in CLAUDE_BINARY_PATHS:
-        path = Path(path)
+    for env_key in ("CLAUDE_BINARY", "CLAUDE_BIN"):
+        raw = str(os.environ.get(env_key, "")).strip()
+        if not raw:
+            continue
+        p = Path(raw)
+        if p.exists() and p.is_file():
+            return str(p)
+
+    resolved = shutil.which("claude")
+    if resolved:
+        return resolved
+
+    nvm_candidates = sorted(
+        Path.home().glob(".nvm/versions/node/*/bin/claude"),
+        key=lambda path: path.stat().st_mtime if path.exists() else 0.0,
+        reverse=True,
+    )
+    for cand in nvm_candidates:
+        if cand.exists() and cand.is_file():
+            return str(cand)
+
+    for cand in CLAUDE_BINARY_PATHS:
+        path = Path(cand)
         if path.exists() and path.is_file():
             return str(path)
-        if str(path) == "claude":
-            try:
-                result = subprocess.run(["which", "claude"], capture_output=True, text=True)
-                if result.returncode == 0:
-                    return "claude"
-            except Exception:
-                pass
     return None
 
 
@@ -683,7 +998,7 @@ def call_claude(
     cmd: List[str] = [
         claude_bin,
         "-p",
-        prompt,
+        "-",
         "--output-format",
         "text",
         "--tools",
@@ -701,6 +1016,7 @@ def call_claude(
                 capture_output=True,
                 text=True,
                 timeout=timeout,
+                input=prompt,
             )
             if result.returncode == 0:
                 return result.stdout.strip()
@@ -741,11 +1057,27 @@ def parse_json_response(response: str) -> Optional[Dict]:
         print(f"{LOG_PREFIX} DEBUG: Response end:\n...{response[-500:]}")
 
     try:
-        code_block_match = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", response)
-        if code_block_match:
-            if DEBUG_MODE:
-                print(f"{LOG_PREFIX} DEBUG: Found JSON in code block")
-            return json.loads(code_block_match.group(1))
+        direct = _coerce_json_payload(json.loads(response))
+        if direct is not None:
+            return direct
+    except (json.JSONDecodeError, ValueError):
+        pass
+
+    try:
+        # Prefer fenced blocks when Claude wraps JSON in markdown.
+        for code_block in re.findall(r"```(?:json)?\s*([\s\S]*?)\s*```", response):
+            try:
+                parsed = _coerce_json_payload(json.loads(code_block))
+                if parsed is not None:
+                    if DEBUG_MODE:
+                        print(f"{LOG_PREFIX} DEBUG: Parsed JSON from code block")
+                    return parsed
+            except (json.JSONDecodeError, ValueError):
+                concatenated = _parse_concatenated_json_objects(code_block)
+                if concatenated is not None:
+                    if DEBUG_MODE:
+                        print(f"{LOG_PREFIX} DEBUG: Parsed concatenated JSON objects from code block")
+                    return concatenated
 
         start = response.find("{")
         if start != -1:
@@ -757,11 +1089,35 @@ def parse_json_response(response: str) -> Optional[Dict]:
                     bracket_count -= 1
                     if bracket_count == 0:
                         json_str = response[start:i + 1]
-                        if DEBUG_MODE:
-                            print(f"{LOG_PREFIX} DEBUG: Extracted JSON ({len(json_str)} chars)")
-                        return json.loads(json_str)
+                        payload = _coerce_json_payload(json.loads(json_str))
+                        if payload is not None:
+                            if DEBUG_MODE:
+                                print(f"{LOG_PREFIX} DEBUG: Extracted JSON object ({len(json_str)} chars)")
+                            return payload
+                        break
+
+        list_start = response.find("[")
+        if list_start != -1:
+            bracket_count = 0
+            for i, char in enumerate(response[list_start:], list_start):
+                if char == "[":
+                    bracket_count += 1
+                elif char == "]":
+                    bracket_count -= 1
+                    if bracket_count == 0:
+                        json_str = response[list_start:i + 1]
+                        payload = _coerce_json_payload(json.loads(json_str))
+                        if payload is not None:
+                            if DEBUG_MODE:
+                                print(f"{LOG_PREFIX} DEBUG: Extracted JSON list ({len(json_str)} chars)")
+                            return payload
+                        break
+
+        concatenated = _parse_concatenated_json_objects(response)
+        if concatenated is not None:
             if DEBUG_MODE:
-                print(f"{LOG_PREFIX} DEBUG: Unbalanced brackets, final count: {bracket_count}")
+                print(f"{LOG_PREFIX} DEBUG: Parsed concatenated JSON objects")
+            return concatenated
     except (json.JSONDecodeError, ValueError) as e:
         print(f"{LOG_PREFIX} JSON parse error: {e}")
         print(f"{LOG_PREFIX} Response preview: {response[:500]}...")
@@ -780,6 +1136,41 @@ def parse_json_response(response: str) -> Optional[Dict]:
     return None
 
 
+def _coerce_json_payload(payload: Any) -> Optional[Dict]:
+    if isinstance(payload, dict):
+        return payload
+    if isinstance(payload, list) and all(isinstance(item, dict) for item in payload):
+        return {"segments": payload}
+    return None
+
+
+def _parse_concatenated_json_objects(text: str) -> Optional[Dict]:
+    """Parse '{...}, {...}' style output into {'segments': [...]}."""
+    decoder = json.JSONDecoder()
+    idx = 0
+    length = len(text)
+    objects: List[Dict[str, Any]] = []
+    while idx < length:
+        while idx < length and text[idx] in " \t\r\n,":
+            idx += 1
+        if idx >= length:
+            break
+        try:
+            obj, end = decoder.raw_decode(text, idx)
+        except json.JSONDecodeError:
+            return None
+        if not isinstance(obj, dict):
+            return None
+        objects.append(obj)
+        idx = end
+
+    if not objects:
+        return None
+    if all(("id" in row and "segment_type" in row) for row in objects):
+        return {"segments": objects}
+    return None
+
+
 def compute_effective_timeout_seconds(
     base_timeout_seconds: int,
     *,
@@ -792,6 +1183,373 @@ def compute_effective_timeout_seconds(
     char_based = int(prompt_chars / TIMEOUT_CHARS_PER_SECOND) + TIMEOUT_BUFFER_SECONDS
     seg_based = int(segment_count * TIMEOUT_SECONDS_PER_SEGMENT) + TIMEOUT_BUFFER_SECONDS
     return min(MAX_DYNAMIC_TIMEOUT_SECONDS, max(base, char_based, seg_based))
+
+
+def ensure_all_speakers_labeled(
+    speakers: List[str], labels: Dict[str, Dict[str, Any]]
+) -> Dict[str, Dict[str, Any]]:
+    normalized = labels if isinstance(labels, dict) else {}
+    for speaker in speakers:
+        if speaker not in normalized:
+            normalized[speaker] = {
+                "role": "unknown",
+                "confidence": 0.3,
+                "reasoning": "Not labeled by LLM",
+            }
+    return normalized
+
+
+def run_global_metadata_analysis(
+    title: str,
+    segments: List[Dict],
+    speakers: List[str],
+    speaker_stats_text: str,
+    claude_model: Optional[str],
+    llm_timeout_seconds: int,
+    llm_retries: int,
+) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Dict[str, Any]]]:
+    sampled_ids = sample_segment_ids(len(segments), GLOBAL_ANALYSIS_SAMPLE_SEGMENTS)
+    sampled_transcript = build_transcript_lines(segments, sampled_ids, max_text_chars=220)
+
+    prompt = ANALYZE_VIDEO_GLOBAL_PROMPT.format(
+        title=title,
+        total_segments=len(segments),
+        speakers=", ".join(speakers),
+        speaker_stats=speaker_stats_text,
+        transcript=sampled_transcript,
+    )
+    base_timeout_seconds = max(1, int(llm_timeout_seconds))
+    effective_timeout_seconds = compute_effective_timeout_seconds(
+        base_timeout_seconds,
+        prompt_chars=len(prompt),
+        segment_count=len(sampled_ids),
+    )
+
+    print(
+        f"{LOG_PREFIX} Global analysis: metadata + speakers "
+        f"(sampled {len(sampled_ids)}/{len(segments)} segments)..."
+    )
+    if effective_timeout_seconds != base_timeout_seconds:
+        print(
+            f"{LOG_PREFIX}   Adaptive timeout: {effective_timeout_seconds}s "
+            f"(base={base_timeout_seconds}s, prompt_chars={len(prompt)}, segments={len(sampled_ids)})"
+        )
+
+    max_retries = max(1, int(llm_retries))
+    for attempt in range(max_retries):
+        try:
+            response = call_claude(
+                prompt,
+                retries=1,
+                timeout=effective_timeout_seconds,
+                model=claude_model,
+            )
+        except RuntimeError as exc:
+            if attempt < max_retries - 1:
+                wait = 2 ** attempt
+                print(
+                    f"{LOG_PREFIX}   WARNING: Global metadata call failed "
+                    f"({attempt + 1}/{max_retries}): {exc}; retrying in {wait}s..."
+                )
+                time.sleep(wait)
+                continue
+            raise
+
+        result = parse_json_response(response)
+        if not result:
+            if attempt < max_retries - 1:
+                print(
+                    f"{LOG_PREFIX}   WARNING: Global metadata JSON parse failed "
+                    f"({attempt + 1}/{max_retries}); retrying..."
+                )
+                time.sleep(2)
+                continue
+            raise RuntimeError("Global metadata analysis returned invalid JSON")
+
+        video_type = result.get("video_type")
+        transcript_conf = result.get("transcript_confidence")
+        speaker_labels = result.get("speaker_labels")
+        if not isinstance(video_type, dict) or not isinstance(transcript_conf, dict) or not isinstance(speaker_labels, dict):
+            if attempt < max_retries - 1:
+                print(
+                    f"{LOG_PREFIX}   WARNING: Global metadata missing required keys "
+                    f"({attempt + 1}/{max_retries}); retrying..."
+                )
+                time.sleep(2)
+                continue
+            raise RuntimeError("Global metadata response missing required objects")
+
+        speaker_labels = ensure_all_speakers_labeled(speakers, speaker_labels)
+        conf = normalize_number(video_type.get("confidence", 0.0), 0.0)
+        score = int(normalize_number(transcript_conf.get("score", 0), 0))
+        print(f"{LOG_PREFIX}   Global video type: {video_type.get('type')} ({conf * 100:.0f}%)")
+        print(f"{LOG_PREFIX}   Global transcript quality: {score}/100")
+        return video_type, transcript_conf, speaker_labels
+
+    raise RuntimeError(f"Global metadata analysis failed after {max_retries} retries")
+
+
+def recover_missing_chunk_segment_ids(
+    *,
+    segments: List[Dict],
+    missing_ids: Set[int],
+    video_type_name: str,
+    speaker_labels_json: str,
+    collapsed_speakers_text: str,
+    claude_model: Optional[str],
+    llm_timeout_seconds: int,
+    llm_retries: int,
+) -> Dict[int, Dict[str, Any]]:
+    if not missing_ids:
+        return {}
+
+    recovered: Dict[int, Dict[str, Any]] = {}
+    pending: Set[int] = set(missing_ids)
+    focus_retries = max(1, min(2, int(llm_retries)))
+
+    for attempt in range(focus_retries):
+        context_ids: Set[int] = set()
+        for seg_id in pending:
+            left = max(0, seg_id - 8)
+            right = min(len(segments), seg_id + 9)
+            context_ids.update(range(left, right))
+
+        transcript = build_transcript_lines(
+            segments,
+            sorted(context_ids),
+            target_ids=set(pending),
+            max_text_chars=220,
+        )
+        prompt = ANALYZE_VIDEO_CHUNK_PROMPT.format(
+            video_type=video_type_name,
+            speaker_labels_json=speaker_labels_json,
+            collapsed_speaker_ids=collapsed_speakers_text,
+            transcript=transcript,
+            target_id_list=", ".join(str(i) for i in sorted(pending)),
+        )
+        prompt += "\nFOCUS MODE: Return ONLY the TARGET IDs listed above."
+
+        base_timeout_seconds = max(1, int(llm_timeout_seconds))
+        effective_timeout_seconds = compute_effective_timeout_seconds(
+            base_timeout_seconds,
+            prompt_chars=len(prompt),
+            segment_count=len(pending),
+        )
+
+        try:
+            response = call_claude(
+                prompt,
+                retries=1,
+                timeout=effective_timeout_seconds,
+                model=claude_model,
+            )
+        except RuntimeError as exc:
+            if attempt < focus_retries - 1:
+                print(
+                    f"{LOG_PREFIX}     WARNING: Missing-ID recovery call failed "
+                    f"({attempt + 1}/{focus_retries}): {exc}; retrying..."
+                )
+                time.sleep(2 ** attempt)
+                continue
+            return {}
+
+        result = parse_json_response(response)
+        if not isinstance(result, dict) or not isinstance(result.get("segments"), list):
+            if attempt < focus_retries - 1:
+                print(
+                    f"{LOG_PREFIX}     WARNING: Missing-ID recovery returned invalid JSON "
+                    f"({attempt + 1}/{focus_retries}); retrying..."
+                )
+                time.sleep(2)
+                continue
+            return {}
+
+        for item in result.get("segments", []):
+            normalized = normalize_segment_classification(item, default_id=-1)
+            seg_id = normalized.get("id", -1)
+            if isinstance(seg_id, int) and seg_id in pending:
+                recovered[seg_id] = normalized
+
+        pending -= set(recovered.keys())
+        if not pending:
+            return recovered
+
+        if attempt < focus_retries - 1:
+            print(
+                f"{LOG_PREFIX}     WARNING: Missing-ID recovery still missing {len(pending)} IDs; retrying..."
+            )
+            time.sleep(2)
+
+    return {} if pending else recovered
+
+
+def analyze_video_segments_chunked(
+    *,
+    title: str,
+    segments: List[Dict],
+    video_type: Dict[str, Any],
+    speaker_labels: Dict[str, Dict[str, Any]],
+    claude_model: Optional[str],
+    llm_timeout_seconds: int,
+    llm_retries: int,
+) -> Tuple[List[Dict[str, Any]], List[str]]:
+    total_segments = len(segments)
+    chunk_size = max(1, int(CHUNKED_ANALYSIS_SEGMENTS))
+    overlap = max(0, int(CHUNK_CONTEXT_OVERLAP))
+    max_retries = max(1, int(llm_retries))
+    video_type_name = str(video_type.get("type", "compilation")).strip().lower() or "compilation"
+    collapsed_speakers = sorted(
+        spk for spk, info in speaker_labels.items()
+        if isinstance(info, dict) and str(info.get("role", "")).strip().lower() == "collapsed"
+    )
+    collapsed_speakers_text = ", ".join(collapsed_speakers) if collapsed_speakers else "(none)"
+    speaker_labels_json = json.dumps(speaker_labels, ensure_ascii=False, indent=2)
+
+    classifications: List[Optional[Dict[str, Any]]] = [None] * total_segments
+    extra_flags: List[str] = []
+
+    chunk_ranges: List[Tuple[int, int, int, int]] = []
+    for emit_start in range(0, total_segments, chunk_size):
+        emit_end = min(total_segments, emit_start + chunk_size)
+        ctx_start = max(0, emit_start - overlap)
+        ctx_end = min(total_segments, emit_end + overlap)
+        chunk_ranges.append((ctx_start, ctx_end, emit_start, emit_end))
+
+    print(
+        f"{LOG_PREFIX} Chunked analysis: {len(chunk_ranges)} chunks "
+        f"(chunk={chunk_size}, overlap={overlap}, total_segments={total_segments})"
+    )
+
+    for idx, (ctx_start, ctx_end, emit_start, emit_end) in enumerate(chunk_ranges, start=1):
+        target_ids = set(range(emit_start, emit_end))
+        ctx_ids = list(range(ctx_start, ctx_end))
+        transcript = build_transcript_lines(
+            segments,
+            ctx_ids,
+            target_ids=target_ids,
+            max_text_chars=220,
+        )
+        prompt = ANALYZE_VIDEO_CHUNK_PROMPT.format(
+            video_type=video_type_name,
+            speaker_labels_json=speaker_labels_json,
+            collapsed_speaker_ids=collapsed_speakers_text,
+            transcript=transcript,
+            target_id_list=", ".join(str(i) for i in sorted(target_ids)),
+        )
+
+        base_timeout_seconds = max(1, int(llm_timeout_seconds))
+        effective_timeout_seconds = compute_effective_timeout_seconds(
+            base_timeout_seconds,
+            prompt_chars=len(prompt),
+            segment_count=len(target_ids),
+        )
+
+        print(
+            f"{LOG_PREFIX}   Chunk {idx}/{len(chunk_ranges)}: target {emit_start}-{emit_end - 1} "
+            f"(context {ctx_start}-{ctx_end - 1})"
+        )
+        if effective_timeout_seconds != base_timeout_seconds:
+            print(
+                f"{LOG_PREFIX}     Adaptive timeout: {effective_timeout_seconds}s "
+                f"(base={base_timeout_seconds}s, prompt_chars={len(prompt)}, target_segments={len(target_ids)})"
+            )
+
+        parsed_segments: Optional[List[Dict[str, Any]]] = None
+        last_error = "unknown"
+        for attempt in range(max_retries):
+            try:
+                response = call_claude(
+                    prompt,
+                    retries=1,
+                    timeout=effective_timeout_seconds,
+                    model=claude_model,
+                )
+            except RuntimeError as exc:
+                last_error = str(exc)
+                if attempt < max_retries - 1:
+                    wait = 2 ** attempt
+                    print(
+                        f"{LOG_PREFIX}     WARNING: Chunk call failed "
+                        f"({attempt + 1}/{max_retries}): {exc}; retrying in {wait}s..."
+                    )
+                    time.sleep(wait)
+                    continue
+                break
+
+            result = parse_json_response(response)
+            if not isinstance(result, dict) or not isinstance(result.get("segments"), list):
+                last_error = "invalid_json_or_missing_segments"
+                if attempt < max_retries - 1:
+                    print(
+                        f"{LOG_PREFIX}     WARNING: Chunk JSON invalid "
+                        f"({attempt + 1}/{max_retries}); retrying..."
+                    )
+                    time.sleep(2)
+                    continue
+                break
+
+            parsed_by_id: Dict[int, Dict[str, Any]] = {}
+            for item in result.get("segments", []):
+                normalized = normalize_segment_classification(item, default_id=-1)
+                seg_id = normalized.get("id", -1)
+                if not isinstance(seg_id, int):
+                    continue
+                if seg_id not in target_ids or seg_id in parsed_by_id:
+                    continue
+                parsed_by_id[seg_id] = normalized
+
+            missing = sorted(target_ids - set(parsed_by_id.keys()))
+            if missing:
+                last_error = f"missing_target_segment_ids={missing[:8]}"
+                if attempt < max_retries - 1:
+                    print(
+                        f"{LOG_PREFIX}     WARNING: Chunk missing {len(missing)} target IDs "
+                        f"({attempt + 1}/{max_retries}); retrying..."
+                    )
+                    time.sleep(2)
+                    continue
+                recovered_missing = recover_missing_chunk_segment_ids(
+                    segments=segments,
+                    missing_ids=set(missing),
+                    video_type_name=video_type_name,
+                    speaker_labels_json=speaker_labels_json,
+                    collapsed_speakers_text=collapsed_speakers_text,
+                    claude_model=claude_model,
+                    llm_timeout_seconds=llm_timeout_seconds,
+                    llm_retries=llm_retries,
+                )
+                if recovered_missing:
+                    parsed_by_id.update(recovered_missing)
+                still_missing = sorted(target_ids - set(parsed_by_id.keys()))
+                if still_missing:
+                    last_error = f"missing_target_segment_ids={still_missing[:8]}"
+                    break
+
+            parsed_segments = [parsed_by_id[i] for i in sorted(parsed_by_id.keys())]
+            break
+
+        if parsed_segments is None:
+            raise RuntimeError(
+                f"Chunk analysis failed for target {emit_start}-{emit_end - 1}: {last_error}"
+            )
+
+        for item in parsed_segments:
+            seg_id = int(item["id"])
+            classifications[seg_id] = item
+
+    for seg_id, item in enumerate(classifications):
+        if item is None:
+            raise RuntimeError(
+                f"Chunked analysis incomplete: no classification for segment id {seg_id}"
+            )
+
+    ordered: List[Dict[str, Any]] = [item for item in classifications if isinstance(item, dict)]
+    ordered = assign_conversation_ids(ordered, video_type=video_type_name)
+    extra_flags.append(f"chunked_analysis_{len(chunk_ranges)}chunks")
+    if collapsed_speakers:
+        extra_flags.append(f"chunked_with_collapsed_speakers_{len(collapsed_speakers)}")
+
+    return ordered, extra_flags
 
 
 # ---------------------------
@@ -809,39 +1567,36 @@ def analyze_video(
 
     Returns (video_type_dict, transcript_confidence_dict, speaker_labels_dict, segment_classifications, extra_flags).
     """
-    speakers = sorted(set(seg.get("pyannote_speaker", "UNKNOWN") for seg in segments))
+    speakers, speaker_stats_text = build_speaker_stats(segments)
 
-    # Compute per-speaker stats
-    speaker_seg_counts: Dict[str, int] = {}
-    speaker_word_counts: Dict[str, int] = {}
-    speaker_duration: Dict[str, float] = {}
-    for seg in segments:
-        spk = seg.get("pyannote_speaker", "UNKNOWN")
-        text = seg.get("text", "").strip()
-        dur = seg.get("end", 0) - seg.get("start", 0)
-        speaker_seg_counts[spk] = speaker_seg_counts.get(spk, 0) + 1
-        speaker_word_counts[spk] = speaker_word_counts.get(spk, 0) + len(text.split())
-        speaker_duration[spk] = speaker_duration.get(spk, 0) + dur
+    if len(segments) > MAX_SINGLE_PASS_SEGMENTS:
+        print(
+            f"{LOG_PREFIX} Using chunked analysis for long transcript "
+            f"({len(segments)} segments > {MAX_SINGLE_PASS_SEGMENTS})"
+        )
+        video_type, transcript_confidence, speaker_labels = run_global_metadata_analysis(
+            title=title,
+            segments=segments,
+            speakers=speakers,
+            speaker_stats_text=speaker_stats_text,
+            claude_model=claude_model,
+            llm_timeout_seconds=llm_timeout_seconds,
+            llm_retries=llm_retries,
+        )
+        classifications, chunk_flags = analyze_video_segments_chunked(
+            title=title,
+            segments=segments,
+            video_type=video_type,
+            speaker_labels=speaker_labels,
+            claude_model=claude_model,
+            llm_timeout_seconds=llm_timeout_seconds,
+            llm_retries=llm_retries,
+        )
+        conv_ids = set(c.get("conversation_id", 0) for c in classifications if c.get("conversation_id", 0) > 0)
+        print(f"{LOG_PREFIX}   Chunked conversations: {len(conv_ids)}")
+        return video_type, transcript_confidence, speaker_labels, classifications, chunk_flags
 
-    stats_lines = []
-    for spk in sorted(speakers, key=lambda s: speaker_seg_counts.get(s, 0), reverse=True):
-        segs = speaker_seg_counts.get(spk, 0)
-        words = speaker_word_counts.get(spk, 0)
-        dur = speaker_duration.get(spk, 0)
-        stats_lines.append(f"{spk}: {segs} segments, ~{words} words, {dur:.1f}s speaking time")
-    speaker_stats_text = "\n".join(stats_lines)
-
-    # Build chronological transcript with speaker IDs
-    transcript_lines = []
-    for i, seg in enumerate(segments):
-        speaker = seg.get("pyannote_speaker", "UNKNOWN")
-        text = seg.get("text", "").strip()
-        start = seg.get("start", 0)
-        end = seg.get("end", 0)
-        if text:
-            transcript_lines.append(f"[{i}] {speaker} ({start:.1f}-{end:.1f}s): \"{text}\"")
-
-    transcript_text = "\n".join(transcript_lines)
+    transcript_text = build_transcript_lines(segments, list(range(len(segments))))
 
     prompt = ANALYZE_VIDEO_PROMPT.format(
         title=title,
@@ -963,7 +1718,7 @@ def resolve_speaker_roles(
     if not collapsed_ids:
         roles = []
         for seg in segments:
-            speaker_id = seg.get("pyannote_speaker", "UNKNOWN")
+            speaker_id = normalize_speaker_id(seg.get("pyannote_speaker"))
             roles.append(speaker_labels.get(speaker_id, {}).get("role", "unknown"))
         return roles, None
 
@@ -973,7 +1728,7 @@ def resolve_speaker_roles(
     unknown = 0
 
     for i, seg in enumerate(segments):
-        speaker_id = seg.get("pyannote_speaker", "UNKNOWN")
+        speaker_id = normalize_speaker_id(seg.get("pyannote_speaker"))
 
         if speaker_id in collapsed_ids:
             total_affected += 1
@@ -1097,25 +1852,34 @@ def process_file(
     # Build output segments
     output_segments = []
     for i, seg in enumerate(segments):
-        classification = classifications[i] if i < len(classifications) else {
+        classification: Dict[str, Any] = classifications[i] if i < len(classifications) else {
             "segment_type": "commentary",
             "conversation_id": 0,
             "is_conversation_start": False,
         }
+        if not isinstance(classification, dict):
+            classification = {}
 
-        speaker_id = seg.get("pyannote_speaker", "UNKNOWN")
+        segment_type = classification.get("segment_type", "commentary")
+        if segment_type not in ("approach", "commentary", "transition"):
+            segment_type = "commentary"
+        conversation_id = classification.get("conversation_id", 0)
+        if not isinstance(conversation_id, int) or conversation_id < 0:
+            conversation_id = 0
+
+        speaker_id = normalize_speaker_id(seg.get("pyannote_speaker"))
         speaker_role = resolved_roles[i]
 
         out_seg = {
             "id": i,
-            "start": seg.get("start", 0),
-            "end": seg.get("end", 0),
-            "text": seg.get("text", ""),
+            "start": normalize_number(seg.get("start", 0), 0.0),
+            "end": normalize_number(seg.get("end", 0), 0.0),
+            "text": normalize_text(seg.get("text", "")),
             "speaker_id": speaker_id,
             "speaker_role": speaker_role,
-            "segment_type": classification.get("segment_type", "commentary"),
-            "conversation_id": classification.get("conversation_id", 0),
-            "is_conversation_start": classification.get("is_conversation_start", False),
+            "segment_type": segment_type,
+            "conversation_id": conversation_id,
+            "is_conversation_start": bool(classification.get("is_conversation_start", False)),
         }
 
         # Include override field for collapsed speakers (audit trail)
@@ -1190,6 +1954,7 @@ def process_file(
         })
 
     elapsed = time.time() - start_time
+    llm_calls = estimate_llm_calls_from_flags(extra_flags)
 
     # Build output
     output = {
@@ -1215,7 +1980,7 @@ def process_file(
             "prompt_version": PROMPT_VERSION,
             "schema_version": SCHEMA_VERSION,
             "input_checksum": compute_checksum(data),
-            "llm_calls": 1,
+            "llm_calls": llm_calls,
             "processing_time_sec": elapsed,
             "model": "claude-cli",
             **({"claude_model": claude_model.strip()} if isinstance(claude_model, str) and claude_model.strip() else {}),
@@ -1231,13 +1996,16 @@ def process_file(
     has_errors = any(r.severity == "error" for r in validation_results)
 
     if has_errors:
-        # Don't write invalid output to the main output file
-        print(f"{LOG_PREFIX} SKIPPING output write due to validation errors")
-    else:
-        # Write output
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        with output_path.open("w", encoding="utf-8") as f:
-            json.dump(output, f, indent=2, ensure_ascii=False)
+        # Fail closed: never leave stale successful artifacts in place when current validation fails.
+        if output_path.exists():
+            output_path.unlink(missing_ok=True)
+            print(f"{LOG_PREFIX}   Removed stale output after validation failure: {output_path}")
+        raise RuntimeError("Validation failed; fail-closed blocking output write")
+
+    # Write output
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as f:
+        json.dump(output, f, indent=2, ensure_ascii=False)
 
     # Summary
     type_counts: Dict[str, int] = {}
@@ -1249,7 +2017,7 @@ def process_file(
     print(f"  Video type: {video_type}")
     print(f"  Conversations: {len(conversations)}")
     print(f"  Segment types: {type_counts}")
-    print(f"  LLM calls: 1")
+    print(f"  LLM calls: {llm_calls}")
     print(f"  Time: {elapsed:.1f}s")
     print(f"  Output: {output_path}")
     print(f"  Validation: {'FAILED' if has_errors else 'PASSED'}")
@@ -1712,6 +2480,12 @@ def _run_directory_with_files(
         if failure_rate > MAX_FAILURE_RATE and total_attempted >= 5:
             print(f"\n{LOG_PREFIX} HALTING: Failure rate {failure_rate:.0%} exceeds {MAX_FAILURE_RATE:.0%} threshold")
             sys.exit(1)
+    if failed > 0 or validation_failed > 0:
+        print(
+            f"\n{LOG_PREFIX} HALTING: strict mode does not allow failed files "
+            f"(exceptions={failed}, validation_failed={validation_failed})"
+        )
+        sys.exit(1)
 
 
 def _run_named_source(args) -> None:

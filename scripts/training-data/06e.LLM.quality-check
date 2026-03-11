@@ -15,8 +15,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -41,6 +43,7 @@ CLAUDE_BINARY_PATHS = [
     "claude",
     Path.home() / ".vscode-server/extensions/anthropic.claude-code-2.1.17-linux-x64/resources/native-binary/claude",
     Path.home() / ".vscode/extensions/anthropic.claude-code-2.1.17-linux-x64/resources/native-binary/claude",
+    Path.home() / ".nvm/versions/node/current/bin/claude",
     "/usr/local/bin/claude",
 ]
 
@@ -188,19 +191,69 @@ def _load_schema() -> Optional[Dict[str, Any]]:
 
 @lru_cache(maxsize=1)
 def _find_claude_binary() -> Optional[str]:
+    for env_key in ("CLAUDE_BINARY", "CLAUDE_BIN"):
+        raw = str(os.environ.get(env_key, "")).strip()
+        if not raw:
+            continue
+        p = Path(raw)
+        if p.exists() and p.is_file():
+            return str(p)
+
+    resolved = shutil.which("claude")
+    if resolved:
+        return resolved
+
+    nvm_candidates = sorted(
+        Path.home().glob(".nvm/versions/node/*/bin/claude"),
+        key=lambda path: path.stat().st_mtime if path.exists() else 0.0,
+        reverse=True,
+    )
+    for cand in nvm_candidates:
+        if cand.exists() and cand.is_file():
+            return str(cand)
+
     for cand in CLAUDE_BINARY_PATHS:
         p = Path(cand)
-        if str(cand) == "claude":
-            try:
-                res = subprocess.run(["which", "claude"], capture_output=True, text=True)
-            except Exception:
-                res = None
-            if res and res.returncode == 0:
-                return "claude"
-            continue
         if p.exists() and p.is_file():
             return str(p)
     return None
+
+
+TRANSIENT_CLAUDE_ERROR_HINTS = (
+    "rate limit",
+    "429",
+    "too many requests",
+    "overloaded",
+    "capacity",
+    "temporarily unavailable",
+    "eai_again",
+    "timed out",
+    "timeout",
+    "connection reset",
+    "network",
+    "socket",
+)
+
+
+def _stderr_excerpt(stderr: str) -> str:
+    text = (stderr or "").strip()
+    if not text:
+        return ""
+    return text.splitlines()[-1][:240]
+
+
+def _is_transient_claude_error(stderr: str) -> bool:
+    low = (stderr or "").lower()
+    return any(hint in low for hint in TRANSIENT_CLAUDE_ERROR_HINTS)
+
+
+def _retry_wait_seconds(attempt: int, *, stderr: str = "", empty_output: bool = False) -> int:
+    base = max(1, 2 ** max(0, int(attempt)))
+    if empty_output:
+        base = max(base, 3)
+    if _is_transient_claude_error(stderr):
+        return min(180, max(base, 15 * (attempt + 1)))
+    return min(45, base)
 
 
 def _call_claude(
@@ -215,14 +268,16 @@ def _call_claude(
         print(f"{LOG_PREFIX} ERROR: Claude CLI binary not found")
         return None
 
-    for attempt in range(max(1, retries)):
+    # retries means retries-after-first-attempt, so total attempts = retries + 1.
+    attempts = max(1, int(retries) + 1)
+    for attempt in range(attempts):
         try:
             cmd = [claude_bin]
             if isinstance(model, str) and model.strip():
                 cmd += ["--model", model.strip()]
             cmd += [
                 "-p",
-                prompt,
+                "-",
                 "--output-format",
                 "text",
                 "--tools",
@@ -235,16 +290,16 @@ def _call_claude(
                 capture_output=True,
                 text=True,
                 timeout=max(1, timeout_seconds),
+                input=prompt,
             )
             if res.returncode == 0:
                 out = (res.stdout or "").strip()
                 if out:
                     return out
-                if attempt < retries - 1:
-                    wait = 2 ** attempt
-                    stderr_excerpt = (res.stderr or "").strip()
+                if attempt < attempts - 1:
+                    wait = _retry_wait_seconds(attempt, stderr=(res.stderr or ""), empty_output=True)
+                    stderr_excerpt = _stderr_excerpt(res.stderr or "")
                     if stderr_excerpt:
-                        stderr_excerpt = stderr_excerpt.splitlines()[-1][:240]
                         print(
                             f"{LOG_PREFIX} Claude CLI empty output (stderr: {stderr_excerpt}), "
                             f"retrying in {wait}s..."
@@ -254,11 +309,10 @@ def _call_claude(
                     time.sleep(wait)
                     continue
                 return None
-            if attempt < retries - 1:
-                wait = 2 ** attempt
-                stderr_excerpt = (res.stderr or "").strip()
+            if attempt < attempts - 1:
+                wait = _retry_wait_seconds(attempt, stderr=(res.stderr or ""), empty_output=False)
+                stderr_excerpt = _stderr_excerpt(res.stderr or "")
                 if stderr_excerpt:
-                    stderr_excerpt = stderr_excerpt.splitlines()[-1][:240]
                     print(
                         f"{LOG_PREFIX} Claude CLI non-zero exit rc={res.returncode} "
                         f"(stderr: {stderr_excerpt}), retrying in {wait}s..."
@@ -267,8 +321,8 @@ def _call_claude(
                     print(f"{LOG_PREFIX} Claude CLI non-zero exit rc={res.returncode}, retrying in {wait}s...")
                 time.sleep(wait)
         except subprocess.TimeoutExpired:
-            if attempt < retries - 1:
-                wait = 2 ** attempt
+            if attempt < attempts - 1:
+                wait = max(5, _retry_wait_seconds(attempt, stderr="timeout", empty_output=False))
                 print(f"{LOG_PREFIX} Claude CLI timeout, retrying in {wait}s...")
                 time.sleep(wait)
     return None

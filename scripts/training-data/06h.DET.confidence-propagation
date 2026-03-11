@@ -57,6 +57,19 @@ DEFAULT_BAND_MEDIUM_THRESHOLD = 0.60
 CONFIDENCE_BAND_HIGH_THRESHOLD = DEFAULT_BAND_HIGH_THRESHOLD
 CONFIDENCE_BAND_MEDIUM_THRESHOLD = DEFAULT_BAND_MEDIUM_THRESHOLD
 
+# Hard quality-overload gate (fail-closed): transcript quality overload at
+# this scale should not pass downstream enrichment, even when some repairs
+# were applied.
+LQ_UNREPAIRED_BLOCK_ABSOLUTE_THRESHOLD = 120
+LQ_UNREPAIRED_BLOCK_RATIO_THRESHOLD = 0.35
+LQ_UNREPAIRED_BLOCK_RATIO_MIN_COUNT = 80
+ARTIFACT_UNREPAIRED_BLOCK_THRESHOLD = 30
+LQ_TOTAL_BLOCK_ABSOLUTE_THRESHOLD = 130
+LQ_TOTAL_BLOCK_RATIO_THRESHOLD = 0.33
+LQ_TOTAL_BLOCK_RATIO_MIN_COUNT = 60
+LQ_TOTAL_BLOCK_EXTREME_RATIO_THRESHOLD = 0.48
+LQ_TOTAL_BLOCK_EXTREME_RATIO_MIN_COUNT = 25
+
 
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
@@ -246,6 +259,105 @@ def _token_count(text: Any) -> int:
 def _gate_decision(confidence_score: float) -> str:
     """Binary video gate: pass if >= VIDEO_GATE_THRESHOLD, block otherwise."""
     return "pass" if confidence_score >= VIDEO_GATE_THRESHOLD else "block"
+
+
+def _count_unrepaired_quality_items(
+    transcript_artifacts: List[Dict[str, Any]],
+    low_quality_segments: List[Dict[str, Any]],
+) -> Tuple[int, int]:
+    artifact_unrepaired = 0
+    for artifact in transcript_artifacts:
+        if not isinstance(artifact, dict):
+            continue
+        if not bool(artifact.get("repaired")):
+            artifact_unrepaired += 1
+
+    lq_unrepaired = 0
+    for item in low_quality_segments:
+        if not isinstance(item, dict):
+            continue
+        if not bool(item.get("repaired")):
+            lq_unrepaired += 1
+
+    return artifact_unrepaired, lq_unrepaired
+
+
+def _quality_overload_gate(
+    *,
+    segment_count: int,
+    artifact_total: int,
+    lq_total: int,
+    artifact_unrepaired: int,
+    lq_unrepaired: int,
+) -> Tuple[bool, List[str], Dict[str, Any]]:
+    reasons: List[str] = []
+    lq_total_ratio = (float(lq_total) / float(segment_count)) if segment_count > 0 else 0.0
+    ratio = (float(lq_unrepaired) / float(segment_count)) if segment_count > 0 else 0.0
+
+    if lq_total >= LQ_TOTAL_BLOCK_ABSOLUTE_THRESHOLD:
+        reasons.append(
+            f"lq_total_abs_{lq_total}>={LQ_TOTAL_BLOCK_ABSOLUTE_THRESHOLD}"
+        )
+    if (
+        lq_total >= LQ_TOTAL_BLOCK_RATIO_MIN_COUNT
+        and lq_total_ratio >= LQ_TOTAL_BLOCK_RATIO_THRESHOLD
+    ):
+        reasons.append(
+            "lq_total_ratio_"
+            f"{lq_total_ratio:.4f}>={LQ_TOTAL_BLOCK_RATIO_THRESHOLD:.2f}"
+            f"_mincount_{LQ_TOTAL_BLOCK_RATIO_MIN_COUNT}"
+        )
+    if (
+        lq_total >= LQ_TOTAL_BLOCK_EXTREME_RATIO_MIN_COUNT
+        and lq_total_ratio >= LQ_TOTAL_BLOCK_EXTREME_RATIO_THRESHOLD
+    ):
+        reasons.append(
+            "lq_total_ratio_extreme_"
+            f"{lq_total_ratio:.4f}>={LQ_TOTAL_BLOCK_EXTREME_RATIO_THRESHOLD:.2f}"
+            f"_mincount_{LQ_TOTAL_BLOCK_EXTREME_RATIO_MIN_COUNT}"
+        )
+    if lq_unrepaired >= LQ_UNREPAIRED_BLOCK_ABSOLUTE_THRESHOLD:
+        reasons.append(
+            f"lq_unrepaired_abs_{lq_unrepaired}>={LQ_UNREPAIRED_BLOCK_ABSOLUTE_THRESHOLD}"
+        )
+    if (
+        lq_unrepaired >= LQ_UNREPAIRED_BLOCK_RATIO_MIN_COUNT
+        and ratio >= LQ_UNREPAIRED_BLOCK_RATIO_THRESHOLD
+    ):
+        reasons.append(
+            "lq_unrepaired_ratio_"
+            f"{ratio:.4f}>={LQ_UNREPAIRED_BLOCK_RATIO_THRESHOLD:.2f}"
+            f"_mincount_{LQ_UNREPAIRED_BLOCK_RATIO_MIN_COUNT}"
+        )
+    if artifact_unrepaired >= ARTIFACT_UNREPAIRED_BLOCK_THRESHOLD:
+        reasons.append(
+            f"artifact_unrepaired_abs_{artifact_unrepaired}>={ARTIFACT_UNREPAIRED_BLOCK_THRESHOLD}"
+        )
+
+    return (
+        len(reasons) > 0,
+        reasons,
+        {
+            "segment_count": int(segment_count),
+            "artifact_total": int(artifact_total),
+            "low_quality_total": int(lq_total),
+            "low_quality_total_ratio": round(_clamp01(lq_total_ratio), 4),
+            "artifact_unrepaired": int(artifact_unrepaired),
+            "low_quality_unrepaired": int(lq_unrepaired),
+            "low_quality_unrepaired_ratio": round(_clamp01(ratio), 4),
+            "thresholds": {
+                "lq_total_abs": LQ_TOTAL_BLOCK_ABSOLUTE_THRESHOLD,
+                "lq_total_ratio": LQ_TOTAL_BLOCK_RATIO_THRESHOLD,
+                "lq_total_ratio_min_count": LQ_TOTAL_BLOCK_RATIO_MIN_COUNT,
+                "lq_total_ratio_extreme": LQ_TOTAL_BLOCK_EXTREME_RATIO_THRESHOLD,
+                "lq_total_ratio_extreme_min_count": LQ_TOTAL_BLOCK_EXTREME_RATIO_MIN_COUNT,
+                "lq_unrepaired_abs": LQ_UNREPAIRED_BLOCK_ABSOLUTE_THRESHOLD,
+                "lq_unrepaired_ratio": LQ_UNREPAIRED_BLOCK_RATIO_THRESHOLD,
+                "lq_unrepaired_ratio_min_count": LQ_UNREPAIRED_BLOCK_RATIO_MIN_COUNT,
+                "artifact_unrepaired_abs": ARTIFACT_UNREPAIRED_BLOCK_THRESHOLD,
+            },
+        },
+    )
 
 
 def _build_confidence_trace(
@@ -1060,11 +1172,31 @@ def propagate_confidence(
         _video_seg_weights.append(token_w)
     video_confidence = _clamp01(weighted_mean(_video_seg_scores, weights=_video_seg_weights))
     video_band = _confidence_tier(video_confidence)
-    video_gate = _gate_decision(video_confidence)
+    video_gate_confidence = _gate_decision(video_confidence)
+    artifact_unrepaired_count, lq_unrepaired_count = _count_unrepaired_quality_items(
+        transcript_artifacts,
+        low_quality_segments,
+    )
+    quality_gate_block, quality_gate_reasons, quality_gate_inputs = _quality_overload_gate(
+        segment_count=len(seg_ids),
+        artifact_total=len(transcript_artifacts),
+        lq_total=len(low_quality_segments),
+        artifact_unrepaired=artifact_unrepaired_count,
+        lq_unrepaired=lq_unrepaired_count,
+    )
+    gate_reason_codes: List[str] = []
+    if video_gate_confidence == "block":
+        gate_reason_codes.append(
+            f"video_confidence_{video_confidence:.4f}<threshold_{VIDEO_GATE_THRESHOLD:.4f}"
+        )
+    gate_reason_codes.extend(quality_gate_reasons)
+    video_gate = "block" if gate_reason_codes else "pass"
     out["video_summary"] = {
         "final_confidence": round(video_confidence, 4),
         "confidence_band": video_band,
         "gate_decision": video_gate,
+        "gate_reason_codes": gate_reason_codes,
+        "gate_inputs": quality_gate_inputs,
         "segment_count": len(seg_ids),
         "conversation_count": len(conversation_summary),
     }
@@ -1095,6 +1227,11 @@ def propagate_confidence(
             "artifact_rejected": quality_repair_counts[1],
             "lq_accepted": quality_repair_counts[2],
             "lq_rejected": quality_repair_counts[3],
+        },
+        "quality_gate": {
+            "blocked": quality_gate_block,
+            "reason_codes": quality_gate_reasons,
+            "inputs": quality_gate_inputs,
         },
     }
 
@@ -1128,6 +1265,11 @@ def propagate_confidence(
             "conversations_total": len(conversation_summary),
             "band_high_threshold": CONFIDENCE_BAND_HIGH_THRESHOLD,
             "band_medium_threshold": CONFIDENCE_BAND_MEDIUM_THRESHOLD,
+        },
+        "quality_gate": {
+            "blocked": quality_gate_block,
+            "reason_codes": quality_gate_reasons,
+            "inputs": quality_gate_inputs,
         },
         "conversation_summaries": conversation_summary,
     }

@@ -1,0 +1,276 @@
+{
+  "video_id": "ctts8xePLWA",
+  "generated_at": "2026-03-05T18:48:30Z",
+  "pipeline_version": "06f.DET.damage-map-v1.0",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.conversations.json",
+  "input": {
+    "stage06d": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.conversations.json",
+    "stage06e": "/home/jonaswsl/projects/daygame-coach/data/06e.LLM.quality-check/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.quality-check.json"
+  },
+  "damage_type_enum": [
+    "transcript_artifact",
+    "low_quality",
+    "mixed_mode",
+    "speaker_ambiguity",
+    "boundary_uncertain"
+  ],
+  "known_stage07_drop_reasons": [
+    "excluded_by_sanitizer",
+    "flagged_evidence_segment",
+    "insufficient_post_hook_evidence",
+    "low_confidence_anchor",
+    "low_quality_evidence_segment",
+    "missing_evidence_segment",
+    "non_approach_segment",
+    "segment_not_in_evidence_allowlist",
+    "transcript_artifact",
+    "unknown_evidence_segment"
+  ],
+  "segments": [
+    {
+      "segment_id": 33,
+      "conversation_id": 0,
+      "damage_types": [
+        "low_quality"
+      ],
+      "damage_reason_codes": [
+        "seed_low_quality_segment"
+      ],
+      "severity": "medium",
+      "seed_confidence": 0.88,
+      "contamination_window": {
+        "start_segment_id": 32,
+        "end_segment_id": 35
+      }
+    },
+    {
+      "segment_id": 94,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 92,
+        "end_segment_id": 97
+      }
+    },
+    {
+      "segment_id": 96,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 94,
+        "end_segment_id": 99
+      }
+    },
+    {
+      "segment_id": 102,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 100,
+        "end_segment_id": 105
+      }
+    },
+    {
+      "segment_id": 103,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 101,
+        "end_segment_id": 106
+      }
+    },
+    {
+      "segment_id": 107,
+      "conversation_id": 1,
+      "damage_types": [
+        "low_quality"
+      ],
+      "damage_reason_codes": [
+        "seed_low_quality_segment"
+      ],
+      "severity": "medium",
+      "seed_confidence": 0.88,
+      "contamination_window": {
+        "start_segment_id": 106,
+        "end_segment_id": 109
+      }
+    },
+    {
+      "segment_id": 125,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 123,
+        "end_segment_id": 128
+      }
+    },
+    {
+      "segment_id": 127,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.97,
+      "contamination_window": {
+        "start_segment_id": 125,
+        "end_segment_id": 130
+      },
+      "details": [
+        "nonsense"
+      ]
+    },
+    {
+      "segment_id": 128,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.97,
+      "contamination_window": {
+        "start_segment_id": 126,
+        "end_segment_id": 130
+      },
+      "details": [
+        "nonsense"
+      ]
+    },
+    {
+      "segment_id": 129,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.97,
+      "contamination_window": {
+        "start_segment_id": 127,
+        "end_segment_id": 130
+      },
+      "details": [
+        "nonsense"
+      ]
+    },
+    {
+      "segment_id": 130,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.97,
+      "contamination_window": {
+        "start_segment_id": 128,
+        "end_segment_id": 130
+      },
+      "details": [
+        "nonsense"
+      ]
+    }
+  ],
+  "conversation_summaries": [
+    {
+      "conversation_id": 1,
+      "segment_count": 34,
+      "damaged_segment_count": 6,
+      "damaged_segment_ratio": 0.1765,
+      "token_count": 404,
+      "damaged_token_count": 88,
+      "damaged_token_ratio": 0.2178,
+      "high_severity_seed_count": 5,
+      "damaged_segment_ids": [
+        94,
+        96,
+        102,
+        103,
+        107,
+        125
+      ]
+    }
+  ],
+  "dropped_candidate_trace": {
+    "present": false,
+    "dropped_candidates_total": 0,
+    "segment_drops_total": 0,
+    "segment_drops_traced": 0,
+    "segment_drops_untraced": 0,
+    "unknown_drop_reason_count": 0,
+    "unknown_drop_reason_samples": [],
+    "untraced_segment_ids": [],
+    "passes_trace_contract": true
+  },
+  "summary": {
+    "segments_total": 131,
+    "damaged_segments_total": 11,
+    "damage_type_counts": {
+      "transcript_artifact": 4,
+      "low_quality": 2,
+      "mixed_mode": 0,
+      "speaker_ambiguity": 9,
+      "boundary_uncertain": 0
+    },
+    "severity_counts": {
+      "low": 0,
+      "medium": 2,
+      "high": 9
+    },
+    "conversation_count": 1,
+    "trace_contract_passed": true
+  }
+}

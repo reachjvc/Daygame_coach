@@ -1,0 +1,4071 @@
+{
+  "source_audio": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+  "audio_sha256": "ac51061aea363f2a295314a0c5526b74db5fe72ba0a15a60c4704ed814bcd96c",
+  "source_timestamps": "/home/jonaswsl/projects/daygame-coach/data/04.EXT.diarize/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].full.json",
+  "processing": {
+    "sample_rate": 22050,
+    "feature_extractor": "librosa",
+    "pitch_range_hz": [
+      65.0,
+      500.0
+    ],
+    "pitch_method": "pyin",
+    "pitch_trim_percentile": 2.0,
+    "embedder": "resemblyzer",
+    "embedder_sample_rate": 16000,
+    "min_embed_raw_sec": 0.8,
+    "min_embed_window_sec": 1.2,
+    "embed_pad_sec": 0.25,
+    "store_embedding_vectors": false
+  },
+  "total_duration_sec": 387.548,
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 6.6,
+      "duration_sec": 6.6,
+      "text": "okay so i so i'm i'm inside of my mastermind right now and you you gave me a video topic",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 164.25955200195312,
+          "std_hz": 23.400590896606445,
+          "range_hz": 94.69786834716797,
+          "direction": -0.14918864226410775
+        },
+        "energy": {
+          "dynamics_db": 13.77585506439209
+        },
+        "tempo": {
+          "syllable_rate": 5.606060606060606
+        },
+        "spectral": {
+          "brightness_hz": 1340.148777071719
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8807017543859649
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 0.0,
+        "end": 6.6
+      }
+    },
+    {
+      "start": 6.58,
+      "end": 14.26,
+      "duration_sec": 7.68,
+      "text": "go ahead and say the video topic again the mindset of a first approach okay the mindset",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 152.22775268554688,
+          "std_hz": 11.080997467041016,
+          "range_hz": 66.9720458984375,
+          "direction": 0.01765378320229994
+        },
+        "energy": {
+          "dynamics_db": 26.35643768310547
+        },
+        "tempo": {
+          "syllable_rate": 4.947916666666667
+        },
+        "spectral": {
+          "brightness_hz": 1768.536758411178
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9758308157099698
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 6.58,
+        "end": 14.26
+      }
+    },
+    {
+      "start": 14.24,
+      "end": 20.5,
+      "duration_sec": 6.26,
+      "text": "of a first approach give give a little more context your first approach ever first approach",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 159.37506103515625,
+          "std_hz": 53.21421432495117,
+          "range_hz": 169.3251190185547,
+          "direction": 0.05629240910005168
+        },
+        "energy": {
+          "dynamics_db": 20.55400276184082
+        },
+        "tempo": {
+          "syllable_rate": 6.389776357827476
+        },
+        "spectral": {
+          "brightness_hz": 1466.4990940772238
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8444444444444444
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 14.24,
+        "end": 20.5
+      }
+    },
+    {
+      "start": 20.48,
+      "end": 29.28,
+      "duration_sec": 8.8,
+      "text": "of the day what's more context first approach ever or in years or in eternity okay your brand",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 135.58876037597656,
+          "std_hz": 44.200138092041016,
+          "range_hz": 144.9692840576172,
+          "direction": -0.07938238168170594
+        },
+        "energy": {
+          "dynamics_db": 26.172067642211914
+        },
+        "tempo": {
+          "syllable_rate": 4.204545454545454
+        },
+        "spectral": {
+          "brightness_hz": 1674.1105873915367
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9894459102902374
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 20.48,
+        "end": 29.28
+      }
+    },
+    {
+      "start": 30.5,
+      "end": 31.246,
+      "duration_sec": 0.746,
+      "text": "Okay.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 187.884033203125,
+          "std_hz": 43.71211242675781,
+          "range_hz": 133.23345947265625,
+          "direction": -4.324824007562011
+        },
+        "energy": {
+          "dynamics_db": 24.862479209899902
+        },
+        "tempo": {
+          "syllable_rate": 2.680965147453088
+        },
+        "spectral": {
+          "brightness_hz": 1243.4487888672131
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 30.5,
+        "end": 31.246
+      }
+    },
+    {
+      "start": 31.266,
+      "end": 31.669,
+      "duration_sec": 0.403,
+      "text": "Gotcha.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 11.465816497802734
+        },
+        "tempo": {
+          "syllable_rate": 7.4441687344912735
+        },
+        "spectral": {
+          "brightness_hz": 1269.855058074763
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9444444444444444
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 31.266,
+        "end": 31.669
+      }
+    },
+    {
+      "start": 31.911,
+      "end": 32.193,
+      "duration_sec": 0.282,
+      "text": "Okay.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 9.644573211669922
+        },
+        "tempo": {
+          "syllable_rate": 3.546099290780186
+        },
+        "spectral": {
+          "brightness_hz": 1247.8767090020594
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8461538461538461
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 31.911,
+        "end": 32.193
+      }
+    },
+    {
+      "start": 32.757,
+      "end": 33.079,
+      "duration_sec": 0.322,
+      "text": "All right.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 15.346170425415039
+        },
+        "tempo": {
+          "syllable_rate": 6.21118012422355
+        },
+        "spectral": {
+          "brightness_hz": 1397.7033804162622
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8571428571428571
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 32.757,
+        "end": 33.079
+      }
+    },
+    {
+      "start": 33.099,
+      "end": 34.51,
+      "duration_sec": 1.411,
+      "text": "Hey Shane, mute your microphone.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 172.11300659179688,
+          "std_hz": 18.98773765563965,
+          "range_hz": 66.22445678710938,
+          "direction": -0.8153234552327885
+        },
+        "energy": {
+          "dynamics_db": 5.504746437072754
+        },
+        "tempo": {
+          "syllable_rate": 5.669737774627918
+        },
+        "spectral": {
+          "brightness_hz": 1337.0587492503103
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9344262295081968
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 33.099,
+        "end": 34.51
+      }
+    },
+    {
+      "start": 34.53,
+      "end": 35.88,
+      "duration_sec": 1.35,
+      "text": "I'm doing a, I'm doing a YouTube",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 137.31661987304688,
+          "std_hz": 9.568699836730957,
+          "range_hz": 30.646751403808594,
+          "direction": -0.10965062370939392
+        },
+        "energy": {
+          "dynamics_db": 5.6862030029296875
+        },
+        "tempo": {
+          "syllable_rate": 5.925925925925919
+        },
+        "spectral": {
+          "brightness_hz": 1122.6184513926016
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 34.53,
+        "end": 35.88
+      }
+    },
+    {
+      "start": 35.86,
+      "end": 38.254,
+      "duration_sec": 2.394,
+      "text": "video while I do this mastermind call.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 128.1249542236328,
+          "std_hz": 13.932062149047852,
+          "range_hz": 53.188446044921875,
+          "direction": -0.3113048893792382
+        },
+        "energy": {
+          "dynamics_db": 13.086173057556152
+        },
+        "tempo": {
+          "syllable_rate": 5.847953216374273
+        },
+        "spectral": {
+          "brightness_hz": 1086.4221332544912
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9038461538461539
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 35.86,
+        "end": 38.254
+      }
+    },
+    {
+      "start": 38.757,
+      "end": 38.878,
+      "duration_sec": 0.121,
+      "text": "Okay.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 164.58859252929688,
+          "std_hz": 8.591034889221191,
+          "range_hz": 21.340179443359375,
+          "direction": -7.098202514648438
+        },
+        "energy": {
+          "dynamics_db": 4.17695426940918
+        },
+        "tempo": {
+          "syllable_rate": 8.264462809917204
+        },
+        "spectral": {
+          "brightness_hz": 2584.750331381198
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 38.757,
+        "end": 38.878
+      }
+    },
+    {
+      "start": 38.898,
+      "end": 42.6,
+      "duration_sec": 3.702,
+      "text": "So if you have not done an approach ever, or you are",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 168.39358520507812,
+          "std_hz": 49.2915153503418,
+          "range_hz": 204.97288513183594,
+          "direction": -0.48143972004208174
+        },
+        "energy": {
+          "dynamics_db": 18.1192626953125
+        },
+        "tempo": {
+          "syllable_rate": 5.402485143165859
+        },
+        "spectral": {
+          "brightness_hz": 1101.8721985009977
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.80625
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 38.898,
+        "end": 42.6
+      }
+    },
+    {
+      "start": 43.16,
+      "end": 45.217,
+      "duration_sec": 2.057,
+      "text": "approaching for the first time in years.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 165.1469268798828,
+          "std_hz": 22.659561157226562,
+          "range_hz": 89.8913345336914,
+          "direction": -0.6448272586857837
+        },
+        "energy": {
+          "dynamics_db": 15.689712524414062
+        },
+        "tempo": {
+          "syllable_rate": 7.292173067574129
+        },
+        "spectral": {
+          "brightness_hz": 1332.833758622306
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8539325842696629
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 43.16,
+        "end": 45.217
+      }
+    },
+    {
+      "start": 45.58,
+      "end": 45.943,
+      "duration_sec": 0.363,
+      "text": "Okay.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 11.284078598022461
+        },
+        "tempo": {
+          "syllable_rate": 5.509641873278244
+        },
+        "spectral": {
+          "brightness_hz": 2358.319035411075
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 45.58,
+        "end": 45.943
+      }
+    },
+    {
+      "start": 45.963,
+      "end": 47.234,
+      "duration_sec": 1.271,
+      "text": "So let me ask you this.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 211.3320770263672,
+          "std_hz": 25.736038208007812,
+          "range_hz": 92.80961608886719,
+          "direction": -0.10219719496831578
+        },
+        "energy": {
+          "dynamics_db": 14.252311706542969
+        },
+        "tempo": {
+          "syllable_rate": 4.720692368214002
+        },
+        "spectral": {
+          "brightness_hz": 1361.6408948987182
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8181818181818182
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 45.963,
+        "end": 47.234
+      }
+    },
+    {
+      "start": 47.355,
+      "end": 47.98,
+      "duration_sec": 0.625,
+      "text": "What would you do?",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 217.22801208496094,
+          "std_hz": 37.02206802368164,
+          "range_hz": 123.88211059570312,
+          "direction": -3.625065525227269
+        },
+        "energy": {
+          "dynamics_db": 9.062167167663574
+        },
+        "tempo": {
+          "syllable_rate": 6.4
+        },
+        "spectral": {
+          "brightness_hz": 1219.494324052746
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 47.355,
+        "end": 47.98
+      }
+    },
+    {
+      "start": 48.14,
+      "end": 51.005,
+      "duration_sec": 2.865,
+      "text": "What opener would you like to use on a chick?",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 171.6351318359375,
+          "std_hz": 58.149898529052734,
+          "range_hz": 290.2666931152344,
+          "direction": -1.142817969693572
+        },
+        "energy": {
+          "dynamics_db": 14.315082550048828
+        },
+        "tempo": {
+          "syllable_rate": 7.329842931937168
+        },
+        "spectral": {
+          "brightness_hz": 1102.452189894983
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8870967741935484
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 48.14,
+        "end": 51.005
+      }
+    },
+    {
+      "start": 51.025,
+      "end": 52.72,
+      "duration_sec": 1.695,
+      "text": "If you were like at the mall and you saw her?",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 139.66436767578125,
+          "std_hz": 15.593229293823242,
+          "range_hz": 54.159454345703125,
+          "direction": -0.5582028641650075
+        },
+        "energy": {
+          "dynamics_db": 7.672399520874023
+        },
+        "tempo": {
+          "syllable_rate": 8.259587020648967
+        },
+        "spectral": {
+          "brightness_hz": 1000.8699335241965
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9178082191780822
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 51.025,
+        "end": 52.72
+      }
+    },
+    {
+      "start": 53.96,
+      "end": 55.138,
+      "duration_sec": 1.178,
+      "text": "Oh shit.",
+      "pyannote_speaker": "UNKNOWN",
+      "features": {
+        "pitch": {
+          "mean_hz": 0.0,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 0.0
+        },
+        "energy": {
+          "dynamics_db": 12.614124298095703
+        },
+        "tempo": {
+          "syllable_rate": 5.942275042444836
+        },
+        "spectral": {
+          "brightness_hz": 2255.68539996153
+        },
+        "quality": {
+          "low_energy": true,
+          "speech_activity_ratio": 0.9607843137254902
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 53.96,
+        "end": 55.138
+      }
+    },
+    {
+      "start": 55.158,
+      "end": 55.97,
+      "duration_sec": 0.812,
+      "text": "I haven't thought about it.",
+      "pyannote_speaker": "UNKNOWN",
+      "features": {
+        "pitch": {
+          "mean_hz": 147.0059051513672,
+          "std_hz": 5.611654758453369,
+          "range_hz": 14.459243774414062,
+          "direction": -0.8033274191196699
+        },
+        "energy": {
+          "dynamics_db": 8.389713287353516
+        },
+        "tempo": {
+          "syllable_rate": 4.926108374384251
+        },
+        "spectral": {
+          "brightness_hz": 1720.4125872871937
+        },
+        "quality": {
+          "low_energy": true,
+          "speech_activity_ratio": 0.9428571428571428
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 55.158,
+        "end": 55.97
+      }
+    },
+    {
+      "start": 56.579,
+      "end": 56.64,
+      "duration_sec": 0.061,
+      "text": "Um,",
+      "pyannote_speaker": "UNKNOWN",
+      "features": {
+        "pitch": {
+          "mean_hz": 179.648681640625,
+          "std_hz": 0.0,
+          "range_hz": 0.0,
+          "direction": 3.5578112469384347e-14
+        },
+        "energy": {
+          "dynamics_db": 0.4617958068847656
+        },
+        "tempo": {
+          "syllable_rate": 0.0
+        },
+        "spectral": {
+          "brightness_hz": 2126.9465109077496
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 56.579,
+        "end": 56.64
+      }
+    },
+    {
+      "start": 56.62,
+      "end": 62.88,
+      "duration_sec": 6.26,
+      "text": "Um, probably like, uh, asking for directions or something.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 131.5234832763672,
+          "std_hz": 64.43680572509766,
+          "range_hz": 230.23114013671875,
+          "direction": 0.3741901200511764
+        },
+        "energy": {
+          "dynamics_db": 20.522377014160156
+        },
+        "tempo": {
+          "syllable_rate": 4.472843450479229
+        },
+        "spectral": {
+          "brightness_hz": 2096.2247246604593
+        },
+        "quality": {
+          "low_energy": true,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 56.62,
+        "end": 62.88
+      }
+    },
+    {
+      "start": 63.08,
+      "end": 63.364,
+      "duration_sec": 0.284,
+      "text": "Great.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 147.85447692871094,
+          "std_hz": 8.49035358428955,
+          "range_hz": 22.577896118164062,
+          "direction": 3.0809149969191743
+        },
+        "energy": {
+          "dynamics_db": 16.25181770324707
+        },
+        "tempo": {
+          "syllable_rate": 3.521126760563394
+        },
+        "spectral": {
+          "brightness_hz": 1128.0470889382348
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 63.08,
+        "end": 63.364
+      }
+    },
+    {
+      "start": 63.48,
+      "end": 65.6,
+      "duration_sec": 2.12,
+      "text": "Then that's the best opener you can possibly do.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 178.99606323242188,
+          "std_hz": 19.22359275817871,
+          "range_hz": 84.8770751953125,
+          "direction": -0.5674774380100026
+        },
+        "energy": {
+          "dynamics_db": 9.648126602172852
+        },
+        "tempo": {
+          "syllable_rate": 6.132075471698121
+        },
+        "spectral": {
+          "brightness_hz": 1299.4886910507348
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9456521739130435
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 63.48,
+        "end": 65.6
+      }
+    },
+    {
+      "start": 66.58,
+      "end": 70.8,
+      "duration_sec": 4.22,
+      "text": "Then that's, that's the best opener because the best opener you can do when you're just",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 170.78305053710938,
+          "std_hz": 40.321693420410156,
+          "range_hz": 172.0478515625,
+          "direction": 0.35466972574509725
+        },
+        "energy": {
+          "dynamics_db": 17.98122787475586
+        },
+        "tempo": {
+          "syllable_rate": 5.450236966824646
+        },
+        "spectral": {
+          "brightness_hz": 1471.8073760261811
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8131868131868132
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 66.58,
+        "end": 70.8
+      }
+    },
+    {
+      "start": 70.78,
+      "end": 74.78,
+      "duration_sec": 4.0,
+      "text": "getting started is the easiest opener that you can do.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 173.36700439453125,
+          "std_hz": 20.948612213134766,
+          "range_hz": 85.37821960449219,
+          "direction": -0.01321544167200483
+        },
+        "energy": {
+          "dynamics_db": 17.61227798461914
+        },
+        "tempo": {
+          "syllable_rate": 4.5
+        },
+        "spectral": {
+          "brightness_hz": 1651.982063959531
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8265895953757225
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 70.78,
+        "end": 74.78
+      }
+    },
+    {
+      "start": 74.88,
+      "end": 79.58,
+      "duration_sec": 4.7,
+      "text": "So straight up, if you find it, a lot of guys find it easiest to just get it out of the",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 192.0812225341797,
+          "std_hz": 29.725658416748047,
+          "range_hz": 277.56036376953125,
+          "direction": -0.38672113398678803
+        },
+        "energy": {
+          "dynamics_db": 12.712553024291992
+        },
+        "tempo": {
+          "syllable_rate": 4.893617021276593
+        },
+        "spectral": {
+          "brightness_hz": 1541.7160054844876
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8522167487684729
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 74.88,
+        "end": 79.58
+      }
+    },
+    {
+      "start": 79.56,
+      "end": 79.804,
+      "duration_sec": 0.244,
+      "text": "way.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 172.85890197753906,
+          "std_hz": 8.681914329528809,
+          "range_hz": 23.936859130859375,
+          "direction": -2.9913961237127045
+        },
+        "energy": {
+          "dynamics_db": 2.6181678771972656
+        },
+        "tempo": {
+          "syllable_rate": 4.098360655737709
+        },
+        "spectral": {
+          "brightness_hz": 900.6347341988495
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 79.56,
+        "end": 79.804
+      }
+    },
+    {
+      "start": 79.8,
+      "end": 81.181,
+      "duration_sec": 1.381,
+      "text": "They say, just get it out of the way.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 173.12522888183594,
+          "std_hz": 37.61471939086914,
+          "range_hz": 112.42314147949219,
+          "direction": 1.496737301909079
+        },
+        "energy": {
+          "dynamics_db": 14.796499252319336
+        },
+        "tempo": {
+          "syllable_rate": 5.792903692976103
+        },
+        "spectral": {
+          "brightness_hz": 1658.5188834986564
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 79.8,
+        "end": 81.181
+      }
+    },
+    {
+      "start": 81.18,
+      "end": 81.921,
+      "duration_sec": 0.741,
+      "text": "Excuse me.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 242.8882293701172,
+          "std_hz": 74.58386993408203,
+          "range_hz": 274.025146484375,
+          "direction": -10.072816415831943
+        },
+        "energy": {
+          "dynamics_db": 21.014507293701172
+        },
+        "tempo": {
+          "syllable_rate": 6.747638326585698
+        },
+        "spectral": {
+          "brightness_hz": 2133.6484761691345
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 81.18,
+        "end": 81.921
+      }
+    },
+    {
+      "start": 81.92,
+      "end": 82.681,
+      "duration_sec": 0.761,
+      "text": "I saw you over here.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 193.01356506347656,
+          "std_hz": 17.78322982788086,
+          "range_hz": 79.74862670898438,
+          "direction": -0.8223954121712134
+        },
+        "energy": {
+          "dynamics_db": 4.782066345214844
+        },
+        "tempo": {
+          "syllable_rate": 5.256241787122238
+        },
+        "spectral": {
+          "brightness_hz": 1363.2930072467416
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9393939393939394
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 81.92,
+        "end": 82.681
+      }
+    },
+    {
+      "start": 82.74,
+      "end": 83.322,
+      "duration_sec": 0.582,
+      "text": "You're really cute.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 167.24900817871094,
+          "std_hz": 19.334835052490234,
+          "range_hz": 61.845855712890625,
+          "direction": 1.177369713161299
+        },
+        "energy": {
+          "dynamics_db": 10.799772262573242
+        },
+        "tempo": {
+          "syllable_rate": 8.591065292096104
+        },
+        "spectral": {
+          "brightness_hz": 1139.1197165772903
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8461538461538461
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 82.74,
+        "end": 83.322
+      }
+    },
+    {
+      "start": 83.42,
+      "end": 84.361,
+      "duration_sec": 0.941,
+      "text": "I wanted to come say hello.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 158.18252563476562,
+          "std_hz": 10.102269172668457,
+          "range_hz": 35.61293029785156,
+          "direction": -0.32854992005882844
+        },
+        "energy": {
+          "dynamics_db": 4.261775970458984
+        },
+        "tempo": {
+          "syllable_rate": 8.501594048884144
+        },
+        "spectral": {
+          "brightness_hz": 1043.3635503799924
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.975609756097561
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 83.42,
+        "end": 84.361
+      }
+    },
+    {
+      "start": 84.78,
+      "end": 85.222,
+      "duration_sec": 0.442,
+      "text": "Boom.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 153.83226013183594,
+          "std_hz": 16.402849197387695,
+          "range_hz": 37.72673034667969,
+          "direction": 5.938835398356117
+        },
+        "energy": {
+          "dynamics_db": 29.999317169189453
+        },
+        "tempo": {
+          "syllable_rate": 6.787330316742188
+        },
+        "spectral": {
+          "brightness_hz": 1384.5589553689972
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 84.78,
+        "end": 85.222
+      }
+    },
+    {
+      "start": 85.2,
+      "end": 85.401,
+      "duration_sec": 0.201,
+      "text": "Boom.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 138.90879821777344,
+          "std_hz": 22.85380744934082,
+          "range_hz": 61.20294189453125,
+          "direction": -9.691420745849605
+        },
+        "energy": {
+          "dynamics_db": 8.53411865234375
+        },
+        "tempo": {
+          "syllable_rate": 4.975124378109616
+        },
+        "spectral": {
+          "brightness_hz": 933.3103253576566
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8888888888888888
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 85.2,
+        "end": 85.401
+      }
+    },
+    {
+      "start": 85.723,
+      "end": 87.334,
+      "duration_sec": 1.611,
+      "text": "Then that's the best for you.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 192.15176391601562,
+          "std_hz": 27.571842193603516,
+          "range_hz": 137.3767547607422,
+          "direction": 0.12556549147440163
+        },
+        "energy": {
+          "dynamics_db": 10.726619720458984
+        },
+        "tempo": {
+          "syllable_rate": 6.828057107386699
+        },
+        "spectral": {
+          "brightness_hz": 1535.5438929539325
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9285714285714286
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 85.723,
+        "end": 87.334
+      }
+    },
+    {
+      "start": 87.797,
+      "end": 91.4,
+      "duration_sec": 3.603,
+      "text": "If you find it easiest to go, excuse me, sorry, do you happen",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 197.173828125,
+          "std_hz": 34.511375427246094,
+          "range_hz": 140.7281494140625,
+          "direction": -0.022044195885617283
+        },
+        "energy": {
+          "dynamics_db": 16.00525951385498
+        },
+        "tempo": {
+          "syllable_rate": 5.828476269775173
+        },
+        "spectral": {
+          "brightness_hz": 1734.9821115329862
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8076923076923077
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 87.797,
+        "end": 91.4
+      }
+    },
+    {
+      "start": 91.38,
+      "end": 94.88,
+      "duration_sec": 3.5,
+      "text": "to know if there is a Starbucks here in this mall?",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 181.56280517578125,
+          "std_hz": 20.102373123168945,
+          "range_hz": 96.66851806640625,
+          "direction": 0.03296740306455484
+        },
+        "energy": {
+          "dynamics_db": 13.356197357177734
+        },
+        "tempo": {
+          "syllable_rate": 4.857142857142857
+        },
+        "spectral": {
+          "brightness_hz": 1448.8029697975892
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8741721854304636
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 91.38,
+        "end": 94.88
+      }
+    },
+    {
+      "start": 95.444,
+      "end": 98.24,
+      "duration_sec": 2.796,
+      "text": "And now you find that easiest, then that's",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 209.82643127441406,
+          "std_hz": 25.701751708984375,
+          "range_hz": 90.88436889648438,
+          "direction": 0.20901888071833552
+        },
+        "energy": {
+          "dynamics_db": 14.474397659301758
+        },
+        "tempo": {
+          "syllable_rate": 3.9341917024320567
+        },
+        "spectral": {
+          "brightness_hz": 1425.7921220351004
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8099173553719008
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 95.444,
+        "end": 98.24
+      }
+    },
+    {
+      "start": 98.22,
+      "end": 99.306,
+      "duration_sec": 1.086,
+      "text": "easiest as well.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 185.24656677246094,
+          "std_hz": 20.950847625732422,
+          "range_hz": 81.26350402832031,
+          "direction": -1.6136092395819577
+        },
+        "energy": {
+          "dynamics_db": 10.516124725341797
+        },
+        "tempo": {
+          "syllable_rate": 6.445672191528554
+        },
+        "spectral": {
+          "brightness_hz": 1636.5844249440413
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8936170212765957
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 98.22,
+        "end": 99.306
+      }
+    },
+    {
+      "start": 99.749,
+      "end": 104.777,
+      "duration_sec": 5.028,
+      "text": "So this is all just doubling back to the only failure is inaction.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 163.574951171875,
+          "std_hz": 55.30794143676758,
+          "range_hz": 183.25881958007812,
+          "direction": -0.2938514165788761
+        },
+        "energy": {
+          "dynamics_db": 19.28871250152588
+        },
+        "tempo": {
+          "syllable_rate": 4.972155926809859
+        },
+        "spectral": {
+          "brightness_hz": 1346.2814076679265
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.815668202764977
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 99.749,
+        "end": 104.777
+      }
+    },
+    {
+      "start": 105.179,
+      "end": 105.32,
+      "duration_sec": 0.141,
+      "text": "And not",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 184.61279296875,
+          "std_hz": 12.43900203704834,
+          "range_hz": 30.462692260742188,
+          "direction": 6.702359335763124
+        },
+        "energy": {
+          "dynamics_db": 2.4928245544433594
+        },
+        "tempo": {
+          "syllable_rate": 7.09219858156073
+        },
+        "spectral": {
+          "brightness_hz": 1239.9507804689435
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 105.179,
+        "end": 105.32
+      }
+    },
+    {
+      "start": 105.3,
+      "end": 109.6,
+      "duration_sec": 4.3,
+      "text": "only that, but also the concept that I talk about all the time, which is permission to bail.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 186.1873321533203,
+          "std_hz": 25.49541664123535,
+          "range_hz": 107.29621887207031,
+          "direction": -0.27904008787109025
+        },
+        "energy": {
+          "dynamics_db": 8.732949256896973
+        },
+        "tempo": {
+          "syllable_rate": 6.744186046511633
+        },
+        "spectral": {
+          "brightness_hz": 1069.192805323496
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9301075268817204
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 105.3,
+        "end": 109.6
+      }
+    },
+    {
+      "start": 109.58,
+      "end": 118.46,
+      "duration_sec": 8.88,
+      "text": "bail so for anybody that's watching this if you are so afraid of the social anxiety and the",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 159.55824279785156,
+          "std_hz": 54.56887435913086,
+          "range_hz": 196.50616455078125,
+          "direction": 0.10839490279418874
+        },
+        "energy": {
+          "dynamics_db": 24.7979679107666
+        },
+        "tempo": {
+          "syllable_rate": 4.054054054054056
+        },
+        "spectral": {
+          "brightness_hz": 1657.2267017454594
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9321148825065274
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 109.58,
+        "end": 118.46
+      }
+    },
+    {
+      "start": 118.44,
+      "end": 125.62,
+      "duration_sec": 7.18,
+      "text": "freezing up that could happen from getting really entrenched in an interaction with this girl like",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 161.7427978515625,
+          "std_hz": 23.242252349853516,
+          "range_hz": 101.98216247558594,
+          "direction": 0.025855924717845
+        },
+        "energy": {
+          "dynamics_db": 19.26371479034424
+        },
+        "tempo": {
+          "syllable_rate": 6.267409470752083
+        },
+        "spectral": {
+          "brightness_hz": 1390.7064974061889
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8129032258064516
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 118.44,
+        "end": 125.62
+      }
+    },
+    {
+      "start": 125.6,
+      "end": 130.6,
+      "duration_sec": 5.0,
+      "text": "damn i feel like if i have to go do this 10 minute interaction i'm gonna freeze up i'm not gonna know",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 143.08563232421875,
+          "std_hz": 11.66071605682373,
+          "range_hz": 49.094207763671875,
+          "direction": 0.055766107720175546
+        },
+        "energy": {
+          "dynamics_db": 14.227682113647461
+        },
+        "tempo": {
+          "syllable_rate": 6.0
+        },
+        "spectral": {
+          "brightness_hz": 1371.2421909385987
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8657407407407407
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 125.6,
+        "end": 130.6
+      }
+    },
+    {
+      "start": 130.58,
+      "end": 136.68,
+      "duration_sec": 6.1,
+      "text": "what to say whatever well then by going indirect and just asking for directions or pretending to",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 160.7251739501953,
+          "std_hz": 30.909494400024414,
+          "range_hz": 137.3162841796875,
+          "direction": -0.014395728513789834
+        },
+        "energy": {
+          "dynamics_db": 16.251449584960938
+        },
+        "tempo": {
+          "syllable_rate": 6.721311475409842
+        },
+        "spectral": {
+          "brightness_hz": 1355.6895874466259
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8403041825095057
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 130.58,
+        "end": 136.68
+      }
+    },
+    {
+      "start": 136.66,
+      "end": 142.798,
+      "duration_sec": 6.138,
+      "text": "recognize her, you now have permission to bail, which is, okay, I've got the balls up now.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 159.13665771484375,
+          "std_hz": 40.08382034301758,
+          "range_hz": 177.5885772705078,
+          "direction": -0.10901887669490715
+        },
+        "energy": {
+          "dynamics_db": 18.584514617919922
+        },
+        "tempo": {
+          "syllable_rate": 4.724666014988592
+        },
+        "spectral": {
+          "brightness_hz": 1423.931563431427
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9056603773584906
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 136.66,
+        "end": 142.798
+      }
+    },
+    {
+      "start": 142.838,
+      "end": 143.16,
+      "duration_sec": 0.322,
+      "text": "All",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 152.27806091308594,
+          "std_hz": 5.158758640289307,
+          "range_hz": 12.433197021484375,
+          "direction": 1.127967834472668
+        },
+        "energy": {
+          "dynamics_db": 17.564456939697266
+        },
+        "tempo": {
+          "syllable_rate": 9.316770186335324
+        },
+        "spectral": {
+          "brightness_hz": 1416.2038604947452
+        },
+        "quality": {
+          "low_energy": true,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 142.838,
+        "end": 143.16
+      }
+    },
+    {
+      "start": 143.14,
+      "end": 143.806,
+      "duration_sec": 0.666,
+      "text": "right.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 161.56509399414062,
+          "std_hz": 3.1115405559539795,
+          "range_hz": 11.986373901367188,
+          "direction": 0.3327203638413363
+        },
+        "energy": {
+          "dynamics_db": 16.668356895446777
+        },
+        "tempo": {
+          "syllable_rate": 6.006006006005778
+        },
+        "spectral": {
+          "brightness_hz": 1401.3840723021974
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.7931034482758621
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 143.14,
+        "end": 143.806
+      }
+    },
+    {
+      "start": 143.827,
+      "end": 146.735,
+      "duration_sec": 2.908,
+      "text": "I know what Aaron said about just any action is better than nothing.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 165.34243774414062,
+          "std_hz": 11.70689868927002,
+          "range_hz": 48.48368835449219,
+          "direction": -0.0422171139509091
+        },
+        "energy": {
+          "dynamics_db": 8.314325332641602
+        },
+        "tempo": {
+          "syllable_rate": 5.502063273727619
+        },
+        "spectral": {
+          "brightness_hz": 1370.1224202513945
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9126984126984127
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 143.827,
+        "end": 146.735
+      }
+    },
+    {
+      "start": 146.795,
+      "end": 146.997,
+      "duration_sec": 0.202,
+      "text": "Okay.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 158.37501525878906,
+          "std_hz": 7.2253618240356445,
+          "range_hz": 19.25836181640625,
+          "direction": -0.9474957784016859
+        },
+        "energy": {
+          "dynamics_db": 2.2480945587158203
+        },
+        "tempo": {
+          "syllable_rate": 4.9504950495042985
+        },
+        "spectral": {
+          "brightness_hz": 1236.463995680817
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8888888888888888
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 146.795,
+        "end": 146.997
+      }
+    },
+    {
+      "start": 147.018,
+      "end": 147.28,
+      "duration_sec": 0.262,
+      "text": "Here I go.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 180.7468719482422,
+          "std_hz": 7.463677406311035,
+          "range_hz": 18.90399169921875,
+          "direction": -2.061405048503733
+        },
+        "energy": {
+          "dynamics_db": 2.875812530517578
+        },
+        "tempo": {
+          "syllable_rate": 7.633587786259529
+        },
+        "spectral": {
+          "brightness_hz": 1033.5934079457497
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 147.018,
+        "end": 147.28
+      }
+    },
+    {
+      "start": 147.6,
+      "end": 148.468,
+      "duration_sec": 0.868,
+      "text": "Excuse me.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 205.1514892578125,
+          "std_hz": 30.118783950805664,
+          "range_hz": 83.82412719726562,
+          "direction": -6.1921712089987375
+        },
+        "energy": {
+          "dynamics_db": 19.92049217224121
+        },
+        "tempo": {
+          "syllable_rate": 5.7603686635945035
+        },
+        "spectral": {
+          "brightness_hz": 2416.1565804715174
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 147.6,
+        "end": 148.468
+      }
+    },
+    {
+      "start": 148.509,
+      "end": 149.64,
+      "duration_sec": 1.131,
+      "text": "Hey, sorry to bother you.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 188.8063507080078,
+          "std_hz": 22.24281883239746,
+          "range_hz": 80.56904602050781,
+          "direction": -0.8506138174874418
+        },
+        "energy": {
+          "dynamics_db": 5.293607711791992
+        },
+        "tempo": {
+          "syllable_rate": 7.957559681697611
+        },
+        "spectral": {
+          "brightness_hz": 1344.4224436222198
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9183673469387755
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 148.509,
+        "end": 149.64
+      }
+    },
+    {
+      "start": 149.66,
+      "end": 150.891,
+      "duration_sec": 1.231,
+      "text": "Do you go to the planet fitness?",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 194.32167053222656,
+          "std_hz": 18.312822341918945,
+          "range_hz": 84.71453857421875,
+          "direction": -0.4284191849284233
+        },
+        "energy": {
+          "dynamics_db": 12.112525939941406
+        },
+        "tempo": {
+          "syllable_rate": 8.93582453290012
+        },
+        "spectral": {
+          "brightness_hz": 1375.4808236060398
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8703703703703703
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 149.66,
+        "end": 150.891
+      }
+    },
+    {
+      "start": 150.952,
+      "end": 151.8,
+      "duration_sec": 0.848,
+      "text": "It's over on main street.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 182.75152587890625,
+          "std_hz": 19.256364822387695,
+          "range_hz": 73.50180053710938,
+          "direction": 0.4111673961737765
+        },
+        "energy": {
+          "dynamics_db": 7.206552505493164
+        },
+        "tempo": {
+          "syllable_rate": 7.075471698113097
+        },
+        "spectral": {
+          "brightness_hz": 1501.7057096530684
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9459459459459459
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 150.952,
+        "end": 151.8
+      }
+    },
+    {
+      "start": 151.92,
+      "end": 154.379,
+      "duration_sec": 2.459,
+      "text": "She goes, um, no, actually I don't.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 197.82278442382812,
+          "std_hz": 46.88124084472656,
+          "range_hz": 217.79940795898438,
+          "direction": 0.852386038999994
+        },
+        "energy": {
+          "dynamics_db": 15.151301383972168
+        },
+        "tempo": {
+          "syllable_rate": 6.100040666937772
+        },
+        "spectral": {
+          "brightness_hz": 1360.7899583993863
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8113207547169812
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 151.92,
+        "end": 154.379
+      }
+    },
+    {
+      "start": 154.682,
+      "end": 156.455,
+      "duration_sec": 1.773,
+      "text": "And you don't have anything left in you.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 199.0570831298828,
+          "std_hz": 14.78664779663086,
+          "range_hz": 54.1776123046875,
+          "direction": 0.05122454929270469
+        },
+        "energy": {
+          "dynamics_db": 10.542393684387207
+        },
+        "tempo": {
+          "syllable_rate": 5.076142131979625
+        },
+        "spectral": {
+          "brightness_hz": 1148.882272676258
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8961038961038961
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 154.682,
+        "end": 156.455
+      }
+    },
+    {
+      "start": 156.496,
+      "end": 157.06,
+      "duration_sec": 0.564,
+      "text": "Cause you just had to",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 182.38612365722656,
+          "std_hz": 12.149870872497559,
+          "range_hz": 41.07341003417969,
+          "direction": 0.9842667212853033
+        },
+        "energy": {
+          "dynamics_db": 6.780454635620117
+        },
+        "tempo": {
+          "syllable_rate": 7.092198581560372
+        },
+        "spectral": {
+          "brightness_hz": 1712.845992365253
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 156.496,
+        "end": 157.06
+      }
+    },
+    {
+      "start": 157.04,
+      "end": 158.853,
+      "duration_sec": 1.813,
+      "text": "overcome that first hurdle.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 177.2740020751953,
+          "std_hz": 19.623991012573242,
+          "range_hz": 87.71231079101562,
+          "direction": 0.18615503751842324
+        },
+        "energy": {
+          "dynamics_db": 12.696008682250977
+        },
+        "tempo": {
+          "syllable_rate": 5.515719801434036
+        },
+        "spectral": {
+          "brightness_hz": 1156.7320554312516
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8354430379746836
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 157.04,
+        "end": 158.853
+      }
+    },
+    {
+      "start": 159.438,
+      "end": 161.755,
+      "duration_sec": 2.317,
+      "text": "Now you can just be like, okay, no problem.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 204.31475830078125,
+          "std_hz": 32.030330657958984,
+          "range_hz": 133.8048553466797,
+          "direction": -0.6064541767400733
+        },
+        "energy": {
+          "dynamics_db": 13.468964576721191
+        },
+        "tempo": {
+          "syllable_rate": 6.042296072507534
+        },
+        "spectral": {
+          "brightness_hz": 1011.2442558574347
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.84
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 159.438,
+        "end": 161.755
+      }
+    },
+    {
+      "start": 161.816,
+      "end": 162.44,
+      "duration_sec": 0.624,
+      "text": "Well, we'll have a good",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 175.0347137451172,
+          "std_hz": 17.031312942504883,
+          "range_hz": 49.700286865234375,
+          "direction": 2.092937552016768
+        },
+        "energy": {
+          "dynamics_db": 4.643030166625977
+        },
+        "tempo": {
+          "syllable_rate": 8.012820512820575
+        },
+        "spectral": {
+          "brightness_hz": 848.2238500680409
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9259259259259259
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 161.816,
+        "end": 162.44
+      }
+    },
+    {
+      "start": 162.42,
+      "end": 168.36,
+      "duration_sec": 5.94,
+      "text": "day she's like yeah you too and you guys just move on so that can also be easiest for a lot of you",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 182.4177703857422,
+          "std_hz": 21.836305618286133,
+          "range_hz": 118.94387817382812,
+          "direction": 0.013543253934124169
+        },
+        "energy": {
+          "dynamics_db": 18.289955139160156
+        },
+        "tempo": {
+          "syllable_rate": 5.218855218855196
+        },
+        "spectral": {
+          "brightness_hz": 1419.2111187297787
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.82421875
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 162.42,
+        "end": 168.36
+      }
+    },
+    {
+      "start": 168.34,
+      "end": 174.14,
+      "duration_sec": 5.8,
+      "text": "guys and then get into basic conversation see how long you can stay in there ask about where she",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 189.14959716796875,
+          "std_hz": 33.68020248413086,
+          "range_hz": 120.32594299316406,
+          "direction": 0.14395496873607158
+        },
+        "energy": {
+          "dynamics_db": 12.36805534362793
+        },
+        "tempo": {
+          "syllable_rate": 5.862068965517259
+        },
+        "spectral": {
+          "brightness_hz": 1642.2502456651196
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.86
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 168.34,
+        "end": 174.14
+      }
+    },
+    {
+      "start": 174.12,
+      "end": 179.18,
+      "duration_sec": 5.06,
+      "text": "lives where you're from maybe a little story about how you've only lived here for two years and",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 181.70213317871094,
+          "std_hz": 18.701372146606445,
+          "range_hz": 78.58621215820312,
+          "direction": -0.11234388582689236
+        },
+        "energy": {
+          "dynamics_db": 10.748170852661133
+        },
+        "tempo": {
+          "syllable_rate": 6.719367588932803
+        },
+        "spectral": {
+          "brightness_hz": 1168.5427388265657
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8761467889908257
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 174.12,
+        "end": 179.18
+      }
+    },
+    {
+      "start": 179.16,
+      "end": 184.26,
+      "duration_sec": 5.1,
+      "text": "you're not sure if you're liking it what about you do you like it that kind of thing talk about work",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 165.70982360839844,
+          "std_hz": 23.905187606811523,
+          "range_hz": 85.13265991210938,
+          "direction": 0.15409999592159457
+        },
+        "energy": {
+          "dynamics_db": 12.66179084777832
+        },
+        "tempo": {
+          "syllable_rate": 5.686274509803928
+        },
+        "spectral": {
+          "brightness_hz": 1187.6852489491546
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8545454545454545
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 179.16,
+        "end": 184.26
+      }
+    },
+    {
+      "start": 184.24,
+      "end": 189.88,
+      "duration_sec": 5.64,
+      "text": "talk about fucking you know oh have you ever been to this bar that's over near where you say that",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 166.1028594970703,
+          "std_hz": 12.513843536376953,
+          "range_hz": 56.06964111328125,
+          "direction": -0.05208669825254499
+        },
+        "energy": {
+          "dynamics_db": 10.904874801635742
+        },
+        "tempo": {
+          "syllable_rate": 5.319148936170226
+        },
+        "spectral": {
+          "brightness_hz": 1208.5134002583125
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8518518518518519
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 184.24,
+        "end": 189.88
+      }
+    },
+    {
+      "start": 189.86,
+      "end": 196.12,
+      "duration_sec": 6.26,
+      "text": "you live bullshit bullshit bullshit and then ideally you go well hey i gotta go um we should",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 178.52601623535156,
+          "std_hz": 29.8631649017334,
+          "range_hz": 136.07720947265625,
+          "direction": 0.09612268168703103
+        },
+        "energy": {
+          "dynamics_db": 14.945919036865234
+        },
+        "tempo": {
+          "syllable_rate": 5.271565495207676
+        },
+        "spectral": {
+          "brightness_hz": 1280.6226629574976
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8222222222222222
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 189.86,
+        "end": 196.12
+      }
+    },
+    {
+      "start": 196.1,
+      "end": 199.06,
+      "duration_sec": 2.96,
+      "text": "uh we should grab dinner sometime and just see what happens",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 176.669921875,
+          "std_hz": 41.42702865600586,
+          "range_hz": 166.57310485839844,
+          "direction": -0.26320222774038216
+        },
+        "energy": {
+          "dynamics_db": 15.824766159057617
+        },
+        "tempo": {
+          "syllable_rate": 7.094594594594575
+        },
+        "spectral": {
+          "brightness_hz": 1317.8806129771656
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.84375
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 196.1,
+        "end": 199.06
+      }
+    },
+    {
+      "start": 201.62,
+      "end": 205.48,
+      "duration_sec": 3.86,
+      "text": "sounds like a plan hell yeah bruce wayne what did you think about that",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 162.5271453857422,
+          "std_hz": 61.83804702758789,
+          "range_hz": 245.9849853515625,
+          "direction": 1.1494225026820306
+        },
+        "energy": {
+          "dynamics_db": 25.297876358032227
+        },
+        "tempo": {
+          "syllable_rate": 5.699481865284996
+        },
+        "spectral": {
+          "brightness_hz": 1499.1831162543976
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8802395209580839
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 201.62,
+        "end": 205.48
+      }
+    },
+    {
+      "start": 209.66,
+      "end": 213.94,
+      "duration_sec": 4.28,
+      "text": "um yeah i like that you just have to kind of go in and just say something",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 133.77059936523438,
+          "std_hz": 10.650654792785645,
+          "range_hz": 35.71247863769531,
+          "direction": 0.053663689391154484
+        },
+        "energy": {
+          "dynamics_db": 17.401927947998047
+        },
+        "tempo": {
+          "syllable_rate": 5.841121495327101
+        },
+        "spectral": {
+          "brightness_hz": 2148.9268909434895
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8756756756756757
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 209.66,
+        "end": 213.94
+      }
+    },
+    {
+      "start": 214.84,
+      "end": 219.5,
+      "duration_sec": 4.66,
+      "text": "um no matter what it is like it doesn't need to be perfect especially if you're scared",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 167.4013671875,
+          "std_hz": 75.16802215576172,
+          "range_hz": 192.05007934570312,
+          "direction": -3.0189878584114416
+        },
+        "energy": {
+          "dynamics_db": 15.463109970092773
+        },
+        "tempo": {
+          "syllable_rate": 5.364806866952794
+        },
+        "spectral": {
+          "brightness_hz": 1904.5030971426488
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8407960199004975
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 214.84,
+        "end": 219.5
+      }
+    },
+    {
+      "start": 219.86,
+      "end": 225.14,
+      "duration_sec": 5.28,
+      "text": "and like you're just kind of starting out and then also she's gonna feel that she's gonna be like oh",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 401.4842224121094,
+          "std_hz": 78.16595458984375,
+          "range_hz": 162.28521728515625,
+          "direction": -9.902583170902394
+        },
+        "energy": {
+          "dynamics_db": 12.537059783935547
+        },
+        "tempo": {
+          "syllable_rate": 6.060606060606092
+        },
+        "spectral": {
+          "brightness_hz": 1824.6431895900114
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8421052631578947
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 219.86,
+        "end": 225.14
+      }
+    },
+    {
+      "start": 225.62,
+      "end": 231.16,
+      "duration_sec": 5.54,
+      "text": "this guy's just trying to get out of his comfort zone like i was talking to a girl yesterday who's",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 160.3824462890625,
+          "std_hz": 98.75601196289062,
+          "range_hz": 400.9510192871094,
+          "direction": 1.4651605448197147
+        },
+        "energy": {
+          "dynamics_db": 16.61463165283203
+        },
+        "tempo": {
+          "syllable_rate": 5.5956678700361095
+        },
+        "spectral": {
+          "brightness_hz": 1840.9707828022883
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8828451882845189
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 225.62,
+        "end": 231.16
+      }
+    },
+    {
+      "start": 231.14,
+      "end": 236.64,
+      "duration_sec": 5.5,
+      "text": "like she's like yeah i can see like when a guy's just being nice and he wants to talk but like i",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 191.69456481933594,
+          "std_hz": 98.11068725585938,
+          "range_hz": 318.93084716796875,
+          "direction": -1.5431906295697673
+        },
+        "energy": {
+          "dynamics_db": 14.341697692871094
+        },
+        "tempo": {
+          "syllable_rate": 4.545454545454546
+        },
+        "spectral": {
+          "brightness_hz": 1952.7534665202113
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8945147679324894
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 231.14,
+        "end": 236.64
+      }
+    },
+    {
+      "start": 236.62,
+      "end": 243.1,
+      "duration_sec": 6.48,
+      "text": "respect that like yeah and and you know what that's a great point and one last thing i'm going",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 191.5467987060547,
+          "std_hz": 69.29212188720703,
+          "range_hz": 328.2208251953125,
+          "direction": -1.1025223560652728
+        },
+        "energy": {
+          "dynamics_db": 18.150087356567383
+        },
+        "tempo": {
+          "syllable_rate": 4.012345679012352
+        },
+        "spectral": {
+          "brightness_hz": 1423.6489243359256
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8285714285714286
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 236.62,
+        "end": 243.1
+      }
+    },
+    {
+      "start": 243.08,
+      "end": 251.24,
+      "duration_sec": 8.16,
+      "text": "going to say about this as well is that, like you said, shaking that nervousness can be very",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 162.38038635253906,
+          "std_hz": 22.318552017211914,
+          "range_hz": 95.52616882324219,
+          "direction": 0.10992279927795845
+        },
+        "energy": {
+          "dynamics_db": 20.84895896911621
+        },
+        "tempo": {
+          "syllable_rate": 5.3921568627451
+        },
+        "spectral": {
+          "brightness_hz": 1677.3367943800213
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8551136363636364
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 243.08,
+        "end": 251.24
+      }
+    },
+    {
+      "start": 251.22,
+      "end": 252.911,
+      "duration_sec": 1.691,
+      "text": "difficult and they can feel that.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 149.15321350097656,
+          "std_hz": 18.40229034423828,
+          "range_hz": 59.03242492675781,
+          "direction": 0.10367442853358301
+        },
+        "energy": {
+          "dynamics_db": 10.258153915405273
+        },
+        "tempo": {
+          "syllable_rate": 7.0963926670609005
+        },
+        "spectral": {
+          "brightness_hz": 1015.6309065624368
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8904109589041096
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 251.22,
+        "end": 252.911
+      }
+    },
+    {
+      "start": 253.294,
+      "end": 257.18,
+      "duration_sec": 3.886,
+      "text": "So what I always tell guys as well is if right now you're even",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 166.19187927246094,
+          "std_hz": 19.86656379699707,
+          "range_hz": 81.05313110351562,
+          "direction": 0.024883214670287077
+        },
+        "energy": {
+          "dynamics_db": 17.515674591064453
+        },
+        "tempo": {
+          "syllable_rate": 5.404014410705101
+        },
+        "spectral": {
+          "brightness_hz": 1295.22980721177
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9523809523809523
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 253.294,
+        "end": 257.18
+      }
+    },
+    {
+      "start": 257.16,
+      "end": 261.06,
+      "duration_sec": 3.9,
+      "text": "watching this video and you're almost like trembling, damn, okay, I'm going to go do this,",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 152.5208740234375,
+          "std_hz": 21.144268035888672,
+          "range_hz": 89.36161041259766,
+          "direction": 0.12063222538267054
+        },
+        "energy": {
+          "dynamics_db": 12.713689804077148
+        },
+        "tempo": {
+          "syllable_rate": 7.1794871794872215
+        },
+        "spectral": {
+          "brightness_hz": 1255.2442678571238
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8928571428571429
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 257.16,
+        "end": 261.06
+      }
+    },
+    {
+      "start": 261.06,
+      "end": 262.235,
+      "duration_sec": 1.175,
+      "text": "but I am scared, whatever.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 170.29653930664062,
+          "std_hz": 8.976238250732422,
+          "range_hz": 30.141250610351562,
+          "direction": 0.324347623115339
+        },
+        "energy": {
+          "dynamics_db": 9.016048431396484
+        },
+        "tempo": {
+          "syllable_rate": 5.106382978723355
+        },
+        "spectral": {
+          "brightness_hz": 1626.9036294723587
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8431372549019608
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 261.06,
+        "end": 262.235
+      }
+    },
+    {
+      "start": 262.6,
+      "end": 264.22,
+      "duration_sec": 1.62,
+      "text": "Well, you're going to be even more scared when you get out there.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 178.3003692626953,
+          "std_hz": 34.46730422973633,
+          "range_hz": 113.57257080078125,
+          "direction": -1.1318945159895275
+        },
+        "energy": {
+          "dynamics_db": 6.891532897949219
+        },
+        "tempo": {
+          "syllable_rate": 6.790123456790105
+        },
+        "spectral": {
+          "brightness_hz": 1139.780827715991
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9571428571428572
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 262.6,
+        "end": 264.22
+      }
+    },
+    {
+      "start": 264.56,
+      "end": 268.375,
+      "duration_sec": 3.815,
+      "text": "Don't go to where you're always game or don't go to where you're living.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 186.19419860839844,
+          "std_hz": 32.35224914550781,
+          "range_hz": 127.02653503417969,
+          "direction": 0.10997799055283371
+        },
+        "energy": {
+          "dynamics_db": 13.915470123291016
+        },
+        "tempo": {
+          "syllable_rate": 5.242463958060291
+        },
+        "spectral": {
+          "brightness_hz": 1048.735639504478
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8666666666666667
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 264.56,
+        "end": 268.375
+      }
+    },
+    {
+      "start": 268.577,
+      "end": 268.96,
+      "duration_sec": 0.383,
+      "text": "Don't go to where",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 234.37570190429688,
+          "std_hz": 25.15720558166504,
+          "range_hz": 72.00202941894531,
+          "direction": 4.192444109449202
+        },
+        "energy": {
+          "dynamics_db": 5.059392929077148
+        },
+        "tempo": {
+          "syllable_rate": 5.221932114882761
+        },
+        "spectral": {
+          "brightness_hz": 814.3890973175911
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 268.577,
+        "end": 268.96
+      }
+    },
+    {
+      "start": 268.94,
+      "end": 273.82,
+      "duration_sec": 4.88,
+      "text": "you're actually grocery shopping, actually going to the H&M, actually walking around in front of",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 169.34564208984375,
+          "std_hz": 14.84434986114502,
+          "range_hz": 74.81996154785156,
+          "direction": -0.11261822741340911
+        },
+        "energy": {
+          "dynamics_db": 10.452205657958984
+        },
+        "tempo": {
+          "syllable_rate": 4.713114754098365
+        },
+        "spectral": {
+          "brightness_hz": 1351.4035066844813
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8672985781990521
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 268.94,
+        "end": 273.82
+      }
+    },
+    {
+      "start": 273.8,
+      "end": 281.34,
+      "duration_sec": 7.54,
+      "text": "your house, drive 30 minutes, drive 25 minutes to a grocery store, drive further to go to bars",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 187.02642822265625,
+          "std_hz": 35.1776123046875,
+          "range_hz": 191.58468627929688,
+          "direction": 0.08582161600275015
+        },
+        "energy": {
+          "dynamics_db": 20.01279926300049
+        },
+        "tempo": {
+          "syllable_rate": 6.366047745358121
+        },
+        "spectral": {
+          "brightness_hz": 1535.835600371963
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8369230769230769
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 273.8,
+        "end": 281.34
+      }
+    },
+    {
+      "start": 281.32,
+      "end": 283.214,
+      "duration_sec": 1.894,
+      "text": "that you don't actually go to.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 184.2681884765625,
+          "std_hz": 33.572025299072266,
+          "range_hz": 122.63965606689453,
+          "direction": -0.6041348493135883
+        },
+        "energy": {
+          "dynamics_db": 11.020814895629883
+        },
+        "tempo": {
+          "syllable_rate": 6.335797254487838
+        },
+        "spectral": {
+          "brightness_hz": 1273.857364163736
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9024390243902439
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 281.32,
+        "end": 283.214
+      }
+    },
+    {
+      "start": 283.254,
+      "end": 286.72,
+      "duration_sec": 3.466,
+      "text": "And then you're going to sort of get this sense of novelty,",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 193.2227325439453,
+          "std_hz": 31.0194149017334,
+          "range_hz": 151.89898681640625,
+          "direction": -0.08218605166275197
+        },
+        "energy": {
+          "dynamics_db": 14.174531936645508
+        },
+        "tempo": {
+          "syllable_rate": 5.193306405077887
+        },
+        "spectral": {
+          "brightness_hz": 1639.2670318964547
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.86
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 283.254,
+        "end": 286.72
+      }
+    },
+    {
+      "start": 286.94,
+      "end": 292.62,
+      "duration_sec": 5.68,
+      "text": "this sense of anonymity of like, okay, this is sick because when I'm over here, I could get",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 184.3059539794922,
+          "std_hz": 27.300365447998047,
+          "range_hz": 109.38340759277344,
+          "direction": 0.06142733221960342
+        },
+        "energy": {
+          "dynamics_db": 16.296802520751953
+        },
+        "tempo": {
+          "syllable_rate": 6.338028169014077
+        },
+        "spectral": {
+          "brightness_hz": 1520.9163574448037
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8530612244897959
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 286.94,
+        "end": 292.62
+      }
+    },
+    {
+      "start": 292.6,
+      "end": 295.306,
+      "duration_sec": 2.706,
+      "text": "rejected a bunch and I'm probably never going to have to see these women again.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 163.59725952148438,
+          "std_hz": 21.18453598022461,
+          "range_hz": 84.886474609375,
+          "direction": -0.4132034195390581
+        },
+        "energy": {
+          "dynamics_db": 9.436561584472656
+        },
+        "tempo": {
+          "syllable_rate": 7.390983000739206
+        },
+        "spectral": {
+          "brightness_hz": 1103.3413693399305
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9487179487179487
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 292.6,
+        "end": 295.306
+      }
+    },
+    {
+      "start": 295.346,
+      "end": 296.86,
+      "duration_sec": 1.514,
+      "text": "It doesn't matter",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 201.86158752441406,
+          "std_hz": 44.8047981262207,
+          "range_hz": 143.39390563964844,
+          "direction": -0.7581231160516916
+        },
+        "energy": {
+          "dynamics_db": 25.226993560791016
+        },
+        "tempo": {
+          "syllable_rate": 3.302509907529701
+        },
+        "spectral": {
+          "brightness_hz": 1208.3209828119386
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9545454545454546
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 295.346,
+        "end": 296.86
+      }
+    },
+    {
+      "start": 296.84,
+      "end": 303.28,
+      "duration_sec": 6.44,
+      "text": "whether you really seduce this girl or close or anything all that matters is that you get some",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 195.53619384765625,
+          "std_hz": 25.591663360595703,
+          "range_hz": 112.46061706542969,
+          "direction": 0.01902031754635838
+        },
+        "energy": {
+          "dynamics_db": 13.383404731750488
+        },
+        "tempo": {
+          "syllable_rate": 5.900621118012425
+        },
+        "spectral": {
+          "brightness_hz": 1447.7214942658727
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8669064748201439
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 296.84,
+        "end": 303.28
+      }
+    },
+    {
+      "start": 303.26,
+      "end": 310.84,
+      "duration_sec": 7.58,
+      "text": "form of a conversation going and any form of a hook any form of a conversation just getting into",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 178.4237060546875,
+          "std_hz": 36.050514221191406,
+          "range_hz": 195.36109924316406,
+          "direction": 0.03839710608023814
+        },
+        "energy": {
+          "dynamics_db": 14.993231773376465
+        },
+        "tempo": {
+          "syllable_rate": 6.332453825857533
+        },
+        "spectral": {
+          "brightness_hz": 1382.7149830427472
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8532110091743119
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 303.26,
+        "end": 310.84
+      }
+    },
+    {
+      "start": 310.82,
+      "end": 316.92,
+      "duration_sec": 6.1,
+      "text": "the most basic of conversations with a very pretty girl jerry you filmed you filmed infield for me at",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 182.07684326171875,
+          "std_hz": 30.670963287353516,
+          "range_hz": 124.84848022460938,
+          "direction": 0.1226637664074574
+        },
+        "energy": {
+          "dynamics_db": 14.50871753692627
+        },
+        "tempo": {
+          "syllable_rate": 6.06557377049178
+        },
+        "spectral": {
+          "brightness_hz": 1280.0935917726486
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8821292775665399
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 310.82,
+        "end": 316.92
+      }
+    },
+    {
+      "start": 316.9,
+      "end": 323.62,
+      "duration_sec": 6.72,
+      "text": "the mall remember yes okay so even some of the ones where like like let's say okay you're sitting",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 203.01393127441406,
+          "std_hz": 62.99164581298828,
+          "range_hz": 272.17828369140625,
+          "direction": 0.39486295748685774
+        },
+        "energy": {
+          "dynamics_db": 23.47597026824951
+        },
+        "tempo": {
+          "syllable_rate": 4.761904761904742
+        },
+        "spectral": {
+          "brightness_hz": 1670.8256162652265
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 316.9,
+        "end": 323.62
+      }
+    },
+    {
+      "start": 323.6,
+      "end": 328.88,
+      "duration_sec": 5.28,
+      "text": "there holding the camera but you're seeing me talk to like really attractive women so whether",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 200.50929260253906,
+          "std_hz": 36.5273551940918,
+          "range_hz": 161.42184448242188,
+          "direction": -0.1384053056585359
+        },
+        "energy": {
+          "dynamics_db": 21.647401809692383
+        },
+        "tempo": {
+          "syllable_rate": 4.92424242424245
+        },
+        "spectral": {
+          "brightness_hz": 1506.3752405154928
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9429824561403509
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 323.6,
+        "end": 328.88
+      }
+    },
+    {
+      "start": 328.86,
+      "end": 334.6,
+      "duration_sec": 5.74,
+      "text": "i got her number or not if you look over and you just see like yeah this dude is just straight up",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 213.35272216796875,
+          "std_hz": 43.50620651245117,
+          "range_hz": 194.8636016845703,
+          "direction": -0.11944114189321887
+        },
+        "energy": {
+          "dynamics_db": 12.555402755737305
+        },
+        "tempo": {
+          "syllable_rate": 5.923344947735182
+        },
+        "spectral": {
+          "brightness_hz": 1409.316802682956
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8911290322580645
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 328.86,
+        "end": 334.6
+      }
+    },
+    {
+      "start": 334.58,
+      "end": 343.62,
+      "duration_sec": 9.04,
+      "text": "like having a good conversation with a really hot chick again that now is you taking your biological",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 166.34683227539062,
+          "std_hz": 41.853580474853516,
+          "range_hz": 201.07720947265625,
+          "direction": -0.062455542262412615
+        },
+        "energy": {
+          "dynamics_db": 19.90639305114746
+        },
+        "tempo": {
+          "syllable_rate": 4.867256637168131
+        },
+        "spectral": {
+          "brightness_hz": 1308.5586156508343
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8461538461538461
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 334.58,
+        "end": 343.62
+      }
+    },
+    {
+      "start": 343.6,
+      "end": 350.8,
+      "duration_sec": 7.2,
+      "text": "destiny and saying fuck you because based on whatever hierarchy the universe is operating",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 186.25985717773438,
+          "std_hz": 32.41667556762695,
+          "range_hz": 146.17282104492188,
+          "direction": 0.1108559295189053
+        },
+        "energy": {
+          "dynamics_db": 17.420536994934082
+        },
+        "tempo": {
+          "syllable_rate": 4.444444444444452
+        },
+        "spectral": {
+          "brightness_hz": 1472.1015071126087
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8327974276527331
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 343.6,
+        "end": 350.8
+      }
+    },
+    {
+      "start": 350.78,
+      "end": 356.18,
+      "duration_sec": 5.4,
+      "text": "off of this girl would have never fallen into my lap, but I'm saying, fuck you to whatever that",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 198.05308532714844,
+          "std_hz": 37.13164138793945,
+          "range_hz": 146.59873962402344,
+          "direction": 0.25901638838524743
+        },
+        "energy": {
+          "dynamics_db": 15.636505126953125
+        },
+        "tempo": {
+          "syllable_rate": 5.555555555555521
+        },
+        "spectral": {
+          "brightness_hz": 1285.077298227087
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8369098712446352
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 350.78,
+        "end": 356.18
+      }
+    },
+    {
+      "start": 356.16,
+      "end": 358.196,
+      "duration_sec": 2.036,
+      "text": "universal structure trying to hold me down.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 195.90097045898438,
+          "std_hz": 26.250896453857422,
+          "range_hz": 117.15867614746094,
+          "direction": -0.6852222080433851
+        },
+        "energy": {
+          "dynamics_db": 8.603324890136719
+        },
+        "tempo": {
+          "syllable_rate": 7.367387033398816
+        },
+        "spectral": {
+          "brightness_hz": 1265.9839514020437
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9431818181818182
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 356.16,
+        "end": 358.196
+      }
+    },
+    {
+      "start": 358.216,
+      "end": 361.22,
+      "duration_sec": 3.004,
+      "text": "And I'm saying, Hey, I'm going to talk to this beautiful",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 203.1079864501953,
+          "std_hz": 32.54240417480469,
+          "range_hz": 125.85258483886719,
+          "direction": -0.2576460689504376
+        },
+        "energy": {
+          "dynamics_db": 15.804744720458984
+        },
+        "tempo": {
+          "syllable_rate": 5.326231691078528
+        },
+        "spectral": {
+          "brightness_hz": 1546.4594326881518
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8384615384615385
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 358.216,
+        "end": 361.22
+      }
+    },
+    {
+      "start": 361.2,
+      "end": 364.84,
+      "duration_sec": 3.64,
+      "text": "woman, no matter what, and I'm going to make this happen.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 170.72024536132812,
+          "std_hz": 47.530921936035156,
+          "range_hz": 180.03077697753906,
+          "direction": -0.20831650379478783
+        },
+        "energy": {
+          "dynamics_db": 18.527462005615234
+        },
+        "tempo": {
+          "syllable_rate": 4.120879120879136
+        },
+        "spectral": {
+          "brightness_hz": 1141.762597201261
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8407643312101911
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 361.2,
+        "end": 364.84
+      }
+    },
+    {
+      "start": 365.363,
+      "end": 368.48,
+      "duration_sec": 3.117,
+      "text": "And so again, what happens is completely",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 221.6651153564453,
+          "std_hz": 30.61762046813965,
+          "range_hz": 112.775634765625,
+          "direction": -0.018455722918141865
+        },
+        "energy": {
+          "dynamics_db": 20.209035873413086
+        },
+        "tempo": {
+          "syllable_rate": 6.095604748155241
+        },
+        "spectral": {
+          "brightness_hz": 1612.047498187231
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9555555555555556
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 365.363,
+        "end": 368.48
+      }
+    },
+    {
+      "start": 368.46,
+      "end": 369.185,
+      "duration_sec": 0.725,
+      "text": "irrelevant.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 205.72894287109375,
+          "std_hz": 15.23436164855957,
+          "range_hz": 45.91413879394531,
+          "direction": -0.6915252970810122
+        },
+        "energy": {
+          "dynamics_db": 6.120506286621094
+        },
+        "tempo": {
+          "syllable_rate": 6.896551724137715
+        },
+        "spectral": {
+          "brightness_hz": 1064.4444802645387
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.90625
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 368.46,
+        "end": 369.185
+      }
+    },
+    {
+      "start": 369.205,
+      "end": 374.38,
+      "duration_sec": 5.175,
+      "text": "You have to be completely unattached from the outcome and recognize that so long as",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 192.7214813232422,
+          "std_hz": 22.629684448242188,
+          "range_hz": 94.46060180664062,
+          "direction": -0.0727784878910348
+        },
+        "energy": {
+          "dynamics_db": 12.491460800170898
+        },
+        "tempo": {
+          "syllable_rate": 6.376811594202884
+        },
+        "spectral": {
+          "brightness_hz": 1495.3783894258333
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8878923766816144
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 369.205,
+        "end": 374.38
+      }
+    },
+    {
+      "start": 374.36,
+      "end": 380.6,
+      "duration_sec": 6.24,
+      "text": "you're actually doing these approaches, getting basic conversation structure going, you have to",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 173.28512573242188,
+          "std_hz": 32.69566345214844,
+          "range_hz": 153.28158569335938,
+          "direction": -0.002357994300644062
+        },
+        "energy": {
+          "dynamics_db": 17.22050952911377
+        },
+        "tempo": {
+          "syllable_rate": 5.28846153846153
+        },
+        "spectral": {
+          "brightness_hz": 1532.2712514885104
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.828996282527881
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 374.36,
+        "end": 380.6
+      }
+    },
+    {
+      "start": 380.58,
+      "end": 382.381,
+      "duration_sec": 1.801,
+      "text": "recognize that that is a victory.",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 143.1142578125,
+          "std_hz": 21.23286247253418,
+          "range_hz": 74.99844360351562,
+          "direction": -0.8625324953826512
+        },
+        "energy": {
+          "dynamics_db": 13.572921752929688
+        },
+        "tempo": {
+          "syllable_rate": 6.107717934480886
+        },
+        "spectral": {
+          "brightness_hz": 1181.3564089645931
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8974358974358975
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 380.58,
+        "end": 382.381
+      }
+    },
+    {
+      "start": 382.908,
+      "end": 383.98,
+      "duration_sec": 1.072,
+      "text": "Should I elaborate further, Jerry?",
+      "pyannote_speaker": "SPEAKER_01",
+      "features": {
+        "pitch": {
+          "mean_hz": 186.92742919921875,
+          "std_hz": 8.022039413452148,
+          "range_hz": 42.27696228027344,
+          "direction": -0.15009764672207834
+        },
+        "energy": {
+          "dynamics_db": 6.235655784606934
+        },
+        "tempo": {
+          "syllable_rate": 7.46268656716416
+        },
+        "spectral": {
+          "brightness_hz": 1037.7149211189
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9148936170212766
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.wav",
+        "start": 382.908,
+        "end": 383.98
+      }
+    }
+  ]
+}

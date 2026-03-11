@@ -140,6 +140,9 @@ CFG_REVIEW_DAMAGED_SEGMENT_COUNT=""
 CFG_BLOCK_DAMAGED_SEGMENT_COUNT=""
 CFG_REVIEW_DAMAGED_CHUNK_RATIO=""
 CFG_BLOCK_DAMAGED_CHUNK_RATIO=""
+CFG_REVIEW_STAGE06E_LOW_QUALITY_COUNT=""
+CFG_REVIEW_STAGE06E_LOW_QUALITY_RATIO=""
+CFG_REVIEW_STAGE06E_LOW_QUALITY_RATIO_MIN_COUNT=""
 CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE=""
 CFG_BLOCK_WINDOWLESS_VIDEO_DAMAGE_SCORE=""
 CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE=()
@@ -319,6 +322,18 @@ emit_optional_non_negative_int("CFG_REVIEW_DAMAGED_SEGMENT_COUNT", r.get("review
 emit_optional_non_negative_int("CFG_BLOCK_DAMAGED_SEGMENT_COUNT", r.get("block_damaged_segment_count"))
 emit_optional_ratio("CFG_REVIEW_DAMAGED_CHUNK_RATIO", r.get("review_damaged_chunk_ratio"))
 emit_optional_ratio("CFG_BLOCK_DAMAGED_CHUNK_RATIO", r.get("block_damaged_chunk_ratio"))
+emit_optional_non_negative_int(
+    "CFG_REVIEW_STAGE06E_LOW_QUALITY_COUNT",
+    r.get("review_stage06e_low_quality_count"),
+)
+emit_optional_ratio(
+    "CFG_REVIEW_STAGE06E_LOW_QUALITY_RATIO",
+    r.get("review_stage06e_low_quality_ratio"),
+)
+emit_optional_non_negative_int(
+    "CFG_REVIEW_STAGE06E_LOW_QUALITY_RATIO_MIN_COUNT",
+    r.get("review_stage06e_low_quality_ratio_min_count"),
+)
 emit_optional_ratio(
     "CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE",
     r.get("review_windowless_video_damage_score"),
@@ -1895,6 +1910,8 @@ show_sub_batch_status() {
   if [[ -f "$status_file" ]]; then
     python3 - "$status_file" "$sub_id" <<'PYEOF'
 import json
+import re
+import subprocess
 import sys
 
 with open(sys.argv[1]) as f:
@@ -1903,6 +1920,12 @@ with open(sys.argv[1]) as f:
 sub_id = sys.argv[2]
 info = data["sub_batches"].get(sub_id, {})
 status = info.get("status", "unknown")
+try:
+    ps_out = subprocess.check_output(["ps", "-eo", "args"], text=True, stderr=subprocess.DEVNULL)
+    if re.search(rf"\bpipeline-runner\s+{re.escape(sub_id)}\b", ps_out):
+        status = "in_progress"
+except Exception:
+    pass
 print(f"Overall status: {status}")
 PYEOF
   fi
@@ -1919,10 +1942,31 @@ show_batch_status() {
 
   python3 - "$status_file" <<'PYEOF'
 import json
+import re
+import subprocess
 import sys
 
 with open(sys.argv[1]) as f:
     data = json.load(f)
+
+batch_id = str(data.get("batch_id", "")).strip()
+live_sub_batches = set()
+try:
+    ps_out = subprocess.check_output(["ps", "-eo", "args"], text=True, stderr=subprocess.DEVNULL)
+    # Match direct runner invocations:
+    #   python3 scripts/training-data/batch/pipeline-runner P003.7 ...
+    pattern = re.compile(r"\bpipeline-runner\s+(P\d+\.\d+)\b")
+    for line in ps_out.splitlines():
+        m = pattern.search(line)
+        if not m:
+            continue
+        sub_id = m.group(1)
+        if batch_id and not sub_id.startswith(f"{batch_id}."):
+            continue
+        live_sub_batches.add(sub_id)
+except Exception:
+    # Status display must remain best-effort.
+    pass
 
 print(f"\nBatch {data['batch_id']} Status")
 print(f"Total videos: {data['total_videos']}")
@@ -1939,14 +1983,21 @@ status_symbols = {
 for sub_id in sorted(data["sub_batches"].keys(), key=lambda x: int(x.split(".")[-1])):
     info = data["sub_batches"][sub_id]
     status = info["status"]
-    symbol = status_symbols.get(status, "?")
+    is_live = sub_id in live_sub_batches
+    display_status = "in_progress" if is_live else status
+    symbol = status_symbols.get(display_status, "?")
     count = info.get("video_count", "?")
-    print(f"  {symbol} {sub_id}: {status} ({count} videos)")
+    suffix = ""
+    if is_live:
+        suffix = " [live runner]"
+    elif status == "in_progress":
+        suffix = " [no live runner detected]"
+    print(f"  {symbol} {sub_id}: {display_status} ({count} videos){suffix}")
 
 # Summary
 counts = {}
-for info in data["sub_batches"].values():
-    s = info["status"]
+for sub_id, info in data["sub_batches"].items():
+    s = "in_progress" if sub_id in live_sub_batches else info["status"]
     counts[s] = counts.get(s, 0) + info.get("video_count", 0)
 
 print()
@@ -2765,17 +2816,27 @@ create_stage_view() {
 	      local src_video_dir="$stage_data_root/$source/$folder"
 	      if [[ ! -d "$src_video_dir" && -d "$stage_data_root/$source" ]]; then
 	        # Folder names in manifests are display-only and can drift (unicode punctuation, title edits).
-	        # Resolve nested stage dirs by video_id when the exact folder is missing.
+	        # Nested stage outputs can also be source/video OR source/channel/video.
+	        # Resolve by video_id recursively under source and prefer dirs that already contain stage files.
+	        local fallback_dir=""
 	        while IFS= read -r -d '' d; do
 	          local bn
 	          bn=$(basename "$d")
 	          local alt_id
 	          alt_id=$(extract_video_id "$bn")
-	          if [[ -n "$alt_id" && "$alt_id" == "$vid_id" ]]; then
+	          [[ -z "$alt_id" || "$alt_id" != "$vid_id" ]] && continue
+
+	          if compgen -G "$d/$pattern" > /dev/null; then
 	            src_video_dir="$d"
 	            break
 	          fi
-	        done < <(find "$stage_data_root/$source" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
+
+	          [[ -z "$fallback_dir" ]] && fallback_dir="$d"
+	        done < <(find "$stage_data_root/$source" -mindepth 1 -maxdepth 4 -type d -print0 2>/dev/null)
+
+	        if [[ ! -d "$src_video_dir" && -n "$fallback_dir" ]]; then
+	          src_video_dir="$fallback_dir"
+	        fi
 	      fi
 	      if [[ -d "$src_video_dir" ]]; then
 	        # Symlink all matching files in the video folder
@@ -2788,6 +2849,20 @@ create_stage_view() {
           ((++link_count))
         done < <(find "$src_video_dir" -maxdepth 1 -type f -name "$pattern" -print0 2>/dev/null)
       fi
+
+	      # Some nested stages (notably 06b) emit source/channel/*.json instead of source/video/*.json.
+	      # Fall back to recursive source lookup by video_id so view pending counts stay truthful.
+	      if [[ "$found_file" == false && -d "$stage_data_root/$source" ]]; then
+	        while IFS= read -r -d '' f; do
+	          found_file=true
+	          local link_name
+	          link_name=$(basename "$f")
+	          local rel_target
+	          rel_target=$(realpath --relative-to="$video_view_dir" "$f")
+	          ln -sf "$rel_target" "$video_view_dir/$link_name" 2>/dev/null || true
+	          ((++link_count))
+	        done < <(find "$stage_data_root/$source" -maxdepth 4 -type f -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
+	      fi
     else
       # Source-scoped stage layout:
       # - Source/video layout: data/<stage>/<source>/<video>/
@@ -2807,6 +2882,7 @@ create_stage_view() {
       fi
 
       # 2) Source-flat layout (if present)
+      # Some stages write to source/channel/*.json; search recursively under source.
       local src_source_dir="$stage_data_root/$source"
       if [[ "$found_file" == false && -d "$src_source_dir" ]]; then
         while IFS= read -r -d '' f; do
@@ -2816,7 +2892,7 @@ create_stage_view() {
           rel_target=$(realpath --relative-to="$video_view_dir" "$f")
           ln -sf "$rel_target" "$video_view_dir/$link_name" 2>/dev/null || true
           ((++link_count))
-        done < <(find "$src_source_dir" -maxdepth 1 -type f -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
+        done < <(find "$src_source_dir" -maxdepth 4 -type f -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
       fi
 
     fi
@@ -2973,6 +3049,15 @@ validate_sub_batch() {
   fi
 
   validate_args+=(--stage-reports-dir "$stage_reports_dir")
+  if [[ -n "$CFG_REVIEW_STAGE06E_LOW_QUALITY_COUNT" ]]; then
+    validate_args+=(--review-stage06e-low-quality-count "$CFG_REVIEW_STAGE06E_LOW_QUALITY_COUNT")
+  fi
+  if [[ -n "$CFG_REVIEW_STAGE06E_LOW_QUALITY_RATIO" ]]; then
+    validate_args+=(--review-stage06e-low-quality-ratio "$CFG_REVIEW_STAGE06E_LOW_QUALITY_RATIO")
+  fi
+  if [[ -n "$CFG_REVIEW_STAGE06E_LOW_QUALITY_RATIO_MIN_COUNT" ]]; then
+    validate_args+=(--review-stage06e-low-quality-ratio-min-count "$CFG_REVIEW_STAGE06E_LOW_QUALITY_RATIO_MIN_COUNT")
+  fi
 
   echo ""
   echo "=== Validation: $sub_id ==="

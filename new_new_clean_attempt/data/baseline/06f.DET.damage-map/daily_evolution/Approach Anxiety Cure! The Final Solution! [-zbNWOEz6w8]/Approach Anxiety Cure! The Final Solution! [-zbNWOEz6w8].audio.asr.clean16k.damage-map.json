@@ -1,0 +1,169 @@
+{
+  "video_id": "-zbNWOEz6w8",
+  "generated_at": "2026-03-05T18:29:07Z",
+  "pipeline_version": "06f.DET.damage-map-v1.0",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.conversations.json",
+  "input": {
+    "stage06d": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.conversations.json",
+    "stage06e": "/home/jonaswsl/projects/daygame-coach/data/06e.LLM.quality-check/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.quality-check.json"
+  },
+  "damage_type_enum": [
+    "transcript_artifact",
+    "low_quality",
+    "mixed_mode",
+    "speaker_ambiguity",
+    "boundary_uncertain"
+  ],
+  "known_stage07_drop_reasons": [
+    "excluded_by_sanitizer",
+    "flagged_evidence_segment",
+    "insufficient_post_hook_evidence",
+    "low_confidence_anchor",
+    "low_quality_evidence_segment",
+    "missing_evidence_segment",
+    "non_approach_segment",
+    "segment_not_in_evidence_allowlist",
+    "transcript_artifact",
+    "unknown_evidence_segment"
+  ],
+  "segments": [
+    {
+      "segment_id": 35,
+      "conversation_id": 0,
+      "damage_types": [
+        "low_quality"
+      ],
+      "damage_reason_codes": [
+        "seed_low_quality_segment"
+      ],
+      "severity": "medium",
+      "seed_confidence": 0.88,
+      "contamination_window": {
+        "start_segment_id": 34,
+        "end_segment_id": 37
+      }
+    },
+    {
+      "segment_id": 111,
+      "conversation_id": 0,
+      "damage_types": [
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.97,
+      "contamination_window": {
+        "start_segment_id": 109,
+        "end_segment_id": 114
+      },
+      "details": [
+        "word_repetition"
+      ]
+    },
+    {
+      "segment_id": 135,
+      "conversation_id": 0,
+      "damage_types": [
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.97,
+      "contamination_window": {
+        "start_segment_id": 133,
+        "end_segment_id": 138
+      },
+      "details": [
+        "language_confusion"
+      ]
+    },
+    {
+      "segment_id": 138,
+      "conversation_id": 0,
+      "damage_types": [
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.97,
+      "contamination_window": {
+        "start_segment_id": 136,
+        "end_segment_id": 141
+      },
+      "details": [
+        "nonsense"
+      ]
+    },
+    {
+      "segment_id": 148,
+      "conversation_id": 0,
+      "damage_types": [
+        "low_quality"
+      ],
+      "damage_reason_codes": [
+        "seed_low_quality_segment"
+      ],
+      "severity": "medium",
+      "seed_confidence": 0.88,
+      "contamination_window": {
+        "start_segment_id": 147,
+        "end_segment_id": 150
+      }
+    },
+    {
+      "segment_id": 151,
+      "conversation_id": 0,
+      "damage_types": [
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.97,
+      "contamination_window": {
+        "start_segment_id": 149,
+        "end_segment_id": 151
+      },
+      "details": [
+        "nonsense"
+      ]
+    }
+  ],
+  "conversation_summaries": [],
+  "dropped_candidate_trace": {
+    "present": false,
+    "dropped_candidates_total": 0,
+    "segment_drops_total": 0,
+    "segment_drops_traced": 0,
+    "segment_drops_untraced": 0,
+    "unknown_drop_reason_count": 0,
+    "unknown_drop_reason_samples": [],
+    "untraced_segment_ids": [],
+    "passes_trace_contract": true
+  },
+  "summary": {
+    "segments_total": 152,
+    "damaged_segments_total": 6,
+    "damage_type_counts": {
+      "transcript_artifact": 4,
+      "low_quality": 2,
+      "mixed_mode": 0,
+      "speaker_ambiguity": 0,
+      "boundary_uncertain": 0
+    },
+    "severity_counts": {
+      "low": 0,
+      "medium": 2,
+      "high": 4
+    },
+    "conversation_count": 0,
+    "trace_contract_passed": true
+  }
+}

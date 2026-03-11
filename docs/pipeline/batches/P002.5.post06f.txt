@@ -1,0 +1,10 @@
+# Sub-batch P002.5 post-06f survivors
+# Generated: 2026-03-07
+# Source manifest: docs/pipeline/batches/P002.5.txt
+# Excludes videos quarantined by data/validation/quarantine/P002.5.json
+
+coach_kyle_how_to_approach_a_girl | This ONE Phrase Makes Any Conversation Flirty FAST [04njgij7V7w]
+coach_kyle_how_to_approach_a_girl | Try This Easy Phrase for Better Conversations With Women! (LIVE DEMO) [IFbQThFcrg8]
+coach_kyle_how_to_approach_a_girl | What Happens When 2 Guys Approach the SAME Woman？ (LIVE DEMO) [FD6h9dzC-F8]
+coach_kyle_how_to_approach_a_girl | What to say to a Woman AFTER the 1st Minute ？ (LIVE DEMO) [Q4yTHLr9LZI]
+coach_kyle_how_to_approach_a_girl | What to say to a Woman when she's with friends？ (LIVE DEMO) [7taia9-erqA]

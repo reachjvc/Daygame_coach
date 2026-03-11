@@ -1,0 +1,1304 @@
+{
+  "video_id": "JKWRj2hwbT4",
+  "generated_at": "2026-03-05T06:55:32Z",
+  "pipeline_version": "06f.DET.damage-map-v1.0",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.clean16k.conversations.json",
+  "input": {
+    "stage06d": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.clean16k.conversations.json",
+    "stage06e": "/home/jonaswsl/projects/daygame-coach/data/06e.LLM.quality-check/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.clean16k.quality-check.json"
+  },
+  "damage_type_enum": [
+    "transcript_artifact",
+    "low_quality",
+    "mixed_mode",
+    "speaker_ambiguity",
+    "boundary_uncertain"
+  ],
+  "known_stage07_drop_reasons": [
+    "excluded_by_sanitizer",
+    "flagged_evidence_segment",
+    "insufficient_post_hook_evidence",
+    "low_confidence_anchor",
+    "low_quality_evidence_segment",
+    "missing_evidence_segment",
+    "non_approach_segment",
+    "segment_not_in_evidence_allowlist",
+    "transcript_artifact",
+    "unknown_evidence_segment"
+  ],
+  "segments": [
+    {
+      "segment_id": 0,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.97,
+      "contamination_window": {
+        "start_segment_id": 0,
+        "end_segment_id": 3
+      },
+      "details": [
+        "word_repetition"
+      ]
+    },
+    {
+      "segment_id": 1,
+      "conversation_id": 0,
+      "damage_types": [
+        "low_quality",
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_low_quality_segment",
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.97,
+      "contamination_window": {
+        "start_segment_id": 0,
+        "end_segment_id": 4
+      },
+      "details": [
+        "word_repetition"
+      ]
+    },
+    {
+      "segment_id": 2,
+      "conversation_id": 0,
+      "damage_types": [
+        "low_quality",
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_low_quality_segment",
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.97,
+      "contamination_window": {
+        "start_segment_id": 0,
+        "end_segment_id": 5
+      },
+      "details": [
+        "word_repetition"
+      ]
+    },
+    {
+      "segment_id": 3,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.97,
+      "contamination_window": {
+        "start_segment_id": 1,
+        "end_segment_id": 6
+      },
+      "details": [
+        "word_repetition"
+      ]
+    },
+    {
+      "segment_id": 4,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 2,
+        "end_segment_id": 7
+      }
+    },
+    {
+      "segment_id": 5,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 3,
+        "end_segment_id": 8
+      }
+    },
+    {
+      "segment_id": 6,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 4,
+        "end_segment_id": 9
+      }
+    },
+    {
+      "segment_id": 7,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 5,
+        "end_segment_id": 10
+      }
+    },
+    {
+      "segment_id": 8,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 6,
+        "end_segment_id": 11
+      }
+    },
+    {
+      "segment_id": 9,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 7,
+        "end_segment_id": 12
+      }
+    },
+    {
+      "segment_id": 10,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 8,
+        "end_segment_id": 13
+      }
+    },
+    {
+      "segment_id": 11,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 9,
+        "end_segment_id": 14
+      }
+    },
+    {
+      "segment_id": 12,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 10,
+        "end_segment_id": 15
+      }
+    },
+    {
+      "segment_id": 13,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 11,
+        "end_segment_id": 16
+      }
+    },
+    {
+      "segment_id": 14,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 12,
+        "end_segment_id": 17
+      }
+    },
+    {
+      "segment_id": 15,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 13,
+        "end_segment_id": 18
+      }
+    },
+    {
+      "segment_id": 16,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 14,
+        "end_segment_id": 19
+      }
+    },
+    {
+      "segment_id": 17,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 15,
+        "end_segment_id": 20
+      }
+    },
+    {
+      "segment_id": 18,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 16,
+        "end_segment_id": 21
+      }
+    },
+    {
+      "segment_id": 19,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 17,
+        "end_segment_id": 22
+      }
+    },
+    {
+      "segment_id": 20,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 18,
+        "end_segment_id": 23
+      }
+    },
+    {
+      "segment_id": 21,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 19,
+        "end_segment_id": 24
+      }
+    },
+    {
+      "segment_id": 22,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 20,
+        "end_segment_id": 25
+      }
+    },
+    {
+      "segment_id": 23,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 21,
+        "end_segment_id": 26
+      }
+    },
+    {
+      "segment_id": 24,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 22,
+        "end_segment_id": 27
+      }
+    },
+    {
+      "segment_id": 25,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 23,
+        "end_segment_id": 28
+      }
+    },
+    {
+      "segment_id": 26,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 24,
+        "end_segment_id": 29
+      }
+    },
+    {
+      "segment_id": 27,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 25,
+        "end_segment_id": 30
+      }
+    },
+    {
+      "segment_id": 28,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 26,
+        "end_segment_id": 31
+      }
+    },
+    {
+      "segment_id": 29,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 27,
+        "end_segment_id": 32
+      }
+    },
+    {
+      "segment_id": 30,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 28,
+        "end_segment_id": 33
+      }
+    },
+    {
+      "segment_id": 31,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 29,
+        "end_segment_id": 34
+      }
+    },
+    {
+      "segment_id": 32,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 30,
+        "end_segment_id": 35
+      }
+    },
+    {
+      "segment_id": 33,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 31,
+        "end_segment_id": 36
+      }
+    },
+    {
+      "segment_id": 34,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 32,
+        "end_segment_id": 37
+      }
+    },
+    {
+      "segment_id": 35,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 33,
+        "end_segment_id": 38
+      }
+    },
+    {
+      "segment_id": 36,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 34,
+        "end_segment_id": 39
+      }
+    },
+    {
+      "segment_id": 37,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 35,
+        "end_segment_id": 40
+      }
+    },
+    {
+      "segment_id": 38,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 36,
+        "end_segment_id": 41
+      }
+    },
+    {
+      "segment_id": 39,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 37,
+        "end_segment_id": 42
+      }
+    },
+    {
+      "segment_id": 40,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 38,
+        "end_segment_id": 43
+      }
+    },
+    {
+      "segment_id": 41,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 39,
+        "end_segment_id": 44
+      }
+    },
+    {
+      "segment_id": 42,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 40,
+        "end_segment_id": 45
+      }
+    },
+    {
+      "segment_id": 43,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 41,
+        "end_segment_id": 46
+      }
+    },
+    {
+      "segment_id": 44,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 42,
+        "end_segment_id": 47
+      }
+    },
+    {
+      "segment_id": 45,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 43,
+        "end_segment_id": 48
+      }
+    },
+    {
+      "segment_id": 47,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 45,
+        "end_segment_id": 50
+      }
+    },
+    {
+      "segment_id": 48,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 46,
+        "end_segment_id": 51
+      }
+    },
+    {
+      "segment_id": 49,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 47,
+        "end_segment_id": 52
+      }
+    },
+    {
+      "segment_id": 50,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 48,
+        "end_segment_id": 53
+      }
+    },
+    {
+      "segment_id": 52,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 50,
+        "end_segment_id": 55
+      }
+    },
+    {
+      "segment_id": 53,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 51,
+        "end_segment_id": 56
+      }
+    },
+    {
+      "segment_id": 54,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 52,
+        "end_segment_id": 57
+      }
+    },
+    {
+      "segment_id": 55,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 53,
+        "end_segment_id": 58
+      }
+    },
+    {
+      "segment_id": 56,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 54,
+        "end_segment_id": 59
+      }
+    },
+    {
+      "segment_id": 57,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 55,
+        "end_segment_id": 60
+      }
+    },
+    {
+      "segment_id": 58,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 56,
+        "end_segment_id": 61
+      }
+    },
+    {
+      "segment_id": 59,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 57,
+        "end_segment_id": 62
+      }
+    },
+    {
+      "segment_id": 60,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 58,
+        "end_segment_id": 63
+      }
+    },
+    {
+      "segment_id": 61,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 59,
+        "end_segment_id": 64
+      }
+    },
+    {
+      "segment_id": 62,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 60,
+        "end_segment_id": 65
+      }
+    },
+    {
+      "segment_id": 63,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 61,
+        "end_segment_id": 66
+      }
+    },
+    {
+      "segment_id": 64,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 62,
+        "end_segment_id": 67
+      }
+    },
+    {
+      "segment_id": 65,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 63,
+        "end_segment_id": 68
+      }
+    },
+    {
+      "segment_id": 66,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 64,
+        "end_segment_id": 69
+      }
+    },
+    {
+      "segment_id": 67,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 65,
+        "end_segment_id": 70
+      }
+    },
+    {
+      "segment_id": 68,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 66,
+        "end_segment_id": 71
+      }
+    },
+    {
+      "segment_id": 69,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 67,
+        "end_segment_id": 72
+      }
+    },
+    {
+      "segment_id": 70,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 68,
+        "end_segment_id": 73
+      }
+    },
+    {
+      "segment_id": 71,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 69,
+        "end_segment_id": 74
+      }
+    },
+    {
+      "segment_id": 72,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 70,
+        "end_segment_id": 75
+      }
+    },
+    {
+      "segment_id": 73,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 71,
+        "end_segment_id": 75
+      }
+    },
+    {
+      "segment_id": 74,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 72,
+        "end_segment_id": 75
+      }
+    },
+    {
+      "segment_id": 75,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "seed_confidence": 0.86,
+      "contamination_window": {
+        "start_segment_id": 73,
+        "end_segment_id": 75
+      }
+    }
+  ],
+  "conversation_summaries": [
+    {
+      "conversation_id": 1,
+      "segment_count": 24,
+      "damaged_segment_count": 22,
+      "damaged_segment_ratio": 0.9167,
+      "token_count": 222,
+      "damaged_token_count": 212,
+      "damaged_token_ratio": 0.955,
+      "high_severity_seed_count": 22,
+      "damaged_segment_ids": [
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        47,
+        48,
+        49,
+        50,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63
+      ]
+    }
+  ],
+  "dropped_candidate_trace": {
+    "present": false,
+    "dropped_candidates_total": 0,
+    "segment_drops_total": 0,
+    "segment_drops_traced": 0,
+    "segment_drops_untraced": 0,
+    "unknown_drop_reason_count": 0,
+    "unknown_drop_reason_samples": [],
+    "untraced_segment_ids": [],
+    "passes_trace_contract": true
+  },
+  "summary": {
+    "segments_total": 76,
+    "damaged_segments_total": 74,
+    "damage_type_counts": {
+      "transcript_artifact": 4,
+      "low_quality": 2,
+      "mixed_mode": 0,
+      "speaker_ambiguity": 74,
+      "boundary_uncertain": 0
+    },
+    "severity_counts": {
+      "low": 0,
+      "medium": 0,
+      "high": 74
+    },
+    "conversation_count": 1,
+    "trace_contract_passed": true
+  }
+}

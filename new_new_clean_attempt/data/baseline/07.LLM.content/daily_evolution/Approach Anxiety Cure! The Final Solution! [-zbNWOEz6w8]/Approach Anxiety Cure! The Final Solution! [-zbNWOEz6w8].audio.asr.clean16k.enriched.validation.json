@@ -1,0 +1,39 @@
+{
+  "video_id": "-zbNWOEz6w8",
+  "validated_at": "2026-03-05T19:30:07Z",
+  "pipeline_version": "07.LLM.content-v1.16",
+  "prompt_version": "1.9.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 0,
+    "info": 5,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "info",
+      "check": "transcript_artifact_repaired",
+      "message": "Seg 111: word_repetition — ASR stuttered 'it's like if your house it's like if your house' — repeated clause [REPAIRED replace conf=0.85]"
+    },
+    {
+      "severity": "info",
+      "check": "transcript_artifact_repaired",
+      "message": "Seg 135: language_confusion — 'Tom Turow does to Egypt' — ASR mangled proper name 'Tom Torero' and misheard 'except' as 'to Egypt' [REPAIRED replace conf=0.87]"
+    },
+    {
+      "severity": "info",
+      "check": "transcript_artifact_repaired",
+      "message": "Seg 138: nonsense — 'once we're to go up, we'll tell you you're really pretty' — ASR garbled pronouns and verb forms describing Tom Torero's hit-and-run technique [REPAIRED replace conf=0.85]"
+    },
+    {
+      "severity": "info",
+      "check": "transcript_artifact_repaired",
+      "message": "Seg 151: nonsense — Hallucinated ASR outro 'Thanks for watching!' — not part of actual conversation, likely triggered by end-of-audio silence [REPAIRED delete conf=0.95]"
+    },
+    {
+      "severity": "info",
+      "check": "validation_passed",
+      "message": "All checks passed"
+    }
+  ]
+}

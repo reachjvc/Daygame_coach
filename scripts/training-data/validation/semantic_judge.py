@@ -18,8 +18,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import random
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -170,17 +172,31 @@ def load_json(path: Path) -> Optional[Dict[str, Any]]:
 
 
 def find_claude_binary() -> Optional[str]:
-    for path in CLAUDE_BINARY_PATHS:
-        path = Path(path)
+    for env_key in ("CLAUDE_BINARY", "CLAUDE_BIN"):
+        raw = str(os.environ.get(env_key, "")).strip()
+        if not raw:
+            continue
+        p = Path(raw)
+        if p.exists() and p.is_file():
+            return str(p)
+
+    resolved = shutil.which("claude")
+    if resolved:
+        return resolved
+
+    nvm_candidates = sorted(
+        Path.home().glob(".nvm/versions/node/*/bin/claude"),
+        key=lambda path: path.stat().st_mtime if path.exists() else 0.0,
+        reverse=True,
+    )
+    for cand in nvm_candidates:
+        if cand.exists() and cand.is_file():
+            return str(cand)
+
+    for cand in CLAUDE_BINARY_PATHS:
+        path = Path(cand)
         if path.exists() and path.is_file():
             return str(path)
-        if str(path) == "claude":
-            try:
-                result = subprocess.run(["which", "claude"], capture_output=True, text=True, timeout=5)
-                if result.returncode == 0:
-                    return "claude"
-            except Exception:
-                pass
     return None
 
 
@@ -193,12 +209,13 @@ def call_claude(prompt: str, timeout: int = 300, model: Optional[str] = None) ->
         cmd = [claude_bin]
         if isinstance(model, str) and model.strip():
             cmd += ["--model", model.strip()]
-        cmd += ["-p", prompt, "--output-format", "text"]
+        cmd += ["-p", "-", "--output-format", "text"]
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
             timeout=timeout,
+            input=prompt,
         )
         if result.returncode != 0:
             err = (result.stderr or "").strip()

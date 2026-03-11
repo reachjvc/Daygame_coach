@@ -1,0 +1,324 @@
+{
+  "video_id": "ctts8xePLWA",
+  "generated_at": "2026-03-05T18:49:19Z",
+  "pipeline_version": "06g.LLM.damage-adjudicator-v1.2",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/06f.DET.damage-map/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.damage-map.json",
+  "damage_map_file": "/home/jonaswsl/projects/daygame-coach/data/06f.DET.damage-map/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.damage-map.json",
+  "context_file": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.conversations.json",
+  "video_type": "infield",
+  "skipped": false,
+  "model": "opus",
+  "batch_size": 8,
+  "thresholds": {
+    "repair_accept_threshold": 0.9,
+    "anchor_allow_threshold": 0.8,
+    "context_left": 4,
+    "context_right": 8,
+    "determinism_n": 1
+  },
+  "summary": {
+    "seeds_total": 11,
+    "llm_calls": 2,
+    "repairs_accepted": 0,
+    "anchor_allowed": 0,
+    "llm_failures": 0,
+    "determinism_mismatches": 0,
+    "contamination_spans": 8
+  },
+  "seeds": [
+    {
+      "seed_segment_id": 33,
+      "conversation_id": 0,
+      "damage_types": [
+        "low_quality"
+      ],
+      "damage_reason_codes": [
+        "seed_low_quality_segment"
+      ],
+      "severity": "medium",
+      "adjudication": {
+        "segment_id": 33,
+        "transcript_confidence": 0.45,
+        "speaker_confidence": 0.85,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 32,
+        "contamination_end_segment_id": 35,
+        "confidence_rationale": "Segment 33 appears truncated at start—missing opening clause. Speaker/phase consistent with surrounding coach commentary but transcript begins mid-sentence, likely missing words."
+      },
+      "overall_confidence": 0.6575,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 127,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 127,
+        "transcript_confidence": 0.05,
+        "speaker_confidence": 0.15,
+        "phase_confidence": 0.3,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 127,
+        "contamination_end_segment_id": 130,
+        "confidence_rationale": "Repetitive 'I love you' text is clearly a music/audio artifact, not real speech. Speaker label SPEAKER_01 is unreliable—likely background music misattributed. Entire block 127-130 is contaminated."
+      },
+      "overall_confidence": 0.11,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 128,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 128,
+        "transcript_confidence": 0.05,
+        "speaker_confidence": 0.15,
+        "phase_confidence": 0.3,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 127,
+        "contamination_end_segment_id": 130,
+        "confidence_rationale": "Continuation of music/audio artifact. Identical repeated text across 1-second segment confirms ASR hallucination on non-speech audio. No recoverable speech content."
+      },
+      "overall_confidence": 0.11,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 129,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 129,
+        "transcript_confidence": 0.05,
+        "speaker_confidence": 0.15,
+        "phase_confidence": 0.3,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 127,
+        "contamination_end_segment_id": 130,
+        "confidence_rationale": "Same music artifact pattern. Identical text, short duration, SPEAKER_01 label is diarization error on background audio. No real dialogue present."
+      },
+      "overall_confidence": 0.11,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 130,
+      "conversation_id": 0,
+      "damage_types": [
+        "speaker_ambiguity",
+        "transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 130,
+        "transcript_confidence": 0.05,
+        "speaker_confidence": 0.15,
+        "phase_confidence": 0.3,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 127,
+        "contamination_end_segment_id": 130,
+        "confidence_rationale": "Final segment of music artifact block. All four segments (127-130) are non-speech audio misrecognized by ASR. Should be excluded entirely from training data."
+      },
+      "overall_confidence": 0.11,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 94,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 94,
+        "transcript_confidence": 0.55,
+        "speaker_confidence": 0.2,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 93,
+        "contamination_end_segment_id": 96,
+        "confidence_rationale": "Seg 93 ends mid-sentence ('all of these') and seg 94 continues it ('are like $5,000') then shifts to target ('I moved here two weeks ago'). Two speakers collapsed into one segment; split point unclear from audio."
+      },
+      "overall_confidence": 0.3987,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 96,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 96,
+        "transcript_confidence": 0.5,
+        "speaker_confidence": 0.15,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 95,
+        "contamination_end_segment_id": 97,
+        "confidence_rationale": "Contains target reply ('no i'm just chilling on the beach'), coach question ('why'd you come here'), and target answer ('fashion school') — three speaker turns collapsed. No safe split without audio."
+      },
+      "overall_confidence": 0.3512,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 102,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 102,
+        "transcript_confidence": 0.6,
+        "speaker_confidence": 0.2,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 101,
+        "contamination_end_segment_id": 103,
+        "confidence_rationale": "SPEAKER_01 labeled coach but content continues coach speech from seg 101 ('so you'll be here for years'). Speaker_id is wrong (should be SPEAKER_00) and likely merges into target response at unknown boundary."
+      },
+      "overall_confidence": 0.4225,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 103,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 103,
+        "transcript_confidence": 0.55,
+        "speaker_confidence": 0.15,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 102,
+        "contamination_end_segment_id": 104,
+        "confidence_rationale": "Coach tease ('is that like my little pony') and target reply ('it's just some horsies') and coach again ('you got a good vibe' continues in 104) collapsed. At least two speaker turns merged; no safe repair."
+      },
+      "overall_confidence": 0.375,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 107,
+      "conversation_id": 1,
+      "damage_types": [
+        "low_quality"
+      ],
+      "damage_reason_codes": [
+        "seed_low_quality_segment"
+      ],
+      "severity": "medium",
+      "adjudication": {
+        "segment_id": 107,
+        "transcript_confidence": 0.3,
+        "speaker_confidence": 0.7,
+        "phase_confidence": 0.8,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 106,
+        "contamination_end_segment_id": 108,
+        "confidence_rationale": "ASR garbled: 'you said okay I was thinking you were like the Amazon' is incoherent in context. Speaker likely correct (coach monologue run from 104-111) but transcript unreliable. No evidence to reconstruct."
+      },
+      "overall_confidence": 0.515,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    },
+    {
+      "seed_segment_id": 125,
+      "conversation_id": 1,
+      "damage_types": [
+        "speaker_ambiguity"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "severity": "high",
+      "adjudication": {
+        "segment_id": 125,
+        "transcript_confidence": 0.8,
+        "speaker_confidence": 0.55,
+        "phase_confidence": 0.85,
+        "repair_possible": false,
+        "repaired_text": null,
+        "contamination_start_segment_id": 124,
+        "contamination_end_segment_id": 126,
+        "confidence_rationale": "'I'll talk to you soon' is clean text but ambiguous speaker — could be coach closing or target farewell. Labeled target/SPEAKER_01 is plausible but not certain given coach dominates 108-124 monologue."
+      },
+      "overall_confidence": 0.6837,
+      "repair_accepted": false,
+      "anchor_allowed": false,
+      "determinism_match": true
+    }
+  ]
+}

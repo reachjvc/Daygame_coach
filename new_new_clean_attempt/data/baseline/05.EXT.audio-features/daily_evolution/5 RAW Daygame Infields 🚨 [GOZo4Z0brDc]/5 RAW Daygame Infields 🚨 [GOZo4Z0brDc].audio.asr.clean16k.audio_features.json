@@ -1,0 +1,647 @@
+{
+  "source_audio": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+  "audio_sha256": "74ccfc75344761c5c4a6a639db4436f331bdde6c78c81ed602fb8ae89455683c",
+  "source_timestamps": "/home/jonaswsl/projects/daygame-coach/data/04.EXT.diarize/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].full.json",
+  "processing": {
+    "sample_rate": 22050,
+    "feature_extractor": "librosa",
+    "pitch_range_hz": [
+      65.0,
+      500.0
+    ],
+    "pitch_method": "pyin",
+    "pitch_trim_percentile": 2.0,
+    "embedder": "resemblyzer",
+    "embedder_sample_rate": 16000,
+    "min_embed_raw_sec": 0.8,
+    "min_embed_window_sec": 1.2,
+    "embed_pad_sec": 0.25,
+    "store_embedding_vectors": false
+  },
+  "total_duration_sec": 49.779,
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 4.5,
+      "duration_sec": 4.5,
+      "text": "I'm giving away five day game infields for free for the next",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 229.4251251220703,
+          "std_hz": 89.80416107177734,
+          "range_hz": 301.99749755859375,
+          "direction": -1.1161649424298579
+        },
+        "energy": {
+          "dynamics_db": 10.45446491241455
+        },
+        "tempo": {
+          "syllable_rate": 4.444444444444445
+        },
+        "spectral": {
+          "brightness_hz": 902.5374818968065
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9948453608247423
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 0.0,
+        "end": 4.5
+      }
+    },
+    {
+      "start": 4.48,
+      "end": 5.917,
+      "duration_sec": 1.437,
+      "text": "three days only.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 169.68472290039062,
+          "std_hz": 16.342905044555664,
+          "range_hz": 65.89138793945312,
+          "direction": -1.3738847725458685
+        },
+        "energy": {
+          "dynamics_db": 6.566802024841309
+        },
+        "tempo": {
+          "syllable_rate": 6.263048016701464
+        },
+        "spectral": {
+          "brightness_hz": 918.0385032384403
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 4.48,
+        "end": 5.917
+      }
+    },
+    {
+      "start": 6.038,
+      "end": 7.96,
+      "duration_sec": 1.922,
+      "text": "So if you just click on this video, you're",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 163.397216796875,
+          "std_hz": 53.13691329956055,
+          "range_hz": 167.22024536132812,
+          "direction": -1.5850652165715067
+        },
+        "energy": {
+          "dynamics_db": 10.260063171386719
+        },
+        "tempo": {
+          "syllable_rate": 7.284079084287202
+        },
+        "spectral": {
+          "brightness_hz": 1002.090595683478
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9759036144578314
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 6.038,
+        "end": 7.96
+      }
+    },
+    {
+      "start": 7.94,
+      "end": 11.28,
+      "duration_sec": 3.34,
+      "text": "going to get access to a little mini New York City day game",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 204.94497680664062,
+          "std_hz": 19.375864028930664,
+          "range_hz": 69.98966979980469,
+          "direction": -0.06528208392533766
+        },
+        "energy": {
+          "dynamics_db": 10.21897268295288
+        },
+        "tempo": {
+          "syllable_rate": 5.38922155688623
+        },
+        "spectral": {
+          "brightness_hz": 1226.6718408594966
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9027777777777778
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 7.94,
+        "end": 11.28
+      }
+    },
+    {
+      "start": 11.26,
+      "end": 14.334,
+      "duration_sec": 3.074,
+      "text": "documentary that I just filmed a few days ago.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 175.865966796875,
+          "std_hz": 23.548032760620117,
+          "range_hz": 134.17349243164062,
+          "direction": 0.15884964736733187
+        },
+        "energy": {
+          "dynamics_db": 9.907130241394043
+        },
+        "tempo": {
+          "syllable_rate": 6.180871828236826
+        },
+        "spectral": {
+          "brightness_hz": 1018.7954289154471
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8796992481203008
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 11.26,
+        "end": 14.334
+      }
+    },
+    {
+      "start": 14.597,
+      "end": 14.86,
+      "duration_sec": 0.263,
+      "text": "It's going to",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 454.5484313964844,
+          "std_hz": 10.263850212097168,
+          "range_hz": 26.303314208984375,
+          "direction": 5.909257071358814
+        },
+        "energy": {
+          "dynamics_db": 10.806966781616211
+        },
+        "tempo": {
+          "syllable_rate": 7.604562737642588
+        },
+        "spectral": {
+          "brightness_hz": 1179.757468356001
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 14.597,
+        "end": 14.86
+      }
+    },
+    {
+      "start": 14.84,
+      "end": 19.08,
+      "duration_sec": 4.24,
+      "text": "include five day game infields including a day game make out",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 245.3303680419922,
+          "std_hz": 101.55674743652344,
+          "range_hz": 314.97186279296875,
+          "direction": -0.20934338688277512
+        },
+        "energy": {
+          "dynamics_db": 10.631970882415771
+        },
+        "tempo": {
+          "syllable_rate": 5.8962264150943415
+        },
+        "spectral": {
+          "brightness_hz": 1020.3100966185663
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.907103825136612
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 14.84,
+        "end": 19.08
+      }
+    },
+    {
+      "start": 19.06,
+      "end": 22.24,
+      "duration_sec": 3.18,
+      "text": "where just right there in the interaction itself, I actually",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 209.90933227539062,
+          "std_hz": 89.92140197753906,
+          "range_hz": 381.16815185546875,
+          "direction": -0.6699823809833502
+        },
+        "energy": {
+          "dynamics_db": 10.040184020996094
+        },
+        "tempo": {
+          "syllable_rate": 4.402515723270441
+        },
+        "spectral": {
+          "brightness_hz": 1077.9320832944852
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9343065693430657
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 19.06,
+        "end": 22.24
+      }
+    },
+    {
+      "start": 22.22,
+      "end": 23.624,
+      "duration_sec": 1.404,
+      "text": "had to make it out with this chick twice.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 187.40695190429688,
+          "std_hz": 21.474191665649414,
+          "range_hz": 93.5827865600586,
+          "direction": -1.0073070561344568
+        },
+        "energy": {
+          "dynamics_db": 10.073848724365234
+        },
+        "tempo": {
+          "syllable_rate": 9.25925925925926
+        },
+        "spectral": {
+          "brightness_hz": 1195.8453302505245
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9016393442622951
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 22.22,
+        "end": 23.624
+      }
+    },
+    {
+      "start": 23.664,
+      "end": 24.6,
+      "duration_sec": 0.936,
+      "text": "So it's pretty",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 276.4619445800781,
+          "std_hz": 180.95086669921875,
+          "range_hz": 396.61474609375,
+          "direction": 16.499010198772343
+        },
+        "energy": {
+          "dynamics_db": 12.641481399536133
+        },
+        "tempo": {
+          "syllable_rate": 5.341880341880342
+        },
+        "spectral": {
+          "brightness_hz": 966.092453211321
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 1.0
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 23.664,
+        "end": 24.6
+      }
+    },
+    {
+      "start": 24.58,
+      "end": 25.732,
+      "duration_sec": 1.152,
+      "text": "unbelievable.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 225.73944091796875,
+          "std_hz": 34.21068572998047,
+          "range_hz": 142.0687255859375,
+          "direction": -1.0069307894445307
+        },
+        "energy": {
+          "dynamics_db": 10.922666072845459
+        },
+        "tempo": {
+          "syllable_rate": 5.208333333333329
+        },
+        "spectral": {
+          "brightness_hz": 894.8423694810631
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.96
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 24.58,
+        "end": 25.732
+      }
+    },
+    {
+      "start": 26.318,
+      "end": 28.52,
+      "duration_sec": 2.202,
+      "text": "And I'm sending it to you for free right now I",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 213.7470245361328,
+          "std_hz": 50.82353210449219,
+          "range_hz": 286.064697265625,
+          "direction": -1.354569349442639
+        },
+        "energy": {
+          "dynamics_db": 9.537154197692871
+        },
+        "tempo": {
+          "syllable_rate": 5.9037238873751186
+        },
+        "spectral": {
+          "brightness_hz": 1037.592930203144
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9263157894736842
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 26.318,
+        "end": 28.52
+      }
+    },
+    {
+      "start": 28.5,
+      "end": 29.421,
+      "duration_sec": 0.921,
+      "text": "All you gotta do is click this link.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 248.73223876953125,
+          "std_hz": 110.1344985961914,
+          "range_hz": 268.1520080566406,
+          "direction": -9.376278660566028
+        },
+        "energy": {
+          "dynamics_db": 7.594447135925293
+        },
+        "tempo": {
+          "syllable_rate": 7.6004343105320356
+        },
+        "spectral": {
+          "brightness_hz": 955.7114221950039
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.95
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 28.5,
+        "end": 29.421
+      }
+    },
+    {
+      "start": 29.4,
+      "end": 30.921,
+      "duration_sec": 1.521,
+      "text": "Again, this is for the next three days only.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 179.216064453125,
+          "std_hz": 12.303159713745117,
+          "range_hz": 46.4237060546875,
+          "direction": -0.16415026076587017
+        },
+        "energy": {
+          "dynamics_db": 10.564690589904785
+        },
+        "tempo": {
+          "syllable_rate": 7.232084155161075
+        },
+        "spectral": {
+          "brightness_hz": 1018.8768384826849
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9545454545454546
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 29.4,
+        "end": 30.921
+      }
+    },
+    {
+      "start": 31.2,
+      "end": 33.12,
+      "duration_sec": 1.92,
+      "text": "After that, I'm going to be selling it.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 174.3479766845703,
+          "std_hz": 29.631513595581055,
+          "range_hz": 120.29037475585938,
+          "direction": 0.38012442508886124
+        },
+        "energy": {
+          "dynamics_db": 9.753683090209961
+        },
+        "tempo": {
+          "syllable_rate": 5.729166666666672
+        },
+        "spectral": {
+          "brightness_hz": 1010.376743153658
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9879518072289156
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 31.2,
+        "end": 33.12
+      }
+    },
+    {
+      "start": 33.18,
+      "end": 35.16,
+      "duration_sec": 1.98,
+      "text": "So click on the video right now.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 205.9073028564453,
+          "std_hz": 83.11099243164062,
+          "range_hz": 310.0990295410156,
+          "direction": -3.8254000769418144
+        },
+        "energy": {
+          "dynamics_db": 11.61222505569458
+        },
+        "tempo": {
+          "syllable_rate": 6.565656565656576
+        },
+        "spectral": {
+          "brightness_hz": 905.8881898232694
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.9186046511627907
+        },
+        "speaker_embedding": {
+          "dim": 256,
+          "vector": null
+        }
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 33.18,
+        "end": 35.16
+      }
+    },
+    {
+      "start": 35.26,
+      "end": 35.901,
+      "duration_sec": 0.641,
+      "text": "Go get it.",
+      "pyannote_speaker": "SPEAKER_00",
+      "features": {
+        "pitch": {
+          "mean_hz": 179.427001953125,
+          "std_hz": 11.201872825622559,
+          "range_hz": 34.932342529296875,
+          "direction": -1.2603831474027485
+        },
+        "energy": {
+          "dynamics_db": 6.321455001831055
+        },
+        "tempo": {
+          "syllable_rate": 4.6801872074882604
+        },
+        "spectral": {
+          "brightness_hz": 749.8218333052129
+        },
+        "quality": {
+          "low_energy": false,
+          "speech_activity_ratio": 0.8214285714285714
+        },
+        "speaker_embedding": null
+      },
+      "audio_clip": {
+        "file": "/home/jonaswsl/projects/daygame-coach/data/01.download/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.wav",
+        "start": 35.26,
+        "end": 35.901
+      }
+    }
+  ]
+}

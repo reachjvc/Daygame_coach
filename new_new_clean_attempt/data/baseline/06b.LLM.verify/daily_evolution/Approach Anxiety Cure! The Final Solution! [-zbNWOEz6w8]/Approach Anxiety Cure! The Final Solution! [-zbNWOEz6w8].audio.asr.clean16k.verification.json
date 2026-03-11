@@ -1,0 +1,33 @@
+{
+  "video_id": "-zbNWOEz6w8",
+  "verified_at": "2026-03-05T19:20:33Z",
+  "pipeline_version": "06b.LLM.verify-v3.1",
+  "verdict": "APPROVE",
+  "video_type_check": {
+    "agrees": true,
+    "suggested_type": null,
+    "confidence": 1.0,
+    "reasoning": "Single speaker delivering instructional monologue about approach anxiety to an audience. One brief audience interjection and an outro. Classic talking_head."
+  },
+  "conversation_verdicts": [],
+  "misattributions": [],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [],
+  "other_flags_detailed": [],
+  "summary": "Clean talking_head classification. SPEAKER_00 is unambiguously the coach delivering a lecture on approach anxiety. SPEAKER_01's single interjection is correctly labeled 'other' (audience member). UNKNOWN outro segment is correctly labeled 'other'. No conversations to detect — all commentary. No issues found.",
+  "metadata": {
+    "input_file": "/home/jonaswsl/projects/daygame-coach/data/06.LLM.video-type/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 53.243205308914185,
+    "llm_calls": 1,
+    "model": "claude-cli",
+    "claude_model": "opus",
+    "flag_summary": {
+      "video_type_agrees": true,
+      "structured_flag_class_counts": {},
+      "other_flag_class_counts": {},
+      "other_flag_count": 0,
+      "other_flag_detailed_count": 0
+    }
+  }
+}

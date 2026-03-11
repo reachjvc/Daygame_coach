@@ -1,6 +1,10 @@
-import { Plus, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Plus, Trash2, CornerDownRight } from "lucide-react"
 import type { ConversationNode } from "@/src/scenarios/types"
+
+/** Mutable counter shared across the entire tree render to cap total nodes */
+interface RenderBudget {
+  remaining: number
+}
 
 interface ConversationNodeViewProps {
   nodeId: string
@@ -12,7 +16,13 @@ interface ConversationNodeViewProps {
   onAddChild: (parentId: string) => void
   onDelete: (id: string) => void
   isLastChild?: boolean
+  /** Ancestor node IDs on the current path — prevents cycles */
+  ancestors?: Set<string>
+  /** Shared render budget to prevent DAG explosion */
+  budget?: RenderBudget
 }
+
+const MAX_RENDER_NODES = 500
 
 export default function ConversationNodeView({
   nodeId,
@@ -24,9 +34,25 @@ export default function ConversationNodeView({
   onAddChild,
   onDelete,
   isLastChild = true,
+  ancestors,
+  budget: parentBudget,
 }: ConversationNodeViewProps) {
   const node = nodes[nodeId]
   if (!node) return null
+
+  // Initialize budget at tree root
+  const budget = parentBudget ?? { remaining: MAX_RENDER_NODES }
+
+  // Budget exhausted — stop rendering
+  if (budget.remaining <= 0) {
+    return <div className="pl-6 text-xs text-muted-foreground italic">... (truncated)</div>
+  }
+  budget.remaining--
+
+  if (depth > 30) return <div className="pl-6 text-xs text-muted-foreground italic">... (depth limit)</div>
+
+  // Cycle detection: if this node is an ancestor of itself
+  const isCycle = ancestors?.has(nodeId) ?? false
 
   const isMe = node.speaker === "me"
   const rawText = node.text[language]
@@ -34,17 +60,53 @@ export default function ConversationNodeView({
   const isEditing = editingNodeId === nodeId
   const hasChildren = node.children.length > 0
 
+  if (isCycle) {
+    return (
+      <div className="relative pl-6 min-w-0">
+        {depth > 0 && (
+          <>
+            <div
+              className="absolute border-l-2 border-muted-foreground/25"
+              style={{ left: 0, top: 0, height: isLastChild ? 18 : "100%" }}
+            />
+            <div
+              className="absolute border-t-2 border-muted-foreground/25"
+              style={{ left: 0, top: 18, width: 16 }}
+            />
+          </>
+        )}
+        <div
+          className="flex items-center gap-1.5 rounded-md border border-dashed border-muted-foreground/30 px-2.5 py-1 mb-1.5 bg-muted/20 cursor-pointer"
+          onClick={() => onEdit(nodeId)}
+        >
+          <CornerDownRight className="size-3 text-muted-foreground shrink-0" />
+          <span
+            className={`shrink-0 rounded px-1 py-0.5 text-[10px] font-bold leading-none text-white ${
+              isMe ? "bg-blue-600/60" : "bg-pink-600/60"
+            }`}
+          >
+            {isMe ? "Me" : "Her"}
+          </span>
+          <span className="text-xs text-muted-foreground truncate">{text}</span>
+          <span className="text-[10px] text-muted-foreground/60 shrink-0">(cycle)</span>
+        </div>
+      </div>
+    )
+  }
+
+  // Build new ancestor set for children (each path gets its own copy)
+  const childAncestors = new Set(ancestors)
+  childAncestors.add(nodeId)
+
   return (
-    <div className="relative pl-6">
+    <div className="relative pl-6 min-w-0">
       {/* Tree connector lines */}
       {depth > 0 && (
         <>
-          {/* Vertical line from parent down to this node */}
           <div
             className="absolute border-l-2 border-muted-foreground/25"
             style={{ left: 0, top: 0, height: isLastChild ? 18 : "100%" }}
           />
-          {/* Horizontal branch into this node */}
           <div
             className="absolute border-t-2 border-muted-foreground/25"
             style={{ left: 0, top: 18, width: 16 }}
@@ -52,9 +114,9 @@ export default function ConversationNodeView({
         </>
       )}
 
-      {/* Node card — compact inline */}
+      {/* Node card */}
       <div
-        className={`group inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 mb-1.5 transition-colors cursor-pointer max-w-full ${
+        className={`group flex items-start gap-1.5 rounded-md border px-2.5 py-1.5 mb-1.5 transition-colors cursor-pointer min-w-0 ${
           isEditing
             ? "border-primary ring-1 ring-primary/40 bg-primary/10"
             : "border-border bg-card hover:border-muted-foreground/50"
@@ -63,15 +125,15 @@ export default function ConversationNodeView({
       >
         {/* Speaker badge */}
         <span
-          className={`shrink-0 rounded px-1.5 py-0.5 text-[11px] font-bold leading-none text-white ${
+          className={`shrink-0 rounded px-1.5 py-0.5 text-[11px] font-bold leading-none text-white mt-0.5 ${
             isMe ? "bg-blue-600" : "bg-pink-600"
           }`}
         >
           {isMe ? "Me" : "Her"}
         </span>
 
-        {/* Text — truncate at ~40 chars */}
-        <span className={`text-sm truncate max-w-[300px] ${rawText ? "text-foreground" : "text-muted-foreground italic"}`}>
+        {/* Text — full wrap */}
+        <span className={`text-sm min-w-0 break-words ${rawText ? "text-foreground" : "text-muted-foreground italic"}`}>
           {text}
         </span>
 
@@ -114,6 +176,8 @@ export default function ConversationNodeView({
               onAddChild={onAddChild}
               onDelete={onDelete}
               isLastChild={i === node.children.length - 1}
+              ancestors={childAncestors}
+              budget={budget}
             />
           ))}
         </div>

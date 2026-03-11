@@ -182,6 +182,10 @@ def _signal_class_for_readiness_reason(reason_code: str, warning_classes: Counte
     reason = str(reason_code or "").strip()
     if reason in {"preexisting_quarantine", "stage06b_reject", "quarantined"}:
         return "quarantine_gate"
+    if reason in {"stage06b_flag_low_transcript_quality", "stage06b_flag_severe"}:
+        return "transcript_quality"
+    if reason == "stage06b_contract_preflight_fail":
+        return "artifact_contract"
     if reason in SIGNAL_CLASS_ALLOWED:
         return reason
     if reason.startswith("policy_block_warning_class:"):
@@ -918,6 +922,10 @@ def _warning_class_for_check(check: str) -> str:
     chk = str(check or "").strip().lower()
     if not chk:
         return "other_quality"
+    if chk in {"stage06b_flag_low_transcript_quality", "stage06b_flag_severe"}:
+        return "transcript_quality"
+    if chk == "stage06b_contract_preflight_fail":
+        return "artifact_contract"
     if chk.startswith("transcript_artifact_"):
         return "contamination_risk"
     if chk in {"transcript_artifact", "segment_text_modified", "stage07_normalization_repairs", "stage07_validation_warnings"}:

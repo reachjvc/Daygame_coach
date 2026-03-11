@@ -1,0 +1,6 @@
+# Sub-batch P002.8 post-06f survivors
+# Generated: 2026-03-06
+# Source manifest: docs/pipeline/batches/P002.8.txt
+# Excludes videos quarantined by data/validation/quarantine/P002.8.json
+
+natural_lifestyles_meetingGirlsIRL | Where To Meet “Wife Material” Women [1ok1oovp0K0]

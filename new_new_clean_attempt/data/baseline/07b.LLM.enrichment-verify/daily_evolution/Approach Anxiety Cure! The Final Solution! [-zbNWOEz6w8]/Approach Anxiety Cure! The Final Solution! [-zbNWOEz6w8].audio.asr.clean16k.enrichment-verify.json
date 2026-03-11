@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "generated_at": "2026-03-05T18:31:02Z",
+  "video_id": "-zbNWOEz6w8",
+  "source": "daily_evolution",
+  "status": "WARN",
+  "gate_decision": "review",
+  "reason_code": "hallucinated_technique_false_time_constraint",
+  "inputs": {
+    "stage07_enriched": "/home/jonaswsl/projects/daygame-coach/data/07.LLM.content/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.enriched.json",
+    "stage06_conversations": "/home/jonaswsl/projects/daygame-coach/data/06c.DET.patched/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.conversations.json",
+    "stage06e_quality_check": "/home/jonaswsl/projects/daygame-coach/data/06e.LLM.quality-check/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.quality-check.json"
+  },
+  "checks": [
+    {
+      "severity": "info",
+      "check": "video_type_consistency",
+      "message": "Talking-head type confirmed by single-speaker educational monologue. All enrichments use talking_head_section type. Consistent.",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review"
+    },
+    {
+      "severity": "info",
+      "check": "section_coverage",
+      "message": "5 sections span segments 0-151, covering the full transcript with no gaps or overlaps.",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review"
+    },
+    {
+      "severity": "info",
+      "check": "hook_rate_zero",
+      "message": "All hook_segment_id values are null. Expected for talking_head content with no infield approaches.",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review"
+    },
+    {
+      "severity": "warning",
+      "check": "technique_evidence_alignment",
+      "message": "false_time_constraint attributed to section 3 (segs 42-80) but no segment in that range discusses time constraints. Speaker discusses checkpoints, eliminating intent, and speaking without agenda — none of which map to false_time_constraint.",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review"
+    },
+    {
+      "severity": "warning",
+      "check": "technique_evidence_alignment",
+      "message": "direct_opener attributed to section 4 (segs 81-121) but the content explicitly contrasts hit-and-runs with going direct (seg 70: 'It's not going in direct'). The compliments described are intentless, not direct openers.",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review"
+    },
+    {
+      "severity": "info",
+      "check": "technique_evidence_alignment",
+      "message": "subcommunication in section 4 has thin support — smiling and eye contact (seg 109) are behaviors mentioned in passing, not a taught subcommunication technique. Minor stretch.",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review"
+    },
+    {
+      "severity": "info",
+      "check": "transcript_quality",
+      "message": "21.7% low-quality segments (33/152), 4 artifact segments (word_repetition, language_confusion, 2x nonsense). Moderate noise but acceptable for informal talking-head content.",
+      "signal_class": "transcript_quality",
+      "remediation_path": "transcript_review"
+    },
+    {
+      "severity": "info",
+      "check": "topic_alignment",
+      "message": "All topic tags (inner_game, coaching_promotion, appearance, career) are supported by evidence segments. coaching_promotion correctly attributed to virtual instruction program mention (seg 43-44).",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review"
+    },
+    {
+      "severity": "info",
+      "check": "phase_coherence",
+      "message": "Section sequence is coherent: intro → mindset reframe → checkpoint technique → hit-and-runs → warm-up after work. Logical pedagogical progression with no contradictions.",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review"
+    }
+  ],
+  "issues": [
+    {
+      "issue_code": "hallucinated_concept_claim",
+      "issue_severity": "major",
+      "gate_decision": "review",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review",
+      "message": "false_time_constraint technique attributed to section 3 has zero transcript support. No segment in range 42-80 mentions time constraints, 'I can only stay a minute', or any temporal limiting device. The section discusses checkpoint-based desensitization and intentless speaking. This technique tag...",
+      "conversation_id": null,
+      "segment_id": null,
+      "evidence_segment_ids": [
+        42,
+        55,
+        56,
+        64,
+        65,
+        69,
+        70,
+        75,
+        80
+      ],
+      "confidence": 0.92
+    },
+    {
+      "issue_code": "evidence_alignment_mismatch",
+      "issue_severity": "major",
+      "gate_decision": "review",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review",
+      "message": "direct_opener attributed to section 4 contradicts transcript evidence. Speaker explicitly contrasts hit-and-runs with direct approaches (seg 70: 'It's not going in direct and hey, you're fucking hot'). The described behavior is intentless complimenting, the opposite of a direct opener. Tag should...",
+      "conversation_id": null,
+      "segment_id": null,
+      "evidence_segment_ids": [
+        70,
+        81,
+        82,
+        83,
+        84,
+        85,
+        121
+      ],
+      "confidence": 0.88
+    },
+    {
+      "issue_code": "low_support_density",
+      "issue_severity": "minor",
+      "gate_decision": "pass",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review",
+      "message": "subcommunication in section 4 rests on a single passing mention of smiling and eye contact (seg 109). Not a taught technique in context — speaker describes warm-up behaviors, not subcommunication strategy.",
+      "conversation_id": null,
+      "segment_id": null,
+      "evidence_segment_ids": [
+        109
+      ],
+      "confidence": 0.7
+    }
+  ],
+  "waivers_applied": [],
+  "metrics": {
+    "checks_total": 9,
+    "errors": 0,
+    "warnings": 2,
+    "infos": 7,
+    "evidence_coverage_ratio": null,
+    "hallucination_risk_ratio": null
+  },
+  "pipeline_version": "07b.LLM.enrichment-verify-v1.3"
+}

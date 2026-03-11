@@ -1,0 +1,67 @@
+{
+  "video_id": "GOZo4Z0brDc",
+  "generated_at": "2026-03-05T17:53:59Z",
+  "pipeline_version": "06e.LLM.quality-check-v1.1",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.conversations.json",
+  "model": "opus",
+  "windowing": {
+    "primary_segment_count": 90,
+    "context_segment_count": 10,
+    "window_count": 1,
+    "windows": [
+      {
+        "index": 0,
+        "primary_start_segment_id": 0,
+        "primary_end_segment_id": 16,
+        "primary_segment_count": 17,
+        "context_start_segment_id": 0,
+        "context_end_segment_id": 16,
+        "context_segment_count": 17,
+        "prompt_chars": 5609,
+        "timeout_seconds": 600
+      }
+    ]
+  },
+  "low_quality_segments": [
+    {
+      "segment": 5,
+      "reason": "Fragment split from surrounding sentence",
+      "quality_issue_type": "sentence_boundary_fragment",
+      "repair_text": null,
+      "repair_confidence": 0.95,
+      "action": "merge_next"
+    },
+    {
+      "segment": 9,
+      "reason": "Fragment split from surrounding sentence",
+      "quality_issue_type": "sentence_boundary_fragment",
+      "repair_text": null,
+      "repair_confidence": 0.95,
+      "action": "merge_next"
+    },
+    {
+      "segment": 11,
+      "reason": "Trailing 'I' is an orphan fragment from a sentence boundary split",
+      "quality_issue_type": "sentence_boundary_fragment",
+      "repair_text": null,
+      "repair_confidence": 0.9,
+      "action": "merge_next"
+    },
+    {
+      "segment": 8,
+      "reason": "'make it out' is likely a mistranscription of 'make out'",
+      "quality_issue_type": "word_mistranscription",
+      "repair_text": "had to make out with this chick twice.",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    }
+  ],
+  "transcript_artifacts": [],
+  "summary": {
+    "segments_total": 17,
+    "low_quality_count": 4,
+    "artifact_count": 0,
+    "lq_repair_candidates": 4,
+    "artifact_types": {}
+  }
+}

@@ -639,3 +639,629 @@ Stop and ask the user if any of these become necessary:
   - current read:
     - `P001.8` is now much closer to an automatically runnable truth-and-repair pipeline
     - the remaining open policy question is narrower: whether `confidence_tier:medium` should count as canonical damage, or stay retrieval-only unless paired with harder evidence like transcript artifacts, low tier, or contamination
+- 2026-03-05: Hardened early gating and resumed full `06+` throughput runs for next subbatches (`P001.6`, `P001.7`, `P001.9`) with real Claude calls:
+  - fixed runner truth gap at Stage `06b`:
+    - `scripts/training-data/batch/pipeline-runner` now fail-closes on severe `FLAG` outputs (not only `REJECT`)
+    - severe triggers now include:
+      - high misattribution volume
+      - high conversation-flag count
+      - major/moderate boundary issue volume
+      - repeated `missing_target_coverage`
+      - any `major` other-quality flag
+  - live proof of newly blocked severe-flag cases:
+    - `mv2X8Yhg9M0` quarantined at `06b` (`stage06b_flag_severe`)
+    - `5sTASDqe0u8` quarantined at `06b` (`conversation_flags=4`, `missing_target_coverage=2`)
+    - `rwlACYYEwUY` quarantined at `06b` (`major_other_flags=3`)
+  - uncovered and fixed stage implementation defects (no workaround path kept):
+    - `scripts/training-data/06e.LLM.quality-check`:
+      - robust Claude binary resolution added (`CLAUDE_BINARY/CLAUDE_BIN`, `shutil.which`, NVM glob fallback)
+    - `scripts/training-data/06g.LLM.damage-adjudicator`:
+      - same robust Claude binary resolution fix
+  - targeted recoveries started to repair false stage failures introduced before the resolver fixes:
+    - `P001.9` targeted rerun (`JyjkFxCTg18`, `YEC7tyrT7ag`) from `06e->09` now proceeds cleanly through `06e`
+    - `P001.6` targeted rerun (`sxChP6EIJHo`) from `06g->09` started after the `06g` fix
+    - `P001.7` targeted full-chain rerun (`X9vElD3W1jw`) from `06->09` started to repair missing stage-06 artifact
+  - latest readiness snapshots after these iterations (current truth, not final campaign close):
+    - `P001.6.auto.report.json`: `eligible=1`, `blocked_ids=7` (`READY` currently only `3JN-3IJTlEA`)
+    - `P001.7.auto.report.json`: `eligible=0`, `blocked_ids=10` (mix of `REVIEW` and `BLOCKED`, with remaining missing-`07b`/quality-policy pressure)
+    - `P001.9.auto.report.json`: improved from `blocked_ids=10` to `blocked_ids=8` after `06e` recovery pass
+- 2026-03-05: Started the next full `06+` throughput wave on fresh subbatches (`P002.2`, `P002.3`, `P002.4`, `P002.5`) with real Claude calls in parallel:
+  - launch profile:
+    - `P002.2`/`P002.3`/`P002.4` from `06->09` at `--parallel 3`
+    - `P002.5` from `06->09` at `--parallel 2`
+  - live progression snapshot while active:
+    - `P002.2`: `06=10/10`, `06b` active, first videos already reaching `06e`
+    - `P002.3`: `06=10/10`, `06b=1/10`, `06c=1/10`, `06d=1/10`
+    - `P002.4`: `06` in-flight with multiple workers, `06b` queue started
+    - `P002.5`: entered `06b` after initial `06` completions
+  - early `06b` outputs observed:
+    - `P002.2`: `JKWRj2hwbT4 -> FLAG` (non-severe under current thresholds)
+    - `P002.3`: `GFOcI3Sni6I -> APPROVE`, `TDxv3HxDYHk -> FLAG`
+  - cross-batch severe-gate telemetry (latest verification artifact per video) during run:
+    - `98` videos audited
+    - severe-gate hits: `14` (`10 FLAG`, `4 REJECT`)
+    - known severe examples still hit by current runner logic:
+      - `5sTASDqe0u8` (`conversation_flags=4`, `missing_target_coverage=2`)
+      - `mv2X8Yhg9M0` (`major_other_flags=1`)
+      - `rwlACYYEwUY` (`major_other_flags=3`)
+- 2026-03-05: Added Stage `06h` quality-overload fail-closed gate + telemetry and reran deterministic segments:
+  - code:
+    - `scripts/training-data/06h.DET.confidence-propagation`
+      - added `video_summary.gate_reason_codes`
+      - added `video_summary.gate_inputs`
+      - added quality-overload block logic (total/unrepaired low-quality + unresolved artifact thresholds)
+      - persisted `quality_gate` in confidence metadata/report
+  - deterministic reruns:
+    - `P002.2`/`P002.3`/`P002.4`: `06h -> 06h`
+    - `P002.5`: reopened from `06f`, rebuilt `06f`, then rebuilt `06h`
+  - current post-rerun quarantine truth:
+    - `P002.2`: `stage06g_execution_error x2`, `stage06b_flag_severe x1`
+    - `P002.3`: `stage06e_execution_error x1`
+    - `P002.4`: `stage06b_flag_severe x2`, `stage06b_contract_preflight_fail x1`
+    - `P002.5`: `stage06b_reject x3`, `stage06b_flag_severe x2`
+  - key effect:
+    - non-semantic `P002.5` preflight deadlocks were cleared; remaining blocks are semantic `06b` severe/reject truth.
+- 2026-03-07: Fix-first calibration pass during Claude-cap window (no new LLM-wave launches):
+  - policy tightening (degree-based, not fail-hard):
+    - `scripts/training-data/batch/pipeline.config.json`
+      - `review_video_damage_score`: `0.18 -> 0.14`
+      - `review_damaged_chunk_ratio`: `0.25 -> 0.22`
+      - `review_severe_damage_chunk_ratio`: `0.40 -> 0.35`
+    - measured expected impact on current-policy readiness corpus (`87` rows):
+      - baseline: `READY=17 / REVIEW=53 / BLOCKED=17`
+      - tightened: `READY=13 / REVIEW=57 / BLOCKED=17`
+      - net: `4` videos move `READY -> REVIEW`, no added hard blocks
+  - calibration tooling added:
+    - `scripts/training-data/validation/calibrate_readiness_thresholds.py`
+      - evaluates candidate review thresholds against historical readiness summaries
+      - emits machine-readable report with exact `READY -> REVIEW` moved IDs
+      - latest run output:
+        - `data/validation/runs/readiness_threshold_calibration.current.json`
+  - LLM stage contribution tooling added:
+    - `scripts/training-data/validation/audit_llm_stage_value.py`
+      - summarizes quarantine reason checks by stage and LLM-stage exclusivity
+      - latest run output:
+        - `data/validation/runs/llm_stage_value_audit.latest.json`
+      - current snapshot (all quarantine artifacts):
+        - LLM-stage exclusive quarantines:
+          - `stage06b: 21`
+          - `stage07b: 9`
+          - `stage06: 8`
+          - `stage06g: 1`
+          - `stage06e: 1`
+  - pipeline correctness hardening completed in this pass:
+    - `scripts/training-data/validation/validate_manifest.py`
+      - quarantine re-emit now preserves existing stage-derived reasons even when input/output paths are the same (prevents accidental quarantine reason loss)
+    - `scripts/training-data/batch/pipeline-runner`
+      - new early fail-closed gate: `stage06_speaker_collapse_overload`
+      - threshold: `total_segments_affected >= 50` in Stage `06` `speaker_collapse` metadata
+      - intent: stop high-collapse transcripts before expensive downstream LLM stages
+- 2026-03-07: Deterministic follow-through while Claude remained capped:
+  - throughput recovery without LLM:
+    - ran deterministic resume set from `06c -> 06d`:
+      - manifest: `/tmp/RECOVER.06cd.txt`
+      - command: `python3 scripts/training-data/batch/pipeline-runner RECOVER.06cd --manifest /tmp/RECOVER.06cd.txt --from 06c --to 06d --parallel 4 --skip-end-validation`
+      - outcome: `3/4` passed; `PE0mhxBtRkA` quarantined as expected due upstream `06b REJECT` strict handling in `06c`
+  - policy revalidation runs executed under tightened thresholds (no stage rerouting):
+    - `./scripts/training-data/batch/sub-batch-ops P003.2 --validate`
+    - `./scripts/training-data/batch/sub-batch-ops P003.3 --validate`
+    - `./scripts/training-data/batch/sub-batch-ops P003.4 --validate`
+    - `./scripts/training-data/batch/sub-batch-ops P003.5 --validate`
+    - `./scripts/training-data/batch/sub-batch-ops P001.5 --validate`
+    - `./scripts/training-data/batch/sub-batch-ops P001.8 --validate`
+  - observed readiness shifts after policy tighten:
+    - `P003.2`: `READY=2` (`ngG5D877MO4`, `pRkEJ91TEEY`)
+    - `P003.3`: `READY=2` (`GOZo4Z0brDc`, `Yr81ALhye2w`)
+    - `P003.4`: `READY=2` (`5n0sxT3JxAQ`, `qZeV9EgBE_c`)
+    - `P003.5`: `READY=1` (`CW_VMViZGn0`)
+    - `P001.5`: `READY=2` (`jl5tLCqpTNo`, `l5zEcgIS2Pw`)
+    - `P001.8`: `READY=0`
+  - refreshed calibration baseline after deterministic revalidation:
+    - `python3 scripts/training-data/validation/calibrate_readiness_thresholds.py --top-n 10 --out data/validation/runs/readiness_threshold_calibration.current.json`
+    - baseline moved from `READY=17` to `READY=12` (with `REVIEW=57`, `BLOCKED=18`) under current-policy corpus
+    - next tightening candidate now starts at `review_damaged_chunk_ratio=0.20` (`READY -> REVIEW` for `CW_VMViZGn0`, `pRkEJ91TEEY`)
+  - scorecards emitted for post-policy snapshots:
+    - `data/validation/runs/20260307.P003.2.postpolicy/scorecard.json`
+    - `data/validation/runs/20260307.P003.3.postpolicy/scorecard.json`
+    - `data/validation/runs/20260307.P003.4.postpolicy/scorecard.json`
+    - `data/validation/runs/20260307.P003.5.postpolicy/scorecard.json`
+    - `data/validation/runs/20260307.P001.5.postpolicy/scorecard.json`
+    - `data/validation/runs/20260307.P001.8.postpolicy/scorecard.json`
+  - additional deterministic audits added for points (3) stage value and (4) transcription quality:
+    - `scripts/training-data/validation/audit_llm_stage_value.py`
+      - latest report: `data/validation/runs/llm_stage_value_audit.latest.json`
+      - current LLM-exclusive quarantine signal counts: `stage06b=21`, `stage07b=9`, `stage06=8`, `stage06g=1`, `stage06e=1`
+    - `scripts/training-data/validation/audit_transcript_quality.py`
+      - latest report: `data/validation/runs/transcript_quality_audit.latest.json`
+      - strong collapse signal:
+        - collapse bucket `50+` currently has `0 APPROVE` in latest artifacts (`FLAG/REJECT/MISSING` only)
+- 2026-03-07: Parallel `06+` throughput wave resumed with real Claude calls on next unresolved subbatches:
+  - launched in parallel:
+    - `python3 scripts/training-data/batch/pipeline-runner P002.8 --from 06 --to 09 --parallel 3 --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2`
+    - `python3 scripts/training-data/batch/pipeline-runner P002.9 --from 06 --to 09 --parallel 3 --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2`
+    - `python3 scripts/training-data/batch/pipeline-runner P002.10 --from 06 --to 09 --parallel 2 --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2`
+  - live findings while active:
+    - strict fail-closed behavior observed in Stage `06` (`NZk0SPu3HXM` quarantined in-run as `stage06_execution_error`, output write blocked)
+    - Stage `06e` timeout pressure is real under `--llm-timeout-seconds 300` (observed repeated `Claude CLI timeout` retries)
+  - fixed an ops-truth defect discovered during this run (no fallback/workaround):
+    - `scripts/training-data/batch/sub-batch-pipeline` `--view` artifact discovery now searches source-recursive layouts (`source/channel/*.json`) by `video_id`
+    - this repaired false pending counts for channel-grouped outputs (example: `P002.10` `06b` now correctly reports `7 files, 0 pending` instead of `1 files, 6 pending`)
+- 2026-03-07: Quantified and validated historical `06f` gate debt (leniency backlog):
+  - new deterministic audit tool:
+    - `scripts/training-data/validation/audit_06f_gate_debt.py`
+    - output: `data/validation/runs/06f_gate_debt_audit.latest.json`
+  - current corpus snapshot:
+    - `scanned_stage06e_files=187`
+    - `triggered_by_current_06f_policy=40`
+    - `triggered_not_currently_quarantined_by_06f=27`
+  - sample proof run (top 10 debt candidates, deterministic `06f` only):
+    - manifest: `data/validation/tmp/DEBT06F.top10.manifest.txt`
+    - command: `python3 scripts/training-data/batch/pipeline-runner DEBT06F.top10 --manifest data/validation/tmp/DEBT06F.top10.manifest.txt --from 06f --to 06f --parallel 5 --skip-end-validation`
+    - result: `10/10` quarantined by `stage06f_low_quality_overload` (no LLM stage dependency)
+  - operational interpretation:
+    - the current gate logic is capable of blocking high low-quality-load videos
+    - a real part of the leniency concern is historical debt (videos passed before current `06f` gate policy) and needs targeted `06f+` reruns, not looser interpretation of current gate truth
+- 2026-03-07: Applied `06f` debt closure into canonical sub-batch quarantine truth (not only temporary debt batches):
+  - generated per-subbatch manifests for affected videos:
+    - `/tmp/debt06f_subbatches/*.txt` (17 affected sub-batches detected)
+  - executed deterministic `06f->06f` reruns for 16 sub-batches (skipped `P002.8` due active concurrent full-chain run):
+    - `P001.10`, `P001.4`, `P001.5`, `P001.6`, `P001.7`, `P001.8`, `P001.9`
+    - `P002.1`, `P002.2`, `P002.3`, `P002.4`, `P002.6`
+    - `P003.1`, `P003.5`, `P003.6`
+    - `P018.3`
+  - deterministic outcomes on these 16 reruns:
+    - all selected videos quarantined (`passed=0`, quarantined counts matched selection sizes)
+  - owner-subbatch coverage after reruns:
+    - `37` debt videos tracked
+    - only `3` missing owner-level `06f` checks:
+      - `KtmnHDVbmss` in `P002.8` (active full-chain rerun in progress)
+      - `jdDdgzdFPfs` in `P002.8` (active full-chain rerun in progress)
+      - `x2kk9HoXjnI` in `P001.4` (already blocked by upstream `stage06b_reject`)
+- 2026-03-07: Closed a resumed-run gate leak in `pipeline-runner`:
+  - issue:
+    - fail-closed gates (`06`, `06b`, `06f`, `06h`) were evaluated only when those stages executed in the current invocation
+    - reruns starting at `07+` could bypass newly tightened upstream gate truth unless quarantine already contained those checks
+  - fix:
+    - `scripts/training-data/batch/pipeline-runner` now replays upstream gates at video start whenever `--from` is after the gate stage
+    - if any upstream gate triggers, video is immediately quarantined with canonical check key/message before downstream execution
+  - validation:
+    - `python3 -m py_compile scripts/training-data/batch/pipeline-runner`
+    - `python3 tests/unit/pipeline/test_pipeline_runner_stage06_gate.py` (`4` tests passing, includes resume gate-replay coverage)
+- 2026-03-07: Re-ran readiness calibration on latest corpus snapshot:
+  - command:
+    - `python3 scripts/training-data/validation/calibrate_readiness_thresholds.py --top-n 30 --out data/validation/runs/readiness_calibration.latest.json`
+  - current baseline:
+    - `READY=11 / REVIEW=52 / BLOCKED=30` (`93` deduped latest rows)
+  - threshold sensitivity:
+    - current `review_damaged_chunk_ratio=0.22` is already strict enough that tested `0.22/0.23/0.25` candidates produce no additional `READY -> REVIEW` moves
+    - next meaningful tighten point remains `review_damaged_chunk_ratio=0.20` (moves `CW_VMViZGn0`, `pRkEJ91TEEY` to `REVIEW`)
+- 2026-03-07: Added manifest-level `06e` low-quality pressure review gating (degree-based, not fail-hard):
+  - problem found:
+    - some videos still validated `READY` with high Stage `06e` low-quality burden because readiness primarily consumed downstream damage metrics and not raw `06e` pressure
+  - canonical fix:
+    - `scripts/training-data/validation/validate_manifest.py`
+      - indexes Stage `06e` artifacts and emits warning `stage06e_low_quality_pressure` when:
+        - `low_quality_count >= review_stage06e_low_quality_count`
+        - OR `low_quality_ratio >= review_stage06e_low_quality_ratio` with `low_quality_count >= review_stage06e_low_quality_ratio_min_count`
+      - mapped this check to canonical `contamination_risk` signal class
+    - `scripts/training-data/batch/sub-batch-pipeline`
+      - passes new `validate_manifest` thresholds from pipeline config
+    - `scripts/training-data/batch/pipeline.config.json`
+      - `review_stage06e_low_quality_count = 80`
+      - `review_stage06e_low_quality_ratio = 0.30`
+      - `review_stage06e_low_quality_ratio_min_count = 30`
+  - measured outcomes after revalidation:
+    - `P002.2`: `READY=1 / REVIEW=3 / BLOCKED=6` -> `READY=0 / REVIEW=4 / BLOCKED=6`
+      - `rEFK-4dNPxA` now `REVIEW` (`reason=contamination_risk`)
+    - `P002.10`: `READY=1 / REVIEW=3 / BLOCKED=3` (historical) -> `READY=0 / REVIEW=2 / BLOCKED=5` in current artifact state
+      - explicit `stage06e_low_quality_pressure` warnings observed on `qR7bHW8EoaE` and `vNrixMbimG0`
+  - calibration refresh:
+    - `python3 scripts/training-data/validation/calibrate_readiness_thresholds.py --top-n 30 --out data/validation/runs/readiness_calibration.latest.json`
+    - baseline shifted from `READY=11 / REVIEW=52 / BLOCKED=30` to `READY=10 / REVIEW=53 / BLOCKED=30`
+- 2026-03-07: Launched next `06+` survivor wave with real Claude calls:
+  - command:
+    - `python3 scripts/training-data/batch/pipeline-runner P003.1 --manifest docs/pipeline/batches/P003.1.post06f.txt --from 06e --to 09 --parallel 2 --skip-end-validation --llm-retries 2`
+  - early live behavior (expected under tightened upstream replay):
+    - immediate upstream-gate quarantines observed before downstream LLM spend:
+      - `zzRdjIz3YLg` (`upstream 06b severe FLAG`)
+      - `MS1JrFBtw3g` (`upstream 06 speaker collapse overload`)
+- 2026-03-07: Completed first post-hardening survivor runs and validated readiness truth:
+  - `P003.1` run completion:
+    - pipeline summary: `passed=5/7`, `quarantined=2` (`zzRdjIz3YLg`, `MS1JrFBtw3g`)
+    - post-run validate (`./scripts/training-data/batch/sub-batch-ops P003.1 --validate`) produced:
+      - readiness: `READY=2 / REVIEW=3 / BLOCKED=5`
+      - Stage 10 dry-run ingest scope: `2` videos (`71xUMBrQjnc`, `xcHP6sZHxX0`)
+  - `P003.2` run completion:
+    - pipeline summary: `passed=9/10`, `quarantined=1` (`tz_Fbn2zoIE`, upstream replayed `06h` block)
+    - post-run validate (`./scripts/training-data/batch/sub-batch-ops P003.2 --validate`) produced:
+      - readiness: `READY=2 / REVIEW=7 / BLOCKED=1`
+      - `REVIEW` drivers are mostly tightened damage policy reasons (`policy_review_damaged_chunk_ratio` / `policy_review_video_damage_score`)
+      - Stage 10 dry-run ingest scope: `2` videos (`ngG5D877MO4`, `pRkEJ91TEEY`)
+- 2026-03-07: Continued full-chain `06->09` throughput wave with real Claude on next unresolved subbatches:
+  - launched:
+    - `python3 scripts/training-data/batch/pipeline-runner P003.3 --from 06 --to 09 --parallel 2 --skip-end-validation --llm-retries 2`
+    - `python3 scripts/training-data/batch/pipeline-runner P003.4 --from 06 --to 09 --parallel 2 --skip-end-validation --llm-retries 2`
+    - `python3 scripts/training-data/batch/pipeline-runner P003.5 --from 06 --to 09 --parallel 1 --skip-end-validation --llm-retries 2`
+    - `python3 scripts/training-data/batch/pipeline-runner P003.6 --from 06 --to 09 --parallel 1 --skip-end-validation --llm-retries 2`
+  - live findings:
+    - upstream contract preflight is actively fail-closed on missing Stage `05` artifacts in these ranges (multiple immediate quarantines with `stage 06 contract preflight failed`)
+    - no bypass path observed; downstream stages only execute for surviving videos
+- 2026-03-07: Ran a cross-batch leniency audit to test for residual false-pass behavior under current policy:
+  - artifact:
+    - `data/validation/runs/leniency_audit.latest.json`
+  - aggregate snapshot:
+    - all readiness rows: `READY=17 / REVIEW=63 / BLOCKED=175` (initial run), then `READY=18 / REVIEW=60 / BLOCKED=177` after P003.1/P003.2 refresh
+    - `READY_high_06e_pressure=0` under configured `06e` pressure criteria
+    - `READY` outlier by damage threshold appeared only in historical `P002.9` readiness generated under older policy (`review_video_damage_score=0.18`, no `review_damaged_chunk_ratio`)
+  - policy-aware check (only summaries containing current damage policy knobs) result:
+    - `READY` violations against active thresholds: `0`
+    - interpretation: current codepath is enforcing tightened damage thresholds; remaining apparent leniency is stale-summary debt, not active gate logic
+- 2026-03-07: Re-ran readiness calibration after latest validations:
+  - command:
+    - `python3 scripts/training-data/validation/calibrate_readiness_thresholds.py --top-n 30 --out data/validation/runs/readiness_calibration.latest.json`
+  - updated baseline:
+    - `READY=12 / REVIEW=58 / BLOCKED=46` (`rows=116`)
+  - sensitivity:
+    - `dcr=0.22` remains stable for current READY set
+    - tightening to `dcr=0.21` or `0.20` currently moves one READY video (`CW_VMViZGn0`) to `REVIEW`
+- 2026-03-07: Hardened Stage 10 against stale readiness-policy snapshots:
+  - issue:
+    - Stage 10 readiness gate accepted any syntactically valid `readiness-summary.json`, even if generated under older policy epochs
+    - this can reintroduce lenient historical thresholds unless sub-batch validation is rerun first
+  - patch:
+    - `scripts/training-data/10.EXT.ingest.ts`
+      - `checkReadinessGate(...)` now requires readiness policy fields:
+        - `review_video_damage_score`
+        - `review_damaged_chunk_ratio`
+        - `review_severe_damage_chunk_ratio`
+      - each must be a finite ratio in `[0,1]`; otherwise ingest exits with a hard error and explicit revalidation instruction
+  - validation:
+    - `node --import ./node_modules/tsx/dist/loader.mjs scripts/training-data/10.EXT.ingest.ts --help`
+    - positive dry-run still passes on current-policy summary:
+      - `node --import ./node_modules/tsx/dist/loader.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/P003.2.txt --dry-run`
+    - stale-policy guard verified:
+      - `node --import ./node_modules/tsx/dist/loader.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/P003.2.txt --readiness-summary data/validation/stage_reports/P002.9/readiness-summary.json --dry-run`
+      - exits with: `Readiness summary policy is missing 'review_damaged_chunk_ratio'`
+- 2026-03-07: Launched additional full-chain waves (`06->09`) with real Claude calls:
+  - commands:
+    - `python3 scripts/training-data/batch/pipeline-runner P003.7 --from 06 --to 09 --parallel 1 --skip-end-validation --llm-retries 2`
+    - `python3 scripts/training-data/batch/pipeline-runner P003.8 --from 06 --to 09 --parallel 1 --skip-end-validation --llm-retries 2`
+  - early live behavior:
+    - both subbatches show immediate Stage `06` contract fail-closed quarantines for videos missing Stage `05` artifacts
+    - surviving videos continue through real Claude-driven Stage `06` without fallback path
+- 2026-03-07: Fixed operator visibility drift in status inspection (no pipeline path divergence):
+  - issue:
+    - `./scripts/training-data/batch/sub-batch-ops <batch> --status` relied only on `*.status.json`
+    - direct `pipeline-runner` launches were running live but still shown as `not_started`, causing ambiguous operator state
+  - patch:
+    - `scripts/training-data/batch/sub-batch-pipeline`
+      - `show_batch_status()` now overlays live process detection from `ps -eo args` for `pipeline-runner Pxxx.y`
+      - displays live rows as `in_progress [live runner]`
+      - shows stale status rows as `in_progress [no live runner detected]` when status-file state lags reality
+      - `show_sub_batch_progress()` now also overlays live runner detection for the sub-batch `Overall status`
+  - validation:
+    - `bash -n scripts/training-data/batch/sub-batch-pipeline`
+    - `./scripts/training-data/batch/sub-batch-ops P003 --status` now correctly reports live runners for `P003.3`–`P003.8`
+- 2026-03-07: Detected mid-wave Claude quota exhaustion as a runtime-truth issue:
+  - observed live failure signature during active `P003.3`–`P003.8` waves:
+    - `stdout="You've hit your limit · resets 5pm (Europe/Copenhagen)"`
+    - downstream symptoms included `06b llm_call_error -> REJECT` and `06e execution failure` (runtime-noise, not content truth)
+  - immediate operational response:
+    - stopped active old-code runners
+    - no active `pipeline-runner` processes left (`pgrep -af "scripts/training-data/batch/pipeline-runner" -> none`)
+- 2026-03-07: Hardened `pipeline-runner` runtime/content separation for quota/outage events:
+  - patch:
+    - `scripts/training-data/batch/pipeline-runner`
+      - `run_subprocess()` now detects limit markers while streaming LLM stage output
+      - `run_video()` now:
+        - aborts as `failed` (non-quarantine) if Claude limit marker is detected
+        - on LLM non-zero exits, re-runs global Claude preflight; if unhealthy, aborts as runtime outage (non-quarantine) instead of adding stage execution quarantine
+        - honors a shared global outage event so remaining videos stop with `global_llm_outage`
+      - run exit code now returns `3` when a global LLM outage is detected mid-run (aligned with startup preflight outage exit)
+  - validation:
+    - `python3 -m py_compile scripts/training-data/batch/pipeline-runner`
+    - `python3 tests/unit/pipeline/test_pipeline_runner_stage06_gate.py`
+    - live preflight probe:
+      - `python3 scripts/training-data/batch/pipeline-runner P003.9 --from 06 --to 06 --parallel 1 --skip-end-validation --llm-retries 2`
+      - result: immediate `exit=3` with `LLM preflight failed: Claude limit exhausted...`, no per-video execution
+- 2026-03-07: Current state after quota cap event:
+  - `P003.3`–`P003.8` run outputs contain runtime-noise quarantines from old runner instances started before outage hardening
+  - these subbatches must be rerun from `06` with the patched runner after quota reset so stale runtime-derived rows are reopened/replaced by real content truth
+- 2026-03-07: Classified runtime-noise quarantine impact for post-cap waves (deterministic audit):
+  - artifacts:
+    - `data/validation/runs/p003_runtime_quarantine_impact.latest.json`
+    - `data/validation/runs/p003_runtime_quarantine_classification.latest.json`
+  - subbatch impact summary:
+    - `P003.3`: `10` quarantined; `8` runtime-polluted (`06b llm_call_error` and `06e execution_error`), `1` upstream-missing, `1` non-runtime `06b` reject
+    - `P003.4`: `10` quarantined; `5` runtime stage execution errors, `5` upstream-missing
+    - `P003.5`: `0` quarantined
+    - `P003.6`: `10` quarantined; `6` runtime-polluted, `4` upstream-missing
+    - `P003.7`: `10` quarantined; `7` runtime-polluted, `3` upstream-missing
+    - `P003.8`: `10` quarantined; `5` runtime-polluted, `5` upstream-missing
+  - rerun implication:
+    - prioritize `P003.3`, `P003.6`, `P003.7`, `P003.8`, `P003.4` from `06` after quota reset (patched runner now prevents this runtime contamination pattern from hardening)
+- 2026-03-09: Restarted full-chain `06->09` waves with patched runner and real Claude calls:
+  - active sub-batches:
+    - `P003.3`, `P003.6`, `P003.7`, `P003.8`, `P003.9`, `P003.10`
+  - observed behavior:
+    - missing-upstream videos fail-closed immediately at Stage `06` contract preflight
+    - surviving videos move through `06/06b` and downstream stages without fallback paths
+- 2026-03-09: Re-ran gate-debt calibration on current artifacts:
+  - `audit_06f_gate_debt.py`:
+    - `triggered_by_current_06f_policy=42`
+    - `triggered_not_currently_quarantined_by_06f=0`
+  - `calibrate_readiness_thresholds.py`:
+    - baseline `READY=12 / REVIEW=58 / BLOCKED=46`
+    - tightening `review_damaged_chunk_ratio` from `0.22` to `0.20` moves one borderline READY video (`CW_VMViZGn0`) to REVIEW
+  - `audit_transcript_quality.py`:
+    - transcript score bucket `<=35` had no APPROVE outcomes (`FLAG=3`, `REJECT=3`)
+- 2026-03-09: Tightened Stage `06b` fail-closed behavior for severe low-transcript flags:
+  - patch:
+    - `scripts/training-data/batch/pipeline-runner`
+    - new gate: if `06b` verdict is `FLAG` and Stage `06 transcript_confidence.score <= 35`, quarantine with `stage06b_flag_low_transcript_quality`
+  - reason:
+    - removes a lenient gap where very low transcript-quality FLAG videos could continue as REVIEW despite consistently poor upstream signal quality
+  - validation:
+    - `python3 tests/unit/pipeline/test_pipeline_runner_stage06_gate.py` passed (`6` tests)
+    - includes new unit coverage for both block and non-block `06b FLAG` transcript-score cases
+- 2026-03-09: Tightened readiness review threshold slightly (not fail-hard):
+  - patch:
+    - `scripts/training-data/batch/pipeline.config.json`
+  - change:
+    - `review_damaged_chunk_ratio: 0.22 -> 0.20`
+  - effect target:
+    - shifts borderline contamination from READY to REVIEW while preserving existing BLOCK policy and avoiding a global reject surge
+- 2026-03-09: Fixed Stage `06/06b/07*` timeout runtime-noise classification in runner:
+  - issue observed during active `P003.*` waves:
+    - long LLM calls timing out were being quarantined as `stageXX_execution_error`, which pollutes quality truth
+  - patch:
+    - `scripts/training-data/batch/pipeline-runner`
+      - subprocess stream parsing now classifies runtime markers into:
+        - `limit`
+        - `timeout`
+      - on non-zero LLM exit with timeout marker, runner now marks video as:
+        - `status=failed`
+        - `error_msg=llm_timeout_during_stage:*`
+        - progress `FAIL(llm_timeout)`
+      - timeout cases are no longer auto-quarantined as canonical content failures
+  - validation:
+    - `python3 -m py_compile scripts/training-data/batch/pipeline-runner`
+    - `python3 tests/unit/pipeline/test_pipeline_runner_stage06_gate.py` (`7` tests passing, including new timeout runtime-failure test)
+- 2026-03-09: Aligned canonical signal-class mapping with new 06b low-transcript gate (and legacy 06b severe-flag gate):
+  - issue:
+    - quarantine checks `stage06b_flag_low_transcript_quality` (new) and `stage06b_flag_severe` (existing) were not explicitly classified by canonical validators
+    - this could classify them as `other_quality`, weakening downstream repair/review metadata precision
+  - patch:
+    - `scripts/training-data/validation/validate_manifest.py`
+      - `_canonical_signal_class(...)` now maps:
+        - `stage06b_flag_low_transcript_quality` -> `transcript_quality`
+        - `stage06b_flag_severe` -> `transcript_quality`
+        - `stage06b_contract_preflight_fail` -> `artifact_contract`
+    - `scripts/training-data/validation/validate_stage_report.py`
+      - `_signal_class_for_readiness_reason(...)` now maps:
+        - `stage06b_flag_low_transcript_quality` -> `transcript_quality`
+        - `stage06b_flag_severe` -> `transcript_quality`
+        - `stage06b_contract_preflight_fail` -> `artifact_contract`
+      - `_warning_class_for_check(...)` now maps the same check keys consistently
+  - validation:
+    - `python3 -m py_compile scripts/training-data/validation/validate_manifest.py scripts/training-data/validation/validate_stage_report.py`
+    - `python3 tests/unit/pipeline/test_validate_signal_class_mappings.py` (`5` tests passing)
+- 2026-03-09: Current live `P003.*` wave observations after mapping patch:
+  - all six runners still active in parallel (`P003.3`, `P003.6`, `P003.7`, `P003.8`, `P003.9`, `P003.10`)
+  - observed gate behavior remains strict and deterministic:
+    - severe Stage `06` speaker-collapse videos are being quarantined immediately (for example `GvoA2AAHJuk`, `2i4UOYnRXas`)
+    - non-gated videos continue through `06b` with real Claude verification and downstream progression (`06e` already active in `P003.9`)
+- 2026-03-09: Extended throughput to backlog sub-batches already at `06h`:
+  - launched:
+    - `python3 scripts/training-data/batch/pipeline-runner P003.2 --from 07 --to 09 --parallel 1 --skip-end-validation --llm-timeout-seconds 360 --llm-retries 2`
+    - `python3 scripts/training-data/batch/pipeline-runner P003.1 --from 07 --to 09 --parallel 1 --skip-end-validation --llm-timeout-seconds 360 --llm-retries 2`
+  - rationale:
+    - `P003.1` and `P003.2` already had full `05..06h` coverage but no `07b/09`; running from `07` avoids redundant upstream reruns
+  - quarantine integrity check before launch:
+    - `P003.1` preexisting quarantines (`5`) are quality-gate based (`stage06b_reject`, `stage06b_flag_severe`, `stage06_speaker_collapse_overload`, `video_type_mismatch`)
+    - `P003.2` preexisting quarantine (`1`) is quality-gate based (`stage06h_video_gate_block`)
+    - no runtime-noise-only quarantine reasons found for these two sub-batches
+  - live state:
+    - both runs passed stage-07 contract preflight on non-quarantined videos and are actively processing Stage `07` with real Claude calls
+- 2026-03-11: Completed parallel `P003` execution wave with real Claude calls (`06->09` and `07->09`):
+  - completed runs:
+    - `P003.1` (`07->09`): `passed=5`, `skipped_preexisting_quarantine=5`
+    - `P003.2` (`07->09`): `passed=9`, `skipped_preexisting_quarantine=1`
+    - `P003.3` (`06->09`): `passed=8`, `quarantined=2`
+    - `P003.6` (`06->09`): `passed=3`, `quarantined=6`, `failed_runtime=1` (`-ivcUSxXCHM`, stage `06` timeout)
+    - `P003.7` (`06->09`): `passed=5`, `quarantined=5`
+    - `P003.8` (`06->09`): `passed=3`, `quarantined=5`, `failed_runtime=2` (`CfsZbTegOCM` stage `06` timeout, `7d7CNDnvh9w` stage `06e` timeout)
+    - `P003.9` (`06->09`): `passed=3`, `quarantined=7`
+    - `P003.10` (`06->09`): `passed=2`, `quarantined=8`
+  - resulting quarantine mix snapshot:
+    - dominant hard blocks are still upstream contract failures (`stage06_contract_preflight_fail`) plus targeted quality gates (`stage06_speaker_collapse_overload`, `stage06b_flag_severe`, `stage06b_reject`, `stage06f_low_quality_overload`)
+    - runtime timeouts remained in `failed` (non-quarantine), confirming runtime/content separation is holding
+- 2026-03-11: Tightened 06b low-transcript FLAG gate to close observed borderline leakage:
+  - evidence from completed wave:
+    - non-quarantined Stage `09` survivors with low transcript score were rare (`3/38` at score `55`)
+    - two of those survivors had `06b` verdict `FLAG` (`HUaUzRpIfBw`, `L3b4FSMskGQ`) and slipped through because threshold was `<=35`
+  - patch:
+    - `scripts/training-data/batch/pipeline-runner`
+      - `STAGE06B_FLAG_LOW_TRANSCRIPT_SCORE_BLOCK_THRESHOLD: 35.0 -> 55.0`
+    - `tests/unit/pipeline/test_pipeline_runner_stage06_gate.py`
+      - added boundary test: `test_stage06b_flag_at_threshold_blocks` (score `55`)
+  - validation:
+    - `python3 -m py_compile scripts/training-data/batch/pipeline-runner`
+    - `python3 tests/unit/pipeline/test_pipeline_runner_stage06_gate.py` (`8` tests passing)
+- 2026-03-11: Backfill/rerun follow-up after threshold/runtime fixes:
+  - runtime-timeout retry manifest:
+    - `docs/pipeline/batches/P003.timeout-retry.1.txt`
+    - includes: `-ivcUSxXCHM`, `CfsZbTegOCM`, `7d7CNDnvh9w`
+    - run started: `P003.timeout-retry.1 --from 06 --to 09 --llm-timeout-seconds 480`
+    - early outcome:
+      - `-ivcUSxXCHM` completed Stage `06` and is now deterministically quarantined by `stage06_speaker_collapse_overload` (was previously runtime-timeout failed)
+      - long chunked rerun for `CfsZbTegOCM` in progress (Stage `06` chunked analysis)
+  - threshold backfill checks under original sub-batch IDs:
+    - `P003.7` manifest `/tmp/P003.7.threshold55.backfill.txt` (`L3b4FSMskGQ`)
+    - `P003.8` manifest `/tmp/P003.8.threshold55.backfill.txt` (`HUaUzRpIfBw`)
+    - `P003.7` result:
+      - rerun completed, remained non-quarantined
+      - observed drift: Stage `06 transcript_confidence.score` moved from prior `55` to `58`, so new `<=55` gate did not trigger
+    - `P003.8` result:
+      - rerun completed and now quarantined in-place with `stage06b_flag_low_transcript_quality`
+      - `P003.8` quarantine membership increased from `5 -> 6` (added `HUaUzRpIfBw`)
+- 2026-03-11: Completed `P003.timeout-retry.1` rerun (`--from 06 --to 09 --llm-timeout-seconds 480 --llm-retries 2`):
+  - final outcome:
+    - `passed=1/3` (`7d7CNDnvh9w`)
+    - `quarantined=2/3` (`-ivcUSxXCHM`, `CfsZbTegOCM`)
+  - both quarantined videos now carry deterministic Stage `06` content-quality truth:
+    - `stage06_speaker_collapse_overload`
+    - `-ivcUSxXCHM`: `affected_segments=115`, `transcript_score=32`
+    - `CfsZbTegOCM`: `affected_segments=880`, `transcript_score=38`
+  - retry-runtime observation:
+    - `7d7CNDnvh9w` Stage `06e` required repeated timeout retries before success, then completed `06f->09` cleanly with `07b gate=pass`
+    - this is a Stage `06e` runtime reliability hotspot, not a content-failure signal
+- 2026-03-11: Verified current `P003` readiness leniency window on latest summaries:
+  - command:
+    - `python3 scripts/training-data/validation/calibrate_readiness_thresholds.py --readiness-glob 'data/validation/stage_reports/P003.*/readiness-summary.json' --review-video-damage-score-candidates '0.14,0.13,0.12' --review-damaged-chunk-ratio-candidates '0.22,0.20,0.18' --review-severe-damage-chunk-ratio-candidates '0.35,0.30'`
+  - result:
+    - baseline `READY=9 / REVIEW=26 / BLOCKED=9` (`44` rows)
+    - with current `review_damaged_chunk_ratio=0.22`, no additional READY videos move to REVIEW
+    - tightening to `0.20` moves `1` READY video (`CW_VMViZGn0`) to REVIEW
+    - tightening to `0.18` moves `4` READY videos (`CW_VMViZGn0`, `ngG5D877MO4`, `pRkEJ91TEEY`, `qZeV9EgBE_c`)
+- 2026-03-11: Started next-wave `P004` execution and found upstream contract gap immediately:
+  - initial `P004.1` and `P004.2` runs from `06->09` quarantined `10/10` each on:
+    - `stage06_contract_preflight_fail` (`missing Stage 05` artifacts)
+  - root-cause audit:
+    - Stage `05` missing because Stage `04` outputs were missing
+    - Stage `04` missing because Stage `03` outputs were missing
+    - Stage `03` missing because Stage `02` transcripts were missing for most videos
+  - corrective action (canonical path, no bypass):
+    - launched Stage `02` backfill on full sub-batch manifests:
+      - `./scripts/training-data/02.EXT.transcribe --manifest docs/pipeline/batches/P004.1.txt --overwrite`
+      - `./scripts/training-data/02.EXT.transcribe --manifest docs/pipeline/batches/P004.2.txt --overwrite`
+    - launched iterative Stage `03` progress on completed subsets while long Stage `02` files continue:
+      - `/tmp/P004.1.stage02ready.partial.txt` (`5` video IDs)
+      - `/tmp/P004.2.stage02ready.partial.txt` (`5` video IDs)
+      - `./scripts/training-data/03.EXT.align --manifest /tmp/P004.1.stage02ready.partial.txt --overwrite`
+      - `./scripts/training-data/03.EXT.align --manifest /tmp/P004.2.stage02ready.partial.txt --overwrite`
+  - notable upstream quality signal during Stage `02`:
+    - `sQz_-9BuNpw` produced near-empty transcript (`4 words / 54s`) and was fail-closed (`output NOT written`)
+    - this provides deterministic upstream unusable-audio evidence rather than downstream ingestion noise
+- 2026-03-11: Resolved stale-contract rerun for `P004.2` single-video scope (`yubzvrH3kLU`) through full chain `06->09`:
+  - run:
+    - `python3 -u scripts/training-data/batch/pipeline-runner P004.2 --manifest /tmp/P004.2.yubz.only.txt --from 06 --to 09 --parallel 1 --skip-end-validation --llm-timeout-seconds 360 --llm-retries 2`
+  - outcome:
+    - `passed=1/1`
+    - stage sequence completed with real Claude calls at `06/06b/06e/06g/07/07b`
+    - `06b verdict=FLAG` was repaired by `06c` (`3` deterministic misattribution fixes)
+    - `07b gate=pass`, `09` chunk output written (`9` chunks)
+- 2026-03-11: Hardened runner startup preflight against transient Claude saturation (no bypass path):
+  - issue:
+    - concurrent lane launch for full `P004.2` was aborting at single-shot preflight timeout (`25s`) during active Claude load
+  - patch:
+    - `scripts/training-data/batch/pipeline-runner`
+      - added bounded retry loop for global Claude preflight:
+        - `CLAUDE_PREFLIGHT_MAX_ATTEMPTS=3`
+        - linear retry backoff
+      - limit-marker detection still fail-closes immediately (no retry masking quota exhaustion)
+  - validation:
+    - `python3 -m py_compile scripts/training-data/batch/pipeline-runner`
+- 2026-03-11: Started iterative `P004.1` refresh lanes (real runs + upstream prep):
+  - active `06->09` partial lane (`/tmp/P004.1.stage02ready.partial.txt`) produced mixed truth:
+    - `MF3GUEB03-o`: runtime timeout at Stage `06` (failed, non-quarantine)
+    - `KuiM4A2P5fA`: deterministic quality quarantine `stage06b_flag_low_transcript_quality` (`FLAG` + score boundary)
+    - `WbMjgv4XcwE`: progressed through `09` with `07b gate=pass`
+    - remaining lane videos continued in-flight
+  - parallel upstream prep for the other half of `P004.1`:
+    - `03/04/05` completed for `1FHmVCWuPhU`, `yjfSA5SpqCY`, `ZQoGfv-wH4k`, `-ymOG7QMrBA`
+    - blocker persists for `wrxnZi--o9g` at Stage `03`
+- 2026-03-11: Identified unresolved Stage `03` alignment blocker on `wrxnZi--o9g`:
+  - failure:
+    - `IndexError: tensors used as indices must be long, int, byte or bool tensors`
+  - attempted structural fix:
+    - `scripts/training-data/03.EXT.align`
+      - added deterministic large-input alignment batching (`ALIGN_BATCH_SEGMENTS=200`)
+      - introduced explicit batch-level progress logging (`Align batch: start-end/total`)
+  - result:
+    - failure persists on this video even after batched alignment, indicating a deeper whisperx/segment-path defect
+    - video remains an explicit upstream technical blocker (not silently bypassed)
+- 2026-03-11: `P004.2` upstream prep completed to Stage `05` on all currently recoverable IDs:
+  - Stage `02` backfill completed (`processed=10`, `flagged=4`)
+  - Stage `03/04/05` executed on stage-ready scope:
+    - dynamic manifest: `/tmp/P004.2.stage05ready.dynamic.txt`
+    - ready coverage: `9/10` IDs with canonical Stage `05` artifacts
+    - missing-only ID: `sQz_-9BuNpw` (upstream fail-closed transcript in Stage `02`)
+  - `bNaZftBdb0Y` was run separately through `03/04/05` and is now included in ready scope
+- 2026-03-11: Prepared `P004.1` consolidated stage-ready scope after mixed partial reruns:
+  - dynamic manifest: `/tmp/P004.1.stage05ready.dynamic.txt`
+  - ready coverage: `9/10` IDs with Stage `05` artifacts
+  - missing-only ID: `wrxnZi--o9g` (persistent Stage `03` technical failure)
+- 2026-03-11: Runner preflight was still false-blocking launches under high Claude latency after retry patch:
+  - observed:
+    - repeated `pipeline-runner` startup aborts with:
+      - `LLM preflight failed: Claude CLI preflight timed out ...`
+    - direct Claude probes intermittently exceeded 25s and even 120s during this window
+  - patch:
+    - `scripts/training-data/batch/pipeline-runner`
+      - increased preflight budget:
+        - `CLAUDE_PREFLIGHT_TIMEOUT_SECONDS: 25 -> 120`
+        - `CLAUDE_PREFLIGHT_MAX_ATTEMPTS: 3 -> 2`
+        - `CLAUDE_PREFLIGHT_RETRY_DELAY_SECONDS: 3 -> 5`
+  - validation:
+    - `python3 -m py_compile scripts/training-data/batch/pipeline-runner`
+  - operational note:
+    - even with increased preflight budget, this session’s Claude health probes still timed out (`timeout 20 ... -> RC:124`), so `06+` wave relaunches remain blocked by real LLM availability, not by stage-contract readiness
+- 2026-03-11: Tightened hard quality-overload blocking in canonical Stage `06h`/`06f` gating path (no side policy):
+  - patched constants:
+    - `scripts/training-data/06h.DET.confidence-propagation`
+    - `scripts/training-data/batch/pipeline-runner`
+    - `scripts/training-data/validation/audit_06f_gate_debt.py`
+  - threshold changes:
+    - `lq_total_abs: 140 -> 130`
+    - `lq_total_ratio: 0.34 -> 0.33` (`min_count=60` unchanged)
+    - `lq_total_ratio_extreme: 0.50 -> 0.48` (`min_count=25` unchanged)
+  - deterministic impact check (historical artifacts):
+    - report: `data/validation/tmp/06h_threshold_impact.latest.json`
+    - `reports_considered=204`
+    - `old_blocked=33 -> new_blocked=35` (`+2`)
+    - newly blocked statuses: `BLOCKED=1`, `REVIEW=1`, `READY=0`
+- 2026-03-11: Tightened soft Stage `06e` low-quality pressure trigger for short high-ratio videos:
+  - patched:
+    - `scripts/training-data/batch/pipeline.config.json`
+  - threshold change:
+    - `review_stage06e_low_quality_ratio_min_count: 30 -> 20`
+  - deterministic impact check (historical artifacts):
+    - report: `data/validation/tmp/stage06e_low_quality_ratio_min_count_impact.latest.json`
+    - `rows_considered=188`
+    - `baseline_triggered=62 -> new_triggered=70` (`+8`)
+    - newly triggered statuses: `READY=2`, `REVIEW=3`, `BLOCKED=3`
+    - newly covered READY IDs: `5n0sxT3JxAQ`, `ngG5D877MO4`
+- 2026-03-11: Began upstream prep for next untouched sub-batches in parallel while Claude remains rate-limited:
+  - launched:
+    - `./scripts/training-data/02.EXT.transcribe --manifest docs/pipeline/batches/P004.3.txt`
+    - `./scripts/training-data/02.EXT.transcribe --manifest docs/pipeline/batches/P004.4.txt`
+  - mode:
+    - parallel execution (two live sessions) to unblock `03/04/05` readiness for upcoming `06+` runs
+- 2026-03-11: Switched to rolling partial-upstream conveyor for `P004.3` / `P004.4` (no waiting for full Stage `02` completion):
+  - method:
+    - repeatedly build dynamic `stage03/04/05` todo manifests from currently finished artifacts
+    - immediately run `03 -> 04 -> 05` on each newly-ready subset while long `02` jobs continue
+  - cumulative progress snapshot during this pass:
+    - `P004.3`: `02=2/10`, `03=2/10`, `04=2/10`, `05=1+/10` (one Stage `05` output currently lands under the source-level folder layout)
+    - `P004.4`: `02=6/10` observed in-flight, with `03/04/05` continuously catching up on completed transcripts
+- 2026-03-11: Completed full upstream catch-up for `P004.3` and `P004.4` through Stage `05`:
+  - deterministic coverage check after rolling runs:
+    - `P004.3`: `02=10/10`, `03=10/10`, `04=10/10`, `05=10/10`
+    - `P004.4`: `02=10/10`, `03=10/10`, `04=10/10`, `05=10/10`
+  - ready manifests created:
+    - `/tmp/P004.3.stage05ready.dynamic.txt` (`10` IDs)
+    - `/tmp/P004.4.stage05ready.dynamic.txt` (`10` IDs)
+  - operational blocker unchanged:
+    - live Claude CLI probe still timing out (`timeout 20 claude -p "reply with ok" -> RC:124`), so `06+` reruns remain gated by real LLM availability window
+- 2026-03-11: First `06+` launch attempt on new `P004.3` ready scope failed closed at global LLM preflight:
+  - command:
+    - `python3 scripts/training-data/batch/pipeline-runner P004.3 --manifest /tmp/P004.3.stage05ready.dynamic.txt --from 06 --to 09 --parallel 4 --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2`
+  - result:
+    - runner aborted before per-video execution with Claude preflight `authentication_error` (`401 invalid authentication credentials`) on retry window
+  - implication:
+    - this is a real runtime/auth blocker, not a content-quality gate outcome
+- 2026-03-11: Continued throughput push despite `06+` auth blocker by expanding upstream prep:
+  - launched in parallel:
+    - `./scripts/training-data/02.EXT.transcribe --manifest docs/pipeline/batches/P004.5.txt`
+    - `./scripts/training-data/02.EXT.transcribe --manifest docs/pipeline/batches/P004.6.txt`

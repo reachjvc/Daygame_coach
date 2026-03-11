@@ -61,6 +61,7 @@
 import argparse
 import hashlib
 import json
+import os
 import re
 import shlex
 from dataclasses import dataclass
@@ -71,6 +72,11 @@ import numpy as np
 import jsonschema
 
 from batch.manifest_parser import load_manifest, load_manifest_sources, manifest_filter_files
+
+# Avoid librosa/numba cache crashes in sandboxed/packaged environments.
+# This stage is deterministic and throughput-bound on I/O, so disabling JIT
+# is an acceptable tradeoff for runtime stability.
+os.environ.setdefault("NUMBA_DISABLE_JIT", "1")
 
 try:
     import librosa  # type: ignore
@@ -257,6 +263,113 @@ def percentile_trim(values: np.ndarray, pct: float) -> np.ndarray:
     return values[(values >= lo) & (values <= hi)]
 
 
+def _frame_view(y: np.ndarray, frame_length: int, hop_length: int) -> np.ndarray:
+    if y.size == 0 or frame_length <= 0 or hop_length <= 0:
+        return np.empty((0, max(1, frame_length)), dtype=np.float32)
+
+    y_work = y.astype(np.float32, copy=False)
+    if y_work.size < frame_length:
+        y_work = np.pad(y_work, (0, frame_length - y_work.size), mode="constant")
+
+    n_frames = 1 + max(0, (y_work.size - frame_length) // hop_length)
+    if n_frames <= 0:
+        return np.empty((0, frame_length), dtype=np.float32)
+
+    stride = y_work.strides[0]
+    frames = np.lib.stride_tricks.as_strided(
+        y_work,
+        shape=(n_frames, frame_length),
+        strides=(hop_length * stride, stride),
+        writeable=False,
+    )
+    return frames
+
+
+def _frame_rms(y: np.ndarray, frame_length: int = 1024, hop_length: int = 256) -> np.ndarray:
+    frames = _frame_view(y, frame_length=frame_length, hop_length=hop_length)
+    if frames.size == 0:
+        return np.empty(0, dtype=np.float32)
+    return np.sqrt(np.mean(frames * frames, axis=1) + 1e-12).astype(np.float32)
+
+
+def _spectral_centroid_fallback(y: np.ndarray, sr: int, frame_length: int = 1024, hop_length: int = 256) -> np.ndarray:
+    frames = _frame_view(y, frame_length=frame_length, hop_length=hop_length)
+    if frames.size == 0:
+        return np.empty(0, dtype=np.float32)
+
+    freqs = np.fft.rfftfreq(frame_length, d=1.0 / max(1, int(sr)))
+    win = np.hanning(frame_length).astype(np.float32)
+    centroids: List[float] = []
+    for frame in frames:
+        mag = np.abs(np.fft.rfft(frame * win))
+        denom = float(np.sum(mag))
+        if denom <= 1e-9:
+            centroids.append(0.0)
+            continue
+        centroids.append(float(np.sum(freqs * mag) / denom))
+    return np.asarray(centroids, dtype=np.float32)
+
+
+def _onset_count_from_rms(rms: np.ndarray, sr: int, hop_length: int) -> int:
+    if rms.size < 2:
+        return 0
+    delta = np.diff(rms, prepend=rms[0])
+    rise_thr = max(float(np.percentile(delta, 75)), 0.0)
+    energy_floor = max(float(np.percentile(rms, 35)), 1e-8)
+    candidates = np.where((delta > rise_thr) & (rms > energy_floor))[0]
+    if candidates.size == 0:
+        return 0
+    min_gap = max(1, int(round(0.08 * max(1, int(sr)) / max(1, hop_length))))
+    count = 0
+    last = -10**9
+    for idx in candidates.tolist():
+        if idx - last >= min_gap:
+            count += 1
+            last = idx
+    return count
+
+
+def _fallback_pitch_values(y: np.ndarray, sr: int, fmin_hz: float, fmax_hz: float) -> np.ndarray:
+    if y.size == 0 or sr <= 0:
+        return np.empty(0, dtype=np.float32)
+
+    frame_length = max(256, int(round(0.040 * sr)))
+    hop_length = max(64, int(round(0.010 * sr)))
+    frames = _frame_view(y, frame_length=frame_length, hop_length=hop_length)
+    if frames.size == 0:
+        return np.empty(0, dtype=np.float32)
+
+    fmax = max(float(fmax_hz), 1.0)
+    fmin = max(float(fmin_hz), 1.0)
+    min_lag = max(1, int(sr / fmax))
+    max_lag = int(sr / fmin)
+    max_lag = min(max_lag, frame_length - 1)
+    if max_lag <= min_lag:
+        return np.empty(0, dtype=np.float32)
+
+    out: List[float] = []
+    for frame in frames:
+        x = frame - float(np.mean(frame))
+        energy = float(np.sqrt(np.mean(x * x) + 1e-12))
+        if energy < 0.005:
+            continue
+        ac = np.correlate(x, x, mode="full")[frame_length - 1 :]
+        if ac.size <= max_lag:
+            continue
+        ac0 = float(ac[0])
+        if ac0 <= 1e-8:
+            continue
+        section = ac[min_lag : max_lag + 1]
+        if section.size == 0:
+            continue
+        lag = int(np.argmax(section)) + min_lag
+        peak = float(ac[lag])
+        if (peak / ac0) < 0.20:
+            continue
+        out.append(float(sr / lag))
+    return np.asarray(out, dtype=np.float32)
+
+
 # -------------------------
 # Audio loading (robust)
 # -------------------------
@@ -312,9 +425,21 @@ def load_audio_mono(path: str) -> Tuple[np.ndarray, int]:
 def resample_np(y: np.ndarray, sr_in: int, sr_out: int) -> np.ndarray:
     if sr_in == sr_out:
         return y.astype(np.float32)
-    if librosa is None:
-        raise SystemExit("librosa is required for resampling in this script.")
-    return librosa.resample(y.astype(np.float32), orig_sr=sr_in, target_sr=sr_out).astype(np.float32)
+
+    # Prefer torchaudio resampling to avoid librosa/numba cache runtime issues
+    # observed in long batch runs.
+    if torchaudio is not None and torch is not None:
+        try:
+            wav = torch.from_numpy(y.astype(np.float32)).unsqueeze(0)
+            out = torchaudio.functional.resample(wav, orig_freq=int(sr_in), new_freq=int(sr_out))
+            return out.squeeze(0).detach().cpu().numpy().astype(np.float32)
+        except Exception as e:
+            print(f"[audio-features] WARN: torchaudio resample failed ({type(e).__name__}): {e}; falling back.")
+
+    if librosa is not None:
+        return librosa.resample(y.astype(np.float32), orig_sr=sr_in, target_sr=sr_out).astype(np.float32)
+
+    raise SystemExit("No resampling backend available (torchaudio/librosa).")
 
 
 # -------------------------
@@ -342,7 +467,7 @@ def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, Any
     - range_hz: For future expressiveness coaching
     - direction: For future question vs statement detection
     """
-    if librosa is None or y.size == 0:
+    if y.size == 0:
         return {
             "mean_hz": 0.0,
             "std_hz": 0.0,
@@ -350,74 +475,64 @@ def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, Any
             "direction": 0.0,
         }
 
-    try:
-        if cfg.pitch_method.lower() == "pyin" and hasattr(librosa, "pyin"):
-            f0, voiced_flag, voiced_prob = librosa.pyin(
-                y=y,
-                fmin=cfg.pitch_fmin_hz,
-                fmax=cfg.pitch_fmax_hz,
-                sr=sr,
-            )
-            f0 = np.asarray(f0, dtype=np.float32)  # contains NaN for unvoiced
-            voiced_flag = np.asarray(voiced_flag, dtype=bool)
+    f0v: Optional[np.ndarray] = None
 
-            # Use pyin's native voiced detection - no additional filtering
-            voiced = voiced_flag & np.isfinite(f0)
+    if librosa is not None:
+        try:
+            if cfg.pitch_method.lower() == "pyin" and hasattr(librosa, "pyin"):
+                f0, voiced_flag, _voiced_prob = librosa.pyin(
+                    y=y,
+                    fmin=cfg.pitch_fmin_hz,
+                    fmax=cfg.pitch_fmax_hz,
+                    sr=sr,
+                )
+                f0 = np.asarray(f0, dtype=np.float32)
+                voiced_flag = np.asarray(voiced_flag, dtype=bool)
+                voiced = voiced_flag & np.isfinite(f0)
+            else:
+                f0 = librosa.yin(
+                    y=y,
+                    fmin=cfg.pitch_fmin_hz,
+                    fmax=cfg.pitch_fmax_hz,
+                    sr=sr,
+                )
+                f0 = np.asarray(f0, dtype=np.float32)
+                voiced = np.isfinite(f0) & (f0 > 0)
+            if np.sum(voiced) >= 2:
+                f0v = f0[voiced]
+        except Exception:
+            f0v = None
 
-        else:
-            # Fallback: yin() has no voiced probability, only gives an f0 guess everywhere
-            f0 = librosa.yin(
-                y=y,
-                fmin=cfg.pitch_fmin_hz,
-                fmax=cfg.pitch_fmax_hz,
-                sr=sr,
-            )
-            f0 = np.asarray(f0, dtype=np.float32)
+    if f0v is None or f0v.size < 2:
+        f0v = _fallback_pitch_values(y, sr, cfg.pitch_fmin_hz, cfg.pitch_fmax_hz)
 
-            # With yin(), treat low-energy / garbage frames as unvoiced is hard.
-            # We approximate: if f0 is finite and >0, mark voiced.
-            voiced = np.isfinite(f0) & (f0 > 0)
-
-        if np.sum(voiced) < 2:
-            return {
-                "mean_hz": 0.0,
-                "std_hz": 0.0,
-                "range_hz": 0.0,
-                "direction": 0.0,
-            }
-
-        f0v = f0[voiced]
-
-        # Soft robustness (not hard clamping): trim only the extreme outliers
-        f0v_stats = percentile_trim(f0v, cfg.pitch_trim_percentile)
-        if f0v_stats.size < 2:
-            f0v_stats = f0v  # retain original voiced values when trimming is too aggressive
-
-        mean_hz = float(np.mean(f0v_stats))
-        std_hz = float(np.std(f0v_stats))
-        range_hz = float(np.max(f0v_stats) - np.min(f0v_stats))
-
-        # direction = slope of linear fit over voiced frames
-        idx_all = np.arange(len(f0), dtype=np.float32)
-        idx = idx_all[voiced]
-        slope = 0.0
-        if idx.size >= 2:
-            slope = float(np.polyfit(idx, f0v, 1)[0])
-
-        # Only return features we actually use (see docstring at top of file)
-        return {
-            "mean_hz": mean_hz,      # For speaker ID (TODO: replace with embeddings)
-            "std_hz": std_hz,        # For tones: playful, confident, nervous
-            "range_hz": range_hz,    # For future: expressiveness metric
-            "direction": slope,      # For future: question vs statement detection
-        }
-    except Exception:
+    if f0v.size < 2:
         return {
             "mean_hz": 0.0,
             "std_hz": 0.0,
             "range_hz": 0.0,
             "direction": 0.0,
         }
+
+    f0v_stats = percentile_trim(f0v, cfg.pitch_trim_percentile)
+    if f0v_stats.size < 2:
+        f0v_stats = f0v
+
+    mean_hz = float(np.mean(f0v_stats))
+    std_hz = float(np.std(f0v_stats))
+    range_hz = float(np.max(f0v_stats) - np.min(f0v_stats))
+
+    slope = 0.0
+    idx = np.arange(f0v.size, dtype=np.float32)
+    if idx.size >= 2:
+        slope = float(np.polyfit(idx, f0v, 1)[0])
+
+    return {
+        "mean_hz": mean_hz,
+        "std_hz": std_hz,
+        "range_hz": range_hz,
+        "direction": slope,
+    }
 
 
 def compute_energy_features(y: np.ndarray, sr: int) -> Dict[str, float]:
@@ -427,10 +542,10 @@ def compute_energy_features(y: np.ndarray, sr: int) -> Dict[str, float]:
     Returns only:
     - dynamics_db: For tone detection (playful, confident, energetic)
     """
-    if librosa is None or y.size == 0:
+    if y.size == 0:
         return {"dynamics_db": 0.0}
 
-    rms = librosa.feature.rms(y=y)[0]  # shape [frames]
+    rms = _frame_rms(y, frame_length=1024, hop_length=256)
     rms = np.asarray(rms, dtype=np.float32)
     db = 20.0 * np.log10(rms + 1e-9)
 
@@ -448,11 +563,11 @@ def compute_quality_features(y: np.ndarray, sr: int) -> Dict[str, Any]:
     - low_energy: True when segment energy/speech activity suggests weak signal
     - speech_activity_ratio: Fraction of frames above adaptive RMS threshold (0..1)
     """
-    if librosa is None or y.size == 0:
+    if y.size == 0:
         return {"low_energy": True, "speech_activity_ratio": 0.0}
 
     try:
-        rms = librosa.feature.rms(y=y)[0]
+        rms = _frame_rms(y, frame_length=1024, hop_length=256)
         rms = np.asarray(rms, dtype=np.float32)
         if rms.size == 0:
             return {"low_energy": True, "speech_activity_ratio": 0.0}
@@ -474,12 +589,13 @@ def compute_tempo_features(y: np.ndarray, sr: int, duration_sec: float) -> Dict[
     Returns only:
     - syllable_rate: For tone detection (confident, nervous)
     """
-    if librosa is None or y.size == 0 or duration_sec <= 0:
+    if y.size == 0 or duration_sec <= 0:
         return {"syllable_rate": 0.0}
 
     try:
-        onset_frames = librosa.onset.onset_detect(y=y, sr=sr, backtrack=False, units="frames")
-        onset_count = int(len(onset_frames))
+        hop_length = 256
+        rms = _frame_rms(y, frame_length=1024, hop_length=hop_length)
+        onset_count = _onset_count_from_rms(rms, sr=sr, hop_length=hop_length)
         syllable_rate = float(onset_count / max(1e-6, duration_sec))
         return {"syllable_rate": syllable_rate}
     except Exception:
@@ -493,10 +609,10 @@ def compute_spectral_features(y: np.ndarray, sr: int) -> Dict[str, float]:
     Returns only:
     - brightness_hz: For tone detection (energetic)
     """
-    if librosa is None or y.size == 0:
+    if y.size == 0:
         return {"brightness_hz": 0.0}
 
-    centroid = librosa.feature.spectral_centroid(y=y, sr=sr)[0]
+    centroid = _spectral_centroid_fallback(y, sr=sr, frame_length=1024, hop_length=256)
 
     return {
         "brightness_hz": float(np.mean(centroid)) if centroid.size else 0.0,
@@ -761,12 +877,20 @@ def batch_for_source(source_name: str, youtube_url: str, overwrite: bool, cfg: C
             print(f"[audio-features] WARN: missing transcript: {transcript_candidates[0]}")
             continue
 
-        out_path = out_root / rel_dir / f"{stem}.audio_features.json"
+        # Canonicalize output stem to clean16k so downstream stage contracts stay stable
+        # even when upstream downloads only expose raw16k naming.
+        out_stem = stem
+        if out_stem.endswith(".audio.asr.raw16k"):
+            out_stem = out_stem[: -len(".audio.asr.raw16k")] + ".audio.asr.clean16k"
+        elif out_stem.endswith(".audio"):
+            out_stem = out_stem + ".asr.clean16k"
+
+        out_path = out_root / rel_dir / f"{out_stem}.audio_features.json"
         if out_path.exists() and not overwrite:
             skipped += 1
             continue
 
-        print(f"[audio-features] {stem}")
+        print(f"[audio-features] {out_stem}")
         build_audio_features(
             audio_path=wav_path,
             transcript_path=transcript_path,

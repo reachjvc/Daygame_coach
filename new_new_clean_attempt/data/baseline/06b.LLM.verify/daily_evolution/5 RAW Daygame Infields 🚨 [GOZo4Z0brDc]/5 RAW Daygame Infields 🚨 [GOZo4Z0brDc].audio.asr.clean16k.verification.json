@@ -1,0 +1,33 @@
+{
+  "video_id": "GOZo4Z0brDc",
+  "verified_at": "2026-03-05T18:50:14Z",
+  "pipeline_version": "06b.LLM.verify-v3.1",
+  "verdict": "APPROVE",
+  "video_type_check": {
+    "agrees": true,
+    "suggested_type": null,
+    "confidence": 1.0,
+    "reasoning": "Single speaker, ~36 seconds, promotional monologue — talking_head is correct"
+  },
+  "conversation_verdicts": [],
+  "misattributions": [],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [],
+  "other_flags_detailed": [],
+  "summary": "Short promotional talking-head clip. Single speaker, no conversations, no infield content despite title. All classifications correct.",
+  "metadata": {
+    "input_file": "/home/jonaswsl/projects/daygame-coach/data/06.LLM.video-type/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 12.610188484191895,
+    "llm_calls": 1,
+    "model": "claude-cli",
+    "claude_model": "opus",
+    "flag_summary": {
+      "video_type_agrees": true,
+      "structured_flag_class_counts": {},
+      "other_flag_class_counts": {},
+      "other_flag_count": 0,
+      "other_flag_detailed_count": 0
+    }
+  }
+}

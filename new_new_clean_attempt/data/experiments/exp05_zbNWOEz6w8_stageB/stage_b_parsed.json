@@ -1,0 +1,208 @@
+{
+  "video_type_received": "talking_head",
+  "enrichments": [
+    {
+      "type": "section",
+      "conversation_id": 0,
+      "description": "Defining approach anxiety as hesitation, overthinking, and paralysis by analysis",
+      "techniques_used": [],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "inner_game"
+      ],
+      "teaching_points": [
+        "Approach anxiety stems from focusing on what could go wrong instead of what could go right",
+        "Hesitation and overthinking cause paralysis \u2014 'paralysis by analysis'"
+      ],
+      "evidence_segment_ids": [
+        1,
+        12,
+        13,
+        14,
+        15
+      ]
+    },
+    {
+      "type": "section",
+      "conversation_id": 0,
+      "description": "Mindset reframe: focus on positive outcomes, brain needs proof not promises",
+      "techniques_used": [],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "inner_game"
+      ],
+      "teaching_points": [
+        "Recall positive past experiences with women before approaching to prime your brain",
+        "The brain needs proof not promises \u2014 push yourself to approach and prove nothing bad happens",
+        "Worst-case outcomes (rejection, being made fun of) are survivable and insignificant in hindsight"
+      ],
+      "evidence_segment_ids": [
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        36,
+        37,
+        38
+      ]
+    },
+    {
+      "type": "section",
+      "conversation_id": 0,
+      "description": "Checkpoint technique: break approaching into small steps starting with intentless speaking",
+      "techniques_used": [
+        {
+          "technique": "indirect_opener",
+          "segment_id": 98,
+          "quote": "hey, I really like your shirt",
+          "evidence_strength": "taught"
+        },
+        {
+          "technique": "subcommunication",
+          "segment_id": 109,
+          "quote": "smiling looking a stranger in the eyes for the first time that day",
+          "evidence_strength": "taught"
+        }
+      ],
+      "techniques_discussed_negatively": [
+        {
+          "technique": "direct_opener",
+          "segment_id": 70,
+          "quote": "It's not going in direct and hey, you're fucking hot",
+          "note": "Coach says NOT to use direct opener as the first checkpoint when struggling with AA"
+        },
+        {
+          "technique": "number_close",
+          "segment_id": 72,
+          "quote": "Hey, let me get your number. It's none of that.",
+          "note": "Coach says NOT to think about closing when you can't even make initial contact"
+        }
+      ],
+      "topics_discussed": [
+        "inner_game",
+        "coaching_promotion"
+      ],
+      "teaching_points": [
+        "Use a 'Halo checkpoint' mental model \u2014 your first checkpoint is simply speaking to a girl, not opening with intent",
+        "Hit and runs / touch and goes: compliment and keep walking, no intent to stop or escalate",
+        "Eliminate the words 'open' and 'approach' \u2014 reframe it as just speaking without intent",
+        "AA comes from thinking 15 steps ahead; focus only on the immediate next step"
+      ],
+      "evidence_segment_ids": [
+        42,
+        43,
+        44,
+        45,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        65,
+        66,
+        67,
+        69,
+        70,
+        71,
+        72,
+        75,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85
+      ]
+    },
+    {
+      "type": "section",
+      "conversation_id": 0,
+      "description": "Practical warmup: going from cold to warm to hot through intentless compliments",
+      "techniques_used": [
+        {
+          "technique": "indirect_opener",
+          "segment_id": 133,
+          "quote": "hey, I really like your vest",
+          "evidence_strength": "taught"
+        },
+        {
+          "technique": "appreciation",
+          "segment_id": 138,
+          "quote": "we'll tell you you're really pretty",
+          "evidence_strength": "mention"
+        }
+      ],
+      "techniques_discussed_negatively": [],
+      "topics_discussed": [
+        "inner_game",
+        "career"
+      ],
+      "teaching_points": [
+        "After sleeping all night or working all day, you're in a 'cold' state \u2014 use intentless speaking to warm up before real approaches",
+        "Giving compliments without intent gives positive energy that comes back to you and gets you into social mode",
+        "The progression is cold \u2192 warm (intentless speaking) \u2192 hot (ready to approach with intent)"
+      ],
+      "evidence_segment_ids": [
+        91,
+        92,
+        93,
+        94,
+        96,
+        97,
+        98,
+        99,
+        100,
+        109,
+        130,
+        131,
+        132,
+        133,
+        141,
+        142,
+        143,
+        144,
+        148,
+        149,
+        150
+      ]
+    }
+  ],
+  "unlisted_concepts": {
+    "techniques": [
+      "hit_and_run: Walk-by compliment with no intent to stop or continue conversation, used as warmup to overcome approach anxiety",
+      "checkpoint_progression: Breaking the approach into sequential micro-goals (speak \u2192 stop \u2192 converse \u2192 escalate) and only focusing on the next one"
+    ],
+    "topics": []
+  },
+  "self_verification": {
+    "checks_passed": [
+      "Every technique claim has a specific segment citation and exact quote",
+      "direct_opener correctly placed in techniques_discussed_negatively per negation rule (seg 70)",
+      "number_close correctly placed in techniques_discussed_negatively (seg 72)",
+      "No techniques tagged based on content from a different video",
+      "Evidence strength accurately reflects taught vs mention distinction",
+      "Topics match what was actually discussed \u2014 inner_game is the dominant topic throughout",
+      "No turn phases needed (talking_head, no approaches)"
+    ],
+    "corrections_made": [
+      "Initially considered tagging statement_of_intent as taught but coach discusses ELIMINATING intent, not using it \u2014 omitted per negation spirit",
+      "bounce mentioned at seg 62 only as an example of overthinking, not taught \u2014 omitted per mention-vs-teach threshold"
+    ],
+    "remaining_concerns": [
+      "Seg 135 has quality=word_mistranscription ('Tom Turow' likely 'Tom Torero', 'Egypt' likely garbled) \u2014 cited seg 138 instead for the hit-and-run example",
+      "Seg 83 references Tom Torero's hit and runs \u2014 this is attributed teaching from another coach, tagged as taught since the current coach adopts and explains it"
+    ]
+  }
+}

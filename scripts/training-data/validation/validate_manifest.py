@@ -112,6 +112,12 @@ def _canonical_signal_class(issue: Dict[str, Any]) -> str:
         return "quarantine_gate"
     if issue_code in {"preexisting_quarantine", "stage06b_reject"}:
         return "quarantine_gate"
+    if check in {"stage06b_flag_low_transcript_quality", "stage06b_flag_severe"}:
+        return "transcript_quality"
+    if issue_code in {"stage06b_flag_low_transcript_quality", "stage06b_flag_severe"}:
+        return "transcript_quality"
+    if check == "stage06b_contract_preflight_fail" or issue_code == "stage06b_contract_preflight_fail":
+        return "artifact_contract"
 
     if check in {"video_type_mismatch", "prompt_variant_mismatch"}:
         return "routing_mismatch"
@@ -168,6 +174,8 @@ def _canonical_signal_class(issue: Dict[str, Any]) -> str:
     if issue_code in {"segment_text_modified", "stage07_normalization_repairs", "stage07_validation_warnings"}:
         return "transcript_quality"
     if check == "stage07_transcript_artifact_risk" or issue_code == "stage07_transcript_artifact_risk":
+        return "contamination_risk"
+    if check == "stage06e_low_quality_pressure" or issue_code == "stage06e_low_quality_pressure":
         return "contamination_risk"
     if check.startswith("transcript_artifact_") or issue_code.startswith("transcript_artifact_"):
         return "contamination_risk"
@@ -1108,6 +1116,31 @@ def _validate_stage07_drop_reason_contract(s07_data: Dict[str, Any]) -> Dict[str
     }
 
 
+def _parse_stage06e_low_quality_metrics(s06e_data: Dict[str, Any]) -> Optional[Dict[str, float]]:
+    summary = s06e_data.get("summary")
+    if not isinstance(summary, dict):
+        return None
+
+    raw_lq = summary.get("low_quality_count")
+    raw_total = summary.get("segments_total")
+    if isinstance(raw_lq, bool) or not isinstance(raw_lq, (int, float)):
+        return None
+    if isinstance(raw_total, bool) or not isinstance(raw_total, (int, float)):
+        return None
+
+    lq_count = int(raw_lq)
+    segment_count = int(raw_total)
+    if segment_count <= 0 or lq_count < 0:
+        return None
+
+    ratio = float(lq_count) / float(segment_count)
+    return {
+        "low_quality_count": float(lq_count),
+        "segments_total": float(segment_count),
+        "low_quality_ratio": ratio,
+    }
+
+
 def _compute_stage07_damage_metrics(s07_data: Dict[str, Any]) -> Dict[str, Any]:
     segments = s07_data.get("segments")
     if not isinstance(segments, list):
@@ -1541,6 +1574,28 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--review-stage06e-low-quality-count",
+        type=int,
+        help=(
+            "Optional soft gate: emit warning when Stage 06e summary.low_quality_count is >= this value."
+        ),
+    )
+    parser.add_argument(
+        "--review-stage06e-low-quality-ratio",
+        type=float,
+        help=(
+            "Optional soft gate: emit warning when Stage 06e low_quality_count/segments_total is >= this value (0..1)."
+        ),
+    )
+    parser.add_argument(
+        "--review-stage06e-low-quality-ratio-min-count",
+        type=int,
+        default=0,
+        help=(
+            "Minimum low_quality_count required before --review-stage06e-low-quality-ratio can trigger (default: 0)."
+        ),
+    )
+    parser.add_argument(
         "--damage-drift-out",
         help=(
             "Optional JSON output path for manifest-level damage drift histograms "
@@ -1560,6 +1615,15 @@ def main() -> None:
         sys.exit(2)
     if args.max_dropped_anchor_ratio is not None and not (0.0 <= float(args.max_dropped_anchor_ratio) <= 1.0):
         print(f"{LOG_PREFIX} ERROR: --max-dropped-anchor-ratio must be within [0,1]", file=sys.stderr)
+        sys.exit(2)
+    if args.review_stage06e_low_quality_count is not None and int(args.review_stage06e_low_quality_count) < 0:
+        print(f"{LOG_PREFIX} ERROR: --review-stage06e-low-quality-count must be >= 0", file=sys.stderr)
+        sys.exit(2)
+    if args.review_stage06e_low_quality_ratio is not None and not (0.0 <= float(args.review_stage06e_low_quality_ratio) <= 1.0):
+        print(f"{LOG_PREFIX} ERROR: --review-stage06e-low-quality-ratio must be within [0,1]", file=sys.stderr)
+        sys.exit(2)
+    if int(args.review_stage06e_low_quality_ratio_min_count) < 0:
+        print(f"{LOG_PREFIX} ERROR: --review-stage06e-low-quality-ratio-min-count must be >= 0", file=sys.stderr)
         sys.exit(2)
 
     manifest_path = Path(args.manifest)
@@ -1614,6 +1678,7 @@ def main() -> None:
     s05_root = data_root / "05.EXT.audio-features"
     s06_root = data_root / "06.LLM.video-type"
     s06c_root = data_root / "06c.DET.patched"
+    s06e_root = data_root / "06e.LLM.quality-check"
     s07_root = data_root / "07.LLM.content"
     s07b_root = data_root / "07b.LLM.enrichment-verify"
     s06b_root = data_root / "06b.LLM.verify"
@@ -1623,6 +1688,7 @@ def main() -> None:
     idx_s05 = _index_paths_by_video_id(s05_root, "*.audio_features.json", manifest_ids) if args.check_stage05_audio else {}
     idx_s06 = _index_paths_by_video_id(s06_root, "*.conversations.json", manifest_ids)
     idx_s06c = _index_paths_by_video_id(s06c_root, "*.conversations.json", manifest_ids)
+    idx_s06e = _index_paths_by_video_id(s06e_root, "*.quality-check.json", manifest_ids)
     idx_s07 = _index_paths_by_video_id(s07_root, "*.enriched.json", manifest_ids)
     idx_s07b = _index_paths_by_video_id(s07b_root, "*.enrichment-verify.json", manifest_ids)
     idx_s07_val = _index_paths_by_video_id(s07_root, "*.validation.json", manifest_ids)
@@ -2101,6 +2167,7 @@ def main() -> None:
         s05_candidates = idx_s05.get(vid) or []
         s06c_candidates = idx_s06c.get(vid) or []
         s06_candidates = idx_s06.get(vid) or []
+        s06e_candidates = idx_s06e.get(vid) or []
         s07_candidates = idx_s07.get(vid) or []
         s07b_candidates = idx_s07b.get(vid) or []
         s07v_candidates = idx_s07_val.get(vid) or []
@@ -2111,6 +2178,7 @@ def main() -> None:
         s05_path = _pick_best_candidate(s05_candidates, src) if s05_candidates else None
         s06c_path = _pick_best_candidate(s06c_candidates, src) if s06c_candidates else None
         s06_path = _pick_best_candidate(s06_candidates, src) if s06_candidates else None
+        s06e_path = _pick_best_candidate(s06e_candidates, src) if s06e_candidates else None
         s07_path = _pick_best_candidate(s07_candidates, src) if s07_candidates else None
         s07b_path = _pick_best_candidate(s07b_candidates, src) if s07b_candidates else None
         s07v_path = _pick_best_candidate(s07v_candidates, src) if s07v_candidates else None
@@ -2121,6 +2189,7 @@ def main() -> None:
             "s05": str(s05_path) if s05_path else None,
             "s06": str(s06_path) if s06_path else None,
             "s06c": str(s06c_path) if s06c_path else None,
+            "s06e": str(s06e_path) if s06e_path else None,
             "s07": str(s07_path) if s07_path else None,
             "s07b": str(s07b_path) if s07b_path else None,
             "s07_validation": str(s07v_path) if s07v_path else None,
@@ -2351,7 +2420,7 @@ def main() -> None:
                     check_counts["error:stage06b_reject"] += 1
                 elif verdict == "FLAG":
                     detailed_stage06b_issues = _extract_stage06b_detailed_issues(v_path, vid, src)
-                    coarse_severity = "info" if detailed_stage06b_issues else "warning"
+                    coarse_severity = "warning"
                     issues.append({
                         "video_id": vid,
                         "source": src,
@@ -2389,6 +2458,58 @@ def main() -> None:
                                 "verify": str(v_path),
                             })
                             check_counts["info:stage06b_flag_classes"] += 1
+
+        if (
+            s06e_path
+            and (
+                args.review_stage06e_low_quality_count is not None
+                or args.review_stage06e_low_quality_ratio is not None
+            )
+        ):
+            s06e_loaded = _load_json(s06e_path)
+            if isinstance(s06e_loaded, dict):
+                s06e_metrics = _parse_stage06e_low_quality_metrics(s06e_loaded)
+                if s06e_metrics is not None:
+                    low_quality_count = int(s06e_metrics.get("low_quality_count", 0.0) or 0.0)
+                    segments_total = int(s06e_metrics.get("segments_total", 0.0) or 0.0)
+                    low_quality_ratio = float(s06e_metrics.get("low_quality_ratio", 0.0) or 0.0)
+
+                    trigger_count = (
+                        args.review_stage06e_low_quality_count is not None
+                        and low_quality_count >= int(args.review_stage06e_low_quality_count)
+                    )
+                    trigger_ratio = (
+                        args.review_stage06e_low_quality_ratio is not None
+                        and low_quality_count >= int(args.review_stage06e_low_quality_ratio_min_count)
+                        and low_quality_ratio >= float(args.review_stage06e_low_quality_ratio)
+                    )
+                    if trigger_count or trigger_ratio:
+                        trigger_parts: List[str] = []
+                        if trigger_count:
+                            trigger_parts.append(
+                                f"count {low_quality_count}>={int(args.review_stage06e_low_quality_count)}"
+                            )
+                        if trigger_ratio:
+                            trigger_parts.append(
+                                "ratio "
+                                f"{low_quality_ratio:.3f}>={float(args.review_stage06e_low_quality_ratio):.3f}"
+                                f" (min_count={int(args.review_stage06e_low_quality_ratio_min_count)})"
+                            )
+                        issues.append(
+                            {
+                                "video_id": vid,
+                                "source": src,
+                                "severity": "warning",
+                                "check": "stage06e_low_quality_pressure",
+                                "message": (
+                                    "Stage 06e low-quality pressure: "
+                                    f"{low_quality_count}/{segments_total} segments "
+                                    f"(ratio={low_quality_ratio:.3f}); triggers: {', '.join(trigger_parts)}"
+                                ),
+                                "s06e": str(s06e_path),
+                            }
+                        )
+                        check_counts["warning:stage06e_low_quality_pressure"] += 1
 
         s07_data: Optional[Dict[str, Any]] = None
         stage07_content_unreadable = False
@@ -2707,7 +2828,7 @@ def main() -> None:
 
     quarantine_severities = {"error"} if args.quarantine_level == "error" else {"error", "warning"}
     quarantine_items: Dict[str, Dict[str, Any]] = {}
-    if emit_quarantine and preserve_input_quarantine_ids and quarantine_file_path and quarantine_file_path.exists():
+    if emit_quarantine and quarantine_file_path and quarantine_file_path.exists():
         # Preserve existing quarantine membership/reasons when re-emitting so
         # stage-derived quarantines (for example 06b REJECT) are never dropped
         # by a later validation-only quarantine write.

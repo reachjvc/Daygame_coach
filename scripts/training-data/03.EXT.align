@@ -376,6 +376,8 @@ def _preprocess_segments_for_align(
 class AlignEngine:
     """Sentence-level alignment using whisperx.align."""
 
+    ALIGN_BATCH_SEGMENTS = 200
+
     def __init__(self, language: str = "en", device: str = ""):
         self.language = (language or "en").strip()
         self.device = _auto_device(device)
@@ -391,6 +393,22 @@ class AlignEngine:
             device=self.device,
         )
         log(f"[03.EXT.align] Loaded alignment model for language={self.language} on device={self.device}")
+
+    def _align_batch(self, segments_batch: List[Dict[str, Any]], audio16k: np.ndarray) -> List[Dict[str, Any]]:
+        try:
+            aligned = self._whisperx.align(
+                segments_batch,
+                self._align_model,
+                self._align_meta,
+                audio16k,
+                self.device,
+                return_char_alignments=False,
+            )
+            return aligned.get("segments", []) or []
+        except TypeError:
+            # Older whisperx versions have different signature
+            aligned = self._whisperx.align(segments_batch, self._align_model, self._align_meta, audio16k, self.device)
+            return aligned.get("segments", []) or []
 
     def align(self, segments: List[Dict[str, Any]], audio16k: np.ndarray) -> List[Dict[str, Any]]:
         """Align segments to sentence-level boundaries.
@@ -408,21 +426,19 @@ class AlignEngine:
             log("[03.EXT.align] WARN: No valid segments after filtering")
             return segments  # Return original if nothing left to align
 
-        try:
-            aligned = self._whisperx.align(
-                filtered_segments,
-                self._align_model,
-                self._align_meta,
-                audio16k,
-                self.device,
-                return_char_alignments=False,
-            )
-            return aligned.get("segments", []) or []
-        except TypeError:
-            # Older whisperx versions have different signature
-            aligned = self._whisperx.align(filtered_segments, self._align_model, self._align_meta, audio16k, self.device)
-            return aligned.get("segments", []) or []
-        # ZeroDivisionError intentionally NOT caught - let it propagate for flagging
+        if len(filtered_segments) <= self.ALIGN_BATCH_SEGMENTS:
+            return self._align_batch(filtered_segments, audio16k)
+
+        # Large segment sets are aligned in deterministic windows to reduce
+        # whisperx tensor-index failures on long compilations.
+        aligned_out: List[Dict[str, Any]] = []
+        total = len(filtered_segments)
+        for start in range(0, total, self.ALIGN_BATCH_SEGMENTS):
+            end = min(start + self.ALIGN_BATCH_SEGMENTS, total)
+            log(f"[03.EXT.align] Align batch: {start + 1}-{end}/{total}")
+            batch = filtered_segments[start:end]
+            aligned_out.extend(self._align_batch(batch, audio16k))
+        return aligned_out
 
 
 # --------------------------

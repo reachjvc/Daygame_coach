@@ -1,0 +1,34 @@
+{
+  "video_id": "L9mcyTuXYjc",
+  "validated_at": "2026-03-05T19:13:40Z",
+  "pipeline_version": "07.LLM.content-v1.16",
+  "prompt_version": "1.9.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 0,
+    "info": 4,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "info",
+      "check": "transcript_artifact_repaired",
+      "message": "Seg 0: word_repetition — ASR stutter: 'so i so i'm i'm' - doubled false starts from speech recognition [REPAIRED replace conf=0.88]"
+    },
+    {
+      "severity": "info",
+      "check": "transcript_artifact_repaired",
+      "message": "Seg 2: word_repetition — ASR stutter: 'give give' - doubled word [REPAIRED replace conf=0.85]"
+    },
+    {
+      "severity": "info",
+      "check": "transcript_artifact_repaired",
+      "message": "Seg 77: word_repetition — ASR stutter: 'going going' - doubled word from speech recognition [REPAIRED replace conf=0.92]"
+    },
+    {
+      "severity": "info",
+      "check": "validation_passed",
+      "message": "All checks passed"
+    }
+  ]
+}

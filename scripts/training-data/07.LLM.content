@@ -53,8 +53,10 @@ from collections import Counter
 import difflib
 import hashlib
 import json
+import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -2276,18 +2278,69 @@ def save_state(state_path: Path, state: ProcessingState) -> None:
 @lru_cache(maxsize=1)
 def find_claude_binary() -> Optional[str]:
     """Find Claude CLI binary in known locations."""
-    for path in CLAUDE_BINARY_PATHS:
-        path = Path(path)
+    for env_key in ("CLAUDE_BINARY", "CLAUDE_BIN"):
+        raw = str(os.environ.get(env_key, "")).strip()
+        if not raw:
+            continue
+        p = Path(raw)
+        if p.exists() and p.is_file():
+            return str(p)
+
+    resolved = shutil.which("claude")
+    if resolved:
+        return resolved
+
+    nvm_candidates = sorted(
+        Path.home().glob(".nvm/versions/node/*/bin/claude"),
+        key=lambda path: path.stat().st_mtime if path.exists() else 0.0,
+        reverse=True,
+    )
+    for cand in nvm_candidates:
+        if cand.exists() and cand.is_file():
+            return str(cand)
+
+    for cand in CLAUDE_BINARY_PATHS:
+        path = Path(cand)
         if path.exists() and path.is_file():
             return str(path)
-        if str(path) == "claude":
-            try:
-                result = subprocess.run(["which", "claude"], capture_output=True, text=True)
-                if result.returncode == 0:
-                    return "claude"
-            except Exception:
-                pass
     return None
+
+
+TRANSIENT_CLAUDE_ERROR_HINTS = (
+    "rate limit",
+    "429",
+    "too many requests",
+    "overloaded",
+    "capacity",
+    "temporarily unavailable",
+    "eai_again",
+    "timed out",
+    "timeout",
+    "connection reset",
+    "network",
+    "socket",
+)
+
+
+def _stderr_excerpt(stderr: str) -> str:
+    text = (stderr or "").strip()
+    if not text:
+        return ""
+    return text.splitlines()[-1][:240]
+
+
+def _is_transient_claude_error(stderr: str) -> bool:
+    low = (stderr or "").lower()
+    return any(hint in low for hint in TRANSIENT_CLAUDE_ERROR_HINTS)
+
+
+def _retry_wait_seconds(attempt: int, *, stderr: str = "", empty_output: bool = False) -> int:
+    base = max(1, 2 ** max(0, int(attempt)))
+    if empty_output:
+        base = max(base, 3)
+    if _is_transient_claude_error(stderr):
+        return min(180, max(base, 15 * (attempt + 1)))
+    return min(45, base)
 
 
 def call_claude(
@@ -2303,14 +2356,16 @@ def call_claude(
         print(f"{LOG_PREFIX} Searched: {[str(p) for p in CLAUDE_BINARY_PATHS]}")
         return None
 
-    for attempt in range(retries):
+    # retries means retries-after-first-attempt, so total attempts = retries + 1.
+    attempts = max(1, int(retries) + 1)
+    for attempt in range(attempts):
         try:
             cmd = [claude_bin]
             if isinstance(model, str) and model.strip():
                 cmd += ["--model", model.strip()]
             cmd += [
                 "-p",
-                prompt,
+                "-",
                 "--output-format",
                 "text",
                 "--tools",
@@ -2322,21 +2377,44 @@ def call_claude(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=timeout
+                timeout=timeout,
+                input=prompt,
             )
             if result.returncode == 0:
-                return result.stdout.strip()
-            else:
-                if attempt < retries - 1:
-                    wait = 2 ** attempt
-                    print(f"{LOG_PREFIX} Claude CLI error, retrying in {wait}s...")
+                out = (result.stdout or "").strip()
+                if out:
+                    return out
+                if attempt < attempts - 1:
+                    wait = _retry_wait_seconds(attempt, stderr=(result.stderr or ""), empty_output=True)
+                    stderr_excerpt = _stderr_excerpt(result.stderr or "")
+                    if stderr_excerpt:
+                        print(
+                            f"{LOG_PREFIX} Claude CLI empty output (stderr: {stderr_excerpt}), "
+                            f"retrying in {wait}s..."
+                        )
+                    else:
+                        print(f"{LOG_PREFIX} Claude CLI empty output, retrying in {wait}s...")
                     time.sleep(wait)
                     continue
-                print(f"{LOG_PREFIX} Claude CLI error: {result.stderr[:200]}")
+                return None
+            if attempt < attempts - 1:
+                wait = _retry_wait_seconds(attempt, stderr=(result.stderr or ""), empty_output=False)
+                stderr_excerpt = _stderr_excerpt(result.stderr or "")
+                if stderr_excerpt:
+                    print(
+                        f"{LOG_PREFIX} Claude CLI error rc={result.returncode} "
+                        f"(stderr: {stderr_excerpt}), retrying in {wait}s..."
+                    )
+                else:
+                    print(f"{LOG_PREFIX} Claude CLI error rc={result.returncode}, retrying in {wait}s...")
+                time.sleep(wait)
+                continue
+            print(f"{LOG_PREFIX} Claude CLI error: {(result.stderr or '')[:200]}")
         except subprocess.TimeoutExpired:
-            if attempt < retries - 1:
-                print(f"{LOG_PREFIX} Timeout, retrying...")
-                time.sleep(2 ** attempt)
+            if attempt < attempts - 1:
+                wait = max(5, _retry_wait_seconds(attempt, stderr="timeout", empty_output=False))
+                print(f"{LOG_PREFIX} Timeout, retrying in {wait}s...")
+                time.sleep(wait)
                 continue
             print(f"{LOG_PREFIX} Claude CLI timeout after {timeout}s")
         except FileNotFoundError:
@@ -4717,12 +4795,16 @@ def _process_non_infield(
     has_errors = any(r.severity == "error" for r in validation_results)
 
     if has_errors:
-        print(f"{LOG_PREFIX}   SKIPPING output write due to validation errors")
-    else:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        with output_path.open("w", encoding="utf-8") as f:
-            json.dump(output, f, ensure_ascii=False)
-        print(f"{LOG_PREFIX}   Wrote: {output_path}")
+        # Fail closed: never leave stale enrichment artifacts on validation failure.
+        if output_path.exists():
+            output_path.unlink(missing_ok=True)
+            print(f"{LOG_PREFIX}   Removed stale output after validation failure: {output_path}")
+        raise RuntimeError("Validation failed; fail-closed blocking output write")
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as f:
+        json.dump(output, f, ensure_ascii=False)
+    print(f"{LOG_PREFIX}   Wrote: {output_path}")
 
     print(f"{LOG_PREFIX}   Validation: {'FAILED' if has_errors else 'PASSED'}")
 
@@ -5281,13 +5363,17 @@ def process_video_file(
     has_errors = any(r.severity == "error" for r in validation_results)
 
     if has_errors:
-        print(f"{LOG_PREFIX}   SKIPPING output write due to validation errors")
-    else:
-        # Write output
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        with output_path.open("w", encoding="utf-8") as f:
-            json.dump(output, f, ensure_ascii=False)
-        print(f"{LOG_PREFIX}   Wrote: {output_path}")
+        # Fail closed: never leave stale enrichment artifacts on validation failure.
+        if output_path.exists():
+            output_path.unlink(missing_ok=True)
+            print(f"{LOG_PREFIX}   Removed stale output after validation failure: {output_path}")
+        raise RuntimeError("Validation failed; fail-closed blocking output write")
+
+    # Write output
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as f:
+        json.dump(output, f, ensure_ascii=False)
+    print(f"{LOG_PREFIX}   Wrote: {output_path}")
 
     print(f"{LOG_PREFIX}   Validation: {'FAILED' if has_errors else 'PASSED'}")
 
@@ -6064,6 +6150,12 @@ def main() -> None:
             print(f"{LOG_PREFIX} {failed} exceptions + {validation_failed} validation failures out of {total_attempted} attempted.")
             print(f"{LOG_PREFIX} Review .validation.json files for details.")
             sys.exit(1)
+    if failed > 0 or validation_failed > 0:
+        print(
+            f"\n{LOG_PREFIX} HALTING: strict mode does not allow failed files "
+            f"(exceptions={failed}, validation_failed={validation_failed})"
+        )
+        sys.exit(1)
 
 
 if __name__ == "__main__":

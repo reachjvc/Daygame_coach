@@ -1,0 +1,19 @@
+{
+  "video_id": "L9mcyTuXYjc",
+  "validated_at": "2026-03-05T19:03:31Z",
+  "pipeline_version": "06.LLM.video-type-v3.5.3",
+  "prompt_version": "3.5.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 0,
+    "info": 1,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "info",
+      "check": "schema_valid",
+      "message": "Output matches JSON schema"
+    }
+  ]
+}

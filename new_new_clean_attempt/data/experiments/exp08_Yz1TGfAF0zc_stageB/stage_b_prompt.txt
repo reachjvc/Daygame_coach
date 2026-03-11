@@ -1,0 +1,440 @@
+You are a senior content analyst for a daygame coaching video pipeline. You receive a classified transcript (with speaker roles, conversation boundaries, and quality flags) and must extract structured enrichment data.
+
+Your job: identify what techniques, topics, and teaching points appear in this video, grounded in specific transcript evidence. You must also self-verify your work to prevent hallucination.
+
+## CRITICAL ANTI-HALLUCINATION RULES
+
+1. **Negation rule**: If the coach describes a technique as something NOT to do ("don't go direct", "that's not what I mean by push-pull"), do NOT tag that technique as used/demonstrated. You may note it under `techniques_discussed_negatively` if relevant.
+2. **This-video rule**: If a technique is only referenced as happening in a DIFFERENT video, situation, or hypothetical, do NOT tag it as demonstrated in THIS video. Tag only what is actually taught, demonstrated, or explained here.
+3. **Evidence-required rule**: Every technique claim MUST cite at least one specific segment ID and an exact short quote from that segment. If you cannot find a specific segment to cite, do not claim the technique.
+4. **Mention vs. teach distinction**: A technique briefly mentioned in passing (1-2 words, no explanation) should be marked `evidence_strength: "mention"`. A technique explained, demonstrated, or analyzed in detail should be marked `evidence_strength: "taught"` or `"demonstrated"`.
+5. **Phase monotonicity**: For approach conversations, turn phases must progress forward only: open → pre_hook → post_hook → close. No segment can regress to an earlier phase.
+6. **Conservative mapping**: When uncertain whether something maps to a taxonomy technique, do NOT force-fit it. Leave it unmapped or note it as a potential `unlisted_concept`.
+
+## TECHNIQUE TAXONOMY (31 techniques)
+
+### Openers — How the approach begins
+- `direct_opener`: Explicitly stating romantic/sexual interest upfront ("I think you're gorgeous, I had to come say hi")
+- `indirect_opener`: Starting conversation without stating interest, using a question or observation ("excuse me, do you know a good restaurant around here?")
+- `situational_opener`: Using something happening in the immediate environment ("that street performer is wild, right?")
+- `observation_opener`: Commenting on something specific about the target ("I noticed your vintage bag, where'd you find that?")
+- `gambit`: Pre-planned conversational routine or story designed to hook attention
+
+### Attraction — Building interest and tension
+- `push_pull`: Alternating between showing interest IN THE TARGET and pulling away FROM THE TARGET ("you seem cool... for someone who eats pizza with a fork"). NOTE: Contrasting yourself against other men ("those guys are trash, but I'm different") is DHV, NOT push_pull. Push-pull must involve giving and taking away attention/interest toward the target specifically.
+- `tease`: Playful teasing, light mocking, banter that creates emotional spikes
+- `cold_read`: Making an assumption about the target ("you look like you're from somewhere warm")
+- `role_play`: Creating imaginary scenarios together ("we'd be a terrible couple, you'd do X and I'd do Y")
+- `disqualification`: Playfully suggesting you're not interested in HER or that SHE is not your type ("you're way too nerdy for me", "we'd never work out"). NOTE: Self-deprecating humor about yourself ("I'm a recovering fuck boy") is NOT disqualification — disqualification must be directed at the TARGET or the compatibility between you.
+- `DHV`: Demonstration of Higher Value — naturally revealing attractive qualities without bragging. Includes contrasting yourself positively against other men ("those guys are trash, but I'm a gentleman"). NOTE: DHV is about displaying YOUR value, not about pushing/pulling the target's interest.
+- `frame_control`: Maintaining or redirecting the conversational frame ("no no, I'm interviewing you, not the other way around")
+- `takeaway`: Threatening to leave or withdraw attention to increase desire
+- `false_time_constraint`: Creating artificial urgency ("I can only stay a minute, I'm meeting friends")
+
+### Connection — Building rapport and deeper engagement
+- `qualification`: Getting target to prove herself/earn your interest ("what's interesting about you beyond looks?")
+- `statement_of_intent`: Directly stating your interest or intentions mid-conversation
+- `grounding`: Sharing personal information to build real connection (hometown, passions, backstory)
+- `storytelling`: Using stories to convey personality, values, or create emotional engagement
+- `vulnerability`: Showing genuine vulnerability or emotion to deepen connection
+- `callback_humor`: Referencing something from earlier in the conversation for comedic/bonding effect
+- `screening`: Asking questions to evaluate compatibility ("are you adventurous?")
+- `appreciation`: Genuine compliments or expressions of appreciation (beyond initial opener)
+
+### Physical — Non-verbal and physical interaction
+- `physical_escalation`: Initiating or increasing physical contact (touch, hug, kiss)
+- `subcommunication`: Using body language, tonality, eye contact, or presence intentionally
+- `calibration`: Adjusting behavior based on the target's reactions and signals
+
+### Compliance
+- `compliance`: Getting target to follow small requests to build investment ("hold this for me", "try this")
+
+### Social
+- `group_dynamics`: Managing interactions with groups (target's friends, mixed sets)
+
+### Closing — Getting contact info or extending the interaction
+- `number_close`: Asking for phone number
+- `instagram_close`: Asking for Instagram/social media
+- `soft_close`: Non-committal close ("we should hang out sometime")
+- `assumptive_close`: Assuming the next step ("so when are we getting coffee?")
+- `instant_date`: Transitioning directly to a date from the approach ("let's grab coffee right now")
+- `bounce`: Moving to a different location together during the interaction
+- `pulling`: Leading target to a private location
+- `pull_talk`: Conversation during the pull that maintains comfort
+- `time_bridge`: Setting up a future meeting ("let's do X next Thursday")
+- `logistics_check`: Checking practical details ("how long are you in town?", "where do you live?")
+
+## TOPIC TAXONOMY (28 topics)
+
+Personal: `name`, `origin`, `career`, `education`, `hobby`, `travel`, `living_situation`, `ambitions`
+Appearance: `appearance`
+Personality: `personality`, `age`, `behavior`, `values`
+Logistics: `plans`, `contact`, `logistics`, `relationship`, `duration`
+Context: `food_drinks`, `location`, `humor`, `flirting`
+Extensions: `tattoos`, `language_learning`, `language_barrier`, `breakthrough_moment`, `coaching_promotion`
+Coaching: `masculinity`, `inner_game`, `gutter_game`
+
+## YOUR TASKS
+
+### For INFIELD / COMPILATION videos (have approach conversations):
+
+For each approach conversation:
+1. **Description**: 10-20 word summary of the interaction
+2. **Techniques used**: Techniques the coach/student ACTUALLY USED during the approach
+   - Each must cite a segment ID and exact quote
+   - Mark `evidence_strength`: "demonstrated" (performed in real-time) or "mention" (referenced but not clearly performed)
+   - Do NOT cite segments marked as low quality/garbled unless you're very confident
+3. **Topics discussed**: From taxonomy — what subjects came up during the approach
+4. **Turn phases**: Label each approach segment with its phase
+   - `open`: Initial contact, greeting, opener delivery
+   - `pre_hook`: Coach building attraction, target passive/short responses
+   - `post_hook`: Target actively engaged — asking questions, sharing, laughing, investing
+   - `close`: Logistics, contact exchange, wrapping up
+   - Phases MUST progress forward only
+5. **Hook point**: If post_hook was reached, describe the moment she "flipped" (segment + signal)
+6. **Investment level**: How much the target invested — `null` (no post_hook), `low`, `medium`, `high`
+
+For each commentary block (coach talking to camera between approaches):
+1. **Description**: 10-20 word summary
+2. **Techniques discussed**: Techniques the coach EXPLAINS or ANALYZES (not necessarily demonstrated)
+3. **Topics discussed**: From taxonomy
+4. **Teaching points**: Key lessons or advice given (1-3 bullets)
+
+### For TALKING_HEAD / PODCAST videos:
+
+Divide the content into logical sections (topic changes, structure shifts):
+1. **Description**: 10-20 word summary of the section
+2. **Techniques discussed**: Techniques explained or referenced
+   - Mark `evidence_strength`: "taught" (explained in depth), "mention" (briefly referenced)
+   - Apply the NEGATION RULE: if coach says "don't do X", that's discussed_negatively, not discussed
+3. **Topics discussed**: From taxonomy
+4. **Teaching points**: Key lessons or advice (1-3 bullets per section)
+
+### Self-verification (REQUIRED)
+
+After completing enrichment, check:
+- [ ] Every technique claim has a specific segment citation and quote
+- [ ] No technique is tagged that the coach explicitly says NOT to do (negation rule)
+- [ ] No technique is tagged based on content from a DIFFERENT video (this-video rule)
+- [ ] Phase labels progress forward only (no regression)
+- [ ] Evidence strength accurately reflects whether technique was demonstrated vs. mentioned
+- [ ] Topics match what was actually discussed, not inferred
+
+Report any corrections in `self_verification`.
+
+## OUTPUT FORMAT
+
+```json
+{
+  "video_type_received": "infield|talking_head|podcast|compilation",
+  "enrichments": [
+    {
+      "type": "approach|commentary|section",
+      "conversation_id": 1,
+      "description": "string",
+      "techniques_used": [
+        {
+          "technique": "taxonomy_name",
+          "segment_id": 42,
+          "quote": "exact short quote from segment",
+          "evidence_strength": "demonstrated|taught|mention"
+        }
+      ],
+      "techniques_discussed_negatively": [
+        {
+          "technique": "taxonomy_name",
+          "segment_id": 42,
+          "quote": "don't do X...",
+          "note": "Coach says NOT to do this"
+        }
+      ],
+      "topics_discussed": ["name", "origin"],
+      "turn_phases": [
+        {"segment_id": 42, "phase": "open|pre_hook|post_hook|close"}
+      ],
+      "hook_point": {
+        "segment_id": 55,
+        "signal": "She started asking questions about his travel plans"
+      },
+      "investment_level": "low|medium|high|null",
+      "teaching_points": ["bullet point 1"],
+      "evidence_segment_ids": [42, 43, 44]
+    }
+  ],
+  "unlisted_concepts": {
+    "techniques": ["concept_name: brief description"],
+    "topics": ["concept_name: brief description"]
+  },
+  "self_verification": {
+    "checks_passed": ["list of checks that passed"],
+    "corrections_made": ["any corrections from self-check"],
+    "remaining_concerns": ["any remaining uncertainties"]
+  }
+}
+```
+
+Notes:
+- `turn_phases` only for approach enrichments
+- `hook_point` and `investment_level` only for approach enrichments
+- `teaching_points` only for commentary/section enrichments
+- `techniques_discussed_negatively` can appear on any enrichment type
+- Return JSON only. No markdown fences, no prose.
+- `unlisted_concepts` should be rare (0-2 per video). Prefer mapping to existing taxonomy.
+
+## INPUT
+
+Video type: compilation
+Title: "What to say to a Woman in the 1st Seconds (LIVE DEMO)"
+Channel: coach_kyle_how_to_approach_a_girl
+
+### Stage A Classification (segments with roles and quality):
+[0] role=coach type=commentary conv=0 quality=missing_punctuation
+[1] role=mixed type=approach conv=1 MIXED quality=missing_punctuation
+[2] role=coach type=approach conv=1 quality=missing_punctuation
+[3] role=mixed type=approach conv=1 MIXED quality=missing_punctuation
+[4] role=mixed type=approach conv=1 MIXED quality=missing_punctuation
+[5] role=coach type=commentary conv=0 quality=missing_punctuation
+[6] role=coach type=commentary conv=0 quality=missing_punctuation
+[7] role=coach type=commentary conv=0 quality=missing_punctuation
+[8] role=coach type=commentary conv=0 quality=missing_punctuation
+[9] role=coach type=commentary conv=0 quality=missing_punctuation
+[10] role=coach type=approach conv=2 quality=missing_punctuation
+[11] role=coach type=approach conv=3 quality=missing_punctuation
+[12] role=coach type=approach conv=3 quality=missing_punctuation
+[13] role=coach type=approach conv=3 quality=missing_punctuation
+[14] role=target type=approach conv=3 quality=missing_punctuation
+[15] role=mixed type=approach conv=3 MIXED quality=missing_punctuation
+[16] role=coach type=commentary conv=0 quality=missing_punctuation
+[17] role=coach type=commentary conv=0 quality=missing_punctuation
+[18] role=coach type=commentary conv=0 quality=missing_punctuation
+[19] role=coach type=commentary conv=0 quality=missing_punctuation
+[20] role=coach type=commentary conv=0
+[21] role=coach type=commentary conv=0
+[22] role=coach type=commentary conv=0
+[23] role=coach type=commentary conv=0
+[24] role=coach type=commentary conv=0
+[25] role=coach type=commentary conv=0
+[26] role=coach type=commentary conv=0
+[27] role=coach type=commentary conv=0
+[28] role=coach type=commentary conv=0
+[29] role=coach type=commentary conv=0
+[30] role=coach type=commentary conv=0
+[31] role=coach type=commentary conv=0
+[32] role=coach type=commentary conv=0
+[33] role=coach type=commentary conv=0 quality=missing_punctuation
+[34] role=coach type=commentary conv=0 quality=missing_punctuation
+[35] role=coach type=commentary conv=0 quality=missing_punctuation
+[36] role=coach type=commentary conv=0 quality=missing_punctuation
+[37] role=coach type=commentary conv=0 quality=missing_punctuation
+[38] role=coach type=commentary conv=0 quality=missing_punctuation
+[39] role=coach type=commentary conv=0
+[40] role=coach type=commentary conv=0 quality=fragment
+[41] role=coach type=commentary conv=0
+[42] role=coach type=commentary conv=0
+[43] role=coach type=commentary conv=0
+[44] role=coach type=commentary conv=0
+[45] role=coach type=commentary conv=0
+[46] role=coach type=commentary conv=0
+[47] role=coach type=commentary conv=0
+[48] role=coach type=commentary conv=0
+[49] role=coach type=commentary conv=0 quality=missing_punctuation
+[50] role=coach type=commentary conv=0 quality=missing_punctuation
+[51] role=coach type=commentary conv=0 quality=missing_punctuation
+[52] role=coach type=commentary conv=0 quality=missing_punctuation
+[53] role=coach type=commentary conv=0 quality=missing_punctuation
+[54] role=coach type=commentary conv=0 quality=missing_punctuation
+[55] role=coach type=commentary conv=0 quality=missing_punctuation
+[56] role=coach type=commentary conv=0 quality=missing_punctuation
+[57] role=coach type=commentary conv=0 quality=missing_punctuation
+[58] role=coach type=commentary conv=0 quality=missing_punctuation
+[59] role=coach type=commentary conv=0 quality=missing_punctuation
+[60] role=coach type=commentary conv=0 quality=missing_punctuation
+[61] role=coach type=commentary conv=0
+[62] role=coach type=commentary conv=0
+[63] role=coach type=commentary conv=0
+[64] role=coach type=commentary conv=0
+[65] role=coach type=commentary conv=0
+[66] role=coach type=commentary conv=0
+[67] role=coach type=commentary conv=0
+[68] role=coach type=commentary conv=0 quality=fragment
+[69] role=coach type=commentary conv=0
+[70] role=coach type=commentary conv=0
+[71] role=coach type=commentary conv=0 quality=missing_punctuation
+[72] role=coach type=commentary conv=0 quality=missing_punctuation
+[73] role=coach type=commentary conv=0 quality=missing_punctuation
+[74] role=coach type=commentary conv=0 quality=missing_punctuation
+[75] role=coach type=commentary conv=0 quality=missing_punctuation
+[76] role=coach type=commentary conv=0 quality=missing_punctuation
+[77] role=mixed type=approach conv=4 MIXED quality=missing_punctuation
+[78] role=coach type=approach conv=4 quality=missing_punctuation
+[79] role=coach type=approach conv=4 quality=missing_punctuation
+[80] role=mixed type=approach conv=5 MIXED quality=missing_punctuation
+[81] role=mixed type=approach conv=5 MIXED quality=missing_punctuation
+[82] role=mixed type=approach conv=6 MIXED quality=missing_punctuation
+[83] role=mixed type=approach conv=6 MIXED quality=missing_punctuation
+[84] role=coach type=approach conv=6 quality=missing_punctuation
+[85] role=coach type=commentary conv=0 quality=missing_punctuation
+[86] role=coach type=commentary conv=0 quality=missing_punctuation
+[87] role=coach type=commentary conv=0 quality=missing_punctuation
+[88] role=coach type=commentary conv=0 quality=missing_punctuation
+[89] role=coach type=commentary conv=0 quality=missing_punctuation
+[90] role=coach type=commentary conv=0 quality=missing_punctuation
+[91] role=coach type=approach conv=7 quality=missing_punctuation
+[92] role=coach type=approach conv=7 quality=missing_punctuation
+[93] role=mixed type=approach conv=7 MIXED quality=missing_punctuation
+[94] role=coach type=commentary conv=0 quality=missing_punctuation
+[95] role=coach type=commentary conv=0 quality=missing_punctuation
+[96] role=coach type=approach conv=8 quality=missing_punctuation
+[97] role=coach type=approach conv=8 quality=missing_punctuation
+[98] role=mixed type=approach conv=8 MIXED quality=missing_punctuation
+[99] role=mixed type=approach conv=8 MIXED quality=garbled
+[100] role=mixed type=approach conv=8 MIXED quality=garbled
+[101] role=mixed type=approach conv=8 MIXED
+[102] role=mixed type=approach conv=8 MIXED quality=missing_punctuation
+[103] role=mixed type=approach conv=8 MIXED quality=missing_punctuation
+[104] role=mixed type=approach conv=8 MIXED quality=missing_punctuation
+[105] role=mixed type=approach conv=8 MIXED quality=garbled
+[106] role=mixed type=approach conv=8 MIXED quality=missing_punctuation
+[107] role=mixed type=approach conv=8 MIXED quality=missing_punctuation
+[108] role=coach type=commentary conv=0 quality=missing_punctuation
+[109] role=coach type=commentary conv=0
+[110] role=coach type=commentary conv=0
+[111] role=coach type=commentary conv=0
+[112] role=coach type=commentary conv=0 quality=missing_punctuation
+[113] role=coach type=commentary conv=0
+[114] role=coach type=commentary conv=0
+[115] role=coach type=commentary conv=0
+[116] role=coach type=commentary conv=0
+[117] role=coach type=commentary conv=0
+[118] role=coach type=commentary conv=0
+[119] role=coach type=commentary conv=0 quality=fragment
+[120] role=coach type=commentary conv=0
+[121] role=coach type=commentary conv=0
+[122] role=coach type=commentary conv=0
+[123] role=coach type=commentary conv=0
+
+### Full Transcript:
+[0] SPEAKER_01 (0.0-4.8): i'm about to go and approach this girl right now and i want to show you guys the two easiest lines
+[1] SPEAKER_01 (4.8-12.0): that you can say right now to just get into more interactions let's go hey excuse me hi i actually
+[2] SPEAKER_01 (11.9-16.1): just saw you walking by and i thought you were cute i just wanted to come over and say hi really
+[3] SPEAKER_01 (16.1-24.2): quick is that a fist bump you're very like chill and low-key but if you don't believe in yourself
+[4] SPEAKER_01 (26.2-32.4): yeah it goes hand in hand no i'm gonna have to take a sip is it good okay that's the first
+[5] SPEAKER_01 (32.4-37.9): easiest opener as you can see that can go really well i didn't over complicate the open it was a
+[6] SPEAKER_01 (37.9-44.1): canned opener but when it's delivered well nice and slow looking her deep in her eyes it can go
+[7] SPEAKER_01 (44.0-49.0): well that actually was a that was a half hour interaction that ended up with a green tea and
+[8] SPEAKER_01 (48.9-53.4): i'm just trying to film this video so i actually had to end the interaction now let's get into the
+[9] SPEAKER_01 (53.3-58.6): second canned open which is i saw you walking by and i thought you had an interesting look
+[10] SPEAKER_01 (59.1-65.2): here we go hey excuse me hi i was actually headed that way but i just want to say i thought you had
+[11] SPEAKER_01 (65.2-70.8): a really interesting look hey excuse me hi hi i was actually just walking by and i thought you
+[12] SPEAKER_01 (70.8-75.7): had a really interesting look i just wanted to say hi really quick thanks hi i know you're like on
+[13] SPEAKER_01 (75.7-80.5): the phone and everything yeah it's a tad bit random but yeah i just want to say what's up how's your
+[14] SPEAKER_02 (80.5-85.6): your day going my day's going well i'm on the phone with my boyfriend um but that's really
+[15] SPEAKER_02 (85.5-89.4): sweet and i appreciate it for sure have a great rest of your day you as well okay take care now
+[16] SPEAKER_01 (90.1-95.0): now she was literally on the phone with her boyfriend now at the time of me approaching
+[17] SPEAKER_01 (95.0-99.4): obviously i didn't know that but it just proves the point that you don't know how the woman's
+[18] SPEAKER_01 (99.4-104.0): gonna respond now when i initially went up to her i saw her talking on the phone i was actually
+[19] SPEAKER_01 (104.0-108.8): thinking oh damn like she's actually on the phone but despite that the moment i got her attention
+[20] SPEAKER_01 (108.8-111.6): attention and said something, she just melted.
+[21] SPEAKER_01 (112.0-113.2): Despite her being on the phone with her man,
+[22] SPEAKER_01 (113.3-114.6): she literally was like, oh my God.
+[23] SPEAKER_01 (114.8-116.3): She was like literally taken back for a second.
+[24] SPEAKER_01 (117.2-120.5): And after having five seconds of interaction, she said, I actually am on the phone with my
+[25] SPEAKER_01 (120.5-121.7): boyfriend, but thank you so much.
+[26] SPEAKER_01 (122.0-122.5): Have a great day.
+[27] SPEAKER_01 (122.9-124.9): And then you walk away from that feeling
+[28] SPEAKER_01 (124.9-128.2): confident, feeling good about yourself because it wasn't creepy.
+[29] SPEAKER_01 (128.2-129.2): Yes, she was on the phone,
+[30] SPEAKER_01 (129.2-131.0): but you took the step anyway.
+[31] SPEAKER_01 (131.1-133.0): Now you congratulate yourself for that.
+[32] SPEAKER_01 (133.0-134.1): So don't let a girl talking
+[33] SPEAKER_01 (134.0-140.0): on the phone holds you back from just at least giving a compliment so those are the two easiest
+[34] SPEAKER_01 (140.0-143.7): can openers that you could use to go up and approach women and as you can see with both of
+[35] SPEAKER_01 (143.7-149.0): these there was nothing special there was nothing unique about these opens just very generic very
+[36] SPEAKER_01 (149.0-155.0): canned line nice slow delivery and the girls still respond positively now the reason i wanted to give
+[37] SPEAKER_01 (155.0-158.7): you guys these lines first before we get into a little bit more advanced stuff in this video
+[38] SPEAKER_01 (158.7-163.3): is because initially when you're starting out you want to start out simple you don't want to
+[39] SPEAKER_01 (163.3-168.3): to have some complicated, super genuine, authentic, witty line that you're going to say.
+[40] SPEAKER_01 (168.3-168.5): It's actually
+[41] SPEAKER_01 (168.5-170.7): going to put you in your head more, right?
+[42] SPEAKER_01 (170.8-173.3): So just having these two lines in your back pocket,
+[43] SPEAKER_01 (173.4-177.5): knowing that I could go up to any girl and just say these with good delivery, that's where you
+[44] SPEAKER_01 (177.5-178.2): want to start.
+[45] SPEAKER_01 (178.5-182.0): As you do that over and over and over again, you will then get to a point where
+[46] SPEAKER_01 (182.0-183.5): you feel really comfortable with that.
+[47] SPEAKER_01 (183.5-186.2): And we can get into more advanced concepts, which is what I
+[48] SPEAKER_01 (186.1-190.5): want to talk about in just a minute, because this is the point that I see a lot with my clients.
+[49] SPEAKER_01 (190.5-195.7): when guys come into my program within about a week to two weeks i get them to this point they're very
+[50] SPEAKER_01 (195.6-200.4): comfortable and confident opening with these canned lines some guys even come into my program
+[51] SPEAKER_01 (200.4-205.1): already at that level the next thing that i usually work on them with is how to elaborate on
+[52] SPEAKER_01 (205.1-210.3): the open so after you said the line how can you make it more genuine and authentic to the particular
+[53] SPEAKER_01 (210.3-214.4): woman in front of you and so i want to show you that in just a second but if you're somebody who's
+[54] SPEAKER_01 (214.4-219.0): not already doing what i just showed you in this video on a daily basis if you're not confident
+[55] SPEAKER_01 (219.0-222.4): with that if you're not already doing that consistently with attractive women i'd love
+[56] SPEAKER_01 (222.4-226.7): to help you get to at least that level and then way beyond that so you can click the link down
+[57] SPEAKER_01 (226.6-230.9): below and apply to work with me directly if you want the coaching accountability the structure
+[58] SPEAKER_01 (230.9-236.3): and the push that you need to hit these levels and go beyond that link is in description let's get
+[59] SPEAKER_01 (236.3-240.0): into the next part of this video and so now what i want to discuss with you guys is how to elaborate
+[60] SPEAKER_01 (240.0-245.1): off of the open so i already gave you some can lines you can open with like i think you look cute
+[61] SPEAKER_01 (245.1-246.9): you, I thought you had an interesting look.
+[62] SPEAKER_01 (247.1-249.9): The next step would be to actually explain to the
+[63] SPEAKER_01 (249.8-251.5): woman what you notice about her.
+[64] SPEAKER_01 (251.6-254.7): And I think this is really powerful because it allows you to come
+[65] SPEAKER_01 (254.6-257.4): off a lot more authentic and genuine, right?
+[66] SPEAKER_01 (257.4-259.3): Because the thing about just saying can lines
+[67] SPEAKER_01 (259.2-263.5): over and over and over again is that it's going to start to feel robotic.
+[68] SPEAKER_01 (263.6-264.0): It's going to start to
+[69] SPEAKER_01 (264.0-266.7): feel like inauthentic at a certain point, right?
+[70] SPEAKER_01 (266.8-270.7): And so the women will respond more when they feel
+[71] SPEAKER_01 (270.6-275.8): like it's genuine and authentic so the easiest way to get comfortable doing this in my opinion
+[72] SPEAKER_01 (275.7-280.8): is you have a couple simple adjectives that you could use because most women are gonna have a
+[73] SPEAKER_01 (280.7-288.5): certain look so it's either like classy elegant professional business casual sporty fit or comfy
+[74] SPEAKER_01 (288.5-293.0): comfortable you know cue and like kind of like comfortable sunday type vibe i would still
+[75] SPEAKER_01 (293.0-298.1): recommend picking one of these and you can even just point out the colors that you notice about
+[76] SPEAKER_01 (298.1-301.7): out there like some of my approaches you'll see me say i just saw you walking by i thought you
+[77] SPEAKER_01 (301.6-308.1): look cute in the all black dress just sitting down here enjoying the sun excuse me can i just
+[78] SPEAKER_00 (308.1-313.5): say really quickly i thought you look super cute like sitting in the all black you you look like
+[79] SPEAKER_00 (313.5-318.8): you're just like i don't know you're like dressed up but you're like comfy and like casual at the
+[80] SPEAKER_01 (318.8-327.8): same time hey excuse me can i just say you look very cute today yeah i see you enjoying your food
+[81] SPEAKER_01 (327.7-335.8): just tanning very peaceful Tuesday afternoon so just elaborating on what
+[82] SPEAKER_01 (335.7-340.4): you see and what you notice about the woman I just thought you look cute yeah
+[83] SPEAKER_01 (341.6-346.5): you have like this is like a very yeah you do you do with the beige with the
+[84] SPEAKER_01 (346.5-350.1): jean like it's a it's a good fit with that one in particular she doesn't speak
+[85] SPEAKER_01 (350.1-354.4): good English either way you could see the concept demonstrated right so I just
+[86] SPEAKER_01 (354.4-358.4): went up i said i thought you looked cute and she's like i don't understand i said i thought you
+[87] SPEAKER_01 (358.4-364.2): looked cute like i like your and she said oh style i said yeah like this top the beige with the jean
+[88] SPEAKER_01 (364.2-369.1): shorts like it looks really good i had to dumb it down a little bit for that particular woman so
+[89] SPEAKER_01 (369.1-373.0): that it would make sense but you could start to see that i'm just pointing out her style and i'm
+[90] SPEAKER_01 (373.0-377.1): just talking about the color coordination and the type of material so that's one way you could do
+[91] SPEAKER_01 (377.1-383.2): it she has good style let's get into a couple other ones hey excuse me hi i was actually headed
+[92] SPEAKER_01 (383.2-387.9): that way but i just want to say i thought you had a really interesting look like you look very cute
+[93] SPEAKER_01 (387.9-392.4): with your white and black sporty fit thank you that one right there what i noticed about her
+[94] SPEAKER_01 (392.4-398.3): she just had a sporty fit she had a white top with black gym spandex on and so she looks cute
+[95] SPEAKER_01 (398.2-402.9): with the white and black she got this sporty fit going on and i thought she had an interesting look
+[96] SPEAKER_01 (402.9-408.9): so that's how you can elaborate on that one let's go to another one hey excuse me i was actually
+[97] SPEAKER_01 (408.9-412.6): headed that way but i just want to say i thought you looked really cute you have like a very
+[98] SPEAKER_01 (412.6-417.6): interesting look with your fashion yeah it's just like the I think the way with
+[99] SPEAKER_01 (417.6-422.8): the the beige it's very like I don't almost like like a Zara type fit yeah
+[100] SPEAKER_02 (423.3-435.1): what are you guys up to was that done intentionally actually says a lot about
+[101] SPEAKER_01 (435.1-441.7): you a good thing yeah I mean it means you're independent and you're a little
+[102] SPEAKER_01 (441.7-447.9): adventurous and you like to explore yeah and you're likely fun yeah yeah i mean you seem very
+[103] SPEAKER_01 (447.9-452.6): bubbly yeah so that's cool you don't have any plans for the next week no i don't know what i'm
+[104] SPEAKER_01 (452.6-458.1): gonna do nothing on the nothing does that excite you or scare you or i literally don't even know
+[105] SPEAKER_02 (458.1-464.2): i need a sort of that to be honest wow okay i know you're gonna be here for a week and you have
+[106] SPEAKER_01 (464.2-469.1): no plans yeah i should be free at some point in the week yeah maybe maybe we should keep in touch
+[107] SPEAKER_01 (469.0-473.8): much yeah do you have WhatsApp or what do you have yeah I do that's another instance of how
+[108] SPEAKER_01 (473.8-478.1): you can elaborate off of the open and it doesn't even need to be just on the open like throughout
+[109] SPEAKER_01 (478.0-483.4): the interaction I'm constantly talking about the things I notice about the woman and that's what
+[110] SPEAKER_01 (483.3-488.9): makes the conversation flavorful now that was about uh maybe 12 to 15 minute interaction that
+[111] SPEAKER_01 (488.9-493.0): just shows you the power of what you can do if you have the right open and the right delivery
+[112] SPEAKER_01 (492.9-498.5): now obviously that alone isn't going to land you dates there is skills when it comes to conversations
+[113] SPEAKER_01 (498.5-501.4): conversations and flirting and running the full interaction.
+[114] SPEAKER_01 (501.4-502.3): So if you want to learn more about
+[115] SPEAKER_01 (502.3-505.0): that stuff, you guys could check out this video right here.
+[116] SPEAKER_01 (505.2-506.4): Or if you're somebody who's not really
+[117] SPEAKER_01 (506.4-511.0): approaching, like if you're not doing the things already discussed in this video, then you likely
+[118] SPEAKER_01 (511.0-515.7): need structure, accountability, coaching, and that push to get you to that next level.
+[119] SPEAKER_01 (515.7-515.9): And I would
+[120] SPEAKER_01 (515.9-517.4): love to help you guys get there.
+[121] SPEAKER_01 (517.5-520.0): So click the link down below and apply to work with me one-on-one.
+[122] SPEAKER_01 (520.3-521.6): That's all for this video, guys.
+[123] SPEAKER_01 (521.9-522.1): Peace out.

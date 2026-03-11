@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "generated_at": "2026-03-05T18:50:20Z",
+  "video_id": "ctts8xePLWA",
+  "source": "daily_evolution",
+  "status": "FAIL",
+  "gate_decision": "block",
+  "reason_code": "llm_no_output",
+  "inputs": {
+    "stage07_enriched": "/home/jonaswsl/projects/daygame-coach/data/07.LLM.content/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.enriched.json",
+    "stage06_conversations": "/home/jonaswsl/projects/daygame-coach/data/06c.DET.patched/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.conversations.json",
+    "stage06e_quality_check": "/home/jonaswsl/projects/daygame-coach/data/06e.LLM.quality-check/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.quality-check.json"
+  },
+  "checks": [
+    {
+      "severity": "error",
+      "check": "llm_response_present",
+      "message": "Claude returned no output; fail-closed block applied.",
+      "signal_class": "quarantine_gate",
+      "remediation_path": "quarantine"
+    }
+  ],
+  "issues": [
+    {
+      "issue_code": "llm_no_output",
+      "issue_severity": "critical",
+      "gate_decision": "block",
+      "signal_class": "quarantine_gate",
+      "remediation_path": "quarantine",
+      "message": "Claude returned no output; fail-closed block applied.",
+      "conversation_id": null,
+      "segment_id": null,
+      "evidence_segment_ids": [],
+      "confidence": 1.0
+    }
+  ],
+  "waivers_applied": [],
+  "metrics": {
+    "checks_total": 1,
+    "errors": 1,
+    "warnings": 0,
+    "infos": 0,
+    "evidence_coverage_ratio": null,
+    "hallucination_risk_ratio": null
+  },
+  "pipeline_version": "07b.LLM.enrichment-verify-v1.3"
+}

@@ -1,0 +1,11 @@
+# Sub-batch P002.4 post-06f survivors
+# Generated: 2026-03-07
+# Source manifest: docs/pipeline/batches/P002.4.txt
+# Excludes videos quarantined by data/validation/quarantine/P002.4.json
+
+coach_kyle_how_to_approach_a_girl | STOP Making This Mistake When She Asks How Old You Are [Abyq1Zz7fmI]
+coach_kyle_how_to_approach_a_girl | Safest Way To Approach Girls At Places You Frequent ✔️ [dFaAFkBdd3Q]
+coach_kyle_how_to_approach_a_girl | The #1 Reason Why You're Not Getting Any Girls (When Going Out) [tRRNh6XEE0k]
+coach_kyle_how_to_approach_a_girl | The Conversation Hook Women Can't Resist [g4A8nBsU9Fs]
+coach_kyle_how_to_approach_a_girl | The ＂I have A Boyfriend＂ Excuse & How To Overcome It [cPtyw5GbG6c]
+

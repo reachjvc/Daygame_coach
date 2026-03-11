@@ -1,0 +1,65 @@
+{
+  "video_id": "JKWRj2hwbT4",
+  "verified_at": "2026-03-05T07:40:54Z",
+  "pipeline_version": "06b.LLM.verify-v3.1",
+  "verdict": "FLAG",
+  "video_type_check": {
+    "agrees": false,
+    "suggested_type": "talking_head",
+    "confidence": 0.72,
+    "reasoning": "Only 1 real conversation with a target. The 'bad approaches' are intentional demonstrations for the camera, not real approaches. ~70% of the video is camera-facing instructional monologue. Closer to talking_head with embedded infield demo than a compilation of multiple approaches."
+  },
+  "conversation_verdicts": [
+    {
+      "conversation_id": 1,
+      "verdict": "FLAG",
+      "notes": "Segments 54-55 are partly camera-facing instruction while still in the approach. Segment 63 bleeds from conversation closing into commentary ('okay so there' begins commentary). Minor boundary bleed but does not corrupt the conversation."
+    }
+  ],
+  "misattributions": [],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [
+    "Segment 63 contains within-segment boundary bleed: conversation closing ('have an awesome day') transitions mid-segment into commentary ('okay so there'). Not fixable by segment-level reclassification.",
+    "Segment 0 (0.0-0.8s) is a very short fragment ('thought you looked really cute') that may be a transcript artifact or cold-open snippet — too brief to classify meaningfully."
+  ],
+  "other_flags_detailed": [
+    {
+      "flag_class": "within_segment_boundary_bleed",
+      "severity": "minor",
+      "segment_id": 63,
+      "conversation_id": 1,
+      "speaker_id": "SPEAKER_00",
+      "notes": "Segment transitions from conv 1 closing to commentary mid-segment. Would need sub-segment split to fix."
+    },
+    {
+      "flag_class": "transcript_artifact",
+      "severity": "minor",
+      "segment_id": 0,
+      "conversation_id": null,
+      "speaker_id": "SPEAKER_00",
+      "notes": "0.8s fragment at video start — may be a cold-open snippet or transcript artifact."
+    }
+  ],
+  "summary": "Roles and collapse overrides are correct. Main concern is video type: classified as 'compilation' but has only 1 real approach amid extensive camera-facing instruction — closer to talking_head. Minor boundary bleed at segment 63 where conversation closing runs into commentary within one segment.",
+  "metadata": {
+    "input_file": "/home/jonaswsl/projects/daygame-coach/data/06.LLM.video-type/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 79.17672967910767,
+    "llm_calls": 1,
+    "model": "claude-cli",
+    "claude_model": "opus",
+    "flag_summary": {
+      "video_type_agrees": false,
+      "structured_flag_class_counts": {
+        "video_type_mismatch": 1,
+        "conversation_flag": 1
+      },
+      "other_flag_class_counts": {
+        "within_segment_boundary_bleed": 1,
+        "transcript_artifact": 1
+      },
+      "other_flag_count": 2,
+      "other_flag_detailed_count": 2
+    }
+  }
+}

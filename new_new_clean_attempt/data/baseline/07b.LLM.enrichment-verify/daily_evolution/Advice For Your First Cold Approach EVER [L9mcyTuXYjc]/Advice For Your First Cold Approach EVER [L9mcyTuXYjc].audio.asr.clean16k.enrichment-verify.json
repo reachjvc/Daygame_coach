@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "generated_at": "2026-03-05T18:14:22Z",
+  "video_id": "L9mcyTuXYjc",
+  "source": "daily_evolution",
+  "status": "PASS",
+  "gate_decision": "pass",
+  "reason_code": "talking_head_enrichment_adequate",
+  "inputs": {
+    "stage07_enriched": "/home/jonaswsl/projects/daygame-coach/data/07.LLM.content/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.enriched.json",
+    "stage06_conversations": "/home/jonaswsl/projects/daygame-coach/data/06c.DET.patched/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.conversations.json",
+    "stage06e_quality_check": "/home/jonaswsl/projects/daygame-coach/data/06e.LLM.quality-check/daily_evolution/Advice For Your First Cold Approach EVER [L9mcyTuXYjc]/Advice For Your First Cold Approach EVER [L9mcyTuXYjc].audio.asr.clean16k.quality-check.json"
+  },
+  "checks": [
+    {
+      "severity": "info",
+      "check": "evidence_coverage",
+      "message": "111 segments total, 7 sections covering segments 0-110 with only segment 92 unassigned; minor gap acceptable for talking-head format.",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review"
+    },
+    {
+      "severity": "info",
+      "check": "technique_evidence_alignment",
+      "message": "false_time_constraint tagged in section 3 (segs 41-64) is a loose fit; transcript describes 'permission to bail' via indirect openers, not a classic false time constraint ('I can only stay a minute'). Semantically adjacent but not precise.",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review"
+    },
+    {
+      "severity": "info",
+      "check": "technique_evidence_alignment_qualification",
+      "message": "qualification tagged in section 4 (segs 65-70) is a minor stretch; coach describes basic rapport questions (where she lives, work) rather than explicit qualification frames. Plausible but loose.",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review"
+    },
+    {
+      "severity": "info",
+      "check": "hook_rate_zero",
+      "message": "All hook_segment_id values are null. Expected for talking-head video with no live infield approaches.",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review"
+    },
+    {
+      "severity": "info",
+      "check": "transcript_quality",
+      "message": "27% low-quality segments (30/111) and 3 word_repetition artifacts. Typical for mastermind-call audio; no material impact on enrichment accuracy.",
+      "signal_class": "transcript_quality",
+      "remediation_path": "transcript_review"
+    },
+    {
+      "severity": "info",
+      "check": "phase_coherence",
+      "message": "Sections follow a logical pedagogical arc: introduction → opener selection → anxiety reduction → conversation structure → student validation → practice logistics → outcome independence. No sequencing issues.",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review"
+    }
+  ],
+  "issues": [
+    {
+      "issue_code": "evidence_alignment_mismatch",
+      "issue_severity": "minor",
+      "gate_decision": "pass",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review",
+      "message": "false_time_constraint technique in section 3 is not directly evidenced; transcript discusses 'permission to bail' via indirect openers which is semantically adjacent but not the canonical false time constraint pattern.",
+      "conversation_id": null,
+      "segment_id": null,
+      "evidence_segment_ids": [
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48
+      ],
+      "confidence": 0.6
+    },
+    {
+      "issue_code": "evidence_alignment_mismatch",
+      "issue_severity": "minor",
+      "gate_decision": "pass",
+      "signal_class": "other_quality",
+      "remediation_path": "manual_review",
+      "message": "qualification technique in section 4 is weakly supported; evidence shows basic rapport questions rather than explicit qualification framing.",
+      "conversation_id": null,
+      "segment_id": null,
+      "evidence_segment_ids": [
+        65,
+        66,
+        67,
+        68
+      ],
+      "confidence": 0.55
+    }
+  ],
+  "waivers_applied": [],
+  "metrics": {
+    "checks_total": 6,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 6,
+    "evidence_coverage_ratio": null,
+    "hallucination_risk_ratio": null
+  },
+  "pipeline_version": "07b.LLM.enrichment-verify-v1.3"
+}

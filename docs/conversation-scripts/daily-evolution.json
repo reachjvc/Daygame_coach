@@ -7,692 +7,859 @@
     "root": {
       "id": "root",
       "speaker": "me",
-      "text": { "da": "", "en": "Daily Evolution (Aaron Alexander) - Approach Patterns" },
-      "children": ["nightgame-context", "daygame-context", "date-context", "mindset-context"]
+      "text": { "da": "", "en": "" },
+      "children": [
+        "conv1-open",
+        "conv2-open",
+        "conv3-open",
+        "conv4-open",
+        "conv5-open",
+        "conv6-open",
+        "conv7-open",
+        "conv8-open"
+      ]
     },
 
-    "nightgame-context": {
-      "id": "nightgame-context",
-      "speaker": "me",
-      "text": { "da": "", "en": "[NIGHTGAME CONTEXT - Bar/Club Environment]" },
-      "children": ["ng-opener-flashbang", "ng-opener-onlyfans", "ng-opener-matching-outfit"]
-    },
-
-    "ng-opener-flashbang": {
-      "id": "ng-opener-flashbang",
+    "conv1-open": {
+      "id": "conv1-open",
       "speaker": "me",
       "text": { "da": "", "en": "Hey, how's it going?" },
-      "note": "Said with FAMILIARITY tone - like you already know her. Walk towards her as she's coming your way, lean in, go for side hug right out the gate. She has a 'flash bang' moment where she's trying to figure out if she knows you or not. The tone is everything - 'Hey, what's up? Hey, how you been? Hey, how's it going?' with that familiar tone like you know her. Eye contact on point, smile on point, side hug right out the gate. Aaron starts all interactions with 'hey' not 'a' - 'Hey, hey!' not 'A, a.' Very important distinction.",
+      "note": "Nightgame 'Flash Bang' opener. Said with FAMILIARITY tone - like you already know her. Walk towards her as she's coming your way, lean in, go for side hug right out the gate. She has a 'flash bang' moment where she's trying to figure out if she knows you or not. The tone is everything.",
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-fb-her-positive", "ng-fb-her-confused", "ng-fb-her-hugs-back"]
+      "children": ["conv1-02"]
     },
-    "ng-fb-her-positive": {
-      "id": "ng-fb-her-positive",
+    "conv1-02": {
+      "id": "conv1-02",
       "speaker": "her",
-      "text": { "da": "", "en": "Hey! Good, good. How are you?" },
+      "text": { "da": "", "en": "Hey... hey! Good, good. How are you?" },
+      "note": "She pauses, hugs you back due to the familiarity tone.",
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-fb-introduce"]
+      "children": ["conv1-03"]
     },
-    "ng-fb-her-confused": {
-      "id": "ng-fb-her-confused",
-      "speaker": "her",
-      "text": { "da": "", "en": "I thought I knew you or something..." },
-      "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-fb-clarify"]
-    },
-    "ng-fb-her-hugs-back": {
-      "id": "ng-fb-her-hugs-back",
-      "speaker": "her",
-      "text": { "da": "", "en": "Hey... hey!" },
-      "note": "She pauses, then hugs you back due to the familiarity tone.",
-      "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-fb-introduce"]
-    },
-    "ng-fb-introduce": {
-      "id": "ng-fb-introduce",
+    "conv1-03": {
+      "id": "conv1-03",
       "speaker": "me",
       "text": { "da": "", "en": "I'm Aaron. What's your name?" },
       "note": "Immediately introduce yourself after the flash bang moment.",
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-fb-her-name"]
+      "children": ["conv1-04"]
     },
-    "ng-fb-clarify": {
-      "id": "ng-fb-clarify",
-      "speaker": "me",
-      "text": { "da": "", "en": "Nah, I just wanted to see what was up. See how you've been. See how your night's going." },
-      "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-fb-her-night-response"]
-    },
-    "ng-fb-her-night-response": {
-      "id": "ng-fb-her-night-response",
-      "speaker": "her",
-      "text": { "da": "", "en": "Oh, okay. Well, it's been good." },
-      "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-fb-who-here-with"]
-    },
-    "ng-fb-who-here-with": {
-      "id": "ng-fb-who-here-with",
-      "speaker": "me",
-      "text": { "da": "", "en": "Who you here with? You here with these people?" },
-      "note": "Get the conversation going by asking about her social context.",
-      "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-conversation-build"]
-    },
-    "ng-fb-her-name": {
-      "id": "ng-fb-her-name",
+    "conv1-04": {
+      "id": "conv1-04",
       "speaker": "her",
       "text": { "da": "", "en": "I'm Jessica." },
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-fb-hows-night"]
+      "children": ["conv1-05"]
     },
-    "ng-fb-hows-night": {
-      "id": "ng-fb-hows-night",
+    "conv1-05": {
+      "id": "conv1-05",
       "speaker": "me",
       "text": { "da": "", "en": "How's your night going?" },
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-fb-her-night-ok"]
+      "children": ["conv1-06"]
     },
-    "ng-fb-her-night-ok": {
-      "id": "ng-fb-her-night-ok",
+    "conv1-06": {
+      "id": "conv1-06",
       "speaker": "her",
       "text": { "da": "", "en": "It's not bad." },
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-conversation-build"]
+      "children": ["conv1-07"]
     },
-
-    "ng-opener-onlyfans": {
-      "id": "ng-opener-onlyfans",
+    "conv1-07": {
+      "id": "conv1-07",
       "speaker": "me",
-      "text": { "da": "", "en": "Hey, what's up? I'm subscribed to your OnlyFans." },
-      "note": "Designed to make her feel an emotion immediately - humor, surprise. All of game is about making women feel emotions and leading. Instead of 'Hey, what's up? Hey, how's your night going?' which makes zero impact - this captures attention.",
-      "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-of-her-amused", "ng-of-her-really", "ng-of-her-offended"]
-    },
-    "ng-of-her-amused": {
-      "id": "ng-of-her-amused",
-      "speaker": "her",
-      "text": { "da": "", "en": "That's funny. That's funny." },
-      "note": "She's amused - that's charismatic, that's going to capture attention and get you into that conversation where you can build comfort.",
-      "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-of-escalate-humor"]
-    },
-    "ng-of-her-really": {
-      "id": "ng-of-her-really",
-      "speaker": "her",
-      "text": { "da": "", "en": "Oh really? Are you?" },
-      "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-of-escalate-humor"]
-    },
-    "ng-of-her-offended": {
-      "id": "ng-of-her-offended",
-      "speaker": "her",
-      "text": { "da": "", "en": "[Gets offended / walks away]" },
-      "note": "Aaron says: 'If a girl gets really mad at the fact that you open with this, then I promise you it wasn't going to go anywhere anyway. She is so incredibly conservative that it wasn't going to go anywhere anyways.'",
+      "text": { "da": "", "en": "Who you here with? You here with these people?" },
+      "note": "Get the conversation going by asking about her social context. From here you run the interaction.",
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
       "children": []
     },
-    "ng-of-escalate-humor": {
-      "id": "ng-of-escalate-humor",
+
+    "conv2-open": {
+      "id": "conv2-open",
+      "speaker": "me",
+      "text": { "da": "", "en": "Hey, what's up? I'm subscribed to your OnlyFans." },
+      "note": "Nightgame opener designed to make her feel an emotion immediately - humor, surprise. Instead of 'Hey, what's up? Hey, how's your night going?' which makes zero impact - this captures attention.",
+      "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
+      "children": ["conv2-02"]
+    },
+    "conv2-02": {
+      "id": "conv2-02",
+      "speaker": "her",
+      "text": { "da": "", "en": "Oh really? Are you?" },
+      "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
+      "children": ["conv2-03"]
+    },
+    "conv2-03": {
+      "id": "conv2-03",
       "speaker": "me",
       "text": { "da": "", "en": "Yeah, I love all the solo scenes. I love the feet shit you've been putting out lately. It's solid shit." },
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-of-her-think"]
+      "children": ["conv2-04"]
     },
-    "ng-of-her-think": {
-      "id": "ng-of-her-think",
+    "conv2-04": {
+      "id": "conv2-04",
       "speaker": "her",
       "text": { "da": "", "en": "Oh really, you think?" },
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-of-volunteer"]
+      "children": ["conv2-05"]
     },
-    "ng-of-volunteer": {
-      "id": "ng-of-volunteer",
+    "conv2-05": {
+      "id": "conv2-05",
       "speaker": "me",
       "text": { "da": "", "en": "Yeah, listen. Hey, I'm telling you straight up - if you need a male model to help out, you know, I would like to see some more kind of like boy-girl content. I could, you know, I would volunteer as tribute if that's something you're needing right now." },
+      "note": "That's charismatic. That's going to capture attention and get you into that conversation where you can build comfort and then close. Aaron says if a girl gets really mad at this, she's so conservative it wasn't going to go anywhere anyway.",
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-conversation-build"]
+      "children": []
     },
 
-    "ng-opener-matching-outfit": {
-      "id": "ng-opener-matching-outfit",
+    "conv3-open": {
+      "id": "conv3-open",
       "speaker": "me",
       "text": { "da": "", "en": "Yo, you know what's crazy?" },
-      "note": "Used when she's wearing something very promiscuous/feminine - tits hanging out, nipple piercings poking out, extremely feminine outfit. Give a split second pause for her to be intrigued. Every other guy: 'Hey, what's up? Can I buy you a drink?' Works in both nightgame AND daygame.",
+      "note": "Nightgame 'matching outfit' opener. Used when she's wearing something very promiscuous/feminine. Give a split second pause for her to be intrigued. Works in both nightgame and daygame.",
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-mo-her-what"]
+      "children": ["conv3-02"]
     },
-    "ng-mo-her-what": {
-      "id": "ng-mo-her-what",
+    "conv3-02": {
+      "id": "conv3-02",
       "speaker": "her",
       "text": { "da": "", "en": "What?" },
       "note": "She's intrigued - 'what's this guy about to say?'",
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-mo-almost-wore"]
+      "children": ["conv3-03"]
     },
-    "ng-mo-almost-wore": {
-      "id": "ng-mo-almost-wore",
+    "conv3-03": {
+      "id": "conv3-03",
       "speaker": "me",
       "text": { "da": "", "en": "I swear to God, I literally almost wore that exact outfit tonight." },
-      "note": "Daygame variation: 'I actually almost wore those exact same shorts today.' Used on a girl wearing 'space booty shorts' with Jupiter and planets on them in a store aisle. 'It's so ridiculous that it's hilarious.'",
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-mo-her-really"]
+      "children": ["conv3-04"]
     },
-    "ng-mo-her-really": {
-      "id": "ng-mo-her-really",
+    "conv3-04": {
+      "id": "conv3-04",
       "speaker": "her",
       "text": { "da": "", "en": "Oh really, did you?" },
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-mo-tshirt-look"]
+      "children": ["conv3-05"]
     },
-    "ng-mo-tshirt-look": {
-      "id": "ng-mo-tshirt-look",
+    "conv3-05": {
+      "id": "conv3-05",
       "speaker": "me",
       "text": { "da": "", "en": "Yeah, I swear. It was between that and then, you know, just the t-shirt look." },
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-mo-her-yeah"]
+      "children": ["conv3-06"]
     },
-    "ng-mo-her-yeah": {
-      "id": "ng-mo-her-yeah",
+    "conv3-06": {
+      "id": "conv3-06",
       "speaker": "her",
       "text": { "da": "", "en": "Oh yeah, yeah." },
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-mo-pulled-off-better"]
+      "children": ["conv3-07"]
     },
-    "ng-mo-pulled-off-better": {
-      "id": "ng-mo-pulled-off-better",
+    "conv3-07": {
+      "id": "conv3-07",
       "speaker": "me",
       "text": { "da": "", "en": "And look, honestly, I'm not gonna lie - I probably think I could have pulled it off better than you. Yeah, probably one of us would have to go home and change. What's your name?" },
       "note": "Push-pull: playful tease followed by name exchange to transition into real conversation.",
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-mo-her-name"]
+      "children": ["conv3-08"]
     },
-    "ng-mo-her-name": {
-      "id": "ng-mo-her-name",
+    "conv3-08": {
+      "id": "conv3-08",
       "speaker": "her",
       "text": { "da": "", "en": "I'm Rebecca. Are these your friends?" },
       "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-conversation-build"]
-    },
-
-    "ng-conversation-build": {
-      "id": "ng-conversation-build",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Build comfort - run the interaction from here]" },
-      "note": "All of these openers capture attention and make her feel something. From here you build comfort, then close. You're either the DJ (capturing attention, everyone's facing the DJ, jumping to the music) or the furniture (in the back corner of the room, everybody walks by it, sits on it, nobody cares about it). Don't be irrelevant and pointless.",
-      "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["ng-qualify-interview", "ng-shamelessly-speak", "ng-transition-relationship-talk"]
-    },
-
-    "ng-qualify-interview": {
-      "id": "ng-qualify-interview",
-      "speaker": "me",
-      "text": { "da": "", "en": "So what do you do? Cool, nice. What was that like? Did you enjoy it? So what do you do for fun?" },
-      "note": "Interview her as though you are the CEO deciding whether she's worthy of being an employee. You are NOT the interviewee. You are the interviewer. You are not going up to this girl trying to peacock and show off enough of yourself to make her want you. Other way around - you're going up to qualify her to see if she is worthy of entering your world.",
-      "source": "3 MINDSETS FOR DATING [vNrixMbimG0]",
-      "children": ["ng-qualify-her-responds"]
-    },
-    "ng-qualify-her-responds": {
-      "id": "ng-qualify-her-responds",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, I mean, I enjoyed it. [talks about herself]" },
-      "source": "3 MINDSETS FOR DATING [vNrixMbimG0]",
-      "children": ["ng-shamelessly-speak"]
-    },
-    "ng-shamelessly-speak": {
-      "id": "ng-shamelessly-speak",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Shamelessly speak about yourself - frame your life confidently. Example: 'Yeah I deliver pizza... I love the job, it's great, I make a ton of money, I drive around, listen to podcasts all night.' Or: 'Oh yeah I live in Fidei, it's the financial district. You can pretty much see the Brooklyn Bridge from my window. I'm kind of between there and World Trade.']" },
-      "note": "All pickup is giving a girl a sample and saying 'here's what the full entree would be like.' If the sample sucks, she's going to flake you and she doesn't want the entree. Don't have bullshit bland ass conversations where you're just 'I live here, I work here, yeah that sounds cool' - nothing charismatic, not shamelessly talking about yourself. That's a bad sample. The expression 'the loudest one in the room is typically the weakest' is bullshit - created by insecure people who can't handle when somebody has the spotlight. Joe Rogan talks about this with why people heckle at comedy shows.",
-      "source": "#1 Communication Mistake Men Make With Women [qrnGU56V_lY]",
-      "children": ["ng-transition-relationship-talk"]
-    },
-
-    "ng-transition-relationship-talk": {
-      "id": "ng-transition-relationship-talk",
-      "speaker": "me",
-      "text": { "da": "", "en": "So do you regularly just end up hanging out with guys you met at [place you met]?" },
-      "note": "The #1 easiest way to sexually escalate a conversation is to start talking about relationships. This works on dates, cold approach, daygame, nightgame. Aaron's actual example uses 'Patty's pub': 'So do you regularly just end up hanging out with guys you met at Patty's pub?'",
-      "source": "#1 KEY To Sexualizing Your Conversations [-_3ypQLrDzo]",
-      "children": ["ng-rel-her-not-all-the-time", "ng-rel-her-player"]
-    },
-    "ng-rel-her-not-all-the-time": {
-      "id": "ng-rel-her-not-all-the-time",
-      "speaker": "her",
-      "text": { "da": "", "en": "Oh, I mean, not all the time." },
-      "source": "#1 KEY To Sexualizing Your Conversations [-_3ypQLrDzo]",
-      "children": ["ng-rel-dive-in"]
-    },
-    "ng-rel-dive-in": {
-      "id": "ng-rel-dive-in",
-      "speaker": "me",
-      "text": { "da": "", "en": "How many boyfriends have you had?" },
-      "note": "Just dive right into it. You can also use: 'When's the last time you had an ex-boyfriend?' Anything to get into the realm of relationship-based conversation. Now you're in that world of sexuality-based conversation - she's screening you as a potential mate.",
-      "source": "#1 KEY To Sexualizing Your Conversations [-_3ypQLrDzo]",
-      "children": ["ng-rel-her-answers"]
-    },
-    "ng-rel-her-answers": {
-      "id": "ng-rel-her-answers",
-      "speaker": "her",
-      "text": { "da": "", "en": "[Talks about relationship history]" },
-      "note": "Now you're in the realm of relationship/sexuality-based conversation. Either consciously or subconsciously she's screening you as a potential mate, seeing if you have what it is that she's looking for.",
-      "source": "#1 KEY To Sexualizing Your Conversations [-_3ypQLrDzo]",
-      "children": ["ng-rel-promiscuous"]
-    },
-    "ng-rel-promiscuous": {
-      "id": "ng-rel-promiscuous",
-      "speaker": "me",
-      "text": { "da": "", "en": "So you're pretty promiscuous, huh?" },
-      "note": "You carry it directly into talking about sex stuff. You don't straight up say 'how many guys you slept with' - say 'so you're pretty promiscuous, huh?' If she's not offended by that, she's not too conservative. Aaron says: 'If she's not a fucking dummy, she's not going to be offended by that. It's really, really great.'",
-      "source": "#1 KEY To Sexualizing Your Conversations [-_3ypQLrDzo]",
-      "children": ["ng-rel-her-what-that-mean"]
-    },
-    "ng-rel-her-what-that-mean": {
-      "id": "ng-rel-her-what-that-mean",
-      "speaker": "her",
-      "text": { "da": "", "en": "What is that supposed to mean?" },
-      "source": "#1 KEY To Sexualizing Your Conversations [-_3ypQLrDzo]",
-      "children": ["ng-close-date"]
-    },
-    "ng-rel-her-player": {
-      "id": "ng-rel-her-player",
-      "speaker": "her",
-      "text": { "da": "", "en": "I can tell you're like a player, huh? You probably like sleep around." },
-      "source": "#1 KEY To Sexualizing Your Conversations [-_3ypQLrDzo]",
-      "children": ["ng-rel-player-response"]
-    },
-    "ng-rel-player-response": {
-      "id": "ng-rel-player-response",
-      "speaker": "me",
-      "text": { "da": "", "en": "No, I mean like, you know, here and there." },
-      "note": "Be kind of funny with it. Don't be defensive.",
-      "source": "#1 KEY To Sexualizing Your Conversations [-_3ypQLrDzo]",
-      "children": ["ng-close-date"]
-    },
-
-    "ng-close-date": {
-      "id": "ng-close-date",
-      "speaker": "me",
-      "text": { "da": "", "en": "Hey, I know we just met but, I don't know, we should grab some food this week. Let's hang out this week." },
-      "note": "A to B: Always have a date location in mind. 'I've got about two to three spots that I'm always asking them if they've ever been to.' Open with whatever comes to mind, then: 'Cool, well have you ever been to [spot]?' Never be wondering where you're taking her.",
-      "source": "10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop)",
-      "children": ["ng-close-her-yeah", "ng-close-her-number"]
-    },
-    "ng-close-her-yeah": {
-      "id": "ng-close-her-yeah",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, that sounds fun." },
-      "children": ["ng-close-exchange"]
-    },
-    "ng-close-her-number": {
-      "id": "ng-close-her-number",
-      "speaker": "her",
-      "text": { "da": "", "en": "Sure, let me give you my number." },
-      "children": ["ng-close-exchange"]
-    },
-    "ng-close-exchange": {
-      "id": "ng-close-exchange",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Exchange numbers / Instagram. Set up the date at your pre-selected location.]" },
-      "note": "Always have 2-3 date spots ready. Never wonder where you're taking her. Always Be Closing - ABC. Always go for the pull. Always go for the number. Anything is better than nothing.",
-      "source": "10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop)",
       "children": []
     },
 
-    "daygame-context": {
-      "id": "daygame-context",
+    "conv4-open": {
+      "id": "conv4-open",
       "speaker": "me",
-      "text": { "da": "", "en": "[DAYGAME CONTEXT - Store/Street/Park Environment]" },
-      "children": ["dg-qualifier-planet-fitness", "dg-opener-indirect", "dg-opener-direct", "dg-opener-matching-outfit-day"]
+      "text": { "da": "", "en": "Hey, excuse me. Sorry, are you listening to the Joe Rogan podcast?" },
+      "note": "Daygame quick number grab. Humorous situational opener on the street to a girl with earbuds. Opens playfully then transitions to direct intent.",
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-02"]
     },
-
-    "dg-opener-indirect": {
-      "id": "dg-opener-indirect",
-      "speaker": "me",
-      "text": { "da": "", "en": "Excuse me, do you happen to live over in [nearby area] by chance?" },
-      "note": "Indirect/pretextual question opener. Aaron's actual example: 'Excuse me, do you happen to live over in Woodland Springs by chance?' She was in line at a store. Also works as: 'Do you hang out at [bar]?' or 'Do you go to [school]?' or 'Do you work at [wherever]?' This is a 'permission to bail' opener - if anxious, you can say 'No problem, have a good one' and still feel like a winner. You overcame the first step of hesitation and anxiety. Doing something is better than nothing.",
-      "source": "10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop)",
-      "children": ["dg-ind-her-no-but", "dg-ind-her-no-flat"]
-    },
-    "dg-ind-her-no-but": {
-      "id": "dg-ind-her-no-but",
+    "conv4-02": {
+      "id": "conv4-02",
       "speaker": "her",
-      "text": { "da": "", "en": "No, I don't, but I am like two minutes away actually. And I have some friends over there." },
-      "note": "She's giving more than you asked for - a smiley demeanor, offering extra info. This is a green light to continue. She's not just saying 'no' - she's engaging.",
-      "source": "10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop)",
-      "children": ["dg-ind-oh-cool"]
+      "text": { "da": "", "en": "No." },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-03"]
     },
-    "dg-ind-her-no-flat": {
-      "id": "dg-ind-her-no-flat",
+    "conv4-03": {
+      "id": "conv4-03",
+      "speaker": "me",
+      "text": { "da": "", "en": "I'm just playing. I just thought you were cute. I wanted to say hey. I didn't know what else to say. What are you doing right now?" },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-04"]
+    },
+    "conv4-04": {
+      "id": "conv4-04",
       "speaker": "her",
-      "text": { "da": "", "en": "No, actually I don't. Sorry." },
-      "source": "10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop)",
-      "children": ["dg-ind-bail", "dg-ind-push-through"]
+      "text": { "da": "", "en": "Heading home." },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-05"]
     },
-    "dg-ind-bail": {
-      "id": "dg-ind-bail",
+    "conv4-05": {
+      "id": "conv4-05",
       "speaker": "me",
-      "text": { "da": "", "en": "Alright, hey, no problem. Have a good one." },
-      "note": "Permission to bail. You now overcame the first step of hesitation and anxiety. Doing something is better than nothing. Give yourself permission to bail - this alone builds confidence over time. You did something and that matters. You're developing a track record of doing what the fuck you say you're gonna do, and that is incredibly powerful for confidence.",
-      "source": "10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop)",
-      "children": ["dg-ind-her-bail-bye"]
+      "text": { "da": "", "en": "Come on a date with me. Let's have like a little instant date. We'll go grab some BB bop." },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-06"]
     },
-    "dg-ind-her-bail-bye": {
-      "id": "dg-ind-her-bail-bye",
+    "conv4-06": {
+      "id": "conv4-06",
       "speaker": "her",
-      "text": { "da": "", "en": "Yeah, you too." },
-      "source": "10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop)",
-      "children": []
+      "text": { "da": "", "en": "I have to go to work, unfortunately." },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-07"]
     },
-    "dg-ind-push-through": {
-      "id": "dg-ind-push-through",
+    "conv4-07": {
+      "id": "conv4-07",
       "speaker": "me",
-      "text": { "da": "", "en": "[If her demeanor is warm - smiley, giving more than you asked for - continue the conversation. The pretextual question was just the entry point.]" },
-      "note": "Aaron says: 'And then I see her smiley demeanor. She's giving more than I really asked for in the conversation.' If she's engaging beyond the question, push through into real interaction.",
-      "source": "10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop)",
-      "children": ["dg-ind-oh-cool"]
+      "text": { "da": "", "en": "Where do you work?" },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-08"]
     },
-    "dg-ind-oh-cool": {
-      "id": "dg-ind-oh-cool",
-      "speaker": "me",
-      "text": { "da": "", "en": "Oh, okay cool." },
-      "note": "From here, run the interaction. Transition into real conversation - qualify her, talk confidently about yourself.",
-      "source": "10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop)",
-      "children": ["dg-qualify"]
-    },
-
-    "dg-opener-direct": {
-      "id": "dg-opener-direct",
-      "speaker": "me",
-      "text": { "da": "", "en": "Excuse me, I saw you over here and I just thought you were so beautiful. I just had to come say hi to you." },
-      "note": "Direct daygame opener. Aaron teaches this but also says for beginners: 'Don't even start off direct because that's even more intimidating for a lot of guys.' Start with the indirect opener first, work up to this. From '2025 IS YOUR YEAR': 'Walk to your local target, walk to your local mall and just start off with...'",
-      "source": "2025 IS YOUR YEAR [EdcPkeELE_s], 27 Minutes To Become Unrecognizable In 27 Days [V63ND9N6gvk]",
-      "children": ["dg-dir-her-thanks-bf", "dg-dir-her-thanks-smile"]
-    },
-    "dg-dir-her-thanks-bf": {
-      "id": "dg-dir-her-thanks-bf",
+    "conv4-08": {
+      "id": "conv4-08",
       "speaker": "her",
-      "text": { "da": "", "en": "Thanks, but I have a boyfriend." },
-      "source": "27 Minutes To Become Unrecognizable In 27 Days [V63ND9N6gvk]",
-      "children": ["dg-dir-no-problem"]
+      "text": { "da": "", "en": "I work in a bio lab." },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-09"]
     },
-    "dg-dir-no-problem": {
-      "id": "dg-dir-no-problem",
+    "conv4-09": {
+      "id": "conv4-09",
       "speaker": "me",
-      "text": { "da": "", "en": "No problem. Have a good one." },
-      "note": "Walk away and feel like a fucking winner because you did that. The worst thing that happens is your ego gets demolished in that moment - but that strengthens your ego, makes you stronger. Even when it 'went wrong' it went right. There are millions of men that wish they had the balls to go up and talk to that woman and they will never do it. You can be the motherfucker that goes 'I'm gonna be that dude.'",
-      "source": "27 Minutes To Become Unrecognizable In 27 Days [V63ND9N6gvk], 10 Years Of Game Wisdom [j8gzCU6jOyQ]",
-      "children": []
+      "text": { "da": "", "en": "Work for me. I'll hire you." },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-10"]
     },
-    "dg-dir-her-thanks-smile": {
-      "id": "dg-dir-her-thanks-smile",
+    "conv4-10": {
+      "id": "conv4-10",
       "speaker": "her",
-      "text": { "da": "", "en": "Aw, thank you! That's so sweet." },
-      "children": ["dg-qualify"]
+      "text": { "da": "", "en": "I can't, unfortunately." },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-11"]
     },
-
-    "dg-opener-matching-outfit-day": {
-      "id": "dg-opener-matching-outfit-day",
+    "conv4-11": {
+      "id": "conv4-11",
       "speaker": "me",
-      "text": { "da": "", "en": "You know what's crazy? I actually almost wore those exact same shorts today." },
-      "note": "Daygame version of the matching outfit opener. Aaron's actual example: girl wearing 'space booty shorts' with Jupiter and planets on them in a store aisle. He walked by her in the aisle and said this. 'It's so ridiculous that it's hilarious.' Again - making the woman feel emotion.",
-      "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["dg-mo-her-laughs", "dg-mo-her-what"]
+      "text": { "da": "", "en": "I'll give you 50. No, I'm just kidding. I'm just playing. I wish, man. What's your name? I'm Aaron." },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-12"]
     },
-    "dg-mo-her-laughs": {
-      "id": "dg-mo-her-laughs",
+    "conv4-12": {
+      "id": "conv4-12",
       "speaker": "her",
-      "text": { "da": "", "en": "[Laughs] Really?" },
-      "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["dg-qualify"]
+      "text": { "da": "", "en": "Hi. Nice to meet you. Very nice to meet you. I'm in a hurry also, so I totally can't hang out right now. I'm sorry. You seem nice. I'm sorry." },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-13"]
     },
-    "dg-mo-her-what": {
-      "id": "dg-mo-her-what",
+    "conv4-13": {
+      "id": "conv4-13",
+      "speaker": "me",
+      "text": { "da": "", "en": "Are you attracted to me?" },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-14"]
+    },
+    "conv4-14": {
+      "id": "conv4-14",
       "speaker": "her",
-      "text": { "da": "", "en": "What?" },
-      "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["dg-mo-repeat"]
+      "text": { "da": "", "en": "I've just met you." },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-15"]
     },
-    "dg-mo-repeat": {
-      "id": "dg-mo-repeat",
+    "conv4-15": {
+      "id": "conv4-15",
       "speaker": "me",
-      "text": { "da": "", "en": "Yeah, I swear. It was between those and just some boring regular shorts. Honestly, I think I could have pulled it off." },
-      "source": "3 Elite Level Nightgame Openers [fv2m34GeheE]",
-      "children": ["dg-qualify"]
+      "text": { "da": "", "en": "Well, get to know me a little bit. Give me your number. Let me take you on a date." },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-16"]
     },
-
-    "dg-qualifier-planet-fitness": {
-      "id": "dg-qualifier-planet-fitness",
-      "speaker": "me",
-      "text": { "da": "", "en": "Excuse me, sorry, do you go to the Planet Fitness over on [street name]?" },
-      "note": "Beginner stepping-stone opener from '2025 IS YOUR YEAR'. Even more low-pressure than the neighborhood opener. Aaron says: 'Don't even start off direct because that's even more intimidating for a lot of guys. Excuse me, sorry, do you go to the Planet Fitness over on fucking Smith Street? No, actually I don't. Oh, okay, no problem, have a good one.' Just look a woman in the eyes and start there. Don't compare yourself to infields - compare yourself to where you are now.",
-      "source": "2025 IS YOUR YEAR [EdcPkeELE_s]",
-      "children": ["dg-pf-her-no", "dg-ind-her-no-but"]
-    },
-    "dg-pf-her-no": {
-      "id": "dg-pf-her-no",
+    "conv4-16": {
+      "id": "conv4-16",
       "speaker": "her",
-      "text": { "da": "", "en": "No, actually I don't." },
-      "source": "2025 IS YOUR YEAR [EdcPkeELE_s]",
-      "children": ["dg-ind-bail"]
+      "text": { "da": "", "en": "Okay. Does that sound good? Yes." },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-17"]
     },
-
-    "dg-qualify": {
-      "id": "dg-qualify",
+    "conv4-17": {
+      "id": "conv4-17",
       "speaker": "me",
-      "text": { "da": "", "en": "So what are you up to today? What do you do?" },
-      "note": "Interview her. You are the interviewer, not the interviewee. You are the CEO deciding if she is worthy of entering your world. Don't put her on a pedestal - don't look at her like she's this glorious amazing creature with the sun shining down upon her. That's putting her on a pedestal. Other way around.",
-      "source": "3 MINDSETS FOR DATING [vNrixMbimG0]",
-      "children": ["dg-qualify-her-responds"]
+      "text": { "da": "", "en": "I'm only gonna save this if you promise you're actually gonna text me back." },
+      "note": "Anti-flake technique: put ownership on her to commit to texting back.",
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-18"]
     },
-    "dg-qualify-her-responds": {
-      "id": "dg-qualify-her-responds",
+    "conv4-18": {
+      "id": "conv4-18",
       "speaker": "her",
-      "text": { "da": "", "en": "I'm just shopping. I work at [place] / I study at [school]." },
-      "children": ["dg-speak-confidently"]
+      "text": { "da": "", "en": "I promise I will text you back." },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
+      "children": ["conv4-19"]
     },
-    "dg-speak-confidently": {
-      "id": "dg-speak-confidently",
+    "conv4-19": {
+      "id": "conv4-19",
       "speaker": "me",
-      "text": { "da": "", "en": "[Speak confidently about your own life. Frame it positively. Example: 'Oh nice. Yeah I live over in the financial district. You can pretty much see the Brooklyn Bridge from my window. I'm kind of between there and World Trade.']" },
-      "note": "Shamelessly speak about yourself. You're giving her a sample of what the full entree would be like. Don't be boring or bland - 'I live here, I work here, yeah that sounds cool' - that's a bad sample. She'll flake you. Even if you deliver pizza: 'Yeah I love the job, it's great, I make a ton of money, I drive around, listen to podcasts all night.' Find confidence in the fact that you are on your journey.",
-      "source": "#1 Communication Mistake Men Make With Women [qrnGU56V_lY]",
-      "children": ["dg-close-date-location"]
-    },
-    "dg-close-date-location": {
-      "id": "dg-close-date-location",
-      "speaker": "me",
-      "text": { "da": "", "en": "Have you ever been to [date location]? Hey, I know we just met but we should grab some food this week. Let's grab drinks this week." },
-      "note": "A to B. Always have a date location in mind - 2-3 spots you always take girls to. 'I'm never wondering where I'm taking girls to.' Aaron says: 'I've got about two to three spots that I'm asking them if they've ever been to one of these spots.' Always Be Closing - ABC.",
-      "source": "10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop)",
-      "children": ["dg-close-her-sure", "dg-close-her-hesitant"]
-    },
-    "dg-close-her-sure": {
-      "id": "dg-close-her-sure",
-      "speaker": "her",
-      "text": { "da": "", "en": "Yeah, sure! That sounds fun." },
-      "children": ["dg-close-exchange"]
-    },
-    "dg-close-her-hesitant": {
-      "id": "dg-close-her-hesitant",
-      "speaker": "her",
-      "text": { "da": "", "en": "I don't know, maybe..." },
-      "note": "Generic hesitant response - not from a specific transcript. This is a common scenario.",
-      "children": ["dg-close-low-pressure"]
-    },
-    "dg-close-low-pressure": {
-      "id": "dg-close-low-pressure",
-      "speaker": "me",
-      "text": { "da": "", "en": "No pressure. Let's just exchange numbers and figure it out." },
-      "note": "Generic low-pressure close. Always go for the number - anything is better than nothing.",
-      "children": ["dg-close-exchange"]
-    },
-    "dg-close-exchange": {
-      "id": "dg-close-exchange",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Exchange numbers. Set up date at your pre-selected location.]" },
-      "note": "Always go for the pull. Always go for the number. ABC - Always Be Closing. Anything is better than nothing. You're developing a track record of doing what you say you're gonna do.",
-      "source": "10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop)",
-      "children": ["date-first-date-tips"]
-    },
-
-    "date-context": {
-      "id": "date-context",
-      "speaker": "me",
-      "text": { "da": "", "en": "[DATE CONTEXT - First Date Principles]" },
-      "children": ["date-first-date-tips", "date-cheap-ideas", "date-dont-do"]
-    },
-
-    "date-first-date-tips": {
-      "id": "date-first-date-tips",
-      "speaker": "me",
-      "text": { "da": "", "en": "[First date: shoulder to shoulder instead of face to face. Walk next to each other, sit at a bar next to each other, or at the very least sit 90 degrees at a high top table.]" },
-      "note": "The problem is that when you're sitting across from a woman at a table or a booth, it can feel like a job interview. There's not a lot of vibe there, not really going to be any physical touch. So many women today have social anxiety - sitting face to face for a long time makes it harder for them to warm up to you. Shoulder to shoulder makes for way more connection.",
-      "source": "3 First Date Tips [0R_umfUObSQ]",
-      "children": ["date-sexualize", "date-physical-escalation"]
-    },
-
-    "date-physical-escalation": {
-      "id": "date-physical-escalation",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Physically escalate on the date: hands on her leg, playing with her fingers, looking at each other. You're having fun - this is supposed to be a good time.]" },
-      "note": "From the workshop: 'You guys have some good little banter, you loosen up together, you get to know each other, your fucking hands on her leg a little bit, you're playing with her fingers, you guys are looking at each other.' Banging chicks is supposed to be FUN. You're supposed to enjoy yourself.",
-      "source": "10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop)",
-      "children": ["date-go-for-pull"]
-    },
-
-    "date-go-for-pull": {
-      "id": "date-go-for-pull",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Close out the check, start walking. 'Let's go chill at my place.' Or bring her home and use a comfort move - head scratcher, put on a show.]" },
-      "note": "From Aaron's McKenzie story: 'I end up just closing out the check and we just go walking. She's like where are we going? I'm like, just a few blocks down, we'll just go chill at my place. And she's like okay.' Always go for the pull. But don't jump the gun if the vibe isn't there - take your time, enjoy another night out, then get her home.",
-      "source": "10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop), 3 Things NOT To Do On A Date [g5jPNbWcqGM]",
+      "text": { "da": "", "en": "Hey, very nice meeting you. I'm seriously gonna take you on the best BB bop date of your life." },
+      "source": "Daygame Infield - Quick Number Grab [qyUXSv4qyEU]",
       "children": []
     },
 
-    "date-cheap-ideas": {
-      "id": "date-cheap-ideas",
+    "conv5-open": {
+      "id": "conv5-open",
       "speaker": "me",
-      "text": { "da": "", "en": "[Cheap date ideas: 1) Ice cream + walk. 2) Dave and Busters / arcade - play games, talk in between, make it competitive. 3) Anything outside - soccer ball at the park, a sixer of White Claw at the park.]" },
-      "note": "'A lot of guys will say I'm not really dating right now because I'm trying to get my money up. Bro, you can get your money up and still be going on some dates.' Game is free - it's free to go to Target, free to go to the mall, free to go make eye contact with the most beautiful girl you've ever seen and say hello.",
-      "source": "3 Cheap Date Ideas [xzjmuWPpRzY], 2025 IS YOUR YEAR [EdcPkeELE_s]",
-      "children": ["date-first-date-tips"]
+      "text": { "da": "", "en": "Hey, do you know if they have coffee here in the Kroger at all?" },
+      "note": "Daygame grocery store approach on a very shy girl. Indirect/situational opener to ease in. He genuinely didn't care about the coffee - just wanted to start the conversation.",
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-02"]
     },
-
-    "date-dont-do": {
-      "id": "date-dont-do",
-      "speaker": "me",
-      "text": { "da": "", "en": "[Three things NOT to do on a first date]" },
-      "note": "1) Don't tell her not to get a salad - let her make her own decisions about what to eat. 2) Don't get into your emotions on the first date - no deep family trouble, no crying. Keep it casual. Getting deep is fun (9/11, aliens) but leave the emotional shit at home. 3) Don't jump the gun if the vibe isn't there - don't rush to 'so you wanna come home with me?' when the sexual vibe isn't happening. Take your time, enjoy another night out.",
-      "source": "3 Things NOT To Do On A Date [g5jPNbWcqGM]",
-      "children": []
-    },
-
-    "date-sexualize": {
-      "id": "date-sexualize",
-      "speaker": "me",
-      "text": { "da": "", "en": "So do you regularly just end up hanging out with guys you met at [place]?" },
-      "note": "On the date: transition into relationship talk to sexualize the conversation naturally. This is the #1 easiest way to sexually escalate. Works on dates, cold approach, daygame, nightgame.",
-      "source": "#1 KEY To Sexualizing Your Conversations [-_3ypQLrDzo]",
-      "children": ["date-sex-her-responds"]
-    },
-    "date-sex-her-responds": {
-      "id": "date-sex-her-responds",
+    "conv5-02": {
+      "id": "conv5-02",
       "speaker": "her",
-      "text": { "da": "", "en": "Oh, I mean, not all the time." },
-      "source": "#1 KEY To Sexualizing Your Conversations [-_3ypQLrDzo]",
-      "children": ["date-sex-ex"]
+      "text": { "da": "", "en": "No, not in this one. The one up on Chambers Road, they do, they have a Starbucks in it." },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-03"]
     },
-    "date-sex-ex": {
-      "id": "date-sex-ex",
+    "conv5-03": {
+      "id": "conv5-03",
       "speaker": "me",
-      "text": { "da": "", "en": "When's the last time you had an ex-boyfriend?" },
-      "note": "Dive right into relationship talk. Now you're in the realm of sexuality-based conversation. You're both screening each other as potential mates. You carry it directly into talking about sex stuff - don't straight up say 'how many guys you slept with' but use: 'So you're pretty promiscuous, huh?'",
-      "source": "#1 KEY To Sexualizing Your Conversations [-_3ypQLrDzo]",
-      "children": ["date-sex-promiscuous"]
+      "text": { "da": "", "en": "Oh, seriously? Why don't they have that here? That's absurd. You're smiling a lot. You seem so happy." },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-04"]
     },
-    "date-sex-promiscuous": {
-      "id": "date-sex-promiscuous",
-      "speaker": "me",
-      "text": { "da": "", "en": "So you're pretty promiscuous, huh?" },
-      "note": "If she's not offended by this, it's a great sign. Aaron: 'If she's not a fucking dummy, she's not going to be offended by that. It's really, really great.'",
-      "source": "#1 KEY To Sexualizing Your Conversations [-_3ypQLrDzo]",
-      "children": ["date-sex-her-what-mean", "date-sex-her-player"]
-    },
-    "date-sex-her-what-mean": {
-      "id": "date-sex-her-what-mean",
+    "conv5-04": {
+      "id": "conv5-04",
       "speaker": "her",
-      "text": { "da": "", "en": "What is that supposed to mean?" },
-      "source": "#1 KEY To Sexualizing Your Conversations [-_3ypQLrDzo]",
-      "children": ["date-physical-escalation"]
+      "text": { "da": "", "en": "Well, I have tea, so." },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-05"]
     },
-    "date-sex-her-player": {
-      "id": "date-sex-her-player",
+    "conv5-05": {
+      "id": "conv5-05",
+      "speaker": "me",
+      "text": { "da": "", "en": "How's your day going?" },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-06"]
+    },
+    "conv5-06": {
+      "id": "conv5-06",
       "speaker": "her",
-      "text": { "da": "", "en": "I can tell you're like a player, huh? You probably like sleep around." },
-      "source": "#1 KEY To Sexualizing Your Conversations [-_3ypQLrDzo]",
-      "children": ["date-sex-player-response"]
+      "text": { "da": "", "en": "It's going great." },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-07"]
     },
-    "date-sex-player-response": {
-      "id": "date-sex-player-response",
+    "conv5-07": {
+      "id": "conv5-07",
       "speaker": "me",
-      "text": { "da": "", "en": "No, I mean like, you know, here and there." },
-      "note": "Be kind of funny with it. Don't be defensive.",
-      "source": "#1 KEY To Sexualizing Your Conversations [-_3ypQLrDzo]",
-      "children": ["date-physical-escalation"]
+      "text": { "da": "", "en": "About to pick up this sushi, and then I'm going to party a little bit. I'm getting ready to go to 4th Street Bar later. You're so cute, what's your name?" },
+      "note": "Shamelessly oversharing about his plans, then transitioning to direct intent.",
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-08"]
     },
-
-    "mindset-context": {
-      "id": "mindset-context",
-      "speaker": "me",
-      "text": { "da": "", "en": "[MINDSET - Core Principles from Aaron Alexander]" },
-      "children": ["mindset-three-dating", "mindset-assume-attraction", "mindset-excited-right", "mindset-do-more", "mindset-maniacal"]
+    "conv5-08": {
+      "id": "conv5-08",
+      "speaker": "her",
+      "text": { "da": "", "en": "Marin." },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-09"]
     },
-
-    "mindset-three-dating": {
-      "id": "mindset-three-dating",
+    "conv5-09": {
+      "id": "conv5-09",
       "speaker": "me",
-      "text": { "da": "", "en": "[3 MINDSETS FOR DATING: 1) Girls are horny - women love having sex. 2) Women want to have sex with YOU - you have value to provide, you're on your journey. 3) You are the CEO interviewing her - you are not going up trying to peacock and show off enough to make her want you.]" },
-      "note": "Mindset #3 is the most important: 'Walk up to these girls as though you are interviewing them to see if they are worthy to enter your world.' When you think 'I'm gonna project the best version of myself and see if she wants me' - that immediately puts it in your head that she's above you. That's putting her on a pedestal. Fuck that noise. Other way around. This makes you less nervous, more confident, and she's attracted to that confidence.",
-      "source": "3 MINDSETS FOR DATING [vNrixMbimG0]",
+      "text": { "da": "", "en": "Hi. You don't want to hug me? Are you serious? Why would you not want to hug me?" },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-10"]
+    },
+    "conv5-10": {
+      "id": "conv5-10",
+      "speaker": "her",
+      "text": { "da": "", "en": "I'm shy." },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-11"]
+    },
+    "conv5-11": {
+      "id": "conv5-11",
+      "speaker": "me",
+      "text": { "da": "", "en": "That's absurd. You are shy. You're very pretty. So what do you got going on the rest of the day?" },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-12"]
+    },
+    "conv5-12": {
+      "id": "conv5-12",
+      "speaker": "her",
+      "text": { "da": "", "en": "I was going to make some Oreo balls." },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-13"]
+    },
+    "conv5-13": {
+      "id": "conv5-13",
+      "speaker": "me",
+      "text": { "da": "", "en": "Oreo balls? Really? So are you inviting me to come over tomorrow and have some of them?" },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-14"]
+    },
+    "conv5-14": {
+      "id": "conv5-14",
+      "speaker": "her",
+      "text": { "da": "", "en": "Well, my roommate and I are dropping them off to our friends." },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-15"]
+    },
+    "conv5-15": {
+      "id": "conv5-15",
+      "speaker": "me",
+      "text": { "da": "", "en": "You can save a few and give me some of them, right?" },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-16"]
+    },
+    "conv5-16": {
+      "id": "conv5-16",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yeah, maybe." },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-17"]
+    },
+    "conv5-17": {
+      "id": "conv5-17",
+      "speaker": "me",
+      "text": { "da": "", "en": "You don't have a boyfriend, right? I can tell. I just think you're cute. And I really didn't care about the coffee. I just wanted to say hello to you." },
+      "note": "Revealing the true intent behind the indirect opener.",
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-18"]
+    },
+    "conv5-18": {
+      "id": "conv5-18",
+      "speaker": "her",
+      "text": { "da": "", "en": "Oh, okay." },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-19"]
+    },
+    "conv5-19": {
+      "id": "conv5-19",
+      "speaker": "me",
+      "text": { "da": "", "en": "But you're shy, so you would never hang out with a stranger that you met at the grocery store, right? Like, that would be outside of your realm of possibilities." },
+      "note": "Reverse psychology / challenge frame to make her want to prove she would.",
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-20"]
+    },
+    "conv5-20": {
+      "id": "conv5-20",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yeah, I guess so." },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-21"]
+    },
+    "conv5-21": {
+      "id": "conv5-21",
+      "speaker": "me",
+      "text": { "da": "", "en": "You're killing me. You're literally killing me. What if I got your phone number and I texted you later to see what you were up to and then if you were free after making these Oreo balls, then you could come meet up with me at 4th Street." },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-22"]
+    },
+    "conv5-22": {
+      "id": "conv5-22",
+      "speaker": "her",
+      "text": { "da": "", "en": "Okay." },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-23"]
+    },
+    "conv5-23": {
+      "id": "conv5-23",
+      "speaker": "me",
+      "text": { "da": "", "en": "Don't only put that in there if you're actually gonna text me back though." },
+      "note": "Anti-flake technique: put ownership on her.",
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
+      "children": ["conv5-24"]
+    },
+    "conv5-24": {
+      "id": "conv5-24",
+      "speaker": "her",
+      "text": { "da": "", "en": "I will text you back. I promise." },
+      "source": "DAYGAME INFIELD | Picking Up A VERY Shy Girl [rXfNz_mA_QM]",
       "children": []
     },
 
-    "mindset-assume-attraction": {
-      "id": "mindset-assume-attraction",
+    "conv6-open": {
+      "id": "conv6-open",
       "speaker": "me",
-      "text": { "da": "", "en": "[ASSUME ATTRACTION - FAFO: Fuck Around and Find Out. You guys are assuming unattraction. You're assuming she is not attracted to you at all. You're constantly finding excuses not to approach. Assume she's going to be attracted to you, then fuck around and find out.]" },
-      "note": "From the workshop: 'If you can assume that you will always succeed, if you can assume this, then this will take you further than fucking anything else.' Aaron assumes attraction every single time because of the maniacal self-talk. Richard Branson quote: 'Entrepreneurship is jumping off a cliff and grabbing sticks on the way down, hoping you're going to build wings.'",
-      "source": "10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop)",
+      "text": { "da": "", "en": "Excuse me. Sorry, are you trying to text me?" },
+      "note": "Daygame street approach on a French girl. Humorous non-sequitur opener to a girl looking at her phone.",
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-02"]
+    },
+    "conv6-02": {
+      "id": "conv6-02",
+      "speaker": "her",
+      "text": { "da": "", "en": "No." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-03"]
+    },
+    "conv6-03": {
+      "id": "conv6-03",
+      "speaker": "me",
+      "text": { "da": "", "en": "Are you not? You should. We should be, like, dating or something, and you should be, like, texting me, like, yo, I'll be there soon." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-04"]
+    },
+    "conv6-04": {
+      "id": "conv6-04",
+      "speaker": "her",
+      "text": { "da": "", "en": "You're very forward." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-05"]
+    },
+    "conv6-05": {
+      "id": "conv6-05",
+      "speaker": "me",
+      "text": { "da": "", "en": "I'm just messing with you. How's your day going?" },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-06"]
+    },
+    "conv6-06": {
+      "id": "conv6-06",
+      "speaker": "her",
+      "text": { "da": "", "en": "Going good. How are you?" },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-07"]
+    },
+    "conv6-07": {
+      "id": "conv6-07",
+      "speaker": "me",
+      "text": { "da": "", "en": "Pretty good. I'm about to come back. Do you know, down this way, do you know where a good spot to grab some food would be?" },
+      "note": "Transitions to directional question to keep the conversation going naturally.",
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-08"]
+    },
+    "conv6-08": {
+      "id": "conv6-08",
+      "speaker": "her",
+      "text": { "da": "", "en": "I don't live here. I'm in Hermosa. I barely ever come up here." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-09"]
+    },
+    "conv6-09": {
+      "id": "conv6-09",
+      "speaker": "me",
+      "text": { "da": "", "en": "I don't live here either, so I don't actually know. You sound like you're from the Midwest." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-10"]
+    },
+    "conv6-10": {
+      "id": "conv6-10",
+      "speaker": "her",
+      "text": { "da": "", "en": "I'm from Paris, France." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-11"]
+    },
+    "conv6-11": {
+      "id": "conv6-11",
+      "speaker": "me",
+      "text": { "da": "", "en": "Paris, France? Oh, moi aussi. I'm from France. Nah. I went. It's a fun city. Why is your English so good?" },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-12"]
+    },
+    "conv6-12": {
+      "id": "conv6-12",
+      "speaker": "her",
+      "text": { "da": "", "en": "Well, I move every five years, so I spent high school in Canada." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-13"]
+    },
+    "conv6-13": {
+      "id": "conv6-13",
+      "speaker": "me",
+      "text": { "da": "", "en": "Are you friends with Bieber?" },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-14"]
+    },
+    "conv6-14": {
+      "id": "conv6-14",
+      "speaker": "her",
+      "text": { "da": "", "en": "I wish." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-15"]
+    },
+    "conv6-15": {
+      "id": "conv6-15",
+      "speaker": "me",
+      "text": { "da": "", "en": "So what is your plan for this evening?" },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-16"]
+    },
+    "conv6-16": {
+      "id": "conv6-16",
+      "speaker": "her",
+      "text": { "da": "", "en": "I have a train to take and then I leave tomorrow." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-17"]
+    },
+    "conv6-17": {
+      "id": "conv6-17",
+      "speaker": "me",
+      "text": { "da": "", "en": "Where you headed?" },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-18"]
+    },
+    "conv6-18": {
+      "id": "conv6-18",
+      "speaker": "her",
+      "text": { "da": "", "en": "Mexico." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-19"]
+    },
+    "conv6-19": {
+      "id": "conv6-19",
+      "speaker": "me",
+      "text": { "da": "", "en": "How about this then - when you get back from your little trip, why don't you and I go on a date? Have you told me your name?" },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-20"]
+    },
+    "conv6-20": {
+      "id": "conv6-20",
+      "speaker": "her",
+      "text": { "da": "", "en": "No. You haven't told me yours." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-21"]
+    },
+    "conv6-21": {
+      "id": "conv6-21",
+      "speaker": "me",
+      "text": { "da": "", "en": "It's more fun that way. You can call me Gladiator. Nah, I'm Aaron. Hi." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-22"]
+    },
+    "conv6-22": {
+      "id": "conv6-22",
+      "speaker": "me",
+      "text": { "da": "", "en": "Let's go on a date. Take my number down and shoot me a text real quick." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-23"]
+    },
+    "conv6-23": {
+      "id": "conv6-23",
+      "speaker": "her",
+      "text": { "da": "", "en": "We'll see." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-24"]
+    },
+    "conv6-24": {
+      "id": "conv6-24",
+      "speaker": "me",
+      "text": { "da": "", "en": "We'll see? What does that mean? It's not a for sure yes? Oh my god, why would it not be? I'm an attractive dude." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
+      "children": ["conv6-25"]
+    },
+    "conv6-25": {
+      "id": "conv6-25",
+      "speaker": "me",
+      "text": { "da": "", "en": "Well, nice meeting you. When you get back from Mexico let's go out. I'll take you out for margaritas so you can relive the trip." },
+      "source": "Aaron Savagely Seducing Young French Vixen | Daygame Infield [LqIhebo0AkY]",
       "children": []
     },
 
-    "mindset-excited-right": {
-      "id": "mindset-excited-right",
+    "conv7-open": {
+      "id": "conv7-open",
       "speaker": "me",
-      "text": { "da": "", "en": "[Be excited about what could go right and never fear what could go wrong. The dirty little secret of the universe is that it really never goes wrong. The worst thing is your ego gets demolished in that moment - but that strengthens your ego, makes you stronger. Even when it 'went wrong' it went right.]" },
-      "note": "Aaron's example: 'I was still kind of chubby, dressed poorly, early days of game. I saw the most beautiful blonde girl, wearing a pink bikini top at the club. My first thoughts were to find a different one, maybe less attractive, more in my league. But I approached anyway. That weekend I ended up sleeping with this girl.' You guys are living a very risk-averse life, and living a life of risk aversion is death.",
-      "source": "10 Years Of Game Wisdom [j8gzCU6jOyQ]",
+      "text": { "da": "", "en": "Excuse me. Sorry. I'm sorry to bother you. Do you live in Kalanaki?" },
+      "note": "Daygame street approach in Greece. Familiarity opener - asking if she lives in a nearby neighborhood. Used to ease into the conversation before transitioning to direct intent.",
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
+      "children": ["conv7-02"]
+    },
+    "conv7-02": {
+      "id": "conv7-02",
+      "speaker": "her",
+      "text": { "da": "", "en": "No. I live in Esme, far away from Kalanaki." },
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
+      "children": ["conv7-03"]
+    },
+    "conv7-03": {
+      "id": "conv7-03",
+      "speaker": "me",
+      "text": { "da": "", "en": "Oh, you just look so familiar. I live up there. I thought you were my neighbor. Are you on your way to work right now or something?" },
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
+      "children": ["conv7-04"]
+    },
+    "conv7-04": {
+      "id": "conv7-04",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yes." },
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
+      "children": ["conv7-05"]
+    },
+    "conv7-05": {
+      "id": "conv7-05",
+      "speaker": "me",
+      "text": { "da": "", "en": "Okay, nice. You work at a bar over here?" },
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
+      "children": ["conv7-06"]
+    },
+    "conv7-06": {
+      "id": "conv7-06",
+      "speaker": "her",
+      "text": { "da": "", "en": "No, I work in an animation studio actually." },
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
+      "children": ["conv7-07"]
+    },
+    "conv7-07": {
+      "id": "conv7-07",
+      "speaker": "me",
+      "text": { "da": "", "en": "Oh, very cool. Okay, nice. Well, I kind of thought you were my neighbor. But I also just thought you were absolutely beautiful." },
+      "note": "Transitioning from familiarity opener to stating intent directly. Aaron says: the transition is simple - just forget what your opener even was and go direct.",
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
+      "children": ["conv7-08"]
+    },
+    "conv7-08": {
+      "id": "conv7-08",
+      "speaker": "her",
+      "text": { "da": "", "en": "Oh, thank you." },
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
+      "children": ["conv7-09"]
+    },
+    "conv7-09": {
+      "id": "conv7-09",
+      "speaker": "me",
+      "text": { "da": "", "en": "You don't ever go on dates with American guys?" },
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
+      "children": ["conv7-10"]
+    },
+    "conv7-10": {
+      "id": "conv7-10",
+      "speaker": "her",
+      "text": { "da": "", "en": "Well, I don't have a problem with where the guy's from. Obviously." },
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
+      "children": ["conv7-11"]
+    },
+    "conv7-11": {
+      "id": "conv7-11",
+      "speaker": "me",
+      "text": { "da": "", "en": "How long have you lived here for?" },
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
+      "children": ["conv7-12"]
+    },
+    "conv7-12": {
+      "id": "conv7-12",
+      "speaker": "her",
+      "text": { "da": "", "en": "For about a month and a half, and I'll be here until the fall." },
+      "note": "Aaron is the one who's been in Greece a month and a half; she lives there. He frames it as if she's the one visiting.",
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
+      "children": ["conv7-13"]
+    },
+    "conv7-13": {
+      "id": "conv7-13",
+      "speaker": "me",
+      "text": { "da": "", "en": "What time do you work right now? You gotta go now or do you wanna get an ice cream with me?" },
+      "note": "Going for the instant date. Always go for the pull.",
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
+      "children": ["conv7-14"]
+    },
+    "conv7-14": {
+      "id": "conv7-14",
+      "speaker": "her",
+      "text": { "da": "", "en": "I'm going right now." },
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
+      "children": ["conv7-15"]
+    },
+    "conv7-15": {
+      "id": "conv7-15",
+      "speaker": "me",
+      "text": { "da": "", "en": "Okay, cool. Follow me on Instagram, I would love to take you out sometime. My name's Aaron, by the way." },
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
+      "children": ["conv7-16"]
+    },
+    "conv7-16": {
+      "id": "conv7-16",
+      "speaker": "her",
+      "text": { "da": "", "en": "Anna. Very nice to meet you." },
+      "source": "Approaching Greek Goddess (+Daygame Infield) [3igAdpCb-CY]",
       "children": []
     },
 
-    "mindset-do-more": {
-      "id": "mindset-do-more",
+    "conv8-open": {
+      "id": "conv8-open",
       "speaker": "me",
-      "text": { "da": "", "en": "[DO MORE. If rejection hurts you, you have to do more approaches. You're gonna be funnier with your best friend you've known since childhood. To be smooth and calm and funny with strangers, you need repetitions. The speech analogy: by day 10 of giving the same speech to 500 people, it starts going well. By day 30, you're giving a Tony Robbins-level speech.]" },
-      "note": "Aaron's speech-to-500-people analogy: 'You take the thing that gives you a full-blown panic attack and you turn it into something you're doing very smoothly.' Guys ask: 'How do I be witty like you?' Answer: more repetitions. There's nothing through a video that's gonna calm your nerves enough. You need to be doing a lot more.",
-      "source": "10 Years Of Game (My Greatest Advice) [yVbiH29D3Q0], 10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop)",
-      "children": []
+      "text": { "da": "", "en": "Hey, what's up? Are you actually a lifeguard? You're not. You're a poser. No, I'm just kidding." },
+      "note": "Daygame grocery store approach. Situational opener based on her lifeguard shirt. Tease into direct intent.",
+      "source": "DAYGAME Infield Pickup | Situational Openers | FULL DAYGAME INFIELD BREAKDOWN [8b19iuqAN6E]",
+      "children": ["conv8-02"]
     },
-
-    "mindset-maniacal": {
-      "id": "mindset-maniacal",
+    "conv8-02": {
+      "id": "conv8-02",
       "speaker": "me",
-      "text": { "da": "", "en": "[MANIACAL SELF-TALK. 'There is maybe nothing more potent in this life than maniacal self-talk.' Look in the mirror and be like: 'Dude, we're gonna crush it today. Let's go. Let's get this shit done, bro.' Literally separate the soul from the lizard brain.]" },
-      "note": "From the workshop: 'I swear to God, just about every day I am maniacally self-talking. I'm on my morning walk, I'm in the sun, I got the shirt off, and I'm just like: we're gonna crush it today dude, let's go, let's get this shit fucking done bro.' Your lizard brain wants to conserve energy and stay safe. Your soul wants to be great. All the greatest athletes, entrepreneurs, CEOs - they're telling themselves all the time they're the fucking man, because the world is competition and the world is going to tell you that you're not shit.",
-      "source": "10 Years In The Field by Aaron Alexander [qDQU-HKjFKM] (workshop)",
+      "text": { "da": "", "en": "You're so pretty." },
+      "note": "Transitioning from situational tease to stating intent.",
+      "source": "DAYGAME Infield Pickup | Situational Openers | FULL DAYGAME INFIELD BREAKDOWN [8b19iuqAN6E]",
+      "children": ["conv8-03"]
+    },
+    "conv8-03": {
+      "id": "conv8-03",
+      "speaker": "her",
+      "text": { "da": "", "en": "Thank you. I just worked out, my hair is like out here, all sweaty." },
+      "source": "DAYGAME Infield Pickup | Situational Openers | FULL DAYGAME INFIELD BREAKDOWN [8b19iuqAN6E]",
+      "children": ["conv8-04"]
+    },
+    "conv8-04": {
+      "id": "conv8-04",
+      "speaker": "me",
+      "text": { "da": "", "en": "Did you? I did not work out today. I'm probably looking fat right now." },
+      "source": "DAYGAME Infield Pickup | Situational Openers | FULL DAYGAME INFIELD BREAKDOWN [8b19iuqAN6E]",
+      "children": ["conv8-05"]
+    },
+    "conv8-05": {
+      "id": "conv8-05",
+      "speaker": "her",
+      "text": { "da": "", "en": "It's okay. You have a green drink." },
+      "source": "DAYGAME Infield Pickup | Situational Openers | FULL DAYGAME INFIELD BREAKDOWN [8b19iuqAN6E]",
+      "children": ["conv8-06"]
+    },
+    "conv8-06": {
+      "id": "conv8-06",
+      "speaker": "me",
+      "text": { "da": "", "en": "I do have a green drink. I'm eating healthy. What's your name? I'm Aaron." },
+      "source": "DAYGAME Infield Pickup | Situational Openers | FULL DAYGAME INFIELD BREAKDOWN [8b19iuqAN6E]",
+      "children": ["conv8-07"]
+    },
+    "conv8-07": {
+      "id": "conv8-07",
+      "speaker": "her",
+      "text": { "da": "", "en": "Hi, very nice to meet you. Do you live in this area?" },
+      "source": "DAYGAME Infield Pickup | Situational Openers | FULL DAYGAME INFIELD BREAKDOWN [8b19iuqAN6E]",
+      "children": ["conv8-08"]
+    },
+    "conv8-08": {
+      "id": "conv8-08",
+      "speaker": "me",
+      "text": { "da": "", "en": "I forgot, I would ask for your number to hang out with you. But I feel like - are you into older guys? I'm 27 years old." },
+      "note": "Aaron reads the girl's energy and uses a calibrated approach. He senses she might be younger and addresses it directly rather than ignoring it.",
+      "source": "DAYGAME Infield Pickup | Situational Openers | FULL DAYGAME INFIELD BREAKDOWN [8b19iuqAN6E]",
+      "children": ["conv8-09"]
+    },
+    "conv8-09": {
+      "id": "conv8-09",
+      "speaker": "her",
+      "text": { "da": "", "en": "Yeah, I really am. I'll give you my number. Do you want to take down my number?" },
+      "source": "DAYGAME Infield Pickup | Situational Openers | FULL DAYGAME INFIELD BREAKDOWN [8b19iuqAN6E]",
+      "children": ["conv8-10"]
+    },
+    "conv8-10": {
+      "id": "conv8-10",
+      "speaker": "me",
+      "text": { "da": "", "en": "Honestly though, only take my number down if you are actually going to text me. What is it?" },
+      "note": "Anti-flake technique: 'Only put my number in your phone if you're actually gonna text me back.' This puts the ownership on her.",
+      "source": "DAYGAME Infield Pickup | Situational Openers | FULL DAYGAME INFIELD BREAKDOWN [8b19iuqAN6E]",
+      "children": ["conv8-11"]
+    },
+    "conv8-11": {
+      "id": "conv8-11",
+      "speaker": "me",
+      "text": { "da": "", "en": "Jenna, so I don't forget. Jenna, lifeguard. I think you're so cute. I'll take you on a date. We'll go to Playhouse. You ever been? Very good restaurant on the Short North. It's not fancy though. I never take girls on first dates to fancy restaurants. I don't want them to get the wrong idea." },
+      "note": "Always have a pre-selected date location ready. Aaron always has 2-3 spots he takes girls to. He names the location, sets the frame.",
+      "source": "DAYGAME Infield Pickup | Situational Openers | FULL DAYGAME INFIELD BREAKDOWN [8b19iuqAN6E]",
       "children": []
     }
   },
   "createdAt": "2026-03-04T12:00:00Z",
-  "updatedAt": "2026-03-04T18:00:00Z"
+  "updatedAt": "2026-03-05T18:00:00Z"
 }

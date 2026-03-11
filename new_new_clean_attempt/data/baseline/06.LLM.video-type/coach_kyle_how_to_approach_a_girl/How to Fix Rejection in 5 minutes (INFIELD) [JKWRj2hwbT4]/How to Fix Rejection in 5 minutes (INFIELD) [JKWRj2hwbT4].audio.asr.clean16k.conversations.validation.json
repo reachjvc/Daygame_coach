@@ -1,0 +1,29 @@
+{
+  "video_id": "JKWRj2hwbT4",
+  "validated_at": "2026-03-05T07:36:00Z",
+  "pipeline_version": "06.LLM.video-type-v3.5.2",
+  "prompt_version": "3.5.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 1,
+    "info": 2,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "info",
+      "check": "schema_valid",
+      "message": "Output matches JSON schema"
+    },
+    {
+      "severity": "info",
+      "check": "speaker_collapse_resolved",
+      "message": "Speaker collapse: 74/74 segments reassigned (100%), 0 remain unknown."
+    },
+    {
+      "severity": "warning",
+      "check": "compilation_with_single_conversation",
+      "message": "Video labeled compilation but only 1 conversation(s); possible infield"
+    }
+  ]
+}

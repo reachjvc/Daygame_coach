@@ -1,0 +1,255 @@
+You are a senior data analyst for a daygame coaching video pipeline. You will receive a transcript with speaker IDs and timestamps from a coaching video. Your job is to produce a comprehensive analysis in ONE pass that combines classification, speaker labeling, quality assessment, and self-verification.
+
+## YOUR TASKS (all in one pass)
+
+### Task 1: Classify the video type
+- `infield`: Coach doing live approaches on the street (1 approach = infield, even with intro/outro)
+- `talking_head`: Coach explaining concepts to camera (no live interaction with targets)
+- `podcast`: Multiple speakers discussing topics (balanced back-and-forth)
+- `compilation`: Mixed content — multiple approaches with breakdowns between them
+
+Decision rules:
+- Count DISTINCT approaches to different targets: 0 → talking_head/podcast; 1 → infield; 2+ → compilation
+- For 0-approach videos: one speaker >80% → talking_head; balanced multi-speaker → podcast
+- Intro/outro commentary alone does NOT make a video "compilation"
+
+### Task 2: Assign speaker roles PER SEGMENT (not per speaker)
+This is critical. The diarization system sometimes merges multiple real speakers into one speaker ID. Therefore, you must decide the role for EACH segment independently based on what the text actually says.
+
+Roles:
+- `coach`: Teaching, demonstrating, addressing camera ("guys", "as you can see"), leading approaches
+- `student`: A coached participant running an approach (not the instructor)
+- `target`: Woman being approached — short responses, gives name/info when asked, reacts
+- `voiceover`: Post-production narration
+- `other`: Background voices, bystanders
+- `unknown`: Cannot determine with confidence
+
+Per-segment rules:
+- If a segment contains MIXED speakers (e.g., coach question + target answer in same segment), mark it as `mixed` and note the dominant speaker and the approximate split
+- NEVER assign "target" to the person who delivers openers ("excuse me", "I just saw you")
+- The person giving SHORT RESPONSES to personal questions is typically the target
+- If unsure, use `unknown` — do not guess
+
+### Task 3: Detect conversation boundaries
+- Assign each segment a `conversation_id` (0 = non-conversational commentary/transition, 1+ = distinct approaches)
+- A new conversation starts when: direct address to new person, location shift, previous approach ended
+- Use time gaps between segments: >30s gap strongly suggests new conversation
+- A valid conversation must be >=10 seconds and ideally include both approacher and target turns
+- Mark the first segment of each conversation with `is_conversation_start: true`
+
+### Task 4: Assess transcript quality per segment
+For each segment, note any quality issues:
+- `clean`: No issues
+- `missing_punctuation`: Semantically correct but lacks punctuation/capitalization
+- `word_mistranscription`: Context makes the error obvious (provide corrected text)
+- `garbled`: Multiple errors, hard to parse
+- `fragment`: Short fragment split from adjacent segment (note: merge_prev or merge_next)
+- `artifact`: ASR hallucination, music transcribed as speech, repeated noise
+- `unrecoverable`: Cannot determine meaning
+
+For repairable issues, provide `repair_text` with the corrected version (only when you're confident).
+
+### Task 5: Self-verification
+After completing tasks 1-4, review your own work for these common errors:
+- Did you mark any target segments as coach (or vice versa)?
+- Did you mark someone delivering an opener as "target"?
+- Are conversation boundaries contiguous (no gaps in conversation_id sequences)?
+- Did you flag any segment as a conversation when it's really just commentary?
+- Are there segments where you assigned "unknown" that you could resolve by looking at surrounding context?
+- For mixed-speaker segments: did you identify the approximate boundary?
+
+Report any corrections you make during self-verification.
+
+## OUTPUT FORMAT
+
+Return a JSON object with this structure:
+
+```json
+{
+  "video_type": {
+    "type": "infield|talking_head|podcast|compilation",
+    "confidence": 0.0-1.0,
+    "reasoning": "brief explanation"
+  },
+  "transcript_confidence": {
+    "score": 1-100,
+    "reasoning": "brief quality summary"
+  },
+  "self_verification": {
+    "corrections_made": ["list of any corrections from Task 5"],
+    "remaining_uncertainties": ["list of things you're not sure about"]
+  },
+  "segments": [
+    {
+      "id": 0,
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach|student|target|voiceover|other|unknown",
+      "is_mixed": false,
+      "mixed_detail": null,
+      "segment_type": "approach|commentary|transition",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "quality": "clean|missing_punctuation|word_mistranscription|garbled|fragment|artifact|unrecoverable",
+      "repair_text": null,
+      "repair_confidence": null,
+      "is_teaser": false,
+      "teaser_of_conversation_id": null
+    }
+  ],
+  "conversations": [
+    {
+      "conversation_id": 1,
+      "description": "brief description of the conversation",
+      "segment_range": [start_id, end_id],
+      "speakers_involved": ["coach", "target"],
+      "target_participation": "none|minimal|moderate|active"
+    }
+  ]
+}
+```
+
+## IMPORTANT RULES
+- Return JSON only. No markdown fences, no prose outside JSON.
+- If you cannot determine something, say so explicitly — do not invent.
+- Be conservative: `unknown` is always safer than a wrong guess.
+- For mixed-speaker segments, `is_mixed: true` with a `mixed_detail` string describing the split is FAR better than guessing wrong.
+
+## VIDEO METADATA
+Title: "Approaching A 10 In Miami"
+Channel: daily_evolution
+Duration: 575 seconds
+
+## TRANSCRIPT (131 segments)
+Format: [ID] SPEAKER_XX (start-end): text
+
+[0] SPEAKER_00 (0.0-1.1): What's going on guys?
+[1] SPEAKER_00 (1.2-2.2): Welcome back.
+[2] SPEAKER_00 (2.7-4.8): My name is Aaron Alexander.
+[3] SPEAKER_00 (4.9-7.1): We've got a fun one for you today.
+[4] SPEAKER_00 (7.4-14.8): If you're new here to this channel, what I do for a living, what I have done full-time for the last
+[5] SPEAKER_00 (14.8-23.4): six years of my life, is I take guys just like you out into the field for an entire weekend
+[6] SPEAKER_00 (23.3-33.8): to show you how simple and fun and effective you can make meeting women so
+[7] SPEAKER_00 (33.8-42.0): many dudes today are struggling with loneliness with depression with porn
+[8] SPEAKER_00 (42.0-50.3): addiction and so much of this stems from the fact that you can't date any of the
+[9] SPEAKER_00 (50.2-54.1): the types of women that you actually want to be dating.
+[10] SPEAKER_00 (54.3-57.5): Now, when you come to one of my live bootcamp programs,
+[11] SPEAKER_00 (57.7-62.1): I show you how simple we can make all of this,
+[12] SPEAKER_00 (62.1-63.7): how fun we can make all of this,
+[13] SPEAKER_00 (63.7-66.3): and how effective I can show you
+[14] SPEAKER_00 (66.3-69.3): how to really have charismatic,
+[15] SPEAKER_00 (69.9-71.6): engaging interactions with women.
+[16] SPEAKER_00 (71.7-74.6): You can drop down in any city in the world.
+[17] SPEAKER_00 (74.7-77.2): Your job moves you to another city.
+[18] SPEAKER_00 (77.3-79.9): You decide that you wanna go traveling.
+[19] SPEAKER_00 (79.9-85.0): You just want to go live somewhere else and I can show you how to literally go out and
+[20] SPEAKER_00 (85.0-86.5): perform alchemy.
+[21] SPEAKER_00 (86.6-93.9): I can show you how to turn what would have been complete strangers that you're just walking
+[22] SPEAKER_00 (93.9-99.9): by in the grocery store, on your way to the gym, at the gym, at the coffee shop, whatever
+[23] SPEAKER_00 (99.8-106.6): it is, how to turn what would be strangers into women that you're sleeping with.
+[24] SPEAKER_00 (106.6-109.6): And I'm incredibly, incredibly passionate about this.
+[25] SPEAKER_00 (109.7-113.8): If you're new to the channel, watch all of my videos, dude.
+[26] SPEAKER_00 (113.8-119.1): I've got hundreds of videos here on the Evolution Daily YouTube
+[27] SPEAKER_00 (119.0-122.1): channel of me not just telling you.
+[28] SPEAKER_00 (122.2-126.1): Most guys just kind of give you random advice and you don't
+[29] SPEAKER_00 (126.1-127.9): really know if they have game.
+[30] SPEAKER_00 (128.0-129.3): I show you.
+[31] SPEAKER_00 (129.3-131.3): Watch all of my infields.
+[32] SPEAKER_00 (131.3-133.5): Watch all of these live demonstrations.
+[33] SPEAKER_00 (133.5-141.8): frustrations and when you really start to see that I'm the dude who can really change your life
+[34] SPEAKER_00 (141.8-148.5): forever and I gotta say this man and whatever dude like if you just want to jump straight to
+[35] SPEAKER_00 (148.5-154.7): the video go ahead do your thing but I gotta say this you know I talk to a lot of guys that are
+[36] SPEAKER_00 (154.7-166.2): really struggling mentally and I truly truly believe that a major percentage of
+[37] SPEAKER_00 (166.2-177.3): men who are down bad who actually even go as far as committing suicide I really
+[38] SPEAKER_00 (177.3-181.1): truly believe that if you were to take that same man and you were to insert
+[39] SPEAKER_00 (181.1-184.3): insert love into his life.
+[40] SPEAKER_00 (184.8-189.1): If you were to insert good sex into his life, if you were to insert a
+[41] SPEAKER_00 (189.1-194.8): woman that loves him, that provides for him, and that he provides for her, and that they create
+[42] SPEAKER_00 (194.8-199.1): this symbiosis, I really believe that we can save lives.
+[43] SPEAKER_00 (199.3-201.9): And so, you know, this is something that
+[44] SPEAKER_00 (201.9-203.0): saved my life.
+[45] SPEAKER_00 (203.5-211.5): Learning game was the absolute catapult for me to start losing weight back when
+[46] SPEAKER_00 (211.5-213.2): I was a 300 pound fatty.
+[47] SPEAKER_00 (213.7-217.7): You know, it was the catapult for me and my self-development to become
+[48] SPEAKER_00 (217.7-219.8): a stronger, better man.
+[49] SPEAKER_00 (220.2-223.0): Sure, it all started stemming with like, I want to get laid.
+[50] SPEAKER_00 (223.9-224.3): But then
+[51] SPEAKER_00 (224.2-226.9): the game has taken me to so many incredible places.
+[52] SPEAKER_00 (226.9-228.7): And I know that again, if you're a dude
+[53] SPEAKER_00 (228.7-234.2): out there who's struggling I know that I can help you to really elevate your life
+[54] SPEAKER_00 (234.2-239.0): to be able to meet these women to be able to enjoy life to be able to have
+[55] SPEAKER_00 (239.0-242.2): good sex to be able to get that girlfriend or really even get that
+[56] SPEAKER_00 (242.2-249.1): quality woman that you want that's going to raise your children so I just want
+[57] SPEAKER_00 (249.1-252.1): this I had to say that because it's just something I'm feeling really passionate
+[58] SPEAKER_00 (252.1-256.4): about lately I'm gonna drop this infield now for you guys I hope you enjoy it
+[59] SPEAKER_00 (256.4-259.6): and you know, if you're really struggling out there,
+[60] SPEAKER_00 (259.7-261.0): I want you to click the link down below.
+[61] SPEAKER_00 (261.1-262.5): It's in the comments, it's in the description,
+[62] SPEAKER_00 (263.6-265.7): evolutiondaily.com where you can actually apply
+[63] SPEAKER_00 (265.7-268.2): to speak with my assistant, Alex,
+[64] SPEAKER_00 (268.4-271.3): who is going to talk to you about, you know,
+[65] SPEAKER_00 (271.3-273.9): potential options for you getting some coaching.
+[66] SPEAKER_00 (274.1-275.2): You know, if this is something
+[67] SPEAKER_00 (275.2-276.7): that you've just always struggled with,
+[68] SPEAKER_00 (276.8-280.3): if you're just not good with chicks and you want that,
+[69] SPEAKER_00 (280.3-282.5): you know, maybe you're on TikTok all the time,
+[70] SPEAKER_00 (282.6-283.8): you're on Instagram all the time,
+[71] SPEAKER_00 (283.8-284.9): you see all these beautiful women
+[72] SPEAKER_00 (284.9-289.9): and you're just like, dude, like, I don't even see a path for me to be able to get there.
+[73] SPEAKER_00 (290.2-290.5): That's what
+[74] SPEAKER_00 (290.5-296.9): I do for a living is I show you this path out in the field live in person.
+[75] SPEAKER_00 (297.2-297.7): So I want you to click
+[76] SPEAKER_00 (297.7-298.8): the link down below.
+[77] SPEAKER_00 (299.3-301.9): And you'll be able to speak with Alex about some of our upcoming coaching
+[78] SPEAKER_00 (301.9-303.3): opportunities for you.
+[79] SPEAKER_00 (304.0-307.6): We try to have different programs and options that fit really any budget
+[80] SPEAKER_00 (307.6-310.0): as well as offering payment plans, things like that.
+[81] SPEAKER_00 (310.0-312.7): But yeah, dude, just really, really
+[82] SPEAKER_00 (312.7-318.0): passionate about this stuff fired up lately more than ever so this is just a
+[83] SPEAKER_00 (318.0-322.4): quick number close you know just a good fun little interaction and this is
+[84] SPEAKER_00 (322.4-325.3): something that you can replicate over and over and over again when you just
+[85] SPEAKER_00 (325.2-329.0): learn some of the basic fundamentals and especially when you come for a full
+[86] SPEAKER_00 (329.0-334.3): weekend and have me there with you you know holding your hand in this process
+[87] SPEAKER_00 (334.3-339.2): helping you to overcome the fear that you currently have of approaching
+[88] SPEAKER_00 (339.2-344.3): beautiful women of running fun engaging interactions with them and showing you
+[89] SPEAKER_00 (344.3-348.3): how you can turn those into dates so thank you guys so much for tuning in
+[90] SPEAKER_00 (348.2-354.7): like this video if you like this video and here's the infield again click the
+[91] SPEAKER_00 (354.6-360.0): link down below to apply so you can speak with my assistant Alex about our
+[92] SPEAKER_00 (360.0-364.7): upcoming coaching programs hopefully I will see you in the field soon
+[93] SPEAKER_00 (374.7-382.1): excuse me what's like the best restaurant to grab food over here I feel like all of these
+[94] SPEAKER_01 (382.1-396.8): are like $5,000 for like a shrimp okay I moved here two weeks ago and so usually I'm like the
+[95] SPEAKER_00 (396.8-402.3): newest person in miami but now you are so i feel like you think you're cooler than me but
+[96] SPEAKER_01 (402.9-408.8): no i'm just chilling on the beach oh yeah why'd you come here fashion school
+[97] SPEAKER_00 (409.5-415.6): okay fashion your fashion's all right yeah this is a chill outfit this is my beach outfit
+[98] SPEAKER_00 (415.6-422.6): i uh this is okay the fit doesn't go together my bag my bag is like two days delayed i checked a
+[99] SPEAKER_00 (422.6-429.0): bag and it's been like yeah because I had to go back to Ohio and then back
+[100] SPEAKER_00 (428.9-434.6): again so yeah it's been crazy you ever been to Ohio what's your uh what do you
+[101] SPEAKER_00 (434.6-442.0): call that what's your name I'm Aaron hello good to meet you yeah so so you'll
+[102] SPEAKER_01 (442.0-451.8): be here for like years for fashion school and shit okay yeah is that like
+[103] SPEAKER_01 (451.8-457.1): my little pony or something uh it's just some horsies that's what's up you gotta you got a
+[104] SPEAKER_00 (457.1-462.8): good vibe you're like a little stoner chick yeah yeah i usually just eat the weed smoking doesn't
+[105] SPEAKER_00 (462.8-468.6): hit the same for me yeah yeah yeah edibles and yeah not just like the flower i'm not
+[106] SPEAKER_00 (468.6-476.1): just gnawing on is there a better way to waste weed than just eating it that would be that would
+[107] SPEAKER_00 (476.1-484.0): would be insane you said okay I was thinking you were like the Amazon listen
+[108] SPEAKER_00 (485.0-491.1): give me your number I'll text you and let's fucking let's do some shit some
+[109] SPEAKER_00 (491.1-498.7): time yeah let's kick it on the beach where from again North Florida so you're
+[110] SPEAKER_00 (498.7-505.4): like you're like a riffraff Florida born and raised spring breakers okay sick I'm
+[111] SPEAKER_00 (505.4-506.0): I'm gonna text you.
+[112] SPEAKER_00 (506.5-507.5): I'm from Ohio.
+[113] SPEAKER_00 (507.9-511.3): So you might meet a lot of like trash dudes around here,
+[114] SPEAKER_00 (511.4-514.1): but I'm like a wholesome ass, you know,
+[115] SPEAKER_00 (514.1-515.0): real world gentleman.
+[116] SPEAKER_00 (516.1-518.2): So, but I'm a good combo of that
+[117] SPEAKER_00 (518.2-520.0): and like a recovering fuck boy as well.
+[118] SPEAKER_00 (520.3-523.0): So just kind of like, you know, doing my thing.
+[119] SPEAKER_00 (524.2-525.0): All right.
+[120] SPEAKER_00 (526.2-526.7): Sick.
+[121] SPEAKER_00 (527.6-529.6): All right, well, I'm gonna keep doing my thing.
+[122] SPEAKER_00 (530.0-532.8): I'm gonna find some food, something chill over here.
+[123] SPEAKER_00 (532.9-534.1): So, all right.
+[124] SPEAKER_00 (534.1-536.7): Well, hey lit good to meet you.
+[125] SPEAKER_01 (536.8-537.6): I'll talk to you soon.
+[126] SPEAKER_00 (537.8-538.7): All right, peace
+[127] SPEAKER_01 (565.4-568.1): I love you, I love you, I love you
+[128] SPEAKER_01 (568.1-568.9): I love you, I love you, I love you
+[129] SPEAKER_01 (568.8-570.0): I love you, I love you, I love you
+[130] SPEAKER_01 (570.0-574.2): I love you, I love you, I love you

@@ -418,6 +418,78 @@ class TestVideoSummary(unittest.TestCase):
             self.assertNotIn("confidence_block_reason", conv)
 
 
+class TestQualityOverloadGate(unittest.TestCase):
+    """Stage 06h quality-overload gate should block severe low-quality density."""
+
+    def test_ratio_gate_blocks_medium_high_density(self):
+        segs = [_make_segment(i) for i in range(1, 151)]
+        data = _make_06d(segs, video_type="talking_head")
+        qc = {
+            "transcript_artifacts": [],
+            "low_quality_segments": [
+                {"segment_index": i, "repaired": True}
+                for i in range(1, 61)
+            ],
+        }
+        out, _ = _propagate(
+            data_06d=data,
+            damage_map=None,
+            adjudication=None,
+            quality_check=qc,
+            apply_repairs=False,
+        )
+        vs = out["video_summary"]
+        self.assertEqual(vs["gate_decision"], "block")
+        self.assertIn(
+            "lq_total_ratio_0.4000>=0.34_mincount_60",
+            vs["gate_reason_codes"],
+        )
+
+    def test_extreme_ratio_gate_blocks_short_video(self):
+        segs = [_make_segment(i) for i in range(1, 68)]
+        data = _make_06d(segs, video_type="talking_head")
+        qc = {
+            "transcript_artifacts": [],
+            "low_quality_segments": [
+                {"segment_index": i, "repaired": True}
+                for i in range(1, 35)
+            ],
+        }
+        out, _ = _propagate(
+            data_06d=data,
+            damage_map=None,
+            adjudication=None,
+            quality_check=qc,
+            apply_repairs=False,
+        )
+        vs = out["video_summary"]
+        self.assertEqual(vs["gate_decision"], "block")
+        self.assertIn(
+            "lq_total_ratio_extreme_0.5075>=0.50_mincount_25",
+            vs["gate_reason_codes"],
+        )
+
+    def test_density_below_threshold_passes(self):
+        segs = [_make_segment(i) for i in range(1, 121)]
+        data = _make_06d(segs, video_type="talking_head")
+        qc = {
+            "transcript_artifacts": [],
+            "low_quality_segments": [
+                {"segment_index": i, "repaired": True}
+                for i in range(1, 41)
+            ],
+        }
+        out, _ = _propagate(
+            data_06d=data,
+            damage_map=None,
+            adjudication=None,
+            quality_check=qc,
+            apply_repairs=False,
+        )
+        vs = out["video_summary"]
+        self.assertEqual(vs["gate_decision"], "pass")
+
+
 class TestPropagationPenalty(unittest.TestCase):
     """Contamination propagation to neighboring segments."""
 

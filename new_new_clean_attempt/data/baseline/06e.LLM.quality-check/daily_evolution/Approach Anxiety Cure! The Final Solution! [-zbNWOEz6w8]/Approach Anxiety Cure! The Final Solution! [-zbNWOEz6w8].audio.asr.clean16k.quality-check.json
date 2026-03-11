@@ -1,0 +1,351 @@
+{
+  "video_id": "-zbNWOEz6w8",
+  "generated_at": "2026-03-05T18:29:07Z",
+  "pipeline_version": "06e.LLM.quality-check-v1.1",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.conversations.json",
+  "model": "opus",
+  "windowing": {
+    "primary_segment_count": 90,
+    "context_segment_count": 10,
+    "window_count": 2,
+    "windows": [
+      {
+        "index": 0,
+        "primary_start_segment_id": 0,
+        "primary_end_segment_id": 89,
+        "primary_segment_count": 90,
+        "context_start_segment_id": 0,
+        "context_end_segment_id": 99,
+        "context_segment_count": 100,
+        "prompt_chars": 11339,
+        "timeout_seconds": 240
+      },
+      {
+        "index": 1,
+        "primary_start_segment_id": 90,
+        "primary_end_segment_id": 151,
+        "primary_segment_count": 62,
+        "context_start_segment_id": 80,
+        "context_end_segment_id": 151,
+        "context_segment_count": 72,
+        "prompt_chars": 9665,
+        "timeout_seconds": 240
+      }
+    ]
+  },
+  "low_quality_segments": [
+    {
+      "segment": 17,
+      "reason": "Multiple sentences run together without punctuation or capitalization",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "mindset of it, or what everyone likes to talk about. It doesn't matter, life's not",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 18,
+      "reason": "ASR transcribed 'approach' as 'approval'; also missing punctuation",
+      "quality_issue_type": "word_mistranscription",
+      "repair_text": "real. What if in ten years you never made the approach? Whatever fucking mindset",
+      "repair_confidence": 0.95,
+      "action": "replace"
+    },
+    {
+      "segment": 19,
+      "reason": "Sentence boundary missing between 'shit' and 'but then'",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "shit. But then I like to get into the technique of it as well. When it comes to",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 30,
+      "reason": "Missing sentence boundary; 'because anyone ever had anything really' runs into next segment",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "rather than promising it that nothing bad ever happens. Because anyone ever had anything really",
+      "repair_confidence": 0.85,
+      "action": "replace"
+    },
+    {
+      "segment": 31,
+      "reason": "Multiple sentences jammed together without any punctuation or capitalization",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "bad happen? I've been made fun of, but like, what then? Here I am now. Oh my god, I'm alive.",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 32,
+      "reason": "Multiple sentences without punctuation or capitalization",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "A girl yelled at you once. I've had a guy get a little aggro with me. You know, like, that's",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 33,
+      "reason": "Run-on lacking sentence boundaries and capitalization",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "my girl, whatever it is. And here you are, alive and well. The sun's beating down on your",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 34,
+      "reason": "Multiple sentences without punctuation; 'Louisville' should be capitalized",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "face, and we're all having a great time. We can't talk about Louisville right now. Okay, dude got",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 35,
+      "reason": "'it was a night tyler club' is garbled — likely 'it was at night, Tyler, club' referencing RSD Tyler at a nightclub, but word boundaries are mangled by ASR",
+      "quality_issue_type": "garbled_speech",
+      "repair_text": null,
+      "repair_confidence": null,
+      "action": "replace"
+    },
+    {
+      "segment": 36,
+      "reason": "Run-on sentence without punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "that nothing terrible is going to happen, right? And that you're going to have a positive experience.",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 37,
+      "reason": "Run-on lacking sentence boundaries",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "You're going to have a positive experience from it. And just saying, okay, I'm going to go in no",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 38,
+      "reason": "Multiple sentences without punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "matter what, right now. Again, that's the mindset of what we're talking about here. Mindset doesn't",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 39,
+      "reason": "Multiple sentences without punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "always help. I can't beat a thought process into your skull, right? So if you've watched a lot",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 40,
+      "reason": "Run-on sentence without punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "of the videos, then you've probably heard me talk about this. But you've only seen one, and you know,",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 41,
+      "reason": "Multiple sentences without punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "whatever. I don't care how much you guys have watched. It's opening. It's not even opening, it's",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 42,
+      "reason": "Run-on with missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "not even approaching. It's speaking to a human being while eliminating intent, right? So I've got",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 49,
+      "reason": "ASR transcribed 'clocking' as 'clicking'",
+      "quality_issue_type": "word_mistranscription",
+      "repair_text": "for what he's clocking to be two hours,",
+      "repair_confidence": 0.92,
+      "action": "replace"
+    },
+    {
+      "segment": 87,
+      "reason": "Run-on missing punctuation and capitalization",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "as the conversation progresses, escalates, then yes, you want to be clear about the fact, like, hey, I'm",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 88,
+      "reason": "Run-on sentence lacking punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "trying to bang you, or date you, or whatever it is. But when you're just trying to get to that first",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 89,
+      "reason": "Run-on missing punctuation; 'san francisco' should be capitalized",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "checkpoint, and you're wandering around San Francisco for two hours and you can't get there,",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 90,
+      "reason": "Run-on text missing punctuation, continues from previous segment",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Then you have to just get there, which is just \"I compliment you.\" I was walking around Madison Square",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 91,
+      "reason": "Run-on missing punctuation, 'woke it up' likely mistranscription of 'woke up'",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Park today and I just woke up and I just went for a walk as soon as I woke up and I wasn't in",
+      "repair_confidence": 0.87,
+      "action": "replace"
+    },
+    {
+      "segment": 109,
+      "reason": "Run-on text missing punctuation across multiple clauses",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "So by doing that, smiling, looking a stranger in the eyes for the first time that day, whatever,",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 110,
+      "reason": "Run-on text missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "and not again thinking so much about every little step of the way because you get overwhelmed, right?",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 111,
+      "reason": "Word repetition ('if your house' repeated) and run-on missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "It's like if every room in your house is destroyed, your",
+      "repair_confidence": 0.85,
+      "action": "replace"
+    },
+    {
+      "segment": 112,
+      "reason": "Run-on text missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "house is completely disheveled and you look at it, you're like, \"I gotta clean up this whole",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 113,
+      "reason": "Mistranscription: 'we'll be also in' likely 'well, start also in' or 'well, start with'; meaning is 'instead of just starting with the bathroom'",
+      "quality_issue_type": "garbled_speech",
+      "repair_text": "fucking place,\" instead of just starting with the bathroom and getting the bathroom done,",
+      "repair_confidence": 0.85,
+      "action": "replace"
+    },
+    {
+      "segment": 135,
+      "reason": "Mistranscription: 'Tom Turow does to Egypt' should be 'Tom Torero does it, except' — name and phrase garbled by ASR",
+      "quality_issue_type": "word_mistranscription",
+      "repair_text": "Or with, you know, what Tom Torero does, except with the hit and runs, which is he'll actually",
+      "repair_confidence": 0.87,
+      "action": "replace"
+    },
+    {
+      "segment": 138,
+      "reason": "Garbled: 'once we're to go up, we'll tell you you're really pretty' — likely 'and once he goes up, he'll tell you you're really pretty' describing Tom Torero's technique",
+      "quality_issue_type": "garbled_speech",
+      "repair_text": "And he'll go up and he'll tell her, \"You're really pretty.\"",
+      "repair_confidence": 0.85,
+      "action": "replace"
+    },
+    {
+      "segment": 145,
+      "reason": "Mistranscription: 'mall center' likely 'call center'",
+      "quality_issue_type": "word_mistranscription",
+      "repair_text": "Maybe you went to your job, your fucking call center,",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 148,
+      "reason": "Fragment: 'you're fucking not' is incomplete/unclear — likely truncated thought meaning 'you're not in a social mode'",
+      "quality_issue_type": "garbled_speech",
+      "repair_text": null,
+      "repair_confidence": null,
+      "action": "replace"
+    },
+    {
+      "segment": 150,
+      "reason": "Extremely long run-on segment with no punctuation, multiple clauses crammed together",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "I've got buddies that are engineers, he knows them, and they talk about how they go to work all day and it's all numbers and fucking drawing shit or whatever they do, and they're just fucking zombied out. And then they're like, \"If you want me to go talk to a girl in a grocery store, how do I go from cold to hot?\" You know, cold to warm to hot, warm being just intentless speaking. And that's how it's going, you know.",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 151,
+      "reason": "Hallucinated outro metadata — not actual speech content from the coaching conversation",
+      "quality_issue_type": "unrecoverable",
+      "repair_text": null,
+      "repair_confidence": 0.95,
+      "action": "delete"
+    }
+  ],
+  "transcript_artifacts": [
+    {
+      "segment_index": 111,
+      "artifact_type": "word_repetition",
+      "description": "ASR stuttered 'it's like if your house it's like if your house' — repeated clause",
+      "repair_text": "It's like if every room in your house is destroyed, your",
+      "repair_confidence": 0.85,
+      "action": "replace",
+      "damage_severity": "low"
+    },
+    {
+      "segment_index": 135,
+      "artifact_type": "language_confusion",
+      "description": "'Tom Turow does to Egypt' — ASR mangled proper name 'Tom Torero' and misheard 'except' as 'to Egypt'",
+      "repair_text": "Or with, you know, what Tom Torero does, except with the hit and runs, which is he'll actually",
+      "repair_confidence": 0.87,
+      "action": "replace",
+      "damage_severity": "medium"
+    },
+    {
+      "segment_index": 138,
+      "artifact_type": "nonsense",
+      "description": "'once we're to go up, we'll tell you you're really pretty' — ASR garbled pronouns and verb forms describing Tom Torero's hit-and-run technique",
+      "repair_text": "And he'll go up and he'll tell her, \"You're really pretty.\"",
+      "repair_confidence": 0.85,
+      "action": "replace",
+      "damage_severity": "high"
+    },
+    {
+      "segment_index": 151,
+      "artifact_type": "nonsense",
+      "description": "Hallucinated ASR outro 'Thanks for watching!' — not part of actual conversation, likely triggered by end-of-audio silence",
+      "repair_text": null,
+      "repair_confidence": 0.95,
+      "action": "delete",
+      "damage_severity": "high"
+    }
+  ],
+  "summary": {
+    "segments_total": 152,
+    "low_quality_count": 33,
+    "artifact_count": 4,
+    "lq_repair_candidates": 31,
+    "artifact_types": {
+      "word_repetition": 1,
+      "language_confusion": 1,
+      "nonsense": 2
+    }
+  }
+}

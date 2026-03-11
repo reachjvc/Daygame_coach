@@ -1,0 +1,22 @@
+{
+  "video_id": "-zbNWOEz6w8",
+  "generated_at": "2026-03-05T18:29:30Z",
+  "pipeline_version": "06g.LLM.damage-adjudicator-v1.2",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/06f.DET.damage-map/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.damage-map.json",
+  "damage_map_file": "/home/jonaswsl/projects/daygame-coach/data/06f.DET.damage-map/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.damage-map.json",
+  "context_file": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/daily_evolution/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8]/Approach Anxiety Cure! The Final Solution! [-zbNWOEz6w8].audio.asr.clean16k.conversations.json",
+  "skipped": true,
+  "skip_reason": "non_infield_video_type:talking_head",
+  "video_type": "talking_head",
+  "model": "opus",
+  "summary": {
+    "seeds_total": 0,
+    "llm_calls": 0,
+    "repairs_accepted": 0,
+    "anchor_allowed": 0,
+    "llm_failures": 0,
+    "determinism_mismatches": 0,
+    "contamination_spans": 0
+  },
+  "seeds": []
+}

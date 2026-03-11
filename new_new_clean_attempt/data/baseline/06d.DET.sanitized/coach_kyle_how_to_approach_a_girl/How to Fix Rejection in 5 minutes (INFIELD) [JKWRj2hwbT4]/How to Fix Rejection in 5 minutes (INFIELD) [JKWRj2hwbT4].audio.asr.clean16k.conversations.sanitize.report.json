@@ -1,0 +1,40 @@
+{
+  "video_id": "JKWRj2hwbT4",
+  "generated_at": "2026-03-05T07:40:55Z",
+  "pipeline_version": "06d.DET.sanitize-v1.0",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/06c.DET.patched/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.clean16k.conversations.json",
+  "rules": {
+    "teaser_duplicate": {
+      "enabled": true,
+      "description": "Early duplicated preview lines are marked and excluded from Stage 07 evidence."
+    },
+    "mixed_mode": {
+      "enabled": true,
+      "description": "Approach segments containing both interaction and commentary markers are excluded from Stage 07 evidence."
+    },
+    "stage07_evidence_allowlist": {
+      "enabled": true,
+      "description": "Per-conversation stage07_evidence_segment_ids generated from sanitized segments."
+    }
+  },
+  "counts": {
+    "segments_total": 76,
+    "teaser_duplicate_segments": 0,
+    "mixed_mode_segments": 0,
+    "mixed_mode_split_candidates": 0,
+    "mixed_mode_split_materialized_segments": 0,
+    "mixed_mode_synthetic_child_segments": 0,
+    "excluded_from_stage07_evidence": 0,
+    "conversations_total": 1,
+    "fixed_coach_speaker_ids_count": 0,
+    "target_lists_filtered_count": 0,
+    "conversations_with_empty_confident_targets": 1
+  },
+  "teaser_runs": [],
+  "teaser_duplicate_segment_ids": [],
+  "mixed_mode_segment_ids": [],
+  "mixed_mode_split_candidate_segment_ids": [],
+  "mixed_mode_split_materialized_segment_ids": [],
+  "mixed_mode_split_child_segment_ids": [],
+  "flagged_segments": []
+}

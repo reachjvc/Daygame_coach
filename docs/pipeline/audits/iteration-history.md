@@ -4875,3 +4875,311 @@ If Stage `09` stops confusing retrieval confidence with transcript damage, and i
 
 ### Next Hypothesis
 Audit whether `confidence_tier:medium` should remain a retrieval-only downrank signal instead of contributing to canonical Stage `09` damage, unless it appears alongside harder evidence such as transcript artifacts, low tier, or contamination.
+
+## Iteration I105 - 2026-03-05
+
+### Hypothesis
+If Stage `06b` severe `FLAG` outcomes are fail-closed in the conveyor runner, and if `06e/06g` resolve Claude binary paths robustly, then next `06+` subbatch reruns should stop admitting known-bad transcripts while removing false execution quarantines caused by brittle runtime lookup.
+
+### Changes
+- `scripts/training-data/batch/pipeline-runner`:
+  - replaced REJECT-only `06b` gate with fail-closed severe-FLAG evaluation
+  - severe-FLAG triggers now include:
+    - `misattributions >= 5`
+    - `conversation_flags >= 4`
+    - `boundary_issue_major_or_moderate >= 2`
+    - `missing_target_coverage >= 2`
+    - `major_other_flags >= 1`
+  - quarantine reason now records `stage06b_flag_severe` with explicit metric payload
+- `scripts/training-data/06e.LLM.quality-check`:
+  - hardened Claude binary resolution:
+    - `CLAUDE_BINARY` / `CLAUDE_BIN` env override
+    - `shutil.which("claude")`
+    - NVM path glob fallback (`~/.nvm/versions/node/*/bin/claude`)
+- `scripts/training-data/06g.LLM.damage-adjudicator`:
+  - same hardened Claude binary resolution path as `06e`
+
+### Run Scope
+- Full reruns with real Claude calls (escalated execution):
+  - `P001.6`: `06b -> 09`
+  - `P001.7`: `06b -> 09`
+  - `P001.9`: `06b -> 09`
+- Targeted recoveries:
+  - `P001.9` (`JyjkFxCTg18`, `YEC7tyrT7ag`): `06e -> 09` after `06e` resolver fix
+  - `P001.6` (`sxChP6EIJHo`): `06g -> 09` after `06g` resolver fix
+  - `P001.7` (`X9vElD3W1jw`): `06 -> 09` to repair missing Stage-06 artifact
+
+### Validation Evidence
+- New `06b` severe-FLAG gate triggered live quarantine instead of downstream admission:
+  - `mv2X8Yhg9M0`: quarantined at `06b` (`stage06b_flag_severe`, `major_other_flags=1`)
+  - `5sTASDqe0u8`: quarantined at `06b` (`conversation_flags=4`, `missing_target_coverage=2`)
+  - `rwlACYYEwUY`: quarantined at `06b` (`major_other_flags=3`)
+- `06e` resolver fix removed prior false runtime failures:
+  - targeted rerun for `JyjkFxCTg18` and `YEC7tyrT7ag` now passes `06e` and continues through downstream stages
+- `06g` resolver bug was reproduced (`[Errno 2] No such file or directory: 'claude'`) and fixed in-place; targeted rerun for `sxChP6EIJHo` launched from `06g`
+- Latest readiness snapshots generated during this iteration:
+  - `P001.6.auto.report.json`: `eligible=1`, `blocked_ids=7`, `segment_repair_candidates=25`
+  - `P001.7.auto.report.json`: `eligible=0`, `blocked_ids=10` (`REVIEW=6`, `BLOCKED=4`)
+  - `P001.9.auto.report.json`: improved from `blocked_ids=10` to `blocked_ids=8` after targeted `06e` recovery
+
+### Decision
+- keep
+- rationale: gating now blocks concrete severe transcript-structure defects at the earliest truth stage (`06b`), while `06e/06g` runtime fixes remove non-semantic false negatives from the conveyor.
+
+### Next Hypothesis
+Once outstanding targeted recoveries (`X9vElD3W1jw`, `sxChP6EIJHo`) finish, rerun full readiness validation for `P001.7` and `P001.9` to measure true delta from runtime-failure debt vs. remaining semantic-quality policy pressure.
+
+## Iteration I106 - 2026-03-05
+
+### Hypothesis
+If we push the next untouched subbatches through full `06+` with real Claude calls in parallel, the tightened `06b` severe gate should begin showing whether fresh throughput is now blocked on real structural defects instead of runtime failures.
+
+### Changes
+- no code changes in this iteration
+- execution and telemetry only:
+  - launched new full-chain subbatch runs from `06 -> 09`
+  - ran a cross-batch `06b` gate telemetry audit against latest verification artifacts
+
+### Run Scope
+- active full `06+` runs:
+  - `python3 scripts/training-data/batch/pipeline-runner P002.2 --from 06 --to 09 --parallel 3 --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2`
+  - `python3 scripts/training-data/batch/pipeline-runner P002.3 --from 06 --to 09 --parallel 3 --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2`
+  - `python3 scripts/training-data/batch/pipeline-runner P002.4 --from 06 --to 09 --parallel 3 --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2`
+  - `python3 scripts/training-data/batch/pipeline-runner P002.5 --from 06 --to 09 --parallel 2 --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2`
+- gate telemetry audit:
+  - parsed latest `data/06b.LLM.verify/**/*.verification.json`
+  - applied the same severe criteria used in `pipeline-runner evaluate_06b_gate`
+
+### Validation Evidence
+- live stage progression (during this iteration):
+  - `P002.2`: `06=10/10`, began `06b` and moved at least one video to `06e`
+  - `P002.3`: `06=10/10`, `06b=1/10`, `06c=1/10`, `06d=1/10`
+  - `P002.4`: `06=6/10` and rising, `06b` workers active
+  - `P002.5`: entered `06b` after initial `06` completions
+- early `06b` outputs now observed in these subbatches:
+  - `P002.2`: `JKWRj2hwbT4 -> FLAG` (non-severe under current thresholds)
+  - `P002.3`: `GFOcI3Sni6I -> APPROVE`, `TDxv3HxDYHk -> FLAG`
+- no new runtime `claude` binary failures appeared in `06e/06g` during these runs
+- cross-batch severe-gate telemetry (latest verification per video):
+  - coverage: `98` videos
+  - verdicts: `APPROVE=55`, `FLAG=39`, `REJECT=4`
+  - severe-gate hits with current runner logic: `14` total (`10 FLAG + 4 REJECT`)
+  - severe FLAG examples still detected by current logic include:
+    - `5sTASDqe0u8` (`conv=4`, `missing_target_coverage=2`)
+    - `mv2X8Yhg9M0` (`major_other_flags=1`)
+    - `rwlACYYEwUY` (`major_other_flags=3`)
+    - `n0smMRCqVmc` (`conversation_flags=4`, `boundary_major_or_moderate=2`)
+
+### Decision
+- keep
+- rationale: throughput expansion is running with real Claude calls and early `06b`/`06e` progression, with no recurrence of the fixed runtime resolver failures.
+
+### Next Hypothesis
+As `P002.2`–`P002.5` finish `06b` and downstream stages, verify whether canonical quarantine/readiness now reflects severe `06b` truth directly on these fresh subbatches and whether any non-severe FLAG classes should be promoted to stricter policy.
+
+## Iteration I107 - 2026-03-05
+
+### Hypothesis
+If we gate Stage `06h` with explicit quality-overload thresholds (not only confidence score), and clean deterministic debt in-flight, then the runner will carry clearer block telemetry and reduce false runtime quarantine churn before the next Claude window.
+
+### Changes
+- `scripts/training-data/06h.DET.confidence-propagation`:
+  - added hard quality-overload gate inputs to `video_summary`:
+    - `gate_reason_codes`
+    - `gate_inputs` (segment count, low-quality/artifact totals, unresolved ratios, thresholds)
+  - new block conditions:
+    - unresolved low-quality absolute and ratio thresholds
+    - unresolved artifact absolute threshold
+    - extreme total low-quality absolute and ratio thresholds (covers pathological `~400 low-quality` scenarios)
+  - propagated `quality_gate` telemetry into `confidence_metadata` and report payload
+- preserved existing confidence threshold gate (`VIDEO_GATE_THRESHOLD`) and merged both into final `video_summary.gate_decision`.
+
+### Run Scope
+- deterministic reruns (no Claude dependency) after patch:
+  - `P002.2 --from 06h --to 06h`
+  - `P002.3 --from 06h --to 06h`
+  - `P002.4 --from 06h --to 06h`
+  - `P002.5 --from 06f --to 06f`, then `P002.5 --from 06h --to 06h`
+- validated compile integrity:
+  - `python3 -m py_compile scripts/training-data/06h.DET.confidence-propagation`
+
+### Validation Evidence
+- quality leakage audit across latest artifacts (113 videos) before `06h` reruns showed high raw low-quality volume could still pass:
+  - multiple videos had `80–150+` low-quality segments with prior `06h=pass`.
+- after reruns and repair-application in `06h`:
+  - high-volume videos now carry explicit telemetry in `video_summary.gate_inputs`
+  - observed examples:
+    - `JF3jPxb1z7s`: `low_quality_total=142`, `low_quality_unrepaired=7`
+    - `QpmMHZXx_0g`: `low_quality_total=137`, `low_quality_unrepaired=5`
+    - `HAxugFq6IRc`: `low_quality_total=150`, `low_quality_unrepaired=13`
+- deterministic debt cleanup on `P002.5`:
+  - reopened 5 same/downstream quarantine rows via restart filtering
+  - rebuilt missing `06f` artifacts and then `06h` for all five recoverable videos
+  - `P002.5` now sits at:
+    - quarantined: 5 (`06b_reject`/`06b_flag_severe` only)
+    - non-preexisting runtime preflight failures cleared
+- current quarantine snapshot:
+  - `P002.2`: `stage06g_execution_error x2`, `stage06b_flag_severe x1`
+  - `P002.3`: `stage06e_execution_error x1`
+  - `P002.4`: `stage06b_flag_severe x2`, `stage06b_contract_preflight_fail x1`
+  - `P002.5`: `stage06b_reject x3`, `stage06b_flag_severe x2`
+
+### Decision
+- keep
+- rationale: Stage `06h` now emits machine-readable gating truth for quality overload, and deterministic debt has been reduced so the next LLM window can be spent on true recoveries (`06e/06g/07/07b`) instead of contract churn.
+
+### Next Hypothesis
+Once Claude quota opens, rerun targeted recovery manifests (`P002.2` `06g`, `P002.3` `06e`, `P002.5` `06e`) and then `07->09` for `P002.2`–`P002.5`; verify whether remaining quarantine reasons are predominantly semantic (`06b` severe/reject, `07b` gate) rather than runtime execution errors.
+
+## Iteration I108 - 2026-03-06
+
+### Hypothesis
+Fail-closing extreme `06f` damage-map seed volume and exposing `06b` lock control at runner level will tighten early blocking and prevent long noisy `06g` churn on obviously damaged videos.
+
+### Changes
+- `scripts/training-data/batch/pipeline-runner`:
+  - added runner flag `--stage06b-claude-lock {on,off}` and forwarded it to stage env via `STAGE06B_CLAUDE_LOCK`.
+  - added post-`06f` fail-closed gate `evaluate_06f_gate(...)`.
+  - new block thresholds:
+    - `STAGE06F_DAMAGE_SEED_TOTAL_BLOCK_THRESHOLD = 180`
+    - `STAGE06F_DAMAGE_SEED_HIGH_BLOCK_THRESHOLD = 120`
+  - new quarantine reason key: `stage06f_damage_seed_overload`.
+- `docs/pipeline/batches/P002.8.post06f.txt`: added post-`06f` survivor manifest (1 video).
+- `docs/pipeline/batches/P002.10.post06f.txt`: added post-`06f` survivor manifest (6 videos).
+
+### Run Scope
+- manifests:
+  - `P002.8` (`06f -> 06f`)
+  - `P002.9` (`06f -> 06f`)
+  - `P002.10` (`06f -> 06f`)
+  - one-video validation scope for `jdDdgzdFPfs` (`TMP.06f`, `06f -> 06f`)
+- attempted (blocked by LLM preflight timeout):
+  - `P002.10` full `06 -> 09`
+  - `P002.8.post06f` `06g -> 09`
+- scorecards written:
+  - `data/validation/runs/20260306.P002.8.I108.gating-tightening/scorecard.json`
+  - `data/validation/runs/20260306.P002.9.I108.gating-tightening/scorecard.json`
+  - `data/validation/runs/20260306.P002.10.I108.gating-tightening/scorecard.json`
+
+### Before vs After (Scorecard)
+- missing_required_input_count: n/a -> `0` (`P002.8`, `P002.9`, `P002.10`)
+- silent_pass_count: n/a -> `0` (`P002.8`, `P002.9`, `P002.10`)
+- cross_stage_error_rate:
+  - n/a -> `0.8889` (`P002.8`)
+  - n/a -> `1.0` (`P002.9`)
+  - n/a -> `1.0` (`P002.10`)
+- stage07_validation_error_count: n/a -> `0` (all 3)
+- chunk_validation_error_count: n/a -> `0` (all 3)
+- semantic_judge.mean_overall_score: n/a -> n/a
+- semantic_judge.major_error_rate: n/a -> n/a
+- semantic_judge.hallucination_rate: n/a -> n/a
+
+### Validation Evidence
+- Direct gate proof on known outlier:
+  - `jdDdgzdFPfs` (`TMP.06f`) now quarantines with:
+    - `stage06f_damage_seed_overload`
+    - metrics: `total_seeds=301`, `high_severity_seeds=282`.
+- `P002.8` after `06f` rerun:
+  - quarantined `9/10`
+  - overload-gated: `KtmnHDVbmss`, `jdDdgzdFPfs`
+  - one survivor: `1ok1oovp0K0`
+- `P002.9` after `06f` rerun:
+  - quarantined `10/10` (all `stage06f_contract_preflight_fail`)
+- `P002.10` after `06f` rerun:
+  - quarantined `1/7` (`qR7bHW8EoaE`, `stage06f_contract_preflight_fail`)
+  - survivors `6/7` in `P002.10.post06f.txt`
+- Current hard blocker:
+  - Claude preflight command times out (`25s`) repeatedly, so full LLM stages cannot be resumed yet.
+
+### Decision
+- keep
+- rationale: early gating is materially stricter and now blocks extreme damage-map pathology before downstream LLM churn; continuation manifests are ready for immediate resume once Claude preflight recovers.
+
+### Next Hypothesis
+Once Claude preflight is healthy, running only post-`06f` survivor manifests (`P002.8.post06f`, `P002.10.post06f`) through `06g -> 09` will maximize throughput while preserving tightened gating truth.
+
+## Iteration I109 - 2026-03-07
+
+### Hypothesis
+If Stage `06f` fail-closed gating also imports Stage `06e` low-quality overload truth (same thresholds as `06h`), we can block known noisy transcripts earlier and reduce downstream `06g+` churn, while still keeping a single policy lineage.
+
+### Changes
+- `scripts/training-data/batch/pipeline-runner`:
+  - extended `evaluate_06f_gate(...)` to include `06e.summary` low-quality overload checks:
+    - `low_quality_total >= 140`
+    - `low_quality_ratio >= 0.40` with `low_quality_total >= 90`
+  - kept existing seed-overload checks:
+    - `total_seeds >= 180`
+    - `high_severity_seeds >= 120`
+  - added new quarantine reason key when only quality-overload triggers:
+    - `stage06f_low_quality_overload`
+  - preserved `stage06f_damage_seed_overload` for seed-triggered overload.
+- Added post-`06f` continuation manifests:
+  - `docs/pipeline/batches/P002.2.post06f.txt` (8 survivors)
+  - `docs/pipeline/batches/P002.3.post06f.txt` (8 survivors)
+  - `docs/pipeline/batches/P002.4.post06f.txt` (5 survivors)
+  - `docs/pipeline/batches/P002.5.post06f.txt` (5 survivors)
+  - `docs/pipeline/batches/P003.4.post06f.txt` (5 survivors)
+  - `docs/pipeline/batches/P003.5.post06f.txt` (8 survivors)
+  - `docs/pipeline/batches/P003.6.post06f.txt` (5 survivors)
+
+### Run Scope
+- Claude availability probes (real CLI):
+  - `timeout 45 claude --model sonnet -p ...` -> timeout (`124`)
+  - `timeout 45 claude --model opus -p ...` -> timeout (`124`)
+- Deterministic subbatch sweeps:
+  - `P003.4`, `P003.5`, `P003.6` (`06f -> 06f`)
+  - `P003.7`, `P003.8`, `P003.9`, `P003.10` (`06f -> 06f`)
+  - root-cause check on dependency debt:
+    - `P003.4` (`06d -> 06d`)
+    - `P003.4` (`06c -> 06c`)
+- Gate impact reruns after patch:
+  - `P002.2`, `P002.3`, `P002.4` (`06f -> 06f`)
+  - `P002.5` (`06f -> 06f`)
+- scorecards written:
+  - `data/validation/runs/20260307.P002.2.I109.06f-upstream-hardening/scorecard.json`
+  - `data/validation/runs/20260307.P002.3.I109.06f-upstream-hardening/scorecard.json`
+  - `data/validation/runs/20260307.P002.4.I109.06f-upstream-hardening/scorecard.json`
+  - `data/validation/runs/20260307.P002.5.I109.06f-upstream-hardening/scorecard.json`
+  - `data/validation/runs/20260307.P003.4.I109.pre-llm-frontier/scorecard.json`
+  - `data/validation/runs/20260307.P003.5.I109.pre-llm-frontier/scorecard.json`
+  - `data/validation/runs/20260307.P003.6.I109.pre-llm-frontier/scorecard.json`
+  - `data/validation/runs/20260307.P003.7.I109.pre-llm-frontier/scorecard.json`
+  - `data/validation/runs/20260307.P003.8.I109.pre-llm-frontier/scorecard.json`
+  - `data/validation/runs/20260307.P003.9.I109.pre-llm-frontier/scorecard.json`
+  - `data/validation/runs/20260307.P003.10.I109.pre-llm-frontier/scorecard.json`
+
+### Before vs After (Scorecard)
+- `P002.2` (`n/a` prior scorecard) -> `quarantined_videos=2`, `cross_stage_error_rate=0.5`, `ingest_eligible_videos=0`
+- `P002.3` (`n/a` prior scorecard) -> `quarantined_videos=2`, `cross_stage_error_rate=0.0`, `ingest_eligible_videos=0`
+- `P002.4` (`n/a` prior scorecard) -> `quarantined_videos=5`, `cross_stage_error_rate=0.3`, `ingest_eligible_videos=0`
+- `P002.5` (`n/a` prior scorecard) -> `quarantined_videos=5`, `cross_stage_error_rate=0.5`, `ingest_eligible_videos=0`
+- `P003.4` (`n/a` prior scorecard) -> `quarantined_videos=5`, `review_videos=2`, `ingest_eligible_videos=3`
+- `P003.5` (`n/a` prior scorecard) -> `quarantined_videos=2`, `review_videos=2`, `ingest_eligible_videos=2`
+- `P003.6` (`n/a` prior scorecard) -> `quarantined_videos=5`, `review_videos=4`, `ingest_eligible_videos=0`
+- `P003.7`-`P003.10` (`n/a` prior scorecard) -> each `quarantined_videos=10`, `cross_stage_error_rate=1.0`, `ingest_eligible_videos=0`
+
+### Validation Evidence
+- New early low-quality gate fired on live reruns:
+  - `HAxugFq6IRc` (`P002.2`) -> `stage06f_low_quality_overload` (`low_quality_total=150`)
+  - `GFOcI3Sni6I` (`P002.3`) -> `stage06f_low_quality_overload` (`127/231 = 0.5498`)
+  - `v-6aibAc8eE` (`P002.3`) -> `stage06f_low_quality_overload` (`105/261 = 0.4023`)
+  - `JF3jPxb1z7s` (`P002.4`) -> `stage06f_low_quality_overload` (`low_quality_total=142`)
+- Existing seed overload gate remains active:
+  - `NGOo69aaUmc` (`P002.4`) -> `stage06f_damage_seed_overload` (`high_severity_seeds=158`)
+- Verification reruns on `P003.4`-`P003.6` after the patch produced no additional `stage06f_low_quality_overload` hits.
+- Current quarantine snapshots after reruns:
+  - `P002.2`: `stage06b_flag_severe x1`, `stage06f_low_quality_overload x1`
+  - `P002.3`: `stage06f_low_quality_overload x2`
+  - `P002.4`: `stage06b_flag_severe x2`, `stage06b_contract_preflight_fail x1`, `stage06f_damage_seed_overload x1`, `stage06f_low_quality_overload x1`
+  - `P002.5`: `stage06b_reject x3`, `stage06b_flag_severe x2` (no new `06f` overload hits)
+- Dependency-debt finding on new frontier subbatches:
+  - `P003.7`-`P003.10`: all videos quarantined at `06f` preflight (`stage06f_contract_preflight_fail`) because required upstream artifacts are absent (`06/06b/06c/06d` all missing).
+  - `P003.4`-`P003.6`: mixed state; only videos with existing `06/06b/06c/06d` progress through `06f`.
+
+### Decision
+- keep
+- rationale: this moves already-established quality-overload truth upstream into `06f` and immediately blocks concrete noisy transcripts earlier without creating a divergent policy path.
+
+### Next Hypothesis
+When Claude preflight recovers, running only survivor manifests from `06g -> 09` (`P002.2.post06f`, `P002.3.post06f`, `P002.4.post06f`, `P002.5.post06f`, `P003.4.post06f`, `P003.5.post06f`, `P003.6.post06f`) will maximize throughput; `P003.7`-`P003.10` should then be started from `06` (not `06f`) because they have no upstream stage artifacts yet.

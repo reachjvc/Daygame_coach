@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "generated_at": "2026-03-05T07:14:41Z",
+  "video_id": "JKWRj2hwbT4",
+  "source": "coach_kyle_how_to_approach_a_girl",
+  "status": "FAIL",
+  "gate_decision": "block",
+  "reason_code": "upstream_stage07_gate_06h_block_0_7687",
+  "inputs": {
+    "stage07_enriched": "/home/jonaswsl/projects/daygame-coach/data/07.LLM.content/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.clean16k.enriched.json",
+    "stage06_conversations": "/home/jonaswsl/projects/daygame-coach/data/06c.DET.patched/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.clean16k.conversations.json",
+    "stage06e_quality_check": "/home/jonaswsl/projects/daygame-coach/data/06e.LLM.quality-check/coach_kyle_how_to_approach_a_girl/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4]/How to Fix Rejection in 5 minutes (INFIELD) [JKWRj2hwbT4].audio.asr.clean16k.quality-check.json"
+  },
+  "checks": [
+    {
+      "severity": "error",
+      "check": "upstream_stage07_gate",
+      "message": "Stage 07 output is gated (06h_block_0.7687); enrichment was intentionally skipped.",
+      "signal_class": "transcript_quality",
+      "remediation_path": "transcript_review"
+    }
+  ],
+  "issues": [
+    {
+      "issue_code": "upstream_stage07_gate_block",
+      "issue_severity": "major",
+      "gate_decision": "block",
+      "signal_class": "transcript_quality",
+      "remediation_path": "transcript_review",
+      "message": "Stage 07 output is gated (06h_block_0.7687); enrichment was intentionally skipped.",
+      "conversation_id": null,
+      "segment_id": null,
+      "evidence_segment_ids": [],
+      "confidence": 1.0
+    }
+  ],
+  "waivers_applied": [],
+  "metrics": {
+    "checks_total": 1,
+    "errors": 1,
+    "warnings": 0,
+    "infos": 0,
+    "evidence_coverage_ratio": null,
+    "hallucination_risk_ratio": null
+  },
+  "pipeline_version": "07b.LLM.enrichment-verify-v1.3"
+}

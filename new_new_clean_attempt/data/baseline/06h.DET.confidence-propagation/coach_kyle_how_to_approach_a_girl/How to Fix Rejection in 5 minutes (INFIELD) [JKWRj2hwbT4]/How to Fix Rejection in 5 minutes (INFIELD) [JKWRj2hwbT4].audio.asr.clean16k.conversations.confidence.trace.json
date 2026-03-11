@@ -1,0 +1,3755 @@
+{
+  "version": 1,
+  "generated_at": "2026-03-05T14:25:03Z",
+  "pipeline_version": "06h.DET.confidence-propagation-v2.1",
+  "scope": {
+    "manifest": "unspecified",
+    "video_id": "JKWRj2hwbT4",
+    "source": null
+  },
+  "segments": [
+    {
+      "segment_id": 0,
+      "conversation_id": 0,
+      "token_weight": 5.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.4103,
+      "confidence_band": "low",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "transcript",
+          "multiplier": 0.3,
+          "before": 1.0,
+          "after": 0.3
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "phase",
+          "multiplier": 0.7,
+          "before": 1.0,
+          "after": 0.7
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 1.0,
+          "before": 0.3,
+          "after": 0.35
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.715
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.8571,
+          "before": 0.7,
+          "after": 0.6
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.4318,
+          "after": 0.4103
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 1,
+      "conversation_id": 0,
+      "token_weight": 16.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.3465,
+      "confidence_band": "low",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "transcript",
+          "multiplier": 0.186,
+          "before": 1.0,
+          "after": 0.186
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "phase",
+          "multiplier": 0.7,
+          "before": 1.0,
+          "after": 0.7
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 1.0,
+          "before": 0.186,
+          "after": 0.268
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.69
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.8571,
+          "before": 0.7,
+          "after": 0.6
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.3648,
+          "after": 0.3465
+        }
+      ],
+      "damage_types": [
+        "seed_low_quality_segment",
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 2,
+      "conversation_id": 0,
+      "token_weight": 17.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.3465,
+      "confidence_band": "low",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "transcript",
+          "multiplier": 0.186,
+          "before": 1.0,
+          "after": 0.186
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "phase",
+          "multiplier": 0.7,
+          "before": 1.0,
+          "after": 0.7
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 1.0,
+          "before": 0.186,
+          "after": 0.268
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.69
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.8571,
+          "before": 0.7,
+          "after": 0.6
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.3648,
+          "after": 0.3465
+        }
+      ],
+      "damage_types": [
+        "seed_low_quality_segment",
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 3,
+      "conversation_id": 0,
+      "token_weight": 16.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.4668,
+      "confidence_band": "low",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "transcript",
+          "multiplier": 0.3,
+          "before": 1.0,
+          "after": 0.3
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "phase",
+          "multiplier": 0.7,
+          "before": 1.0,
+          "after": 0.7
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 1.0,
+          "before": 0.3,
+          "after": 0.425
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.715
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9286,
+          "before": 0.7,
+          "after": 0.65
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.4914,
+          "after": 0.4668
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 4,
+      "conversation_id": 0,
+      "token_weight": 19.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.6803,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.725,
+          "before": 1.0,
+          "after": 0.725
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.9779,
+          "before": 0.68,
+          "after": 0.665
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.775,
+          "before": 1.0,
+          "after": 0.775
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7161,
+          "after": 0.6803
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 5,
+      "conversation_id": 0,
+      "token_weight": 20.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.7458,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.8,
+          "before": 1.0,
+          "after": 0.8
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.715
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.825,
+          "before": 1.0,
+          "after": 0.825
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7851,
+          "after": 0.7458
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 6,
+      "conversation_id": 0,
+      "token_weight": 18.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.704,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.75,
+          "before": 1.0,
+          "after": 0.75
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.69
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.8,
+          "before": 1.0,
+          "after": 0.8
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7411,
+          "after": 0.704
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 7,
+      "conversation_id": 0,
+      "token_weight": 20.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.6803,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.725,
+          "before": 1.0,
+          "after": 0.725
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.9779,
+          "before": 0.68,
+          "after": 0.665
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.775,
+          "before": 1.0,
+          "after": 0.775
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7161,
+          "after": 0.6803
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 8,
+      "conversation_id": 0,
+      "token_weight": 19.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8379,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.91,
+          "before": 1.0,
+          "after": 0.91
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.765
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.882,
+          "after": 0.8379
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 9,
+      "conversation_id": 0,
+      "token_weight": 17.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8379,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.91,
+          "before": 1.0,
+          "after": 0.91
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.765
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.882,
+          "after": 0.8379
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 10,
+      "conversation_id": 0,
+      "token_weight": 17.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8306,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.765
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8744,
+          "after": 0.8306
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 11,
+      "conversation_id": 0,
+      "token_weight": 19.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8306,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.765
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8744,
+          "after": 0.8306
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 12,
+      "conversation_id": 0,
+      "token_weight": 18.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8202,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.89,
+          "before": 1.0,
+          "after": 0.89
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.75
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.89,
+          "before": 1.0,
+          "after": 0.89
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8634,
+          "after": 0.8202
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 13,
+      "conversation_id": 0,
+      "token_weight": 21.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8306,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.765
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8744,
+          "after": 0.8306
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 14,
+      "conversation_id": 0,
+      "token_weight": 23.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8379,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.91,
+          "before": 1.0,
+          "after": 0.91
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.765
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.882,
+          "after": 0.8379
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 15,
+      "conversation_id": 0,
+      "token_weight": 7.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8306,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.765
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8744,
+          "after": 0.8306
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 16,
+      "conversation_id": 0,
+      "token_weight": 1.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8417,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.91,
+          "before": 1.0,
+          "after": 0.91
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.78
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8861,
+          "after": 0.8417
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 17,
+      "conversation_id": 0,
+      "token_weight": 5.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8454,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.915,
+          "before": 1.0,
+          "after": 0.915
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.78
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8899,
+          "after": 0.8454
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 18,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8406,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.91,
+          "before": 1.0,
+          "after": 0.91
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.775
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.92,
+          "before": 1.0,
+          "after": 0.92
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8849,
+          "after": 0.8406
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 19,
+      "conversation_id": 0,
+      "token_weight": 3.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8177,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.89,
+          "before": 1.0,
+          "after": 0.89
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.74
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.875,
+          "before": 1.0,
+          "after": 0.875
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8607,
+          "after": 0.8177
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 20,
+      "conversation_id": 0,
+      "token_weight": 5.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8512,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.92,
+          "before": 1.0,
+          "after": 0.92
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.79
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.935,
+          "before": 1.0,
+          "after": 0.935
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.896,
+          "after": 0.8512
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 21,
+      "conversation_id": 0,
+      "token_weight": 7.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8551,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.79
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.94,
+          "before": 1.0,
+          "after": 0.94
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9001,
+          "after": 0.8551
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 22,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8524,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.92,
+          "before": 1.0,
+          "after": 0.92
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.795
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.94,
+          "before": 1.0,
+          "after": 0.94
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8972,
+          "after": 0.8524
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 23,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.856,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.795
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.94,
+          "before": 1.0,
+          "after": 0.94
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9011,
+          "after": 0.856
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 24,
+      "conversation_id": 0,
+      "token_weight": 9.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8854,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.96,
+          "before": 1.0,
+          "after": 0.96
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.815
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9319,
+          "after": 0.8854
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 25,
+      "conversation_id": 0,
+      "token_weight": 7.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8781,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.815
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9243,
+          "after": 0.8781
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 26,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8781,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.815
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9243,
+          "after": 0.8781
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 27,
+      "conversation_id": 0,
+      "token_weight": 7.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8677,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.94,
+          "before": 1.0,
+          "after": 0.94
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.8
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.94,
+          "before": 1.0,
+          "after": 0.94
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9134,
+          "after": 0.8677
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 28,
+      "conversation_id": 0,
+      "token_weight": 18.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.7765,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.825,
+          "before": 1.0,
+          "after": 0.825
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.765
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8174,
+          "after": 0.7765
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 29,
+      "conversation_id": 0,
+      "token_weight": 20.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.729,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.775,
+          "before": 1.0,
+          "after": 0.775
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.715
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.85,
+          "before": 1.0,
+          "after": 0.85
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7674,
+          "after": 0.729
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 30,
+      "conversation_id": 0,
+      "token_weight": 20.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.6487,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.7,
+          "before": 1.0,
+          "after": 0.7
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.8676,
+          "before": 0.68,
+          "after": 0.59
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.775,
+          "before": 1.0,
+          "after": 0.775
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.6828,
+          "after": 0.6487
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 31,
+      "conversation_id": 0,
+      "token_weight": 20.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.6668,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.725,
+          "before": 1.0,
+          "after": 0.725
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.8676,
+          "before": 0.68,
+          "after": 0.59
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.775,
+          "before": 1.0,
+          "after": 0.775
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7018,
+          "after": 0.6668
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 32,
+      "conversation_id": 0,
+      "token_weight": 10.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8417,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.91,
+          "before": 1.0,
+          "after": 0.91
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.78
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8861,
+          "after": 0.8417
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 33,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8454,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.915,
+          "before": 1.0,
+          "after": 0.915
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.78
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8899,
+          "after": 0.8454
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 34,
+      "conversation_id": 0,
+      "token_weight": 7.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.849,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.92,
+          "before": 1.0,
+          "after": 0.92
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.78
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8936,
+          "after": 0.849
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 35,
+      "conversation_id": 0,
+      "token_weight": 5.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8544,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.79
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8994,
+          "after": 0.8544
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 36,
+      "conversation_id": 0,
+      "token_weight": 8.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8454,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.915,
+          "before": 1.0,
+          "after": 0.915
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.78
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8899,
+          "after": 0.8454
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 37,
+      "conversation_id": 0,
+      "token_weight": 5.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.849,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.92,
+          "before": 1.0,
+          "after": 0.92
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.78
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8936,
+          "after": 0.849
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 38,
+      "conversation_id": 0,
+      "token_weight": 4.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8544,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.79
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8994,
+          "after": 0.8544
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 39,
+      "conversation_id": 0,
+      "token_weight": 9.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8544,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.79
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8994,
+          "after": 0.8544
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 40,
+      "conversation_id": 1,
+      "token_weight": 3.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8778,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.96,
+          "before": 1.0,
+          "after": 0.96
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.78
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9241,
+          "after": 0.8778
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 41,
+      "conversation_id": 1,
+      "token_weight": 1.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8261,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.9412,
+          "before": 0.68,
+          "after": 0.64
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8696,
+          "after": 0.8261
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 42,
+      "conversation_id": 1,
+      "token_weight": 1.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8216,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.9044,
+          "before": 0.68,
+          "after": 0.615
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8649,
+          "after": 0.8216
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 43,
+      "conversation_id": 1,
+      "token_weight": 1.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.7843,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.7574,
+          "before": 0.68,
+          "after": 0.515
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.875,
+          "before": 1.0,
+          "after": 0.875
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8256,
+          "after": 0.7843
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 44,
+      "conversation_id": 1,
+      "token_weight": 11.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8652,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.75
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9108,
+          "after": 0.8652
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 45,
+      "conversation_id": 1,
+      "token_weight": 5.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8634,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.74
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9089,
+          "after": 0.8634
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 46,
+      "conversation_id": 1,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8778,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.924,
+          "after": 0.8778
+        }
+      ],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 47,
+      "conversation_id": 1,
+      "token_weight": 2.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.846,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.94,
+          "before": 1.0,
+          "after": 0.94
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.69
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8905,
+          "after": 0.846
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 48,
+      "conversation_id": 1,
+      "token_weight": 2.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8478,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.94,
+          "before": 1.0,
+          "after": 0.94
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.7
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8924,
+          "after": 0.8478
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 49,
+      "conversation_id": 1,
+      "token_weight": 4.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8126,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.8309,
+          "before": 0.68,
+          "after": 0.565
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8554,
+          "after": 0.8126
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 50,
+      "conversation_id": 1,
+      "token_weight": 1.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.799,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.8676,
+          "before": 0.68,
+          "after": 0.59
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8411,
+          "after": 0.799
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 51,
+      "conversation_id": 1,
+      "token_weight": 4.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8778,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.924,
+          "after": 0.8778
+        }
+      ],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 52,
+      "conversation_id": 1,
+      "token_weight": 2.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.7888,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.7941,
+          "before": 0.68,
+          "after": 0.54
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.875,
+          "before": 1.0,
+          "after": 0.875
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8304,
+          "after": 0.7888
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 53,
+      "conversation_id": 1,
+      "token_weight": 2.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.7933,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.8309,
+          "before": 0.68,
+          "after": 0.565
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.875,
+          "before": 1.0,
+          "after": 0.875
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8351,
+          "after": 0.7933
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 54,
+      "conversation_id": 1,
+      "token_weight": 7.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.7651,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.875,
+          "before": 1.0,
+          "after": 0.875
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.7574,
+          "before": 0.68,
+          "after": 0.515
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.85,
+          "before": 1.0,
+          "after": 0.85
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.8054,
+          "after": 0.7651
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 55,
+      "conversation_id": 1,
+      "token_weight": 17.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.7458,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.85,
+          "before": 1.0,
+          "after": 0.85
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.7574,
+          "before": 0.68,
+          "after": 0.515
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.825,
+          "before": 1.0,
+          "after": 0.825
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7851,
+          "after": 0.7458
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 56,
+      "conversation_id": 1,
+      "token_weight": 13.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.7221,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.825,
+          "before": 1.0,
+          "after": 0.825
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.7206,
+          "before": 0.68,
+          "after": 0.49
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.8,
+          "before": 1.0,
+          "after": 0.8
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7601,
+          "after": 0.7221
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 57,
+      "conversation_id": 1,
+      "token_weight": 18.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.6848,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.775,
+          "before": 1.0,
+          "after": 0.775
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.7206,
+          "before": 0.68,
+          "after": 0.49
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.775,
+          "before": 1.0,
+          "after": 0.775
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7208,
+          "after": 0.6848
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 58,
+      "conversation_id": 1,
+      "token_weight": 21.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.7404,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.85,
+          "before": 1.0,
+          "after": 0.85
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.6838,
+          "before": 0.68,
+          "after": 0.465
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7794,
+          "after": 0.7404
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 59,
+      "conversation_id": 1,
+      "token_weight": 19.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.7449,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.85,
+          "before": 1.0,
+          "after": 0.85
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.7206,
+          "before": 0.68,
+          "after": 0.49
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7841,
+          "after": 0.7449
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 60,
+      "conversation_id": 1,
+      "token_weight": 19.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.7449,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.85,
+          "before": 1.0,
+          "after": 0.85
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.7206,
+          "before": 0.68,
+          "after": 0.49
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7841,
+          "after": 0.7449
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 61,
+      "conversation_id": 1,
+      "token_weight": 22.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.7223,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.825,
+          "before": 1.0,
+          "after": 0.825
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.6838,
+          "before": 0.68,
+          "after": 0.465
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7604,
+          "after": 0.7223
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 62,
+      "conversation_id": 1,
+      "token_weight": 23.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.7268,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.825,
+          "before": 1.0,
+          "after": 0.825
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.7206,
+          "before": 0.68,
+          "after": 0.49
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7651,
+          "after": 0.7268
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 63,
+      "conversation_id": 1,
+      "token_weight": 19.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.6974,
+      "confidence_band": "medium",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.8,
+          "before": 1.0,
+          "after": 0.8
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 0.6471,
+          "before": 0.68,
+          "after": 0.44
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.85,
+          "before": 1.0,
+          "after": 0.85
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.7341,
+          "after": 0.6974
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 64,
+      "conversation_id": 0,
+      "token_weight": 21.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8865,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.96,
+          "before": 1.0,
+          "after": 0.96
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.815
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.975,
+          "before": 1.0,
+          "after": 0.975
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9332,
+          "after": 0.8865
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 65,
+      "conversation_id": 0,
+      "token_weight": 16.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8793,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.815
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.975,
+          "before": 1.0,
+          "after": 0.975
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9256,
+          "after": 0.8793
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 66,
+      "conversation_id": 0,
+      "token_weight": 10.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8865,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.96,
+          "before": 1.0,
+          "after": 0.96
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.815
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.975,
+          "before": 1.0,
+          "after": 0.975
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9332,
+          "after": 0.8865
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 67,
+      "conversation_id": 0,
+      "token_weight": 5.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8793,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.815
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.975,
+          "before": 1.0,
+          "after": 0.975
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9256,
+          "after": 0.8793
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 68,
+      "conversation_id": 0,
+      "token_weight": 16.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8829,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.955,
+          "before": 1.0,
+          "after": 0.955
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.815
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.975,
+          "before": 1.0,
+          "after": 0.975
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9294,
+          "after": 0.8829
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 69,
+      "conversation_id": 0,
+      "token_weight": 15.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8865,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.96,
+          "before": 1.0,
+          "after": 0.96
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.815
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.975,
+          "before": 1.0,
+          "after": 0.975
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9332,
+          "after": 0.8865
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 70,
+      "conversation_id": 0,
+      "token_weight": 5.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8781,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.815
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9243,
+          "after": 0.8781
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 71,
+      "conversation_id": 0,
+      "token_weight": 16.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8854,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.96,
+          "before": 1.0,
+          "after": 0.96
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.815
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9319,
+          "after": 0.8854
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 72,
+      "conversation_id": 0,
+      "token_weight": 4.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8842,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.96,
+          "before": 1.0,
+          "after": 0.96
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.815
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.925,
+          "before": 1.0,
+          "after": 0.925
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9307,
+          "after": 0.8842
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 73,
+      "conversation_id": 0,
+      "token_weight": 13.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8866,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.965,
+          "before": 1.0,
+          "after": 0.965
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.815
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9333,
+          "after": 0.8866
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 74,
+      "conversation_id": 0,
+      "token_weight": 6.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8866,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.965,
+          "before": 1.0,
+          "after": 0.965
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.815
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.9,
+          "before": 1.0,
+          "after": 0.9
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9333,
+          "after": 0.8866
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 75,
+      "conversation_id": 0,
+      "token_weight": 2.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.8746,
+      "confidence_band": "high",
+      "penalties": [
+        {
+          "issue_code": "damage_multiplier",
+          "axis": "speaker",
+          "multiplier": 0.8,
+          "before": 0.85,
+          "after": 0.68
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "transcript",
+          "multiplier": 0.95,
+          "before": 1.0,
+          "after": 0.95
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "speaker",
+          "multiplier": 1.0,
+          "before": 0.68,
+          "after": 0.815
+        },
+        {
+          "issue_code": "adjudication_merge",
+          "axis": "phase",
+          "multiplier": 0.875,
+          "before": 1.0,
+          "after": 0.875
+        },
+        {
+          "issue_code": "contamination_propagation",
+          "axis": "all",
+          "multiplier": 0.95,
+          "before": 0.9206,
+          "after": 0.8746
+        }
+      ],
+      "damage_types": [
+        "seed_speaker_collapsed"
+      ],
+      "repair_credit_applied": false
+    }
+  ],
+  "conversations": [
+    {
+      "conversation_id": 1,
+      "segment_count": 24,
+      "impacted_segment_ratio": 0.5833,
+      "final_confidence": 0.7907,
+      "confidence_band": "medium",
+      "gate_decision": "block"
+    }
+  ],
+  "video_summary": {
+    "segment_count": 76,
+    "conversation_count": 1,
+    "final_confidence": 0.7687,
+    "confidence_band": "medium",
+    "gate_decision": "block"
+  }
+}

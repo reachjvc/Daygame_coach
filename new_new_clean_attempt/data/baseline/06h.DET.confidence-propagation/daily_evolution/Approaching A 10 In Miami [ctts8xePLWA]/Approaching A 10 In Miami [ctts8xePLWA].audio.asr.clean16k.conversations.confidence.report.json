@@ -1,0 +1,80 @@
+{
+  "video_id": "ctts8xePLWA",
+  "generated_at": "2026-03-05T18:49:19Z",
+  "pipeline_version": "06h.DET.confidence-propagation-v2.1",
+  "model_version": "v2.1",
+  "video_type": "infield",
+  "axis_weights": {
+    "transcript": 0.475,
+    "speaker": 0.475,
+    "phase": 0.05
+  },
+  "damage_type_counts": {
+    "seed_low_quality_segment": 2,
+    "seed_speaker_collapsed": 9,
+    "seed_transcript_artifact": 4
+  },
+  "quality_repairs": {
+    "artifact_accepted": 4,
+    "artifact_rejected": 0,
+    "lq_accepted": 32,
+    "lq_rejected": 0
+  },
+  "summary": {
+    "segments_total": 131,
+    "tier_counts": {
+      "high": 120,
+      "medium": 3,
+      "low": 8
+    },
+    "segments_with_repairs": 36,
+    "segments_repaired_by_06e": 36,
+    "repair_credit_segments": 4,
+    "conversations_total": 1,
+    "band_high_threshold": 0.8,
+    "band_medium_threshold": 0.6
+  },
+  "quality_gate": {
+    "blocked": false,
+    "reason_codes": [],
+    "inputs": {
+      "segment_count": 131,
+      "artifact_total": 4,
+      "low_quality_total": 34,
+      "low_quality_total_ratio": 0.2595,
+      "artifact_unrepaired": 0,
+      "low_quality_unrepaired": 2,
+      "low_quality_unrepaired_ratio": 0.0153,
+      "thresholds": {
+        "lq_total_abs": 140,
+        "lq_total_ratio": 0.4,
+        "lq_total_ratio_min_count": 90,
+        "lq_unrepaired_abs": 120,
+        "lq_unrepaired_ratio": 0.35,
+        "lq_unrepaired_ratio_min_count": 80,
+        "artifact_unrepaired_abs": 30
+      }
+    }
+  },
+  "conversation_summaries": [
+    {
+      "conversation_id": 1,
+      "segment_count": 34,
+      "anchor_segment_count": 28,
+      "conversation_confidence_score": 0.9064
+    }
+  ],
+  "inputs": {
+    "stage06d": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.conversations.json",
+    "damage_map": "/home/jonaswsl/projects/daygame-coach/data/06f.DET.damage-map/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.damage-map.json",
+    "damage_adjudication": "/home/jonaswsl/projects/daygame-coach/data/06g.LLM.damage-adjudicator/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.damage-adjudication.json",
+    "damage_adjudication_skipped": false,
+    "quality_check": "loaded"
+  },
+  "confidence_trace": {
+    "version": 1,
+    "path": "/home/jonaswsl/projects/daygame-coach/data/06h.DET.confidence-propagation/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.conversations.confidence.trace.json",
+    "segments": 131,
+    "conversations": 1
+  }
+}

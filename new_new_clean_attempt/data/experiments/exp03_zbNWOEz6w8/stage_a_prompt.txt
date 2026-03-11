@@ -1,0 +1,276 @@
+You are a senior data analyst for a daygame coaching video pipeline. You will receive a transcript with speaker IDs and timestamps from a coaching video. Your job is to produce a comprehensive analysis in ONE pass that combines classification, speaker labeling, quality assessment, and self-verification.
+
+## YOUR TASKS (all in one pass)
+
+### Task 1: Classify the video type
+- `infield`: Coach doing live approaches on the street (1 approach = infield, even with intro/outro)
+- `talking_head`: Coach explaining concepts to camera (no live interaction with targets)
+- `podcast`: Multiple speakers discussing topics (balanced back-and-forth)
+- `compilation`: Mixed content — multiple approaches with breakdowns between them
+
+Decision rules:
+- Count DISTINCT approaches to different targets: 0 → talking_head/podcast; 1 → infield; 2+ → compilation
+- For 0-approach videos: one speaker >80% → talking_head; balanced multi-speaker → podcast
+- Intro/outro commentary alone does NOT make a video "compilation"
+
+### Task 2: Assign speaker roles PER SEGMENT (not per speaker)
+This is critical. The diarization system sometimes merges multiple real speakers into one speaker ID. Therefore, you must decide the role for EACH segment independently based on what the text actually says.
+
+Roles:
+- `coach`: Teaching, demonstrating, addressing camera ("guys", "as you can see"), leading approaches
+- `student`: A coached participant running an approach (not the instructor)
+- `target`: Woman being approached — short responses, gives name/info when asked, reacts
+- `voiceover`: Post-production narration
+- `other`: Background voices, bystanders
+- `unknown`: Cannot determine with confidence
+
+Per-segment rules:
+- If a segment contains MIXED speakers (e.g., coach question + target answer in same segment), mark it as `mixed` and note the dominant speaker and the approximate split
+- NEVER assign "target" to the person who delivers openers ("excuse me", "I just saw you")
+- The person giving SHORT RESPONSES to personal questions is typically the target
+- If unsure, use `unknown` — do not guess
+
+### Task 3: Detect conversation boundaries
+- Assign each segment a `conversation_id` (0 = non-conversational commentary/transition, 1+ = distinct approaches)
+- A new conversation starts when: direct address to new person, location shift, previous approach ended
+- Use time gaps between segments: >30s gap strongly suggests new conversation
+- A valid conversation must be >=10 seconds and ideally include both approacher and target turns
+- Mark the first segment of each conversation with `is_conversation_start: true`
+
+### Task 4: Assess transcript quality per segment
+For each segment, note any quality issues:
+- `clean`: No issues
+- `missing_punctuation`: Semantically correct but lacks punctuation/capitalization
+- `word_mistranscription`: Context makes the error obvious (provide corrected text)
+- `garbled`: Multiple errors, hard to parse
+- `fragment`: Short fragment split from adjacent segment (note: merge_prev or merge_next)
+- `artifact`: ASR hallucination, music transcribed as speech, repeated noise
+- `unrecoverable`: Cannot determine meaning
+
+For repairable issues, provide `repair_text` with the corrected version (only when you're confident).
+
+### Task 5: Self-verification
+After completing tasks 1-4, review your own work for these common errors:
+- Did you mark any target segments as coach (or vice versa)?
+- Did you mark someone delivering an opener as "target"?
+- Are conversation boundaries contiguous (no gaps in conversation_id sequences)?
+- Did you flag any segment as a conversation when it's really just commentary?
+- Are there segments where you assigned "unknown" that you could resolve by looking at surrounding context?
+- For mixed-speaker segments: did you identify the approximate boundary?
+
+Report any corrections you make during self-verification.
+
+## OUTPUT FORMAT
+
+Return a JSON object with this structure:
+
+```json
+{
+  "video_type": {
+    "type": "infield|talking_head|podcast|compilation",
+    "confidence": 0.0-1.0,
+    "reasoning": "brief explanation"
+  },
+  "transcript_confidence": {
+    "score": 1-100,
+    "reasoning": "brief quality summary"
+  },
+  "self_verification": {
+    "corrections_made": ["list of any corrections from Task 5"],
+    "remaining_uncertainties": ["list of things you're not sure about"]
+  },
+  "segments": [
+    {
+      "id": 0,
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach|student|target|voiceover|other|unknown",
+      "is_mixed": false,
+      "mixed_detail": null,
+      "segment_type": "approach|commentary|transition",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "quality": "clean|missing_punctuation|word_mistranscription|garbled|fragment|artifact|unrecoverable",
+      "repair_text": null,
+      "repair_confidence": null,
+      "is_teaser": false,
+      "teaser_of_conversation_id": null
+    }
+  ],
+  "conversations": [
+    {
+      "conversation_id": 1,
+      "description": "brief description of the conversation",
+      "segment_range": [start_id, end_id],
+      "speakers_involved": ["coach", "target"],
+      "target_participation": "none|minimal|moderate|active"
+    }
+  ]
+}
+```
+
+## IMPORTANT RULES
+- Return JSON only. No markdown fences, no prose outside JSON.
+- If you cannot determine something, say so explicitly — do not invent.
+- Be conservative: `unknown` is always safer than a wrong guess.
+- For mixed-speaker segments, `is_mixed: true` with a `mixed_detail` string describing the split is FAR better than guessing wrong.
+
+## VIDEO METADATA
+Title: "Approach Anxiety Cure! The Final Solution!"
+Channel: daily_evolution
+Duration: 490 seconds
+
+## TRANSCRIPT (152 segments)
+Format: [ID] SPEAKER_XX (start-end): text
+
+[0] SPEAKER_00 (0.0-1.5): What?
+[1] SPEAKER_00 (1.5-2.5): Approach anxiety.
+[2] SPEAKER_00 (2.5-2.9): Who struggles with it?
+[3] SPEAKER_00 (3.9-4.7): Day game?
+[4] SPEAKER_00 (4.8-6.1): Everyone, right?
+[5] SPEAKER_00 (6.2-6.8): That's just like a thing.
+[6] SPEAKER_00 (6.9-7.7): Not you.
+[7] SPEAKER_00 (8.1-9.0): You look confident.
+[8] SPEAKER_00 (9.2-10.8): You look fucking confident.
+[9] SPEAKER_00 (11.0-11.8): No more AA.
+[10] SPEAKER_00 (12.1-13.2): No more AA.
+[11] SPEAKER_00 (13.4-15.1): Only when I hesitate.
+[12] SPEAKER_00 (16.2-17.8): Hesitation will get you killed.
+[13] SPEAKER_00 (18.3-19.6): Paralysis by analysis.
+[14] SPEAKER_00 (20.1-23.1): Overthinking and getting paralyzed by your overthinking.
+[15] SPEAKER_00 (23.7-28.6): Focusing on what could potentially go wrong as opposed to what could go right.
+[16] SPEAKER_00 (28.6-33.1): so first when I talk about approach anxiety I like to talk about like the
+[17] SPEAKER_00 (33.1-38.3): mindset of it or what everyone likes to talk about it doesn't matter life's not
+[18] SPEAKER_00 (38.3-41.9): real what if in ten years you never made the approval whatever fucking mindset
+[19] SPEAKER_00 (41.9-44.8): shit but then I like to get into the technique of it as well when it comes to
+[20] SPEAKER_00 (44.8-48.1): the mindset of the approach anxiety it's focusing so much on what is
+[21] SPEAKER_00 (48.1-52.0): potentially gonna go wrong as opposed to what could go right and what is likely
+[22] SPEAKER_00 (52.0-55.6): to go right if you've really been practicing this right if you've really
+[23] SPEAKER_00 (55.6-59.8): been fucking working on this, like, I think about every fucking hot girl I've ever slept
+[24] SPEAKER_00 (59.8-64.1): with, dated, that, you know, we fucked once, she became a good friend, whatever, all these
+[25] SPEAKER_00 (64.1-68.4): positive experiences I've had with girls, you need to be thinking of that when you go
+[26] SPEAKER_00 (68.4-69.3): in and talk to a girl.
+[27] SPEAKER_00 (69.5-73.8): There's that expression that the brain needs proof, not promises, so once you actually
+[28] SPEAKER_00 (73.8-78.4): are starting to push yourself to do it no matter the fuck what, clearing your head before
+[29] SPEAKER_00 (78.4-82.9): you go in and just fucking do it, and you start to realize, again, proving to your brain
+[30] SPEAKER_00 (82.9-88.3): rather than promising it that nothing bad ever happens because anyone ever had anything really
+[31] SPEAKER_00 (88.2-95.8): bad happen i've been made fun of but like what then i was here i am now oh my god i'm alive
+[32] SPEAKER_00 (95.8-102.4): a girl yelled at you once i've had a guy get a little aggro with me you know like that's
+[33] SPEAKER_00 (102.4-109.4): my girl whatever it is and here you are alive and well the sun's beating down on your
+[34] SPEAKER_00 (109.4-116.4): face and we're all having a great time we can't talk about louisville right now okay dude got
+[35] SPEAKER_00 (116.4-122.9): punched in the face whatever whatever yeah it was a night tyler club wow so so it's understanding
+[36] SPEAKER_00 (122.9-128.3): that nothing terrible is going to happen right and that you're going to have a positive experience
+[37] SPEAKER_00 (128.3-133.4): you're going to have a positive experience from it and just saying okay i'm going to go in no
+[38] SPEAKER_00 (133.4-138.5): matter what right now again that's the mindset of what we're talking about here mindset doesn't
+[39] SPEAKER_00 (138.5-146.0): always help i can't beat a thought process into your skull right so if you've watched a lot
+[40] SPEAKER_00 (146.0-150.5): of the videos then you've probably heard me talk about this but you've only seen one and you know
+[41] SPEAKER_00 (150.5-157.1): whatever i don't care how much you guys have watched it's opening it's not even opening it's
+[42] SPEAKER_00 (157.1-164.7): not even approaching it's speaking to a human being while eliminating intent right so i've got
+[43] SPEAKER_00 (164.7-166.2): I've got a guy that's on my virtual instruction program
+[44] SPEAKER_00 (166.2-169.5): right now who, he told me that he will go out
+[45] SPEAKER_00 (169.5-173.3): and it will take him two hours to make his first approach.
+[46] SPEAKER_00 (174.1-176.1): So, like that's not an exaggeration.
+[47] SPEAKER_00 (176.2-178.3): Like that is a literal, like he will walk around
+[48] SPEAKER_00 (178.3-181.5): and he's in San Francisco, he'll walk around
+[49] SPEAKER_00 (181.5-183.5): for what he's clicking to be two hours,
+[50] SPEAKER_00 (183.7-185.3): looking at every girl thinking like,
+[51] SPEAKER_00 (185.4-186.8): all right, I'm gonna do this one, I'm gonna do this one,
+[52] SPEAKER_00 (186.8-188.6): and then he doesn't end up doing it.
+[53] SPEAKER_00 (188.8-190.3): For two fucking hours.
+[54] SPEAKER_00 (190.5-193.0): And I said to him, I said the reason why that's happening
+[55] SPEAKER_00 (192.9-196.8): is because you're focusing on 15 steps forward
+[56] SPEAKER_00 (196.8-198.6): and all at once, right?
+[57] SPEAKER_00 (199.0-201.1): So you're so afraid to approach
+[58] SPEAKER_00 (201.7-205.1): because you're thinking, you don't trust in your ability
+[59] SPEAKER_00 (205.1-207.2): to hold your own within the interactions, right?
+[60] SPEAKER_00 (207.3-210.2): To hold the engaging conversation, essentially escalate.
+[61] SPEAKER_00 (210.2-212.2): But what happens if things start going well
+[62] SPEAKER_00 (212.2-214.4): and I don't know how to bounce her or the fuck, whatever?
+[63] SPEAKER_00 (214.7-215.2): You know what I mean?
+[64] SPEAKER_00 (215.3-216.9): You're thinking so far ahead.
+[65] SPEAKER_00 (217.1-219.7): I view this shit like Halo Checkpoints.
+[66] SPEAKER_00 (219.6-225.8): You ever played a first-person shooter video game anyone Call of Duty or Halo, whatever
+[67] SPEAKER_00 (227.1-232.9): Once you make it to that first checkpoint you die and every time you die you go back to that checkpoint, right?
+[68] SPEAKER_00 (233.3-234.8): Go right back there.
+[69] SPEAKER_00 (235.2-239.3): So if the very first checkpoint is just speaking to a girl
+[70] SPEAKER_00 (239.2-242.8): It's not going in direct and hey, you're fucking hot.
+[71] SPEAKER_00 (242.8-244.0): It's not hey, you want to get out of here?
+[72] SPEAKER_00 (244.1-245.1): Hey, let me get your number.
+[73] SPEAKER_00 (245.2-246.0): It's none of that.
+[74] SPEAKER_00 (246.6-246.8): It's just
+[75] SPEAKER_00 (246.8-248.4): just speaking to the girl.
+[76] SPEAKER_00 (248.8-250.3): Hey, real quick, is that still recording?
+[77] SPEAKER_00 (250.9-251.3): Yeah.
+[78] SPEAKER_00 (251.6-253.5): Okay, she was watching, guys, we're gonna make sure.
+[79] SPEAKER_00 (253.9-256.0): So, if that's the very first step,
+[80] SPEAKER_00 (256.1-258.8): then just do that and eliminate all intent.
+[81] SPEAKER_00 (259.2-262.7): So you're not gonna be afraid to just compliment a girl,
+[82] SPEAKER_00 (262.8-265.5): just to say hello to her, compliment her.
+[83] SPEAKER_00 (265.7-267.4): Tom Torero calls it hit and runs.
+[84] SPEAKER_00 (267.5-270.2): I like to call it hit and runs, touch and goes,
+[85] SPEAKER_00 (270.4-273.0): whatever the fuck it is, speaking without intent.
+[86] SPEAKER_00 (273.2-275.4): So yes, when you're getting better at game
+[87] SPEAKER_00 (275.4-281.7): as the conversation progresses escalates then yes you want to be clear about the fact like hey i'm
+[88] SPEAKER_00 (281.7-286.7): trying to bang you or date you or whatever it is but when you're just trying to get to that first
+[89] SPEAKER_00 (286.7-290.2): checkpoint and you're wandering around san francisco for two hours and you can't get there
+[90] SPEAKER_00 (290.1-296.3): then you have to just get there which is just i compliment you i was walking around madison square
+[91] SPEAKER_00 (296.3-301.7): park today and i just woke it up and i just went for a walk as soon as i woke up and i wasn't in
+[92] SPEAKER_00 (301.7-303.1): in my zone, you know what I mean?
+[93] SPEAKER_00 (303.3-305.8): I don't even like to really call it like being in state.
+[94] SPEAKER_00 (306.0-308.7): I just wasn't in a social mode of mind,
+[95] SPEAKER_00 (308.9-309.5): you know what I mean?
+[96] SPEAKER_00 (309.5-310.9): I didn't want to talk to people.
+[97] SPEAKER_00 (311.2-312.8): So what I do, I just walk by,
+[98] SPEAKER_00 (312.9-313.9): hey, I really like your shirt.
+[99] SPEAKER_00 (314.0-314.8): And she's like, oh, thanks.
+[100] SPEAKER_00 (315.0-316.8): You're like making people's day and shit,
+[101] SPEAKER_00 (316.9-317.3): you know what I mean?
+[102] SPEAKER_00 (317.4-319.4): Some girl was like, oh, I don't really wanna wear
+[103] SPEAKER_00 (319.4-321.0): this jacket, and then you compliment her,
+[104] SPEAKER_00 (321.0-323.3): and she's just like, ah, great,
+[105] SPEAKER_00 (323.4-324.5): I guess it was a good choice.
+[106] SPEAKER_01 (324.7-325.9): You make people feel good,
+[107] SPEAKER_00 (325.9-327.8): and by giving that positive energy out,
+[108] SPEAKER_00 (327.8-329.0): that'll come back to you.
+[109] SPEAKER_00 (329.0-333.7): so by doing that smiling looking a stranger in the eyes for the first time that day whatever
+[110] SPEAKER_00 (333.7-339.8): and not again thinking so much about every little step of the way because you get overwhelmed right
+[111] SPEAKER_00 (339.8-346.1): it's like if your house it's like if your house if every room in your house is destroyed your
+[112] SPEAKER_00 (346.1-350.0): house is completely disheveled and you look at it you're like i gotta clean up this whole
+[113] SPEAKER_00 (349.9-355.1): fucking place instead of just we'll be also in the bathroom and getting the bathroom done
+[114] SPEAKER_00 (355.0-356.3): and then I'll do the bedroom.
+[115] SPEAKER_00 (356.4-356.8): You know what I mean?
+[116] SPEAKER_00 (356.9-359.1): Room by room, step by step.
+[117] SPEAKER_00 (360.2-361.1): Does that make sense?
+[118] SPEAKER_00 (361.3-362.0): Is that helpful?
+[119] SPEAKER_00 (362.5-364.4): Like, do you think that that could actually
+[120] SPEAKER_00 (364.4-366.3): help you to make approaches,
+[121] SPEAKER_00 (366.8-370.2): starting off by just talking without any intent at all?
+[122] SPEAKER_00 (370.6-371.9): It gets you out of your head.
+[123] SPEAKER_00 (372.1-374.7): If you're thinking about sexually escalating
+[124] SPEAKER_00 (374.7-376.5): in the bedroom and you can't even approach a girl,
+[125] SPEAKER_00 (376.8-378.4): you're not gonna go anywhere.
+[126] SPEAKER_00 (378.5-381.3): And again, too, even when I go on this rant,
+[127] SPEAKER_00 (381.4-382.5): because I talk about this to guys
+[128] SPEAKER_00 (382.4-383.7): on the virtual instruction program,
+[129] SPEAKER_00 (383.7-386.6): Instagram, like boot camps I do in Columbus, whatever, I go on this rant all the time.
+[130] SPEAKER_00 (386.7-391.8): I try to even eliminate the words open and approach when I talk about this.
+[131] SPEAKER_00 (392.1-394.4): It's just speaking without intent.
+[132] SPEAKER_00 (394.8-396.4): You don't even have to stop.
+[133] SPEAKER_00 (396.6-400.7): Just walking by, hey, I really like your vest, and she'll be like, oh, like, usually you'll
+[134] SPEAKER_00 (400.7-402.4): be like, oh, thanks, and you just keep moving along.
+[135] SPEAKER_00 (402.7-407.3): Or with, you know, what Tom Turow does to Egypt with the hit runs, which is he'll actually
+[136] SPEAKER_00 (407.3-410.4): just go up to girls and be like, hey, how are you doing today?
+[137] SPEAKER_00 (410.5-411.4): And she'll be like, I'm good.
+[138] SPEAKER_00 (411.4-413.2): but once we're to go up, we'll tell you you're really pretty.
+[139] SPEAKER_00 (413.3-415.1): And he'll, like, just run away from there.
+[140] SPEAKER_00 (415.2-415.6): You know what I mean?
+[141] SPEAKER_00 (416.0-420.3): Just to, again, like I said, get into that mode where you're looking a stranger in the eyes,
+[142] SPEAKER_00 (420.4-424.1): you're talking, and you're, you know, just getting into that mode.
+[143] SPEAKER_00 (424.6-426.1): You slept all night, you know?
+[144] SPEAKER_00 (426.1-427.8): If you're going out during the day, you slept all night.
+[145] SPEAKER_00 (427.9-431.0): Maybe you went to your job, your fucking mall center,
+[146] SPEAKER_00 (431.1-432.7): and you've been sitting in that cube all day or something.
+[147] SPEAKER_00 (432.8-433.5): I don't know what you do.
+[148] SPEAKER_00 (433.9-436.9): But then afterwards, you're fucking not.
+[149] SPEAKER_00 (437.2-439.6): I mean, I've got buddies that are engineers, you know?
+[150] SPEAKER_00 (439.6-468.3): I've got buddies that are engineers, he knows them, and they talk about how they go to work all day and it's all numbers and fucking drawing shit or whatever they do, and they're just fucking zombied out, and then they're like, if you want me to go talk to a girl in a grocery store, how do I go from cold to hot, you know, cold to warm to hot, warm being just intentless speaking, and that's how it's going, you know.
+[151] UNKNOWN (481.0-484.0): Thanks for watching!

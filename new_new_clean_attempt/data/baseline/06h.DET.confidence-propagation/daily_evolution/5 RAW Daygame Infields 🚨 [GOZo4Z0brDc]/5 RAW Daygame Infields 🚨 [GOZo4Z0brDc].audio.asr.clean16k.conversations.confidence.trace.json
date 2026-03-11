@@ -1,0 +1,207 @@
+{
+  "version": 1,
+  "generated_at": "2026-03-05T17:55:35Z",
+  "pipeline_version": "06h.DET.confidence-propagation-v2.1",
+  "scope": {
+    "manifest": "/tmp/manifest_GOZo4Z0brDc_albwt4f4.txt",
+    "video_id": "GOZo4Z0brDc",
+    "source": null
+  },
+  "segments": [
+    {
+      "segment_id": 0,
+      "conversation_id": 0,
+      "token_weight": 12.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 1,
+      "conversation_id": 0,
+      "token_weight": 3.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 2,
+      "conversation_id": 0,
+      "token_weight": 9.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 3,
+      "conversation_id": 0,
+      "token_weight": 13.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 4,
+      "conversation_id": 0,
+      "token_weight": 9.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 5,
+      "conversation_id": 0,
+      "token_weight": 1.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 6,
+      "conversation_id": 0,
+      "token_weight": 14.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 7,
+      "conversation_id": 0,
+      "token_weight": 10.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 8,
+      "conversation_id": 0,
+      "token_weight": 8.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 9,
+      "conversation_id": 0,
+      "token_weight": 1.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 10,
+      "conversation_id": 0,
+      "token_weight": 4.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 11,
+      "conversation_id": 0,
+      "token_weight": 1.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 12,
+      "conversation_id": 0,
+      "token_weight": 19.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 13,
+      "conversation_id": 0,
+      "token_weight": 9.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 14,
+      "conversation_id": 0,
+      "token_weight": 8.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 15,
+      "conversation_id": 0,
+      "token_weight": 7.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    },
+    {
+      "segment_id": 16,
+      "conversation_id": 0,
+      "token_weight": 3.0,
+      "base_confidence": 1.0,
+      "final_confidence": 0.9975,
+      "confidence_band": "high",
+      "penalties": [],
+      "damage_types": [],
+      "repair_credit_applied": false
+    }
+  ],
+  "conversations": [],
+  "video_summary": {
+    "segment_count": 17,
+    "conversation_count": 0,
+    "final_confidence": 0.9975,
+    "confidence_band": "high",
+    "gate_decision": "pass"
+  }
+}

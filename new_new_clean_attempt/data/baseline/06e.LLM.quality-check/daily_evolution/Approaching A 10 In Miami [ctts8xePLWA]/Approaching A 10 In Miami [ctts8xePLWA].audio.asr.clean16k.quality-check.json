@@ -1,0 +1,357 @@
+{
+  "video_id": "ctts8xePLWA",
+  "generated_at": "2026-03-05T18:48:30Z",
+  "pipeline_version": "06e.LLM.quality-check-v1.1",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/06d.DET.sanitized/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.conversations.json",
+  "model": "opus",
+  "windowing": {
+    "primary_segment_count": 90,
+    "context_segment_count": 10,
+    "window_count": 2,
+    "windows": [
+      {
+        "index": 0,
+        "primary_start_segment_id": 0,
+        "primary_end_segment_id": 89,
+        "primary_segment_count": 90,
+        "context_start_segment_id": 0,
+        "context_end_segment_id": 99,
+        "context_segment_count": 100,
+        "prompt_chars": 11775,
+        "timeout_seconds": 240
+      },
+      {
+        "index": 1,
+        "primary_start_segment_id": 90,
+        "primary_end_segment_id": 130,
+        "primary_segment_count": 41,
+        "context_start_segment_id": 80,
+        "context_end_segment_id": 130,
+        "context_segment_count": 51,
+        "prompt_chars": 8492,
+        "timeout_seconds": 240
+      }
+    ]
+  },
+  "low_quality_segments": [
+    {
+      "segment": 33,
+      "reason": "Starts mid-sentence with 'frustrations' — no grammatical connection to preceding segment 32 ('Watch all of these live demonstrations.'). Likely missing content between segments.",
+      "quality_issue_type": "garbled_speech",
+      "repair_text": null,
+      "repair_confidence": null,
+      "action": "replace"
+    },
+    {
+      "segment": 34,
+      "reason": "Run-on text lacking punctuation and sentence boundaries",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Forever. And I gotta say this, man. And whatever, dude, like, if you just want to jump straight to",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 35,
+      "reason": "Run-on text lacking punctuation and sentence boundaries",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "the video, go ahead, do your thing. But I gotta say this. You know, I talk to a lot of guys that are",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 53,
+      "reason": "Missing punctuation in run-on clause",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "out there who's struggling, I know that I can help you to really elevate your life,",
+      "repair_confidence": 0.92,
+      "action": "replace"
+    },
+    {
+      "segment": 54,
+      "reason": "Run-on list without commas",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "to be able to meet these women, to be able to enjoy life, to be able to have",
+      "repair_confidence": 0.95,
+      "action": "replace"
+    },
+    {
+      "segment": 55,
+      "reason": "Run-on list without commas",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "good sex, to be able to get that girlfriend, or really even get that",
+      "repair_confidence": 0.95,
+      "action": "replace"
+    },
+    {
+      "segment": 56,
+      "reason": "Missing punctuation and sentence boundary",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "quality woman that you want that's going to raise your children. So I just want...",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 57,
+      "reason": "Missing punctuation, awkward segment start",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "I had to say that because it's just something I'm feeling really passionate",
+      "repair_confidence": 0.87,
+      "action": "replace"
+    },
+    {
+      "segment": 58,
+      "reason": "Run-on with multiple sentences lacking boundaries",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "about lately. I'm gonna drop this infield now for you guys. I hope you enjoy it.",
+      "repair_confidence": 0.93,
+      "action": "replace"
+    },
+    {
+      "segment": 82,
+      "reason": "Run-on text missing sentence boundaries",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "passionate about this stuff. Fired up lately more than ever. So this is just a",
+      "repair_confidence": 0.92,
+      "action": "replace"
+    },
+    {
+      "segment": 83,
+      "reason": "Run-on text missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "quick number close, you know, just a good, fun little interaction. And this is",
+      "repair_confidence": 0.92,
+      "action": "replace"
+    },
+    {
+      "segment": 86,
+      "reason": "Run-on text with missing commas",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "weekend and have me there with you, you know, holding your hand in this process,",
+      "repair_confidence": 0.92,
+      "action": "replace"
+    },
+    {
+      "segment": 88,
+      "reason": "Run-on list missing commas",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "beautiful women, of running fun, engaging interactions with them, and showing you",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 89,
+      "reason": "Run-on text missing sentence boundary",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "how you can turn those into dates. So thank you guys so much for tuning in.",
+      "repair_confidence": 0.93,
+      "action": "replace"
+    },
+    {
+      "segment": 90,
+      "reason": "Run-on promotional speech missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Like this video if you like this video, and here's the infield again. Click the",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 93,
+      "reason": "Run-on missing punctuation and capitalization",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Excuse me, what's like the best restaurant to grab food over here? I feel like all of these",
+      "repair_confidence": 0.92,
+      "action": "replace"
+    },
+    {
+      "segment": 94,
+      "reason": "Run-on missing punctuation, sentence boundaries unclear",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Are like $5,000 for like a shrimp. Okay, I moved here two weeks ago, and so usually I'm like the",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 95,
+      "reason": "Run-on missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Newest person in Miami, but now you are. So I feel like you think you're cooler than me, but",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 96,
+      "reason": "Run-on missing punctuation, multiple sentences",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "No, I'm just chilling on the beach. Oh yeah, why'd you come here? Fashion school?",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 97,
+      "reason": "Run-on missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Okay, fashion. Your fashion's all right. Yeah, this is a chill outfit. This is my beach outfit.",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 98,
+      "reason": "Run-on missing punctuation, fragmented thought",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "I, uh... this is okay. The fit doesn't go together. My bag, my bag is like two days delayed. I checked a",
+      "repair_confidence": 0.85,
+      "action": "replace"
+    },
+    {
+      "segment": 99,
+      "reason": "Run-on missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Bag and it's been like... yeah, because I had to go back to Ohio and then back",
+      "repair_confidence": 0.87,
+      "action": "replace"
+    },
+    {
+      "segment": 100,
+      "reason": "Run-on missing punctuation, multiple topic shifts",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Again. So yeah, it's been crazy. You ever been to Ohio? What's your, uh, what do you",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 101,
+      "reason": "Run-on missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Call that... what's your name? I'm Aaron. Hello, good to meet you. Yeah, so, so you'll",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 102,
+      "reason": "Run-on missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Be here for like years for fashion school and shit? Okay. Yeah, is that like",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 103,
+      "reason": "Run-on missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "My Little Pony or something? Uh, it's just some horsies. That's what's up. You gotta... you got a",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 104,
+      "reason": "Run-on missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Good vibe. You're like a little stoner chick. Yeah, yeah, I usually just eat the weed. Smoking doesn't",
+      "repair_confidence": 0.9,
+      "action": "replace"
+    },
+    {
+      "segment": 105,
+      "reason": "Run-on missing punctuation, fragmented",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Hit the same for me. Yeah, yeah, yeah. Edibles and yeah... not just like the flower. I'm not",
+      "repair_confidence": 0.85,
+      "action": "replace"
+    },
+    {
+      "segment": 106,
+      "reason": "Run-on missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Just gnawing on... is there a better way to waste weed than just eating it? That would be, that would",
+      "repair_confidence": 0.85,
+      "action": "replace"
+    },
+    {
+      "segment": 107,
+      "reason": "Garbled segment; 'you said okay I was thinking you were like the Amazon' lacks clear referent and transition",
+      "quality_issue_type": "garbled_speech",
+      "repair_text": null,
+      "repair_confidence": null,
+      "action": "replace"
+    },
+    {
+      "segment": 108,
+      "reason": "Run-on missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Give me your number. I'll text you and let's fucking... let's do some shit some",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 109,
+      "reason": "Run-on missing punctuation",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Time. Yeah, let's kick it on the beach. Where from again? North Florida. So you're",
+      "repair_confidence": 0.88,
+      "action": "replace"
+    },
+    {
+      "segment": 110,
+      "reason": "Run-on missing punctuation; 'riffraff' likely refers to rapper RiFF RAFF",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Like, you're like a RiFF RAFF. Florida born and raised. Spring Breakers. Okay, sick. I'm",
+      "repair_confidence": 0.85,
+      "action": "replace"
+    },
+    {
+      "segment": 124,
+      "reason": "'hey lit' likely 'hey, lit' (slang) or name — minor missing comma",
+      "quality_issue_type": "missing_punctuation",
+      "repair_text": "Well, hey, lit. Good to meet you.",
+      "repair_confidence": 0.85,
+      "action": "replace"
+    }
+  ],
+  "transcript_artifacts": [
+    {
+      "segment_index": 127,
+      "artifact_type": "nonsense",
+      "description": "ASR hallucination loop — identical 'I love you' repeated across segments 127-130, likely background/outro music hallucinated as speech",
+      "repair_text": null,
+      "repair_confidence": 0.98,
+      "action": "delete",
+      "damage_severity": "high"
+    },
+    {
+      "segment_index": 128,
+      "artifact_type": "nonsense",
+      "description": "ASR hallucination loop — identical repeated segment from background music",
+      "repair_text": null,
+      "repair_confidence": 0.98,
+      "action": "delete",
+      "damage_severity": "high"
+    },
+    {
+      "segment_index": 129,
+      "artifact_type": "nonsense",
+      "description": "ASR hallucination loop — identical repeated segment from background music",
+      "repair_text": null,
+      "repair_confidence": 0.98,
+      "action": "delete",
+      "damage_severity": "high"
+    },
+    {
+      "segment_index": 130,
+      "artifact_type": "nonsense",
+      "description": "ASR hallucination loop — identical repeated segment from background music",
+      "repair_text": null,
+      "repair_confidence": 0.98,
+      "action": "delete",
+      "damage_severity": "high"
+    }
+  ],
+  "summary": {
+    "segments_total": 131,
+    "low_quality_count": 34,
+    "artifact_count": 4,
+    "lq_repair_candidates": 32,
+    "artifact_types": {
+      "nonsense": 4
+    }
+  }
+}

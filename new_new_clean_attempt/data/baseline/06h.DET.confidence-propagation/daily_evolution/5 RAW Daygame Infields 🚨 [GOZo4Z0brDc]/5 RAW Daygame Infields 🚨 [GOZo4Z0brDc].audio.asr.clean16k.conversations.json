@@ -1,0 +1,592 @@
+{
+  "video_id": "GOZo4Z0brDc",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/05.EXT.audio-features/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.audio_features.json",
+  "processed_at": "2026-03-05T18:48:34Z",
+  "video_type": {
+    "type": "talking_head",
+    "confidence": 0.97,
+    "reasoning": "Single speaker promoting a free video giveaway. Zero approaches, no target interaction, purely promotional monologue to camera."
+  },
+  "transcript_confidence": {
+    "score": 92,
+    "reasoning": "Clear, coherent speech with logical flow. Minor overlap timestamps between segments 2-3 and 5-6 but text is fully understandable."
+  },
+  "speaker_labels": {
+    "SPEAKER_00": {
+      "role": "coach",
+      "confidence": 0.95,
+      "reasoning": "Solo speaker promoting his own daygame infield content, references filming approaches and a make-out — clearly the coach/creator."
+    }
+  },
+  "segments": [
+    {
+      "id": 0,
+      "start": 0.0,
+      "end": 4.5,
+      "text": "I'm giving away five day game infields for free for the next",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 1,
+      "start": 4.48,
+      "end": 5.917,
+      "text": "three days only.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 2,
+      "start": 6.038,
+      "end": 7.96,
+      "text": "So if you just click on this video, you're",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 3,
+      "start": 7.94,
+      "end": 11.28,
+      "text": "going to get access to a little mini New York City day game",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 4,
+      "start": 11.26,
+      "end": 14.334,
+      "text": "documentary that I just filmed a few days ago.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 5,
+      "start": 14.597,
+      "end": 14.86,
+      "text": "",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "merge_next",
+        "applied_at": "2026-03-05T17:55:35Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 6,
+      "start": 14.84,
+      "end": 19.08,
+      "text": "It's going to include five day game infields including a day game make out",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 7,
+      "start": 19.06,
+      "end": 22.24,
+      "text": "where just right there in the interaction itself, I actually",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 8,
+      "start": 22.22,
+      "end": 23.624,
+      "text": "had to make out with this chick twice.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T17:55:35Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 9,
+      "start": 23.664,
+      "end": 24.6,
+      "text": "",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "merge_next",
+        "applied_at": "2026-03-05T17:55:35Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 10,
+      "start": 24.58,
+      "end": 25.732,
+      "text": "So it's pretty unbelievable.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 11,
+      "start": 26.318,
+      "end": 28.52,
+      "text": "",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "merge_next",
+        "applied_at": "2026-03-05T17:55:35Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 12,
+      "start": 28.5,
+      "end": 29.421,
+      "text": "And I'm sending it to you for free right now I All you gotta do is click this link.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 13,
+      "start": 29.4,
+      "end": 30.921,
+      "text": "Again, this is for the next three days only.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 14,
+      "start": 31.2,
+      "end": 33.12,
+      "text": "After that, I'm going to be selling it.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 15,
+      "start": 33.18,
+      "end": 35.16,
+      "text": "So click on the video right now.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 16,
+      "start": 35.26,
+      "end": 35.901,
+      "text": "Go get it.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.95,
+        "phase": 1.0,
+        "overall": 0.9975
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    }
+  ],
+  "conversations": [],
+  "review_flags": null,
+  "speaker_collapse": null,
+  "metadata": {
+    "pipeline_version": "06.LLM.video-type-v3.5.3",
+    "prompt_version": "3.5.0",
+    "schema_version": "3.5.0",
+    "input_checksum": "32fdf50d05eccc71",
+    "llm_calls": 1,
+    "processing_time_sec": 15.609834432601929,
+    "model": "claude-cli",
+    "claude_model": "opus",
+    "sanitized_at": "2026-03-05T18:50:15Z",
+    "sanitizer_pipeline_version": "06d.DET.sanitize-v1.0",
+    "confidence_propagated_at": "2026-03-05T17:55:35Z",
+    "confidence_pipeline_version": "06h.DET.confidence-propagation-v2.1"
+  },
+  "patch_metadata": {
+    "patched_at": "2026-03-05T18:50:15Z",
+    "pipeline_version": "06c.DET.patch-v2.0",
+    "apply_mixed_speaker_other_flags": false,
+    "compatibility_repairs": [],
+    "verification_verdict": "APPROVE",
+    "verification_file": "/home/jonaswsl/projects/daygame-coach/data/06b.LLM.verify/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.verification.json",
+    "verification_schema_valid": true,
+    "fixes_applied": [],
+    "fixes_applied_count": 0,
+    "flags_not_fixed": [],
+    "flags_not_fixed_count": 0
+  },
+  "sanitize_metadata": {
+    "pipeline_version": "06d.DET.sanitize-v1.0",
+    "source_file": "/home/jonaswsl/projects/daygame-coach/data/06c.DET.patched/daily_evolution/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc]/5 RAW Daygame Infields 🚨 [GOZo4Z0brDc].audio.asr.clean16k.conversations.json",
+    "generated_at": "2026-03-05T18:50:15Z",
+    "counts": {
+      "segments_total": 17,
+      "teaser_duplicate_segments": 0,
+      "mixed_mode_segments": 0,
+      "mixed_mode_split_candidates": 0,
+      "mixed_mode_split_materialized_segments": 0,
+      "mixed_mode_synthetic_child_segments": 0,
+      "excluded_from_stage07_evidence": 0,
+      "fixed_coach_speaker_ids_count": 1,
+      "target_lists_filtered_count": 0,
+      "conversations_with_empty_confident_targets": 0
+    }
+  },
+  "video_summary": {
+    "final_confidence": 0.9975,
+    "confidence_band": "high",
+    "gate_decision": "pass",
+    "gate_reason_codes": [],
+    "gate_inputs": {
+      "segment_count": 17,
+      "artifact_total": 0,
+      "low_quality_total": 4,
+      "low_quality_total_ratio": 0.2353,
+      "artifact_unrepaired": 0,
+      "low_quality_unrepaired": 0,
+      "low_quality_unrepaired_ratio": 0.0,
+      "thresholds": {
+        "lq_total_abs": 140,
+        "lq_total_ratio": 0.4,
+        "lq_total_ratio_min_count": 90,
+        "lq_unrepaired_abs": 120,
+        "lq_unrepaired_ratio": 0.35,
+        "lq_unrepaired_ratio_min_count": 80,
+        "artifact_unrepaired_abs": 30
+      }
+    },
+    "segment_count": 17,
+    "conversation_count": 0
+  },
+  "confidence_metadata": {
+    "pipeline_version": "06h.DET.confidence-propagation-v2.1",
+    "model_version": "v2.1",
+    "generated_at": "2026-03-05T17:55:35Z",
+    "band_high_threshold": 0.8,
+    "band_medium_threshold": 0.6,
+    "video_type": "talking_head",
+    "axis_weights": {
+      "transcript": 0.9,
+      "speaker": 0.05,
+      "phase": 0.05
+    },
+    "global_transcript_score": 0.92,
+    "tier_counts": {
+      "high": 17,
+      "medium": 0,
+      "low": 0
+    },
+    "damage_type_counts": {},
+    "segments_with_repairs": 4,
+    "segments_repaired_by_06e": 4,
+    "repair_credit_segments": 0,
+    "damage_map_present": true,
+    "adjudication_present": false,
+    "quality_check_present": true,
+    "quality_repairs": {
+      "artifact_accepted": 0,
+      "artifact_rejected": 0,
+      "lq_accepted": 4,
+      "lq_rejected": 0
+    },
+    "quality_gate": {
+      "blocked": false,
+      "reason_codes": [],
+      "inputs": {
+        "segment_count": 17,
+        "artifact_total": 0,
+        "low_quality_total": 4,
+        "low_quality_total_ratio": 0.2353,
+        "artifact_unrepaired": 0,
+        "low_quality_unrepaired": 0,
+        "low_quality_unrepaired_ratio": 0.0,
+        "thresholds": {
+          "lq_total_abs": 140,
+          "lq_total_ratio": 0.4,
+          "lq_total_ratio_min_count": 90,
+          "lq_unrepaired_abs": 120,
+          "lq_unrepaired_ratio": 0.35,
+          "lq_unrepaired_ratio_min_count": 80,
+          "artifact_unrepaired_abs": 30
+        }
+      }
+    }
+  },
+  "quality_data": {
+    "low_quality_segments": [
+      {
+        "segment": 5,
+        "reason": "Fragment split from surrounding sentence",
+        "quality_issue_type": "sentence_boundary_fragment",
+        "repair_text": null,
+        "repair_confidence": 0.95,
+        "action": "merge_next",
+        "original_text": "It's going to",
+        "repaired": true,
+        "repair_action_applied": "merge_next"
+      },
+      {
+        "segment": 9,
+        "reason": "Fragment split from surrounding sentence",
+        "quality_issue_type": "sentence_boundary_fragment",
+        "repair_text": null,
+        "repair_confidence": 0.95,
+        "action": "merge_next",
+        "original_text": "So it's pretty",
+        "repaired": true,
+        "repair_action_applied": "merge_next"
+      },
+      {
+        "segment": 11,
+        "reason": "Trailing 'I' is an orphan fragment from a sentence boundary split",
+        "quality_issue_type": "sentence_boundary_fragment",
+        "repair_text": null,
+        "repair_confidence": 0.9,
+        "action": "merge_next",
+        "original_text": "And I'm sending it to you for free right now I",
+        "repaired": true,
+        "repair_action_applied": "merge_next"
+      },
+      {
+        "segment": 8,
+        "reason": "'make it out' is likely a mistranscription of 'make out'",
+        "quality_issue_type": "word_mistranscription",
+        "repair_text": "had to make out with this chick twice.",
+        "repair_confidence": 0.88,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "had to make it out with this chick twice."
+      }
+    ],
+    "transcript_artifacts": []
+  }
+}

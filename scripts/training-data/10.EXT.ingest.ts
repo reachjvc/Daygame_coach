@@ -1491,6 +1491,35 @@ function checkReadinessGate(
     allowIngestStatuses = parsed
   }
 
+  // Guard against stale readiness summaries produced before current
+  // damage-policy hardening knobs existed. We require these fields so
+  // ingest cannot proceed on legacy policy snapshots.
+  const requiredPolicyRatios = [
+    "review_video_damage_score",
+    "review_damaged_chunk_ratio",
+    "review_severe_damage_chunk_ratio",
+  ] as const
+  if (!policy) {
+    console.error(`❌ Readiness summary missing policy object: ${summaryPath}`)
+    console.error("   Re-run sub-batch validation to regenerate readiness with current policy.")
+    process.exit(1)
+  }
+  for (const key of requiredPolicyRatios) {
+    if (!(key in policy)) {
+      console.error(`❌ Readiness summary policy is missing '${key}' (${summaryPath})`)
+      console.error("   Re-run sub-batch validation to regenerate readiness with current policy.")
+      process.exit(1)
+    }
+    const value = policy[key]
+    if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 1) {
+      console.error(
+        `❌ Readiness summary policy '${key}' must be a finite ratio in [0,1] (got '${String(value)}') (${summaryPath})`
+      )
+      console.error("   Re-run sub-batch validation to regenerate readiness with current policy.")
+      process.exit(1)
+    }
+  }
+
   const summaryScope = isObject((data as any).scope) ? ((data as any).scope as Record<string, unknown>) : null
   if (summaryScope) {
     const scopeManifest = typeof summaryScope.manifest === "string" ? summaryScope.manifest.trim() : ""

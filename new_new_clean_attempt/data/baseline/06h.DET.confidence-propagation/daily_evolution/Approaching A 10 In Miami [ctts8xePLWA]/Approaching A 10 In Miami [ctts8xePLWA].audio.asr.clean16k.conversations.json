@@ -1,0 +1,3866 @@
+{
+  "video_id": "ctts8xePLWA",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/05.EXT.audio-features/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.audio_features.json",
+  "processed_at": "2026-03-05T19:32:21Z",
+  "video_type": {
+    "type": "infield",
+    "confidence": 0.95,
+    "reasoning": "One distinct approach to a woman on the beach in Miami (segments 93-126), preceded by a long talking-head intro and followed by a brief outro. Single approach + intro/outro = infield."
+  },
+  "transcript_confidence": {
+    "score": 62,
+    "reasoning": "The talking-head intro and most of the approach are coherent and readable. However, several approach segments have run-on text with missing punctuation and speaker boundaries bleeding across turns (e.g., segment 96 mixes coach and target speech). Segments 127-130 are completely garbled ASR artifacts from outro music ('I love you' repeated). Overall usable but with notable diarization and segmentation issues in the approach."
+  },
+  "speaker_labels": {
+    "SPEAKER_00": {
+      "role": "coach",
+      "confidence": 0.99,
+      "reasoning": "Introduces himself as Aaron Alexander, promotes Evolution Daily coaching programs, delivers the approach opener, leads the entire conversation, and does camera commentary."
+    },
+    "SPEAKER_01": {
+      "role": "collapsed",
+      "confidence": 0.3,
+      "reasoning": "mixed_diarization_error: Most segments are target responses, but segments 96 and 102-103 contain coach speech (questions like 'why'd you come here', 'is that like my little pony') mixed with target answers. Segments 127-130 are garbled music/outro artifacts."
+    }
+  },
+  "segments": [
+    {
+      "id": 0,
+      "start": 0.0,
+      "end": 1.146,
+      "text": "What's going on guys?",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 1,
+      "start": 1.207,
+      "end": 2.212,
+      "text": "Welcome back.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 2,
+      "start": 2.655,
+      "end": 4.847,
+      "text": "My name is Aaron Alexander.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 3,
+      "start": 4.908,
+      "end": 7.14,
+      "text": "We've got a fun one for you today.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 4,
+      "start": 7.4,
+      "end": 14.8,
+      "text": "If you're new here to this channel, what I do for a living, what I have done full-time for the last",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 5,
+      "start": 14.78,
+      "end": 23.36,
+      "text": "six years of my life, is I take guys just like you out into the field for an entire weekend",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 6,
+      "start": 23.34,
+      "end": 33.8,
+      "text": "to show you how simple and fun and effective you can make meeting women so",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 7,
+      "start": 33.78,
+      "end": 42.0,
+      "text": "many dudes today are struggling with loneliness with depression with porn",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 8,
+      "start": 41.98,
+      "end": 50.26,
+      "text": "addiction and so much of this stems from the fact that you can't date any of the",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 9,
+      "start": 50.24,
+      "end": 54.08,
+      "text": "the types of women that you actually want to be dating.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 10,
+      "start": 54.34,
+      "end": 57.48,
+      "text": "Now, when you come to one of my live bootcamp programs,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 11,
+      "start": 57.66,
+      "end": 62.06,
+      "text": "I show you how simple we can make all of this,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 12,
+      "start": 62.08,
+      "end": 63.681,
+      "text": "how fun we can make all of this,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 13,
+      "start": 63.7,
+      "end": 66.28,
+      "text": "and how effective I can show you",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 14,
+      "start": 66.26,
+      "end": 69.3,
+      "text": "how to really have charismatic,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 15,
+      "start": 69.86,
+      "end": 71.56,
+      "text": "engaging interactions with women.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 16,
+      "start": 71.68,
+      "end": 74.56,
+      "text": "You can drop down in any city in the world.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 17,
+      "start": 74.68,
+      "end": 77.16,
+      "text": "Your job moves you to another city.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 18,
+      "start": 77.3,
+      "end": 79.9,
+      "text": "You decide that you wanna go traveling.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 19,
+      "start": 79.88,
+      "end": 85.04,
+      "text": "You just want to go live somewhere else and I can show you how to literally go out and",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 20,
+      "start": 85.02,
+      "end": 86.501,
+      "text": "perform alchemy.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 21,
+      "start": 86.62,
+      "end": 93.9,
+      "text": "I can show you how to turn what would have been complete strangers that you're just walking",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 22,
+      "start": 93.88,
+      "end": 99.86,
+      "text": "by in the grocery store, on your way to the gym, at the gym, at the coffee shop, whatever",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 23,
+      "start": 99.84,
+      "end": 106.62,
+      "text": "it is, how to turn what would be strangers into women that you're sleeping with.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 24,
+      "start": 106.6,
+      "end": 109.6,
+      "text": "And I'm incredibly, incredibly passionate about this.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 25,
+      "start": 109.68,
+      "end": 113.78,
+      "text": "If you're new to the channel, watch all of my videos, dude.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 26,
+      "start": 113.84,
+      "end": 119.06,
+      "text": "I've got hundreds of videos here on the Evolution Daily YouTube",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 27,
+      "start": 119.04,
+      "end": 122.14,
+      "text": "channel of me not just telling you.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 28,
+      "start": 122.2,
+      "end": 126.1,
+      "text": "Most guys just kind of give you random advice and you don't",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 29,
+      "start": 126.08,
+      "end": 127.86,
+      "text": "really know if they have game.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 30,
+      "start": 128.04,
+      "end": 129.281,
+      "text": "I show you.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 31,
+      "start": 129.34,
+      "end": 131.34,
+      "text": "Watch all of my infields.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 32,
+      "start": 131.32,
+      "end": 133.5,
+      "text": "Watch all of these live demonstrations.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 0.95,
+        "speaker": 0.9405,
+        "phase": 0.95,
+        "overall": 0.9455
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [
+        "adjudicated_seed:33"
+      ],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 33,
+      "start": 133.48,
+      "end": 141.8,
+      "text": "frustrations and when you really start to see that I'm the dude who can really change your life",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 0.5082,
+        "speaker": 0.874,
+        "phase": 0.855,
+        "overall": 0.6993
+      },
+      "confidence_tier": "medium",
+      "contamination_sources": [
+        "adjudicated_seed:33",
+        "seed_low_quality_segment"
+      ],
+      "damage_reason_codes": [
+        "seed_low_quality_segment"
+      ],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 34,
+      "start": 141.78,
+      "end": 148.54,
+      "text": "Forever. And I gotta say this, man. And whatever, dude, like, if you just want to jump straight to",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.95,
+        "speaker": 0.9405,
+        "phase": 0.95,
+        "overall": 0.9455
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 35,
+      "start": 148.52,
+      "end": 154.74,
+      "text": "the video, go ahead, do your thing. But I gotta say this. You know, I talk to a lot of guys that are",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.95,
+        "speaker": 0.9405,
+        "phase": 0.95,
+        "overall": 0.9455
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 36,
+      "start": 154.72,
+      "end": 166.2,
+      "text": "really struggling mentally and I truly truly believe that a major percentage of",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 37,
+      "start": 166.18,
+      "end": 177.32,
+      "text": "men who are down bad who actually even go as far as committing suicide I really",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 38,
+      "start": 177.3,
+      "end": 181.14,
+      "text": "truly believe that if you were to take that same man and you were to insert",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 39,
+      "start": 181.12,
+      "end": 184.276,
+      "text": "insert love into his life.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 40,
+      "start": 184.758,
+      "end": 189.08,
+      "text": "If you were to insert good sex into his life, if you were to insert a",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 41,
+      "start": 189.06,
+      "end": 194.84,
+      "text": "woman that loves him, that provides for him, and that he provides for her, and that they create",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 42,
+      "start": 194.82,
+      "end": 199.104,
+      "text": "this symbiosis, I really believe that we can save lives.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 43,
+      "start": 199.305,
+      "end": 201.92,
+      "text": "And so, you know, this is something that",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 44,
+      "start": 201.9,
+      "end": 202.985,
+      "text": "saved my life.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 45,
+      "start": 203.547,
+      "end": 211.54,
+      "text": "Learning game was the absolute catapult for me to start losing weight back when",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 46,
+      "start": 211.52,
+      "end": 213.231,
+      "text": "I was a 300 pound fatty.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 47,
+      "start": 213.714,
+      "end": 217.7,
+      "text": "You know, it was the catapult for me and my self-development to become",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 48,
+      "start": 217.68,
+      "end": 219.773,
+      "text": "a stronger, better man.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 49,
+      "start": 220.215,
+      "end": 223.033,
+      "text": "Sure, it all started stemming with like, I want to get laid.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 50,
+      "start": 223.858,
+      "end": 224.26,
+      "text": "But then",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 51,
+      "start": 224.24,
+      "end": 226.864,
+      "text": "the game has taken me to so many incredible places.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 52,
+      "start": 226.904,
+      "end": 228.72,
+      "text": "And I know that again, if you're a dude",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 53,
+      "start": 228.7,
+      "end": 234.18,
+      "text": "out there who's struggling, I know that I can help you to really elevate your life,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 54,
+      "start": 234.16,
+      "end": 239.0,
+      "text": "to be able to meet these women, to be able to enjoy life, to be able to have",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 55,
+      "start": 238.98,
+      "end": 242.2,
+      "text": "good sex, to be able to get that girlfriend, or really even get that",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 56,
+      "start": 242.18,
+      "end": 249.1,
+      "text": "quality woman that you want that's going to raise your children. So I just want...",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 57,
+      "start": 249.08,
+      "end": 252.14,
+      "text": "I had to say that because it's just something I'm feeling really passionate",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 58,
+      "start": 252.12,
+      "end": 256.4,
+      "text": "about lately. I'm gonna drop this infield now for you guys. I hope you enjoy it.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 59,
+      "start": 256.38,
+      "end": 259.64,
+      "text": "and you know, if you're really struggling out there,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 60,
+      "start": 259.7,
+      "end": 261.021,
+      "text": "I want you to click the link down below.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 61,
+      "start": 261.08,
+      "end": 262.521,
+      "text": "It's in the comments, it's in the description,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 62,
+      "start": 263.58,
+      "end": 265.72,
+      "text": "evolutiondaily.com where you can actually apply",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 63,
+      "start": 265.7,
+      "end": 268.2,
+      "text": "to speak with my assistant, Alex,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 64,
+      "start": 268.44,
+      "end": 271.3,
+      "text": "who is going to talk to you about, you know,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 65,
+      "start": 271.28,
+      "end": 273.92,
+      "text": "potential options for you getting some coaching.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 66,
+      "start": 274.06,
+      "end": 275.181,
+      "text": "You know, if this is something",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 67,
+      "start": 275.16,
+      "end": 276.741,
+      "text": "that you've just always struggled with,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 68,
+      "start": 276.76,
+      "end": 280.28,
+      "text": "if you're just not good with chicks and you want that,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 69,
+      "start": 280.34,
+      "end": 282.52,
+      "text": "you know, maybe you're on TikTok all the time,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 70,
+      "start": 282.6,
+      "end": 283.781,
+      "text": "you're on Instagram all the time,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 71,
+      "start": 283.78,
+      "end": 284.941,
+      "text": "you see all these beautiful women",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 72,
+      "start": 284.92,
+      "end": 289.875,
+      "text": "and you're just like, dude, like, I don't even see a path for me to be able to get there.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 73,
+      "start": 290.218,
+      "end": 290.54,
+      "text": "That's what",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 74,
+      "start": 290.52,
+      "end": 296.916,
+      "text": "I do for a living is I show you this path out in the field live in person.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 75,
+      "start": 297.197,
+      "end": 297.7,
+      "text": "So I want you to click",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 76,
+      "start": 297.68,
+      "end": 298.75,
+      "text": "the link down below.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 77,
+      "start": 299.255,
+      "end": 301.9,
+      "text": "And you'll be able to speak with Alex about some of our upcoming coaching",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 78,
+      "start": 301.88,
+      "end": 303.29,
+      "text": "opportunities for you.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 79,
+      "start": 303.955,
+      "end": 307.6,
+      "text": "We try to have different programs and options that fit really any budget",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 80,
+      "start": 307.58,
+      "end": 309.979,
+      "text": "as well as offering payment plans, things like that.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 81,
+      "start": 309.999,
+      "end": 312.72,
+      "text": "But yeah, dude, just really, really",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 82,
+      "start": 312.7,
+      "end": 318.0,
+      "text": "passionate about this stuff. Fired up lately more than ever. So this is just a",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 83,
+      "start": 317.98,
+      "end": 322.44,
+      "text": "quick number close, you know, just a good, fun little interaction. And this is",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 84,
+      "start": 322.42,
+      "end": 325.26,
+      "text": "something that you can replicate over and over and over again when you just",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 85,
+      "start": 325.24,
+      "end": 329.0,
+      "text": "learn some of the basic fundamentals and especially when you come for a full",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 86,
+      "start": 328.98,
+      "end": 334.32,
+      "text": "weekend and have me there with you, you know, holding your hand in this process,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 87,
+      "start": 334.3,
+      "end": 339.2,
+      "text": "helping you to overcome the fear that you currently have of approaching",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 88,
+      "start": 339.18,
+      "end": 344.3,
+      "text": "beautiful women, of running fun, engaging interactions with them, and showing you",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 89,
+      "start": 344.28,
+      "end": 348.26,
+      "text": "how you can turn those into dates. So thank you guys so much for tuning in.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 90,
+      "start": 348.24,
+      "end": 354.66,
+      "text": "Like this video if you like this video, and here's the infield again. Click the",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 91,
+      "start": 354.64,
+      "end": 359.98,
+      "text": "link down below to apply so you can speak with my assistant Alex about our",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 92,
+      "start": 359.96,
+      "end": 364.68,
+      "text": "upcoming coaching programs hopefully I will see you in the field soon",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 93,
+      "start": 374.74,
+      "end": 382.08,
+      "text": "Excuse me, what's like the best restaurant to grab food over here? I feel like all of these",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": true,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.95,
+        "speaker": 0.9405,
+        "phase": 0.95,
+        "overall": 0.9455
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [
+        "adjudicated_seed:94"
+      ],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 94,
+      "start": 382.06,
+      "end": 396.84,
+      "text": "Are like $5,000 for like a shrimp. Okay, I moved here two weeks ago, and so usually I'm like the",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "speaker_role_override": "target",
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.7362,
+        "speaker": 0.2888,
+        "phase": 0.8788,
+        "overall": 0.5308
+      },
+      "confidence_tier": "low",
+      "contamination_sources": [
+        "adjudicated_seed:94",
+        "seed_speaker_collapsed"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 95,
+      "start": 396.82,
+      "end": 402.28,
+      "text": "Newest person in Miami, but now you are. So I feel like you think you're cooler than me, but",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.95,
+        "speaker": 0.9405,
+        "phase": 0.95,
+        "overall": 0.9455
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [
+        "adjudicated_seed:96"
+      ],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 96,
+      "start": 402.9,
+      "end": 408.84,
+      "text": "No, I'm just chilling on the beach. Oh yeah, why'd you come here? Fashion school?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "unknown",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "speaker_role_override": "unknown",
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.7125,
+        "speaker": 0.265,
+        "phase": 0.8788,
+        "overall": 0.5083
+      },
+      "confidence_tier": "low",
+      "contamination_sources": [
+        "adjudicated_seed:96",
+        "seed_speaker_collapsed"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 97,
+      "start": 409.46,
+      "end": 415.64,
+      "text": "Okay, fashion. Your fashion's all right. Yeah, this is a chill outfit. This is my beach outfit.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.95,
+        "speaker": 0.9405,
+        "phase": 0.95,
+        "overall": 0.9455
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 98,
+      "start": 415.62,
+      "end": 422.6,
+      "text": "I, uh... this is okay. The fit doesn't go together. My bag, my bag is like two days delayed. I checked a",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 99,
+      "start": 422.58,
+      "end": 428.96,
+      "text": "Bag and it's been like... yeah, because I had to go back to Ohio and then back",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 100,
+      "start": 428.94,
+      "end": 434.58,
+      "text": "Again. So yeah, it's been crazy. You ever been to Ohio? What's your, uh, what do you",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 101,
+      "start": 434.56,
+      "end": 442.02,
+      "text": "Call that... what's your name? I'm Aaron. Hello, good to meet you. Yeah, so, so you'll",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.95,
+        "speaker": 0.9405,
+        "phase": 0.95,
+        "overall": 0.9455
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [
+        "adjudicated_seed:102"
+      ],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 102,
+      "start": 442.0,
+      "end": 451.82,
+      "text": "Be here for like years for fashion school and shit? Okay. Yeah, is that like",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "speaker_role_override": "coach",
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.76,
+        "speaker": 0.2888,
+        "phase": 0.8788,
+        "overall": 0.5421
+      },
+      "confidence_tier": "low",
+      "contamination_sources": [
+        "adjudicated_seed:102",
+        "adjudicated_seed:103",
+        "seed_speaker_collapsed"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 103,
+      "start": 451.8,
+      "end": 457.08,
+      "text": "My Little Pony or something? Uh, it's just some horsies. That's what's up. You gotta... you got a",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "speaker_role_override": "coach",
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.7362,
+        "speaker": 0.265,
+        "phase": 0.8788,
+        "overall": 0.5196
+      },
+      "confidence_tier": "low",
+      "contamination_sources": [
+        "adjudicated_seed:103",
+        "seed_speaker_collapsed"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 104,
+      "start": 457.06,
+      "end": 462.84,
+      "text": "Good vibe. You're like a little stoner chick. Yeah, yeah, I usually just eat the weed. Smoking doesn't",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.95,
+        "speaker": 0.9405,
+        "phase": 0.95,
+        "overall": 0.9455
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 105,
+      "start": 462.82,
+      "end": 468.64,
+      "text": "Hit the same for me. Yeah, yeah, yeah. Edibles and yeah... not just like the flower. I'm not",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 106,
+      "start": 468.62,
+      "end": 476.1,
+      "text": "Just gnawing on... is there a better way to waste weed than just eating it? That would be, that would",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.95,
+        "speaker": 0.9405,
+        "phase": 0.95,
+        "overall": 0.9455
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [
+        "adjudicated_seed:107"
+      ],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 107,
+      "start": 476.08,
+      "end": 484.0,
+      "text": "would be insane you said okay I was thinking you were like the Amazon listen",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 0.437,
+        "speaker": 0.8027,
+        "phase": 0.855,
+        "overall": 0.6316
+      },
+      "confidence_tier": "medium",
+      "contamination_sources": [
+        "adjudicated_seed:107",
+        "seed_low_quality_segment"
+      ],
+      "damage_reason_codes": [
+        "seed_low_quality_segment"
+      ],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 108,
+      "start": 485.02,
+      "end": 491.08,
+      "text": "Give me your number. I'll text you and let's fucking... let's do some shit some",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.95,
+        "speaker": 0.9405,
+        "phase": 0.95,
+        "overall": 0.9455
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 109,
+      "start": 491.06,
+      "end": 498.72,
+      "text": "Time. Yeah, let's kick it on the beach. Where from again? North Florida. So you're",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 110,
+      "start": 498.7,
+      "end": 505.4,
+      "text": "Like, you're like a RiFF RAFF. Florida born and raised. Spring Breakers. Okay, sick. I'm",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 111,
+      "start": 505.38,
+      "end": 506.041,
+      "text": "I'm gonna text you.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 112,
+      "start": 506.52,
+      "end": 507.481,
+      "text": "I'm from Ohio.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 113,
+      "start": 507.9,
+      "end": 511.26,
+      "text": "So you might meet a lot of like trash dudes around here,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 114,
+      "start": 511.42,
+      "end": 514.1,
+      "text": "but I'm like a wholesome ass, you know,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 115,
+      "start": 514.08,
+      "end": 515.001,
+      "text": "real world gentleman.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 116,
+      "start": 516.08,
+      "end": 518.2,
+      "text": "So, but I'm a good combo of that",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 117,
+      "start": 518.18,
+      "end": 520.04,
+      "text": "and like a recovering fuck boy as well.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 118,
+      "start": 520.3,
+      "end": 523.02,
+      "text": "So just kind of like, you know, doing my thing.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 119,
+      "start": 524.2,
+      "end": 525.001,
+      "text": "All right.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 120,
+      "start": 526.24,
+      "end": 526.742,
+      "text": "Sick.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 121,
+      "start": 527.64,
+      "end": 529.58,
+      "text": "All right, well, I'm gonna keep doing my thing.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 122,
+      "start": 529.96,
+      "end": 532.84,
+      "text": "I'm gonna find some food, something chill over here.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 123,
+      "start": 532.92,
+      "end": 534.141,
+      "text": "So, all right.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 1.0,
+        "speaker": 0.99,
+        "phase": 1.0,
+        "overall": 0.9952
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 124,
+      "start": 534.12,
+      "end": 536.682,
+      "text": "Well, hey, lit. Good to meet you.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "replace",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.95,
+        "speaker": 0.9405,
+        "phase": 0.95,
+        "overall": 0.9455
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [
+        "adjudicated_seed:125"
+      ],
+      "damage_reason_codes": [],
+      "contains_repaired_text": true,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 125,
+      "start": 536.783,
+      "end": 537.61,
+      "text": "I'll talk to you soon.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "speaker_role_override": "target",
+      "segment_confidence": {
+        "transcript": 0.855,
+        "speaker": 0.455,
+        "phase": 0.8788,
+        "overall": 0.6662
+      },
+      "confidence_tier": "medium",
+      "contamination_sources": [
+        "adjudicated_seed:125",
+        "seed_speaker_collapsed"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed"
+      ],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 126,
+      "start": 537.832,
+      "end": 538.72,
+      "text": "All right, peace",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "segment_confidence": {
+        "transcript": 0.95,
+        "speaker": 0.9405,
+        "phase": 0.95,
+        "overall": 0.9455
+      },
+      "confidence_tier": "high",
+      "contamination_sources": [],
+      "damage_reason_codes": [],
+      "contains_repaired_text": false,
+      "repair_credit_applied": false
+    },
+    {
+      "id": 127,
+      "start": 565.4,
+      "end": 568.08,
+      "text": "",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "unknown",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "speaker_role_override": "unknown",
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "delete",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.475,
+        "speaker": 0.265,
+        "phase": 0.475,
+        "overall": 0.3753
+      },
+      "confidence_tier": "low",
+      "contamination_sources": [
+        "adjudicated_seed:127",
+        "adjudicated_seed:128",
+        "adjudicated_seed:129",
+        "adjudicated_seed:130",
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "contains_repaired_text": true,
+      "repair_credit_applied": true
+    },
+    {
+      "id": 128,
+      "start": 568.06,
+      "end": 568.861,
+      "text": "",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "unknown",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "speaker_role_override": "unknown",
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "delete",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.475,
+        "speaker": 0.265,
+        "phase": 0.475,
+        "overall": 0.3753
+      },
+      "confidence_tier": "low",
+      "contamination_sources": [
+        "adjudicated_seed:128",
+        "adjudicated_seed:129",
+        "adjudicated_seed:130",
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "contains_repaired_text": true,
+      "repair_credit_applied": true
+    },
+    {
+      "id": 129,
+      "start": 568.84,
+      "end": 569.981,
+      "text": "",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "unknown",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "speaker_role_override": "unknown",
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "delete",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.475,
+        "speaker": 0.265,
+        "phase": 0.475,
+        "overall": 0.3753
+      },
+      "confidence_tier": "low",
+      "contamination_sources": [
+        "adjudicated_seed:129",
+        "adjudicated_seed:130",
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "contains_repaired_text": true,
+      "repair_credit_applied": true
+    },
+    {
+      "id": 130,
+      "start": 569.96,
+      "end": 574.18,
+      "text": "",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "unknown",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "speaker_role_override": "unknown",
+      "repair_metadata": {
+        "source_stage": "06e.LLM.quality-check",
+        "action": "delete",
+        "applied_at": "2026-03-05T18:49:19Z"
+      },
+      "segment_confidence": {
+        "transcript": 0.475,
+        "speaker": 0.265,
+        "phase": 0.475,
+        "overall": 0.3753
+      },
+      "confidence_tier": "low",
+      "contamination_sources": [
+        "adjudicated_seed:130",
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "damage_reason_codes": [
+        "seed_speaker_collapsed",
+        "seed_transcript_artifact"
+      ],
+      "contains_repaired_text": true,
+      "repair_credit_applied": true
+    }
+  ],
+  "conversations": [
+    {
+      "conversation_id": 1,
+      "segment_ids": [
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126
+      ],
+      "start_time": 374.74,
+      "end_time": 538.72,
+      "target_participation": {
+        "label": "single_woman",
+        "target_speaker_ids": [
+          "SPEAKER_01"
+        ],
+        "confidence": 0.9,
+        "reasoning": "Detected target turns from one consistent speaker ID.",
+        "target_speaker_ids_confident": [],
+        "fixed_coach_speaker_ids": [
+          "SPEAKER_00"
+        ],
+        "confidence_hygiene": {
+          "pipeline_version": "06d.DET.sanitize-v1.0",
+          "min_target_label_confidence": 0.6,
+          "fixed_coach_min_confidence": 0.75
+        }
+      },
+      "stage07_evidence_segment_ids": [
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126
+      ],
+      "excluded_stage07_evidence_segment_ids": [],
+      "sanitizer_version": "06d.DET.sanitize-v1.0",
+      "conversation_confidence_score": 0.9064,
+      "stage07_anchor_segment_ids": [
+        93,
+        95,
+        97,
+        98,
+        99,
+        100,
+        101,
+        104,
+        105,
+        106,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        126
+      ],
+      "stage07_anchor_policy": {
+        "source_stage": "06h.DET.confidence-propagation-v2.1",
+        "anchor_confidence_tier": "high"
+      }
+    }
+  ],
+  "review_flags": [
+    "speaker_collapse: SPEAKER_01 (9 segs, 22% reassigned, 7 unknown)"
+  ],
+  "speaker_collapse": {
+    "detected": true,
+    "collapsed_speakers": [
+      "SPEAKER_01"
+    ],
+    "total_segments_affected": 9,
+    "reassigned_count": 2,
+    "unknown_count": 7,
+    "reassignment_rate": 0.222
+  },
+  "metadata": {
+    "pipeline_version": "06.LLM.video-type-v3.5.3",
+    "prompt_version": "3.5.0",
+    "schema_version": "3.5.0",
+    "input_checksum": "902195009a7a357e",
+    "llm_calls": 1,
+    "processing_time_sec": 69.78379368782043,
+    "model": "claude-cli",
+    "claude_model": "opus",
+    "sanitized_at": "2026-03-05T19:46:38Z",
+    "sanitizer_pipeline_version": "06d.DET.sanitize-v1.0",
+    "confidence_propagated_at": "2026-03-05T18:49:19Z",
+    "confidence_pipeline_version": "06h.DET.confidence-propagation-v2.1"
+  },
+  "patch_metadata": {
+    "patched_at": "2026-03-05T19:46:38Z",
+    "pipeline_version": "06c.DET.patch-v2.0",
+    "apply_mixed_speaker_other_flags": false,
+    "compatibility_repairs": [],
+    "verification_verdict": "FLAG",
+    "verification_file": "/home/jonaswsl/projects/daygame-coach/data/06b.LLM.verify/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.verification.json",
+    "verification_schema_valid": true,
+    "fixes_applied": [
+      {
+        "segment_id": 102,
+        "field": "speaker_role+speaker_role_override",
+        "old": "role=unknown, override=unknown",
+        "new": "coach",
+        "source": "collapse_issue",
+        "evidence": "Asks 'be here for like years for fashion school and shit okay yeah is that like' — leading/questioning style consistent with coach, not target responses."
+      },
+      {
+        "segment_id": 103,
+        "field": "speaker_role+speaker_role_override",
+        "old": "role=unknown, override=unknown",
+        "new": "coach",
+        "source": "collapse_issue",
+        "evidence": "'my little pony or something' is a coach-style tease/question about her accessory. 'that's what's up you gotta you got a' is coach leading. Mixed but predominantly coach."
+      }
+    ],
+    "fixes_applied_count": 2,
+    "flags_not_fixed": [
+      "other_flag: Segments 127-130 are background music ('I love you' repeated), not actual speech — should be excluded or flagged as non-speech audio",
+      "other_flag: Very low target coverage in Conv 1 (2/34 segments) — mixed diarization segments likely contain unrecoverable target responses",
+      "other_flag: Dropped low-confidence collapse issue seg 96 (confidence=0.55)"
+    ],
+    "flags_not_fixed_count": 3
+  },
+  "sanitize_metadata": {
+    "pipeline_version": "06d.DET.sanitize-v1.0",
+    "source_file": "/home/jonaswsl/projects/daygame-coach/data/06c.DET.patched/daily_evolution/Approaching A 10 In Miami [ctts8xePLWA]/Approaching A 10 In Miami [ctts8xePLWA].audio.asr.clean16k.conversations.json",
+    "generated_at": "2026-03-05T19:46:38Z",
+    "counts": {
+      "segments_total": 131,
+      "teaser_duplicate_segments": 0,
+      "mixed_mode_segments": 0,
+      "mixed_mode_split_candidates": 0,
+      "mixed_mode_split_materialized_segments": 0,
+      "mixed_mode_synthetic_child_segments": 0,
+      "excluded_from_stage07_evidence": 0,
+      "fixed_coach_speaker_ids_count": 1,
+      "target_lists_filtered_count": 0,
+      "conversations_with_empty_confident_targets": 1
+    }
+  },
+  "video_summary": {
+    "final_confidence": 0.9556,
+    "confidence_band": "high",
+    "gate_decision": "pass",
+    "gate_reason_codes": [],
+    "gate_inputs": {
+      "segment_count": 131,
+      "artifact_total": 4,
+      "low_quality_total": 34,
+      "low_quality_total_ratio": 0.2595,
+      "artifact_unrepaired": 0,
+      "low_quality_unrepaired": 2,
+      "low_quality_unrepaired_ratio": 0.0153,
+      "thresholds": {
+        "lq_total_abs": 140,
+        "lq_total_ratio": 0.4,
+        "lq_total_ratio_min_count": 90,
+        "lq_unrepaired_abs": 120,
+        "lq_unrepaired_ratio": 0.35,
+        "lq_unrepaired_ratio_min_count": 80,
+        "artifact_unrepaired_abs": 30
+      }
+    },
+    "segment_count": 131,
+    "conversation_count": 1
+  },
+  "confidence_metadata": {
+    "pipeline_version": "06h.DET.confidence-propagation-v2.1",
+    "model_version": "v2.1",
+    "generated_at": "2026-03-05T18:49:19Z",
+    "band_high_threshold": 0.8,
+    "band_medium_threshold": 0.6,
+    "video_type": "infield",
+    "axis_weights": {
+      "transcript": 0.475,
+      "speaker": 0.475,
+      "phase": 0.05
+    },
+    "global_transcript_score": 0.62,
+    "tier_counts": {
+      "high": 120,
+      "medium": 3,
+      "low": 8
+    },
+    "damage_type_counts": {
+      "seed_low_quality_segment": 2,
+      "seed_speaker_collapsed": 9,
+      "seed_transcript_artifact": 4
+    },
+    "segments_with_repairs": 36,
+    "segments_repaired_by_06e": 36,
+    "repair_credit_segments": 4,
+    "damage_map_present": true,
+    "adjudication_present": true,
+    "quality_check_present": true,
+    "quality_repairs": {
+      "artifact_accepted": 4,
+      "artifact_rejected": 0,
+      "lq_accepted": 32,
+      "lq_rejected": 0
+    },
+    "quality_gate": {
+      "blocked": false,
+      "reason_codes": [],
+      "inputs": {
+        "segment_count": 131,
+        "artifact_total": 4,
+        "low_quality_total": 34,
+        "low_quality_total_ratio": 0.2595,
+        "artifact_unrepaired": 0,
+        "low_quality_unrepaired": 2,
+        "low_quality_unrepaired_ratio": 0.0153,
+        "thresholds": {
+          "lq_total_abs": 140,
+          "lq_total_ratio": 0.4,
+          "lq_total_ratio_min_count": 90,
+          "lq_unrepaired_abs": 120,
+          "lq_unrepaired_ratio": 0.35,
+          "lq_unrepaired_ratio_min_count": 80,
+          "artifact_unrepaired_abs": 30
+        }
+      }
+    }
+  },
+  "quality_data": {
+    "low_quality_segments": [
+      {
+        "segment": 33,
+        "reason": "Starts mid-sentence with 'frustrations' — no grammatical connection to preceding segment 32 ('Watch all of these live demonstrations.'). Likely missing content between segments.",
+        "quality_issue_type": "garbled_speech",
+        "repair_text": null,
+        "repair_confidence": null,
+        "action": "replace"
+      },
+      {
+        "segment": 34,
+        "reason": "Run-on text lacking punctuation and sentence boundaries",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Forever. And I gotta say this, man. And whatever, dude, like, if you just want to jump straight to",
+        "repair_confidence": 0.88,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "forever and I gotta say this man and whatever dude like if you just want to jump straight to"
+      },
+      {
+        "segment": 35,
+        "reason": "Run-on text lacking punctuation and sentence boundaries",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "the video, go ahead, do your thing. But I gotta say this. You know, I talk to a lot of guys that are",
+        "repair_confidence": 0.9,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "the video go ahead do your thing but I gotta say this you know I talk to a lot of guys that are"
+      },
+      {
+        "segment": 53,
+        "reason": "Missing punctuation in run-on clause",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "out there who's struggling, I know that I can help you to really elevate your life,",
+        "repair_confidence": 0.92,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "out there who's struggling I know that I can help you to really elevate your life"
+      },
+      {
+        "segment": 54,
+        "reason": "Run-on list without commas",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "to be able to meet these women, to be able to enjoy life, to be able to have",
+        "repair_confidence": 0.95,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "to be able to meet these women to be able to enjoy life to be able to have"
+      },
+      {
+        "segment": 55,
+        "reason": "Run-on list without commas",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "good sex, to be able to get that girlfriend, or really even get that",
+        "repair_confidence": 0.95,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "good sex to be able to get that girlfriend or really even get that"
+      },
+      {
+        "segment": 56,
+        "reason": "Missing punctuation and sentence boundary",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "quality woman that you want that's going to raise your children. So I just want...",
+        "repair_confidence": 0.88,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "quality woman that you want that's going to raise your children so I just want"
+      },
+      {
+        "segment": 57,
+        "reason": "Missing punctuation, awkward segment start",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "I had to say that because it's just something I'm feeling really passionate",
+        "repair_confidence": 0.87,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "this I had to say that because it's just something I'm feeling really passionate"
+      },
+      {
+        "segment": 58,
+        "reason": "Run-on with multiple sentences lacking boundaries",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "about lately. I'm gonna drop this infield now for you guys. I hope you enjoy it.",
+        "repair_confidence": 0.93,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "about lately I'm gonna drop this infield now for you guys I hope you enjoy it"
+      },
+      {
+        "segment": 82,
+        "reason": "Run-on text missing sentence boundaries",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "passionate about this stuff. Fired up lately more than ever. So this is just a",
+        "repair_confidence": 0.92,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "passionate about this stuff fired up lately more than ever so this is just a"
+      },
+      {
+        "segment": 83,
+        "reason": "Run-on text missing punctuation",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "quick number close, you know, just a good, fun little interaction. And this is",
+        "repair_confidence": 0.92,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "quick number close you know just a good fun little interaction and this is"
+      },
+      {
+        "segment": 86,
+        "reason": "Run-on text with missing commas",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "weekend and have me there with you, you know, holding your hand in this process,",
+        "repair_confidence": 0.92,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "weekend and have me there with you you know holding your hand in this process"
+      },
+      {
+        "segment": 88,
+        "reason": "Run-on list missing commas",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "beautiful women, of running fun, engaging interactions with them, and showing you",
+        "repair_confidence": 0.9,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "beautiful women of running fun engaging interactions with them and showing you"
+      },
+      {
+        "segment": 89,
+        "reason": "Run-on text missing sentence boundary",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "how you can turn those into dates. So thank you guys so much for tuning in.",
+        "repair_confidence": 0.93,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "how you can turn those into dates so thank you guys so much for tuning in"
+      },
+      {
+        "segment": 90,
+        "reason": "Run-on promotional speech missing punctuation",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Like this video if you like this video, and here's the infield again. Click the",
+        "repair_confidence": 0.9,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "like this video if you like this video and here's the infield again click the"
+      },
+      {
+        "segment": 93,
+        "reason": "Run-on missing punctuation and capitalization",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Excuse me, what's like the best restaurant to grab food over here? I feel like all of these",
+        "repair_confidence": 0.92,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "excuse me what's like the best restaurant to grab food over here I feel like all of these"
+      },
+      {
+        "segment": 94,
+        "reason": "Run-on missing punctuation, sentence boundaries unclear",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Are like $5,000 for like a shrimp. Okay, I moved here two weeks ago, and so usually I'm like the",
+        "repair_confidence": 0.88,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "are like $5,000 for like a shrimp okay I moved here two weeks ago and so usually I'm like the"
+      },
+      {
+        "segment": 95,
+        "reason": "Run-on missing punctuation",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Newest person in Miami, but now you are. So I feel like you think you're cooler than me, but",
+        "repair_confidence": 0.9,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "newest person in miami but now you are so i feel like you think you're cooler than me but"
+      },
+      {
+        "segment": 96,
+        "reason": "Run-on missing punctuation, multiple sentences",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "No, I'm just chilling on the beach. Oh yeah, why'd you come here? Fashion school?",
+        "repair_confidence": 0.9,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "no i'm just chilling on the beach oh yeah why'd you come here fashion school"
+      },
+      {
+        "segment": 97,
+        "reason": "Run-on missing punctuation",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Okay, fashion. Your fashion's all right. Yeah, this is a chill outfit. This is my beach outfit.",
+        "repair_confidence": 0.9,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "okay fashion your fashion's all right yeah this is a chill outfit this is my beach outfit"
+      },
+      {
+        "segment": 98,
+        "reason": "Run-on missing punctuation, fragmented thought",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "I, uh... this is okay. The fit doesn't go together. My bag, my bag is like two days delayed. I checked a",
+        "repair_confidence": 0.85,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "i uh this is okay the fit doesn't go together my bag my bag is like two days delayed i checked a"
+      },
+      {
+        "segment": 99,
+        "reason": "Run-on missing punctuation",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Bag and it's been like... yeah, because I had to go back to Ohio and then back",
+        "repair_confidence": 0.87,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "bag and it's been like yeah because I had to go back to Ohio and then back"
+      },
+      {
+        "segment": 100,
+        "reason": "Run-on missing punctuation, multiple topic shifts",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Again. So yeah, it's been crazy. You ever been to Ohio? What's your, uh, what do you",
+        "repair_confidence": 0.88,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "again so yeah it's been crazy you ever been to Ohio what's your uh what do you"
+      },
+      {
+        "segment": 101,
+        "reason": "Run-on missing punctuation",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Call that... what's your name? I'm Aaron. Hello, good to meet you. Yeah, so, so you'll",
+        "repair_confidence": 0.88,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "call that what's your name I'm Aaron hello good to meet you yeah so so you'll"
+      },
+      {
+        "segment": 102,
+        "reason": "Run-on missing punctuation",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Be here for like years for fashion school and shit? Okay. Yeah, is that like",
+        "repair_confidence": 0.9,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "be here for like years for fashion school and shit okay yeah is that like"
+      },
+      {
+        "segment": 103,
+        "reason": "Run-on missing punctuation",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "My Little Pony or something? Uh, it's just some horsies. That's what's up. You gotta... you got a",
+        "repair_confidence": 0.88,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "my little pony or something uh it's just some horsies that's what's up you gotta you got a"
+      },
+      {
+        "segment": 104,
+        "reason": "Run-on missing punctuation",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Good vibe. You're like a little stoner chick. Yeah, yeah, I usually just eat the weed. Smoking doesn't",
+        "repair_confidence": 0.9,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "good vibe you're like a little stoner chick yeah yeah i usually just eat the weed smoking doesn't"
+      },
+      {
+        "segment": 105,
+        "reason": "Run-on missing punctuation, fragmented",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Hit the same for me. Yeah, yeah, yeah. Edibles and yeah... not just like the flower. I'm not",
+        "repair_confidence": 0.85,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "hit the same for me yeah yeah yeah edibles and yeah not just like the flower i'm not"
+      },
+      {
+        "segment": 106,
+        "reason": "Run-on missing punctuation",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Just gnawing on... is there a better way to waste weed than just eating it? That would be, that would",
+        "repair_confidence": 0.85,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "just gnawing on is there a better way to waste weed than just eating it that would be that would"
+      },
+      {
+        "segment": 107,
+        "reason": "Garbled segment; 'you said okay I was thinking you were like the Amazon' lacks clear referent and transition",
+        "quality_issue_type": "garbled_speech",
+        "repair_text": null,
+        "repair_confidence": null,
+        "action": "replace"
+      },
+      {
+        "segment": 108,
+        "reason": "Run-on missing punctuation",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Give me your number. I'll text you and let's fucking... let's do some shit some",
+        "repair_confidence": 0.88,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "give me your number I'll text you and let's fucking let's do some shit some"
+      },
+      {
+        "segment": 109,
+        "reason": "Run-on missing punctuation",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Time. Yeah, let's kick it on the beach. Where from again? North Florida. So you're",
+        "repair_confidence": 0.88,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "time yeah let's kick it on the beach where from again North Florida so you're"
+      },
+      {
+        "segment": 110,
+        "reason": "Run-on missing punctuation; 'riffraff' likely refers to rapper RiFF RAFF",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Like, you're like a RiFF RAFF. Florida born and raised. Spring Breakers. Okay, sick. I'm",
+        "repair_confidence": 0.85,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "like you're like a riffraff Florida born and raised spring breakers okay sick I'm"
+      },
+      {
+        "segment": 124,
+        "reason": "'hey lit' likely 'hey, lit' (slang) or name — minor missing comma",
+        "quality_issue_type": "missing_punctuation",
+        "repair_text": "Well, hey, lit. Good to meet you.",
+        "repair_confidence": 0.85,
+        "action": "replace",
+        "repaired": true,
+        "original_text": "Well, hey lit good to meet you."
+      }
+    ],
+    "transcript_artifacts": [
+      {
+        "segment_index": 127,
+        "artifact_type": "nonsense",
+        "description": "ASR hallucination loop — identical 'I love you' repeated across segments 127-130, likely background/outro music hallucinated as speech",
+        "repair_text": null,
+        "repair_confidence": 0.98,
+        "action": "delete",
+        "damage_severity": "high",
+        "original_text": "I love you, I love you, I love you",
+        "repaired": true,
+        "repair_action_applied": "delete"
+      },
+      {
+        "segment_index": 128,
+        "artifact_type": "nonsense",
+        "description": "ASR hallucination loop — identical repeated segment from background music",
+        "repair_text": null,
+        "repair_confidence": 0.98,
+        "action": "delete",
+        "damage_severity": "high",
+        "original_text": "I love you, I love you, I love you",
+        "repaired": true,
+        "repair_action_applied": "delete"
+      },
+      {
+        "segment_index": 129,
+        "artifact_type": "nonsense",
+        "description": "ASR hallucination loop — identical repeated segment from background music",
+        "repair_text": null,
+        "repair_confidence": 0.98,
+        "action": "delete",
+        "damage_severity": "high",
+        "original_text": "I love you, I love you, I love you",
+        "repaired": true,
+        "repair_action_applied": "delete"
+      },
+      {
+        "segment_index": 130,
+        "artifact_type": "nonsense",
+        "description": "ASR hallucination loop — identical repeated segment from background music",
+        "repair_text": null,
+        "repair_confidence": 0.98,
+        "action": "delete",
+        "damage_severity": "high",
+        "original_text": "I love you, I love you, I love you",
+        "repaired": true,
+        "repair_action_applied": "delete"
+      }
+    ]
+  }
+}
