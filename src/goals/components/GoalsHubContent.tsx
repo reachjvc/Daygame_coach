@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
-import { Aperture, Loader2, Settings2, Library, Clock, MoreVertical, Plus, CalendarCheck } from "lucide-react"
+import { Aperture, Loader2, Settings2, Library, Clock, MoreVertical, Plus, CalendarCheck, Eye } from "lucide-react"
 import { GoalFormModal } from "./GoalFormModal"
 import { CelebrationOverlay } from "./CelebrationOverlay"
 import { MilestoneCompleteDialog } from "./MilestoneCompleteDialog"
@@ -432,6 +432,17 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
         {goals.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
             <ViewSwitcher activeView={viewMode} onViewChange={handleViewChange} />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 h-8 px-3"
+              onClick={() => router.push(setupPath)}
+              title="Preview setup wizard (new user view)"
+              data-testid="goals-preview-setup-toggle"
+            >
+              <Eye className="size-4" />
+              <span className="text-xs hidden sm:inline">Setup Preview</span>
+            </Button>
             <Button
               size="sm"
               onClick={handleCreateGoal}

@@ -107,6 +107,12 @@ const testPages = [
     description: "Branching conversation script editor with DA/EN toggle — saves to filesystem JSON",
     icon: MessageSquare,
   },
+  {
+    name: "Exercising",
+    href: "/test/exercising",
+    description: "Google Sheets workout tracker with Starscream-style double progression",
+    icon: Dumbbell,
+  },
 ]
 
 export default function TestPagesIndex() {

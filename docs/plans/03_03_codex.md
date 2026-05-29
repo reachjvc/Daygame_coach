@@ -1265,3 +1265,91 @@ Stop and ask the user if any of these become necessary:
   - launched in parallel:
     - `./scripts/training-data/02.EXT.transcribe --manifest docs/pipeline/batches/P004.5.txt`
     - `./scripts/training-data/02.EXT.transcribe --manifest docs/pipeline/batches/P004.6.txt`
+- 2026-03-11: Resumed `P004` `06+` throughput on host Claude and completed first full ready-manifest run (`P004.3`):
+  - run:
+    - `python3 -u scripts/training-data/batch/pipeline-runner P004.3 --manifest /tmp/P004.3.stage05ready.dynamic.txt --from 06 --to 09 --parallel 4 --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2`
+  - final summary:
+    - `passed=2/10` (`IAQkP6TB_ns`, `VS33FtHWOj0`)
+    - `quarantined=4/10` (`dobxfvKUInY`, `O8-MOBBdgok`, `7yzBa5EuIC4`, `X5jkjtGbcnU`)
+    - `failed_runtime=4/10` (`OzHVBWFa3ls`, `sxvJrLiM7PM`, `UmtqjbdVKlo` at stage `06`; `K-18DC0j1Nc` at stage `06e`)
+  - validation + reports:
+    - `./scripts/training-data/batch/sub-batch-ops P004.3 --validate`
+    - canonical gate: `data/validation/gates/P004.3.gate.json` (`pass=0`, `review=0`, `block=10`)
+    - scorecard: `data/validation/scorecards/P004.3.scorecard.json`
+    - readiness/ingest quarantine report: `data/validation/ingest_quarantine/P004.3.auto.report.json`
+- 2026-03-11: Launched next lane `P004.4` from stage-ready manifest with higher LLM timeout budget:
+  - active run:
+    - `python3 -u scripts/training-data/batch/pipeline-runner P004.4 --manifest /tmp/P004.4.stage05ready.dynamic.txt --from 06 --to 09 --parallel 4 --skip-end-validation --llm-timeout-seconds 480 --llm-retries 2`
+  - launch rationale:
+    - `P004.3` runtime failures clustered at long stage `06` / `06e` windows under `300s` base timeout
+    - increased to `480s` to reduce pure timeout churn while preserving canonical stage path
+- 2026-03-12: `P004.4` run completed with real Claude calls and explicit runtime separation:
+  - final summary:
+    - `passed=1/10` (`2BiuNIx8_0k`)
+    - `quarantined=7/10` (`ugi8DxSTFqU`, `QoSeMHSS4rg`, `jsSOPFSYTcA`, `Fr1N5htZrm0`, `NK5OD5BKs6c`, `0GHKYmdszEs`, `jViWP1TXgfk`)
+    - `failed_runtime=2/10`
+      - `jgXEYtm0VaM` at stage `06` timeout
+      - `IY6_JzbJyzY` at stage `07` (`Claude limit exhausted`, runtime outage path, non-quarantine)
+  - validation/regenerated artifacts:
+    - `./scripts/training-data/batch/sub-batch-ops P004.4 --validate`
+    - canonical gate: `data/validation/gates/P004.4.gate.json` (`pass=0`, `review=1`, `block=9`)
+    - scorecard: `data/validation/scorecards/P004.4.scorecard.json`
+    - ingest quarantine report: `data/validation/ingest_quarantine/P004.4.auto.report.json`
+- 2026-03-12: Built focused runtime-retry manifest for the two non-quarantine failures from `P004.4`:
+  - manifest:
+    - `docs/pipeline/batches/P004.runtime-retry.1.txt`
+    - `jgXEYtm0VaM`
+    - `IY6_JzbJyzY`
+  - run:
+    - `python3 -u scripts/training-data/batch/pipeline-runner P004.runtime-retry.1 --manifest docs/pipeline/batches/P004.runtime-retry.1.txt --from 06 --to 09 --parallel 2 --skip-end-validation --llm-timeout-seconds 480 --llm-retries 2`
+  - outcome:
+    - `IY6_JzbJyzY` converted from runtime outage to deterministic quality quarantine (`06b verdict=REJECT`)
+    - `jgXEYtm0VaM` remained runtime-failed at stage `06` timeout (`489s` window)
+- 2026-03-12: Attempted single-video high-timeout retry for remaining runtime-failed ID:
+  - manifest:
+    - `docs/pipeline/batches/P004.runtime-retry.2.txt` (`jgXEYtm0VaM`)
+  - command:
+    - `python3 -u scripts/training-data/batch/pipeline-runner P004.runtime-retry.2 --manifest docs/pipeline/batches/P004.runtime-retry.2.txt --from 06 --to 09 --parallel 1 --skip-end-validation --llm-timeout-seconds 600 --llm-retries 2`
+  - blocker:
+    - preflight failed closed before per-video execution:
+      - `Claude limit exhausted: You've hit your limit · resets 3pm (Europe/Copenhagen)`
+- 2026-03-12: Prepared post-reset launch surface for remaining `P004` wave while LLM quota is exhausted:
+  - stage-ready manifests materialized (all from canonical batch lists, `05` coverage already complete):
+    - `/tmp/P004.5.stage05ready.dynamic.txt`
+    - `/tmp/P004.6.stage05ready.dynamic.txt`
+    - `/tmp/P004.7.stage05ready.dynamic.txt`
+    - `/tmp/P004.8.stage05ready.dynamic.txt`
+    - `/tmp/P004.9.stage05ready.dynamic.txt`
+    - `/tmp/P004.10.stage05ready.dynamic.txt`
+  - immediate next command once preflight recovers:
+    - `python3 -u scripts/training-data/batch/pipeline-runner P004.runtime-retry.2 --manifest docs/pipeline/batches/P004.runtime-retry.2.txt --from 06 --to 09 --parallel 1 --skip-end-validation --llm-timeout-seconds 600 --llm-retries 2`
+- 2026-03-14: Completed `P004.runtime-retry.2` post-reset execution; remaining runtime-failed ID still timed out:
+  - run:
+    - `python3 -u scripts/training-data/batch/pipeline-runner P004.runtime-retry.2 --manifest docs/pipeline/batches/P004.runtime-retry.2.txt --from 06 --to 09 --parallel 1 --skip-end-validation --llm-timeout-seconds 600 --llm-retries 2`
+  - final summary:
+    - `passed=0/1`
+    - `failed_runtime=1/1` (`jgXEYtm0VaM` at stage `06`)
+    - error: `Claude CLI timeout after 600s` in `06.LLM.video-type` (strict halt, non-quarantine runtime failure)
+- 2026-03-14: Revalidated `P004.4` after runtime retries to refresh canonical readiness artifacts:
+  - command:
+    - `./scripts/training-data/batch/sub-batch-ops P004.4 --validate`
+  - refreshed artifacts:
+    - canonical gate: `data/validation/gates/P004.4.gate.json` (`pass=0`, `review=1`, `block=9`)
+    - scorecard: `data/validation/scorecards/P004.4.scorecard.json`
+    - ingest quarantine report: `data/validation/ingest_quarantine/P004.4.auto.report.json`
+  - taxonomy/readiness note:
+    - stage `08` remains manifest-FAIL with missing stage `07` outputs for `IY6_JzbJyzY` and `jgXEYtm0VaM`
+- 2026-03-14: Attempted to advance next lane (`P004.5`) from stage-ready scope; aborted at global LLM preflight:
+  - run:
+    - `python3 -u scripts/training-data/batch/pipeline-runner P004.5 --manifest /tmp/P004.5.stage05ready.dynamic.txt --from 06 --to 09 --parallel 4 --skip-end-validation --llm-timeout-seconds 480 --llm-retries 2`
+  - result:
+    - aborted before per-video execution (`0/10` processed)
+    - preflight failure: `Claude CLI preflight timed out after 120s (attempt 2/2)`
+  - operational implication:
+    - transient global Claude responsiveness outage remains the current throughput blocker for `P004.5+` wave launches
+- 2026-03-14: Switched `P004.5` launch to persistent health-loop mode to auto-start on recovery:
+  - command (live monitor loop):
+    - `while true; do timeout 20 claude -p "reply with ok"; sleep 60; done; python3 -u scripts/training-data/batch/pipeline-runner P004.5 --manifest /tmp/P004.5.stage05ready.dynamic.txt --from 06 --to 09 --parallel 4 --skip-end-validation --llm-timeout-seconds 480 --llm-retries 2`
+  - live status snapshot:
+    - repeated probe failures with `rc:124` at `11:40`, `11:41`, `11:42`, `11:44`, `11:45` (Europe/Copenhagen)
+    - no per-video execution started yet (waiting on first healthy preflight)

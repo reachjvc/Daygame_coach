@@ -1112,7 +1112,8 @@ export function buildSetupInserts(selections: GoalSetupSelections): BatchGoalIns
     let l1TempId: string
 
     if (areaId === "daygame") {
-      // Daygame: use path-based L1
+      // Daygame: use path-based L1 (requires a path selection)
+      if (!selections.path) continue
       const pathL1s = getDaygamePathL1(selections.path)
       const l1 = pathL1s[0]
       if (!l1) continue

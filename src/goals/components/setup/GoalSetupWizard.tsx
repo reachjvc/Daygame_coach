@@ -283,7 +283,6 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
 
   // --- Create goals handler ---
   const handleCreateGoals = useCallback(async () => {
-    if (!path) return
     setIsCreating(true)
     setError(null)
     try {
@@ -351,13 +350,13 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
   const ctaConfig = useMemo(() => {
     switch (step) {
       case "direction":
-        return { label: "Choose Goals \u2192", disabled: !path }
+        return { label: "Choose Goals \u2192", disabled: !path && selectedAreas.size === 0 }
       case "goals":
         return { label: "View Summary \u2192", disabled: selectedGoals.size === 0 }
       case "summary":
         return { label: isCreating ? "Creating..." : "Create Goals", disabled: isCreating }
     }
-  }, [step, path, selectedGoals.size, isCreating])
+  }, [step, path, selectedAreas.size, selectedGoals.size, isCreating])
 
   // Life area IDs for keyboard shortcuts (3-6)
   const otherAreaIds = useMemo(

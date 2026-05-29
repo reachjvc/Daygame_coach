@@ -399,7 +399,7 @@ export interface SetupCustomCategory {
 }
 
 export interface GoalSetupSelections {
-  path: DaygamePath
+  path: DaygamePath | null
   selectedAreas: Set<string>
   selectedL1s: Set<string>
   selectedGoalIds: Set<string>

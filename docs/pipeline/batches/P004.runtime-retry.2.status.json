@@ -1,0 +1,12 @@
+{
+  "batch_id": "P004.runtime-retry.2",
+  "created_at": "2026-04-09T09:08:29Z",
+  "total_videos": 1,
+  "sub_batch_size": 10,
+  "sub_batches": {
+    "P004.runtime-retry.2.1": {
+      "status": "not_started",
+      "video_count": 1
+    }
+  }
+}

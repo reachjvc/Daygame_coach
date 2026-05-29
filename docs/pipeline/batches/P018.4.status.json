@@ -1,0 +1,12 @@
+{
+  "batch_id": "P018.4",
+  "created_at": "2026-04-09T09:08:23Z",
+  "total_videos": 1,
+  "sub_batch_size": 10,
+  "sub_batches": {
+    "P018.4.1": {
+      "status": "not_started",
+      "video_count": 1
+    }
+  }
+}

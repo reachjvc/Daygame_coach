@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState, useCallback } from "react"
-import { Sun, GripVertical, ChevronRight, ChevronDown, Trash2 } from "lucide-react"
+import { Sun, GripVertical, ChevronRight, ChevronDown, Trash2, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable"
@@ -138,10 +138,11 @@ export function DailyActionView({
 }: DailyActionViewProps) {
   const [localOrder, setLocalOrder] = useState<string[] | null>(null)
 
-  const { actionableGoals, archivedActionableGoals, milestoneGoals, sectionTitle } = useMemo(() => {
+  const { actionableGoals, archivedActionableGoals, milestoneGoals, topLevelGoals, sectionTitle } = useMemo(() => {
     const actionable = goals.filter((g) => !g.is_archived && isDailyActionable(g))
     const archivedActionable = goals.filter((g) => g.is_archived && isDailyActionable(g))
     const milestones = goals.filter(isDailyMilestone)
+    const topLevel = goals.filter((g) => g.goal_level === 1 && !g.is_archived)
 
     // Dynamic section title based on goal mix
     const periods = new Set(actionable.map(g => g.period))
@@ -153,6 +154,7 @@ export function DailyActionView({
       actionableGoals: actionable,
       archivedActionableGoals: archivedActionable,
       milestoneGoals: milestones,
+      topLevelGoals: topLevel,
       sectionTitle: title,
     }
   }, [goals])
@@ -317,6 +319,61 @@ export function DailyActionView({
                     {g.current_value}/{g.target_value}
                     {info && <span className="text-xs text-emerald-400 ml-2">next: {info.nextValue}</span>}
                   </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Top-level goals with target dates */}
+      {topLevelGoals.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+            Destinations
+          </h2>
+          <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+            {topLevelGoals.map((g) => {
+              const targetDate = g.target_date ? new Date(g.target_date) : null
+              const now = new Date()
+              let countdown: string | null = null
+              if (targetDate) {
+                const diffMs = targetDate.getTime() - now.getTime()
+                const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+                if (diffDays > 365) {
+                  const years = Math.floor(diffDays / 365)
+                  const months = Math.floor((diffDays % 365) / 30)
+                  countdown = months > 0 ? `${years}y ${months}mo` : `${years}y`
+                } else if (diffDays > 30) {
+                  const months = Math.floor(diffDays / 30)
+                  const days = diffDays % 30
+                  countdown = days > 0 ? `${months}mo ${days}d` : `${months}mo`
+                } else if (diffDays > 0) {
+                  countdown = `${diffDays}d`
+                } else if (diffDays === 0) {
+                  countdown = "today"
+                } else {
+                  countdown = `${Math.abs(diffDays)}d overdue`
+                }
+              }
+              return (
+                <div key={g.id} className="flex items-center justify-between text-sm gap-2">
+                  <div className="flex items-center gap-2 truncate min-w-0">
+                    <Target className="size-3.5 text-muted-foreground flex-shrink-0" />
+                    <span className="truncate">{g.title}</span>
+                  </div>
+                  {targetDate ? (
+                    <span className="font-medium whitespace-nowrap flex items-center gap-2">
+                      <span className="text-muted-foreground text-xs">
+                        {targetDate.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                      </span>
+                      <span className={`text-xs ${countdown?.includes("overdue") ? "text-destructive" : "text-emerald-400"}`}>
+                        {countdown}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground/50">no date</span>
+                  )}
                 </div>
               )
             })}
