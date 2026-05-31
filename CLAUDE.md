@@ -1,6 +1,12 @@
 # CLAUDE.md
 If you enter planmode and give user a summary, keep it conscise. Sacrifice grammar for conscisiveness.
 
+### Pipeline work → read `docs/pipeline/learnings.md` first
+Before any pipeline stage work: read learnings.md. It has gotchas, fixes, and batch context that prevent repeat mistakes. Update it as you discover new things. Quality > speed > coverage.
+
+### 16. Plan Language — Human-First, AI-Second
+Plans must be written so the user can understand direction and intent without deciphering code references. Structure: **plain-language explanation first** (what changes, why, what the user will see), then an AI execution section with file paths and line numbers. The user decides whether to execute based on the human section — they shouldn't need to read the AI section to understand what's happening.
+
 
 ## ⛔ PRE-RESPONSE CHECKLIST (Complete Before Every Summary)
 

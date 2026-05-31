@@ -19,6 +19,8 @@ export const CreateGoalSchema = z.object({
   tracking_type: GoalTrackingTypeSchema.optional(),
   period: GoalPeriodSchema.optional(),
   target_value: z.number().int().min(1),
+  current_value: z.number().int().min(0).optional(),
+  current_streak: z.number().int().min(0).optional(),
   custom_end_date: z.string().optional(),
   linked_metric: LinkedMetricSchema.optional(),
   position: z.number().int().min(0).optional(),
@@ -35,6 +37,7 @@ export const CreateGoalSchema = z.object({
   ramp_steps: z.array(z.record(z.string(), z.unknown())).nullable().optional(),
   motivation_note: z.string().max(500).nullable().optional(),
   goal_phase: GoalPhaseSchema.nullable().optional(),
+  aligned_values: z.array(z.string().max(100)).max(7).optional(),
 }).refine(
   (data) => !!(data.category || data.life_area),
   { message: "Either category or life_area is required" }
@@ -68,6 +71,7 @@ export const UpdateGoalSchema = z.object({
   ramp_steps: z.array(z.record(z.string(), z.unknown())).nullable().optional(),
   motivation_note: z.string().max(500).nullable().optional(),
   goal_phase: GoalPhaseSchema.nullable().optional(),
+  aligned_values: z.array(z.string().max(100)).max(7).optional(),
 })
 
 // ============================================

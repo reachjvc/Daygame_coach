@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Sun, Layers, GitFork, Orbit } from "lucide-react"
+import { Sun, Layers, GitFork, Orbit, TreePine } from "lucide-react"
 import type { GoalViewMode } from "../../types"
 
 interface ViewSwitcherProps {
@@ -13,6 +13,7 @@ const VIEW_OPTIONS: { mode: GoalViewMode; icon: typeof Sun; label: string }[] = 
   { mode: "today", icon: Sun, label: "Today" },
   { mode: "hierarchy", icon: Layers, label: "Hierarchy" },
   { mode: "tree", icon: GitFork, label: "Tree" },
+  { mode: "tree-of-life", icon: TreePine, label: "Life" },
   { mode: "orrery", icon: Orbit, label: "Orrery" },
 ]
 

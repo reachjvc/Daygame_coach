@@ -10,25 +10,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Loader2, Plus, Minus, Lightbulb, Calendar, Trash2, Archive } from "lucide-react"
-import { FutureDateInput } from "./FutureDateInput"
+import { Loader2, Trash2, Archive } from "lucide-react"
 import { LIFE_AREAS, getLifeAreaConfig } from "../data/lifeAreas"
-import { MilestoneCurveEditor } from "./MilestoneCurveEditor"
-import { HabitRampEditor } from "./HabitRampEditor"
-import { UpwardConnectionPrompt } from "./UpwardConnectionPrompt"
+import { GoalFormVariant6 } from "./GoalFormVariant6"
 import { deriveChildLevel } from "../goalsService"
-import { getCurveTheme } from "../curveThemes"
 import type {
   GoalWithProgress,
   GoalPeriod,
@@ -122,8 +107,18 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
     { frequencyPerWeek: 25, durationWeeks: 8 },
   ])
 
+  // Starting progress (backfill from pre-app history)
+  const [startingValue, setStartingValue] = useState(0)
+  const [startingStreak, setStartingStreak] = useState(0)
+
   const isEditing = !!goal
-  const theme = getCurveTheme("zen")
+
+  // Button style helpers for unselected state (dark-theme friendly)
+  const unselCls = (_accentHex: string) =>
+    "border-[#4b5563] bg-transparent text-[#e0e0e0] hover:bg-white/5"
+  const unselStyle = (_accentHex: string): React.CSSProperties | undefined =>
+    undefined
+  const unselSub = "text-[#9ca3af]"
 
   // Initialize form when editing
   useEffect(() => {
@@ -181,6 +176,8 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
       { frequencyPerWeek: 15, durationWeeks: 4 },
       { frequencyPerWeek: 25, durationWeeks: 8 },
     ])
+    setStartingValue(0)
+    setStartingStreak(0)
     setError(null)
     setSuccessMessage(null)
     setShowDeleteConfirm(false)
@@ -335,6 +332,12 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
         payload.milestone_config = milestoneConfig
       }
 
+      // Starting progress (backfill — only on create)
+      if (!isEditing) {
+        if (startingValue > 0) payload.current_value = startingValue
+        if (startingStreak > 0) payload.current_streak = startingStreak
+      }
+
       const url = isEditing ? `/api/goals/${goal.id}` : "/api/goals"
       const method = isEditing ? "PUT" : "POST"
 
@@ -383,7 +386,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
       }}
     >
       <DialogContent
-        className="sm:max-w-lg max-h-[90vh] flex flex-col"
+        className="sm:max-w-xl max-h-[90vh] flex flex-col"
         data-testid="goal-form-modal"
       >
         <DialogHeader>
@@ -397,489 +400,58 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4 overflow-y-auto flex-1 min-h-0">
-          {/* Goal Type Toggle */}
-          <div className="space-y-2">
-            <Label>Goal Type</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {([
-                { type: "recurring" as GoalType, label: "Recurring", desc: "Resets per period" },
-                { type: "milestone" as GoalType, label: "Milestone", desc: "One-time target" },
-                { type: "habit_ramp" as GoalType, label: "Habit Ramp", desc: "Ramps up over time" },
-              ]).map(({ type, label, desc }) => {
-                const isSelected = goalType === type
-                return (
-                  <Button
-                    key={type}
-                    type="button"
-                    variant="outline"
-                    className="h-auto py-2 px-3 flex-col items-start transition-colors"
-                    style={isSelected ? {
-                      backgroundColor: areaConfig.hex,
-                      color: "white",
-                      borderColor: "transparent",
-                    } : { borderColor: theme.border, color: theme.text, background: "transparent" }}
-                    onClick={() => setGoalType(type)}
-                  >
-                    <span className="font-medium text-xs">{label}</span>
-                    <span className={`text-[11px] ${isSelected ? "text-white/70" : ""}`} style={isSelected ? undefined : { color: theme.muted }}>
-                      {desc}
-                    </span>
-                  </Button>
-                )
-              })}
-            </div>
-          </div>
+        <div className="overflow-y-auto flex-1 min-h-0">
+          <GoalFormVariant6
+            lifeArea={lifeArea}
+            setLifeArea={setLifeArea}
+            parentGoals={parentGoals}
+            parentGoalId={parentGoalId}
+            setParentGoalId={setParentGoalId}
+            goalType={goalType}
+            setGoalType={setGoalType}
+            title={title}
+            setTitle={setTitle}
+            description={description}
+            setDescription={setDescription}
+            goalNature={goalNature}
+            setGoalNature={setGoalNature}
+            motivationNote={motivationNote}
+            setMotivationNote={setMotivationNote}
+            selectedSuggestion={selectedSuggestion}
+            setSelectedSuggestion={setSelectedSuggestion}
+            trackingType={trackingType}
+            setTrackingType={setTrackingType}
+            targetValue={targetValue}
+            setTargetValue={setTargetValue}
+            period={period}
+            setPeriod={setPeriod}
+            targetDate={targetDate}
+            setTargetDate={setTargetDate}
+            startingValue={startingValue}
+            setStartingValue={setStartingValue}
+            startingStreak={startingStreak}
+            setStartingStreak={setStartingStreak}
+            isEditing={isEditing}
+          />
+        </div>
 
-          {/* Goal Nature Toggle */}
-          <div className="space-y-2">
-            <Label>Goal Nature</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {([
-                { nature: "input" as GoalNature, label: "Input", desc: "Actions you control", color: "#22c55e" },
-                { nature: "outcome" as GoalNature, label: "Outcome", desc: "Results you measure", color: "#ef4444" },
-              ]).map(({ nature, label, desc, color }) => {
-                const isSelected = goalNature === nature
-                return (
-                  <Button
-                    key={nature}
-                    type="button"
-                    variant="outline"
-                    className="h-auto py-2 px-3 flex-col items-start transition-colors"
-                    style={isSelected ? {
-                      backgroundColor: color,
-                      color: "white",
-                      borderColor: "transparent",
-                    } : { borderColor: theme.border, color: theme.text, background: "transparent" }}
-                    onClick={() => setGoalNature(nature)}
-                  >
-                    <span className="font-medium text-xs">{label}</span>
-                    <span className={`text-[11px] ${isSelected ? "text-white/70" : ""}`} style={isSelected ? undefined : { color: theme.muted }}>
-                      {desc}
-                    </span>
-                  </Button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Life Area Selection */}
-          <div className="space-y-2">
-            <Label>Life Area</Label>
-            <div className="flex flex-wrap gap-2">
-              {LIFE_AREAS.filter((a) => a.id !== "custom").map((area) => {
-                const Icon = area.icon
-                const isSelected = lifeArea === area.id
-                return (
-                  <Badge
-                    key={area.id}
-                    role="button"
-                    tabIndex={0}
-                    variant="outline"
-                    className="cursor-pointer gap-1.5 transition-colors border-transparent"
-                    style={{
-                      backgroundColor: isSelected ? area.hex : `${area.hex}15`,
-                      color: isSelected ? "white" : area.hex,
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        const prevSuggestions = getLifeAreaConfig(lifeArea).suggestions
-                        const titleIsSuggestion = prevSuggestions.some(s => s.title === title)
-                        setLifeArea(area.id)
-                        setCustomLifeArea("")
-                        setSelectedSuggestion(null)
-                        setUserPickedLifeArea(true)
-                        setLifeAreaOverrideNote(null)
-                        setParentGoalId(null)
-                        if (titleIsSuggestion || !title.trim()) {
-                          setTitle("")
-                          setTargetValue(1)
-                          setLinkedMetric(null)
-                        }
-                      }
-                    }}
-                    onClick={() => {
-                      const prevSuggestions = getLifeAreaConfig(lifeArea).suggestions
-                      const titleIsSuggestion = prevSuggestions.some(s => s.title === title)
-                      setLifeArea(area.id)
-                      setCustomLifeArea("")
-                      setSelectedSuggestion(null)
-                      setUserPickedLifeArea(true)
-                      setLifeAreaOverrideNote(null)
-                      setParentGoalId(null)
-                      if (titleIsSuggestion || !title.trim()) {
-                        setTitle("")
-                        setTargetValue(1)
-                        setLinkedMetric(null)
-                      }
-                    }}
-                  >
-                    <Icon className="size-3" />
-                    {area.name}
-                  </Badge>
-                )
-              })}
-              <Badge
-                role="button"
-                tabIndex={0}
-                variant="outline"
-                className="cursor-pointer transition-colors border-transparent"
-                style={{
-                  backgroundColor: lifeArea === "custom" ? "#9ca3af" : "#9ca3af15",
-                  color: lifeArea === "custom" ? "white" : "#9ca3af",
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const prevSuggestions = getLifeAreaConfig(lifeArea).suggestions
-                    const titleIsSuggestion = prevSuggestions.some(s => s.title === title)
-                    setLifeArea("custom")
-                    setSelectedSuggestion(null)
-                    setUserPickedLifeArea(true)
-                    setLifeAreaOverrideNote(null)
-                    setParentGoalId(null)
-                    if (titleIsSuggestion || !title.trim()) {
-                      setTitle("")
-                      setTargetValue(1)
-                      setLinkedMetric(null)
-                    }
-                  }
-                }}
-                onClick={() => {
-                  const prevSuggestions = getLifeAreaConfig(lifeArea).suggestions
-                  const titleIsSuggestion = prevSuggestions.some(s => s.title === title)
-                  setLifeArea("custom")
-                  setSelectedSuggestion(null)
-                  setUserPickedLifeArea(true)
-                  setLifeAreaOverrideNote(null)
-                  setParentGoalId(null)
-                  if (titleIsSuggestion || !title.trim()) {
-                    setTitle("")
-                    setTargetValue(1)
-                    setLinkedMetric(null)
-                  }
-                }}
-              >
-                + Custom
-              </Badge>
-            </div>
-
-            {lifeArea === "custom" && (
-              <Input
-                placeholder="Enter life area name..."
-                value={customLifeArea}
-                onChange={(e) => setCustomLifeArea(e.target.value)}
-                className="mt-2"
-  
-              />
-            )}
-            {lifeAreaOverrideNote && (
-              <p className="text-xs text-amber-500 mt-1">{lifeAreaOverrideNote}</p>
-            )}
-          </div>
-
-          {/* Goal Title */}
-          <div className="space-y-2">
-            <Label htmlFor="goal-title">Goal</Label>
-            <Input
-              id="goal-title"
-              placeholder="What do you want to achieve?"
-              value={title}
-              data-testid="goal-form-title-input"
-              onChange={(e) => {
-                setTitle(e.target.value)
-                if (error) setError(null)
-                if (selectedSuggestion && e.target.value !== selectedSuggestion) {
-                  setSelectedSuggestion(null)
-                }
-              }}
-
-            />
-
-            {suggestions.length > 0 && (
-              <div className="space-y-1.5">
-                <p className="text-xs" style={{ color: theme.muted }}>Suggestions:</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {suggestions.map((suggestion) => {
-                    const isSelected = selectedSuggestion === suggestion.title
-                    return (
-                      <Badge
-                        key={suggestion.title}
-                        variant="outline"
-                        className="cursor-pointer text-xs transition-colors border-transparent"
-                        style={{
-                          backgroundColor: isSelected ? areaConfig.hex : `${areaConfig.hex}15`,
-                          color: isSelected ? "white" : areaConfig.hex,
-                        }}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                      >
-                        {suggestion.title}
-                      </Badge>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="goal-description">Description (optional)</Label>
-            <Textarea
-              id="goal-description"
-              placeholder="What is this goal about?"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={2}
-
-            />
-          </div>
-
-          {/* Motivation Note */}
-          <div className="space-y-2">
-            <Label htmlFor="goal-motivation">
-              Why does this matter to you? <span className="text-muted-foreground font-normal">(optional)</span>
-            </Label>
-            <Textarea
-              id="goal-motivation"
-              placeholder="This note will appear when you need motivation most"
-              value={motivationNote}
-              onChange={(e) => setMotivationNote(e.target.value)}
-              rows={2}
-
-            />
-          </div>
-
-          {/* Tracking Type */}
-          <div className="space-y-2">
-            <Label>Tracking Type</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {TRACKING_TYPE_OPTIONS.map((option) => {
-                const isSelected = trackingType === option.value
-                return (
-                  <Button
-                    key={option.value}
-                    type="button"
-                    variant="outline"
-                    className="h-auto py-2 px-3 flex-col items-start transition-colors"
-                    style={isSelected ? {
-                      backgroundColor: areaConfig.hex,
-                      color: "white",
-                      borderColor: "transparent",
-                    } : { borderColor: theme.border, color: theme.text, background: "transparent" }}
-                    onClick={() => setTrackingType(option.value)}
-                  >
-                    <span className="font-medium">{option.label}</span>
-                    <span className={`text-xs ${isSelected ? "text-white/70" : ""}`} style={isSelected ? undefined : { color: theme.muted }}>
-                      {option.description}
-                    </span>
-                  </Button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Target Value (counter only, non-ramp) */}
-          {trackingType === "counter" && goalType !== "habit_ramp" && (
-            <div className="space-y-2">
-              <Label>Target</Label>
-              <div className="flex items-center gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    const newVal = Math.max(1, targetValue - 1)
-                    setTargetValue(newVal)
-                    setMilestoneConfig((c) => ({ ...c, target: newVal }))
-                  }}
-                  disabled={targetValue <= 1}
-                  style={{ borderColor: theme.border, color: theme.text, background: "transparent" }}
-                >
-                  <Minus className="size-4" />
-                </Button>
-                <Input
-                  type="number"
-                  inputMode="numeric"
-                  value={targetValue}
-                  onChange={(e) => {
-                    const newVal = Math.max(1, parseInt(e.target.value) || 1)
-                    setTargetValue(newVal)
-                    setMilestoneConfig((c) => ({ ...c, target: newVal }))
-                  }}
-                  className="w-20 text-center text-lg font-bold"
-                  min={1}
-
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    const newVal = targetValue + 1
-                    setTargetValue(newVal)
-                    setMilestoneConfig((c) => ({ ...c, target: newVal }))
-                  }}
-                  style={{ borderColor: theme.border, color: theme.text, background: "transparent" }}
-                >
-                  <Plus className="size-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Milestone Curve Editor */}
-          {goalType === "milestone" && trackingType === "counter" && targetValue > 1 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Milestone Ladder</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs h-6"
-                  style={{ color: theme.muted }}
-                  onClick={() => setShowCurveEditor(!showCurveEditor)}
-                >
-                  {showCurveEditor ? "Hide" : "Customize curve"}
-                </Button>
-              </div>
-              {showCurveEditor && (
-                <MilestoneCurveEditor
-                  config={{ ...milestoneConfig, target: targetValue }}
-                  onChange={setMilestoneConfig}
-                  allowDirectEdit
-                />
-              )}
-            </div>
-          )}
-
-          {/* Habit Ramp Editor */}
-          {goalType === "habit_ramp" && (
-            <div className="space-y-2">
-              <Label>Ramp Schedule</Label>
-              <HabitRampEditor
-                steps={rampSteps}
-                onChange={setRampSteps}
-                milestoneConfig={milestoneConfig}
-                accentColor={areaConfig.hex}
-              />
-            </div>
-          )}
-
-          {/* Period (recurring and habit_ramp goals) */}
-          {(goalType === "recurring" || goalType === "habit_ramp") && (
-            <div className="space-y-2">
-              <Label>Reset Period</Label>
-              <div className="flex flex-wrap gap-2">
-                {PERIOD_OPTIONS.map((option) => {
-                  const isSelected = period === option.value
-                  return (
-                    <Button
-                      key={option.value}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="transition-colors"
-                      style={isSelected ? {
-                        backgroundColor: areaConfig.hex,
-                        color: "white",
-                        borderColor: "transparent",
-                      } : { borderColor: theme.border, color: theme.text, background: "transparent" }}
-                      onClick={() => setPeriod(option.value)}
-                    >
-                      {option.label}
-                    </Button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Target Date (milestone goals only) */}
-          {goalType === "milestone" && (
-            <div className="space-y-2">
-              <Label htmlFor="target-date">
-                <Calendar className="size-3 inline mr-1" />
-                Target Date (optional)
-              </Label>
-              <FutureDateInput
-                value={targetDate}
-                onChange={setTargetDate}
-                className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
-              />
-              {targetDate && (
-                <p className="text-xs" style={{ color: theme.muted }}>
-                  {new Date(targetDate + "T00:00:00").toLocaleDateString("en-US", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Parent Goal / Upward Connection */}
-          {parentGoals.length > 0 && (
-            <div className="space-y-2">
-              <Label>Parent Goal</Label>
-              <UpwardConnectionPrompt
-                availableParents={filteredParentGoals.length > 0 ? filteredParentGoals : parentGoals}
-                selectedParentId={parentGoalId}
-                onSelectParent={setParentGoalId}
-                alwaysShow
-              />
-            </div>
-          )}
-
-          {/* Linked Metric (daygame goals: weekly for recurring/habit_ramp, cumulative for milestone) */}
-          {effectiveLifeArea === "daygame" && (
-            goalType === "milestone" ||
-            ((goalType === "recurring" || goalType === "habit_ramp") && period === "weekly")
-          ) && (
-            <div className="space-y-2">
-              <Label>Auto-Sync with Tracking</Label>
-              <Select
-                value={linkedMetric ?? "none"}
-                onValueChange={(v) => setLinkedMetric(v === "none" ? null : (v as LinkedMetric))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select metric to sync" />
-                </SelectTrigger>
-                <SelectContent>
-                  {LINKED_METRIC_OPTIONS
-                    .filter((opt) => {
-                      if (opt.group === "none") return true
-                      if (goalType === "milestone") return opt.group === "cumulative"
-                      return opt.group === "weekly"
-                    })
-                    .map((opt) => (
-                      <SelectItem key={opt.value ?? "none"} value={opt.value ?? "none"}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs" style={{ color: theme.muted }}>
-                Goal progress will automatically update from your session data
-              </p>
-            </div>
-          )}
-
-          {error && (
+        <>
+        {error && (
+          <div className="px-5 py-2">
             <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm">
               {error}
             </div>
-          )}
-
-          {successMessage && (
+          </div>
+        )}
+        {successMessage && (
+          <div className="px-5 py-2">
             <div className="p-3 rounded-md bg-green-500/10 text-green-600 dark:text-green-400 text-sm">
               {successMessage}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        <DialogFooter className="gap-2 sm:gap-0" style={{ borderColor: theme.border }}>
+        <DialogFooter className="gap-2 sm:gap-0">
           {isEditing && (
             <div className="flex-1 flex items-center gap-1">
               {showDeleteConfirm ? (
@@ -899,7 +471,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                     size="sm"
                     onClick={() => setShowDeleteConfirm(false)}
                     disabled={isDeleting}
-                    style={{ color: theme.muted }}
+                    className="text-muted-foreground"
                   >
                     Cancel
                   </Button>
@@ -909,8 +481,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="hover:text-foreground"
-                    style={{ color: theme.muted }}
+                    className="hover:text-foreground text-muted-foreground"
                     onClick={() => handleDelete(false)}
                     disabled={isSubmitting || isDeleting}
                   >
@@ -936,7 +507,6 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting || isDeleting}
             data-testid="goal-form-cancel"
-            style={{ borderColor: theme.border, color: theme.text, background: "transparent" }}
           >
             Cancel
           </Button>
@@ -973,6 +543,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
             )}
           </Button>
         </DialogFooter>
+        </>
       </DialogContent>
     </Dialog>
   )

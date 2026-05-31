@@ -29,7 +29,7 @@ export const LIFE_AREAS: LifeAreaConfig[] = [
       { title: "10 approaches per week", defaultTarget: 10, defaultPeriod: "weekly", linkedMetric: "approaches_weekly", featured: true },
       { title: "3 sessions per week", defaultTarget: 3, defaultPeriod: "weekly", linkedMetric: "sessions_weekly", featured: true },
       { title: "Get 2 numbers weekly", defaultTarget: 2, defaultPeriod: "weekly", linkedMetric: "numbers_weekly" },
-      { title: "1 instadate monthly", defaultTarget: 1, defaultPeriod: "monthly", linkedMetric: "instadates_weekly" },
+      { title: "1 instadate monthly", defaultTarget: 1, defaultPeriod: "monthly" },
       { title: "Record 5 voice notes", defaultTarget: 5, defaultPeriod: "weekly" },
       { title: "Rate 3 approaches per week", defaultTarget: 3, defaultPeriod: "weekly" },
       { title: "Open in <3 seconds 5x per week", defaultTarget: 5, defaultPeriod: "weekly" },

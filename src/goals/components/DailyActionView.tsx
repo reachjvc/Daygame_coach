@@ -9,6 +9,8 @@ import { CSS } from "@dnd-kit/utilities"
 import { GoalCard } from "./GoalCard"
 import { GoalToggle } from "./GoalToggle"
 import { TodaysPulse } from "./TodaysPulse"
+import { PeriodRollupRow } from "./PeriodRollupRow"
+import { usePeriodStats } from "../hooks/usePeriodStats"
 import { isDailyActionable, isDailyMilestone, getNextMilestoneInfo, computeProjectedDate, getTimeOfDayBracket } from "../goalsService"
 import type { GoalWithProgress, GoalViewMode } from "../types"
 
@@ -138,35 +140,119 @@ export function DailyActionView({
 }: DailyActionViewProps) {
   const [localOrder, setLocalOrder] = useState<string[] | null>(null)
 
-  const { actionableGoals, archivedActionableGoals, milestoneGoals, topLevelGoals, sectionTitle } = useMemo(() => {
+  // Period hierarchy: shorter periods roll up into longer ones
+  const PERIOD_HIERARCHY: { period: string; label: string; statsKey: "week" | "month" | "year"; shorterPeriods: string[] }[] = [
+    { period: "daily", label: "Today", statsKey: "week", shorterPeriods: [] },
+    { period: "weekly", label: "This Week", statsKey: "week", shorterPeriods: ["daily"] },
+    { period: "monthly", label: "This Month", statsKey: "month", shorterPeriods: ["daily", "weekly"] },
+    { period: "yearly", label: "This Year", statsKey: "year", shorterPeriods: ["daily", "weekly", "monthly"] },
+  ]
+
+  const { statsMap } = usePeriodStats(goals)
+
+  const { periodSections, allActionableGoals, dailyGoals, archivedActionableGoals, milestoneGoals, topLevelGoals } = useMemo(() => {
     const actionable = goals.filter((g) => !g.is_archived && isDailyActionable(g))
     const archivedActionable = goals.filter((g) => g.is_archived && isDailyActionable(g))
     const milestones = goals.filter(isDailyMilestone)
     const topLevel = goals.filter((g) => g.goal_level === 1 && !g.is_archived)
 
-    // Dynamic section title based on goal mix
-    const periods = new Set(actionable.map(g => g.period))
-    const title = periods.size === 1 && periods.has("daily") ? "Today"
-      : periods.size === 1 && periods.has("weekly") ? "This Week"
-      : "Active Goals"
+    const now = new Date()
+
+    // Compute period date boundaries for milestone placement
+    const dayOfWeek = now.getDay() || 7
+    const monday = new Date(now)
+    monday.setDate(now.getDate() - dayOfWeek + 1)
+    const sunday = new Date(monday)
+    sunday.setDate(monday.getDate() + 6)
+
+    const mondayStr = monday.toISOString().split("T")[0]
+    const sundayStr = sunday.toISOString().split("T")[0]
+    const currentMonth = now.getMonth()
+    const currentYear = now.getFullYear()
+
+    function isInPeriod(targetDate: string, period: string): boolean {
+      const d = new Date(targetDate)
+      switch (period) {
+        case "weekly": return targetDate >= mondayStr && targetDate <= sundayStr
+        case "monthly": return d.getMonth() === currentMonth && d.getFullYear() === currentYear
+        case "yearly": return d.getFullYear() === currentYear
+        default: return false
+      }
+    }
+
+    // Build sections with native goals, rollups, and milestone placements
+    const sections: {
+      label: string
+      period: string
+      statsKey: "week" | "month" | "year"
+      nativeGoals: GoalWithProgress[]
+      rollupGoals: GoalWithProgress[]
+      deltaGoals: GoalWithProgress[]
+      deadlineGoals: GoalWithProgress[]
+    }[] = []
+
+    const coveredPeriods = new Set(PERIOD_HIERARCHY.map((p) => p.period))
+
+    for (const { period, label, statsKey, shorterPeriods } of PERIOD_HIERARCHY) {
+      const nativeGoals = actionable.filter((g) => g.period === period)
+
+      // Rollup: actionable goals from shorter periods
+      const rollupGoals = shorterPeriods.length > 0
+        ? actionable.filter((g) => shorterPeriods.includes(g.period))
+        : []
+
+      // Delta: cumulative milestones (show progress gained in this period)
+      const deltaGoals = period !== "daily"
+        ? milestones.filter((g) => g.goal_type === "milestone")
+        : []
+
+      // Deadline: milestones with target_date falling in this period
+      const deadlineGoals = period !== "daily"
+        ? [...milestones, ...topLevel].filter((g) =>
+            g.target_date && isInPeriod(g.target_date, period)
+          )
+        : []
+
+      const hasContent = nativeGoals.length > 0 || rollupGoals.length > 0
+        || deltaGoals.length > 0 || deadlineGoals.length > 0
+
+      if (hasContent) {
+        sections.push({ label, period, statsKey, nativeGoals, rollupGoals, deltaGoals, deadlineGoals })
+      }
+    }
+
+    // Catch-all for quarterly/custom
+    const other = actionable.filter((g) => !coveredPeriods.has(g.period))
+    if (other.length > 0) {
+      sections.push({
+        label: "Active Goals",
+        period: "other",
+        statsKey: "year",
+        nativeGoals: other,
+        rollupGoals: [],
+        deltaGoals: [],
+        deadlineGoals: [],
+      })
+    }
 
     return {
-      actionableGoals: actionable,
+      periodSections: sections,
+      allActionableGoals: actionable,
+      dailyGoals: actionable.filter((g) => g.period === "daily"),
       archivedActionableGoals: archivedActionable,
       milestoneGoals: milestones,
       topLevelGoals: topLevel,
-      sectionTitle: title,
     }
-  }, [goals])
+  }, [goals, statsMap])
 
-  // Apply local order if set (during drag reordering)
-  const orderedGoals = useMemo(() => {
-    if (!localOrder) return actionableGoals
-    const goalMap = new Map(actionableGoals.map(g => [g.id, g]))
+  // Apply local order for drag reordering (daily goals only)
+  const orderedDailyGoals = useMemo(() => {
+    if (!localOrder) return dailyGoals
+    const goalMap = new Map(dailyGoals.map(g => [g.id, g]))
     return localOrder
       .map(id => goalMap.get(id))
       .filter((g): g is GoalWithProgress => !!g)
-  }, [actionableGoals, localOrder])
+  }, [dailyGoals, localOrder])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -177,7 +263,7 @@ export function DailyActionView({
     const { active, over } = event
     if (!over || active.id === over.id) return
 
-    const currentIds = (localOrder ?? actionableGoals.map(g => g.id))
+    const currentIds = (localOrder ?? dailyGoals.map(g => g.id))
     const oldIndex = currentIds.indexOf(active.id as string)
     const newIndex = currentIds.indexOf(over.id as string)
     if (oldIndex === -1 || newIndex === -1) return
@@ -185,13 +271,13 @@ export function DailyActionView({
     const newOrder = arrayMove(currentIds, oldIndex, newIndex)
     setLocalOrder(newOrder)
     onReorder?.(newOrder)
-  }, [localOrder, actionableGoals, onReorder])
+  }, [localOrder, dailyGoals, onReorder])
 
-  if (actionableGoals.length === 0 && milestoneGoals.length === 0 && archivedActionableGoals.length === 0) {
+  if (allActionableGoals.length === 0 && milestoneGoals.length === 0 && archivedActionableGoals.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
         <Sun className="size-8 mx-auto mb-3 opacity-50" />
-        <p className="text-sm">No daily or weekly goals yet.</p>
+        <p className="text-sm">No active goals yet.</p>
         <div className="flex items-center justify-center gap-2 mt-3">
           <Button variant="outline" size="sm" onClick={() => onSwitchView?.("strategic")}>
             Strategic view
@@ -206,10 +292,10 @@ export function DailyActionView({
 
   return (
     <div className="space-y-5">
-      {/* Today's Pulse — aggregate progress ring + time-of-day context */}
-      {!isCustomizeMode && actionableGoals.length > 0 && (
+      {/* Today's Pulse — aggregate progress ring + time-of-day context (daily goals only) */}
+      {!isCustomizeMode && dailyGoals.length > 0 && (
         <TodaysPulse
-          goals={actionableGoals}
+          goals={dailyGoals}
           timeOfDay={getTimeOfDayBracket(new Date().getHours())}
         />
       )}
@@ -235,62 +321,102 @@ export function DailyActionView({
         </div>
       )}
 
-      {/* Actionable goals */}
-      {orderedGoals.length > 0 && (
-        <div className="space-y-2">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-            {sectionTitle}
-          </h2>
-          {isCustomizeMode ? (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={orderedGoals.map(g => g.id)} strategy={verticalListSortingStrategy}>
+      {/* Multi-period goal sections */}
+      {periodSections.map(({ label, period, statsKey, nativeGoals, rollupGoals, deltaGoals, deadlineGoals }) => {
+        const isDailySection = period === "daily"
+        const displayNative = isDailySection ? orderedDailyGoals : nativeGoals
+        const hasRollups = rollupGoals.length > 0 || deltaGoals.length > 0 || deadlineGoals.length > 0
+
+        return (
+          <div key={label} className="space-y-2">
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+              {label}
+            </h2>
+
+            {/* Native goals — full interactive cards */}
+            {displayNative.length > 0 && (
+              isCustomizeMode && isDailySection ? (
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={displayNative.map(g => g.id)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-2">
+                      {displayNative.map((goal) => (
+                        <SortableGoalRow
+                          key={goal.id}
+                          goal={goal}
+                          allGoals={goals}
+                          isCustomizeMode={isCustomizeMode}
+                          onIncrement={onIncrement}
+                          onSetValue={onSetValue}
+                          onComplete={onComplete}
+                          onReset={onReset}
+                          onEdit={onEdit}
+                          onAddChild={onAddChild}
+                          onGoalToggle={onGoalToggle}
+                          onDeleteGoal={onDeleteGoal}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              ) : (
                 <div className="space-y-2">
-                  {orderedGoals.map((goal) => (
-                    <SortableGoalRow
-                      key={goal.id}
-                      goal={goal}
-                      allGoals={goals}
-                      isCustomizeMode={isCustomizeMode}
-                      onIncrement={onIncrement}
-                      onSetValue={onSetValue}
-                      onComplete={onComplete}
-                      onReset={onReset}
-                      onEdit={onEdit}
-                      onAddChild={onAddChild}
-                      onGoalToggle={onGoalToggle}
-                      onDeleteGoal={onDeleteGoal}
-                    />
-                  ))}
+                  {displayNative.map((goal) => {
+                    const milestoneInfo = getNextMilestoneInfo(goal)
+                    const projection = computeProjectedDate(goal)
+                    return isCustomizeMode ? (
+                      <SortableGoalRow
+                        key={goal.id}
+                        goal={goal}
+                        allGoals={goals}
+                        isCustomizeMode={isCustomizeMode}
+                        onIncrement={onIncrement}
+                        onSetValue={onSetValue}
+                        onComplete={onComplete}
+                        onReset={onReset}
+                        onEdit={onEdit}
+                        onAddChild={onAddChild}
+                        onGoalToggle={onGoalToggle}
+                        onDeleteGoal={onDeleteGoal}
+                      />
+                    ) : (
+                      <GoalCard
+                        key={goal.id}
+                        goal={goal}
+                        allGoals={goals}
+                        variant="compact"
+                        breadcrumbMode="parent-only"
+                        nextMilestone={milestoneInfo}
+                        projectedDate={projection}
+                        onIncrement={onIncrement}
+                        onSetValue={onSetValue}
+                        onComplete={onComplete}
+                        onReset={onReset}
+                        onEdit={onEdit}
+                        onAddChild={onAddChild}
+                      />
+                    )
+                  })}
                 </div>
-              </SortableContext>
-            </DndContext>
-          ) : (
-            <div className="space-y-2">
-              {orderedGoals.map((goal) => {
-                const milestoneInfo = getNextMilestoneInfo(goal)
-                const projection = computeProjectedDate(goal)
-                return (
-                  <GoalCard
-                    key={goal.id}
-                    goal={goal}
-                    allGoals={goals}
-                    variant="compact"
-                    breadcrumbMode="parent-only"
-                    nextMilestone={milestoneInfo}
-                    projectedDate={projection}
-                    onIncrement={onIncrement}
-                    onSetValue={onSetValue}
-                    onComplete={onComplete}
-                    onReset={onReset}
-                    onEdit={onEdit}
-                    onAddChild={onAddChild}
-                  />
-                )
-              })}
-            </div>
-          )}
-        </div>
-      )}
+              )
+            )}
+
+            {/* Rollup rows — completion rates, deltas, deadlines */}
+            {!isCustomizeMode && hasRollups && (
+              <div className="rounded-lg border border-border bg-card p-3 space-y-1.5">
+                {rollupGoals.map((g) => (
+                  <PeriodRollupRow key={`rollup-${g.id}`} goal={g} stats={statsMap.get(g.id)} period={statsKey} mode="completion" />
+                ))}
+                {deltaGoals.map((g) => (
+                  <PeriodRollupRow key={`delta-${g.id}`} goal={g} stats={statsMap.get(g.id)} period={statsKey} mode="delta" />
+                ))}
+                {deadlineGoals.map((g) => (
+                  <PeriodRollupRow key={`deadline-${g.id}`} goal={g} stats={statsMap.get(g.id)} period={statsKey} mode="deadline" />
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
 
       {/* Hidden goals — collapsible bar, always visible when archived goals exist */}
       {archivedActionableGoals.length > 0 && (

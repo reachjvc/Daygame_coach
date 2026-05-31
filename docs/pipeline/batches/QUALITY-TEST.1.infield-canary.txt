@@ -1,0 +1,8 @@
+# QUALITY-TEST.1 — Infield canary (first 5)
+#
+# Format: source_name | video_folder_name
+NICK_KRAUSER_JOYOFDAYGAME |Joy of Daygame #4 - More Gutter Game in Warsaw [grq-TNERVuA]
+NICK_KRAUSER_JOYOFDAYGAME |Joy of Daygame #5 - Dappy Bird in Mall [4n7tesaFEdI]
+NICK_KRAUSER_JOYOFDAYGAME |Joy of Daygame #6 - Brunette in Park [NhaqeRwLPJY]
+NICK_KRAUSER_WOMANIZER |Womanizers Bible #14 - A Year in Euro Jaunt Daygame [hQVNJtDY1TQ]
+NICK_KRAUSER_WOMANIZER |Womanizers Bible #20 - Questions and Answers Roundup [QpsXsCulJIM]

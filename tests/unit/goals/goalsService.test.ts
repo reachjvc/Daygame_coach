@@ -25,6 +25,7 @@ import {
   getWeeklyRhythm,
   computePacing,
   buildMilestoneCelebrationData,
+  computeMultiPeriodStats,
 } from "@/src/goals/goalsService"
 import type { GoalWithProgress, GoalFilterState, BadgeStatus } from "@/src/goals/types"
 import type { DailyGoalSnapshotRow } from "@/src/db/goalTypes"
@@ -68,6 +69,7 @@ function createGoalWithProgress(overrides: Partial<GoalWithProgress> = {}): Goal
     streak_freezes_available: 0,
     streak_freezes_used: 0,
     last_freeze_date: null,
+    aligned_values: [],
     progress_percentage: 0,
     is_complete: false,
     days_remaining: null,
@@ -1544,5 +1546,264 @@ describe("filterScorecardGoals", () => {
     const result = filterScorecardGoals(goals)
     expect(result).toHaveLength(2)
     expect(result.map(g => g.id)).toEqual(["keep-1", "keep-2"])
+  })
+})
+
+// ============================================================================
+// computeMultiPeriodStats
+// ============================================================================
+
+describe("computeMultiPeriodStats", () => {
+  // Fixed reference date: Wednesday 2026-03-18
+  // Week starts Monday 2026-03-16
+  // Month starts 2026-03-01
+  // Year starts 2026-01-01
+  const NOW = new Date("2026-03-18T12:00:00Z")
+
+  function makeSnap(overrides: Partial<DailyGoalSnapshotRow> = {}): DailyGoalSnapshotRow {
+    return {
+      id: "snap-1",
+      user_id: "user-1",
+      goal_id: "protein",
+      snapshot_date: "2026-03-17",
+      current_value: 155,
+      target_value: 150,
+      was_complete: true,
+      current_streak: 3,
+      best_streak: 10,
+      period: "daily",
+      created_at: "2026-03-17T08:00:00Z",
+      ...overrides,
+    }
+  }
+
+  // --- Type A: Daily recurring goal — completion rates across periods ---
+
+  test("daily goal: counts completions for week/month/year", () => {
+    const goal = createGoalWithProgress({
+      id: "protein",
+      title: "Eat 150g protein daily",
+      period: "daily",
+      goal_type: "recurring",
+      target_value: 150,
+      current_value: 120,
+    })
+
+    // Simulate 2 months of daily snapshots
+    const snapshots: DailyGoalSnapshotRow[] = [
+      // January (outside current month, but in current year)
+      makeSnap({ snapshot_date: "2026-01-15", was_complete: true }),
+      makeSnap({ snapshot_date: "2026-01-16", was_complete: false }),
+      makeSnap({ snapshot_date: "2026-01-17", was_complete: true }),
+      // February
+      makeSnap({ snapshot_date: "2026-02-10", was_complete: true }),
+      makeSnap({ snapshot_date: "2026-02-11", was_complete: true }),
+      makeSnap({ snapshot_date: "2026-02-12", was_complete: false }),
+      // March (current month) — before this week
+      makeSnap({ snapshot_date: "2026-03-02", was_complete: true }),
+      makeSnap({ snapshot_date: "2026-03-03", was_complete: false }),
+      makeSnap({ snapshot_date: "2026-03-10", was_complete: true }),
+      makeSnap({ snapshot_date: "2026-03-11", was_complete: true }),
+      makeSnap({ snapshot_date: "2026-03-12", was_complete: false }),
+      makeSnap({ snapshot_date: "2026-03-13", was_complete: true }),
+      // This week (Mon 2026-03-16 — Wed 2026-03-18)
+      makeSnap({ snapshot_date: "2026-03-16", was_complete: true }),
+      makeSnap({ snapshot_date: "2026-03-17", was_complete: false }),
+    ]
+
+    const stats = computeMultiPeriodStats(goal, snapshots, NOW)
+
+    // This week: Mon+Tue = 2 snapshots, 1 complete
+    expect(stats.weekCompleted).toBe(1)
+    expect(stats.weekTotal).toBe(2)
+
+    // This month (March): 8 snapshots, 5 complete
+    expect(stats.monthCompleted).toBe(5)
+    expect(stats.monthTotal).toBe(8)
+
+    // This year: all 14 snapshots, 9 complete
+    expect(stats.yearCompleted).toBe(9)
+    expect(stats.yearTotal).toBe(14)
+
+    // Not a milestone — no deltas
+    expect(stats.monthDelta).toBeNull()
+    expect(stats.yearDelta).toBeNull()
+  })
+
+  // --- Type B: Weekly goal — completion rates at week granularity ---
+
+  test("weekly goal: counts weekly completions for month/year", () => {
+    const goal = createGoalWithProgress({
+      id: "gym",
+      title: "Go to gym 4x/week",
+      period: "weekly",
+      goal_type: "recurring",
+      target_value: 4,
+      current_value: 2,
+    })
+
+    // Weekly snapshots (one per Monday reset)
+    const snapshots: DailyGoalSnapshotRow[] = [
+      // January
+      makeSnap({ goal_id: "gym", snapshot_date: "2026-01-05", was_complete: true, period: "weekly" }),
+      makeSnap({ goal_id: "gym", snapshot_date: "2026-01-12", was_complete: false, period: "weekly" }),
+      makeSnap({ goal_id: "gym", snapshot_date: "2026-01-19", was_complete: true, period: "weekly" }),
+      makeSnap({ goal_id: "gym", snapshot_date: "2026-01-26", was_complete: true, period: "weekly" }),
+      // February
+      makeSnap({ goal_id: "gym", snapshot_date: "2026-02-02", was_complete: true, period: "weekly" }),
+      makeSnap({ goal_id: "gym", snapshot_date: "2026-02-09", was_complete: false, period: "weekly" }),
+      makeSnap({ goal_id: "gym", snapshot_date: "2026-02-16", was_complete: true, period: "weekly" }),
+      makeSnap({ goal_id: "gym", snapshot_date: "2026-02-23", was_complete: true, period: "weekly" }),
+      // March (current month)
+      makeSnap({ goal_id: "gym", snapshot_date: "2026-03-02", was_complete: true, period: "weekly" }),
+      makeSnap({ goal_id: "gym", snapshot_date: "2026-03-09", was_complete: false, period: "weekly" }),
+      makeSnap({ goal_id: "gym", snapshot_date: "2026-03-16", was_complete: true, period: "weekly" }),
+    ]
+
+    const stats = computeMultiPeriodStats(goal, snapshots, NOW)
+
+    // This week: 1 snapshot (Mon 3/16), 1 complete
+    expect(stats.weekCompleted).toBe(1)
+    expect(stats.weekTotal).toBe(1)
+
+    // This month: 3 snapshots (3/2, 3/9, 3/16), 2 complete
+    expect(stats.monthCompleted).toBe(2)
+    expect(stats.monthTotal).toBe(3)
+
+    // This year: 11 snapshots, 8 complete (Jan: 3, Feb: 3, Mar: 2)
+    expect(stats.yearCompleted).toBe(8)
+    expect(stats.yearTotal).toBe(11)
+  })
+
+  // --- Type E: Habit ramp — was_complete uses ramp-appropriate target ---
+
+  test("habit ramp: completion respects per-snapshot target (ramp-aware)", () => {
+    const goal = createGoalWithProgress({
+      id: "approach-freq",
+      title: "Approach Frequency",
+      period: "weekly",
+      goal_type: "habit_ramp",
+      target_value: 15, // current ramp step target
+      current_value: 12,
+      ramp_steps: [
+        { durationWeeks: 4, frequencyPerWeek: 5 },
+        { durationWeeks: 4, frequencyPerWeek: 10 },
+        { durationWeeks: 8, frequencyPerWeek: 15 },
+      ] as unknown as Record<string, unknown>[],
+    })
+
+    // Snapshots with DIFFERENT target_values reflecting ramp progression
+    const snapshots: DailyGoalSnapshotRow[] = [
+      // Ramp step 1 (target 5): hit 6 → complete
+      makeSnap({ goal_id: "approach-freq", snapshot_date: "2026-01-05", target_value: 5, current_value: 6, was_complete: true, period: "weekly" }),
+      makeSnap({ goal_id: "approach-freq", snapshot_date: "2026-01-12", target_value: 5, current_value: 4, was_complete: false, period: "weekly" }),
+      // Ramp step 2 (target 10): hit 11 → complete
+      makeSnap({ goal_id: "approach-freq", snapshot_date: "2026-02-02", target_value: 10, current_value: 11, was_complete: true, period: "weekly" }),
+      makeSnap({ goal_id: "approach-freq", snapshot_date: "2026-02-09", target_value: 10, current_value: 8, was_complete: false, period: "weekly" }),
+      // Ramp step 3 (target 15): in March
+      makeSnap({ goal_id: "approach-freq", snapshot_date: "2026-03-02", target_value: 15, current_value: 16, was_complete: true, period: "weekly" }),
+      makeSnap({ goal_id: "approach-freq", snapshot_date: "2026-03-09", target_value: 15, current_value: 10, was_complete: false, period: "weekly" }),
+      makeSnap({ goal_id: "approach-freq", snapshot_date: "2026-03-16", target_value: 15, current_value: 18, was_complete: true, period: "weekly" }),
+    ]
+
+    const stats = computeMultiPeriodStats(goal, snapshots, NOW)
+
+    // Year: 7 total, 4 complete (6>=5, 11>=10, 16>=15, 18>=15)
+    // was_complete already accounts for the correct ramp target at each snapshot
+    expect(stats.yearCompleted).toBe(4)
+    expect(stats.yearTotal).toBe(7)
+
+    // Month: 3 total (3/2, 3/9, 3/16), 2 complete
+    expect(stats.monthCompleted).toBe(2)
+    expect(stats.monthTotal).toBe(3)
+  })
+
+  // --- Type D: Cumulative milestone with delta ---
+
+  test("cumulative milestone: computes month and year deltas", () => {
+    const goal = createGoalWithProgress({
+      id: "approach-vol",
+      title: "Approach Volume",
+      goal_type: "milestone",
+      period: "weekly",
+      target_value: 1000,
+      current_value: 450, // current cumulative total
+    })
+
+    // Snapshots capture cumulative value at each weekly reset
+    const snapshots: DailyGoalSnapshotRow[] = [
+      // December last year (baseline for yearly delta)
+      makeSnap({ goal_id: "approach-vol", snapshot_date: "2025-12-29", current_value: 100, was_complete: false, period: "weekly" }),
+      // January
+      makeSnap({ goal_id: "approach-vol", snapshot_date: "2026-01-05", current_value: 120, was_complete: false, period: "weekly" }),
+      makeSnap({ goal_id: "approach-vol", snapshot_date: "2026-01-26", current_value: 200, was_complete: false, period: "weekly" }),
+      // February (baseline for monthly delta — last snap before March)
+      makeSnap({ goal_id: "approach-vol", snapshot_date: "2026-02-23", current_value: 350, was_complete: false, period: "weekly" }),
+      // March (current month)
+      makeSnap({ goal_id: "approach-vol", snapshot_date: "2026-03-02", current_value: 380, was_complete: false, period: "weekly" }),
+      makeSnap({ goal_id: "approach-vol", snapshot_date: "2026-03-09", current_value: 410, was_complete: false, period: "weekly" }),
+      makeSnap({ goal_id: "approach-vol", snapshot_date: "2026-03-16", current_value: 430, was_complete: false, period: "weekly" }),
+    ]
+
+    const stats = computeMultiPeriodStats(goal, snapshots, NOW)
+
+    // Month delta: current (450) - last snap before March (350) = 100
+    expect(stats.monthDelta).toBe(100)
+
+    // Year delta: current (450) - last snap before Jan 1 (100) = 350
+    expect(stats.yearDelta).toBe(350)
+  })
+
+  // --- Edge: no snapshots ---
+
+  test("no snapshots: returns zeros for completion, current_value for deltas", () => {
+    const recurring = createGoalWithProgress({
+      id: "new-goal",
+      period: "daily",
+      goal_type: "recurring",
+      current_value: 5,
+    })
+
+    const stats = computeMultiPeriodStats(recurring, [], NOW)
+    expect(stats.weekCompleted).toBe(0)
+    expect(stats.weekTotal).toBe(0)
+    expect(stats.monthCompleted).toBe(0)
+    expect(stats.monthTotal).toBe(0)
+    expect(stats.yearCompleted).toBe(0)
+    expect(stats.yearTotal).toBe(0)
+    expect(stats.monthDelta).toBeNull()
+    expect(stats.yearDelta).toBeNull()
+  })
+
+  test("milestone with no snapshots: delta equals current_value", () => {
+    const milestone = createGoalWithProgress({
+      id: "new-milestone",
+      goal_type: "milestone",
+      current_value: 21,
+      target_value: 1000,
+    })
+
+    const stats = computeMultiPeriodStats(milestone, [], NOW)
+    expect(stats.monthDelta).toBe(21)
+    expect(stats.yearDelta).toBe(21)
+  })
+
+  // --- Edge: snapshots only from other goals are ignored ---
+
+  test("ignores snapshots from other goals", () => {
+    const goal = createGoalWithProgress({
+      id: "my-goal",
+      period: "daily",
+      goal_type: "recurring",
+    })
+
+    const snapshots = [
+      makeSnap({ goal_id: "other-goal", snapshot_date: "2026-03-16", was_complete: true }),
+      makeSnap({ goal_id: "other-goal", snapshot_date: "2026-03-17", was_complete: true }),
+    ]
+
+    const stats = computeMultiPeriodStats(goal, snapshots, NOW)
+    expect(stats.weekTotal).toBe(0)
+    expect(stats.monthTotal).toBe(0)
   })
 })

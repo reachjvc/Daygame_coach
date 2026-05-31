@@ -65,6 +65,7 @@ export interface UserGoalRow {
   streak_freezes_used: number
   last_freeze_date: string | null
   goal_phase: GoalPhase | null
+  aligned_values: string[]
 }
 
 /**
@@ -76,6 +77,8 @@ export interface UserGoalInsert {
   tracking_type?: GoalTrackingType
   period?: GoalPeriod
   target_value: number
+  current_value?: number
+  current_streak?: number
   custom_end_date?: string
   linked_metric?: LinkedMetric
   position?: number
@@ -92,6 +95,7 @@ export interface UserGoalInsert {
   ramp_steps?: Record<string, unknown>[] | null
   motivation_note?: string | null
   goal_phase?: GoalPhase | null
+  aligned_values?: string[]
 }
 
 /**
@@ -121,6 +125,7 @@ export interface UserGoalUpdate {
   ramp_steps?: Record<string, unknown>[] | null
   motivation_note?: string | null
   goal_phase?: GoalPhase | null
+  aligned_values?: string[]
 }
 
 /**
@@ -192,6 +197,7 @@ export function computeGoalProgress(goal: UserGoalRow, timezone: string | null =
 
   return {
     ...goal,
+    aligned_values: goal.aligned_values ?? [],
     progress_percentage,
     is_complete,
     days_remaining,

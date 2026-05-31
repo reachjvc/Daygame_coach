@@ -83,7 +83,7 @@ export type CelebrationTier = "subtle" | "toast" | "confetti-small" | "confetti-
 /**
  * View modes for the Goals Hub
  */
-export type GoalViewMode = "today" | "hierarchy" | "tree" | "orrery" | "daily" | "strategic" | "standard" | "time-horizon"
+export type GoalViewMode = "today" | "hierarchy" | "tree" | "tree-of-life" | "orrery" | "daily" | "strategic" | "standard" | "time-horizon"
 
 /**
  * Filter state for goals list/views
@@ -367,6 +367,76 @@ export interface WeeklyReviewData {
 }
 
 // ============================================================================
+// Tree of Life Types
+// ============================================================================
+
+/**
+ * Data returned by the tree-of-life endpoint — combines goals + values
+ */
+export interface TreeOfLifeData {
+  tree: GoalTreeNode[]
+  goals: GoalWithProgress[]
+  roots: CoreValueRoot[] | null
+  aspirational: string[] | null
+  soilDensity: number
+  alignmentMap: Record<string, string[]>
+}
+
+/**
+ * A core value displayed as a tree root
+ */
+export interface CoreValueRoot {
+  id: string
+  rank: number
+}
+
+/**
+ * Positioned node for the canvas tree layout
+ */
+export interface TreeLayoutNode {
+  id: string
+  type: "trunk" | "branch" | "leaf" | "root" | "crown"
+  x: number
+  y: number
+  width: number
+  height: number
+  color: string
+  label: string
+  progress: number
+  goalLevel: number | null
+  lifeArea: string
+  parentId: string | null
+  children: string[]
+  isComplete: boolean
+  streak: number
+  phase: string | null
+  alignedValues: string[]
+}
+
+/**
+ * Root node in the layout (core values)
+ */
+export interface TreeLayoutRoot {
+  id: string
+  valueId: string
+  rank: number
+  x: number
+  y: number
+  thickness: number
+  connectedBranches: string[]
+}
+
+/**
+ * Full layout output from the layout engine
+ */
+export interface TreeLayout {
+  nodes: TreeLayoutNode[]
+  roots: TreeLayoutRoot[]
+  bounds: { width: number; height: number }
+  groundY: number
+}
+
+// ============================================================================
 // Cross-Area Connection Types (Phase 3.4)
 // ============================================================================
 
@@ -411,6 +481,21 @@ export interface GoalSetupSelections {
   customCategories: SetupCustomCategory[]
   targetDates: Record<string, string>
   goalDates: Record<string, string>
+}
+
+// ============================================================================
+// Multi-Period Stats (Rollup Layer)
+// ============================================================================
+
+export interface GoalPeriodStats {
+  weekCompleted: number
+  weekTotal: number
+  monthCompleted: number
+  monthTotal: number
+  yearCompleted: number
+  yearTotal: number
+  monthDelta: number | null
+  yearDelta: number | null
 }
 
 // ============================================================================

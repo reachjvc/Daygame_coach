@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -112,6 +112,12 @@ const testPages = [
     href: "/test/exercising",
     description: "Google Sheets workout tracker with Starscream-style double progression",
     icon: Dumbbell,
+  },
+  {
+    name: "Pricing",
+    href: "/test/pricing",
+    description: "Subscription tier pricing page — Free, Practitioner, Coached, Premium Plus",
+    icon: CreditCard,
   },
 ]
 

@@ -229,31 +229,42 @@ export async function createGoal(
   const lifeArea = goal.life_area ?? goal.category
   const category = goal.category ?? goal.life_area ?? "custom"
 
+  const insertData: Record<string, unknown> = {
+    user_id: userId,
+    title: goal.title,
+    category,
+    tracking_type: goal.tracking_type ?? "counter",
+    period: goal.period ?? "weekly",
+    target_value: goal.target_value,
+    custom_end_date: goal.custom_end_date ?? null,
+    linked_metric: goal.linked_metric ?? null,
+    position: goal.position ?? nextPosition,
+    life_area: lifeArea,
+    parent_goal_id: goal.parent_goal_id ?? null,
+    target_date: goal.target_date ?? null,
+    description: goal.description ?? null,
+    goal_type: goal.goal_type ?? "recurring",
+    goal_nature: goal.goal_nature ?? null,
+    display_category: goal.display_category ?? null,
+    goal_level: goal.goal_level ?? null,
+    template_id: goal.template_id ?? null,
+    milestone_config: goal.milestone_config ?? null,
+    ramp_steps: goal.ramp_steps ?? null,
+    goal_phase: goal.goal_phase ?? null,
+  }
+
+  // Starting values for backfill (pre-app history)
+  if (goal.current_value !== undefined && goal.current_value > 0) {
+    insertData.current_value = goal.current_value
+  }
+  if (goal.current_streak !== undefined && goal.current_streak > 0) {
+    insertData.current_streak = goal.current_streak
+    insertData.best_streak = goal.current_streak
+  }
+
   const { data, error } = await supabase
     .from("user_goals")
-    .insert({
-      user_id: userId,
-      title: goal.title,
-      category,
-      tracking_type: goal.tracking_type ?? "counter",
-      period: goal.period ?? "weekly",
-      target_value: goal.target_value,
-      custom_end_date: goal.custom_end_date ?? null,
-      linked_metric: goal.linked_metric ?? null,
-      position: goal.position ?? nextPosition,
-      life_area: lifeArea,
-      parent_goal_id: goal.parent_goal_id ?? null,
-      target_date: goal.target_date ?? null,
-      description: goal.description ?? null,
-      goal_type: goal.goal_type ?? "recurring",
-      goal_nature: goal.goal_nature ?? null,
-      display_category: goal.display_category ?? null,
-      goal_level: goal.goal_level ?? null,
-      template_id: goal.template_id ?? null,
-      milestone_config: goal.milestone_config ?? null,
-      ramp_steps: goal.ramp_steps ?? null,
-      goal_phase: goal.goal_phase ?? null,
-    })
+    .insert(insertData)
     .select()
     .single()
 
@@ -280,6 +291,42 @@ export async function createGoal(
       throw new DuplicateGoalError("template_exists", existingId)
     }
     throw new Error(`Failed to create goal: ${error.message}`)
+  }
+
+  // Backfill synthetic snapshots for pre-app history
+  // If user specified a starting streak, generate that many was_complete snapshots going back in time
+  const streakCount = goal.current_streak ?? 0
+  if (streakCount > 0 && data) {
+    const goalPeriod = goal.period ?? "weekly"
+    const periodDays = goalPeriod === "daily" ? 1 : goalPeriod === "weekly" ? 7 : goalPeriod === "monthly" ? 30 : 365
+    const backfillSnapshots: Array<{ id: string; user_id: string; goal_id: string; snapshot_date: string; current_value: number; target_value: number; was_complete: boolean; current_streak: number; best_streak: number; period: string }> = []
+    const today = getTodayInTimezone(timezone)
+
+    for (let i = 1; i <= streakCount; i++) {
+      const d = new Date(today)
+      d.setDate(d.getDate() - (i * periodDays))
+      const dateStr = d.toISOString().split("T")[0]
+      backfillSnapshots.push({
+        id: crypto.randomUUID(),
+        user_id: userId,
+        goal_id: data.id,
+        snapshot_date: dateStr,
+        current_value: goal.target_value,
+        target_value: goal.target_value,
+        was_complete: true,
+        current_streak: streakCount - i,
+        best_streak: streakCount,
+        period: goalPeriod,
+      })
+    }
+
+    if (backfillSnapshots.length > 0) {
+      await supabase
+        .from("daily_goal_snapshots")
+        .upsert(backfillSnapshots, { onConflict: "goal_id,snapshot_date" })
+        .then(() => {})
+        .catch(() => {}) // Non-fatal: backfill failure doesn't block goal creation
+    }
   }
 
   return computeGoalProgress(data as UserGoalRow, timezone)
@@ -686,6 +733,127 @@ export async function resetWeeklyGoals(userId: string, timezone: string | null =
     const updateData: Record<string, unknown> = {
       current_value: 0,
       period_start_date: mondayStr,
+    }
+
+    if (!wasComplete) {
+      if (shouldAutoFreeze(goal, today)) {
+        updateData.streak_freezes_available = goal.streak_freezes_available - 1
+        updateData.streak_freezes_used = goal.streak_freezes_used + 1
+        updateData.last_freeze_date = today
+      } else {
+        updateData.current_streak = 0
+      }
+    }
+
+    await supabase
+      .from("user_goals")
+      .update(updateData)
+      .eq("id", goal.id)
+      .eq("user_id", userId)
+  }
+
+  return goals.length
+}
+
+/**
+ * Reset all monthly goals for a user whose period started before the 1st of the current month.
+ * Mirrors the weekly reset pattern: snapshot → zero out → handle streaks/freezes.
+ * Idempotent: skips goals whose period_start_date is already in the current month.
+ */
+export async function resetMonthlyGoals(userId: string, timezone: string | null = null): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+  const now = getNowInTimezone(timezone)
+  const today = getTodayInTimezone(timezone)
+
+  // Compute the 1st of the current month
+  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  const firstOfMonthStr = firstOfMonth.toISOString().split("T")[0]
+
+  const { data: goals, error: fetchError } = await supabase
+    .from("user_goals")
+    .select("id, current_value, target_value, current_streak, best_streak, period, period_start_date, streak_freezes_available, streak_freezes_used, last_freeze_date, linked_metric")
+    .eq("user_id", userId)
+    .eq("period", "monthly")
+    .eq("is_active", true)
+    .eq("is_archived", false)
+    .lt("period_start_date", firstOfMonthStr)
+
+  if (fetchError) {
+    throw new Error(`Failed to fetch monthly goals: ${fetchError.message}`)
+  }
+
+  if (!goals || goals.length === 0) {
+    return 0
+  }
+
+  await snapshotGoals(userId, goals, today).catch(() => {})
+
+  for (const goal of goals) {
+    const wasComplete = goal.current_value >= goal.target_value
+
+    const updateData: Record<string, unknown> = {
+      current_value: 0,
+      period_start_date: firstOfMonthStr,
+    }
+
+    if (!wasComplete) {
+      if (shouldAutoFreeze(goal, today)) {
+        updateData.streak_freezes_available = goal.streak_freezes_available - 1
+        updateData.streak_freezes_used = goal.streak_freezes_used + 1
+        updateData.last_freeze_date = today
+      } else {
+        updateData.current_streak = 0
+      }
+    }
+
+    await supabase
+      .from("user_goals")
+      .update(updateData)
+      .eq("id", goal.id)
+      .eq("user_id", userId)
+  }
+
+  return goals.length
+}
+
+/**
+ * Reset all yearly goals for a user whose period started before January 1st of the current year.
+ * Mirrors the weekly/monthly reset pattern: snapshot → zero out → handle streaks/freezes.
+ * Idempotent: skips goals whose period_start_date is already in the current year.
+ */
+export async function resetYearlyGoals(userId: string, timezone: string | null = null): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+  const now = getNowInTimezone(timezone)
+  const today = getTodayInTimezone(timezone)
+
+  const jan1 = new Date(now.getFullYear(), 0, 1)
+  const jan1Str = jan1.toISOString().split("T")[0]
+
+  const { data: goals, error: fetchError } = await supabase
+    .from("user_goals")
+    .select("id, current_value, target_value, current_streak, best_streak, period, period_start_date, streak_freezes_available, streak_freezes_used, last_freeze_date, linked_metric")
+    .eq("user_id", userId)
+    .eq("period", "yearly")
+    .eq("is_active", true)
+    .eq("is_archived", false)
+    .lt("period_start_date", jan1Str)
+
+  if (fetchError) {
+    throw new Error(`Failed to fetch yearly goals: ${fetchError.message}`)
+  }
+
+  if (!goals || goals.length === 0) {
+    return 0
+  }
+
+  await snapshotGoals(userId, goals, today).catch(() => {})
+
+  for (const goal of goals) {
+    const wasComplete = goal.current_value >= goal.target_value
+
+    const updateData: Record<string, unknown> = {
+      current_value: 0,
+      period_start_date: jan1Str,
     }
 
     if (!wasComplete) {

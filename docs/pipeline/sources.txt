@@ -6,8 +6,9 @@
 #
 # Example:
 daily_evolution|https://www.youtube.com/watch?v=utuuVOXJunM
-daily_evolution|https://www.youtube.com/@Evolutiondaily
-social_stoic|https://www.youtube.com/@SocialStoicYouTube
+# DISABLED: channel URLs create duplicate folders alongside per-video dirs (59GB waste)
+# daily_evolution|https://www.youtube.com/@Evolutiondaily
+# social_stoic|https://www.youtube.com/@SocialStoicYouTube
 natural_lifestyles_innergrowth|https://www.youtube.com/watch?v=S0CyzHycb6g&list=PLtfVGUer52V5v9nE1ZEULzMhOZUF8J7xy
 natural_lifestyles_femalepsychology|https://www.youtube.com/watch?v=Y2hyrJ7ez1A&list=PLtfVGUer52V7X2zMqLM7W-60Smmu8DZp2
 natural_lifestyles_meetingGirlsIRL|https://www.youtube.com/watch?v=2h9wq53QIQk&list=PLtfVGUer52V7lhPcOPFyr1n1cCBeXIB3z

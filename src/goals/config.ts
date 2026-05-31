@@ -65,6 +65,11 @@ export const CATEGORY_ORDER: GoalDisplayCategory[] = [
  * View mode labels and icons for the ViewSwitcher
  */
 export const VIEW_MODE_CONFIG: Record<GoalViewMode, { label: string; description: string }> = {
+  today: { label: "Today", description: "Daily action checklist" },
+  hierarchy: { label: "Hierarchy", description: "Goals organized by life area and category" },
+  tree: { label: "Tree", description: "Visual tree showing how goals connect" },
+  "tree-of-life": { label: "Tree of Life", description: "Living tree rooted in your values" },
+  orrery: { label: "Orrery", description: "Animated orbital view of your goal system" },
   daily: { label: "Daily", description: "Action-focused view for this week's goals" },
   strategic: { label: "Strategic", description: "Full hierarchy with achievements and categories" },
   standard: { label: "Standard", description: "Life area cards with progress overview" },

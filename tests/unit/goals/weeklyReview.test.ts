@@ -42,6 +42,7 @@ function createGoal(overrides: Partial<GoalWithProgress> = {}): GoalWithProgress
     streak_freezes_available: 0,
     streak_freezes_used: 0,
     last_freeze_date: null,
+    aligned_values: [],
     progress_percentage: 50,
     is_complete: false,
     days_remaining: null,

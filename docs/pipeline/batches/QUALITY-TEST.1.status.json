@@ -1,0 +1,9 @@
+{
+  "batch": "QUALITY-TEST.1",
+  "created": "2026-05-30T06:01:52Z",
+  "purpose": "End-to-end pipeline quality validation. 100 videos across all 21 producers. Goal: verify output quality before scaling.",
+  "video_count": 100,
+  "status": "created",
+  "stages_completed": [],
+  "notes": "Videos selected from pool of 1,276 eligible (have WAV, not yet in pipeline). Distributed across all coaches for representative coverage."
+}

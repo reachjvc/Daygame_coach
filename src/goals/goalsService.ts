@@ -2,7 +2,7 @@
  * Goals business logic — tree building, filtering, progress aggregation
  */
 
-import type { GoalWithProgress, GoalTreeNode, GoalFilterState, InputMode, CelebrationTier, MilestoneLadderConfig, HabitRampStep, PreviewGoalState, TimeOfDayBracket, WeeklyRhythm, PacingInfo, MilestoneCelebrationData, BadgeStatus, TierUpgradeEvent, WeeklyReviewData, WeeklyGoalMomentum, GoalSetupSelections, WillGateResult, BottleneckResult, GoalTemplate, PhaseTransitionEvent } from "./types"
+import type { GoalWithProgress, GoalTreeNode, GoalFilterState, InputMode, CelebrationTier, MilestoneLadderConfig, HabitRampStep, PreviewGoalState, TimeOfDayBracket, WeeklyRhythm, PacingInfo, MilestoneCelebrationData, BadgeStatus, TierUpgradeEvent, WeeklyReviewData, WeeklyGoalMomentum, GoalSetupSelections, WillGateResult, BottleneckResult, GoalTemplate, PhaseTransitionEvent, GoalPeriodStats } from "./types"
 import type { DailyGoalSnapshotRow, GoalPhase, LinkedMetric } from "@/src/db/goalTypes"
 import type { BatchGoalInsert } from "./treeGenerationService"
 import { generateMilestoneLadder, computeRampMilestoneDates } from "./milestoneService"
@@ -503,6 +503,82 @@ export function computePacing(goal: GoalWithProgress, now?: Date): PacingInfo | 
   else status = "behind"
 
   return { actualRate, projectedRate, pacingRatio, status, daysActive }
+}
+
+// ============================================================================
+// Multi-Period Stats (Rollup Layer)
+// ============================================================================
+
+/**
+ * Compute completion rates and deltas for a goal across week/month/year time windows.
+ * Uses snapshot data (which is ramp-aware — was_complete checked against the target at that time).
+ * For cumulative milestones, computes deltas from earliest snapshot in each period.
+ */
+export function computeMultiPeriodStats(
+  goal: GoalWithProgress,
+  snapshots: DailyGoalSnapshotRow[],
+  now?: Date
+): GoalPeriodStats {
+  const ref = now ?? new Date()
+  const goalSnapshots = snapshots.filter((s) => s.goal_id === goal.id)
+
+  // Compute period boundaries
+  const dayOfWeek = ref.getDay() || 7
+  const monday = new Date(ref)
+  monday.setDate(ref.getDate() - dayOfWeek + 1)
+  const mondayStr = monday.toISOString().split("T")[0]
+
+  const firstOfMonth = new Date(ref.getFullYear(), ref.getMonth(), 1)
+  const firstOfMonthStr = firstOfMonth.toISOString().split("T")[0]
+
+  const jan1Str = `${ref.getFullYear()}-01-01`
+
+  // Filter snapshots by period
+  const weekSnaps = goalSnapshots.filter((s) => s.snapshot_date >= mondayStr)
+  const monthSnaps = goalSnapshots.filter((s) => s.snapshot_date >= firstOfMonthStr)
+  const yearSnaps = goalSnapshots.filter((s) => s.snapshot_date >= jan1Str)
+
+  // Completion rates
+  const weekCompleted = weekSnaps.filter((s) => s.was_complete).length
+  const monthCompleted = monthSnaps.filter((s) => s.was_complete).length
+  const yearCompleted = yearSnaps.filter((s) => s.was_complete).length
+
+  // Deltas for cumulative milestones
+  let monthDelta: number | null = null
+  let yearDelta: number | null = null
+
+  if (goal.goal_type === "milestone") {
+    // Find earliest snapshot at or before the period start to get baseline
+    const sortedByDate = [...goalSnapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date))
+
+    const monthBaseline = sortedByDate.find((s) => s.snapshot_date >= firstOfMonthStr)
+      ?? sortedByDate[sortedByDate.length - 1]
+    if (monthBaseline) {
+      // Use the snapshot's value as baseline (value before that period's reset)
+      const baselineValue = monthBaseline.snapshot_date >= firstOfMonthStr
+        ? (sortedByDate.findLast((s) => s.snapshot_date < firstOfMonthStr)?.current_value ?? 0)
+        : monthBaseline.current_value
+      monthDelta = goal.current_value - baselineValue
+    } else {
+      monthDelta = goal.current_value
+    }
+
+    const yearBaseline = sortedByDate.findLast((s) => s.snapshot_date < jan1Str)
+    yearDelta = yearBaseline
+      ? goal.current_value - yearBaseline.current_value
+      : goal.current_value
+  }
+
+  return {
+    weekCompleted,
+    weekTotal: weekSnaps.length,
+    monthCompleted,
+    monthTotal: monthSnaps.length,
+    yearCompleted,
+    yearTotal: yearSnaps.length,
+    monthDelta,
+    yearDelta,
+  }
 }
 
 // ============================================================================

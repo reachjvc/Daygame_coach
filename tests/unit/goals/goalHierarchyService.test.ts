@@ -34,6 +34,7 @@ function mockGoal(overrides: Partial<GoalWithProgress> & { id: string }): GoalWi
     display_category: null,
     goal_level: null,
     template_id: null,
+    aligned_values: [],
     progress_percentage: 0,
     is_complete: false,
     days_remaining: null,

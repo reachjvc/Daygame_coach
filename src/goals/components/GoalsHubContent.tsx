@@ -16,6 +16,7 @@ import { GoalHierarchyView } from "./GoalHierarchyView"
 import { DailyActionView } from "./DailyActionView"
 import { TreeView } from "./views/TreeView"
 import { OrreryView } from "./views/OrreryView"
+import { TreeOfLifeView } from "./tree-of-life"
 import { ViewSwitcher } from "./views/ViewSwitcher"
 import { ActionToast } from "./ActionToast"
 import { FireStreakBadge } from "@/src/tracking/components/FireStreakBadge"
@@ -23,7 +24,7 @@ import { flattenTree, getCelebrationTier, generateDirtyDogInserts, buildMileston
 import type { GoalWithProgress, GoalTreeNode, GoalViewMode, CelebrationTier, MilestoneCelebrationData } from "../types"
 
 const VIEW_STORAGE_KEY = "goals-view-mode"
-const VALID_VIEWS: GoalViewMode[] = ["today", "hierarchy", "tree", "orrery"]
+const VALID_VIEWS: GoalViewMode[] = ["today", "hierarchy", "tree", "tree-of-life", "orrery"]
 
 function getInitialView(): GoalViewMode {
   if (typeof window === "undefined") return "today"
@@ -385,6 +386,14 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
             onCreateGoal={handleCreateGoal}
           />
         )
+      case "tree-of-life":
+        return (
+          <TreeOfLifeView
+            onIncrement={handleIncrement}
+            onEdit={handleEdit}
+            onCreateGoal={handleCreateGoal}
+          />
+        )
       case "orrery":
         return (
           <OrreryView goals={goals} />
@@ -507,10 +516,16 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
         </div>
       )}
 
-      {/* Fire Streak Badge */}
+      {/* Old streak badge (kept for reference) */}
       {weekStreak >= 2 && (
         <FireStreakBadge streak={weekStreak} bestStreak={bestWeekStreak} variant="card" />
       )}
+
+      {/* Streak system overhaul — placeholder */}
+      <div className="w-full rounded-xl border border-orange-500/30 bg-orange-500/10 p-6 text-center">
+        <span className="text-3xl font-bold text-orange-400">PLACEHOLDER</span>
+        <p className="text-sm text-muted-foreground mt-1">Streak system overhaul coming</p>
+      </div>
 
       {/* Active view */}
       <div>
