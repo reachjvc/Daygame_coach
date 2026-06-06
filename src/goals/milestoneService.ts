@@ -281,12 +281,100 @@ function selectFromPool(
  *
  * The first milestone is always `start`, the last is always `target`.
  * Intermediate milestones are guaranteed to be monotonically increasing.
+ *
+ * If `config.pins` are supplied, those milestones are fixed to the user's
+ * exact values and the unpinned milestones flow through the gaps between them
+ * (each gap is its own sub-ladder). This is the "freeze edited, flow the rest"
+ * behaviour — the auto-curve regenerates only the milestones the user hasn't
+ * touched.
  */
 export function generateMilestoneLadder(config: MilestoneLadderConfig): GeneratedMilestone[] {
-  const { start, target, steps, curveTension, controlPoints = [] } = config
+  const { start, target, steps, curveTension, controlPoints = [], pins = [] } = config
 
   if (steps < 2) {
     return [{ step: 0, rawValue: target, value: target }]
+  }
+
+  // Collect valid interior pins (dedupe by step, last write wins).
+  const pinByStep = new Map<number, number>()
+  for (const p of pins) {
+    if (p.step > 0 && p.step < steps - 1 && Number.isFinite(p.value)) {
+      pinByStep.set(p.step, p.value)
+    }
+  }
+
+  // No pins → single segment (identical to legacy behaviour).
+  if (pinByStep.size === 0) {
+    return generateLadderSegment(start, target, steps, curveTension, controlPoints)
+  }
+
+  // Build anchors: start → interior pins (clamped monotonic) → target.
+  const ascending = target >= start
+  const anchors: { step: number; value: number }[] = [{ step: 0, value: start }]
+  let prev = start
+  for (const step of [...pinByStep.keys()].sort((a, b) => a - b)) {
+    let v = pinByStep.get(step)!
+    // Clamp so the ladder never reverses direction around a manual edit, and
+    // reserve at least 1 unit of headroom per still-unplaced step so the gap up
+    // to `target` can always hold its remaining milestones monotonically.
+    const stepsAfter = steps - 1 - step
+    if (ascending) v = Math.min(Math.max(v, prev + 1), target - stepsAfter)
+    else v = Math.max(Math.min(v, prev - 1), target + stepsAfter)
+    anchors.push({ step, value: v })
+    prev = v
+  }
+  anchors.push({ step: steps - 1, value: target })
+
+  const result: GeneratedMilestone[] = new Array(steps)
+  for (const a of anchors) {
+    result[a.step] = { step: a.step, rawValue: a.value, value: a.value }
+  }
+
+  // Fill each gap between consecutive anchors with its own sub-ladder.
+  for (let i = 0; i < anchors.length - 1; i++) {
+    const a = anchors[i]
+    const b = anchors[i + 1]
+    const segSteps = b.step - a.step + 1
+    if (segSteps <= 2) continue // adjacent anchors — nothing to fill
+    const seg = generateLadderSegment(a.value, b.value, segSteps, curveTension, controlPoints)
+    for (let j = 1; j < segSteps - 1; j++) {
+      const gStep = a.step + j
+      result[gStep] = { step: gStep, rawValue: seg[j].rawValue, value: seg[j].value }
+    }
+  }
+
+  return result
+}
+
+/**
+ * Generate one contiguous milestone ladder from `start` to `target` over
+ * `steps` milestones (endpoints inclusive). This is the core curve engine;
+ * `generateMilestoneLadder` calls it once per gap between pinned anchors.
+ */
+function generateLadderSegment(
+  start: number,
+  target: number,
+  steps: number,
+  curveTension: number,
+  controlPoints: CurveControlPoint[] = []
+): GeneratedMilestone[] {
+  const config: MilestoneLadderConfig = { start, target, steps, curveTension, controlPoints }
+
+  if (steps < 2) {
+    return [{ step: 0, rawValue: target, value: target }]
+  }
+
+  // Descending goal (a reduction — bodyweight, body fat, 5k time …): the nice-
+  // number pool and increment logic are built for ascending ranges, so generate
+  // the ascending ladder over the reversed range and flip it. Tension is kept
+  // (not negated): reversing maps the ascending ladder's late increments to the
+  // descending ladder's early increments, so tension>0 still means "quick wins".
+  if (target < start) {
+    const asc = generateLadderSegment(target, start, steps, curveTension, controlPoints)
+    return asc.map((_, i) => {
+      const src = asc[steps - 1 - i]
+      return { step: i, rawValue: src.rawValue, value: src.value }
+    })
   }
 
   // Build candidate pool of nice numbers including endpoints

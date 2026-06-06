@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -118,6 +118,18 @@ const testPages = [
     href: "/test/pricing",
     description: "Subscription tier pricing page — Free, Practitioner, Coached, Premium Plus",
     icon: CreditCard,
+  },
+  {
+    name: "New New Goals",
+    href: "/test/new-goals",
+    description: "Redesigned goal framework: Identity → Pillars → Objectives → Targets with auto-milestones",
+    icon: Target,
+  },
+  {
+    name: "Test Chatbot",
+    href: "/test/test-chatbot",
+    description: "AI Coach replica that retrieves from the isolated embeddings_test table (Ollama, premium-gated)",
+    icon: HelpCircle,
   },
 ]
 

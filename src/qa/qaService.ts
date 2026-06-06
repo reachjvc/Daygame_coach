@@ -1,11 +1,13 @@
 import { retrieveRelevantChunks, hasRelevantChunks } from "./retrieval"
-import { buildSystemPrompt, buildUserPrompt, parseResponse } from "./prompt"
+import { buildSystemPrompt, buildUserPrompt, parseResponse, stripInternalAttribution } from "./prompt"
+import { analyzeAnswerGrounding } from "./grounding"
 import { computeConfidence, detectPolicyViolations } from "./confidence"
 import { getProvider, isValidProvider } from "./providers"
 import { QA_CONFIG } from "./config"
 import type {
   QARequest,
   QAResponse,
+  HandleQAOptions,
   RetrievedChunk,
   Source,
   MetaCognition,
@@ -25,10 +27,19 @@ import type {
  */
 export async function handleQARequest(
   request: QARequest,
-  userId: string
+  userId: string,
+  options: HandleQAOptions = {}
 ): Promise<QAResponse> {
   const startTime = Date.now()
   void userId
+
+  const {
+    backend,
+    buildSystemPrompt: systemPromptBuilder = buildSystemPrompt,
+    hideAttribution = false,
+    adaptive,
+    model: modelOverride,
+  } = options
 
   // Merge request options with defaults
   const retrievalOptions = {
@@ -39,7 +50,8 @@ export async function handleQARequest(
 
   const generationOptions = {
     provider: request.generation?.provider ?? QA_CONFIG.defaults.provider,
-    model: request.generation?.model,
+    // Explicit request model wins; else the caller's default override; else config default.
+    model: request.generation?.model ?? modelOverride,
     maxOutputTokens: request.generation?.maxOutputTokens ?? QA_CONFIG.defaults.maxOutputTokens,
     temperature: request.generation?.temperature ?? QA_CONFIG.defaults.temperature,
   }
@@ -52,16 +64,30 @@ export async function handleQARequest(
     )
   }
 
-  // Step 1: Retrieve relevant chunks
-  const chunks = await retrieveRelevantChunks(request.question, retrievalOptions)
+  // Step 1: Retrieve relevant chunks (backend defaults to production embeddings)
+  const { chunks, plan: adaptivePlan } = await retrieveRelevantChunks(
+    request.question,
+    retrievalOptions,
+    backend,
+    adaptive
+  )
 
-  // If no relevant chunks found, return a "don't know" response
+  // If no relevant chunks found, return a "don't know" response (carry the plan
+  // so the bench can show *why* nothing was used).
   if (!hasRelevantChunks(chunks)) {
-    return createNoContextResponse(generationOptions.provider, startTime)
+    const base = createNoContextResponse(generationOptions.provider, startTime)
+    return adaptivePlan ? { ...base, adaptivePlan } : base
   }
 
-  // Step 2: Build prompts
-  const systemPrompt = buildSystemPrompt(chunks, request.question)
+  // Adaptive answer-token budget: escalate above the default only when needed,
+  // unless the caller explicitly pinned maxOutputTokens.
+  const effectiveMaxTokens =
+    request.generation?.maxOutputTokens != null
+      ? generationOptions.maxOutputTokens
+      : adaptivePlan?.outputTokens ?? generationOptions.maxOutputTokens
+
+  // Step 2: Build prompts (builder defaults to production buildSystemPrompt)
+  const systemPrompt = systemPromptBuilder(chunks, request.question)
   const userPrompt = buildUserPrompt(request.question)
 
   // Step 3: Call LLM provider
@@ -70,24 +96,36 @@ export async function handleQARequest(
     systemPrompt,
     userPrompt,
     model: generationOptions.model || getDefaultModel(generationOptions.provider),
-    maxTokens: generationOptions.maxOutputTokens,
+    maxTokens: effectiveMaxTokens,
     temperature: generationOptions.temperature,
   })
 
   // Step 4: Parse response
   const { reasoning, answer, suggestedFollowUps } = parseResponse(providerResponse.content)
-  const answerWithCoachCitations = addCoachNamesToSourceCitations(answer, chunks)
+
+  // No-attribution path strips all source/coach references from the displayed
+  // answer and keeps provenance internally; default path adds coach citations.
+  const stripped = hideAttribution ? stripInternalAttribution(answer) : null
+  const finalAnswer = stripped
+    ? stripped.answer
+    : addCoachNamesToSourceCitations(answer, chunks)
 
   // Step 5: Compute confidence
-  const policyViolations = detectPolicyViolations(answerWithCoachCitations)
-  const confidence = computeConfidence(chunks, answerWithCoachCitations, policyViolations)
+  const policyViolations = detectPolicyViolations(finalAnswer)
+  const confidence = computeConfidence(chunks, finalAnswer, policyViolations)
 
   // Step 6: Assemble response
   const sources = chunksToSources(chunks)
   const metaCognition = createMetaCognition(reasoning, chunks, suggestedFollowUps)
 
+  // Test path: map each answer sentence to the source that best supports it.
+  const grounding = hideAttribution ? analyzeAnswerGrounding(finalAnswer, sources) : undefined
+
   return {
-    answer: answerWithCoachCitations,
+    answer: finalAnswer,
+    ...(stripped ? { usedSourceIndexes: stripped.usedSourceIndexes } : {}),
+    ...(adaptivePlan ? { adaptivePlan } : {}),
+    ...(grounding ? { grounding } : {}),
     confidence,
     sources,
     metaCognition,

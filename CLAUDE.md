@@ -1,4 +1,6 @@
 # CLAUDE.md
+**Keep ALL plans and summaries very concise. Cut the verbose — no preamble, no recap, no filler. Sacrifice grammar for concision.**
+
 If you enter planmode and give user a summary, keep it conscise. Sacrifice grammar for conscisiveness.
 
 ### Pipeline work → read `docs/pipeline/learnings.md` first

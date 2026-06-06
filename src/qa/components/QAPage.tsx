@@ -4,7 +4,7 @@ import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import type { QAResponse, Source, ConfidenceResult, MetaCognition } from "../types"
+import type { QAResponse, Source, ConfidenceResult, MetaCognition, AdaptivePlan, AnswerGroundingSpan } from "../types"
 import { TIMEOUT_CONFIG } from "../config"
 
 type Message = {
@@ -21,7 +21,14 @@ const SAMPLE_QUESTIONS = [
   "What body language should I use during the approach?",
 ]
 
-export function QAPage() {
+type QAPageProps = {
+  /** API endpoint to POST questions to. Defaults to the production route. */
+  endpoint?: string
+  /** Optional banner label, e.g. for the dev test-data variant. */
+  variantLabel?: string
+}
+
+export function QAPage({ endpoint = "/api/qa", variantLabel }: QAPageProps = {}) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -31,6 +38,8 @@ export function QAPage() {
   const [latestSources, setLatestSources] = useState<Source[]>([])
   const [latestMetaCognition, setLatestMetaCognition] = useState<MetaCognition | null>(null)
   const [latestConfidence, setLatestConfidence] = useState<ConfidenceResult | null>(null)
+  const [latestAdaptivePlan, setLatestAdaptivePlan] = useState<AdaptivePlan | null>(null)
+  const [latestGrounding, setLatestGrounding] = useState<AnswerGroundingSpan[] | null>(null)
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -54,6 +63,20 @@ export function QAPage() {
     return { label: "Low confidence", color: "bg-orange-100 text-orange-800" }
   }
 
+  const supportColor = (s: AnswerGroundingSpan["support"]): string => {
+    if (s === "strong") return "bg-green-500"
+    if (s === "partial") return "bg-amber-500"
+    if (s === "weak") return "bg-red-500"
+    return "bg-muted-foreground/40"
+  }
+
+  // Sources that actually back at least one (non-weak) sentence of the answer.
+  const usedSourceNums = new Set(
+    (latestGrounding ?? [])
+      .filter((g) => g.bestSource && (g.support === "strong" || g.support === "partial"))
+      .map((g) => g.bestSource as number)
+  )
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLTextAreaElement>) => {
     event.preventDefault()
     const trimmed = input.trim()
@@ -64,13 +87,15 @@ export function QAPage() {
     setLatestSources([])
     setLatestMetaCognition(null)
     setLatestConfidence(null)
+    setLatestAdaptivePlan(null)
+    setLatestGrounding(null)
     setInput("")
 
     try {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_CONFIG.qaRequestTimeoutMs)
 
-      const response = await fetch("/api/qa", {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -107,6 +132,8 @@ export function QAPage() {
       setLatestSources(data.sources || [])
       setLatestMetaCognition(data.metaCognition || null)
       setLatestConfidence(data.confidence || null)
+      setLatestAdaptivePlan(data.adaptivePlan || null)
+      setLatestGrounding(data.grounding || null)
     } catch (fetchError) {
       let message: string
       if (fetchError instanceof Error && fetchError.name === "AbortError") {
@@ -146,6 +173,12 @@ export function QAPage() {
         <p className="mx-auto max-w-3xl text-base text-muted-foreground">
           Ask for advice grounded in real coaching transcripts. Each answer includes sources and confidence scoring.
         </p>
+        {variantLabel && (
+          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-amber-400/50 bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+            <span className="size-2 rounded-full bg-amber-500" />
+            {variantLabel}
+          </div>
+        )}
       </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px] h-[calc(var(--app-vh)*100-280px)]">
@@ -256,6 +289,69 @@ export function QAPage() {
 
           {/* Right column: Meta-cognition + Sources */}
           <div className="flex flex-col gap-6 h-full overflow-y-auto">
+            {/* Adaptive retrieval plan (internal inspection) */}
+            {latestAdaptivePlan && (
+              <Card className="border-amber-400/40 overflow-hidden flex flex-col flex-shrink-0">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Adaptive Retrieval</CardTitle>
+                  <CardDescription className="text-xs">
+                    tier: <span className="font-semibold uppercase">{latestAdaptivePlan.tier}</span> · need {Math.round(latestAdaptivePlan.needScore * 100)}%
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-xs space-y-2">
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                    <span className="text-muted-foreground">Chunks used</span>
+                    <span className="text-foreground text-right">{latestAdaptivePlan.chunkCount}</span>
+                    <span className="text-muted-foreground">Context tokens</span>
+                    <span className="text-foreground text-right">{latestAdaptivePlan.contextTokens} / {latestAdaptivePlan.contextBudget}</span>
+                    <span className="text-muted-foreground">Stitch radius</span>
+                    <span className="text-foreground text-right">{latestAdaptivePlan.stitchRadius}</span>
+                    <span className="text-muted-foreground">Answer budget</span>
+                    <span className="text-foreground text-right">{latestAdaptivePlan.outputTokens} tok</span>
+                  </div>
+                  {latestAdaptivePlan.reasons.length > 0 && (
+                    <ul className="list-disc list-inside text-muted-foreground pt-1 border-t border-border">
+                      {latestAdaptivePlan.reasons.map((r, i) => (
+                        <li key={i}>{r}</li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* How the data shaped this answer (per-sentence grounding) */}
+            {latestGrounding && latestGrounding.length > 0 && (
+              <Card className="border-primary/20 overflow-hidden flex flex-col flex-shrink-0">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">How the data shaped this answer</CardTitle>
+                  <CardDescription className="text-xs">
+                    {latestGrounding.filter((g) => g.support === "strong" || g.support === "partial").length}/{latestGrounding.length} sentences backed by a source · lexical overlap estimate
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-xs space-y-2 overflow-y-auto max-h-[280px]">
+                  {latestGrounding.map((span, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className={`mt-1 size-2 flex-shrink-0 rounded-full ${supportColor(span.support)}`} title={span.support} />
+                      <div className="flex-1">
+                        <p className="text-foreground">{span.text}</p>
+                        <p className="text-muted-foreground">
+                          {span.bestSource
+                            ? `→ source ${span.bestSource} · ${Math.round(span.score * 100)}% overlap`
+                            : "→ no supporting source (possible drift)"}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex flex-wrap gap-3 pt-2 border-t border-border text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-green-500" /> strong</span>
+                    <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-amber-500" /> partial</span>
+                    <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-red-500" /> weak/drift</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Confidence Details */}
             {latestConfidence && (
               <Card className="border-primary/20 overflow-hidden flex flex-col flex-shrink-0">
@@ -337,14 +433,19 @@ export function QAPage() {
                     </div>
                   ) : latestSources.length > 0 ? (
                     latestSources.map((source, i) => (
-                      <div key={i} className="rounded-lg border bg-muted/50 p-3">
-                        <div className="flex items-center justify-between mb-1">
+                      <div key={i} className={`rounded-lg border p-3 ${usedSourceNums.has(i + 1) ? "border-green-500/50 bg-green-500/5" : "bg-muted/50"}`}>
+                        <div className="flex items-center justify-between mb-1 gap-2">
                           <p className="font-semibold text-foreground">
                             Source {i + 1}: {source.metadata.coach ?? source.metadata.channel ?? "Unknown Coach"}
                           </p>
-                          <span className="text-xs text-muted-foreground">
-                            {Math.round(source.relevanceScore * 100)}% match
-                          </span>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {usedSourceNums.has(i + 1) && (
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-100 text-green-800">used</span>
+                            )}
+                            <span className="text-xs text-muted-foreground">
+                              {Math.round(source.relevanceScore * 100)}% match
+                            </span>
+                          </div>
                         </div>
                         {source.metadata.topic && (
                           <p className="text-xs text-primary mb-1">{source.metadata.topic}</p>

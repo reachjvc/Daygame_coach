@@ -28,6 +28,14 @@ export {
 } from "./embeddingsRepo"
 
 export {
+  searchTestEmbeddings,
+  searchTestEmbeddingsByKeyword,
+  fetchTestEmbeddingsBySourceAndConversation,
+  fetchTestCommentaryForConversation,
+  getTestEmbeddingsCount,
+} from "./embeddingsTestRepo"
+
+export {
   getProfile,
   updateProfile,
   hasPurchased,

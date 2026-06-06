@@ -118,6 +118,22 @@ export interface MilestoneLadderConfig {
   steps: number
   curveTension: number
   controlPoints?: CurveControlPoint[]
+  /**
+   * Manually fixed milestones the user has edited. The generator pins these
+   * exact values and flows the *unpinned* milestones in the gaps between them
+   * ("freeze edited, flow the rest"). Pins on step 0 / last step are ignored —
+   * those endpoints are `start` / `target`.
+   */
+  pins?: MilestonePin[]
+}
+
+/**
+ * A user-pinned milestone: a fixed value at a specific step the auto-curve
+ * must honour instead of recomputing.
+ */
+export interface MilestonePin {
+  step: number
+  value: number
 }
 
 /**

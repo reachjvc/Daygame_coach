@@ -386,6 +386,84 @@ describe("generateMilestoneLadder", () => {
       }
     }
   })
+
+  // --- Pins: "freeze edited, flow the rest" ---
+
+  test("an interior pin appears at exactly its value and step", () => {
+    const config: MilestoneLadderConfig = {
+      start: 40, target: 100, steps: 7, curveTension: 0,
+      pins: [{ step: 3, value: 70 }],
+    }
+    const result = generateMilestoneLadder(config)
+    expect(result).toHaveLength(7)
+    expect(result[3].value).toBe(70)
+    expect(result[0].value).toBe(40)
+    expect(result[6].value).toBe(100)
+  })
+
+  test("pinned ladder stays monotonically non-decreasing", () => {
+    const result = generateMilestoneLadder({
+      start: 40, target: 100, steps: 7, curveTension: 0,
+      pins: [{ step: 2, value: 55 }, { step: 4, value: 75 }],
+    })
+    for (let i = 1; i < result.length; i++) {
+      expect(result[i].value).toBeGreaterThanOrEqual(result[i - 1].value)
+    }
+    expect(result[2].value).toBe(55)
+    expect(result[4].value).toBe(75)
+  })
+
+  test("pins on step 0 / last step are ignored (endpoints win)", () => {
+    const result = generateMilestoneLadder({
+      start: 40, target: 100, steps: 7, curveTension: 0,
+      pins: [{ step: 0, value: 5 }, { step: 6, value: 999 }],
+    })
+    expect(result[0].value).toBe(40)
+    expect(result[6].value).toBe(100)
+  })
+
+  test("a pin above the target is clamped below it (no reversal)", () => {
+    const result = generateMilestoneLadder({
+      start: 40, target: 100, steps: 7, curveTension: 0,
+      pins: [{ step: 3, value: 500 }],
+    })
+    expect(result[3].value).toBeLessThan(100)
+    for (let i = 1; i < result.length; i++) {
+      expect(result[i].value).toBeGreaterThanOrEqual(result[i - 1].value)
+    }
+  })
+
+  // --- Descending ladders (reduction goals: weight loss, faster times) ---
+
+  test("descending ladder steps down from start to target, monotonic", () => {
+    const result = generateMilestoneLadder({ start: 90, target: 80, steps: 6, curveTension: 0 })
+    expect(result).toHaveLength(6)
+    expect(result[0].value).toBe(90)
+    expect(result[5].value).toBe(80)
+    for (let i = 1; i < result.length; i++) {
+      expect(result[i].value).toBeLessThanOrEqual(result[i - 1].value)
+    }
+  })
+
+  test("descending ladder honours an interior pin", () => {
+    const result = generateMilestoneLadder({
+      start: 25, target: 12, steps: 7, curveTension: 0,
+      pins: [{ step: 3, value: 18 }],
+    })
+    expect(result[0].value).toBe(25)
+    expect(result[6].value).toBe(12)
+    expect(result[3].value).toBe(18)
+    for (let i = 1; i < result.length; i++) {
+      expect(result[i].value).toBeLessThanOrEqual(result[i - 1].value)
+    }
+  })
+
+  test("no pins → identical result to omitting the pins field", () => {
+    const base: MilestoneLadderConfig = { start: 1, target: 500, steps: 10, curveTension: 1.2 }
+    const withEmpty = generateMilestoneLadder({ ...base, pins: [] })
+    const without = generateMilestoneLadder(base)
+    expect(withEmpty.map((m) => m.value)).toEqual(without.map((m) => m.value))
+  })
 })
 
 // ============================================================================

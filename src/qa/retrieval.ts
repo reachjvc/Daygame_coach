@@ -1,7 +1,20 @@
 import { searchSimilarEmbeddings, searchEmbeddingsByKeyword, fetchEmbeddingsBySourceAndConversation, fetchCommentaryForConversation } from "@/src/db/server"
 import type { EmbeddingMetadata } from "@/src/db/types"
 import { QA_CONFIG } from "./config"
-import type { RetrievalOptions, RetrievedChunk } from "./types"
+import { DEFAULT_ADAPTIVE, computeNeedScore, estimateTokens, kneeCount, lerp, needTier } from "./adaptive"
+import type { AdaptivePlan, AdaptiveRetrievalConfig, RetrievalBackend, RetrievalOptions, RetrievedChunk } from "./types"
+
+/**
+ * Production retrieval backend (the live `embeddings` table). Used by default
+ * so existing callers are unchanged. The test chatbot injects an alternate
+ * backend bound to `embeddings_test`.
+ */
+export const DEFAULT_RETRIEVAL_BACKEND: RetrievalBackend = {
+  searchSimilarEmbeddings,
+  searchEmbeddingsByKeyword,
+  fetchEmbeddingsBySourceAndConversation,
+  fetchCommentaryForConversation,
+}
 
 function normalizeSourcePath(source?: string): string {
   return (source ?? "").replace(/\\/g, "/")
@@ -293,8 +306,10 @@ export async function generateEmbedding(text: string): Promise<number[]> {
  */
 export async function retrieveRelevantChunks(
   question: string,
-  options: RetrievalOptions = {}
-): Promise<RetrievedChunk[]> {
+  options: RetrievalOptions = {},
+  backend: RetrievalBackend = DEFAULT_RETRIEVAL_BACKEND,
+  adaptive?: AdaptiveRetrievalConfig
+): Promise<{ chunks: RetrievedChunk[]; plan: AdaptivePlan | null }> {
   const {
     topK = QA_CONFIG.defaults.topK,
     minScore = QA_CONFIG.defaults.minScore,
@@ -311,7 +326,7 @@ export async function retrieveRelevantChunks(
   const candidateCount = Math.min(400, Math.max(topK * 20, 100))
   const candidateThreshold = Math.max(0, Math.min(minScore, 0.2))
 
-  const vectorMatches = await searchSimilarEmbeddings(embedding, {
+  const vectorMatches = await backend.searchSimilarEmbeddings(embedding, {
     limit: candidateCount,
     matchThreshold: candidateThreshold,
   })
@@ -341,7 +356,7 @@ export async function retrieveRelevantChunks(
   })()
 
   const keywordMatches = needsLexicalFallback && fallbackKeyword
-    ? await searchEmbeddingsByKeyword(fallbackKeyword, { limit: 80 })
+    ? await backend.searchEmbeddingsByKeyword(fallbackKeyword, { limit: 80 })
     : []
 
   const combinedCandidates = (() => {
@@ -423,6 +438,75 @@ export async function retrieveRelevantChunks(
 
   scored.sort((a, b) => b.combinedScore - a.combinedScore)
 
+  // --- Adaptive planning (test bench): size retrieval to the question ---
+  // Non-adaptive path keeps every default below so production is unchanged.
+  let candidatePool = scored
+  let selectLimit = topK
+  let effectiveStitchRadius = 1
+  let expand = true
+  let contextBudgetTokens = Number.POSITIVE_INFINITY
+  let planDraft: AdaptivePlan | null = null
+
+  if (adaptive) {
+    const minRelevance = adaptive.minRelevance ?? DEFAULT_ADAPTIVE.minRelevance
+    const baseContextTokens = adaptive.baseContextTokens ?? DEFAULT_ADAPTIVE.baseContextTokens
+    const maxContextTokens = adaptive.maxContextTokens ?? DEFAULT_ADAPTIVE.maxContextTokens
+
+    const aboveFloor = scored.filter((s) => s.match.similarity >= minRelevance)
+
+    // Nothing clears the floor → return nothing (caller refuses).
+    if (aboveFloor.length === 0) {
+      return {
+        chunks: [],
+        plan: {
+          tier: "shallow",
+          needScore: 0,
+          chunkCount: 0,
+          contextTokens: 0,
+          contextBudget: 0,
+          stitchRadius: 0,
+          outputTokens: 0,
+          reasons: [
+            `no chunk cleared the relevance floor (${minRelevance}); best was ${(scored[0]?.match.similarity ?? 0).toFixed(2)}`,
+          ],
+        },
+      }
+    }
+
+    // Need is judged on the *usable* top matches, not the whole candidate pool,
+    // so a well-covered topic doesn't auto-escalate to "deep".
+    const topSimsDesc = aboveFloor.slice(0, topK).map((s) => s.match.similarity)
+    const hasExpandable = aboveFloor.slice(0, topK).some((s) => {
+      const t = String((s.match.metadata as any)?.segmentType ?? "").toUpperCase()
+      return t === "INTERACTION" || t === "EXPLANATION" || t === "COMMENTARY"
+    })
+
+    const { score: need, reasons } = computeNeedScore(question, topSimsDesc, hasExpandable)
+    const tier = needTier(need)
+
+    const maxChunks = Math.max(1, Math.min(topK, lerp(2, topK, need)))
+    const knee = kneeCount(aboveFloor.map((s) => s.combinedScore))
+    selectLimit = Math.max(1, Math.min(maxChunks, knee, topK))
+    effectiveStitchRadius = need < 0.34 ? 0 : need < 0.67 ? 1 : 2
+    expand = need >= 0.34
+    contextBudgetTokens = lerp(baseContextTokens, maxContextTokens, need)
+    candidatePool = aboveFloor
+
+    reasons.unshift(`${aboveFloor.length} candidates ≥ floor ${minRelevance}; cap ${selectLimit} chunks`)
+    reasons.push(`stitch radius ${effectiveStitchRadius}; cross-ref ${expand ? "on" : "off"}`)
+
+    planDraft = {
+      tier,
+      needScore: Math.round(need * 100) / 100,
+      chunkCount: 0, // filled after budget packing
+      contextTokens: 0, // filled at assembly
+      contextBudget: contextBudgetTokens,
+      stitchRadius: effectiveStitchRadius,
+      outputTokens: lerp(DEFAULT_ADAPTIVE.baseOutputTokens, DEFAULT_ADAPTIVE.maxOutputTokens, need),
+      reasons,
+    }
+  }
+
   // Diversity caps to avoid flooding with near-duplicates from one source/coach
   const maxPerSource = 2
   const maxPerCoach = 3
@@ -432,8 +516,8 @@ export async function retrieveRelevantChunks(
   const perConversationCount = new Map<string, number>()
 
   const selectedMatches: typeof combinedCandidates = []
-  for (const { match } of scored) {
-    if (selectedMatches.length >= topK) break
+  for (const { match } of candidatePool) {
+    if (selectedMatches.length >= selectLimit) break
     const sourceKey = normalizeSourcePath(match.source) || "unknown-source"
     const nextSourceCount = (perSourceCount.get(sourceKey) ?? 0) + 1
     if (nextSourceCount > maxPerSource) continue
@@ -463,14 +547,14 @@ export async function retrieveRelevantChunks(
   // Safety valve: if the query has a strong anchor token (e.g. "medicine") and we still
   // didn't select any chunk containing it, force-include the best anchor-containing match.
   if (primaryAnchors.length > 0 && !selectedMatches.some((m) => containsAnyToken(m.content, primaryAnchors))) {
-    const bestAnchor = scored.find(({ match }) => containsAnyToken(match.content, primaryAnchors))?.match
+    const bestAnchor = candidatePool.find(({ match }) => containsAnyToken(match.content, primaryAnchors))?.match
     if (bestAnchor) {
       // Don't duplicate an already-selected chunk.
       if (selectedMatches.some((m) => m.id === bestAnchor.id)) {
         // no-op
       } else {
-      // Replace the last item (lowest-ranked) to keep size == topK
-      if (selectedMatches.length >= topK) selectedMatches.pop()
+      // Replace the last item (lowest-ranked) to keep size == selectLimit
+      if (selectedMatches.length >= selectLimit) selectedMatches.pop()
       selectedMatches.unshift(bestAnchor)
       }
     }
@@ -486,7 +570,7 @@ export async function retrieveRelevantChunks(
     const cached = conversationCache.get(key)
     if (cached) return cached
 
-    const rows = await fetchEmbeddingsBySourceAndConversation(source, conversationId)
+    const rows = await backend.fetchEmbeddingsBySourceAndConversation(source, conversationId)
     const normalized = rows.map((r) => ({
       id: r.id,
       content: r.content,
@@ -497,7 +581,8 @@ export async function retrieveRelevantChunks(
     return normalized
   }
 
-  const stitchTasks = selectedMatches.map(async (match) => {
+  // Radius 0 (shallow adaptive tier) skips stitching entirely.
+  const stitchTasks = effectiveStitchRadius <= 0 ? [] : selectedMatches.map(async (match) => {
     const sourceKey = normalizeSourcePath(match.source) || ""
     const convId = asFiniteNumber((match.metadata as any)?.conversationId)
     if (!sourceKey || convId === null) return
@@ -515,7 +600,7 @@ export async function retrieveRelevantChunks(
       // For short conversations (<=4 chunks), just include all phases.
       if (convTotal !== null && convTotal <= 4) return sorted
 
-      const radius = 1
+      const radius = effectiveStitchRadius
       const start = Math.max(0, focusIdx - radius)
       const endExclusive = Math.min(sorted.length, focusIdx + radius + 1)
       return sorted.slice(start, endExclusive)
@@ -536,7 +621,7 @@ export async function retrieveRelevantChunks(
     const cached = commentaryCache.get(key)
     if (cached) return cached
     try {
-      const rows = await fetchCommentaryForConversation(source, convId)
+      const rows = await backend.fetchCommentaryForConversation(source, convId)
       const normalized = rows.map((r) => ({
         id: r.id,
         content: r.content,
@@ -553,7 +638,8 @@ export async function retrieveRelevantChunks(
 
   const crossRefContentById = new Map<string, { text: string; type: "commentary" | "conversation" }>()
 
-  const crossRefTasks = selectedMatches.map(async (match) => {
+  // Shallow adaptive tier skips cross-reference expansion.
+  const crossRefTasks = !expand ? [] : selectedMatches.map(async (match) => {
     const sourceKey = normalizeSourcePath(match.source) || ""
     if (!sourceKey) return
     const meta = match.metadata as Record<string, unknown> | null
@@ -594,8 +680,12 @@ export async function retrieveRelevantChunks(
 
   await Promise.all(crossRefTasks)
 
-  // Transform to RetrievedChunk format, truncating if needed
-  const chunks: RetrievedChunk[] = selectedMatches.map((match) => {
+  // Transform to RetrievedChunk format, truncating if needed.
+  // In adaptive mode, stop adding chunks once the context-token budget is hit
+  // (always keep at least one).
+  const chunks: RetrievedChunk[] = []
+  let usedContextTokens = 0
+  for (const match of selectedMatches) {
     const rawCoach = match.metadata?.coach ?? match.metadata?.channel ?? deriveCoachFromSource(match.source)
     const rawTopic = match.metadata?.topic ??
       (typeof match.metadata?.video_title === "string" ? match.metadata.video_title : undefined) ??
@@ -612,11 +702,18 @@ export async function retrieveRelevantChunks(
       content = content + separator + crossRef.text
     }
 
-    return {
+    const text = content.length > maxChunkChars
+      ? content.substring(0, maxChunkChars) + "..."
+      : content
+    const tokens = estimateTokens(text)
+
+    // Budget gate (adaptive only): keep ≥1, then stop once over budget.
+    if (chunks.length >= 1 && usedContextTokens + tokens > contextBudgetTokens) break
+    usedContextTokens += tokens
+
+    chunks.push({
       chunkId: match.id,
-      text: content.length > maxChunkChars
-        ? content.substring(0, maxChunkChars) + "..."
-        : content,
+      text,
       metadata: {
         coach: typeof rawCoach === "string" ? rawCoach : undefined,
         topic: typeof rawTopic === "string" ? rawTopic : undefined,
@@ -624,10 +721,15 @@ export async function retrieveRelevantChunks(
         timestamp: typeof match.metadata?.timestamp === "string" ? match.metadata.timestamp : undefined,
       },
       relevanceScore: match.similarity,
-    }
-  })
+    })
+  }
 
-  return chunks
+  if (planDraft) {
+    planDraft.chunkCount = chunks.length
+    planDraft.contextTokens = usedContextTokens
+  }
+
+  return { chunks, plan: planDraft }
 }
 
 /**
