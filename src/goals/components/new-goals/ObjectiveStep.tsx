@@ -39,6 +39,11 @@ import {
   Zap,
   Milestone,
   Users,
+  PersonStanding,
+  StretchHorizontal,
+  Beef,
+  Accessibility,
+  BedDouble,
   type LucideIcon,
 } from "lucide-react"
 
@@ -65,6 +70,11 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Zap,
   Milestone,
   Users,
+  PersonStanding,
+  StretchHorizontal,
+  Beef,
+  Accessibility,
+  BedDouble,
 }
 
 const COMMITMENT_CONFIG: Record<string, { label: string; color: string }> = {

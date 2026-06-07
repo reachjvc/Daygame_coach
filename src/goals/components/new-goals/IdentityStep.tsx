@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import { IDENTITY_ASPECTS, PILLARS } from "@/src/goals/data/newGoalFramework"
-import { Dumbbell, Landmark, Heart, Compass, Check, Plus, type LucideIcon } from "lucide-react"
+import { GoalIntake } from "./GoalIntake"
+import { Dumbbell, Landmark, Heart, Compass, Ban, Check, Plus, type LucideIcon } from "lucide-react"
 
-const ICON_MAP: Record<string, LucideIcon> = { Dumbbell, Landmark, Heart, Compass }
+const ICON_MAP: Record<string, LucideIcon> = { Dumbbell, Landmark, Heart, Compass, Ban }
 
 interface IdentityStepProps {
   selectedPillars: Set<string>
@@ -12,9 +13,11 @@ interface IdentityStepProps {
   onNext: () => void
   customPillars: { id: string; label: string }[]
   onAddCustomPillar: (label: string) => void
+  /** Free-text intake matched pillars+objectives → select them and advance. */
+  onApplyIntake?: (pillarIds: string[], objectiveIds: string[]) => void
 }
 
-export function IdentityStep({ selectedPillars, onTogglePillar, onNext, customPillars, onAddCustomPillar }: IdentityStepProps) {
+export function IdentityStep({ selectedPillars, onTogglePillar, onNext, customPillars, onAddCustomPillar, onApplyIntake }: IdentityStepProps) {
   const [customInput, setCustomInput] = useState("")
 
   const handleClick = (pillarId: string) => {
@@ -37,6 +40,17 @@ export function IdentityStep({ selectedPillars, onTogglePillar, onNext, customPi
       <p className="text-zinc-400 text-center mb-8">
         Choose the areas of life you want to focus on
       </p>
+
+      {onApplyIntake && (
+        <>
+          <GoalIntake onApply={onApplyIntake} />
+          <div className="flex items-center gap-3 my-6">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-xs text-zinc-600">or choose areas yourself</span>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+        </>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         {PILLARS.map(pillar => {

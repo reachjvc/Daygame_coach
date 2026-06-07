@@ -1,10 +1,11 @@
 "use client"
 
-import React, { useState, useCallback, useMemo } from "react"
+import React, { useState, useCallback, useMemo, useEffect } from "react"
 import { useSteppedFlow } from "@/src/shared/useSteppedFlow"
 import { HistoryBarrierProvider } from "@/src/shared/HistoryBarrierContext"
-import { getObjectivesForPillar, TARGETS } from "@/src/goals/data/newGoalFramework"
+import { getObjectivesForPillar, OBJECTIVES, TARGETS, deriveStartValue, getTemplatesForPillar, getPrimaryTemplateForObjective } from "@/src/goals/data/newGoalFramework"
 import type { Template, TargetOverride } from "@/src/goals/data/newGoalFramework"
+import type { CustomTarget } from "@/src/goals/types"
 import { IdentityStep } from "./IdentityStep"
 import { GoalsConfigStep } from "./GoalsConfigStep"
 import { SummaryStep } from "./SummaryStep"
@@ -27,8 +28,75 @@ export function NewGoalsFlow() {
   const [selectedObjectives, setSelectedObjectives] = useState<Set<string>>(new Set())
   const [targetOverrides, setTargetOverrides] = useState<Record<string, TargetOverride>>({})
   const [customPillars, setCustomPillars] = useState<{ id: string; label: string }[]>([])
+  const [labels, setLabels] = useState<Record<string, string>>({})
+  const [customTargets, setCustomTargets] = useState<CustomTarget[]>([])
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
 
   const { step, isFirst, isLast, goNext, goBack } = useSteppedFlow(STEPS, "focus")
+
+  // Rehydrate a previously saved plan when the flow opens.
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/goals/plan")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return
+        if (Array.isArray(data.pillars) && data.pillars.length) setSelectedPillars(new Set(data.pillars))
+        if (Array.isArray(data.objectives) && data.objectives.length) setSelectedObjectives(new Set(data.objectives))
+        if (data.targetOverrides && Object.keys(data.targetOverrides).length) setTargetOverrides(data.targetOverrides)
+        if (data.labels && Object.keys(data.labels).length) setLabels(data.labels)
+        if (Array.isArray(data.customTargets) && data.customTargets.length) setCustomTargets(data.customTargets)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
+  const handleSave = useCallback(async () => {
+    setSaveStatus("saving")
+    try {
+      const res = await fetch("/api/goals/plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pillars: [...selectedPillars],
+          objectives: [...selectedObjectives],
+          targetOverrides,
+          labels,
+          customTargets,
+        }),
+      })
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Save failed")
+      setSaveStatus("saved")
+    } catch (e) {
+      console.error("Save plan failed:", e)
+      setSaveStatus("error")
+    }
+  }, [selectedPillars, selectedObjectives, targetOverrides, labels, customTargets])
+
+  // Any edit after a save returns the button to its actionable state.
+  useEffect(() => {
+    setSaveStatus((s) => (s === "saved" ? "idle" : s))
+  }, [targetOverrides, selectedPillars, selectedObjectives, labels, customTargets])
+
+  const renameItem = useCallback((id: string, label: string) => {
+    setLabels((prev) => ({ ...prev, [id]: label }))
+  }, [])
+
+  const addCustomTarget = useCallback((pillarId: string) => {
+    const id = nextId("custom_tgt")
+    setCustomTargets((prev) => [...prev, { id, pillarId, unit: "" }])
+    setLabels((prev) => ({ ...prev, [id]: "New goal" }))
+    setTargetOverrides((prev) => ({
+      ...prev,
+      [id]: { enabled: true, value: 10, steps: 7, curveTension: 0, targetDate: "" },
+    }))
+  }, [])
+
+  const removeCustomTarget = useCallback((id: string) => {
+    setCustomTargets((prev) => prev.filter((c) => c.id !== id))
+    setLabels((prev) => { const n = { ...prev }; delete n[id]; return n })
+    setTargetOverrides((prev) => { const n = { ...prev }; delete n[id]; return n })
+  }, [])
 
   const hasEnabledTargets = useMemo(() => {
     return Object.values(targetOverrides).some(o => o.enabled)
@@ -86,13 +154,31 @@ export function NewGoalsFlow() {
       const next = { ...prev }
       for (const [targetId, enabled] of Object.entries(template.targetOverrides)) {
         const levelValue = level?.targetValues[targetId]
-        const mc = TARGETS.find(t => t.id === targetId)?.milestoneConfig
+        const target = TARGETS.find(t => t.id === targetId)
+        const mc = target?.milestoneConfig
+        const value = levelValue ?? next[targetId]?.value ?? mc?.target ?? 0
+        // Seed a level-appropriate START that scales with the chosen target, so the
+        // ladder (start → target) makes sense at every level — not just Beginner.
+        // Cumulative metrics (no metricKind) keep the authored baseline start.
+        const startValue =
+          enabled && target?.metricKind && target.metricKind !== "cumulative" && mc
+            ? deriveStartValue(target.metricKind, value)
+            : undefined
+        // Cap milestone count to the span so a tiny range (e.g. pull-ups 3→5 or
+        // 5 kiss closes) doesn't repeat the same number across many dots.
+        const authoredSteps = mc?.steps || 0
+        const effStart = startValue ?? mc?.start
+        const span = mc && effStart != null ? Math.abs(value - effStart) : Infinity
+        const cappedSteps = Number.isFinite(span)
+          ? Math.min(authoredSteps, Math.max(2, Math.floor(span) + 1))
+          : authoredSteps
         next[targetId] = {
           enabled,
-          value: levelValue ?? next[targetId]?.value ?? mc?.target ?? 0,
-          // Inherit the target's authored step count / curve so the ladder keeps
-          // its intended shape (a previously user-set value wins via `||` / `??`).
-          steps: next[targetId]?.steps || mc?.steps || 0,
+          value,
+          startValue,
+          // Recompute steps fresh for the chosen level (a level switch resets the
+          // numbers), capping to the span so the ladder is appropriately fine.
+          steps: cappedSteps || mc?.steps || 0,
           curveTension: next[targetId]?.curveTension ?? mc?.curveTension ?? 0,
           targetDate: next[targetId]?.targetDate ?? "",
         }
@@ -136,6 +222,29 @@ export function NewGoalsFlow() {
     [],
   )
 
+  // Free-text intake → apply a template per matched objective (so its targets are
+  // actually enabled on the Goals step), plus a starter template for any matched
+  // area with no specific objective, then select the pillars and advance.
+  const applyIntake = useCallback((pillarIds: string[], objectiveIds: string[]) => {
+    if (pillarIds.length) setSelectedPillars(prev => { const n = new Set(prev); for (const id of pillarIds) n.add(id); return n })
+
+    const templates = new Set<Template>()
+    for (const objId of objectiveIds) {
+      const tmpl = getPrimaryTemplateForObjective(objId)
+      if (tmpl) templates.add(tmpl)
+    }
+    const objPillars = new Set(objectiveIds.map(id => OBJECTIVES.find(o => o.id === id)?.pillarId).filter(Boolean))
+    for (const pid of pillarIds) {
+      if (!objPillars.has(pid)) {
+        const starter = getTemplatesForPillar(pid)[0]
+        if (starter) templates.add(starter)
+      }
+    }
+    for (const t of templates) applyTemplate(t, 0)
+    if (objectiveIds.length) setSelectedObjectives(prev => { const n = new Set(prev); for (const id of objectiveIds) n.add(id); return n })
+    goNext()
+  }, [applyTemplate, goNext])
+
   return (
     <HistoryBarrierProvider>
       <div className="min-h-screen bg-zinc-950 text-white">
@@ -166,6 +275,7 @@ export function NewGoalsFlow() {
               onNext={goNext}
               customPillars={customPillars}
               onAddCustomPillar={addCustomPillar}
+              onApplyIntake={applyIntake}
             />
           )}
           {step === "goals" && (
@@ -177,6 +287,11 @@ export function NewGoalsFlow() {
               onApplyTemplate={applyTemplate}
               onUnapplyTemplate={unapplyTemplate}
               onUpdateTarget={updateTarget}
+              labels={labels}
+              customTargets={customTargets}
+              onRename={renameItem}
+              onAddCustomTarget={addCustomTarget}
+              onRemoveCustomTarget={removeCustomTarget}
             />
           )}
           {step === "summary" && (
@@ -184,6 +299,11 @@ export function NewGoalsFlow() {
               selectedPillars={selectedPillars}
               selectedObjectives={selectedObjectives}
               targetOverrides={targetOverrides}
+              labels={labels}
+              customTargets={customTargets}
+              onRename={renameItem}
+              onSave={handleSave}
+              saveStatus={saveStatus}
             />
           )}
         </div>

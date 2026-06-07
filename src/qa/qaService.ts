@@ -1,6 +1,6 @@
 import { retrieveRelevantChunks, hasRelevantChunks } from "./retrieval"
 import { buildSystemPrompt, buildUserPrompt, parseResponse, stripInternalAttribution } from "./prompt"
-import { analyzeAnswerGrounding } from "./grounding"
+import { computeGroundedness } from "./grounding"
 import { computeConfidence, detectPolicyViolations } from "./confidence"
 import { getProvider, isValidProvider } from "./providers"
 import { QA_CONFIG } from "./config"
@@ -118,14 +118,24 @@ export async function handleQARequest(
   const sources = chunksToSources(chunks)
   const metaCognition = createMetaCognition(reasoning, chunks, suggestedFollowUps)
 
-  // Test path: map each answer sentence to the source that best supports it.
-  const grounding = hideAttribution ? analyzeAnswerGrounding(finalAnswer, sources) : undefined
+  // Test path: composite groundedness rating (AI support + deterministic flags).
+  const groundedness = hideAttribution
+    ? await computeGroundedness(finalAnswer, sources, (systemPrompt, userPrompt) =>
+        provider({
+          systemPrompt,
+          userPrompt,
+          model: generationOptions.model || getDefaultModel(generationOptions.provider),
+          maxTokens: 500,
+          temperature: 0,
+        }).then((r) => r.content)
+      )
+    : undefined
 
   return {
     answer: finalAnswer,
     ...(stripped ? { usedSourceIndexes: stripped.usedSourceIndexes } : {}),
     ...(adaptivePlan ? { adaptivePlan } : {}),
-    ...(grounding ? { grounding } : {}),
+    ...(groundedness ? { groundedness } : {}),
     confidence,
     sources,
     metaCognition,

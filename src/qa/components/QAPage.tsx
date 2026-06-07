@@ -4,7 +4,7 @@ import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import type { QAResponse, Source, ConfidenceResult, MetaCognition, AdaptivePlan, AnswerGroundingSpan } from "../types"
+import type { QAResponse, Source, ConfidenceResult, MetaCognition, AdaptivePlan, GroundednessRating, GroundednessClaim } from "../types"
 import { TIMEOUT_CONFIG } from "../config"
 
 type Message = {
@@ -26,9 +26,14 @@ type QAPageProps = {
   endpoint?: string
   /** Optional banner label, e.g. for the dev test-data variant. */
   variantLabel?: string
+  /** Override the request timeout (ms). Test bench runs longer (judge call). */
+  requestTimeoutMs?: number
+  /** Show the legacy retrieval-based confidence rating. Off on the test bench
+   *  where Groundedness is the single source of truth. */
+  showConfidence?: boolean
 }
 
-export function QAPage({ endpoint = "/api/qa", variantLabel }: QAPageProps = {}) {
+export function QAPage({ endpoint = "/api/qa", variantLabel, requestTimeoutMs, showConfidence = true }: QAPageProps = {}) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -36,10 +41,9 @@ export function QAPage({ endpoint = "/api/qa", variantLabel }: QAPageProps = {})
     },
   ])
   const [latestSources, setLatestSources] = useState<Source[]>([])
-  const [latestMetaCognition, setLatestMetaCognition] = useState<MetaCognition | null>(null)
   const [latestConfidence, setLatestConfidence] = useState<ConfidenceResult | null>(null)
   const [latestAdaptivePlan, setLatestAdaptivePlan] = useState<AdaptivePlan | null>(null)
-  const [latestGrounding, setLatestGrounding] = useState<AnswerGroundingSpan[] | null>(null)
+  const [latestGroundedness, setLatestGroundedness] = useState<GroundednessRating | null>(null)
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -63,18 +67,17 @@ export function QAPage({ endpoint = "/api/qa", variantLabel }: QAPageProps = {})
     return { label: "Low confidence", color: "bg-orange-100 text-orange-800" }
   }
 
-  const supportColor = (s: AnswerGroundingSpan["support"]): string => {
-    if (s === "strong") return "bg-green-500"
-    if (s === "partial") return "bg-amber-500"
-    if (s === "weak") return "bg-red-500"
-    return "bg-muted-foreground/40"
+  const verdictColor = (v: GroundednessClaim["verdict"]): string => {
+    if (v === "supported") return "bg-green-500"
+    if (v === "partial") return "bg-amber-500"
+    return "bg-red-500"
   }
 
-  // Sources that actually back at least one (non-weak) sentence of the answer.
+  // Sources the judge says back at least one supported/partial claim.
   const usedSourceNums = new Set(
-    (latestGrounding ?? [])
-      .filter((g) => g.bestSource && (g.support === "strong" || g.support === "partial"))
-      .map((g) => g.bestSource as number)
+    (latestGroundedness?.claims ?? [])
+      .filter((c) => c.verdict !== "unsupported")
+      .flatMap((c) => c.sources)
   )
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLTextAreaElement>) => {
@@ -85,15 +88,14 @@ export function QAPage({ endpoint = "/api/qa", variantLabel }: QAPageProps = {})
     setMessages((prev) => [...prev, { role: "user", text: trimmed }])
     setIsLoading(true)
     setLatestSources([])
-    setLatestMetaCognition(null)
     setLatestConfidence(null)
     setLatestAdaptivePlan(null)
-    setLatestGrounding(null)
+    setLatestGroundedness(null)
     setInput("")
 
     try {
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_CONFIG.qaRequestTimeoutMs)
+      const timeoutId = setTimeout(() => controller.abort(), requestTimeoutMs ?? TIMEOUT_CONFIG.qaRequestTimeoutMs)
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -130,10 +132,9 @@ export function QAPage({ endpoint = "/api/qa", variantLabel }: QAPageProps = {})
         },
       ])
       setLatestSources(data.sources || [])
-      setLatestMetaCognition(data.metaCognition || null)
       setLatestConfidence(data.confidence || null)
       setLatestAdaptivePlan(data.adaptivePlan || null)
-      setLatestGrounding(data.grounding || null)
+      setLatestGroundedness(data.groundedness || null)
     } catch (fetchError) {
       let message: string
       if (fetchError instanceof Error && fetchError.name === "AbortError") {
@@ -251,7 +252,7 @@ export function QAPage({ endpoint = "/api/qa", variantLabel }: QAPageProps = {})
                           {message.text}
                         </div>
                       </div>
-                      {message.confidence && message.role === "assistant" && (
+                      {showConfidence && message.confidence && message.role === "assistant" && (
                         <div className="flex justify-start mb-3">
                           <span className={`text-xs px-2 py-1 rounded-full font-semibold ${getConfidenceLabel(message.confidence.score).color}`}>
                             {getConfidenceLabel(message.confidence.score).label} ({Math.round(message.confidence.score * 100)}%)
@@ -320,40 +321,51 @@ export function QAPage({ endpoint = "/api/qa", variantLabel }: QAPageProps = {})
               </Card>
             )}
 
-            {/* How the data shaped this answer (per-sentence grounding) */}
-            {latestGrounding && latestGrounding.length > 0 && (
-              <Card className="border-primary/20 overflow-hidden flex flex-col flex-shrink-0">
+            {/* Groundedness (composite: AI support + deterministic flags) */}
+            {latestGroundedness && (
+              <Card className="border-primary/20 flex flex-col flex-shrink-0">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">How the data shaped this answer</CardTitle>
+                  <CardTitle className="text-base">Groundedness {Math.round(latestGroundedness.score * 100)}%</CardTitle>
                   <CardDescription className="text-xs">
-                    {latestGrounding.filter((g) => g.support === "strong" || g.support === "partial").length}/{latestGrounding.length} sentences backed by a source · lexical overlap estimate
+                    AI support {Math.round(latestGroundedness.aiSupport * 100)}% · material {Math.round(latestGroundedness.materialStrength * 100)}% · how much of this answer the sources actually back
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="text-xs space-y-2 overflow-y-auto max-h-[280px]">
-                  {latestGrounding.map((span, i) => (
-                    <div key={i} className="flex items-start gap-2">
-                      <span className={`mt-1 size-2 flex-shrink-0 rounded-full ${supportColor(span.support)}`} title={span.support} />
-                      <div className="flex-1">
-                        <p className="text-foreground">{span.text}</p>
-                        <p className="text-muted-foreground">
-                          {span.bestSource
-                            ? `→ source ${span.bestSource} · ${Math.round(span.score * 100)}% overlap`
-                            : "→ no supporting source (possible drift)"}
-                        </p>
-                      </div>
+                <CardContent className="text-xs space-y-2">
+                  {latestGroundedness.unsupportedSpecifics.length > 0 && (
+                    <div className="rounded-md border border-red-500/40 bg-red-500/5 p-2 space-y-1">
+                      <p className="font-semibold text-red-600">⚠ Not found in sources (possible drift)</p>
+                      {latestGroundedness.unsupportedSpecifics.map((f, i) => (
+                        <p key={i} className="text-muted-foreground">{f}</p>
+                      ))}
                     </div>
-                  ))}
+                  )}
+                  {latestGroundedness.claims.length === 0 ? (
+                    <p className="text-muted-foreground italic">No claims to grade (refusal or empty answer).</p>
+                  ) : (
+                    latestGroundedness.claims.map((c, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <span className={`mt-1 size-2 flex-shrink-0 rounded-full ${verdictColor(c.verdict)}`} title={c.verdict} />
+                        <div className="flex-1">
+                          <p className="text-foreground">{c.text}</p>
+                          <p className="text-muted-foreground">
+                            {c.verdict}
+                            {c.sources.length > 0 ? ` · source ${c.sources.join(", ")}` : c.verdict === "unsupported" ? " · no source" : ""}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                   <div className="flex flex-wrap gap-3 pt-2 border-t border-border text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-green-500" /> strong</span>
+                    <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-green-500" /> supported</span>
                     <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-amber-500" /> partial</span>
-                    <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-red-500" /> weak/drift</span>
+                    <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-red-500" /> unsupported</span>
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Confidence Details */}
-            {latestConfidence && (
+            {/* Confidence Details (legacy retrieval rating — hidden on test bench) */}
+            {showConfidence && latestConfidence && (
               <Card className="border-primary/20 overflow-hidden flex flex-col flex-shrink-0">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">Confidence Details</CardTitle>
@@ -378,43 +390,9 @@ export function QAPage({ endpoint = "/api/qa", variantLabel }: QAPageProps = {})
               </Card>
             )}
 
-            {/* Meta-Cognition */}
-            {latestMetaCognition && (
-              <Card className="border-primary/20 overflow-hidden flex flex-col flex-shrink-0">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Meta-Cognition</CardTitle>
-                  <CardDescription className="text-xs">How this answer was formed</CardDescription>
-                </CardHeader>
-                <CardContent className="text-xs space-y-3 overflow-y-auto max-h-[200px]">
-                  <div>
-                    <p className="font-semibold text-foreground mb-1">Reasoning</p>
-                    <p className="text-muted-foreground">{latestMetaCognition.reasoning}</p>
-                  </div>
-                  {latestMetaCognition.limitations && (
-                    <div>
-                      <p className="font-semibold text-foreground mb-1">Limitations</p>
-                      <p className="text-muted-foreground">{latestMetaCognition.limitations}</p>
-                    </div>
-                  )}
-                  {latestMetaCognition.suggestedFollowUps.length > 0 && (
-                    <div>
-                      <p className="font-semibold text-foreground mb-1">Suggested Follow-ups</p>
-                      <ul className="list-disc list-inside text-muted-foreground">
-                        {latestMetaCognition.suggestedFollowUps.map((q, i) => (
-                          <li key={i} className="cursor-pointer hover:text-foreground" onClick={() => setInput(q)}>
-                            {q}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
             {/* Sources */}
             {(messages.length > 1 || isLoading) && (
-              <Card className="border-primary/20 overflow-hidden flex flex-col flex-1" data-testid="qa-sources">
+              <Card className="border-primary/20 flex flex-col flex-shrink-0" data-testid="qa-sources">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">Sources</CardTitle>
                   <CardDescription className="text-xs">
@@ -425,7 +403,7 @@ export function QAPage({ endpoint = "/api/qa", variantLabel }: QAPageProps = {})
                       : "No relevant sources found"}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3 text-xs text-muted-foreground overflow-y-auto flex-1">
+                <CardContent className="space-y-3 text-xs text-muted-foreground">
                   {isLoading ? (
                     <div className="flex flex-col gap-2">
                       <div className="h-12 w-full animate-pulse rounded-lg bg-muted/50" />

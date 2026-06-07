@@ -3,8 +3,11 @@
  */
 
 import type { GoalWithProgress, GoalTreeNode, GoalFilterState, InputMode, CelebrationTier, MilestoneLadderConfig, HabitRampStep, PreviewGoalState, TimeOfDayBracket, WeeklyRhythm, PacingInfo, MilestoneCelebrationData, BadgeStatus, TierUpgradeEvent, WeeklyReviewData, WeeklyGoalMomentum, GoalSetupSelections, WillGateResult, BottleneckResult, GoalTemplate, PhaseTransitionEvent, GoalPeriodStats } from "./types"
-import type { DailyGoalSnapshotRow, GoalPhase, LinkedMetric } from "@/src/db/goalTypes"
+import type { DailyGoalSnapshotRow, GoalPhase, LinkedMetric, UserGoalRow } from "@/src/db/goalTypes"
 import type { BatchGoalInsert } from "./treeGenerationService"
+import type { NewGoalsFlowState } from "./types"
+import { PILLARS, OBJECTIVES, TARGETS, getSharedDriver, makeCustomFrameworkTarget } from "./data/newGoalFramework"
+import type { TargetOverride } from "./data/newGoalFramework"
 import { generateMilestoneLadder, computeRampMilestoneDates } from "./milestoneService"
 import { getTemplatesByCategory, GOAL_TEMPLATE_MAP, getL2AchievementsForL3, getDaygamePathL1, getAreaCatalog } from "./data/goalGraph"
 import { LIFE_AREAS } from "./data/lifeAreas"
@@ -1078,11 +1081,17 @@ export function applyPreviewState(
  * Only flags goals with directly invalid template_ids. Children with valid (or no)
  * template_ids are NOT cascade-archived — they become roots instead.
  * Custom goals (no template_id) are never orphaned.
+ *
+ * Framework-plan goals (`fw:*`) live in a separate namespace that is intentionally
+ * absent from GOAL_TEMPLATE_MAP — they are validated/persisted via the new-goals
+ * plan path, not the goalGraph registry. They must NOT be treated as orphans, or
+ * the hub's auto-archive sweep (/api/goals/tree) would wipe a user's whole plan
+ * on first load.
  */
 export function getOrphanedGoalIds(goals: GoalWithProgress[]): string[] {
   const orphans: string[] = []
   for (const g of goals) {
-    if (g.template_id && !GOAL_TEMPLATE_MAP[g.template_id]) {
+    if (g.template_id && !g.template_id.startsWith("fw:") && !GOAL_TEMPLATE_MAP[g.template_id]) {
       orphans.push(g.id)
     }
   }
@@ -1396,4 +1405,300 @@ function templateToSetupInsert(
   }
 
   return base
+}
+
+// ============================================================================
+// New-Goals Framework Persistence (flow state ⇄ user_goals)
+// ============================================================================
+//
+// The /test/new-goals flow is mapped onto the real user_goals tree:
+//   pillar  → goal_level 0 container        (template_id "fw:pillar:<id>")
+//   objective → goal_level 1, parent=pillar (template_id "fw:obj:<id>")
+//   target  → goal_level 3, parent=objective(template_id "fw:tgt:<overrideKey>")
+//
+// Targets are L3 (daily-actionable leaves), parented straight to their L1
+// objective — the same L1→L3 "skip the badge-reserved L2" shape goalGraph
+// already uses. This is what makes a framework target show on the Today view
+// (isDailyActionable requires goal_level 3 or null) instead of being mis-read
+// as a standalone L2 achievement badge.
+//
+// The framework linkage lives entirely in `template_id`; override data is
+// reconstructed from real columns (target_value, current_value, target_date,
+// ramp_steps) plus `milestone_config` (only populated for real ladders, so the
+// existing milestone UI never reads a config without start/target).
+
+const FW_PILLAR = "fw:pillar:"
+const FW_OBJ = "fw:obj:"
+const FW_TGT = "fw:tgt:"
+const FW_CUSTOM_OBJ = "fw:obj:custom:" // synthetic per-pillar container for user-added goals
+const FW_CUSTOM = "fw:custom:"         // a user-added goal
+
+/** Pillar → canonical life_area (free-form column; falls back to "custom"). */
+const PILLAR_LIFE_AREA: Record<string, string> = {
+  health: "health_fitness",
+  wealth: "career_business",
+  relations: "daygame",
+  meaning: "personal_growth",
+  vices: "vices_elimination",
+}
+function pillarLifeArea(pillarId: string): string {
+  return PILLAR_LIFE_AREA[pillarId] ?? "custom"
+}
+
+/** Build a single target goal insert, mapping the primitive to goal_type/columns. */
+function buildTargetInsert(
+  t: (typeof TARGETS)[number],
+  ov: TargetOverride,
+  lifeArea: string,
+  parentTempId: string,
+  title: string,
+): BatchGoalInsert {
+  const sd = t.sharedDriverId ? getSharedDriver(t.sharedDriverId) : null
+  const rawMc = sd?.milestoneConfig ?? t.milestoneConfig
+  const ramp = ov.rampSteps ?? sd?.rampSteps ?? t.rampSteps
+  // A driver inherits its tracking metric from its shared driver (or its own
+  // field). When set, syncLinkedGoals auto-updates current_value from logged
+  // activity and the GoalCard "Auto-synced" chip lights up. Null = manual.
+  const linkedMetric = sd?.linkedMetric ?? t.linkedMetric ?? null
+
+  const base: BatchGoalInsert = {
+    _tempId: FW_TGT + t.id,
+    _tempParentId: parentTempId,
+    title,
+    life_area: lifeArea,
+    category: lifeArea,
+    template_id: FW_TGT + t.id,
+    goal_level: 3,
+    goal_nature: t.role === "driver" ? "input" : "outcome",
+    target_value: 1,
+    current_value: 0,
+    tracking_type: "counter",
+    goal_type: "recurring",
+    period: "weekly",
+    target_date: ov.targetDate || undefined,
+    linked_metric: linkedMetric,
+  }
+
+  const hasMc = (t.primitive === "volume" || t.primitive === "target") && rawMc != null
+  const hasRamp =
+    (t.primitive === "habit" || (t.primitive === "volume" && t.role === "driver")) &&
+    ramp != null && ramp.length > 0
+  const hasStages = (t.primitive === "skill" || t.primitive === "stage") && (t.stageSteps?.length ?? 0) > 0
+
+  if (hasMc && rawMc) {
+    const start = ov.startValue ?? rawMc.start
+    const target = ov.value ?? rawMc.target
+    base.goal_type = "milestone"
+    base.target_value = Math.max(1, Math.round(target))
+    base.current_value = Math.max(0, Math.round(start))
+    base.milestone_config = {
+      start,
+      target,
+      steps: ov.steps || rawMc.steps,
+      curveTension: ov.curveTension ?? rawMc.curveTension,
+      ...(ov.milestoneEdits ? { milestoneEdits: ov.milestoneEdits } : {}),
+    }
+  } else if (hasRamp && ramp) {
+    base.goal_type = "habit_ramp"
+    base.target_value = Math.max(1, Math.round(ramp[0].frequencyPerWeek))
+    base.ramp_steps = ramp as unknown as Record<string, unknown>[]
+  } else if (hasStages && t.stageSteps) {
+    base.target_value = Math.max(1, t.stageSteps.length)
+  }
+
+  return base
+}
+
+/**
+ * Map the new-goals flow state to an ordered batch of user_goals inserts
+ * (parents before children, hierarchy via _tempId/_tempParentId). Enabling a
+ * target implicitly pulls in its objective and pillar so the tree is complete.
+ */
+export function buildFrameworkPlanInserts(state: NewGoalsFlowState): BatchGoalInsert[] {
+  const labels = state.labels ?? {}
+  const customs = state.customTargets ?? []
+  const lbl = (id: string, fallback: string) => labels[id] ?? fallback
+  const pillarSet = new Set(state.pillars)
+  const objSet = new Set(state.objectives)
+
+  // Enabling a target implies its objective + pillar are part of the plan.
+  for (const [targetId, ov] of Object.entries(state.targetOverrides)) {
+    if (!ov.enabled) continue
+    const t = TARGETS.find((x) => x.id === targetId)
+    if (t) {
+      objSet.add(t.objectiveId)
+      const obj = OBJECTIVES.find((o) => o.id === t.objectiveId)
+      if (obj) pillarSet.add(obj.pillarId)
+    }
+  }
+  // Enabling a custom goal pulls in its pillar.
+  for (const c of customs) {
+    if (state.targetOverrides[c.id]?.enabled) pillarSet.add(c.pillarId)
+  }
+
+  const inserts: BatchGoalInsert[] = []
+
+  for (const p of PILLARS) {
+    if (!pillarSet.has(p.id)) continue
+    inserts.push({
+      _tempId: FW_PILLAR + p.id,
+      _tempParentId: null,
+      title: lbl(p.id, p.label),
+      life_area: pillarLifeArea(p.id),
+      category: pillarLifeArea(p.id),
+      template_id: FW_PILLAR + p.id,
+      goal_level: 0,
+      goal_type: "milestone",
+      tracking_type: "counter",
+      period: "weekly",
+      target_value: 1,
+      aligned_values: p.values.slice(0, 7),
+    })
+  }
+
+  for (const o of OBJECTIVES) {
+    if (!objSet.has(o.id) || !pillarSet.has(o.pillarId)) continue
+    inserts.push({
+      _tempId: FW_OBJ + o.id,
+      _tempParentId: FW_PILLAR + o.pillarId,
+      title: lbl(o.id, o.label),
+      description: o.description,
+      life_area: pillarLifeArea(o.pillarId),
+      category: pillarLifeArea(o.pillarId),
+      template_id: FW_OBJ + o.id,
+      goal_level: 1,
+      goal_type: "milestone",
+      tracking_type: "counter",
+      period: "weekly",
+      target_value: 1,
+      aligned_values: o.values.slice(0, 7),
+    })
+  }
+
+  // Synthetic "Your own goals" container per pillar that has enabled custom goals.
+  const pillarsWithCustoms = new Set(
+    customs.filter((c) => state.targetOverrides[c.id]?.enabled && pillarSet.has(c.pillarId)).map((c) => c.pillarId),
+  )
+  for (const pid of pillarsWithCustoms) {
+    inserts.push({
+      _tempId: FW_CUSTOM_OBJ + pid,
+      _tempParentId: FW_PILLAR + pid,
+      title: "Your own goals",
+      life_area: pillarLifeArea(pid),
+      category: pillarLifeArea(pid),
+      template_id: FW_CUSTOM_OBJ + pid,
+      goal_level: 1,
+      goal_type: "milestone",
+      tracking_type: "counter",
+      period: "weekly",
+      target_value: 1,
+    })
+  }
+
+  // Emit one row per enabled target — but collapse shared drivers to a single
+  // persisted goal: the first target that uses the driver in canonical TARGETS
+  // order, which is exactly what the config UI's getDeduplicatedTargetsForPillar
+  // shows and edits. Without this, two objectives sharing a driver (e.g. Gym in
+  // both Get-Strong and Transform-Body) persist two rows that also collide on
+  // the linked_metric unique index. Iterating TARGETS (not targetOverrides) keeps
+  // the winner deterministic and aligned with the UI's displayed/edited target.
+  const claimedDrivers = new Set<string>()
+  for (const t of TARGETS) {
+    const ov = state.targetOverrides[t.id]
+    if (!ov?.enabled) continue
+    if (t.sharedDriverId) {
+      if (claimedDrivers.has(t.sharedDriverId)) continue
+      claimedDrivers.add(t.sharedDriverId)
+    }
+    const obj = OBJECTIVES.find((o) => o.id === t.objectiveId)
+    const lifeArea = obj ? pillarLifeArea(obj.pillarId) : "custom"
+    const parentTempId = obj && objSet.has(obj.id) ? FW_OBJ + obj.id : FW_PILLAR + (obj?.pillarId ?? "")
+    inserts.push(buildTargetInsert(t, ov, lifeArea, parentTempId, lbl(t.id, t.label)))
+  }
+
+  // User-added custom goals.
+  for (const c of customs) {
+    const ov = state.targetOverrides[c.id]
+    if (!ov?.enabled || !pillarSet.has(c.pillarId)) continue
+    const title = lbl(c.id, "New goal")
+    const synth = makeCustomFrameworkTarget(c.id, c.pillarId, c.unit, title)
+    const insert = buildTargetInsert(synth, ov, pillarLifeArea(c.pillarId), FW_CUSTOM_OBJ + c.pillarId, title)
+    insert._tempId = FW_CUSTOM + c.id
+    insert.template_id = FW_CUSTOM + c.id
+    // Stash pillar + unit so the custom goal can be rebuilt on reload.
+    insert.milestone_config = {
+      ...(insert.milestone_config as Record<string, unknown> | null ?? {}),
+      customPillar: c.pillarId,
+      customUnit: c.unit,
+    }
+    inserts.push(insert)
+  }
+
+  return inserts
+}
+
+/**
+ * Reconstruct the flow state from saved framework goals (inverse of
+ * buildFrameworkPlanInserts). Only fields the user actually changed from the
+ * framework defaults are set, so pin/start indicators don't show falsely.
+ */
+export function parseFrameworkPlan(goals: UserGoalRow[]): NewGoalsFlowState {
+  const pillars: string[] = []
+  const objectives: string[] = []
+  const targetOverrides: Record<string, TargetOverride> = {}
+  const labels: Record<string, string> = {}
+  const customTargets: NonNullable<NewGoalsFlowState["customTargets"]> = []
+
+  type Mc = {
+    start?: number; steps?: number; curveTension?: number
+    milestoneEdits?: TargetOverride["milestoneEdits"]
+    customPillar?: string; customUnit?: string
+  }
+  // Rebuild a target override from a goal row, given the framework default start.
+  const overrideFromRow = (g: UserGoalRow, mc: Mc, defStart: number | undefined): TargetOverride => {
+    const ov: TargetOverride = {
+      enabled: true,
+      value: g.target_value,
+      steps: typeof mc.steps === "number" ? mc.steps : 0,
+      curveTension: typeof mc.curveTension === "number" ? mc.curveTension : 0,
+      targetDate: g.target_date ?? "",
+    }
+    if (typeof mc.start === "number" && mc.start !== defStart) ov.startValue = mc.start
+    if (mc.milestoneEdits && Object.keys(mc.milestoneEdits).length > 0) ov.milestoneEdits = mc.milestoneEdits
+    if (g.goal_type === "habit_ramp" && g.ramp_steps) {
+      ov.rampSteps = g.ramp_steps as unknown as TargetOverride["rampSteps"]
+    }
+    return ov
+  }
+
+  for (const g of goals) {
+    const tpl = g.template_id ?? ""
+    if (tpl.startsWith(FW_CUSTOM)) {
+      const id = tpl.slice(FW_CUSTOM.length)
+      const mc = (g.milestone_config ?? {}) as Mc
+      customTargets.push({ id, pillarId: mc.customPillar ?? "custom", unit: mc.customUnit ?? "" })
+      targetOverrides[id] = overrideFromRow(g, mc, 0) // custom goals default start = 0
+      labels[id] = g.title
+    } else if (tpl.startsWith(FW_CUSTOM_OBJ)) {
+      // synthetic container — not a user-selected objective; skip
+    } else if (tpl.startsWith(FW_PILLAR)) {
+      const id = tpl.slice(FW_PILLAR.length)
+      pillars.push(id)
+      const def = PILLARS.find((p) => p.id === id)?.label
+      if (def && g.title !== def) labels[id] = g.title
+    } else if (tpl.startsWith(FW_OBJ)) {
+      const id = tpl.slice(FW_OBJ.length)
+      objectives.push(id)
+      const def = OBJECTIVES.find((o) => o.id === id)?.label
+      if (def && g.title !== def) labels[id] = g.title
+    } else if (tpl.startsWith(FW_TGT)) {
+      const key = tpl.slice(FW_TGT.length)
+      const t = TARGETS.find((x) => x.id === key)
+      const mc = (g.milestone_config ?? {}) as Mc
+      targetOverrides[key] = overrideFromRow(g, mc, t?.milestoneConfig?.start)
+      if (t && g.title !== t.label) labels[key] = g.title
+    }
+  }
+
+  return { pillars, objectives, targetOverrides, labels, customTargets }
 }

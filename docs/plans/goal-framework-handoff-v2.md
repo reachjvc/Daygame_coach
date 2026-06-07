@@ -91,7 +91,7 @@ Templates are presets that auto-select targets at a chosen difficulty level. Sto
 - **Template section**: Click-to-toggle pills + inline level picker when active
 - **4 type buckets**: WHAT YOU DO (green), WHAT YOU MEASURE (amber), JOURNEY MILESTONES (pink), SKILLS TO BUILD (purple)
 - **Select-all per bucket**: Checkbox on bucket header
-- **Editable milestones (freeze-and-flow)**: Each interior milestone dot is click-to-edit — pin its value (nice +/- steppers or direct entry, manual value respected exactly, e.g. 49 stays 49) and/or give it its own checkpoint date. Pinned milestones lock (filled dot + lock icon); the auto-curve regenerates only the *unpinned* milestones in the gaps around them. "Reset to auto" unpins. Endpoints (start/target) are edited via the row stepper + targetDate, not here. Stored in `TargetOverride.milestoneEdits` (keyed by step index; cleared when the milestone *count* changes). Generator support: `MilestoneLadderConfig.pins` → `generateMilestoneLadder` splits the ladder into sub-ladders between pinned anchors.
+- **Editable milestones (freeze-and-flow)**: Every milestone dot except the final target is click-to-edit. **Start dot** (step 0 = current level) → "Starting point (now)" editor → `TargetOverride.startValue` (clamped below target with step headroom). **Interior dots** → pin value (nice +/- steppers or direct entry, manual value respected exactly, e.g. 49 stays 49) and/or set a checkpoint date → `TargetOverride.milestoneEdits` (keyed by step). Pinned milestones lock (filled dot + lock icon); the auto-curve regenerates only the *unpinned* milestones in the gaps around them. "Reset to auto" unpins/clears. The **final target** is edited via the row's prominent stepper + targetDate. Generator support: `MilestoneLadderConfig.pins` → `generateMilestoneLadder` splits the ladder into sub-ladders between pinned anchors; a final safety pass guarantees non-decreasing even on degenerate ranges. The **Summary** step renders the full ladder with pins (lock) + per-milestone dates.
 - **Milestone config panel**: Steps slider (3-15), tension presets (Quick wins/Balanced/Ambitious), tension slider (-2 to 2). For volume/target primitives only.
 - **Inline ramp editor**: Editable frequency + duration per step, add/remove steps, "keep flat" button, visual ramp bar. For habit/volume-driver primitives only.
 - **Shared driver dedup**: `getDeduplicatedTargetsForPillar()` ensures shared drivers appear once
@@ -156,17 +156,56 @@ getTemplatesForPillar(pillarId) → Template[]
 
 ## 8. What's NOT done (known gaps)
 
-1. **No persistence** — everything is client-side state, nothing saves to DB.
-2. **Ramp overrides are local** — edited ramps live in GoalsConfigStep state, not in the parent's `targetOverrides`. If you navigate back and forward, ramp edits are lost.
-3. **No calibration flow** — the handoff doc describes "ask current level at adopt-time." Templates with levels are the proxy for this but there's no actual "what can you bench now?" intake.
+1. ~~No persistence~~ **DONE** — the flow now saves into the real `user_goals` table. See §11.
+2. ~~Ramp overrides are local~~ **FIXED** — ramp edits now live in `TargetOverride.rampSteps` (parent state), so they survive navigation.
+3. **Calibration: partial** — the *start* value (current level) is now directly editable per target (click the first milestone dot → "Starting point (now)"), clamped to stay below target with step headroom. There's still no dedicated up-front "what can you bench now?" intake step; the per-target start edit is the in-place version of it.
 4. **No regression model** — the debate identified that the framework needs to normalize sawtooth progress. Not implemented.
 5. **No phase detection** — beginner vs intermediate feedback loops not differentiated.
 6. **Stage/skill targets are read-only** — no way to mark stages as completed or skills as progressed.
-7. **Custom pillars/objectives** — the UI supports adding them but they have no targets, templates, or shared drivers.
+7. **Custom pillars** — addable in the Focus step but have no framework targets and aren't persisted. (Custom *goals* under a real pillar ARE supported + persisted — see §11.)
 8. **Dead files** — ObjectiveStep.tsx and TargetStep.tsx should be deleted.
 9. **The "daily interface"** — the debate concluded the daily experience should be "what did you do, what did you notice" — this test page only covers the setup flow, not the daily tracking view.
 
 ---
+
+## 12. Smarter preset numbers (start scales with target)
+
+Templates used to set only the *target* per level — the *start* stayed frozen at `milestoneConfig.start`, so non-beginner ladders were nonsense (bench Advanced `40→140`, marathon `1→42`, 5k `35→20`).
+
+**Every** milestone target now declares a `metricKind` (`strength`/`reps`/`distance`/`bodymass`/`bodyfat`/`pace`/`income`/`rate`/`cumulative`), and `deriveStartValue(kind, target)` (in `newGoalFramework.ts`) computes a sensible "where you are now" that scales with the chosen target. `applyTemplate` seeds `startValue` from it (cumulative metrics keep their ~0 baseline, no scaling), and caps step count to the span so tiny ranges don't repeat dots. Authored `milestoneConfig.start` values were corrected to match.
+
+Results, e.g.: bench Beg `40→60` · Int `70→100` · Adv `100→140`; pull-ups `3→5` / `9→15` / `15→25`; body-fat `25→18` / `21→14` / `17→10`; marathon `21→42`. **Relations/meaning**: cumulative metrics (lifetime counts) correctly stay at their baseline — kiss closes `1→5`…`1→30`, books `1→52`; the one rate metric, dates/month, now scales (`2→3` / `3→6` / `5→10`, was `1→3` / `1→6` / `1→10`). The span cap also cleans small-target cumulative ladders (kiss closes Beginner is now `1→2→3→4→5`, not four 1s). Verified by `tests/unit/goals/presetStartScaling.test.ts` (prints every scaling ladder + asserts direction/monotonicity + dates-vs-cumulative).
+
+**Skills-to-build chains** were rewritten to consistent, concrete 4-stage progressions (e.g. Open Cleanly: first cold approach → push through the nerves → open 3+ per outing → open anyone, anytime). All 10 skill targets in `newGoalFramework.ts`.
+
+## 11. Persistence (flow ⇄ user_goals)
+
+The flow now saves to the **real `user_goals` table** — no new tables, no migration, no RLS (the table has none; auth is app-level).
+
+**Mapping** (`src/goals/goalsService.ts` — `buildFrameworkPlanInserts` / `parseFrameworkPlan`):
+- pillar → `goal_level 0` container, `template_id "fw:pillar:<id>"`, `aligned_values` = pillar values
+- objective → `goal_level 1`, parent = pillar, `template_id "fw:obj:<id>"`
+- target → `goal_level 2`, parent = objective, `template_id "fw:tgt:<id>"`
+  - volume/target primitive → `goal_type milestone`, `target_value` = target, `current_value` = start, `milestone_config` = `{start,target,steps,curveTension,milestoneEdits}`
+  - habit / volume-driver → `goal_type habit_ramp`, `ramp_steps`
+  - skill/stage → `goal_type recurring`, `target_value` = #stages, `milestone_config null`
+  - `goal_nature` = driver→`input`, metric→`outcome`; `target_date` = the target's date
+
+The framework linkage lives entirely in `template_id` (`fw:%`); override data reconstructs from real columns + `milestone_config` (only populated for real ladders, so existing milestone UI never reads a config lacking start/target). Enabling a target auto-includes its objective + pillar.
+
+**Repo** (`src/db/goalRepo.ts`): `saveFrameworkPlan` archives prior `fw:%` goals then `createGoalBatch` (so re-save **replaces**); `getFrameworkPlanGoals` loads them. `createGoalBatch` now also persists `current_value`/`aligned_values` when supplied (existing callers unaffected).
+
+**Route** `app/api/goals/plan` — `GET` (load → parsed flow state) + `POST` (save), Zod-validated (`NewGoalsPlanSchema`), ≤50 lines.
+
+**UI**: `SummaryStep` has a **Save my plan** button (idle/saving/saved/error); `NewGoalsFlow` GETs on mount to rehydrate selections + overrides.
+
+**Editable titles + custom goals** (added on top of persistence):
+- Every pillar / objective / target title is click-to-edit (`EditableTitle` component) in the Goals step (pillar header + target rows) and the Summary tree (all three). Renames live in flow state `labels` (keyed by framework/custom id) and persist as the goal row `title`; reload restores only titles that differ from the framework default.
+- "**Add your own goal to <pillar>**" button per pillar creates a custom numeric target (`makeCustomFrameworkTarget`) — rename + set value/start/date/pins with the same milestone editor; trash icon removes it. Persisted as `fw:custom:<id>` rows under a synthetic per-pillar `fw:obj:custom:<pillar>` container (pillar + unit stashed in `milestone_config.customPillar`/`customUnit`). Reload rebuilds `customTargets` + their overrides; the synthetic container is skipped (not exposed as a user objective).
+
+**Verified**: 14 mapper unit tests + two end-to-end runs (16-check persistence + 18-check rename/add-goal: UI rename → add custom → save → DB rows → reload rehydration).
+
+**Limitations**: custom pillars (no framework id) aren't persisted; `linked_metric` isn't set (so no auto-sync from tracking yet); descending goals store `current_value > target_value` so the existing progress % is cosmetically off (framework UI renders them correctly via `milestone_config`).
 
 ## 9. Design documents
 

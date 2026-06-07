@@ -88,6 +88,34 @@ export const BatchCreateGoalSchema = z.object({
 })
 
 // ============================================
+// New-Goals Framework Plan Schema
+// ============================================
+
+const TargetOverrideSchema = z.object({
+  enabled: z.boolean(),
+  value: z.number(),
+  startValue: z.number().optional(),
+  steps: z.number(),
+  curveTension: z.number(),
+  targetDate: z.string(),
+  milestoneEdits: z
+    .record(z.string(), z.object({ value: z.number().optional(), date: z.string().optional() }))
+    .optional(),
+  rampSteps: z.array(z.object({ frequencyPerWeek: z.number(), durationWeeks: z.number() })).optional(),
+})
+
+export const NewGoalsPlanSchema = z.object({
+  pillars: z.array(z.string().max(100)).max(20),
+  objectives: z.array(z.string().max(100)).max(50),
+  targetOverrides: z.record(z.string().max(100), TargetOverrideSchema),
+  labels: z.record(z.string().max(100), z.string().max(200)).optional(),
+  customTargets: z
+    .array(z.object({ id: z.string().max(100), pillarId: z.string().max(100), unit: z.string().max(40) }))
+    .max(100)
+    .optional(),
+})
+
+// ============================================
 // Type Exports (inferred from schemas)
 // ============================================
 

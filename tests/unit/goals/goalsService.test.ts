@@ -26,6 +26,7 @@ import {
   computePacing,
   buildMilestoneCelebrationData,
   computeMultiPeriodStats,
+  getOrphanedGoalIds,
 } from "@/src/goals/goalsService"
 import type { GoalWithProgress, GoalFilterState, BadgeStatus } from "@/src/goals/types"
 import type { DailyGoalSnapshotRow } from "@/src/db/goalTypes"
@@ -1805,5 +1806,25 @@ describe("computeMultiPeriodStats", () => {
     const stats = computeMultiPeriodStats(goal, snapshots, NOW)
     expect(stats.weekTotal).toBe(0)
     expect(stats.monthTotal).toBe(0)
+  })
+})
+
+describe("getOrphanedGoalIds", () => {
+  test("flags goals whose template_id is not in the goalGraph registry", () => {
+    const goals = [
+      createGoalWithProgress({ id: "stale", template_id: "l3_deleted_template" }),
+      createGoalWithProgress({ id: "custom", template_id: null }),
+    ]
+    expect(getOrphanedGoalIds(goals)).toEqual(["stale"])
+  })
+
+  test("never flags framework-plan (fw:*) goals — they live in a separate namespace", () => {
+    const goals = [
+      createGoalWithProgress({ id: "p", template_id: "fw:pillar:health" }),
+      createGoalWithProgress({ id: "o", template_id: "fw:obj:obj_strong" }),
+      createGoalWithProgress({ id: "t", template_id: "fw:tgt:t_bench" }),
+      createGoalWithProgress({ id: "c", template_id: "fw:custom:custom_tgt_1" }),
+    ]
+    expect(getOrphanedGoalIds(goals)).toEqual([])
   })
 })

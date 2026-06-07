@@ -32,6 +32,31 @@ export {
 } from "@/src/db/goalEnums"
 
 /**
+ * A user-added goal that isn't part of the static framework. Its value/date/
+ * milestone state lives in `targetOverrides[id]`; its title lives in `labels[id]`.
+ */
+export interface CustomTarget {
+  id: string
+  pillarId: string
+  unit: string
+}
+
+/**
+ * Serializable state of the new-goals flow (Focus → Goals → Summary). This is
+ * what the flow POSTs to persist and what GET returns to rehydrate it.
+ *
+ * `labels` holds user-renamed titles keyed by framework id (pillar / objective /
+ * target / custom-target). `customTargets` holds user-added goals.
+ */
+export interface NewGoalsFlowState {
+  pillars: string[]
+  objectives: string[]
+  targetOverrides: Record<string, import("./data/newGoalFramework").TargetOverride>
+  labels?: Record<string, string>
+  customTargets?: CustomTarget[]
+}
+
+/**
  * Predefined life area IDs
  */
 export type LifeAreaId =

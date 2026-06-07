@@ -45,8 +45,8 @@ export interface QAResponse {
   usedSourceIndexes?: number[]
   /** What adaptive retrieval decided (present only on the adaptive path). */
   adaptivePlan?: AdaptivePlan
-  /** Per-sentence answer→source grounding map (present only on the test path). */
-  grounding?: AnswerGroundingSpan[]
+  /** Composite groundedness rating (present only on the test path). */
+  groundedness?: GroundednessRating
 }
 
 export interface ConfidenceResult {
@@ -163,20 +163,29 @@ export interface AdaptiveRetrievalConfig {
   maxContextTokens?: number
 }
 
-/**
- * One sentence of the answer mapped to the source that best supports it
- * (deterministic lexical overlap — computed by us, not the model's self-report).
- * Internal/inspection only.
- */
-export interface AnswerGroundingSpan {
+/** One claim (answer sentence) judged for support against the sources. */
+export interface GroundednessClaim {
   text: string
-  /** 1-based index of the best-supporting source, or null if unsupported */
-  bestSource: number | null
-  /** overlap score 0..1 with the best source */
+  /** AI-judged support by meaning (not textual similarity). */
+  verdict: "supported" | "partial" | "unsupported"
+  /** 1-based source numbers the judge says back this claim. */
+  sources: number[]
+}
+
+/**
+ * Composite groundedness rating (test bench). AI support (semantic) +
+ * deterministic signals (material strength, fabricated specifics). Label-only.
+ */
+export interface GroundednessRating {
+  /** overall 0..1 composite */
   score: number
-  support: "strong" | "partial" | "weak" | "filler"
-  /** top supporting sources by overlap */
-  perSource: { source: number; score: number }[]
+  /** fraction of claims supported by meaning (partial = 0.5) */
+  aiSupport: number
+  /** deterministic: how relevant the retrieved sources were (precondition) */
+  materialStrength: number
+  claims: GroundednessClaim[]
+  /** deterministic red flags: specifics in the answer absent from all sources */
+  unsupportedSpecifics: string[]
 }
 
 /** What adaptive retrieval decided, for transparency (internal/inspection). */

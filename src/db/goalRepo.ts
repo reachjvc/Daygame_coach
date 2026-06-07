@@ -420,6 +420,7 @@ export async function createGoalBatch(
         tracking_type: insert.tracking_type ?? "counter",
         period: insert.period ?? "weekly",
         target_value: insert.target_value,
+        ...(insert.current_value !== undefined ? { current_value: insert.current_value } : {}),
         custom_end_date: insert.custom_end_date ?? null,
         linked_metric: insert.linked_metric ?? null,
         position: insert.position ?? nextPosition,
@@ -435,6 +436,7 @@ export async function createGoalBatch(
         milestone_config: insert.milestone_config ?? null,
         ramp_steps: insert.ramp_steps ?? null,
         goal_phase: insert.goal_phase ?? null,
+        ...(insert.aligned_values !== undefined ? { aligned_values: insert.aligned_values } : {}),
       })
       .select()
       .single()
@@ -1562,4 +1564,52 @@ export async function deleteAllGoals(userId: string): Promise<number> {
   }
 
   return count
+}
+
+// ============================================
+// New-Goals Framework Plan (template_id "fw:%")
+// ============================================
+
+/**
+ * Fetch the user's active framework-plan goals (those persisted by the
+ * /test/new-goals flow, identified by the "fw:" template_id prefix).
+ */
+export async function getFrameworkPlanGoals(userId: string): Promise<UserGoalRow[]> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("user_goals")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("is_archived", false)
+    .like("template_id", "fw:%")
+    .order("goal_level", { ascending: true })
+    .order("position", { ascending: true })
+
+  if (error) throw new Error(`Failed to load framework plan: ${error.message}`)
+  return (data ?? []) as UserGoalRow[]
+}
+
+/**
+ * Replace the user's framework plan: archive the previous "fw:" goals, then
+ * batch-insert the new set. Archiving first frees the unique (user_id,
+ * template_id) index so the same targets can be re-created with new values.
+ */
+export async function saveFrameworkPlan(
+  userId: string,
+  inserts: (UserGoalInsert & { _tempId: string; _tempParentId: string | null })[],
+  timezone: string | null = null,
+): Promise<GoalWithProgress[]> {
+  const supabase = await createServerSupabaseClient()
+  const { data: prior, error } = await supabase
+    .from("user_goals")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("is_archived", false)
+    .like("template_id", "fw:%")
+
+  if (error) throw new Error(`Failed to read existing framework plan: ${error.message}`)
+  if (prior && prior.length > 0) {
+    await archiveGoalsBatch(userId, prior.map((g) => g.id))
+  }
+  return createGoalBatch(userId, inserts, timezone)
 }

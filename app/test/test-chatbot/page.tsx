@@ -7,6 +7,8 @@ export default function TestChatbotPage() {
     <QAPage
       endpoint="/api/qa-test"
       variantLabel="TEST · querying embeddings_test"
+      requestTimeoutMs={90000}
+      showConfidence={false}
     />
   )
 }

@@ -458,6 +458,17 @@ describe("generateMilestoneLadder", () => {
     }
   })
 
+  test("degenerate range (start near target) never goes backwards", () => {
+    // start 59 → target 60 over 7 steps: only 1 unit of range. The ladder must
+    // still be non-decreasing (collapses to equal values rather than dipping).
+    const result = generateMilestoneLadder({ start: 59, target: 60, steps: 7, curveTension: 0 })
+    expect(result[0].value).toBe(59)
+    expect(result[result.length - 1].value).toBe(60)
+    for (let i = 1; i < result.length; i++) {
+      expect(result[i].value).toBeGreaterThanOrEqual(result[i - 1].value)
+    }
+  })
+
   test("no pins → identical result to omitting the pins field", () => {
     const base: MilestoneLadderConfig = { start: 1, target: 500, steps: 10, curveTension: 1.2 }
     const withEmpty = generateMilestoneLadder({ ...base, pins: [] })

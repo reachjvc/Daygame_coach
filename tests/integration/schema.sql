@@ -412,7 +412,9 @@ CREATE TABLE user_goals (
   best_streak INTEGER NOT NULL DEFAULT 0,
   is_active BOOLEAN NOT NULL DEFAULT true,
   is_archived BOOLEAN NOT NULL DEFAULT false,
-  linked_metric TEXT CHECK (linked_metric IS NULL OR linked_metric IN ('approaches_weekly', 'sessions_weekly', 'numbers_weekly', 'instadates_weekly', 'field_reports_weekly', 'approaches_cumulative', 'sessions_cumulative', 'numbers_cumulative', 'instadates_cumulative', 'field_reports_cumulative', 'approach_quality_avg_weekly')),
+  -- Mirrors the production `linked_metric` enum (src/db/goalEnums.ts LINKED_METRICS,
+  -- migration 20260306_expand_goal_enum_constraints). Keep in sync when adding metrics.
+  linked_metric TEXT CHECK (linked_metric IS NULL OR linked_metric IN ('approaches_weekly', 'sessions_weekly', 'numbers_weekly', 'instadates_weekly', 'field_reports_weekly', 'approaches_cumulative', 'sessions_cumulative', 'numbers_cumulative', 'instadates_cumulative', 'field_reports_cumulative', 'approach_quality_avg_weekly', 'high_quality_approaches_cumulative', 'scenario_sessions_cumulative', 'scenario_types_cumulative', 'scenario_high_scores_cumulative', 'body_weight_current', 'sleep_hours_avg_weekly', 'gym_sessions_weekly', 'gym_sessions_cumulative', 'nutrition_quality_avg_weekly', 'cardio_sessions_weekly', 'training_hours_cumulative', 'consecutive_training_weeks', 'bench_press_1rm', 'squat_1rm', 'deadlift_1rm', 'overhead_press_1rm', 'pullups_max_reps', 'progress_photos_cumulative', 'protein_days_hit_weekly', 'calorie_days_hit_weekly', 'weight_lost_from_peak', 'weight_gained_from_lowest', 'body_measurements_count', 'mobility_sessions_weekly', 'yoga_sessions_weekly', 'flexibility_hours_cumulative', 'running_sessions_weekly', 'running_distance_cumulative', 'longest_run_km', 'consecutive_cardio_weeks')),
   position INTEGER NOT NULL DEFAULT 0,
   life_area TEXT NOT NULL DEFAULT 'custom',
   parent_goal_id UUID REFERENCES user_goals(id) ON DELETE CASCADE,

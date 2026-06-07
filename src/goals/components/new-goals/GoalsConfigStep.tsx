@@ -5,12 +5,14 @@ import {
   PILLARS,
   OBJECTIVES,
   TARGETS,
+  TEMPLATES,
   PRIMITIVE_META,
   getObjectivesForPillar,
   getTargetsForObjective,
   getSharedDriver,
   getTemplatesForPillar,
   getObjectivesForSharedDriver,
+  makeCustomFrameworkTarget,
 } from "@/src/goals/data/newGoalFramework"
 import type {
   FrameworkTarget,
@@ -20,7 +22,8 @@ import type {
   TargetOverride,
 } from "@/src/goals/data/newGoalFramework"
 import { generateMilestoneLadder } from "@/src/goals/milestoneService"
-import type { MilestoneLadderConfig, MilestonePin } from "@/src/goals/types"
+import type { MilestoneLadderConfig, MilestonePin, CustomTarget } from "@/src/goals/types"
+import { EditableTitle } from "./EditableTitle"
 import {
   ChevronDown,
   ChevronRight,
@@ -36,6 +39,7 @@ import {
   Plus,
   Lock,
   RotateCcw,
+  Trash2,
   Dumbbell,
   Landmark,
   Heart,
@@ -48,6 +52,13 @@ import {
   Brain,
   Users,
   Trophy,
+  Ban,
+  Star,
+  Sparkles,
+  Activity,
+  Flame,
+  Footprints,
+  Medal,
   type LucideIcon,
 } from "lucide-react"
 
@@ -58,7 +69,7 @@ import {
 const ICON_MAP: Record<string, LucideIcon> = {
   Dumbbell, Landmark, Heart, Compass, Scaling, Wind, TrendingUp, Shield,
   Sunrise, BookOpen, Brain, Users, Trophy, Target: TargetIcon, Zap, Repeat,
-  Milestone, Flag, Plus,
+  Milestone, Flag, Plus, Ban, Activity, Flame, Footprints, Medal,
 }
 
 const PRIMITIVE_ICON_MAP: Record<string, LucideIcon> = {
@@ -97,6 +108,13 @@ interface GoalsConfigStepProps {
   onApplyTemplate: (template: Template, levelIndex: number) => void
   onUnapplyTemplate: (template: Template) => void
   onUpdateTarget: (targetId: string, updates: Partial<TargetOverride>) => void
+  /** User-renamed titles keyed by framework / custom id. */
+  labels: Record<string, string>
+  /** User-added custom goals. */
+  customTargets: CustomTarget[]
+  onRename: (id: string, label: string) => void
+  onAddCustomTarget: (pillarId: string) => void
+  onRemoveCustomTarget: (id: string) => void
 }
 
 // ---------------------------------------------------------------------------
@@ -164,6 +182,59 @@ function detectActiveLevel(
     if (matches) return i
   }
   return 0 // default to beginner
+}
+
+// Harvested from the production setup wizard's DirectionStep: the daygame-specific
+// "pick your path" onboarding. Each path applies the matching Relations template
+// (the core funnel), framing them as identities rather than plain template chips.
+const NEON_FTO = "#ec4899"       // hot pink
+const NEON_ABUNDANCE = "#3b82f6" // electric blue
+const RELATIONS_PATHS = [
+  { templateId: "tmpl_girlfriend", title: "Find The One", subtitle: "Connection & commitment", icon: Star, color: NEON_FTO },
+  { templateId: "tmpl_abundance", title: "Abundance", subtitle: "Freedom & experience", icon: Sparkles, color: NEON_ABUNDANCE },
+] as const
+
+/** FTO vs Abundance path cards shown atop the Relations pillar — picking one
+ * applies its template (auto-selects the core daygame funnel). */
+function RelationsPathChooser({
+  pillarTargets,
+  targetOverrides,
+  onApplyTemplate,
+}: {
+  pillarTargets: FrameworkTarget[]
+  targetOverrides: Record<string, TargetOverride>
+  onApplyTemplate: (template: Template, levelIndex: number) => void
+}) {
+  return (
+    <div className="mb-4">
+      <p className="text-xs text-zinc-500 mb-2">Choose your path — we&apos;ll set up your core funnel:</p>
+      <div className="grid grid-cols-2 gap-3">
+        {RELATIONS_PATHS.map((p) => {
+          const tmpl = TEMPLATES.find((t) => t.id === p.templateId)
+          if (!tmpl) return null
+          const active = isTemplateActive(tmpl, targetOverrides, pillarTargets)
+          const Icon = p.icon
+          return (
+            <button
+              key={p.templateId}
+              onClick={() => onApplyTemplate(tmpl, 0)}
+              title={tmpl.description}
+              className="relative rounded-xl p-4 text-left transition-all duration-200"
+              style={{
+                background: active ? `${p.color}35` : `${p.color}18`,
+                border: `${active ? 2 : 1}px solid ${p.color}`,
+                boxShadow: active ? `0 0 20px ${p.color}30, inset 0 0 20px ${p.color}10` : "none",
+              }}
+            >
+              <Icon className="size-5 mb-2" style={{ color: p.color, filter: `drop-shadow(0 0 6px ${p.color})` }} />
+              <h3 className="text-sm font-semibold text-white mb-0.5">{p.title}</h3>
+              <p className="text-xs text-white/40">{p.subtitle}</p>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 /** Collect all targets for a pillar, deduplicate shared drivers */
@@ -738,10 +809,18 @@ function TargetRow({
   onRampAddStep,
   onRampRemoveStep,
   onRampFlatten,
+  label,
+  onRename,
+  isCustom,
+  onRemoveCustomTarget,
 }: {
   target: FrameworkTarget
   enabled: boolean
   override?: TargetOverride
+  label: string
+  onRename: (id: string, label: string) => void
+  isCustom: boolean
+  onRemoveCustomTarget: (id: string) => void
   isEditing: boolean
   isConfigExpanded: boolean
   isRampExpanded: boolean
@@ -818,10 +897,13 @@ function TargetRow({
   const commitMilestoneValue = useCallback((step: number, value: number) => {
     if (step === 0) {
       // Editing the start (= current level). Clamp to the correct side of the
-      // target so the ladder direction never flips.
+      // target — and leave 1 unit of room per step — so the ladder neither flips
+      // direction nor collapses into a sub-step range.
       let v = Math.max(1, value)
-      if (ascending) v = Math.min(v, effectiveTarget - 1)
-      else v = Math.max(v, effectiveTarget + 1)
+      const room = Math.max(1, lastStep) // steps - 1
+      if (ascending) v = Math.min(v, effectiveTarget - room)
+      else v = Math.max(v, effectiveTarget + room)
+      v = Math.max(1, v)
       onUpdate(target.id, { startValue: v })
       return
     }
@@ -864,8 +946,22 @@ function TargetRow({
           {enabled && <Check className="size-3 text-zinc-950" strokeWidth={3} />}
         </button>
 
-        <span className={`text-sm font-medium flex-1 ${enabled ? "text-white" : "text-zinc-500"}`}>
-          {target.label}
+        <span className={`text-sm font-medium flex-1 flex items-center gap-1 ${enabled ? "text-white" : "text-zinc-500"}`}>
+          <EditableTitle
+            value={label}
+            onCommit={(v) => onRename(target.id, v)}
+            inputClassName="text-sm w-44"
+            ariaLabel={`Rename ${label}`}
+          />
+          {isCustom && (
+            <button
+              onClick={() => onRemoveCustomTarget(target.id)}
+              title="Remove this goal"
+              className="text-zinc-600 hover:text-red-400 transition-colors"
+            >
+              <Trash2 className="size-3.5" />
+            </button>
+          )}
         </span>
 
         <PrimitiveBadge primitive={primitive} role={role} />
@@ -1068,6 +1164,10 @@ function BucketSection({
   onRampAddStep,
   onRampRemoveStep,
   onRampFlatten,
+  labels,
+  onRename,
+  customIds,
+  onRemoveCustomTarget,
 }: {
   bucketKey: BucketKey
   targets: FrameworkTarget[]
@@ -1075,6 +1175,10 @@ function BucketSection({
   onToggle: () => void
   targetOverrides: GoalsConfigStepProps["targetOverrides"]
   onUpdateTarget: GoalsConfigStepProps["onUpdateTarget"]
+  labels: Record<string, string>
+  onRename: (id: string, label: string) => void
+  customIds: Set<string>
+  onRemoveCustomTarget: (id: string) => void
   expandedConfigs: Set<string>
   toggleConfig: (id: string) => void
   expandedRamps: Set<string>
@@ -1173,6 +1277,10 @@ function BucketSection({
                 onRampAddStep={onRampAddStep}
                 onRampRemoveStep={onRampRemoveStep}
                 onRampFlatten={onRampFlatten}
+                label={labels[target.id] ?? target.label}
+                onRename={onRename}
+                isCustom={customIds.has(target.id)}
+                onRemoveCustomTarget={onRemoveCustomTarget}
               />
             )
           })}
@@ -1194,8 +1302,14 @@ export function GoalsConfigStep({
   onApplyTemplate,
   onUnapplyTemplate,
   onUpdateTarget,
+  labels,
+  customTargets,
+  onRename,
+  onAddCustomTarget,
+  onRemoveCustomTarget,
 }: GoalsConfigStepProps) {
   const activePillars = PILLARS.filter((p) => selectedPillars.has(p.id))
+  const customIds = useMemo(() => new Set(customTargets.map((c) => c.id)), [customTargets])
 
   const [expandedBuckets, setExpandedBuckets] = useState<Set<string>>(() => {
     const initial = new Set<string>()
@@ -1310,10 +1424,13 @@ export function GoalsConfigStep({
     autoExpandBuckets()
   }
 
-  // Build per-pillar deduplicated targets + bucket groupings
+  // Build per-pillar deduplicated targets (framework + user-added custom) + buckets
   const pillarData = useMemo(() => {
     return activePillars.map((pillar) => {
-      const allTargets = getDeduplicatedTargetsForPillar(pillar.id)
+      const customs = customTargets
+        .filter((c) => c.pillarId === pillar.id)
+        .map((c) => makeCustomFrameworkTarget(c.id, c.pillarId, c.unit, labels[c.id] ?? "New goal"))
+      const allTargets = [...getDeduplicatedTargetsForPillar(pillar.id), ...customs]
 
       const buckets: Record<BucketKey, FrameworkTarget[]> = {
         do: [], measure: [], milestones: [], skills: [],
@@ -1325,7 +1442,7 @@ export function GoalsConfigStep({
       return { pillar, allTargets, buckets }
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPillars])
+  }, [selectedPillars, customTargets, labels])
 
   const [centralDate, setCentralDate] = useState("")
 
@@ -1377,18 +1494,29 @@ export function GoalsConfigStep({
 
         return (
           <div key={pillar.id} className="mb-10">
-            {/* Pillar header */}
+            {/* Pillar header (editable) */}
             <div className="flex items-center gap-2 mb-3">
               {PillarIcon && (
                 <PillarIcon className="size-5" style={{ color: pillar.color }} />
               )}
-              <span
+              <EditableTitle
+                value={labels[pillar.id] ?? pillar.label}
+                onCommit={(v) => onRename(pillar.id, v)}
                 className="text-lg font-semibold uppercase tracking-wide"
+                inputClassName="text-lg uppercase tracking-wide w-56"
                 style={{ color: pillar.color }}
-              >
-                {pillar.label}
-              </span>
+                ariaLabel={`Rename ${pillar.label}`}
+              />
             </div>
+
+            {/* Daygame path chooser (harvested from the setup wizard) — Relations only */}
+            {pillar.id === "relations" && (
+              <RelationsPathChooser
+                pillarTargets={allTargets}
+                targetOverrides={targetOverrides}
+                onApplyTemplate={onApplyTemplate}
+              />
+            )}
 
             {/* Templates */}
             <TemplateSection
@@ -1423,8 +1551,20 @@ export function GoalsConfigStep({
                 onRampAddStep={handleRampAddStep}
                 onRampRemoveStep={handleRampRemoveStep}
                 onRampFlatten={handleRampFlatten}
+                labels={labels}
+                onRename={onRename}
+                customIds={customIds}
+                onRemoveCustomTarget={onRemoveCustomTarget}
               />
             ))}
+
+            {/* Add a brand-new goal of your own */}
+            <button
+              onClick={() => onAddCustomTarget(pillar.id)}
+              className="mt-1 flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-white/15 text-sm text-zinc-400 hover:text-white hover:border-white/30 transition-colors w-full"
+            >
+              <Plus className="size-4" /> Add your own goal to {labels[pillar.id] ?? pillar.label}
+            </button>
           </div>
         )
       })}

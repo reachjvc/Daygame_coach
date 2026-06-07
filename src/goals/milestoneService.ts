@@ -484,6 +484,16 @@ function generateLadderSegment(
     }
   }
 
+  // Final safety net: guarantee the ascending ladder is non-decreasing. For
+  // degenerate ranges (e.g. start 59 → target 60 over 7 steps) the fallback can
+  // emit a dip; clamp each milestone up to its predecessor rather than ship a
+  // ladder that visibly goes backwards. Endpoints (start, target) are untouched.
+  for (let i = 1; i < milestones.length - 1; i++) {
+    if (milestones[i].value < milestones[i - 1].value) {
+      milestones[i] = { ...milestones[i], value: milestones[i - 1].value }
+    }
+  }
+
   return milestones
 }
 
