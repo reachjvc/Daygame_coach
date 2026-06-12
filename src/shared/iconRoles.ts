@@ -121,7 +121,7 @@ export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   Orbit: ["orrery/planetary view"],
   PartyPopper: ["celebration overlay", "completion celebration"],
   Puzzle: ["custom/miscellaneous life area"],
-  Rocket: ["onboarding"],
+  Rocket: ["onboarding", "start a business objective icon"],
   Scaling: ["body transformation objective icon"],
   Shield: ["streak freezes", "defensive/protection theme", "scenario catalog"],
   Sprout: ["personal growth life area", "garden view growth stages"],

@@ -87,6 +87,11 @@ export interface Pillar {
 export interface Objective {
   id: string; pillarId: string; label: string; description: string; icon: string
   successPreview: string; commitment: CommitmentLevel; values: string[]
+  /** Hidden matcher-only vocabulary: a plain-language restatement of the goal plus
+   *  the many ways people actually phrase it. Embedded for intake matching, NEVER
+   *  shown to the user. Keep it human/feeling language (not coach-jargon) and
+   *  distinct per goal so areas don't collide. */
+  soundsLike: string
 }
 
 export interface SharedDriver {
@@ -171,31 +176,33 @@ export const SHARED_DRIVERS: SharedDriver[] = [
 
 export const OBJECTIVES: Objective[] = [
   // Health
-  { id: "obj_strong", pillarId: "health", label: "Get Strong", description: "Build serious strength through progressive overload", icon: "Dumbbell", successPreview: "Bench 100kg · Squat 140kg · Deadlift 180kg", commitment: "heavy", values: ["strength", "discipline"] },
-  { id: "obj_body", pillarId: "health", label: "Transform Your Body", description: "Change your physical composition and appearance", icon: "Scaling", successPreview: "Target weight · Low body fat · Photoshoot ready", commitment: "moderate", values: ["transformation", "patience"] },
-  { id: "obj_endurance", pillarId: "health", label: "Build Endurance", description: "Cardio capacity and conditioning", icon: "Wind", successPreview: "500km run · 4x/week cardio · Sub-25min 5k", commitment: "moderate", values: ["endurance", "resilience"] },
-  { id: "obj_calisthenics", pillarId: "health", label: "Master Your Bodyweight", description: "Calisthenics: pull, push, and skill work — no gym needed", icon: "PersonStanding", successPreview: "20 pull-ups · First muscle-up · Freestanding handstand", commitment: "heavy", values: ["strength", "control"] },
-  { id: "obj_mobility", pillarId: "health", label: "Move Without Pain", description: "Flexibility, mobility, and joint health you'll feel daily", icon: "StretchHorizontal", successPreview: "Touch your toes · Flat deep squat · Front splits", commitment: "moderate", values: ["mobility", "vitality"] },
-  { id: "obj_muscle", pillarId: "health", label: "Build Muscle", description: "Lean bulk: eat in a surplus, lift, and add real size", icon: "Beef", successPreview: "+10kg lean mass · Bigger arms · Stronger lifts", commitment: "heavy", values: ["growth", "consistency"] },
-  { id: "obj_active", pillarId: "health", label: "Stay Active Daily", description: "Build a healthy, moving lifestyle — no gym required", icon: "Accessibility", successPreview: "10k steps/day · Moving daily · Lower resting heart rate", commitment: "light", values: ["vitality", "consistency"] },
-  { id: "obj_recovery", pillarId: "health", label: "Sleep & Recover", description: "Master sleep and recovery so everything else compounds", icon: "BedDouble", successPreview: "8h sleep · Consistent schedule · Wake up refreshed", commitment: "light", values: ["vitality", "resilience"] },
+  { id: "obj_strong", pillarId: "health", label: "Get Strong", description: "Build serious strength through progressive overload", icon: "Dumbbell", successPreview: "Bench 100kg · Squat 140kg · Deadlift 180kg", commitment: "heavy", values: ["strength", "discipline"], soundsLike: "Getting physically stronger and lifting heavier weights. want to get strong, build strength, lift heavier, get powerful, strong as hell, deadlift squat bench, powerlifting, hit the gym and get strong, feel strong" },
+  { id: "obj_body", pillarId: "health", label: "Transform Your Body", description: "Change your physical composition and appearance", icon: "Scaling", successPreview: "Target weight · Low body fat · Photoshoot ready", commitment: "moderate", values: ["transformation", "patience"], soundsLike: "Changing how my body looks — leaner, more defined, better physique. lose weight, get lean, lose fat, get shredded, look good naked, change my body, drop body fat, get a six pack, abs, transform my physique, get aesthetic, look better" },
+  { id: "obj_endurance", pillarId: "health", label: "Build Endurance", description: "Cardio capacity and conditioning", icon: "Wind", successPreview: "500km run · 4x/week cardio · Sub-25min 5k", commitment: "moderate", values: ["endurance", "resilience"], soundsLike: "Cardio fitness and stamina — running, conditioning, not getting winded. get fit, build stamina, run longer, better cardio, stop getting out of breath, run a 5k, run a marathon, conditioning, endurance, fitness" },
+  { id: "obj_calisthenics", pillarId: "health", label: "Master Your Bodyweight", description: "Calisthenics: pull, push, and skill work — no gym needed", icon: "PersonStanding", successPreview: "20 pull-ups · First muscle-up · Freestanding handstand", commitment: "heavy", values: ["strength", "control"], soundsLike: "Bodyweight skills and control without a gym — pull-ups, push-ups, handstands. calisthenics, bodyweight training, pull ups, muscle up, handstand, train without a gym, street workout, gymnastic strength, body control" },
+  { id: "obj_mobility", pillarId: "health", label: "Move Without Pain", description: "Flexibility, mobility, and joint health you'll feel daily", icon: "StretchHorizontal", successPreview: "Touch your toes · Flat deep squat · Front splits", commitment: "moderate", values: ["mobility", "vitality"], soundsLike: "Flexibility, mobility and moving without pain or stiffness. stop hurting, fix my back, get flexible, touch my toes, mobility, joint pain, feeling stiff, move better, no more pain, stretch more, loosen up" },
+  { id: "obj_muscle", pillarId: "health", label: "Build Muscle", description: "Lean bulk: eat in a surplus, lift, and add real size", icon: "Beef", successPreview: "+10kg lean mass · Bigger arms · Stronger lifts", commitment: "heavy", values: ["growth", "consistency"], soundsLike: "Building muscle size and mass — getting bigger, bulking up. build muscle, get bigger, gain mass, bulk up, put on size, gain weight, get jacked, bigger arms, muscle growth, get swole" },
+  { id: "obj_active", pillarId: "health", label: "Stay Active Daily", description: "Build a healthy, moving lifestyle — no gym required", icon: "Accessibility", successPreview: "10k steps/day · Moving daily · Lower resting heart rate", commitment: "light", values: ["vitality", "consistency"], soundsLike: "An active everyday lifestyle — moving more, walking, healthy without the gym. be more active, move more, stop being lazy, get off the couch, healthier lifestyle, walk more, stay in shape, daily movement, feel good in my body, more energy, get healthy" },
+  { id: "obj_recovery", pillarId: "health", label: "Sleep & Recover", description: "Master sleep and recovery so everything else compounds", icon: "BedDouble", successPreview: "8h sleep · Consistent schedule · Wake up refreshed", commitment: "light", values: ["vitality", "resilience"], soundsLike: "Better sleep and recovery — resting well, waking up refreshed instead of tired. sleep better, fix my sleep, stop being tired, more rest, wake up refreshed, insomnia, recover properly, sleep schedule, stop feeling exhausted, more energy" },
   // Relations
-  { id: "obj_girlfriend", pillarId: "relations", label: "Get a Girlfriend", description: "Find someone great through volume and skill development", icon: "Heart", successPreview: "Approaches → Numbers → Dates → Exclusive", commitment: "heavy", values: ["courage", "persistence"] },
-  { id: "obj_abundance", pillarId: "relations", label: "Date Abundantly", description: "Build an abundant dating life with options", icon: "Users", successPreview: "Consistent approaches · Strong text game · Active rotation", commitment: "heavy", values: ["confidence", "charisma"] },
-  { id: "obj_inner", pillarId: "relations", label: "Build Inner Game", description: "Bulletproof mindset and emotional resilience", icon: "Brain", successPreview: "Daily meditation · Journaling · Anxiety mastered", commitment: "moderate", values: ["presence", "resilience"] },
+  { id: "obj_girlfriend", pillarId: "relations", label: "Get a Girlfriend", description: "Find someone great through volume and skill development", icon: "Heart", successPreview: "Approaches → Numbers → Dates → Exclusive", commitment: "heavy", values: ["courage", "persistence"], soundsLike: "Finding a real loving relationship — a girlfriend, a partner, someone to share life with. get a girlfriend, find a partner, find love, someone i love, wake up next to someone i love, stop being lonely, a real relationship, meet someone special, settle down, find the one, want to be loved, not be single anymore, a loving partner" },
+  { id: "obj_abundance", pillarId: "relations", label: "Date Abundantly", description: "Build an abundant dating life with options", icon: "Users", successPreview: "Consistent approaches · Strong text game · Active rotation", commitment: "heavy", values: ["confidence", "charisma"], soundsLike: "An active dating life with options — meeting lots of women and going on dates. date more, meet women, dating life, more options, more matches, go on lots of dates, abundance with women, dating apps, talk to more girls, get more dates, play the field, casual dating" },
+  { id: "obj_inner", pillarId: "relations", label: "Build Inner Game", description: "Bulletproof mindset and emotional resilience", icon: "Brain", successPreview: "Daily meditation · Journaling · Anxiety mastered", commitment: "moderate", values: ["presence", "resilience"], soundsLike: "Confidence and emotional resilience socially and with women — beating anxiety and self-doubt. more confident, social confidence, stop being nervous around women, approach anxiety, self doubt, believe in myself, less shy, get out of my head, inner confidence, self esteem, fear of rejection, stop caring what people think" },
   // Wealth
-  { id: "obj_income", pillarId: "wealth", label: "Build Income", description: "Grow your earning power through focused work", icon: "TrendingUp", successPreview: "Deep work mastery · First client → $5k → $10k month", commitment: "moderate", values: ["ambition", "focus"] },
-  { id: "obj_freedom", pillarId: "wealth", label: "Financial Freedom", description: "Build lasting financial independence", icon: "Shield", successPreview: "Emergency fund → Debt-free → Fully invested", commitment: "heavy", values: ["independence", "discipline"] },
+  { id: "obj_income", pillarId: "wealth", label: "Build Income", description: "Grow your earning power through focused work", icon: "TrendingUp", successPreview: "Deep work mastery · First client → $5k → $10k month", commitment: "moderate", values: ["ambition", "focus"], soundsLike: "Earning more money through a job, skills, or freelancing. make more money, earn more, higher income, get a raise, make money online, freelance, side hustle, get clients, increase my income, better job, make money from my skills, six figures, earn a living" },
+  { id: "obj_freedom", pillarId: "wealth", label: "Financial Freedom", description: "Build lasting financial independence", icon: "Shield", successPreview: "Emergency fund → Debt-free → Fully invested", commitment: "heavy", values: ["independence", "discipline"], soundsLike: "Long-term financial security — savings, getting out of debt, investing, not worrying about money. financial freedom, get out of debt, save money, invest, retire early, financial security, stop living paycheck to paycheck, build wealth, passive income, money in the bank, never worry about money, financially independent" },
+  { id: "obj_business", pillarId: "wealth", label: "Start a Business", description: "Build your own business — from idea to real, profitable revenue", icon: "Rocket", successPreview: "Idea → First sale → Profitable → $10k+/mo", commitment: "heavy", values: ["ambition", "ownership"], soundsLike: "Starting and growing your own business — from idea to profit. start a business, my own business, build a business, be my own boss, work for myself, entrepreneur, start a startup, launch a product, my own company, build something of my own, get my business going, make it profitable, dollars a month in profit, first paying customer, scale my business" },
   // Meaning
-  { id: "obj_practice", pillarId: "meaning", label: "Daily Practice", description: "Build grounding daily rituals that compound", icon: "Sunrise", successPreview: "Meditation · Reading · Journaling → Unbreakable", commitment: "moderate", values: ["presence", "wisdom"] },
-  { id: "obj_growth", pillarId: "meaning", label: "Continuous Growth", description: "Never stop learning and evolving", icon: "BookOpen", successPreview: "Courses → Skills → Mastery → Teaching", commitment: "light", values: ["growth", "curiosity"] },
+  { id: "obj_practice", pillarId: "meaning", label: "Daily Practice", description: "Build grounding daily rituals that compound", icon: "Sunrise", successPreview: "Meditation · Reading · Journaling → Unbreakable", commitment: "moderate", values: ["presence", "wisdom"], soundsLike: "Grounding daily rituals — meditation, journaling, mindfulness, inner calm. meditate, journaling, mindfulness, daily routine, morning routine, inner peace, be present, calm my mind, spiritual practice, grounding habits, stop overthinking, feel centered, be more disciplined" },
+  { id: "obj_growth", pillarId: "meaning", label: "Continuous Growth", description: "Never stop learning and evolving", icon: "BookOpen", successPreview: "Courses · Skills · Mastery → Teaching", commitment: "light", values: ["growth", "curiosity"], soundsLike: "Always learning and bettering yourself — skills, reading, self-improvement. learn new things, self improvement, keep growing, read more, learn a skill, better myself, personal growth, never stop learning, develop myself, become my best self, level up, work on myself" },
+  { id: "obj_purpose", pillarId: "meaning", label: "Find Your Purpose", description: "Build a life with direction and meaning you're excited to wake up to", icon: "Compass", successPreview: "Clear direction · A vision that pulls you · Excited to wake up", commitment: "moderate", values: ["purpose", "vision"], soundsLike: "Finding direction, purpose and a life you're excited to wake up to. find my purpose, feel alive, excited about life, a life worth living, a future worth living, find direction, find meaning, know why i'm here, build something meaningful, stop feeling lost, feel fulfilled, live with intention, a vision for my life, wake up excited, make my life count" },
   // Vices — alcohol is split into two paths (Get Sober vs Drink Less), like the
   // Girlfriend vs Abundance split in Relations, so the user picks their approach.
-  { id: "obj_nofap", pillarId: "vices", label: "Quit Porn", description: "Break the porn habit and reclaim your drive", icon: "ShieldOff", successPreview: "90 days free · urges mastered · real intimacy", commitment: "heavy", values: ["discipline", "freedom"] },
-  { id: "obj_sober", pillarId: "vices", label: "Get Sober", description: "Cut alcohol out completely and stay clean", icon: "Ban", successPreview: "Dry months · clear mornings · sober for good", commitment: "heavy", values: ["clarity", "willpower"] },
-  { id: "obj_drinkless", pillarId: "vices", label: "Drink Less", description: "Stay under a healthy limit without quitting entirely", icon: "Wine", successPreview: "Within limit · dry days stacking · in control", commitment: "moderate", values: ["moderation", "control"] },
-  { id: "obj_screen", pillarId: "vices", label: "Reclaim Attention", description: "Escape the scroll and use screens with intention", icon: "Smartphone", successPreview: "Under your limit · social-free days · focused", commitment: "moderate", values: ["focus", "presence"] },
-  { id: "obj_clean_diet", pillarId: "vices", label: "Kill the Junk", description: "Quit junk food, sugar, and nicotine for good", icon: "Cigarette", successPreview: "Junk-free weeks · sugar broken · smoke-free", commitment: "moderate", values: ["health", "discipline"] },
+  { id: "obj_nofap", pillarId: "vices", label: "Quit Porn", description: "Break the porn habit and reclaim your drive", icon: "ShieldOff", successPreview: "90 days free · urges mastered · real intimacy", commitment: "heavy", values: ["discipline", "freedom"], soundsLike: "Quitting porn and compulsive masturbation. quit porn, stop watching porn, nofap, porn addiction, stop fapping, beat porn, no more porn, reclaim my drive, porn free, stop the porn habit" },
+  { id: "obj_sober", pillarId: "vices", label: "Get Sober", description: "Cut alcohol out completely and stay clean", icon: "Ban", successPreview: "Dry months · clear mornings · sober for good", commitment: "heavy", values: ["clarity", "willpower"], soundsLike: "Quitting alcohol completely — total sobriety. quit drinking, get sober, stop drinking, give up alcohol, sobriety, alcohol free, stop drinking completely, no more alcohol, stay dry, stop being a drunk" },
+  { id: "obj_drinkless", pillarId: "vices", label: "Drink Less", description: "Stay under a healthy limit without quitting entirely", icon: "Wine", successPreview: "Within limit · dry days stacking · in control", commitment: "moderate", values: ["moderation", "control"], soundsLike: "Cutting back on alcohol without fully quitting — drinking in moderation. drink less, cut back on drinking, moderate my drinking, fewer drinks, drink in moderation, control my drinking, less alcohol, dry days, stop binge drinking" },
+  { id: "obj_screen", pillarId: "vices", label: "Reclaim Attention", description: "Escape the scroll and use screens with intention", icon: "Smartphone", successPreview: "Under your limit · social-free days · focused", commitment: "moderate", values: ["focus", "presence"], soundsLike: "Less screen time and social media — escaping the scroll, regaining focus. less screen time, stop scrolling, social media addiction, phone addiction, off my phone, doomscrolling, reclaim my attention, stop wasting time online, digital detox, stop being distracted, focus better" },
+  { id: "obj_clean_diet", pillarId: "vices", label: "Kill the Junk", description: "Quit junk food, sugar, and nicotine for good", icon: "Cigarette", successPreview: "Junk-free weeks · sugar broken · smoke-free", commitment: "moderate", values: ["health", "discipline"], soundsLike: "Quitting junk food, sugar, nicotine and other consumption habits. quit sugar, stop eating junk, eat clean, quit smoking, quit vaping, stop nicotine, junk food, cut out sugar, stop snacking, kill my bad habits, stop eating crap" },
 ]
 
 export const TEMPLATES: Template[] = [
@@ -274,19 +281,19 @@ export const TEMPLATES: Template[] = [
     ] },
   { id: "tmpl_active", pillarId: "health", label: "Active Lifestyle", description: "No gym needed: daily steps, move every day, healthier heart", icon: "TrendingUp",
     objectiveIds: ["obj_active"],
-    targetOverrides: { t_steps_active: true, t_move_active: true, t_step_count: true, t_resting_hr: true, t_active_streak: true, t_active_stages: true },
+    targetOverrides: { t_steps_active: true, t_move_active: true, t_step_count: true, t_resting_hr: true, t_active_streak: true, t_active_stages: true, t_active_lifetime: true, t_active_energy: true },
     levels: [
-      { label: "Beginner", targetValues: { t_step_count: 6000, t_resting_hr: 70, t_active_streak: 8 } },
-      { label: "Intermediate", targetValues: { t_step_count: 8000, t_resting_hr: 62, t_active_streak: 26 } },
-      { label: "Advanced", targetValues: { t_step_count: 12000, t_resting_hr: 55, t_active_streak: 52 } },
+      { label: "Beginner", targetValues: { t_step_count: 6000, t_resting_hr: 70, t_active_streak: 8, t_active_lifetime: 120, t_active_energy: 6 } },
+      { label: "Intermediate", targetValues: { t_step_count: 8000, t_resting_hr: 62, t_active_streak: 26, t_active_lifetime: 250, t_active_energy: 7 } },
+      { label: "Advanced", targetValues: { t_step_count: 12000, t_resting_hr: 55, t_active_streak: 52, t_active_lifetime: 365, t_active_energy: 8 } },
     ] },
   { id: "tmpl_recovery", pillarId: "health", label: "Sleep & Recovery", description: "Fix your sleep: consistent schedule, wind down, wake refreshed", icon: "Sunrise",
     objectiveIds: ["obj_recovery"],
-    targetOverrides: { t_sleep_schedule: true, t_winddown: true, t_no_screen_bed: true, t_sleep_hours: true, t_sleep_streak: true, t_recovery_stages: true },
+    targetOverrides: { t_sleep_schedule: true, t_winddown: true, t_no_screen_bed: true, t_sleep_hours: true, t_sleep_streak: true, t_recovery_stages: true, t_restful_nights: true, t_sleep_hygiene: true },
     levels: [
-      { label: "Beginner", targetValues: { t_sleep_streak: 8 } },
-      { label: "Intermediate", targetValues: { t_sleep_streak: 26 } },
-      { label: "Advanced", targetValues: { t_sleep_streak: 52 } },
+      { label: "Beginner", targetValues: { t_sleep_streak: 8, t_restful_nights: 60 } },
+      { label: "Intermediate", targetValues: { t_sleep_streak: 26, t_restful_nights: 120 } },
+      { label: "Advanced", targetValues: { t_sleep_streak: 52, t_restful_nights: 200 } },
     ] },
 
   // Relations templates
@@ -318,43 +325,61 @@ export const TEMPLATES: Template[] = [
   // Wealth templates
   { id: "tmpl_hustle", pillarId: "wealth", label: "Income Builder", description: "Deep work + sales skills → growing revenue", icon: "TrendingUp",
     objectiveIds: ["obj_income"],
-    targetOverrides: { t_deep_work: true, t_weekly_review: true, t_monthly_income: true, t_income_stages: true, t_sales_skill: true },
+    targetOverrides: { t_deep_work: true, t_weekly_review: true, t_monthly_income: true, t_income_stages: true, t_sales_skill: true, t_offers_made: true, t_clients: true, t_monthly_profit: true },
     levels: [
-      { label: "Beginner", targetValues: { t_deep_work: 200, t_monthly_income: 3000 } },
-      { label: "Intermediate", targetValues: { t_deep_work: 500, t_monthly_income: 7000 } },
-      { label: "Advanced", targetValues: { t_deep_work: 1000, t_monthly_income: 15000 } },
+      { label: "Beginner", targetValues: { t_deep_work: 200, t_monthly_income: 3000, t_clients: 5, t_monthly_profit: 1000 } },
+      { label: "Intermediate", targetValues: { t_deep_work: 500, t_monthly_income: 7000, t_clients: 15, t_monthly_profit: 5000 } },
+      { label: "Advanced", targetValues: { t_deep_work: 1000, t_monthly_income: 15000, t_clients: 30, t_monthly_profit: 12000 } },
     ] },
   { id: "tmpl_fi", pillarId: "wealth", label: "Financial Independence", description: "Save aggressively, invest consistently, build net worth", icon: "Shield",
     objectiveIds: ["obj_income", "obj_freedom"],
-    targetOverrides: { t_deep_work: true, t_weekly_review: true, t_monthly_income: true, t_income_stages: true, t_budget: true, t_savings_habit: true, t_net_worth: true, t_savings_rate: true, t_freedom_stages: true },
+    targetOverrides: { t_deep_work: true, t_weekly_review: true, t_monthly_income: true, t_income_stages: true, t_budget: true, t_savings_habit: true, t_net_worth: true, t_savings_rate: true, t_freedom_stages: true, t_debt_payoff: true, t_emergency_fund: true, t_invested_total: true },
     levels: [
-      { label: "Beginner", targetValues: { t_deep_work: 200, t_monthly_income: 3000, t_net_worth: 25, t_savings_rate: 15 } },
-      { label: "Intermediate", targetValues: { t_deep_work: 500, t_monthly_income: 7000, t_net_worth: 100, t_savings_rate: 25 } },
-      { label: "Advanced", targetValues: { t_deep_work: 1000, t_monthly_income: 15000, t_net_worth: 500, t_savings_rate: 40 } },
+      { label: "Beginner", targetValues: { t_deep_work: 200, t_monthly_income: 3000, t_net_worth: 25, t_savings_rate: 15, t_debt_payoff: 5, t_emergency_fund: 1, t_invested_total: 10 } },
+      { label: "Intermediate", targetValues: { t_deep_work: 500, t_monthly_income: 7000, t_net_worth: 100, t_savings_rate: 25, t_debt_payoff: 15, t_emergency_fund: 3, t_invested_total: 50 } },
+      { label: "Advanced", targetValues: { t_deep_work: 1000, t_monthly_income: 15000, t_net_worth: 500, t_savings_rate: 40, t_debt_payoff: 30, t_emergency_fund: 6, t_invested_total: 150 } },
+    ] },
+
+  { id: "tmpl_business", pillarId: "wealth", label: "Start a Business", description: "From idea to first sale to a profitable business", icon: "Rocket",
+    objectiveIds: ["obj_business"],
+    targetOverrides: { t_biz_build: true, t_biz_outreach: true, t_biz_customers: true, t_biz_revenue: true, t_biz_profit: true, t_biz_skill: true, t_biz_stages: true },
+    levels: [
+      { label: "Beginner", targetValues: { t_biz_build: 200, t_biz_customers: 10, t_biz_revenue: 2000, t_biz_profit: 1000 } },
+      { label: "Intermediate", targetValues: { t_biz_build: 500, t_biz_customers: 50, t_biz_revenue: 10000, t_biz_profit: 6000 } },
+      { label: "Advanced", targetValues: { t_biz_build: 1000, t_biz_customers: 200, t_biz_revenue: 30000, t_biz_profit: 15000 } },
     ] },
 
   // Meaning templates
   { id: "tmpl_mindful", pillarId: "meaning", label: "Mindful Life", description: "Daily meditation, journaling, and reading", icon: "Sunrise",
     objectiveIds: ["obj_practice"],
-    targetOverrides: { t_med_practice: true, t_journal_practice: true, t_reading: true, t_books: true, t_practice_stages: true },
+    targetOverrides: { t_med_practice: true, t_journal_practice: true, t_reading: true, t_books: true, t_practice_stages: true, t_med_streak: true, t_presence_skill: true },
     levels: [
-      { label: "Beginner", targetValues: { t_books: 12 } },
-      { label: "Intermediate", targetValues: { t_books: 30 } },
-      { label: "Advanced", targetValues: { t_books: 52 } },
+      { label: "Beginner", targetValues: { t_books: 12, t_med_streak: 30 } },
+      { label: "Intermediate", targetValues: { t_books: 30, t_med_streak: 100 } },
+      { label: "Advanced", targetValues: { t_books: 52, t_med_streak: 365 } },
     ] },
   { id: "tmpl_polymath", pillarId: "meaning", label: "Continuous Learner", description: "Courses, skills, and deep practice", icon: "BookOpen",
     objectiveIds: ["obj_practice", "obj_growth"],
-    targetOverrides: { t_med_practice: true, t_reading: true, t_books: true, t_learning_hours: true, t_skill_practice: true, t_courses: true, t_growth_stages: true },
+    targetOverrides: { t_med_practice: true, t_reading: true, t_books: true, t_learning_hours: true, t_skill_practice: true, t_courses: true, t_growth_stages: true, t_skills_mastered: true, t_projects_built: true, t_teach_skill: true },
     levels: [
-      { label: "Beginner", targetValues: { t_books: 12, t_learning_hours: 100, t_courses: 5 } },
-      { label: "Intermediate", targetValues: { t_books: 30, t_learning_hours: 300, t_courses: 12 } },
-      { label: "Advanced", targetValues: { t_books: 52, t_learning_hours: 500, t_courses: 20 } },
+      { label: "Beginner", targetValues: { t_books: 12, t_learning_hours: 100, t_courses: 5, t_skills_mastered: 2, t_projects_built: 3 } },
+      { label: "Intermediate", targetValues: { t_books: 30, t_learning_hours: 300, t_courses: 12, t_skills_mastered: 5, t_projects_built: 12 } },
+      { label: "Advanced", targetValues: { t_books: 52, t_learning_hours: 500, t_courses: 20, t_skills_mastered: 10, t_projects_built: 30 } },
+    ] },
+
+  { id: "tmpl_purpose", pillarId: "meaning", label: "Find Your Purpose", description: "Clarify your direction and build a life you're excited about", icon: "Compass",
+    objectiveIds: ["obj_purpose"],
+    targetOverrides: { t_purpose_journal: true, t_purpose_action: true, t_purpose_clarity: true, t_purpose_excited: true, t_purpose_milestones: true, t_purpose_stages: true },
+    levels: [
+      { label: "Beginner", targetValues: { t_purpose_excited: 30, t_purpose_milestones: 3 } },
+      { label: "Intermediate", targetValues: { t_purpose_excited: 90, t_purpose_milestones: 12 } },
+      { label: "Advanced", targetValues: { t_purpose_excited: 365, t_purpose_milestones: 30 } },
     ] },
 
   // Vices templates (levels = streak milestones, so they slot into badge tiers)
   { id: "tmpl_reboot", pillarId: "vices", label: "Porn Reboot", description: "Quit porn, daily check-ins, ride out the urges", icon: "Sunrise",
     objectiveIds: ["obj_nofap"],
-    targetOverrides: { t_nofap_streak: true, t_nofap_checkin: true, t_nofap_stages: true },
+    targetOverrides: { t_nofap_streak: true, t_nofap_checkin: true, t_nofap_stages: true, t_nofap_urge: true, t_nofap_replace: true },
     levels: [
       { label: "Beginner", targetValues: { t_nofap_streak: 30 } },
       { label: "Intermediate", targetValues: { t_nofap_streak: 90 } },
@@ -362,31 +387,31 @@ export const TEMPLATES: Template[] = [
     ] },
   { id: "tmpl_sobriety", pillarId: "vices", label: "Get Sober", description: "Cut alcohol completely and stack dry days", icon: "Shield",
     objectiveIds: ["obj_sober"],
-    targetOverrides: { t_sober_streak: true, t_sober_checkin: true, t_sober_stages: true },
+    targetOverrides: { t_sober_streak: true, t_sober_checkin: true, t_sober_stages: true, t_sober_money: true, t_sober_trigger: true },
     levels: [
-      { label: "Beginner", targetValues: { t_sober_streak: 30 } },
-      { label: "Intermediate", targetValues: { t_sober_streak: 90 } },
-      { label: "Advanced", targetValues: { t_sober_streak: 365 } },
+      { label: "Beginner", targetValues: { t_sober_streak: 30, t_sober_money: 500 } },
+      { label: "Intermediate", targetValues: { t_sober_streak: 90, t_sober_money: 2000 } },
+      { label: "Advanced", targetValues: { t_sober_streak: 365, t_sober_money: 5000 } },
     ] },
   { id: "tmpl_moderation", pillarId: "vices", label: "Mindful Drinking", description: "Stay under your limit, stack alcohol-free days", icon: "Target",
     objectiveIds: ["obj_drinkless"],
-    targetOverrides: { t_drink_limit: true, t_drink_dry_days: true, t_drink_stages: true },
+    targetOverrides: { t_drink_limit: true, t_drink_dry_days: true, t_drink_stages: true, t_drink_count: true, t_drink_money: true },
     levels: [
-      { label: "Beginner", targetValues: { t_drink_dry_days: 15 } },
-      { label: "Intermediate", targetValues: { t_drink_dry_days: 30 } },
-      { label: "Advanced", targetValues: { t_drink_dry_days: 60 } },
+      { label: "Beginner", targetValues: { t_drink_dry_days: 15, t_drink_count: 10, t_drink_money: 300 } },
+      { label: "Intermediate", targetValues: { t_drink_dry_days: 30, t_drink_count: 6, t_drink_money: 1000 } },
+      { label: "Advanced", targetValues: { t_drink_dry_days: 60, t_drink_count: 3, t_drink_money: 2500 } },
     ] },
   { id: "tmpl_detox", pillarId: "vices", label: "Digital Detox", description: "Cap screen time, reclaim your attention", icon: "Brain",
     objectiveIds: ["obj_screen"],
-    targetOverrides: { t_screen_limit: true, t_no_socials: true, t_screen_stages: true },
+    targetOverrides: { t_screen_limit: true, t_no_socials: true, t_screen_stages: true, t_screen_hours: true, t_focus_sessions: true },
     levels: [
-      { label: "Beginner", targetValues: { t_no_socials: 30 } },
-      { label: "Intermediate", targetValues: { t_no_socials: 60 } },
-      { label: "Advanced", targetValues: { t_no_socials: 120 } },
+      { label: "Beginner", targetValues: { t_no_socials: 30, t_screen_hours: 4 } },
+      { label: "Intermediate", targetValues: { t_no_socials: 60, t_screen_hours: 3 } },
+      { label: "Advanced", targetValues: { t_no_socials: 120, t_screen_hours: 2 } },
     ] },
   { id: "tmpl_clean", pillarId: "vices", label: "Clean Living", description: "Quit junk, sugar, and nicotine for good", icon: "Trophy",
     objectiveIds: ["obj_clean_diet"],
-    targetOverrides: { t_junkfree_days: true, t_sugarfree_streak: true, t_smoke_free: true, t_diet_stages: true },
+    targetOverrides: { t_junkfree_days: true, t_sugarfree_streak: true, t_smoke_free: true, t_diet_stages: true, t_homecooked: true, t_craving_skill: true },
     levels: [
       { label: "Beginner", targetValues: { t_sugarfree_streak: 30, t_smoke_free: 30 } },
       { label: "Intermediate", targetValues: { t_sugarfree_streak: 60, t_smoke_free: 90 } },
@@ -501,6 +526,8 @@ export const TARGETS: FrameworkTarget[] = [
   { id: "t_resting_hr", objectiveId: "obj_active", label: "Resting Heart Rate", primitive: "target", role: "metric", unit: "bpm", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 75, target: 60, steps: 7, curveTension: 0 }, rampSteps: null, stageSteps: null, metricKind: 'pace' },
   { id: "t_active_streak", objectiveId: "obj_active", label: "Active Weeks Streak", primitive: "habit", role: "metric", unit: "weeks", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 1, target: 26, steps: 7, curveTension: 0.8 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
   { id: "t_active_stages", objectiveId: "obj_active", label: "Active Lifestyle Journey", primitive: "stage", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["mostly sedentary", "moving most days", "active by default", "athletic baseline"] },
+  { id: "t_active_lifetime", objectiveId: "obj_active", label: "Lifetime Active Days", primitive: "volume", role: "metric", unit: "total", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 1, target: 365, steps: 9, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
+  { id: "t_active_energy", objectiveId: "obj_active", label: "Daily Energy", primitive: "target", role: "metric", unit: "/10", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 4, target: 8, steps: 5, curveTension: 0 }, rampSteps: null, stageSteps: null, metricKind: 'reps' },
 
   // =========================================================================
   // Health -> Sleep & Recover (obj_recovery)
@@ -511,6 +538,8 @@ export const TARGETS: FrameworkTarget[] = [
   { id: "t_sleep_hours", objectiveId: "obj_recovery", label: "Average Sleep", primitive: "target", role: "metric", unit: "hours", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 6, target: 8, steps: 4, curveTension: 0 }, rampSteps: null, stageSteps: null, linkedMetric: "sleep_hours_avg_weekly" },
   { id: "t_sleep_streak", objectiveId: "obj_recovery", label: "Good-Sleep Week Streak", primitive: "target", role: "metric", unit: "weeks", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 26, steps: 7, curveTension: 0.8 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
   { id: "t_recovery_stages", objectiveId: "obj_recovery", label: "Recovery Journey", primitive: "stage", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["always exhausted", "consistent bedtime", "sleeping deeply", "wake up refreshed"] },
+  { id: "t_restful_nights", objectiveId: "obj_recovery", label: "Restful Nights", primitive: "volume", role: "metric", unit: "total", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 1, target: 200, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
+  { id: "t_sleep_hygiene", objectiveId: "obj_recovery", label: "Sleep Hygiene", primitive: "skill", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["wired at bedtime", "winding down nightly", "falling asleep fast", "deep restorative sleep"] },
 
   // =========================================================================
   // Relations -> Get a Girlfriend (obj_girlfriend)
@@ -554,6 +583,9 @@ export const TARGETS: FrameworkTarget[] = [
   { id: "t_monthly_income", objectiveId: "obj_income", label: "Monthly Income", primitive: "target", role: "metric", unit: "$", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 3000, target: 10000, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'income' },
   { id: "t_income_stages", objectiveId: "obj_income", label: "Income Milestones", primitive: "stage", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["first paying client", "$1k month", "$5k month", "$10k month"] },
   { id: "t_sales_skill", objectiveId: "obj_income", label: "Sales & Networking", primitive: "skill", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["deliver your first pitch", "pitch without flinching", "handle objections calmly", "close deals consistently"] },
+  { id: "t_offers_made", objectiveId: "obj_income", label: "Offers Made", primitive: "volume", role: "driver", unit: "/week", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: [{ frequencyPerWeek: 2, durationWeeks: 8 }, { frequencyPerWeek: 4, durationWeeks: 12 }, { frequencyPerWeek: 6, durationWeeks: 24 }], stageSteps: null },
+  { id: "t_clients", objectiveId: "obj_income", label: "Paying Clients", primitive: "volume", role: "metric", unit: "total", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 1, target: 30, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
+  { id: "t_monthly_profit", objectiveId: "obj_income", label: "Monthly Profit", primitive: "target", role: "metric", unit: "$", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 1000, target: 15000, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'income' },
 
   // =========================================================================
   // Wealth -> Financial Freedom (obj_freedom)
@@ -563,6 +595,20 @@ export const TARGETS: FrameworkTarget[] = [
   { id: "t_net_worth", objectiveId: "obj_freedom", label: "Net Worth", primitive: "target", role: "metric", unit: "k$", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 100, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
   { id: "t_savings_rate", objectiveId: "obj_freedom", label: "Savings Rate", primitive: "target", role: "metric", unit: "%", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 15, target: 30, steps: 6, curveTension: 0 }, rampSteps: null, stageSteps: null, metricKind: 'rate' },
   { id: "t_freedom_stages", objectiveId: "obj_freedom", label: "Freedom Milestones", primitive: "stage", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["emergency fund", "debt-free", "investing regularly", "financially independent"] },
+  { id: "t_debt_payoff", objectiveId: "obj_freedom", label: "Debt Paid Off", primitive: "volume", role: "metric", unit: "k$", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 20, steps: 7, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
+  { id: "t_emergency_fund", objectiveId: "obj_freedom", label: "Emergency Fund", primitive: "target", role: "metric", unit: "months", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 6, steps: 6, curveTension: 0.8 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
+  { id: "t_invested_total", objectiveId: "obj_freedom", label: "Invested Total", primitive: "volume", role: "metric", unit: "k$", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 50, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
+
+  // =========================================================================
+  // Wealth -> Start a Business (obj_business)
+  // =========================================================================
+  { id: "t_biz_build", objectiveId: "obj_business", label: "Build Hours", primitive: "volume", role: "driver", unit: "hours/week", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 1, target: 500, steps: 10, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
+  { id: "t_biz_outreach", objectiveId: "obj_business", label: "Customer Outreach", primitive: "volume", role: "driver", unit: "/week", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: [{ frequencyPerWeek: 2, durationWeeks: 8 }, { frequencyPerWeek: 4, durationWeeks: 12 }, { frequencyPerWeek: 6, durationWeeks: 24 }], stageSteps: null },
+  { id: "t_biz_customers", objectiveId: "obj_business", label: "Paying Customers", primitive: "volume", role: "metric", unit: "total", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 1, target: 100, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
+  { id: "t_biz_revenue", objectiveId: "obj_business", label: "Monthly Revenue", primitive: "target", role: "metric", unit: "$", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 10000, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'income' },
+  { id: "t_biz_profit", objectiveId: "obj_business", label: "Monthly Profit", primitive: "target", role: "metric", unit: "$", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 10000, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'income' },
+  { id: "t_biz_skill", objectiveId: "obj_business", label: "Founder Skills", primitive: "skill", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["validate an idea", "land your first sale", "build a repeatable offer", "scale what works"] },
+  { id: "t_biz_stages", objectiveId: "obj_business", label: "Business Journey", primitive: "stage", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["just an idea", "first paying customer", "ramen profitable", "real, growing business"] },
 
   // =========================================================================
   // Meaning -> Daily Practice (obj_practice)
@@ -572,6 +618,8 @@ export const TARGETS: FrameworkTarget[] = [
   { id: "t_reading", objectiveId: "obj_practice", label: "Reading", primitive: "habit", role: "driver", unit: "days/week", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: [{ frequencyPerWeek: 3, durationWeeks: 8 }, { frequencyPerWeek: 5, durationWeeks: 12 }, { frequencyPerWeek: 7, durationWeeks: 24 }], stageSteps: null },
   { id: "t_books", objectiveId: "obj_practice", label: "Books Read", primitive: "volume", role: "metric", unit: "total", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 1, target: 50, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
   { id: "t_practice_stages", objectiveId: "obj_practice", label: "Practice Depth", primitive: "stage", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["sporadic practice", "daily routine", "unbreakable habit", "teaching others"] },
+  { id: "t_med_streak", objectiveId: "obj_practice", label: "Meditation Streak", primitive: "target", role: "metric", unit: "days", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 100, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
+  { id: "t_presence_skill", objectiveId: "obj_practice", label: "Presence", primitive: "skill", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["constantly distracted", "noticing the wandering", "returning to the breath", "present by default"] },
 
   // =========================================================================
   // Meaning -> Continuous Growth (obj_growth)
@@ -580,6 +628,19 @@ export const TARGETS: FrameworkTarget[] = [
   { id: "t_skill_practice", objectiveId: "obj_growth", label: "Skill Practice", primitive: "habit", role: "driver", unit: "days/week", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: [{ frequencyPerWeek: 2, durationWeeks: 8 }, { frequencyPerWeek: 4, durationWeeks: 12 }, { frequencyPerWeek: 6, durationWeeks: 24 }], stageSteps: null },
   { id: "t_courses", objectiveId: "obj_growth", label: "Courses Completed", primitive: "volume", role: "metric", unit: "total", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 1, target: 20, steps: 7, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
   { id: "t_growth_stages", objectiveId: "obj_growth", label: "Growth Path", primitive: "stage", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["curious learner", "active practitioner", "skilled professional", "teaching & mentoring"] },
+  { id: "t_skills_mastered", objectiveId: "obj_growth", label: "Skills Mastered", primitive: "volume", role: "metric", unit: "total", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 5, steps: 5, curveTension: 0.8 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
+  { id: "t_projects_built", objectiveId: "obj_growth", label: "Projects Built", primitive: "volume", role: "metric", unit: "total", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 12, steps: 7, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
+  { id: "t_teach_skill", objectiveId: "obj_growth", label: "Teaching & Sharing", primitive: "skill", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["take notes for yourself", "explain it to a friend", "write or post publicly", "teach or mentor others"] },
+
+  // =========================================================================
+  // Meaning -> Find Your Purpose (obj_purpose)
+  // =========================================================================
+  { id: "t_purpose_journal", objectiveId: "obj_purpose", label: "Vision Journaling", primitive: "habit", role: "driver", unit: "days/week", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: [{ frequencyPerWeek: 3, durationWeeks: 4 }, { frequencyPerWeek: 5, durationWeeks: 8 }, { frequencyPerWeek: 7, durationWeeks: 24 }], stageSteps: null },
+  { id: "t_purpose_action", objectiveId: "obj_purpose", label: "Aligned Action", primitive: "habit", role: "driver", unit: "days/week", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: [{ frequencyPerWeek: 3, durationWeeks: 4 }, { frequencyPerWeek: 5, durationWeeks: 8 }, { frequencyPerWeek: 7, durationWeeks: 24 }], stageSteps: null },
+  { id: "t_purpose_clarity", objectiveId: "obj_purpose", label: "Clarity of Direction", primitive: "skill", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["drifting, no direction", "exploring what matters", "a clear direction", "living it daily"] },
+  { id: "t_purpose_excited", objectiveId: "obj_purpose", label: "Excited-to-Wake Days", primitive: "target", role: "metric", unit: "days", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 90, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
+  { id: "t_purpose_milestones", objectiveId: "obj_purpose", label: "Meaningful Milestones", primitive: "volume", role: "metric", unit: "total", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 12, steps: 7, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
+  { id: "t_purpose_stages", objectiveId: "obj_purpose", label: "Purpose Journey", primitive: "stage", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["feeling lost", "searching for meaning", "found my direction", "living my purpose"] },
 
   // =========================================================================
   // Vices -> Quit Porn (obj_nofap). Streak metrics are cumulative (start at 0),
@@ -588,6 +649,8 @@ export const TARGETS: FrameworkTarget[] = [
   { id: "t_nofap_streak", objectiveId: "obj_nofap", label: "Days Porn-Free", primitive: "target", role: "metric", unit: "days", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 90, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
   { id: "t_nofap_checkin", objectiveId: "obj_nofap", label: "Daily Check-in", primitive: "habit", role: "driver", unit: "days/week", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: [{ frequencyPerWeek: 5, durationWeeks: 4 }, { frequencyPerWeek: 7, durationWeeks: 24 }], stageSteps: null },
   { id: "t_nofap_stages", objectiveId: "obj_nofap", label: "Reboot Journey", primitive: "stage", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["white-knuckling the urges", "urges getting weaker", "weeks clean", "truly free"] },
+  { id: "t_nofap_urge", objectiveId: "obj_nofap", label: "Urge Control", primitive: "skill", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["urges feel overwhelming", "riding them out", "urges pass quickly", "barely tempted"] },
+  { id: "t_nofap_replace", objectiveId: "obj_nofap", label: "Replacement Habit", primitive: "habit", role: "driver", unit: "days/week", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: [{ frequencyPerWeek: 3, durationWeeks: 4 }, { frequencyPerWeek: 5, durationWeeks: 8 }, { frequencyPerWeek: 7, durationWeeks: 24 }], stageSteps: null },
 
   // =========================================================================
   // Vices -> Get Sober (obj_sober)
@@ -595,6 +658,8 @@ export const TARGETS: FrameworkTarget[] = [
   { id: "t_sober_streak", objectiveId: "obj_sober", label: "Alcohol-Free Days", primitive: "target", role: "metric", unit: "days", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 90, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
   { id: "t_sober_checkin", objectiveId: "obj_sober", label: "Stay Dry Today", primitive: "habit", role: "driver", unit: "days/week", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: [{ frequencyPerWeek: 7, durationWeeks: 24 }], stageSteps: null },
   { id: "t_sober_stages", objectiveId: "obj_sober", label: "Sobriety Journey", primitive: "stage", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["cutting back", "first dry weeks", "dry months", "sober for good"] },
+  { id: "t_sober_money", objectiveId: "obj_sober", label: "Money Saved", primitive: "volume", role: "metric", unit: "$", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 2000, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
+  { id: "t_sober_trigger", objectiveId: "obj_sober", label: "Trigger Control", primitive: "skill", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["triggers blindside me", "spotting my triggers", "planning around them", "triggers lose their grip"] },
 
   // =========================================================================
   // Vices -> Drink Less (obj_drinkless) — moderation path
@@ -602,6 +667,8 @@ export const TARGETS: FrameworkTarget[] = [
   { id: "t_drink_limit", objectiveId: "obj_drinkless", label: "Days Within Limit", primitive: "habit", role: "driver", unit: "days/week", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: [{ frequencyPerWeek: 4, durationWeeks: 4 }, { frequencyPerWeek: 6, durationWeeks: 8 }, { frequencyPerWeek: 7, durationWeeks: 24 }], stageSteps: null },
   { id: "t_drink_dry_days", objectiveId: "obj_drinkless", label: "Alcohol-Free Days", primitive: "target", role: "metric", unit: "days", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 60, steps: 7, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
   { id: "t_drink_stages", objectiveId: "obj_drinkless", label: "Moderation Path", primitive: "stage", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["drinking too much", "cutting back", "steady moderation", "effortless control"] },
+  { id: "t_drink_count", objectiveId: "obj_drinkless", label: "Weekly Drink Count", primitive: "target", role: "metric", unit: "drinks", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 14, target: 4, steps: 7, curveTension: 0 }, rampSteps: null, stageSteps: null, metricKind: 'pace' },
+  { id: "t_drink_money", objectiveId: "obj_drinkless", label: "Money Saved", primitive: "volume", role: "metric", unit: "$", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 1000, steps: 7, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
 
   // =========================================================================
   // Vices -> Reclaim Attention (obj_screen)
@@ -609,6 +676,8 @@ export const TARGETS: FrameworkTarget[] = [
   { id: "t_screen_limit", objectiveId: "obj_screen", label: "Days Under Screen Limit", primitive: "habit", role: "driver", unit: "days/week", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: [{ frequencyPerWeek: 4, durationWeeks: 4 }, { frequencyPerWeek: 6, durationWeeks: 8 }, { frequencyPerWeek: 7, durationWeeks: 24 }], stageSteps: null },
   { id: "t_no_socials", objectiveId: "obj_screen", label: "Social-Media-Free Days", primitive: "target", role: "metric", unit: "days", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 60, steps: 7, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
   { id: "t_screen_stages", objectiveId: "obj_screen", label: "Attention Journey", primitive: "stage", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["doomscrolling", "catching myself", "disciplined use", "intentional by default"] },
+  { id: "t_screen_hours", objectiveId: "obj_screen", label: "Daily Screen Time", primitive: "target", role: "metric", unit: "hours", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 6, target: 2, steps: 6, curveTension: 0 }, rampSteps: null, stageSteps: null, metricKind: 'pace' },
+  { id: "t_focus_sessions", objectiveId: "obj_screen", label: "Focus Sessions", primitive: "volume", role: "driver", unit: "/week", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: [{ frequencyPerWeek: 3, durationWeeks: 4 }, { frequencyPerWeek: 5, durationWeeks: 8 }, { frequencyPerWeek: 7, durationWeeks: 24 }], stageSteps: null },
 
   // =========================================================================
   // Vices -> Kill the Junk (obj_clean_diet)
@@ -617,6 +686,8 @@ export const TARGETS: FrameworkTarget[] = [
   { id: "t_sugarfree_streak", objectiveId: "obj_clean_diet", label: "Sugar-Free Streak", primitive: "target", role: "metric", unit: "days", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 60, steps: 7, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
   { id: "t_smoke_free", objectiveId: "obj_clean_diet", label: "Smoke-Free Days", primitive: "target", role: "metric", unit: "days", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 0, target: 90, steps: 8, curveTension: 1.2 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
   { id: "t_diet_stages", objectiveId: "obj_clean_diet", label: "Clean Living Journey", primitive: "stage", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["constant cravings", "cutting back", "mostly clean", "clean by default"] },
+  { id: "t_homecooked", objectiveId: "obj_clean_diet", label: "Home-Cooked Meals", primitive: "habit", role: "driver", unit: "days/week", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: [{ frequencyPerWeek: 3, durationWeeks: 4 }, { frequencyPerWeek: 5, durationWeeks: 8 }, { frequencyPerWeek: 7, durationWeeks: 24 }], stageSteps: null },
+  { id: "t_craving_skill", objectiveId: "obj_clean_diet", label: "Craving Control", primitive: "skill", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["cravings run the show", "pausing before I give in", "cravings fade fast", "barely notice them"] },
 ]
 
 // ---------------------------------------------------------------------------

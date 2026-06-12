@@ -10,6 +10,10 @@
 
 import { PILLARS, OBJECTIVES } from "./data/newGoalFramework"
 
+function pillarLabel(id: string): string {
+  return PILLARS.find((p) => p.id === id)?.label ?? id
+}
+
 export type TaxonomyKind = "pillar" | "objective"
 
 export interface TaxonomyItem {
@@ -56,7 +60,9 @@ export function buildTaxonomyItems(): TaxonomyItem[] {
       kind: "objective",
       pillarId: o.pillarId,
       label: o.label,
-      text: `${o.label}. ${o.description}. ${o.successPreview}. ${o.values.join(", ")}.`,
+      // soundsLike (hidden matcher vocabulary) carries the bulk of the signal — it's
+      // the human/feeling phrasings people actually type, so it leads the embedded text.
+      text: `${o.label}. ${o.soundsLike} ${o.description}. ${o.successPreview}. ${o.values.join(", ")}.`,
     })
   }
   return items
@@ -149,4 +155,92 @@ export function pickSuggestions(matches: IntakeMatches, opts: SuggestionOpts = {
     .map((o) => o.id)
 
   return { pillarIds: [...pillarIds], objectiveIds }
+}
+
+// ---------------------------------------------------------------------------
+// Clarifying-questions layer — when the match is ambiguous, ask instead of guess.
+// Deterministic, $0: embeddings decide WHEN/WHICH to ask, the taxonomy supplies
+// the options.
+// ---------------------------------------------------------------------------
+
+export interface Clarification {
+  pillarId: string
+  prompt: string
+  /** Candidate objectives for the user to choose between (multi-select). */
+  options: IntakeMatch[]
+}
+
+/** Two suggested areas that scored close enough to be worth disambiguating. */
+export interface ClosePillars {
+  a: string
+  b: string
+  prompt: string
+}
+
+export interface IntakeResolution {
+  /** Areas to pre-select. */
+  pillarIds: string[]
+  /** Objectives auto-selected because they clearly dominate their area. */
+  objectiveIds: string[]
+  /** Ambiguous areas (tied / weak objectives) the user should disambiguate. */
+  clarifications: Clarification[]
+  /** Adjacent suggested areas with near-equal scores — "is this more X or Y?". */
+  closePillars: ClosePillars[]
+}
+
+export interface ResolveOpts extends SuggestionOpts {
+  /** A pillar's top objective only auto-selects if the runner-up is below topScore*tieRatio. */
+  tieRatio?: number
+  /** Below this, even the top objective is too weak to auto-pick → clarify. */
+  objectiveFloor?: number
+  /** How many options to offer in a clarification. */
+  clarifyOptions?: number
+  /** Two kept areas whose effective scores differ by <= this are flagged as "close". */
+  closeMargin?: number
+  /** Max close-pillar prompts to surface. */
+  maxClosePairs?: number
+}
+
+/**
+ * Resolve a match into pre-selections + clarifying questions. For each suggested
+ * pillar: if one objective clearly dominates → auto-select it; if the top
+ * objectives are tied (or all weak) → emit a "Which {pillar} goal?" question so
+ * the user picks. Also surfaces close-pillar pairs (near-equal area scores, e.g.
+ * "habit vs dating life") so the user can disambiguate up front. This turns a
+ * vague input into a short guided multiple-choice funnel.
+ */
+export function resolveIntake(matches: IntakeMatches, opts: ResolveOpts = {}): IntakeResolution {
+  const { tieRatio = 0.85, objectiveFloor = 0.2, clarifyOptions = 3, closeMargin = 0.06, maxClosePairs = 2 } = opts
+  const { pillarIds } = pickSuggestions(matches, opts)
+
+  const objectiveIds: string[] = []
+  const clarifications: Clarification[] = []
+  for (const pid of pillarIds) {
+    const objs = matches.objectives.filter((o) => o.pillarId === pid).sort((a, b) => b.score - a.score)
+    const top = objs[0]
+    const second = objs[1]
+    const ask = () => clarifications.push({ pillarId: pid, prompt: `Which ${pillarLabel(pid)} goal fits best?`, options: objs.slice(0, clarifyOptions) })
+
+    if (!top || top.score < objectiveFloor) {
+      if (objs.length > 0) ask()                       // nothing matched well → let them pick
+    } else if (!second || second.score < top.score * tieRatio) {
+      objectiveIds.push(top.id)                        // clear winner → auto-select
+    } else {
+      ask()                                            // tied → ask
+    }
+  }
+
+  // Close-pillar disambiguation: adjacent kept areas (in effective-score order)
+  // whose scores are near-equal are genuinely ambiguous — ask which fits better.
+  const keptEff = effectivePillarScores(matches).filter((p) => pillarIds.includes(p.id))
+  const closePillars: ClosePillars[] = []
+  for (let i = 0; i + 1 < keptEff.length && closePillars.length < maxClosePairs; i++) {
+    const a = keptEff[i]
+    const b = keptEff[i + 1]
+    if (a.score - b.score <= closeMargin) {
+      closePillars.push({ a: a.id, b: b.id, prompt: `Is this more about ${pillarLabel(a.id)} or ${pillarLabel(b.id)}?` })
+    }
+  }
+
+  return { pillarIds, objectiveIds, clarifications, closePillars }
 }

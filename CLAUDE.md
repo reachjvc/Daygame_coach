@@ -3,6 +3,9 @@
 
 If you enter planmode and give user a summary, keep it conscise. Sacrifice grammar for conscisiveness.
 
+### Screenshots → always write to `.playwright-mcp/`
+ALL screenshots (Playwright MCP and any ad-hoc node/playwright scripts) must save into `.playwright-mcp/` (gitignored). Never write `.png` to repo root or scattered dirs. For scripted captures pass an explicit path: `page.screenshot({ path: '.playwright-mcp/<name>.png' })`. Delete throwaway screenshots when done.
+
 ### Pipeline work → read `docs/pipeline/learnings.md` first
 Before any pipeline stage work: read learnings.md. It has gotchas, fixes, and batch context that prevent repeat mistakes. Update it as you discover new things. Quality > speed > coverage.
 

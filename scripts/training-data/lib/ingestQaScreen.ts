@@ -11,7 +11,16 @@
  * Severity ladder: PASS < ADVISORY < REVIEW < BLOCK.
  *   BLOCK    — thin/negligible content; never ingested.
  *   REVIEW   — type-uncertain, low post-repair confidence, or unverifiable; needs --allow-review.
- *   ADVISORY — heavy-repair reliance or compilation; ingested, but logged.
+ *   ADVISORY — extension point; no checks currently emit it.
+ *
+ * Every check must map to a RESIDUAL problem in the final corpus, not a proxy:
+ *  - "compilation" is NOT flagged. Chunks are scoped per conversation (metadata.conversationId
+ *    + conversationChunkIndex), so a chunk never spans two clips; over-segmented compilations
+ *    are already rejected upstream at the stage-06 conversation-count gate.
+ *  - "heavy-repair" (lots of 06e repairs) is NOT flagged. Raw pre-repair damage says nothing
+ *    about final quality — residual unrepaired damage is what matters, and that is already
+ *    covered by the low-confidence REVIEW (#4) and the 06h gate's unrepaired-ratio block.
+ *    (Verified: the 8 heavy-repair QT1 videos ended ~100% high-tier with <2% unrepaired.)
  */
 
 import fs from "fs"
@@ -27,7 +36,6 @@ export const QA_THRESHOLDS = {
   shortSegs: 60, // segments < this AND below minHighRatio -> BLOCK (escaped the size-gated lq check)
   minHighRatio: 0.95, // high-tier / total below this -> REVIEW (low post-repair confidence)
   minVtConfidence: 0.8, // 06 video_type confidence below this -> REVIEW (type uncertain)
-  heavyRepairLq: 0.3, // raw low-quality ratio at/above this -> ADVISORY (rescued by 06e)
 }
 
 /** All signals the screen reasons over. Pure data — gathered separately from IO. */
@@ -35,8 +43,7 @@ export interface VideoSignals {
   videoId: string
   chunkCount: number
   segments: number | null
-  highTierRatio: number | null // tier_counts.high / segments_total
-  lqRatio: number | null // 06h quality_gate.inputs.low_quality_total_ratio
+  highTierRatio: number | null // tier_counts.high / segments_total (post-repair)
   videoType: string | null // 06h video_type
   dominantChunkType: string | null // most common [TYPE:] tag across 09 chunks
   vtConfidence: number | null // 06 video_type.confidence
@@ -96,17 +103,6 @@ export function screenVideo(s: VideoSignals): Verdict {
   if (s.highTierRatio != null && s.highTierRatio < QA_THRESHOLDS.minHighRatio) {
     reasons.push(`low-confidence: ${(s.highTierRatio * 100).toFixed(1)}% high-tier (< ${QA_THRESHOLDS.minHighRatio * 100}%)`)
     esc("REVIEW")
-  }
-
-  // #3 heavy-repair reliance -> ADVISORY
-  if (s.lqRatio != null && s.lqRatio >= QA_THRESHOLDS.heavyRepairLq) {
-    advisories.push(`heavy-repair: raw low-quality ratio ${s.lqRatio.toFixed(2)} (>= ${QA_THRESHOLDS.heavyRepairLq}), repaired by 06e`)
-    esc("ADVISORY")
-  }
-  // #5 compilation -> ADVISORY
-  if (s.videoType === "compilation") {
-    advisories.push("compilation: multi-clip video — verify chunk/context boundaries")
-    esc("ADVISORY")
   }
 
   return { videoId: s.videoId, severity, reasons, advisories }
@@ -204,7 +200,6 @@ export function gatherSignals(videoId: string, chunkFilePath: string, idx: Scree
   // 06h confidence report
   let segments: number | null = null
   let highTierRatio: number | null = null
-  let lqRatio: number | null = null
   let videoType: string | null = null
   const p06h = idx.i06h.get(videoId)
   if (p06h) {
@@ -216,15 +211,13 @@ export function gatherSignals(videoId: string, chunkFilePath: string, idx: Scree
         segments = total
         if (typeof high === "number") highTierRatio = high / total
       }
-      const lq = r?.quality_gate?.inputs?.low_quality_total_ratio
-      if (typeof lq === "number") lqRatio = lq
       if (typeof r?.video_type === "string") videoType = r.video_type
     } catch {
       /* leave nulls -> screened as REVIEW (unverifiable) */
     }
   }
 
-  return { videoId, chunkCount, segments, highTierRatio, lqRatio, videoType, dominantChunkType, vtConfidence }
+  return { videoId, chunkCount, segments, highTierRatio, videoType, dominantChunkType, vtConfidence }
 }
 
 /** Run the screen over (videoId, chunkFilePath) pairs. */

@@ -1538,8 +1538,24 @@ export function buildFrameworkPlanInserts(state: NewGoalsFlowState): BatchGoalIn
 
   const inserts: BatchGoalInsert[] = []
 
+  // Emit pillars/objectives in the user's RANKED order (state arrays) first, so
+  // emit order -> createGoalBatch sequential `position` -> priority is encoded in
+  // `position` and round-trips via parseFrameworkPlan (fetched goal_level,position).
+  // Any pillar/objective pulled in only IMPLICITLY (by an enabled target, not
+  // user-ranked) is appended in canonical PILLARS/OBJECTIVES order so it still
+  // persists. Custom-pillar ids in state.pillars are skipped here (they have no
+  // framework pillar row — handled by the synthetic "Your own goals" container).
+  const pillarById = new Map(PILLARS.map((p) => [p.id, p]))
+  const emittedPillars = new Set<string>()
+  const orderedPillarIds: string[] = []
+  for (const id of state.pillars) {
+    if (pillarSet.has(id) && pillarById.has(id) && !emittedPillars.has(id)) { orderedPillarIds.push(id); emittedPillars.add(id) }
+  }
   for (const p of PILLARS) {
-    if (!pillarSet.has(p.id)) continue
+    if (pillarSet.has(p.id) && !emittedPillars.has(p.id)) { orderedPillarIds.push(p.id); emittedPillars.add(p.id) }
+  }
+  for (const id of orderedPillarIds) {
+    const p = pillarById.get(id)!
     inserts.push({
       _tempId: FW_PILLAR + p.id,
       _tempParentId: null,
@@ -1556,8 +1572,18 @@ export function buildFrameworkPlanInserts(state: NewGoalsFlowState): BatchGoalIn
     })
   }
 
+  const objById = new Map(OBJECTIVES.map((o) => [o.id, o]))
+  const emittedObjs = new Set<string>()
+  const orderedObjIds: string[] = []
+  for (const id of state.objectives ?? []) {
+    const o = objById.get(id)
+    if (o && objSet.has(id) && pillarSet.has(o.pillarId) && !emittedObjs.has(id)) { orderedObjIds.push(id); emittedObjs.add(id) }
+  }
   for (const o of OBJECTIVES) {
-    if (!objSet.has(o.id) || !pillarSet.has(o.pillarId)) continue
+    if (objSet.has(o.id) && pillarSet.has(o.pillarId) && !emittedObjs.has(o.id)) { orderedObjIds.push(o.id); emittedObjs.add(o.id) }
+  }
+  for (const id of orderedObjIds) {
+    const o = objById.get(id)!
     inserts.push({
       _tempId: FW_OBJ + o.id,
       _tempParentId: FW_PILLAR + o.pillarId,

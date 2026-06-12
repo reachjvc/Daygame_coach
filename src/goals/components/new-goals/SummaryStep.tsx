@@ -18,7 +18,7 @@ import {
 } from "@/src/goals/data/newGoalFramework"
 import { makeCustomFrameworkTarget } from "@/src/goals/data/newGoalFramework"
 import type { FrameworkTarget, GoalPrimitive, TargetOverride } from "@/src/goals/data/newGoalFramework"
-import { classifyHorizon, HORIZON_META, HORIZONS_ORDERED } from "@/src/goals/horizonService"
+import { classifyHorizon, HORIZON_META, HORIZONS_ORDERED, formatCountdown, interpolateDateISO } from "@/src/goals/horizonService"
 import type { Horizon } from "@/src/goals/horizonService"
 import { generateMilestoneLadder } from "@/src/goals/milestoneService"
 import type { MilestoneLadderConfig, MilestonePin, CustomTarget } from "@/src/goals/types"
@@ -64,6 +64,16 @@ interface SummaryStepProps {
   onRename?: (id: string, label: string) => void
   onSave?: () => void
   saveStatus?: "idle" | "saving" | "saved" | "error"
+  /** Plan start date (YYYY-MM-DD). */
+  startDate?: string
+  /** Priority order (rank) of selected pillars / objectives. */
+  pillarOrder?: string[]
+  objectiveOrder?: string[]
+  /** Per-tier target dates (flow-state only). */
+  pillarDates?: Record<string, string>
+  objectiveDates?: Record<string, string>
+  /** Initial view for the toggle (area | time | roadmap). */
+  defaultView?: "area" | "time" | "roadmap"
 }
 
 export function SummaryStep({
@@ -75,8 +85,15 @@ export function SummaryStep({
   onRename,
   onSave,
   saveStatus = "idle",
+  startDate,
+  pillarOrder = [],
+  objectiveOrder = [],
+  pillarDates = {},
+  objectiveDates = {},
+  defaultView = "area",
 }: SummaryStepProps) {
-  const [view, setView] = useState<"area" | "time">("area")
+  const [view, setView] = useState<"area" | "time" | "roadmap">(defaultView)
+  const now = useMemo(() => new Date(), [])
   const enabledTargetCount = useMemo(() => {
     let count = 0
     for (const objId of selectedObjectives) {
@@ -163,7 +180,9 @@ export function SummaryStep({
     return out
   }, [selectedObjectives, targetOverrides, labels])
 
-  const activePillars = PILLARS.filter((p) => selectedPillars.has(p.id))
+  // Areas in priority (rank) order, matching Focus/Goals; unranked active areas last.
+  const pillarRankIdx = (id: string) => { const i = pillarOrder.indexOf(id); return i === -1 ? Infinity : i }
+  const activePillars = PILLARS.filter((p) => selectedPillars.has(p.id)).sort((a, b) => pillarRankIdx(a.id) - pillarRankIdx(b.id))
 
   function isTargetEnabled(target: FrameworkTarget): boolean {
     const override = targetOverrides[target.id]
@@ -262,8 +281,13 @@ export function SummaryStep({
     return ""
   }
 
-  /** Render one target row (framework or custom) with editable title + milestone chain. */
-  function renderTargetRow(target: FrameworkTarget) {
+  /**
+   * Render one target row (framework or custom) with editable title + milestone chain.
+   * In roadmap mode (`opts.projectDates`), unpinned checkpoints get projected dates paced
+   * from the plan start to the target's effective end (own date, else the inherited
+   * `opts.endDate` from its objective/area) — completing the dated cascade.
+   */
+  function renderTargetRow(target: FrameworkTarget, opts?: { projectDates?: boolean; endDate?: string }) {
     const primMeta = PRIMITIVE_META[target.primitive]
     const detail = renderTargetDetail(target)
     const isShared = !!target.sharedDriverId
@@ -271,8 +295,16 @@ export function SummaryStep({
     const roleColor = target.role === "driver" ? "#22c55e" : "#3b82f6"
     const milestones = buildMilestones(target)
     const edits = targetOverrides[target.id]?.milestoneEdits
-    const targetDate = targetOverrides[target.id]?.targetDate
+    const ownDate = targetOverrides[target.id]?.targetDate
+    // Effective end for dating: own target date, else the inherited tier date (roadmap only).
+    const endDate = ownDate || (opts?.projectDates ? opts?.endDate : undefined)
+    const targetDate = endDate
+    const projectDates = !!opts?.projectDates && !!startDate && !!endDate
+    const horizon = classifyHorizon({ primitive: target.primitive, role: target.role, targetDate: targetDate || undefined }, now)
+    const hMeta = HORIZON_META[horizon]
+    const firstStep = milestones ? milestones[0].step : 0
     const lastStep = milestones ? milestones[milestones.length - 1].step : -1
+    const span = lastStep - firstStep || 1
     const label = labels[target.id] ?? target.label
 
     return (
@@ -296,16 +328,25 @@ export function SummaryStep({
           <span className="text-[10px] px-1.5 py-0.5 rounded-full shrink-0" style={{ backgroundColor: primMeta.color + "33", color: primMeta.color }}>
             {primMeta.label}
           </span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full shrink-0" style={{ backgroundColor: hMeta.color + "22", color: hMeta.color }} title={hMeta.sublabel}>
+            {hMeta.label}
+          </span>
           {isShared && <span className="text-[10px] text-zinc-500 italic shrink-0">(shared)</span>}
           {detail && !milestones && <span className="text-[10px] text-zinc-500">&rarr; {detail}</span>}
-          {targetDate && <span className="text-[10px] text-zinc-500">&rarr; by {fmtDate(targetDate)}</span>}
+          {targetDate
+            ? <span className="text-[10px] text-zinc-500">&rarr; by {fmtDate(targetDate)}{formatCountdown(targetDate, now) ? ` · ${formatCountdown(targetDate, now)}` : ""}</span>
+            : <span className="text-[10px] text-zinc-600">&rarr; no date</span>}
         </div>
 
         {milestones && milestones.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap pl-12 ml-4 mt-0.5 mb-1">
             {milestones.map((m, i) => {
               const pinned = edits?.[m.step]?.value != null
-              const date = m.step === lastStep ? targetDate : edits?.[m.step]?.date
+              const manualDate = m.step === lastStep ? targetDate : edits?.[m.step]?.date
+              // Project an evenly-paced date for unpinned checkpoints when in roadmap mode.
+              const projected = !manualDate && projectDates ? interpolateDateISO(startDate!, endDate!, (m.step - firstStep) / span) : null
+              const date = manualDate ?? projected
+              const isProjected = !manualDate && !!projected
               return (
                 <div key={m.step} className="flex items-center gap-1">
                   <span
@@ -315,7 +356,7 @@ export function SummaryStep({
                     {m.value}
                   </span>
                   {pinned && <Lock className="size-2.5" style={{ color: primMeta.color }} />}
-                  {date && <span className="text-[9px] text-zinc-600">({fmtDate(date)})</span>}
+                  {date && <span className={`text-[9px] ${isProjected ? "text-zinc-700 italic" : "text-zinc-600"}`}>({fmtDate(date)})</span>}
                   {i < milestones.length - 1 && <span className="text-[10px] text-zinc-700">{"→"}</span>}
                 </div>
               )
@@ -329,9 +370,12 @@ export function SummaryStep({
   return (
     <div>
       <h2 className="text-2xl font-bold text-center mb-2">Your Goal Map</h2>
-      <p className="text-zinc-400 text-center mb-6">
+      <p className="text-zinc-400 text-center mb-1">
         Here&apos;s what you&apos;re building toward
       </p>
+      {startDate && (
+        <p className="text-xs text-zinc-500 text-center mb-6">Starting {fmtDate(startDate)}</p>
+      )}
 
       {onSave && (
         <div className="flex flex-col items-center gap-2 mb-8">
@@ -498,18 +542,90 @@ export function SummaryStep({
         </div>
       )}
 
-      {/* View toggle — by area (the abstract→concrete hierarchy) or by time horizon */}
+      {/* View toggle — by area (hierarchy), by time horizon, or by roadmap (ranked dated cascade) */}
       <div className="flex items-center justify-center gap-1 mb-4">
-        {(["area", "time"] as const).map((v) => (
+        {(["area", "time", "roadmap"] as const).map((v) => (
           <button
             key={v}
             onClick={() => setView(v)}
             className={`text-xs px-3 py-1.5 rounded-full border transition-all ${view === v ? "bg-white/10 border-white/30 text-white" : "bg-white/5 border-white/10 text-zinc-500 hover:text-zinc-300"}`}
           >
-            {v === "area" ? "By area" : "By time"}
+            {v === "area" ? "By area" : v === "time" ? "By time" : "By roadmap"}
           </button>
         ))}
       </div>
+
+      {/* By-roadmap view — the ranked, dated cascade: areas (priority + date) →
+          objectives (priority + date) → targets (date + milestone checkpoints). */}
+      {view === "roadmap" && (() => {
+        const tierBadge = (date: string | undefined) => {
+          if (!date) return <span className="text-[10px] text-zinc-600">no date</span>
+          const cd = formatCountdown(date, now)
+          return <span className="text-[10px] text-zinc-400">by {fmtDate(date)}{cd ? ` · ${cd}` : ""}</span>
+        }
+        // Areas in priority order (ranked), then any active area not yet ranked.
+        const rankedPillars = [
+          ...pillarOrder.filter((id) => selectedPillars.has(id)),
+          ...activePillars.map((p) => p.id).filter((id) => !pillarOrder.includes(id)),
+        ]
+          .map((id) => PILLARS.find((p) => p.id === id))
+          .filter((p): p is NonNullable<typeof p> => !!p)
+
+        return (
+          <div className="space-y-4">
+            {rankedPillars.map((pillar, pIdx) => {
+              const PillarIcon = ICON_MAP[pillar.icon]
+              const pillarObjsAll = getObjectivesForPillar(pillar.id)
+              const objIds = pillarObjsAll.map((o) => o.id)
+              const rankedObjs = [
+                ...objectiveOrder.filter((id) => objIds.includes(id) && selectedObjectives.has(id)),
+                ...objIds.filter((id) => selectedObjectives.has(id) && !objectiveOrder.includes(id)),
+              ].map((id) => pillarObjsAll.find((o) => o.id === id)!).filter(Boolean)
+              const pillarCustoms = customTargets
+                .filter((c) => c.pillarId === pillar.id && (targetOverrides[c.id]?.enabled ?? true))
+                .map((c) => makeCustomFrameworkTarget(c.id, c.pillarId, c.unit, labels[c.id] ?? "New goal"))
+              if (rankedObjs.length === 0 && pillarCustoms.length === 0) return null
+
+              return (
+                <div key={pillar.id} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                  {/* Area row — rank badge + name + date/countdown */}
+                  <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: `linear-gradient(90deg, ${pillar.color}15, transparent)` }}>
+                    <span className="text-[10px] font-bold size-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: pillar.color + "33", color: pillar.color }}>{pIdx + 1}</span>
+                    {PillarIcon && <PillarIcon className="size-5" style={{ color: pillar.color }} />}
+                    <span className="text-sm font-bold" style={{ color: pillar.color }}>{labels[pillar.id] ?? pillar.label}</span>
+                    <span className="ml-auto">{tierBadge(pillarDates[pillar.id])}</span>
+                  </div>
+
+                  <div className="px-4 py-2">
+                    {rankedObjs.map((obj, oIdx) => {
+                      const targets = getTargetsForObjective(obj.id).filter(isTargetEnabled)
+                      return (
+                        <div key={obj.id} className="mb-3 last:mb-0">
+                          {/* Objective row — rank badge + name + date/countdown */}
+                          <div className="flex items-center gap-2 pl-4 py-1.5 border-l-2 border-white/10">
+                            <span className="text-[9px] font-bold size-4 rounded-full flex items-center justify-center shrink-0 bg-white/10 text-zinc-300">{oIdx + 1}</span>
+                            <span className="text-sm font-medium text-zinc-200">{labels[obj.id] ?? obj.label}</span>
+                            <span className="ml-auto">{tierBadge(objectiveDates[obj.id])}</span>
+                          </div>
+                          {targets.map((target) => renderTargetRow(target, { projectDates: true, endDate: objectiveDates[obj.id] || pillarDates[pillar.id] }))}
+                        </div>
+                      )
+                    })}
+                    {pillarCustoms.length > 0 && (
+                      <div className={rankedObjs.length > 0 ? "mt-3" : ""}>
+                        <div className="flex items-center gap-2 pl-4 py-1.5 border-l-2 border-white/10">
+                          <span className="text-sm font-medium text-zinc-200">Your own goals</span>
+                        </div>
+                        {pillarCustoms.map((target) => renderTargetRow(target, { projectDates: true, endDate: pillarDates[pillar.id] }))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+      })()}
 
       {/* By-time view — group every goal by its horizon so the cascade is visible */}
       {view === "time" && (
@@ -553,9 +669,10 @@ export function SummaryStep({
       <div className="space-y-4">
         {activePillars.map((pillar) => {
           const PillarIcon = ICON_MAP[pillar.icon]
-          const pillarObjectives = getObjectivesForPillar(pillar.id).filter(
-            (o) => selectedObjectives.has(o.id)
-          )
+          const objRankIdx = (id: string) => { const i = objectiveOrder.indexOf(id); return i === -1 ? Infinity : i }
+          const pillarObjectives = getObjectivesForPillar(pillar.id)
+            .filter((o) => selectedObjectives.has(o.id))
+            .sort((a, b) => objRankIdx(a.id) - objRankIdx(b.id))
           const pillarCustoms = customTargets
             .filter((c) => c.pillarId === pillar.id && (targetOverrides[c.id]?.enabled ?? true))
             .map((c) => makeCustomFrameworkTarget(c.id, c.pillarId, c.unit, labels[c.id] ?? "New goal"))

@@ -8,7 +8,6 @@ function clean(overrides: Partial<VideoSignals> = {}): VideoSignals {
     chunkCount: 30,
     segments: 200,
     highTierRatio: 0.99,
-    lqRatio: 0.1,
     videoType: "talking_head",
     dominantChunkType: "talking_head",
     vtConfidence: 0.97,
@@ -32,15 +31,14 @@ describe("screenVideo", () => {
 
   it("BLOCKs a short + damaged video that escaped the size-gated lq check", () => {
     // 11 segs, 90.9% high — the real 6fHFpEjahnc case
-    const v = screenVideo(clean({ segments: 11, highTierRatio: 0.909, lqRatio: 0.64, chunkCount: 3 }))
+    const v = screenVideo(clean({ segments: 11, highTierRatio: 0.909, chunkCount: 3 }))
     expect(v.severity).toBe("BLOCK")
   })
 
-  it("does NOT block a short but clean video", () => {
-    // 40 segs but fully repaired to 100% high (xfVhG9qwB38 case) — ADVISORY at most, never BLOCK
-    const v = screenVideo(clean({ segments: 40, highTierRatio: 1.0, lqRatio: 0.35, chunkCount: 11 }))
-    expect(v.severity).not.toBe("BLOCK")
-    expect(v.severity).not.toBe("REVIEW")
+  it("does NOT flag a short but clean video (heavy repair that ended ~100% high)", () => {
+    // 40 segs, fully repaired to 100% high (xfVhG9qwB38 case) — repaired == not a problem
+    const v = screenVideo(clean({ segments: 40, highTierRatio: 1.0, chunkCount: 11 }))
+    expect(v.severity).toBe("PASS")
   })
 
   it("REVIEWs a type-uncertain video (low video_type confidence)", () => {
@@ -67,20 +65,14 @@ describe("screenVideo", () => {
     expect(v.reasons.join(" ")).toMatch(/unverifiable/)
   })
 
-  it("ADVISORY for heavy-repair reliance (still ingestible)", () => {
-    const v = screenVideo(clean({ lqRatio: 0.4 }))
-    expect(v.severity).toBe("ADVISORY")
-    expect(v.advisories.join(" ")).toMatch(/heavy-repair/)
-  })
-
-  it("ADVISORY for compilation", () => {
+  it("does NOT flag a clean compilation (chunks are conversation-scoped)", () => {
     const v = screenVideo(clean({ videoType: "compilation", dominantChunkType: "compilation" }))
-    expect(v.severity).toBe("ADVISORY")
-    expect(v.advisories.join(" ")).toMatch(/compilation/)
+    expect(v.severity).toBe("PASS")
+    expect(v.advisories.join(" ")).not.toMatch(/compilation/)
   })
 
-  it("escalates to the worst severity (BLOCK beats REVIEW beats ADVISORY)", () => {
-    const v = screenVideo(clean({ chunkCount: 2, highTierRatio: 0.5, segments: 10, lqRatio: 0.9, vtConfidence: 0.5 }))
+  it("escalates to the worst severity (BLOCK beats REVIEW)", () => {
+    const v = screenVideo(clean({ chunkCount: 2, highTierRatio: 0.5, segments: 10, vtConfidence: 0.5 }))
     expect(v.severity).toBe("BLOCK")
   })
 })

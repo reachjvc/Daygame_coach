@@ -25,20 +25,38 @@ type BadgeRow = {
   earnedIdx: number
   next: AchievementTier | null
   progress: number
+  /** True for "lower is better" metrics (weight, body-fat, waist) where tiers descend. */
+  descending: boolean
 }
 
 export function AchievementsPanel({ goals, onEdit }: { goals: GoalWithProgress[]; onEdit?: (goal: GoalWithProgress) => void }) {
   const badges: BadgeRow[] = []
   for (const g of goals) {
+    if (g.is_archived) continue // the tree fetch includes archived rows; achievements track only live goals
     const tpl = g.template_id ?? ""
     if (!tpl.startsWith(FW_TGT)) continue
     const tiers = getAchievementTiers(tpl.slice(FW_TGT.length))
     if (!tiers) continue
+    // "Lower is better" metrics (weight, body-fat, waist) have DESCENDING tiers — a
+    // tier is earned when you reach AT OR BELOW it, and progress accrues as the value
+    // falls. Without this, sitting at the start value reads as "Maxed — Gold!".
+    const descending = tiers.length >= 2 && tiers[0].value > tiers[tiers.length - 1].value
     let earnedIdx = -1
-    tiers.forEach((t, i) => { if (g.current_value >= t.value) earnedIdx = i })
+    tiers.forEach((t, i) => { if (descending ? g.current_value <= t.value : g.current_value >= t.value) earnedIdx = i })
     const next = tiers[earnedIdx + 1] ?? null
-    const progress = next ? Math.min(100, Math.round((g.current_value / next.value) * 100)) : 100
-    badges.push({ goal: g, id: g.id, label: g.title, value: g.current_value, tiers, earnedIdx, next, progress })
+    let progress = 100
+    if (next) {
+      if (descending) {
+        // Track the descent from the last earned tier (or the journey's start) down to next.
+        const start = (g.milestone_config as { start?: number } | null)?.start
+        const base = tiers[earnedIdx]?.value ?? (typeof start === "number" ? start : g.current_value)
+        progress = base > next.value ? Math.round(((base - g.current_value) / (base - next.value)) * 100) : 0
+      } else {
+        progress = Math.round((g.current_value / next.value) * 100)
+      }
+      progress = Math.max(0, Math.min(100, progress))
+    }
+    badges.push({ goal: g, id: g.id, label: g.title, value: g.current_value, tiers, earnedIdx, next, progress, descending })
   }
 
   if (badges.length === 0) return null
@@ -80,7 +98,7 @@ export function AchievementsPanel({ goals, onEdit }: { goals: GoalWithProgress[]
             </div>
             <span className="text-[10px] ml-auto">
               {b.next
-                ? <span className="text-zinc-500">{b.value}/{b.next.value} → {b.next.tier} ({b.progress}%)</span>
+                ? <span className="text-zinc-500">{b.value} {b.descending ? "↓" : "/"} {b.next.value} → {b.next.tier} ({b.progress}%)</span>
                 : <span className="text-amber-300">Maxed — Gold!</span>}
             </span>
           </div>

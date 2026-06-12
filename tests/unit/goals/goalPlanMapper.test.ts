@@ -203,6 +203,35 @@ describe("parseFrameworkPlan (round-trip)", () => {
   })
 })
 
+describe("ranked priority round-trips via emit order → position", () => {
+  // insertsToRows preserves array (emit) order; createGoalBatch assigns `position`
+  // in that order and getFrameworkPlanGoals fetches `.order(goal_level, position)`,
+  // so emit order == fetched order for our monotonic-by-level emit. This locks the
+  // contract that user rank survives save→reload.
+  test("preserves a non-canonical pillar + objective order", () => {
+    const ranked: NewGoalsFlowState = {
+      pillars: ["relations", "health"], // canonical PILLARS order is health before relations
+      objectives: ["obj_girlfriend", "obj_strong"], // canonical is obj_strong first
+      targetOverrides: {},
+    }
+    const restored = parseFrameworkPlan(insertsToRows(buildFrameworkPlanInserts(ranked)))
+    expect(restored.pillars).toEqual(["relations", "health"])
+    expect(restored.objectives).toEqual(["obj_girlfriend", "obj_strong"])
+  })
+
+  test("user-ranked items come first; target-implied items append in canonical order", () => {
+    const implied: NewGoalsFlowState = {
+      pillars: ["relations"], // health is pulled in only via the bench target below
+      objectives: [],
+      targetOverrides: { t_bench: { enabled: true, value: 60, steps: 7, curveTension: 0, targetDate: "" } },
+    }
+    const restored = parseFrameworkPlan(insertsToRows(buildFrameworkPlanInserts(implied)))
+    expect(restored.pillars[0]).toBe("relations") // ranked first
+    expect(restored.pillars).toContain("health") // implied, appended
+    expect(restored.objectives).toContain("obj_strong") // implied by t_bench
+  })
+})
+
 describe("custom titles (labels)", () => {
   const renamed: NewGoalsFlowState = {
     ...plan,

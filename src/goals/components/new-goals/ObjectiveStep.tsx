@@ -44,6 +44,12 @@ import {
   Beef,
   Accessibility,
   BedDouble,
+  Rocket,
+  ShieldOff,
+  Ban,
+  Wine,
+  Smartphone,
+  Cigarette,
   type LucideIcon,
 } from "lucide-react"
 
@@ -75,6 +81,12 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Beef,
   Accessibility,
   BedDouble,
+  Rocket,
+  ShieldOff,
+  Ban,
+  Wine,
+  Smartphone,
+  Cigarette,
 }
 
 const COMMITMENT_CONFIG: Record<string, { label: string; color: string }> = {

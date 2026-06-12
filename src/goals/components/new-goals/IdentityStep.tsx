@@ -3,27 +3,32 @@
 import { useState } from "react"
 import { IDENTITY_ASPECTS, PILLARS } from "@/src/goals/data/newGoalFramework"
 import { GoalIntake } from "./GoalIntake"
+import type { IntakePathSelection } from "./GoalIntake"
+import { SortablePriorityList, type PriorityItem } from "./SortablePriorityList"
 import { Dumbbell, Landmark, Heart, Compass, Ban, Check, Plus, type LucideIcon } from "lucide-react"
 
 const ICON_MAP: Record<string, LucideIcon> = { Dumbbell, Landmark, Heart, Compass, Ban }
 
 interface IdentityStepProps {
   selectedPillars: Set<string>
+  /** Selected pillar ids in priority order (rank). */
+  pillarOrder: string[]
   onTogglePillar: (pillarId: string) => void
+  onReorderPillars: (ids: string[]) => void
   onNext: () => void
   customPillars: { id: string; label: string }[]
   onAddCustomPillar: (label: string) => void
-  /** Free-text intake matched pillars+objectives → select them and advance. */
-  onApplyIntake?: (pillarIds: string[], objectiveIds: string[]) => void
+  /** Free-text intake → per-area path selections (template + level + optional date) → apply + advance. */
+  onApplyIntake?: (selections: IntakePathSelection[]) => void
 }
 
-export function IdentityStep({ selectedPillars, onTogglePillar, onNext, customPillars, onAddCustomPillar, onApplyIntake }: IdentityStepProps) {
+export function IdentityStep({ selectedPillars, pillarOrder, onTogglePillar, onReorderPillars, onNext, customPillars, onAddCustomPillar, onApplyIntake }: IdentityStepProps) {
   const [customInput, setCustomInput] = useState("")
 
+  // No auto-advance on select: multiple areas must stay visible so they can be
+  // drag-ranked here. The user advances with the "Next" button.
   const handleClick = (pillarId: string) => {
-    const wasSelected = selectedPillars.has(pillarId)
     onTogglePillar(pillarId)
-    if (!wasSelected) onNext()
   }
 
   const handleAddCustom = () => {
@@ -31,8 +36,15 @@ export function IdentityStep({ selectedPillars, onTogglePillar, onNext, customPi
     if (!trimmed) return
     onAddCustomPillar(trimmed)
     setCustomInput("")
-    onNext()
   }
+
+  // Build the ranked-priority chips (framework + custom) in current rank order.
+  const labelFor = (id: string) =>
+    PILLARS.find((p) => p.id === id)?.label ?? customPillars.find((c) => c.id === id)?.label ?? id
+  const colorFor = (id: string) => PILLARS.find((p) => p.id === id)?.color
+  const rankItems: PriorityItem[] = pillarOrder.map((id) => ({ id, label: labelFor(id), color: colorFor(id) }))
+
+  void onNext // navigation handled by the flow's Next button
 
   return (
     <div>
@@ -50,6 +62,13 @@ export function IdentityStep({ selectedPillars, onTogglePillar, onNext, customPi
             <div className="h-px flex-1 bg-white/10" />
           </div>
         </>
+      )}
+
+      {rankItems.length >= 2 && (
+        <div className="mb-6 bg-white/5 border border-white/10 rounded-xl p-4">
+          <p className="text-xs text-zinc-400 mb-3">Your focus, in priority order — drag to rank (1 = most important)</p>
+          <SortablePriorityList items={rankItems} onReorder={onReorderPillars} />
+        </div>
       )}
 
       <div className="grid grid-cols-2 gap-4">

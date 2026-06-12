@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest"
-import { buildTaxonomyItems, taxonomyVersion, cosine, matchTaxonomy, pickSuggestions, effectivePillarScores } from "@/src/goals/intakeService"
+import { buildTaxonomyItems, taxonomyVersion, cosine, matchTaxonomy, pickSuggestions, effectivePillarScores, resolveIntake } from "@/src/goals/intakeService"
 import type { TaxonomyItem } from "@/src/goals/intakeService"
 
 describe("cosine", () => {
@@ -72,6 +72,67 @@ describe("pickSuggestions", () => {
   test("never strands the user — returns ≥ minPillars even when nothing matches", () => {
     const m = matchTaxonomy([0, 0, 0, 1], items, vecs)
     expect(pickSuggestions(m, { minPillars: 1 }).pillarIds.length).toBeGreaterThanOrEqual(1)
+  })
+})
+
+describe("resolveIntake (clarifying questions)", () => {
+  const it: TaxonomyItem[] = [
+    { id: "health", kind: "pillar", pillarId: "health", label: "Health", text: "" },
+    { id: "obj_a", kind: "objective", pillarId: "health", label: "A", text: "" },
+    { id: "obj_b", kind: "objective", pillarId: "health", label: "B", text: "" },
+  ]
+  test("clear-winner objective auto-selects with no question", () => {
+    const v = [[1, 0, 0], [1, 0, 0], [0, 1, 0]] // obj_a == query, obj_b orthogonal
+    const r = resolveIntake(matchTaxonomy([1, 0, 0], it, v))
+    expect(r.objectiveIds).toContain("obj_a")
+    expect(r.clarifications).toHaveLength(0)
+  })
+  test("tied objectives → a clarifying question, nothing auto-selected", () => {
+    const v = [[1, 0, 0], [0.95, 0.31, 0], [0.95, 0, 0.31]] // obj_a ≈ obj_b ≈ query
+    const r = resolveIntake(matchTaxonomy([1, 0, 0], it, v))
+    expect(r.objectiveIds).not.toContain("obj_a")
+    expect(r.clarifications).toHaveLength(1)
+    expect(r.clarifications[0].pillarId).toBe("health")
+    expect(r.clarifications[0].prompt).toMatch(/Which Health goal/)
+    expect(r.clarifications[0].options.map((o) => o.id).sort()).toEqual(["obj_a", "obj_b"])
+  })
+  test("seeds pillar + objective order by descending match score (best = rank #1)", () => {
+    const it2: TaxonomyItem[] = [
+      { id: "health", kind: "pillar", pillarId: "health", label: "Health", text: "" },
+      { id: "obj_a", kind: "objective", pillarId: "health", label: "A", text: "" },
+      { id: "wealth", kind: "pillar", pillarId: "wealth", label: "Wealth", text: "" },
+      { id: "obj_w", kind: "objective", pillarId: "wealth", label: "W", text: "" },
+    ]
+    // query [1,0,0]: obj_w is an exact match (score 1), obj_a partial (0.707) → wealth ranks first.
+    const v2 = [[0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 0]]
+    const r = resolveIntake(matchTaxonomy([1, 0, 0], it2, v2))
+    expect(r.pillarIds).toEqual(["wealth", "health"])
+    expect(r.objectiveIds).toEqual(["obj_w", "obj_a"])
+  })
+  test("flags close-pillar pairs when two kept areas score near-equal", () => {
+    const it3: TaxonomyItem[] = [
+      { id: "vices", kind: "pillar", pillarId: "vices", label: "Vices", text: "" },
+      { id: "obj_v", kind: "objective", pillarId: "vices", label: "V", text: "" },
+      { id: "relations", kind: "pillar", pillarId: "relations", label: "Relations", text: "" },
+      { id: "obj_r", kind: "objective", pillarId: "relations", label: "R", text: "" },
+    ]
+    // Both objectives match the query almost equally → areas are close.
+    const v3 = [[0, 1, 0], [1, 0.02, 0], [0, 0, 1], [1, 0, 0.02]]
+    const r = resolveIntake(matchTaxonomy([1, 0, 0], it3, v3))
+    expect(r.closePillars.length).toBe(1)
+    expect([r.closePillars[0].a, r.closePillars[0].b].sort()).toEqual(["relations", "vices"])
+    expect(r.closePillars[0].prompt).toMatch(/Is this more about/)
+  })
+  test("does NOT flag close pillars when scores are far apart", () => {
+    const it4: TaxonomyItem[] = [
+      { id: "wealth", kind: "pillar", pillarId: "wealth", label: "Wealth", text: "" },
+      { id: "obj_w", kind: "objective", pillarId: "wealth", label: "W", text: "" },
+      { id: "health", kind: "pillar", pillarId: "health", label: "Health", text: "" },
+      { id: "obj_a", kind: "objective", pillarId: "health", label: "A", text: "" },
+    ]
+    const v4 = [[0, 1, 0], [1, 0, 0], [0, 0, 1], [0.3, 0.95, 0]] // obj_w=1.0, obj_a≈0.3
+    const r = resolveIntake(matchTaxonomy([1, 0, 0], it4, v4))
+    expect(r.closePillars).toEqual([])
   })
 })
 

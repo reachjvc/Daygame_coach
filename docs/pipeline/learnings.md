@@ -78,13 +78,15 @@ Passing the 06h gate (`quality_gate.blocked=False`) does NOT mean a video is ing
 | 1 | Thin / negligible content | `chunkCount <= 4` **OR** (`segments < 60` AND `high-tier ratio < 0.95`) — short+damaged that escaped the size-gated lq check (lq gate only fires at >=60 segs) | **BLOCK** | 6fHFpEjahnc: 3 chunks, 11 segs, 90.9% high |
 | 2 | Type-classification uncertainty | 06 `video_type.confidence < 0.80` **OR** 06h `video_type` != dominant 09 `[TYPE:]` tag | **REVIEW** | EogjdB3msWA: 06=infield@0.70, 06h/09=talking_head |
 | 4 | Low post-repair confidence | `tier_counts.high / segments_total < 0.95` | **REVIEW** | H-_FULmTJXc 92.3% |
-| 3 | Heavy-repair reliance | `low_quality_total_ratio >= 0.30` (rescued by 06e, not raw-clean) | ADVISORY | Husc_BTKyF4 0.40; WEe2aq3qKmc 0.39 |
-| 5 | Compilation (cross-clip boundaries) | 06h `video_type == compilation` | ADVISORY | 1Ottjy_7jzk; VRsmSr3-EBU |
 | — | Unverifiable (missing 06h report) | 06h signals absent/unparseable | **REVIEW** (fail-closed) | — |
+
+**Design principle: every check maps to a RESIDUAL problem in the final corpus, never a proxy.** Two planned flags were dropped after checking the data:
+- **Compilation — NOT flagged.** Chunks are scoped per conversation (`metadata.conversationId` + `conversationChunkIndex`/`Total`), so a chunk never spans two clips — verified on VRsmSr3-EBU: conv1 (5 INTERACTION) → conv2 (3) → 5 isolated COMMENTARY. Over-segmented compilations are already killed upstream at the stage-06 conversation-count gate.
+- **Heavy-repair (high `lq_total_ratio`) — NOT flagged.** Raw pre-repair damage says nothing about final quality. The 8 heavy-repair QT1 videos (lq 0.30–0.40) ended ~100% high-tier with **<2% left unrepaired** (06h even rejected the low-confidence repairs). Residual damage — the thing that matters — is already covered by #4 (high-tier <0.95 → REVIEW) and the 06h gate's own unrepaired-ratio block. ("Repaired" + low residual == not a problem.) The only uncaught risk is a *confidently-wrong* repair (06e mistranscribes, 06h accepts ≥0.85); pre-repair volume isn't a proxy for that — catching it needs a repair-correctness sample-audit, a separate task.
 
 **Key fix vs first draft:** #1 keys off FINAL high-tier ratio, NOT raw `lq_ratio` — a short video with high raw lq that 06e repaired to ~100% high (e.g. xfVhG9qwB38: 40 segs, lq 0.35, 100% high) is NOT blocked. Earlier "EogjdB3msWA = type mismatch" was wrong: 06h/09 agree (talking_head); the real signal is the LOW 06-stage confidence (0.70), so the rule keys off that.
 
-**Validated on the 30 new QT1 passes:** BLOCK 1 (6fHFpEjahnc), REVIEW 2 (EogjdB3msWA, H-_FULmTJXc), ADVISORY 10, PASS 17 — matches manual review exactly.
+**Validated on the 30 new QT1 passes:** BLOCK 1 (6fHFpEjahnc), REVIEW 2 (EogjdB3msWA, H-_FULmTJXc), PASS 27 — matches manual review. (No advisories: both compilations and all 8 heavy-repair videos are PASS.)
 
 Rule of thumb: the headline number ("49/100 done") is misleading until screened — "done at 09" != "ingest-quality".
 
