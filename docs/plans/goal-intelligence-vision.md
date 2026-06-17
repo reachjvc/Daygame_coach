@@ -1,7 +1,20 @@
 ¨
 IMPORTANT NOTE: WHEN WORKING ON THIS DOCUMENT, UPDATE IT WHEN MAKIGN CHANGES TO THE STRUCTURE. THE DOCUMENT IS ALIVE. ALWAYS ALWAYS ALWAYS UPDATE IT. IF YOU FIND A MISTAKE OR NON UPDATED; INFORM USER.
 
+INSTRUCTION (Claude): Prioritise THOROUGHNESS and shared understanding over speed. This is an
+*understanding-log first, spec second.* Do NOT harden insights into rules/architecture until they've
+been reasoned through together and the user agrees. When unsure, slow down, think, and capture the
+open thread rather than a premature answer. Most of the philosophy below was earned in long chat
+discussions — preserve the reasoning, not just the conclusions.
+
 # Goal Intelligence — Vision (concept, not a build plan)
+
+> ▶ **WHERE WE LEFT OFF (2026-06-13):** user wants to research more into *what makes a good goal*
+> (sparked by a podcast on purpose etc.) before going further. Standing feeling: **we're not done
+> with the first steps** — the "what makes a goal stick / what is a good goal" foundation still
+> needs more grounding (beyond the lenses already listed) before the Phase-0 lists get written.
+> NEXT: bring back the purpose/good-goal research, fold it into "what makes a goal stick", then
+> tackle the NEEDS taxonomy.
 
 **What we're building:** a system that takes a person's raw words and works out the *real desire
 underneath*, instead of stuffing them into the first plausible template. Goals become **clues to a
@@ -59,6 +72,40 @@ else reads them.
 
 ---
 
+## Build backlog — concrete threads (don't lose these)
+
+> The phases above are *categories*; this is the running list of the *specific* artifacts we invent
+> in discussion, by TYPE, so loose threads get implemented not lost. **Add to this every time we
+> generate something concrete.** (✓ = a first version already exists in the `/test/new-goals` flow.)
+
+```
+DATA (lists to author)     → see Phase 0 (NEEDS · GOAL→NEED · NEED↔AVENUE · FEELING lexicon · …)
+ENGINES (read lists→model) → see Phase 1 (decompose · why-ladder · need-map · efficacy · transmute …)
+
+QUESTIONNAIRE / FLOW   (questions → an outcome/route)
+  ✓  objective-level "which part of {area}?" question  (built)
+  [ ] AVOIDANCE / "quit X" → de-shame + WHY questionnaire → routes to method   (the porn case)
+  [ ] broad-spectrum probe: "what is it about THIS — would anything w/ the same surface do, or is it this?"
+  [ ] strand-sort (sexuality): lust · relatedness · status · mastery · control · novelty · anaesthesia
+
+REFRAME / GUIDANCE TOOLS   (a move the system makes)
+  [ ] AVOIDANCE→TOWARD reframe ("stop X" → "become Y")
+  [ ] REORDER-don't-repress nav (non-cultivate · accept · out-compete · habituate; never "don't want it")
+  [ ] TRANSMUTE re-route (dark/weak drive → high-yield form)
+  [ ] SATIATION / self-sufficiency test (behavioural treadmill probe — bypasses bad introspection)
+  [ ] DE-SHAME move (split urge/act · normalise the mechanism · relapse = data, not sin)
+
+CHECKS / DIALS   (objectification, scalar)
+  [ ] FUNGIBILITY (her vs interchangeable qualities) · RECIPROCITY (mutual vs use) · BLOOM (dissolves when looks fade)
+
+ROUTERS / EDGES   (classify + branch/handoff)
+  [ ] TWO-AXIS floor check (psychology gradient × object permissibility categorical)
+  [ ] EDGE-RESOLUTION router (rows 1–7): coach / de-shame+coach / hold-line+signpost / refuse+safeguard
+  [ ] PROCESS recognizer: A = redirect (our tool) vs B = contain (clinical → route)
+```
+
+---
+
 ## The shift
 
 ```
@@ -74,6 +121,29 @@ The plan is the **last mile**, generated from a filled-in model — not the firs
 
 ---
 
+## The needs model (decided framing: one end → 3 spine → extensions)
+
+Humbler than "15 universal needs." A hypothesis, not metaphysics.
+
+```
+  ONE final end ── a life that goes well (eudaimonia) — an ACTIVITY, not a feeling
+        │           (you can't aim at the feeling; it's the by-product of living well)
+        ▼
+  3 SPINE needs ── AUTONOMY · COMPETENCE · RELATEDNESS   (SDT; cross-culturally validated)
+        │
+        ▼
+  ~10 EXTENSIONS ─ status · security · meaning · vitality · belonging · freedom · growth · …
+                   audience-tuned (Western men 22–40, this domain) — and the DARK drives
+                   (dominance · desirability · winning · escape) named HONESTLY, not laundered
+```
+
+- **Derive, don't decree:** seed v0 from prior instruments (SDT, Reiss, Schwartz) + LLM-clustering
+  of real goal statements; instrument so real users can overwrite it later. List = data, not doctrine.
+- **A value is a drive you've endorsed** — same energy, owned. Surface this to the man: his
+  "shoulds" are often un-owned drives; his values are the drives he has claimed.
+
+---
+
 ## The PERSON-MODEL (the "blanks" the system carries about you)
 
 ```
@@ -86,6 +156,7 @@ The plan is the **last mile**, generated from a filled-in model — not the firs
 │ CAPACITY            │ real time / energy / money available         │
 │ IDENTITY            │ who they're trying to become                 │
 │ VALUES / fit        │ which core values it expresses (↔ Inner Game)│
+│ SHADOW / edge       │ dark-drive · entitlement · person-as-object  │
 │ TENSIONS            │ which goals fight each other                 │
 │ PRIORITY            │ the ONE for this season                      │
 │ READINESS           │ acting? ambivalent? in denial?               │
@@ -105,6 +176,7 @@ Each engine below is just *something that fills one row by asking a good questio
       ├─▶ WHY-LADDER    climb means→ends until a root NEED  (see ladder)
       ├─▶ NEED MAP      which needs are unmet (the ache) vs thriving
       ├─▶ EFFICACY      is the chosen avenue evidence-based for that need? (trap check)
+      ├─▶ TRANSMUTE     dark/weak drive → re-route to its high-yield form (don't shame, don't indulge)
       ├─▶ ELIMINATION   what's DRAINING them — sometimes removing > adding
       ├─▶ CONFLICT      do these goals fight for the same hours/energy/identity?
       ├─▶ PRIORITY      given conflict + capacity, which ONE now?
@@ -130,6 +202,9 @@ Each engine below is just *something that fills one row by asking a good questio
   NEED     relatedness · status · self-worth   ← the actual driver, where the plan should aim
 ```
 
+Stop-rule (Aristotle's *finality*): keep asking *"for the sake of what?"* until the answer is
+*"for itself."* That terminus is the need.
+
 ## The trap check (a "bad goal" = a weak avenue to a real need)
 
 ```
@@ -142,6 +217,64 @@ Each engine below is just *something that fills one row by asking a good questio
 
 The happiness-trap is just *one* instance of this. So is the rebound, the revenge-body, the
 hustle-as-escape. **Perceived** progress toward a feeling, via an avenue that won't deliver it.
+
+---
+
+## Healthy vs objectifying desire — the scalar spine
+
+The deepest layer we reached (sexuality is the home domain; it generalises to money, power, status).
+Drives aren't bad — **forms** are (Nietzsche: don't shame, don't indulge raw — re-route to the
+high-yield form). Two axes, **both must pass**; Axis-1-clean never licenses an Axis-2 breach:
+
+- **Axis 1 — psychology of the drive:** gradient, transmutable, *askable*.
+- **Axis 2 — permissibility of the object/act:** categorical floor (consent · capacity · no coercion).
+  A bright line drawn across a *real gradient* — placed there because self-judgment is self-serving
+  at the edge ("she's mature for her age / I love her" is the dial-reading *failing*).
+
+Above the floor, objectification is **scalar** — three dials (Kant · Nussbaum · Aristotle):
+
+```
+  FUNGIBILITY  want *her* (irreplaceable) vs interchangeable QUALITIES. Caring about beauty/youth is
+   (Nussbaum)  fine — "both the beauty AND the person" is healthy (Plato's ladder: start at the body,
+               ascend to the person). Test: "would any sufficiently {hot/young} one do, or is it HER?"
+  RECIPROCITY  equal mutual self-giving vs use. Sex tends to objectify; only equal reciprocity redeems
+     (Kant)    it. Big asymmetry (e.g. 50/18) *strains* reciprocity → toward "use", not categorical.
+  BLOOM TEST   does it dissolve when the looks fade? → it was use all along (Aristotle: youth-eros =
+  (Aristotle)  pleasure-friendship). Behavioural — bypasses unreliable self-report (cf. self-sufficiency).
+```
+
+How a drive goes bad: `misroute → person-as-OBJECT → ENTITLEMENT ("owed") → blocked → ressentiment → harm`.
+- **Entitlement is central but not sole** (Malamuth Confluence Model: + impersonal/objectifying sex,
+  empathy deficits, disinhibition). Don't collapse to one variable.
+- **Two roads:** A = deprivation/ressentiment (achievement *defuses* it) · B = entitlement/predation
+  (achievement *arms* it — high-status men too). So the edge is **personhood + entitlement, not "is he succeeding".**
+- **Cultivation is the moral event** (Kant + Job's "covenant with my eyes"): the involuntary flicker
+  isn't the wrong; *feeding/pursuing* it consolidates the objectifying maxim and corrodes your own
+  capacity for the higher (reciprocal) good.
+
+**Navigation — reorder wants, don't repress them.** Suppression backfires (ironic-process, reactance).
+**Never tell a user "don't want that".** Instead: (1) **don't cultivate** (manage attention upstream,
+not thought-combat); (2) **accept the flicker** without obeying *or* fighting it; (3) **out-compete** it
+with a higher affirmed aim (Nietzsche — the master/servant move); (4) trust **habituation**: white-knuckle
+*continence* → *temperance*, where the pull itself weakens. Endpoint: a man who can feel the flicker and
+not be ruled by it — no war. (Aside: the gradient's author, Aristotle, seems to have *flourished*; the
+absolutists Nietzsche/Kant lived anguish/renunciation — weak evidence *for* the scalar over the poles.)
+
+**Master/servant — a CONDITIONAL lens.** Surface it on signals (suffering · escalation · stuckness ·
+harm, or the user's appetite for depth), never universally (avoid the purity-auditor). Broad-spectrum
+probe that fits almost any goal: *"What is it about THIS that you want — would anything with the same
+surface do, or is it this in particular?"* (probes fungibility · master/servant · the real why at once).
+
+**Two change-processes (why "stopping" differs by person).** When the underlying drive HAS a
+permissible outlet → **A · REDIRECT** (surface why → address the fire → reframe toward a good outlet →
+transmute/habituate; endpoint = *integration* — the attraction's fine, only the avenue changes; relapse
+= a dip in a recovery curve). When the object is impermissible (no outlet exists) → **B · CONTAIN**
+(NOT "stop being attracted" — that's the suppression trap; instead accept-without-acting +
+identity-separation + lifelong relapse-prevention + anti-isolation support + sometimes meds + a
+meaningful life worth protecting; endpoint = *stable non-offending + meaning despite an unmeetable
+desire*). **A = give the drive a better home; B = accept it has no home, build a good life around never
+housing it.** Our tool runs **A**; it must *recognise* **B** and route to clinical care, never attempt A
+on it. A *mixed* person runs both in parallel on different strands (→ the dimensions/edge router).
 
 ---
 
@@ -176,6 +309,20 @@ that core set and **feed evidence back**.
 Values also **disambiguate the avenue**: two routes to the same need — pick the one that fits him.
 Make money by *craft* (values: mastery, quality) vs *hustle* (values: speed, autonomy). Same need,
 different value-fit, different plan.
+
+---
+
+## What we teach the man (Aristotle, operationalised)
+
+Three threads to surface *during* goal-setting — they help a man build a life he wouldn't have
+designed himself:
+
+- **EUDAIMONIA = an activity (living well), not a feeling.** You can't aim at "feel good" — it's the
+  by-product. Aim at the activity; the feeling follows. (→ feeling-atoms are symptoms, not goals.)
+- **FINALITY (the why-stop test):** "do you want this for itself, or for something further?" — the
+  ladder's stop-rule (above). The terminus is the need.
+- **SELF-SUFFICIENCY (treadmill test):** "if you had this and nothing else changed, would life feel
+  complete?" If each win just spawns the next lack, he's chasing something non-self-sufficient — flag it.
 
 ---
 
@@ -284,11 +431,21 @@ other 90% is reading the person.
 
 ---
 
+## Principles (decided)
+- **ASK, never tell.** Every need/why is a **hypothesis the man validates**, surfaced as a question,
+  falsifiable by him (Sartre guardrail) — never a verdict or an imposed "essence".
+- **TRANSMUTE, don't shame or indulge** — re-route dark drives to their high-yield form (Nietzsche).
+- **SUBTRACTIVE moves are first-class** — needing-less / removing / dissolving a *manufactured*
+  demand can be the answer, not always a better goal (Buddhist check) → not a craving-optimiser.
+- **REORDER wants, don't repress** — never tell a user "don't want X"; out-compete + habituate (continence→temperance).
+- **Status-anxiety / comparison is NOT a committed build task** — it's the *gated* master/servant lens
+  (fires on signals, not universal). If ever built, only as narrow high-precision tells, never mind-reading.
+
 ## Non-goals / open questions
-- Not therapy, not diagnosis — it *asks*, it doesn't *tell* or label.
+- Not therapy, not diagnosis.
 - How much to infer silently vs confirm out loud? (silent-confident-wrong is the current sin)
 - Where does the model persist, and how does it update over time / across sessions?
-- The efficacy/"trap" map needs a defensible evidence base — and a light touch (ask, never preach).
+- The efficacy/"trap" + transmutation maps need a defensible evidence base (and the light touch above).
 - Extensibility: how does the system flag "this person doesn't fit my boxes"?
 - Values ↔ goals: read-only from Inner Game, or does goal evidence write *back* (and can that be wrong)?
 - What if a man has no core values set yet — does a goal seed a lightweight values pass, or wait?

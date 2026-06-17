@@ -389,6 +389,128 @@ def _merge_turns(turns: List[Dict[str, Any]], gap_sec: float = 0.35, min_dur_sec
     return merged
 
 
+# Re-segmentation: split ASR segments that span >1 diarization turn so each output segment is
+# single-speaker. Without this, a chunk containing both the coach's question and the target's reply
+# gets stamped with one winning speaker, fusing two speakers into one segment (unrecoverable
+# downstream). Tiny fragments are merged back to avoid shattering clean speech on brief turn blips.
+RESEG_MIN_SUBSEG_WORDS = 2
+RESEG_MIN_SUBSEG_DUR_SEC = 0.40
+
+
+def _speaker_at(t: float, turns_sorted: List[Dict[str, Any]]) -> Optional[str]:
+    """Speaker of the turn covering time t; if t is in a gap, the nearest turn's speaker."""
+    best: Optional[str] = None
+    best_dist: Optional[float] = None
+    for tr in turns_sorted:
+        s = float(tr.get("start", 0.0))
+        e = float(tr.get("end", 0.0))
+        if s <= t < e:
+            return str(tr.get("speaker"))
+        dist = min(abs(t - s), abs(t - e))
+        if best_dist is None or dist < best_dist:
+            best_dist = dist
+            best = str(tr.get("speaker"))
+    return best
+
+
+def _coalesce_runs(word_spk: List[Tuple[Dict[str, Any], Optional[str]]]) -> List[Dict[str, Any]]:
+    runs: List[Dict[str, Any]] = []
+    for w, spk in word_spk:
+        if runs and runs[-1]["speaker"] == spk:
+            runs[-1]["words"].append(w)
+        else:
+            runs.append({"speaker": spk, "words": [w]})
+    return runs
+
+
+def _run_duration(run: Dict[str, Any]) -> float:
+    ws = run["words"]
+    try:
+        return float(ws[-1].get("end", 0.0)) - float(ws[0].get("start", 0.0))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _resegment_segments_by_turns(
+    segments: List[Dict[str, Any]],
+    turns: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Split each ASR segment at diarization turn boundaries using word-level timestamps.
+
+    A clean single-speaker segment yields exactly one run -> unchanged. A segment spanning a real
+    turn change is split into single-speaker sub-segments. Segments without word timing fall back to
+    a whole-segment assignment (nearest turn at the segment midpoint).
+    """
+    turns_sorted = sorted(turns, key=lambda t: float(t.get("start", 0.0)))
+    out: List[Dict[str, Any]] = []
+    for seg in segments:
+        words = seg.get("words") or []
+        if not words:
+            new_seg = dict(seg)
+            mid = (float(seg.get("start", 0.0)) + float(seg.get("end", 0.0))) / 2.0
+            new_seg["speaker"] = _speaker_at(mid, turns_sorted)
+            out.append(new_seg)
+            continue
+
+        word_spk: List[Tuple[Dict[str, Any], Optional[str]]] = []
+        for w in words:
+            s = w.get("start")
+            e = w.get("end")
+            if s is None or e is None:
+                spk = word_spk[-1][1] if word_spk else _speaker_at(float(seg.get("start", 0.0)), turns_sorted)
+            else:
+                spk = _speaker_at((float(s) + float(e)) / 2.0, turns_sorted)
+            word_spk.append((w, spk))
+
+        # Merge tiny runs (brief turn blips) into the dominant neighbour, then re-coalesce.
+        for _ in range(20):
+            runs = _coalesce_runs(word_spk)
+            if len(runs) <= 1:
+                break
+            tiny = [
+                i for i, r in enumerate(runs)
+                if len(r["words"]) < RESEG_MIN_SUBSEG_WORDS and _run_duration(r) < RESEG_MIN_SUBSEG_DUR_SEC
+            ]
+            if not tiny:
+                break
+            i = tiny[0]
+            if i == 0:
+                target_spk = runs[i + 1]["speaker"]
+            elif i == len(runs) - 1:
+                target_spk = runs[i - 1]["speaker"]
+            else:
+                target_spk = (
+                    runs[i - 1]["speaker"]
+                    if len(runs[i - 1]["words"]) >= len(runs[i + 1]["words"])
+                    else runs[i + 1]["speaker"]
+                )
+            offset = sum(len(r["words"]) for r in runs[:i])
+            for j in range(offset, offset + len(runs[i]["words"])):
+                word_spk[j] = (word_spk[j][0], target_spk)
+
+        runs = _coalesce_runs(word_spk)
+        if len(runs) <= 1:
+            new_seg = dict(seg)
+            new_seg["speaker"] = runs[0]["speaker"] if runs else seg.get("speaker")
+            for w in new_seg.get("words") or []:
+                w["speaker"] = new_seg["speaker"]
+            out.append(new_seg)
+            continue
+
+        for run in runs:
+            wlist = run["words"]
+            for w in wlist:
+                w["speaker"] = run["speaker"]
+            sub = dict(seg)
+            sub["words"] = wlist
+            sub["start"] = float(wlist[0].get("start", seg.get("start", 0.0)))
+            sub["end"] = float(wlist[-1].get("end", seg.get("end", 0.0)))
+            sub["text"] = " ".join(str(w.get("word", "")).strip() for w in wlist).strip()
+            sub["speaker"] = run["speaker"]
+            out.append(sub)
+    return out
+
+
 def _attach_speaker_by_overlap(segments: List[Dict[str, Any]], turns: List[Dict[str, Any]]) -> None:
     """
     Assign speaker to each segment based on overlap with diarization turns.
@@ -516,15 +638,15 @@ class DiarizeEngine:
             log("[04.EXT.diarize] WARN: No diarization turns detected")
             return segments
 
-        # Try whisperx assign_word_speakers first
+        # Assign speakers (segment-level), then re-cut segments at turn boundaries so each output
+        # segment is single-speaker (recovers two-speaker chunks the old per-segment stamp fused).
         try:
             aligned_dict = {"segments": segments}
             assigned = self._whisperx.assign_word_speakers(turns, aligned_dict)
-            return assigned.get("segments", []) or segments
+            segments = assigned.get("segments", []) or segments
         except Exception:
-            # Fallback to overlap-based assignment
             _attach_speaker_by_overlap(segments, turns)
-            return segments
+        return _resegment_segments_by_turns(segments, turns)
 
 
 # --------------------------

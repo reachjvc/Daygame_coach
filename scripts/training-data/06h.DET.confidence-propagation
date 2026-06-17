@@ -41,6 +41,7 @@ from validation.confidence_model import (
     REPAIR_CREDIT_MULTIPLIER,
     PROPAGATION_PENALTY,
     SPEAKER_AMBIGUITY_MULT_INFIELD,
+    SPEAKER_AMBIGUITY_MULT_INFIELD_WITH_OVERRIDE,
     SPEAKER_AMBIGUITY_MULT_COMPILATION_NO_OVERRIDE,
     SPEAKER_AMBIGUITY_MULT_COMPILATION_WITH_OVERRIDE,
     SPEAKER_OVERRIDE_FLOOR,
@@ -50,6 +51,24 @@ from validation.confidence_model import (
 
 LOG_PREFIX = "[06h.DET.confidence-propagation]"
 PIPELINE_VERSION = "06h.DET.confidence-propagation-v2.1"
+
+# Cosmetic low-quality reasons (missing punctuation/capitalization) are formatting 06e repairs, not
+# transcription damage. They must not drive the overload gate. (The full list is still used for
+# repair application below; only the GATE COUNT excludes cosmetics.)
+COSMETIC_LQ_REASON_MARKERS = ("punctuat", "capital")
+
+
+def _count_substantive_low_quality(low_quality_segments: List[Dict[str, Any]]) -> int:
+    substantive = 0
+    for item in low_quality_segments:
+        if not isinstance(item, dict):
+            continue
+        reason = str(item.get("reason", "")).strip().lower()
+        if reason and any(m in reason for m in COSMETIC_LQ_REASON_MARKERS):
+            continue
+        substantive += 1
+    return substantive
+
 
 REPAIR_ACCEPT_THRESHOLD = 0.85
 DEFAULT_BAND_HIGH_THRESHOLD = 0.80
@@ -485,6 +504,10 @@ def _damage_multiplier(
                 speaker *= SPEAKER_AMBIGUITY_MULT_COMPILATION_WITH_OVERRIDE
             else:
                 speaker *= SPEAKER_AMBIGUITY_MULT_COMPILATION_NO_OVERRIDE
+        elif has_speaker_role_override:
+            # Stage 06 confidently reassigned this collapsed infield speaker — trust it like a
+            # reassigned compilation speaker, don't apply the full unresolved-collapse penalty.
+            speaker *= SPEAKER_AMBIGUITY_MULT_INFIELD_WITH_OVERRIDE
         else:
             speaker *= SPEAKER_AMBIGUITY_MULT_INFIELD
     if "boundary_uncertain" in damage_types:
@@ -1180,7 +1203,7 @@ def propagate_confidence(
     quality_gate_block, quality_gate_reasons, quality_gate_inputs = _quality_overload_gate(
         segment_count=len(seg_ids),
         artifact_total=len(transcript_artifacts),
-        lq_total=len(low_quality_segments),
+        lq_total=_count_substantive_low_quality(low_quality_segments),
         artifact_unrepaired=artifact_unrepaired_count,
         lq_unrepaired=lq_unrepaired_count,
     )

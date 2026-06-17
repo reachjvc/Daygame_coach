@@ -131,6 +131,79 @@ def _r3(x: float) -> float:
     return float(np.round(float(x), 3))
 
 
+def _normalize_artifact_text(text: Any) -> str:
+    """Lowercase + collapse to alnum tokens, for comparing repeated low-info ASR artifacts."""
+    import re
+    return re.sub(r"[^a-z0-9]+", " ", str(text).lower()).strip()
+
+
+def _trim_edge_artifacts(
+    segments: List[Dict[str, Any]],
+    min_run: int = 10,
+    max_words: int = 2,
+) -> Tuple[List[Dict[str, Any]], Optional[Dict[str, Any]]]:
+    """Drop a contiguous run of identical low-information segments at the START or END.
+
+    These edge runs are almost always ASR mistranscriptions of intro/outro music
+    (e.g. a long block of "Pew! Pew! Pew!"). One such localized defect otherwise tanks the
+    holistic transcript-quality score even when the real conversation is clean.
+
+    Conservative by design — only trims when ALL hold:
+      - the run is at an EDGE (leading or trailing), never the middle (mid-content
+        repetition is the hallucination detector's job; trimming it would break continuity),
+      - the repeated text is short/low-information (<= max_words tokens),
+      - the run is long (>= min_run identical consecutive segments).
+
+    Returns (possibly-trimmed segments, report-or-None). Kept segments keep original timing.
+    """
+    n = len(segments)
+    if n == 0:
+        return segments, None
+    norm = [_normalize_artifact_text(s.get("text", "")) for s in segments]
+    max_token_len = 6  # "pew"=3; guards against trimming legitimately repeated longer words
+
+    def edge_trim(indices: List[int]) -> Tuple[int, str]:
+        """Walk inward from an edge over segments made of a tiny vocab of short tokens
+        (intro/outro music artifacts). Stop at the first real-content segment. Only trim
+        if the accumulated artifact spans >= min_run tokens (so brief real repeats survive)."""
+        seg_count = 0
+        token_total = 0
+        vocab: set = set()
+        for i in indices:
+            toks = norm[i].split()
+            if not toks:
+                seg_count += 1  # blank edge segment folds into the artifact region
+                continue
+            seg_vocab = set(toks)
+            if len(seg_vocab) > max_words or any(len(t) > max_token_len for t in seg_vocab):
+                break  # real content
+            vocab |= seg_vocab
+            if len(vocab) > max_words:
+                break
+            token_total += len(toks)
+            seg_count += 1
+        if token_total >= min_run and 0 < len(vocab) <= max_words:
+            return seg_count, " ".join(sorted(vocab))
+        return 0, ""
+
+    start_cut, lead_token = edge_trim(list(range(n)))
+    end_cut, trail_token = edge_trim(list(range(n - 1, -1, -1)))
+
+    if (start_cut + end_cut) >= n or (start_cut == 0 and end_cut == 0):
+        return segments, None
+
+    trimmed = segments[start_cut : n - end_cut]
+    report = {
+        "lead_trimmed": start_cut,
+        "lead_text": lead_token if start_cut else None,
+        "trail_trimmed": end_cut,
+        "trail_text": trail_token if end_cut else None,
+        "original_count": n,
+        "kept_count": len(trimmed),
+    }
+    return trimmed, report
+
+
 def _detect_repetition_hallucination(
     segments: List[Dict[str, Any]],
     min_repeats: int = 3,
@@ -677,6 +750,18 @@ def transcribe_full_file_with_engine(
         result = engine.transcribe(audio_path)
 
     segments = _segments_from_any(result.get("segments", []) or [], duration_sec)
+
+    # Drop ASR intro/outro artifacts (e.g. a long contiguous "Pew! Pew!" block from
+    # mistranscribed music) at the edges before quality scoring, so one localized defect
+    # doesn't tank the holistic transcript score. Conservative: edges only, short text, long runs.
+    segments, edge_trim = _trim_edge_artifacts(segments)
+    if edge_trim:
+        log(
+            f"[02.EXT.transcribe] TRIMMED edge artifact: "
+            f"lead={edge_trim['lead_trimmed']} ('{edge_trim['lead_text']}') "
+            f"trail={edge_trim['trail_trimmed']} ('{edge_trim['trail_text']}') "
+            f"kept={edge_trim['kept_count']}/{edge_trim['original_count']}"
+        )
 
     seg_n = len(segments)
     last_end = float(segments[-1]["end"]) if segments else 0.0

@@ -44,6 +44,12 @@ PROPAGATION_PENALTY = 0.95
 # Speaker ambiguity multipliers by video type.
 # Compilations: speaker identity matters less (mostly one narrator).
 SPEAKER_AMBIGUITY_MULT_INFIELD = 0.48
+# A collapsed infield speaker that Stage 06 CONFIDENTLY reassigned (speaker_role_override present)
+# is the same situation as a reassigned compilation speaker — trust it the same instead of applying
+# the full unresolved-collapse penalty. Without an override (role stays unknown) the segment is
+# genuinely unresolved and keeps SPEAKER_AMBIGUITY_MULT_INFIELD. Fixes coach-heavy / confidently-
+# reassigned infield (e.g. K8) being held by the 06h confidence gate on an over-harsh penalty.
+SPEAKER_AMBIGUITY_MULT_INFIELD_WITH_OVERRIDE = 0.80
 SPEAKER_AMBIGUITY_MULT_COMPILATION_NO_OVERRIDE = 0.65
 SPEAKER_AMBIGUITY_MULT_COMPILATION_WITH_OVERRIDE = 0.80
 

@@ -38,6 +38,10 @@ PIPELINE_VERSION = "06f.DET.damage-map-v1.0"
 SCHEMA_PATH = Path(__file__).resolve().parent / "schemas" / "damage_map.schema.json"
 
 SEVERITY_RANK = {"low": 1, "medium": 2, "high": 3}
+# Cosmetic low-quality reasons (missing punctuation/capitalization) are formatting that 06e repairs;
+# they are NOT transcription damage and must not be seeded as low_quality damage (doing so wrongly
+# tanks 06h confidence + trips the overload gate). Substance only seeds damage.
+COSMETIC_LQ_REASON_MARKERS = ("punctuat", "capital")
 KNOWN_STAGE07_DROP_REASONS: Set[str] = {
     "missing_evidence_segment",
     "unknown_evidence_segment",
@@ -445,6 +449,9 @@ def build_damage_map(
             sid_lq = _safe_int(item.get("segment"))
             if sid_lq is None:
                 continue
+            reason = str(item.get("reason", "")).strip().lower()
+            if reason and any(m in reason for m in COSMETIC_LQ_REASON_MARKERS):
+                continue  # cosmetic punctuation/capitalization -> not damage (06e still repairs it)
             low_quality_ids.add(sid_lq)
             conf = item.get("repair_confidence")
             if isinstance(conf, (int, float)) and conf >= 0.85:

@@ -92,6 +92,68 @@ Rule of thumb: the headline number ("49/100 done") is misleading until screened 
 
 ---
 
+## Infield Investigation (2026-06-12) — most infield quarantines are GATE ARTIFACTS
+
+Plan: `docs/plans/infield-pipeline-improvement.md`. Re-derived from data, not summaries.
+- **18 infield** in QT1 (not 16). **3 reached 09**: kVNih9mOvsE, EogjdB3msWA, H-_FULmTJXc. 15 quarantined.
+- Kill histogram: collapse-overload×5, 06b-flag-severe×4, 06b-low-transcript×3, 07-validator-missing×1, 06h-gate×1, 06e-crash×1.
+- **3 confirmed bugs, all cheap to fix (Phase 1):**
+  1. 06b counts no-op misattributions (`current==suggested`) as damage. yTWnGdzgz7w = 6/6 coach→coach no-ops → killed. 06c already skips no-ops (`06c.DET.patch:431`). Gate at `pipeline-runner:746` counts raw `len(misattributions)`.
+  2. 06b gate runs (`pipeline-runner:1333`, returns) BEFORE 06c applies fixes (conf≥0.7). h-wWMx5Ssac/9tcvr26JP10/TeZg-eAknDs killed for having *correctable* labels.
+  3. 06 collapse gate blocks on raw `total_segments_affected>=50` (`pipeline-runner:839`), ignores `reassignment_rate`/`unknown_count` (both in meta, `06.LLM.video-type:1748`). K8_TBjaiNUk = 151 affected, rate 1.0, 0 unknown, score 72 → killed despite perfect repair.
+- Plus: score-cliff ≤55 penalizes short clips (X6VydswgnfY = 32s coherent), and one localized "Pew!" intro block (NhaqeRwLPJY segs 0–111, 112/112) tanks holistic score 38.
+- **"Broken" collapse cases (42/52/55) are coherent dialogue MIS-SPLIT by diarization, not garbled ASR.** → diarizer track (Area 2), not write-offs.
+- **Stage 04 doesn't tune diarization AT ALL**: WhisperX bundled `DiarizationPipeline`, no num_speakers/threshold, unpinned model (`04.EXT.diarize:495`). Collapse = default-threshold under-clustering. Levers untried: pyannote-direct + lower clustering threshold, community-1, enrolled-coach TS-VAD (coach is same person across all videos). Do NOT denoise ASR audio (regresses Whisper).
+- Need a ~30-video human-labeled infield ground-truth set to make threshold changes empirical (Phase 0).
+
+---
+
+## Infield Phase-1 Gate Fixes — IMPLEMENTED + 5-video test (2026-06-12)
+
+Implemented the 5 Phase-1 fixes from `docs/plans/infield-pipeline-improvement.md`:
+- **1a/1b** `pipeline-runner` `evaluate_06b_gate`: `_count_residual_misattributions()` counts only misattributions 06c will NOT auto-apply (skips no-ops where current==suggested, skips conf>=0.7 swaps 06c fixes). Fixes the no-op overcount AND the 06b-before-06c ordering in one place.
+- **1c** `evaluate_06_gate`: blocks on UNREPAIRED collapse (`unknown_count>=25` OR `reassignment_rate<0.85 & affected>=50`), not raw count. Constants near L56-72.
+- **1d** short-clip exemption (`segments<15`) from the low-transcript-score cliff.
+- **1e** `02.EXT.transcribe._trim_edge_artifacts()`: drops a leading/trailing run of a short repeated token (music artifact like "Pew!"). Conservative: edges only, tokens<=6 chars, vocab<=2, run>=10 tokens. NOTE: at stage 02 the artifact is ONE fat segment ("Pew!"x110); it only becomes 112 separate segments AFTER stage-03 alignment. Trimmer handles both shapes.
+
+Tests: `tests/unit/pipeline/test_pipeline_runner_stage06_gate.py` (14, all pass), new `test_transcribe_edge_trim.py` (8, all pass). Pre-existing unrelated failures: `test_06h_confidence.py` TestQualityOverloadGate (2) — tests expect 0.50/0.34, code uses 0.48/0.33 (stale tests, not my change; not in `.test-known-failures.json`).
+
+**5-video end-to-end test (real pipeline, isolated sub-batches):**
+| Fix | Video | Result |
+|---|---|---|
+| 1a no-op | yTWnGdzgz7w | ✓ → 09, 61 chunks (6 no-op misattr no longer block) |
+| 1b ordering | h-wWMx5Ssac | ✓ → 09; **verified 06c applied all 7 swaps** in patched output |
+| 1c collapse (moderate) | 4n7tesaFEdI | ✓ → 09, 9 chunks (affected 53, rate .96) |
+| 1c collapse (large) | K8_TBjaiNUk | ✗ passed 06 gate but **re-caught at 06f** (high_severity_seeds=151>=120) |
+| 1d short-clip | X6VydswgnfY | cliff cleared, but held by a LEGIT `mixed_speaker_segment` major flag (2/7 segs mixed) — fail-closed working |
+| 1e intro-trim | NhaqeRwLPJY | ✓ → 09, 8 chunks; **transcript_score 38→62** (337→225 segs after trim) |
+
+**Net: 4/5 recovered to stage 09 with coherent, attribution-correct data.** Two follow-on findings:
+1. **06f damage-seed gate has the SAME count-not-quality problem as the old 06 collapse gate** — K8's 151 reassigned-collapse segments become 151 high-severity 06f seeds (but low_quality_ratio only 0.16). Large reassigned collapses get re-blocked at 06f. Needs the same residual-vs-count treatment (`evaluate_06f_gate`, `STAGE06F_DAMAGE_SEED_HIGH_BLOCK_THRESHOLD=120`). 4n7t (53 affected) stayed under the threshold so it passed — so 1c recovers MODERATE collapses; large ones need the 06f fix too.
+2. X6VydswgnfY confirms gates still protect quality: 1d cleared the brevity cliff but an independent real mixed-speaker defect (no 06c-fixable) correctly held it. Throughput != quality.
+
+Caveat: thresholds (collapse 0.85/25, short-clip 15) are hand-picked from a handful of examples — provisional until the Phase-0 infield ground-truth eval set validates them.
+
+### Follow-up: 06f collapse-echo fix (2026-06-14)
+The 06f overload gate had the SAME proxy-count bug. K8's 151 high-severity damage seeds were 149 `seed_speaker_collapsed`-only echoes (verified in `data/06f.DET.damage-map`) of the collapse Stage 06 already reassigned (rate 1.0) — only 2 were genuine (`seed_transcript_artifact`), and actual low-quality was 24/157=15%. Fix: `evaluate_06f_gate` skips seeds whose `damage_reason_codes` are a subset of `{seed_speaker_collapsed}` (constant `STAGE06F_COLLAPSE_SEED_REASON_CODE`). Collapse is adjudicated once, at the Stage 06 gate; 06f no longer re-litigates it. Genuine damage seeds / mixed-reason seeds still count (fail-closed). Tests added (3) in `test_pipeline_runner_stage06_gate.py`. K8 now passes the 06f gate → with this, large reassigned collapses recover too.
+
+### K8 STOP POINT: 06h confidence gate is a REAL signal, not a proxy (2026-06-15)
+After fixing the 06 + 06f count gates, K8 reaches the **06h video-confidence gate and is correctly held**: `video_confidence 0.736 < 0.85`. Verified WHY in `data/06h.../confidence.report.json`: 157 segs = **5 high / 150 medium / 2 low**; `axis_weights speaker=0.475`; `damage_type_counts seed_speaker_collapsed=151`. The collapse-reassigned segments are capped at MEDIUM speaker-confidence, dragging the video to 0.736. This is NOT a mechanical echo like the count gates — it's a graded measure of genuine uncertainty: K8's speaker labels are content-REASSIGNMENT (LLM inference), not clean diarization, so moderate confidence is defensible. The 06h `quality_gate.blocked=False` (low-quality only 12.7%); the block is purely the speaker-confidence floor.
+**Decision: do NOT lower the 0.85 infield threshold by hand.** Whether collapse-heavy infield should pass at a lower bar is a per-type-threshold question that needs the Phase-0 ground-truth eval set (have a human confirm whether K8's reassigned speaker labels are actually correct). This is the boundary between "fixing proxy-count bugs" (done) and "tuning real quality thresholds" (needs evidence). Gates fixed so far recover MODERATE collapses (4n7t) + the no-op/ordering/short-clip/intro cases; LARGE collapses (K8) are now correctly gated on real confidence, pending the eval set.
+
+---
+
+## Stage 04 turn-boundary re-segmentation — FIXES two-speakers-fused-in-one-chunk (2026-06-15)
+Root cause of X6VydswgnfY-style `mixed_speaker_segment`: whisperx `assign_word_speakers` stamps ONE speaker per ASR segment. When a 5s chunk contains the coach's question + target's reply, one speaker wins the whole chunk and the other is lost — unrecoverable downstream. **Verified the boundaries DO exist**: re-ran pyannote on X6, raw turns for seg0 (0-5.2s) = SPEAKER_00(0.03-0.62) / SPEAKER_02(0.84-3.63) / SPEAKER_00(3.63-4.50) / SPEAKER_02(4.50-7.96). Stage 04 was discarding them. (Earlier claim "pyannote never detected it" was WRONG — only the per-word labels are uniform because assign_word_speakers collapses to per-segment majority; the RAW turns have the boundaries.)
+Fix: `04.EXT.diarize._resegment_segments_by_turns()` re-cuts each ASR segment at turn boundaries using word timestamps; tiny blip-runs (<2 words & <0.4s) merge back to avoid fragmenting clean speech; clean single-speaker segments unchanged. Wired into `diarize()` after assignment. Tests: `test_diarize_resegment.py` (5). 
+Result on X6: 7→17 segments, "where are you"→coach / "from colombia..."→target (was all target), major mixed_speaker flags GONE, video reaches stage 09. Tradeoff: introduces a milder inverse artifact `diarization_split_same_person` (minor severity, occasionally over-splits one speaker on imperfect pyannote turns) — net big win, improves automatically when diarization improves (Phase 2 community-1/source-sep). NOTE: only takes effect on stage-04 RE-RUN — to apply across the corpus, re-run stage 04 for infield videos.
+X6 still BLOCKed at the pre-ingest thin-content screen (17 segs, 88.2% high-tier) — a genuine 32s-clip call, NOT the speaker bug (which is fixed).
+
+## Substantive vs cosmetic low-quality — 06f overload gate over-counted punctuation (2026-06-17)
+The talking-head backlog was mostly blocked by `stage06f_low_quality_overload` — but **56-96% of the "low quality" segments are cosmetic** (06e reason "Missing capitalization and punctuation" / "Missing punctuation between clauses"), NOT garbled/mistranscribed. 06e flags them as repair candidates and repairs them; the transcript is coherent (e.g. dmsus9VLFGE score 78). The 06f gate counted RAW low_quality (cosmetic + substantive), so videos got quarantined for missing commas. Verified across 12 videos: genuine (non-cosmetic) low-quality ratio is 2-14%, far under the 0.33 gate.
+Fix: `evaluate_06f_gate` now counts SUBSTANTIVE low-quality only via `_count_substantive_low_quality()` (reads 06e `low_quality_segments`, excludes reasons matching `STAGE06E_COSMETIC_LQ_REASON_MARKERS=("punctuat","capital")`); falls back to raw summary count if the per-segment list is absent (fail-closed). Genuine garbled still blocks. Tests (3) in `test_pipeline_runner_stage06_gate.py`. All 12 previously-failed videos now pass the 06f gate.
+OPEN: cosmetic punctuation may also seed low_quality damage in 06f damage-map → lower 06h confidence tiers → could cause ingest REVIEW (low high-tier ratio) even after passing 06f. If the NEXT15 batch shows that, extend the cosmetic/substantive split into 06f damage-map seeding + 06h (the user's "multiple sorts of ratings" — cosmetic dimension shouldn't penalize confidence either).
+
 ## Key Gotchas (read before any pipeline work)
 
 - `find -print0 | while read` + stdin-consuming tools (ffmpeg, grep) = path corruption. Always `</dev/null` on inner tool.

@@ -53,15 +53,36 @@ STAGE06B_FLAG_BOUNDARY_BLOCK_THRESHOLD = 2
 STAGE06B_FLAG_MISSING_TARGET_COVERAGE_BLOCK_THRESHOLD = 2
 STAGE06B_FLAG_MAJOR_OTHER_BLOCK_THRESHOLD = 1
 STAGE06B_FLAG_LOW_TRANSCRIPT_SCORE_BLOCK_THRESHOLD = 55.0
+# Mirror 06c.DET.patch MIN_MISATTRIBUTION_CONFIDENCE: only residual misattributions that
+# 06c will NOT auto-apply should count toward the severe-FLAG gate (see _count_residual_misattributions).
+STAGE06C_MIN_MISATTRIBUTION_CONFIDENCE = 0.7
+# Short, coherent clips score low on the holistic transcript cliff purely from brevity, not damage.
+# Clips below this segment count are exempt from the low-transcript-score block (severe-FLAG
+# checks still apply; the pre-ingest QA screen makes the final thin-content call).
+STAGE06B_SHORT_CLIP_SEGMENT_FLOOR = 15
 STAGE06_SPEAKER_COLLAPSE_TOTAL_BLOCK_THRESHOLD = 50
+# A collapse is only a quality problem when it was NOT repaired. Stage 06 reassigns collapsed
+# speakers per-segment by content; block only on residual damage (many unknowns, or a low
+# reassignment rate on a large collapse), never on the raw affected count. Provisional values
+# pending the infield ground-truth eval set.
+STAGE06_COLLAPSE_UNKNOWN_BLOCK_THRESHOLD = 25
+STAGE06_COLLAPSE_REASSIGNMENT_RATE_MIN = 0.85
 STAGE06F_DAMAGE_SEED_TOTAL_BLOCK_THRESHOLD = 180
 STAGE06F_DAMAGE_SEED_HIGH_BLOCK_THRESHOLD = 120
+# A damage seed whose ONLY reason is the speaker collapse is a downstream echo of the Stage 06
+# collapse — already adjudicated by evaluate_06_gate on residual reassignment quality. It must not
+# re-drive the 06f overload count (same proxy-count bug fixed at the Stage 06 gate).
+STAGE06F_COLLAPSE_SEED_REASON_CODE = "seed_speaker_collapsed"
 # Keep aligned with Stage 06h quality-overload policy to avoid split gating logic.
 STAGE06F_LQ_TOTAL_BLOCK_ABSOLUTE_THRESHOLD = 130
 STAGE06F_LQ_TOTAL_BLOCK_RATIO_THRESHOLD = 0.33
 STAGE06F_LQ_TOTAL_BLOCK_RATIO_MIN_COUNT = 60
 STAGE06F_LQ_TOTAL_BLOCK_EXTREME_RATIO_THRESHOLD = 0.48
 STAGE06F_LQ_TOTAL_BLOCK_EXTREME_RATIO_MIN_COUNT = 25
+# Cosmetic low-quality reasons (missing punctuation/capitalization) are formatting, not
+# transcription damage — 06e repairs them and they reach the corpus clean. The overload gate must
+# count only SUBSTANTIVE low-quality (garbled/nonsense/mistranscribed), not cosmetics.
+STAGE06E_COSMETIC_LQ_REASON_MARKERS = ("punctuat", "capital")
 
 CLAUDE_PREFLIGHT_PROMPT = "Reply with exactly: ok"
 CLAUDE_PREFLIGHT_MODEL = "opus"
@@ -692,6 +713,39 @@ def _stage06b_flag_summary_counts(payload: dict) -> Dict[str, int]:
     return counts
 
 
+def _count_residual_misattributions(value: Any) -> int:
+    """Count misattributions 06c.DET.patch will NOT auto-apply (the residual damage signal).
+
+    06c applies a speaker_role fix only when suggested_role != current_role AND
+    confidence >= STAGE06C_MIN_MISATTRIBUTION_CONFIDENCE. Therefore:
+      - no-op confirmations (suggested == current) -> 06c skips -> NOT damage.
+      - high-confidence real swaps -> 06c deterministically corrects -> NOT residual damage.
+      - low-confidence real swaps, or entries 06c cannot apply -> left unfixed -> RESIDUAL.
+    Counting only the residual fixes the no-op-overcounting bug and the 06b-before-06c ordering
+    problem in one place (the gate looks ahead to what 06c will leave unresolved). Fail-closed:
+    entries that are incomplete/un-appliable count as residual.
+    """
+    if not isinstance(value, list):
+        return 0
+    residual = 0
+    for row in value:
+        if not isinstance(row, dict):
+            continue
+        suggested_role = row.get("suggested_role")
+        if suggested_role is None:
+            residual += 1  # 06c skips incomplete entries; treat as unresolved (fail-closed)
+            continue
+        current_role = row.get("current_role")
+        if current_role == suggested_role:
+            continue  # no-op confirmation, not damage
+        confidence = row.get("confidence", 1.0)  # 06c defaults missing confidence to 1.0
+        if not isinstance(confidence, (int, float)) or isinstance(confidence, bool):
+            confidence = 1.0
+        if confidence < STAGE06C_MIN_MISATTRIBUTION_CONFIDENCE:
+            residual += 1  # 06c won't auto-apply below its confidence floor -> residual
+    return residual
+
+
 def evaluate_06b_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], Optional[str]]:
     """Fail-closed gate for Stage 06b REJECT + severe FLAG outcomes."""
     verify_dir = DATA_DIR / "06b.LLM.verify" / source
@@ -714,6 +768,7 @@ def evaluate_06b_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], 
         return False, None, None
 
     transcript_score: Optional[float] = None
+    segment_count: Optional[int] = None
     stage06_dir = DATA_DIR / "06.LLM.video-type" / source
     if stage06_dir.exists():
         stage06_path = _pick_newest(list(stage06_dir.rglob(f"*{video_id}*.conversations.json")))
@@ -725,11 +780,20 @@ def evaluate_06b_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], 
                     raw_score = transcript_confidence.get("score")
                     if isinstance(raw_score, (int, float)) and not isinstance(raw_score, bool):
                         transcript_score = float(raw_score)
+                segs = stage06_payload.get("segments")
+                if isinstance(segs, list):
+                    segment_count = len(segs)
             except (json.JSONDecodeError, OSError):
                 transcript_score = None
 
+    # Short, coherent clips score low on the holistic cliff purely from brevity. Exempt clips
+    # below the segment floor from the low-transcript block; the severe-FLAG checks below still
+    # apply, and the pre-ingest QA screen (ingestQaScreen.ts) makes the final thin-content call.
+    is_short_clip = segment_count is not None and segment_count < STAGE06B_SHORT_CLIP_SEGMENT_FLOOR
+
     if (
-        transcript_score is not None
+        not is_short_clip
+        and transcript_score is not None
         and transcript_score <= STAGE06B_FLAG_LOW_TRANSCRIPT_SCORE_BLOCK_THRESHOLD
     ):
         return (
@@ -743,7 +807,10 @@ def evaluate_06b_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], 
 
     structured_counts = _stage06b_flag_summary_counts(payload)
 
-    misattribution_count = _safe_count_list(payload.get("misattributions"))
+    # Count only RESIDUAL misattributions — those 06c.DET.patch will not auto-apply. This fixes
+    # both the no-op-overcounting bug and the 06b-before-06c ordering problem (the gate no longer
+    # kills videos whose flagged swaps 06c will deterministically correct one stage later).
+    misattribution_count = _count_residual_misattributions(payload.get("misattributions"))
 
     conversation_flag_count = structured_counts.get("conversation_flag")
     if not isinstance(conversation_flag_count, int):
@@ -836,15 +903,30 @@ def evaluate_06_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], O
     if not isinstance(raw_total_segments, (int, float)) or isinstance(raw_total_segments, bool):
         return False, None, None
     total_segments_affected = int(raw_total_segments)
-    if total_segments_affected < STAGE06_SPEAKER_COLLAPSE_TOTAL_BLOCK_THRESHOLD:
-        return False, None, None
 
     reassignment_rate = collapse_meta.get("reassignment_rate", 0.0)
     if not isinstance(reassignment_rate, (int, float)) or isinstance(reassignment_rate, bool):
         reassignment_rate = 0.0
+    reassignment_rate = float(reassignment_rate)
     unknown_count = collapse_meta.get("unknown_count", 0)
     if not isinstance(unknown_count, (int, float)) or isinstance(unknown_count, bool):
         unknown_count = 0
+    unknown_count = int(unknown_count)
+
+    # Block only on UNREPAIRED collapse, never on the raw affected count. Stage 06 reassigns
+    # collapsed speakers per-segment by content; a fully/largely reassigned collapse (high rate,
+    # few unknowns) is corrected and must pass. Residual damage = many unresolved segments, OR a
+    # low reassignment rate on a large collapse. (Genuinely bad audio still gets caught downstream
+    # by the 06b low-transcript and 06h confidence gates.)
+    collapse_unrepaired = (
+        unknown_count >= STAGE06_COLLAPSE_UNKNOWN_BLOCK_THRESHOLD
+        or (
+            reassignment_rate < STAGE06_COLLAPSE_REASSIGNMENT_RATE_MIN
+            and total_segments_affected >= STAGE06_SPEAKER_COLLAPSE_TOTAL_BLOCK_THRESHOLD
+        )
+    )
+    if not collapse_unrepaired:
+        return False, None, None
 
     transcript_score_text = ""
     transcript_confidence = payload.get("transcript_confidence")
@@ -854,11 +936,10 @@ def evaluate_06_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], O
             transcript_score_text = f", transcript_score={int(raw_score)}"
 
     message = (
-        "Stage 06 speaker collapse overload "
-        f"(affected_segments={total_segments_affected}>="
-        f"{STAGE06_SPEAKER_COLLAPSE_TOTAL_BLOCK_THRESHOLD}, "
-        f"reassignment_rate={float(reassignment_rate):.2f}, "
-        f"unknown_count={int(unknown_count)}"
+        "Stage 06 speaker collapse unrepaired "
+        f"(affected_segments={total_segments_affected}, "
+        f"reassignment_rate={reassignment_rate:.2f}<{STAGE06_COLLAPSE_REASSIGNMENT_RATE_MIN} "
+        f"or unknown_count={unknown_count}>={STAGE06_COLLAPSE_UNKNOWN_BLOCK_THRESHOLD}"
         f"{transcript_score_text})."
     )
     return True, "stage06_speaker_collapse_overload", message
@@ -913,6 +994,27 @@ def evaluate_06h_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], 
     return True, "stage06h_video_gate_block", message
 
 
+def _count_substantive_low_quality(stage06e_payload: Any) -> Optional[int]:
+    """Count SUBSTANTIVE low-quality segments (garbled/nonsense/mistranscribed), excluding cosmetic
+    formatting (missing punctuation/capitalization). Cosmetic issues are repaired by 06e and are not
+    damage, so they must not drive the overload gate. Returns None if the per-segment list is absent
+    (caller falls back to the raw summary count, preserving fail-closed behaviour)."""
+    if not isinstance(stage06e_payload, dict):
+        return None
+    segs = stage06e_payload.get("low_quality_segments")
+    if not isinstance(segs, list):
+        return None
+    substantive = 0
+    for s in segs:
+        if not isinstance(s, dict):
+            continue
+        reason = str(s.get("reason", "")).strip().lower()
+        if reason and any(marker in reason for marker in STAGE06E_COSMETIC_LQ_REASON_MARKERS):
+            continue  # cosmetic punctuation/capitalization -> not substantive damage
+        substantive += 1
+    return substantive
+
+
 def evaluate_06f_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], Optional[str]]:
     """Fail-closed gate on extreme 06f damage/quality overload."""
     stage06f_dir = DATA_DIR / "06f.DET.damage-map" / source
@@ -942,6 +1044,15 @@ def evaluate_06f_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], 
             continue
         if not isinstance(segment_id, int):
             continue
+        # Skip collapse-echo seeds: a seed whose only reason is the speaker collapse is already
+        # adjudicated at the Stage 06 gate (on residual reassignment quality). Counting it here
+        # would re-block a successfully reassigned collapse on a proxy count. Genuine damage seeds
+        # (transcript artifacts, etc.) still count; any non-collapse reason keeps the seed.
+        reason_codes = row.get("damage_reason_codes")
+        if isinstance(reason_codes, list) and reason_codes:
+            non_collapse = {str(rc).strip() for rc in reason_codes} - {STAGE06F_COLLAPSE_SEED_REASON_CODE}
+            if not non_collapse:
+                continue
         total_seed_count += 1
         severity = str(row.get("severity", "")).strip().lower()
         if severity == "high":
@@ -965,12 +1076,18 @@ def evaluate_06f_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], 
             stage06e_payload = json.loads(stage06e_path.read_text(encoding="utf-8"))
             summary = stage06e_payload.get("summary")
             if isinstance(summary, dict):
-                raw_lq_total = summary.get("low_quality_count", 0)
                 raw_segment_count = summary.get("segments_total", 0)
-                if isinstance(raw_lq_total, (int, float)) and not isinstance(raw_lq_total, bool):
-                    lq_total_count = int(raw_lq_total)
                 if isinstance(raw_segment_count, (int, float)) and not isinstance(raw_segment_count, bool):
                     segment_count = int(raw_segment_count)
+                # Count SUBSTANTIVE low-quality only (exclude cosmetic punctuation 06e repairs);
+                # fall back to the raw summary count if the per-segment list is unavailable.
+                substantive_lq = _count_substantive_low_quality(stage06e_payload)
+                if substantive_lq is not None:
+                    lq_total_count = substantive_lq
+                else:
+                    raw_lq_total = summary.get("low_quality_count", 0)
+                    if isinstance(raw_lq_total, (int, float)) and not isinstance(raw_lq_total, bool):
+                        lq_total_count = int(raw_lq_total)
                 if segment_count and segment_count > 0 and lq_total_count is not None:
                     lq_total_ratio = float(lq_total_count) / float(segment_count)
         except (json.JSONDecodeError, OSError, ValueError, TypeError):
