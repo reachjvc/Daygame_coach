@@ -8,6 +8,7 @@ import { todayISO } from "@/src/goals/horizonService"
 import type { Template, TargetOverride } from "@/src/goals/data/newGoalFramework"
 import type { IntakeMatches, IntakeResolution } from "@/src/goals/intakeService"
 import type { CustomTarget } from "@/src/goals/types"
+import type { ProgramSelection } from "@/src/programs/types"
 import { GoalIntake } from "./GoalIntake"
 import { GoalsConfigStep } from "./GoalsConfigStep"
 import { SummaryStep } from "./SummaryStep"
@@ -62,6 +63,8 @@ export function NewGoalsFlow({ onSaved }: { onSaved?: () => void } = {}) {
   const [pillarDates, setPillarDates] = useState<Record<string, string>>({})
   const [objectiveDates, setObjectiveDates] = useState<Record<string, string>>({})
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  // Optional workout programs attached under Health (≤1 per discipline) → enrolled (idempotently) on save.
+  const [programSelections, setProgramSelections] = useState<ProgramSelection[]>([])
 
   const { step, isFirst, isLast, goNext, goBack } = useSteppedFlow(STEPS, "plan")
 
@@ -88,6 +91,7 @@ export function NewGoalsFlow({ onSaved }: { onSaved?: () => void } = {}) {
         }
         if (data.labels && Object.keys(data.labels).length) setLabels(data.labels)
         if (Array.isArray(data.customTargets) && data.customTargets.length) setCustomTargets(data.customTargets)
+        if (Array.isArray(data.programSelections) && data.programSelections.length) setProgramSelections(data.programSelections)
       })
       .catch(() => {})
     return () => { cancelled = true }
@@ -105,6 +109,7 @@ export function NewGoalsFlow({ onSaved }: { onSaved?: () => void } = {}) {
           targetOverrides,
           labels,
           customTargets,
+          programSelections,
         }),
       })
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Save failed")
@@ -115,12 +120,12 @@ export function NewGoalsFlow({ onSaved }: { onSaved?: () => void } = {}) {
       console.error("Save plan failed:", e)
       setSaveStatus("error")
     }
-  }, [pillarOrder, objectiveOrder, targetOverrides, labels, customTargets, onSaved])
+  }, [pillarOrder, objectiveOrder, targetOverrides, labels, customTargets, programSelections, onSaved])
 
   // Any edit after a save returns the button to its actionable state.
   useEffect(() => {
     setSaveStatus((s) => (s === "saved" ? "idle" : s))
-  }, [targetOverrides, pillarOrder, objectiveOrder, labels, customTargets])
+  }, [targetOverrides, pillarOrder, objectiveOrder, labels, customTargets, programSelections])
 
   const renameItem = useCallback((id: string, label: string) => {
     setLabels((prev) => ({ ...prev, [id]: label }))
@@ -317,6 +322,8 @@ export function NewGoalsFlow({ onSaved }: { onSaved?: () => void } = {}) {
               onChangeStartDate={setStartDate}
               objectiveDates={objectiveDates}
               onChangeObjectiveDate={(id, d) => setObjectiveDates(prev => ({ ...prev, [id]: d }))}
+              programSelections={programSelections}
+              onChangeProgramSelections={setProgramSelections}
             />
             )}
             </>

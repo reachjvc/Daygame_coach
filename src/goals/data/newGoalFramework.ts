@@ -184,6 +184,7 @@ export const OBJECTIVES: Objective[] = [
   { id: "obj_muscle", pillarId: "health", label: "Build Muscle", description: "Lean bulk: eat in a surplus, lift, and add real size", icon: "Beef", successPreview: "+10kg lean mass · Bigger arms · Stronger lifts", commitment: "heavy", values: ["growth", "consistency"], soundsLike: "Building muscle size and mass — getting bigger, bulking up. build muscle, get bigger, gain mass, bulk up, put on size, gain weight, get jacked, bigger arms, muscle growth, get swole" },
   { id: "obj_active", pillarId: "health", label: "Stay Active Daily", description: "Build a healthy, moving lifestyle — no gym required", icon: "Accessibility", successPreview: "10k steps/day · Moving daily · Lower resting heart rate", commitment: "light", values: ["vitality", "consistency"], soundsLike: "An active everyday lifestyle — moving more, walking, healthy without the gym. be more active, move more, stop being lazy, get off the couch, healthier lifestyle, walk more, stay in shape, daily movement, feel good in my body, more energy, get healthy" },
   { id: "obj_recovery", pillarId: "health", label: "Sleep & Recover", description: "Master sleep and recovery so everything else compounds", icon: "BedDouble", successPreview: "8h sleep · Consistent schedule · Wake up refreshed", commitment: "light", values: ["vitality", "resilience"], soundsLike: "Better sleep and recovery — resting well, waking up refreshed instead of tired. sleep better, fix my sleep, stop being tired, more rest, wake up refreshed, insomnia, recover properly, sleep schedule, stop feeling exhausted, more energy" },
+  { id: "obj_triathlon", pillarId: "health", label: "Race a Triathlon", description: "Train swim, bike and run for a triathlon or Ironman", icon: "Medal", successPreview: "Swim · Bike · Run → cross the finish line", commitment: "heavy", values: ["endurance", "grit"], soundsLike: "Training for a triathlon or ironman — swim bike run, multisport endurance racing. triathlon, ironman, 70.3, half ironman, sprint triathlon, olympic triathlon, do a triathlon, train for a triathlon, swim bike run, multisport, brick workout, open water swim, race a triathlon, finish an ironman, tri training, complete a triathlon" },
   // Relations
   { id: "obj_girlfriend", pillarId: "relations", label: "Get a Girlfriend", description: "Find someone great through volume and skill development", icon: "Heart", successPreview: "Approaches → Numbers → Dates → Exclusive", commitment: "heavy", values: ["courage", "persistence"], soundsLike: "Finding a real loving relationship — a girlfriend, a partner, someone to share life with. get a girlfriend, find a partner, find love, someone i love, wake up next to someone i love, stop being lonely, a real relationship, meet someone special, settle down, find the one, want to be loved, not be single anymore, a loving partner" },
   { id: "obj_abundance", pillarId: "relations", label: "Date Abundantly", description: "Build an abundant dating life with options", icon: "Users", successPreview: "Consistent approaches · Strong text game · Active rotation", commitment: "heavy", values: ["confidence", "charisma"], soundsLike: "An active dating life with options — meeting lots of women and going on dates. date more, meet women, dating life, more options, more matches, go on lots of dates, abundance with women, dating apps, talk to more girls, get more dates, play the field, casual dating" },
@@ -294,6 +295,14 @@ export const TEMPLATES: Template[] = [
       { label: "Beginner", targetValues: { t_sleep_streak: 8, t_restful_nights: 60 } },
       { label: "Intermediate", targetValues: { t_sleep_streak: 26, t_restful_nights: 120 } },
       { label: "Advanced", targetValues: { t_sleep_streak: 52, t_restful_nights: 200 } },
+    ] },
+  { id: "tmpl_triathlete", pillarId: "health", label: "Triathlete", description: "Swim, bike and run — train for a triathlon or Ironman", icon: "Medal",
+    objectiveIds: ["obj_triathlon"],
+    targetOverrides: { t_tri_sessions: true, t_tri_swim: true, t_tri_bike: true, t_tri_run: true, t_tri_stages: true },
+    levels: [
+      { label: "Beginner", targetValues: { t_tri_swim: 750, t_tri_bike: 20, t_tri_run: 5 } },
+      { label: "Intermediate", targetValues: { t_tri_swim: 1500, t_tri_bike: 40, t_tri_run: 10 } },
+      { label: "Advanced", targetValues: { t_tri_swim: 1900, t_tri_bike: 90, t_tri_run: 21 } },
     ] },
 
   // Relations templates
@@ -476,6 +485,15 @@ export const TARGETS: FrameworkTarget[] = [
   { id: "t_5k_time", objectiveId: "obj_endurance", label: "5K Time", primitive: "target", role: "metric", unit: "min", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 28, target: 22, steps: 7, curveTension: 0 }, rampSteps: null, stageSteps: null, metricKind: 'pace' },
   { id: "t_consec_cardio", objectiveId: "obj_endurance", label: "Consecutive Cardio Weeks", primitive: "habit", role: "metric", unit: "weeks", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 1, target: 26, steps: 7, curveTension: 0.8 }, rampSteps: null, stageSteps: null, metricKind: 'cumulative' },
   { id: "t_endurance_stages", objectiveId: "obj_endurance", label: "Endurance Journey", primitive: "stage", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["survive a jog", "run 5k without stopping", "complete 10k", "half marathon"] },
+
+  // =========================================================================
+  // Health -> Race a Triathlon (obj_triathlon)
+  // =========================================================================
+  { id: "t_tri_sessions", objectiveId: "obj_triathlon", label: "Multisport Sessions", primitive: "volume", role: "driver", unit: "/week", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: [{ frequencyPerWeek: 4, durationWeeks: 8 }, { frequencyPerWeek: 5, durationWeeks: 12 }, { frequencyPerWeek: 6, durationWeeks: 12 }], stageSteps: null },
+  { id: "t_tri_swim", objectiveId: "obj_triathlon", label: "Race Swim Distance", primitive: "target", role: "metric", unit: "m", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 200, target: 1900, steps: 8, curveTension: 0 }, rampSteps: null, stageSteps: null, metricKind: 'distance' },
+  { id: "t_tri_bike", objectiveId: "obj_triathlon", label: "Race Bike Distance", primitive: "target", role: "metric", unit: "km", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 10, target: 90, steps: 8, curveTension: 0 }, rampSteps: null, stageSteps: null, metricKind: 'distance' },
+  { id: "t_tri_run", objectiveId: "obj_triathlon", label: "Race Run Distance", primitive: "target", role: "metric", unit: "km", defaultEnabled: false, sharedDriverId: null, milestoneConfig: { start: 3, target: 21, steps: 8, curveTension: 0 }, rampSteps: null, stageSteps: null, metricKind: 'distance' },
+  { id: "t_tri_stages", objectiveId: "obj_triathlon", label: "Race Journey", primitive: "stage", role: "metric", unit: "", defaultEnabled: false, sharedDriverId: null, milestoneConfig: null, rampSteps: null, stageSteps: ["finish a sprint triathlon", "finish Olympic distance", "finish a 70.3", "finish an Ironman"] },
 
   // =========================================================================
   // Health -> Master Your Bodyweight (obj_calisthenics)

@@ -57,6 +57,18 @@ SPEAKER_AMBIGUITY_MULT_COMPILATION_WITH_OVERRIDE = 0.80
 # boost the base speaker_conf to at least this value.
 SPEAKER_OVERRIDE_FLOOR = 0.85
 
+# A collapse that Stage 06 reassigned NEARLY COMPLETELY by content (high reassignment_rate,
+# few residual unknowns) is the diarizer mislabelling speakers on otherwise-clean dialogue —
+# the override labels are trustworthy, so credit the speaker axis close to full instead of the
+# generic 0.80 over-collapse penalty. Gated on the SAME residual signals as the stage-06 collapse
+# gate (reassignment_rate / unknown_count), so a poorly-reassigned collapse gets NO boost and the
+# fail-closed behaviour is preserved. (Recovers clean infield like grq-TNERVuA: 291/294 reassigned,
+# rate 0.99, held at video_confidence 0.82 purely on the speaker axis despite correct labels.)
+SPEAKER_REASSIGN_TRUST_RATE_MIN = 0.95
+SPEAKER_REASSIGN_TRUST_UNKNOWN_MAX = 10
+SPEAKER_AMBIGUITY_MULT_INFIELD_TRUSTED_REASSIGN = 0.95
+SPEAKER_OVERRIDE_FLOOR_TRUSTED_REASSIGN = 0.92
+
 
 def get_axis_weights(video_type: str) -> Dict[str, float]:
     """Return axis weights for the given video type."""

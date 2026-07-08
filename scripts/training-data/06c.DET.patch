@@ -446,6 +446,9 @@ def apply_patches(
         seg["speaker_role"] = suggested_role
         if old_override is not None:
             seg["speaker_role_override"] = suggested_role
+            # The LLM's per-attribution confidence described the pre-patch role; drop it so 06h
+            # uses its deterministic override floor for this 06c-corrected label instead.
+            seg.pop("speaker_role_override_confidence", None)
         fixes_applied.append({
             "segment_id": seg_id,
             "field": "speaker_role" + ("+speaker_role_override" if old_override else ""),
@@ -539,6 +542,8 @@ def apply_patches(
         old_override = seg.get("speaker_role_override")
         seg["speaker_role"] = suggested_override
         seg["speaker_role_override"] = suggested_override
+        # Stale LLM confidence described the pre-patch role; drop it (06h falls back to floor).
+        seg.pop("speaker_role_override_confidence", None)
         fixes_applied.append({
             "segment_id": seg_id,
             "field": "speaker_role+speaker_role_override",
@@ -718,6 +723,8 @@ def apply_patches(
                 seg["speaker_role"] = "unknown"
                 if old_override is not None:
                     seg["speaker_role_override"] = "unknown"
+                    # Stale after demotion to unknown; drop so 06h uses its floor.
+                    seg.pop("speaker_role_override_confidence", None)
 
                 demoted += 1
                 fixes_applied.append({

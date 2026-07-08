@@ -44,7 +44,11 @@ from validation.confidence_model import (
     SPEAKER_AMBIGUITY_MULT_INFIELD_WITH_OVERRIDE,
     SPEAKER_AMBIGUITY_MULT_COMPILATION_NO_OVERRIDE,
     SPEAKER_AMBIGUITY_MULT_COMPILATION_WITH_OVERRIDE,
+    SPEAKER_AMBIGUITY_MULT_INFIELD_TRUSTED_REASSIGN,
     SPEAKER_OVERRIDE_FLOOR,
+    SPEAKER_OVERRIDE_FLOOR_TRUSTED_REASSIGN,
+    SPEAKER_REASSIGN_TRUST_RATE_MIN,
+    SPEAKER_REASSIGN_TRUST_UNKNOWN_MAX,
     VIDEO_GATE_THRESHOLD,
 )
 
@@ -487,6 +491,7 @@ def _damage_multiplier(
     *,
     video_type: str = "unknown",
     has_speaker_role_override: bool = False,
+    trusted_reassignment: bool = False,
 ) -> Tuple[float, float, float]:
     transcript = 1.0
     speaker = 1.0
@@ -507,7 +512,12 @@ def _damage_multiplier(
         elif has_speaker_role_override:
             # Stage 06 confidently reassigned this collapsed infield speaker — trust it like a
             # reassigned compilation speaker, don't apply the full unresolved-collapse penalty.
-            speaker *= SPEAKER_AMBIGUITY_MULT_INFIELD_WITH_OVERRIDE
+            # When the collapse was reassigned near-completely by content (trusted_reassignment),
+            # the labels are reliable dialogue mis-split by the diarizer — credit close to full.
+            if trusted_reassignment:
+                speaker *= SPEAKER_AMBIGUITY_MULT_INFIELD_TRUSTED_REASSIGN
+            else:
+                speaker *= SPEAKER_AMBIGUITY_MULT_INFIELD_WITH_OVERRIDE
         else:
             speaker *= SPEAKER_AMBIGUITY_MULT_INFIELD
     if "boundary_uncertain" in damage_types:
@@ -860,6 +870,18 @@ def propagate_confidence(
         video_type_str = "unknown"
     axis_weights = get_axis_weights(video_type_str)
 
+    # v2.2: Trust a collapse that Stage 06 reassigned near-completely by content. Same residual
+    # signals as the stage-06 collapse gate — a poorly-reassigned collapse (low rate / many
+    # unknowns) gets NO boost, preserving fail-closed. Only meaningful for infield collapse.
+    speaker_collapse_meta = out.get("speaker_collapse") if isinstance(out.get("speaker_collapse"), dict) else {}
+    _collapse_rate = _safe_float(speaker_collapse_meta.get("reassignment_rate"), 0.0)
+    _collapse_unknown = _safe_int(speaker_collapse_meta.get("unknown_count"))
+    _collapse_unknown = _collapse_unknown if _collapse_unknown is not None else 10 ** 9
+    trusted_reassignment = bool(speaker_collapse_meta.get("detected")) and (
+        _collapse_rate >= SPEAKER_REASSIGN_TRUST_RATE_MIN
+        and _collapse_unknown <= SPEAKER_REASSIGN_TRUST_UNKNOWN_MAX
+    )
+
     # v2: Build set of segment IDs with accepted quality repairs (for repair credit).
     repaired_by_06e: Set[int] = set()
     for artifact in transcript_artifacts:
@@ -926,9 +948,27 @@ def propagate_confidence(
         has_speaker_override = isinstance(seg.get("speaker_role_override"), str) and bool(
             seg.get("speaker_role_override", "").strip()
         )
-        # If override exists for a collapsed speaker, boost speaker_conf floor.
+        # v3: If stage 06 supplied a per-segment confidence for its override, HONOR it directly —
+        # the LLM's stated certainty for THIS attribution replaces the crude structural discount
+        # (floor + ambiguity multiplier), which cannot tell an obvious reassignment from a guess.
+        override_conf = None
         if has_speaker_override:
-            speaker_conf = max(speaker_conf, SPEAKER_OVERRIDE_FLOOR)
+            _raw_oc = seg.get("speaker_role_override_confidence")
+            if isinstance(_raw_oc, (int, float)) and not isinstance(_raw_oc, bool):
+                override_conf = _clamp01(float(_raw_oc))
+        if has_speaker_override:
+            if override_conf is not None:
+                # Trust the model's per-attribution confidence as the speaker base.
+                speaker_conf = override_conf
+            else:
+                # Legacy artifacts without a stated confidence: keep the structural floor. A
+                # near-completely reassigned collapse gets the higher trusted floor.
+                _override_floor = (
+                    SPEAKER_OVERRIDE_FLOOR_TRUSTED_REASSIGN
+                    if trusted_reassignment
+                    else SPEAKER_OVERRIDE_FLOOR
+                )
+                speaker_conf = max(speaker_conf, _override_floor)
 
         # v2: Base scores start at 1.0 — damage reduces from there.
         phase_conf = 1.0
@@ -952,7 +992,12 @@ def propagate_confidence(
             dmg_types,
             video_type=video_type_str,
             has_speaker_role_override=has_speaker_override,
+            trusted_reassignment=trusted_reassignment,
         )
+        # v3: When we honored the LLM's per-attribution confidence, do NOT also apply the structural
+        # speaker-ambiguity discount — the stated number already reflects that uncertainty.
+        if override_conf is not None:
+            s_mult = 1.0
 
         # v2: Repair credit — if segment was repaired, use gentler transcript multiplier.
         _06e_repair_credit = False

@@ -3,6 +3,7 @@ import {
   CreateGoalSchema,
   UpdateGoalSchema,
   BatchCreateGoalSchema,
+  NewGoalsPlanSchema,
 } from "@/src/db/goalSchemas"
 
 // ============================================================================
@@ -283,5 +284,33 @@ describe("error messages include field names", () => {
       expect(fields).toHaveProperty("tracking_type")
       expect(fields).toHaveProperty("period")
     }
+  })
+})
+
+// ============================================================================
+// NewGoalsPlanSchema — workout-program attachment
+// ============================================================================
+
+describe("NewGoalsPlanSchema programSelections", () => {
+  const base = { pillars: ["health"], objectives: ["obj_strong"], targetOverrides: {} }
+
+  test("accepts a plan with no program selections", () => {
+    expect(NewGoalsPlanSchema.safeParse(base).success).toBe(true)
+  })
+
+  test("accepts one program per discipline (1RM + linear)", () => {
+    const result = NewGoalsPlanSchema.safeParse({
+      ...base,
+      programSelections: [
+        { programId: "wendler-531", level: "intermediate", unitSystem: "kg", oneRepMaxes: { squat: 140 } },
+        { programId: "stronglifts-5x5", level: "beginner", unitSystem: "lb", workingWeights: { squat: 135 } },
+      ],
+    })
+    expect(result.success).toBe(true)
+  })
+
+  test("rejects an invalid unit system / non-positive max", () => {
+    expect(NewGoalsPlanSchema.safeParse({ ...base, programSelections: [{ programId: "x", level: "beginner", unitSystem: "stone" }] }).success).toBe(false)
+    expect(NewGoalsPlanSchema.safeParse({ ...base, programSelections: [{ programId: "x", level: "beginner", unitSystem: "kg", oneRepMaxes: { squat: -5 } }] }).success).toBe(false)
   })
 })

@@ -592,12 +592,23 @@ def _attach_speaker_by_overlap(segments: List[Dict[str, Any]], turns: List[Dict[
 class DiarizeEngine:
     """Speaker diarization using pyannote."""
 
-    def __init__(self, device: str = "", hf_token: str = ""):
+    def __init__(self, device: str = "", hf_token: str = "",
+                 diarizer: str = "whisperx", min_speakers: int = 0,
+                 max_speakers: int = 0, clustering_threshold: float = 0.0):
         self.device = _auto_device(device)
         self.hf_token = _get_hf_token(hf_token)
+        self.diarizer = diarizer
+        self.min_speakers = int(min_speakers or 0)
+        self.max_speakers = int(max_speakers or 0)
+        self.clustering_threshold = float(clustering_threshold or 0.0)
+        self._whisperx = None
 
         if not self.hf_token:
             raise SystemExit("Diarization requires HF token. Set HF_TOKEN or pass --hf-token.")
+
+        if self.diarizer == "pyannote-direct":
+            self._load_pyannote_direct()
+            return
 
         try:
             import whisperx  # type: ignore
@@ -623,15 +634,63 @@ class DiarizeEngine:
 
         log(f"[04.EXT.diarize] Loaded diarization pipeline on device={self.device}")
 
+    def _load_pyannote_direct(self):
+        """Phase-2 spike: call pyannote directly so we can force >=2 speakers / tune the
+        AHC clustering threshold to counter coach+target collapse on infield audio."""
+        import functools
+        import torch  # type: ignore
+        from pyannote.audio import Pipeline  # type: ignore
+        # torch 2.6 defaults weights_only=True which breaks pyannote checkpoints (trusted source).
+        _orig_load = torch.load
+        torch.load = functools.partial(_orig_load, weights_only=False)
+        try:
+            pipe = Pipeline.from_pretrained(
+                "pyannote/speaker-diarization-3.1", use_auth_token=self.hf_token,
+            )
+        finally:
+            torch.load = _orig_load
+        if pipe is None:
+            raise SystemExit("pyannote pipeline load returned None (check HF token / model access).")
+        try:
+            pipe.to(torch.device(self.device))
+        except Exception:
+            pass
+        # Lower AHC threshold => split more aggressively (counter collapse). Optional.
+        if self.clustering_threshold > 0:
+            try:
+                pipe.clustering.threshold = self.clustering_threshold
+            except Exception as e:
+                log(f"[04.EXT.diarize] WARN: could not set clustering threshold: {e}")
+        self._pyannote = pipe
+        log(f"[04.EXT.diarize] Loaded pyannote-direct on device={self.device} "
+            f"(min_speakers={self.min_speakers or '-'}, max_speakers={self.max_speakers or '-'}, "
+            f"clustering_threshold={self.clustering_threshold or 'default'})")
+
+    def _diarize_pyannote_direct(self, audio_path: str) -> List[Dict[str, Any]]:
+        """Run pyannote directly and return turns [{start,end,speaker}]."""
+        kwargs: Dict[str, Any] = {}
+        if self.min_speakers > 0:
+            kwargs["min_speakers"] = self.min_speakers
+        if self.max_speakers > 0:
+            kwargs["max_speakers"] = self.max_speakers
+        ann = self._pyannote(audio_path, **kwargs)
+        turns: List[Dict[str, Any]] = []
+        for turn, _, label in ann.itertracks(yield_label=True):
+            turns.append({"start": float(turn.start), "end": float(turn.end), "speaker": str(label)})
+        turns.sort(key=lambda x: (x["start"], x["end"]))
+        return turns
+
     def diarize(self, segments: List[Dict[str, Any]], audio16k: np.ndarray, audio_path: str) -> List[Dict[str, Any]]:
         """Add speaker labels to segments."""
         # Run diarization
-        try:
-            diar_out = self._diar_pipeline(audio_path)
-        except Exception:
-            diar_out = self._diar_pipeline(audio16k)
-
-        turns = _normalize_diar_output(diar_out)
+        if self.diarizer == "pyannote-direct":
+            turns = _normalize_diar_output(self._diarize_pyannote_direct(audio_path))
+        else:
+            try:
+                diar_out = self._diar_pipeline(audio_path)
+            except Exception:
+                diar_out = self._diar_pipeline(audio16k)
+            turns = _normalize_diar_output(diar_out)
         turns = _merge_turns(turns)
 
         if not turns:
@@ -641,6 +700,8 @@ class DiarizeEngine:
         # Assign speakers (segment-level), then re-cut segments at turn boundaries so each output
         # segment is single-speaker (recovers two-speaker chunks the old per-segment stamp fused).
         try:
+            if self._whisperx is None:
+                raise RuntimeError("no whisperx (pyannote-direct mode)")
             aligned_dict = {"segments": segments}
             assigned = self._whisperx.assign_word_speakers(turns, aligned_dict)
             segments = assigned.get("segments", []) or segments
@@ -858,13 +919,20 @@ if __name__ == "__main__":
 
     p.add_argument("--device", default=os.environ.get("WHISPERX_DEVICE", ""))
     p.add_argument("--hf-token", default=os.environ.get("HF_TOKEN", ""), help="Hugging Face token for pyannote.")
+    p.add_argument("--diarizer", choices=["whisperx", "pyannote-direct"], default="whisperx",
+                   help="Diarization backend. pyannote-direct exposes min/max-speakers + clustering threshold (Phase-2 collapse spike).")
+    p.add_argument("--min-speakers", type=int, default=0, help="pyannote-direct: force at least N speakers (counter collapse).")
+    p.add_argument("--max-speakers", type=int, default=0, help="pyannote-direct: cap speakers at N.")
+    p.add_argument("--clustering-threshold", type=float, default=0.0, help="pyannote-direct: AHC threshold; lower = split more.")
 
     p.add_argument("--progress-interval", type=float, default=float(os.environ.get("TRANSCRIBE_PROGRESS_INTERVAL", "15")))
 
     args = p.parse_args()
 
     # Initialize engine
-    engine = DiarizeEngine(device=args.device, hf_token=args.hf_token)
+    engine = DiarizeEngine(device=args.device, hf_token=args.hf_token,
+                           diarizer=args.diarizer, min_speakers=args.min_speakers,
+                           max_speakers=args.max_speakers, clustering_threshold=args.clustering_threshold)
 
     # Single-file mode
     if args.input:

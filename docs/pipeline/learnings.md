@@ -295,3 +295,99 @@ User wants to evaluate whether pipeline stages can be **eliminated or simplified
 - `src/db/embeddingsTestRepo.ts` — test embeddings repo
 - `scripts/training-data/10.EXT.ingest-test.ts` — test ingest script
 - `supabase/migrations/20260606_create_embeddings_test_table.sql` — test table migration (applied)
+
+---
+
+## Infield Phase 1 DONE + applied (2026-06-18) — QT1 86/100 at stage 09
+
+Phase 1 gate fixes (`docs/plans/infield-pipeline-improvement.md` 1a–1e) are **fully implemented** and now **applied to every stuck QT1 infield**. Net: 11 of 15 quarantined infield recovered by the gate fixes; +2 more this session.
+
+- **Don't trust 06h `quality_gate.blocked=False` in the report file.** The runner's `--from 07` does a **06h gate REPLAY** that enforces `video_confidence >= 0.85` — a check the standalone report's `blocked` field does NOT capture. 4 collapse videos (9tcvr26JP10 0.73, fO1NVRiSy9s 0.83, oZjZU0kksK8 0.82, grq-TNERVuA) pass the (fixed) collapse gate but BLOCK at 06h on real low post-repair confidence. Verify by running the gate, not reading the artifact.
+- **Re-running quarantined videos through the FIXED gate is the Phase-1 application step** — but most re-confirm as genuine: low transcript score (40–52, non-short → no short-clip exemption) and severe FLAGs are real damage, not artifacts. Only false-kills recover (8J_TuB6GwlI: old "low transcript 52" → re-scored clean, 525 high-tier).
+- **The 14 still-missing are all genuine:** 3 stage-02 rejects (audio is 90–95% whisper hallucination / a 32s clip — `02.EXT.transcribe` fail-closed SKIPs; not fixable), 4 collapse→06h-confidence (Phase 2 diarization), 6 genuine 06b blocks, 1 deterministic stage-06 validation fail (w4GAi9RhMYc: bad audio_features.json).
+- **Clean 06e/06g stalls (not quarantined) are resumable** with `pipeline-runner <m> --from 06e` — `-CZtcqqEDdk` resumed to a full PASS. Watch 06g: it can loop retrying one schema-invalid segment (records fail-closed `llm_failure` row and continues).
+- Further infield recovery = Phase 2 only (pyannote-direct threshold escalation / TS-VAD), which per fail-closed discipline needs Phase 0 ground-truth eval set FIRST.
+
+---
+
+## QT2 batch (2026-06-19) — 100 fresh videos, primarily-infield selection
+
+Built `docs/pipeline/batches/QT2.txt`: 100 unprocessed videos (0 overlap w/ QT1), selected ~65 infield-by-channel + 35 theory. Ran full pipeline 02→09.
+
+- **EXT 02→05** (GPU, chained, ~6h overnight): 98/100 (2 stage-02 hallucination rejects).
+- **LLM 06→09**: hit the **Claude usage limit at 06e** mid-run (the rate-limit bottleneck again). Resumed AFTER reset — but `pipeline-runner QT2` (default) prints **"Restart from 06: ignoring N quarantine entries (retained 0/N)"** and reopens ALL quarantines + re-runs 06/06b with `--overwrite` → re-burns fresh quota. **The runner passes `--overwrite` to every stage in its `--from`→09 range, so it never skips completed stages.** Correct resume: kill it, build an **in-flight-only manifest** (QT2 minus real-quarantine IDs from the first log minus dead), and run `--from <actual-stall-stage>` (here `--from 06e`, since all 61 in-flight had 06d). That resumed 06e→09 with no waste, no outage → 57/61 passed.
+- **Result: 57/100 at stage 09, 53 ingest-ready** (PASS 53 / REVIEW 2 / BLOCK 2). ~57% vs QT1's lower initial rate — infield gate fixes help.
+- **Selection lesson:** infield-by-channel ≠ infield-by-content. Stage-06 typed the 100 as talking_head 44, compilation 20, **infield 16**, podcast 7. Most "infield-channel" videos are compilations or coach-narration-over-clips. True infield (16) stayed hardest: 5 PASS / 2 REVIEW / 9 quarantined.
+- Ingested 53 QT2 PASS → `embeddings_test` now **133 videos (80 QT1 + 53 QT2), 5612 chunks**.
+
+---
+
+## CRITICAL: pipeline-runner false "LLM outage" abort = CLAUDECODE nested-session block (2026-06-23)
+The runner's LLM preflight calls the `claude` CLI. If launched from inside a Claude Code session, `CLAUDECODE` is set and `claude` refuses ("cannot be launched inside another Claude Code session") → the runner misreads this as a global outage and prints **"Aborting before per-video execution to avoid mass execution-error quarantine during global LLM outages/limits"** even when quota is FINE. **Always launch pipeline LLM runs with `( unset CLAUDECODE; ./scripts/training-data/batch/pipeline-runner ... )`.** Verify real quota separately with `( unset CLAUDECODE; claude -p "Reply OK" )` before assuming an outage. Real quota limits show an explicit `You've hit your limit · resets <time>` from the CLI; the bare "Aborting before per-video execution" with no reset time is the false CLAUDECODE one.
+
+---
+
+## QT3 batch DONE (2026-06-23) — 69/100 stage 09, 65 ingested. Operational lessons.
+100 fresh videos (`QT3.txt`), primarily-infield-by-channel (heavy on daily_evolution infield-titled). Final: **69/100 at stage 09, 65 PASS ingested** (2355 chunks). DB now **198 videos (QT1 80 + QT2 53 + QT3 65), 7967 chunks, 0 extraneous**.
+- **Big compilation-heavy batches don't fit one quota window.** QT3's videos have many segments (06b prompts to 160k chars, 06e per-segment on 1000+ segs) → quota dies mid-run repeatedly. The grind took several windows. **Future: process in ~20-30 video chunks that complete within a window, so progress banks instead of being lost to mid-run outage.**
+- **Resume efficiently by stage, never blanket --from 06b.** Re-running the expensive 06b for videos that already have good verdicts wastes the most-limited quota. Split not-@09 in-flight: good-06b+06d → `--from 06e` (cheap, recovered 26/32); good-06b-no-06d → `--from 06c`; corrupted/missing-06b → `--from 06b`.
+- **Outage during 06b corrupts verdicts to fail-closed REJECT** ("Verification LLM failed... You've hit your limit"). These are NOT real rejects — detect via the summary string and re-run. (QT3 first pass: 83/84 "rejects" were this.)
+- **`unset CLAUDECODE` is mandatory** (see prior note) — and beware a SECOND false-abort cause: **the runner's LLM preflight times out (120s×2) when the Anthropic API is degraded** (intermittent 500s / slow). That prints the same "Aborting before per-video execution" line. Distinguish: burst-probe `claude -p "Reply OK"` — if it 500s or is slow, the API is degraded (wait); if 5/5 fast OK, just relaunch (preflight will pass).
+
+---
+
+## QT4 batch (2026-06-24) — 100 infield-focused, EXT phase running
+Built `docs/pipeline/batches/QT4.txt`: 100 unprocessed videos, 0 overlap with QT1/QT2/QT3 or any prior stage-02 attempt.
+- **Status of the prior 300 (verified from data, not summaries — intersected manifest YouTube IDs against `data/09.EXT.chunks/`):** stage-09 reached: QT1 86, QT2 57, QT3 69 = **212/300**. Quarantined/blocked: 14+43+31 = **88/300**.
+- **Selection constraint:** dedicated infield channels (playing_with_fire_infield, coach_kyle_infield, austen_summers_meets_girls, NL_meetingGirlsIRL) are now **fully consumed** by QT1–3 (0 unprocessed). Of 985 unprocessed downloaded videos, 877 are daily_evolution. So infield-by-content is ~entirely daily_evolution now. QT4 = 87 daily_evolution (all literal "INFIELD" titles) + 13 infield-leaning from other channels (coach_kyle approach×3, TODD_V infield footage, etc.) for channel spread. Expect the QT2/QT3 caveat to hold: infield-by-title ≠ infield-by-content; stage-06 will re-type many as compilation/talking_head.
+- **Pre-flight:** all 100 have raw16k+clean16k audio (no clean16k gap). One pick (SZgkkTImrCY, Todd V) had only metadata, no audio → swapped for daily_evolution yrgCgJUhPrU.
+- **EXT 02→05 launched** (GPU, bg) → `data/QT4.ext.log`. After it completes, run LLM 06→09 with `( unset CLAUDECODE; pipeline-runner QT4 --parallel 5 )` — and per QT3 lesson, process in ~20-30 video chunks per quota window so progress banks instead of dying mid-run.
+
+### QT4 DONE (2026-06-25) — 50/100 stage 09, 41 ingested. Infield selection validated; tight-retry-loop gotcha.
+Final: **50/100 at stage 09** (QT4.1 13, QT4.2 13, QT4.3 11, QT4.4 13). EXT 02→05 = 100/100 (no stage-02 rejects). Ingest: QA screen = 41 PASS + 8 REVIEW + 1 BLOCK. After user sign-off, ingested **49/50 (41 PASS + 8 REVIEW via `--allow-review`) = 851 chunks**; only the 1 thin BLOCK (WFPURH2z6N8, 4 chunks) excluded. `embeddings_test` now **8897 chunks**. (Ingest is idempotent/per-video replace — re-running with `--allow-review` only added the 8 REVIEW deltas, no dupes.) Held REVIEW (low post-repair high-tier <80% or video_type conf <0.80): 1M4dQg5peV8, 8reXU39JMQo, 9lkrnS53O_c, FB1cW1uMNPk, J_Vl8gpctKw, cMmtGVn9eNM, fNl30KAQJDA, mD1A2Jgargo; BLOCK (thin, 4 chunks): WFPURH2z6N8.
+- **Infield selection finally worked: stage-06 typed 60/100 as infield** (vs QT2/QT3's ~16) — the literal-"INFIELD"-in-title filter is a far better infield proxy than infield-by-channel. True-infield pass rate 24/60 = 40% (consistent with historical ~37%); talking_head 14/14, compilation 12/23.
+- **NEW GOTCHA — a tight retry-loop on the runner's flaky preflight makes it WORSE, not better.** The runner's LLM preflight (`claude --model opus -p ... --strict-mcp-config --no-session-persistence`, 120s×2) intermittently times out even when the *identical command run by hand returns in 7–9s* and direct quota probes are clean. A wrapper that relaunched the runner every ~5 min on each preflight-abort drove it to **persistent** 120s timeouts (QT4.3/4.4 failed 8/8 and 5/5). **Fix that actually worked: launch each chunk FRESH and SEQUENTIALLY, one at a time, no rapid retries** — every fresh launch (QT4.1, QT4.2, QT4.3-resume, QT4.4) cleared preflight first try and ran to completion. Rapid killed-preflight relaunches appear to degrade the API session/rate-bucket; space launches out.
+- **Real quota mid-run still writes `llm_outage_during_stage` rows (NOT real quarantines).** QT4.3 died at 06e on a real limit → 19 outage rows + fail-closed 06b/06e outputs. Resume = delete the fail-closed/outage outputs (`grep fail_closed|llm_call_error|llm_outage`) + `rm` the chunk quarantine file, then `--from 06b` (06 video-type survived the outage). Re-ran clean → 11/25.
+
+### QT5 DONE (2026-06-25) — 71/100 stage 09, 66 ingested. Infield well is DRAWING DOWN.
+Next 100, same fresh-sequential LLM approach. Final: **71/100 at stage 09** (QT5.1 13, QT5.2 20, QT5.3 24-after-resume, QT5.4 14). Ingested **66 (65 PASS + 1 REVIEW) = 1176 chunks**; 5 thin BLOCKs excluded. `embeddings_test` now **10,073 chunks**.
+- **Outage resume confirmed again:** QT5.3 died at 06e/07 (real limit) → cleaned + `--from 06b` → 24/25 (this time the outage wrote NO fail-closed files, just aborted clean — 0 to delete). QT5.4 hit a longer (daily, "resets Jun 26 10pm") limit; 4 videos still stalled (`-niMKo_fHfg` 08, `398QNJ1VYtI` 07, `AKpAECnkfYA` 07, `BQvRaHF4DT8` 06g) — resume `--from 06b` after the reset.
+### QT6 DONE (2026-07-07) — 87/99 stage 09, talking_head-heavy. Two lessons.
+Next 100 (99 after dropping a no-audio pick), run **20 at a time** (5 chunks). Final **87/99 at stage 09** — 88% pass because it's talking_head-heavy (only ~7 typed infield; pool spent). NOT yet ingested — see DB note below.
+- **RESUME STAGE DEPENDS ON WHERE THE OUTAGE HIT vs whether stage 06 finished.** QT6.5's outage hit during its FIRST 06→09 pass, at 06b — but 06 had NOT completed for the later videos (15/19 had no `06.LLM.video-type` output). Resuming `--from 06b` FALSE-QUARANTINED them (06b needs 06 as input → contract fail → 3/19). Fix: `--from 06` → 17/19. **Rule: if the chunk never finished its first 06 pass (missing `data/06.LLM.video-type/*/<id>*conversations.json`), resume `--from 06`, NOT 06b.** (QT4.3/QT5.3 stalled at 06e+ where 06 WAS done, so `--from 06b` was correct there.) Detect by checking for the 06 output before picking the resume stage — don't trust the pass count.
+- **CRITICAL — Supabase test project auto-PAUSED after ~1 week idle (free tier).** After an 11-day gap (Jun 25→Jul 6), `vcjzbmtcgmjrvvklzqaq.supabase.co` stopped resolving in DNS entirely (`curl: (6) Could not resolve host`), and `10.EXT.ingest-test.ts` fails with `TypeError: fetch failed` in `deleteTestEmbeddingsBySource`. This blocks stage-10 ingest ONLY — stages 02–09 are all local (files on disk), so processing continues fine. Resolution is USER-ONLY: restore/unpause the project in the Supabase dashboard. Distinguish from a transient blip: general internet works (google 200) but the project subdomain won't resolve. Pending ingest when it's back: QT5 backlog (6 videos, 71→77) + QT6 (87 videos).
+
+### INFIELD POOL DEPLETION (important for future batches): QT5 stage-06 typed only **30/100 infield** (vs QT4's 60) — the literal-"INFIELD"-title daily_evolution videos are now exhausted (only 3 left pre-QT5). QT5 fell back to the next tier (picking-up/nightgame/grocery/daygame) which is mostly coach-narration → 63 typed talking_head. Higher total throughput (71, because talking_head passes ~92%) but lower infield purity (12 infield reached 09). **For QT6+: the daily_evolution infield-footage well is largely spent. To keep doing infield-focused batches, need NEW infield channel sources** (more playing_with_fire / coach_kyle_infield / austen / NL meetingGirlsIRL uploads, or new infield channels added to sources.txt + downloaded). Otherwise future batches will be predominantly talking_head theory.
+
+---
+
+## Phase-2 diarization spike — pyannote-direct (force >=2 speakers) (2026-06-24)
+Added `--diarizer pyannote-direct --min-speakers N --max-speakers N --clustering-threshold F` to `04.EXT.diarize`
+(loads pyannote/speaker-diarization-3.1 directly, torch.load weights_only=False patch for the 2.6 unpickle block,
+converts Annotation→turns, reuses existing assign/resegment). Ran 28 collapse/attribution infield+compilation quarantines through it (04→05→06→09).
+- **Collapse eliminated on ALL 28** (every video now diarizes to >=2 speakers; was 1). `min_speakers=2` is the knob.
+- **5 recovered to stage 09 (4 ingested)** — e.g. grq-TNERVuA flipped from collapse/reject → 06b **APPROVE** "roles correctly assigned throughout."
+- **BUT only ~18% pass outright.** Forcing 2 clusters SEPARATES speakers but doesn't guarantee CORRECT assignment — 06b still rejects when the split mislabels segments. Plan's prediction confirmed: num_speakers alone isn't the full fix.
+- **~4 near-misses stuck at the 06h 0.85 gate** (06b-APPROVED, final_conf 0.80–0.84: fO1NVRiSy9s/eFmMa8svM70=0.836). The diarizer raised them but the 0.85 cutoff (unvalidated) is now the blocker, not diarization.
+- **Rest still fail on audio quality** (low-transcript hallucination) — diarization can't fix.
+- Next levers for a bigger win: clustering-threshold sweep, pyannote community-1, and **coach voice-enrollment (TS-VAD)** — coach is constant across all videos = the structural fix. Needs the Phase-0 ground-truth set to validate the 0.85 threshold + measure DER.
+DB after spike: **202 videos, 8046 chunks**.
+
+---
+
+## Stall root-cause audit + two IMPLEMENTED fixes (2026-07-08)
+Audited all 191 not-done across QT1–QT7 (ran the runner's real `evaluate_06b_gate` per video, read 06/06h outputs + transcripts). Only ~30/191 (16%) are genuinely-bad content; the rest are recoverable outage-stalls (64) or blocked on **questionable criteria** (97). Two criteria fixes shipped this session:
+
+### Fix 1 — Stage-06 `transcript_confidence.score` prompt reframed (over-blocks infield/compilation)
+- **Root cause:** the ≤55 06b gate (`stage06b_flag_low_transcript_quality`) is the single biggest stall — **68 videos, 65 of them infield/compilation**, half clustered at 51–55. The score is a SUBJECTIVE 1–100 LLM judgment (06.LLM.video-type prompt), and the old prompt tanked the whole-video number for diarization/speaker-split, cosmetic punctuation, and short/overlapping infield turns — none of which are ASR word-garbage, and all separately adjudicated downstream (06c/06e/06f/06h + pre-ingest QA). The score is consumed ONLY by the 06b gate (verified) → reworking it is RAG/embedding-safe.
+- **Change:** rewrote the rubric (full `ANALYZE_VIDEO_PROMPT` + sampled `ANALYZE_VIDEO_GLOBAL_PROMPT`) to score **% of content that is usable** = words correctly transcribed AND coach-vs-target ROLE roughly right. Penalizes ASR word-garbage (primary) + **role swaps/merges in proportion** (NOT free — coach's words shown as target's still counts); explicitly does NOT penalize punctuation/caps, short/overlapping turns, or one speaker split across multiple IDs when the ROLE is still correct.
+- **⚠️ OPEN — threshold is now unanchored (circularity):** `STAGE06B_FLAG_LOW_TRANSCRIPT_SCORE_BLOCK_THRESHOLD=55.0` was implicitly tuned to the OLD prompt's scoring. Changing what the number MEANS unmoors 55. **Did NOT change it.** Must recalibrate empirically when quota's back: re-run the new prompt on known-good passes + a sample of the 68 blocked + a few known-bad, then set the threshold on the rubric's meaning (% usable). Don't trust 55 until then.
+
+### Fix 2 — LLM per-attribution confidence, honored by 06h (infield 0.85-floor over-penalty)
+- **Root cause:** 06h did NOT honor per-attribution certainty. It applied a blanket structural discount to collapse-reassigned infield segments — `speaker *= 0.48/0.80/0.95` (`_damage_multiplier`) — keyed on collapse RATE, not on whether the LLM was sure about a given line. So "What's your name?"→coach (obvious) took the same haircut as a genuine guess, dragging videos under the 0.85 floor.
+- **Change:** stage 06 now emits `speaker_role_override_confidence` (0–1) per overridden segment (full + chunk prompts, normalize + output plumbing, schema). 06h **honors it directly** as the speaker base and skips the ambiguity multiplier (`s_mult=1.0`) when present; **legacy artifacts without it fall back to the old floor×multiplier (backward-compatible, fail-closed).** 06c drops the confidence when it rewrites an override (stale → 06h uses floor). Tests: `TestHonoredOverrideConfidence` (3) in `test_06h_confidence.py` — all pass. (2 pre-existing `TestQualityOverloadGate` failures are the stale 0.48/0.33-vs-0.50/0.34 tests, unrelated.)
+- **Only takes effect on stage-06 RE-RUN** — existing 06h artifacts/chunks lack the field. To benefit, re-run infield 06→06h. User will validate label quality once many infield videos exist; for now the directive is "best LLM guess" (trust it, calibrate later — same calibration question as the 0.85 floor, now concrete).
+
+### Also found (NOT yet fixed) — RAG ignores the confidence it's given
+- The "where are the mistakes" signal DOES reach the DB: 06f/06h write per-chunk `chunk_confidence_score`/`damage_score`/`contains_repaired_text` + `damaged_segment_ids`/`damage_segment_windows` into `metadata jsonb` (both ingest scripts), and the RPC returns it.
+- BUT `retrieval.ts:404` reads `metadata.chunkConfidence` (camelCase) while ingest writes `chunk_confidence_score` (snake_case) → **the confidence-downrank is DEAD CODE (field-name mismatch)**, and the localized damage fields are never read. Sub-0.3 chunks are dropped at stage 09 (worst never ingested). Fix pending user go-ahead.

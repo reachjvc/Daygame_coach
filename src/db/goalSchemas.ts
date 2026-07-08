@@ -113,6 +113,19 @@ export const NewGoalsPlanSchema = z.object({
     .array(z.object({ id: z.string().max(100), pillarId: z.string().max(100), unit: z.string().max(40) }))
     .max(100)
     .optional(),
+  // Optional workout programs attached in the plan builder (≤1 per discipline) → enrolled on save.
+  programSelections: z
+    .array(
+      z.object({
+        programId: z.string().max(100),
+        level: z.enum(["beginner", "intermediate", "advanced"]),
+        unitSystem: z.enum(["kg", "lb"]),
+        oneRepMaxes: z.record(z.string().max(100), z.number().positive()).optional(),
+        workingWeights: z.record(z.string().max(100), z.number().positive()).optional(),
+      })
+    )
+    .max(8)
+    .optional(),
 })
 
 // ============================================

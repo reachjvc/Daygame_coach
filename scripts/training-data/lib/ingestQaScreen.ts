@@ -34,7 +34,9 @@ const SEV_ORDER: Record<Severity, number> = { PASS: 0, ADVISORY: 1, REVIEW: 2, B
 export const QA_THRESHOLDS = {
   minChunks: 4, // chunkCount <= this -> BLOCK (negligible content)
   shortSegs: 60, // segments < this AND below minHighRatio -> BLOCK (escaped the size-gated lq check)
-  minHighRatio: 0.95, // high-tier / total below this -> REVIEW (low post-repair confidence)
+  minHighRatio: 0.80, // high-tier / total below this -> REVIEW (low post-repair confidence).
+  // Lowered 0.95 -> 0.80 to admit infield, which is inherently noisier than studio talking-head and
+  // naturally lands at ~85-94% high-tier; 0.95 was calibrated for clean content and over-held infield.
   minVtConfidence: 0.8, // 06 video_type confidence below this -> REVIEW (type uncertain)
 }
 

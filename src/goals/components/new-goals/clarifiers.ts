@@ -34,6 +34,7 @@ export const AUTHORED_CLARIFIERS: Record<string, AuthoredClarifier> = {
       obj_recovery: { label: "Fix my sleep & energy", sub: "Rest well, wake up actually refreshed" },
       obj_strong: { label: "Get genuinely strong", sub: "Lift heavy — squat, bench, deadlift" },
       obj_body: { label: "Change how my body looks", sub: "Lean out, drop fat, build a physique" },
+      obj_triathlon: { label: "Race a triathlon", sub: "Swim, bike, run — sprint to Ironman" },
     },
   },
   relations: {

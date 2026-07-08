@@ -1,7 +1,55 @@
 # Infield Pipeline Improvement Plan
 
-Status: PROPOSED — investigate-verified, implement nothing until approved.
+Status: **Phase 1 DONE + applied (2026-06-18).** Phases 0/2/3/4 not started.
 Batch under study: QUALITY-TEST.1 (100 videos). All numbers below re-derived from `data/` + scripts, not from prior summaries.
+
+---
+
+## PROGRESS LOG
+
+### 2026-06-18 — Phase 1 verified done, re-applied to all stuck infield
+Phase 1 gate fixes (1a–1e) are **fully implemented** in `pipeline-runner` + `02.EXT.transcribe`:
+`_count_residual_misattributions` (1a), collapse residual gate on `unknown_count`/`reassignment_rate` (1c),
+`STAGE06B_SHORT_CLIP_SEGMENT_FLOOR` (1d), `_trim_edge_artifacts` (1e); 1b folded into the 1a residual count.
+Test: `tests/unit/pipeline/test_pipeline_runner_stage06_gate.py`.
+
+**Recovery measured against the 15 quarantined infield: 11 already at stage 09** (4n7tesaFEdI, K8_TBjaiNUk,
+yTWnGdzgz7w, h-wWMx5Ssac, TeZg-eAknDs, NhaqeRwLPJY, UmhMBv40HU8, X6VydswgnfY, -5We8Qvv2Cg, 68kUvx1TUdY, zWyau0QVSpA).
+
+**This session — re-ran every still-stuck QT1 video through the fixed gates:**
+- `-CZtcqqEDdk` (clean 06e stall, not quarantined) → resumed 06e→09, **PASS**.
+- `8J_TuB6GwlI` (old low-transcript false-kill) → re-gate → **PASS** (525 high-tier segs).
+- Re-gate re-quarantined 6 under the FIXED gates for GENUINE reasons (transcript score 40–52 non-short, or
+  real severe FLAGs): clWClbCY9jI, tX9j5cLK63I, 0m3iRVM4FZk, A6dFLFMNK_I, _Am8ItTeNoQ, p8NGf6VWOfo. **Confirmed real.**
+- `w4GAi9RhMYc` re-run from 06 → re-fails stage-06 validation deterministically (bad `audio_features.json`). Real.
+
+**QT1 now 86/100 at stage 09.** Phase 1 recovery is exhausted. The remaining 14:
+| Bucket | N | IDs |
+|---|---|---|
+| Stage-02 reject (audio 90–95% hallucination / 32s clip) — dead | 3 | PwvM7HhnUEA, nMHYVtW1V_8, wv-U9drRpAo |
+| Pass collapse gate, fail 06h video-confidence <0.85 (Phase 2) | 4 | 9tcvr26JP10, fO1NVRiSy9s, grq-TNERVuA, oZjZU0kksK8 |
+| Genuine 06b block under fixed gate (low transcript / severe FLAG) | 6 | clWClbCY9jI, tX9j5cLK63I, 0m3iRVM4FZk, A6dFLFMNK_I, _Am8ItTeNoQ, p8NGf6VWOfo |
+| Stage-06 validation fail (deterministic) | 1 | w4GAi9RhMYc |
+
+Further recovery needs **Phase 2 (diarization re-architecture)** — only path left, and per fail-closed discipline
+it requires **Phase 0 (ground-truth eval set)** first so threshold/diarizer changes are measured, not guessed.
+
+### 2026-06-18 (cont.) — Surgical 06h reassignment-credit fix (Area 1 extension)
+Implemented: 06h now **credits a near-completely reassigned collapse** (reassignment_rate ≥ 0.95 AND
+unknown_count ≤ 10 — same residual signals as the stage-06 collapse gate). For those, override segments get
+`SPEAKER_OVERRIDE_FLOOR_TRUSTED_REASSIGN=0.92` + `SPEAKER_AMBIGUITY_MULT_INFIELD_TRUSTED_REASSIGN=0.95`
+instead of 0.85/0.80. Files: `validation/confidence_model.py`, `06h.DET.confidence-propagation`. Tests added:
+`test_06h_confidence.py::TestTrustedReassignment` (4 cases, pass). Fail-closed preserved: a poorly-reassigned
+collapse gets NO boost.
+
+**Effect (measured):** removes the over-harsh speaker-axis *proxy* penalty — grq-TNERVuA high-tier segs 29→124.
+But it does **NOT** pass the 4 collapse cases (grq 0.76, fO1NVRiSy9s 0.83, oZjZU0kksK8 0.825, 9tcvr26JP10 0.77 <
+0.85). **Why:** the residual drag is **06g's independent, content-based speaker_confidence** (median 0.65 over
+294 segs — it judges whether each role label matches local dialogue context, told to be conservative). That is a
+**real quality signal, not a proxy** — overriding it would be a §15 bypass of a quality decision. So the surgical
+fix is correct and kept (improves confidence metadata on passing infield), but the 4 stay blocked legitimately.
+**Moving them further = Phase 2 (better diarization → 06g genuinely more confident), NOT gutting 06g or dropping 0.85.**
+QT1 unchanged at 86/100; recovery without Phase 2 is exhausted.
 
 ---
 

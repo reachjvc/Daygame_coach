@@ -53,7 +53,7 @@ from validation.confidence_model import (
 
 def _make_segment(sid: int, *, speaker_id="SPEAKER_00", role="coach",
                   segment_type="approach", text="Hello", conv_id=1,
-                  speaker_role_override=None):
+                  speaker_role_override=None, speaker_role_override_confidence=None):
     seg = {
         "id": sid,
         "speaker_id": speaker_id,
@@ -64,12 +64,14 @@ def _make_segment(sid: int, *, speaker_id="SPEAKER_00", role="coach",
     }
     if speaker_role_override is not None:
         seg["speaker_role_override"] = speaker_role_override
+    if speaker_role_override_confidence is not None:
+        seg["speaker_role_override_confidence"] = speaker_role_override_confidence
     return seg
 
 
 def _make_06d(segments, *, video_type="infield", speaker_labels=None,
-              transcript_score=70):
-    return {
+              transcript_score=70, speaker_collapse=None):
+    payload = {
         "video_id": "test_video",
         "segments": segments,
         "conversations": [
@@ -82,6 +84,9 @@ def _make_06d(segments, *, video_type="infield", speaker_labels=None,
         "transcript_confidence": {"score": transcript_score},
         "metadata": {},
     }
+    if speaker_collapse is not None:
+        payload["speaker_collapse"] = speaker_collapse
+    return payload
 
 
 def _make_damage_map(segments_data):
@@ -272,6 +277,70 @@ class TestSpeakerCollapse(unittest.TestCase):
         # Override boosts from 0.30 to max(0.30, 0.85) = 0.85
         self.assertAlmostEqual(seg["segment_confidence"]["speaker"],
                                SPEAKER_OVERRIDE_FLOOR, places=2)
+
+
+class TestHonoredOverrideConfidence(unittest.TestCase):
+    """v3: when stage 06 supplies a per-segment speaker_role_override_confidence, 06h honors it
+    directly, replacing the structural floor + ambiguity multiplier (which cannot tell an obvious
+    reassignment from a guess). Absent confidence keeps the legacy behavior (covered elsewhere)."""
+
+    def _speaker_conf(self, override_conf):
+        segs = [_make_segment(1, speaker_id="SPEAKER_01", speaker_role_override="coach",
+                              speaker_role_override_confidence=override_conf)]
+        labels = {"SPEAKER_01": {"label": "collapsed", "confidence": 0.30}}
+        data = _make_06d(segs, video_type="infield", speaker_labels=labels)
+        dmg = _make_damage_map([(1, ["speaker_ambiguity"], ["seed_speaker_collapsed"])])
+        out, _ = _propagate(data_06d=data, damage_map=dmg,
+                            adjudication=None, quality_check=None)
+        return out["segments"][0]["segment_confidence"]["speaker"]
+
+    def test_high_confidence_honored_not_discounted(self):
+        # LLM says 0.95 → speaker stays 0.95 despite infield speaker_ambiguity (no 0.48/0.80 cut).
+        self.assertAlmostEqual(self._speaker_conf(0.95), 0.95, places=2)
+
+    def test_low_confidence_honored_below_floor(self):
+        # LLM says 0.40 → honored down, below the legacy 0.85 override floor (trust the model both ways).
+        self.assertAlmostEqual(self._speaker_conf(0.40), 0.40, places=2)
+
+    def test_confident_attribution_beats_legacy_penalty(self):
+        # A confident attribution scores strictly higher than the legacy 0.68 untrusted-override path.
+        self.assertGreater(self._speaker_conf(0.95), 0.68)
+
+
+class TestTrustedReassignment(unittest.TestCase):
+    """v2.2: a near-completely reassigned collapse credits the speaker axis close to full;
+    a poorly-reassigned one keeps the generic over-collapse penalty (fail-closed)."""
+
+    _TRUSTED = {"detected": True, "total_segments_affected": 100,
+                "reassigned_count": 99, "unknown_count": 1, "reassignment_rate": 0.99}
+    _UNTRUSTED = {"detected": True, "total_segments_affected": 100,
+                  "reassigned_count": 55, "unknown_count": 45, "reassignment_rate": 0.55}
+
+    def _speaker_conf(self, collapse):
+        segs = [_make_segment(1, speaker_id="SPEAKER_01", speaker_role_override="coach")]
+        labels = {"SPEAKER_01": {"label": "collapsed", "confidence": 0.30}}
+        data = _make_06d(segs, video_type="infield", speaker_labels=labels,
+                         speaker_collapse=collapse)
+        dmg = _make_damage_map([(1, ["speaker_ambiguity"], ["seed_speaker_collapsed"])])
+        out, _ = _propagate(data_06d=data, damage_map=dmg,
+                            adjudication=None, quality_check=None)
+        return out["segments"][0]["segment_confidence"]["speaker"]
+
+    def test_trusted_reassignment_credits_speaker(self):
+        # floor 0.92 * trusted mult 0.95 = 0.874
+        self.assertAlmostEqual(self._speaker_conf(self._TRUSTED), 0.874, places=2)
+
+    def test_untrusted_reassignment_keeps_penalty(self):
+        # floor 0.85 * with-override mult 0.80 = 0.68
+        self.assertAlmostEqual(self._speaker_conf(self._UNTRUSTED), 0.68, places=2)
+
+    def test_trusted_strictly_higher_than_untrusted(self):
+        self.assertGreater(self._speaker_conf(self._TRUSTED),
+                           self._speaker_conf(self._UNTRUSTED))
+
+    def test_no_collapse_meta_is_untrusted(self):
+        # Backward compat: absent speaker_collapse → generic override path (0.68).
+        self.assertAlmostEqual(self._speaker_conf(None), 0.68, places=2)
 
 
 class TestLLMFailureFallback(unittest.TestCase):

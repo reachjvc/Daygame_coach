@@ -114,6 +114,12 @@ const testPages = [
     icon: Dumbbell,
   },
   {
+    name: "Workout Programs",
+    href: "/test/programs",
+    description: "Trackable fitness programs (StrongLifts 5×5, 5/3/1) — enroll, log today's session, engine advances weights",
+    icon: Dumbbell,
+  },
+  {
     name: "Pricing",
     href: "/test/pricing",
     description: "Subscription tier pricing page — Free, Practitioner, Coached, Premium Plus",

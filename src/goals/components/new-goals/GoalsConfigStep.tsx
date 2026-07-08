@@ -29,6 +29,21 @@ import type { IntakeMatches } from "@/src/goals/intakeService"
 import { EditableTitle } from "./EditableTitle"
 import { PlanTimeline } from "./PlanTimeline"
 import { clarifierPrompt, clarifierOption } from "./clarifiers"
+import { ProgramPicker } from "@/src/programs/components/ProgramPicker"
+import { hasProgramsForDiscipline, requireProgram } from "@/src/programs/data/catalog"
+import type { Discipline, ProgramSelection } from "@/src/programs/types"
+
+// Which fitness objectives map to program discipline(s). A discipline's picker
+// shows only when its objective is in the plan AND programs exist for it.
+const OBJECTIVE_DISCIPLINE: Record<string, Discipline[]> = {
+  obj_strong: ["strength"],
+  obj_muscle: ["bodybuilding"],
+  obj_body: ["bodybuilding"],
+  obj_endurance: ["cardio"],
+  obj_calisthenics: ["calisthenics"],
+  obj_mobility: ["flexibility"],
+  obj_triathlon: ["triathlon", "ironman"],
+}
 import {
   DndContext,
   closestCenter,
@@ -155,6 +170,9 @@ interface GoalsConfigStepProps {
   /** Per-objective target dates (flow-state only) — set by a template's time horizon. */
   objectiveDates?: Record<string, string>
   onChangeObjectiveDate?: (objectiveId: string, date: string) => void
+  /** Workout programs attached under Health (≤1 per discipline) → enrolled on save. */
+  programSelections?: ProgramSelection[]
+  onChangeProgramSelections?: (selections: ProgramSelection[]) => void
 }
 
 // ---------------------------------------------------------------------------
@@ -1376,6 +1394,8 @@ export function GoalsConfigStep({
   onReorderPillars,
   objectiveDates = {},
   onChangeObjectiveDate,
+  programSelections = [],
+  onChangeProgramSelections,
 }: GoalsConfigStepProps) {
   // Areas in priority (rank) order, matching the Intake step; unranked active areas last.
   const rankIdx = (id: string) => { const i = pillarOrder.indexOf(id); return i === -1 ? Infinity : i }
@@ -1971,6 +1991,28 @@ export function GoalsConfigStep({
           </div>
         </div>
       )}
+
+      {/* Workout programs — first-class under Health. One picker per fitness discipline
+          whose objective is in the plan and which has encoded programs. */}
+      {onChangeProgramSelections && (() => {
+        const disciplines = [...new Set(
+          [...(selectedObjectives ?? [])].flatMap((o) => OBJECTIVE_DISCIPLINE[o] ?? [])
+        )].filter((d) => hasProgramsForDiscipline(d))
+        if (disciplines.length === 0) return null
+        const selectionFor = (d: Discipline) =>
+          programSelections.find((s) => requireProgram(s.programId).discipline === d) ?? null
+        const setSelectionFor = (d: Discipline, sel: ProgramSelection | null) => {
+          const others = programSelections.filter((s) => requireProgram(s.programId).discipline !== d)
+          onChangeProgramSelections(sel ? [...others, sel] : others)
+        }
+        return (
+          <div className="mt-5 space-y-3">
+            {disciplines.map((d) => (
+              <ProgramPicker key={d} discipline={d} value={selectionFor(d)} onChange={(sel) => setSelectionFor(d, sel)} />
+            ))}
+          </div>
+        )
+      })()}
       </div>{/* end right pane */}
       </div>{/* end split grid */}
     </div>

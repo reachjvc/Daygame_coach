@@ -287,6 +287,9 @@ def normalize_segment_classification(item: Any, default_id: int) -> Dict[str, An
         override = speaker_role_override.strip().lower()
         if override in {"coach", "student", "target", "unknown"}:
             normalized["speaker_role_override"] = override
+            override_conf = item.get("speaker_role_override_confidence")
+            if isinstance(override_conf, (int, float)) and not isinstance(override_conf, bool):
+                normalized["speaker_role_override_confidence"] = max(0.0, min(1.0, float(override_conf)))
 
     if normalize_bool(item.get("is_teaser"), False):
         normalized["is_teaser"] = True
@@ -753,25 +756,48 @@ CRITICAL RULES:
       - "target" if the segment is a short response to a question, gives personal info when asked, or reacts to the coach
       - "unknown" if you genuinely cannot determine from context
    c) Only add speaker_role_override to segments from collapsed speakers. Omit it for all other segments.
+   d) For EACH segment you give a speaker_role_override, ALSO add "speaker_role_override_confidence":
+      a number 0.0-1.0 = how certain you are of THIS segment's role from context. Use HIGH (0.9-1.0)
+      when it is obvious (a direct answer to the coach's question, a clear opener); use LOW (0.3-0.6)
+      when you must guess. Be honest — this number is trusted directly, so do not inflate it.
 7. If video_type is "talking_head" or "podcast": ALL segments must be "commentary" with conversation_id 0
 8. If video_type is "infield" or "compilation": classify each segment as approach/commentary/transition with sequential conversation_ids
 
 TRANSCRIPT QUALITY ASSESSMENT:
 
-Evaluate the overall quality and reliability of the transcript. Consider:
+Score how much of the transcript is USABLE as training data — the spoken words are correctly
+transcribed AND attributed to roughly the right ROLE (coach vs target). Treat the score as your
+best estimate of the PERCENTAGE of the content a reader could trust. Weigh each problem by how
+much of the content it actually affects.
 
-1. COHERENCE: Does the text flow logically? Can you follow conversations?
-2. SPEAKER CLARITY: Can you distinguish who is speaking? Are speaker changes clear?
-3. ASR ARTIFACTS: Are there obvious transcription errors? (repeated words, nonsense, garbled text)
-4. COMPLETENESS: Does the transcript seem complete or are there gaps/missing dialogue?
-5. LANGUAGE ISSUES: Wrong language detected? Mixed languages causing confusion?
+COUNTS AGAINST the score:
+1. ASR WORD ERRORS (most serious) — nonsense words, garbled/unintelligible text, wrong-language
+   transcription, or mistranscriptions that change meaning. These corrupt the content itself.
+2. ROLE MISATTRIBUTION (serious — penalize in proportion) — the coach's words shown as the
+   target's (or vice versa), or two speakers' words merged into one turn. Wrongly-attributed
+   dialogue is misleading training data. A couple of ambiguous handoffs is minor; roles
+   systematically swapped or merged across the conversation is major.
 
-Output a confidence score from 1-100:
-- 90-100: Excellent - clear, coherent, easy to follow, minimal errors
-- 70-89: Good - mostly clear, some minor issues but usable
-- 50-69: Fair - noticeable issues, some segments unclear but core content understandable
-- 30-49: Poor - significant issues, hard to follow, many errors
-- 1-29: Unusable - severely garbled, mostly nonsense, cannot reliably extract meaning
+DOES NOT count against the score (handled elsewhere or not a defect):
+3. Missing punctuation or capitalization — cosmetic; ignore.
+4. Short, fragmented, or overlapping turns in fast infield/street exchanges — normal for the
+   format, not a transcription defect.
+5. One real speaker split across multiple speaker IDs when the ROLE is still correct — a labeling
+   artifact, not a content error. Judge whether the WORDS are captured and whether COACH-vs-TARGET
+   is right, NOT whether turns are cleanly separated or IDs are tidy.
+
+Do not let a few bad segments sink an otherwise-usable video, and do not down-score a video just
+for being infield or compilation — those formats are messier but usually still readable. Score
+the actual proportion of trustworthy, correctly-attributed content.
+
+Output a score from 1-100 = estimated % of the transcript that is usable (correctly transcribed
+AND roughly correct on coach-vs-target):
+- 90-100: Nearly all content accurate and correctly attributed.
+- 70-89: Mostly usable; localized ASR errors or a few uncertain role handoffs.
+- 50-69: Usable core, but a noticeable share is garbled OR coach/target attribution is unreliable
+  in parts.
+- 30-49: A large share is garbled or role-misattributed; extract with caution.
+- 1-29: Mostly unusable — pervasive garble, or roles so scrambled that who-said-what is lost.
 
 TEASER/PREVIEW DETECTION:
 
@@ -810,7 +836,7 @@ FULL TRANSCRIPT ({segment_count} segments):
 {transcript}
 
 OUTPUT: First, briefly reason about the video type, speaker assignments, transcript quality, and any teasers (3-5 sentences). Then output the JSON object in a ```json code block with this exact structure:
-{{"video_type": {{"type": "infield|talking_head|podcast|compilation", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}, "transcript_confidence": {{"score": 1-100, "reasoning": "brief explanation of transcript quality issues or strengths"}}, "speaker_labels": {{"SPEAKER_XX": {{"role": "coach|student|target|voiceover|other|unknown|collapsed", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}}}, "segments": [{{"id": 0, "segment_type": "approach|commentary|transition", "conversation_id": 0, "is_conversation_start": false, "speaker_role_override": "coach|student|target|unknown (ONLY for collapsed speakers, omit otherwise)", "is_teaser": true (ONLY if this segment is a teaser/preview, omit otherwise), "teaser_of_conversation_id": N or null (ONLY if is_teaser is true)}}, ...]}}
+{{"video_type": {{"type": "infield|talking_head|podcast|compilation", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}, "transcript_confidence": {{"score": 1-100, "reasoning": "brief explanation of transcript quality issues or strengths"}}, "speaker_labels": {{"SPEAKER_XX": {{"role": "coach|student|target|voiceover|other|unknown|collapsed", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}}}, "segments": [{{"id": 0, "segment_type": "approach|commentary|transition", "conversation_id": 0, "is_conversation_start": false, "speaker_role_override": "coach|student|target|unknown (ONLY for collapsed speakers, omit otherwise)", "speaker_role_override_confidence": 0.0-1.0 (REQUIRED whenever speaker_role_override is set; your certainty of THIS segment's role), "is_teaser": true (ONLY if this segment is a teaser/preview, omit otherwise), "teaser_of_conversation_id": N or null (ONLY if is_teaser is true)}}, ...]}}
 """
 
 
@@ -819,7 +845,12 @@ ANALYZE_VIDEO_GLOBAL_PROMPT = """You are analyzing a daygame coaching video. Det
 Tasks:
 1. Classify video type: infield|talking_head|podcast|compilation
 2. Label each speaker role: coach|student|target|voiceover|other|unknown|collapsed
-3. Assess transcript quality score (1-100)
+3. Assess transcript quality score (1-100) = estimated % of the transcript that is USABLE:
+   correctly transcribed AND coach-vs-target attribution roughly right. Penalize ASR word-garbage
+   most, and role swaps/merges (coach's words shown as target's, or turns merged) in proportion to
+   how much of the content they affect. Do NOT penalize: missing punctuation/capitalization, short
+   or overlapping infield turns, or one real speaker split across multiple IDs when the ROLE is
+   still correct. Don't let a few bad segments sink an otherwise-usable video.
 
 Rules:
 - If a speaker ID mixes approacher and target behavior, mark that ID as "collapsed".
@@ -856,6 +887,9 @@ Instructions:
 3. Set is_conversation_start=true only when a TARGET segment clearly starts a new approach conversation.
 4. Set conversation_id=0 for all output segments (pipeline will assign final IDs globally).
 5. speaker_role_override is allowed ONLY for TARGET segments whose speaker_id is in collapsed_speaker_ids.
+   When you set speaker_role_override, ALSO set "speaker_role_override_confidence" (0.0-1.0) = how sure
+   you are of THIS segment's role from context: HIGH (0.9-1.0) when obvious, LOW (0.3-0.6) when guessing.
+   Be honest; it is trusted directly.
 6. If video_type is talking_head or podcast: do not use approach.
 7. Mark teaser segments when clearly intro-preview content that repeats later.
 8. TARGET IDs for this request: {target_id_list}
@@ -865,7 +899,7 @@ Chunk context:
 {transcript}
 
 OUTPUT JSON SCHEMA:
-{{"segments": [{{"id": 123, "segment_type": "approach|commentary|transition", "conversation_id": 0, "is_conversation_start": false, "speaker_role_override": "coach|student|target|unknown (only when needed)", "is_teaser": true (optional), "teaser_of_conversation_id": N or null (optional)}}]}}
+{{"segments": [{{"id": 123, "segment_type": "approach|commentary|transition", "conversation_id": 0, "is_conversation_start": false, "speaker_role_override": "coach|student|target|unknown (only when needed)", "speaker_role_override_confidence": 0.0-1.0 (whenever speaker_role_override is set), "is_teaser": true (optional), "teaser_of_conversation_id": N or null (optional)}}]}}
 """
 
 
@@ -1886,6 +1920,9 @@ def process_file(
         override = classification.get("speaker_role_override")
         if override:
             out_seg["speaker_role_override"] = override
+            override_conf = classification.get("speaker_role_override_confidence")
+            if isinstance(override_conf, (int, float)) and not isinstance(override_conf, bool):
+                out_seg["speaker_role_override_confidence"] = max(0.0, min(1.0, float(override_conf)))
 
         # Include teaser fields if present
         is_teaser = classification.get("is_teaser")

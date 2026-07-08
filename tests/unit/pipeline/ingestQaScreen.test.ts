@@ -53,10 +53,15 @@ describe("screenVideo", () => {
     expect(v.reasons.join(" ")).toMatch(/type-mismatch/)
   })
 
-  it("REVIEWs low post-repair confidence (< 95% high tier)", () => {
-    const v = screenVideo(clean({ segments: 273, highTierRatio: 0.923 }))
+  it("REVIEWs low post-repair confidence (< 80% high tier)", () => {
+    const v = screenVideo(clean({ segments: 273, highTierRatio: 0.74 }))
     expect(v.severity).toBe("REVIEW")
     expect(v.reasons.join(" ")).toMatch(/low-confidence/)
+  })
+
+  it("PASSes infield-level confidence at or above the 80% bar", () => {
+    const v = screenVideo(clean({ segments: 273, highTierRatio: 0.91 }))
+    expect(v.severity).toBe("PASS")
   })
 
   it("REVIEWs an unverifiable video (missing 06h signals) — fail-closed", () => {
