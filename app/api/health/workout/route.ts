@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { createWorkoutLog, getWorkoutLogs, deleteWorkoutLog } from "@/src/db/healthRepo"
+import { createWorkoutLog, getWorkoutLogs, getWorkoutLogsWithSets, deleteWorkoutLog } from "@/src/db/healthRepo"
 import type { WorkoutLogInsert, WorkoutSetInsert } from "@/src/health/types"
 import { z } from "zod"
 
+const NoteField = z.string().trim().max(500).nullable().optional()
+
 const SetSchema = z.object({
-  exercise: z.string().min(1).max(100),
-  weight_kg: z.number().min(0),
-  reps: z.number().int().positive(),
-  set_number: z.number().int().positive(),
+  exercise: z.string().min(1).max(100), weight_kg: z.number().min(0),
+  reps: z.number().int().positive(), set_number: z.number().int().positive(),
+  is_warmup: z.boolean().optional(), notes: NoteField, exercise_notes: NoteField,
 })
 
 const CreateSchema = z.object({
@@ -26,8 +27,10 @@ export async function GET(request: Request) {
   const auth = await requireAuth()
   if (!auth.success) return auth.response
   try {
-    const days = Number(new URL(request.url).searchParams.get("days") ?? 90)
-    return NextResponse.json(await getWorkoutLogs(auth.userId, days))
+    const params = new URL(request.url).searchParams
+    const days = Number(params.get("days") ?? 90)
+    const withSets = params.get("include") === "sets"
+    return NextResponse.json(await (withSets ? getWorkoutLogsWithSets(auth.userId, days) : getWorkoutLogs(auth.userId, days)))
   } catch (e) { console.error("Error getting workout logs:", e); return err("Failed to get workout logs") }
 }
 

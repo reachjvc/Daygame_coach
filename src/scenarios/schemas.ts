@@ -53,3 +53,35 @@ export const ChatRequestSchema = z.object({
   situation_id: z.string().optional(),
   keepItGoingContext: KeepItGoingContextSchema.optional(),
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Scenario Lab (/api/scenarios/lab)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const LabKindSchema = z.enum(["coldread", "career"])
+
+const LabChatMessageSchema = z.object({
+  role: z.enum(["user", "girl"]),
+  text: z.string().max(2000),
+})
+
+export const LabRequestSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("start"),
+    kind: LabKindSchema,
+    seed: z.string().max(200),
+  }),
+  z.object({
+    action: z.literal("respond"),
+    kind: LabKindSchema,
+    momentId: z.string().max(200),
+    history: z.array(LabChatMessageSchema).max(20),
+    message: z.string().min(1).max(2000),
+  }),
+  z.object({
+    action: z.literal("debrief"),
+    kind: LabKindSchema,
+    momentId: z.string().max(200),
+    history: z.array(LabChatMessageSchema).max(24),
+  }),
+])

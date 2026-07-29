@@ -495,3 +495,84 @@ CREATE TABLE user_values (
 );
 
 CREATE INDEX idx_user_values_user_id ON user_values(user_id);
+
+-- ============================================
+-- Beta invite flow tables + claim function
+-- Mirrors supabase/migrations/20260709_create_beta_tables.sql with two
+-- test-container adaptations:
+--   1. beta_testers.user_id references profiles(id) (no auth.users here)
+--   2. auth.uid() is stubbed to read the 'test.uid' session setting
+-- RLS + a non-owner `authenticated` role are modeled so the security
+-- property (membership is NOT self-grantable) is actually exercised.
+-- ============================================
+
+CREATE SCHEMA IF NOT EXISTS auth;
+
+-- Stub of Supabase's auth.uid(): tests set the caller via
+-- SELECT set_config('test.uid', '<uuid>', false)
+CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid AS $$
+  SELECT NULLIF(current_setting('test.uid', true), '')::uuid
+$$ LANGUAGE sql STABLE;
+
+CREATE TABLE beta_invites (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code TEXT UNIQUE NOT NULL,
+  max_uses INT NOT NULL DEFAULT 60,
+  use_count INT NOT NULL DEFAULT 0 CHECK (use_count >= 0 AND use_count <= max_uses),
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+ALTER TABLE beta_invites ENABLE ROW LEVEL SECURITY;
+-- NO policies (service role / definer function only)
+
+CREATE TABLE beta_testers (
+  user_id UUID PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+  invite_id UUID NOT NULL REFERENCES beta_invites(id),
+  granted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+ALTER TABLE beta_testers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "beta_testers_select_own" ON beta_testers
+  FOR SELECT USING (auth.uid() = user_id);
+-- NO insert/update/delete policies (system-granted)
+
+CREATE TABLE waitlist_emails (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL,
+  source TEXT NOT NULL CHECK (source IN ('beta_full', 'premium_teaser')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (email, source)
+);
+ALTER TABLE waitlist_emails ENABLE ROW LEVEL SECURITY;
+-- NO policies (service role inserts only)
+
+CREATE OR REPLACE FUNCTION claim_beta_slot(p_code TEXT)
+RETURNS TEXT
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE v_invite beta_invites%rowtype;
+BEGIN
+  IF auth.uid() IS NULL THEN RETURN 'invalid'; END IF;
+  SELECT * INTO v_invite FROM beta_invites
+    WHERE code = p_code AND active
+    FOR UPDATE;
+  IF NOT FOUND THEN RETURN 'invalid'; END IF;
+  IF EXISTS (SELECT 1 FROM beta_testers WHERE user_id = auth.uid())
+    THEN RETURN 'already_member'; END IF;
+  IF v_invite.use_count >= v_invite.max_uses THEN RETURN 'full'; END IF;
+  UPDATE beta_invites SET use_count = use_count + 1 WHERE id = v_invite.id;
+  INSERT INTO beta_testers (user_id, invite_id) VALUES (auth.uid(), v_invite.id);
+  RETURN 'granted';
+END $$;
+
+-- Non-owner role mirroring Supabase's `authenticated` (table owner bypasses
+-- RLS, so denial tests must run under this role via SET ROLE)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+    CREATE ROLE authenticated NOLOGIN;
+  END IF;
+END $$;
+GRANT USAGE ON SCHEMA public, auth TO authenticated;
+GRANT SELECT ON beta_testers TO authenticated;
+REVOKE EXECUTE ON FUNCTION claim_beta_slot(TEXT) FROM public;
+GRANT EXECUTE ON FUNCTION claim_beta_slot(TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated;

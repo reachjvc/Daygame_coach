@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createServerSupabaseClient } from "./supabase"
-import { hasPurchased } from "./profilesRepo"
+import { hasAccess, hasPurchased } from "./profilesRepo"
 
 export type AuthSuccess = {
   success: true
@@ -48,6 +48,25 @@ export async function requirePremium(): Promise<AuthResult> {
     return {
       success: false,
       response: NextResponse.json({ error: "Premium subscription required" }, { status: 403 }),
+    }
+  }
+
+  return authResult
+}
+
+/**
+ * Require authentication AND access (premium purchase OR beta membership)
+ * for an API route. Use for the standard feature set; premium-only routes
+ * should keep using requirePremium().
+ */
+export async function requireAccess(): Promise<AuthResult> {
+  const authResult = await requireAuth()
+  if (!authResult.success) return authResult
+
+  if (!(await hasAccess(authResult.userId))) {
+    return {
+      success: false,
+      response: NextResponse.json({ error: "Access required" }, { status: 403 }),
     }
   }
 

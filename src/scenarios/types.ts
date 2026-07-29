@@ -314,3 +314,59 @@ export interface ConversationScript {
   createdAt: string
   updatedAt: string
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Scenario Lab (corpus-grounded test lab — /test/scenario-lab)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Lab scenario kinds, mirroring the scenario-engine dataset keys */
+export type LabKind = "coldread" | "career"
+
+/** One corpus moment as served to the lab (subset of the engine's Moment) */
+export interface LabMoment {
+  id: string
+  channel: string
+  trigger: string
+  context: string[]
+  coachResponse: string[]
+  girlReaction: string[]
+  readConfirmed?: boolean
+  outcome: string
+}
+
+export interface LabChatMessage {
+  role: "user" | "girl"
+  text: string
+}
+
+export interface LabStartResult {
+  kind: LabKind
+  momentId: string
+  /** What the user sees before their first line (scene + her appearance/line) */
+  scene: string
+  /** Cold-read only: what she just said/did, career: her reveal line */
+  openingLine: string | null
+}
+
+export interface LabRespondResult {
+  reply: string
+  turn: number
+  /** Sim ends the exchange after a natural stopping point */
+  done: boolean
+}
+
+export interface LabDebriefResult {
+  score: number
+  feedback: string
+  bestMove: string
+  weakestLine: string
+  rewrite: string
+  /** The receipt: what the real coach did in this exact spot */
+  receipt: {
+    channel: string
+    situation: string[]
+    coachResponse: string[]
+    girlReaction: string[]
+    outcome: string
+  }
+}

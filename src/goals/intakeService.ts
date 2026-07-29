@@ -244,3 +244,116 @@ export function resolveIntake(matches: IntakeMatches, opts: ResolveOpts = {}): I
 
   return { pillarIds, objectiveIds, clarifications, closePillars }
 }
+
+// ---------------------------------------------------------------------------
+// Span highlighting — colour the user's OWN words by the area each bit is about.
+// Same embeddings, applied per clause instead of to the whole sentence, so
+// "…better my body, my mind, my business and my dating life" lights up as
+// Health / Meaning / Wealth / Relations. Language-agnostic like the rest: the
+// splitter is punctuation-driven, and the scoring is cosine against the taxonomy.
+// ---------------------------------------------------------------------------
+
+/** A clause of the user's text, with offsets back into the original string. */
+export interface TextSpan {
+  text: string
+  /** Inclusive start offset in the source string. */
+  start: number
+  /** Exclusive end offset. */
+  end: number
+}
+
+/** Clause separators: punctuation, plus "and"-ish conjunctions in the languages the
+ * multilingual model covers well. Kept OUT of the spans so they render uncoloured. */
+const SPAN_SEPARATORS = /([,;.!?\n]+|\s+(?:and|&|og|und|et|y|e|och|en)\s+)/gi
+
+/**
+ * Split text into clause spans, dropping separators and surrounding whitespace.
+ * Offsets index the ORIGINAL string, so a renderer can rebuild it exactly:
+ * the gaps between spans are the separators.
+ */
+export function splitSpans(text: string): TextSpan[] {
+  const spans: TextSpan[] = []
+  let cursor = 0
+  const push = (start: number, end: number) => {
+    // Trim whitespace off both ends, keeping offsets honest.
+    let s = start
+    let e = end
+    while (s < e && /\s/.test(text[s])) s++
+    while (e > s && /\s/.test(text[e - 1])) e--
+    if (e > s) spans.push({ text: text.slice(s, e), start: s, end: e })
+  }
+  for (const m of text.matchAll(SPAN_SEPARATORS)) {
+    push(cursor, m.index)
+    cursor = m.index + m[0].length
+  }
+  push(cursor, text.length)
+  return spans
+}
+
+/**
+ * Word-boundary TAILS of a span, longest → shortest, capped at `maxWords`.
+ *
+ * A clause carries its meaning at the END ("I want to wake up everyday feeling driven to
+ * better my body" is about *my body*); the lead-in is filler. Scoring the tails lets us
+ * highlight just the operative words instead of washing the whole clause in one colour.
+ */
+export function tailSpans(span: TextSpan, maxWords = 8): TextSpan[] {
+  // Offsets of each word start within the span, in source coordinates.
+  const starts: number[] = []
+  for (let i = 0; i < span.text.length; i++) {
+    const prevIsSpace = i === 0 || /\s/.test(span.text[i - 1])
+    if (prevIsSpace && !/\s/.test(span.text[i])) starts.push(span.start + i)
+  }
+  return starts
+    .slice(Math.max(0, starts.length - maxWords))
+    .map((start) => ({ text: span.text.slice(start - span.start), start, end: span.end }))
+}
+
+/**
+ * The tightest tail that's still (essentially) as on-topic as the best one: the SHORTEST
+ * candidate scoring within `ratio` of the best score for `pillarId`. Candidates must be
+ * ordered longest → shortest (as `tailSpans` returns them), with `matches[i]` scoring
+ * `candidates[i]`. Falls back to the first candidate when nothing matches the pillar.
+ */
+export function tightenSpan(
+  candidates: TextSpan[],
+  matches: IntakeMatches[],
+  pillarId: string,
+  ratio = 0.97,
+): TextSpan {
+  const scores = matches.map((m) => {
+    const top = effectivePillarScores(m).find((p) => p.id === pillarId)
+    return top?.score ?? -Infinity
+  })
+  const best = Math.max(...scores)
+  if (!Number.isFinite(best)) return candidates[0]
+  // Candidates run longest → shortest, so the LAST qualifying one is the tightest.
+  let pick = candidates[0]
+  for (let i = 0; i < candidates.length; i++) {
+    if (scores[i] >= best * ratio) pick = candidates[i]
+  }
+  return pick
+}
+
+export interface SpanPillarOpts {
+  /** Below this cosine, a span isn't about any area — leave it uncoloured. */
+  spanFloor?: number
+  /** Only colour spans whose winner is one of these (the areas actually in the plan). */
+  allowedPillarIds?: string[]
+}
+
+/**
+ * Pick the area each span is about — or null when it's filler ("I want to…") or
+ * matches an area that isn't in the plan. `spanMatches[i]` must be the taxonomy
+ * match for `spans[i]` (same order).
+ */
+export function assignSpanPillars(spanMatches: IntakeMatches[], opts: SpanPillarOpts = {}): (string | null)[] {
+  const { spanFloor = 0.3, allowedPillarIds } = opts
+  const allowed = allowedPillarIds ? new Set(allowedPillarIds) : null
+  return spanMatches.map((m) => {
+    const top = effectivePillarScores(m)[0]
+    if (!top || top.score < spanFloor) return null
+    if (allowed && !allowed.has(top.id)) return null
+    return top.id
+  })
+}

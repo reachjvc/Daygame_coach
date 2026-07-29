@@ -1,10 +1,16 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
+  {
+    name: "Scenario Lab",
+    href: "/test/scenario-lab",
+    description: "Corpus-grounded cold-read & career-response practice with real-coach receipts",
+    icon: Drama,
+  },
   {
     name: "Marcus Loop",
     href: "/test/marcus-loop",
@@ -130,6 +136,12 @@ const testPages = [
     href: "/test/new-goals",
     description: "Redesigned goal framework: Identity → Pillars → Objectives → Targets with auto-milestones",
     icon: Target,
+  },
+  {
+    name: "Life Mastery",
+    href: "/test/vision-plan",
+    description: "Whole-life goal system: vision → life areas → goals with horizons, morning ritual, RPM daily musts, weekly evaluation + monthly report",
+    icon: Telescope,
   },
   {
     name: "Test Chatbot",

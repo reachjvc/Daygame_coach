@@ -16,6 +16,7 @@ import {
   makeCustomFrameworkTarget,
 } from "@/src/goals/data/newGoalFramework"
 import type {
+  Pillar,
   FrameworkTarget,
   GoalPrimitive,
   SharedDriver,
@@ -23,12 +24,13 @@ import type {
   TargetOverride,
 } from "@/src/goals/data/newGoalFramework"
 import { generateMilestoneLadder } from "@/src/goals/milestoneService"
-import type { MilestoneLadderConfig, MilestonePin, CustomTarget } from "@/src/goals/types"
+import type { MilestoneLadderConfig, MilestonePin, CustomTarget, CustomCard } from "@/src/goals/types"
 import { suggestedTargetDate, todayISO, addDaysISO } from "@/src/goals/horizonService"
 import type { IntakeMatches } from "@/src/goals/intakeService"
 import { EditableTitle } from "./EditableTitle"
 import { PlanTimeline } from "./PlanTimeline"
-import { clarifierPrompt, clarifierOption } from "./clarifiers"
+import { AreaDateButton } from "./AreaDateButton"
+import { clarifierPrompt, clarifierOption, AUTHORED_CLARIFIERS } from "./clarifiers"
 import { ProgramPicker } from "@/src/programs/components/ProgramPicker"
 import { hasProgramsForDiscipline, requireProgram } from "@/src/programs/data/catalog"
 import type { Discipline, ProgramSelection } from "@/src/programs/types"
@@ -92,6 +94,7 @@ import {
   Footprints,
   Medal,
   Rocket,
+  X,
   type LucideIcon,
 } from "lucide-react"
 
@@ -147,8 +150,16 @@ interface GoalsConfigStepProps {
   labels: Record<string, string>
   /** User-added custom goals. */
   customTargets: CustomTarget[]
+  /** Routine cards the user wrote themselves (their goals carry `cardId`). */
+  customCards?: CustomCard[]
+  onAddCustomCard?: (pillarId: string) => void
+  onRemoveCustomCard?: (id: string) => void
+  /** Areas the user wrote themselves — treated exactly like framework pillars for
+   * ranking/dating/dragging; they just have no built-in routines of their own. */
+  customAreas?: Pillar[]
+  onAddCustomArea?: () => void
   onRename: (id: string, label: string) => void
-  onAddCustomTarget: (pillarId: string) => void
+  onAddCustomTarget: (pillarId: string, cardId?: string) => void
   onRemoveCustomTarget: (id: string) => void
   /** Plan start date (YYYY-MM-DD) — anchors "from when" + date suggestions. */
   startDate?: string
@@ -167,6 +178,11 @@ interface GoalsConfigStepProps {
   onToggleArea?: (pillarId: string) => void
   /** Reorder the on areas → priority rank (#1..N). */
   onReorderPillars?: (ids: string[]) => void
+  /** Per-AREA dates set on each area card (flow-state only). An area missing here inherits
+   * `intakeDate` — see areaEndDate. */
+  pillarDates?: Record<string, string>
+  /** Set an area's own date; "" resets it to inheriting `intakeDate`. */
+  onChangePillarDate?: (pillarId: string, date: string) => void
   /** Per-objective target dates (flow-state only) — set by a template's time horizon. */
   objectiveDates?: Record<string, string>
   onChangeObjectiveDate?: (objectiveId: string, date: string) => void
@@ -245,6 +261,15 @@ function detectActiveLevel(
 /** A draggable Kanban column. The grip in the header (attributes/listeners) reorders the column;
  * its left-to-right position is the area's priority. Render-prop so the column body stays in the
  * parent's scope (no prop threading). */
+/**
+ * A draggable area column. The WHOLE card drags — grab it anywhere, not just the grip.
+ *
+ * Pointer listeners live on the card root; the grip keeps only the keyboard listeners (+ the
+ * dnd attributes), so it stays the a11y handle and the visual affordance without nesting a
+ * role="button" around the card's own buttons. The PointerSensor's 6px activation distance
+ * is what keeps the buttons inside the card clickable: a click that never moves is a click,
+ * and only a real drag becomes a drag.
+ */
 function SortableColumn({ id, children }: { id: string; children: (handle: { attributes: ReturnType<typeof useSortable>["attributes"]; listeners: ReturnType<typeof useSortable>["listeners"] }) => ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
   const style = {
@@ -253,9 +278,15 @@ function SortableColumn({ id, children }: { id: string; children: (handle: { att
     opacity: isDragging ? 0.6 : 1,
     zIndex: isDragging ? 20 : undefined,
   }
+  const { onKeyDown, ...pointerListeners } = listeners ?? {}
   return (
-    <div ref={setNodeRef} style={style} className="w-[300px] shrink-0">
-      {children({ attributes, listeners })}
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...pointerListeners}
+      className={`w-[300px] shrink-0 touch-none ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+    >
+      {children({ attributes, listeners: onKeyDown ? { onKeyDown } : undefined })}
     </div>
   )
 }
@@ -863,6 +894,51 @@ function MilestoneDots({
 }
 
 // ---------------------------------------------------------------------------
+// CustomGoalRow — a goal the user wrote themselves: name it, set the number, drop it.
+// Deliberately compact (title + value + remove) vs TargetRow's full framework editor;
+// a hand-written goal has no milestone ladder / ramp / shared driver to configure.
+// ---------------------------------------------------------------------------
+
+function CustomGoalRow({
+  id,
+  label,
+  color,
+  override,
+  onRename,
+  onUpdate,
+  onRemove,
+}: {
+  id: string
+  label: string
+  color: string
+  override?: TargetOverride
+  onRename: (id: string, label: string) => void
+  onUpdate: (id: string, updates: Partial<TargetOverride>) => void
+  onRemove: (id: string) => void
+}) {
+  return (
+    <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.02] px-2 py-1.5">
+      <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+      <EditableTitle
+        value={label}
+        onCommit={(next) => onRename(id, next)}
+        className="text-[13px] text-white min-w-0 flex-1"
+      />
+      <input
+        type="number"
+        value={override?.value ?? 0}
+        onChange={(e) => onUpdate(id, { value: Number(e.target.value) })}
+        className="w-12 shrink-0 bg-white/5 border border-white/10 rounded px-1 py-0.5 text-[11px] text-right text-white focus:outline-none focus:border-white/25"
+        aria-label={`${label} target value`}
+      />
+      <button onClick={() => onRemove(id)} className="shrink-0 text-zinc-600 hover:text-red-300 transition-colors" aria-label={`Remove ${label}`}>
+        <X className="size-3.5" />
+      </button>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // TargetRow
 // ---------------------------------------------------------------------------
 
@@ -1380,6 +1456,11 @@ export function GoalsConfigStep({
   onUpdateTarget,
   labels,
   customTargets,
+  customCards = [],
+  onAddCustomCard,
+  onRemoveCustomCard,
+  customAreas = [],
+  onAddCustomArea,
   onRename,
   onAddCustomTarget,
   onRemoveCustomTarget,
@@ -1392,6 +1473,8 @@ export function GoalsConfigStep({
   onChangeIntakeDate,
   onToggleArea,
   onReorderPillars,
+  pillarDates = {},
+  onChangePillarDate,
   objectiveDates = {},
   onChangeObjectiveDate,
   programSelections = [],
@@ -1399,7 +1482,10 @@ export function GoalsConfigStep({
 }: GoalsConfigStepProps) {
   // Areas in priority (rank) order, matching the Intake step; unranked active areas last.
   const rankIdx = (id: string) => { const i = pillarOrder.indexOf(id); return i === -1 ? Infinity : i }
-  const activePillars = PILLARS.filter((p) => selectedPillars.has(p.id)).sort((a, b) => rankIdx(a.id) - rankIdx(b.id))
+  // Framework pillars + the user's own areas — everything downstream (rank, cards,
+  // timeline lanes, dates) treats them identically.
+  const allPillars = useMemo(() => [...PILLARS, ...customAreas], [customAreas])
+  const activePillars = allPillars.filter((p) => selectedPillars.has(p.id)).sort((a, b) => rankIdx(a.id) - rankIdx(b.id))
   const customIds = useMemo(() => new Set(customTargets.map((c) => c.id)), [customTargets])
   // Which template rows are expanded (showing their editable goals).
   const [expandedTemplates, setExpandedTemplates] = useState<Set<string>>(new Set())
@@ -1411,12 +1497,6 @@ export function GoalsConfigStep({
   const toggleAreaCollapse = useCallback((id: string) => {
     setCollapsedAreas((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   }, [])
-  // Which areas show ALL their template suggestions (vs the top few).
-  const [showAllAreas, setShowAllAreas] = useState<Set<string>>(new Set())
-  const toggleShowAll = useCallback((id: string) => {
-    setShowAllAreas((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
-  }, [])
-
   const [expandedBuckets, setExpandedBuckets] = useState<Set<string>>(() => {
     const initial = new Set<string>()
     const bucketKeys: BucketKey[] = ["do", "measure", "milestones", "skills"]
@@ -1577,11 +1657,13 @@ export function GoalsConfigStep({
 
   // All areas as toggleable sections: selected (rank order) first, then the rest.
   const orderedAreas = useMemo(() => {
-    const sel = PILLARS.filter((p) => selectedPillars.has(p.id)).sort((a, b) => rankIdx(a.id) - rankIdx(b.id))
+    const sel = allPillars.filter((p) => selectedPillars.has(p.id)).sort((a, b) => rankIdx(a.id) - rankIdx(b.id))
+    // A custom area only exists because the user made it — it's never an "off" area
+    // to re-add later, so it drops out of the plan entirely when toggled off.
     const rest = PILLARS.filter((p) => !selectedPillars.has(p.id))
     return [...sel, ...rest]
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPillars])
+  }, [selectedPillars, allPillars])
 
   // The "on" areas, in priority (rank) order — these are the draggable Kanban columns.
   const onAreas = orderedAreas.filter((p) => selectedPillars.has(p.id))
@@ -1606,8 +1688,13 @@ export function GoalsConfigStep({
   const targetIdsForTemplate = (tmpl: Template) =>
     Object.entries(tmpl.targetOverrides).filter(([, on]) => on).map(([id]) => id)
 
-  // An area's furthest dated goal → its end on the timeline figure.
+  // Where an area's timeline lane ends, most specific first:
+  //   1. the date the user set on its north star badge,
+  //   2. its furthest dated goal,
+  //   3. the main "achieve goal by" date it inherits.
+  // Only an area with none of these stays "ongoing".
   const areaEndDate = (pillarId: string): string | null => {
+    if (pillarDates[pillarId]) return pillarDates[pillarId]
     let max = ""
     for (const t of getTemplatesForPillar(pillarId)) {
       for (const id of Object.keys(t.targetOverrides)) {
@@ -1615,7 +1702,7 @@ export function GoalsConfigStep({
         if (ov?.enabled && ov.targetDate && ov.targetDate > max) max = ov.targetDate
       }
     }
-    return max || null
+    return max || intakeDate || null
   }
 
   // The template's own goals, bucketed by type, for the inline expand editor.
@@ -1663,7 +1750,17 @@ export function GoalsConfigStep({
   const OBJ_BAND = 0.12 // objectives within this of the top score are "in contention"
   const objOptionsForArea = (pillarId: string) => {
     const objs = (matches?.objectives ?? []).filter((o) => o.pillarId === pillarId) // already score-desc
-    if (!objs.length) return []
+    if (!objs.length) {
+      // No match signal for this area (focus-area click / "Add an area" chip, not a typed
+      // north star) → the question must still ask something concrete: fall back to the
+      // authored clarifier options, else the area's own objectives.
+      const authored = Object.keys(AUTHORED_CLARIFIERS[pillarId]?.options ?? {})
+      const ids = authored.length ? authored : getObjectivesForPillar(pillarId).map((o) => o.id)
+      return ids.slice(0, 5).flatMap((id) => {
+        const o = OBJECTIVES.find((x) => x.id === id)
+        return o ? [{ id: o.id, label: o.label, pillarId, score: 0 }] : []
+      })
+    }
     const top = objs[0].score
     const inContention = objs.filter((o) => o.score >= top - OBJ_BAND)
     // ≥2 in contention → offer those; otherwise fall back to the top few so it's never a dead-end.
@@ -1685,20 +1782,25 @@ export function GoalsConfigStep({
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-center mb-1.5">Your plan</h2>
-      <p className="text-sm text-zinc-500 text-center mb-5">
-        Answer a couple of quick questions on the left · drag the columns to prioritize · fine-tune on the right
+      {/* The one question this step asks. Everything under it — areas in priority order,
+          every routine visible and unticked — exists to answer it. */}
+      <h2 className="text-3xl sm:text-4xl font-bold text-center mb-2 tracking-tight">
+        What is the one thing that needs to happen?
+      </h2>
+      <p className="text-sm text-zinc-500 text-center mb-6">
+        Your areas, most important first — drag to re-rank. Pick what&apos;s real for you, or write your own.
       </p>
 
       <div className="flex items-center justify-center gap-2.5 mb-6 text-sm text-zinc-400 flex-wrap">
-        <span className="font-medium text-zinc-300">Achieve by</span>
+        <span className="font-medium text-zinc-300">Is there a date this needs to happen by?</span>
         <input
           type="date"
           value={intakeDate ?? ""}
           onChange={(e) => onChangeIntakeDate?.(e.target.value)}
           className="bg-white/5 border border-white/15 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-white/30 transition-colors"
-          aria-label="Achieve-by (target) date"
+          aria-label="Main goal date"
         />
+        <span className="text-xs text-zinc-600">optional</span>
         {/* Start date — secondary, smaller. */}
         <span className="text-zinc-600">·</span>
         <label className="flex items-center gap-1 text-xs text-zinc-500">
@@ -1713,92 +1815,9 @@ export function GoalsConfigStep({
         </label>
       </div>
 
-      {/* Split: smart narrowing questions on the LEFT, the live plan board on the RIGHT. */}
-      <div className="grid lg:grid-cols-[300px_minmax(0,1fr)] gap-6 items-start">
-
-      {/* LEFT — the question tree: only the areas we're genuinely unsure about ask. */}
-      <aside className="space-y-3 lg:sticky lg:top-20">
-        <div className="flex items-center gap-2">
-          <Sparkles className="size-4 text-violet-300" />
-          <h3 className="text-sm font-semibold text-white">Quick questions</h3>
-          {openQuestions.length > 0 && (
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-200">{openQuestions.length}</span>
-          )}
-        </div>
-
-        {openQuestions.length === 0 ? (
-          <p className="text-xs text-zinc-500 leading-relaxed">
-            ✓ Nothing to decide — your plan&apos;s ready on the right. Tweak any area there.
-          </p>
-        ) : (
-          openQuestions.map(({ pillar, options }) => {
-            const Icon = ICON_MAP[pillar.icon]
-            const areaLabel = labels[pillar.id] ?? pillar.label
-            return (
-              <div key={pillar.id} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-                <div className="flex items-center gap-2 mb-2.5">
-                  {Icon && <Icon className="size-4 shrink-0" style={{ color: pillar.color }} />}
-                  <p className="text-[13px] text-zinc-200 leading-snug font-medium">
-                    {clarifierPrompt(pillar.id, areaLabel)}
-                  </p>
-                </div>
-                <div className="space-y-1.5">
-                  {options.map((opt) => {
-                    const obj = OBJECTIVES.find((o) => o.id === opt.id)
-                    const override = clarifierOption(pillar.id, opt.id)
-                    const label = override?.label ?? obj?.label ?? opt.label
-                    const sub = override?.sub ?? obj?.description
-                    const OIcon = obj ? ICON_MAP[obj.icon] : undefined
-                    return (
-                      <button
-                        key={opt.id}
-                        onClick={() => pickObjective(opt.id)}
-                        className="w-full text-left rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/25 transition-all px-3 py-2"
-                      >
-                        <span className="flex items-center gap-2">
-                          {OIcon
-                            ? <OIcon className="size-3.5 shrink-0" style={{ color: pillar.color }} />
-                            : <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: pillar.color }} />}
-                          <span className="text-[13px] font-medium text-white">{label}</span>
-                        </span>
-                        {sub && <span className="block text-[11px] text-zinc-500 mt-0.5 line-clamp-2">{sub}</span>}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })
-        )}
-
-        {decided.length > 0 && (
-          <div className="pt-2.5 border-t border-white/5">
-            <p className="text-[10px] uppercase tracking-wider text-zinc-600 mb-1.5">Decided · tap to change</p>
-            <div className="flex flex-wrap gap-1.5">
-              {decided.map(({ pillar, pickedTmpl }) => (
-                <button
-                  key={pillar.id}
-                  onClick={() => pickedTmpl && onUnapplyTemplate(pickedTmpl)}
-                  title={`Change ${labels[pillar.id] ?? pillar.label}`}
-                  className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 transition-all"
-                >
-                  <Check className="size-3" />{pickedTmpl?.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </aside>
-
-      {/* RIGHT — the live plan: timeline + draggable area columns. */}
+      {/* The live plan — draggable area cards, then the timeline that reads them back —
+          runs full width. The narrowing questions follow BELOW it (see 'Quick questions'). */}
       <div className="min-w-0">
-      {/* Timeline figure — areas laddering toward the end goal, dates on the X axis. */}
-      <PlanTimeline
-        areas={onAreas.map((p) => ({ id: p.id, label: labels[p.id] ?? p.label, color: p.color, endDate: areaEndDate(p.id) }))}
-        startDate={startDate || todayISO()}
-        endGoalDate={intakeDate || null}
-      />
-
       {/* Kanban — each life area is a column; drag them left↔right to set priority (#1 = leftmost). */}
       {onAreas.length > 0 ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onColumnDragEnd}>
@@ -1811,17 +1830,20 @@ export function GoalsConfigStep({
                     const templates = templatesForPillarRanked(pillar.id)
                     const collapsed = collapsedAreas.has(pillar.id)
                     const isAct = (t: Template) => pickedIds.has(t.id)
-                    const showAll = showAllAreas.has(pillar.id)
-                    const activeTemplates = templates.filter(isAct)
-                    const hasActive = activeTemplates.length > 0
-                    // Keep columns tidy: show only the picked routine(s) — or the single top
-                    // suggestion when nothing's picked yet — and tuck the rest behind "Show more".
-                    const base = hasActive ? activeTemplates : templates.slice(0, 1)
-                    const shown = showAll ? templates : base
-                    const hidden = templates.length - shown.length
+                    // Every routine the area offers, ranked best-match first by the north star —
+                    // all visible, NONE preselected. Picking is the user's move.
+                    const shown = templates
+                    const hasActive = templates.some(isAct)
+                    const picked = templates.filter(isAct)
+                    const isMain = areaRank.get(pillar.id) === 1
+                    const ownCards = customCards.filter((c) => c.pillarId === pillar.id)
+                    const looseGoals = customTargets.filter((c) => c.pillarId === pillar.id && !c.cardId)
                     return (
-                      <div className="rounded-xl border border-white/15 bg-white/[0.03] overflow-hidden">
-                        {/* Column header — the grip drags the whole column (= priority). */}
+                      <div
+                        className="rounded-xl border bg-white/[0.03] overflow-hidden"
+                        style={{ borderColor: isMain ? `${pillar.color}80` : "rgba(255,255,255,0.15)" }}
+                      >
+                        {/* Card header — the grip drags the whole card (= priority). */}
                         <div className="flex items-center gap-2 px-3 py-2.5" style={{ background: `linear-gradient(90deg, ${pillar.color}1f, transparent)` }}>
                           <button
                             {...handle.attributes}
@@ -1836,11 +1858,34 @@ export function GoalsConfigStep({
                           </span>
                           {AreaIcon && <AreaIcon className="size-4 shrink-0" style={{ color: pillar.color }} />}
                           <span className="text-sm font-semibold truncate" style={{ color: pillar.color }}>{labels[pillar.id] ?? pillar.label}</span>
+                          {/* This area's target date — the main date until it's given its own. */}
+                          {onChangePillarDate && (
+                            <AreaDateButton
+                              areaId={pillar.id}
+                              areaLabel={labels[pillar.id] ?? pillar.label}
+                              color={pillar.color}
+                              date={pillarDates[pillar.id] ?? ""}
+                              mainDate={intakeDate ?? ""}
+                              onChange={onChangePillarDate}
+                            />
+                          )}
+                          <button onClick={() => onToggleArea?.(pillar.id)} className="ml-auto shrink-0 inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 px-2 py-0.5 text-[10px] font-medium transition-all" aria-label={`Remove ${pillar.label}`}>
+                            On
+                          </button>
+                        </div>
+
+                        {/* Where the area stands. */}
+                        <div className="px-3 py-2 flex items-center gap-1.5 flex-wrap border-b border-white/5">
+                          {isMain && (
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: `${pillar.color}26`, color: pillar.color }}>
+                              Matters most
+                            </span>
+                          )}
+                          <span className="text-[11px] text-zinc-500">
+                            {picked.length ? `${picked.length} picked` : "Nothing picked yet"}
+                          </span>
                           <button onClick={() => toggleAreaCollapse(pillar.id)} className="ml-auto shrink-0 text-zinc-500 hover:text-zinc-200 transition-colors" aria-label={collapsed ? `Expand ${pillar.label}` : `Collapse ${pillar.label}`}>
                             {collapsed ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
-                          </button>
-                          <button onClick={() => onToggleArea?.(pillar.id)} className="shrink-0 inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 px-2 py-0.5 text-[10px] font-medium transition-all" aria-label={`Remove ${pillar.label}`}>
-                            On
                           </button>
                         </div>
 
@@ -1848,7 +1893,7 @@ export function GoalsConfigStep({
                         {!collapsed && templates.length > 0 && (
                           <div className="px-2 pb-2 pt-1.5 space-y-1.5">
                             {!hasActive && (
-                              <p className="text-[11px] text-zinc-500 px-1 pb-0.5">Pick one — or answer on the left ←</p>
+                              <p className="text-[11px] text-zinc-500 px-1 pb-0.5">Pick one — or answer the quick questions below ↓</p>
                             )}
                             {shown.map((tmpl) => {
                               const active = isAct(tmpl)
@@ -1948,14 +1993,78 @@ export function GoalsConfigStep({
                                 </div>
                               )
                             })}
-                            {(hidden > 0 || showAll) && (
+                          </div>
+                        )}
+
+                        {/* Your own: a card you name (goals live under it), or a single loose goal. */}
+                        {!collapsed && (
+                          <div className="px-2 pb-2 pt-1 space-y-1.5">
+                            {ownCards.map((card) => {
+                              const cardGoals = customTargets.filter((c) => c.cardId === card.id)
+                              return (
+                                <div key={card.id} className="rounded-lg border border-dashed border-white/20 bg-white/[0.02]">
+                                  <div className="flex items-center gap-1.5 px-2.5 py-1.5">
+                                    <EditableTitle
+                                      value={labels[card.id] ?? "My routine"}
+                                      onCommit={(next) => onRename(card.id, next)}
+                                      className="text-[13px] font-medium text-white"
+                                    />
+                                    <button onClick={() => onRemoveCustomCard?.(card.id)} className="ml-auto text-zinc-600 hover:text-red-300 transition-colors" aria-label={`Remove ${labels[card.id] ?? "card"}`}>
+                                      <X className="size-3.5" />
+                                    </button>
+                                  </div>
+                                  {cardGoals.map((c) => (
+                                    <div key={c.id} className="px-2.5 pb-1.5">
+                                      <CustomGoalRow
+                                        id={c.id}
+                                        label={labels[c.id] ?? "New goal"}
+                                        color={pillar.color}
+                                        override={targetOverrides[c.id]}
+                                        onRename={onRename}
+                                        onUpdate={onUpdateTarget}
+                                        onRemove={onRemoveCustomTarget}
+                                      />
+                                    </div>
+                                  ))}
+                                  <button
+                                    onClick={() => onAddCustomTarget(pillar.id, card.id)}
+                                    className="w-full text-left text-[11px] text-zinc-500 hover:text-zinc-200 px-2.5 pb-2 transition-colors"
+                                  >
+                                    ＋ add a goal to this card
+                                  </button>
+                                </div>
+                              )
+                            })}
+
+                            {looseGoals.map((c) => (
+                              <CustomGoalRow
+                                key={c.id}
+                                id={c.id}
+                                label={labels[c.id] ?? "New goal"}
+                                color={pillar.color}
+                                override={targetOverrides[c.id]}
+                                onRename={onRename}
+                                onUpdate={onUpdateTarget}
+                                onRemove={onRemoveCustomTarget}
+                              />
+                            ))}
+
+                            <div className="flex gap-1.5">
+                              {onAddCustomCard && (
+                                <button
+                                  onClick={() => onAddCustomCard(pillar.id)}
+                                  className="flex-1 text-[11px] text-zinc-500 hover:text-white border border-dashed border-white/15 hover:border-white/30 rounded-lg py-1.5 transition-all"
+                                >
+                                  ＋ your own card
+                                </button>
+                              )}
                               <button
-                                onClick={() => toggleShowAll(pillar.id)}
-                                className="w-full text-[11px] text-zinc-500 hover:text-zinc-200 py-1.5 rounded-lg hover:bg-white/[0.03] transition-colors"
+                                onClick={() => onAddCustomTarget(pillar.id)}
+                                className="flex-1 text-[11px] text-zinc-500 hover:text-white border border-dashed border-white/15 hover:border-white/30 rounded-lg py-1.5 transition-all"
                               >
-                                {hidden > 0 ? `Show ${hidden} more` : "Show fewer"}
+                                ＋ your own goal
                               </button>
-                            )}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1963,12 +2072,31 @@ export function GoalsConfigStep({
                   }}
                 </SortableColumn>
               ))}
+              {/* Write your own area — a column of your own, ranked and dated like the rest. */}
+              {onAddCustomArea && (
+                <button
+                  onClick={onAddCustomArea}
+                  className="w-[220px] shrink-0 self-stretch min-h-[120px] rounded-xl border border-dashed border-white/15 text-zinc-500 hover:text-white hover:border-white/30 hover:bg-white/[0.03] transition-all flex flex-col items-center justify-center gap-1.5"
+                >
+                  <Plus className="size-5" />
+                  <span className="text-xs font-medium">Your own area</span>
+                  <span className="text-[10px] text-zinc-600">something we didn&apos;t list</span>
+                </button>
+              )}
             </div>
           </SortableContext>
         </DndContext>
       ) : (
         <p className="text-sm text-zinc-500 text-center py-8">No areas yet — add one below.</p>
       )}
+
+      {/* Timeline figure — the same areas, in the same priority order, laddering toward the
+          end goal. Sits UNDER the cards: you arrange the plan first, then read it back as time. */}
+      <PlanTimeline
+        areas={onAreas.map((p) => ({ id: p.id, label: labels[p.id] ?? p.label, color: p.color, endDate: areaEndDate(p.id) }))}
+        startDate={startDate || todayISO()}
+        endGoalDate={intakeDate || null}
+      />
 
       {/* Off areas → add chips */}
       {offAreas.length > 0 && (
@@ -2013,8 +2141,87 @@ export function GoalsConfigStep({
           </div>
         )
       })()}
-      </div>{/* end right pane */}
-      </div>{/* end split grid */}
+      </div>{/* end plan board */}
+
+      {/* Quick questions — only the areas we're genuinely unsure about ask. Below the plan:
+          the board is the point; these are the few gaps left to close. */}
+      <aside className="mt-8 pt-6 border-t border-white/5">
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles className="size-4 text-violet-300" />
+          <h3 className="text-sm font-semibold text-white">Quick questions</h3>
+          {openQuestions.length > 0 && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-200">{openQuestions.length}</span>
+          )}
+          {openQuestions.length > 0 && (
+            <span className="text-[11px] text-zinc-500">— answer these to fill in the areas above</span>
+          )}
+        </div>
+
+        {openQuestions.length === 0 ? (
+          <p className="text-xs text-zinc-500 leading-relaxed">
+            ✓ Nothing to decide — your plan&apos;s ready above. Tweak any area there.
+          </p>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
+          {openQuestions.map(({ pillar, options }) => {
+            const Icon = ICON_MAP[pillar.icon]
+            const areaLabel = labels[pillar.id] ?? pillar.label
+            return (
+              <div key={pillar.id} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                <div className="flex items-center gap-2 mb-2.5">
+                  {Icon && <Icon className="size-4 shrink-0" style={{ color: pillar.color }} />}
+                  <p className="text-[13px] text-zinc-200 leading-snug font-medium">
+                    {clarifierPrompt(pillar.id, areaLabel)}
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  {options.map((opt) => {
+                    const obj = OBJECTIVES.find((o) => o.id === opt.id)
+                    const override = clarifierOption(pillar.id, opt.id)
+                    const label = override?.label ?? obj?.label ?? opt.label
+                    const sub = override?.sub ?? obj?.description
+                    const OIcon = obj ? ICON_MAP[obj.icon] : undefined
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={() => pickObjective(opt.id)}
+                        className="w-full text-left rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/25 transition-all px-3 py-2"
+                      >
+                        <span className="flex items-center gap-2">
+                          {OIcon
+                            ? <OIcon className="size-3.5 shrink-0" style={{ color: pillar.color }} />
+                            : <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: pillar.color }} />}
+                          <span className="text-[13px] font-medium text-white">{label}</span>
+                        </span>
+                        {sub && <span className="block text-[11px] text-zinc-500 mt-0.5 line-clamp-2">{sub}</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+          </div>
+        )}
+
+        {decided.length > 0 && (
+          <div className="mt-4 pt-2.5 border-t border-white/5">
+            <p className="text-[10px] uppercase tracking-wider text-zinc-600 mb-1.5">Decided · tap to change</p>
+            <div className="flex flex-wrap gap-1.5">
+              {decided.map(({ pillar, pickedTmpl }) => (
+                <button
+                  key={pillar.id}
+                  onClick={() => pickedTmpl && onUnapplyTemplate(pickedTmpl)}
+                  title={`Change ${labels[pillar.id] ?? pillar.label}`}
+                  className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 transition-all"
+                >
+                  <Check className="size-3" />{pickedTmpl?.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </aside>
     </div>
   )
 }

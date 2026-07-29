@@ -167,3 +167,25 @@ Shared multi-turn chat interface for career/shittests scenarios.
 | Location | `lib/scenarios/` flat | `src/scenarios/` with sub-modules |
 | Components | `components/scenarios/` | `src/scenarios/{type}/Component.tsx` |
 | Dashboard | `/dashboard_test/scenarios` | `/dashboard/scenarios` |
+
+---
+
+## Scenario Lab (test-page beta, 2026-07)
+
+Corpus-grounded practice lab at `/test/scenario-lab` — NOT wired into the main
+chat route yet. Two modes: **cold-read** and **career-response**. Every round is
+seeded by a real infield moment from `data/scenario-mining/dataset.json`
+(built by `scripts/scenario-engine/engine.ts extract`); the sim-girl is grounded
+in the real girl's lines; the judge prompt embeds engine-distilled principles
+(`data/scenario-mining/principles/<kind>.md`, validated against a held-out split
+— see `data/scenario-mining/REPORT.md`); debriefs show the real coach's response
+as a "receipt".
+
+Files: `src/scenarios/scenarioLabService.ts` (logic),
+`app/api/scenarios/lab/route.ts` (auth + zod + delegate),
+`src/scenarios/components/ScenarioLab.tsx` (UI),
+lab types in `src/scenarios/types.ts`, `LabRequestSchema` in `schemas.ts`.
+LLM via `src/shared/claudeHeadless.ts` (async Claude CLI, fail-closed; strips
+`ANTHROPIC_API_KEY` from child env so Max-subscription OAuth is used).
+Promotion path: plug into `handleChatMessage` + `ScenarioTypeSchema` once the
+user validates lab quality.

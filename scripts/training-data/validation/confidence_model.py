@@ -16,7 +16,12 @@ DEFAULT_HIGH_THRESHOLD = 0.80
 DEFAULT_MEDIUM_THRESHOLD = 0.60
 
 # Video-level gate threshold: videos below this are blocked from LLM processing.
-VIDEO_GATE_THRESHOLD = 0.85
+# 2026-07-09: 0.85->0.80. Once 06h honors the LLM's per-attribution override confidence
+# (speaker_role_override_confidence), 06h video_confidence reflects the model's ACTUAL certainty:
+# confidently-reassigned collapses self-sort to 0.92-0.99, leaving a clean residual gradient. Tier
+# audit of the 14 videos in 0.64-0.85 showed a natural break at 0.80 — everything >=0.80 is 64-87%
+# high-tier (good), below 0.80 trends to junk (9-40% high). See learnings.md "Stall root-cause audit".
+VIDEO_GATE_THRESHOLD = 0.80
 
 # ---- v2 confidence model constants (06h.DET.confidence-propagation-v2.0) ----
 

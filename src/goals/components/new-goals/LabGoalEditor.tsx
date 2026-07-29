@@ -17,7 +17,18 @@ import { X, Gauge } from "lucide-react"
 
 type Mc = { start?: number; steps?: number; curveTension?: number; milestoneEdits?: Record<string, { value?: number; date?: string }> }
 
-export function LabGoalEditor({ goal, onClose, onSaved }: { goal: GoalWithProgress; onClose: () => void; onSaved: () => void }) {
+export function LabGoalEditor({
+  goal,
+  onClose,
+  onSaved,
+  onSaveLocal,
+}: {
+  goal: GoalWithProgress
+  onClose: () => void
+  onSaved: () => void
+  /** Sandbox: apply the update locally instead of PUTting /api/goals/{id}. */
+  onSaveLocal?: (update: { milestone_config: Record<string, unknown>; target_value: number }) => void
+}) {
   const mc = (goal.milestone_config ?? {}) as Mc
   const initialPins: MilestonePin[] = mc.milestoneEdits
     ? Object.entries(mc.milestoneEdits).filter(([, e]) => e.value != null).map(([s, e]) => ({ step: Number(s), value: e.value! }))
@@ -50,11 +61,16 @@ export function LabGoalEditor({ goal, onClose, onSaved }: { goal: GoalWithProgre
     if (config.pins && config.pins.length > 0) {
       milestone_config.milestoneEdits = Object.fromEntries(config.pins.map((p) => [p.step, { value: p.value }]))
     }
-    await fetch(`/api/goals/${goal.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ milestone_config, target_value: Math.max(1, Math.round(config.target)) }),
-    }).catch(() => {})
+    const target_value = Math.max(1, Math.round(config.target))
+    if (onSaveLocal) {
+      onSaveLocal({ milestone_config, target_value })
+    } else {
+      await fetch(`/api/goals/${goal.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ milestone_config, target_value }),
+      }).catch(() => {})
+    }
     setSaving(false)
     onSaved()
     onClose()

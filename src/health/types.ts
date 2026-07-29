@@ -98,6 +98,10 @@ export interface WorkoutSetRow {
   weight_kg: number
   reps: number
   set_number: number
+  is_warmup: boolean
+  notes: string | null
+  // Exercise-level note, denormalized onto each of the exercise's set rows
+  exercise_notes: string | null
 }
 
 export interface WorkoutSetInsert {
@@ -105,6 +109,26 @@ export interface WorkoutSetInsert {
   weight_kg: number
   reps: number
   set_number: number
+  is_warmup?: boolean
+  notes?: string | null
+  exercise_notes?: string | null
+}
+
+// A workout log with its sets attached (GET /api/health/workout?include=sets)
+export type WorkoutLogWithSets = WorkoutLogRow & { sets: WorkoutSetRow[] }
+
+// One cell of the aligned weekly activity grid
+export interface HeatmapDay {
+  date: string
+  count: number
+  future: boolean
+}
+
+// Compact per-exercise summary of a workout's sets, for history rows and hints
+export interface ExerciseSummary {
+  exercise: string
+  detail: string
+  setCount: number
 }
 
 export interface PersonalRecord {
@@ -121,6 +145,39 @@ export interface WorkoutStats {
   volumeLoad4wAvg: number | null
   personalRecords: PersonalRecord[]
   heatmap: { date: string; count: number }[]
+}
+
+// Templates: user-saved presets that prefill the workout logger form.
+// Sets are stored as a JSONB payload (no set_number — order is array order).
+export interface WorkoutTemplateSet {
+  exercise: string
+  weight_kg: number
+  reps: number
+  is_warmup?: boolean
+  notes?: string | null
+  exercise_notes?: string | null
+}
+
+export interface WorkoutTemplateRow {
+  id: string
+  user_id: string
+  name: string
+  session_type: SessionType
+  duration_min: number | null
+  intensity: WorkoutIntensity
+  distance_km: number | null
+  sets: WorkoutTemplateSet[]
+  created_at: string
+  updated_at: string
+}
+
+export interface WorkoutTemplateInsert {
+  name: string
+  session_type: SessionType
+  duration_min?: number | null
+  intensity: WorkoutIntensity
+  distance_km?: number | null
+  sets?: WorkoutTemplateSet[]
 }
 
 // ============================================================================

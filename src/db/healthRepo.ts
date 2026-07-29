@@ -1,7 +1,7 @@
 /**
  * Database repository for Health & Appearance tracking
  *
- * All database access for weight_logs, sleep_logs, workout_logs, workout_sets, nutrition_logs.
+ * All database access for weight_logs, sleep_logs, workout_logs, workout_sets, workout_templates, nutrition_logs.
  */
 
 import { createServerSupabaseClient } from "./supabase"
@@ -14,6 +14,8 @@ import type {
   WorkoutLogInsert,
   WorkoutSetRow,
   WorkoutSetInsert,
+  WorkoutTemplateRow,
+  WorkoutTemplateInsert,
   NutritionLogRow,
   NutritionLogInsert,
   BodyMeasurementRow,
@@ -159,6 +161,28 @@ export async function getWorkoutLogs(userId: string, days: number = 90): Promise
   return (data ?? []) as WorkoutLogRow[]
 }
 
+export async function getWorkoutLogsWithSets(
+  userId: string,
+  days: number = 90
+): Promise<(WorkoutLogRow & { sets: WorkoutSetRow[] })[]> {
+  const supabase = await createServerSupabaseClient()
+  const logs = await getWorkoutLogs(userId, days)
+  if (logs.length === 0) return []
+  const { data, error } = await supabase
+    .from("workout_sets")
+    .select("*")
+    .in("log_id", logs.map((l) => l.id))
+    .order("set_number", { ascending: true })
+  if (error) throw new Error(`Failed to get workout sets: ${error.message}`)
+  const byLog = new Map<string, WorkoutSetRow[]>()
+  for (const s of (data ?? []) as WorkoutSetRow[]) {
+    const group = byLog.get(s.log_id)
+    if (group) group.push(s)
+    else byLog.set(s.log_id, [s])
+  }
+  return logs.map((l) => ({ ...l, sets: byLog.get(l.id) ?? [] }))
+}
+
 export async function getWorkoutSets(logId: string): Promise<WorkoutSetRow[]> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
@@ -234,6 +258,49 @@ export async function deleteWorkoutLog(userId: string, logId: string): Promise<v
     .eq("id", logId)
     .eq("user_id", userId)
   if (error) throw new Error(`Failed to delete workout log: ${error.message}`)
+}
+
+// ============================================
+// Workout Templates
+// ============================================
+
+export async function getWorkoutTemplates(userId: string): Promise<WorkoutTemplateRow[]> {
+  const supabase = await createServerSupabaseClient()
+  const { error, data } = await supabase
+    .from("workout_templates")
+    .select("*")
+    .eq("user_id", userId)
+    .order("name", { ascending: true })
+  if (error) throw new Error(`Failed to get workout templates: ${error.message}`)
+  return (data ?? []) as WorkoutTemplateRow[]
+}
+
+// Saving under an existing name replaces that template (unique on user_id+name)
+export async function upsertWorkoutTemplate(
+  userId: string,
+  template: WorkoutTemplateInsert
+): Promise<WorkoutTemplateRow> {
+  const supabase = await createServerSupabaseClient()
+  const { error, data } = await supabase
+    .from("workout_templates")
+    .upsert(
+      { user_id: userId, updated_at: new Date().toISOString(), ...template },
+      { onConflict: "user_id,name" }
+    )
+    .select()
+    .single()
+  if (error) throw new Error(`Failed to save workout template: ${error.message}`)
+  return data as WorkoutTemplateRow
+}
+
+export async function deleteWorkoutTemplate(userId: string, templateId: string): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase
+    .from("workout_templates")
+    .delete()
+    .eq("id", templateId)
+    .eq("user_id", userId)
+  if (error) throw new Error(`Failed to delete workout template: ${error.message}`)
 }
 
 // ============================================
@@ -379,6 +446,7 @@ export async function getExerciseMax(userId: string, exercise: string): Promise<
     .select("weight_kg, reps")
     .in("log_id", logIds)
     .ilike("exercise", exercise)
+    .eq("is_warmup", false)
   if (setsError) throw new Error(`Failed to query sets for ${exercise}: ${setsError.message}`)
   if (!sets || sets.length === 0) return 0
 
@@ -437,6 +505,7 @@ export async function getPullUpsMax(userId: string): Promise<number> {
     .select("reps")
     .in("log_id", logIds)
     .ilike("exercise", "%pull%up%")
+    .eq("is_warmup", false)
   if (setsError) throw new Error(`Failed to query pull-up sets: ${setsError.message}`)
   if (!sets || sets.length === 0) return 0
 

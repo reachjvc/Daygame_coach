@@ -1,15 +1,18 @@
 "use client"
 
 /**
- * Test-only wrapper that turns /test/new-goals into the FULL best-of-both journey:
- * the new creation flow (with the harvested FTO/Abundance path onboarding) ⇄ a
- * tracking view assembled from the REAL hub components (DailyActionView → which
- * renders TodaysPulse + GoalCards — plus GoalFormModal + WeeklyReviewDialog).
+ * Test-only wrapper that turns /test/new-goals into a fully DISCONNECTED sandbox:
+ * the new creation flow ⇄ a tracking view assembled from the REAL hub components
+ * (DailyActionView → TodaysPulse + GoalCards, plus the lab curve editor).
  *
- * It reuses the production components unchanged and talks to the real /api/goals/*
- * endpoints, so it demonstrates the combination end-to-end WITHOUT touching any
- * production route (GoalsHubContent is left alone — its handler logic is lifted
- * here, not imported, to keep the test surface self-contained).
+ * NOTHING here writes to /api/goals/*, and the lab itself never reads it either.
+ * Saving a plan materializes it into local GoalWithProgress rows
+ * (buildLocalPlanGoals) kept in localStorage, and all tracking interactions
+ * mutate that local copy — so you can play freely without touching your real
+ * goals. Production-API affordances that can't run locally (GoalFormModal,
+ * WeeklyReviewDialog) are left out. Known benign leak: GoalCards internally GET
+ * /api/goals/snapshots (usePeriodStats) — read-only, and sandbox goal ids never
+ * match real snapshot rows, so nothing real renders and nothing is written.
  */
 
 import { useState, useEffect, useCallback } from "react"
@@ -17,94 +20,125 @@ import { NewGoalsFlow } from "./NewGoalsFlow"
 import { AchievementsPanel } from "./AchievementsPanel"
 import { LabGoalEditor } from "./LabGoalEditor"
 import { DailyActionView } from "../DailyActionView"
-import { GoalFormModal } from "../GoalFormModal"
-import { WeeklyReviewDialog } from "../WeeklyReviewDialog"
-import { flattenTree } from "../../goalsService"
-import type { GoalWithProgress, GoalTreeNode } from "../../types"
-import { CalendarCheck, Loader2, Plus, Aperture } from "lucide-react"
+import { buildLocalPlanGoals } from "../../goalsService"
+import type { GoalWithProgress, NewGoalsFlowState } from "../../types"
+import { Loader2, Plus, Aperture, RotateCcw } from "lucide-react"
 
 type Mode = "create" | "track"
+
+const SANDBOX_KEY = "newGoalsLabSandboxGoals_v1"
+
+function loadSandboxGoals(): GoalWithProgress[] {
+  try {
+    const raw = localStorage.getItem(SANDBOX_KEY)
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+/** Recompute the display progress fields after a local value change. */
+function withProgress(g: GoalWithProgress, current_value: number): GoalWithProgress {
+  return {
+    ...g,
+    current_value,
+    progress_percentage: g.target_value > 0 ? Math.min(100, Math.round((current_value / g.target_value) * 100)) : 0,
+    is_complete: current_value >= g.target_value,
+  }
+}
 
 export function NewGoalsLab() {
   const [mode, setMode] = useState<Mode>("create")
   const [goals, setGoals] = useState<GoalWithProgress[]>([])
-  const [loading, setLoading] = useState(false)
-  const [reviewOpen, setReviewOpen] = useState(false)
-  const [isFormOpen, setIsFormOpen] = useState(false)
-  const [editingGoal, setEditingGoal] = useState<GoalWithProgress | undefined>()
+  const [hydrated, setHydrated] = useState(false)
   const [curveGoal, setCurveGoal] = useState<GoalWithProgress | null>(null)
 
-  const fetchGoals = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await fetch("/api/goals/tree?includeArchived=true")
-      const data = await res.json()
-      const tree: GoalTreeNode[] = Array.isArray(data) ? data : []
-      setGoals(flattenTree(tree))
-    } catch {
-      /* test surface — swallow */
-    } finally {
-      setLoading(false)
-    }
+  // Sandbox plan survives reloads via localStorage (this browser only).
+  useEffect(() => {
+    setGoals(loadSandboxGoals())
+    setHydrated(true)
   }, [])
 
-  useEffect(() => {
-    if (mode === "track") fetchGoals()
-  }, [mode, fetchGoals])
+  const updateGoals = useCallback((updater: (prev: GoalWithProgress[]) => GoalWithProgress[]) => {
+    setGoals((prev) => {
+      const next = updater(prev)
+      try { localStorage.setItem(SANDBOX_KEY, JSON.stringify(next)) } catch { /* quota */ }
+      return next
+    })
+  }, [])
+
+  const onSandboxSave = useCallback((state: NewGoalsFlowState) => {
+    updateGoals(() => buildLocalPlanGoals(state))
+  }, [updateGoals])
+
+  const resetSandbox = useCallback(() => {
+    try { localStorage.removeItem(SANDBOX_KEY) } catch { /* ignore */ }
+    setGoals([])
+    setMode("create")
+  }, [])
 
   const onIncrement = useCallback(async (goalId: string, amount: number) => {
-    setGoals((prev) => prev.map((g) => g.id === goalId
-      ? { ...g, current_value: g.current_value + amount, progress_percentage: Math.min(100, Math.round(((g.current_value + amount) / g.target_value) * 100)), is_complete: g.current_value + amount >= g.target_value }
-      : g))
-    await fetch(`/api/goals/${goalId}/increment`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount }) }).catch(() => {})
-    fetchGoals()
-  }, [fetchGoals])
+    updateGoals((prev) => prev.map((g) => (g.id === goalId ? withProgress(g, g.current_value + amount) : g)))
+  }, [updateGoals])
 
   const onSetValue = useCallback(async (goalId: string, value: number) => {
-    setGoals((prev) => prev.map((g) => g.id === goalId
-      ? { ...g, current_value: value, progress_percentage: Math.min(100, Math.round((value / g.target_value) * 100)), is_complete: value >= g.target_value }
-      : g))
-    await fetch(`/api/goals/${goalId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ current_value: value }) }).catch(() => {})
-    fetchGoals()
-  }, [fetchGoals])
+    updateGoals((prev) => prev.map((g) => (g.id === goalId ? withProgress(g, value) : g)))
+  }, [updateGoals])
 
   const onReset = useCallback(async (goalId: string) => {
-    await fetch(`/api/goals/${goalId}/reset`, { method: "POST" }).catch(() => {})
-    fetchGoals()
-  }, [fetchGoals])
+    updateGoals((prev) => prev.map((g) => {
+      if (g.id !== goalId) return g
+      const start = typeof (g.milestone_config as { start?: unknown } | null)?.start === "number"
+        ? (g.milestone_config as { start: number }).start
+        : 0
+      return withProgress(g, start)
+    }))
+  }, [updateGoals])
 
   const onComplete = useCallback((goal: GoalWithProgress) => { onIncrement(goal.id, 1) }, [onIncrement])
-  // Milestone goals open the curve editor (reshape + re-pace); others use the form.
+  // Milestone goals open the lab curve editor (local save); other types have no
+  // sandbox-safe editor — their edit is a no-op here.
   const onEdit = useCallback((goal: GoalWithProgress) => {
     if (goal.goal_type === "milestone" && goal.milestone_config) setCurveGoal(goal)
-    else { setEditingGoal(goal); setIsFormOpen(true) }
   }, [])
-  const onAddChild = useCallback(() => { setEditingGoal(undefined); setIsFormOpen(true) }, [])
+
+  const onCurveSaveLocal = useCallback((update: { milestone_config: Record<string, unknown>; target_value: number }) => {
+    if (!curveGoal) return
+    updateGoals((prev) => prev.map((g) =>
+      g.id === curveGoal.id
+        ? withProgress({ ...g, milestone_config: update.milestone_config, target_value: update.target_value }, g.current_value)
+        : g,
+    ))
+  }, [curveGoal, updateGoals])
 
   const tabClass = (m: Mode) => `px-4 py-1.5 rounded-full text-sm font-medium transition-all ${mode === m ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"}`
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
-      {/* Mode toggle — flip between the creation flow and live tracking */}
+      {/* Mode toggle — flip between the creation flow and local tracking */}
       <div className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-sm border-b border-white/5">
         <div className="max-w-4xl mx-auto px-6 py-3 flex items-center gap-2">
           <button onClick={() => setMode("create")} className={tabClass("create")}>
             <span className="flex items-center gap-1.5"><Aperture className="size-4" /> Create plan</span>
           </button>
           <button onClick={() => setMode("track")} className={tabClass("track")}>Track</button>
-          {mode === "track" && (
-            <button onClick={() => setReviewOpen(true)} className="ml-auto flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors">
-              <CalendarCheck className="size-4" /> Weekly Review
+          <span className="ml-auto flex items-center gap-3">
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border border-amber-400/30 bg-amber-500/10 text-amber-300" title="Nothing here reads or writes your real goals — everything stays in this browser.">
+              Sandbox
+            </span>
+            <button onClick={resetSandbox} className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-white transition-colors" title="Clear the sandbox plan and start over">
+              <RotateCcw className="size-3.5" /> Reset
             </button>
-          )}
+          </span>
         </div>
       </div>
 
       {mode === "create" ? (
-        <NewGoalsFlow onSaved={() => { setMode("track"); fetchGoals() }} />
+        <NewGoalsFlow sandbox onSandboxSave={onSandboxSave} onSaved={() => setMode("track")} />
       ) : (
         <div className="max-w-4xl mx-auto px-6 py-8 pb-24">
-          {loading && goals.length === 0 ? (
+          {!hydrated ? (
             <div className="flex items-center justify-center py-20"><Loader2 className="size-8 animate-spin text-zinc-500" /></div>
           ) : goals.length === 0 ? (
             <div className="text-center py-20">
@@ -117,31 +151,23 @@ export function NewGoalsLab() {
             <>
               <AchievementsPanel goals={goals} onEdit={onEdit} />
               <DailyActionView
-              goals={goals}
-              onIncrement={onIncrement}
-              onSetValue={onSetValue}
-              onComplete={onComplete}
-              onReset={onReset}
-              onEdit={onEdit}
-              onAddChild={onAddChild}
-              onSwitchView={() => {}}
-              onCreateGoal={() => setMode("create")}
+                goals={goals}
+                onIncrement={onIncrement}
+                onSetValue={onSetValue}
+                onComplete={onComplete}
+                onReset={onReset}
+                onEdit={onEdit}
+                onAddChild={() => {}}
+                onSwitchView={() => {}}
+                onCreateGoal={() => setMode("create")}
               />
             </>
           )}
         </div>
       )}
 
-      <GoalFormModal
-        open={isFormOpen}
-        onOpenChange={(o) => { setIsFormOpen(o); if (!o) setEditingGoal(undefined) }}
-        goal={editingGoal}
-        parentGoals={goals}
-        onSuccess={fetchGoals}
-      />
-      <WeeklyReviewDialog isOpen={reviewOpen} onClose={() => setReviewOpen(false)} />
       {curveGoal && (
-        <LabGoalEditor goal={curveGoal} onClose={() => setCurveGoal(null)} onSaved={fetchGoals} />
+        <LabGoalEditor goal={curveGoal} onClose={() => setCurveGoal(null)} onSaved={() => {}} onSaveLocal={onCurveSaveLocal} />
       )}
     </div>
   )

@@ -52,7 +52,12 @@ STAGE06B_FLAG_CONVERSATION_BLOCK_THRESHOLD = 4
 STAGE06B_FLAG_BOUNDARY_BLOCK_THRESHOLD = 2
 STAGE06B_FLAG_MISSING_TARGET_COVERAGE_BLOCK_THRESHOLD = 2
 STAGE06B_FLAG_MAJOR_OTHER_BLOCK_THRESHOLD = 1
-STAGE06B_FLAG_LOW_TRANSCRIPT_SCORE_BLOCK_THRESHOLD = 55.0
+# 2026-07-08: lowered 55->35. The stage-06 transcript score is a subjective LLM judgment; the old
+# prompt tanked it for speaker-collapse/cosmetic/short-turns (adjudicated better downstream: 06h
+# 0.85 floor, 06e/06f/chunk-drop<0.3, pre-ingest thin screen). Reading the 68 videos this gate
+# blocked showed ~65 are word-followable false-blocks; genuine garble sits <=~30. 35 = fail-closed
+# backstop for pervasive whole-video garble only. See learnings.md "Stall root-cause audit".
+STAGE06B_FLAG_LOW_TRANSCRIPT_SCORE_BLOCK_THRESHOLD = 35.0
 # Mirror 06c.DET.patch MIN_MISATTRIBUTION_CONFIDENCE: only residual misattributions that
 # 06c will NOT auto-apply should count toward the severe-FLAG gate (see _count_residual_misattributions).
 STAGE06C_MIN_MISATTRIBUTION_CONFIDENCE = 0.7

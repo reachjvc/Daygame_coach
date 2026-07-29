@@ -39,6 +39,16 @@ export interface CustomTarget {
   id: string
   pillarId: string
   unit: string
+  /** Set when the goal sits under a user-written CARD (see CustomCard); unset = a
+   * loose goal directly under the area. Grouping is a planning aid — on save both
+   * kinds land under the pillar's "Your own goals" container. */
+  cardId?: string
+}
+
+/** A routine card the user wrote themselves, holding their own goals. */
+export interface CustomCard {
+  id: string
+  pillarId: string
 }
 
 /**
@@ -554,4 +564,541 @@ export interface BottleneckResult {
   bottleneckGoalId: string | null
   description: string
   recommendedFocus: string
+}
+
+// ---------------------------------------------------------------------------
+// Vision → plan (test page /test/vision-plan) — see docs/plans/vision-to-plan-test-page.md
+// ---------------------------------------------------------------------------
+
+/** A clause of the user's vision text, offsets into the original string. */
+export interface VisionSpan {
+  text: string
+  start: number
+  end: number
+}
+
+/**
+ * One distinct thing the user's vision statement is asking for — a clause (or
+ * merged adjacent clauses) routed to a life area, optionally with the framework
+ * objective it matched. Derived deterministically from browser embeddings.
+ */
+export interface VisionIntent {
+  id: string
+  /** The user's own words for this intent (merged clauses joined with " · "). */
+  text: string
+  pillarId: string
+  pillarLabel: string
+  pillarColor: string
+  /** Best-matching framework objective within the pillar, if strong enough. */
+  objectiveId: string | null
+  objectiveLabel: string | null
+  /** Cosine score of the winning taxonomy item (relative signal, not a %). */
+  confidence: number
+  /** Source clauses, for highlighting the vision text. */
+  spans: VisionSpan[]
+}
+
+export interface VisionIntentResult {
+  intents: VisionIntent[]
+  /** Clauses that didn't land on any life area (filler or unmatched). */
+  unmatched: VisionSpan[]
+}
+
+/** One ordered step of the morning ritual (PLM layer) — checklist item, not a goal habit. */
+export interface VisionRitualItem {
+  id: string
+  title: string
+  /** Rough duration — the preset compositions sum to ~15/30/60 minutes. */
+  minutes: number
+}
+
+/** The user's assembled morning ritual — an ORDERED daily checklist, tracked
+ * separately from goal habits (it never enters the balancer). */
+export interface VisionRitual {
+  items: VisionRitualItem[]
+  /** Which preset seeded it (15/30/60) — null once assembled by hand. */
+  preset: 15 | 30 | 60 | null
+  /** v10 — ISO date the ritual was (re)designed: drives the 30-day install
+   * counter and the ~30-day rotation nudge ("menu, not checklist"). */
+  builtAt?: string
+  /** v10 — the ritual MATRIX beyond mornings: weekly per-area rituals
+   * ("Money Tuesday", relationship journal), due on their weekday. */
+  weekly?: VisionWeeklyRitual[]
+}
+
+/** One weekly-cadence ritual tied to a life area, due on a fixed weekday. */
+export interface VisionWeeklyRitual {
+  id: string
+  title: string
+  /** Blueprint area it maintains, or null for whole-life rituals. */
+  areaId: string | null
+  /** 0=Mon … 6=Sun. */
+  weekday: number
+  /** v11 — fires every OTHER week (his relationship journal is bi-weekly). */
+  everyOtherWeek?: boolean
+  /** v16 — monthly cadence: due on this day of month (1-28); weekday ignored. */
+  monthlyDay?: number
+}
+
+/** A free-text item the user added to one day's plan (RPM could-do list). */
+export interface VisionAdhocItem {
+  id: string
+  title: string
+  done: boolean
+}
+
+/** One day's RPM plan: starred "must items" (≤5) + ad-hoc could-do items. */
+export interface VisionDayPlan {
+  /** Habit/task/adhoc ids the user starred as today's musts (80/20). Max 5. */
+  mustIds: string[]
+  adhoc: VisionAdhocItem[]
+  /** v9 RPM anatomy — pillarId → TODAY'S fresh reason for that area block
+   * ("write 3 fresh reasons daily — re-deriving them IS the conditioning"). */
+  blockReasons?: Record<string, string>
+}
+
+/** One committed outcome for next week, tied to a Blueprint area, with its why
+ * (Stefan's weekly ritual: "what are my outcomes... and why do I want that"). */
+export interface VisionWeeklyOutcome {
+  areaId: string
+  outcome: string
+  why: string
+  /** v10 — the weekday (0=Mon…6=Sun) it's scheduled into; an outcome without
+   * a slot is a wish ("what doesn't get scheduled doesn't happen"). */
+  weekday?: number
+}
+
+/** One Weekly Evaluation Ritual (PLM): rate every life area, note, pick a focus. */
+export interface VisionWeeklyReview {
+  /** ISO date of the reviewed week's first day (startDate-anchored weeks). */
+  weekStart: string
+  /** pillarId → 1-10 self-rating. */
+  areaRatings: Record<string, number>
+  note: string
+  /** Life area to lean into next week, or null. */
+  focusPillarId: string | null
+  /** M4 reflection prompts — "whatever gets rewarded gets repeated". */
+  magicMoment?: string
+  accomplishment?: string
+  lesson?: string
+  /** v11 — the fractal review's middle question: the week's biggest challenge
+   * and its ROOT cause (95% solution, 5% problem). */
+  challenge?: string
+  /** Next week's committed outcomes (max 3), each with its why. */
+  outcomes?: VisionWeeklyOutcome[]
+  /** v10 — capture-everything: head emptied at review time, each item tagged
+   * to the area it belongs to (RPM Capture→Categorize). */
+  captures?: Array<{ text: string; areaId: string | null }>
+}
+
+/**
+ * The per-area layer of the Life Plan (PLM v3) — Stefan gives EVERY area a
+ * compelling custom name ("Physical Power — World Class Health and Fitness"),
+ * its own purpose, and its own identity/role, on top of the area vision
+ * ("your 10", stored in VisionPlanState.yourTens).
+ */
+export interface VisionAreaPlan {
+  /** Compelling custom name for the area — language that drives you. */
+  name?: string
+  /** Why this area matters to you (the area-level why). */
+  purpose?: string
+  /** Who you are in this area ("I'm an athlete", "I'm a world-class coach"). */
+  identity?: string
+  /** v10 — the maintenance floor while OTHER areas hold focus (consented
+   * drift has a contract: "health 45-60 min/day" even in a money season). */
+  maintenance?: string
+  /** v17 — "why work on this area NOW?" (the area's why-work, distinct from
+   * `purpose` which is why the area matters at all). */
+  whyWork?: string
+  /** v17 — the soft layer AUTHORED INSIDE this area. The record key is the
+   * provenance, so the global view is a pure roll-up (softLayerRollup) and
+   * life-wide-only entries stay in VisionPlanState's own lists. */
+  values?: string[]
+  affirmations?: string[]
+  incantations?: string[]
+  rules?: string[]
+}
+
+/** The Driving Force (PLM M1) — created after the vision, re-read daily/weekly:
+ * one non-negotiable master purpose + reason words + "I am..." identity lines. */
+export interface VisionDrivingForce {
+  /** The single overarching life-purpose statement (non-negotiable). */
+  purpose: string
+  /** Rapid-fire reason words ("the reasons are the fuel"). */
+  reasons: string[]
+  /** Identity statements ("Who am I committed to being?"), each "I am..." */
+  identity: string[]
+  /** v6 — one-sentence mission statement (VAK template, BE + DO/GIVE, energy test). */
+  mission?: string
+  /** v6 — Code of Conduct: standards for how you show up ("to be fun, loving, disciplined…"). */
+  conduct?: string[]
+  /** v9 — the Primary Question: the habitual question rewritten so its
+   * presupposition empowers (his, PPlaK8y4PzA: "How can I appreciate and
+   * enjoy my life even more, while feeling even more fully alive and growing
+   * and making a difference?"). */
+  primaryQuestion?: string
+}
+
+/** Monthly-report verdict per goal — Stefan's observed status taxonomy. */
+export type VisionGoalVerdict =
+  | "achieved"
+  | "on-track"
+  | "over-achieved"
+  | "likely-miss"
+  | "not-started"
+  | "modified"
+  | "cancelled"
+  | "rescheduled"
+
+/** A confirmed verdict + its reason ("every non-achieved status carries a reason"). */
+export interface VisionVerdictEntry {
+  verdict: VisionGoalVerdict
+  reason: string
+  /** v9 — the prescriptive fix committed for a miss: name it as a SYSTEM
+   * ("failures → owned reason → fix that becomes a named system"). */
+  fix?: string
+}
+
+/** Evening reflection (Five Minute Journal PM + Productivity Planner close). */
+export interface VisionEveningReflection {
+  /** "Three amazing things that happened today" (free text). */
+  amazing: string
+  /** "How could I have made today better?" */
+  better: string
+  /** Productivity Planner-style 1-10 end-of-day self-score. */
+  dayScore?: number
+  /** v11 — the NIGHTLY magic-moment jar: one line, every evening (the jar is
+   * a daily ritual in his system, not a weekly one). */
+  magicMoment?: string
+}
+
+/** Tracking history for the vision-plan sandbox (M6) — what the user checked off. */
+export interface VisionProgress {
+  /** ISO date (YYYY-MM-DD) tracking started — day 0 of the balanced schedule. */
+  startDate: string
+  /** habitId → ISO dates it was completed on. */
+  completions: Record<string, string[]>
+  /** Task ids checked off. */
+  tasksDone: string[]
+  /** ISO dates the user read their vision (daily vision review, PLM). */
+  visionReviews?: string[]
+  /** ISO date → ritual item ids completed that day. */
+  ritualCompletions?: Record<string, string[]>
+  /** ISO date → that day's RPM plan (musts + ad-hoc items). */
+  dayPlans?: Record<string, VisionDayPlan>
+  /** Completed Weekly Evaluation Rituals, one per weekStart. */
+  weeklyReviews?: VisionWeeklyReview[]
+  /** ISO date → evening reflection (M5). */
+  eveningReflections?: Record<string, VisionEveningReflection>
+  /** "YYYY-MM" → goalId → confirmed report verdict (M6). */
+  reportVerdicts?: Record<string, Record<string, VisionVerdictEntry>>
+  /** v9 — numeric RESULT logging for milestone goals: goalId → dated readings
+   * (his reports show GOAL / RESULT / PROGRESS with exact numbers). */
+  measureLogs?: Record<string, VisionMeasureLog[]>
+}
+
+/** One dated numeric reading of a milestone goal's measure. */
+export interface VisionMeasureLog {
+  date: string
+  value: number
+}
+
+/**
+ * Everything the vision-plan sandbox persists (M5) — one lossless state object
+ * in localStorage; the balanced schedule and track rows are always DERIVED from
+ * it, never stored, so nothing can drift.
+ */
+export interface VisionPlanState {
+  vision: string
+  intents: VisionIntent[]
+  goals: VisionGoalDraft[]
+  /** Goal ids in priority order (first = highest). */
+  priorityIds: string[]
+  dailyBudget: number
+  /** True once the user confirmed the plan and tracking started. */
+  confirmed: boolean
+  /** Present once tracking has started (set at confirm). */
+  progress?: VisionProgress
+  /** Pillar ids in the user's drag order (first = highest priority area). */
+  areaOrder?: string[]
+  /** Pillar ids the user has toggled OFF — their goals are hidden, not deleted. */
+  deselectedAreas?: string[]
+  /** The assembled morning ritual (PLM layer) — absent until the user builds one. */
+  ritual?: VisionRitual
+  /** M0 — ISO date the user took the Commit to Mastery pledge. */
+  committedAt?: string
+  /** M0 — ranked value hierarchy, first = most important (elicited BEFORE vision). */
+  values?: string[]
+  /** v5 — ranked AWAY-FROM values (emotional states avoided; #1 shapes decisions most). */
+  awayValues?: string[]
+  /** M1 — master purpose + reasons + identity, re-read daily. */
+  drivingForce?: VisionDrivingForce
+  /** M2 — Blueprint area id → what YOUR 10 looks like (the wheel's reference). */
+  yourTens?: Record<string, string>
+  /** v3 — Blueprint area id → the area's own name/purpose/identity (Life Plan). */
+  areaPlans?: Record<string, VisionAreaPlan>
+  /** v4 — the season's 1-3 domino areas ("which area, conquered, lifts all the others?"). */
+  focusAreaIds?: string[]
+  /** v6 — the user's own incantation cards (added on top of the canon deck). */
+  incantations?: string[]
+  /** v8 — 1-3yr wants circled out of the vision brainstorm, waiting to be
+   * qualified into goals (his workshop: brainstorm → circle → qualify). */
+  goalInbox?: string[]
+  /** v8 — the name spoken in the Manifesto ("My name is ___ and I am the
+   * master of my life"). */
+  manifestoName?: string
+  /** v9 — the user's OWN credo lines, added on top of his skeleton (his
+   * meta-pattern: mine is the worked example — design your own). */
+  manifestoLines?: string[]
+  /** v10 — habit-breaking letters (thank-you + goodbye), one pair per habit. */
+  letters?: Array<{ habit: string; thankYou: string; goodbye: string; date: string }>
+  /** v10 — 30-day one-day-at-a-time counters; a slip restarts startDate. */
+  counters?: Array<{ label: string; startDate: string }>
+  /** v13 — engineered value-rules ("I feel X anytime I…" / "I experience X
+   * only if I were to consistently…"), read daily; Robbins/DWD lineage. */
+  valueRules?: string[]
+  /** v14 — user-added rooms on the vision wheel, beyond the canonical 12
+   * (renames of canonical rooms live in areaPlans[id].name). */
+  customAreas?: Array<{ id: string; label: string; color: string }>
+  /** v15 — wants typed into wheel rooms, first-class: each carries its room
+   * (area authoritative) and feeds goal drafting directly — they are NOT
+   * flattened into the vision prose. */
+  wheelWants?: Array<{ id: string; areaId: string; text: string }>
+  /** M1 room journey — today's self-rating per room (0-10), captured in the
+   * room's "locate yourself" beat before tracking starts; the first weekly
+   * evaluation measures against it. */
+  baselineRatings?: Record<string, number>
+  /** v17 — area id → ISO date the CURRENT baselineRatings value was set.
+   * Re-rating during create overwrites both: pre-commit is a design session,
+   * not a tracking log — the history that matters is progress.weeklyReviews. */
+  baselineRatedAt?: Record<string, string>
+  /** v17 — area id → what YOUR 0 looks like: the opposite pole of your 10, so
+   * a rating measures against both ends instead of against nothing. */
+  yourZeros?: Record<string, string>
+  /** v17 — life-wide affirmations (the global peer of values / incantations /
+   * valueRules; per-area ones live in areaPlans[id].affirmations). */
+  affirmations?: string[]
+  /** v17 — how deep the user is going in each area this pass. Absent = "later".
+   * Commitment stays 12/12 (the manifesto); attention scopes to a few. */
+  areaScope?: Record<string, "deep" | "sketched" | "later">
+}
+
+/** One pickable habit template in the routine library (M10). */
+export interface RoutineTemplate {
+  id: string
+  title: string
+  /** Sensible default frequency — editable like any habit once added. */
+  daysPerWeek: number
+}
+
+/**
+ * A category of common activities (morning routine, workouts, …) the vision
+ * may not have surfaced. Picks fold into ONE goal per category, owned by the
+ * category's primary life area (first pillarId).
+ */
+export interface RoutineCategory {
+  id: string
+  label: string
+  /** Life areas this category advances — first = primary (owns the goal). */
+  pillarIds: string[]
+  /** The created goal's "why". */
+  why: string
+  items: RoutineTemplate[]
+}
+
+/** Per-goal rollup at a point in time (M6). */
+export interface VisionGoalRollup {
+  goalId: string
+  /** Habit instances completed to date / expected to date. */
+  done: number
+  expected: number
+  /** done/expected capped at 1 (1 when nothing expected yet). */
+  adherence: number
+  tasksDone: number
+  tasksTotal: number
+  /** 0-100 blended progress. */
+  percent: number
+  pace: PacingStatus
+}
+
+/** Options for the cross-goal balancer (M4). */
+export interface BalanceOpts {
+  /** Max habit-instances per day at steady state. Default 4. */
+  dailyBudget?: number
+  /** Weeks over which capacity ramps up linearly (Fabulous dosing). Default 4. */
+  rampWeeks?: number
+}
+
+/** A habit placed on the calendar by the balancer. */
+export interface BalancedHabit {
+  habitId: string
+  goalId: string
+  title: string
+  pillarColor: string
+  daysPerWeek: number
+  /** 1-based week the habit activates — null means it did NOT fit the budget
+   * (surfaced as overflow, never silently dropped). */
+  startWeek: number | null
+  /** Leveled weekday slots (0=Mon … 6=Sun), length === daysPerWeek when scheduled. */
+  weekdays: number[]
+}
+
+/** A one-time task placed on the calendar (goal activation offset applied). */
+export interface BalancedTask {
+  taskId: string
+  goalId: string
+  title: string
+  /** Absolute day offset from plan start. */
+  dueDay: number
+  /** 1-based week containing dueDay. */
+  week: number
+}
+
+export interface BalancedWeek {
+  week: number
+  /** Habit-instances per week once this week's activations are live. */
+  load: number
+  /** Effective capacity for this week (ramped). */
+  cap: number
+  /** Habits that come online this week. */
+  startingHabitIds: string[]
+}
+
+/** The balanced, dosed schedule across ALL goals — the market-gap piece. */
+export interface BalancedPlan {
+  habits: BalancedHabit[]
+  tasks: BalancedTask[]
+  weeks: BalancedWeek[]
+  overflowHabitIds: string[]
+  steadyLoad: number
+  weeklyCap: number
+  dailyBudget: number
+  /** Steady-state instances per weekday after leveling (0=Mon … 6=Sun). */
+  dayLoads: number[]
+}
+
+/** A recurring behaviour inside a vision goal — always scheduled (Dreamfora lesson). */
+export interface VisionHabit {
+  id: string
+  title: string
+  /** Target frequency, 1-7 days per week. */
+  daysPerWeek: number
+  /** Provenance: the curated framework target this habit mirrors, or null/absent
+   * when it's a pure AI suggestion (badged as such in the UI). */
+  sourceTargetId?: string | null
+  /** M11: named training days (Push / Pull / Chest Day A …) this habit cycles
+   * through — slot k of the week runs days[k % days.length]. Null/absent = a
+   * plain habit. */
+  routine?: HabitRoutine | null
+}
+
+/** One named day inside a habit's routine (M11). */
+export interface RoutineDay {
+  id: string
+  name: string
+}
+
+/** A habit's designed day rotation — order matters (slot 1 of the week = first day). */
+export interface HabitRoutine {
+  days: RoutineDay[]
+}
+
+/** A pickable workout split template (M11) — pre-named days + a sensible frequency. */
+export interface WorkoutSplit {
+  id: string
+  label: string
+  /** Day names in cycle order. */
+  days: string[]
+  /** Default daysPerWeek applied on pick (clamped 1-7). */
+  recommendedPerWeek: number
+}
+
+/** A one-time action inside a vision goal. */
+export interface VisionTask {
+  id: string
+  title: string
+  /** Due N days after the plan starts. */
+  dueOffsetDays: number
+}
+
+/** The measurable ladder for a milestone_ladder goal — maps 1:1 onto MilestoneLadderConfig. */
+export interface VisionMeasure {
+  unit: string
+  start: number
+  target: number
+  steps: number
+}
+
+/**
+ * v17 — vision goals have a third shape on top of the two template types: an
+ * ACHIEVEMENT is binary (you did it or you didn't) and carries no number — a
+ * first muscle-up, a driver's licence, quitting smoking. Its rungs are named
+ * checkpoints stored as `tasks`, so it needs no new progress math: goalRollup,
+ * balancePlan and expectedToDate already run on habits + tasks, not on type.
+ *
+ * Deliberately NOT folded into GoalTemplateType — that type is shared with
+ * goalsService / treeGenerationService, which have no achievement concept.
+ */
+export type VisionGoalType = GoalTemplateType | "achievement"
+
+/**
+ * A concrete goal drafted by the LLM from the vision's intents (M2/M3) —
+ * framework-grounded: pillar always real, objective from the framework menu or
+ * null for a custom goal. `why` is the Lifetick-style motivation, editable.
+ * Decomposition (M3): habits + tasks always; measure for milestone_ladder,
+ * rampSteps for habit_ramp.
+ */
+export interface VisionGoalDraft {
+  id: string
+  title: string
+  pillarId: string
+  pillarLabel: string
+  pillarColor: string
+  objectiveId: string | null
+  objectiveLabel: string | null
+  type: VisionGoalType
+  why: string
+  /** Which vision intents this goal came from (LLM may merge or re-route them). */
+  sourceIntentIds: string[]
+  habits: VisionHabit[]
+  tasks: VisionTask[]
+  measure: VisionMeasure | null
+  rampSteps: HabitRampStep[] | null
+  /** Optional user-set "achieve by" date (YYYY-MM-DD) — fed to AI refinement. */
+  targetDate?: string | null
+  /** M3 — the goal as an affirmation sentence ("I will easily…"). Editable. */
+  smartSentence?: string | null
+  /** M3 — belief 0-10 that this goal is achievable; <7 → shrink it (Stefan's rule). */
+  beliefLevel?: number | null
+  /** v4 — desire 0-10; belief AND desire must both clear 7 or reshape the goal. */
+  desireLevel?: number | null
+  /** M3 — the pain-why: "what will it cost you if you DON'T achieve this?" */
+  painWhy?: string | null
+  /** v3 — Blueprint area this goal was created FOR (Life Plan per-area goals).
+   * When set, the goal feeds ONLY this area; when absent, it feeds every area
+   * its pillar maps to. */
+  areaId?: string | null
+  /** v9 — the reward you'll give yourself when it lands (celebration is half
+   * of "whatever gets rewarded gets repeated"). */
+  reward?: string | null
+  /** v9 — the stake: what you forfeit / must do if you miss (consequence). */
+  stake?: string | null
+  /** v9 — obstacle pre-mortem: what will try to stop you, and the counter. */
+  obstacles?: string | null
+  /** v9 — the 100-Reasons exercise: rapid-fire reasons this goal must happen
+   * (aim 100; the first ~10 are the surface, the gold is past 30). */
+  reasonsList?: string[]
+  /** v11 — the feeling clause of his template ("…creating [feeling]"). */
+  feeling?: string | null
+  /** v17 — goals THIS goal FEEDS (downstream, cross-area expected). Outward
+   * direction matches the authoring gesture: you finish an area and say "this
+   * feeds the money goal I already wrote", never re-opening the target.
+   * Acyclic by construction — addGoalEdge refuses an edge that closes a loop. */
+  feedsGoalIds?: string[]
+  /** v17 — "Who else does this goal serve?" */
+  whoItServes?: string | null
+  /** v17 — "What does this make possible that isn't possible now?" */
+  unlocks?: string | null
+  /** v17 — "What's the smallest first move you can make this week?" */
+  firstStep?: string | null
 }

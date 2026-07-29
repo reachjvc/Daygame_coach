@@ -15,6 +15,9 @@ const WorkoutLogger = lazy(() =>
 const NutritionTracker = lazy(() =>
   import("@/src/health/components/NutritionTracker").then((m) => ({ default: m.NutritionTracker }))
 )
+const ActiveProgramsPanel = lazy(() =>
+  import("@/src/programs/components/ActiveProgramsPanel").then((m) => ({ default: m.ActiveProgramsPanel }))
+)
 
 const STORAGE_KEY = "health-tracking-collapsed"
 
@@ -64,6 +67,7 @@ export function HealthTrackingPanel() {
             <SleepTracker />
             <WorkoutLogger />
             <NutritionTracker />
+            <ActiveProgramsPanel />
           </div>
         </Suspense>
       )}

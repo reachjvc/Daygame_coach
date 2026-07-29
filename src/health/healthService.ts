@@ -12,7 +12,11 @@ import type {
   SleepLogRow,
   SleepStats,
   SleepQuality,
+  WorkoutLogRow,
+  WorkoutLogWithSets,
   WorkoutSetRow,
+  HeatmapDay,
+  ExerciseSummary,
   PersonalRecord,
   NutritionLogRow,
   NutritionStats,
@@ -201,8 +205,9 @@ export function detectPersonalRecords(
   const records: PersonalRecord[] = []
   const exerciseMaxes = new Map<string, { weight_kg: number; reps: number }>()
 
-  // Build map of previous maxes (by exercise)
+  // Build map of previous maxes (by exercise); warm-up sets never count toward PRs
   for (const s of allSets) {
+    if (s.is_warmup) continue
     const key = s.exercise.toLowerCase()
     const prev = exerciseMaxes.get(key)
     if (!prev || s.weight_kg > prev.weight_kg || (s.weight_kg === prev.weight_kg && s.reps > prev.reps)) {
@@ -212,6 +217,7 @@ export function detectPersonalRecords(
 
   // Check new sets for PRs
   for (const s of newSets) {
+    if (s.is_warmup) continue
     const key = s.exercise.toLowerCase()
     const prev = exerciseMaxes.get(key)
     if (!prev || s.weight_kg > prev.weight_kg || (s.weight_kg === prev.weight_kg && s.reps > prev.reps)) {
@@ -230,9 +236,120 @@ export function detectPersonalRecords(
 
 /**
  * Compute volume load: sets × reps × weight for a workout's sets.
+ * Warm-up sets are excluded — volume load tracks working volume only.
  */
 export function computeVolumeLoad(sets: WorkoutSetRow[]): number {
-  return sets.reduce((total, s) => total + s.weight_kg * s.reps, 0)
+  return sets.reduce((total, s) => (s.is_warmup ? total : total + s.weight_kg * s.reps), 0)
+}
+
+/** Local-date key (YYYY-MM-DD) so a 23:30 workout counts on the day the user trained. */
+function localDateKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
+
+function mondayOf(d: Date): Date {
+  const m = new Date(d)
+  const dayOfWeek = m.getDay() || 7
+  m.setDate(m.getDate() - dayOfWeek + 1)
+  m.setHours(0, 0, 0, 0)
+  return m
+}
+
+/**
+ * Aligned activity grid: `weeks` Monday-start columns of 7 days, ending with
+ * the week containing `today`. Days after `today` are flagged future.
+ */
+export function buildWorkoutHeatmapWeeks(
+  logs: WorkoutLogRow[],
+  today: Date,
+  weeks: number = 13
+): HeatmapDay[][] {
+  const counts = new Map<string, number>()
+  for (const log of logs) {
+    const key = localDateKey(new Date(log.logged_at))
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+
+  const todayKey = localDateKey(today)
+  const start = mondayOf(today)
+  start.setDate(start.getDate() - (weeks - 1) * 7)
+
+  const grid: HeatmapDay[][] = []
+  for (let w = 0; w < weeks; w++) {
+    const week: HeatmapDay[] = []
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(start)
+      day.setDate(start.getDate() + w * 7 + d)
+      const key = localDateKey(day)
+      week.push({ date: key, count: counts.get(key) ?? 0, future: key > todayKey })
+    }
+    grid.push(week)
+  }
+  return grid
+}
+
+/**
+ * Consecutive weeks with ≥1 workout, counting back from the current week.
+ * An empty current week doesn't break the streak (it isn't over yet) —
+ * counting starts from last week instead.
+ */
+export function computeWeekStreak(logs: WorkoutLogRow[], today: Date): number {
+  const weeksWithWorkouts = new Set<string>()
+  for (const log of logs) weeksWithWorkouts.add(localDateKey(mondayOf(new Date(log.logged_at))))
+
+  const cursor = mondayOf(today)
+  if (!weeksWithWorkouts.has(localDateKey(cursor))) cursor.setDate(cursor.getDate() - 7)
+
+  let streak = 0
+  while (weeksWithWorkouts.has(localDateKey(cursor))) {
+    streak++
+    cursor.setDate(cursor.getDate() - 7)
+  }
+  return streak
+}
+
+/**
+ * Compact per-exercise summary of a workout's sets, in first-seen order.
+ * Detail collapses uniform sets ("80kg × 5 × 3 sets") and lists mixed ones
+ * ("80×5, 85×5, 85×3"); warm-up sets are marked with a "w" suffix.
+ */
+export function summarizeWorkoutSets(sets: WorkoutSetRow[]): ExerciseSummary[] {
+  const groups = new Map<string, WorkoutSetRow[]>()
+  for (const s of sets) {
+    const key = s.exercise.toLowerCase()
+    const group = groups.get(key)
+    if (group) group.push(s)
+    else groups.set(key, [s])
+  }
+
+  return Array.from(groups.values()).map((group) => {
+    const working = group.filter((s) => !s.is_warmup)
+    const uniform =
+      working.length > 1 &&
+      working.every((s) => s.weight_kg === working[0].weight_kg && s.reps === working[0].reps) &&
+      working.length === group.length
+    const detail = uniform
+      ? `${working[0].weight_kg}kg × ${working[0].reps} × ${working.length} sets`
+      : group.map((s) => `${s.weight_kg}×${s.reps}${s.is_warmup ? "w" : ""}`).join(", ")
+    return { exercise: group[0].exercise, detail, setCount: group.length }
+  })
+}
+
+/**
+ * The most recent logged sets for an exercise (case-insensitive), for
+ * last-time hints. Expects logs sorted by logged_at ascending.
+ */
+export function findLastExerciseSets(
+  logs: WorkoutLogWithSets[],
+  exercise: string
+): { date: string; sets: WorkoutSetRow[] } | null {
+  const name = exercise.trim().toLowerCase()
+  if (!name) return null
+  for (let i = logs.length - 1; i >= 0; i--) {
+    const match = (logs[i].sets ?? []).filter((s) => s.exercise.toLowerCase() === name)
+    if (match.length > 0) return { date: logs[i].logged_at, sets: match }
+  }
+  return null
 }
 
 // ============================================================================

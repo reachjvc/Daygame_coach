@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from "./supabase"
 import type { ProfileRow, ProfileUpdate } from "./types"
+import { isBetaTester } from "./betaRepo"
 
 /**
  * Repository for profiles table (user data).
@@ -59,6 +60,16 @@ export async function updateProfile(
 export async function hasPurchased(userId: string): Promise<boolean> {
   const profile = await getProfile(userId)
   return profile?.has_purchased ?? false
+}
+
+/**
+ * Check if a user has access to the standard feature set:
+ * purchased (premium) OR accepted beta tester.
+ * Premium-only surfaces should keep using hasPurchased().
+ */
+export async function hasAccess(userId: string): Promise<boolean> {
+  if (await hasPurchased(userId)) return true
+  return isBetaTester(userId)
 }
 
 /**

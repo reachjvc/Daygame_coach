@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest"
-import { buildTaxonomyItems, taxonomyVersion, cosine, matchTaxonomy, pickSuggestions, effectivePillarScores, resolveIntake } from "@/src/goals/intakeService"
+import { buildTaxonomyItems, taxonomyVersion, cosine, matchTaxonomy, pickSuggestions, effectivePillarScores, resolveIntake, splitSpans, assignSpanPillars, tailSpans, tightenSpan } from "@/src/goals/intakeService"
 import type { TaxonomyItem } from "@/src/goals/intakeService"
 
 describe("cosine", () => {
@@ -148,5 +148,146 @@ describe("buildTaxonomyItems / taxonomyVersion", () => {
     const v1 = taxonomyVersion(a)
     const b = a.map((i, idx) => (idx === 0 ? { ...i, text: i.text + " X" } : i))
     expect(taxonomyVersion(b)).not.toBe(v1)
+  })
+})
+
+describe("splitSpans", () => {
+  const GOAL = "I want to wake up everyday feeling driven to better my body, my mind, my business and my dating life."
+
+  test("splits on commas and 'and', dropping the separators", () => {
+    expect(splitSpans(GOAL).map((s) => s.text)).toEqual([
+      "I want to wake up everyday feeling driven to better my body",
+      "my mind",
+      "my business",
+      "my dating life",
+    ])
+  })
+
+  test("offsets index the ORIGINAL string, so the text can be rebuilt exactly", () => {
+    const spans = splitSpans(GOAL)
+    for (const s of spans) expect(GOAL.slice(s.start, s.end)).toBe(s.text)
+    // Gaps between spans are the separators — reassembling loses nothing.
+    let out = ""
+    let cursor = 0
+    for (const s of spans) { out += GOAL.slice(cursor, s.start) + s.text; cursor = s.end }
+    expect(out + GOAL.slice(cursor)).toBe(GOAL)
+  })
+
+  test("spans never include leading/trailing whitespace", () => {
+    for (const s of splitSpans("  a  ,   b and   c  ")) expect(s.text).toBe(s.text.trim())
+  })
+
+  test("handles empty / separator-only / no-separator input", () => {
+    expect(splitSpans("")).toEqual([])
+    expect(splitSpans("  , ; . and  ")).toEqual([])
+    expect(splitSpans("just one clause")).toEqual([{ text: "just one clause", start: 0, end: 15 }])
+  })
+
+  test("'and' only splits as a word, not inside one", () => {
+    expect(splitSpans("understanding and sandals").map((s) => s.text)).toEqual(["understanding", "sandals"])
+  })
+
+  test("other languages: Danish 'og', German 'und'", () => {
+    expect(splitSpans("min krop og mit sind").map((s) => s.text)).toEqual(["min krop", "mit sind"])
+    expect(splitSpans("mein Körper und mein Geist").map((s) => s.text)).toEqual(["mein Körper", "mein Geist"])
+  })
+})
+
+describe("assignSpanPillars", () => {
+  // 3 orthogonal axes = health / wealth. Pillar items only, so effectiveScore = own score.
+  const items: TaxonomyItem[] = [
+    { id: "health", kind: "pillar", pillarId: "health", label: "Health", text: "" },
+    { id: "wealth", kind: "pillar", pillarId: "wealth", label: "Wealth", text: "" },
+  ]
+  const vecs = [[1, 0, 0], [0, 1, 0]]
+  const m = (v: number[]) => matchTaxonomy(v, items, vecs)
+
+  test("picks the winning pillar per span", () => {
+    expect(assignSpanPillars([m([1, 0, 0]), m([0, 1, 0])])).toEqual(["health", "wealth"])
+  })
+
+  test("below the floor → null (filler words stay uncoloured)", () => {
+    expect(assignSpanPillars([m([0.2, 0.1, 0.97])], { spanFloor: 0.3 })).toEqual([null])
+  })
+
+  test("winner outside the plan's areas → null", () => {
+    expect(assignSpanPillars([m([0, 1, 0])], { allowedPillarIds: ["health"] })).toEqual([null])
+    expect(assignSpanPillars([m([0, 1, 0])], { allowedPillarIds: ["health", "wealth"] })).toEqual(["wealth"])
+  })
+
+  test("an objective can carry its pillar (effective score), like the whole-text match", () => {
+    const withObj: TaxonomyItem[] = [...items, { id: "obj_lift", kind: "objective", pillarId: "health", label: "Lift", text: "" }]
+    const withObjVecs = [...vecs, [0, 0, 1]]
+    // Matches the OBJECTIVE strongly, the health pillar not at all → health still wins.
+    expect(assignSpanPillars([matchTaxonomy([0, 0, 1], withObj, withObjVecs)])).toEqual(["health"])
+  })
+
+  test("empty input → empty output", () => {
+    expect(assignSpanPillars([])).toEqual([])
+  })
+})
+
+describe("tailSpans", () => {
+  const span = (text: string, start = 0) => ({ text, start, end: start + text.length })
+
+  test("returns word-boundary tails, longest → shortest, offsets intact", () => {
+    const src = "better my body"
+    expect(tailSpans(span(src))).toEqual([
+      { text: "better my body", start: 0, end: 14 },
+      { text: "my body", start: 7, end: 14 },
+      { text: "body", start: 10, end: 14 },
+    ])
+  })
+
+  test("offsets stay in SOURCE coordinates when the span doesn't start at 0", () => {
+    const source = "xxxxx better my body"
+    const s = span("better my body", 6)
+    for (const t of tailSpans(s)) expect(source.slice(t.start, t.end)).toBe(t.text)
+  })
+
+  test("caps at maxWords, keeping the shortest tails", () => {
+    const tails = tailSpans(span("a b c d e f g h i j"), 3)
+    expect(tails.map((t) => t.text)).toEqual(["h i j", "i j", "j"])
+  })
+
+  test("single word / collapses to itself", () => {
+    expect(tailSpans(span("body")).map((t) => t.text)).toEqual(["body"])
+  })
+})
+
+describe("tightenSpan", () => {
+  const items: TaxonomyItem[] = [
+    { id: "health", kind: "pillar", pillarId: "health", label: "Health", text: "" },
+    { id: "wealth", kind: "pillar", pillarId: "wealth", label: "Wealth", text: "" },
+  ]
+  const vecs = [[1, 0, 0], [0, 1, 0]]
+  const m = (v: number[]) => matchTaxonomy(v, items, vecs)
+  const cands = [
+    { text: "I want to better my body", start: 0, end: 24 },
+    { text: "my body", start: 17, end: 24 },
+    { text: "body", start: 20, end: 24 },
+  ]
+
+  test("picks the SHORTEST tail that's still as on-topic (drops the filler lead-in)", () => {
+    // The full clause is diluted by filler; "my body" and "body" are squarely on-topic.
+    const matches = [m([0.6, 0, 0.8]), m([1, 0, 0]), m([1, 0, 0])]
+    expect(tightenSpan(cands, matches, "health").text).toBe("body")
+  })
+
+  test("keeps the longer span when trimming genuinely loses signal", () => {
+    const matches = [m([1, 0, 0]), m([0.5, 0, 0.87]), m([0.2, 0, 0.98])]
+    expect(tightenSpan(cands, matches, "health").text).toBe("I want to better my body")
+  })
+
+  test("ratio controls how much dilution is tolerated", () => {
+    const matches = [m([1, 0, 0]), m([0.9, 0, 0.44]), m([0.2, 0, 0.98])]
+    expect(tightenSpan(cands, matches, "health", 0.99).text).toBe("I want to better my body")
+    expect(tightenSpan(cands, matches, "health", 0.85).text).toBe("my body")
+  })
+
+  test("pillar absent from every candidate → first candidate, no crash", () => {
+    const empty: TaxonomyItem[] = []
+    const matches = [matchTaxonomy([1, 0, 0], empty, []), matchTaxonomy([1, 0, 0], empty, []), matchTaxonomy([1, 0, 0], empty, [])]
+    expect(tightenSpan(cands, matches, "health")).toEqual(cands[0])
   })
 })

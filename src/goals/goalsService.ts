@@ -4,6 +4,7 @@
 
 import type { GoalWithProgress, GoalTreeNode, GoalFilterState, InputMode, CelebrationTier, MilestoneLadderConfig, HabitRampStep, PreviewGoalState, TimeOfDayBracket, WeeklyRhythm, PacingInfo, MilestoneCelebrationData, BadgeStatus, TierUpgradeEvent, WeeklyReviewData, WeeklyGoalMomentum, GoalSetupSelections, WillGateResult, BottleneckResult, GoalTemplate, PhaseTransitionEvent, GoalPeriodStats } from "./types"
 import type { DailyGoalSnapshotRow, GoalPhase, LinkedMetric, UserGoalRow } from "@/src/db/goalTypes"
+import { computeGoalProgress } from "@/src/db/goalTypes"
 import type { BatchGoalInsert } from "./treeGenerationService"
 import type { NewGoalsFlowState } from "./types"
 import { PILLARS, OBJECTIVES, TARGETS, getSharedDriver, makeCustomFrameworkTarget } from "./data/newGoalFramework"
@@ -1661,6 +1662,55 @@ export function buildFrameworkPlanInserts(state: NewGoalsFlowState): BatchGoalIn
   }
 
   return inserts
+}
+
+/**
+ * SANDBOX: materialize a framework plan as local GoalWithProgress rows — no DB,
+ * no API. Ids are the framework `_tempId`s and parents are resolved locally, so
+ * tree/track views render the plan exactly as a real save would, while nothing
+ * touches user_goals. Used by test surfaces that must stay disconnected.
+ */
+export function buildLocalPlanGoals(state: NewGoalsFlowState): GoalWithProgress[] {
+  const now = new Date().toISOString()
+  return buildFrameworkPlanInserts(state).map((ins, i) =>
+    computeGoalProgress({
+      id: ins._tempId,
+      user_id: "sandbox",
+      title: ins.title,
+      category: ins.category ?? ins.life_area ?? "custom",
+      tracking_type: ins.tracking_type ?? "counter",
+      period: ins.period ?? "weekly",
+      target_value: ins.target_value,
+      current_value: ins.current_value ?? 0,
+      period_start_date: now.slice(0, 10),
+      custom_end_date: null,
+      current_streak: 0,
+      best_streak: 0,
+      is_active: true,
+      is_archived: false,
+      linked_metric: ins.linked_metric ?? null,
+      position: i,
+      created_at: now,
+      updated_at: now,
+      life_area: ins.life_area ?? "custom",
+      parent_goal_id: ins._tempParentId,
+      target_date: ins.target_date ?? null,
+      description: ins.description ?? null,
+      goal_type: ins.goal_type ?? "recurring",
+      goal_nature: ins.goal_nature ?? null,
+      display_category: ins.display_category ?? null,
+      goal_level: ins.goal_level ?? null,
+      template_id: ins.template_id ?? null,
+      milestone_config: ins.milestone_config ?? null,
+      ramp_steps: ins.ramp_steps ?? null,
+      motivation_note: null,
+      streak_freezes_available: 0,
+      streak_freezes_used: 0,
+      last_freeze_date: null,
+      goal_phase: ins.goal_phase ?? null,
+      aligned_values: ins.aligned_values ?? [],
+    }),
+  )
 }
 
 /**

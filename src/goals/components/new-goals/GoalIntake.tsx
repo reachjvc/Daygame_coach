@@ -11,9 +11,9 @@
  * API, taxonomy vectors in localStorage), so repeat use is instant and free.
  */
 
-import { useState, useCallback } from "react"
-import { buildTaxonomyItems, taxonomyVersion, matchTaxonomy, resolveIntake } from "@/src/goals/intakeService"
-import type { IntakeMatches, IntakeResolution } from "@/src/goals/intakeService"
+import { useState, useCallback, type ReactNode } from "react"
+import { buildTaxonomyItems, taxonomyVersion, matchTaxonomy, resolveIntake, splitSpans, assignSpanPillars, tailSpans, tightenSpan } from "@/src/goals/intakeService"
+import type { IntakeMatches, IntakeResolution, TextSpan, TaxonomyItem } from "@/src/goals/intakeService"
 import { PILLARS } from "@/src/goals/data/newGoalFramework"
 import { Sparkles, Loader2 } from "lucide-react"
 
@@ -43,6 +43,75 @@ async function embed(texts: string[], onProgress?: (pct: number) => void): Promi
 
 type Phase = "idle" | "loading" | "matching" | "done" | "error"
 
+type Highlight = TextSpan & { pillarId: string }
+
+/**
+ * Which words of `text` are about which area.
+ *
+ * 1. split into clauses → 2. embed them → the area each is about (filler scores below the
+ * floor and stays uncoloured) → 3. re-score each surviving clause's word-boundary TAILS and
+ * keep the tightest one that's still on-topic, so we highlight "my body", not the whole
+ * "I want to wake up everyday feeling driven to better my body".
+ *
+ * Both embed calls are batched (one per stage) — the model is already loaded and local.
+ */
+async function highlightSpans(
+  text: string,
+  items: TaxonomyItem[],
+  vecs: number[][],
+  allowedPillarIds: string[],
+): Promise<Highlight[]> {
+  const spans = splitSpans(text)
+  if (!spans.length) return []
+
+  const spanVecs = await embed(spans.map((s) => s.text))
+  const pillars = assignSpanPillars(spanVecs.map((v) => matchTaxonomy(v, items, vecs)), { allowedPillarIds })
+
+  // Only clauses that landed on an area are worth tightening.
+  const hits = spans.map((s, i) => ({ span: s, pillarId: pillars[i] })).filter((h): h is { span: TextSpan; pillarId: string } => !!h.pillarId)
+  if (!hits.length) return []
+
+  // One flat embed for every candidate tail across every clause.
+  const cands = hits.map((h) => tailSpans(h.span))
+  const flat = cands.flat()
+  const flatVecs = await embed(flat.map((c) => c.text))
+  const flatMatches = flatVecs.map((v) => matchTaxonomy(v, items, vecs))
+
+  let offset = 0
+  return hits.map((h, i) => {
+    const group = cands[i]
+    const groupMatches = flatMatches.slice(offset, offset + group.length)
+    offset += group.length
+    return { ...tightenSpan(group, groupMatches, h.pillarId), pillarId: h.pillarId }
+  })
+}
+
+/**
+ * Draw the user's sentence with each area-bearing clause in that area's colour, over a
+ * soft wash of it. Gaps between spans (separators, filler) render plain, so the sentence
+ * reads exactly as typed — highlighting only adds colour, never edits the words.
+ */
+function renderHighlighted(text: string, spans: Highlight[]) {
+  const out: ReactNode[] = []
+  let cursor = 0
+  spans.forEach((s, i) => {
+    if (s.start > cursor) out.push(text.slice(cursor, s.start))
+    const color = PILLARS.find((p) => p.id === s.pillarId)?.color ?? "#a1a1aa"
+    out.push(
+      <span
+        key={`${s.start}-${i}`}
+        className="rounded px-1 -mx-0.5 decoration-2 underline-offset-4"
+        style={{ color, backgroundColor: `${color}1a`, textDecorationLine: "underline", textDecorationColor: `${color}80` }}
+      >
+        {s.text}
+      </span>,
+    )
+    cursor = s.end
+  })
+  if (cursor < text.length) out.push(text.slice(cursor))
+  return out
+}
+
 const PLACEHOLDER = "e.g. I want to feel good in my everyday life, wake up next to someone I like, stop a bad habit, and get my business going again…"
 
 export function GoalIntake({
@@ -63,8 +132,12 @@ export function GoalIntake({
   const [text, setText] = useState("")
   const [phase, setPhase] = useState<Phase>("idle")
   const [pct, setPct] = useState(0)
-  const [matchedAreas, setMatchedAreas] = useState<string[]>([])
-  const [editing, setEditing] = useState(true) // collapse to a slim bar once matched
+  // Matched areas carry their pillar color so the card's pills read as the same
+  // areas the plan board below uses.
+  const [matchedAreas, setMatchedAreas] = useState<{ label: string; color: string }[]>([])
+  // Clauses of the user's text that are ABOUT an area → drawn in that area's colour.
+  const [highlights, setHighlights] = useState<Highlight[]>([])
+  const [editing, setEditing] = useState(true) // collapse to the north star card once matched
   const [err, setErr] = useState("")
 
   const ensureTaxonomyVecs = useCallback(async (onProgress: (p: number) => void) => {
@@ -91,7 +164,14 @@ export function GoalIntake({
       const [qVec] = await embed([q])
       const m = matchTaxonomy(qVec, items, vecs)
       const res = resolveIntake(m)
-      setMatchedAreas(res.pillarIds.map((id) => PILLARS.find((p) => p.id === id)?.label ?? id))
+      setMatchedAreas(res.pillarIds.map((id) => {
+        const pillar = PILLARS.find((p) => p.id === id)
+        return { label: pillar?.label ?? id, color: pillar?.color ?? "#a1a1aa" }
+      }))
+      // Colour the user's own words: work out which area each clause is about, then trim
+      // each to the words actually carrying it ("…driven to better my body" → "my body").
+      // Two extra batched embeds — same local model, still no API.
+      setHighlights(await highlightSpans(q, items, vecs, res.pillarIds))
       // Hand up immediately → the plan (areas → objective questions → priority) renders below.
       onMatched(m, res)
       setPhase("done")
@@ -105,27 +185,62 @@ export function GoalIntake({
 
   const busy = phase === "loading" || phase === "matching"
 
-  // Collapsed view once matched — a slim bar so the plan below is the focus.
+  // Matched view — the north star card. Shows what the user wrote IN FULL, large, as the
+  // thing the plan below is anchored to.
   if (matched && !editing) {
     return (
-      <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 mb-6 flex items-center gap-3">
-        <Sparkles className="size-4 text-violet-300 shrink-0" />
-        <span className="text-sm text-zinc-300 truncate flex-1" title={text}>{text || "Your goal"}</span>
-        <span className="text-[10px] text-emerald-300/90 shrink-0">✓ {matchedAreas.length} area{matchedAreas.length === 1 ? "" : "s"}</span>
-        <button onClick={() => setEditing(true)} className="text-xs text-zinc-400 hover:text-white shrink-0 transition-colors">Edit</button>
+      <div className="relative overflow-hidden rounded-2xl border border-violet-400/20 bg-gradient-to-br from-violet-500/[0.12] via-white/[0.04] to-transparent px-6 py-5 mb-6">
+        {/* Soft glow behind the star mark */}
+        <div className="pointer-events-none absolute -top-16 -right-10 size-48 rounded-full bg-violet-500/20 blur-3xl" />
+
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="size-3.5 text-violet-300" />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-200/90">North Star</span>
+            <span className="h-px flex-1 bg-gradient-to-r from-violet-400/30 to-transparent" />
+            <button onClick={() => setEditing(true)} className="text-xs text-zinc-400 hover:text-white shrink-0 transition-colors">Edit</button>
+          </div>
+
+          <p className="text-lg sm:text-xl font-medium leading-relaxed text-white whitespace-pre-wrap">
+            {highlights.length ? renderHighlighted(text, highlights) : text || "Your north star"}
+          </p>
+
+          {matchedAreas.length > 0 && (
+            <div className="flex items-center gap-2 mt-4 flex-wrap">
+              <span className="text-[10px] text-zinc-500">Matched</span>
+              {matchedAreas.map((a) => (
+                <span
+                  key={a.label}
+                  className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full border"
+                  style={{
+                    color: a.color,
+                    borderColor: `${a.color}59`, // ~35% — a tinted outline, not a shout
+                    backgroundColor: `${a.color}1f`, // ~12% fill
+                  }}
+                >
+                  <span className="size-1.5 rounded-full" style={{ backgroundColor: a.color }} />
+                  {a.label}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     )
   }
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-center mb-2">What do you want?</h2>
-      <p className="text-zinc-400 text-center mb-6">Tell us in your own words — your plan builds below as we match.</p>
+      <h2 className="text-2xl font-bold text-center mb-2">What&apos;s your north star?</h2>
+      {/* The WHY: this one line is the thing every goal below gets aimed at. */}
+      <p className="text-zinc-400 text-center mb-6">
+        One line on the life you&apos;re aiming at — every goal below gets pointed at it.
+      </p>
 
       <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-6">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="size-4 text-violet-300" />
-          <span className="text-sm font-semibold text-white">Your goal</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-200/90">North Star</span>
           <span className="text-[10px] text-zinc-500">— in your own words, any language</span>
         </div>
 
@@ -147,7 +262,7 @@ export function GoalIntake({
             {phase === "loading" ? (pct > 0 ? `Loading model ${pct}%` : "Loading model…") : phase === "matching" ? "Matching…" : matched ? "Re-match" : "Match my goals"}
           </button>
           <label className="flex items-center gap-1.5 text-xs text-zinc-400 ml-auto">
-            Achieve by
+            Achieve main goal by date
             <input
               type="date"
               value={date}
@@ -163,7 +278,7 @@ export function GoalIntake({
 
         {phase === "done" && matched && (
           <p className="text-xs text-emerald-300/90 mt-3">
-            ✓ Matched {matchedAreas.length} area{matchedAreas.length === 1 ? "" : "s"}{matchedAreas.length ? ` (${matchedAreas.join(", ")})` : ""} — your plan is below ↓
+            ✓ Matched {matchedAreas.length} area{matchedAreas.length === 1 ? "" : "s"}{matchedAreas.length ? ` (${matchedAreas.map((a) => a.label).join(", ")})` : ""} — your plan is below ↓
           </p>
         )}
       </div>
