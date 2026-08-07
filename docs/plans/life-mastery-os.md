@@ -146,3 +146,60 @@ Built:
 - **Guided path extended**: "Set a goal in every area — N have none" and "Write the why for N more areas", both deep-linking into the Life Plan view (PendingAction.mode now includes "lifeplan").
 
 Verified: 1714 unit tests green (v3 suites: goalFeedsArea scoping, createAreaGoal invariants, state round-trip, per-area actions), 16/16 Playwright checks (tab nav, overview, composer, no-leak scoping, badge navigation, Track integration, triple persistence), screenshot inspected.
+
+---
+
+## v17 — AREA-FIRST REBUILD (SHIPPED 2026-07-29)
+
+The flow didn't hold together. Verified defects, not opinions: "muscle up" was classified a weekly habit and **could never be changed** (the type toggle existed only in the room row; the stage-3 cards printed the type as a dead label); `createAreaGoal` hardcoded a single flat ramp phase, so "habit ramps" weren't ramps; Commit sat SECOND and gated tracking, so you signed a manifesto before seeing your goals; stage 3 ended in a text hint while the real operating loop hid behind a header pill; and the whole method — values, driving force, identity, ritual, balancer — was buried in a collapsed "Go deeper — optional" drawer. 6 of 15 principle cards were authored but never rendered.
+
+**The new shape — the wheel is the product, a life area is the unit of work.**
+
+`mode: create | track | library` · `createStage: rooms | lifewide | commit` (renamed off "map/track" so `stage: track` and `mode: track` can never be confused again).
+
+- **Screen 1 — Your rooms.** The wheel is the first thing on screen; no preamble card, no textarea. A **ScopePicker** sets each room `deep | sketched | later`; opening a room promotes it to deep. Wheel shows three honest states (parked rooms dashed and dim, never "unfinished homework"), a soft-beat outer ring, focus dots, and "N/12 ROOMS MAPPED".
+  **Room journey, re-ordered to how the work actually happens:** 1 the picture (your 10) → *suggestions arrive on their own once the 10 is written* → 2 the gap (rate yourself only after a 10 means something) → 3 the goals → 4 the deeper work (why, pain-why, identity, and this room's own values / affirmations / incantations / rules) → connections. `roomBeats` counts 4; suggestions and connections are un-numbered aids so the panel can't promise six steps while the wheel scores four.
+- **Screen 2 — Your life, whole.** The "Go deeper" drawer is **deleted**; driving force, values journey, rules engineering, domino picker, blueprint and routine library are all in the flow. Prose path and the three interview exercises live here (whole-life exercises never belonged beside a single room).
+- **Screen 3 — Commit.** Ritual → week balancer → manifesto → **one terminal action**: "Sign & start tracking" signs and lands you in the daily loop. The signature IS the hand-off, which is what its own copy always claimed.
+- **Library (replaces the Life Plan tab).** 7 read-back pages: Areas (the old LifePlanView), Vision, Manifesto, Values, Affirmations, Driving force, The method. Per-area soft material rolls up with **provenance** — each entry tagged with the rooms that authored it.
+
+**Service layer (v17):**
+- **Third goal type `achievement`** — binary, `measure: null`, rungs as `tasks`. Verified cheap: `goalRollup`/`balancePlan`/`expectedToDate` don't branch on type at all. `VisionGoalType = GoalTemplateType | "achievement"`; `GoalTemplateType` deliberately NOT widened (shared with goalsService/treeGenerationService).
+- **`classifyGoalInput` rewritten** — R1 cadence → habit · R2 gradable-comparative escape ("get better at guitar" stays a practice) · R3 achievement cues (verbs / "first" / named achievements), R3a quantified-ascending → milestone, R3b "under/sub" stays binary (we never invent a descending `start`) · R4 bare number, now ignoring ordinals and bare years, with a distance/money unit table ("run 10k" = 10 km, not 10,000) · R5 default.
+- **Real ramps** — `createAreaGoal` takes 1-8 phases; `habits[0].daysPerWeek` follows the **LAST** phase, because `balancePlan` sizes capacity off steady state.
+- **Goal graph** — outward `feedsGoalIds` (matches the authoring gesture), reverse index computed; `addGoalEdge` fails closed on unknown id / self-edge / duplicate / cycle; `removeGoal` is the single deletion entry point and strips inbound edges.
+- **Soft layer** — `VisionAreaPlan` gains values/affirmations/incantations/rules/whyWork (the record key IS the provenance); `softLayerRollup()` is pure, never stored.
+- **`loadVisionPlanState`** returns `{state, repairs}`. The line: **repair what our own code could have produced** (dangling edges — `removeRoutineHabit` deletes goals today; persisted cycles; a habit_ramp that lost its phases) and **hard-reject what only corruption can** (milestone with no measure). Repairs are rendered as a dismissible notice — reported, never swallowed. Broken `priorityIds` stays fatal. `parseVisionPlanState` is now a thin wrapper, so the whole prior test contract passes untouched.
+- **Persistence: key stays `visionPlanSandbox_v1`.** Every addition optional; a bump would orphan existing plans with no upgrade path — silent total data loss.
+
+**Framework assets closed out:** all **15/15** principle cards now placed (`vision`, `identity`, `tens`, `rpm`, `evening`, `sos` were dead); `MASTERY_TEN_KEYS`, `MASTERY_THREE_LEVELS`, `PLATEAU_DOCTRINE` and `MANIFESTO_OPENER_TEMPLATE` now render in the Library. Raw `LIFE_MASTERY_CORPUS` deliberately stays internal grounding (provenance-or-silence).
+
+**A decision I re-broke and then honoured:** v17 initially re-added `yourZeros` because `life-mastery-canon.md` still mentions "area zeros". That mention is itself the stale artifact — on 2026-07-28 the corpus was checked directly and the answer was NO (he uses the 0-10 *scale* and hammers defining your 10, but never asks you to write your 0), and the field was removed by user decision. Re-added from a doc, removed again after checking the record. **The canon doc's "area zeros" line should be deleted** so it stops re-seeding this.
+
+**Bugs found and fixed during the build:** a stale closure made auto-suggestion a silent no-op (it re-read `yourTens` from before the blur that armed it — now takes the fresh text and errors loudly); `setGoals` called inside a `setSuggestions` updater double-added every accepted goal (React re-invokes updaters); goal deletion left dangling links; and `FoundationSection part="values"` was gated on `committedAt`, which made the values exercise unreachable once Commit moved last.
+
+Verified: **1847 unit tests green** (56 new v17 assertions), `scripts/vision-plan-flow-audit.mjs` **30/30 pass** (rewritten for the new order; now also asserts the drawer's absence and that every principle id renders), typecheck clean, and the whole flow walked in the browser cold-start → sign → tracking → library.
+
+**Known follow-up:** the room suggestion call took ~26s in testing — a long time on "Reading your 10…". Worth addressing before real users.
+
+
+---
+
+## v18 — THE REASONS (2026-07-29, same day)
+
+User verdict on v17: *"the more reasons etc. isn't really something the system makes easy. I might write a goal like 'get a girlfriend', but brainstorming all the different [reasons] would be a good idea."* Correct — and the diagnosis was not "the feature is missing".
+
+**The actual problem was sprawl, not absence.** A single goal already carried SIX why-shaped fields (`why`, `painWhy`, `reasonsList`, plus `whoItServes`/`unlocks`/`firstStep` — the last three added in v17 that same day and **never rendered, 0 UI references**), on top of `areaPlans.purpose`, `areaPlans.whyWork`, `drivingForce.purpose` and `drivingForce.reasons`. "Why" had been answered by adding another field eight times. Building a brainstorm *beside* them would have been the ninth.
+
+So: **deleted** `whoItServes`/`unlocks`/`firstStep` (types, zod, `createAreaGoal`, tests), keeping three that genuinely differ — `why` (the one line), `painWhy` (the cost of not), `reasonsList` (the hundred) — and made the third one work.
+
+**`ReasonsDrill` rebuilt in place** (not a new component beside it). It was a collapsed disclosure, one blank `Because…` input and a `0/100` counter: it told you the gold was past thirty and handed you an empty box. Now:
+- **Vehicle → ends.** `readGoalVehicle()` reuses `VEHICLE_CONVERSIONS` — previously wired ONLY into the values exercise, never into goals. "Get a girlfriend" is a vehicle; the card names what it's actually for and each end is a one-tap starter reason. Returns null rather than guessing when no vehicle word is present.
+- **A prompt class instead of a blank box.** `REASON_PROMPTS` — eight angles (the daily texture · the body · who you become · the cost of not · who else feels it · what it unlocks · the proof · the feeling) with an "another angle →" cycler. Nobody produces 100 from nothing; they produce 12 from one angle and stop.
+- **Expansion in the user's own voice**, via the accept-tray doctrine already proven by the room suggestions: write two or three, get 20 more written as a style-match, keep/discard each or keep-all. New fail-closed route `POST /api/goals/vision-plan/reasons` + `buildReasonsPrompt`/`parseReasonsResponse` (dedupes against existing AND within the batch; an all-duplicate batch throws rather than returning a silent empty list).
+
+**Deliberate copy decision:** the prompt instructs the model NOT to sanitise, and the drill's own line now reads "nothing left out because it sounds bad written down". The doctrine is *no filter* — and a reason list you'd be comfortable reading to your mother is a reason list that doesn't move you. Live output on "get a girlfriend" included "Because sex. I'm not going to pretend otherwise" and "Because sundays are unbearable", which is the register that works. The values-facing `VEHICLE_CONVERSIONS` ends stay values-shaped (Love/Intimacy/Passion/Companionship/Connection) because that table is shared with the values journey; the bluntness lives in the reason prompts, where it belongs.
+
+**Bug found on the way, on the exact example goal:** `"get a girlfriend"` matched `/friend|social|community/` and resolved to **Friends**, because the Friends rule sits above Relationship and "girlfriend" contains "friend". Fixed with `\bfriend`, and Relationship now also matches girlfriend/boyfriend/dating/dates/husband/wife/spouse.
+
+Verified: 1857 unit tests (10 new), flow audit 30/30, and the whole drill walked in the browser — vehicle card, all eight angles, live expansion, keep-one / discard / keep-all, persistence.

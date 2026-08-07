@@ -18,14 +18,14 @@ export const RITUAL_LIBRARY: VisionRitualItem[] = [
   { id: "rit-bed", title: "Make your bed", minutes: 2 },
   { id: "rit-vision", title: "Read your vision out loud", minutes: 2 },
   { id: "rit-questions", title: "Ask your 8 empowering questions", minutes: 5 },
-  { id: "rit-incantations", title: "Speak your incantations — out loud, full body", minutes: 5 },
+  { id: "rit-incantations", title: "Speak your incantations. Out loud, full body", minutes: 5 },
   { id: "rit-gratitude", title: "Write three gratitudes", minutes: 3 },
   { id: "rit-breath", title: "Breathwork / priming", minutes: 5 },
   { id: "rit-meditate", title: "Meditate", minutes: 10 },
-  { id: "rit-move", title: "Move — stretch, walk or quick workout", minutes: 10 },
+  { id: "rit-move", title: "Move, stretch, walk or quick workout", minutes: 10 },
   { id: "rit-read", title: "Read 10 pages", minutes: 15 },
   { id: "rit-journal", title: "Journal", minutes: 5 },
-  { id: "rit-plan", title: "Plan your day — pick 3-5 must items", minutes: 5 },
+  { id: "rit-plan", title: "Plan your day, pick 3-5 must items", minutes: 5 },
   { id: "rit-cold", title: "Cold shower finish", minutes: 3 },
   { id: "rit-sunlight", title: "Daylight on your face", minutes: 10 },
 ]
@@ -54,15 +54,15 @@ export const RITUAL_DIMENSIONS: Record<string, "mind" | "body" | "spirit"> = {
  * morning (his examples: Money Tuesday, biweekly relationship journal,
  * magic-moment jar). Weekday 0=Mon … 6=Sun. */
 export const WEEKLY_RITUAL_LIBRARY: VisionWeeklyRitual[] = [
-  { id: "writ-money", title: "Money Tuesday — 30 min with your numbers", areaId: "lm_money", weekday: 1 },
-  { id: "writ-relationship", title: "Relationship journal — six needs rated 0-10, one appreciation, love-language check (bi-weekly)", areaId: "lm_relationship", weekday: 3, everyOtherWeek: true },
-  { id: "writ-family", title: "Call home — no agenda, just presence", areaId: "lm_family", weekday: 6 },
+  { id: "writ-money", title: "Money Tuesday. 30 min with your numbers", areaId: "lm_money", weekday: 1 },
+  { id: "writ-relationship", title: "Relationship journal. Six needs rated 0-10, one appreciation, love-language check (bi-weekly)", areaId: "lm_relationship", weekday: 3, everyOtherWeek: true },
+  { id: "writ-family", title: "Call home, no agenda, just presence", areaId: "lm_family", weekday: 6 },
   { id: "writ-adventure", title: "Plan one small adventure for the weekend", areaId: "lm_fun", weekday: 3 },
   { id: "writ-friends", title: "Reach out to one friend you haven't heard from", areaId: "lm_friends", weekday: 4 },
   // Monthly slots (his documented monthly cadences; quarterly/yearly still tracked as a gap)
-  { id: "writ-pl", title: "Monthly money review — go through the month's profit & loss", areaId: "lm_money", weekday: 0, monthlyDay: 1 },
-  { id: "writ-romance", title: "Plan one romantic experience this month — create magical moments", areaId: "lm_relationship", weekday: 0, monthlyDay: 3 },
-  { id: "writ-jar-open", title: "Open the magic-moment jar — pull a few notes, reminisce", areaId: null, weekday: 0, monthlyDay: 28 },
+  { id: "writ-pl", title: "Monthly money review. Go through the month's profit & loss", areaId: "lm_money", weekday: 0, monthlyDay: 1 },
+  { id: "writ-romance", title: "Plan one romantic experience this month. Create magical moments", areaId: "lm_relationship", weekday: 0, monthlyDay: 3 },
+  { id: "writ-jar-open", title: "Open the magic-moment jar. Pull a few notes, reminisce", areaId: null, weekday: 0, monthlyDay: 28 },
 ]
 
 /** Preset compositions summing to ~15/30/60 minutes — ORDER IS THE RITUAL. */
@@ -77,7 +77,7 @@ export const ROUTINE_CATEGORIES: RoutineCategory[] = [
     id: "morning",
     label: "Morning routine",
     pillarIds: ["meaning", "health"],
-    why: "How you start the day decides how the day goes — a small morning stack you can win every day.",
+    why: "How you start the day decides how the day goes. A small morning stack you can win every day.",
     items: [
       { id: "meditate", title: "Meditate 10 minutes", daysPerWeek: 5 },
       { id: "sunlight", title: "Morning walk in daylight", daysPerWeek: 5 },
@@ -93,7 +93,7 @@ export const ROUTINE_CATEGORIES: RoutineCategory[] = [
     id: "night",
     label: "Night routine",
     pillarIds: ["health", "vices"],
-    why: "Good days are set up the night before — wind down, reset your space, protect your sleep.",
+    why: "Good days are set up the night before. Wind down, reset your space, protect your sleep.",
     items: [
       { id: "cleanup", title: "Nightly 10-minute cleanup", daysPerWeek: 5 },
       { id: "screens-off", title: "Screens off 1 hour before bed", daysPerWeek: 5 },
@@ -109,13 +109,13 @@ export const ROUTINE_CATEGORIES: RoutineCategory[] = [
     id: "work",
     label: "Work routine",
     pillarIds: ["wealth"],
-    why: "Compounding output comes from a few protected work habits, not from more hours.",
+    why: "Compounding output comes from a few protected work habits.",
     items: [
       { id: "mit", title: "One most-important task, done first", daysPerWeek: 5 },
       { id: "deep-work", title: "90-minute deep work block", daysPerWeek: 5 },
-      { id: "shutdown", title: "Daily shutdown — clear inbox, plan tomorrow", daysPerWeek: 5 },
+      { id: "shutdown", title: "Daily shutdown. Clear inbox, plan tomorrow", daysPerWeek: 5 },
       { id: "weekly-review", title: "Weekly review", daysPerWeek: 1 },
-      { id: "money-tuesday", title: "Money Tuesday — 30 min with your numbers", daysPerWeek: 1 },
+      { id: "money-tuesday", title: "Money Tuesday. 30 min with your numbers", daysPerWeek: 1 },
       { id: "no-social-morning", title: "No social media before noon", daysPerWeek: 5 },
       { id: "inbox-zero", title: "Inbox to zero once a day", daysPerWeek: 5 },
       { id: "learn-craft", title: "30 minutes sharpening your craft", daysPerWeek: 3 },
@@ -129,7 +129,7 @@ export const ROUTINE_CATEGORIES: RoutineCategory[] = [
     why: "A body you're proud of is built from sessions you don't skip.",
     items: [
       { id: "strength", title: "Strength session", daysPerWeek: 3 },
-      { id: "cardio", title: "Cardio — run, bike or swim", daysPerWeek: 2 },
+      { id: "cardio", title: "Cardio, run, bike or swim", daysPerWeek: 2 },
       { id: "steps", title: "10k steps", daysPerWeek: 5 },
       { id: "mobility", title: "10-minute stretch / mobility", daysPerWeek: 4 },
       { id: "protein", title: "Hit your protein target", daysPerWeek: 5 },
@@ -142,7 +142,7 @@ export const ROUTINE_CATEGORIES: RoutineCategory[] = [
     id: "social",
     label: "Social & connection",
     pillarIds: ["relations"],
-    why: "Relationships compound like money — small consistent deposits.",
+    why: "Relationships compound like money, on small consistent deposits.",
     items: [
       { id: "reach-out", title: "Reach out to one friend", daysPerWeek: 3 },
       { id: "conversation", title: "Start one conversation with a stranger", daysPerWeek: 3 },

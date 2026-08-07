@@ -14,8 +14,10 @@ export const VEHICLE_CONVERSIONS: Array<{ match: RegExp; label: string; ends: st
   { match: /career|work|job|business|success/i, label: "Career/success", ends: ["Growth", "Significance", "Contribution", "Freedom"] },
   { match: /fitness|gym|body|training|sport/i, label: "Fitness", ends: ["Health", "Vitality", "Confidence", "Discipline"] },
   { match: /travel|adventure|explor/i, label: "Travel", ends: ["Adventure", "Freedom", "Growth"] },
-  { match: /friend|social|community/i, label: "Friends", ends: ["Connection", "Belonging", "Fun"] },
-  { match: /relationship|partner|marriage|love life/i, label: "Relationship", ends: ["Love", "Intimacy", "Connection"] },
+  // \bfriend so "girlfriend"/"boyfriend" fall through to Relationship below —
+  // without the boundary, "get a girlfriend" reads as a friendship goal.
+  { match: /\bfriend|social|community/i, label: "Friends", ends: ["Connection", "Belonging", "Fun"] },
+  { match: /relationship|partner|marriage|love life|girlfriend|boyfriend|dating|\bdates?\b|husband|wife|spouse/i, label: "Relationship", ends: ["Love", "Intimacy", "Passion", "Companionship", "Connection"] },
   { match: /god|faith|church|religio|spiritual/i, label: "Faith", ends: ["Faith", "Peace", "Purpose"] },
   { match: /learn|knowledge|read|study|education/i, label: "Learning", ends: ["Growth", "Wisdom", "Curiosity"] },
   { match: /helping|giving|volunteer|charity/i, label: "Helping others", ends: ["Contribution", "Love", "Purpose"] },

@@ -669,6 +669,25 @@ export interface VisionWeeklyOutcome {
 }
 
 /** One Weekly Evaluation Ritual (PLM): rate every life area, note, pick a focus. */
+/**
+ * v23 — the weekly review as it is being written, before it is saved.
+ * Persisted on every keystroke so leaving the page mid-review no longer throws
+ * the whole thing away. Every field is optional except the week it belongs to.
+ */
+export interface VisionWeeklyDraft {
+  weekStart: string
+  areaRatings: Record<string, number>
+  note?: string
+  focusPillarId?: string | null
+  magicMoment?: string
+  accomplishment?: string
+  lesson?: string
+  challenge?: string
+  outcomes?: VisionWeeklyOutcome[]
+  captures?: Array<{ text: string; areaId: string | null }>
+  savedAt: string
+}
+
 export interface VisionWeeklyReview {
   /** ISO date of the reviewed week's first day (startDate-anchored weeks). */
   weekStart: string
@@ -737,6 +756,12 @@ export interface VisionDrivingForce {
    * enjoy my life even more, while feeling even more fully alive and growing
    * and making a difference?"). */
   primaryQuestion?: string
+  /** v23 — the habitual question the primary question REPLACED. Kept so the
+   * user can see what they rewrote away from; that contrast is the exercise. */
+  primaryQuestionOld?: string
+  /** v23 — the mission's three parts, kept separately so "rewrite it" can
+   * repopulate the boxes instead of demanding all three be retyped. */
+  missionParts?: { name: string; be: string; doGive: string }
 }
 
 /** Monthly-report verdict per goal — Stefan's observed status taxonomy. */
@@ -749,6 +774,14 @@ export type VisionGoalVerdict =
   | "modified"
   | "cancelled"
   | "rescheduled"
+  // v21 — the outcomes he actually reports that our taxonomy had no word for.
+  // Without these, every non-hit collapses to "missed", which is not how he
+  // talks about his own 80-90% year.
+  | "pushed"
+  | "reshaped"
+  | "displaced"
+  | "paused"
+  | "deferred-by-choice"
 
 /** A confirmed verdict + its reason ("every non-achieved status carries a reason"). */
 export interface VisionVerdictEntry {
@@ -795,6 +828,12 @@ export interface VisionProgress {
   /** v9 — numeric RESULT logging for milestone goals: goalId → dated readings
    * (his reports show GOAL / RESULT / PROGRESS with exact numbers). */
   measureLogs?: Record<string, VisionMeasureLog[]>
+  /** v23 — the in-progress weekly review, saved as it is typed. Cleared when
+   * the review is saved for real. */
+  weeklyDraft?: VisionWeeklyDraft
+  /** v23 — the last date the daily loop was opened, so roll-over covers every
+   * day the user was away instead of only yesterday. */
+  lastSeen?: string
 }
 
 /** One dated numeric reading of a milestone goal's measure. */
@@ -837,8 +876,36 @@ export interface VisionPlanState {
   yourTens?: Record<string, string>
   /** v3 — Blueprint area id → the area's own name/purpose/identity (Life Plan). */
   areaPlans?: Record<string, VisionAreaPlan>
-  /** v4 — the season's 1-3 domino areas ("which area, conquered, lifts all the others?"). */
+  /** v4 — the season's 1-3 domino areas ("which area, conquered, lifts all the others?").
+   * v19: this is now a PROJECTION of `areaRank` — its top `focusCount` entries.
+   * Written only by setAreaPriority(); never assign it directly. */
   focusAreaIds?: string[]
+  /** v20 — single or partnered; picks which relationship toolkit to show. */
+  relationshipStatus?: "single" | "partnered" | "unset"
+  /** v20 — approach-ladder reps by rung level. */
+  approachReps?: Record<string, number>
+  /** v21 — limiting beliefs being worked, with their reference counts. */
+  beliefs?: Array<{
+    id: string
+    old: string
+    replacement?: string
+    useful?: boolean
+    evidence?: string[]
+    references?: string[]
+    startedAt?: string
+  }>
+  /** v21 — the divergent phase: raw brainstormed wants with a horizon number
+   * and whether they were circled into this year's set. */
+  rawWants?: Array<{ id: string; text: string; years: 1 | 3 | 5 | 10 | 20 | null; circled: boolean }>
+  /** v20 — guided-build sessions completed (ids from GUIDE_SESSIONS). */
+  guideDone?: string[]
+  /** v20 — the annual debrief he treats as a prerequisite to goal setting.
+   * Good strictly first; the no-"but" rule is enforced in the UI copy. */
+  yearDebrief?: { good: string[]; challenges: string[]; lessons: string[] }
+  /** v19 — every area in the user's priority order for this season. The single
+   * source of truth for area priority: "focus" and "maintenance" are tiers of
+   * this list, not separate state. */
+  areaRank?: string[]
   /** v6 — the user's own incantation cards (added on top of the canon deck). */
   incantations?: string[]
   /** v8 — 1-3yr wants circled out of the vision brainstorm, waiting to be
@@ -872,15 +939,41 @@ export interface VisionPlanState {
    * Re-rating during create overwrites both: pre-commit is a design session,
    * not a tracking log — the history that matters is progress.weeklyReviews. */
   baselineRatedAt?: Record<string, string>
-  /** v17 — area id → what YOUR 0 looks like: the opposite pole of your 10, so
-   * a rating measures against both ends instead of against nothing. */
-  yourZeros?: Record<string, string>
   /** v17 — life-wide affirmations (the global peer of values / incantations /
    * valueRules; per-area ones live in areaPlans[id].affirmations). */
   affirmations?: string[]
   /** v17 — how deep the user is going in each area this pass. Absent = "later".
    * Commitment stays 12/12 (the manifesto); attention scopes to a few. */
   areaScope?: Record<string, "deep" | "sketched" | "later">
+  /** v23 — the raw vision prose as typed, when it differs from the ANALYSED
+   * `vision`. The Guide's vision textarea writes this. */
+  visionDraft?: string
+  /** v23 — the morning-ritual audit worksheet (the acts you already do, marked
+   * empowering or draining). The draining ones are what the designed ritual is
+   * replacing, so they have to survive alongside it. */
+  ritualAudit?: Array<{ id: string; text: string; mark: "up" | "down" | null }>
+  /** v23 — the rules exercise's worksheet: the rule as your head states it,
+   * beside its rewrite. `valueRules` keeps only the rewrites. */
+  ruleWork?: Array<{ id: string; value: string; old: string; rewritten?: string }>
+  /** v23 — approach-session debriefs. */
+  sessionJournals?: Array<{ id: string; date: string; reps: string; body: string; felt: string; her: string; next: string }>
+  /** v25 — question ids the intake has revealed. A question lands here when it
+   * is answered AND when it is waved past with "I'm not sure yet", which is how
+   * an unanswered question can still let the next one appear. Order is reveal
+   * order, so it doubles as the trail of how far the user got. */
+  intakeSeen?: string[]
+  /** v25 — Blueprint area id → what YOUR 0 looks like. The source teaches the 0
+   * in the same breath as the 10 ("what is the ten for you and then what is a
+   * zero for you"), and the weekly wheel needs both ends to mean anything. */
+  yourZeros?: Record<string, string>
+  /** v25 — the Perfect Day exercise: one day, years out, written hour by hour.
+   * It is the on-ramp when the vision box is too big to start, and it is its own
+   * artifact because it gets re-read on its own.
+   *
+   * The rest of the goal qualification stack (desire, reward, stake, obstacles,
+   * pain-why, the sentence) already lives on VisionGoalDraft. Do not add a
+   * parallel store for it here. */
+  perfectDay?: string
 }
 
 /** One pickable habit template in the routine library (M10). */
@@ -990,6 +1083,14 @@ export interface VisionHabit {
    * through — slot k of the week runs days[k % days.length]. Null/absent = a
    * plain habit. */
   routine?: HabitRoutine | null
+  /**
+   * M8 — a stand-in, not a chosen action. Every goal is created with one habit
+   * so it has something on the calendar, and for a target or a finish line
+   * that habit is auto-titled "Work toward: <the goal>", which is not a thing
+   * anyone can actually do. Marking it lets the card ask for the real actions
+   * instead of showing a placeholder as though the user had written it.
+   */
+  placeholder?: boolean
 }
 
 /** One named day inside a habit's routine (M11). */
@@ -1021,12 +1122,75 @@ export interface VisionTask {
   dueOffsetDays: number
 }
 
-/** The measurable ladder for a milestone_ladder goal — maps 1:1 onto MilestoneLadderConfig. */
+/** The measurable ladder for a milestone_ladder goal — maps 1:1 onto MilestoneLadderConfig.
+ *
+ * `start` may be GREATER than `target`: body fat, race times, debt and ranks all
+ * improve downward. Every consumer of this type must read direction from the
+ * pair, never assume start < target (see `measureDirection`). */
 export interface VisionMeasure {
   unit: string
   start: number
   target: number
   steps: number
+  /** M6 — how the measure is worked, when the number alone doesn't say it:
+   * "3×6-8", "5/3/1", "AMRAP". Display-only; no progress math reads it. Kept
+   * off the title so the title stays the movement's name. */
+  protocol?: string
+}
+
+/**
+ * M7 — where a written line actually belongs. A goal list is not a list of
+ * goals: it mixes in identity statements, standing rules, and outcomes nobody
+ * controls. Each has a real home in state already; intake's job is to OFFER
+ * the route, never to take it silently.
+ */
+export type GoalRoute = "goal" | "identity" | "rule" | "horizon-want"
+
+export const GOAL_ROUTES: readonly GoalRoute[] = ["goal", "identity", "rule", "horizon-want"] as const
+
+/**
+ * What intake made of one written line. `route` is a SUGGESTION — the review
+ * screen defaults to "goal" and offers the alternative beside it, because a
+ * mis-route on a real goal is worse than no routing at all.
+ */
+export interface GoalReading {
+  title: string
+  type: VisionGoalType
+  why: string
+  daysPerWeek: number
+  measure: VisionMeasure | null
+  targetDate: string | null
+  /** M7 — the suggested destination, with the cue that triggered it. */
+  route: GoalRoute
+  /** The literal matched text that produced a non-"goal" route; null otherwise.
+   * Shown to the user so the suggestion is inspectable, never magic. */
+  routeCue: string | null
+  /** M3 — set when the line names a MONTHLY rhythm. A monthly cadence is not a
+   * weekly habit; it belongs in `VisionWeeklyRitual.monthlyDay`. Flagged rather
+   * than silently rounded to "once a week". */
+  monthly?: boolean
+}
+
+/** One line of a pasted goal list, as read by `parseGoalList`. */
+export interface GoalListRow {
+  id: string
+  /** The line exactly as the user wrote it. */
+  raw: string
+  reading: GoalReading
+  /** Blueprint area from the nearest preceding heading, or null when unresolved
+   * — the review screen REQUIRES the user to resolve these before accepting. */
+  areaId: string | null
+  /** The heading text this row sat under, for display ("Health", "Dating"). */
+  heading: string | null
+  /** M9 — id of the row this one is indented under, when the list nests. */
+  parentRowId: string | null
+}
+
+/** The full reading of a pasted list. Pure — writes nothing. */
+export interface GoalListParse {
+  rows: GoalListRow[]
+  /** Headings we could not map to any Blueprint area, in order of appearance. */
+  unresolvedHeadings: string[]
 }
 
 /**
@@ -1095,10 +1259,97 @@ export interface VisionGoalDraft {
    * feeds the money goal I already wrote", never re-opening the target.
    * Acyclic by construction — addGoalEdge refuses an edge that closes a loop. */
   feedsGoalIds?: string[]
-  /** v17 — "Who else does this goal serve?" */
-  whoItServes?: string | null
-  /** v17 — "What does this make possible that isn't possible now?" */
-  unlocks?: string | null
-  /** v17 — "What's the smallest first move you can make this week?" */
-  firstStep?: string | null
+}
+
+// ---------------------------------------------------------------------------
+// The simple Life Mastery flow (/test/life-mastery).
+//
+// Three screens: your why, your areas, then a why per goal. Deliberately its
+// own shape rather than a slice of VisionPlanState — that state carries the
+// whole daily/weekly/monthly system and none of it belongs here. Nothing in
+// this flow touches the database; it lives in localStorage.
+// ---------------------------------------------------------------------------
+
+export type LifeMasteryStepId = "why" | "areas" | "goals"
+
+/** One goal, written in an area on step 2 and qualified on step 3. */
+export interface SimpleGoal {
+  id: string
+  /** A Blueprint area id, or a custom area the user added. */
+  areaId: string
+  title: string
+  /** Why you want it. The one field step 3 exists for. */
+  why: string
+  /** What it costs you if you do not do it. */
+  painWhy: string
+  /** YYYY-MM-DD, or null while it is open. */
+  targetDate: string | null
+  /** 0-10 that you can do it. Under 7 the goal wants shrinking. */
+  beliefLevel: number | null
+  /** 0-10 that you want it. Under 7 the goal wants dropping. */
+  desireLevel: number | null
+  /** The goal as one sentence, starting with "I will easily". */
+  sentence: string
+}
+
+/** A user's changes to one of the twelve Blueprint areas. */
+export interface SimpleAreaEdit {
+  /** A name that means something to them. Absent means the Blueprint name. */
+  label?: string
+  /** Areas they are not working on this year. They stay, greyed. */
+  hidden?: boolean
+}
+
+/** An area the user added themselves, on top of the twelve. */
+export interface SimpleCustomArea {
+  id: string
+  label: string
+  color: string
+}
+
+export interface LifeMasteryPlan {
+  version: 1
+  /** Step 1, keyed by WHY_QUESTIONS id. Every answer is plain text. */
+  answers: Record<string, string>
+  areaEdits: Record<string, SimpleAreaEdit>
+  customAreas: SimpleCustomArea[]
+  goals: SimpleGoal[]
+  /**
+   * Monotonic id counters. Deriving the next id from the highest id in the
+   * list hands a deleted goal's id to the next one written, and anything
+   * keyed by that id (a React row, an open editor) then shows the dead goal's
+   * state on the new one. These only ever go up.
+   */
+  goalSeq: number
+  areaSeq: number
+  /** How far out the vision sits: 5, 10 or 20 years. His own range. */
+  horizonYears: number
+  /** ISO timestamp of the last change, for the saved indicator. */
+  updatedAt: string | null
+}
+
+/** An area as the flow renders it: Blueprint area or custom, edits applied. */
+export interface ResolvedArea {
+  id: string
+  label: string
+  /** Empty for custom areas. */
+  sublabel: string
+  color: string
+  textColor: string
+  hidden: boolean
+  custom: boolean
+  /** True when the user renamed it away from the Blueprint name. */
+  renamed: boolean
+}
+
+export interface LifeMasteryProgress {
+  visionAnswered: boolean
+  whyAnswered: boolean
+  /** How many of the seven ladder rungs carry an answer. */
+  rungsAnswered: number
+  goals: number
+  areasWithGoals: number
+  goalsWithWhy: number
+  /** Steps that are done, in flow order. */
+  done: Record<LifeMasteryStepId, boolean>
 }

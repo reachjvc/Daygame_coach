@@ -3,6 +3,7 @@ import {
   deriveIntents,
   confidenceTier,
   buildGoalGenPrompt,
+  dropDuplicateSuggestions,
   parseGoalGenResponse,
   measureToLadderConfig,
   balancePlan,
@@ -79,6 +80,27 @@ import {
   classifyGoalInput,
   loadVisionPlanState,
   softLayerRollup,
+  readGoalVehicle,
+  REASON_PROMPTS,
+  setAreaPriority,
+  deriveAreaRank,
+  GUIDE_SESSIONS,
+  CORRECTION_MOVES,
+  CORRECTION_GUARD_RAIL,
+  BIWEEKLY_CHECKIN,
+  biweeklyCheckinDue,
+  beliefConditioning,
+  paretoKeepCount,
+  circledThisYear,
+  HORIZON_YEARS,
+  guideSession,
+  guideProgress,
+  guideSittingWarning,
+  areaTier,
+  nextLevelTarget,
+  MAX_FOCUS_AREAS,
+  buildReasonsPrompt,
+  parseReasonsResponse,
   goalFeeders,
   goalEdges,
   wouldCycle,
@@ -312,6 +334,51 @@ describe("buildGoalGenPrompt", () => {
     expect(prompt).toContain("obj_business")
     expect(prompt).toContain("STRICT JSON")
   })
+
+  // v25 — the room tray re-drafts on every goal the user writes, so the prompt
+  // has to say what the room already holds and that rule 1 is off.
+  it("stays a plan build when suggestFor is absent", () => {
+    expect(buildGoalGenPrompt(REQ)).not.toContain("SUGGESTION-TRAY MODE")
+  })
+
+  it("switches to tray mode, lists what the room already has, and leads with the anchor", () => {
+    const prompt = buildGoalGenPrompt({
+      ...REQ,
+      suggestFor: { anchor: "Bench 100 kg", have: ["Bench 100 kg", "Gym 4x/week"] },
+    })
+    expect(prompt).toContain("SUGGESTION-TRAY MODE")
+    expect(prompt).toContain("OVERRIDES rule 1")
+    expect(prompt).toContain("- Bench 100 kg")
+    expect(prompt).toContain("- Gym 4x/week")
+    expect(prompt).toContain('THE LINE THEY JUST WROTE: "Bench 100 kg"')
+  })
+
+  it("omits the anchor line when the tray was seeded by the 10 alone", () => {
+    const prompt = buildGoalGenPrompt({ ...REQ, suggestFor: { anchor: null, have: ["Gym 4x/week"] } })
+    expect(prompt).toContain("SUGGESTION-TRAY MODE")
+    expect(prompt).toContain("- Gym 4x/week")
+    expect(prompt).not.toContain("THE LINE THEY JUST WROTE")
+  })
+})
+
+describe("dropDuplicateSuggestions", () => {
+  it("drops what the room already holds, however it is worded", () => {
+    const out = dropDuplicateSuggestions(
+      [{ title: "Bench 100 KG" }, { title: "gym  4x/week!" }, { title: "Sleep 8 hours" }],
+      ["Bench 100 kg", "Gym 4x/week"],
+    )
+    expect(out.map((g) => g.title)).toEqual(["Sleep 8 hours"])
+  })
+
+  it("drops repeats inside one batch and returns nothing when every draft is a repeat", () => {
+    expect(dropDuplicateSuggestions([{ title: "Sleep 8 hours" }, { title: "sleep 8 hours" }], []).length).toBe(1)
+    expect(dropDuplicateSuggestions([{ title: "Bench 100 kg" }], ["bench 100 kg"])).toEqual([])
+  })
+
+  it("keeps everything when the room is empty", () => {
+    const drafts = [{ title: "Sleep 8 hours" }, { title: "Walk 10k steps" }]
+    expect(dropDuplicateSuggestions(drafts, [])).toEqual(drafts)
+  })
 })
 
 describe("VisionPlanRequestSchema", () => {
@@ -319,6 +386,14 @@ describe("VisionPlanRequestSchema", () => {
     expect(VisionPlanRequestSchema.safeParse(REQ).success).toBe(true)
     expect(VisionPlanRequestSchema.safeParse({ vision: "x", intents: [] }).success).toBe(false)
     expect(VisionPlanRequestSchema.safeParse({ vision: "a".repeat(3000), intents: REQ.intents }).success).toBe(false)
+  })
+
+  it("accepts a tray refill and rejects an oversized one", () => {
+    const tray = (have: string[]) => ({ ...REQ, suggestFor: { anchor: "Bench 100 kg", have } })
+    expect(VisionPlanRequestSchema.safeParse(tray(["Gym 4x/week"])).success).toBe(true)
+    expect(VisionPlanRequestSchema.safeParse({ ...REQ, suggestFor: { anchor: null, have: [] } }).success).toBe(true)
+    expect(VisionPlanRequestSchema.safeParse(tray(Array(61).fill("Gym"))).success).toBe(false)
+    expect(VisionPlanRequestSchema.safeParse(tray(["a".repeat(200)])).success).toBe(false)
   })
 })
 
@@ -518,6 +593,9 @@ function makeGoal(habitsDaysPerWeek: number[], taskOffsets: number[] = []): Visi
     tasks: taskOffsets.map((o, i) => ({ id: `${gid}-t${i}`, title: `${gid} task ${i}`, dueOffsetDays: o })),
     measure: null,
     rampSteps: [{ frequencyPerWeek: 3, durationWeeks: 4 }],
+    // v24 — one taxonomy: every goal carries its area explicitly. The loader
+    // stamps it for legacy blobs, so a fixture without it isn't round-trippable.
+    areaId: "lm_health",
   }
 }
 
@@ -1341,15 +1419,24 @@ describe("PLM Blueprint — life mastery areas", () => {
     expect(BLUEPRINT_ROWS.flatMap((r) => r.areaIds)).not.toContain("lm_spirituality")
   })
 
-  it("blueprintCoverage lights areas via the goals' pillars", () => {
+  // v23 — a goal feeds exactly ONE area. The pillar map is many-to-many, and
+  // fanning a goal out across every mapped area inflated every coverage number
+  // in the product (one "meaning" goal used to light six wedges).
+  it("blueprintCoverage lights exactly one area per goal", () => {
     const covered = blueprintCoverage([{ pillarId: "health" }, { pillarId: "wealth" }])
     expect(covered.has("lm_health")).toBe(true)
-    expect(covered.has("lm_fitness")).toBe(true)
     expect(covered.has("lm_money")).toBe(true)
-    expect(covered.has("lm_mission")).toBe(true)
+    expect(covered.size).toBe(2)
+    expect(covered.has("lm_fitness")).toBe(false)
+    expect(covered.has("lm_mission")).toBe(false)
     expect(covered.has("lm_relationship")).toBe(false)
-    expect(covered.has("lm_fun")).toBe(false)
     expect(blueprintCoverage([]).size).toBe(0)
+  })
+
+  it("one meaning-pillar goal lights one wedge, not six", () => {
+    const covered = blueprintCoverage([{ pillarId: "meaning" }])
+    expect(covered.size).toBe(1)
+    expect(covered.has("lm_mission")).toBe(true)
   })
 
   it("lastRatingsBefore returns the newest review strictly before the week", () => {
@@ -1390,12 +1477,12 @@ describe("PLM OS — evening reflection (M5)", () => {
 })
 
 describe("PLM OS — touch-every-area + rebaseline (M4/M2)", () => {
-  it("areasTouchedInWeek maps check-ins through pillars to Blueprint areas", () => {
+  it("areasTouchedInWeek credits the ONE area a check-in belongs to", () => {
     const g = makeGoal([3]) // pillar health
     const p = baseProgress({ completions: { [g.habits[0].id]: [MON] } })
     const touched = areasTouchedInWeek([g], p, MON, addDays(MON, 6))
     expect(touched.has("lm_health")).toBe(true)
-    expect(touched.has("lm_fitness")).toBe(true)
+    expect(touched.has("lm_fitness")).toBe(false)
     expect(touched.has("lm_money")).toBe(false)
     expect(areasTouchedInWeek([g], p, addDays(MON, 7), addDays(MON, 13)).size).toBe(0)
   })
@@ -1613,10 +1700,10 @@ describe("PLM OS v2 — guided pendingActions", () => {
 // ---------------------------------------------------------------------------
 
 describe("PLM v3 — goalFeedsArea + coverage with areaId", () => {
-  it("explicit areaId feeds ONLY that area; pillar goals feed all mapped areas", () => {
+  it("a goal feeds exactly one area — explicit areaId, else its pillar's primary", () => {
     const pillarGoal = { pillarId: "health" }
     expect(goalFeedsArea(pillarGoal, "lm_health")).toBe(true)
-    expect(goalFeedsArea(pillarGoal, "lm_fitness")).toBe(true)
+    expect(goalFeedsArea(pillarGoal, "lm_fitness")).toBe(false)
     expect(goalFeedsArea(pillarGoal, "lm_money")).toBe(false)
     const areaGoal = { pillarId: "health", areaId: "lm_fitness" }
     expect(goalFeedsArea(areaGoal, "lm_fitness")).toBe(true)
@@ -1645,7 +1732,11 @@ describe("PLM v3 — createAreaGoal", () => {
     expect(g.type).toBe("milestone_ladder")
     expect(g.habits[0].title).toContain("Work toward")
     expect(g.rampSteps).toBeNull()
-    expect(g.why.length).toBeGreaterThan(5) // default why filled
+    // A goal is created with NO why. It used to be filled with "Because money
+    // is part of the life I said I want" — a sentence the user never wrote, in
+    // the one field the framework turns on, and it read as answered so nothing
+    // could ever ask for the real one.
+    expect(g.why).toBe("")
     expect(() => createAreaGoal({ areaId: "lm_money", title: "x", type: "milestone_ladder", why: "" }, [])).toThrow(/measure/)
     expect(() => createAreaGoal({ areaId: "nope", title: "x", type: "habit_ramp", why: "" }, [])).toThrow(/Unknown Blueprint area/)
   })
@@ -1671,7 +1762,10 @@ describe("M1.5 — classifyGoalInput", () => {
     const g = classifyGoalInput("bench 100 kg", TODAY)
     expect(g.type).toBe("milestone_ladder")
     expect(g.measure).toEqual({ unit: "kg", start: 0, target: 100, steps: 5 })
-    expect(g.targetDate).toBe("2027-07-28") // +365d
+    // No fabricated deadline. It used to stamp today+365 on every captured
+    // line — a date nobody chose, printed in the SMART sentence as though
+    // they had. `planConformance` counts a missing date as missing.
+    expect(g.targetDate).toBeNull()
     expect(g.title).toBe("Bench 100 kg")
   })
   it("unit before the number is picked up too", () => {
@@ -1698,7 +1792,7 @@ describe("M1.5 — classifyGoalInput", () => {
     const g = classifyGoalInput("muscle up", TODAY)
     expect(g.type).toBe("achievement")
     expect(g.measure).toBeNull()
-    expect(g.targetDate).toBe("2027-07-28")
+    expect(g.targetDate).toBeNull() // a deadline is chosen, never stamped on
     expect(g.title).toBe("Muscle up")
   })
   it("text with no number, no frequency and no achievement cue is still a practice", () => {
@@ -1717,7 +1811,7 @@ describe("M1.5 — classifyGoalInput", () => {
 
 describe("PLM v3 — pendingActions per-area", () => {
   const goal = makeGoal([3]) // health pillar → covers lm_health/lm_fitness only
-  it("demands a goal in every area and a why per area", () => {
+  it("with no season chosen, asks across all twelve areas", () => {
     const ids = pendingActions({
       committedAt: MON, values: ["a", "b", "c"],
       drivingForce: { purpose: "p", reasons: [], identity: [] },
@@ -1725,9 +1819,34 @@ describe("PLM v3 — pendingActions per-area", () => {
       goals: [goal], progress: null, confirmed: false, today: MON,
     })
     const areaGoals = ids.find((a) => a.id === "area-goals")
-    expect(areaGoals?.label).toContain("10 areas have none") // 12 - health/fitness
-    expect(areaGoals?.mode).toBe("lifeplan")
+    // 12 areas, one goal (pillar health → lm_health only) ⇒ 11 empty.
+    expect(areaGoals?.label).toContain("11 areas have none")
+    expect(areaGoals?.mode).toBe("library") // v17 — the Life Plan tab became the Library's Areas page
     expect(ids.some((a) => a.id === "area-purpose")).toBe(true)
+  })
+
+  // v23 — once a season is chosen the badge stops demanding depth everywhere.
+  // Nagging "9 areas have none" the morning after the user deliberately picked
+  // two focus areas is the even-wheel completionism the doctrine exists to kill.
+  it("with a season chosen, asks for depth in the focus areas only", () => {
+    const ids = pendingActions({
+      committedAt: MON, values: ["a", "b", "c"],
+      drivingForce: { purpose: "p", reasons: [], identity: [] },
+      yourTens: {}, areaPlans: {}, ritual: null,
+      focusAreaIds: ["lm_health", "lm_money"],
+      areaRank: ["lm_health", "lm_money", "lm_fun", "lm_family"],
+      focusCount: 2,
+      goals: [goal], progress: null, confirmed: false, today: MON,
+    })
+    const areaGoals = ids.find((a) => a.id === "area-goals")
+    // Only Money lacks a goal among the two focus areas; Fun/Family are not asked.
+    expect(areaGoals?.label).toContain("Money")
+    expect(areaGoals?.label).not.toContain("Fun")
+    const tens = ids.find((a) => a.id === "tens")
+    expect(tens?.label).toContain("Health")
+    expect(tens?.label).not.toContain("Family")
+    // The maintenance tier is honoured with a floor, not a goal.
+    expect(ids.find((a) => a.id === "floors")?.label).toContain("floor")
   })
 })
 
@@ -2533,7 +2652,9 @@ describe("v17 — classifyGoalInput knows an achievement from a habit", () => {
   })
 
   it("an achievement verb WITH an ascending count is a real ladder", () => {
-    expect(classifyGoalInput("publish 3 articles", TODAY)).toMatchObject({ type: "milestone_ladder", measure: { unit: "articles", start: 0, target: 3, steps: 5 } })
+    // M4: `steps` follows the range now — a 0→3 climb gets three rungs, not
+    // five. Five rungs over a range of three forced fractional milestones.
+    expect(classifyGoalInput("publish 3 articles", TODAY)).toMatchObject({ type: "milestone_ladder", measure: { unit: "articles", start: 0, target: 3, steps: 3 } })
     expect(classifyGoalInput("earn 100k", TODAY).measure).toMatchObject({ unit: "$", target: 100000 })
     expect(classifyGoalInput("run 10k", TODAY).measure).toMatchObject({ unit: "km", target: 10 })
     expect(classifyGoalInput("hit 100 pushups", TODAY).measure).toMatchObject({ target: 100 })
@@ -2555,7 +2676,9 @@ describe("v17 — classifyGoalInput knows an achievement from a habit", () => {
       const g = classifyGoalInput(s, TODAY)
       if (g.type === "achievement") {
         expect(g.measure, s).toBeNull()
-        expect(g.targetDate, s).not.toBeNull()
+        // The date is a GAP, not a default. `goalGaps` reports it and the row
+        // says "captured — still needs a date" until the user picks one.
+        expect(g.targetDate, s).toBeNull()
       }
       if (g.type === "milestone_ladder") {
         expect(g.measure!.target, s).toBeGreaterThan(g.measure!.start)
@@ -2565,7 +2688,9 @@ describe("v17 — classifyGoalInput knows an achievement from a habit", () => {
 
   it("is pure — same input and same today give an identical result", () => {
     expect(classifyGoalInput("run a marathon", TODAY)).toEqual(classifyGoalInput("run a marathon", TODAY))
-    expect(classifyGoalInput("run a marathon", "2030-01-01").targetDate).toBe("2031-01-01")
+    // Purity no longer depends on `today` at all for the date, because no date
+    // is invented — which is a stronger guarantee than the old one.
+    expect(classifyGoalInput("run a marathon", "2030-01-01")).toEqual(classifyGoalInput("run a marathon", TODAY))
   })
 
   it("output still feeds createAreaGoal without throwing, for all three shapes", () => {
@@ -2629,16 +2754,12 @@ describe("v17 — schema round-trips for the new fields", () => {
     ...makeGoal([3]),
     id: "g-v17",
     feedsGoalIds: [],
-    whoItServes: "my kids",
-    unlocks: "mornings without dread",
-    firstStep: "book the gym induction",
   })
 
   it("a full v17 state round-trips", () => {
     const g = goal()
     const state = {
       vision: "v", intents: [], goals: [g], priorityIds: [g.id], dailyBudget: 4, confirmed: false,
-      yourZeros: { lm_health: "Exhausted by 3pm every day" },
       baselineRatedAt: { lm_health: "2026-07-28" },
       affirmations: ["I am the master of my life"],
       areaScope: { lm_health: "deep" as const, lm_fun: "later" as const },
@@ -2713,5 +2834,554 @@ describe("v17 — the LLM can propose achievements", () => {
     })
     expect(prompt).toContain("achievement")
     expect(prompt).toContain("BINARY")
+  })
+})
+
+
+describe("v18 — the reasons drill actually helps", () => {
+  it("reads a goal title as a vehicle and names the ends underneath", () => {
+    // "girlfriend" contains "friend" — the Friends rule must not swallow it.
+    expect(readGoalVehicle("Get a girlfriend")).toEqual({ label: "Relationship", ends: ["Love", "Intimacy", "Passion", "Companionship", "Connection"] })
+    expect(readGoalVehicle("Get a boyfriend")?.label).toBe("Relationship")
+    expect(readGoalVehicle("Go on more dates")?.label).toBe("Relationship")
+    expect(readGoalVehicle("See my friends more")?.label).toBe("Friends")
+    expect(readGoalVehicle("Build passive income")).toEqual({ label: "Money", ends: ["Freedom", "Security", "Abundance", "Significance"] })
+    // A bare number names no vehicle word — we decline rather than guess.
+    expect(readGoalVehicle("Make 10k a month")).toBeNull()
+  })
+
+  it("returns null rather than guessing when the title names no known vehicle", () => {
+    expect(readGoalVehicle("Do a strict muscle-up")).toBeNull()
+    expect(readGoalVehicle("   ")).toBeNull()
+  })
+
+  it("hands back a fresh ends array — callers edit it without mutating the table", () => {
+    const a = readGoalVehicle("relationship")!
+    const before = a.ends.length
+    a.ends.push("Mutated")
+    expect(readGoalVehicle("relationship")!.ends).toHaveLength(before)
+  })
+
+  it("prompts cover distinct angles, not one restated", () => {
+    expect(REASON_PROMPTS.length).toBeGreaterThanOrEqual(8)
+    expect(new Set(REASON_PROMPTS.map((p) => p.id)).size).toBe(REASON_PROMPTS.length)
+    // The blunt ones are the point — a polite list doesn't move anyone.
+    expect(REASON_PROMPTS.some((p) => /sex|touch/i.test(p.question))).toBe(true)
+    expect(REASON_PROMPTS.some((p) => /takes? from you/i.test(p.question))).toBe(true)
+  })
+
+  it("the prompt tells the model to copy the user's voice and not sanitise", () => {
+    const p = buildReasonsPrompt("Get a girlfriend", "I'm tired of my own company", ["Because I want to be touched"], 20)
+    expect(p).toContain("Get a girlfriend")
+    expect(p).toContain("I'm tired of my own company")
+    expect(p).toContain("Because I want to be touched")
+    expect(p).toMatch(/do not sanitise/i)
+    expect(p).toContain("20 MORE")
+  })
+
+  it("handles an empty starting list without pretending there are examples", () => {
+    expect(buildReasonsPrompt("Get a girlfriend", "", [], 10)).toContain("haven't written any yet")
+  })
+
+  it("parses an expansion and drops duplicates of what's already there", () => {
+    const raw = JSON.stringify({ reasons: ["Because I want to be touched", "  BECAUSE I WANT TO BE TOUCHED  ", "So Sunday isn't silent"] })
+    expect(parseReasonsResponse(raw, ["because i want to be touched"])).toEqual(["So Sunday isn't silent"])
+  })
+
+  it("de-duplicates within the batch too", () => {
+    const raw = JSON.stringify({ reasons: ["Same thing", "same thing", "Different"] })
+    expect(parseReasonsResponse(raw, [])).toEqual(["Same thing", "Different"])
+  })
+
+  it("fails closed — never a silent empty list", () => {
+    expect(() => parseReasonsResponse("not json", [])).toThrow(/unparseable/)
+    expect(() => parseReasonsResponse(JSON.stringify({ nope: [] }), [])).toThrow(/schema/)
+    expect(() => parseReasonsResponse(JSON.stringify({ reasons: ["dupe"] }), ["Dupe"])).toThrow(/duplicated/)
+  })
+
+  it("tolerates markdown fences the CLI sometimes adds", () => {
+    expect(parseReasonsResponse('```json\n{"reasons":["A real one"]}\n```', [])).toEqual(["A real one"])
+  })
+})
+
+
+describe("v19 — area prioritisation is ONE ranking with two tiers", () => {
+  const KNOWN = LIFE_MASTERY_AREAS.map((a) => a.id)
+
+  it("focusAreaIds is exactly the top slice of the ranking — the invariant", () => {
+    const rank = ["lm_fitness", "lm_money", "lm_health", "lm_fun"]
+    const out = setAreaPriority(rank, 2, KNOWN)
+    expect(out.areaRank).toEqual(rank)
+    expect(out.focusAreaIds).toEqual(["lm_fitness", "lm_money"])
+    expect(out.focusAreaIds).toEqual(out.areaRank.slice(0, 2))
+  })
+
+  it("tiers derive from position — no separate scope state", () => {
+    const rank = ["lm_fitness", "lm_money", "lm_health"]
+    expect(areaTier(rank, 2, "lm_fitness")).toBe("focus")
+    expect(areaTier(rank, 2, "lm_money")).toBe("focus")
+    expect(areaTier(rank, 2, "lm_health")).toBe("maintenance")
+  })
+
+  it("an unranked area is maintenance, not an error", () => {
+    expect(areaTier(["lm_fitness"], 1, "lm_spirituality")).toBe("maintenance")
+  })
+
+  it("fails closed on a ranking the user couldn't have meant", () => {
+    expect(() => setAreaPriority(["lm_fitness", "lm_fitness"], 1, KNOWN)).toThrow(/twice/)
+    expect(() => setAreaPriority(["nope"], 1, KNOWN)).toThrow(/Unknown area "nope"/)
+    expect(() => setAreaPriority(["lm_fitness"], 0, KNOWN)).toThrow(/1-3/)
+    expect(() => setAreaPriority(["lm_fitness"], 4, KNOWN)).toThrow(/1-3/)
+    expect(MAX_FOCUS_AREAS).toBe(3)
+  })
+
+  it("focus never exceeds the ranking's own length", () => {
+    expect(setAreaPriority(["lm_fitness"], 3, KNOWN).focusAreaIds).toEqual(["lm_fitness"])
+  })
+
+  it("migrates an old plan: focus set first, then deep, then sketched, then the rest", () => {
+    const rank = deriveAreaRank({
+      focusAreaIds: ["lm_money", "lm_fitness"],
+      areaScope: { lm_fun: "deep", lm_family: "sketched", lm_health: "later" },
+    })
+    expect(rank.slice(0, 2)).toEqual(["lm_money", "lm_fitness"])
+    expect(rank[2]).toBe("lm_fun")        // deep outranks sketched
+    expect(rank[3]).toBe("lm_family")
+    expect(rank).toHaveLength(LIFE_MASTERY_AREAS.length) // nothing lost, nothing duplicated
+    expect(new Set(rank).size).toBe(rank.length)
+  })
+
+  it("migration is idempotent and keeps custom rooms", () => {
+    const once = deriveAreaRank({ focusAreaIds: ["lm_fun"] }, ["custom-1"])
+    expect(once).toContain("custom-1")
+    expect(deriveAreaRank({ areaRank: once }, ["custom-1"])).toEqual(once)
+  })
+
+  it("an empty plan still ranks every canonical area", () => {
+    expect(deriveAreaRank({})).toEqual(LIFE_MASTERY_AREAS.map((a) => a.id))
+  })
+
+  it("the +1 rule targets one level up, never 10", () => {
+    expect(nextLevelTarget(2)).toBe(3)
+    expect(nextLevelTarget(6)).toBe(7)
+    expect(nextLevelTarget(9)).toBe(10)
+    expect(nextLevelTarget(10)).toBeNull()   // at the top, hold rather than climb
+    expect(nextLevelTarget(null)).toBeNull()
+    expect(nextLevelTarget(undefined)).toBeNull()
+  })
+
+  it("areaRank round-trips through the schema", () => {
+    const g = makeGoal([3])
+    const state = {
+      vision: "v", intents: [], goals: [g], priorityIds: [g.id], dailyBudget: 4, confirmed: false,
+      areaRank: ["lm_fitness", "lm_money"], focusAreaIds: ["lm_fitness"],
+    }
+    expect(parseVisionPlanState(JSON.stringify(state))).toEqual(state)
+  })
+})
+
+
+describe("v20 — the guided build follows HIS order", () => {
+  const ids = GUIDE_SESSIONS.map((s) => s.id)
+
+  it("starts above the areas and derives them — vision before areas, areas before goals", () => {
+    const at = (id: string) => (ids as string[]).indexOf(id)
+    expect(at("state")).toBe(0)                      // his stated first step
+    expect(at("debrief")).toBeLessThan(at("vision")) // debrief is a prerequisite
+    expect(at("vision")).toBeLessThan(at("driving")) // purpose comes AFTER vision
+    expect(at("driving")).toBeLessThan(at("areas"))  // and both before areas
+    expect(at("areas")).toBeLessThan(at("brainstorm"))
+    expect(at("brainstorm")).toBeLessThan(at("qualify"))
+    expect(at("qualify")).toBeLessThan(at("chunk"))
+    expect(at("commit")).toBe(ids.length - 1)        // commit is last, and starts the loop
+  })
+
+  it("every session states what it asks and why it sits there", () => {
+    for (const s of GUIDE_SESSIONS) {
+      expect(s.ask.length, s.id).toBeGreaterThan(12)
+      expect(s.why.length, s.id).toBeGreaterThan(20)
+      expect(s.minutes, s.id).toBeGreaterThan(0)
+    }
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(guideSession("vision")?.title).toBe("Your vision")
+    expect(guideSession("nope" as never)).toBeUndefined()
+  })
+
+  it("the state session is a gate that stores nothing", () => {
+    expect(guideSession("state")?.gateOnly).toBe(true)
+  })
+
+  it("progress offers the first unfinished session in his order", () => {
+    expect(guideProgress([]).next).toBe("state")
+    expect(guideProgress([]).doneCount).toBe(0)
+    expect(guideProgress(["state"]).next).toBe("debrief")
+    expect(guideProgress(ids).next).toBeNull()
+    expect(guideProgress(ids).doneCount).toBe(ids.length)
+  })
+
+  it("skipping doesn't strand you — out-of-order completion is allowed", () => {
+    const p = guideProgress(["vision", "commit"])
+    expect(p.next).toBe("state")            // still offers what's missing
+    expect(p.done).toEqual(["vision", "commit"]) // recorded in his order, not click order
+    expect(p.doneCount).toBe(2)
+  })
+
+  it("ignores unknown ids rather than throwing", () => {
+    expect(guideProgress(["state", "not-a-session"]).doneCount).toBe(1)
+  })
+
+  // v24 — the dosage rule fires on work DONE, not work left. It used to greet a
+  // blank slate with "that's over two hours left, do a couple and come back" —
+  // a warning about volume aimed at someone who had not started, contradicting
+  // the "260 min" line directly above it.
+  it("says nothing to someone who has not started", () => {
+    expect(guideSittingWarning(guideProgress([]))).toBeNull()
+    expect(guideSittingWarning(guideProgress(ids.slice(0, 1)))).toBeNull()
+  })
+
+  it("suggests stopping once enough is behind you, and names the real number", () => {
+    const w = guideSittingWarning(guideProgress(ids.slice(0, 3)))
+    expect(w).toMatch(/3 in one sitting/)
+    expect(w).toMatch(/come back/)
+  })
+
+  it("says nothing once the build is finished — there is nothing to come back to", () => {
+    expect(guideSittingWarning(guideProgress(ids))).toBeNull()
+  })
+
+  it("reports how long the NEXT session takes, so a blank slate is quoted 5 min not 260", () => {
+    const p0 = guideProgress([])
+    expect(p0.nextMinutes).toBe(GUIDE_SESSIONS[0].minutes)
+    expect(p0.nextMinutes).toBeLessThan(p0.minutesLeft)
+  })
+
+  it("guideDone and yearDebrief round-trip through the schema", () => {
+    const g = makeGoal([3])
+    const state = {
+      vision: "v", intents: [], goals: [g], priorityIds: [g.id], dailyBudget: 4, confirmed: false,
+      guideDone: ["state", "debrief"],
+      yearDebrief: { good: ["shipped the thing"], challenges: ["got ill in March"], lessons: ["rest earlier"] },
+    }
+    expect(parseVisionPlanState(JSON.stringify(state))).toEqual(state)
+  })
+})
+
+
+describe("v21 — course correction has an ORDER, not just labels", () => {
+  it("drops last and changes the approach first — his sequence", () => {
+    expect(CORRECTION_MOVES.map((m) => m.id)).toEqual(["approach", "push", "reshape", "displace", "drop"])
+  })
+
+  it("only the first move skips the dabbler guard-rail", () => {
+    expect(CORRECTION_MOVES[0].needsGuardRail).toBe(false)
+    for (const m of CORRECTION_MOVES.slice(1)) expect(m.needsGuardRail, m.id).toBe(true)
+  })
+
+  it("each move records a verdict our taxonomy can hold", () => {
+    for (const m of CORRECTION_MOVES) expect(typeof m.verdict === "string" || m.verdict === null, m.id).toBe(true)
+    expect(CORRECTION_MOVES.map((m) => m.verdict)).toContain("pushed")
+    expect(CORRECTION_MOVES.map((m) => m.verdict)).toContain("deferred-by-choice")
+  })
+
+  it("the guard-rail sends a lost-excitement answer to the reasons, not to the goal", () => {
+    expect(CORRECTION_GUARD_RAIL.lostItAdvice).toMatch(/reasons/i)
+  })
+
+  it("the six new verdicts survive the schema", () => {
+    const g = makeGoal([3])
+    for (const verdict of ["pushed", "reshaped", "displaced", "paused", "deferred-by-choice", "rescheduled"]) {
+      const state = {
+        vision: "v", intents: [], goals: [g], priorityIds: [g.id], dailyBudget: 4, confirmed: true,
+        progress: { startDate: "2026-01-01", completions: {}, tasksDone: [],
+          reportVerdicts: { "2026-06": { [g.id]: { verdict, reason: "because" } } } },
+      }
+      expect(parseVisionPlanState(JSON.stringify(state)), verdict).not.toBeNull()
+    }
+  })
+
+  it("the bi-weekly check-in fires every 14 days and not in between", () => {
+    expect(BIWEEKLY_CHECKIN).toHaveLength(4)
+    expect(biweeklyCheckinDue("2026-01-01", "2026-01-15")).toBe(true)   // day 14
+    expect(biweeklyCheckinDue("2026-01-01", "2026-01-29")).toBe(true)   // day 28
+    expect(biweeklyCheckinDue("2026-01-01", "2026-01-20")).toBe(false)
+    expect(biweeklyCheckinDue("2026-01-01", "2026-01-01")).toBe(false)  // day 0 isn't a check-in
+  })
+})
+
+describe("v21 — belief work", () => {
+  it("no conditioning window until a replacement is actually written", () => {
+    expect(beliefConditioning({ old: "x" } as never, "2026-03-01")).toBeNull()
+    expect(beliefConditioning({ replacement: "new" }, "2026-03-01")).toBeNull()
+  })
+
+  it("tracks the day count and the reference count", () => {
+    const c = beliefConditioning({ replacement: "new", startedAt: "2026-01-01", references: ["2026-01-02", "2026-01-03"] }, "2026-01-11")
+    expect(c).toEqual({ day: 10, references: 2, installed: false })
+  })
+
+  it("counts as installed only past 30 days AND with real references", () => {
+    const refs = Array.from({ length: 10 }, (_, i) => `2026-01-${String(i + 2).padStart(2, "0")}`)
+    expect(beliefConditioning({ replacement: "n", startedAt: "2026-01-01", references: refs }, "2026-02-05")!.installed).toBe(true)
+    // time alone isn't enough — the references are the legs under the table
+    expect(beliefConditioning({ replacement: "n", startedAt: "2026-01-01", references: [] }, "2026-06-01")!.installed).toBe(false)
+    // references alone aren't enough either
+    expect(beliefConditioning({ replacement: "n", startedAt: "2026-01-01", references: refs }, "2026-01-10")!.installed).toBe(false)
+  })
+
+  it("beliefs round-trip through the schema", () => {
+    const g = makeGoal([3])
+    const state = {
+      vision: "v", intents: [], goals: [g], priorityIds: [g.id], dailyBudget: 4, confirmed: false,
+      beliefs: [{ id: "b1", old: "I can't talk to people", replacement: "I get better every time I try", useful: false, evidence: ["did it once"], references: ["2026-01-02"], startedAt: "2026-01-01" }],
+    }
+    expect(parseVisionPlanState(JSON.stringify(state))).toEqual(state)
+  })
+})
+
+describe("v21 — the divergent phase", () => {
+  it("offers his five horizons", () => {
+    expect([...HORIZON_YEARS]).toEqual([1, 3, 5, 10, 20])
+  })
+
+  it("80/20 keeps about a fifth, never zero, never past his 20-goal ceiling", () => {
+    expect(paretoKeepCount(0)).toBe(0)
+    expect(paretoKeepCount(1)).toBe(1)     // never cut to nothing
+    expect(paretoKeepCount(50)).toBe(10)
+    expect(paretoKeepCount(200)).toBe(20)  // his stated ceiling holds
+  })
+
+  it("only circled one-year wants graduate to goals", () => {
+    const wants = [
+      { id: "a", text: "muscle up", years: 1 as const, circled: true },
+      { id: "b", text: "own a house", years: 10 as const, circled: true },  // circled but not this year
+      { id: "c", text: "learn guitar", years: 1 as const, circled: false }, // this year but not circled
+      { id: "d", text: "no horizon", years: null, circled: true },
+    ]
+    expect(circledThisYear(wants)).toEqual([{ id: "a", text: "muscle up" }])
+    expect(circledThisYear(undefined)).toEqual([])
+  })
+
+  it("rawWants round-trip through the schema", () => {
+    const g = makeGoal([3])
+    const state = {
+      vision: "v", intents: [], goals: [g], priorityIds: [g.id], dailyBudget: 4, confirmed: false,
+      rawWants: [{ id: "w1", text: "muscle up", years: 1 as const, circled: true }, { id: "w2", text: "villa", years: 20 as const, circled: false }],
+    }
+    expect(parseVisionPlanState(JSON.stringify(state))).toEqual(state)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// v23 — the functional pass. Each block below pins a bug that shipped: a field
+// the user could fill in that went nowhere, a gate that threw work away, or a
+// number that counted the same thing more than once.
+// ---------------------------------------------------------------------------
+
+import {
+  derivedGuideDone, guideDoneSet, seedBaselineReview, rolloverAdhocSince, daysAway,
+} from "@/src/goals/visionPlanService"
+import { goalAreaId, PILLAR_PRIMARY_AREA } from "@/src/goals/data/lifeMasteryAreas"
+
+describe("v23 — Guide completion is derived from the plan, not from clicks", () => {
+  it("an empty plan has completed nothing", () => {
+    expect(derivedGuideDone({})).toEqual([])
+  })
+
+  it("each session completes when its artifact exists", () => {
+    const g = makeGoal([3])
+    const done = derivedGuideDone({
+      vision: "I am healthy and free.",
+      yearDebrief: { good: ["shipped the thing"] },
+      drivingForce: { purpose: "to build", identity: ["I am a builder"] },
+      areaPlans: { lm_health: { name: "The Engine" } },
+      yourTens: { lm_health: "Training six days, no excuses." },
+      rawWants: [{ circled: true }],
+      goals: [{ ...g, beliefLevel: 8, desireLevel: 9, milestones: [{}] }],
+      ritual: { items: [] },
+      committedAt: "2026-01-01",
+    })
+    // "state" is a gate with no artifact — it can only be marked by hand.
+    expect(done).not.toContain("state")
+    for (const id of ["debrief", "vision", "driving", "areas", "rooms", "brainstorm", "qualify", "chunk", "rituals", "commit"]) {
+      expect(done).toContain(id)
+    }
+  })
+
+  it("qualify needs BOTH ratings on EVERY goal, not just one", () => {
+    const g = makeGoal([3])
+    expect(derivedGuideDone({ goals: [{ ...g, beliefLevel: 8 }] })).not.toContain("qualify")
+    expect(derivedGuideDone({ goals: [{ ...g, beliefLevel: 8, desireLevel: 8 }] })).toContain("qualify")
+    expect(derivedGuideDone({
+      goals: [{ ...g, beliefLevel: 8, desireLevel: 8 }, { ...g, beliefLevel: 8 }],
+    })).not.toContain("qualify")
+  })
+
+  it("a hand-marked session stays done even with no artifact", () => {
+    expect(guideDoneSet(["state"], {})).toEqual(["state"])
+    // Derived and manual union, no duplicates.
+    const set = guideDoneSet(["vision"], { vision: "written" })
+    expect(set.filter((x) => x === "vision")).toHaveLength(1)
+  })
+})
+
+describe("v23 — the day-1 ratings become review week 0", () => {
+  it("seeds a review dated before the plan starts, so week 1 has a 'from'", () => {
+    const p = baseProgress()
+    const seeded = seedBaselineReview(p, { lm_health: 4, lm_money: 6 })
+    const wk0 = seeded.weeklyReviews![0]
+    expect(wk0.weekStart).toBe(addDays(p.startDate, -7))
+    expect(wk0.areaRatings).toEqual({ lm_health: 4, lm_money: 6 })
+    // The first real review can now compare against something.
+    expect(lastRatingsBefore(seeded, p.startDate)).toEqual({ lm_health: 4, lm_money: 6 })
+  })
+
+  it("never collides with a real week, and never fires reviewDue", () => {
+    const p = seedBaselineReview(baseProgress(), { lm_health: 4 })
+    // Day 7 still asks for week 1: the baseline is not mistaken for it.
+    const due = reviewDue(p, addDays(p.startDate, 7))
+    expect(due?.weekIndex).toBe(1)
+    expect(due?.start).toBe(p.startDate)
+  })
+
+  it("is idempotent and never overwrites", () => {
+    const once = seedBaselineReview(baseProgress(), { lm_health: 4 })
+    const twice = seedBaselineReview(once, { lm_health: 9 })
+    expect(twice.weeklyReviews).toHaveLength(1)
+    expect(twice.weeklyReviews![0].areaRatings.lm_health).toBe(4)
+  })
+
+  it("does nothing when no room was ever rated", () => {
+    const p = baseProgress()
+    expect(seedBaselineReview(p, {}).weeklyReviews).toBeUndefined()
+    expect(seedBaselineReview(p, undefined).weeklyReviews).toBeUndefined()
+  })
+})
+
+describe("v23 — roll-over covers every day away, not just yesterday", () => {
+  it("carries unfinished work forward across a gap", () => {
+    const start = MON
+    let p: VisionProgress = { startDate: start, completions: {}, tasksDone: [] }
+    p = addAdhocItem(p, start, "call the accountant")
+    const threeDaysLater = addDays(start, 3)
+    // The old single-day call could not see Monday from Thursday.
+    expect(rolloverAdhoc(p, addDays(threeDaysLater, -1), threeDaysLater).dayPlans?.[threeDaysLater]?.adhoc ?? []).toHaveLength(0)
+    const rolled = rolloverAdhocSince(p, start, threeDaysLater)
+    expect(rolled.dayPlans![threeDaysLater].adhoc.map((a) => a.title)).toEqual(["call the accountant"])
+  })
+
+  it("leaves finished work behind and never duplicates", () => {
+    const start = MON
+    let p: VisionProgress = { startDate: start, completions: {}, tasksDone: [] }
+    p = addAdhocItem(p, start, "done thing")
+    const id = p.dayPlans![start].adhoc[0].id
+    p = toggleAdhocItem(p, start, id)
+    const later = addDays(start, 2)
+    expect(rolloverAdhocSince(p, start, later).dayPlans?.[later]?.adhoc ?? []).toHaveLength(0)
+
+    let q: VisionProgress = { startDate: start, completions: {}, tasksDone: [] }
+    q = addAdhocItem(q, start, "open thing")
+    const first = rolloverAdhocSince(q, start, later)
+    const second = rolloverAdhocSince(first, start, later)
+    expect(second.dayPlans![later].adhoc).toHaveLength(1)
+  })
+
+  it("daysAway reports the gap the UI needs to explain itself", () => {
+    expect(daysAway(MON, MON)).toBe(0)
+    expect(daysAway(MON, addDays(MON, 1))).toBe(0)
+    expect(daysAway(MON, addDays(MON, 3))).toBe(2)
+    expect(daysAway(undefined, MON)).toBe(0)
+  })
+})
+
+describe("v23 — a goal feeds exactly one area", () => {
+  it("every pillar has a primary area, and it is a real area", () => {
+    for (const [, areaId] of Object.entries(PILLAR_PRIMARY_AREA)) {
+      expect(LIFE_MASTERY_AREAS.some((a) => a.id === areaId)).toBe(true)
+    }
+  })
+
+  it("an explicit areaId always wins over the pillar default", () => {
+    expect(goalAreaId({ pillarId: "health", areaId: "lm_fitness" })).toBe("lm_fitness")
+    expect(goalAreaId({ pillarId: "health" })).toBe("lm_health")
+  })
+
+  it("no goal is ever counted in two areas", () => {
+    for (const pillarId of Object.keys(PILLAR_PRIMARY_AREA)) {
+      const hits = LIFE_MASTERY_AREAS.filter((a) => goalFeedsArea({ pillarId }, a.id))
+      expect(hits).toHaveLength(1)
+    }
+  })
+})
+
+describe("v23 — refine reshapes the plan without deleting the user's work", () => {
+  const qualified = {
+    ...makeGoal([3]),
+    id: "goal-1",
+    areaId: "lm_fitness",
+    beliefLevel: 9,
+    desireLevel: 8,
+    painWhy: "I stay stuck",
+    reward: "a trip",
+    stake: "$100 to a cause I hate",
+    obstacles: "shiny objects",
+    feeling: "quiet pride",
+    smartSentence: "I will easily train 4x a week by December.",
+    reasonsList: ["because my kids watch", "because I said I would"],
+  }
+  const llm = JSON.stringify({
+    goals: [{
+      title: "Train four times a week",
+      pillarId: "health",
+      objectiveId: null,
+      type: "habit_ramp",
+      why: "so training stops being a decision",
+      sourceIntentIds: ["i1"],
+      habits: [{ title: "Strength session", daysPerWeek: 4 }],
+      tasks: [],
+      measure: null,
+      rampSteps: [{ frequencyPerWeek: 2, durationWeeks: 4 }, { frequencyPerWeek: 4, durationWeeks: 8 }],
+    }],
+  })
+
+  it("keeps every hand-written qualification field", () => {
+    const out = parseGoalRefineResponse(llm, qualified as never, "x")
+    expect(out.beliefLevel).toBe(9)
+    expect(out.desireLevel).toBe(8)
+    expect(out.painWhy).toBe("I stay stuck")
+    expect(out.reward).toBe("a trip")
+    expect(out.stake).toBe("$100 to a cause I hate")
+    expect(out.obstacles).toBe("shiny objects")
+    expect(out.feeling).toBe("quiet pride")
+    expect(out.smartSentence).toBe("I will easily train 4x a week by December.")
+    expect(out.reasonsList).toEqual(["because my kids watch", "because I said I would"])
+  })
+
+  it("keeps areaId — losing it silently re-routes the goal to another area", () => {
+    const out = parseGoalRefineResponse(llm, qualified as never, "x")
+    expect(out.areaId).toBe("lm_fitness")
+    expect(goalFeedsArea(out, "lm_fitness")).toBe(true)
+    expect(goalFeedsArea(out, "lm_health")).toBe(false)
+  })
+
+  it("still replaces the decomposition it was asked to change", () => {
+    const out = parseGoalRefineResponse(llm, qualified as never, "x")
+    expect(out.habits[0].title).toBe("Strength session")
+    expect(out.rampSteps).toHaveLength(2)
+    expect(out.id).toBe("goal-1")
+  })
+
+  it("an achievement goal cannot come back as a measured ladder", () => {
+    const achievement = { ...qualified, type: "achievement" as const, measure: null, rampSteps: null }
+    const ladder = JSON.stringify({
+      goals: [{
+        title: "Read 12 books", pillarId: "health", objectiveId: null,
+        type: "milestone_ladder", why: "to keep learning", sourceIntentIds: ["i1"],
+        habits: [{ title: "Read", daysPerWeek: 5 }], tasks: [],
+        measure: { unit: "books", start: 0, target: 12, steps: 4 }, rampSteps: null,
+      }],
+    })
+    const out = parseGoalRefineResponse(ladder, achievement as never, "x")
+    expect(out.type).toBe("achievement")
+    expect(out.measure).toBeNull()
   })
 })

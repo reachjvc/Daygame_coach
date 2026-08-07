@@ -138,7 +138,13 @@ const testPages = [
     icon: Target,
   },
   {
-    name: "Life Mastery",
+    name: "Life Mastery (simple)",
+    href: "/test/life-mastery",
+    description: "Three steps: your vision and big why with every question in one place → 12 editable areas you type goals into → a why under every goal",
+    icon: Telescope,
+  },
+  {
+    name: "Life Mastery (full lab)",
     href: "/test/vision-plan",
     description: "Whole-life goal system: vision → life areas → goals with horizons, morning ritual, RPM daily musts, weekly evaluation + monthly report",
     icon: Telescope,

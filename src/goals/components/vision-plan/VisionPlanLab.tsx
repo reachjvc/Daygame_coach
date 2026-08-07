@@ -27,6 +27,24 @@ import {
   confidenceTier,
   balancePlan,
   loadVisionPlanState,
+  softLayerRollup,
+  readGoalVehicle,
+  REASON_PROMPTS,
+  setAreaPriority,
+  deriveAreaRank,
+  GUIDE_SESSIONS,
+  approachRung,
+  CORRECTION_MOVES,
+  CORRECTION_GUARD_RAIL,
+  beliefConditioning,
+  paretoKeepCount,
+  HORIZON_YEARS,
+  type HorizonYears,
+  guideProgress,
+  guideDoneSet,
+  guideSittingWarning,
+  areaTier,
+  nextLevelTarget,
   addGoalEdge,
   removeGoalEdge,
   wouldCycle,
@@ -75,7 +93,8 @@ import {
   materializeOutcomes,
   counterDay,
   adhocOriginDate,
-  rolloverAdhoc,
+  rolloverAdhocSince,
+  seedBaselineReview,
   MAX_MUST_ITEMS,
   reviewDue,
   goalRollupRange,
@@ -102,11 +121,36 @@ import {
   saveVerdict,
   createAreaGoal,
   classifyGoalInput,
+  ladderSteps,
+  measureDirection,
+  shrunkTarget,
+  goalNeedsAction,
+  goalIsPlanned,
+  goalGaps,
+  planConformance,
+  addGoalAction,
+  dropDuplicateSuggestions,
+  deriveIntakePosition,
+  isAnnualRerun,
+  isIntakeAnswered,
+  isIntakeSettled,
+  isIntakePageComplete,
+  revealedIntakeQuestions,
 } from "@/src/goals/visionPlanService"
 import type { PendingAction } from "@/src/goals/visionPlanService"
-import { LIFE_MASTERY_AREAS, LIFE_MASTERY_AREA_MAP, LIFE_MASTERY_SUCCESS_LEVEL, BLUEPRINT_ROWS, blueprintCoverage, goalFeedsArea, VALUE_SUGGESTIONS, EMPOWERING_QUESTIONS, RAISE_ACTIONS } from "@/src/goals/data/lifeMasteryAreas"
+import { LIFE_MASTERY_AREAS, LIFE_MASTERY_AREA_MAP, LIFE_MASTERY_SUCCESS_LEVEL, BLUEPRINT_ROWS, blueprintCoverage, goalFeedsArea, areaTextColor, VALUE_SUGGESTIONS, EMPOWERING_QUESTIONS, RAISE_ACTIONS } from "@/src/goals/data/lifeMasteryAreas"
 import { PRINCIPLES, SOS_PROTOCOLS } from "@/src/goals/data/lifeMasteryPrinciples"
-import { MANIFESTO_PROGRAM_CREDO, INCANTATION_DECK, INCANTATION_PROTOCOL, QUESTION_FOLLOW_UP, MONEY_JARS, MONEY_WEEKLY_RITUAL, MONEY_RULES, MONEY_DEBT_PROTOCOL, RELATIONSHIP_JOURNAL_SCRIPT, SIX_NEEDS, RULES_EXERCISE, CONSEQUENCE_MENU, CONSEQUENCE_RULES, RESOURCE_LADDER, AREA_BOOKS } from "@/src/goals/data/lifeMasteryContent"
+import { EXEMPLAR_WHOLE_LIFE, EXEMPLAR_ERA_LABEL, exemplarArea, type ExemplarEra } from "@/src/goals/data/lifeMasteryExemplar"
+import { BELIEF_STEPS, BELIEF_STEMS, BELIEF_SHORT_FORM, type BeliefWork } from "@/src/goals/data/lifeMasteryBeliefs"
+import {
+  INTAKE_PAGES,
+  INTAKE_SKIP_LABEL,
+  questionsForPage,
+  type IntakePageId,
+  type IntakeQuestion,
+} from "@/src/goals/data/lifeMasteryIntake"
+import { APPROACH_LADDER, APPROACH_OPENER, APPROACH_REPS, APPROACH_VENUES, SESSION_JOURNAL_PROMPTS, SINGLE_BOOKS, type RelationshipStatus } from "@/src/goals/data/lifeMasterySingle"
+import { MANIFESTO_PROGRAM_CREDO, MANIFESTO_OPENER_TEMPLATE, MASTERY_TEN_KEYS, MASTERY_THREE_LEVELS, PLATEAU_DOCTRINE, INCANTATION_DECK, INCANTATION_PROTOCOL, QUESTION_FOLLOW_UP, MONEY_JARS, MONEY_WEEKLY_RITUAL, MONEY_RULES, MONEY_DEBT_PROTOCOL, RELATIONSHIP_JOURNAL_SCRIPT, SIX_NEEDS, RULES_EXERCISE, CONSEQUENCE_MENU, CONSEQUENCE_RULES, RESOURCE_LADDER, AREA_BOOKS } from "@/src/goals/data/lifeMasteryContent"
 import { buildExamplePlan, EXAMPLE_VISION } from "@/src/goals/data/lifeMasteryExample"
 import { VEHICLE_CONVERSIONS, AWAY_SUGGESTIONS, detectValueConflicts, startPairwise, pairwiseQuestion, pairwiseAnswer } from "@/src/goals/data/valuesFramework"
 import type { PairwiseState } from "@/src/goals/data/valuesFramework"
@@ -121,8 +165,9 @@ import { SortablePriorityList } from "@/src/goals/components/new-goals/SortableP
 import { TARGETS, PILLARS } from "@/src/goals/data/newGoalFramework"
 import { ROUTINE_CATEGORIES, RITUAL_LIBRARY, RITUAL_DIMENSIONS, WEEKLY_RITUAL_LIBRARY } from "@/src/goals/data/visionRoutineLibrary"
 import { EditableTitle } from "@/src/goals/components/new-goals/EditableTitle"
-import type { VisionPlanRepair } from "@/src/goals/visionPlanService"
-import type { BalancedHabit, BalancedPlan, BalancedTask, HabitRampStep, HabitRoutine, RoutineCategory, RoutineTemplate, VisionAdhocItem, VisionAreaPlan, VisionDrivingForce, VisionGoalDraft, VisionGoalType, VisionMeasure, VisionGoalRollup, VisionGoalVerdict, VisionHabit, VisionIntent, VisionIntentResult, VisionPlanState, VisionProgress, VisionRitual, VisionVerdictEntry, VisionWeeklyOutcome, VisionWeeklyReview, VisionWeeklyRitual, WorkoutSplit } from "@/src/goals/types"
+import type { VisionPlanRepair, SoftLayerEntry, GuideSessionId, GuideEvidence } from "@/src/goals/visionPlanService"
+import { GoalListReview, ReasonsPass, type GoalListAccept } from "./GoalListReview"
+import type { BalancedHabit, BalancedPlan, BalancedTask, HabitRampStep, HabitRoutine, RoutineCategory, RoutineTemplate, VisionAdhocItem, VisionAreaPlan, VisionDrivingForce, VisionGoalDraft, VisionGoalType, VisionMeasure, VisionGoalRollup, VisionGoalVerdict, VisionHabit, VisionIntent, VisionIntentResult, VisionPlanState, VisionProgress, VisionRitual, VisionVerdictEntry, VisionWeeklyDraft, VisionWeeklyOutcome, VisionWeeklyReview, VisionWeeklyRitual, WorkoutSplit } from "@/src/goals/types"
 import {
   DndContext,
   closestCenter,
@@ -134,7 +179,7 @@ import {
 } from "@dnd-kit/core"
 import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { Telescope, Loader2, Sparkles, Wand2, ChevronDown, Repeat, Check, TrendingUp, Minus, Plus, AlertTriangle, X, RotateCcw, GripVertical, Lock } from "lucide-react"
+import { Telescope, Loader2, Sparkles, Wand2, ChevronDown, Repeat, Check, TrendingUp, Minus, Plus, AlertTriangle, X, RotateCcw, GripVertical, Lock, CalendarCheck } from "lucide-react"
 
 // Same model + cache as GoalIntake so the taxonomy vectors are shared between
 // the two test pages (identical items → identical version hash → cache hit).
@@ -176,14 +221,34 @@ async function embed(texts: string[], onProgress?: (pct: number) => void): Promi
 type Phase = "idle" | "loading" | "matching" | "done" | "error"
 
 const SANDBOX_KEY = "visionPlanSandbox_v1"
+/** v25 — which view the lab was last in. View state, so it is kept out of
+ * the plan schema and simply restored on load. */
+const VIEW_MODE_KEY = "visionPlanMode_v1"
 
 const PLACEHOLDER =
   "I wake up energized in a strong, healthy body. My business makes 10 k$/month and my time is my own. I'm in a loving relationship, and I see my closest friends every week. My mind is calm and on my side…"
 
+
+/**
+ * v24 — a pillar colour, lightened until it passes WCAG AA as TEXT.
+ *
+ * Pillar colours live in `newGoalFramework.ts`, which several other surfaces
+ * share, so they are not safe to change there. Two of them are legible as a
+ * fill and NOT as small text on the dark surface (wealth's purple-500 measures
+ * 4.30:1 against 4.5 required). Fills keep the shared colour; text uses this.
+ * Same rule as `areaTextColor` for the twelve areas.
+ */
+const PILLAR_TEXT_TINT: Record<string, string> = {
+  "#a855f7": "#c084fc", // purple-500 → purple-400
+  "#6366f1": "#818cf8", // indigo-500 → indigo-400
+}
+const pillarTextColor = (hex: string): string => PILLAR_TEXT_TINT[hex?.toLowerCase()] ?? hex
+
 /** Draw the vision with each intent's clauses in that intent's area colour. */
 function renderHighlighted(text: string, intents: VisionIntent[]) {
   const marks = intents
-    .flatMap((it) => it.spans.map((s) => ({ ...s, color: it.pillarColor })))
+    // v24 — these clauses are TEXT, so they take the legible tint, not the fill.
+    .flatMap((it) => it.spans.map((s) => ({ ...s, color: pillarTextColor(it.pillarColor) })))
     .sort((a, b) => a.start - b.start)
   const out: ReactNode[] = []
   let cursor = 0
@@ -273,7 +338,7 @@ function AreaCard({ area, rank, selected, onToggle }: { area: AreaGroup; rank: n
           >
             {rank}
           </span>
-          <span className="text-sm font-semibold truncate" style={{ color: selected ? area.color : undefined }}>{area.label}</span>
+          <span className="text-sm font-semibold truncate" style={{ color: selected ? pillarTextColor(area.color) : undefined }}>{area.label}</span>
         </div>
         <button
           onClick={onToggle}
@@ -296,7 +361,7 @@ function AreaCard({ area, rank, selected, onToggle }: { area: AreaGroup; rank: n
                 <span className="text-zinc-200">&ldquo;{it.text}&rdquo;</span>
                 <span className="block text-[10px] text-zinc-500 mt-0.5">
                   {it.objectiveLabel ? <>→ {it.objectiveLabel} · </> : null}
-                  {it.id.startsWith("room-") ? "your room — from the wheel" : TIER_LABEL[confidenceTier(it.confidence)]}
+                  {it.id.startsWith("room-") ? "your room, from the wheel" : TIER_LABEL[confidenceTier(it.confidence)]}
                 </span>
               </li>
             ))}
@@ -314,7 +379,7 @@ function AreaCard({ area, rank, selected, onToggle }: { area: AreaGroup; rank: n
             </ul>
           </div>
         )}
-        {!selected && <p className="text-[10px] text-zinc-500 mt-2 italic">Left out — click to include</p>}
+        {!selected && <p className="text-[10px] text-zinc-500 mt-2 italic">Left out, click to include</p>}
       </button>
     </div>
   )
@@ -370,7 +435,7 @@ function ProvenanceBadge({ sourceTargetId }: { sourceTargetId?: string | null })
     )
   }
   return (
-    <span className="text-[9px] px-1.5 py-px rounded-full border border-white/15 text-zinc-500 shrink-0" title="AI suggestion — not from your curated framework. Use Refine to challenge it.">
+    <span className="text-[9px] px-1.5 py-px rounded-full border border-white/15 text-zinc-500 shrink-0" title="Suggested for you, based on what you wrote. Refine it or write your own.">
       AI pick
     </span>
   )
@@ -489,7 +554,7 @@ function LifeAreaWheel({ areas, vision }: { areas: VisionAreaRollup[]; vision: n
  * a level 7 or more in each area." Identity is direct-labeled, never
  * color-alone; sector gaps + labels carry it for CVD readers.
  */
-function LifeMasteryWheel({ ratings, prevRatings }: { ratings: Record<string, number> | null; prevRatings?: Record<string, number> | null }) {
+function LifeMasteryWheel({ ratings, prevRatings, labels }: { ratings: Record<string, number> | null; prevRatings?: Record<string, number> | null; labels?: Record<string, string> }) {
   const C = 195
   const R = 108
   const n = LIFE_MASTERY_AREAS.length
@@ -507,13 +572,16 @@ function LifeMasteryWheel({ ratings, prevRatings }: { ratings: Record<string, nu
 
   return (
     <div className="flex flex-col items-center">
-      <svg width="390" height="390" viewBox="0 0 390 390" role="img" aria-label={avg != null ? `Life Mastery Wheel — average ${avg}/10` : "Life Mastery Wheel — not yet rated"}>
+      {/* v24 — a fixed 390px width inside a padded container overflowed a 390px
+          phone, giving the whole page a horizontal scrollbar. The other wheel
+          in this file already scales; this one now matches. */}
+      <svg viewBox="0 0 390 390" className="w-full max-w-[390px] h-auto mx-auto block" role="img" aria-label={avg != null ? `Life Mastery Wheel. Average ${avg}/10` : "Life Mastery Wheel. Not yet rated"}>
         {/* Recessive grid rings + Stefan's success line at 7/10 */}
         {[0.25, 0.5, 0.75, 1].map((f) => (
           <circle key={f} cx={C} cy={C} r={R * f} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
         ))}
         <circle cx={C} cy={C} r={(R * LIFE_MASTERY_SUCCESS_LEVEL) / 10} fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="1" strokeDasharray="3 4">
-          <title>Success line — level {LIFE_MASTERY_SUCCESS_LEVEL}+ in every area</title>
+          <title>The floor. Level {LIFE_MASTERY_SUCCESS_LEVEL}. Aim one level up where you&apos;re working; hold the floor elsewhere.</title>
         </circle>
 
         {LIFE_MASTERY_AREAS.map((a, i) => {
@@ -528,7 +596,7 @@ function LifeMasteryWheel({ ratings, prevRatings }: { ratings: Record<string, nu
             <g key={a.id}>
               {/* Faint full sector = the area's slice of life; filled to rating */}
               <path d={wedge(start, end, R)} fill={`${a.color}14`} stroke="none">
-                <title>{`${a.label} — ${a.sublabel}. ${a.prompt}${rating != null ? ` Rated ${rating}/10.` : " Not rated yet."}`}</title>
+                <title>{`${labels?.[a.id] ?? a.label} — ${a.sublabel}. ${a.prompt}${rating != null ? ` Rated ${rating}/10.` : " Not rated yet."}`}</title>
               </path>
               {rating != null && (
                 <path d={wedge(start, end, (R * Math.min(10, Math.max(1, rating))) / 10)} fill={`${a.color}b8`} stroke={a.color} strokeWidth="1" />
@@ -539,7 +607,7 @@ function LifeMasteryWheel({ ratings, prevRatings }: { ratings: Record<string, nu
                 return <circle cx={px} cy={py} r="2.2" fill="rgba(255,255,255,0.55)"><title>{`Last week: ${prevRatings[a.id]}/10`}</title></circle>
               })()}
               <text x={lx} y={ly} textAnchor={anchor} dominantBaseline="middle" fontSize="9" fill="#d4d4d8">
-                {a.label}
+                {labels?.[a.id] ?? a.label}
               </text>
               {rating != null && (
                 <text x={lx} y={ly + 11} textAnchor={anchor} dominantBaseline="middle" fontSize="8.5" fill={rating < LIFE_MASTERY_SUCCESS_LEVEL ? "#fbbf24" : "#71717a"} className="tabular-nums">
@@ -570,7 +638,7 @@ function LifeMasteryWheel({ ratings, prevRatings }: { ratings: Record<string, nu
       </svg>
       {avg != null ? (
         <p className="text-[10px] text-zinc-500 mt-1 text-center">
-          Dashed ring = level {LIFE_MASTERY_SUCCESS_LEVEL} — the FLOOR, not the aim: push every area toward 8-9-10.
+          Dashed ring = level {LIFE_MASTERY_SUCCESS_LEVEL} — the floor, not the aim. Aim one level up in the areas you&apos;re working; the rest hold their floor.
           {rated.some((a) => ratings![a.id] < LIFE_MASTERY_SUCCESS_LEVEL) && (
             <span className="text-amber-300/80"> Amber scores are this week&apos;s weak spots.</span>
           )}
@@ -678,8 +746,8 @@ function BlueprintPyramid({
       </svg>
       <p className="text-[10px] text-zinc-500 mt-1 text-center max-w-sm">
         {ratings
-          ? "Brightness = your latest rating per row. Click any row to inspect it — the base carries everything above it."
-          : "The Life Mastery Blueprint — order is the hierarchy (health is the foundation). Lit rows are fed by your current plan; dim rows are areas your goals don't touch yet."}
+          ? "Brightness = your latest rating per row. Click any row to inspect it. The base carries everything above it."
+          : "The Life Mastery Blueprint. Order is the hierarchy (health is the foundation). Lit rows are fed by your current plan; dim rows are areas your goals don't touch yet."}
       </p>
     </div>
   )
@@ -694,6 +762,7 @@ function BlueprintAreaPanel({
   band,
   progress,
   yourTens,
+  yourZeros,
   goals,
   addedHabitIds,
   onRaise,
@@ -701,6 +770,9 @@ function BlueprintAreaPanel({
   band: number
   progress: VisionProgress
   yourTens: Record<string, string>
+  /** v25 — the other end of the scale, shown beside the 10 so the number the
+   * user just gave has both anchors visible. */
+  yourZeros: Record<string, string>
   goals: VisionGoalDraft[]
   addedHabitIds: Set<string>
   onRaise: (areaId: string) => void
@@ -748,11 +820,17 @@ function BlueprintAreaPanel({
             )}
             <p className="text-[11px] text-zinc-400 mt-2">
               <span className="text-zinc-500 uppercase text-[9px] tracking-wide mr-1.5">Your 10</span>
-              {(yourTens[a.id] ?? "").trim() || <span className="text-zinc-600 italic">not written yet — define it in the Plan view so this rating measures something.</span>}
+              {(yourTens[a.id] ?? "").trim() || <span className="text-zinc-600 italic">not written yet. Define it in the Plan view so this rating measures something.</span>}
             </p>
+            {(yourZeros[a.id] ?? "").trim() && (
+              <p className="text-[11px] text-zinc-500 mt-1">
+                <span className="text-zinc-500 uppercase text-[9px] tracking-wide mr-1.5">Your 0</span>
+                {(yourZeros[a.id] ?? "").trim()}
+              </p>
+            )}
             <p className="text-[11px] text-zinc-500 mt-1.5">
               <span className="text-zinc-500 uppercase text-[9px] tracking-wide mr-1.5">Fed by</span>
-              {feeding.length ? feeding.map((g) => g.title).join(" · ") : <span className="text-zinc-600 italic">no goals — this area lives on rituals alone right now.</span>}
+              {feeding.length ? feeding.map((g) => g.title).join(" · ") : <span className="text-zinc-600 italic">no goals. This area lives on rituals alone right now.</span>}
             </p>
             {latest != null && latest < LIFE_MASTERY_SUCCESS_LEVEL && !raiseDone && raiseName && (
               <button
@@ -765,7 +843,7 @@ function BlueprintAreaPanel({
             {/* v13 — his escalation ladder + book prescriptions for a stuck area */}
             {latest != null && latest < LIFE_MASTERY_SUCCESS_LEVEL && (
               <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-2">
-                <p className="text-[9px] uppercase tracking-wide text-zinc-600 mb-1">Level up the input — the ladder, rung by rung</p>
+                <p className="text-[9px] uppercase tracking-wide text-zinc-600 mb-1">Level up the input, one rung at a time</p>
                 <p className="text-[10px] text-zinc-500 mb-1">{RESOURCE_LADDER[1]} The rule: the more you pay, the more you pay attention. A plateau is exactly when a coach earns their fee.</p>
                 {(AREA_BOOKS[a.id] ?? []).length > 0 && (
                   <p className="text-[10px] text-zinc-400">
@@ -792,12 +870,12 @@ function weekLabel(startDate: string, weekStart: string): string {
  * so you can go back over previous weeks". Rows = areas, columns = weeks,
  * last column = movement vs the week before.
  */
-function ScoreHistoryCard({ progress }: { progress: VisionProgress }) {
+function ScoreHistoryCard({ progress, labels }: { progress: VisionProgress; labels?: Record<string, string> }) {
   const reviews = (progress.weeklyReviews ?? []).slice().sort((a, b) => (a.weekStart < b.weekStart ? -1 : 1)).slice(-8)
   if (reviews.length === 0) {
     return (
       <p className="text-xs text-zinc-500 text-center py-8">
-        Your score history builds here, week by week — your own life spreadsheet.
+        Your score history builds here, week by week. Your own life spreadsheet.
         Complete weekly evaluations to fill it.
       </p>
     )
@@ -828,7 +906,7 @@ function ScoreHistoryCard({ progress }: { progress: VisionProgress }) {
               <tr key={a.id} className="border-t border-white/5">
                 <td className="py-1 pr-2 whitespace-nowrap">
                   <span className="inline-block size-1.5 rounded-full mr-1.5 align-middle" style={{ backgroundColor: a.color }} />
-                  <span className="text-zinc-300">{a.label}</span>
+                  <span className="text-zinc-300">{labels?.[a.id] ?? a.label}</span>
                 </td>
                 {vals.map((v, i) => (
                   <td key={i} className={`text-center px-1.5 ${v == null ? "text-zinc-700" : v < LIFE_MASTERY_SUCCESS_LEVEL ? "text-amber-300" : "text-zinc-200"}`}>
@@ -898,7 +976,7 @@ function RoutineLibrary({ added, onToggleItem }: { added: Set<string>; onToggleI
                     <span
                       key={pid}
                       className="flex items-center gap-1 text-[10px] px-1.5 py-px rounded-full border"
-                      style={{ color: p.color, borderColor: `${p.color}40`, backgroundColor: `${p.color}14` }}
+                      style={{ color: pillarTextColor(p.color), borderColor: `${p.color}40`, backgroundColor: `${p.color}14` }}
                     >
                       <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color }} />
                       {p.label}
@@ -1005,7 +1083,7 @@ function WorkoutDesigner({
   return (
     <div className="mt-1.5 ml-6 rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
       <div className="flex items-center gap-2">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Training days — in order</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Training days, in order</span>
         <button onClick={onClear} className="ml-auto text-[10px] text-zinc-600 hover:text-red-300 transition-colors">remove split</button>
       </div>
       <ul className="mt-1.5 space-y-1">
@@ -1155,7 +1233,7 @@ function InterviewFlow({
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") submit() }}
           autoFocus
-          placeholder={loop ? "First answer from the gut — empty Enter when done" : "Your answer…"}
+          placeholder={loop ? "First answer from the gut. Empty Enter when done" : "Your answer…"}
           className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40"
         />
         <button onClick={submit} className="text-[11px] px-2.5 py-1 rounded-md border border-violet-400/40 text-violet-200 hover:bg-violet-500/15 transition-colors">
@@ -1172,12 +1250,12 @@ function InterviewFlow({
  * text the user edits into their own words.
  */
 const PERFECT_DAY_QUESTIONS = [
-  "Ten years from now, zero limits: what time do you wake up — and how do you feel in the first ten seconds?",
+  "Ten years from now, zero limits: what time do you wake up. And how do you feel in the first ten seconds?",
   "Where in the world are you? What kind of home is around you?",
-  "Who do you wake up next to — who is in your life on this day?",
+  "Who do you wake up next to. Who is in your life on this day?",
   "What is the FIRST emotion of your day?",
-  "What does your morning look like there — the ritual, the food, the pace?",
-  "What do you spend the day actually doing — the work that feels like your mission?",
+  "What does your morning look like there. The ritual, the food, the pace?",
+  "What do you spend the day actually doing. The work that feels like your mission?",
   "How does the evening end, and what do you feel as you fall asleep?",
 ]
 
@@ -1198,7 +1276,7 @@ interface WheelRoom {
  * progress on the wedge, hub counts rooms begun. */
 /** v17 — how deep the user is going in a room this pass. Commitment is still
  * 12/12 (the manifesto); this is where the ATTENTION goes. */
-export type RoomScope = "deep" | "sketched" | "later"
+export type RoomScope = "deep" | "sketched" | "later" | "unset"
 
 function VisionRoomWheel({ rooms, ratings, beats, scopes, focusIds, activeId, onPick }: { rooms: WheelRoom[]; ratings: Record<string, number>; beats: Record<string, number>; scopes: Record<string, RoomScope>; focusIds?: string[]; activeId: string | null; onPick: (id: string) => void }) {
   const C = 195
@@ -1207,8 +1285,10 @@ function VisionRoomWheel({ rooms, ratings, beats, scopes, focusIds, activeId, on
   const seg = 360 / n
   const GAP = 2.5
   const BEATS_TOTAL = 4
-  const scopeOf = (id: string): RoomScope => scopes[id] ?? "later"
-  const mapped = rooms.filter((r) => scopeOf(r.id) !== "later" || (beats[r.id] ?? 0) > 0).length
+  // "unset" = no season ranking yet. It must NOT look parked: nothing is on a
+  // maintenance floor until the user has actually chosen a priority.
+  const scopeOf = (id: string): RoomScope => scopes[id] ?? "unset"
+  const mapped = rooms.filter((r) => !["later", "unset"].includes(scopeOf(r.id)) || (beats[r.id] ?? 0) > 0).length
   const focus = new Set(focusIds ?? [])
   const arc = (startDeg: number, endDeg: number, r: number): string => {
     const [x1, y1] = polar(C, C, r, startDeg)
@@ -1244,7 +1324,7 @@ function VisionRoomWheel({ rooms, ratings, beats, scopes, focusIds, activeId, on
         // Three honest states, so a parked room never reads as unfinished
         // homework: deep (working it), sketched (a line and a number), later.
         const sub = parked
-          ? "later"
+          ? "floor"
           : done >= BEATS_TOTAL
           ? "✓ complete"
           : scope === "sketched" && done < 2
@@ -1257,11 +1337,10 @@ function VisionRoomWheel({ rooms, ratings, beats, scopes, focusIds, activeId, on
               fill={parked ? `${r.color}0a` : begunRoom ? `${r.color}30` : `${r.color}14`}
               stroke={active ? "#fff" : parked ? "rgba(255,255,255,0.08)" : begunRoom ? `${r.color}88` : "rgba(255,255,255,0.10)"}
               strokeWidth={active ? 2 : 1}
-              strokeDasharray={parked ? "3 3" : undefined}
               role="button"
               tabIndex={0}
               aria-pressed={active}
-              aria-label={`${r.label} — ${done > 0 ? `${done} of ${BEATS_TOTAL} steps done${rating != null ? `, today ${rating}/10` : ""}` : parked ? "parked for later; open it to start" : "open this room's journey"}`}
+              aria-label={`${r.label} — ${done > 0 ? `${done} of ${BEATS_TOTAL} steps done${rating != null ? `, today ${rating}/10` : ""}` : parked ? "on a maintenance floor this season; open it to start" : "open this room's journey"}`}
               onClick={() => onPick(r.id)}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPick(r.id) } }}
               className="cursor-pointer focus:outline-none"
@@ -1271,18 +1350,23 @@ function VisionRoomWheel({ rooms, ratings, beats, scopes, focusIds, activeId, on
             {rating != null && (
               <path d={wedge(start, end, (R * Math.min(10, Math.max(1, rating))) / 10)} fill={`${r.color}b0`} stroke={r.color} strokeWidth="1" className="pointer-events-none" />
             )}
-            {/* The soft beat earns an outer ring — the room's inner work is done. */}
+            {/* The soft beat earns an outer ring. The room's inner work is done. */}
             {done >= BEATS_TOTAL && (
               <path d={arc(start, end, R + 4)} fill="none" stroke={r.color} strokeWidth="2" strokeLinecap="round" className="pointer-events-none" />
             )}
             {focus.has(r.id) && (
               <circle cx={lx - (anchor === "end" ? -5 : 5)} cy={ly} r="2.5" fill={r.color} className="pointer-events-none" />
             )}
-            <text x={lx.toFixed(2)} y={ly.toFixed(2)} textAnchor={anchor} dominantBaseline="middle" fontSize="9" fill={active ? "#fff" : parked ? "#71717a" : begunRoom ? "#e4e4e7" : "#a1a1aa"} className="pointer-events-none">
+            <text
+              x={lx.toFixed(2)} y={ly.toFixed(2)} textAnchor={anchor} dominantBaseline="middle" fontSize="9"
+              fill={active ? "#fff" : parked ? "#71717a" : begunRoom ? "#e4e4e7" : "#a1a1aa"}
+              onClick={() => onPick(r.id)}
+              className="cursor-pointer"
+            >
               {label}
             </text>
             {(begunRoom || scope !== "later") && (
-              <text x={lx.toFixed(2)} y={(ly + 11).toFixed(2)} textAnchor={anchor} dominantBaseline="middle" fontSize="8.5" fill={parked ? "#52525b" : r.color} className="pointer-events-none tabular-nums">
+              <text x={lx.toFixed(2)} y={(ly + 11).toFixed(2)} textAnchor={anchor} dominantBaseline="middle" fontSize="8.5" fill={parked ? "#52525b" : r.color} onClick={() => onPick(r.id)} className="cursor-pointer tabular-nums">
                 {sub}
               </text>
             )}
@@ -1304,15 +1388,15 @@ function VisionRoomWheel({ rooms, ratings, beats, scopes, focusIds, activeId, on
   )
 }
 
-/** v17 — the three shapes a goal can take, in one place so the row, the card
+/** v17. The three shapes a goal can take, in one place so the row, the card
  * and the suggestion tray all speak the same language. */
 const GOAL_TYPE_META: Array<{ type: VisionGoalType; icon: string; label: string; hint: string }> = [
-  { type: "milestone_ladder", icon: "🎯", label: "Target", hint: "A number you climb to by a date — 100 kg, 10k a month" },
-  { type: "habit_ramp", icon: "🔁", label: "Practice", hint: "An ongoing weekly practice — you never 'finish' it" },
-  { type: "achievement", icon: "🏁", label: "Finish line", hint: "You either did it or you didn't — a first muscle-up, a licence" },
+  { type: "milestone_ladder", icon: "🎯", label: "Target", hint: "A number you climb to by a date. 100 kg, 10k a month" },
+  { type: "habit_ramp", icon: "🔁", label: "Practice", hint: "An ongoing weekly practice. You never 'finish' it" },
+  { type: "achievement", icon: "🏁", label: "Finish line", hint: "You either did it or you didn't. A first muscle-up, a licence" },
 ]
 
-/** v17 — the one-tap flip between all three shapes. Lives in BOTH the compact
+/** v17. The one-tap flip between all three shapes. Lives in BOTH the compact
  * row and the full card: a goal typed wrong at birth was previously frozen
  * forever, which is the single loudest thing wrong with the old flow. */
 function GoalTypeToggle({ type, onSetType, size = "sm" }: {
@@ -1391,7 +1475,7 @@ function RampEditor({ steps, color, onChange }: {
           >+ phase</button>
         )}
       </div>
-      <p className="text-[10px] text-zinc-600 mt-1">The last phase is your steady state — that&apos;s the load the week gets balanced against.</p>
+      <p className="text-[10px] text-zinc-600 mt-1">The last phase is your steady state. That&apos;s the load the week gets balanced against.</p>
     </div>
   )
 }
@@ -1400,22 +1484,30 @@ function RampEditor({ steps, color, onChange }: {
  * editor. Same component either way, so a goal reads and edits identically
  * wherever you meet it: type toggle, title, its shape's controls, a date for
  * every type, and — expanded — the ramp and the questions behind the goal. */
-function RoomGoalRow({ goal, color, suggested, onEditTitle, onSetType, onEditMeasure, onEditDate, onFreq, onRemove, onEditRamp, onEditWhy }: {
+function RoomGoalRow({ goal, color, suggested, subGoals, onEditTitle, onSetType, onEditMeasure, onEditDate, onFreq, onRemove, onEditRamp, onEditWhy, onAddAction }: {
   goal: VisionGoalDraft
   color: string
   suggested: boolean
+  /** M9 — goals that feed this one from the same room. A goal with two or more
+   * of them IS a project, so it renders as one; no parent field required. */
+  subGoals?: VisionGoalDraft[]
   onEditTitle: (title: string) => void
   onSetType: (type: VisionGoalType) => void
-  onEditMeasure: (patch: { target?: number; unit?: string }) => void
+  onEditMeasure: (patch: { target?: number; unit?: string; start?: number }) => void
   onEditDate: (date: string) => void
   onFreq: (delta: number) => void
   onRemove: () => void
   onEditRamp?: (steps: HabitRampStep[]) => void
   onEditWhy?: (why: string) => void
+  onAddAction?: (action: { title: string; daysPerWeek: number }) => void
 }) {
   const [open, setOpen] = useState(false)
   const [whyDraft, setWhyDraft] = useState(goal.why)
+  const [actionDraft, setActionDraft] = useState("")
+  const [actionDays, setActionDays] = useState(3)
   useEffect(() => { setWhyDraft(goal.why) }, [goal.why])
+  const needsAction = goalNeedsAction(goal)
+  const children = subGoals ?? []
   const isTarget = goal.type === "milestone_ladder"
   const isPractice = goal.type === "habit_ramp"
   const freq = goal.habits[0]?.daysPerWeek ?? 3
@@ -1431,6 +1523,17 @@ function RoomGoalRow({ goal, color, suggested, onEditTitle, onSetType, onEditMea
         </span>
         {isTarget && (
           <span className="flex items-center gap-1.5 shrink-0">
+            {/* M2 — where you are now. Without it every ladder in the product
+                climbed from zero, whatever the truth was. */}
+            <input
+              type="number"
+              value={goal.measure?.start ?? ""}
+              onChange={(e) => onEditMeasure({ start: Number(e.target.value) })}
+              aria-label={`Starting number for ${goal.title} — where you are now`}
+              placeholder="from"
+              className="w-14 bg-white/5 border border-white/10 rounded-md px-1.5 py-1 text-[11px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/25 tabular-nums"
+            />
+            <span className="text-[10px] text-zinc-600">→</span>
             <input
               type="number"
               value={goal.measure?.target ?? ""}
@@ -1445,6 +1548,9 @@ function RoomGoalRow({ goal, color, suggested, onEditTitle, onSetType, onEditMea
               aria-label={`Unit for ${goal.title}`}
               className="w-16 bg-white/5 border border-white/10 rounded-md px-1.5 py-1 text-[11px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/25"
             />
+            {goal.measure && measureDirection(goal.measure) === "down" && (
+              <span className="text-[10px] text-sky-300/80" title="This goal improves downward">↓</span>
+            )}
           </span>
         )}
         {isPractice && (
@@ -1471,11 +1577,84 @@ function RoomGoalRow({ goal, color, suggested, onEditTitle, onSetType, onEditMea
         </button>
         <button onClick={onRemove} aria-label={`Remove goal ${goal.title}`} className="shrink-0 text-zinc-600 hover:text-red-300 opacity-0 group-hover/row:opacity-100 transition-all"><X className="size-3.5" /></button>
       </div>
+
+      {/* Captured ≠ planned. A line that came in from a list is not a goal yet,
+          and it used to look like one: a fabricated why, a fabricated deadline,
+          a "Work toward: …" habit already on the calendar. Saying so at the
+          point of contact is the whole point — a quiet badge in the header is
+          not the same as the row admitting what it is. */}
+      {!goalIsPlanned(goal) && (
+        <div className="mx-2.5 mb-2 flex items-baseline gap-2 flex-wrap">
+          <span className="text-[9px] font-semibold uppercase tracking-[0.14em] px-1.5 py-0.5 rounded border border-zinc-500/40 text-zinc-400 shrink-0">
+            captured
+          </span>
+          <span className="text-[10px] text-zinc-500">
+            not a goal yet — still needs {goalGaps(goal).join(" · ")}
+          </span>
+        </div>
+      )}
+
+      {/* M8 — a goal that names an outcome and no action. Until this asked,
+          "no pain in my left knee" went on the calendar three times a week as
+          a habit called "Work toward: no pain in my left knee". */}
+      {needsAction && onAddAction && (
+        <div className="mx-2.5 mb-2 rounded-lg border border-amber-400/25 bg-amber-500/[0.06] px-2.5 py-2">
+          <p className="text-[11px] text-amber-100/90">What will you actually do about this?</p>
+          <p className="text-[10px] text-zinc-500 mt-0.5">
+            It names where you want to end up but nothing you can do on a Tuesday. One action is enough to start.
+          </p>
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <input
+              value={actionDraft}
+              onChange={(e) => setActionDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && actionDraft.trim()) { onAddAction({ title: actionDraft.trim(), daysPerWeek: actionDays }); setActionDraft("") }
+              }}
+              placeholder="e.g. physio exercises · stretch the hip · walk 30 minutes"
+              aria-label={`An action for ${goal.title}`}
+              className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[11px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30"
+            />
+            <select
+              value={actionDays}
+              onChange={(e) => setActionDays(Number(e.target.value))}
+              aria-label={`Days per week for this action`}
+              className="bg-white/5 border border-white/10 rounded-md px-1.5 py-1 text-[10px] text-zinc-300 focus:outline-none shrink-0"
+            >
+              {[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n} className="bg-zinc-900">{n}×/wk</option>)}
+            </select>
+            <button
+              onClick={() => { if (actionDraft.trim()) { onAddAction({ title: actionDraft.trim(), daysPerWeek: actionDays }); setActionDraft("") } }}
+              disabled={!actionDraft.trim()}
+              className="shrink-0 text-[10px] px-2 py-1 rounded-md border border-white/15 text-zinc-300 hover:bg-white/10 disabled:opacity-30 transition-colors"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* M9 — a goal that other goals in this room feed IS a project. Derived
+          from the edges that already exist; no parent field, no migration. */}
+      {children.length > 0 && (
+        <div className="mx-2.5 mb-2 pl-2.5 border-l" style={{ borderColor: `${color}55` }}>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-1">
+            {children.length} steps feed this
+          </p>
+          {children.map((c) => (
+            <p key={c.id} className="text-[11px] text-zinc-400 py-0.5">
+              {c.title}
+              <span className="ml-1.5 text-[9px] text-zinc-600">
+                {c.type === "habit_ramp" ? `${c.habits[0]?.daysPerWeek ?? 3}×/wk` : c.type === "milestone_ladder" ? `${c.measure?.start} → ${c.measure?.target} ${c.measure?.unit ?? ""}` : "done or not"}
+              </span>
+            </p>
+          ))}
+        </div>
+      )}
       {open && (
         <div className="px-2.5 pb-2.5 pt-1 space-y-2.5 border-t border-white/5">
           {onEditWhy && (
             <div>
-              <p className="text-[10px] text-zinc-500">Why this goal? (The reason is the fuel — yours to write, never the coach&apos;s.)</p>
+              <p className="text-[10px] text-zinc-500">Why this goal? (The reason is the fuel, and it is yours to write.)</p>
               <input
                 value={whyDraft}
                 onChange={(e) => setWhyDraft(e.target.value)}
@@ -1494,12 +1673,12 @@ function RoomGoalRow({ goal, color, suggested, onEditTitle, onSetType, onEditMea
               onClick={() => onEditRamp([{ frequencyPerWeek: Math.max(1, freq - 1), durationWeeks: 4 }, { frequencyPerWeek: freq, durationWeeks: 8 }])}
               className="text-[11px] text-zinc-500 hover:text-zinc-300 underline decoration-dotted transition-colors"
             >
-              + Ease into it — build a ramp instead of starting at full load
+              + Ease into it. Build a ramp instead of starting at full load
             </button>
           )}
           {goal.type === "achievement" && (
             <p className="text-[10px] text-zinc-600">
-              A finish line has no number to climb — its rungs are the checkpoints in its plan, and it&apos;s done when it&apos;s done.
+              A finish line has no number to climb. Its rungs are the checkpoints in its plan, and it&apos;s done when it&apos;s done.
             </p>
           )}
         </div>
@@ -1599,7 +1778,7 @@ function FeedsPicker({ goal, allGoals, color, onLink, onUnlink }: {
                 key={c.id}
                 onClick={() => { onLink(goal.id, c.id); setOpen(false) }}
                 disabled={loops}
-                title={loops ? `"${c.title}" already feeds this one — a loop would make the plan unreadable` : `This goal feeds "${c.title}"`}
+                title={loops ? `"${c.title}" already feeds this one. A loop would make the plan unreadable` : `This goal feeds "${c.title}"`}
                 className="text-[10px] px-2 py-0.5 rounded-full border border-white/15 text-zinc-300 hover:bg-white/10 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
               >
                 {c.title}
@@ -1618,10 +1797,9 @@ function FeedsPicker({ goal, allGoals, color, onLink, onUnlink }: {
  * → the gap (rate yourself, now that a 10 means something) → the goals → the
  * deeper work (why, identity, this room's values and affirmations). Every beat
  * writes straight into the same stores the rest of the app reads. */
-function RoomJourneyPanel({ room, dream, zero, rating, why, whyWork, identity, soft, goalsInRoom, allGoals, suggestions, suggestionPhase, autoSuggest, onToggleAutoSuggest, suggestedIds, today, onDream, onZero, onRating, onWhy, onWhyWork, onIdentity, onSoft, onLinkGoals, onUnlinkGoals, onPropose, onAcceptSuggestion, onDismissSuggestion, onAddGoalRaw, onEditGoalTitle, onSetGoalType, onEditGoalMeasure, onEditGoalDate, onGoalFreq, onRemoveGoal, onEditGoalRamp, onEditGoalWhy, onRename, onRemove, onClose }: {
+function RoomJourneyPanel({ room, dream, zero, rating, why, whyWork, identity, soft, goalsInRoom, allGoals, suggestions, suggestionPhase, autoSuggest, onToggleAutoSuggest, suggestedIds, today, onDream, onZero, onRating, onWhy, onWhyWork, onIdentity, onSoft, approachReps, onApproachRep, relationshipStatus, onRelationshipStatus, sessionJournals, onLogSession, onLinkGoals, onUnlinkGoals, onPropose, onAcceptSuggestion, onDismissSuggestion, onAddGoalRaw, onOpenList, onAddGoalAction, onEditGoalTitle, onSetGoalType, onEditGoalMeasure, onEditGoalDate, onGoalFreq, onRemoveGoal, onEditGoalRamp, onEditGoalWhy, onRename, onRemove, onClose }: {
   room: WheelRoom
   dream: string
-  zero: string
   rating: number | null
   why: string
   whyWork: string
@@ -1633,27 +1811,40 @@ function RoomJourneyPanel({ room, dream, zero, rating, why, whyWork, identity, s
   allGoals: VisionGoalDraft[]
   /** v17 — drafted but NOT yet committed: the coach proposes, you author. */
   suggestions: VisionGoalDraft[]
-  suggestionPhase: "idle" | "loading" | "error"
+  /** v25 — "dry" = the coach answered but every draft was already in the room. */
+  suggestionPhase: "idle" | "loading" | "error" | "dry" | "unavailable"
   autoSuggest: boolean
   onToggleAutoSuggest: () => void
   suggestedIds: Set<string>
   today: string
   onDream: (text: string) => void
+  /** v25 — what a 0 looks like here. The source names both ends in one
+   * breath ("what is the ten for you and then what is a zero for you"), and a
+   * rating only means something once both ends are yours. */
+  zero: string
   onZero: (text: string) => void
   onRating: (rating: number) => void
   onWhy: (text: string) => void
   onWhyWork: (text: string) => void
   onIdentity: (text: string) => void
   onSoft: (kind: "values" | "affirmations" | "incantations" | "rules", items: string[]) => void
+  approachReps: Record<string, number>
+  onApproachRep: (level: number, next: number) => void
+  relationshipStatus: RelationshipStatus
+  onRelationshipStatus: (s: RelationshipStatus) => void
+  sessionJournals: Array<{ id: string; date: string; reps: string; body: string; felt: string; her: string; next: string }>
+  onLogSession: (j: { id: string; date: string; reps: string; body: string; felt: string; her: string; next: string }) => void
   onLinkGoals: (fromId: string, toId: string) => void
   onUnlinkGoals: (fromId: string, toId: string) => void
   onPropose: () => void
   onAcceptSuggestion: (id: string) => void
   onDismissSuggestion: (id: string) => void
   onAddGoalRaw: (input: { title: string; type: VisionGoalType; why: string; daysPerWeek: number; measure: VisionMeasure | null; targetDate: string | null }) => void
+  onOpenList: () => void
+  onAddGoalAction: (goalId: string, action: { title: string; daysPerWeek: number }) => void
   onEditGoalTitle: (goalId: string, title: string) => void
   onSetGoalType: (goalId: string, type: VisionGoalType) => void
-  onEditGoalMeasure: (goalId: string, patch: { target?: number; unit?: string }) => void
+  onEditGoalMeasure: (goalId: string, patch: { target?: number; unit?: string; start?: number }) => void
   onEditGoalDate: (goalId: string, date: string) => void
   onGoalFreq: (goalId: string, delta: number) => void
   onRemoveGoal: (goalId: string) => void
@@ -1667,20 +1858,38 @@ function RoomJourneyPanel({ room, dream, zero, rating, why, whyWork, identity, s
   // shouldn't churn the reading on every keystroke.
   const [dreamDraft, setDreamDraft] = useState(dream)
   const [zeroDraft, setZeroDraft] = useState(zero)
-  const [zeroOpen, setZeroOpen] = useState(false)
   const [whyDraft, setWhyDraft] = useState(why)
+  // v24 — the four list exercises are one disclosure, not four open boxes.
+  const [softOpen, setSoftOpen] = useState(false)
   const [whyWorkDraft, setWhyWorkDraft] = useState(whyWork)
   const [identityDraft, setIdentityDraft] = useState(identity)
   const [goalDraft, setGoalDraft] = useState("")
   const [renaming, setRenaming] = useState(false)
   const [renameDraft, setRenameDraft] = useState("")
-  useEffect(() => { setDreamDraft(dream); setZeroDraft(zero); setZeroOpen(false); setWhyDraft(why); setWhyWorkDraft(whyWork); setIdentityDraft(identity); setGoalDraft(""); setRenaming(false) }, [room.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setDreamDraft(dream); setWhyDraft(why); setWhyWorkDraft(whyWork); setIdentityDraft(identity); setGoalDraft(""); setRenaming(false) }, [room.id]) // eslint-disable-line react-hooks/exhaustive-deps
   const submitGoal = () => {
     const t = goalDraft.trim()
     if (!t) return
     onAddGoalRaw(classifyGoalInput(t, today))
     setGoalDraft("")
   }
+  // M9 — a project is derived, not declared: index the goals in this room that
+  // feed another goal in the SAME room, and render those inside their parent
+  // instead of as siblings. Cross-area edges stay in the Feeds picker below;
+  // they are a different relationship and shouldn't collapse a room's list.
+  // v25 — doubles as "which tray drafts are already kept": an accepted draft
+  // commits under its own id, so membership here IS keptness.
+  const inRoom = new Set(goalsInRoom.map((g) => g.id))
+  const childrenOf = new Map<string, VisionGoalDraft[]>()
+  for (const g of goalsInRoom) {
+    for (const parentId of g.feedsGoalIds ?? []) {
+      if (!inRoom.has(parentId)) continue
+      childrenOf.set(parentId, [...(childrenOf.get(parentId) ?? []), g])
+    }
+  }
+  const nested = new Set([...childrenOf.values()].flat().map((g) => g.id))
+  const roomRoots = goalsInRoom.filter((g) => !nested.has(g.id))
+
   const prompt = AREA_WANT_PROMPTS[room.id]
   const softDone = !!why.trim() || !!identity.trim() || (soft.affirmations?.length ?? 0) > 0
   // Only the four beats the WHEEL counts get a number. Suggestions and
@@ -1701,7 +1910,7 @@ function RoomJourneyPanel({ room, dream, zero, rating, why, whyWork, identity, s
     </div>
   )
   return (
-    <div className="rounded-xl border p-4 mt-2" style={{ borderColor: `${room.color}55`, background: `${room.color}0a` }}>
+    <div id="lm-room-panel" className="rounded-xl border p-4 mt-2 scroll-mt-24" style={{ borderColor: `${room.color}55`, background: `${room.color}0a` }}>
       {/* Header — the room's name is an artifact too ("language that drives you") */}
       <div className="flex items-center gap-2 mb-3">
         <span className="size-2.5 rounded-full shrink-0" style={{ background: room.color }} />
@@ -1712,7 +1921,7 @@ function RoomJourneyPanel({ room, dream, zero, rating, why, whyWork, identity, s
             onKeyDown={(e) => { if (e.key === "Enter" && renameDraft.trim()) { onRename(renameDraft); setRenaming(false) } if (e.key === "Escape") setRenaming(false) }}
             autoFocus
             aria-label={`New name for ${room.label}`}
-            placeholder="A name that pulls — “Physical Power”, not “Fitness”"
+            placeholder="A name that pulls. Try “Physical Power” over “Fitness”"
             className="flex-1 min-w-0 bg-white/5 border border-white/20 rounded-lg px-2.5 py-1 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/40"
           />
         ) : (
@@ -1735,7 +1944,7 @@ function RoomJourneyPanel({ room, dream, zero, rating, why, whyWork, identity, s
       <div className="space-y-4">
         {/* Beat 1 — the picture (WHAT a 10 looks like) */}
         <div>
-          {beat(1, !!dream.trim(), "The picture — what a 10 here looks like")}
+          {beat(1, !!dream.trim() && !!zero.trim(), "The picture. What a 10 and a 0 here look like")}
           <p className="text-[11px] text-zinc-500 mt-1">{prompt?.q ?? `What does a 10 in ${room.label} look like for you?`} Write it as already true.</p>
           <textarea
             value={dreamDraft}
@@ -1743,83 +1952,32 @@ function RoomJourneyPanel({ room, dream, zero, rating, why, whyWork, identity, s
             onBlur={() => { if (dreamDraft !== dream) onDream(dreamDraft) }}
             rows={2}
             aria-label={`Your 10 in ${room.label}`}
-            placeholder={prompt ? `e.g. “${prompt.eg}”` : "Present tense — the you who already lives there"}
+            placeholder={prompt ? `e.g. “${prompt.eg}”` : "Present tense. The you who already lives there"}
             className="mt-1.5 w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30 resize-none"
           />
-          {/* v17 — your 0. A rating needs two reference points, not one: the
-              framework names both poles, and the low one is what makes a 4
-              mean something. Optional, tucked under the 10 it mirrors. */}
-          {dream.trim() && (
-            zeroOpen || zero.trim() ? (
-              <div className="mt-2">
-                <p className="text-[10px] text-zinc-500">And your 0 — what this room looks like at its worst. The other end of the scale.</p>
-                <input
-                  value={zeroDraft}
-                  onChange={(e) => setZeroDraft(e.target.value)}
-                  onBlur={() => { if (zeroDraft !== zero) onZero(zeroDraft) }}
-                  aria-label={`Your 0 in ${room.label}`}
-                  placeholder="e.g. “Exhausted by 3pm, every day, and pretending it's fine”"
-                  className="mt-1 w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30"
-                />
-              </div>
-            ) : (
-              <button onClick={() => setZeroOpen(true)} className="mt-1.5 text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors">
-                + Name your 0 too — the rating means more with both ends marked
-              </button>
-            )
-          )}
-        </div>
-
-        {/* v17 — Beat 2: the suggestions arrive on their own once the 10 is
-            written. They land in a TRAY you accept from, never straight into
-            your list: the coach drafts, you author. */}
-        <div>
-          {aside(<Wand2 className="size-3" />, "Suggestions — drafted from your picture")}
-          {!dream.trim() ? (
-            <p className="text-[11px] text-zinc-600 mt-1">Write your 10 above and suggestions appear here by themselves.</p>
-          ) : suggestionPhase === "loading" ? (
-            <p className="flex items-center gap-1.5 text-[11px] text-violet-200/80 mt-1.5">
-              <Loader2 className="size-3 animate-spin" /> Reading your 10 and drafting goals…
-            </p>
-          ) : suggestions.length > 0 ? (
-            <>
-              <p className="text-[11px] text-zinc-500 mt-1">
-                Tap one to keep it — it becomes yours to edit. Dismiss the rest.
-                <button onClick={onToggleAutoSuggest} className="ml-1.5 underline decoration-dotted text-zinc-600 hover:text-zinc-400 transition-colors">
-                  {autoSuggest ? "stop suggesting automatically" : "suggest automatically again"}
-                </button>
-              </p>
-              <div className="mt-2 space-y-1.5">
-                {suggestions.map((s) => (
-                  <div key={s.id} className="flex items-start gap-2 rounded-lg border border-violet-400/25 bg-violet-500/[0.06] px-2.5 py-1.5">
-                    <span className="text-[11px] shrink-0 mt-0.5" title={s.type === "habit_ramp" ? "A weekly practice" : s.type === "achievement" ? "Done or not done" : "A target you climb to"}>
-                      {s.type === "habit_ramp" ? "🔁" : s.type === "achievement" ? "🏁" : "🎯"}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm text-zinc-100">{s.title}</span>
-                      {s.why && <span className="block text-[10px] text-zinc-500 mt-0.5">{s.why}</span>}
-                    </span>
-                    <button onClick={() => onAcceptSuggestion(s.id)} className="shrink-0 text-[11px] px-2 py-1 rounded-md font-medium text-zinc-950 transition-colors" style={{ background: room.color }}>keep</button>
-                    <button onClick={() => onDismissSuggestion(s.id)} aria-label={`Dismiss ${s.title}`} className="shrink-0 text-zinc-600 hover:text-red-300 transition-colors mt-1"><X className="size-3" /></button>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : suggestionPhase === "error" ? (
-            <p className="text-[11px] text-red-300 mt-1.5">The coach didn&apos;t answer. <button onClick={onPropose} className="underline decoration-dotted hover:text-red-200">Try again</button></p>
-          ) : (
-            <p className="text-[11px] text-zinc-600 mt-1">
-              Nothing pending — <button onClick={onPropose} className="underline decoration-dotted text-zinc-500 hover:text-zinc-300 transition-colors">suggest {goalsInRoom.length ? "more" : "some"} from my 10</button>
-            </p>
-          )}
+          {/* v25 — and the 0, asked in the same breath as the 10. Without the
+              bottom of the scale the rating below has only one anchor. */}
+          <p className="text-[11px] text-zinc-500 mt-2.5">And what does a 0 in {room.label} look like?</p>
+          <textarea
+            value={zeroDraft}
+            onChange={(e) => setZeroDraft(e.target.value)}
+            onBlur={() => { if (zeroDraft !== zero) onZero(zeroDraft) }}
+            rows={2}
+            aria-label={`Your 0 in ${room.label}`}
+            placeholder="The version of this you would not want to live in"
+            className="mt-1.5 w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30 resize-none"
+          />
         </div>
 
         {/* v17 — Beat 3: the gap, asked AFTER the 10. You can't honestly rate
             where you are until you've said what a 10 would be. */}
         <div>
-          {beat(2, rating != null, "The gap — where you are today, honestly")}
-          <p className="text-[11px] text-zinc-500 mt-1">Now you&apos;ve named the 10 — where are you today, honestly?</p>
+          {beat(2, rating != null, "The gap, where you are today, honestly")}
+          <p className="text-[11px] text-zinc-500 mt-1">Now you&apos;ve named the 10. Where are you today, honestly?</p>
           <div className="flex items-center gap-3 mt-1.5">
+            {/* v23 — same phantom-value bug as belief/desire: the thumb sat at
+                5 with the readout showing "–", and dragging to 5 records
+                nothing because the input never fires. */}
             <input
               type="range"
               min={0}
@@ -1828,12 +1986,18 @@ function RoomJourneyPanel({ room, dream, zero, rating, why, whyWork, identity, s
               value={rating ?? 5}
               onChange={(e) => onRating(Number(e.target.value))}
               aria-label={`Where are you in ${room.label} today, 0-10`}
-              className="flex-1"
-              style={{ accentColor: room.color }}
+              className={`flex-1 ${rating == null ? "opacity-40" : ""}`}
+              style={{ accentColor: rating == null ? "#52525b" : room.color }}
             />
-            <span className="text-sm tabular-nums w-12 text-right" style={{ color: rating != null ? room.color : "#52525b" }}>
+            <button
+              onClick={() => onRating(rating ?? 5)}
+              aria-label={rating == null ? `Confirm ${room.label} at 5` : `${room.label} rated ${rating}`}
+              title={rating == null ? "Tap to confirm 5, or slide to rate" : "Confirmed"}
+              className={`text-sm tabular-nums w-12 text-right ${rating == null ? "underline decoration-dotted hover:text-white" : ""}`}
+              style={{ color: rating != null ? room.color : "#a1a1aa" }}
+            >
               {rating != null ? `${rating}/10` : "–/10"}
-            </span>
+            </button>
           </div>
           {rating != null && dream.trim() && (
             <p className="text-[10px] text-zinc-500 mt-1">The gap between {rating} and your 10 is the work — and the reason this room is worth entering.</p>
@@ -1842,15 +2006,17 @@ function RoomJourneyPanel({ room, dream, zero, rating, why, whyWork, identity, s
 
         {/* Beat 4 — the goals: a list you rattle off, each line a tracked row */}
         <div>
-          {beat(3, goalsInRoom.length > 0, "The goals — the moves that get you there")}
+          {beat(3, goalsInRoom.length > 0, "The goals, the moves that get you there")}
           {goalsInRoom.length > 0 && (
             <div className="mt-2 space-y-1.5">
-              {goalsInRoom.map((g) => (
+              {roomRoots.map((g) => (
                 <RoomGoalRow
                   key={g.id}
                   goal={g}
                   color={room.color}
                   suggested={suggestedIds.has(g.id)}
+                  subGoals={childrenOf.get(g.id) ?? []}
+                  onAddAction={(a) => onAddGoalAction(g.id, a)}
                   onEditTitle={(t) => onEditGoalTitle(g.id, t)}
                   onSetType={(t) => onSetGoalType(g.id, t)}
                   onEditMeasure={(patch) => onEditGoalMeasure(g.id, patch)}
@@ -1884,8 +2050,87 @@ function RoomJourneyPanel({ room, dream, zero, rating, why, whyWork, identity, s
             </button>
           </div>
           <p className="text-[10px] text-zinc-600 mt-1.5">
-            A number becomes a <span className="text-zinc-400">🎯 target with a date</span>; a frequency like &ldquo;4×/week&rdquo; becomes a <span className="text-zinc-400">🔁 weekly practice</span>; something you either do or don&apos;t — &ldquo;first muscle-up&rdquo; — becomes a <span className="text-zinc-400">🏁 finish line</span>. Flip any of them with the toggle.
+            A number becomes a <span className="text-zinc-400">🎯 target with a date</span>; a frequency like &ldquo;4×/week&rdquo; becomes a <span className="text-zinc-400">🔁 weekly practice</span>; something you either do or don&apos;t, like &ldquo;first muscle-up&rdquo;, becomes a <span className="text-zinc-400">🏁 finish line</span>. Flip any of them with the toggle.
+            {" "}
+            <button onClick={onOpenList} className="text-zinc-400 underline underline-offset-2 hover:text-zinc-200 transition-colors">
+              Already written a list? Paste the whole thing.
+            </button>
           </p>
+
+          {/* v25 — the tray sits UNDER your own list, not above it: your goals
+              come first and the coach's drafts answer them. It fills itself
+              twice over — from your 10, and again from each goal you write —
+              and a kept draft stays put, marked, so picking several in a row
+              doesn't re-flow the list under the cursor. */}
+          <div className="mt-4 pt-3 border-t border-white/5">
+            {aside(<Wand2 className="size-3" />, "Suggestions. Drafted from your 10 and your goals")}
+            {suggestionPhase === "loading" ? (
+              <p className="flex items-center gap-1.5 text-[11px] text-violet-200/80 mt-1.5">
+                <Loader2 className="size-3 animate-spin" /> Reading what you wrote and drafting goals…
+              </p>
+            ) : suggestions.length > 0 ? (
+              <>
+                <p className="text-[11px] text-zinc-500 mt-1">
+                  Keep as many as you want. Each one becomes yours to edit above. Dismiss the rest.
+                  <button onClick={onToggleAutoSuggest} className="ml-1.5 underline decoration-dotted text-zinc-600 hover:text-zinc-400 transition-colors">
+                    {autoSuggest ? "stop suggesting automatically" : "suggest automatically again"}
+                  </button>
+                </p>
+                {/* Rows accumulate now — a kept one stays and every goal you
+                    add tops the tray up — so it gets its own scroll rather than
+                    pushing the deeper work off the screen. */}
+                <div className="mt-2 space-y-1.5 max-h-[26rem] overflow-y-auto pr-1">
+                  {suggestions.map((s) => {
+                    const kept = inRoom.has(s.id)
+                    return (
+                      <div key={s.id} className={`flex items-start gap-2 rounded-lg border px-2.5 py-1.5 transition-colors ${kept ? "border-white/10 bg-white/[0.02]" : "border-violet-400/25 bg-violet-500/[0.06]"}`}>
+                        <span className="text-[11px] shrink-0 mt-0.5" title={s.type === "habit_ramp" ? "A weekly practice" : s.type === "achievement" ? "Done or not done" : "A target you climb to"}>
+                          {s.type === "habit_ramp" ? "🔁" : s.type === "achievement" ? "🏁" : "🎯"}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className={`block text-sm ${kept ? "text-zinc-500" : "text-zinc-100"}`}>{s.title}</span>
+                          {s.why && <span className="block text-[10px] text-zinc-600 mt-0.5">{s.why}</span>}
+                        </span>
+                        {kept ? (
+                          <span className="shrink-0 text-[11px] px-2 py-1 text-zinc-500" title="Already in your list above">✓ kept</span>
+                        ) : (
+                          <button onClick={() => onAcceptSuggestion(s.id)} className="shrink-0 text-[11px] px-2 py-1 rounded-md font-medium text-zinc-950 transition-colors" style={{ background: room.color }}>keep</button>
+                        )}
+                        <button onClick={() => onDismissSuggestion(s.id)} aria-label={kept ? `Clear ${s.title} from the tray` : `Dismiss ${s.title}`} className="shrink-0 text-zinc-600 hover:text-red-300 transition-colors mt-1"><X className="size-3" /></button>
+                      </div>
+                    )
+                  })}
+                </div>
+                <button onClick={onPropose} className="mt-1.5 text-[11px] text-zinc-600 hover:text-zinc-300 underline decoration-dotted transition-colors">suggest a few more</button>
+                {/* A refill that failed or came back all-duplicates has to say so
+                    HERE — with rows still on screen the empty-tray states below
+                    never render, and the button would look like it did nothing. */}
+                {suggestionPhase === "error" && (
+                  <p className="text-[11px] text-red-300 mt-1.5">The coach didn&apos;t answer. <button onClick={onPropose} className="underline decoration-dotted hover:text-red-200">Try again</button></p>
+                )}
+                {suggestionPhase === "unavailable" && (
+                  <p className="text-[11px] text-zinc-500 mt-1.5">Drafting suggestions needs you signed in. Write your own below and nothing is lost.</p>
+                )}
+                {suggestionPhase === "dry" && (
+                  <p className="text-[11px] text-zinc-500 mt-1.5">Nothing new that time. Everything drafted is already in your list.</p>
+                )}
+              </>
+            ) : suggestionPhase === "unavailable" ? (
+              <p className="text-[11px] text-zinc-500 mt-1.5">Drafting suggestions needs you signed in. Write your own below and nothing is lost.</p>
+            ) : suggestionPhase === "error" ? (
+              <p className="text-[11px] text-red-300 mt-1.5">The coach didn&apos;t answer. <button onClick={onPropose} className="underline decoration-dotted hover:text-red-200">Try again</button></p>
+            ) : suggestionPhase === "dry" ? (
+              <p className="text-[11px] text-zinc-500 mt-1.5">
+                Nothing new. Everything drafted this time is already in your list. <button onClick={onPropose} className="underline decoration-dotted text-zinc-500 hover:text-zinc-300 transition-colors">Try again</button>
+              </p>
+            ) : !dream.trim() && goalsInRoom.length === 0 ? (
+              <p className="text-[11px] text-zinc-600 mt-1">Write your 10 above, or add a goal, and suggestions appear here by themselves.</p>
+            ) : (
+              <p className="text-[11px] text-zinc-600 mt-1">
+                Nothing pending <button onClick={onPropose} className="underline decoration-dotted text-zinc-500 hover:text-zinc-300 transition-colors">suggest {goalsInRoom.length ? "more" : "some"} from what I&apos;ve written</button>
+              </p>
+            )}
+          </div>
         </div>
 
         {/* v17 — Beat 5: THE DEEPER WORK, promoted out of the drawer it used to
@@ -1893,13 +2138,27 @@ function RoomJourneyPanel({ room, dream, zero, rating, why, whyWork, identity, s
             who you are here, and this room's own values / affirmations / rules.
             This is the framework — hiding it behind "optional" was the bug. */}
         <div>
-          {beat(4, softDone, "The deeper work — why this room, and who you are in it")}
+          {beat(4, softDone, "The deeper work. Why this room, and who you are in it")}
+          {/* v24 — this rendered SEVEN empty inputs at once (fuel, pain-why,
+              identity, then values / affirmations / incantations / rules)
+              before a single word of the 10 above it was written. A previous
+              pass over-corrected here: hiding the block behind "optional" was
+              the bug, so it was un-hidden entirely — and the fix for that bug
+              created this one. Progressive reveal is the actual answer, and
+              it was left open in v22's own ledger. The block now unlocks on
+              the 10, and the four list exercises sit behind one disclosure. */}
+          {!dream.trim() ? (
+            <p className="text-[11px] text-zinc-500 mt-1 pl-4 border-l" style={{ borderColor: `${room.color}33` }}>
+              Unlocks once you&apos;ve pictured your 10 above. The why and the identity only mean something against a picture.
+            </p>
+          ) : (
+          <>
           <p className="text-[11px] text-zinc-500 mt-1">
             Goals are what you do. This is what makes you keep doing them.
           </p>
           <div className="mt-2 space-y-2.5 pl-4 border-l" style={{ borderColor: `${room.color}33` }}>
             <div>
-              <p className="text-[10px] text-zinc-500">The fuel — read on hard days, feeds your driving force.</p>
+              <p className="text-[10px] text-zinc-500">The fuel. The line you read on a hard day in this room.</p>
               <input
                 value={whyDraft}
                 onChange={(e) => setWhyDraft(e.target.value)}
@@ -1921,7 +2180,8 @@ function RoomJourneyPanel({ room, dream, zero, rating, why, whyWork, identity, s
               />
             </div>
             <div>
-              <p className="text-[10px] text-zinc-500">The identity — one line, joins your incantations and daily card.</p>
+              <PrincipleCardView id="identity" />
+              <p className="text-[10px] text-zinc-500">The identity. Who you are when this room is handled.</p>
               <input
                 value={identityDraft}
                 onChange={(e) => setIdentityDraft(e.target.value)}
@@ -1941,19 +2201,53 @@ function RoomJourneyPanel({ room, dream, zero, rating, why, whyWork, identity, s
                 </button>
               )}
             </div>
-            <SoftList label="This room's values" hint="What does this room stand for? These roll up into your life-wide values." placeholder="Vitality" color={room.color} items={soft.values ?? []} onChange={(v) => onSoft("values", v)} />
-            <SoftList label="Affirmations" hint='Present tense, out loud — "I am strong and I train like it."' placeholder="I am…" color={room.color} items={soft.affirmations ?? []} onChange={(v) => onSoft("affirmations", v)} />
-            <SoftList label="Incantations" hint="Said with your whole body, not just your mouth. Movement + voice + repetition." placeholder="All I need is within me right now" color={room.color} items={soft.incantations ?? []} onChange={(v) => onSoft("incantations", v)} />
-            <SoftList label="Rules" hint={RULES_EXERCISE.rewriteFormat} placeholder="I feel fit anytime I move my body" color={room.color} items={soft.rules ?? []} onChange={(v) => onSoft("rules", v)} />
+            {room.id === "lm_relationship" && (
+              <SinglePersonPanel
+                color={room.color}
+                reps={approachReps}
+                onReps={onApproachRep}
+                status={relationshipStatus}
+                onStatus={onRelationshipStatus}
+                journals={sessionJournals}
+                onLogSession={onLogSession}
+                today={today}
+              />
+            )}
+            {(() => {
+              const softCount = (soft.values?.length ?? 0) + (soft.affirmations?.length ?? 0) + (soft.incantations?.length ?? 0) + (soft.rules?.length ?? 0)
+              return (
+                <div>
+                  <button
+                    onClick={() => setSoftOpen((o) => !o)}
+                    aria-expanded={softOpen}
+                    className="flex items-center gap-1.5 text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                  >
+                    <ChevronDown className={`size-3 transition-transform ${softOpen ? "" : "-rotate-90"}`} />
+                    {softOpen ? "Hide" : "Values, affirmations, incantations and rules for this room"}
+                    {softCount > 0 && <span className="text-zinc-600">· {softCount} written</span>}
+                  </button>
+                  {softOpen && (
+                    <div className="mt-2 space-y-2.5">
+                      <SoftList label="This room's values" hint="What does this room stand for? Shown in Library › Values beside your ranked five. They don't change the ranking." placeholder="Vitality" color={room.color} items={soft.values ?? []} onChange={(v) => onSoft("values", v)} />
+                      <SoftList label="Affirmations for this room" hint='Present tense, out loud — "I am strong and I train like it."' placeholder="I am…" color={room.color} items={soft.affirmations ?? []} onChange={(v) => onSoft("affirmations", v)} />
+                      <SoftList label="Incantations. Affirmations said with your whole body" hint="Movement, voice and repetition together. Your whole body says it." placeholder="All I need is within me right now" color={room.color} items={soft.incantations ?? []} onChange={(v) => onSoft("incantations", v)} />
+                      <SoftList label="Rules for this room. When do you get to feel good here?" hint={RULES_EXERCISE.rewriteFormat} placeholder="I feel fit anytime I move my body" color={room.color} items={soft.rules ?? []} onChange={(v) => onSoft("rules", v)} />
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
           </div>
+          </>
+          )}
         </div>
 
         {/* v17 — Beat 6: connections. Goals don't live alone; naming what feeds
             what is how a plan becomes a system. */}
         {goalsInRoom.length > 0 && allGoals.length > 1 && (
           <div>
-            {aside(<TrendingUp className="size-3" />, "Connections — what feeds what")}
-            <p className="text-[11px] text-zinc-500 mt-1">Does a goal here serve a bigger one — in this room or another?</p>
+            {aside(<TrendingUp className="size-3" />, "Connections, what feeds what")}
+            <p className="text-[11px] text-zinc-500 mt-1">Does a goal here serve a bigger one. In this room or another?</p>
             <div className="mt-2 space-y-2">
               {goalsInRoom.map((g) => (
                 <FeedsPicker key={g.id} goal={g} allGoals={allGoals} color={room.color} onLink={onLinkGoals} onUnlink={onUnlinkGoals} />
@@ -1964,11 +2258,12 @@ function RoomJourneyPanel({ room, dream, zero, rating, why, whyWork, identity, s
       </div>
 
       <p className="text-[10px] text-zinc-600 mt-3 text-right">
-        <button onClick={onClose} className="underline decoration-dotted text-zinc-500 hover:text-zinc-300 transition-colors">Done — pick the next room</button>
+        <button onClick={onClose} className="underline decoration-dotted text-zinc-500 hover:text-zinc-300 transition-colors">Done, pick the next room</button>
       </p>
     </div>
   )
 }
+
 
 /** A room's dream as an intent — the user picked the room, so the area is
  * authoritative and needs no embedding. Pure: also used at hydrate time. */
@@ -2001,17 +2296,17 @@ function mergeRoomIntents(savedIntents: VisionIntent[], yourTens: Record<string,
  * rooms (same areas the wheel/pyramid/10s use). Examples follow the corpus
  * pattern: one concrete, sensory, NUMBERED sentence — never an abstraction. */
 const AREA_WANT_PROMPTS: Record<string, { q: string; eg: string }> = {
-  lm_health: { q: "What do you want for your health — energy, how you feel waking up?", eg: "I wake up at 6 with energy that lasts the whole day" },
-  lm_fitness: { q: "What do you want for your body — strength, endurance, how you look?", eg: "I'm lean and strong — training 4×/week, stage-ready" },
-  lm_mindset: { q: "What do you want your thoughts and beliefs to be like?", eg: "My mind is on my side — hard things feel doable" },
-  lm_emotions: { q: "How do you want to FEEL most days?", eg: "Most mornings I feel grateful and excited, not anxious" },
-  lm_relationship: { q: "What do you want in your intimate relationship (or dating life)?", eg: "I wake up next to someone I love — we still flirt" },
-  lm_mission: { q: "What do you want for your work, business or mission?", eg: "I run my own business doing work that matters — free to travel a month at a time" },
-  lm_money: { q: "What do you want for your finances?", eg: "My investments pay my rent — 5 k$/month passive income" },
-  lm_family: { q: "What do you want with your family?", eg: "I call home every week — and I'm fully there when I do" },
+  lm_health: { q: "What do you want for your health. Energy, how you feel waking up?", eg: "I wake up at 6 with energy that lasts the whole day" },
+  lm_fitness: { q: "What do you want for your body. Strength, endurance, how you look?", eg: "I'm lean and strong. Training 4×/week, stage-ready" },
+  lm_mindset: { q: "What do you want your thoughts and beliefs to be like?", eg: "My mind is on my side. Hard things feel doable" },
+  lm_emotions: { q: "How do you want to FEEL most days?", eg: "Most mornings I feel grateful and excited" },
+  lm_relationship: { q: "What do you want in your intimate relationship (or dating life)?", eg: "I wake up next to someone I love. We still flirt" },
+  lm_mission: { q: "What do you want for your work, business or mission?", eg: "I run my own business doing work that matters. Free to travel a month at a time" },
+  lm_money: { q: "What do you want for your finances?", eg: "My investments pay my rent. 5 k$/month passive income" },
+  lm_family: { q: "What do you want with your family?", eg: "I call home every week. And I'm fully there when I do" },
   lm_friends: { q: "What do you want for your friendships and social life?", eg: "I have five close friends I actually see every week" },
-  lm_fun: { q: "What do you want more of — hobbies, adventure, travel?", eg: "One small adventure a month, one big trip a year" },
-  lm_contribution: { q: "What do you want to give — impact, contribution?", eg: "I give 5% of everything I earn to something I believe in" },
+  lm_fun: { q: "What do you want more of. Hobbies, adventure, travel?", eg: "One small adventure a month, one big trip a year" },
+  lm_contribution: { q: "What do you want to give. Impact, contribution?", eg: "I give 5% of everything I earn to something I believe in" },
   lm_spirituality: { q: "What do you want for your spiritual life?", eg: "I have a daily practice that connects me to something bigger" },
 }
 
@@ -2021,59 +2316,100 @@ const AREA_WANT_PROMPTS: Record<string, { q: string; eg: string }> = {
  * that commitment and depth are different things. You commit to all twelve when
  * you sign the manifesto. Here you choose the few you'll actually work.
  */
-function ScopePicker({ rooms, scopes, onScope }: {
+/**
+ * v19 — THE SEASON'S PRIORITY. He works 1-3 areas at a time and lets the rest
+ * slide on purpose. This is ONE ordered ranking; "focus" and "maintenance" are
+ * tiers of it, not separate state — which is why the old deep/sketched/later
+ * picker is gone rather than sitting beside this.
+ */
+function SeasonPriority({ rooms, areaRank, focusCount, onReorder, onFocusCount, ratings, maintenance, onMaintenance }: {
   rooms: WheelRoom[]
-  scopes: Record<string, RoomScope>
-  onScope: (areaId: string, scope: RoomScope) => void
+  areaRank: string[]
+  focusCount: number
+  onReorder: (rank: string[]) => void
+  onFocusCount: (n: number) => void
+  ratings: Record<string, number>
+  maintenance: Record<string, string>
+  onMaintenance: (areaId: string, text: string) => void
 }) {
   const [open, setOpen] = useState(false)
-  const deep = rooms.filter((r) => scopes[r.id] === "deep")
-  const cycle = (id: string) => {
-    const now = scopes[id] ?? "later"
-    onScope(id, now === "later" ? "deep" : now === "deep" ? "sketched" : "later")
+  const byId = new Map(rooms.map((r) => [r.id, r]))
+  const ordered = areaRank.filter((id) => byId.has(id))
+  const move = (i: number, delta: number) => {
+    const j = i + delta
+    if (j < 0 || j >= ordered.length) return
+    const next = [...ordered]
+    ;[next[i], next[j]] = [next[j], next[i]]
+    onReorder(next)
   }
+  const focusNames = ordered.slice(0, focusCount).map((id) => byId.get(id)?.label).filter(Boolean)
   return (
     <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5">
       <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="w-full flex items-center gap-2 text-left">
         <Telescope className="size-3.5 text-violet-300 shrink-0" />
         <span className="text-xs font-medium text-zinc-200">
-          {deep.length === 0 ? "Which rooms are you working this pass?" : `Working ${deep.length} ${deep.length === 1 ? "room" : "rooms"} this pass`}
+          {focusNames.length ? `This season: ${focusNames.join(" · ")}` : "What are you working on this season?"}
         </span>
-        <span className="ml-auto text-[10px] text-zinc-500">{open ? "hide" : "choose"}</span>
+        <span className="ml-auto text-[10px] text-zinc-500">{open ? "hide" : "set priority"}</span>
       </button>
       <p className="text-[10px] text-zinc-600 mt-1">
-        Twelve rooms. You commit to all of them — you work a few at a time. That&apos;s not a compromise, that&apos;s the method.
+        One to three areas at a time. Everything else drops to a maintenance floor. On purpose, with your consent. That&apos;s not neglect, that&apos;s how you actually move one.
       </p>
       {open && (
         <>
-          <div className="grid gap-1.5 sm:grid-cols-2 mt-2.5">
-            {rooms.map((r) => {
-              const scope = scopes[r.id] ?? "later"
+          <div className="flex items-center gap-2 mt-2.5">
+            <span className="text-[10px] uppercase tracking-wide text-zinc-500">Areas in focus</span>
+            {[1, 2, 3].map((n) => (
+              <button
+                key={n}
+                onClick={() => onFocusCount(n)}
+                aria-pressed={focusCount === n}
+                className={`size-6 rounded-md border text-[11px] tabular-nums transition-colors ${focusCount === n ? "border-violet-400/60 bg-violet-500/20 text-white" : "border-white/15 text-zinc-400 hover:text-zinc-200"}`}
+              >{n}</button>
+            ))}
+          </div>
+          <ol className="mt-2 space-y-1">
+            {ordered.map((id, i) => {
+              const r = byId.get(id)!
+              const focus = i < focusCount
+              const rating = ratings[id]
+              const target = nextLevelTarget(rating)
               return (
-                <button
-                  key={r.id}
-                  onClick={() => cycle(r.id)}
-                  aria-label={`${r.label} — currently ${scope}; tap to change`}
-                  className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left transition-colors ${
-                    scope === "deep"
-                      ? "border-white/25 bg-white/[0.07]"
-                      : scope === "sketched"
-                      ? "border-white/15 bg-white/[0.03]"
-                      : "border-white/10 border-dashed bg-transparent"
-                  }`}
-                >
-                  <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: scope === "later" ? "#3f3f46" : r.color }} />
-                  <span className={`text-xs min-w-0 flex-1 truncate ${scope === "later" ? "text-zinc-500" : "text-zinc-100"}`}>{r.label}</span>
-                  <span className="text-[9px] uppercase tracking-wider text-zinc-500 shrink-0">
-                    {scope === "deep" ? "deep" : scope === "sketched" ? "sketch" : "later"}
-                  </span>
-                </button>
+                <li key={id}>
+                  {i === focusCount && (
+                    <div className="flex items-center gap-2 my-1.5">
+                      <span className="h-px flex-1 bg-white/10" />
+                      <span className="text-[9px] uppercase tracking-wider text-zinc-600">maintenance, the floor you hold</span>
+                      <span className="h-px flex-1 bg-white/10" />
+                    </div>
+                  )}
+                  <div className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 ${focus ? "border-white/25 bg-white/[0.07]" : "border-white/10 bg-transparent"}`}>
+                    <span className="text-[10px] tabular-nums text-zinc-600 w-4 shrink-0">{i + 1}</span>
+                    <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: focus ? r.color : "#3f3f46" }} />
+                    <span className={`text-xs min-w-0 flex-1 truncate ${focus ? "text-zinc-100" : "text-zinc-500"}`}>{r.label}</span>
+                    {focus && rating != null && target != null && rating < LIFE_MASTERY_SUCCESS_LEVEL && (
+                      <span className="text-[10px] text-zinc-500 shrink-0" title="One level up is the target. Never 'get to 10'">
+                        {rating} → {target}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-0.5 shrink-0">
+                      <button onClick={() => move(i, -1)} disabled={i === 0} aria-label={`Move ${r.label} up`} className="size-5 rounded border border-white/10 text-zinc-500 hover:text-zinc-200 disabled:opacity-20 transition-colors">↑</button>
+                      <button onClick={() => move(i, 1)} disabled={i === ordered.length - 1} aria-label={`Move ${r.label} down`} className="size-5 rounded border border-white/10 text-zinc-500 hover:text-zinc-200 disabled:opacity-20 transition-colors">↓</button>
+                    </span>
+                  </div>
+                  {!focus && (
+                    <input
+                      value={maintenance[id] ?? ""}
+                      onChange={(e) => onMaintenance(id, e.target.value)}
+                      aria-label={`Maintenance floor for ${r.label}`}
+                      placeholder={`Floor for ${r.label.toLowerCase()} — the least that still counts`}
+                      className="mt-1 ml-6 w-[calc(100%-1.5rem)] bg-white/[0.03] border border-white/10 rounded-md px-2 py-1 text-[11px] text-zinc-300 placeholder:text-zinc-700 focus:outline-none focus:border-white/25"
+                    />
+                  )}
+                </li>
               )
             })}
-          </div>
-          <p className="text-[10px] text-zinc-600 mt-2">
-            <span className="text-zinc-400">Deep</span> — the full journey, goals and all. <span className="text-zinc-400">Sketch</span> — one line and a rating, two minutes. <span className="text-zinc-400">Later</span> — parked, not forgotten. Three to five deep is the sweet spot.
-          </p>
+          </ol>
         </>
       )}
     </div>
@@ -2085,16 +2421,26 @@ function ScopePicker({ rooms, scopes, onScope }: {
  * any of his four exercises, each composing into the vision text — then the
  * make-it-pull test. Every exercise is re-runnable; drafts append.
  */
-function VisionWorkshop({ rooms, ratings, roomBeats, scopes, focusIds, onScope, activeAreaId, onPick, proseOpen, onToggleProse, renderRoomPanel, onCompose, onGoalMaterial, onAddRoom }: {
+function VisionWorkshop({ rooms, ratings, roomBeats, scopes, focusIds, onLoadExample, exampleWouldOverwrite, areaRank, focusCount, onReorder, onFocusCount, maintenance, onMaintenance, activeAreaId, onPick, proseOpen, onToggleProse, renderRoomPanel, onCompose, onGoalMaterial, onAddRoom }: {
   rooms: WheelRoom[]
   /** M1 — today's 0-10 self-rating per room; fills the wedge. */
   ratings: Record<string, number>
   /** M1 — completed journey beats per room (0-5); shown on the wedge. */
   roomBeats: Record<string, number>
-  /** v17 — how deep the user is going in each room this pass. */
+  /** v19 — tiers derived from the season ranking; the wheel reads these. */
   scopes: Record<string, RoomScope>
   focusIds: string[]
-  onScope: (areaId: string, scope: RoomScope) => void
+  /** Present only while the sandbox is empty — the worked example is a
+   * starting aid, not a permanent control. */
+  onLoadExample?: () => void
+  /** v23 — true when loading the example would destroy real user work. */
+  exampleWouldOverwrite?: boolean
+  areaRank: string[]
+  focusCount: number
+  onReorder: (rank: string[]) => void
+  onFocusCount: (n: number) => void
+  maintenance: Record<string, string>
+  onMaintenance: (areaId: string, text: string) => void
   /** v17 — room-open state is parent-owned so the parent can hide the prose box. */
   activeAreaId: string | null
   onPick: (id: string | null) => void
@@ -2109,6 +2455,7 @@ function VisionWorkshop({ rooms, ratings, roomBeats, scopes, focusIds, onScope, 
   type Tool = null | "magician" | "perfect-day" | "brainstorm"
   const [tool, setTool] = useState<Tool>(null)
   const [statePrep, setStatePrep] = useState(false)
+  const [exampleArmed, setExampleArmed] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
   const [addDraft, setAddDraft] = useState("")
   const composeSentence = (a: string) => {
@@ -2144,41 +2491,71 @@ function VisionWorkshop({ rooms, ratings, roomBeats, scopes, focusIds, onScope, 
     </button>
   )
 
-  return (
-    <div className="mt-3">
-      {/* State first — "if you're in a negative state, the answers won't come" */}
-      <button onClick={() => setStatePrep((o) => !o)} aria-expanded={statePrep} className="text-[11px] text-zinc-500 hover:text-zinc-300 underline decoration-dotted underline-offset-2 transition-colors">
-        Before you start: 2 minutes to get in state — never skip this part
+  /** v22 — the get-in-state prompt now lives BELOW the wheel. It used to be the
+   * first thing on screen, which put a link above the product. */
+  const statePrepBlock = (
+    <div className="mt-3 text-center">
+      {onLoadExample && (
+        <p className="mb-2">
+          <button
+            onClick={() => { if (exampleArmed || !exampleWouldOverwrite) { onLoadExample(); setExampleArmed(false) } else setExampleArmed(true) }}
+            className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${exampleArmed ? "border-amber-400/50 bg-amber-500/[0.12] text-amber-100" : "border-sky-400/30 bg-sky-500/[0.08] text-sky-200 hover:bg-sky-500/15"}`}
+          >
+            {exampleArmed
+              ? "This replaces your own plan. Tap again to load the example"
+              : "Or see a filled example first — it\u2019s easier to write yours after reading one"}
+          </button>
+          {exampleArmed && (
+            <button onClick={() => setExampleArmed(false)} className="ml-2 text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors">keep mine</button>
+          )}
+        </p>
+      )}
+      <button onClick={() => setStatePrep((o) => !o)} aria-expanded={statePrep} className="text-[11px] text-zinc-600 hover:text-zinc-300 underline decoration-dotted underline-offset-2 transition-colors">
+        Before you start: 2 minutes to get in state. Never skip this part
       </button>
       {statePrep && (
-        <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2.5">
+        <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2.5 text-left">
           <ol className="space-y-1 text-xs text-zinc-300">
             <li className="flex items-baseline gap-2"><span className="text-[10px] text-violet-300/80 tabular-nums shrink-0">1.</span>Stand up. Shake out your body. Put on music that lifts you.</li>
-            <li className="flex items-baseline gap-2"><span className="text-[10px] text-violet-300/80 tabular-nums shrink-0">2.</span>Ten big breaths. Smile — even if it feels silly. Especially then.</li>
+            <li className="flex items-baseline gap-2"><span className="text-[10px] text-violet-300/80 tabular-nums shrink-0">2.</span>Ten big breaths. Smile. Even if it feels silly. Especially then.</li>
             <li className="flex items-baseline gap-2"><span className="text-[10px] text-violet-300/80 tabular-nums shrink-0">3.</span>Become a kid again: no limits, no fear, nothing is unrealistic. THEN begin.</li>
           </ol>
           <p className="text-[10px] text-zinc-600 mt-1.5">&ldquo;If you&apos;re in a negative state, the answers aren&apos;t going to come to you.&rdquo;</p>
         </div>
       )}
+    </div>
+  )
 
+  return (
+    <div>
       {tool === null ? (
         <>
-          <div className="mt-2">
+          <div>
             <VisionRoomWheel rooms={rooms} ratings={ratings} beats={roomBeats} scopes={scopes} focusIds={focusIds} activeId={activeAreaId} onPick={pickRoom} />
           </div>
           {/* v17 — scope, not commitment. You commit to all twelve in the
               manifesto; you WORK a few at a time. Naming that out loud is what
               keeps twelve rooms from reading as twelve pieces of homework. */}
           {!activeAreaId && (
-            <ScopePicker rooms={rooms} scopes={scopes} onScope={onScope} />
+            <SeasonPriority
+              rooms={rooms}
+              areaRank={areaRank}
+              focusCount={focusCount}
+              onReorder={onReorder}
+              onFocusCount={onFocusCount}
+              ratings={ratings}
+              maintenance={maintenance}
+              onMaintenance={onMaintenance}
+            />
           )}
+          {!activeAreaId && statePrepBlock}
           {activeAreaId ? (
             renderRoomPanel(activeAreaId, () => onPick(null))
           ) : (
             <p className="text-[10px] text-zinc-600 mt-1.5 text-center">
               {Object.keys(roomBeats).length === 0
-                ? "Tap the room that pulls you most — its journey opens here. No required order."
-                : `${Object.keys(roomBeats).length} of ${rooms.length} rooms begun — tap another, go deeper in one, or stop here.`}
+                ? "Tap the room that pulls you most. Its journey opens here. No required order."
+                : `${Object.keys(roomBeats).length} of ${rooms.length} rooms begun. An even wheel isn't the goal. A moving one is.`}
             </p>
           )}
           <div className="mt-2 text-center">
@@ -2189,7 +2566,7 @@ function VisionWorkshop({ rooms, ratings, roomBeats, scopes, focusIds, onScope, 
                   onChange={(e) => setAddDraft(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") submitAddRoom(); if (e.key === "Escape") { setAddOpen(false); setAddDraft("") } }}
                   autoFocus
-                  placeholder="Name the room — “Music”, “Adventure”, “Faith”…"
+                  placeholder="Name the room. “Music”, “Adventure”, “Faith”…"
                   className="w-64 bg-white/5 border border-white/15 rounded-lg px-2.5 py-1 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30"
                 />
                 <button onClick={submitAddRoom} disabled={!addDraft.trim()} className="text-[11px] px-2.5 py-1 rounded-md border border-white/20 text-zinc-200 hover:bg-white/10 disabled:opacity-30 transition-colors">Add room</button>
@@ -2197,7 +2574,7 @@ function VisionWorkshop({ rooms, ratings, roomBeats, scopes, focusIds, onScope, 
               </span>
             ) : (
               <button onClick={() => setAddOpen(true)} className="text-[11px] text-zinc-600 hover:text-zinc-300 transition-colors">
-                + Add a room of your own — your life, your map
+                + Add a room of your own. Your life, your map
               </button>
             )}
           </div>
@@ -2217,9 +2594,9 @@ function VisionWorkshop({ rooms, ratings, roomBeats, scopes, focusIds, onScope, 
               )}
               {proseOpen && (
                 <div className="grid gap-2 sm:grid-cols-2 mt-2 text-left">
-                  {toolBtn("perfect-day", "The Perfect Day", "Describe one day, ten years out, hour by hour — it becomes vision text in the box.")}
-                  {toolBtn("magician", "The Magician", "“If a magician could create the perfect life for you — what would it be?” Three big questions, written into the box.")}
-                  {toolBtn("brainstorm", "The Unlimited Brainstorm", "Dump everything you want, rapid fire, tag each 1/3/5/10/20 years — 5y+ becomes vision text, 1-3y lands in the Goal Workshop.")}
+                  {toolBtn("perfect-day", "The Perfect Day", "Describe one day, ten years out, hour by hour. It becomes vision text in the box.")}
+                  {toolBtn("magician", "The Magician", "“If a magician could create the perfect life for you. What would it be?” Three big questions, written into the box.")}
+                  {toolBtn("brainstorm", "The Unlimited Brainstorm", "Dump everything you want, rapid fire, tag each 1/3/5/10/20 years. 5y+ becomes vision text, 1-3y lands in the Goal Workshop.")}
                 </div>
               )}
             </div>
@@ -2229,17 +2606,17 @@ function VisionWorkshop({ rooms, ratings, roomBeats, scopes, focusIds, onScope, 
         <div className="mt-2 rounded-xl border border-violet-400/25 bg-violet-500/[0.05] p-4">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-200/90">
-              {tool === "magician" ? "The Magician — no limits" : tool === "perfect-day" ? "The Perfect Day — hour by hour" : "The Unlimited Brainstorm"}
+              {tool === "magician" ? "The Magician, no limits" : tool === "perfect-day" ? "The Perfect Day, hour by hour" : "The Unlimited Brainstorm"}
             </span>
             <button onClick={closeTool} aria-label="Close exercise" className="ml-auto text-zinc-600 hover:text-zinc-300"><X className="size-3.5" /></button>
           </div>
 
           {tool === "magician" && (
             <>
-              <p className="text-[11px] text-zinc-500 mt-1">Answer big — realism comes later, at the goals.</p>
+              <p className="text-[11px] text-zinc-500 mt-1">Answer big. Realism comes later, at the goals.</p>
               <InterviewFlow
                 questions={[
-                  "If a magician could create the PERFECT life for you — no limits at all — what would that life look like?",
+                  "If a magician could create the PERFECT life for you. No limits at all. What would that life look like?",
                   "In that life, who have you become? What kind of person?",
                   "And what does having that life let you GIVE?",
                 ]}
@@ -2251,7 +2628,7 @@ function VisionWorkshop({ rooms, ratings, roomBeats, scopes, focusIds, onScope, 
 
           {tool === "perfect-day" && (
             <>
-              <p className="text-[11px] text-zinc-500 mt-1">Clarity is power — don&apos;t be vague. Skip with an empty Enter. Run it again for another kind of day (travel, family, work).</p>
+              <p className="text-[11px] text-zinc-500 mt-1">Clarity is power. Don&apos;t be vague. Skip with an empty Enter. Run it again for another kind of day (travel, family, work).</p>
               <InterviewFlow
                 questions={PERFECT_DAY_QUESTIONS}
                 onAnswer={(a, i) => setAnswers((p) => { const n = [...p]; n[i] = a; return n })}
@@ -2263,8 +2640,8 @@ function VisionWorkshop({ rooms, ratings, roomBeats, scopes, focusIds, onScope, 
           {tool === "brainstorm" && !tagging && (
             <>
               <p className="text-[11px] text-zinc-500 mt-1 flex items-center gap-2 flex-wrap">
-                <span>Everything you want to create, experience, do or give — rapid fire, no filter, every area of life. Empty Enter when you run dry.</span>
-                <ExerciseTimer minutes={10} label="Put 10 minutes on the clock — timed means no editor" />
+                <span>Everything you want to create, experience, do or give. Rapid fire, no filter, every area of life. Empty Enter when you run dry.</span>
+                <ExerciseTimer minutes={10} label="Put 10 minutes on the clock. Timed means no editor" />
               </p>
               {wants.length > 0 && (
                 <div className="flex items-center gap-1.5 flex-wrap mt-2">
@@ -2274,7 +2651,7 @@ function VisionWorkshop({ rooms, ratings, roomBeats, scopes, focusIds, onScope, 
                 </div>
               )}
               <InterviewFlow
-                questions={["What do you want — to create, experience, do, or give?", "What else? Keep going — material things count too."]}
+                questions={["What do you want. To create, experience, do, or give?", "What else? Keep going. Material things count too."]}
                 loop
                 onAnswer={(a) => setWants((p) => (p.some((x) => x.text === a) ? p : [...p, { text: a, years: null }]))}
                 onDone={() => { if (wants.length) setTagging(true); else closeTool() }}
@@ -2284,7 +2661,7 @@ function VisionWorkshop({ rooms, ratings, roomBeats, scopes, focusIds, onScope, 
 
           {tool === "brainstorm" && tagging && (
             <>
-              <p className="text-[11px] text-zinc-500 mt-1">Now tag each: how many YEARS away is it? The 5/10/20-year ones become your vision. The 1-3-year ones are goal material — keep them for the goals step.</p>
+              <p className="text-[11px] text-zinc-500 mt-1">Now tag each: how many YEARS away is it? The 5/10/20-year ones become your vision. The 1-3-year ones are goal material. Keep them for the goals step.</p>
               <ul className="space-y-1.5 mt-2">
                 {wants.map((w, i) => (
                   <li key={w.text} className="flex items-center gap-2 flex-wrap text-xs text-zinc-200">
@@ -2319,7 +2696,7 @@ function VisionWorkshop({ rooms, ratings, roomBeats, scopes, focusIds, onScope, 
                   disabled={wants.some((w) => w.years === null)}
                   className="text-[11px] px-3 py-1 rounded-md border border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
-                  Sort them — 5y+ into the vision, 1-3y into the Goal Workshop
+                  Sort them. 5y+ into the vision, 1-3y into the Goal Workshop
                 </button>
                 <CopyButton label="Copy 1-3yr goal material" getText={() => `GOAL MATERIAL (1-3 years):\n${wants.filter((w) => w.years !== null && w.years < 5).map((w) => `- ${w.text} (${w.years}y)`).join("\n")}`} />
               </div>
@@ -2348,7 +2725,7 @@ function IncantationDeck({ mission, own, onAdd, onRemove }: { mission?: string; 
       <div className="w-full flex items-center gap-2 px-3 py-2">
         <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-white/[0.04] transition-colors rounded-md">
           <ChevronDown className={`size-3.5 text-zinc-500 shrink-0 transition-transform ${open ? "" : "-rotate-90"}`} />
-          <span className="text-[11px] text-zinc-400">Your incantation deck — say each aloud, full body, end with a fist-clench &ldquo;YES!&rdquo;</span>
+          <span className="text-[11px] text-zinc-400">Your incantation deck. Say each aloud, full body, end with a fist-clench &ldquo;YES!&rdquo;</span>
         </button>
         <span className="shrink-0"><CopyButton label="Copy deck" getText={() => ["MY INCANTATIONS", ...(mission ? [mission] : []), ...own, ...INCANTATION_DECK.map((c) => c.text)].join("\n")} /></span>
       </div>
@@ -2374,7 +2751,7 @@ function IncantationDeck({ mission, own, onAdd, onRemove }: { mission?: string; 
           {canon.map((c) => (
             <p key={c.text} className="group/card flex items-baseline gap-2 text-xs text-zinc-300 italic border-l-2 border-white/15 pl-2.5 py-0.5">
               <span className="min-w-0">{c.text}</span>
-              {c.origin === "lineage" && <span className="text-[8px] not-italic uppercase tracking-wide text-zinc-600 shrink-0" title="A classic worth keeping on any deck — Gandhi, MLK, Rohn, Lee">from the greats</span>}
+              {c.origin === "lineage" && <span className="text-[8px] not-italic uppercase tracking-wide text-zinc-600 shrink-0" title="A classic worth keeping on any deck. Gandhi, MLK, Rohn, Lee">from the greats</span>}
               {!own.includes(c.text) && (
                 <button onClick={() => onAdd(c.text)} aria-label={`Adopt incantation: ${c.text}`} className="ml-auto text-[9px] not-italic px-1.5 py-px rounded border border-white/15 text-zinc-600 hover:text-zinc-200 hover:bg-white/10 opacity-0 group-hover/card:opacity-100 transition-all shrink-0">+ mine</button>
               )}
@@ -2482,8 +2859,8 @@ function ValuesJourney({
   if (phase === "elicit") {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90">Step 1 — what has actually mattered?</span>
-        <p className="text-xs text-zinc-500 mt-1">No list to pick from — this is an audit of YOUR life. First answer, from the gut. Keep going until you run dry (aim for 7+).</p>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90">Step 1. What has actually mattered?</span>
+        <p className="text-xs text-zinc-500 mt-1">No list to pick from. This is an audit of YOUR life. First answer, from the gut. Keep going until you run dry (aim for 7+).</p>
         {raw.length > 0 && (
           <div className="flex items-center gap-1.5 flex-wrap mt-2">
             {raw.map((r) => (
@@ -2545,9 +2922,9 @@ function ValuesJourney({
     }
     return (
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90">Step 2 — a value is an emotion</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90">Step 2. A value is an emotion</span>
         <p className="text-sm text-zinc-200 mt-2">
-          You said <span className="text-amber-200 font-medium">&ldquo;{item}&rdquo;</span> — but that&apos;s a vehicle.
+          You said <span className="text-amber-200 font-medium">&ldquo;{item}&rdquo;</span> but that&apos;s a vehicle.
           What does it actually GIVE you?
         </p>
         <div className="flex items-center gap-1.5 flex-wrap mt-3">
@@ -2572,7 +2949,7 @@ function ValuesJourney({
       const est = pair!.ranked.length + pair!.pending.length
       return (
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90 block mb-2">Step 3 — the hierarchy: which has been MORE important in your life?</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90 block mb-2">Step 3. The hierarchy: which has been MORE important in your life?</span>
           <PairComparison
             valueA={{ id: "a", displayName: q.a }}
             valueB={{ id: "b", displayName: q.b }}
@@ -2606,7 +2983,7 @@ function ValuesJourney({
   if (phase === "away") {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90">Step 4 — what do you run FROM?</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90">Step 4. What do you run FROM?</span>
         <p className="text-xs text-zinc-500 mt-1">
           The states you avoid shape your decisions more than the ones you chase. Name them honestly.
         </p>
@@ -2646,7 +3023,7 @@ function ValuesJourney({
   if (phase === "audit") {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90">Step 5 — read the consequences off the ordering</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90">Step 5. Read the consequences off the ordering</span>
         {conflicts.length > 0 ? (
           <div className="space-y-2 mt-2">
             {conflicts.map((c) => (
@@ -2657,14 +3034,14 @@ function ValuesJourney({
             ))}
           </div>
         ) : (
-          <p className="text-xs text-zinc-400 mt-2">No obvious conflicts in this hierarchy — that&apos;s rare. Keep it honest as life changes.</p>
+          <p className="text-xs text-zinc-400 mt-2">No obvious conflicts in this hierarchy. That&apos;s rare. Keep it honest as life changes.</p>
         )}
         <p className="text-xs text-zinc-300 mt-3">
           Now the design question: <span className="text-white">&ldquo;What do my values NEED to be to create the life I want?&rdquo;</span>{" "}
           Reorder or edit freely below — this list is yours to engineer.
         </p>
         <button onClick={() => setPhase("idle")} className="mt-3 text-[11px] px-3 py-1 rounded-md border border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 transition-colors">
-          Done — show my hierarchy
+          Done, show my hierarchy
         </button>
       </div>
     )
@@ -2674,7 +3051,7 @@ function ValuesJourney({
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90">Your values — the hierarchy</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90">Your values, the hierarchy</span>
         {values.length > 0 && (
           <button onClick={() => { setRaw([...values]); setPhase("elicit") }} className="ml-auto text-[10px] text-zinc-600 hover:text-zinc-300 transition-colors">
             Redo the exercise
@@ -2684,7 +3061,7 @@ function ValuesJourney({
       {values.length === 0 && !manual ? (
         <>
           <p className="text-xs text-zinc-500 mt-1">
-            Not a list to pick from — an audit of your life, in five steps: what mattered → the emotion behind it →
+            Not a list to pick from. An audit of your life, in five steps: what mattered → the emotion behind it →
             the order → what you avoid → what the ordering costs you.
           </p>
           <div className="flex items-center gap-2 mt-3">
@@ -2717,6 +3094,7 @@ function ValuesJourney({
               onChange={(e) => setCustom(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && custom.trim()) { onSetValues(dedupe([...values, custom.trim()])); setCustom("") } }}
               placeholder="Add a value…"
+              aria-label="Add a value"
               className="w-32 bg-transparent border-b border-white/10 focus:border-white/30 text-[11px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none py-0.5"
             />
           </div>
@@ -2730,7 +3108,7 @@ function ValuesJourney({
           )}
           {values.length >= 3 && awayValues.length === 0 && (
             <button onClick={() => { setRaw([]); setPhase("away") }} className="mt-2 text-[11px] text-red-300/80 hover:text-red-200 underline decoration-dotted underline-offset-2 transition-colors">
-              Name your away-from values — they steer more than you think
+              Name your away-from values. They steer more than you think
             </button>
           )}
           {conflicts.length > 0 && (
@@ -2758,18 +3136,32 @@ function ValuesJourney({
  * the current rule, notice it's hard/out of your control, rewrite it easy and
  * self-controlled, invert the away-values, condition daily.
  */
-function RulesEngineering({ values, awayValues, rules, onRules, onAddIncantation }: {
+function RulesEngineering({ values, awayValues, rules, onRules, onAddIncantation, ruleWork, onRuleWork }: {
   values: string[]
   awayValues: string[]
   rules: string[]
   onRules: (next: string[]) => void
   onAddIncantation: (card: string) => void
+  ruleWork: Array<{ id: string; value: string; old: string; rewritten?: string }>
+  onRuleWork: (fn: (prev: Array<{ id: string; value: string; old: string; rewritten?: string }>) => Array<{ id: string; value: string; old: string; rewritten?: string }>) => void
 }) {
   const [open, setOpen] = useState(false)
   const [picked, setPicked] = useState<string | null>(null)
   const [pickedAway, setPickedAway] = useState(false)
-  const [currentRule, setCurrentRule] = useState("")
   const [draft, setDraft] = useState("")
+  // v23 — the exercise is CATCH the old rule, THEN rewrite it. Only the rewrite
+  // was ever kept, and `currentRule` was one shared local string, so switching
+  // to a different value destroyed the caught rule for the previous one. It is
+  // now stored per value, and the pair is what the user reads back.
+  const currentRule = (picked && ruleWork.find((w) => w.value === picked)?.old) ?? ""
+  const setCurrentRule = (text: string) => {
+    if (!picked) return
+    onRuleWork((prev) => {
+      const i = prev.findIndex((w) => w.value === picked)
+      if (i === -1) return [...prev, { id: `rw-${picked}`, value: picked, old: text }]
+      return prev.map((w, j) => (j === i ? { ...w, old: text } : w))
+    })
+  }
   const [showExamples, setShowExamples] = useState(false)
   const addRule = () => {
     const t = draft.trim()
@@ -2781,13 +3173,19 @@ function RulesEngineering({ values, awayValues, rules, onRules, onAddIncantation
         ? `I experience ${v} only if I were to consistently ${t}`
         : `I feel ${v} anytime I ${t}`
     if (!rules.includes(line)) onRules([...rules, line])
+    // Bind the rewrite to the rule it replaced, so the worksheet reads as a pair.
+    onRuleWork((prev) => {
+      const i = prev.findIndex((w) => w.value === picked)
+      if (i === -1) return [...prev, { id: `rw-${picked}`, value: picked, old: "", rewritten: line }]
+      return prev.map((w, j) => (j === i ? { ...w, rewritten: line } : w))
+    })
     setDraft("")
   }
   return (
     <div id="lm-rules" className="mt-4 rounded-2xl border border-amber-400/20 bg-gradient-to-br from-amber-500/[0.05] via-white/[0.03] to-transparent p-5 scroll-mt-20">
       <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="w-full flex items-center gap-2 text-left">
         <ChevronDown className={`size-3.5 text-zinc-500 shrink-0 transition-transform ${open ? "" : "-rotate-90"}`} />
-        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90">Engineer your rules — when do you get to FEEL your values?</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90">Engineer your rules. When do you get to FEEL your values?</span>
         {rules.length > 0 && <span className="ml-auto text-[10px] text-zinc-500 tabular-nums">{rules.length} rule{rules.length === 1 ? "" : "s"}</span>}
       </button>
       {open && (
@@ -2795,9 +3193,9 @@ function RulesEngineering({ values, awayValues, rules, onRules, onAddIncantation
           <p className="text-[11px] text-zinc-400 mb-2">
             A rule is your belief about what has to happen before you're allowed to feel a value. Most people make it
             incredibly hard to feel good and incredibly easy to feel bad. The exercise: catch the rule, then rewrite it
-            so it's easy and inside your control. The test is never &ldquo;is it true?&rdquo; — it&apos;s &ldquo;does holding it serve me?&rdquo;
+            so it's easy and inside your control. The test is never &ldquo;is it true?&rdquo;. It&apos;s &ldquo;does holding it serve me?&rdquo;
           </p>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-1.5">Step 1 — pick a value (or an away-from to disarm)</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-1.5">Step 1. Pick a value (or an away-from to disarm)</p>
           <div className="flex items-center gap-1.5 flex-wrap mb-2">
             {values.map((v) => (
               <button key={v} onClick={() => { setPicked(v); setPickedAway(false); setCurrentRule("") }} aria-pressed={picked === v && !pickedAway}
@@ -2814,12 +3212,12 @@ function RulesEngineering({ values, awayValues, rules, onRules, onAddIncantation
           </div>
           {picked && (
             <>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-1">Step 2 — catch the current rule</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-1">Step 2. Catch the current rule</p>
               <p className="text-xs text-amber-100/90 mb-1.5">{pickedAway ? `What has to happen for you to feel ${picked.toLowerCase()}?` : RULES_EXERCISE.elicit.question(picked)} <span className="text-zinc-500">…and what else has to happen?</span></p>
               <input
                 value={currentRule}
                 onChange={(e) => setCurrentRule(e.target.value)}
-                placeholder="Write it exactly as your head says it — no editing."
+                placeholder="Write it exactly as your head says it. No editing."
                 aria-label={`Current rule for ${picked}`}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/25 mb-1.5"
               />
@@ -2862,7 +3260,7 @@ function RulesEngineering({ values, awayValues, rules, onRules, onAddIncantation
           )}
           {rules.length > 0 && (
             <>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mt-2 mb-1">Your rules — read them aloud daily, one value a day, 30 days</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mt-2 mb-1">Your rules. Read them aloud daily, one value a day, 30 days</p>
               <ul className="space-y-1">
                 {rules.map((r) => (
                   <li key={r} className="group/rule flex items-baseline gap-2 text-xs text-zinc-200">
@@ -2894,9 +3292,9 @@ const MANIFESTO_CLOSING = "I commit to mastery in all areas of my life, refusing
  * without writing the user's lines for them. */
 const MANIFESTO_PROMPTS = [
   "When you know exactly what to do but don't feel like doing it — what do you do? Answer as a rule: \"I…\"",
-  "What is your word worth — to others, and to yourself when nobody's watching?",
+  "What is your word worth. To others, and to yourself when nobody's watching?",
   "What do you do right after a win, before rushing to the next thing?",
-  "What will you no longer settle for — starting now?",
+  "What will you no longer settle for. Starting now?",
   "Who are you on your worst day? Write the line you'll need to read that morning.",
 ]
 /** How many own lines a manifesto needs before it can be signed. */
@@ -2907,7 +3305,7 @@ function ManifestoText({ name, ownLines, onRemove }: { name: string; ownLines?: 
     <div className="text-left max-w-xl mx-auto space-y-1.5">
       <p className="text-sm text-white font-medium">My name is {name.trim() || "________"} and I am the master of my life.</p>
       {(ownLines ?? []).length === 0 ? (
-        <p className="text-xs italic text-zinc-600">— your credo lines go here; this document is yours to write —</p>
+        <p className="text-xs italic text-zinc-600">your credo lines go here, and this document is yours to write</p>
       ) : (
         (ownLines ?? []).map((line) => (
           <p key={line} className="group flex items-baseline gap-2 text-xs text-zinc-300">
@@ -2934,6 +3332,8 @@ function FoundationSection({
   onManifestoName,
   onManifestoLines,
   onValueRules,
+  ruleWork,
+  onRuleWork,
   onAddIncantation,
   onCommit,
   onSetValues,
@@ -2951,6 +3351,8 @@ function FoundationSection({
   onManifestoName: (name: string) => void
   onManifestoLines: (lines: string[]) => void
   onValueRules: (next: string[]) => void
+  ruleWork: Array<{ id: string; value: string; old: string; rewritten?: string }>
+  onRuleWork: (fn: (prev: Array<{ id: string; value: string; old: string; rewritten?: string }>) => Array<{ id: string; value: string; old: string; rewritten?: string }>) => void
   onAddIncantation: (card: string) => void
   onCommit: () => void
   onSetValues: (values: string[]) => void
@@ -3012,7 +3414,7 @@ function FoundationSection({
           </div>
           {showHis && (
             <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.02] p-2.5">
-              <p className="text-[10px] text-zinc-600 mb-1.5">The program credo — a worked example. Adopt a line only if you&apos;d say it in your own voice:</p>
+              <p className="text-[10px] text-zinc-600 mb-1.5">The program credo. A worked example. Adopt a line only if you&apos;d say it in your own voice:</p>
               <ul className="space-y-1">
                 {MANIFESTO_CREDO.map((l) => (
                   <li key={l} className="flex items-baseline gap-2 text-[11px] text-zinc-400">
@@ -3035,9 +3437,12 @@ function FoundationSection({
     </div>
   )
   const signable = manifestoName.trim().length > 0 && manifestoLines.length >= MANIFESTO_MIN_LINES
-  // The optional values exercise — only meaningful once committed.
+  // v17 — values are NO LONGER gated on the signature. They used to be, because
+  // Commit came second and everything downstream could assume it. Commit is now
+  // LAST (you sign the plan you built), so that gate would make the values
+  // exercise unreachable during the entire create flow. Values are upstream of
+  // the vision in the framework anyway — eliciting them early is the point.
   if (part === "values") {
-    if (!committedAt) return null
     return (
       <div className="max-w-3xl mx-auto mb-6">
         <PrincipleCardView id="values" />
@@ -3049,6 +3454,8 @@ function FoundationSection({
             rules={valueRules}
             onRules={onValueRules}
             onAddIncantation={onAddIncantation}
+            ruleWork={ruleWork}
+            onRuleWork={onRuleWork}
           />
         )}
       </div>
@@ -3060,14 +3467,14 @@ function FoundationSection({
       {!committedAt && <PrincipleCardView id="mastery" />}
       {!committedAt ? (
         <div className="rounded-2xl border border-amber-400/25 bg-gradient-to-br from-amber-500/[0.08] via-white/[0.03] to-transparent p-5 text-center">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90 mb-2">Your manifesto — the commitment that gates tracking</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90 mb-2">Your manifesto. The commitment that gates tracking</p>
           <p className="text-sm text-zinc-300 leading-relaxed max-w-xl mx-auto">
-            The dabbler tries something, hits the plateau, and quits. The master commits to the whole climb —
-            and to <span className="text-white">every</span> area of life, not just the loud one. You can&apos;t master
+            The dabbler tries something, hits the plateau, and quits. The master commits to the whole climb.
+            And to <span className="text-white">every</span> area of life, including the quiet ones. You can&apos;t master
             your business while your body, relationships and mind fall apart.
           </p>
           <p className="text-[11px] text-zinc-500 mt-1.5 max-w-xl mx-auto">
-            Write your vision above first if you like — but nothing gets tracked until this is signed. Commitment gates the operating, not the dreaming.
+            Write your vision above first if you like. But nothing gets tracked until this is signed. You can dream before you commit. You cannot operate.
           </p>
           <div className="mt-4 flex items-center justify-center gap-2">
             <label className="text-[11px] text-zinc-500" htmlFor="lm-manifesto-name">Your name:</label>
@@ -3083,18 +3490,18 @@ function FoundationSection({
             <ManifestoText name={manifestoName} ownLines={manifestoLines} onRemove={(l) => onManifestoLines(manifestoLines.filter((x) => x !== l))} />
             {ownLinesEditor}
           </div>
-          <p className="text-[10px] text-zinc-500 mt-3">Read it OUT LOUD — a manifesto is spoken, not skimmed. Then sign it:</p>
+          <p className="text-[10px] text-zinc-500 mt-3">Read it OUT LOUD. A manifesto is meant to be spoken. Then sign it:</p>
           <button
             onClick={onCommit}
             disabled={!signable}
             className="mt-3 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-100 hover:bg-amber-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm font-semibold"
           >
-            <Check className="size-4" /> This is my manifesto — I commit
+            <Check className="size-4" /> This is my manifesto. I commit
           </button>
           {!signable && (
             <p className="text-[10px] text-zinc-600 mt-2">
               {!manifestoName.trim()
-                ? "Put your name in it first — it isn't yours until it's signed."
+                ? "Put your name in it first. It becomes yours when you sign it."
                 : `Write at least ${MANIFESTO_MIN_LINES} lines of your own (${manifestoLines.length}/${MANIFESTO_MIN_LINES}) — a manifesto you didn't write won't hold you.`}
             </p>
           )}
@@ -3160,17 +3567,18 @@ function DrivingForceBuilder({ df, onChange, defaultName }: { df: VisionDrivingF
   return (
     <div className="grid gap-4 md:grid-cols-2 items-start">
       <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Your purpose — why do you want this vision?</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Your purpose. Why do you want this vision?</span>
         <textarea
           value={cur.purpose}
           onChange={(e) => onChange({ ...cur, purpose: e.target.value })}
           rows={3}
-          placeholder="What will this give me? Why do I want this? Write it as one non-negotiable statement — the fuel you'll read on hard days."
+          placeholder="What will this give me? Why do I want this? Write it as one non-negotiable statement. The fuel you'll read on hard days."
+          aria-label="Your purpose"
           className="mt-2 w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/20 transition-colors resize-none"
         />
         {interviewing ? (
           <InterviewFlow
-            questions={["Why do you want this vision — really?", "What will it give you, once it's real?", "And what would it cost you to never get there?"]}
+            questions={["Why do you want this vision, really?", "What will it give you, once it's real?", "And what would it cost you to never get there?"]}
             onAnswer={(a, i) => setAnswers((p) => { const n = [...p]; n[i] = a; return n })}
             onDone={() => {
               setInterviewing(false)
@@ -3184,7 +3592,7 @@ function DrivingForceBuilder({ df, onChange, defaultName }: { df: VisionDrivingF
             Prefer to be asked? Answer three questions instead
           </button>
         )}
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mt-3">Reason words — the more reasons, the more fuel</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mt-3">Reason words. The more reasons, the more fuel</p>
         <div className="flex items-center gap-1.5 flex-wrap mt-2">
           {REASON_WORDS.map((w) => {
             const on = cur.reasons.includes(w)
@@ -3202,8 +3610,8 @@ function DrivingForceBuilder({ df, onChange, defaultName }: { df: VisionDrivingF
         </div>
       </div>
       <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Identity — who are you committed to being?</span>
-        <p className="text-[10px] text-zinc-600 mt-1">&ldquo;The strongest force in the human personality is the need to stay consistent with how we define ourselves.&rdquo; — Tony Robbins</p>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Identity, who are you committed to being?</span>
+        <p className="text-[10px] text-zinc-600 mt-1">&ldquo;The strongest force in the human personality is the need to stay consistent with how we define ourselves.&rdquo;. Tony Robbins</p>
         <ul className="mt-2 space-y-1">
           {cur.identity.map((line) => (
             <li key={line} className="group/id flex items-center gap-2 text-sm text-zinc-200">
@@ -3223,6 +3631,7 @@ function DrivingForceBuilder({ df, onChange, defaultName }: { df: VisionDrivingF
             value={identityDraft}
             onChange={(e) => setIdentityDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") addIdentity() }}
+            aria-label="Add an identity line"
             placeholder='I am… ("disciplined", "a world-class coach", "an athlete")'
             className="flex-1 min-w-0 bg-transparent border-b border-white/10 focus:border-white/30 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none py-0.5"
           />
@@ -3232,15 +3641,27 @@ function DrivingForceBuilder({ df, onChange, defaultName }: { df: VisionDrivingF
 
       {/* v6 — mission statement: one sentence, BE + DO/GIVE, the energy test */}
       <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Your mission — one sentence, spoken daily</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Your mission, one sentence, spoken daily</span>
         {cur.mission ? (
           <>
             <p className="text-sm italic text-violet-100 mt-2 leading-relaxed">{cur.mission}</p>
-            <button onClick={() => onChange({ ...cur, mission: undefined })} className="mt-2 text-[10px] text-zinc-600 hover:text-red-300 transition-colors">rewrite it</button>
+            {/* v23 — "rewrite it" used to clear the mission AND leave the three
+                component boxes empty, so tweaking one clause meant retyping all
+                three. The parts are kept, so the boxes come back filled. */}
+            <button
+              onClick={() => {
+                const parts = cur.missionParts
+                if (parts) { setMissionName(parts.name); setMissionBe(parts.be); setMissionGive(parts.doGive) }
+                onChange({ ...cur, mission: undefined })
+              }}
+              className="mt-2 text-[10px] text-zinc-600 hover:text-red-300 transition-colors"
+            >
+              rewrite it
+            </button>
           </>
         ) : (
           <>
-            <p className="text-[10px] text-zinc-600 mt-1">The test: said out loud, it should give you goosebumps. If it doesn&apos;t — keep searching. Complexity is the enemy of execution; pick something for THIS phase.</p>
+            <p className="text-[10px] text-zinc-600 mt-1">The test: said out loud, it should give you goosebumps. If it doesn&apos;t. Keep searching. Complexity is the enemy of execution; pick something for THIS phase.</p>
             <div className="grid gap-2 sm:grid-cols-3 mt-2">
               <input value={missionName} onChange={(e) => setMissionName(e.target.value)} placeholder="Your full name" aria-label="Mission name"
                 className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/20" />
@@ -3253,7 +3674,7 @@ function DrivingForceBuilder({ df, onChange, defaultName }: { df: VisionDrivingF
               <>
                 <p className="text-sm italic text-violet-200/90 mt-2 leading-relaxed">{missionPreview}</p>
                 <button
-                  onClick={() => onChange({ ...cur, mission: missionPreview })}
+                  onClick={() => onChange({ ...cur, mission: missionPreview, missionParts: { name: missionName.trim(), be: missionBe.trim(), doGive: missionGive.trim() } })}
                   disabled={!missionBe.trim() || !missionGive.trim() || !missionName.trim()}
                   className="mt-2 text-[11px] px-2.5 py-1 rounded-md border border-violet-400/40 text-violet-200 hover:bg-violet-500/15 disabled:opacity-30 transition-colors"
                 >
@@ -3267,7 +3688,7 @@ function DrivingForceBuilder({ df, onChange, defaultName }: { df: VisionDrivingF
 
       {/* v6 — code of conduct: standards for how you show up */}
       <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Code of conduct — how you're committed to showing up</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Code of conduct. How you're committed to showing up</span>
         <ul className="mt-2 space-y-1">
           {(cur.conduct ?? []).map((line) => (
             <li key={line} className="group/cc flex items-center gap-2 text-sm text-zinc-200">
@@ -3283,6 +3704,7 @@ function DrivingForceBuilder({ df, onChange, defaultName }: { df: VisionDrivingF
             value={conductDraft}
             onChange={(e) => setConductDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") addConduct() }}
+            aria-label="Add a standard to your code of conduct"
             placeholder='To be… ("playful", "loving and caring", "disciplined", "grateful")'
             className="flex-1 min-w-0 bg-transparent border-b border-white/10 focus:border-white/30 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none py-0.5"
           />
@@ -3293,17 +3715,27 @@ function DrivingForceBuilder({ df, onChange, defaultName }: { df: VisionDrivingF
       {/* v9 — the Primary Question: the habitual question, rebuilt so its
           presupposition works FOR you. A question smuggles in its assumption. */}
       <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Your primary question — the one your mind asks on loop</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Your primary question. The one your mind asks on loop</span>
         {cur.primaryQuestion ? (
           <>
             <p className="text-sm italic text-violet-100 mt-2 leading-relaxed">{cur.primaryQuestion}</p>
-            <p className="text-[10px] text-zinc-600 mt-1">Ask it on purpose, all day — the mind answers whatever it&apos;s asked.</p>
-            <button onClick={() => onChange({ ...cur, primaryQuestion: undefined })} className="mt-2 text-[10px] text-zinc-600 hover:text-red-300 transition-colors">rewrite it</button>
+            {/* v23 — the question you REPLACED is the point of the exercise, and
+                it used to be discarded the moment the new one was kept. */}
+            {cur.primaryQuestionOld && (
+              <p className="text-[10px] text-zinc-600 mt-1">Replacing: &ldquo;{cur.primaryQuestionOld}&rdquo;</p>
+            )}
+            <p className="text-[10px] text-zinc-600 mt-1">Ask it on purpose, all day. The mind answers whatever it&apos;s asked.</p>
+            <button
+              onClick={() => { setPqOld(cur.primaryQuestionOld ?? ""); setPqNew(cur.primaryQuestion ?? ""); onChange({ ...cur, primaryQuestion: undefined }) }}
+              className="mt-2 text-[10px] text-zinc-600 hover:text-red-300 transition-colors"
+            >
+              rewrite it
+            </button>
           </>
         ) : (
           <>
             <p className="text-[10px] text-zinc-600 mt-1">
-              Everyone runs a default question without noticing — &ldquo;why does this always happen to me?&rdquo;, &ldquo;what if I fail?&rdquo;.
+              Everyone runs a default question without noticing. &ldquo;why does this always happen to me?&rdquo;, &ldquo;what if I fail?&rdquo;.
               Catch yours, then rebuild it so the assumption inside it empowers you. A strong one: &ldquo;How can I appreciate and enjoy my life even more, while feeling even more fully alive and growing and making a difference?&rdquo; A common trap: &ldquo;How can I become better?&rdquo; hides an I&apos;m-not-enough assumption.
             </p>
             <div className="grid gap-2 sm:grid-cols-2 mt-2">
@@ -3317,7 +3749,7 @@ function DrivingForceBuilder({ df, onChange, defaultName }: { df: VisionDrivingF
               <input
                 value={pqNew}
                 onChange={(e) => setPqNew(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && pqNew.trim()) onChange({ ...cur, primaryQuestion: pqNew.trim() }) }}
+                onKeyDown={(e) => { if (e.key === "Enter" && pqNew.trim()) onChange({ ...cur, primaryQuestion: pqNew.trim(), ...(pqOld.trim() ? { primaryQuestionOld: pqOld.trim() } : {}) }) }}
                 placeholder='Step 2 — the upgrade: "how can I enjoy making this happen?"'
                 aria-label="Your new primary question"
                 className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/20"
@@ -3327,7 +3759,7 @@ function DrivingForceBuilder({ df, onChange, defaultName }: { df: VisionDrivingF
               <p className="text-[10px] text-amber-300/80 mt-1.5">What does &ldquo;{pqOld.trim()}&rdquo; assume? Now write the question whose assumption you&apos;d WANT to live inside.</p>
             )}
             <button
-              onClick={() => { if (pqNew.trim()) onChange({ ...cur, primaryQuestion: pqNew.trim() }) }}
+              onClick={() => { if (pqNew.trim()) onChange({ ...cur, primaryQuestion: pqNew.trim(), ...(pqOld.trim() ? { primaryQuestionOld: pqOld.trim() } : {}) }) }}
               disabled={!pqNew.trim()}
               className="mt-2 text-[11px] px-2.5 py-1 rounded-md border border-violet-400/40 text-violet-200 hover:bg-violet-500/15 disabled:opacity-30 transition-colors"
             >
@@ -3346,17 +3778,17 @@ function DrivingForceBuilder({ df, onChange, defaultName }: { df: VisionDrivingF
 function IdentityStackCard() {
   const [open, setOpen] = useState(false)
   const rows: Array<[string, string]> = [
-    ["Manifesto", "Your signed commitment + credo. Written once, re-read when you need the spine — it gates starting to track."],
+    ["Manifesto", "Your signed commitment + credo. Written once, re-read when you need the spine. It gates starting to track."],
     ["Values & rules", "WHAT you want to feel, and WHEN you allow yourself to feel it. Rules are read aloud in the morning ritual, one value a day."],
     ["Identity + code of conduct", "WHO you are (\"I am…\") and HOW you show up. Lives on your daily driving-force card."],
-    ["Mission", "One sentence, spoken daily — the goosebumps test."],
-    ["Incantations", "The spoken conditioning deck — a few cards a day inside the morning ritual, full body."],
+    ["Mission", "One sentence, spoken daily. The goosebumps test."],
+    ["Incantations", "The spoken conditioning deck. A few cards a day inside the morning ritual, full body."],
   ]
   return (
     <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.02]">
       <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-white/[0.04] transition-colors">
         <ChevronDown className={`size-3.5 text-zinc-500 shrink-0 transition-transform ${open ? "" : "-rotate-90"}`} />
-        <span className="text-[11px] text-zinc-400">Five identity pieces — how they fit, and when each gets read</span>
+        <span className="text-[11px] text-zinc-400">Five identity pieces. How they fit, and when each gets read</span>
       </button>
       {open && (
         <ul className="px-4 pb-3 space-y-1">
@@ -3372,17 +3804,17 @@ function IdentityStackCard() {
 /** UX pass — jargon lands cold on newcomers; one card defines every term the
  * product uses before it's taught. */
 const GLOSSARY: Array<[string, string]> = [
-  ["Manifesto", "A short personal commitment you write and sign — your terms for showing up."],
+  ["Manifesto", "A short personal commitment you write and sign. Your terms for showing up."],
   ["Credo", "The \"I…\" lines inside the manifesto."],
-  ["Incantation", "A line you say OUT LOUD with your whole body to condition a feeling — stronger cousin of an affirmation."],
+  ["Incantation", "A line you say OUT LOUD with your whole body to condition a feeling. Stronger cousin of an affirmation."],
   ["North Star", "Your vision sentence, echoed back with the parts we recognized highlighted."],
-  ["Your 10", "What the best version of each life area looks like FOR YOU — the reference your weekly 0-10 rating measures against."],
+  ["Your 10", "What the best version of each life area looks like FOR YOU. The reference your weekly 0-10 rating measures against."],
   ["Domino areas", "The 1-3 life areas you focus on this season, because lifting them lifts the rest."],
-  ["Musts", "The 3-5 starred items that make today a win — everything else is could-do."],
-  ["Rules", "Your beliefs about what has to happen before you're allowed to feel a value — rewritten here so feeling good gets easy."],
+  ["Musts", "The 3-5 starred items that make today a win. Everything else is could-do."],
+  ["Rules", "Your beliefs about what has to happen before you're allowed to feel a value. Rewritten here so feeling good gets easy."],
   ["The plateau", "The flat stretch after early progress where most people quit. Expected here, planned for."],
   ["Install (30 days)", "A new ritual runs 30 days without negotiation before it counts as yours."],
-  ["Driving force", "Your purpose, identity and reasons — the card you read every morning."],
+  ["Driving force", "Your purpose, identity and reasons. The card you read every morning."],
 ]
 function GlossaryCard() {
   const [open, setOpen] = useState(false)
@@ -3395,8 +3827,8 @@ function GlossaryCard() {
       {open && (
         <div className="px-4 pb-3">
           <p className="text-[11px] text-zinc-500 mb-2">
-            One honest note first: this program distills a long coaching lineage — Tony Robbins&apos; strategies, T. Harv Eker&apos;s
-            money system, Gary Chapman&apos;s love languages, and classics from Gandhi to Jim Rohn — into a single method. Where a
+            One honest note first: this program distills a long coaching lineage. Tony Robbins&apos; strategies, T. Harv Eker&apos;s
+            money system, Gary Chapman&apos;s love languages, and classics from Gandhi to Jim Rohn. Into a single method. Where a
             piece has a clear source, we name it.
           </p>
           <ul className="space-y-1">
@@ -3428,7 +3860,7 @@ function PrincipleCardView({ id }: { id: string }) {
       >
         <ChevronDown className={`size-3.5 text-zinc-500 shrink-0 transition-transform ${open ? "" : "-rotate-90"}`} />
         <span className="text-[11px] font-medium text-zinc-300">{card.title}</span>
-        {!open && <span className="text-[11px] text-zinc-600 min-w-0 truncate">— {card.teaser}</span>}
+        {!open && <span className="text-[11px] text-zinc-600 min-w-0 truncate">{card.teaser}</span>}
       </button>
       {open && (
         <div className="px-4 pb-3.5 space-y-2 text-xs leading-relaxed">
@@ -3459,7 +3891,7 @@ function CopyButton({ label, getText }: { label: string; getText: () => string }
         }).catch(() => {})
       }}
       className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors shrink-0 ${copied ? "border-emerald-400/50 bg-emerald-500/10 text-emerald-300" : "border-white/15 text-zinc-500 hover:text-zinc-300 hover:border-white/30"}`}
-      title="Copy as text — put it on your wall, in your notes, wherever you'll see it"
+      title="Copy as text. Put it on your wall, in your notes, wherever you'll see it"
     >
       {copied ? "Copied" : label}
     </button>
@@ -3470,13 +3902,14 @@ function CopyButton({ label, getText }: { label: string; getText: () => string }
  * v4 — the SOS panel: the front door for rough moments. Audience research:
  * people arrive mid-crisis; each crisis type gets a ≤60-second protocol.
  */
-function SosPanel({ onClose, counters, onCounters, letters, onLetters, onAddIncantation, today }: {
+function SosPanel({ onClose, counters, onCounters, letters, onLetters, onAddIncantation, onLogBelief, today }: {
   onClose: () => void
   counters: Array<{ label: string; startDate: string }>
   onCounters: (next: Array<{ label: string; startDate: string }>) => void
   letters: Array<{ habit: string; thankYou: string; goodbye: string; date: string }>
   onLetters: (next: Array<{ habit: string; thankYou: string; goodbye: string; date: string }>) => void
   onAddIncantation: (card: string) => void
+  onLogBelief: (old: string, replacement: string) => void
   today: string
 }) {
   const [active, setActive] = useState<string | null>(null)
@@ -3493,11 +3926,12 @@ function SosPanel({ onClose, counters, onCounters, letters, onLetters, onAddInca
     <div className="fixed inset-0 z-40 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 pt-[8vh]" onClick={onClose}>
       <div className="w-full max-w-lg rounded-2xl border border-amber-400/25 bg-zinc-900 p-5 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90">Right now — 60 seconds</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/90">Right now. 60 seconds</span>
           <button onClick={onClose} aria-label="Close SOS" className="ml-auto text-zinc-500 hover:text-white"><X className="size-4" /></button>
         </div>
+        <PrincipleCardView id="sos" />
         <p className="text-xs text-zinc-400 mb-4">
-          You can&apos;t plan your way out of a state — change the state first, then come back to the plan. What&apos;s happening?
+          You can&apos;t plan your way out of a state. Change the state first, then come back to the plan. What&apos;s happening?
         </p>
         <div className="space-y-2">
           {SOS_PROTOCOLS.map((p) => (
@@ -3527,25 +3961,25 @@ function SosPanel({ onClose, counters, onCounters, letters, onLetters, onAddInca
         </div>
         {/* v10 — the CHANGE toolkit: for the habit you're breaking, not just the hour you're surviving */}
         <div className="mt-4 pt-3 border-t border-white/10">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-200/80 mb-2">The change toolkit — for the habit you&apos;re breaking</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-200/80 mb-2">The change toolkit. For the habit you&apos;re breaking</p>
 
           {/* 30-day one-day-at-a-time counters */}
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 mb-2">
-            <p className="text-[10px] text-zinc-500 mb-1.5">One day at a time — never &ldquo;forever&rdquo;, only ever today. 30 days breaks the loop.</p>
+            <p className="text-[10px] text-zinc-500 mb-1.5">One day at a time. Never &ldquo;forever&rdquo;, only ever today. 30 days breaks the loop.</p>
             {counters.map((c) => {
               const day = counterDay(c, today)
               return (
                 <div key={c.label} className="flex items-center gap-2 mb-1.5">
                   <span className="text-xs text-zinc-200 min-w-0 truncate">{c.label}</span>
                   <span className={`text-xs tabular-nums shrink-0 ${day > 30 ? "text-emerald-300" : "text-amber-200"}`}>
-                    {day > 30 ? `${day} days — the loop is broken. Stay humble: triggers never die.` : `day ${day}/30`}
+                    {day > 30 ? `${day} days. The loop is broken. Stay humble: triggers never die.` : `day ${day}/30`}
                   </span>
                   <span className="ml-auto flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => onCounters(counters.map((x) => (x.label === c.label ? { ...x, startDate: today } : x)))}
                       className="text-[10px] px-1.5 py-0.5 rounded border border-white/15 text-zinc-400 hover:bg-white/10 transition-colors"
-                      title="A slip is a data point, not a verdict — restart the count, keep the lesson."
-                    >slipped — restart</button>
+                      title="A slip is a data point. Restart the count and keep the lesson."
+                    >slipped, restart</button>
                     <button onClick={() => onCounters(counters.filter((x) => x.label !== c.label))} aria-label={`Remove counter ${c.label}`} className="text-zinc-600 hover:text-zinc-300 transition-colors">×</button>
                   </span>
                 </div>
@@ -3576,7 +4010,7 @@ function SosPanel({ onClose, counters, onCounters, letters, onLetters, onAddInca
             </button>
             {letterOpen && (
               <div className="mt-2">
-                <p className="text-[10px] text-zinc-500 mb-1.5">Every habit served a need — that&apos;s why it stuck. Thank it honestly for what it did for you; THEN end the relationship in writing. Two letters, same sitting.</p>
+                <p className="text-[10px] text-zinc-500 mb-1.5">Every habit served a need. That&apos;s why it stuck. Thank it honestly for what it did for you; THEN end the relationship in writing. Two letters, same sitting.</p>
                 <input
                   value={letterHabit}
                   onChange={(e) => setLetterHabit(e.target.value)}
@@ -3596,20 +4030,24 @@ function SosPanel({ onClose, counters, onCounters, letters, onLetters, onAddInca
                   value={letterBye}
                   onChange={(e) => setLetterBye(e.target.value)}
                   rows={2}
-                  placeholder={`"Goodbye — this is over because…" — and what takes its place.`}
+                  placeholder={`"Goodbye, this is over because…" — and what takes its place.`}
                   aria-label="Goodbye letter"
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/25 mb-1.5 resize-none"
                 />
+                {/* v23 — this used to demand all three fields before it would
+                    save anything, so a half-written goodbye letter was lost the
+                    moment the panel closed. The thank-you comes first on
+                    purpose; the goodbye can be finished later. */}
                 <button
                   onClick={() => {
                     const h = letterHabit.trim()
-                    if (!h || !letterThanks.trim() || !letterBye.trim()) return
+                    if (!h || !letterThanks.trim()) return
                     onLetters([...letters.filter((l) => l.habit !== h), { habit: h, thankYou: letterThanks.trim(), goodbye: letterBye.trim(), date: today }])
                     setLetterHabit(""); setLetterThanks(""); setLetterBye("")
                   }}
-                  disabled={!letterHabit.trim() || !letterThanks.trim() || !letterBye.trim()}
+                  disabled={!letterHabit.trim() || !letterThanks.trim()}
                   className="text-[11px] px-2.5 py-1 rounded-md border border-amber-400/40 text-amber-200 hover:bg-amber-500/10 disabled:opacity-30 transition-colors"
-                >Sign both letters</button>
+                >{letterBye.trim() ? "Sign both letters" : "Save what I have"}</button>
                 {letters.length > 0 && (
                   <ul className="mt-2 space-y-1">
                     {letters.map((l) => (
@@ -3629,7 +4067,7 @@ function SosPanel({ onClose, counters, onCounters, letters, onLetters, onAddInca
 
           {/* Belief swap → incantation deck */}
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-            <p className="text-[10px] text-zinc-500 mb-1.5">Belief swap — the utility test: not &ldquo;is it true?&rdquo; but <span className="text-zinc-300">&ldquo;does holding it get me the life I said I want?&rdquo;</span> If not, engineer its replacement.</p>
+            <p className="text-[10px] text-zinc-500 mb-1.5">Belief swap. The utility test: not &ldquo;is it true?&rdquo; but <span className="text-zinc-300">&ldquo;does holding it get me the life I said I want?&rdquo;</span> If not, engineer its replacement.</p>
             <input
               value={beliefOld}
               onChange={(e) => { setBeliefOld(e.target.value); setBeliefSaved(false) }}
@@ -3644,15 +4082,28 @@ function SosPanel({ onClose, counters, onCounters, letters, onLetters, onAddInca
               aria-label="Replacement belief"
               className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/25 mb-1.5"
             />
+            {/* v23 — the limiting belief itself used to be thrown away here:
+                only the replacement survived, as an incantation string. The
+                belief-work store has an `old` field designed for exactly this,
+                and the Guide's belief exercise already uses it — so this widget
+                writes to the same place instead of its own lossy local state. */}
             <button
-              onClick={() => { if (beliefNew.trim()) { onAddIncantation(beliefNew.trim()); setBeliefSaved(true) } }}
+              onClick={() => {
+                if (!beliefNew.trim()) return
+                onAddIncantation(beliefNew.trim())
+                if (beliefOld.trim()) onLogBelief(beliefOld.trim(), beliefNew.trim())
+                setBeliefSaved(true)
+              }}
               disabled={!beliefNew.trim() || beliefSaved}
               className="text-[11px] px-2.5 py-1 rounded-md border border-violet-400/40 text-violet-200 hover:bg-violet-500/15 disabled:opacity-30 transition-colors"
-            >{beliefSaved ? "In your incantation deck — speak it daily" : "Add replacement to my incantation deck"}</button>
+            >{beliefSaved ? "In your incantation deck, speak it daily" : "Add replacement to my incantation deck"}</button>
+            {beliefSaved && beliefOld.trim() && (
+              <p className="text-[10px] text-zinc-600 mt-1.5">Kept in your belief work, so you can come back and stack evidence against it.</p>
+            )}
           </div>
         </div>
 
-        <p className="text-[10px] text-zinc-600 mt-3">A bad hour is weather, not a verdict on the plan.</p>
+        <p className="text-[10px] text-zinc-600 mt-3">A bad hour is weather. The plan is still there.</p>
       </div>
     </div>
   )
@@ -3667,11 +4118,11 @@ function MoneySystemCard() {
     <div className="mt-1.5 rounded-lg border border-lime-400/20 bg-lime-500/[0.04]">
       <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-white/[0.04] transition-colors">
         <ChevronDown className={`size-3.5 text-zinc-500 shrink-0 transition-transform ${open ? "" : "-rotate-90"}`} />
-        <span className="text-[11px] text-lime-200/90">The money system — the agenda for this ritual</span>
+        <span className="text-[11px] text-lime-200/90">The money system. The agenda for this ritual</span>
       </button>
       {open && (
         <div className="px-4 pb-3">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-1">The jars — every dollar gets a job (T. Harv Eker&apos;s system)</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-1">The jars. Every dollar gets a job (T. Harv Eker&apos;s system)</p>
           <div className="space-y-1 mb-2.5">
             {MONEY_JARS.map((j) => (
               <div key={j.name} className="flex items-baseline gap-2">
@@ -3719,11 +4170,11 @@ function JournalScriptCard() {
       <div className="w-full flex items-center gap-2 px-3 py-2">
         <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-white/[0.04] transition-colors rounded-md">
           <ChevronDown className={`size-3.5 text-zinc-500 shrink-0 transition-transform ${open ? "" : "-rotate-90"}`} />
-          <span className="text-[11px] text-rose-200/90">The session script — step by step, for the two of you</span>
+          <span className="text-[11px] text-rose-200/90">The session script. Step by step, for the two of you</span>
         </button>
         <span className="shrink-0">
           <CopyButton label="Copy script" getText={() => [
-            "RELATIONSHIP JOURNAL — SESSION SCRIPT",
+            "RELATIONSHIP JOURNAL. SESSION SCRIPT",
             RELATIONSHIP_JOURNAL_SCRIPT.container,
             "",
             ...RELATIONSHIP_JOURNAL_SCRIPT.steps.map((st, i) => `${i + 1}. ${st.title}\n   ${st.detail}`),
@@ -3771,25 +4222,33 @@ function HorizonChip({ goal, today }: { goal: VisionGoalDraft; today: string }) 
  * ORDERED checklist; steps can be toggled from the library, reordered, and the
  * total minutes are always visible. The ritual never enters the balancer.
  */
-/** v10 — his ritual DESIGN method, step 1: audit what you already do each
- * morning and mark each act empowering (↑) or draining (↓). The draining ones
- * are the redesign targets. A worksheet, not stored state. */
-function RitualAudit() {
+/** The ritual DESIGN method, step 1: audit what you already do each morning and
+ * mark each act empowering (↑) or draining (↓). The draining ones are the
+ * redesign targets.
+ *
+ * v23 — this was local state ("a worksheet, not stored state"), so 6-10 typed
+ * lines and their marks vanished on navigation, and so did the derived
+ * "N draining acts" list. Those acts are precisely what the designed ritual is
+ * supposed to replace, so they have to survive next to it. Now persisted. */
+function RitualAudit({ items, onChange }: {
+  items: Array<{ id: string; text: string; mark: "up" | "down" | null }>
+  onChange: (fn: (prev: Array<{ id: string; text: string; mark: "up" | "down" | null }>) => Array<{ id: string; text: string; mark: "up" | "down" | null }>) => void
+}) {
   const [open, setOpen] = useState(false)
-  const [items, setItems] = useState<Array<{ text: string; up: boolean | null }>>([])
   const [draft, setDraft] = useState("")
   const add = () => {
     const t = draft.trim()
-    if (!t || items.some((i) => i.text === t)) return
-    setItems((p) => [...p, { text: t, up: null }])
+    if (!t) return
+    // Updater form: a burst of Adds must not read the same render's copy.
+    onChange((prev) => (prev.some((i) => i.text === t) ? prev : [...prev, { id: `ra-${prev.length}-${t.slice(0, 12)}`, text: t, mark: null }]))
     setDraft("")
   }
-  const down = items.filter((i) => i.up === false)
+  const down = items.filter((i) => i.mark === "down")
   return (
     <div className="rounded-lg border border-white/10 bg-white/[0.02] mb-3">
       <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-white/[0.04] transition-colors">
         <ChevronDown className={`size-3.5 text-zinc-500 shrink-0 transition-transform ${open ? "" : "-rotate-90"}`} />
-        <span className="text-[11px] text-zinc-400">Step 1 — audit your CURRENT morning first (you already have a ritual; you just didn&apos;t design it)</span>
+        <span className="text-[11px] text-zinc-400">Step 1. Audit your CURRENT morning first (you already have a ritual; you just didn&apos;t design it)</span>
       </button>
       {open && (
         <div className="px-3 pb-3">
@@ -3808,20 +4267,27 @@ function RitualAudit() {
           {items.length > 0 && (
             <ul className="space-y-1">
               {items.map((it, i) => (
-                <li key={it.text} className="flex items-center gap-2 text-xs text-zinc-300">
+                <li key={it.id} className="flex items-center gap-2 text-xs text-zinc-300">
                   <span className="min-w-0">{it.text}</span>
                   <span className="ml-auto flex items-center gap-1 shrink-0">
-                    {([["↑", true], ["↓", false]] as const).map(([sym, val]) => (
+                    {([["↑", "up"], ["↓", "down"]] as const).map(([sym, val]) => (
                       <button
                         key={sym}
-                        onClick={() => setItems((p) => p.map((x, j) => (j === i ? { ...x, up: val } : x)))}
-                        aria-pressed={it.up === val}
-                        aria-label={`${it.text}: ${val ? "empowering" : "draining"}`}
-                        className={`text-[11px] px-1.5 py-0.5 rounded border transition-colors ${it.up === val ? (val ? "border-emerald-400/60 bg-emerald-500/20 text-emerald-200" : "border-red-400/60 bg-red-500/20 text-red-200") : "border-white/15 text-zinc-500 hover:text-zinc-300"}`}
+                        onClick={() => onChange((p) => p.map((x, j) => (j === i ? { ...x, mark: val } : x)))}
+                        aria-pressed={it.mark === val}
+                        aria-label={`${it.text}: ${val === "up" ? "empowering" : "draining"}`}
+                        className={`text-[11px] px-1.5 py-0.5 rounded border transition-colors ${it.mark === val ? (val === "up" ? "border-emerald-400/60 bg-emerald-500/20 text-emerald-200" : "border-red-400/60 bg-red-500/20 text-red-200") : "border-white/15 text-zinc-500 hover:text-zinc-300"}`}
                       >
                         {sym}
                       </button>
                     ))}
+                    <button
+                      onClick={() => onChange((p) => p.filter((_, j) => j !== i))}
+                      aria-label={`Remove ${it.text}`}
+                      className="text-[11px] px-1 text-zinc-600 hover:text-zinc-300 transition-colors"
+                    >
+                      ×
+                    </button>
                   </span>
                 </li>
               ))}
@@ -3846,9 +4312,13 @@ function RitualBuilder({
   onMove,
   onClear,
   onWeeklyToggle,
+  auditItems,
+  onAuditChange,
 }: {
   ritual: VisionRitual | null
   vision?: string
+  auditItems: Array<{ id: string; text: string; mark: "up" | "down" | null }>
+  onAuditChange: (fn: (prev: Array<{ id: string; text: string; mark: "up" | "down" | null }>) => Array<{ id: string; text: string; mark: "up" | "down" | null }>) => void
   onPreset: (preset: 15 | 30 | 60) => void
   onToggleStep: (item: { id: string; title: string; minutes: number }) => void
   onMove: (index: number, dir: -1 | 1) => void
@@ -3860,12 +4330,12 @@ function RitualBuilder({
   const coverage = ritualCoverage(ritual, RITUAL_DIMENSIONS)
   return (
     <>
-    <RitualAudit />
+    <RitualAudit items={auditItems} onChange={onAuditChange} />
     {vision?.trim() && (
       <div className="rounded-lg border border-violet-400/20 bg-violet-500/[0.05] px-3 py-2 mb-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-200/80 mb-0.5">Step 2 — design FROM the vision, not from habit lists</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-200/80 mb-0.5">Step 2. Design it FROM the vision</p>
         <p className="text-[11px] text-zinc-400 line-clamp-2">{vision.trim()}</p>
-        <p className="text-[10px] text-zinc-500 mt-1">Read it. Which 2-3 morning acts would make THAT person inevitable? Pick those below — the ritual serves the vision, not the other way round.</p>
+        <p className="text-[10px] text-zinc-500 mt-1">Read it. Which 2-3 morning acts would make THAT person inevitable? Pick those below. The ritual is there to serve the vision.</p>
       </div>
     )}
     <div className="grid gap-4 md:grid-cols-2 items-start">
@@ -3911,15 +4381,15 @@ function RitualBuilder({
       </div>
       <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Your ritual — in order</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Your ritual, in order</span>
           {ritual && (
             <span className="ml-auto text-[11px] text-zinc-400 tabular-nums">~{ritualMinutes(ritual)} min every morning</span>
           )}
         </div>
         {!ritual ? (
           <p className="text-sm text-zinc-500 mt-3">
-            No ritual yet — pick a preset or steps on the left. It becomes a daily checklist at the top of your Track view.
-            On chaotic days, any ONE step counts — consistency beats duration.
+            No ritual yet. Pick a preset or steps on the left. It becomes a daily checklist at the top of your Track view.
+            On chaotic days, any ONE step counts. Consistency beats duration.
           </p>
         ) : (
           <ol className="mt-2 space-y-1">
@@ -3963,7 +4433,7 @@ function RitualBuilder({
               </span>
             ))}
             {!(coverage.mind && coverage.body && coverage.spirit) && (
-              <span className="text-[10px] text-amber-300/80">— the floor: touch all three every morning, even one minute each.</span>
+              <span className="text-[10px] text-amber-300/80">the floor: touch all three every morning, even one minute each.</span>
             )}
           </div>
         )}
@@ -3972,7 +4442,7 @@ function RitualBuilder({
     {/* v10 — the ritual MATRIX: weekly per-area rituals beyond the morning */}
     <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
       <div className="flex items-center gap-2">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">The week — and month — have rituals too</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">The week, and month, have rituals too</span>
         {!ritual && <span className="text-[10px] text-zinc-600">build the morning ritual first</span>}
       </div>
       <ul className="mt-2 grid gap-1 sm:grid-cols-2">
@@ -3996,7 +4466,7 @@ function RitualBuilder({
           )
         })}
       </ul>
-      <p className="text-[10px] text-zinc-600 mt-2">Examples: Money Tuesday and the relationship journal — they show up on Track on their day. The quarterly and yearly rhythms (net worth, annual review) live in the monthly report and the year-in-review.</p>
+      <p className="text-[10px] text-zinc-600 mt-2">Examples: Money Tuesday and the relationship journal. They show up on Track on their day. The quarterly and yearly rhythms (net worth, annual review) live in the monthly report and the year-in-review.</p>
     </div>
     </>
   )
@@ -4018,7 +4488,7 @@ function EmpoweringQuestions() {
         className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-white/[0.04] transition-colors"
       >
         <ChevronDown className={`size-3.5 text-zinc-500 shrink-0 transition-transform ${open ? "" : "-rotate-90"}`} />
-        <span className="text-[11px] text-zinc-400">The 8 questions — one at a time, out loud, and FEEL each answer</span>
+        <span className="text-[11px] text-zinc-400">The 8 questions. One at a time, out loud, and FEEL each answer</span>
       </button>
       {open && (
         <div className="px-4 pb-3">
@@ -4032,13 +4502,13 @@ function EmpoweringQuestions() {
               <p className="text-[10px] text-violet-300/80 tabular-nums mb-1">{idx + 1} of {EMPOWERING_QUESTIONS.length}</p>
               <p className="text-sm text-zinc-100">{EMPOWERING_QUESTIONS[idx]}</p>
               <p className="text-[10px] text-violet-200/70 mt-1">Then the follow-up: {QUESTION_FOLLOW_UP}</p>
-              <p className="text-[10px] text-zinc-600 mt-1">Ask it out loud. Sit in the answer until you FEEL it — then move on. Stuck? &ldquo;What COULD I be happy about?&rdquo;</p>
+              <p className="text-[10px] text-zinc-600 mt-1">Ask it out loud. Sit in the answer until you FEEL it. Then move on. Stuck? &ldquo;What COULD I be happy about?&rdquo;</p>
               <div className="flex items-center gap-2 mt-2">
                 <button
                   onClick={() => setIdx((i) => i + 1)}
                   className="text-[11px] px-3 py-1 rounded-md border border-violet-400/40 text-violet-200 hover:bg-violet-500/15 transition-colors"
                 >
-                  Felt it — next
+                  Felt it, next
                 </button>
                 {idx > 0 && (
                   <button onClick={() => setIdx((i) => Math.max(0, i - 1))} className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors">back</button>
@@ -4113,7 +4583,7 @@ function OneThingTimer({ title }: { title: string }) {
           ) : finished ? (
             <button onClick={() => setEndsAt(null)}
               className="text-[10px] px-2.5 py-1 rounded-md border border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 transition-colors">
-              60 minutes done — celebrate it, then check it off
+              60 minutes done. Celebrate it, then check it off
             </button>
           ) : (
             <>
@@ -4124,7 +4594,7 @@ function OneThingTimer({ title }: { title: string }) {
         </span>
       </div>
       {endsAt === null && (
-        <p className="text-[10px] text-zinc-500 mt-1">Before email, before messages — willpower is highest now. One block, one thing, sixty minutes.</p>
+        <p className="text-[10px] text-zinc-500 mt-1">Before email, before messages. Willpower is highest now. One block, one thing, sixty minutes.</p>
       )}
     </div>
   )
@@ -4162,6 +4632,7 @@ function AddAdhocRow({ onAdd }: { onAdd: (title: string) => void }) {
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") commit() }}
         placeholder="Add something to today… (unfinished items roll to tomorrow)"
+        aria-label="Add something to today"
         className="flex-1 min-w-0 bg-transparent border-b border-white/10 focus:border-white/30 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none py-0.5 transition-colors"
       />
       <button
@@ -4189,6 +4660,9 @@ function WeeklyReviewForm({
   focusAreaIds,
   onRaise,
   onSave,
+  draft,
+  onDraft,
+  labels,
   vision,
   purpose,
   topValues,
@@ -4203,24 +4677,57 @@ function WeeklyReviewForm({
   focusAreaIds?: string[]
   onRaise: (areaId: string) => void
   onSave: (review: VisionWeeklyReview) => void
+  draft?: VisionWeeklyDraft | null
+  onDraft: (patch: Partial<VisionWeeklyDraft>) => void
+  labels?: Record<string, string>
   vision?: string
   purpose?: string
   topValues?: string[]
   tensDefined?: Set<string>
 }) {
-  const [ratings, setRatings] = useState<Record<string, number>>({})
-  const [note, setNote] = useState("")
-  const [focus, setFocus] = useState<string | null>(null)
+  // v23 — this form is the single largest block of writing in the product (12
+  // sliders, 4 reflections, 3 outcomes, unlimited captures, the honest note),
+  // and every character of it used to live in component state behind a Save
+  // button that stayed DISABLED until all twelve areas were rated. Rate eleven,
+  // write the lesson and three outcomes, click anything — all gone. State now
+  // seeds from a persisted draft and every edit writes back through `onDraft`.
+  const seed = draft && draft.weekStart === win.start ? draft : null
+  const [ratings, setRatingsRaw] = useState<Record<string, number>>(seed?.areaRatings ?? {})
+  const [note, setNoteRaw] = useState(seed?.note ?? "")
+  const [focus, setFocusRaw] = useState<string | null>(seed?.focusPillarId ?? null)
   // PLM OS M4 — reflection + committed outcomes.
-  const [magicMoment, setMagicMoment] = useState("")
-  const [accomplishment, setAccomplishment] = useState("")
-  const [lesson, setLesson] = useState("")
-  const [challenge, setChallenge] = useState("")
-  const [outcomes, setOutcomes] = useState<VisionWeeklyOutcome[]>([])
+  const [magicMoment, setMagicMomentRaw] = useState(seed?.magicMoment ?? "")
+  const [accomplishment, setAccomplishmentRaw] = useState(seed?.accomplishment ?? "")
+  const [lesson, setLessonRaw] = useState(seed?.lesson ?? "")
+  const [challenge, setChallengeRaw] = useState(seed?.challenge ?? "")
+  const [outcomes, setOutcomesRaw] = useState<VisionWeeklyOutcome[]>(seed?.outcomes ?? [])
   // v10 — capture-everything (RPM Capture→Categorize).
-  const [captures, setCaptures] = useState<Array<{ text: string; areaId: string | null }>>([])
+  const [captures, setCapturesRaw] = useState<Array<{ text: string; areaId: string | null }>>(seed?.captures ?? [])
   const [captureDraft, setCaptureDraft] = useState("")
-  const allRated = LIFE_MASTERY_AREAS.every((a) => ratings[a.id] != null)
+  // Each setter mirrors into the persisted draft. Updater-function form
+  // throughout, because a burst of clicks (rating five areas quickly) otherwise
+  // reads the same render's copy and loses all but the last — a bug this file
+  // has already shipped three times.
+  const mirror = <T,>(set: React.Dispatch<React.SetStateAction<T>>, key: keyof VisionWeeklyDraft) =>
+    (v: React.SetStateAction<T>) =>
+      set((prev) => {
+        const next = typeof v === "function" ? (v as (p: T) => T)(prev) : v
+        onDraft({ [key]: next } as Partial<VisionWeeklyDraft>)
+        return next
+      })
+  const setRatings = mirror(setRatingsRaw, "areaRatings")
+  const setNote = mirror(setNoteRaw, "note")
+  const setFocus = mirror(setFocusRaw, "focusPillarId")
+  const setMagicMoment = mirror(setMagicMomentRaw, "magicMoment")
+  const setAccomplishment = mirror(setAccomplishmentRaw, "accomplishment")
+  const setLesson = mirror(setLessonRaw, "lesson")
+  const setChallenge = mirror(setChallengeRaw, "challenge")
+  const setOutcomes = mirror(setOutcomesRaw, "outcomes")
+  const setCaptures = mirror(setCapturesRaw, "captures")
+  // v23 — honour the user's own names for their rooms here too.
+  const areaLabel = (a: { id: string; label: string }) => labels?.[a.id] ?? a.label
+  const ratedCount = LIFE_MASTERY_AREAS.filter((a) => ratings[a.id] != null).length
+  const allRated = ratedCount === LIFE_MASTERY_AREAS.length
   const raiseAdded = (areaId: string): boolean => {
     const pick = RAISE_ACTIONS[areaId]
     return pick ? addedHabitIds.has(routineHabitId(pick.categoryId, pick.itemId)) : true
@@ -4246,19 +4753,19 @@ function WeeklyReviewForm({
           ritual opens on the life you designed, not on numbers. */}
       {(vision?.trim() || purpose?.trim()) && (
         <div className="mb-4 rounded-lg border border-violet-400/20 bg-violet-500/[0.06] px-3 py-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-200/90 mb-1">Step 1 — re-read your plan, out loud</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-200/90 mb-1">Step 1. Re-read your plan, out loud</p>
           {vision?.trim() && <p className="text-xs text-zinc-300 whitespace-pre-wrap">{vision.trim()}</p>}
           {purpose?.trim() && <p className="text-[11px] text-zinc-400 mt-1.5"><span className="text-zinc-500">Purpose:</span> {purpose.trim()}</p>}
           {(topValues?.length ?? 0) > 0 && (
             <p className="text-[10px] text-zinc-500 mt-1.5">Values: <span className="text-zinc-300">{topValues!.slice(0, 5).join(" · ")}</span></p>
           )}
-          <p className="text-[10px] text-zinc-500 mt-1.5">Feel it again before you touch a single slider — you&apos;re not grading numbers, you&apos;re checking in on the life you designed.</p>
+          <p className="text-[10px] text-zinc-500 mt-1.5">Feel it again before you touch a single slider. You&apos;re not grading numbers, you&apos;re checking in on the life you designed.</p>
         </div>
       )}
 
       <p className="text-xs text-zinc-400 mb-4">
         Rate every area of your life against <span className="text-zinc-200">your</span> ideal — your 10 is different from anyone else&apos;s.
-        You can&apos;t manage what you don&apos;t measure; honest numbers beat pretty ones. {LIFE_MASTERY_SUCCESS_LEVEL} is the floor, not the aim — push each area toward 8-9-10.
+        You can&apos;t manage what you don&apos;t measure; honest numbers beat pretty ones. Aim for one level up in the areas you&apos;re working — {LIFE_MASTERY_SUCCESS_LEVEL}+ is the target, and the rest hold their floor while you push.
       </p>
 
       {weekRollups.length > 0 && (
@@ -4290,8 +4797,8 @@ function WeeklyReviewForm({
           return (
             <div key={a.id} className="flex items-center gap-3" title={a.prompt}>
               <span className="w-32 shrink-0 min-w-0">
-                <span className="block text-xs truncate" style={{ color: a.color }}>{a.label}</span>
-                <span className="block text-[9px] text-zinc-600 truncate">{tensDefined?.has(a.id) === false ? "no 10 defined — rating against what?" : a.sublabel}</span>
+                <span className="block text-xs truncate" style={{ color: areaTextColor(a) }}>{areaLabel(a)}</span>
+                <span className="block text-[9px] text-zinc-600 truncate">{tensDefined?.has(a.id) === false ? "no 10 defined, rating against what?" : a.sublabel}</span>
               </span>
               <input
                 type="range"
@@ -4299,15 +4806,16 @@ function WeeklyReviewForm({
                 max={10}
                 value={val ?? 5}
                 onChange={(e) => setRatings((p) => ({ ...p, [a.id]: Number(e.target.value) }))}
-                aria-label={`Rate ${a.label} 0 to 10`}
+                aria-label={`Rate ${areaLabel(a)} 0 to 10`}
                 className={`flex-1 ${val == null ? "opacity-40" : ""}`}
                 style={{ accentColor: val == null ? "#52525b" : a.color }}
               />
               <span className="w-16 text-right shrink-0">
                 <button
                   onClick={() => setRatings((p) => ({ ...p, [a.id]: val ?? 5 }))}
+                  aria-label={val == null ? `Confirm ${areaLabel(a)} at 5` : `${areaLabel(a)} rated ${val}`}
                   title={val == null ? "Tap to confirm 5, or slide to rate" : "Confirmed"}
-                  className={`text-xs tabular-nums ${val == null ? "text-zinc-600 underline decoration-dotted hover:text-zinc-300" : val < LIFE_MASTERY_SUCCESS_LEVEL ? "text-amber-300" : "text-white"}`}
+                  className={`text-xs tabular-nums ${val == null ? "text-zinc-400 underline decoration-dotted hover:text-white" : val < LIFE_MASTERY_SUCCESS_LEVEL ? "text-amber-300" : "text-white"}`}
                 >
                   {val ?? "–"}/10
                 </button>
@@ -4332,7 +4840,9 @@ function WeeklyReviewForm({
         })}
       </div>
       {!allRated && (
-        <p className="text-[10px] text-zinc-500 mt-2">Slide every area to rate it (0-10, against YOUR 10 and YOUR 0) — the ritual is checking in with your WHOLE life, not just the loud parts.</p>
+        <p className="text-[10px] text-zinc-500 mt-2">
+          {ratedCount} of {LIFE_MASTERY_AREAS.length} rated. The ritual is checking in with your WHOLE life, not just the loud parts — but you can save what you have and finish later.
+        </p>
       )}
 
       {/* M4 — "you have to do something each week to grow every area" */}
@@ -4345,12 +4855,12 @@ function WeeklyReviewForm({
               return a ? (
                 <span key={id}>
                   {i > 0 && <span className="text-amber-200/50"> · </span>}
-                  <span style={{ color: a.color }}>{a.label}</span>
+                  <span style={{ color: areaTextColor(a) }}>{areaLabel(a)}</span>
                 </span>
               ) : null
             })}
           </p>
-          <p className="text-[10px] text-zinc-500 mt-0.5">Do one small thing in each area every week — even a phone call counts. For anything under {LIFE_MASTERY_SUCCESS_LEVEL}, ask: &ldquo;What can I do to level up this area of life?&rdquo;</p>
+          <p className="text-[10px] text-zinc-500 mt-0.5">A maintenance area only has to hold its floor — a phone call counts. For a focus area under {LIFE_MASTERY_SUCCESS_LEVEL}, ask: &ldquo;What gets this one level up next week?&rdquo;</p>
         </div>
       )}
 
@@ -4372,7 +4882,7 @@ function WeeklyReviewForm({
             className="mt-1 w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/20 transition-colors" />
       </label>
         <label className="block">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-300/70">Biggest challenge — root cause?</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-300/70">Biggest challenge, root cause?</span>
           <input value={challenge} onChange={(e) => setChallenge(e.target.value)} placeholder="What actually caused it?"
             className="mt-1 w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/20 transition-colors" />
         </label>
@@ -4380,8 +4890,8 @@ function WeeklyReviewForm({
 
       {/* v10 — RPM Capture→Categorize: empty the head, give every item a home */}
       <div className="mt-4">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Capture everything — then give each item a home</span>
-        <p className="text-[10px] text-zinc-600 mt-0.5">Everything circling in your head — commitments, ideas, loose ends. Dump first, categorize after. Promote the real ones to outcomes (→); the rest stay PARKED here on purpose — a captured thought stops circling.</p>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Capture everything. Then give each item a home</span>
+        <p className="text-[10px] text-zinc-600 mt-0.5">Everything circling in your head. Commitments, ideas, loose ends. Dump first, categorize after. Promote the real ones to outcomes (→); the rest stay PARKED here on purpose. A captured thought stops circling.</p>
         {captures.map((c, i) => (
           <div key={i} className="flex items-center gap-2 mt-1.5">
             <input
@@ -4397,7 +4907,7 @@ function WeeklyReviewForm({
               className="bg-white/5 border border-white/10 rounded-md px-1.5 py-1 text-[11px] text-zinc-300 focus:outline-none shrink-0"
             >
               <option value="" className="bg-zinc-900">— area?</option>
-              {LIFE_MASTERY_AREAS.map((a) => <option key={a.id} value={a.id} className="bg-zinc-900">{a.label}</option>)}
+              {LIFE_MASTERY_AREAS.map((a) => <option key={a.id} value={a.id} className="bg-zinc-900">{areaLabel(a)}</option>)}
             </select>
             <button
               onClick={() => {
@@ -4406,7 +4916,7 @@ function WeeklyReviewForm({
                 setCaptures((p) => p.filter((_, j) => j !== i))
               }}
               disabled={outcomes.length >= 3 || !c.text.trim()}
-              title={outcomes.length >= 3 ? "Outcome slots full (max 3) — captured items stay parked here" : "Promote to next week's outcomes"}
+              title={outcomes.length >= 3 ? "Outcome slots full (max 3). Captured items stay parked here" : "Promote to next week's outcomes"}
               className="text-[10px] px-1.5 py-0.5 rounded-full border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 disabled:opacity-30 shrink-0 transition-colors"
             >→ outcome</button>
             <button onClick={() => setCaptures((p) => p.filter((_, j) => j !== i))} aria-label={`Remove captured item ${i + 1}`} className="text-zinc-600 hover:text-red-300 shrink-0"><X className="size-3.5" /></button>
@@ -4431,7 +4941,7 @@ function WeeklyReviewForm({
 
       {/* M4 — next week's committed outcomes (max 3), each with its why */}
       <div className="mt-4">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Next week&apos;s outcomes — with the why, ON a day</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Next week&apos;s outcomes. With the why, ON a day</span>
         {outcomes.map((o, i) => (
           <div key={i} className="flex items-center gap-2 mt-1.5">
             <select
@@ -4440,7 +4950,7 @@ function WeeklyReviewForm({
               aria-label={`Outcome ${i + 1} area`}
               className="bg-white/5 border border-white/10 rounded-md px-1.5 py-1 text-[11px] text-zinc-300 focus:outline-none shrink-0"
             >
-              {LIFE_MASTERY_AREAS.map((a) => <option key={a.id} value={a.id} className="bg-zinc-900">{a.label}</option>)}
+              {LIFE_MASTERY_AREAS.map((a) => <option key={a.id} value={a.id} className="bg-zinc-900">{areaLabel(a)}</option>)}
             </select>
             <input
               value={o.outcome}
@@ -4470,7 +4980,7 @@ function WeeklyReviewForm({
           </div>
         ))}
         {outcomes.length === 0 && (
-          <p className="text-[10px] text-zinc-600 mt-1">Nothing committed yet — up to three, each with a why and a day.</p>
+          <p className="text-[10px] text-zinc-600 mt-1">Nothing committed yet. Up to three, each with a why and a day.</p>
         )}
         {outcomes.length < 3 && (
           <button
@@ -4486,11 +4996,12 @@ function WeeklyReviewForm({
         onChange={(e) => setNote(e.target.value)}
         rows={2}
         placeholder="One honest sentence about this week…"
+        aria-label="The honest note about this week"
         className="mt-1 w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/20 transition-colors resize-none"
       />
 
       <div className="flex items-center gap-2 mt-3 flex-wrap">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Next week&apos;s focus — the ONE area to lean into hardest (your 1-3 season areas live in the Life Plan):</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Next week&apos;s focus. The ONE area to lean into hardest (your 1-3 season areas live in the Life Plan):</span>
         {LIFE_MASTERY_AREAS.map((a) => (
           <button
             key={a.id}
@@ -4528,17 +5039,28 @@ function WeeklyReviewForm({
                 : {}),
             })
           }
-          disabled={!allRated}
+          disabled={ratedCount === 0}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm font-medium"
         >
           <Check className="size-4" /> Save weekly review
         </button>
+        {/* v23 — the gate used to be all-twelve-or-nothing, which is how a
+            review with eleven ratings and three written outcomes got thrown
+            away. A partial review is still a review. */}
+        {!allRated && ratedCount > 0 && (
+          <span className="text-[10px] text-amber-200/80">
+            {LIFE_MASTERY_AREAS.length - ratedCount} area{LIFE_MASTERY_AREAS.length - ratedCount === 1 ? "" : "s"} unrated — saved anyway, and your writing is kept as you type.
+          </span>
+        )}
       </div>
     </div>
   )
 }
 
-/** Verdict labels in Stefan's taxonomy — every non-achieved status gets a reason. */
+/** Verdict labels — every non-achieved status gets a reason.
+ * v21: the last five exist because he reports outcomes our taxonomy had no word
+ * for. Collapsing all of them into "missed" is what made a normal 80-90% year
+ * read as failure. */
 const VERDICT_LABELS: Record<VisionGoalVerdict, string> = {
   achieved: "Achieved",
   "on-track": "On track",
@@ -4548,6 +5070,11 @@ const VERDICT_LABELS: Record<VisionGoalVerdict, string> = {
   modified: "Modified",
   cancelled: "Cancelled",
   rescheduled: "Rescheduled",
+  pushed: "Pushed the date",
+  reshaped: "Reshaped it",
+  displaced: "Displaced by something else",
+  paused: "Paused",
+  "deferred-by-choice": "Chose not to, deliberately",
 }
 const VERDICT_SUCCESS: VisionGoalVerdict[] = ["achieved", "over-achieved"]
 
@@ -4615,6 +5142,11 @@ function MonthlyReportSection({
         body: JSON.stringify({ vision, report }),
       })
       const data = await res.json().catch(() => null)
+      // A 401 in this sandbox means nobody is signed in, which is an expected
+      // state here and NOT a failed answer from the model. Reporting both the
+      // same way told the user "the coach didn't answer" about a request that
+      // was never made.
+      if (res.status === 401 || res.status === 403) throw new Error("UNAUTHENTICATED")
       if (!res.ok) throw new Error(data?.error ?? `Request failed (${res.status})`)
       if (!data?.commentary) throw new Error("No commentary in response")
       setCommentary((p) => ({ ...p, [report.month]: data.commentary }))
@@ -4667,18 +5199,18 @@ function MonthlyReportSection({
           </div>
 
           {report.rangeEnd < report.rangeStart ? (
-            <p className="text-sm text-zinc-500 mt-4">No finished days in this period yet — come back tomorrow.</p>
+            <p className="text-sm text-zinc-500 mt-4">No finished days in this period yet. Come back tomorrow.</p>
           ) : (
             <>
               <p className="text-[11px] text-zinc-500 mt-3">
                 {isYear
-                  ? "Successes first — acknowledge what you made happen before you study what slipped. Then take the lessons into next year's goals."
-                  : "Wins first — flood them, don't rush past them, and don't be hard on yourself. THEN study each miss: own the reason, and commit a fix you can name (95% solution, 5% problem)."}
+                  ? "Successes first. Acknowledge what you made happen before you study what slipped. Then take the lessons into next year's goals."
+                  : "Wins first. Flood them, don't rush past them, and don't be hard on yourself. THEN study each miss: own the reason, and commit a fix you can name (95% solution, 5% problem)."}
               </p>
               {isYear && (evidence.moments.length > 0 || evidence.wins.length > 0 || evidence.lessons.length > 0) && (
                 <div className="mt-3 rounded-xl border border-violet-400/20 bg-violet-500/[0.05] p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-200/90">Relive the year first — your own evidence</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-200/90">Relive the year first, your own evidence</span>
                     <CopyButton label="Copy" getText={() => [
                       evidence.wins.length ? `WHAT I MADE HAPPEN:\n${evidence.wins.map((x) => `- ${x}`).join("\n")}` : "",
                       evidence.moments.length ? `MAGIC MOMENTS:\n${evidence.moments.map((x) => `- ${x}`).join("\n")}` : "",
@@ -4686,7 +5218,7 @@ function MonthlyReportSection({
                     ].filter(Boolean).join("\n\n")} />
                   </div>
                   <div className="grid gap-3 sm:grid-cols-3 text-xs">
-                    {([["What you made happen", evidence.wins], ["Magic moments — the jar, opened", evidence.moments], ["Lessons — keep them as rules", evidence.lessons]] as const).map(([label, items]) => (
+                    {([["What you made happen", evidence.wins], ["Magic moments, the jar, opened", evidence.moments], ["Lessons, keep them as rules", evidence.lessons]] as const).map(([label, items]) => (
                       items.length > 0 && (
                         <div key={label}>
                           <p className="text-[9px] uppercase tracking-wide text-zinc-500 mb-1">{label}</p>
@@ -4698,7 +5230,7 @@ function MonthlyReportSection({
                       )
                     ))}
                   </div>
-                  <p className="text-[10px] text-zinc-600 mt-2">Read this BEFORE judging the numbers — a year is what happened, not just what got measured.</p>
+                  <p className="text-[10px] text-zinc-600 mt-2">Read this BEFORE judging the numbers. A year is everything that happened, and the measured part is only some of it.</p>
                 </div>
               )}
               <ul className="mt-4 space-y-2.5">
@@ -4709,15 +5241,15 @@ function MonthlyReportSection({
                   return (
                     <li key={pg.goalId} className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
                       {isYear && idx === 0 && firstMissIdx !== 0 && (
-                        <p className="text-[9px] uppercase tracking-wide text-emerald-300/80 mb-1.5">Successes — by category</p>
+                        <p className="text-[9px] uppercase tracking-wide text-emerald-300/80 mb-1.5">Successes, by category</p>
                       )}
                       {isYear && idx === firstMissIdx && (
-                        <p className="text-[9px] uppercase tracking-wide text-amber-300/80 mb-1.5">What slipped — own it, fix it, carry the lesson</p>
+                        <p className="text-[9px] uppercase tracking-wide text-amber-300/80 mb-1.5">What slipped. Own it, fix it, carry the lesson</p>
                       )}
                       <div className="flex items-center gap-2 text-sm">
                         <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: pg.pillarColor }} />
                         <span className="min-w-0 truncate text-zinc-200">{pg.title}</span>
-                        {isYear && <span className="text-[10px] shrink-0" style={{ color: pg.pillarColor }}>{pg.pillarLabel}</span>}
+                        {isYear && <span className="text-[10px] shrink-0" style={{ color: pillarTextColor(pg.pillarColor) }}>{pg.pillarLabel}</span>}
                         <span className="ml-auto flex items-center gap-3 shrink-0 tabular-nums text-xs">
                           <span className={pg.rollup.pace === "behind" ? "text-amber-300" : "text-emerald-300"}>
                             {pg.rollup.done}/{pg.rollup.expected} check-ins
@@ -4760,7 +5292,7 @@ function MonthlyReportSection({
                             className="flex-1 min-w-0 bg-transparent border-b border-white/10 focus:border-white/30 text-[11px] text-zinc-300 placeholder:text-zinc-600 focus:outline-none py-0.5"
                           />
                         )}
-                        {!saved && <span className="text-[9px] text-zinc-600 shrink-0">suggested — confirm or change</span>}
+                        {!saved && <span className="text-[9px] text-zinc-600 shrink-0">suggested, confirm or change</span>}
                       </div>
                       {/* v9 — every miss commits a fix, and the fix gets a NAME
                           (a reason explains the past; a system changes the future) */}
@@ -4775,7 +5307,7 @@ function MonthlyReportSection({
                             onClick={() => onVerdict(pg.goalId, { verdict: "cancelled", reason: saved?.reason || "consciously dropped — it no longer earns a slot", ...(saved?.fix ? { fix: saved.fix } : {}) })}
                             className="text-[10px] px-2 py-0.5 rounded-full border border-white/15 text-zinc-400 hover:bg-white/10 transition-colors"
                           >consciously drop</button>
-                          <span className="text-[9px] text-zinc-600">— never silently.</span>
+                          <span className="text-[9px] text-zinc-600">never silently.</span>
                         </div>
                       )}
                       {needsReason && (
@@ -4784,7 +5316,7 @@ function MonthlyReportSection({
                           <input
                             value={saved?.fix ?? ""}
                             onChange={(e) => onVerdict(pg.goalId, { verdict: current, reason: saved?.reason ?? "", ...(e.target.value ? { fix: e.target.value } : {}) })}
-                            placeholder={`Name the system that prevents the repeat — e.g. "Money Tuesday", "gym bag by the door"`}
+                            placeholder={`Name the system that prevents the repeat. E.g. "Money Tuesday", "gym bag by the door"`}
                             aria-label={`Fix commitment for ${pg.title}`}
                             className="flex-1 min-w-0 bg-transparent border-b border-sky-400/20 focus:border-sky-400/50 text-[11px] text-zinc-300 placeholder:text-zinc-600 focus:outline-none py-0.5"
                           />
@@ -4833,7 +5365,7 @@ function MonthlyReportSection({
               {isYear && (
                 <p className="text-[11px] text-zinc-500 mt-4 pt-3 border-t border-white/10">
                   Year reviewed? Time to re-run your goal setting: get in a peak state, brainstorm without limits,
-                  and set next year&apos;s goals — checked against your vision and values on the Plan view.
+                  and set next year&apos;s goals. Checked against your vision and values on the Plan view.
                 </p>
               )}
             </>
@@ -4916,12 +5448,12 @@ function GoalDeepRow({
           <span className="text-sm font-semibold text-white">{goal.title}</span>
           <span
             className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border ${paceStyle.cls}`}
-            title={rollup.pace === "behind" ? "Behind ≠ failing. Plateaus are where dabblers quit — keep the reps; the curve jumps later." : undefined}
+            title={rollup.pace === "behind" ? "Behind ≠ failing. Plateaus are where dabblers quit. Keep the reps; the curve jumps later." : undefined}
           >
             {paceStyle.icon} {paceStyle.label}
           </span>
           {bestStreak > 1 && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full border border-white/15 text-zinc-300 tabular-nums" title="Longest current chain across this goal's habits — don't break it">
+            <span className="text-[10px] px-2 py-0.5 rounded-full border border-white/15 text-zinc-300 tabular-nums" title="Longest current chain across this goal's habits. Don't break it">
               {bestStreak}-chain
             </span>
           )}
@@ -4999,7 +5531,7 @@ function GoalDeepRow({
                         <span className="text-zinc-600"> · logged {last.date}</span>
                       </span>
                     ) : (
-                      <span className="text-[11px] text-zinc-600">no reading yet — a report without a number is a feeling</span>
+                      <span className="text-[11px] text-zinc-600">no reading yet. A report without a number is a feeling</span>
                     )}
                     {rr && (
                       <span className={`tabular-nums ${rr.donePct >= rr.timePct ? "text-emerald-300" : "text-amber-300"}`}>
@@ -5045,9 +5577,18 @@ function AreaGoalComposer({ areaLabel, onAdd, initialTitle, startOpen, onCancel 
   const [why, setWhy] = useState("")
   const [days, setDays] = useState(3)
   const [unit, setUnit] = useState("")
+  const [start, setStart] = useState("")
   const [target, setTarget] = useState("")
   const [targetDate, setTargetDate] = useState("")
-  const valid = title.trim() && (type === "habit_ramp" || (unit.trim() && Number(target) > 0))
+  // M2 — a ladder needs a FROM as well as a TO. The composer used to hardcode
+  // start: 0, so every climb in the product began at zero whether or not that
+  // was true, and "10 pull-ups, from 6" silently became a climb from nothing.
+  const startNum = start.trim() === "" ? 0 : Number(start)
+  const valid =
+    title.trim() &&
+    (type !== "milestone_ladder" ||
+      (unit.trim() !== "" && target.trim() !== "" && Number.isFinite(Number(target)) &&
+       Number.isFinite(startNum) && Number(target) !== startNum))
   const commit = () => {
     if (!valid) return
     onAdd({
@@ -5055,10 +5596,12 @@ function AreaGoalComposer({ areaLabel, onAdd, initialTitle, startOpen, onCancel 
       type,
       why: why.trim(),
       daysPerWeek: days,
-      measure: type === "milestone_ladder" ? { unit: unit.trim(), start: 0, target: Number(target), steps: 5 } : null,
+      measure: type === "milestone_ladder"
+        ? { unit: unit.trim(), start: startNum, target: Number(target), steps: ladderSteps(startNum, Number(target)) }
+        : null,
       targetDate: targetDate || null,
     })
-    setTitle(""); setWhy(""); setUnit(""); setTarget(""); setTargetDate(""); setOpen(false)
+    setTitle(""); setWhy(""); setUnit(""); setStart(""); setTarget(""); setTargetDate(""); setOpen(false)
   }
   if (!open) {
     return (
@@ -5070,7 +5613,7 @@ function AreaGoalComposer({ areaLabel, onAdd, initialTitle, startOpen, onCancel 
   return (
     <div className="mt-2 rounded-lg border border-white/15 bg-white/[0.03] p-3 space-y-2">
       <div className="flex items-center gap-2">
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={`The goal — specific, measurable, yours`} autoFocus
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={`The goal, specific, measurable, yours`} autoFocus
           className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/25" />
         <span className="flex rounded-lg border border-white/15 overflow-hidden shrink-0">
           {(["habit_ramp", "milestone_ladder"] as const).map((t) => (
@@ -5088,10 +5631,16 @@ function AreaGoalComposer({ areaLabel, onAdd, initialTitle, startOpen, onCancel 
         </select>
         {type === "milestone_ladder" && (
           <>
-            <input value={target} onChange={(e) => setTarget(e.target.value)} type="number" placeholder="target" aria-label="Target value"
-              className="w-20 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[11px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none tabular-nums" />
+            <input value={start} onChange={(e) => setStart(e.target.value)} type="number" placeholder="from" aria-label="Starting value, where you are now"
+              className="w-16 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[11px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none tabular-nums" />
+            <span className="text-[10px] text-zinc-600">→</span>
+            <input value={target} onChange={(e) => setTarget(e.target.value)} type="number" placeholder="to" aria-label="Target value"
+              className="w-16 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[11px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none tabular-nums" />
             <input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="unit ($/mo, kg…)" aria-label="Measure unit"
               className="w-24 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[11px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none" />
+            {start.trim() !== "" && target.trim() !== "" && Number(target) < startNum && (
+              <span className="text-[10px] text-sky-300/80">counts down ↓</span>
+            )}
           </>
         )}
         <label className="flex items-center gap-1.5 text-[10px] text-zinc-500">by
@@ -5117,19 +5666,45 @@ function AreaGoalComposer({ areaLabel, onAdd, initialTitle, startOpen, onCancel 
  * The first ten are the surface; the gold is past thirty. Read the list back
  * on hard days — reasons are the fuel.
  */
-function ReasonsDrill({ goalTitle, reasons, onAdd, onRemove }: {
+function ReasonsDrill({ goalTitle, goalWhy, reasons, onAdd, onAddMany, onRemove }: {
   goalTitle: string
+  goalWhy: string
   reasons: string[]
   onAdd: (reason: string) => void
+  onAddMany: (reasons: string[]) => void
   onRemove: (reason: string) => void
 }) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState("")
+  const [promptIdx, setPromptIdx] = useState(0)
+  const [tray, setTray] = useState<string[]>([])
+  const [phase, setPhase] = useState<"idle" | "loading" | "error">("idle")
+  const [err, setErr] = useState("")
+  const vehicle = readGoalVehicle(goalTitle)
+  const prompt = REASON_PROMPTS[promptIdx % REASON_PROMPTS.length]
   const add = () => {
     const t = draft.trim()
     if (!t || reasons.length >= 150) return
     onAdd(t)
     setDraft("")
+  }
+  const expand = async () => {
+    setPhase("loading"); setErr("")
+    try {
+      const res = await fetch("/api/goals/vision-plan/reasons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ goalTitle, why: goalWhy, existing: reasons, want: 20 }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error ?? `Request failed (${res.status})`)
+      setTray((prev) => [...prev, ...(data.reasons as string[])])
+      setPhase("idle")
+    } catch (e) {
+      console.error("Reason expansion failed:", e)
+      setErr(e instanceof Error ? e.message : "Couldn't get more reasons")
+      setPhase("error")
+    }
   }
   return (
     <div className="mt-1.5">
@@ -5144,19 +5719,87 @@ function ReasonsDrill({ goalTitle, reasons, onAdd, onRemove }: {
       {open && (
         <div className="mt-1.5 rounded-lg border border-white/10 bg-white/[0.02] p-2.5">
           <p className="text-[10px] text-zinc-500 mb-1.5">
-            Rapid fire — why MUST this happen? No filter, no editing. The first ten are the surface; the gold is past thirty. {reasons.length >= 100 ? "100+. Now read them back — out loud." : ""}
+            Rapid fire — why MUST this happen? No filter, no editing, nothing left out because it sounds bad written down. The first ten are the surface; the gold is past thirty. {reasons.length >= 100 ? "100+. Now read them back, out loud." : ""}
           </p>
+
+          {/* v18 — the goal is usually a VEHICLE. Naming what it's actually for
+              gives the drill something to pull on; an empty why makes a goal
+              circular ("I want a girlfriend because I want a girlfriend"). */}
+          {vehicle && (
+            <div className="mb-2 rounded-md border border-violet-400/20 bg-violet-500/[0.06] px-2.5 py-1.5">
+              <p className="text-[10px] text-violet-200/90">
+                &ldquo;{goalTitle}&rdquo; is a <span className="font-medium">vehicle</span>. What it&apos;s actually for:
+              </p>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {vehicle.ends.map((e) => (
+                  <button
+                    key={e}
+                    onClick={() => onAdd(`Because I want ${e.toLowerCase()}`)}
+                    title={`Add "${e}" as a reason. Then make it specific`}
+                    className="text-[10px] px-2 py-0.5 rounded-full border border-violet-400/30 text-violet-100 hover:bg-violet-500/20 transition-colors"
+                  >
+                    + {e}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[9px] text-zinc-600 mt-1">These are starting words. Add one, then rewrite it as the thing you&apos;d actually say.</p>
+            </div>
+          )}
+
+          {/* v18 — a prompt class instead of a blank box. Nobody produces 100
+              from nothing; they produce 12 from one angle and stop. */}
+          <div className="mb-1.5 flex items-baseline gap-2">
+            <span className="text-[10px] uppercase tracking-wide text-zinc-500 shrink-0">{prompt.label}</span>
+            <span className="text-[11px] text-zinc-300 min-w-0">{prompt.question}</span>
+            <button onClick={() => setPromptIdx((i) => i + 1)} className="ml-auto text-[10px] text-zinc-600 hover:text-zinc-300 transition-colors shrink-0">another angle →</button>
+          </div>
+
           <div className="flex items-center gap-2">
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") add() }}
-              placeholder={`Because…`}
+              placeholder="Say it the way you'd actually say it"
               aria-label={`Add a reason for ${goalTitle}`}
               className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/25"
             />
             <button onClick={add} disabled={!draft.trim()} className="text-[11px] px-2.5 py-1 rounded-md border border-white/15 text-zinc-300 hover:bg-white/10 disabled:opacity-30 transition-colors">Add</button>
           </div>
+
+          {/* v18 — expansion in the user's own voice. Same accept-tray doctrine
+              as the room suggestions: the coach drafts, the user keeps. */}
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <button
+              onClick={expand}
+              disabled={phase === "loading"}
+              className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-md border border-violet-400/40 bg-violet-500/10 text-violet-100 hover:bg-violet-500/20 disabled:opacity-40 transition-colors"
+            >
+              {phase === "loading" ? <Loader2 className="size-3 animate-spin" /> : <Wand2 className="size-3" />}
+              {phase === "loading" ? "Writing in your voice…" : reasons.length ? "20 more in my voice" : "Get me started"}
+            </button>
+            {reasons.length === 0 && <span className="text-[10px] text-zinc-600">Write two or three first and they&apos;ll sound like you.</span>}
+            {phase === "error" && <span className="text-[10px] text-red-300">{err}</span>}
+          </div>
+
+          {tray.length > 0 && (
+            <div className="mt-2 rounded-md border border-violet-400/20 bg-violet-500/[0.05] p-2">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] uppercase tracking-wide text-violet-200/90">Keep the ones that are true</span>
+                <button onClick={() => { onAddMany(tray); setTray([]) }} className="ml-auto text-[10px] text-violet-200 hover:text-white transition-colors">keep all</button>
+                <button onClick={() => setTray([])} className="text-[10px] text-zinc-600 hover:text-zinc-300 transition-colors">clear</button>
+              </div>
+              <ul className="space-y-0.5 max-h-44 overflow-y-auto pr-1">
+                {tray.map((r) => (
+                  <li key={r} className="group flex items-baseline gap-2 text-[11px] text-zinc-300">
+                    <button onClick={() => { onAdd(r); setTray((p) => p.filter((x) => x !== r)) }} className="text-emerald-300/80 hover:text-emerald-200 shrink-0" aria-label={`Keep: ${r}`}>+</button>
+                    <span className="min-w-0">{r}</span>
+                    <button onClick={() => setTray((p) => p.filter((x) => x !== r))} aria-label={`Discard: ${r}`} className="ml-auto opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-300 transition-opacity shrink-0">×</button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {reasons.length > 0 && (
             <>
               <ol className="mt-2 space-y-0.5 max-h-40 overflow-y-auto pr-1">
@@ -5199,15 +5842,15 @@ function GoalWorkshopPanel({ items, onQualify, onDismiss, onAddWant }: {
     <div id="lm-goal-workshop" className="mb-6 rounded-2xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/[0.08] via-white/[0.03] to-transparent p-5 scroll-mt-20">
       <div className="flex items-center gap-2 mb-2">
         <Wand2 className="size-3.5 text-emerald-300" />
-        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-200/90">The Goal Workshop — you author these</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-200/90">The Goal Workshop, you author these</span>
         <span className="h-px flex-1 bg-gradient-to-r from-emerald-400/30 to-transparent" />
       </div>
       <p className="text-[11px] text-zinc-400 mb-3">
         The sequence: brainstorm everything → <span className="text-emerald-200">circle the ones that become this year&apos;s goals</span> → qualify each (which area, what shape, why).
-        {items.length > 0 && <> These are your 1-3 year wants from the brainstorm. Circle one to make it a goal — or let it go.</>}
+        {items.length > 0 && <> These are your 1-3 year wants from the brainstorm. Circle one to make it a goal. Or let it go.</>}
       </p>
       {items.length === 0 ? (
-        <p className="text-[11px] text-zinc-500">Nothing waiting. Add a want below, or run the Unlimited Brainstorm in the vision workshop above — its 1-3 year wants land here.</p>
+        <p className="text-[11px] text-zinc-500">Nothing waiting. Add a want below, or run the Unlimited Brainstorm in the vision workshop above. Its 1-3 year wants land here.</p>
       ) : (
         <ul className="space-y-2">
           {items.map((item) => (
@@ -5215,9 +5858,12 @@ function GoalWorkshopPanel({ items, onQualify, onDismiss, onAddWant }: {
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-zinc-200 min-w-0">{item}</span>
                 <span className="ml-auto flex items-center gap-2 shrink-0">
+                  {/* v23 — circling a NEW want resets the area picker: one
+                      `areaId` is shared by the whole list, so it used to carry
+                      the previous item's choice over silently. */}
                   {circled !== item && (
-                    <button onClick={() => setCircled(item)} className="text-[10px] px-2 py-0.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 transition-colors">
-                      ◯ Circle it — this becomes a goal
+                    <button onClick={() => { setCircled(item); setAreaId(LIFE_MASTERY_AREAS[0].id) }} className="text-[10px] px-2 py-0.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 transition-colors">
+                      ◯ Circle it, this becomes a goal
                     </button>
                   )}
                   <button onClick={() => { onDismiss(item); if (circled === item) setCircled(null) }} className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors" aria-label={`Let go of ${item}`}>
@@ -5253,7 +5899,8 @@ function GoalWorkshopPanel({ items, onQualify, onDismiss, onAddWant }: {
           value={wantDraft}
           onChange={(e) => setWantDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && wantDraft.trim()) { onAddWant(wantDraft.trim()); setWantDraft("") } }}
-          placeholder="Another want for this year? Dump it here — circle it when it's real."
+          placeholder="Another want for this year? Dump it here. Circle it when it's real."
+          aria-label="Add a want for this year"
           className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/25"
         />
         <button onClick={() => { if (wantDraft.trim()) { onAddWant(wantDraft.trim()); setWantDraft("") } }} disabled={!wantDraft.trim()}
@@ -5276,7 +5923,7 @@ function LifePlanView({
   yourTens,
   progress,
   focusAreaIds,
-  onSetFocus,
+  onEditSeason,
   onAreaPlan,
   onYourTen,
   onAddGoal,
@@ -5286,7 +5933,7 @@ function LifePlanView({
   yourTens: Record<string, string>
   progress: VisionProgress | null
   focusAreaIds: string[]
-  onSetFocus: (ids: string[]) => void
+  onEditSeason: () => void
   onAreaPlan: (areaId: string, patch: Partial<VisionAreaPlan>) => void
   onYourTen: (areaId: string, text: string) => void
   onAddGoal: (areaId: string, input: { title: string; type: VisionGoalType; why: string; daysPerWeek: number; measure: VisionMeasure | null; targetDate: string | null }) => void
@@ -5307,10 +5954,6 @@ function LifePlanView({
       return next
     })
   }
-  const toggleFocus = (areaId: string) => {
-    if (focusAreaIds.includes(areaId)) onSetFocus(focusAreaIds.filter((x) => x !== areaId))
-    else if (focusAreaIds.length < 3) onSetFocus([...focusAreaIds, areaId])
-  }
   const areaName = (a: (typeof LIFE_MASTERY_AREAS)[number]) => (areaPlans[a.id]?.name ?? "").trim() || a.label
   const latestRating = (areaId: string): number | null => {
     if (!progress) return null
@@ -5321,64 +5964,81 @@ function LifePlanView({
     <div id="lm-lifeplan" className="max-w-5xl mx-auto px-6 py-10 pb-24 scroll-mt-20">
       <h1 className="text-2xl font-bold text-center mb-2">Your Life Plan</h1>
       <p className="text-zinc-400 text-center mb-8 max-w-2xl mx-auto text-sm">
-        The document behind everything — one area at a time. Name it so it drives you, define your 10,
+        The document behind everything. One area at a time. Name it so it drives you, define your 10,
         write the why, claim the identity, and give it goals. <span className="text-zinc-300">Every</span> area,
-        not just the loud ones.
+        including the quiet ones.
       </p>
 
       <PrincipleCardView id="focus" />
-      {/* v4 — the domino picker: 1-3 focus areas this season */}
+      {/* v23 — READ-ONLY. There used to be three separate focus pickers writing
+          the same season, and two of them (this one and the lifewide chips) set
+          `focusAreaIds` without touching `areaRank`/`focusCount` — so picking a
+          focus here and going back to the rooms screen showed a DIFFERENT
+          season, which changed again after a reload. The ranker on the rooms
+          screen is the one writer; these are summaries of its result. */}
       <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 mb-6">
         <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
-          This season&apos;s focus — pick 1-3 domino areas ({focusAreaIds.length}/3)
+          This season&apos;s focus
         </span>
         <p className="text-[11px] text-zinc-500 mt-1">
-          Which area, conquered, lifts all the others? The rest drop to maintenance — on purpose, with your consent.
+          Which area, conquered, lifts all the others? The rest drop to maintenance. On purpose, with your consent.
         </p>
         <div className="flex items-center gap-1.5 flex-wrap mt-2">
-          {LIFE_MASTERY_AREAS.map((a) => {
-            const on = focusAreaIds.includes(a.id)
-            return (
-              <button
-                key={a.id}
-                onClick={() => toggleFocus(a.id)}
-                aria-pressed={on}
-                disabled={!on && focusAreaIds.length >= 3}
-                className="text-[11px] px-2 py-0.5 rounded-full border transition-colors disabled:opacity-40"
-                style={on ? { color: a.color, borderColor: `${a.color}80`, backgroundColor: `${a.color}26` } : { color: "#a1a1aa", borderColor: "rgba(255,255,255,0.15)" }}
-              >
-                {areaName(a)}
-              </button>
-            )
-          })}
+          {focusAreaIds.length === 0 ? (
+            <span className="text-[11px] text-zinc-500">Not chosen yet. Every area is being treated the same.</span>
+          ) : (
+            focusAreaIds.map((id) => {
+              const a = LIFE_MASTERY_AREA_MAP.get(id)
+              if (!a) return null
+              return (
+                <span
+                  key={id}
+                  className="text-[11px] px-2 py-0.5 rounded-full border"
+                  style={{ color: a.color, borderColor: `${a.color}80`, backgroundColor: `${a.color}26` }}
+                >
+                  {areaName(a)}
+                </span>
+              )
+            })
+          )}
+          <button
+            onClick={onEditSeason}
+            className="text-[11px] text-zinc-400 hover:text-zinc-200 underline underline-offset-2 ml-1"
+          >
+            Change it in Your rooms →
+          </button>
         </div>
         {/* v10 — consented drift has a CONTRACT: minimum floors for the areas
             that must never fully drift (grind-season floors: health
             45-60 min/day, 1-2 date nights a week). */}
-        {focusAreaIds.length > 0 && (
-          <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-1.5">The maintenance contract — floors for what&apos;s NOT in focus</p>
-            <div className="grid gap-1.5 sm:grid-cols-3">
-              {["lm_health", "lm_relationship", "lm_family"].filter((id) => !focusAreaIds.includes(id)).map((id) => {
-                const a = LIFE_MASTERY_AREA_MAP.get(id)
-                if (!a) return null
-                return (
-                  <label key={id} className="block">
-                    <span className="text-[10px]" style={{ color: a.color }}>{areaName(a)}</span>
-                    <input
-                      value={areaPlans[id]?.maintenance ?? ""}
-                      onChange={(e) => onAreaPlan(id, { maintenance: e.target.value })}
-                      placeholder={id === "lm_health" ? "e.g. 45 min movement, daily" : id === "lm_relationship" ? "e.g. 1 real date night / week" : "e.g. one call home / week"}
-                      aria-label={`Maintenance floor for ${a.label}`}
-                      className="mt-0.5 w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-white/20"
-                    />
-                  </label>
-                )
-              })}
-            </div>
-            <p className="text-[10px] text-zinc-600 mt-1.5">A season of focus is fine; an accidental collapse isn&apos;t. Write the floor, keep the floor.</p>
-          </div>
-        )}
+        {/* v23 — read-back only. The editable copy of this lived here AND on the
+            rooms screen, with different eligibility rules (this one offered
+            floors for three hardcoded areas; the ranker offers one for every
+            area outside focus). One writer, one rule. */}
+        <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-1.5">The maintenance contract. Floors for what&apos;s NOT in focus</p>
+          {focusAreaIds.length === 0 ? (
+            <p className="text-[11px] text-zinc-500">Pick your season focus first and the floors for everything else appear here.</p>
+          ) : (
+            (() => {
+              const floors = LIFE_MASTERY_AREAS.filter((a) => !focusAreaIds.includes(a.id) && (areaPlans[a.id]?.maintenance ?? "").trim())
+              if (floors.length === 0) {
+                return <p className="text-[11px] text-zinc-500">No floors written yet. A floor is the least you&apos;ll accept in an area you&apos;re not pushing.</p>
+              }
+              return (
+                <ul className="grid gap-1 sm:grid-cols-2">
+                  {floors.map((a) => (
+                    <li key={a.id} className="text-[11px] text-zinc-300">
+                      <span style={{ color: areaTextColor(a) }}>{areaName(a)}</span>
+                      <span className="text-zinc-500"> — {areaPlans[a.id]?.maintenance}</span>
+                    </li>
+                  ))}
+                </ul>
+              )
+            })()
+          )}
+          <p className="text-[10px] text-zinc-600 mt-1.5">A season of focus is fine; an accidental collapse isn&apos;t. Write the floor, keep the floor.</p>
+        </div>
       </div>
 
       {/* The overlook — the whole plan at a glance */}
@@ -5395,7 +6055,7 @@ function LifePlanView({
               onClick={() => document.getElementById(`lm-area-${a.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}
               className={`rounded-lg border px-3 py-2 text-left transition-colors hover:bg-white/[0.05] ${complete ? "border-white/15 bg-white/[0.04]" : "border-dashed border-white/15 bg-white/[0.02]"}`}
             >
-              <span className="flex items-center gap-1.5 text-xs font-medium truncate" style={{ color: a.color }}>
+              <span className="flex items-center gap-1.5 text-xs font-medium truncate" style={{ color: areaTextColor(a) }}>
                 <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: a.color }} />
                 {areaName(a)}
               </span>
@@ -5445,13 +6105,13 @@ function LifePlanView({
                 </span>
               </div>
               {isOpen(a.id) && areaName(a) === a.label && (
-                <p className="text-[10px] text-zinc-600 mt-0.5 ml-4">Name it so it drives you — a flat label doesn&apos;t pull; a name like &ldquo;Physical Power&rdquo; does. Click the name to change it.</p>
+                <p className="text-[10px] text-zinc-600 mt-0.5 ml-4">Name it so it drives you. A flat label doesn&apos;t pull; a name like &ldquo;Physical Power&rdquo; does. Click the name to change it.</p>
               )}
 
               {isOpen(a.id) && (<>
               <div className="grid gap-3 md:grid-cols-2 mt-3">
                 <label className="block">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Your 10 — the vision for this area</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Your 10, the vision for this area</span>
                   <textarea
                     value={yourTens[a.id] ?? ""}
                     onChange={(e) => onYourTen(a.id, e.target.value)}
@@ -5500,7 +6160,7 @@ function LifePlanView({
                   </ul>
                 ) : (
                   <p className="text-[11px] text-zinc-600 mt-1 italic">
-                    Nothing yet — no area gets left behind. Even one small goal keeps it growing.
+                    Nothing yet. No area gets left behind. Even one small goal keeps it growing.
                   </p>
                 )}
                 <AreaGoalComposer areaLabel={areaName(a)} onAdd={(input) => onAddGoal(a.id, input)} />
@@ -5530,7 +6190,7 @@ function ActionsBadge({ actions, onGo }: { actions: PendingAction[]; onGo: (a: P
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-2 w-72 rounded-xl border border-white/15 bg-zinc-900 shadow-xl z-30 p-1.5">
-          <p className="text-[10px] text-zinc-500 px-2 py-1">Your guided path — in order:</p>
+          <p className="text-[10px] text-zinc-500 px-2 py-1">Your guided path, in order:</p>
           {actions.map((a) => (
             <button
               key={a.id}
@@ -5547,70 +6207,1466 @@ function ActionsBadge({ actions, onGo }: { actions: PendingAction[]; onGo: (a: P
   )
 }
 
-/** v16 — the 3-stage create flow's rail: Map → Commit → Track, shown one at a
- * time. Real navigation (sets the active stage), current stage highlighted,
- * done stages checked, Track locked until there's a plan to set up. */
-function StageRail({ stage, onGo, hasPlan, mapDone, committed, confirmed, roomCrumb }: {
-  stage: CreateStage
-  onGo: (s: CreateStage) => void
-  hasPlan: boolean
-  mapDone: boolean
-  committed: boolean
-  confirmed: boolean
-  /** v17 — shown while a room journey is open: which room, and where in the set. */
-  roomCrumb?: { label: string; index: number; total: number; onPrev?: () => void; onNext?: () => void; onBack: () => void } | null
+
+// ===========================================================================
+// v25 — THE SEQUENTIAL INTAKE
+//
+// The order is the source's: debrief the year, commit and audit what has been
+// driving you, write the vision and the three things that hang off it, break
+// life into areas, then set goals. See docs/plans/life-mastery-intake-redesign.md
+//
+// The anti-clunk rule: questions reveal one at a time DOWN A SINGLE SCROLL.
+// There is no Next button inside a page and no Save button anywhere. Answer a
+// question and the next one mounts below it. Five page transitions in the whole
+// intake instead of nineteen.
+// ===========================================================================
+
+/** The rail. Five pages, current one highlighted, finished ones clickable. */
+function IntakeRail({ page, pages, onGo, done, reachable }: {
+  page: IntakePageId
+  /** The pages actually in play. On a first run the year debrief is absent,
+   * so it must not appear in the rail either. */
+  pages: typeof INTAKE_PAGES
+  onGo: (p: IntakePageId) => void
+  done: (p: IntakePageId) => boolean
+  reachable: (p: IntakePageId) => boolean
 }) {
-  // v17 — Commit is LAST: you sign the plan you built, not one you haven't
-  // seen yet. Signing is the hand-off into tracking.
-  const stages: Array<{ id: CreateStage; label: string; done: boolean; locked: boolean; hint?: string }> = [
-    { id: "rooms", label: "Your rooms", done: mapDone, locked: false },
-    { id: "lifewide", label: "Your life", done: hasPlan, locked: !mapDone, hint: mapDone ? undefined : "Open one room first" },
-    { id: "commit", label: "Commit", done: committed || confirmed, locked: !hasPlan, hint: hasPlan ? undefined : "You need at least one goal to commit to" },
-  ]
+  const idx = pages.findIndex((p) => p.id === page)
   return (
-    <div className="sticky top-[51px] z-10 -mx-6 px-6 py-2.5 mb-8 bg-zinc-950/85 backdrop-blur-sm">
+    <div className="sticky top-[51px] z-10 -mx-6 px-6 py-2 mb-5 bg-zinc-950/85 backdrop-blur-sm">
       <div className="flex items-center justify-center gap-1 sm:gap-2 flex-wrap">
-        {stages.map((s, i) => {
-          const active = s.id === stage
+        {pages.map((p, i) => {
+          const active = p.id === page
+          const isDone = done(p.id)
+          const locked = !reachable(p.id)
+          // On a narrow screen only the current page and its neighbours stay
+          // legible; the rest collapse to dots so the rail never wraps to
+          // three lines on a phone.
+          const near = Math.abs(i - idx) <= 1
           return (
-            <span key={s.id} className="flex items-center gap-1 sm:gap-2">
-              {i > 0 && <span className="w-5 sm:w-8 h-px bg-white/15" />}
+            <span key={p.id} className="flex items-center gap-1 sm:gap-2">
+              {i > 0 && <span className="w-4 sm:w-8 h-px bg-white/15" />}
               <button
-                onClick={() => !s.locked && onGo(s.id)}
-                disabled={s.locked}
-                title={s.hint}
+                onClick={() => !locked && onGo(p.id)}
+                disabled={locked}
+                title={locked ? "Finish the page before this one first" : p.label}
                 aria-current={active ? "step" : undefined}
-                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-colors ${active ? "border-violet-400/60 bg-violet-500/20 text-white font-medium" : s.done ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-300" : s.locked ? "border-white/10 text-zinc-600" : "border-white/15 text-zinc-400 hover:text-zinc-200 hover:border-white/30"}`}
+                className={`flex items-center gap-1.5 text-xs px-2.5 sm:px-3 py-1.5 rounded-full border transition-colors ${
+                  active ? "border-violet-400/60 bg-violet-500/20 text-white font-medium"
+                  : isDone ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-300"
+                  : locked ? "border-white/10 text-zinc-600"
+                  : "border-white/15 text-zinc-400 hover:text-zinc-200 hover:border-white/30"}`}
               >
-                <span className={`size-4 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${active ? "bg-violet-400 text-zinc-950" : s.done ? "bg-emerald-400 text-zinc-950" : "border border-current"}`}>
-                  {s.done ? "✓" : s.locked ? <Lock className="size-2.5" /> : i + 1}
+                <span className={`size-4 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                  active ? "bg-violet-400 text-zinc-950" : isDone ? "bg-emerald-400 text-zinc-950" : "border border-current"}`}>
+                  {isDone ? "✓" : locked ? <Lock className="size-2.5" /> : i + 1}
                 </span>
-                {s.label}
+                <span className={near ? "" : "hidden sm:inline"}>{p.label}</span>
               </button>
             </span>
           )
         })}
       </div>
-      {/* v17 — while a room is open the rail says WHICH room and where you are
-          in the set, so a journey never feels like a place you fell into. */}
-      {roomCrumb && (
-        <div className="flex items-center justify-center gap-2 mt-1.5 text-[11px]">
-          <button onClick={roomCrumb.onPrev} disabled={!roomCrumb.onPrev} className="text-zinc-500 hover:text-zinc-200 disabled:opacity-25 transition-colors">‹ prev</button>
-          <span className="text-zinc-500">
-            Rooms › <span className="text-zinc-200">{roomCrumb.label}</span>
-            <span className="text-zinc-600 tabular-nums"> · {roomCrumb.index} of {roomCrumb.total}</span>
-          </span>
-          <button onClick={roomCrumb.onNext} disabled={!roomCrumb.onNext} className="text-zinc-500 hover:text-zinc-200 disabled:opacity-25 transition-colors">next ›</button>
-          <button onClick={roomCrumb.onBack} className="ml-2 text-zinc-600 hover:text-zinc-300 underline decoration-dotted transition-colors">back to the wheel</button>
+    </div>
+  )
+}
+
+/**
+ * One question, rendered as the same four slots every time: the question, why
+ * you are being asked, a worked answer from the source, and a couple of
+ * ordinary examples. The input underneath depends on the question's kind.
+ *
+ * `autoFocusOnMount` is what makes the reveal feel like one continuous motion:
+ * the newly mounted question scrolls itself into view once and takes the
+ * caret, so typing continues without touching the mouse.
+ */
+function IntakeQuestionBlock({ q, isNewest, answered, children, onSkip }: {
+  q: IntakeQuestion
+  isNewest: boolean
+  answered: boolean
+  children: ReactNode
+  onSkip: () => void
+}) {
+  const ref = useRef<HTMLDivElement | null>(null)
+  const scrolled = useRef(false)
+  useEffect(() => {
+    if (!isNewest || scrolled.current || !ref.current) return
+    scrolled.current = true
+    // Never scroll-jack the very first question of a page, and respect a
+    // reduced-motion preference by jumping instead of gliding.
+    const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ref.current.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" })
+  }, [isNewest])
+
+  const [showWorked, setShowWorked] = useState(false)
+  return (
+    <div ref={ref} id={`intake-${q.id}`} className="scroll-mt-28 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+      <div className="flex items-start gap-2">
+        <span className={`mt-1 size-4 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+          answered ? "bg-emerald-400 text-zinc-950" : "border border-white/25 text-zinc-500"}`}>
+          {answered ? "✓" : ""}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[15px] sm:text-base font-semibold text-zinc-100 leading-snug">{q.question}</h3>
+          <p className="text-[12px] text-zinc-400 mt-1.5 leading-relaxed">{q.why}</p>
+        </div>
+      </div>
+
+      <div className="mt-3.5">{children}</div>
+
+      {(q.quote || q.examples.length > 0) && (
+        <div className="mt-3 pt-3 border-t border-white/[0.06]">
+          {q.quote && (
+            <>
+              <button
+                onClick={() => setShowWorked((s) => !s)}
+                className="text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                {showWorked ? "Hide the worked answer" : "See a worked answer"}
+              </button>
+              {showWorked && (
+                <blockquote className="mt-2 pl-3 border-l-2 border-violet-400/30 text-[12px] text-violet-100/80 italic leading-relaxed">
+                  {q.quote}
+                  {q.quoteVideoId && <span className="not-italic text-zinc-600"> ({q.quoteVideoId})</span>}
+                </blockquote>
+              )}
+            </>
+          )}
+          {q.examples.length > 0 && (
+            <ul className="mt-2 space-y-1">
+              {q.examples.map((e) => (
+                <li key={e} className="text-[11px] text-zinc-500 leading-relaxed">
+                  <span className="text-zinc-600">e.g.</span> {e}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {!answered && (
+        <button onClick={onSkip} className="mt-3 text-[11px] text-zinc-600 hover:text-zinc-400 underline decoration-dotted underline-offset-2 transition-colors">
+          {INTAKE_SKIP_LABEL}
+        </button>
+      )}
+    </div>
+  )
+}
+
+/**
+ * The commit control. This is the intake's first question and it had no input
+ * at all, so the only way past it was the skip link. The full manifesto is
+ * signed at the end of the intake; this is the lighter decision that opens the
+ * work, and it is the one the source puts first.
+ */
+function IntakeCommit({ committedAt, today, onCommit, onUndo }: {
+  committedAt: string | null
+  today: string
+  onCommit: () => void
+  onUndo: () => void
+}) {
+  if (committedAt) {
+    return (
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-400/30 bg-emerald-500/[0.07] px-3 py-2.5">
+        <Check className="size-4 text-emerald-300 shrink-0" />
+        <span className="text-sm text-emerald-100">You committed on {committedAt}.</span>
+        <button onClick={onUndo} className="ml-auto text-[11px] text-zinc-500 hover:text-zinc-300 underline decoration-dotted underline-offset-2 transition-colors">
+          Undo
+        </button>
+      </div>
+    )
+  }
+  return (
+    <div>
+      <ul className="space-y-1.5 mb-3">
+        {["I am committing to every area of my life, including the quiet ones.",
+          "I expect the flat stretch where progress stops showing, and I plan to keep going through it.",
+          "I am doing the work, and not only reading about it."].map((line) => (
+          <li key={line} className="flex items-start gap-2 text-sm text-zinc-200 leading-relaxed">
+            <span className="mt-1.5 size-1.5 rounded-full bg-violet-400/70 shrink-0" />
+            <span>{line}</span>
+          </li>
+        ))}
+      </ul>
+      <button
+        onClick={onCommit}
+        className="text-sm font-medium px-4 py-2 rounded-lg bg-violet-500/20 border border-violet-400/40 text-violet-100 hover:bg-violet-500/30 transition-all"
+      >
+        I commit, {today}
+      </button>
+    </div>
+  )
+}
+
+/** A free-text answer. Saves as you type, so there is no Save button. */
+function IntakeText({ value, onChange, placeholder, long }: {
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+  long?: boolean
+}) {
+  return long ? (
+    <textarea
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      rows={6}
+      className="w-full rounded-lg bg-black/20 border border-white/10 focus:border-violet-400/40 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none p-3 leading-relaxed resize-y"
+    />
+  ) : (
+    <input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full bg-transparent border-b border-white/10 focus:border-white/30 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none py-1"
+    />
+  )
+}
+
+/** A list answer. Enter adds a line, which is the whole interaction. */
+function IntakeList({ items, onChange, placeholder }: {
+  items: string[]
+  onChange: (next: string[]) => void
+  placeholder?: string
+}) {
+  const [draft, setDraft] = useState("")
+  const add = () => {
+    const t = draft.trim()
+    if (!t || items.includes(t)) { setDraft(""); return }
+    onChange([...items, t])
+    setDraft("")
+  }
+  return (
+    <div>
+      {items.length > 0 && (
+        <ul className="space-y-1 mb-2">
+          {items.map((it) => (
+            <li key={it} className="group/li flex items-start gap-2 text-sm text-zinc-200">
+              <span className="mt-1.5 size-1.5 rounded-full bg-violet-400/70 shrink-0" />
+              <span className="flex-1 min-w-0 leading-relaxed">{it}</span>
+              <button
+                onClick={() => onChange(items.filter((x) => x !== it))}
+                aria-label={`Remove ${it}`}
+                className="mt-0.5 text-zinc-600 hover:text-red-300 opacity-0 group-hover/li:opacity-100 focus:opacity-100 transition-all shrink-0"
+              ><X className="size-3.5" /></button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="flex items-center gap-2">
+        <Plus className="size-3.5 shrink-0 text-zinc-600" />
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add() } }}
+          onBlur={add}
+          placeholder={placeholder}
+          className="flex-1 min-w-0 bg-transparent border-b border-white/10 focus:border-white/30 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none py-0.5"
+        />
+        <button onClick={add} disabled={!draft.trim()} className="text-[11px] px-2 py-0.5 rounded-md border border-white/15 text-zinc-300 hover:bg-white/10 disabled:opacity-30 transition-colors">Add</button>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * The driving force, assembled. This is the payoff of page 2: the four things
+ * that hang off the vision, on one card, in the order they were written, so it
+ * reads top to bottom. The weekly review re-reads exactly this.
+ */
+function DrivingForceCard({ vision, purpose, identity, conduct }: {
+  vision: string
+  purpose: string
+  identity: string[]
+  conduct: string[]
+}) {
+  const has = vision.trim() || purpose.trim() || identity.length > 0 || conduct.length > 0
+  if (!has) return null
+  const row = (label: string, body: ReactNode) => (
+    <div className="py-2.5 border-t border-white/[0.06] first:border-t-0 first:pt-0">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-300/70">{label}</span>
+      <div className="mt-1 text-sm text-zinc-200 leading-relaxed">{body}</div>
+    </div>
+  )
+  return (
+    <div className="rounded-xl border border-violet-400/25 bg-violet-500/[0.06] p-4 sm:p-5">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-200/90 mb-3">Your driving force</p>
+      {vision.trim() && row("The life you're building", <p className="whitespace-pre-wrap">{vision}</p>)}
+      {purpose.trim() && row("Why you want it", <p className="whitespace-pre-wrap">{purpose}</p>)}
+      {identity.length > 0 && row("Who you're being", <ul className="space-y-0.5">{identity.map((l) => <li key={l}>{l}</li>)}</ul>)}
+      {conduct.length > 0 && row("How you show up", <ul className="space-y-0.5">{conduct.map((l) => <li key={l}>{l}</li>)}</ul>)}
+      <p className="text-[11px] text-zinc-500 mt-3 pt-3 border-t border-white/[0.06]">Read this every week. It is what the whole plan hangs off.</p>
+    </div>
+  )
+}
+
+/**
+ * v20 — the SINGLE branch of the relationship area. Everything the area used to
+ * offer assumed you were already partnered; this is what the framework's author
+ * actually taught single men, and it only renders when the user says that's
+ * where they are.
+ *
+ * Voice rule, from him: add value, become attractive. Never "pickup", never
+ * framed as acquiring a person.
+ */
+function SinglePersonPanel({ color, reps, onReps, status, onStatus, journals, onLogSession, today }: {
+  color: string
+  reps: Record<string, number>
+  onReps: (level: number, next: number) => void
+  status: RelationshipStatus
+  onStatus: (s: RelationshipStatus) => void
+  journals: Array<{ id: string; date: string; reps: string; body: string; felt: string; her: string; next: string }>
+  onLogSession: (j: { id: string; date: string; reps: string; body: string; felt: string; her: string; next: string }) => void
+  today: string
+}) {
+  const [openJournal, setOpenJournal] = useState(false)
+  const [journalDraft, setJournalDraft] = useState<Record<string, string>>({})
+  const live = approachRung(reps, APPROACH_LADDER)
+  if (status === "unset") {
+    return (
+      <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-2">
+        <p className="text-[11px] text-zinc-400">Where are you with this?</p>
+        <p className="text-[10px] text-zinc-600 mt-0.5">The work is completely different depending on the answer, so the area asks rather than assuming.</p>
+        <div className="flex items-center gap-2 mt-1.5">
+          <button onClick={() => onStatus("single")} className="text-[11px] px-2.5 py-1 rounded-md border border-white/20 text-zinc-200 hover:bg-white/10 transition-colors">Single, and looking</button>
+          <button onClick={() => onStatus("partnered")} className="text-[11px] px-2.5 py-1 rounded-md border border-white/20 text-zinc-200 hover:bg-white/10 transition-colors">With someone</button>
+        </div>
+      </div>
+    )
+  }
+  if (status === "partnered") {
+    return (
+      <p className="mt-2 text-[10px] text-zinc-600">
+        Showing the couples toolkit — the relationship journal, the six needs, the love-language check.{" "}
+        <button onClick={() => onStatus("single")} className="underline decoration-dotted hover:text-zinc-400 transition-colors">I&apos;m single, actually</button>
+      </p>
+    )
+  }
+  return (
+    <div className="mt-2 space-y-2.5">
+      <div className="flex items-baseline gap-2">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Meeting people, the ladder</span>
+        <button onClick={() => onStatus("partnered")} className="ml-auto text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors">I&apos;m with someone now</button>
+      </div>
+      <p className="text-[11px] text-zinc-400">
+        This came out of 2,000 approaches in a year, at eighteen. It moves on reps. And you end every interaction yourself, which is where &ldquo;there&apos;s no rejection&rdquo; comes from.
+      </p>
+      {APPROACH_LADDER.map((rung) => {
+        const done = reps[String(rung.level)] ?? 0
+        const isLive = rung.level === live
+        const isPast = rung.level < live
+        return (
+          <div key={rung.level} className={`rounded-lg border px-2.5 py-2 ${isLive ? "border-white/25 bg-white/[0.06]" : "border-white/10 bg-transparent"}`}>
+            <div className="flex items-center gap-2">
+              <span className={`size-5 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0 ${isPast ? "text-zinc-950" : isLive ? "border" : "border border-white/15 text-zinc-600"}`} style={isPast ? { background: color } : isLive ? { borderColor: color, color } : undefined}>
+                {isPast ? "✓" : rung.level}
+              </span>
+              <span className={`text-xs min-w-0 flex-1 ${isLive ? "text-zinc-100" : isPast ? "text-zinc-400" : "text-zinc-600"}`}>{rung.title}</span>
+              {rung.repsToAdvance > 0 && (
+                <span className="text-[10px] tabular-nums text-zinc-500 shrink-0">{done}/{rung.repsToAdvance}</span>
+              )}
+              {isLive && (
+                <span className="flex items-center gap-1 shrink-0">
+                  <button onClick={() => onReps(rung.level, Math.max(0, done - 1))} aria-label={`One fewer at level ${rung.level}`} className="size-5 rounded border border-white/15 text-zinc-400 hover:bg-white/10 transition-colors">−</button>
+                  <button onClick={() => onReps(rung.level, done + 1)} aria-label={`Log one at level ${rung.level}`} className="size-5 rounded border border-white/15 text-zinc-200 hover:bg-white/10 transition-colors">+</button>
+                </span>
+              )}
+            </div>
+            {isLive && (
+              <>
+                <p className="text-[11px] text-zinc-300 mt-1">{rung.action}</p>
+                <p className="text-[10px] text-zinc-500 mt-0.5">{rung.point}</p>
+              </>
+            )}
+          </div>
+        )
+      })}
+
+      {live === 4 && (
+        <div className="rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-2">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">The opener, a shape to make your own</p>
+          <p className="text-xs text-zinc-200 mt-1 italic">&ldquo;{APPROACH_OPENER.template}&rdquo;</p>
+          <p className="text-[10px] text-zinc-600 mt-1">{APPROACH_OPENER.note}</p>
+        </div>
+      )}
+
+      <div className="rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-2">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">A starting volume</p>
+        <p className="text-xs text-zinc-300 mt-0.5">{APPROACH_REPS.perDay} a day, {APPROACH_REPS.daysPerWeek} days a week — as a practice, not a quota.</p>
+        <p className="text-[10px] text-zinc-500 mt-1">&ldquo;{APPROACH_REPS.purposeQuote}&rdquo;</p>
+        <p className="text-[10px] text-zinc-600 mt-1">Where this works: {APPROACH_VENUES.join(" · ")}</p>
+      </div>
+
+      {/* v23 — these five inputs used to have NO `value` and NO `onChange`:
+          React never saw a keystroke, so the text died on the next re-render,
+          not merely on navigation. It is the only artifact in this room that
+          produces learning, so it is now a real, saved log. */}
+      <div>
+        <button onClick={() => setOpenJournal((o) => !o)} aria-expanded={openJournal} className="flex items-center gap-1.5 text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors">
+          <ChevronDown className={`size-3 transition-transform ${openJournal ? "" : "-rotate-90"}`} />
+          After a session — the debrief questions
+          {journals.length > 0 && <span className="text-zinc-600">· {journals.length} logged</span>}
+        </button>
+        {openJournal && (
+          <div className="mt-1.5 space-y-1.5 pl-4 border-l" style={{ borderColor: `${color}33` }}>
+            {SESSION_JOURNAL_PROMPTS.map((q) => (
+              <div key={q.id}>
+                <p className="text-[10px] text-zinc-500">{q.label}</p>
+                <input
+                  aria-label={q.label}
+                  placeholder={q.placeholder}
+                  value={journalDraft[q.id] ?? ""}
+                  onChange={(e) => setJournalDraft((prev) => ({ ...prev, [q.id]: e.target.value }))}
+                  className="mt-0.5 w-full bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[11px] text-zinc-200 placeholder:text-zinc-700 focus:outline-none focus:border-white/25"
+                />
+              </div>
+            ))}
+            <div className="flex items-center gap-2 pt-0.5">
+              <button
+                onClick={() => {
+                  if (!SESSION_JOURNAL_PROMPTS.some((q) => (journalDraft[q.id] ?? "").trim())) return
+                  onLogSession({
+                    id: `sj-${Date.now()}`,
+                    date: today,
+                    reps: (journalDraft.reps ?? "").trim(),
+                    body: (journalDraft.body ?? "").trim(),
+                    felt: (journalDraft.felt ?? "").trim(),
+                    her: (journalDraft.her ?? "").trim(),
+                    next: (journalDraft.next ?? "").trim(),
+                  })
+                  setJournalDraft({})
+                }}
+                disabled={!SESSION_JOURNAL_PROMPTS.some((q) => (journalDraft[q.id] ?? "").trim())}
+                className="text-[10px] px-2 py-0.5 rounded-full border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 disabled:opacity-30 transition-colors"
+              >
+                Save this session
+              </button>
+              <span className="text-[10px] text-zinc-600">Saved sessions show up in your weekly review.</span>
+            </div>
+            {journals.length > 0 && (
+              <ul className="pt-1 space-y-1">
+                {journals.slice(-3).reverse().map((j) => (
+                  <li key={j.id} className="text-[10px] text-zinc-500">
+                    <span className="text-zinc-400">{j.date}</span>
+                    {j.reps ? ` · ${j.reps}` : ""}
+                    {j.next ? ` · next: ${j.next}` : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+
+      <p className="text-[10px] text-zinc-600">
+        Reading he actually prescribes for this: {SINGLE_BOOKS.join(" · ")}.
+      </p>
+    </div>
+  )
+}
+
+/**
+ * v21 — THE BELIEF-CHANGE EXERCISE. His procedure, in order. Reachable wherever
+ * a belief is in the way: from an identity field, or from a goal you keep not
+ * doing. Step 2 is the one that does the work — it asks whether the belief is
+ * USEFUL, not whether it's true, so nobody has to win an argument to move.
+ */
+function BeliefWorkPanel({ beliefs, onChange, today }: {
+  beliefs: BeliefWork[]
+  /** Updater, not a value — same reason as BrainstormPanel: logging references
+   * and editing steps produces bursts of clicks. */
+  onChange: (updater: (prev: BeliefWork[]) => BeliefWork[]) => void
+  today: string
+}) {
+  const [draft, setDraft] = useState("")
+  const [openId, setOpenId] = useState<string | null>(null)
+  const add = () => {
+    const t = draft.trim()
+    if (!t) return
+    const id = `belief-${Date.now().toString(36)}`
+    onChange((prev) => [...prev, { id, old: t }])
+    setDraft(""); setOpenId(id)
+  }
+  const patch = (id: string, p: Partial<BeliefWork>) =>
+    onChange((prev) => prev.map((b) => (b.id === id ? { ...b, ...p } : b)))
+
+  return (
+    <div className="space-y-2">
+      <p className="text-[11px] text-zinc-500">
+        {BELIEF_SHORT_FORM.gloss}
+      </p>
+      <div className="flex items-center gap-2">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add() } }}
+          aria-label="A belief that's in the way"
+          placeholder={BELIEF_STEMS.join("   ")}
+          className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30"
+        />
+        <button onClick={add} disabled={!draft.trim()} className="text-[11px] px-2.5 py-1 rounded-md border border-white/15 text-zinc-300 hover:bg-white/10 disabled:opacity-30 transition-colors">Add</button>
+      </div>
+
+      {beliefs.map((b) => {
+        const open = openId === b.id
+        const cond = beliefConditioning(b, today)
+        return (
+          <div key={b.id} className="rounded-lg border border-white/10 bg-white/[0.03]">
+            <button onClick={() => setOpenId(open ? null : b.id)} aria-expanded={open} className="w-full flex items-center gap-2 px-2.5 py-2 text-left">
+              <span className="text-xs min-w-0 flex-1 truncate text-zinc-200">{b.replacement || b.old}</span>
+              {cond && (
+                <span className={`text-[10px] tabular-nums shrink-0 ${cond.installed ? "text-emerald-300" : "text-zinc-500"}`}>
+                  day {cond.day} · {cond.references} refs{cond.installed ? " · installed" : ""}
+                </span>
+              )}
+              {b.useful === true && <span className="text-[9px] px-1.5 py-px rounded-full border border-white/15 text-zinc-500 shrink-0">kept</span>}
+              <ChevronDown className={`size-3.5 shrink-0 text-zinc-600 transition-transform ${open ? "" : "-rotate-90"}`} />
+            </button>
+            {open && (
+              <div className="px-2.5 pb-2.5 space-y-2 border-t border-white/5 pt-2">
+                <p className="text-[11px] text-zinc-500">The belief: &ldquo;{b.old}&rdquo;</p>
+
+                {/* Step 2 — the usefulness test, and a real exit if the answer is yes */}
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">{BELIEF_STEPS[1].title}</p>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">{BELIEF_STEPS[1].ask}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <button onClick={() => patch(b.id, { useful: false })} aria-pressed={b.useful === false} className={`text-[11px] px-2 py-0.5 rounded-md border transition-colors ${b.useful === false ? "border-violet-400/60 bg-violet-500/20 text-white" : "border-white/15 text-zinc-400 hover:text-zinc-200"}`}>No, it costs me</button>
+                    <button onClick={() => patch(b.id, { useful: true })} aria-pressed={b.useful === true} className={`text-[11px] px-2 py-0.5 rounded-md border transition-colors ${b.useful === true ? "border-white/40 bg-white/10 text-white" : "border-white/15 text-zinc-400 hover:text-zinc-200"}`}>Actually yes</button>
+                  </div>
+                  {b.useful === true && (
+                    <p className="text-[10px] text-zinc-500 mt-1">Then keep it. A belief that serves you isn&apos;t a limiting belief, and there&apos;s nothing to fix here.</p>
+                  )}
+                </div>
+
+                {b.useful === false && (
+                  <>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">{BELIEF_STEPS[2].title}</p>
+                      <p className="text-[11px] text-zinc-400 mt-0.5">{BELIEF_STEPS[2].ask}</p>
+                      <GuideList label="Counter-evidence" placeholder="Someone who did it anyway. Or a time you already did" items={b.evidence ?? []} onChange={(evidence) => patch(b.id, { evidence })} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">{BELIEF_STEPS[3].title}</p>
+                      <p className="text-[11px] text-zinc-400 mt-0.5">{BELIEF_STEPS[3].ask}</p>
+                      <input
+                        value={b.replacement ?? ""}
+                        onChange={(e) => patch(b.id, { replacement: e.target.value, startedAt: b.startedAt ?? today })}
+                        aria-label={`Replacement for: ${b.old}`}
+                        placeholder="Believable AND useful"
+                        className="mt-1 w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30"
+                      />
+                      <p className="text-[10px] text-zinc-600 mt-1">{BELIEF_STEPS[3].why}</p>
+                    </div>
+                    {b.replacement && (
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">{BELIEF_STEPS[5].title}</p>
+                        <p className="text-[11px] text-zinc-400 mt-0.5">{BELIEF_STEPS[5].why}</p>
+                        <button
+                          onClick={() => onChange((prev) => prev.map((x) => (x.id === b.id ? { ...x, references: [...(x.references ?? []), today] } : x)))}
+                          className="mt-1 text-[11px] px-2.5 py-1 rounded-md border border-emerald-400/40 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/20 transition-colors"
+                        >
+                          + I acted as if it were true today
+                        </button>
+                        {cond && (
+                          <p className="text-[10px] text-zinc-600 mt-1">
+                            {cond.installed
+                              ? "Past 30 days with real references behind it. That's a leg-count worth trusting."
+                              : `Day ${cond.day} of 30, ${cond.references} references. Both matter: time alone doesn't install it.`}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    <p className="text-[10px] text-zinc-600">{BELIEF_STEPS[6].ask}</p>
+                  </>
+                )}
+                <button onClick={() => onChange((prev) => prev.filter((x) => x.id !== b.id))} className="text-[10px] text-zinc-600 hover:text-red-300 transition-colors">remove this belief</button>
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * v21 — COURSE CORRECTION on a goal that's behind. His moves in order, with the
+ * dabbler guard-rail on everything past "change the approach". Dropping is
+ * available but last, and only as a deliberate choice.
+ */
+function CorrectionPanel({ goalTitle, onVerdict, onClose }: {
+  goalTitle: string
+  onVerdict: (verdict: VisionGoalVerdict, reason: string) => void
+  onClose: () => void
+}) {
+  const [moveId, setMoveId] = useState<string | null>(null)
+  const [guard, setGuard] = useState<"strategic" | "lost" | null>(null)
+  const [reason, setReason] = useState("")
+  const move = CORRECTION_MOVES.find((m) => m.id === moveId)
+  const guardCleared = !move?.needsGuardRail || guard === "strategic"
+  return (
+    <div className="rounded-lg border border-amber-400/25 bg-amber-500/[0.05] px-2.5 py-2 space-y-2">
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-200/90">Behind on &ldquo;{goalTitle}&rdquo;</span>
+        <button onClick={onClose} aria-label="Close" className="ml-auto text-zinc-600 hover:text-zinc-300"><X className="size-3" /></button>
+      </div>
+      <p className="text-[11px] text-zinc-400">In order. Approach first, letting go last. Most goals need the first one.</p>
+      <div className="space-y-1">
+        {CORRECTION_MOVES.map((m, i) => (
+          <button
+            key={m.id}
+            onClick={() => { setMoveId(m.id); setGuard(null) }}
+            aria-pressed={moveId === m.id}
+            className={`w-full text-left rounded-md border px-2 py-1.5 transition-colors ${moveId === m.id ? "border-white/30 bg-white/[0.07]" : "border-white/10 hover:bg-white/[0.04]"}`}
+          >
+            <span className="text-[11px] text-zinc-200">{i + 1}. {m.title}</span>
+            {moveId === m.id && <span className="block text-[10px] text-zinc-500 mt-0.5">{m.ask}</span>}
+          </button>
+        ))}
+      </div>
+      {move?.needsGuardRail && (
+        <div className="rounded-md border border-white/10 bg-white/[0.02] px-2 py-1.5">
+          <p className="text-[11px] text-zinc-300">{CORRECTION_GUARD_RAIL.question}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <button onClick={() => setGuard("strategic")} aria-pressed={guard === "strategic"} className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${guard === "strategic" ? "border-violet-400/60 bg-violet-500/20 text-white" : "border-white/15 text-zinc-400"}`}>{CORRECTION_GUARD_RAIL.strategic}</button>
+            <button onClick={() => setGuard("lost")} aria-pressed={guard === "lost"} className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${guard === "lost" ? "border-amber-400/60 bg-amber-500/20 text-white" : "border-white/15 text-zinc-400"}`}>{CORRECTION_GUARD_RAIL.lostIt}</button>
+          </div>
+          {guard === "lost" && <p className="text-[10px] text-amber-300/80 mt-1">{CORRECTION_GUARD_RAIL.lostItAdvice}</p>}
+        </div>
+      )}
+      {move && guardCleared && (
+        <div>
+          <input
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            aria-label="Reason for this change"
+            placeholder="What changed? (every non-achieved status carries a reason)"
+            className="w-full bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[11px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/25"
+          />
+          <button
+            onClick={() => { if (move.verdict) onVerdict(move.verdict, reason.trim()); onClose() }}
+            disabled={!reason.trim() || !move.verdict}
+            className="mt-1.5 text-[11px] px-2.5 py-1 rounded-md border border-violet-400/40 bg-violet-500/10 text-violet-100 hover:bg-violet-500/20 disabled:opacity-30 transition-colors"
+          >
+            Record it
+          </button>
         </div>
       )}
     </div>
   )
 }
 
+/**
+ * v21 — THE DIVERGENT PHASE. Dump everything unfiltered, then put a horizon
+ * number beside each line, then circle this year's. Without this there is
+ * nothing for 80/20 to cut, which is why the old flow went straight to
+ * structured goals and never felt like his workshop.
+ */
+function BrainstormPanel({ wants, onChange }: {
+  wants: Array<{ id: string; text: string; years: HorizonYears | null; circled: boolean }>
+  /** Takes an UPDATER, not a value. Numbering a list means many clicks in quick
+   * succession; passing a computed array would make every click read the same
+   * render's copy and silently overwrite the previous one. */
+  onChange: (updater: (prev: Array<{ id: string; text: string; years: HorizonYears | null; circled: boolean }>) => Array<{ id: string; text: string; years: HorizonYears | null; circled: boolean }>) => void
+}) {
+  const [draft, setDraft] = useState("")
+  const [phase, setPhase] = useState<"dump" | "number" | "circle">("dump")
+  const add = () => {
+    const t = draft.trim()
+    if (!t) return
+    onChange((prev) => [...prev, { id: `w-${Date.now().toString(36)}-${prev.length}`, text: t, years: null, circled: false }])
+    setDraft("")
+  }
+  const patch = (id: string, p: Partial<{ years: HorizonYears | null; circled: boolean }>) =>
+    onChange((prev) => prev.map((w) => (w.id === id ? { ...w, ...p } : w)))
+  const oneYear = wants.filter((w) => w.years === 1)
+  const keep = paretoKeepCount(oneYear.length)
+  const circled = oneYear.filter((w) => w.circled).length
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-1">
+        {(["dump", "number", "circle"] as const).map((ph, i) => (
+          <button
+            key={ph}
+            onClick={() => setPhase(ph)}
+            aria-pressed={phase === ph}
+            className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${phase === ph ? "border-violet-400/60 bg-violet-500/20 text-white" : "border-white/15 text-zinc-500 hover:text-zinc-300"}`}
+          >
+            {i + 1}. {ph === "dump" ? "Dump" : ph === "number" ? "Number" : "Circle"}
+          </button>
+        ))}
+        <span className="ml-auto text-[10px] text-zinc-600 tabular-nums">{wants.length} written</span>
+      </div>
+
+      {phase === "dump" && (
+        <>
+          <p className="text-[11px] text-zinc-500">
+            Five to ten minutes, no filter, no editing, no deciding whether it&apos;s realistic. Realism is a later step. This one is for volume.
+          </p>
+          <div className="flex items-center gap-2">
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add() } }}
+              aria-label="Something you want"
+              placeholder="Anything you want. Money, body, places, people, things"
+              className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30"
+            />
+            <button onClick={add} disabled={!draft.trim()} className="text-[11px] px-2.5 py-1 rounded-md border border-white/15 text-zinc-300 hover:bg-white/10 disabled:opacity-30 transition-colors">Add</button>
+          </div>
+        </>
+      )}
+
+      {phase === "number" && (
+        <p className="text-[11px] text-zinc-500">
+          A number beside each one: how many years out is this? Use 1, 3, 5, 10 or 20. Only the 1s become this year&apos;s goals.
+        </p>
+      )}
+
+      {phase === "circle" && (
+        <p className="text-[11px] text-zinc-500">
+          {oneYear.length} tagged for this year. Circle the ones that actually make the cut — 80/20 says about {keep}. You have {circled}.
+        </p>
+      )}
+
+      <ul className="space-y-1 max-h-64 overflow-y-auto pr-1">
+        {wants.map((w) => (
+          <li key={w.id} className="group flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.02] px-2 py-1">
+            {phase === "circle" && w.years === 1 && (
+              <button
+                onClick={() => patch(w.id, { circled: !w.circled })}
+                aria-label={`${w.circled ? "Uncircle" : "Circle"} ${w.text}`}
+                aria-pressed={w.circled}
+                className={`size-4 rounded-full border shrink-0 transition-colors ${w.circled ? "bg-violet-400 border-violet-400" : "border-white/25"}`}
+              />
+            )}
+            <span className={`text-xs min-w-0 flex-1 ${phase === "circle" && w.years !== 1 ? "text-zinc-600" : "text-zinc-200"}`}>{w.text}</span>
+            {phase === "number" && (
+              <span className="flex items-center gap-0.5 shrink-0">
+                {HORIZON_YEARS.map((y) => (
+                  <button
+                    key={y}
+                    onClick={() => patch(w.id, { years: w.years === y ? null : y })}
+                    aria-label={`${w.text}: ${y} years`}
+                    aria-pressed={w.years === y}
+                    className={`text-[10px] tabular-nums px-1 py-0.5 rounded border transition-colors ${w.years === y ? "border-violet-400/60 bg-violet-500/20 text-white" : "border-white/10 text-zinc-500 hover:text-zinc-300"}`}
+                  >{y}</button>
+                ))}
+              </span>
+            )}
+            {phase !== "number" && w.years != null && (
+              <span className="text-[10px] tabular-nums text-zinc-500 shrink-0">{w.years}y</span>
+            )}
+            <button onClick={() => onChange((prev) => prev.filter((x) => x.id !== w.id))} aria-label={`Remove ${w.text}`} className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-300 transition-all shrink-0">×</button>
+          </li>
+        ))}
+      </ul>
+      {wants.length === 0 && <p className="text-[10px] text-zinc-600">Nothing yet. Start typing. Quantity first.</p>}
+    </div>
+  )
+}
+
+/** v20 — a rapid list input used by several guide sessions (debrief lines,
+ * brainstorm lines). Add on Enter, remove on hover. */
+function GuideList({ label, placeholder, items, onChange, noBut }: {
+  label: string
+  placeholder: string
+  items: string[]
+  onChange: (items: string[]) => void
+  /** The debrief's no-"but" rule — warn rather than block; it's his point, not a validator. */
+  noBut?: boolean
+}) {
+  const [draft, setDraft] = useState("")
+  const butWarn = noBut && /\bbut\b/i.test(draft)
+  const add = () => {
+    const t = draft.trim()
+    if (!t) return
+    onChange([...items, t])
+    setDraft("")
+  }
+  return (
+    <div>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">{label}</p>
+      {items.length > 0 && (
+        <ol className="mt-1 space-y-0.5">
+          {items.map((it, i) => (
+            <li key={`${it}-${i}`} className="group flex items-baseline gap-2 text-xs text-zinc-200">
+              <span className="text-zinc-600 tabular-nums shrink-0">{i + 1}.</span>
+              <span className="min-w-0">{it}</span>
+              <button onClick={() => onChange(items.filter((_, n) => n !== i))} aria-label={`Remove ${it}`} className="ml-auto opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-300 transition-opacity shrink-0">×</button>
+            </li>
+          ))}
+        </ol>
+      )}
+      <input
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add() } }}
+        onBlur={add}
+        aria-label={label}
+        placeholder={placeholder}
+        className="mt-1 w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30"
+      />
+      {butWarn && (
+        <p className="text-[10px] text-amber-300/80 mt-1">
+          Careful with &ldquo;but&rdquo;. It cheapens the win. Let the good stand on its own; the challenges get their own list.
+        </p>
+      )}
+    </div>
+  )
+}
+
+/** v20 — his answer, shown beside yours. The whole point of the exemplar:
+ * "it's easier to write yours after reading one." */
+function HisAnswer({ quotes, gloss, reconstructed }: {
+  quotes: Array<{ quote: string; videoId: string; era: ExemplarEra }>
+  gloss?: string
+  reconstructed?: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  if (quotes.length === 0 && !gloss) return null
+  return (
+    <div className="mt-2 rounded-lg border border-sky-400/20 bg-sky-500/[0.05] px-2.5 py-2">
+      <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="w-full flex items-center gap-2 text-left">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-200/90">A worked example</span>
+        {reconstructed && (
+          <span className="text-[9px] px-1.5 py-px rounded-full border border-amber-400/30 text-amber-300" title="No written paragraph exists for this area. This is assembled from how it is described elsewhere">
+            reconstructed
+          </span>
+        )}
+        <span className="ml-auto text-[10px] text-zinc-500">{open ? "hide" : "read it"}</span>
+      </button>
+      {open && (
+        <>
+          {gloss && <p className="text-[11px] text-zinc-400 mt-1.5">{gloss}</p>}
+          {quotes.map((q, i) => (
+            <blockquote key={i} className="mt-1.5 pl-2 border-l border-sky-400/30">
+              <p className="text-[11px] text-zinc-200 leading-relaxed">&ldquo;{q.quote}&rdquo;</p>
+              <p className="text-[9px] text-zinc-600 mt-0.5">{EXEMPLAR_ERA_LABEL[q.era]}</p>
+            </blockquote>
+          ))}
+        </>
+      )}
+    </div>
+  )
+}
+
+/**
+ * v23 — where the sessions that happen elsewhere actually send you, and what
+ * you do when you arrive. Each names its own exercise: "open it in the plan"
+ * told a user nothing, and the chunk hand-off didn't even land near a chunking
+ * control.
+ */
+const GUIDE_HANDOFF: Partial<Record<GuideSessionId, { what: string; how: string; cta: string; page: IntakePageId; anchor?: string }>> = {
+  qualify: {
+    what: "Each goal gets its sentence, its two ratings and its why. On the goal card itself.",
+    how: "Belief and desire both 7 or higher, or the goal is the wrong size. Under the gate, the card tells you which way to reshape it.",
+    cta: "Open my goals →",
+    page: "doing",
+    anchor: "lm-goals",
+  },
+  chunk: {
+    what: "Break each one-year goal into steps with dates.",
+    how: "On a goal with a number, set how many milestones it gets. The ladder spreads the target across them and dates each one. A yearly number divided by twelve is a monthly target you can actually check.",
+    cta: "Open my goals →",
+    page: "doing",
+    anchor: "lm-goals",
+  },
+  rituals: {
+    what: "Design the morning, then size the week honestly.",
+    how: "Audit what your morning already is, then build the replacement and set the daily budget so the plan fits the week you actually have.",
+    cta: "Open the ritual builder →",
+    page: "doing",
+    anchor: "lm-ritual-builder",
+  },
+  commit: {
+    what: "Write your manifesto, sign it, and start tracking.",
+    how: "Signing opens the loop. It opens the daily page and schedules your first weekly review.",
+    cta: "Open the commit page →",
+    page: "doing",
+    anchor: "lm-foundation",
+  },
+}
+
+/**
+ * v20 — THE GUIDE. The order of operations, one session at a time, each with
+ * the reason it sits there and a worked example beside your box. Resumable and
+ * skippable by design: this is a teaching path, not a wizard that holds the
+ * app hostage.
+ */
+function GuideView({ done, openId, onOpen, onComplete, onSkipTo, visionText, onVisionText, debrief, onDebrief, drivingForce, onDrivingForce, areaPlans, onAreaPlan, beliefs, onBeliefs, rawWants, onRawWants, goalInbox, onSendToWorkshop, onReadVision, visionReadBusy, rooms, yourTens, ratings, onOpenRoom, today, evidence, onGoStage }: {
+  done: string[]
+  openId: GuideSessionId | null
+  onOpen: (id: GuideSessionId | null) => void
+  onComplete: (id: GuideSessionId) => void
+  onSkipTo: (id: GuideSessionId) => void
+  visionText: string
+  onVisionText: (t: string) => void
+  debrief: { good: string[]; challenges: string[]; lessons: string[] }
+  onDebrief: (d: { good: string[]; challenges: string[]; lessons: string[] }) => void
+  drivingForce: VisionDrivingForce | null
+  onDrivingForce: (df: VisionDrivingForce) => void
+  areaPlans: Record<string, VisionAreaPlan>
+  onAreaPlan: (areaId: string, patch: Partial<VisionAreaPlan>) => void
+  beliefs: BeliefWork[]
+  onBeliefs: (updater: (prev: BeliefWork[]) => BeliefWork[]) => void
+  rawWants: Array<{ id: string; text: string; years: HorizonYears | null; circled: boolean }>
+  onRawWants: (updater: (prev: Array<{ id: string; text: string; years: HorizonYears | null; circled: boolean }>) => Array<{ id: string; text: string; years: HorizonYears | null; circled: boolean }>) => void
+  goalInbox: string[]
+  onSendToWorkshop: (texts: string[]) => void
+  onReadVision: (text: string) => void
+  visionReadBusy: boolean
+  rooms: WheelRoom[]
+  yourTens: Record<string, string>
+  ratings: Record<string, number>
+  onOpenRoom: (areaId: string) => void
+  today: string
+  /** v24 — the saved plan. A session counts as done when its OUTPUT exists,
+   * wherever it was produced: the Guide used to announce "0 of 10" over a
+   * finished, signed plan because it tracked its own clicks and nothing else. */
+  evidence: GuideEvidence
+  onGoStage: (page: IntakePageId, anchor?: string) => void
+}) {
+  const p = guideProgress(done, evidence)
+  const warn = guideSittingWarning(p)
+  const doneSet = new Set(done)
+  const [visionDraft, setVisionDraft] = useState(visionText)
+  useEffect(() => { setVisionDraft(visionText) }, [visionText])
+  const df = drivingForce ?? { purpose: "", reasons: [], identity: [] }
+
+  return (
+    <div className="max-w-3xl mx-auto px-6 py-10 pb-24">
+      <h1 className="text-2xl font-bold text-center mb-2">Build it in order</h1>
+      <p className="text-zinc-400 text-center text-sm mb-2">
+        {/* v24 — the old subtitle promised "your vision, then your purpose…"
+            over a list whose first two steps are getting in state and closing
+            out the year. It described a different list to the one underneath
+            it, which is the kind of mismatch a careful reader catches at once. */}
+        Clear the year first, then write the vision, your purpose and who you are — and only then the goals.
+      </p>
+      {/* v24 — a blank slate used to be told "0 of 11 done · about 260 min left
+          if you did the rest now": four and a half hours, quoted as the second
+          line on the page, to someone deciding whether to start at all. It is
+          the single most bounce-inducing sentence in the product, and it sat
+          directly above a warning that called the same number "over two hours".
+          Show the cost of the NEXT step; show the total only once someone is
+          underway and the number has stopped being a threat. */}
+      <p className="text-zinc-500 text-center text-[11px] mb-6">
+        {p.doneCount === 0
+          ? `Every step is optional and you can leave whenever. The first one takes ${p.nextMinutes} minutes.`
+          : `${p.doneCount} of ${p.total} done${p.next ? ` · next takes about ${p.nextMinutes} min` : " the build is complete"}.`}
+      </p>
+      {warn && (
+        <p className="text-[11px] text-amber-300/80 text-center mb-6 max-w-xl mx-auto">{warn}</p>
+      )}
+
+      <div className="space-y-2">
+        {GUIDE_SESSIONS.map((sess, i) => {
+          const isDone = doneSet.has(sess.id)
+          const isOpen = openId === sess.id
+          const isNext = p.next === sess.id
+          return (
+            <div key={sess.id} className={`rounded-xl border transition-colors ${isOpen ? "border-violet-400/40 bg-violet-500/[0.05]" : isDone ? "border-emerald-400/25 bg-emerald-500/[0.04]" : isNext ? "border-white/20 bg-white/[0.03]" : "border-white/10 bg-white/[0.02]"}`}>
+              <button onClick={() => onOpen(isOpen ? null : sess.id)} aria-expanded={isOpen} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left">
+                <span className={`size-5 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0 ${isDone ? "bg-emerald-400 text-zinc-950" : isNext ? "bg-violet-400 text-zinc-950" : "border border-white/20 text-zinc-500"}`}>
+                  {isDone ? "✓" : i + 1}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className={`block text-sm font-medium ${isDone ? "text-emerald-100" : "text-zinc-100"}`}>{sess.title}</span>
+                  <span className="block text-[11px] text-zinc-500 mt-0.5">{sess.ask}</span>
+                </span>
+                <span className="text-[10px] text-zinc-600 shrink-0">{sess.minutes} min</span>
+              </button>
+
+              {isOpen && (
+                <div className="px-3 pb-3 space-y-3 border-t border-white/5 pt-2.5">
+                  <p className="text-[11px] text-zinc-400 italic">{sess.why}</p>
+
+                  {sess.id === "state" && (
+                    <div className="rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-2">
+                      <ol className="space-y-1 text-xs text-zinc-300">
+                        <li className="flex items-baseline gap-2"><span className="text-[10px] text-violet-300/80 shrink-0">1.</span>Stand up. Shake out your body. Music that lifts you.</li>
+                        <li className="flex items-baseline gap-2"><span className="text-[10px] text-violet-300/80 shrink-0">2.</span>Ten big breaths. Shoulders back. Smile, even if it feels stupid.</li>
+                        <li className="flex items-baseline gap-2"><span className="text-[10px] text-violet-300/80 shrink-0">3.</span>Somewhere alone, with something to write in. Then begin.</li>
+                      </ol>
+                      <p className="text-[10px] text-zinc-600 mt-1.5">Nature, a library, a coffee shop. Anywhere you won&apos;t be interrupted.</p>
+                    </div>
+                  )}
+
+                  {sess.id === "debrief" && (
+                    <div className="space-y-2.5">
+                      <GuideList label="What was all the good?" placeholder="Everything that went well. No editing, no modesty" items={debrief.good} onChange={(good) => onDebrief({ ...debrief, good })} noBut />
+                      {debrief.good.length > 0 && (
+                        <>
+                          <GuideList label="What were the challenges?" placeholder="What was hard, and what actually caused it" items={debrief.challenges} onChange={(challenges) => onDebrief({ ...debrief, challenges })} />
+                          <GuideList label="What did you learn?" placeholder="The lesson, stated so you could act on it" items={debrief.lessons} onChange={(lessons) => onDebrief({ ...debrief, lessons })} />
+                        </>
+                      )}
+                      {debrief.good.length === 0 && (
+                        <p className="text-[10px] text-zinc-600">The good comes first and it comes alone. The challenges list opens once you&apos;ve written at least one.</p>
+                      )}
+                    </div>
+                  )}
+
+                  {sess.id === "vision" && (
+                    <div>
+                      <p className="text-[11px] text-zinc-500 mb-1">
+                        Present tense, as though it&apos;s already true. No limits. Belief comes later, at the goals. Put numbers in where you have them.
+                      </p>
+                      <textarea
+                        value={visionDraft}
+                        onChange={(e) => setVisionDraft(e.target.value)}
+                        onBlur={() => { if (visionDraft !== visionText) onVisionText(visionDraft) }}
+                        rows={8}
+                        aria-label="Your whole-life vision"
+                        placeholder="I am… I have… I live…"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30 resize-y"
+                      />
+                      <p className="text-[10px] text-zinc-600 mt-1">
+                        Then read it out loud. If it doesn&apos;t give you goosebumps, it isn&apos;t finished. Rewrite the flat sentences.
+                      </p>
+                      {/* v23 — the session used to end here. The vision was
+                          stored, and nothing happened: the wheel stayed dark
+                          and no areas were drafted, because the only control
+                          that reads prose into intents lives behind a collapsed
+                          link on a different screen. Forty-five minutes of
+                          writing with no visible consequence. */}
+                      <div className="mt-2 flex items-center gap-2 flex-wrap">
+                        <button
+                          onClick={() => { if (visionDraft !== visionText) onVisionText(visionDraft); onReadVision(visionDraft) }}
+                          disabled={visionDraft.trim().length < 40 || visionReadBusy}
+                          className="text-[11px] px-2.5 py-1 rounded-md border border-violet-400/40 bg-violet-500/10 text-violet-100 hover:bg-violet-500/20 disabled:opacity-30 transition-colors"
+                        >
+                          {visionReadBusy ? "Reading your vision…" : "Read this and light up my areas →"}
+                        </button>
+                        <span className="text-[10px] text-zinc-600">
+                          {visionDraft.trim().length < 40 ? "Write a few lines first." : "Turns your words into areas and goal drafts."}
+                        </span>
+                      </div>
+                      <HisAnswer quotes={[EXEMPLAR_WHOLE_LIFE.purpose]} gloss="Vision, purpose, identity and code of conduct are four separate documents, re-read together. This is the purpose one." />
+                    </div>
+                  )}
+
+                  {sess.id === "driving" && (
+                    <div className="space-y-2.5">
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Your purpose, why are you here?</p>
+                        <textarea
+                          value={df.purpose}
+                          onChange={(e) => onDrivingForce({ ...df, purpose: e.target.value })}
+                          rows={3}
+                          aria-label="Your purpose"
+                          placeholder="Don't wait to discover it. Pick what you want your life to be about."
+                          className="mt-1 w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30 resize-none"
+                        />
+                        <p className="text-[10px] text-zinc-600 mt-1">
+                          You decide your purpose. If you&apos;re stuck, drop the word &ldquo;passion&rdquo; and ask what you actually enjoy. Joy is the clue.
+                        </p>
+                      </div>
+                      <GuideList label="Who are you? (I am…)" placeholder="I am…" items={df.identity} onChange={(identity) => onDrivingForce({ ...df, identity })} />
+                      <GuideList label="Your code of conduct, the standards" placeholder="To be…" items={df.conduct ?? []} onChange={(conduct) => onDrivingForce({ ...df, conduct })} />
+                      <HisAnswer quotes={[EXEMPLAR_WHOLE_LIFE.mission, EXEMPLAR_WHOLE_LIFE.identityRule]} gloss="A mission is one sentence with a BE and a DO in it, said daily. And the reason identity does the work:" />
+                      <div className="pt-1">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">A belief in the way? Rewrite it</p>
+                        <p className="text-[11px] text-zinc-500 mt-0.5">If a belief contradicts the identity you just wrote, work it here. The question to ask is whether the belief is useful to you.</p>
+                        <div className="mt-1.5">
+                          <BeliefWorkPanel beliefs={beliefs} onChange={onBeliefs} today={today} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {sess.id === "areas" && (
+                    <div className="space-y-2">
+                      <p className="text-[11px] text-zinc-500">
+                        Rename any area so the words pull you. Not &ldquo;fitness&rdquo; and &ldquo;money&rdquo;. &ldquo;physical power&rdquo; and &ldquo;absolute financial freedom&rdquo;.
+                      </p>
+                      <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                        {LIFE_MASTERY_AREAS.map((a) => {
+                          const ex = exemplarArea(a.id)
+                          return (
+                            <div key={a.id} className="flex items-center gap-2">
+                              <span className="size-2 rounded-full shrink-0" style={{ background: a.color }} />
+                              <input
+                                value={areaPlans[a.id]?.name ?? ""}
+                                onChange={(e) => onAreaPlan(a.id, { name: e.target.value })}
+                                aria-label={`Rename ${a.label}`}
+                                placeholder={a.label}
+                                className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/25"
+                              />
+                              {ex?.renamedTo && (
+                                <span className="text-[10px] text-sky-300/70 shrink-0 truncate max-w-[45%]" title={`Example: ${ex.renamedTo}`}>e.g. {ex.renamedTo}</span>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* v23 — the per-area pass. The build doc lists it as the
+                      session where the 10 comes BEFORE the score ("the step
+                      before this is knowing what your 10 is"), and it is the
+                      only place `yourTens` can be authored — but it was missing
+                      from GUIDE_SESSIONS entirely, so the Guide went straight
+                      from naming areas to brainstorming goals. */}
+                  {sess.id === "rooms" && (
+                    <div className="space-y-2">
+                      <p className="text-[11px] text-zinc-500">
+                        One room at a time: what a 10 looks like there, then where you honestly are today. The 10 comes first. Without it there is nothing to score against.
+                      </p>
+                      <div className="space-y-1 max-h-72 overflow-y-auto pr-1">
+                        {rooms.map((r) => {
+                          const ten = (yourTens[r.id] ?? "").trim()
+                          const score = ratings[r.id]
+                          return (
+                            <button
+                              key={r.id}
+                              onClick={() => onOpenRoom(r.id)}
+                              className="w-full flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.02] px-2 py-1.5 text-left hover:bg-white/[0.05] transition-colors"
+                            >
+                              <span className="size-2 rounded-full shrink-0" style={{ background: r.color }} />
+                              <span className="text-xs text-zinc-200 min-w-0 truncate">{r.label}</span>
+                              <span className="ml-auto shrink-0 text-[10px] tabular-nums">
+                                {ten ? <span className="text-emerald-300/80">10 written</span> : <span className="text-zinc-600">no 10 yet</span>}
+                                <span className="text-zinc-700"> · </span>
+                                {score != null ? <span className="text-zinc-300">{score}/10</span> : <span className="text-zinc-600">unrated</span>}
+                              </span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                      <p className="text-[10px] text-zinc-600">
+                        {rooms.filter((r) => (yourTens[r.id] ?? "").trim()).length} of {rooms.length} rooms have a 10 written. You do not need all of them — the ones you are focusing on this season matter most.
+                      </p>
+                    </div>
+                  )}
+
+                  {sess.id === "brainstorm" && (
+                    <>
+                      <BrainstormPanel wants={rawWants} onChange={onRawWants} />
+                      {/* v23 — the dump/number/circle exercise wrote `rawWants`
+                          and stopped there: nothing read it, and the Goal
+                          Workshop's own empty state pointed at a DIFFERENT
+                          brainstorm. Thirty minutes of correct work, discarded
+                          with no explanation. The circled one-year lines now
+                          go where the copy always claimed they went. */}
+                      {(() => {
+                        const circled = rawWants.filter((w) => w.circled && w.years === 1)
+                        const fresh = circled.filter((w) => !goalInbox.includes(w.text))
+                        if (circled.length === 0) return null
+                        return (
+                          <div className="rounded-lg border border-emerald-400/25 bg-emerald-500/[0.06] px-2.5 py-2">
+                            <p className="text-[11px] text-emerald-100/90">
+                              {circled.length} circled for this year.
+                              {fresh.length === 0 ? " All of them are in your Goal Workshop." : ""}
+                            </p>
+                            {fresh.length > 0 && (
+                              <button
+                                onClick={() => onSendToWorkshop(fresh.map((w) => w.text))}
+                                className="mt-1.5 text-[11px] px-2.5 py-1 rounded-md border border-emerald-400/40 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/20 transition-colors"
+                              >
+                                Send {fresh.length} to the Goal Workshop →
+                              </button>
+                            )}
+                          </div>
+                        )
+                      })()}
+                    </>
+                  )}
+
+                  {/* v23 — these four used to share one card reading "this one
+                      happens in the plan itself" over a button that sent you to
+                      a screen without saying what to do when you arrived. The
+                      chunk button in particular landed on a page whose chunking
+                      control (milestone count, per goal) was never mentioned.
+                      Each now names its destination and its exercise. Also gone:
+                      a dead `sess.id === "brainstorm"` arm inside a block that
+                      only ever renders for these four. */}
+                  {GUIDE_HANDOFF[sess.id] && (
+                    <div className="rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-2">
+                      <p className="text-[11px] text-zinc-300">{GUIDE_HANDOFF[sess.id]!.what}</p>
+                      <p className="text-[10px] text-zinc-500 mt-1">{GUIDE_HANDOFF[sess.id]!.how}</p>
+                      <button
+                        onClick={() => onGoStage(GUIDE_HANDOFF[sess.id]!.page, GUIDE_HANDOFF[sess.id]!.anchor)}
+                        className="mt-1.5 text-[11px] px-2.5 py-1 rounded-md border border-violet-400/40 bg-violet-500/10 text-violet-100 hover:bg-violet-500/20 transition-colors"
+                      >
+                        {GUIDE_HANDOFF[sess.id]!.cta}
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      onClick={() => { onComplete(sess.id); const n = GUIDE_SESSIONS[i + 1]; onOpen(n ? n.id : null) }}
+                      className="text-[11px] px-3 py-1.5 rounded-lg border border-emerald-400/40 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/20 transition-colors"
+                    >
+                      {isDone ? "Done — next" : "Mark done, next"}
+                    </button>
+                    {GUIDE_SESSIONS[i + 1] && (
+                      <button onClick={() => onSkipTo(GUIDE_SESSIONS[i + 1].id)} className="text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors">
+                        skip for now
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 /** v17 — the create flow's three screens, in order. Named apart from `mode`
  * so "stage: track" and "mode: track" can never be confused again. */
-type CreateStage = "rooms" | "lifewide" | "commit"
+
+type LibraryPage = "areas" | "vision" | "manifesto" | "values" | "affirmations" | "driving" | "method"
+
+const LIBRARY_PAGES: Array<{ id: LibraryPage; label: string }> = [
+  { id: "areas", label: "Areas" },
+  { id: "vision", label: "Vision" },
+  { id: "manifesto", label: "Manifesto" },
+  { id: "values", label: "Values" },
+  { id: "affirmations", label: "Affirmations" },
+  { id: "driving", label: "Driving force" },
+  { id: "method", label: "The method" },
+]
+
+/** v17 — one rolled-up soft-layer list, showing WHICH rooms authored each entry.
+ * Read-only on purpose: you author inside the room that owns the material, and
+ * read it back whole here. */
+function SoftRollupList({ entries, empty, editHint }: {
+  entries: SoftLayerEntry[]
+  empty: string
+  editHint: string
+}) {
+  if (entries.length === 0) return <p className="text-sm text-zinc-500">{empty}</p>
+  return (
+    <>
+      <ul className="space-y-1.5">
+        {entries.map((e) => (
+          <li key={e.text} className="flex items-start gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5">
+            <span className="text-sm text-zinc-100 min-w-0 flex-1">{e.text}</span>
+            <span className="flex flex-wrap gap-1 shrink-0">
+              {e.lifeWide && <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full border border-violet-400/30 text-violet-300">life-wide</span>}
+              {e.areaIds.map((id) => {
+                const a = LIFE_MASTERY_AREA_MAP.get(id)
+                return (
+                  <span key={id} className="text-[9px] px-1.5 py-0.5 rounded-full border" style={{ borderColor: `${a?.color ?? "#71717a"}55`, color: a?.color ?? "#a1a1aa" }}>
+                    {a?.label ?? id}
+                  </span>
+                )
+              })}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-[10px] text-zinc-600 mt-2">{editHint}</p>
+    </>
+  )
+}
+
+/**
+ * v17 — THE LIBRARY. Everything you wrote, read back whole. The create flow is
+ * where you author; this is where you go to actually re-read the thing — which
+ * the framework asks for daily and the old lab had nowhere to do.
+ */
+function LibraryView({ page, onPage, state, goals, yourTens, awayValues, drivingForce, manifestoName, manifestoLines, committedAt, visionText, onGoEdit, areasPage }: {
+  page: LibraryPage
+  onPage: (p: LibraryPage) => void
+  state: Pick<VisionPlanState, "areaPlans" | "values" | "affirmations" | "incantations" | "valueRules">
+  goals: VisionGoalDraft[]
+  yourTens: Record<string, string>
+  awayValues: string[]
+  drivingForce: VisionDrivingForce | null
+  manifestoName: string
+  manifestoLines: string[]
+  committedAt: string | null
+  visionText: string
+  onGoEdit: (page: IntakePageId) => void
+  areasPage: ReactNode
+}) {
+  const values = softLayerRollup(state, "values")
+  const affirmations = softLayerRollup(state, "affirmations")
+  const incantations = softLayerRollup(state, "incantations")
+  const rules = softLayerRollup(state, "rules")
+  const tens = LIFE_MASTERY_AREAS.filter((a) => (yourTens[a.id] ?? "").trim())
+  const section = (title: string, body: ReactNode, copy?: string) => (
+    <section className="mb-8">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-200/90">{title}</span>
+        <span className="h-px flex-1 bg-gradient-to-r from-violet-400/30 to-transparent" />
+        {copy && <CopyButton label="Copy" getText={() => copy} />}
+      </div>
+      {body}
+    </section>
+  )
+  return (
+    <div id="lm-lifeplan" className="max-w-5xl mx-auto px-6 py-10 pb-24 scroll-mt-20">
+      <h1 className="text-2xl font-bold text-center mb-2">Your library</h1>
+      <p className="text-zinc-400 text-center text-sm mb-6">
+        Everything you wrote, read back whole. Re-reading is the practice. This is where you do it.
+      </p>
+      <div className="flex items-center justify-center gap-1 flex-wrap mb-8">
+        {LIBRARY_PAGES.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => onPage(p.id)}
+            aria-current={page === p.id ? "page" : undefined}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${page === p.id ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {page === "areas" && areasPage}
+
+      {page === "vision" && (
+        <>
+          {section("Your North Star", visionText.trim() ? (
+            <p className="text-lg leading-relaxed text-white whitespace-pre-wrap">{visionText}</p>
+          ) : <p className="text-sm text-zinc-500">Nothing written yet. Open a room and picture your 10.</p>, visionText)}
+          {section("Your 10s, room by room", tens.length ? (
+            <div className="space-y-2">
+              {tens.map((a) => (
+                <div key={a.id}>
+                  <p className="text-sm leading-relaxed">
+                    <span className="inline-flex items-center gap-1.5 mr-2">
+                      <span className="size-1.5 rounded-full inline-block" style={{ background: a.color }} />
+                      <span className="text-[11px] uppercase tracking-wide" style={{ color: areaTextColor(a) }}>{a.label}</span>
+                    </span>
+                    <span className="text-white">{yourTens[a.id].trim()}</span>
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : <p className="text-sm text-zinc-500">No rooms mapped yet.</p>)}
+          <button onClick={() => onGoEdit("areas")} className="text-xs text-zinc-500 hover:text-white transition-colors">← Edit this in your areas</button>
+        </>
+      )}
+
+      {page === "manifesto" && (
+        <>
+          {section(committedAt ? `Signed ${committedAt}` : "Not signed yet", (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
+              <p className="text-base text-white leading-relaxed">
+                {MANIFESTO_OPENER_TEMPLATE.replace("___", manifestoName.trim() || "___")}
+              </p>
+              {manifestoLines.length > 0 && (
+                <ul className="mt-3 space-y-1.5">
+                  {manifestoLines.map((l, i) => <li key={i} className="text-sm text-zinc-200">{l}</li>)}
+                </ul>
+              )}
+              {rules.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-white/10">
+                  <p className="text-[10px] uppercase tracking-wide text-zinc-500 mb-1.5">The rules I live by</p>
+                  <SoftRollupList entries={rules} empty="" editHint="" />
+                </div>
+              )}
+            </div>
+          ), `${MANIFESTO_OPENER_TEMPLATE.replace("___", manifestoName || "___")}\n${manifestoLines.join("\n")}`)}
+          <button onClick={() => onGoEdit("doing")} className="text-xs text-zinc-500 hover:text-white transition-colors">← Edit your manifesto</button>
+        </>
+      )}
+
+      {page === "values" && (
+        <>
+          {section("What you move toward", (
+            <SoftRollupList entries={values} empty="No values written yet. They're authored inside each area, and life-wide on the Where you're going page." editHint="Authored in the areas tagged beside each one. Edit them there, or add life-wide ones on the Where you're going page." />
+          ), values.map((v) => v.text).join("\n"))}
+          {awayValues.length > 0 && section("What you move away from", (
+            <div className="flex flex-wrap gap-1.5">
+              {awayValues.map((v) => <span key={v} className="text-xs px-2 py-0.5 rounded-full border border-white/15 text-zinc-300">{v}</span>)}
+            </div>
+          ))}
+          {rules.length > 0 && section("Your rules", <SoftRollupList entries={rules} empty="" editHint="" />, rules.map((r) => r.text).join("\n"))}
+          <button onClick={() => onGoEdit("going")} className="text-xs text-zinc-500 hover:text-white transition-colors">← Edit your values</button>
+        </>
+      )}
+
+      {page === "affirmations" && (
+        <>
+          {section("Affirmations, read them, out loud", (
+            <SoftRollupList entries={affirmations} empty="None yet. Write an identity line in a room's deeper work and it'll offer to become one." editHint="Tagged with the room that authored each. Read them in the morning ritual." />
+          ), affirmations.map((a) => a.text).join("\n"))}
+          {section("Incantations, said with your whole body", (
+            <>
+              <SoftRollupList entries={incantations} empty="None yet. Add them in a room's deeper work, or from the incantation deck." editHint="" />
+              <ol className="mt-3 space-y-1">
+                {INCANTATION_PROTOCOL.map((step, i) => (
+                  <li key={i} className="flex items-baseline gap-2 text-[11px] text-zinc-400">
+                    <span className="text-[10px] text-violet-300/80 tabular-nums shrink-0">{i + 1}.</span>{step}
+                  </li>
+                ))}
+              </ol>
+            </>
+          ), incantations.map((a) => a.text).join("\n"))}
+          {goals.some((g) => (g.smartSentence ?? "").trim()) && section("Your goals, as sentences", (
+            <ul className="space-y-1">
+              {goals.filter((g) => (g.smartSentence ?? "").trim()).map((g) => (
+                <li key={g.id} className="text-sm text-zinc-200">{g.smartSentence}</li>
+              ))}
+            </ul>
+          ))}
+        </>
+      )}
+
+      {page === "driving" && (
+        <>
+          {drivingForce ? (
+            <>
+              {drivingForce.mission && section("Your mission", <p className="text-lg text-white leading-relaxed">{drivingForce.mission}</p>, drivingForce.mission)}
+              {section("Your purpose", <p className="text-base text-white leading-relaxed whitespace-pre-wrap">{drivingForce.purpose}</p>, drivingForce.purpose)}
+              {drivingForce.identity.length > 0 && section("Who you are", (
+                <ul className="space-y-1">{drivingForce.identity.map((i, n) => <li key={n} className="text-sm text-zinc-100">{i}</li>)}</ul>
+              ), drivingForce.identity.join("\n"))}
+              {drivingForce.conduct && drivingForce.conduct.length > 0 && section("Your code of conduct", (
+                <ul className="space-y-1">{drivingForce.conduct.map((c, n) => <li key={n} className="text-sm text-zinc-200">{c}</li>)}</ul>
+              ), drivingForce.conduct.join("\n"))}
+              {drivingForce.reasons.length > 0 && section("The reasons", (
+                <div className="flex flex-wrap gap-1.5">
+                  {drivingForce.reasons.map((r) => <span key={r} className="text-xs px-2 py-0.5 rounded-full border border-white/15 text-zinc-300">{r}</span>)}
+                </div>
+              ))}
+            </>
+          ) : (
+            <p className="text-sm text-zinc-500">No driving force written yet. It lives on the Where you're going page.</p>
+          )}
+          <button onClick={() => onGoEdit("going")} className="text-xs text-zinc-500 hover:text-white transition-colors">← Edit your driving force</button>
+        </>
+      )}
+
+      {page === "method" && (
+        <>
+          {section("The path", (
+            <>
+              <p className="text-sm text-zinc-300 leading-relaxed">{MASTERY_THREE_LEVELS}</p>
+              <ol className="mt-3 space-y-1">
+                {MASTERY_TEN_KEYS.map((k, i) => (
+                  <li key={i} className="flex items-baseline gap-2 text-sm text-zinc-200">
+                    <span className="text-[10px] text-violet-300/80 tabular-nums shrink-0">{i + 1}.</span>{k}
+                  </li>
+                ))}
+              </ol>
+              <p className="text-xs text-zinc-400 mt-3 leading-relaxed">{PLATEAU_DOCTRINE}</p>
+            </>
+          ))}
+          {section("The principles behind each step", (
+            <div className="space-y-2">
+              {Object.keys(PRINCIPLES).map((id: string) => <PrincipleCardView key={id} id={id} />)}
+            </div>
+          ))}
+          <GlossaryCard />
+        </>
+      )}
+    </div>
+  )
+}
 
 export function VisionPlanLab() {
   const [text, setText] = useState("")
@@ -5623,6 +7679,12 @@ export function VisionPlanLab() {
   // M2 — LLM-drafted goals from the intents.
   const [goals, setGoals] = useState<VisionGoalDraft[] | null>(null)
   const [goalPhase, setGoalPhase] = useState<"idle" | "generating" | "done" | "error">("idle")
+  // M1 — the paste-a-list door. Holds the room it was opened from so the rows
+  // default to that area when the pasted text has no headings of its own.
+  const [listOpen, setListOpen] = useState<string | null>(null)
+  // The beat after intake: goal → why. Holds the ids just created, so the
+  // reasons pass asks about those and not about the whole plan.
+  const [reasonsFor, setReasonsFor] = useState<string[]>([])
   const [goalErr, setGoalErr] = useState("")
   // Which goal cards have their habits/tasks/milestones open (M3).
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
@@ -5635,13 +7697,27 @@ export function VisionPlanLab() {
   const [deselected, setDeselected] = useState<Set<string>>(new Set())
   // M5 — confirmed plan + create/track mode, persisted to localStorage.
   const [confirmed, setConfirmed] = useState(false)
-  const [mode, setMode] = useState<"create" | "track" | "lifeplan">("create")
+  const [mode, setMode] = useState<"create" | "track" | "library" | "guide">("create")
+  // v20 — guided build: which sessions are finished, and the one open now.
+  const [beliefs, setBeliefs] = useState<BeliefWork[]>([])
+  const [rawWants, setRawWants] = useState<Array<{ id: string; text: string; years: HorizonYears | null; circled: boolean }>>([])
+  const [correctingGoal, setCorrectingGoal] = useState<string | null>(null)
+  const [relationshipStatus, setRelationshipStatus] = useState<RelationshipStatus>("unset")
+  const [approachReps, setApproachReps] = useState<Record<string, number>>({})
+  const [guideDone, setGuideDone] = useState<string[]>([])
+  const [openSession, setOpenSession] = useState<GuideSessionId | null>(null)
+  const [yearDebrief, setYearDebrief] = useState<{ good: string[]; challenges: string[]; lessons: string[] }>({ good: [], challenges: [], lessons: [] })
+  // v23 — four worksheets that used to live in component state and were thrown
+  // away on navigation. Each one is real user writing; see the schema comments.
+  const [ritualAudit, setRitualAudit] = useState<Array<{ id: string; text: string; mark: "up" | "down" | null }>>([])
+  const [ruleWork, setRuleWork] = useState<Array<{ id: string; value: string; old: string; rewritten?: string }>>([])
+  const [sessionJournals, setSessionJournals] = useState<Array<{ id: string; date: string; reps: string; body: string; felt: string; her: string; next: string }>>([])
+  // v17 — which read-back page the Library is showing.
+  const [libraryPage, setLibraryPage] = useState<LibraryPage>("areas")
   // v16 — the create page is a 3-stage flow, one screen at a time (was one
   // endless scroll pretending to be a sequence): map your life → commit → set
   // up tracking. Stefan's depth (values/driving-force/ritual) is optional,
   // behind a "go deeper" in the track stage — never a wall before you start.
-  const [stage, setStage] = useState<CreateStage>("rooms")
-  const [deeperOpen, setDeeperOpen] = useState(false)
   const [hydrated, setHydrated] = useState(false)
   const [resetArmed, setResetArmed] = useState(false)
   // M6 — check-off history; startDate anchors the balanced schedule to real days.
@@ -5658,6 +7734,13 @@ export function VisionPlanLab() {
   const [areaPlans, setAreaPlans] = useState<Record<string, VisionAreaPlan>>({})
   const [focusAreaIds, setFocusAreaIds] = useState<string[]>([])
   const [awayValues, setAwayValues] = useState<string[]>([])
+  // v25 — the sequential intake: the reveal trail, your 0 per area, and the
+  // Perfect Day write-up. `intakeSeen` records a question as settled when it is
+  // answered AND when it is waved past, which is what lets "I'm not sure yet"
+  // move you on without inventing an answer.
+  const [intakeSeen, setIntakeSeen] = useState<string[]>([])
+  const [yourZeros, setYourZeros] = useState<Record<string, string>>({})
+  const [perfectDay, setPerfectDay] = useState<string>("")
   const [incantations, setIncantations] = useState<string[]>([])
   // v8 — goal workshop inbox (1-3yr brainstorm wants awaiting circle→qualify)
   // + the Manifesto name ("My name is ___ and I am the master of my life").
@@ -5689,24 +7772,27 @@ export function VisionPlanLab() {
   const [baselineRatings, setBaselineRatings] = useState<Record<string, number>>({})
   // v17 — when each baseline was set, so the first weekly review knows how old it is.
   const [baselineRatedAt, setBaselineRatedAt] = useState<Record<string, string>>({})
-  // v17 — your 0 per room: the opposite pole, so the rating has two references.
-  const [yourZeros, setYourZeros] = useState<Record<string, string>>({})
   // v17 — life-wide affirmations (per-area ones live in areaPlans[id].affirmations).
   const [affirmations, setAffirmations] = useState<string[]>([])
-  // v17 — where the attention goes this pass. Commitment stays 12/12; depth doesn't.
-  const [areaScope, setAreaScope] = useState<Record<string, RoomScope>>({})
+  // v19 — the season's area ranking. ONE source of truth: focus and
+  // maintenance are tiers of this list, so there is no separate scope state.
+  const [areaRank, setAreaRank] = useState<string[]>([])
+  const [focusCount, setFocusCount] = useState(1)
   // v17 — repairs the load layer made to a persisted plan. Shown, never swallowed.
   const [loadRepairs, setLoadRepairs] = useState<VisionPlanRepair[]>([])
   // M1.5 — coach suggestions commit straight into the goal list; this Set just
   // badges them "✨ suggested" (session-only, cleared on edit/delete).
   const [suggestedIds, setSuggestedIds] = useState<Set<string>>(new Set())
-  const [proposalPhase, setProposalPhase] = useState<Record<string, "idle" | "loading" | "error">>({})
+  const [proposalPhase, setProposalPhase] = useState<Record<string, "idle" | "loading" | "error" | "dry" | "unavailable">>({})
   // v17 — drafted-but-not-accepted goals per room. Session-only by design: a
   // suggestion you never accepted isn't yours, so it shouldn't outlive the tab.
   const [suggestions, setSuggestions] = useState<Record<string, VisionGoalDraft[]>>({})
   const [autoSuggest, setAutoSuggest] = useState(true)
   const suggestTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
   const lastSuggestedRef = useRef<Record<string, string>>({})
+  // v25 — the goal-authored trigger keeps its own "already drafted from this"
+  // memo, so re-writing your 10 and adding a goal can't cancel each other out.
+  const lastGoalSuggestedRef = useRef<Record<string, string>>({})
   // Id minting reads the CURRENT goals without making the proposal callback
   // depend on them (it would re-create mid-flight and re-arm the debounce).
   const goalsRef = useRef<VisionGoalDraft[] | null>(null)
@@ -5742,7 +7828,10 @@ export function VisionPlanLab() {
     if (loaded?.repairs.length) setLoadRepairs(loaded.repairs)
     if (saved && saved.goals.length === 0) {
       // Foundation-only save: restore the groundwork, leave the plan flow idle.
-      setText(saved.vision)
+      setText(saved.visionDraft ?? saved.vision)
+      setRitualAudit(saved.ritualAudit ?? [])
+      setRuleWork(saved.ruleWork ?? [])
+      setSessionJournals(saved.sessionJournals ?? [])
       setCommittedAt(saved.committedAt ?? null)
       setValuesList(saved.values ?? [])
       setAwayValues(saved.awayValues ?? [])
@@ -5756,11 +7845,24 @@ export function VisionPlanLab() {
       setCustomAreas(saved.customAreas ?? [])
       setBaselineRatings(saved.baselineRatings ?? {})
       setBaselineRatedAt(saved.baselineRatedAt ?? {})
-      setYourZeros(saved.yourZeros ?? {})
       setAffirmations(saved.affirmations ?? [])
-      setAreaScope(saved.areaScope ?? {})
+      {
+        // v19 — migrate: old focus set + retired deep/sketched scope -> ranking.
+        const rank = deriveAreaRank(saved, (saved.customAreas ?? []).map((c) => c.id))
+        setAreaRank(rank)
+        setFocusCount(Math.min(3, Math.max(1, (saved.focusAreaIds ?? []).length || 1)))
+        setGuideDone(saved.guideDone ?? [])
+        setRelationshipStatus(saved.relationshipStatus ?? "unset")
+        setBeliefs(saved.beliefs ?? [])
+        setRawWants((saved.rawWants ?? []) as never)
+        setApproachReps(saved.approachReps ?? {})
+        if (saved.yearDebrief) setYearDebrief(saved.yearDebrief)
+      }
       setDrivingForce(saved.drivingForce ?? null)
       setYourTens(saved.yourTens ?? {})
+      setYourZeros(saved.yourZeros ?? {})
+      setIntakeSeen(saved.intakeSeen ?? [])
+      setPerfectDay(saved.perfectDay ?? "")
       setAreaPlans(saved.areaPlans ?? {})
       setFocusAreaIds(saved.focusAreaIds ?? [])
       setRitual(saved.ritual ?? null)
@@ -5774,8 +7876,15 @@ export function VisionPlanLab() {
         }
       }
     } else if (saved) {
-      setText(saved.vision)
+      setText(saved.visionDraft ?? saved.vision)
       setMatchedText(saved.vision)
+      setRitualAudit(saved.ritualAudit ?? [])
+      setRuleWork(saved.ruleWork ?? [])
+      setSessionJournals(saved.sessionJournals ?? [])
+      setRelationshipStatus(saved.relationshipStatus ?? "unset")
+      setBeliefs(saved.beliefs ?? [])
+      setRawWants((saved.rawWants ?? []) as never)
+      setApproachReps(saved.approachReps ?? {})
       setResult({ intents: mergeRoomIntents(saved.intents, saved.yourTens ?? {}), unmatched: [] })
       setPhase("done")
       setGoals(saved.goals)
@@ -5790,6 +7899,9 @@ export function VisionPlanLab() {
       setAwayValues(saved.awayValues ?? [])
       setDrivingForce(saved.drivingForce ?? null)
       setYourTens(saved.yourTens ?? {})
+      setYourZeros(saved.yourZeros ?? {})
+      setIntakeSeen(saved.intakeSeen ?? [])
+      setPerfectDay(saved.perfectDay ?? "")
       setAreaPlans(saved.areaPlans ?? {})
       setFocusAreaIds(saved.focusAreaIds ?? [])
       setIncantations(saved.incantations ?? [])
@@ -5802,15 +7914,37 @@ export function VisionPlanLab() {
       setCustomAreas(saved.customAreas ?? [])
       setBaselineRatings(saved.baselineRatings ?? {})
       setBaselineRatedAt(saved.baselineRatedAt ?? {})
-      setYourZeros(saved.yourZeros ?? {})
       setAffirmations(saved.affirmations ?? [])
-      setAreaScope(saved.areaScope ?? {})
+      {
+        // v19 — migrate: old focus set + retired deep/sketched scope -> ranking.
+        const rank = deriveAreaRank(saved, (saved.customAreas ?? []).map((c) => c.id))
+        setAreaRank(rank)
+        setFocusCount(Math.min(3, Math.max(1, (saved.focusAreaIds ?? []).length || 1)))
+        setGuideDone(saved.guideDone ?? [])
+        if (saved.yearDebrief) setYearDebrief(saved.yearDebrief)
+      }
       setAreaOrder(extendAreaOrder(saved.areaOrder ?? uniquePillarIds(saved.intents), saved.goals))
       setDeselected(new Set(saved.deselectedAreas ?? []))
       if (saved.confirmed) setMode("track")
       // Resume on the stage that matches how far they got, not always the start.
-      setStage(saved.committedAt ? "commit" : saved.goals.length > 0 ? "lifewide" : "rooms")
     }
+    // v22 — a user with nothing lands on the GUIDE, not on a wheel wrapped in
+    // explanation. The guided path is what a blank slate needs; the wheel is
+    // what you use once you know the method. Anyone with any work already done
+    // resumes where they were.
+    //
+    // v23 — "where they were" has to include the Guide. Someone whose only work
+    // is guided work (a year debrief, a vision, a purpose, renamed areas) has no
+    // goals, so they used to be dropped onto the Plan wheel — a screen they had
+    // never chosen — with their session progress nowhere in sight.
+    const guideOnly =
+      !!saved && saved.goals.length === 0 && !saved.committedAt &&
+      ((saved.guideDone?.length ?? 0) > 0 ||
+        !!saved.yearDebrief?.good?.length ||
+        (saved.rawWants?.length ?? 0) > 0 ||
+        (saved.beliefs?.length ?? 0) > 0 ||
+        (saved.visionDraft ?? "").trim().length > 0)
+    if (!loaded || guideOnly) setMode("guide")
     setHydrated(true)
   }, [])
 
@@ -5818,15 +7952,33 @@ export function VisionPlanLab() {
   // (commit/values/driving force), which must survive reloads too.
   useEffect(() => {
     if (!hydrated) return
-    const hasPlan = !!goals && goals.length > 0 && !!result
+    // A goal IS the plan. Requiring `result` — the vision-intent analysis —
+    // meant anyone who went straight to a room and typed a goal saved NOTHING:
+    // the goal rendered, the room looked right, and it was gone on reload.
+    // The vision is optional and always was; `intents` already falls back to
+    // [] three lines down, which is the tell that this gate was wrong.
+    const hasPlan = !!goals && goals.length > 0
+    // v23 — this gate used to omit every field the Guide writes, so a user who
+    // did the year debrief, the brainstorm and the belief work and nothing else
+    // saved NOTHING: the whole session was gone on reload. Anything a user can
+    // type belongs in this list.
     const hasFoundation =
       !!committedAt || valuesList.length > 0 || awayValues.length > 0 || !!drivingForce ||
       Object.keys(yourTens).length > 0 || Object.keys(areaPlans).length > 0 || !!ritual || focusAreaIds.length > 0 || incantations.length > 0 ||
       goalInbox.length > 0 || manifestoName.trim().length > 0 || manifestoLines.length > 0 || letters.length > 0 || counters.length > 0 || valueRules.length > 0 || customAreas.length > 0 || Object.keys(baselineRatings).length > 0 ||
-      Object.keys(yourZeros).length > 0 || affirmations.length > 0 || Object.keys(areaScope).length > 0
+      affirmations.length > 0 || areaRank.length > 0 || guideDone.length > 0 ||
+      text.trim().length > 0 || beliefs.length > 0 || rawWants.length > 0 ||
+      Object.keys(approachReps).length > 0 || relationshipStatus !== "unset" ||
+      yearDebrief.good.length > 0 || yearDebrief.challenges.length > 0 || yearDebrief.lessons.length > 0 ||
+      ritualAudit.length > 0 || ruleWork.length > 0 || sessionJournals.length > 0
     if (!hasPlan && !hasFoundation) return
     const state: VisionPlanState = {
-      vision: hasPlan ? matchedText : matchedText || text,
+      // `vision` stays the ANALYSED text (the one the wheel and goals came
+      // from). `visionDraft` is the raw prose buffer, which the Guide's vision
+      // textarea writes. They used to be one slot with `hasPlan ? matchedText`
+      // in front of it, so every word written in the Guide after the first goal
+      // existed was silently dropped on the next reload.
+      vision: matchedText || text,
       intents: result?.intents ?? [],
       goals: goals ?? [],
       priorityIds,
@@ -5853,12 +8005,24 @@ export function VisionPlanLab() {
       ...(customAreas.length ? { customAreas } : {}),
       ...(Object.keys(baselineRatings).length ? { baselineRatings } : {}),
       ...(Object.keys(baselineRatedAt).length ? { baselineRatedAt } : {}),
-      ...(Object.keys(yourZeros).length ? { yourZeros } : {}),
       ...(affirmations.length ? { affirmations } : {}),
-      ...(Object.keys(areaScope).length ? { areaScope } : {}),
+      ...(areaRank.length ? { areaRank } : {}),
+      ...(guideDone.length ? { guideDone } : {}),
+      ...(relationshipStatus !== "unset" ? { relationshipStatus } : {}),
+      ...(beliefs.length ? { beliefs } : {}),
+      ...(rawWants.length ? { rawWants } : {}),
+      ...(Object.keys(approachReps).length ? { approachReps } : {}),
+      ...(yearDebrief.good.length || yearDebrief.challenges.length || yearDebrief.lessons.length ? { yearDebrief } : {}),
+      ...(text.trim() && text !== matchedText ? { visionDraft: text } : {}),
+      ...(ritualAudit.length ? { ritualAudit } : {}),
+      ...(ruleWork.length ? { ruleWork } : {}),
+      ...(sessionJournals.length ? { sessionJournals } : {}),
+      ...(intakeSeen.length ? { intakeSeen } : {}),
+      ...(Object.keys(yourZeros).length ? { yourZeros } : {}),
+      ...(perfectDay.trim() ? { perfectDay } : {}),
     }
     try { localStorage.setItem(SANDBOX_KEY, JSON.stringify(state)) } catch { /* quota */ }
-  }, [hydrated, goals, result, matchedText, text, priorityIds, dailyBudget, confirmed, progress, areaOrder, deselected, ritual, committedAt, valuesList, awayValues, drivingForce, yourTens, areaPlans, focusAreaIds, incantations, goalInbox, manifestoName, manifestoLines, letters, counters, valueRules, customAreas, baselineRatings, baselineRatedAt, yourZeros, affirmations, areaScope])
+  }, [hydrated, goals, result, matchedText, text, priorityIds, dailyBudget, confirmed, progress, areaOrder, deselected, ritual, committedAt, valuesList, awayValues, drivingForce, yourTens, areaPlans, focusAreaIds, incantations, goalInbox, manifestoName, manifestoLines, letters, counters, valueRules, customAreas, baselineRatings, baselineRatedAt, affirmations, areaRank, guideDone, yearDebrief, relationshipStatus, approachReps, beliefs, rawWants, ritualAudit, ruleWork, sessionJournals, intakeSeen, yourZeros, perfectDay])
 
   // Keep the id-minting mirror current, and never let a pending suggestion
   // timer fire into an unmounted tree.
@@ -5875,13 +8039,15 @@ export function VisionPlanLab() {
     setGoals(null); setGoalPhase("idle"); setGoalErr("")
     setPriorityIds([]); setDailyBudget(4)
     setAreaOrder([]); setDeselected(new Set())
-    setConfirmed(false); setMode("create"); setStage("rooms"); setDeeperOpen(false); setResetArmed(false)
+    setConfirmed(false); setMode("create"); setPage("matters"); setResetArmed(false)
     setProgress(null)
     setRitual(null); setReportMonth(null)
-    setCommittedAt(null); setValuesList([]); setAwayValues([]); setIncantations([]); setDrivingForce(null); setYourTens({}); setAreaPlans({}); setFocusAreaIds([])
+    setCommittedAt(null); setValuesList([]); setAwayValues([]); setIncantations([]); setDrivingForce(null); setYourTens({}); setYourZeros({}); setIntakeSeen([]); setPerfectDay(""); setAreaPlans({}); setFocusAreaIds([])
     setGoalInbox([]); setManifestoName(""); setManifestoLines([])
     setLetters([]); setCounters([]); setValueRules([]); setCustomAreas([]); setBaselineRatings({}); setSuggestedIds(new Set()); setProposalPhase({})
-    setBaselineRatedAt({}); setYourZeros({}); setAffirmations([]); setAreaScope({}); setLoadRepairs([])
+    setBaselineRatedAt({}); setAffirmations([]); setAreaRank([]); setFocusCount(1); setLoadRepairs([])
+    setGuideDone([]); setOpenSession(null); setRelationshipStatus("unset"); setApproachReps({}); setBeliefs([]); setRawWants([]); setCorrectingGoal(null); setYearDebrief({ good: [], challenges: [], lessons: [] })
+    setRitualAudit([]); setRuleWork([]); setSessionJournals([])
     setExpanded(new Set())
   }, [])
 
@@ -5899,8 +8065,10 @@ export function VisionPlanLab() {
     return { items, vecs }
   }, [])
 
-  const run = useCallback(async () => {
-    const q = text.trim()
+  // v23 — `override` lets the Guide run the read on the text it just wrote,
+  // without waiting a render for `text` state to catch up.
+  const run = useCallback(async (override?: string) => {
+    const q = (override ?? text).trim()
     if (!q) return
     setPhase("loading"); setErr(""); setPct(0)
 
@@ -5914,7 +8082,7 @@ export function VisionPlanLab() {
       stallTimer = setInterval(() => {
         if (Date.now() - lastBeat > 45_000) {
           resetExtractor() // next click restarts the load (cached shards resume)
-          reject(new Error("Model download stalled — check your connection and click again to resume."))
+          reject(new Error("Model download stalled. Check your connection and click again to resume."))
         }
       }, 5_000)
     })
@@ -5924,7 +8092,7 @@ export function VisionPlanLab() {
       lastBeat = Date.now()
       setPhase("matching")
       const spans = splitSpans(q)
-      if (!spans.length) throw new Error("Couldn't split the text into parts — try adding a few more words.")
+      if (!spans.length) throw new Error("Couldn't split the text into parts. Try adding a few more words.")
       const spanVecs = await embed(spans.map((s) => s.text))
       lastBeat = Date.now()
       return spanVecs.map((v) => matchTaxonomy(v, items, vecs)).map((m, i) => ({ m, span: spans[i] }))
@@ -6120,8 +8288,18 @@ export function VisionPlanLab() {
       habits: g.habits.map((h) => (h.id === habitId ? { ...h, daysPerWeek: Math.min(7, Math.max(1, h.daysPerWeek + delta)) } : h)),
     }))
   }, [editGoal])
-  const editMeasure = useCallback((goalId: string, patch: Partial<{ target: number; steps: number; unit: string }>) => {
-    editGoal(goalId, (g) => (g.measure ? { ...g, measure: { ...g.measure, ...patch } } : g))
+  const editMeasure = useCallback((goalId: string, patch: Partial<{ start: number; target: number; steps: number; unit: string }>) => {
+    editGoal(goalId, (g) => {
+      if (!g.measure) return g
+      const measure = { ...g.measure, ...patch }
+      // M4 — the rung count follows the range, so moving either end re-derives
+      // it. Left alone, editing 0→100 down to 0→2 would keep five rungs and
+      // draw fractional milestones between two whole numbers.
+      if (patch.start !== undefined || patch.target !== undefined) {
+        measure.steps = ladderSteps(measure.start, measure.target)
+      }
+      return { ...g, measure }
+    })
   }, [editGoal])
   /** v17 — replace a goal's whole ramp. The primary habit follows the LAST
    * phase, because that's the steady-state load balancePlan sizes against —
@@ -6228,9 +8406,19 @@ export function VisionPlanLab() {
   }, [])
   const confirmPlan = useCallback(() => {
     setConfirmed(true)
-    setProgress((prev) => prev ?? { startDate: localTodayISO(), completions: {}, tasksDone: [] })
+    // v23 — signing SEEDS tracking from the plan instead of starting it blank.
+    // The room ratings collected all through planning were written to
+    // `baselineRatings` and then read by nothing on Track: the wheel, the score
+    // history and the pyramid all read `weeklyReviews`, which is empty for the
+    // first seven days. So week one — the week a new user most needs to see
+    // movement — had no "from" to compare against, and the +1 rule, the deltas
+    // and the ghost dots were all blank. The baseline becomes review week 0.
+    setProgress((prev) => {
+      const base = prev ?? { startDate: localTodayISO(), completions: {}, tasksDone: [] }
+      return seedBaselineReview({ ...base, lastSeen: localTodayISO() }, baselineRatings)
+    })
     setMode("track")
-  }, [])
+  }, [baselineRatings])
 
   // --- PLM layer handlers ----------------------------------------------------
 
@@ -6260,6 +8448,10 @@ export function VisionPlanLab() {
       const weekly = has ? (prev.weekly ?? []).filter((x) => x.id !== w.id) : [...(prev.weekly ?? []), w]
       return { ...prev, weekly }
     })
+  }, [])
+  /** M8 — attach a real action to a goal that had only the auto placeholder. */
+  const addAction = useCallback((goalId: string, action: { title: string; daysPerWeek: number }) => {
+    setGoals((prev) => (prev ? addGoalAction(prev, goalId, action) : prev))
   }, [])
   const onRitualRotate = useCallback(() => {
     setRitual((prev) => (prev ? { ...prev, builtAt: today } : prev))
@@ -6293,14 +8485,38 @@ export function VisionPlanLab() {
   }, [today])
   useEffect(() => {
     if (!hydrated || mode !== "track") return
-    setProgress((prev) => (prev ? rolloverAdhoc(prev, addDays(today, -1), today) : prev))
+    // v23 — roll every day the user was away, not just yesterday. Missing two
+    // days used to strand Monday's unfinished musts on Monday's plan forever,
+    // with nothing anywhere saying they existed.
+    setProgress((prev) => (prev ? { ...rolloverAdhocSince(prev, prev.lastSeen, today), lastSeen: today } : prev))
     // v10 — scheduled weekly outcomes land on their day's could-do list.
     setProgress((prev) => (prev ? materializeOutcomes(prev, today) : prev))
   }, [hydrated, mode, today])
 
   // M5 — Weekly Evaluation Ritual.
   const onSaveWeeklyReview = useCallback((review: VisionWeeklyReview) => {
-    setProgress((prev) => (prev ? saveWeeklyReview(prev, review) : prev))
+    setProgress((prev) => {
+      if (!prev) return prev
+      // Saving the review retires its draft — otherwise re-opening the form
+      // would restore the pre-save copy over the saved one.
+      // the draft is intentionally dropped once the review is saved
+      const { weeklyDraft: _savedDraft, ...rest } = saveWeeklyReview(prev, review)
+      void _savedDraft
+      return rest
+    })
+  }, [])
+
+  // v23 — mirror every keystroke of the weekly review into `progress` so the
+  // form can be left and come back to. Updater form: the review writes bursts.
+  const onWeeklyDraft = useCallback((patch: Partial<VisionWeeklyDraft>, weekStart: string) => {
+    setProgress((prev) => {
+      if (!prev) return prev
+      const base: VisionWeeklyDraft =
+        prev.weeklyDraft && prev.weeklyDraft.weekStart === weekStart
+          ? prev.weeklyDraft
+          : { weekStart, areaRatings: {}, savedAt: localTodayISO() }
+      return { ...prev, weeklyDraft: { ...base, ...patch, weekStart, savedAt: localTodayISO() } }
+    })
   }, [])
 
   // --- PLM OS handlers -------------------------------------------------------
@@ -6340,16 +8556,23 @@ export function VisionPlanLab() {
 
   // OS v2 — the guided path: pending actions + deep-link navigation.
   const guided = useMemo(
-    () => pendingActions({ committedAt, values: valuesList, awayValues, drivingForce, yourTens, areaPlans, focusAreaIds, ritual, goals, progress, confirmed, today }),
-    [committedAt, valuesList, awayValues, drivingForce, yourTens, areaPlans, focusAreaIds, ritual, goals, progress, confirmed, today],
+    () => pendingActions({ committedAt, values: valuesList, awayValues, drivingForce, yourTens, areaPlans, focusAreaIds, ritual, goals, priorityIds, progress, confirmed, today }),
+    [committedAt, valuesList, awayValues, drivingForce, yourTens, areaPlans, focusAreaIds, ritual, goals, priorityIds, progress, confirmed, today],
   )
-  const goToAnchor = useCallback((mode: "create" | "track" | "lifeplan", anchor: string) => {
+  const goToAnchor = useCallback((mode: "create" | "track" | "library", anchor: string) => {
     setMode(mode)
     // A section that doesn't exist yet (e.g. Goals before the vision is read)
     // falls back to the flow's start instead of a dead click.
     window.setTimeout(() => (document.getElementById(anchor) ?? document.getElementById("lm-vision"))?.scrollIntoView({ behavior: "smooth", block: "start" }), 180)
   }, [])
   // v4 — the pace-setter: load a clearly-labeled worked example into the sandbox.
+  // v23 — it OVERWRITES values, driving force, area plans, your-10s and the whole
+  // progress history. On a blank slate that's the point; on top of real work it
+  // is destructive and used to happen on a single click with no warning. Arm it
+  // when there is something to lose.
+  const exampleWouldOverwrite =
+    valuesList.length > 0 || !!drivingForce || Object.keys(yourTens).length > 0 ||
+    Object.keys(areaPlans).length > 0 || (!!goals && goals.length > 0) || !!progress
   const loadExample = useCallback(() => {
     const ex = buildExamplePlan(today)
     setText(ex.vision); setMatchedText(ex.vision)
@@ -6368,7 +8591,7 @@ export function VisionPlanLab() {
     setManifestoLines((prev) => (prev.length ? prev : ex.manifestoLines ?? []))
     setValueRules(ex.valueRules ?? [])
     setAreaOrder(extendAreaOrder(ex.areaOrder ?? [], ex.goals)); setDeselected(new Set())
-    setMode("track"); setStage("lifewide")
+    setMode("track"); setPage("doing")
   }, [today])
 
   const toggleGoalExpanded = useCallback((goalId: string) => {
@@ -6383,7 +8606,11 @@ export function VisionPlanLab() {
   // Domino focus — one choice, felt everywhere: picking 1-3 season rooms
   // ALSO floats their goals to the front of the schedule (stable partition,
   // manual drags between goals of the same tier survive; drag re-overrides).
-  const onSetFocus = useCallback((ids: string[]) => {
+  // v23 — INTERNAL. Only `applyPriority` may call this: it writes the focus
+  // projection and re-floats the schedule, but it does NOT write `areaRank` or
+  // `focusCount`, so any other caller desyncs the season. The pickers that used
+  // to call it directly are now read-only summaries.
+  const applyFocusProjection = useCallback((ids: string[]) => {
     setFocusAreaIds(ids)
     if (ids.length === 0) return
     setPriorityIds((prev) => {
@@ -6406,6 +8633,17 @@ export function VisionPlanLab() {
     ],
     [areaPlans, customAreas],
   )
+  // v23 — ONE label resolver. Renaming was honoured in four places and ignored
+  // in the mode you live in: the Track wheel, the weekly review's twelve rows
+  // and its three area dropdowns, the score history and the rebaseline nudge
+  // all read the canonical `label` straight off the data module. So the Guide
+  // spent a session teaching that the name is load-bearing, and every day after
+  // that the product called your room "Health" again.
+  const areaLabels = useMemo(
+    () => Object.fromEntries(wheelRooms.map((r) => [r.id, r.label])) as Record<string, string>,
+    [wheelRooms],
+  )
+
   const onRenameRoom = useCallback((id: string, name: string) => {
     const t = name.trim()
     if (!t) return
@@ -6428,6 +8666,207 @@ export function VisionPlanLab() {
   // v17 — journey progress per room (0-4 beats: picture, gap, goals, the soft
   // work). The soft beat is now COUNTED, not optional depth hidden in a drawer:
   // an area's why/identity/affirmation is the framework, not a nice-to-have.
+  // v23 — the rail used to unlock "Your life" on `roomBeats`, which counts a
+  // bare 0-10 rating. But stage 2 renders only under `result && phase ===
+  // "done"`, and rating a room never sets `result` — so moving one slider
+  // unlocked the step, and clicking it showed a heading, the rail and a bottom
+  // bar over an empty page. Two gates for one screen, disagreeing. This is the
+  // condition stage 2 actually needs, and the bottom stepper reads it too.
+  const lifewideReady = (!!result && phase === "done" && result.intents.length > 0) || (!!goals && goals.length > 0)
+
+  // =========================================================================
+  // v25 — THE SEQUENTIAL INTAKE
+  //
+  // The predicates in visionPlanService read a VisionPlanState, but this
+  // component keeps its state spread across ~40 useState hooks. `liveState`
+  // assembles the slice the intake needs so "is this question answered" has one
+  // definition, shared with the migration path and the tests.
+  // =========================================================================
+  const liveState = useMemo<VisionPlanState>(() => ({
+    vision: matchedText,
+    visionDraft: text,
+    intents: result?.intents ?? [],
+    goals: goals ?? [],
+    priorityIds,
+    dailyBudget,
+    confirmed,
+    ...(committedAt ? { committedAt } : {}),
+    ...(valuesList.length ? { values: valuesList } : {}),
+    ...(awayValues.length ? { awayValues } : {}),
+    ...(drivingForce ? { drivingForce } : {}),
+    ...(Object.keys(yourTens).length ? { yourTens } : {}),
+    ...(Object.keys(yourZeros).length ? { yourZeros } : {}),
+    ...(Object.keys(areaPlans).length ? { areaPlans } : {}),
+    ...(areaRank.length ? { areaRank } : {}),
+    ...(rawWants.length ? { rawWants } : {}),
+    ...(yearDebrief.good.length || yearDebrief.challenges.length || yearDebrief.lessons.length ? { yearDebrief } : {}),
+    ...(perfectDay.trim() ? { perfectDay } : {}),
+    ...(intakeSeen.length ? { intakeSeen } : {}),
+    ...(progress ? { progress } : {}),
+  }), [matchedText, text, result, goals, priorityIds, dailyBudget, confirmed, committedAt, valuesList,
+      awayValues, drivingForce, yourTens, yourZeros, areaPlans, areaRank, rawWants, yearDebrief,
+      perfectDay, intakeSeen, progress])
+
+  // Page 0 asks you to debrief a year. On a first run there is no year in the
+  // app to debrief, so it is dropped from the rail entirely rather than shown
+  // as a step you are expected to skip.
+  const visiblePages = useMemo(
+    () => INTAKE_PAGES.filter((p) => !(p.optionalOnFirstRun && !isAnnualRerun(liveState))),
+    [liveState],
+  )
+  const [page, setPage] = useState<IntakePageId>("matters")
+  const intakePage = visiblePages.find((p) => p.id === page) ?? visiblePages[0]
+  const revealed = useMemo(() => revealedIntakeQuestions(liveState, page), [liveState, page])
+
+  // On hydrate, drop the user at the page holding their first unfinished
+  // question so a returning plan reopens where it stopped.
+  const intakeLanded = useRef(false)
+  useEffect(() => {
+    if (!hydrated || intakeLanded.current) return
+    intakeLanded.current = true
+    setPage(deriveIntakePosition(liveState).page)
+    // Reopen the view the user was last in. Without this a reload mid-intake
+    // dropped them on the Guide, which reads as "my answers are gone" even
+    // though the plan itself had saved correctly.
+    try {
+      const saved = localStorage.getItem(VIEW_MODE_KEY)
+      if (saved === "create" || saved === "track" || saved === "library" || saved === "guide") setMode(saved)
+    } catch { /* private mode */ }
+  }, [hydrated, liveState])
+
+  useEffect(() => {
+    if (!hydrated) return
+    try { localStorage.setItem(VIEW_MODE_KEY, mode) } catch { /* quota */ }
+  }, [hydrated, mode])
+
+  /** "I'm not sure yet": settle the question without inventing an answer. */
+  const waveIntakePast = useCallback((id: string) => {
+    setIntakeSeen((prev) => (prev.includes(id) ? prev : [...prev, id]))
+  }, [])
+
+  /** The first question still holding this page's CTA. Named on screen, because
+   * "answer the questions on this page first" beside a page of filled-in
+   * answers is the least helpful thing we could say. */
+  const blockingQuestion = useMemo(
+    () => revealed.find((q) => !q.optional && !isIntakeSettled(liveState, q.id)) ?? null,
+    [revealed, liveState],
+  )
+  const pageIndex = visiblePages.findIndex((p) => p.id === page)
+  const nextPage = pageIndex >= 0 ? visiblePages[pageIndex + 1] : undefined
+  const nextPageLabel = nextPage ? `Next: ${nextPage.label}` : "Finish"
+  const goNextIntakePage = useCallback(() => {
+    if (!nextPage) return
+    setPage(nextPage.id)
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "auto" })
+  }, [nextPage])
+
+  /** The input for one question. Free-text and list questions render
+   * generically; the `custom` ones hand off to the editors that already exist
+   * for that exercise, so nothing is rebuilt twice. */
+  const renderIntakeInput = useCallback((q: IntakeQuestion): ReactNode => {
+    const debrief = (key: "good" | "challenges" | "lessons") => (
+      <IntakeList
+        items={yearDebrief[key]}
+        onChange={(next) => setYearDebrief((prev) => ({ ...prev, [key]: next }))}
+        placeholder={q.placeholder}
+      />
+    )
+    switch (q.id) {
+      case "back_good": return debrief("good")
+      case "back_challenges": return debrief("challenges")
+      case "back_lessons": return debrief("lessons")
+      case "values_audit":
+        return <IntakeList items={valuesList} onChange={setValuesList} placeholder={q.placeholder} />
+      case "vision":
+        return <IntakeText long value={text} onChange={setText} placeholder={q.placeholder} />
+      case "perfect_day":
+        return <IntakeText long value={perfectDay} onChange={setPerfectDay} placeholder={q.placeholder} />
+      case "purpose":
+        return (
+          <IntakeText
+            long
+            value={drivingForce?.purpose ?? ""}
+            onChange={(v) => setDrivingForce((prev) => ({ ...(prev ?? { purpose: "", reasons: [], identity: [] }), purpose: v }))}
+            placeholder={q.placeholder}
+          />
+        )
+      case "identity":
+        return (
+          <IntakeList
+            items={drivingForce?.identity ?? []}
+            onChange={(next) => setDrivingForce((prev) => ({ ...(prev ?? { purpose: "", reasons: [], identity: [] }), identity: next }))}
+            placeholder={q.placeholder}
+          />
+        )
+      case "conduct":
+        return (
+          <IntakeList
+            items={drivingForce?.conduct ?? []}
+            onChange={(next) => setDrivingForce((prev) => ({ ...(prev ?? { purpose: "", reasons: [], identity: [] }), conduct: next }))}
+            placeholder={q.placeholder}
+          />
+        )
+      // These two had no input at all, so the skip link was the only way past
+      // them. The first question in the whole intake was unclickable.
+      case "commit":
+        return (
+          <IntakeCommit
+            committedAt={committedAt}
+            today={today}
+            onCommit={() => setCommittedAt(today)}
+            onUndo={() => setCommittedAt(null)}
+          />
+        )
+      case "values_redesign":
+        return (
+          <ValuesJourney
+            values={valuesList}
+            awayValues={awayValues}
+            onSetValues={setValuesList}
+            onSetAway={setAwayValues}
+          />
+        )
+      // Pages "areas" and "doing" draw their own editors below the question
+      // list, so a custom question there is answerable without an inline input.
+      // Anywhere else, a question with no input is a dead end: the heading
+      // renders and the only control on the card is the skip link. That shipped
+      // once. It must never be silent again (CLAUDE.md rule 3).
+      // Pages "areas" and "doing" answer their questions through the wheel and
+      // the goal workshop, which render directly beneath this card. The pointer
+      // exists because a card with a heading and nothing else reads as broken,
+      // which is exactly how the commit question shipped.
+      case "areas_pick":
+      case "areas_room":
+      case "brainstorm":
+      case "qualify":
+      case "action_plan":
+      case "sign":
+        return (
+          <p className="flex items-center gap-2 text-[11px] text-zinc-500">
+            <ChevronDown className="size-3.5 shrink-0 text-zinc-600" />
+            {q.id === "areas_pick" ? "Pick an area on the wheel below to open it."
+              : q.id === "areas_room" ? "Everything for the open area is in the panel below."
+              : q.id === "brainstorm" ? "The workshop below takes the list, the year numbers and the circling."
+              : q.id === "qualify" ? "Each goal below carries its own sentence, ratings and reasons."
+              : q.id === "action_plan" ? "Add the actions and the chunks on each goal below."
+              : "Sign below to finish and start tracking."}
+          </p>
+        )
+      default: {
+        if (q.page === "areas" || q.page === "doing") return null
+        const msg = `Intake question "${q.id}" on page "${q.page}" has no input. Wire it in renderIntakeInput.`
+        if (process.env.NODE_ENV !== "production") throw new Error(msg)
+        console.error(msg)
+        return (
+          <p className="text-[11px] text-amber-300/90 rounded-lg border border-amber-400/30 bg-amber-500/[0.07] px-3 py-2">
+            This question is not finished yet. Skip it for now and it will keep your place.
+          </p>
+        )
+      }
+    }
+  }, [yearDebrief, valuesList, awayValues, text, perfectDay, drivingForce, committedAt, today])
+
+
   const roomBeats = useMemo(() => {
     const beats: Record<string, number> = {}
     for (const r of wheelRooms) {
@@ -6441,6 +8880,23 @@ export function VisionPlanLab() {
     }
     return beats
   }, [wheelRooms, yourTens, baselineRatings, goals, areaPlans])
+  // v19 — the wheel's three visual states, DERIVED from the ranking. A
+  // maintenance area is dimmed, never dashed-out: it has a floor, not a grave.
+  const areaScopes = useMemo(() => {
+    const out: Record<string, RoomScope> = {}
+    for (const r of wheelRooms) {
+      if (areaRank.length === 0) { out[r.id] = "unset"; continue }
+      const tier = areaTier(areaRank, focusCount, r.id)
+      out[r.id] = tier === "focus" ? "deep" : (roomBeats[r.id] ?? 0) > 0 ? "sketched" : "later"
+    }
+    return out
+  }, [wheelRooms, areaRank, focusCount, roomBeats])
+  const maintenanceFloors = useMemo(() => {
+    const out: Record<string, string> = {}
+    for (const [id, plan] of Object.entries(areaPlans)) if (plan?.maintenance) out[id] = plan.maintenance
+    return out
+  }, [areaPlans])
+
   // M1 room journey — beat handlers. The dream doubles as the room's intent:
   // saving it upserts `room-<areaId>` into the reading so the board, goal
   // drafting and coverage all see it without any embedding.
@@ -6448,10 +8904,25 @@ export function VisionPlanLab() {
   // `yourTens` from this closure would read the value from BEFORE the blur that
   // armed it — a stale-closure no-op that looks exactly like "the AI is broken".
   // The caller that has the fresh text passes it in.
-  const proposeRoomGoals = useCallback(async (areaId: string, dreamOverride?: string) => {
+  /**
+   * v25 — the tray now has two seeds. The 10 is one; a goal the user just wrote
+   * is the other (`anchorTitle`), because "here is a goal" is at least as strong
+   * a statement of direction as "here is my picture" — and a room whose 10 is
+   * still blank would otherwise never suggest anything. Whatever the seed, the
+   * room's own goals and the standing tray go up as `have` so the coach cannot
+   * hand back what the user already wrote.
+   */
+  const proposeRoomGoals = useCallback(async (areaId: string, dreamOverride?: string, anchorTitle?: string) => {
     const dream = (dreamOverride ?? yourTens[areaId] ?? "").trim()
-    if (!dream) {
-      console.error(`Refusing to draft goals for "${areaId}" with no 10 written`)
+    const roomGoals = (goalsRef.current ?? []).filter((g) => goalFeedsArea(g, areaId))
+    // No 10 and no anchor handed in — the tray button was pressed in a room the
+    // user has only written goals into. Their last goal is the seed: it is still
+    // their own words, and refusing here would leave the button dead in exactly
+    // the room where they've done the most writing.
+    const anchor = (anchorTitle ?? "").trim() || (dream ? "" : (roomGoals[roomGoals.length - 1]?.title ?? "").trim())
+    const seed = dream || anchor
+    if (!seed) {
+      console.error(`Refusing to draft goals for "${areaId}" with no 10 and no goal to work from`)
       setProposalPhase((p) => ({ ...p, [areaId]: "error" }))
       return
     }
@@ -6459,18 +8930,43 @@ export function VisionPlanLab() {
     try {
       const canonical = LIFE_MASTERY_AREA_MAP.get(areaId)
       const roomLabel = canonical ? (areaPlans[areaId]?.name ?? "").trim() || canonical.label : customAreas.find((c) => c.id === areaId)?.label
-      const intent = makeRoomIntent(areaId, dream)
+      const intent = makeRoomIntent(areaId, seed)
+      // Everything the room already holds — committed goals first, then drafts
+      // still sitting in the tray. Both are "already said"; only the committed
+      // ones are the user's, but a tray full of near-duplicates is just as bad.
+      const have = dropDuplicateSuggestions(
+        [
+          ...roomGoals.map((g) => g.title),
+          ...(suggestionsRef.current[areaId] ?? []).map((g) => g.title),
+          ...(anchor ? [anchor] : []),
+        ].map((title) => ({ title: title.slice(0, 160) })),
+        [],
+      ).map((g) => g.title)
       const res = await fetch("/api/goals/vision-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          vision: dream,
+          vision: seed,
           intents: [{ id: intent.id, text: intent.text, pillarId: intent.pillarId, pillarLabel: intent.pillarLabel, objectiveId: null, objectiveLabel: null, origin: "room", ...(roomLabel ? { roomLabel } : {}) }],
+          suggestFor: { anchor: anchor || null, have: have.slice(0, 60) },
         }),
       })
       const data = await res.json().catch(() => null)
+      // A 401 here means nobody is signed in, which is an expected state in
+      // this sandbox and NOT a failed answer from the model. Reporting both
+      // the same way told the user "the coach didn't answer" about a request
+      // that was never made.
+      if (res.status === 401 || res.status === 403) throw new Error("UNAUTHENTICATED")
       if (!res.ok) throw new Error(data?.error ?? `Request failed (${res.status})`)
       if (!Array.isArray(data?.goals) || data.goals.length === 0) throw new Error("No suggestions came back")
+      // Every draft the user already has, in whatever wording, is dropped here —
+      // and if that empties the batch, the tray says so rather than looking like
+      // a button that did nothing.
+      const fresh = dropDuplicateSuggestions(data.goals as VisionGoalDraft[], have)
+      if (fresh.length === 0) {
+        setProposalPhase((p) => ({ ...p, [areaId]: "dry" }))
+        return
+      }
       // v17 — drafts land in a TRAY, not in the goal list. The coach proposes;
       // the user authors. Ids are minted here against both the committed goals
       // and the tray, so accepting one later can't collide.
@@ -6478,7 +8974,7 @@ export function VisionPlanLab() {
         const tray = prev[areaId] ?? []
         const taken = new Set([...(goalsRef.current ?? []).map((g) => g.id), ...tray.map((g) => g.id)])
         const drafts: VisionGoalDraft[] = []
-        for (const src of data.goals as VisionGoalDraft[]) {
+        for (const src of fresh) {
           let n = 1
           while (taken.has(`room-${areaId}-g${n}`)) n++
           const newId = `room-${areaId}-g${n}`
@@ -6493,21 +8989,28 @@ export function VisionPlanLab() {
       })
       setProposalPhase((p) => ({ ...p, [areaId]: "idle" }))
     } catch (e) {
-      console.error("Room goal proposal failed:", e)
-      setProposalPhase((p) => ({ ...p, [areaId]: "error" }))
+      const unauth = e instanceof Error && e.message === "UNAUTHENTICATED"
+      // Still reported, never swallowed (CLAUDE.md rule 3). Reported ACCURATELY.
+      if (unauth) console.warn(`Goal drafting is unavailable for "${areaId}": not signed in.`)
+      else console.error("Room goal proposal failed:", e)
+      setProposalPhase((p) => ({ ...p, [areaId]: unauth ? "unavailable" : "error" }))
     }
   }, [yourTens, areaPlans, customAreas])
 
-  /** v17 — accept one drafted suggestion: it leaves the tray and becomes a real
-   * goal, taking the same commit path suggestions used to take automatically.
-   * The user's why stays blank — that question is theirs to answer. */
+  /** v17 — accept one drafted suggestion: it becomes a real goal, taking the
+   * same commit path suggestions used to take automatically. The user's why
+   * stays blank — that question is theirs to answer.
+   *
+   * v25 — the draft STAYS in the tray, marked kept. Picking three of five used
+   * to mean the list re-flowing under the cursor after every click; now the tray
+   * holds still and only the buttons change. The committed goal carries the same
+   * id, so "is this one kept" is read off the goal list, not a second store. */
   const acceptSuggestion = useCallback((areaId: string, id: string) => {
     // Read the draft OUTSIDE any updater: React re-invokes updaters (twice in
     // StrictMode), so committing the goal from inside one would add it twice.
     // Every setState below is its own pure updater.
     const draft = (suggestionsRef.current[areaId] ?? []).find((g) => g.id === id)
     if (!draft) return
-    setSuggestions((prev) => ({ ...prev, [areaId]: (prev[areaId] ?? []).filter((g) => g.id !== id) }))
     setGoals((prev) => ((prev ?? []).some((g) => g.id === draft.id) ? prev : [...(prev ?? []), draft]))
     setPriorityIds((p) => (p.includes(draft.id) ? p : [...p, draft.id]))
     setAreaOrder((p) => extendAreaOrder(p, [...(goalsRef.current ?? []), draft]))
@@ -6545,7 +9048,10 @@ export function VisionPlanLab() {
   const maybeSuggest = useCallback((areaId: string, dream: string) => {
     if (!autoSuggest) return
     const t = dream.trim()
-    if (t.length < 40) return
+    // v25 — 6 characters, not 40. This rides the BLUR the dream commits on, so
+    // what arrives is a finished line, not half-typed text: "get healthy" is a
+    // real 10 and used to draft nothing at all, silently.
+    if (t.length < 6) return
     if (lastSuggestedRef.current[areaId] === t) return
     const timers = suggestTimersRef.current
     if (timers[areaId]) clearTimeout(timers[areaId])
@@ -6553,6 +9059,28 @@ export function VisionPlanLab() {
       lastSuggestedRef.current[areaId] = t
       void proposeRoomGoals(areaId, t)
     }, 600)
+  }, [autoSuggest, proposeRoomGoals])
+
+  /**
+   * v25 — the second trigger: a goal the user just wrote themselves. Same
+   * debounce as the 10, so rattling four goals off in a row costs ONE draft
+   * (the last title wins) instead of four.
+   *
+   * Deliberately wired to the room composer only — NOT to accepting a
+   * suggestion. Accepting adds a goal too, and firing on that would loop: draft
+   * → keep → draft → keep, forever, on the coach's dime.
+   */
+  const maybeSuggestFromGoal = useCallback((areaId: string, title: string) => {
+    if (!autoSuggest) return
+    const t = title.trim()
+    if (t.length < 3) return
+    if (lastGoalSuggestedRef.current[areaId] === t) return
+    const timers = suggestTimersRef.current
+    if (timers[areaId]) clearTimeout(timers[areaId])
+    timers[areaId] = setTimeout(() => {
+      lastGoalSuggestedRef.current[areaId] = t
+      void proposeRoomGoals(areaId, undefined, t)
+    }, 900)
   }, [autoSuggest, proposeRoomGoals])
   const onRoomDream = useCallback((areaId: string, dream: string) => {
     const t = dream.trim()
@@ -6583,15 +9111,36 @@ export function VisionPlanLab() {
   // v17 — scope a room. This is the deliberate up-front choice; actually
   // OPENING a room promotes it too (openRoom), because doing the work is a
   // clearer statement of intent than any picker.
-  const onRoomScope = useCallback((areaId: string, scope: RoomScope) => {
-    setAreaScope((p) => ({ ...p, [areaId]: scope }))
+  // v19 — the ONE writer of rank + its focus projection, routed through the
+  // fail-closed service setter so an impossible ranking can't be persisted.
+  const applyPriority = useCallback((rank: string[], focus: number) => {
+    const known = [...LIFE_MASTERY_AREAS.map((a) => a.id), ...customAreas.map((c) => c.id)]
+    try {
+      const out = setAreaPriority(rank, focus, known)
+      setAreaRank(out.areaRank)
+      setFocusCount(focus)
+      applyFocusProjection(out.focusAreaIds)
+    } catch (e) {
+      console.error("Refused an invalid area priority:", e)
+    }
+  }, [customAreas, applyFocusProjection])
+  const onApproachRep = useCallback((level: number, next: number) => {
+    setApproachReps((p) => ({ ...p, [String(level)]: next }))
   }, [])
+  const onReorderAreas = useCallback((rank: string[]) => applyPriority(rank, focusCount), [applyPriority, focusCount])
+  const onFocusCount = useCallback((n: number) => applyPriority(areaRank, n), [applyPriority, areaRank])
   const openRoom = useCallback((areaId: string | null) => {
     setActiveRoomId(areaId)
-    if (areaId) setAreaScope((p) => (p[areaId] === "deep" ? p : { ...p, [areaId]: "deep" }))
-  }, [])
-  const onRoomZero = useCallback((areaId: string, zero: string) => {
-    setYourZeros((p) => ({ ...p, [areaId]: zero }))
+    // v22 — a wedge click has to visibly DO something. The panel renders below
+    // the wheel, so without this the page looks unchanged and the user assumes
+    // the click failed. Deferred a frame so the panel exists before we scroll.
+    if (areaId) {
+      requestAnimationFrame(() => {
+        document.getElementById("lm-room-panel")?.scrollIntoView({ behavior: "smooth", block: "center" })
+      })
+    }
+    // v19 — opening a room no longer re-ranks anything: priority is a
+    // deliberate choice in the season list, not a side effect of clicking.
   }, [])
   // Plain-text vision for read-only surfaces (Track card, ritual step 2, copy
   // blocks): the prose if written, else the room dreams spelled out.
@@ -6667,6 +9216,84 @@ export function VisionPlanLab() {
     }
   }, [goals])
 
+  /**
+   * M1 — write an accepted goal list away, each row to its real home. Goals are
+   * created in ONE pass so `createAreaGoal` sees every id already taken and
+   * cannot collide; sub-goals are then wired to their parent with the existing
+   * edge set (M9), which is cycle-safe by construction.
+   *
+   * Fail-closed: a row that `createAreaGoal` rejects is reported, not skipped
+   * silently — a list that quietly drops three of its lines is worse than one
+   * that says which three.
+   */
+  const onAcceptGoalList = useCallback((accepted: GoalListAccept) => {
+    // Computed from the current `goals` in the event handler, then written with
+    // plain setters — never inside another setter's updater. React re-invokes
+    // updaters, so a setter nested in one runs twice and double-adds.
+    const rejected: string[] = []
+    let next = [...(goals ?? [])]
+    const byRow = new Map<string, string>()
+    for (const row of accepted.goals) {
+      try {
+        const draft = createAreaGoal({ areaId: row.areaId, ...row.reading }, next.map((g) => g.id))
+        next = [...next, draft]
+        byRow.set(row.rowId, draft.id)
+      } catch (e) {
+        rejected.push(`${row.reading.title}: ${e instanceof Error ? e.message : "could not be created"}`)
+      }
+    }
+    // A sub-goal FEEDS its parent — the outward direction `feedsGoalIds`
+    // already uses, so the project view is a pure read of existing state.
+    for (const row of accepted.goals) {
+      const childId = byRow.get(row.rowId)
+      const parentId = row.parentRowId ? byRow.get(row.parentRowId) : undefined
+      if (!childId || !parentId) continue
+      try { next = addGoalEdge(next, childId, parentId) } catch { /* self/cycle/dupe — the edge set is the guard */ }
+    }
+    const newIds = [...byRow.values()]
+    setGoals(next)
+    setPriorityIds((p) => [...p, ...newIds.filter((id) => !p.includes(id))])
+    setAreaOrder((p) => extendAreaOrder(p, next))
+    setGoalPhase("done")
+
+    for (const id of accepted.identities) {
+      if (id.areaId) {
+        setAreaPlans((prev) => {
+          const cur = prev[id.areaId!] ?? {}
+          const merged = [cur.identity?.trim(), id.text.trim()].filter(Boolean).join("\n")
+          return { ...prev, [id.areaId!]: { ...cur, identity: merged } }
+        })
+      } else {
+        setDrivingForce((prev) => ({ ...prev, identity: [...prev.identity, id.text] }))
+      }
+    }
+    if (accepted.rules.length) setValueRules((prev) => [...prev, ...accepted.rules])
+    if (accepted.horizonWants.length) {
+      setRawWants((prev) => [
+        ...prev,
+        ...accepted.horizonWants.map((text, i) => ({
+          id: `w-list-${prev.length + i}`, text, years: 5 as HorizonYears, circled: false,
+        })),
+      ])
+    }
+    if (accepted.monthlyRituals.length) {
+      setRitual((prev) => {
+        // The review screen only hands monthly rows over when a ritual exists
+        // (canAddRituals); this guard keeps that contract enforceable here too.
+        if (!prev) return prev
+        const weekly = [...(prev.weekly ?? [])]
+        accepted.monthlyRituals.forEach((m, i) => {
+          weekly.push({ id: `wr-list-${weekly.length + i}`, title: m.title, areaId: m.areaId, weekday: 0, monthlyDay: 1 })
+        })
+        return { ...prev, weekly }
+      })
+    }
+    if (rejected.length) console.error("Some list rows could not be created:", rejected)
+    setListOpen(null)
+    // His order: the goal is not finished until its why is written under it.
+    setReasonsFor(newIds)
+  }, [goals])
+
   // v8 — Goal Workshop handlers: circle→qualify creates a USER-authored goal
   // (works even before any AI suggestion exists — the user is the author).
   const onQualifyWorkshopGoal = useCallback((item: string, areaId: string, input: { title: string; type: VisionGoalType; why: string; daysPerWeek: number; measure: VisionMeasure | null; targetDate: string | null }) => {
@@ -6701,9 +9328,14 @@ export function VisionPlanLab() {
   // any area that exists only in the drafted goals (coach re-route) so every
   // goal's area is present, draggable and toggleable.
   const areaGroups = useMemo<AreaGroup[]>(() => {
-    if (!result) return []
+    // Bailing on `!result` meant a user who pasted a list or typed goals into a
+    // room saw "0 life areas in your plan" while holding a dozen goals: the
+    // groups were derived from vision INTENTS, and only the prose path has any.
+    // The `coachOnly` pass below already handles goals with no intent — it was
+    // simply unreachable. Third instance of one gate: `result` is optional.
+    if (!result && !(goals?.length)) return []
     const byPillar = new Map<string, VisionIntent[]>()
-    for (const it of result.intents) {
+    for (const it of result?.intents ?? []) {
       const list = byPillar.get(it.pillarId)
       if (list) list.push(it)
       else byPillar.set(it.pillarId, [it])
@@ -6842,6 +9474,15 @@ export function VisionPlanLab() {
     }
   }, [balanced, progress, activeGoals, today, ritual, reportMonth])
 
+  // v23 — is there anything worth reading back? Mirrors the persistence gate:
+  // if we bothered to save it, the Library can show it.
+  const hasReadableContent =
+    (!!goals && goals.length > 0) || !!committedAt || valuesList.length > 0 || !!drivingForce ||
+    Object.values(yourTens).some((t) => (t ?? "").trim()) ||
+    Object.keys(areaPlans).length > 0 || manifestoLines.length > 0 ||
+    incantations.length > 0 || affirmations.length > 0 || valueRules.length > 0 ||
+    (matchedText || text).trim().length > 0
+
   const busy = phase === "loading" || phase === "matching"
   const stale = result !== null && text.trim() !== matchedText
 
@@ -6849,40 +9490,65 @@ export function VisionPlanLab() {
     <div className="min-h-screen bg-zinc-950 text-white">
       {/* Header bar — sandbox badge + mode tabs, pattern from NewGoalsLab */}
       <div className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-sm border-b border-white/5">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center gap-2">
+        {/* v24 — this row was a single non-wrapping flex line. On a 390px phone
+            it ran to 748px: "Rough day?" (the SOS front door the canon requires
+            on screen one), the next-actions badge and Reset were all pushed off
+            the right edge and unreachable, and the page scrolled sideways.
+            Wraps now, and the spacing tightens below sm so it usually still
+            fits one line. */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 sm:py-3 flex items-center gap-x-2 gap-y-1.5 flex-wrap">
           <span className="flex items-center gap-1.5 text-sm font-medium text-white">
             <Telescope className="size-4 text-violet-300" /> Life Mastery
           </span>
-          {goals && goals.length > 0 && (
-            <div className="flex items-center gap-1 ml-4">
-              {([["create", "Plan"], ["lifeplan", "Life Plan"], ["track", "Track"]] as const)
+          {/* v20 — the Guide is always reachable: it exists FOR the person who
+              has no plan yet, so gating it on goals hid it exactly when it was
+              the thing they needed. Plan/Track/Library still gate on content. */}
+          {(
+            <div className="flex items-center gap-1 ml-1 sm:ml-4">
+              {([["guide", "Guide"], ["create", "Plan"], ["track", "Track"], ["library", "Library"]] as const)
+                // v23 — Library used to be gated on goals existing, which is the
+                // same bug v22 fixed one pill to the left: someone who finished
+                // Guide sessions 1-5 has a year debrief, a vision, a purpose, an
+                // identity, a code of conduct and renamed areas, and could not
+                // open the page that exists to read them back. It now opens
+                // whenever there is anything to read.
+                .filter(([m]) => m === "guide" || m === "create" || m === "library" || (goals && goals.length > 0))
+                .filter(([m]) => m !== "library" || hasReadableContent)
                 .filter(([m]) => m !== "track" || confirmed)
                 .map(([m, label]) => (
                   <button
                     key={m}
                     onClick={() => setMode(m)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${mode === m ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+                    className={`px-3 py-1 min-h-[44px] sm:min-h-0 inline-flex items-center rounded-full text-xs font-medium transition-all ${
+                      mode === m
+                        ? "bg-white/10 text-white"
+                        : m === "guide"
+                        // v22 — the Guide is the front door for anyone without a
+                        // plan, so it has to LOOK like a destination.
+                        ? "border border-violet-400/40 bg-violet-500/10 text-violet-100 hover:bg-violet-500/20"
+                        : "text-zinc-500 hover:text-zinc-300"
+                    }`}
                   >
                     {label}
                   </button>
                 ))}
             </div>
           )}
-          <span className="ml-auto flex items-center gap-3">
+          <span className="ml-auto flex items-center gap-x-2 sm:gap-x-3 gap-y-1.5 flex-wrap justify-end">
             {matchedText === EXAMPLE_VISION && (
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border border-sky-400/30 bg-sky-500/10 text-sky-300" title="This is the worked example — Reset to start your own plan.">
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border border-sky-400/30 bg-sky-500/10 text-sky-300" title="This is the worked example. Reset to start your own plan.">
                 Example plan
               </span>
             )}
             <button
               onClick={() => setSosOpen(true)}
-              className="text-xs font-medium px-2.5 py-1 rounded-full border border-amber-400/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-colors"
+              className="text-xs font-medium px-2.5 py-1 min-h-[44px] sm:min-h-0 inline-flex items-center rounded-full border border-amber-400/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-colors"
               title="Rough moment? 60-second protocols for urges, paralysis, anxiety, dark days. No setup needed."
             >
               Rough day?
             </button>
             {(goals || result) && <ActionsBadge actions={guided} onGo={(a) => goToAnchor(a.mode, a.anchor)} />}
-            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border border-amber-400/30 bg-amber-500/10 text-amber-300" title="Nothing here reads or writes your real goals — everything stays in this browser.">
+            <span className="hidden sm:inline text-[10px] font-medium px-2 py-0.5 rounded-full border border-amber-400/30 bg-amber-500/10 text-amber-300" title="Nothing here reads or writes your real goals. Everything stays in this browser.">
               Sandbox
             </span>
             {(goals || result) && (
@@ -6892,7 +9558,7 @@ export function VisionPlanLab() {
                   <button onClick={() => setResetArmed(false)} className="text-xs text-zinc-500 hover:text-white transition-colors">Keep</button>
                 </span>
               ) : (
-                <button onClick={() => setResetArmed(true)} className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-white transition-colors" title="Clear the sandbox plan and start over">
+                <button onClick={() => setResetArmed(true)} className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-white transition-colors min-h-[44px] sm:min-h-0" title="Clear the sandbox plan and start over">
                   <RotateCcw className="size-3.5" /> Reset
                 </button>
               )
@@ -6913,10 +9579,10 @@ export function VisionPlanLab() {
                 {loadRepairs.map((r, i) => (
                   <li key={i}>
                     · {r.kind === "dangling-edge"
-                      ? `A link from one goal pointed at a goal that no longer exists — removed.`
+                      ? `A link from one goal pointed at a goal that no longer exists. Removed.`
                       : r.kind === "cycle-broken"
-                      ? `Two goals fed each other in a loop — the later link was removed.`
-                      : `A weekly practice had lost its ease-in schedule — rebuilt from its habits.`}
+                      ? `Two goals fed each other in a loop. The later link was removed.`
+                      : `A weekly practice had lost its ease-in schedule. Rebuilt from its habits.`}
                   </li>
                 ))}
               </ul>
@@ -6933,20 +9599,89 @@ export function VisionPlanLab() {
           letters={letters}
           onLetters={setLetters}
           onAddIncantation={(card) => setIncantations((p) => (p.includes(card) ? p : [...p, card]))}
+          onLogBelief={(old, replacement) =>
+            setBeliefs((prev) =>
+              prev.some((b) => b.old.trim().toLowerCase() === old.trim().toLowerCase())
+                ? prev
+                : [...prev, { id: `bl-${prev.length}-${Date.now()}`, old, replacement, startedAt: today }],
+            )
+          }
           today={today}
         />
       )}
-      {mode === "lifeplan" ? (
-        <LifePlanView
-          goals={goals ?? []}
+      {mode === "guide" ? (
+        <GuideView
+          // v23 — completion is what the PLAN proves, not what was clicked.
+          done={guideDoneSet(guideDone, {
+            vision: matchedText || text,
+            yearDebrief,
+            drivingForce,
+            areaPlans,
+            yourTens,
+            rawWants,
+            goals,
+            ritual,
+            committedAt,
+          })}
+          openId={openSession}
+          onOpen={setOpenSession}
+          onComplete={(id) => setGuideDone((p) => (p.includes(id) ? p : [...p, id]))}
+          onSkipTo={setOpenSession}
+          visionText={text}
+          onVisionText={setText}
+          debrief={yearDebrief}
+          onDebrief={setYearDebrief}
+          drivingForce={drivingForce}
+          onDrivingForce={setDrivingForce}
           areaPlans={areaPlans}
-          yourTens={yourTens}
-          progress={progress}
-          focusAreaIds={focusAreaIds}
-          onSetFocus={onSetFocus}
           onAreaPlan={onAreaPlan}
-          onYourTen={(areaId, text) => setYourTens((p) => ({ ...p, [areaId]: text }))}
-          onAddGoal={onAddAreaGoal}
+          beliefs={beliefs}
+          onBeliefs={setBeliefs}
+          rawWants={rawWants}
+          onRawWants={setRawWants}
+          goalInbox={goalInbox}
+          onSendToWorkshop={(texts) => setGoalInbox((prev) => [...prev, ...texts.filter((t) => !prev.includes(t))])}
+          onReadVision={(t) => { setMode("create"); setPage("going"); setProseOpen(true); void run(t) }}
+          visionReadBusy={phase === "loading" || phase === "matching"}
+          rooms={wheelRooms}
+          yourTens={yourTens}
+          ratings={baselineRatings}
+          onOpenRoom={(areaId) => { setMode("create"); setPage("areas"); openRoom(areaId) }}
+          evidence={{ vision: visionDisplayText || text, yearDebrief, drivingForce, areaPlans, rawWants, goals: goals ?? [], ritual, committedAt }}
+          today={today}
+          onGoStage={(p, anchor) => {
+            setMode("create")
+            setPage(p)
+            if (anchor) requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth", block: "start" }))
+          }}
+        />
+      ) : mode === "library" ? (
+        <LibraryView
+          page={libraryPage}
+          onPage={setLibraryPage}
+          state={{ areaPlans, values: valuesList, affirmations, incantations, valueRules }}
+          goals={goals ?? []}
+          yourTens={yourTens}
+          awayValues={awayValues}
+          drivingForce={drivingForce}
+          manifestoName={manifestoName}
+          manifestoLines={manifestoLines}
+          committedAt={committedAt}
+          visionText={visionDisplayText || text}
+          onGoEdit={(p) => { setMode("create"); setPage(p) }}
+          areasPage={
+            <LifePlanView
+              goals={goals ?? []}
+              areaPlans={areaPlans}
+              yourTens={yourTens}
+              progress={progress}
+              focusAreaIds={focusAreaIds}
+              onEditSeason={() => { setMode("create"); setPage("areas"); requestAnimationFrame(() => document.getElementById("lm-season-priority")?.scrollIntoView({ behavior: "smooth", block: "center" })) }}
+              onAreaPlan={onAreaPlan}
+              onYourTen={(areaId, text) => setYourTens((p) => ({ ...p, [areaId]: text }))}
+              onAddGoal={onAddAreaGoal}
+            />
+          }
         />
       ) : mode === "track" ? (
         <div className="max-w-4xl mx-auto px-6 py-10 pb-24">
@@ -6957,12 +9692,35 @@ export function VisionPlanLab() {
             </div>
           ) : (
             <>
+              {/* v24 — when the weekly review is DUE, say so at the top.
+                  The form renders about 40% down the page, below the driving
+                  force card, the four stat tiles, the morning ritual and the
+                  day plan — so the one ritual that turns tracking into
+                  learning was reached only by scrolling past everything else,
+                  or by noticing it inside the actions badge. */}
+              {track.due && (
+                <button
+                  onClick={() => document.getElementById("lm-weekly")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                  className="w-full mb-6 rounded-xl border border-violet-400/35 bg-violet-500/[0.10] px-4 py-3 text-left hover:bg-violet-500/[0.16] transition-colors"
+                >
+                  <span className="flex items-center gap-2 flex-wrap">
+                    <CalendarCheck className="size-4 text-violet-300 shrink-0" />
+                    <span className="text-sm font-medium text-violet-100">Your week {track.due.weekIndex} review is ready</span>
+                    <span className="text-[11px] text-zinc-400">{track.due.start} → {track.due.end}</span>
+                    <span className="ml-auto text-[11px] text-violet-200/90 shrink-0">Start it →</span>
+                  </span>
+                  <span className="block text-[11px] text-zinc-400 mt-1">
+                    Rate where you are, name the lesson, and pick next week&apos;s outcomes. About 20 minutes.
+                  </span>
+                </button>
+              )}
+
               {/* PLM OS M1 — the Driving Force, read daily: values → vision →
                   purpose → identity ("the four things are the driving force") */}
               <div id="lm-driving-card" className="rounded-2xl border border-violet-400/20 bg-gradient-to-br from-violet-500/[0.12] via-white/[0.04] to-transparent px-6 py-5 mb-6 scroll-mt-20">
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles className="size-3.5 text-violet-300" />
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-200/90">Your driving force — read it every morning</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-200/90">Your driving force, read it every morning</span>
                   <span className="h-px flex-1 bg-gradient-to-r from-violet-400/30 to-transparent" />
                   <CopyButton
                     label="Copy"
@@ -7084,8 +9842,8 @@ export function VisionPlanLab() {
                       const day = installDay(ritual, today)
                       if (day !== null && day < 30) return <span className="text-[10px] px-2 py-0.5 rounded-full border border-violet-400/30 text-violet-200 tabular-nums" title="The install rule: 30 days without negotiation, then it runs itself">install day {day}/30</span>
                       if (rotationDue(ritual, today)) return (
-                        <button onClick={onRitualRotate} className="text-[10px] px-2 py-0.5 rounded-full border border-amber-400/40 text-amber-300 hover:bg-amber-500/10 transition-colors" title="~30 days in — the library is a menu, not a checklist. Swap a step in the Plan view, then restart the install count.">
-                          30+ days — rotate something
+                        <button onClick={onRitualRotate} className="text-[10px] px-2 py-0.5 rounded-full border border-amber-400/40 text-amber-300 hover:bg-amber-500/10 transition-colors" title="~30 days in. The library is a menu you pick from. Swap a step in the Plan view, then restart the install count.">
+                          30+ days, rotate something
                         </button>
                       )
                       return null
@@ -7141,7 +9899,7 @@ export function VisionPlanLab() {
                                   {done && <Check className="size-3.5 text-zinc-950" />}
                                 </span>
                                 <span className={`text-sm min-w-0 ${done ? "text-zinc-400 line-through" : "text-zinc-100"}`}>{w.title}</span>
-                                {area && <span className="ml-auto text-[10px] shrink-0" style={{ color: area.color }}>{area.label}</span>}
+                                {area && <span className="ml-auto text-[10px] shrink-0" style={{ color: areaTextColor(area) }}>{area.label}</span>}
                               </button>
                               {w.id === "writ-money" && <MoneySystemCard />}
                               {w.id === "writ-relationship" && <JournalScriptCard />}
@@ -7162,6 +9920,7 @@ export function VisionPlanLab() {
                   <span className="text-[10px] text-zinc-600">{today}</span>
                   <span className="h-px flex-1 bg-gradient-to-r from-emerald-400/30 to-transparent" />
                 </div>
+                <PrincipleCardView id="rpm" />
                 {(() => {
                   const mustSet = new Set(track.dayPlan.mustIds)
                   const mustFull = track.dayPlan.mustIds.length >= MAX_MUST_ITEMS
@@ -7188,12 +9947,12 @@ export function VisionPlanLab() {
                           </span>
                           <span className={`text-sm min-w-0 truncate ${done ? "text-zinc-400 line-through" : "text-zinc-100"}`}>
                             {h.title}
-                            {routineDay && <span className="font-semibold" style={{ color: h.pillarColor }}> — {routineDay.name}</span>}
+                            {routineDay && <span className="font-semibold" style={{ color: pillarTextColor(h.pillarColor) }}> — {routineDay.name}</span>}
                           </span>
                           <span className="ml-auto size-1.5 rounded-full shrink-0" style={{ backgroundColor: h.pillarColor }} />
                         </button>
                         <MustToggle starred={mustSet.has(h.habitId)} disabled={mustFull} onToggle={() => onToggleMust(h.habitId)} label={h.title} />
-                        {justDone === h.habitId && <span className="text-[10px] text-emerald-300 shrink-0 animate-pulse">smile — &ldquo;good job&rdquo;, out loud</span>}
+                        {justDone === h.habitId && <span className="text-[10px] text-emerald-300 shrink-0 animate-pulse">smile. &ldquo;good job&rdquo;, out loud</span>}
                       </li>
                     )
                   }
@@ -7213,7 +9972,7 @@ export function VisionPlanLab() {
                           <span className="ml-auto text-[10px] text-zinc-500 shrink-0">one-time</span>
                         </button>
                         <MustToggle starred={mustSet.has(t.taskId)} disabled={mustFull} onToggle={() => onToggleMust(t.taskId)} label={t.title} />
-                        {justDone === t.taskId && <span className="text-[10px] text-emerald-300 shrink-0 animate-pulse">smile — &ldquo;good job&rdquo;, out loud</span>}
+                        {justDone === t.taskId && <span className="text-[10px] text-emerald-300 shrink-0 animate-pulse">smile. &ldquo;good job&rdquo;, out loud</span>}
                       </li>
                     )
                   }
@@ -7245,7 +10004,7 @@ export function VisionPlanLab() {
                             who says?
                           </button>
                         )}
-                        {justDone === a.id && <span className="text-[10px] text-emerald-300 shrink-0 animate-pulse">smile — &ldquo;good job&rdquo;, out loud</span>}
+                        {justDone === a.id && <span className="text-[10px] text-emerald-300 shrink-0 animate-pulse">smile. &ldquo;good job&rdquo;, out loud</span>}
                       </li>
                     )
                   }
@@ -7299,13 +10058,13 @@ export function VisionPlanLab() {
                         </>
                       )}
                       {empty ? (
-                        <p className="text-sm text-zinc-500">Nothing scheduled today — rest is part of the plan.</p>
+                        <p className="text-sm text-zinc-500">Nothing scheduled today. Rest is part of the plan.</p>
                       ) : (
                         blocks.map((b) => (
                           <div key={b.pillarId} className="mb-3 rounded-xl border border-white/10 bg-white/[0.02] p-3">
                             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                               <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: b.color }} />
-                              <span className="text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: b.color }}>{b.label}</span>
+                              <span className="text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: pillarTextColor(b.color) }}>{b.label}</span>
                               <span className="text-[10px] text-zinc-600 min-w-0 truncate">Result: progress toward {b.goalTitles.map((x) => `“${x}”`).join(" · ")}</span>
                             </div>
                             <textarea
@@ -7313,7 +10072,7 @@ export function VisionPlanLab() {
                               onChange={(e) => onSetBlockReason(b.pillarId, e.target.value)}
                               rows={2}
                               aria-label={`Fresh reasons for the ${b.label} block`}
-                              placeholder={"3 fresh reasons this block matters TODAY — one per line. Yesterday's reasons don't carry."}
+                              placeholder={"3 fresh reasons this block matters TODAY. One per line. Yesterday's reasons don't carry."}
                               className="mb-2 w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-white/20 transition-colors resize-none"
                             />
                             <ul className="space-y-1.5">
@@ -7327,8 +10086,8 @@ export function VisionPlanLab() {
                       <div className="mb-1 rounded-xl border border-white/10 bg-white/[0.02] p-3">
                         <div className="flex items-center gap-2 mb-1.5">
                           <span className="size-2 rounded-full shrink-0 bg-zinc-500" />
-                          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-400">Add-ons — keep one for the heart</span>
-                          <span className="text-[10px] text-zinc-600">connection or joy, not output</span>
+                          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-400">Add-ons, keep one for the heart</span>
+                          <span className="text-[10px] text-zinc-600">connection or joy</span>
                         </div>
                         {track.dayPlan.adhoc.length > 0 && (
                           <>
@@ -7336,14 +10095,14 @@ export function VisionPlanLab() {
                               {mustsFirst(track.dayPlan.adhoc, (a) => a.id).map(adhocRow)}
                             </ul>
                             <p className="text-[10px] text-zinc-600 mt-1.5">
-                              The delegation pass — after the musts are starred, ask of each could-do: &ldquo;who says I have to do this?&rdquo; A VA, Fiverr, a friend. Delegated = off the plate, not on a someday list.
+                              The delegation pass. After the musts are starred, ask of each could-do: &ldquo;who says I have to do this?&rdquo; A VA, Fiverr, a friend. Delegated means off your plate entirely.
                             </p>
                           </>
                         )}
                         <AddAdhocRow onAdd={onAddAdhoc} />
                       </div>
                       {track.dayPlan.mustIds.length === 0 && !empty && (
-                        <p className="text-[10px] text-zinc-600 mt-2">Tip: star 3-5 &ldquo;must&rdquo; items and do them FIRST — willpower is highest in the morning; win those and the day is a win.</p>
+                        <p className="text-[10px] text-zinc-600 mt-2">Tip: star 3-5 &ldquo;must&rdquo; items and do them FIRST. Willpower is highest in the morning; win those and the day is a win.</p>
                       )}
                       {/* Celebration doctrine: every completed process goal gets acknowledged */}
                       {doneToday > 0 && (
@@ -7355,7 +10114,7 @@ export function VisionPlanLab() {
                         track.dueHabits.every((h) => (progress.completions[h.habitId] ?? []).includes(today)) &&
                         track.dueTasks.every((t) => progress.tasksDone.includes(t.taskId)) && (
                           <p className="mt-3 rounded-lg border border-emerald-400/25 bg-emerald-500/[0.08] px-3 py-2 text-xs text-emerald-200">
-                            Everything scheduled today is done — celebrate it, out loud. What gets rewarded gets repeated.
+                            Everything scheduled today is done. Celebrate it, out loud. What gets rewarded gets repeated.
                           </p>
                         )}
                     </>
@@ -7365,6 +10124,7 @@ export function VisionPlanLab() {
                 {/* PLM OS M5 — evening reflection (Five Minute Journal PM) */}
                 <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-4">
                   <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Evening reflection</span>
+                  <PrincipleCardView id="evening" />
                   {/* v8 — the RPM end-of-day test, asked in his words: outcomes, not effort */}
                   {track.dayPlan.mustIds.length > 0 && (() => {
                     const doneCount = track.dayPlan.mustIds.filter((id) =>
@@ -7376,12 +10136,12 @@ export function VisionPlanLab() {
                     return (
                       <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
                         <p className="text-[11px] text-zinc-300">
-                          The RPM test — <span className="text-white">did you achieve your outcomes?</span>{" "}
+                          The RPM test <span className="text-white">did you achieve your outcomes?</span>{" "}
                           <span className={`tabular-nums ${doneCount === total ? "text-emerald-300" : "text-amber-300"}`}>{doneCount}/{total}</span> musts done.
                         </p>
                         {doneCount > 0 && (
                           <p className="text-[10px] text-emerald-200/80 mt-1">
-                            Celebrate each one before you sleep — smile, hand on chest, out loud: &ldquo;good job.&rdquo; Whatever gets rewarded gets repeated.
+                            Celebrate each one before you sleep. Smile, hand on chest, out loud: &ldquo;good job.&rdquo; Whatever gets rewarded gets repeated.
                           </p>
                         )}
                       </div>
@@ -7404,14 +10164,14 @@ export function VisionPlanLab() {
                         value={eveningReflectionFor(progress, today).better}
                         onChange={(e) => onEveningReflection({ better: e.target.value })}
                         rows={2}
-                        placeholder="No blame — just the adjustment."
+                        placeholder="No blame, just the adjustment."
                         className="mt-1 w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/20 transition-colors resize-none"
                       />
                     </label>
                   </div>
                   {/* v11 — the NIGHTLY magic-moment jar: one line, every evening */}
                   <label className="block mt-2">
-                    <span className="text-[10px] text-zinc-500">Tonight&apos;s magic moment — one line for the jar</span>
+                    <span className="text-[10px] text-zinc-500">Tonight&apos;s magic moment. One line for the jar</span>
                     <input
                       value={eveningReflectionFor(progress, today).magicMoment ?? ""}
                       onChange={(e) => onEveningReflection({ magicMoment: e.target.value })}
@@ -7420,8 +10180,11 @@ export function VisionPlanLab() {
                     />
                   </label>
                   {/* Productivity Planner close: score the day 1-10 */}
-                  <div className="flex items-center gap-3 mt-2.5">
-                    <span className="text-[10px] text-zinc-500 shrink-0">Productivity score</span>
+                  {/* v24 — this row was one non-wrapping line: label (shrink-0)
+                      + slider + readout ran 60px past a 390px phone. */}
+                  <div className="flex items-center gap-x-3 gap-y-1 mt-2.5 flex-wrap">
+                    <span className="text-[10px] text-zinc-500">Score today 1-10. How productive did it feel?</span>
+                    {/* v23 — third phantom-value slider; same fix. */}
                     <input
                       type="range"
                       min={1}
@@ -7429,11 +10192,16 @@ export function VisionPlanLab() {
                       value={eveningReflectionFor(progress, today).dayScore ?? 5}
                       onChange={(e) => onEveningReflection({ dayScore: Number(e.target.value) })}
                       aria-label="Productivity score for today"
-                      className="flex-1 accent-emerald-400"
+                      className={`flex-1 accent-emerald-400 ${eveningReflectionFor(progress, today).dayScore == null ? "opacity-40" : ""}`}
                     />
-                    <span className={`text-xs tabular-nums w-10 text-right shrink-0 ${eveningReflectionFor(progress, today).dayScore != null ? "text-white" : "text-zinc-600"}`}>
+                    <button
+                      onClick={() => onEveningReflection({ dayScore: eveningReflectionFor(progress, today).dayScore ?? 5 })}
+                      aria-label={eveningReflectionFor(progress, today).dayScore == null ? "Confirm today's score at 5" : `Today scored ${eveningReflectionFor(progress, today).dayScore}`}
+                      title={eveningReflectionFor(progress, today).dayScore == null ? "Tap to confirm 5, or slide to rate" : "Confirmed"}
+                      className={`text-xs tabular-nums w-10 text-right shrink-0 ${eveningReflectionFor(progress, today).dayScore != null ? "text-white" : "text-zinc-400 underline decoration-dotted hover:text-white"}`}
+                    >
                       {eveningReflectionFor(progress, today).dayScore ?? "–"}/10
-                    </span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -7447,15 +10215,29 @@ export function VisionPlanLab() {
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-6 flex flex-col items-center justify-center">
                   <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500 mb-3">Life Mastery Wheel</span>
-                  <LifeMasteryWheel ratings={track.latestReview?.areaRatings ?? null} prevRatings={track.prevOfLatest} />
+                  {/* v24 — fall back to the day-one baseline. Reading reviews
+                      alone left this wheel EMPTY for the whole first week: you
+                      rate twelve rooms honestly on day one and see nothing, and
+                      the first review then starts from zero, so week one could
+                      not show progress at all. */}
+                  <LifeMasteryWheel
+                    ratings={track.latestReview?.areaRatings ?? (Object.keys(baselineRatings).length ? baselineRatings : null)}
+                    prevRatings={track.prevOfLatest}
+                    labels={areaLabels}
+                  />
+                  {!track.latestReview && Object.keys(baselineRatings).length > 0 && (
+                    <p className="text-[10px] text-zinc-600 mt-2 text-center max-w-xs">
+                      Your day-one ratings, until the first weekly review gives them something to move against.
+                    </p>
+                  )}
                 </div>
               </div>
 
               {/* OS v2 — the spreadsheet: week-by-week scores, like Stefan keeps */}
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 mb-8">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Score history — your spreadsheet</span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Score history, your spreadsheet</span>
                 <div className="mt-2">
-                  <ScoreHistoryCard progress={progress} />
+                  <ScoreHistoryCard progress={progress} labels={areaLabels} />
                 </div>
               </div>
 
@@ -7473,6 +10255,9 @@ export function VisionPlanLab() {
                     focusAreaIds={focusAreaIds}
                     onRaise={onRaiseArea}
                     onSave={onSaveWeeklyReview}
+                    draft={progress?.weeklyDraft ?? null}
+                    onDraft={(patch) => onWeeklyDraft(patch, track.due!.start)}
+                    labels={areaLabels}
                     vision={visionDisplayText}
                     purpose={drivingForce?.purpose}
                     topValues={valuesList}
@@ -7496,7 +10281,7 @@ export function VisionPlanLab() {
               <div className="mb-2">
                 <div className="flex items-center gap-2 mb-3">
                   <TrendingUp className="size-3.5 text-emerald-300" />
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-200/90">Goals — toward your vision</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-200/90">Goals, toward your vision</span>
                   <span className="text-[10px] text-zinc-600">click a goal for its full anatomy</span>
                   <span className="h-px flex-1 bg-gradient-to-r from-emerald-400/30 to-transparent" />
                 </div>
@@ -7505,18 +10290,34 @@ export function VisionPlanLab() {
                     const r = track.rollups.get(g.id)
                     if (!r || !balanced) return null
                     return (
-                      <GoalDeepRow
-                        key={g.id}
-                        goal={g}
-                        rollup={r}
-                        balanced={balanced}
-                        progress={progress}
-                        today={today}
-                        verdict={track.verdicts[g.id] ?? null}
-                        expanded={expandedGoals.has(g.id)}
-                        onToggle={() => toggleGoalExpanded(g.id)}
-                        onLogMeasure={(v) => onLogMeasure(g.id, v)}
-                      />
+                      <div key={g.id}>
+                        <GoalDeepRow
+                          goal={g}
+                          rollup={r}
+                          balanced={balanced}
+                          progress={progress}
+                          today={today}
+                          verdict={track.verdicts[g.id] ?? null}
+                          expanded={expandedGoals.has(g.id)}
+                          onToggle={() => toggleGoalExpanded(g.id)}
+                          onLogMeasure={(v) => onLogMeasure(g.id, v)}
+                        />
+                        {/* v21 — behind is a normal state, not a failure. His
+                            moves in order, with the dabbler guard-rail. */}
+                        {correctingGoal === g.id ? (
+                          <div className="mt-1.5">
+                            <CorrectionPanel
+                              goalTitle={g.title}
+                              onVerdict={(verdict, reason) => onSaveVerdict(today.slice(0, 7), g.id, { verdict, reason })}
+                              onClose={() => setCorrectingGoal(null)}
+                            />
+                          </div>
+                        ) : (
+                          <button onClick={() => setCorrectingGoal(g.id)} className="mt-1 ml-1 text-[10px] text-zinc-600 hover:text-amber-300 transition-colors">
+                            behind on this? →
+                          </button>
+                        )}
+                      </div>
                     )
                   })}
                 </div>
@@ -7526,12 +10327,12 @@ export function VisionPlanLab() {
               <div className="mt-8">
                 <div className="flex items-center gap-2 mb-3">
                   <Telescope className="size-3.5 text-violet-300" />
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-200/90">Your blueprint — the map of your life</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-200/90">Your blueprint, the map of your life</span>
                   <span className="h-px flex-1 bg-gradient-to-r from-violet-400/30 to-transparent" />
                 </div>
                 <p className="text-xs text-zinc-500 mb-4 max-w-2xl">
                   Read it bottom-up: each row CARRIES the ones above it. Broken health drains your mind; a shaky mind poisons
-                  your emotions; wrecked emotions strain the relationship — and so on to the top. Spirituality isn&apos;t a row,
+                  your emotions; wrecked emotions strain the relationship. And so on to the top. Spirituality isn&apos;t a row,
                   it&apos;s the circle around everything. Brightness = your latest weekly rating (before your first review, it shows which rows your plan feeds). Click any row.
                 </p>
                 <div className="grid gap-4 md:grid-cols-2 items-start">
@@ -7547,13 +10348,14 @@ export function VisionPlanLab() {
                         band={selectedBand}
                         progress={progress}
                         yourTens={yourTens}
+                        yourZeros={yourZeros}
                         goals={activeGoals}
                         addedHabitIds={addedHabitIds}
                         onRaise={onRaiseArea}
                       />
                     ) : (
                       <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-6 text-center">
-                        <p className="text-sm text-zinc-500">Click a row of the pyramid to inspect that part of your life —</p>
+                        <p className="text-sm text-zinc-500">Click a row of the pyramid to inspect that part of your life</p>
                         <p className="text-xs text-zinc-600 mt-1">its rating trend, your 10, the goals feeding it, and a one-tap fix when it&apos;s weak.</p>
                       </div>
                     )}
@@ -7625,7 +10427,7 @@ export function VisionPlanLab() {
                 jarMoments={Object.entries(progress.eveningReflections ?? {})
                   .filter(([d, r]) => d.startsWith(track.month.slice(0, 4)) && !!r.magicMoment?.trim())
                   .map(([, r]) => r.magicMoment!.trim())}
-                onRerankFocus={() => setMode("lifeplan")}
+                onRerankFocus={() => { setMode("library"); setLibraryPage("areas") }}
                 results={Object.fromEntries(
                   track.report.perGoal.map((pg) => {
                     const goal = activeGoals.find((g) => g.id === pg.goalId)
@@ -7645,68 +10447,140 @@ export function VisionPlanLab() {
               />
 
               <p className="text-center mt-8">
-                <button onClick={() => { setMode("create"); setStage("lifewide") }} className="text-xs text-zinc-500 hover:text-white transition-colors">← Adjust the plan</button>
+                <button onClick={() => { setMode("create"); setPage("doing") }} className="text-xs text-zinc-500 hover:text-white transition-colors">← Adjust the plan</button>
               </p>
             </>
           )}
         </div>
       ) : (
-      <div className="max-w-6xl mx-auto px-6 py-10 pb-24">
-        <h1 className="text-2xl font-bold text-center mb-2">
-          {stage === "commit" ? "Commit to the climb" : stage === "lifewide" ? "Your life, whole" : "Your rooms"}
-        </h1>
-        <p className="text-zinc-400 text-center mb-8">
-          {stage === "commit"
-            ? "Design the mornings, size the week honestly, then sign. Signing is where the planning stops and the living starts."
-            : stage === "lifewide"
-            ? "Step back from the rooms: what you value, what drives you, the season's focus — and every goal you wrote, qualified."
-            : "Twelve rooms of your life. Open the one that pulls you most — picture your 10, mark where you are today, set the goals that close the gap."}
-        </p>
+      <div className="max-w-6xl mx-auto px-6 pt-5 pb-24">
+        <h1 className="text-2xl font-bold text-center mb-1">{intakePage.label}</h1>
+        <p className="text-zinc-400 text-sm text-center mb-4 max-w-2xl mx-auto">{intakePage.intro}</p>
 
-        {/* v17 — three stages, shown one at a time, ending in Commit. The rail
-            is real navigation, not a menu of everything-at-once. */}
-        <StageRail
-          stage={stage}
-          onGo={setStage}
-          hasPlan={!!goals && goals.length > 0}
-          mapDone={Object.keys(roomBeats).length > 0 || (!!goals && goals.length > 0)}
-          committed={!!committedAt}
-          confirmed={confirmed}
-          roomCrumb={stage === "rooms" && activeRoomId ? (() => {
-            const deep = wheelRooms.filter((r) => areaScope[r.id] === "deep" || (roomBeats[r.id] ?? 0) > 0)
-            const list = deep.some((r) => r.id === activeRoomId) ? deep : wheelRooms
-            const i = list.findIndex((r) => r.id === activeRoomId)
-            return {
-              label: wheelRooms.find((r) => r.id === activeRoomId)?.label ?? "",
-              index: i + 1,
-              total: list.length,
-              onPrev: i > 0 ? () => openRoom(list[i - 1].id) : undefined,
-              onNext: i >= 0 && i < list.length - 1 ? () => openRoom(list[i + 1].id) : undefined,
-              onBack: () => openRoom(null),
-            }
-          })() : null}
+        {/* v25 — five pages instead of nineteen steps. The rail is real
+            navigation: finished pages stay clickable, the ones ahead are
+            locked until the page before them is settled. */}
+        <IntakeRail
+          page={page}
+          pages={visiblePages}
+          onGo={setPage}
+          done={(p) => isIntakePageComplete(liveState, p)}
+          reachable={(p) => {
+            const order = visiblePages.map((x) => x.id)
+            const i = order.indexOf(p)
+            if (i <= 0) return true
+            return order.slice(0, i).every((prev) => isIntakePageComplete(liveState, prev))
+          }}
         />
+
+        {/* The room crumb still belongs to the areas page, where a room can be
+            open. It sits under the rail so the rail keeps one job. */}
+        {page === "areas" && activeRoomId && (() => {
+          const deep = wheelRooms.filter((r) => areaTier(areaRank, focusCount, r.id) === "focus" || (roomBeats[r.id] ?? 0) > 0)
+          const list = deep.some((r) => r.id === activeRoomId) ? deep : wheelRooms
+          const i = list.findIndex((r) => r.id === activeRoomId)
+          return (
+            <div className="flex items-center justify-center gap-2 -mt-2 mb-4 text-[11px]">
+              <button onClick={() => i > 0 && openRoom(list[i - 1].id)} disabled={i <= 0} className="text-zinc-500 hover:text-zinc-200 disabled:opacity-25 transition-colors">‹ prev</button>
+              <span className="text-zinc-500">
+                Rooms › <span className="text-zinc-200">{wheelRooms.find((r) => r.id === activeRoomId)?.label ?? ""}</span>
+                <span className="text-zinc-600 tabular-nums"> · {i + 1} of {list.length}</span>
+              </span>
+              <button onClick={() => i >= 0 && i < list.length - 1 && openRoom(list[i + 1].id)} disabled={i < 0 || i >= list.length - 1} className="text-zinc-500 hover:text-zinc-200 disabled:opacity-25 transition-colors">next ›</button>
+              <button onClick={() => openRoom(null)} className="ml-2 text-zinc-600 hover:text-zinc-300 underline decoration-dotted transition-colors">back to the wheel</button>
+            </div>
+          )
+        })()}
+
+        {/* Every page runs the same reveal: one question at a time, down a
+            single scroll. Pages 3 and 4 put their editors INSIDE the question
+            card, so the question you are answering and the tool you answer it
+            with are never separated. They used to be, and the gates asked for
+            state the visible screen could not produce. */}
+        {true && (
+          <div className={page === "back" || page === "matters" || page === "going" ? "max-w-2xl mx-auto space-y-3" : "space-y-3"}>
+            {revealed.map((q, i) => (
+              <IntakeQuestionBlock
+                key={q.id}
+                q={q}
+                isNewest={i === revealed.length - 1 && i > 0}
+                answered={isIntakeAnswered(liveState, q.id)}
+                onSkip={() => waveIntakePast(q.id)}
+              >
+                {renderIntakeInput(q)}
+              </IntakeQuestionBlock>
+            ))}
+            {page === "going" && (
+              <div className="pt-2">
+                <DrivingForceCard
+                  vision={text}
+                  purpose={drivingForce?.purpose ?? ""}
+                  identity={drivingForce?.identity ?? []}
+                  conduct={drivingForce?.conduct ?? []}
+                />
+              </div>
+            )}
+            {blockingQuestion && revealed.length > 0 && (
+              <p className="pt-2 text-center text-[11px] text-amber-300/80">
+                Still open: {blockingQuestion.question} You can answer it, or use &ldquo;{INTAKE_SKIP_LABEL}&rdquo; under it.
+              </p>
+            )}
+            {isIntakePageComplete(liveState, page) && (
+              <div className="pt-4 text-center">
+                <button
+                  onClick={goNextIntakePage}
+                  className="text-sm px-5 py-2.5 rounded-lg bg-violet-500/20 border border-violet-400/40 text-violet-100 hover:bg-violet-500/30 transition-all font-medium"
+                >
+                  {nextPageLabel}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
 
         {/* v17 — STAGE 1: the wheel IS the first thing you see. No preamble
             card above it, no textarea: a life area is the unit of work, so the
             map of your areas is where the product opens. */}
-        {stage === "rooms" && (<>
-        <PrincipleCardView id="tens" />
+        {page === "areas" && (<>
 
-        <div id="lm-vision" className="max-w-3xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-5 mb-6 scroll-mt-20">
-          {/* The deliverable, spelled out — a fresh user must know WHAT to
-              type, roughly how much, and what it turns into. */}
-          <p className="text-xs text-zinc-300 leading-relaxed">
-            Your life as a wheel of <span className="text-white">twelve rooms</span>.
-            Tap the one that pulls you most and walk its journey:
-            <span className="text-white"> the picture</span> (what a 10 here looks like),
-            <span className="text-white"> the gap</span> (where you are today, 0-10),
-            <span className="text-white"> the goals</span> (how you close it),
-            <span className="text-white"> the deeper work</span> (why it matters, who you are here).
-          </p>
-          <p className="text-[11px] text-zinc-500 mt-1">
-            Deep in a few rooms beats shallow in twelve. Rename any room, add your own.
-          </p>
+        {/* Capture is not planning. A pasted list produces goals that look
+            finished; this says out loud how much of the method the plan
+            actually has, measured against his order rather than against
+            whether our features were used. It exists so nobody has to
+            hand-inspect a plan to discover it is 1/10 of the framework. */}
+        {(goals?.length ?? 0) > 0 && (() => {
+          const c = planConformance({ committedAt, values: valuesList, vision: matchedText || text, drivingForce, yourTens, areaPlans, goals })
+          if (c.stepsDone === c.stepsTotal && c.captured.length === 0) return null
+          const next = c.steps.find((s) => !s.done)
+          return (
+            <div className="max-w-3xl mx-auto rounded-2xl border border-amber-400/25 bg-amber-500/[0.05] px-5 py-3 mb-4">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className="text-[11px] font-semibold text-amber-100/90">
+                  Your plan has {c.stepsDone} of {c.stepsTotal} parts of the method
+                </span>
+                {c.captured.length > 0 && (
+                  <span className="text-[11px] text-zinc-400">
+                    · {c.captured.length} of {c.goalsTotal} {c.captured.length === 1 ? "goal is" : "goals are"} captured, not planned yet
+                  </span>
+                )}
+              </div>
+              {next && (
+                <p className="text-[10px] text-zinc-500 mt-1">
+                  Next: <span className="text-zinc-300">{next.label}</span> — {next.note}
+                </p>
+              )}
+              <div className="flex gap-1 mt-2" role="img" aria-label={`${c.stepsDone} of ${c.stepsTotal} parts of the method present`}>
+                {c.steps.map((s) => (
+                  <span key={s.id} title={`${s.label} — ${s.note}`}
+                    className={`h-1 flex-1 rounded-full ${s.done ? "bg-emerald-400/70" : "bg-white/10"}`} />
+                ))}
+              </div>
+            </div>
+          )
+        })()}
+
+        <div id="lm-vision" className="max-w-3xl mx-auto bg-white/5 border border-white/10 rounded-2xl px-5 pt-3 pb-5 mb-6 scroll-mt-20">
 
           {/* State-priming + vision tools sit ABOVE the box — "before you
               write" has to come before the writing. */}
@@ -7714,9 +10588,16 @@ export function VisionPlanLab() {
             rooms={wheelRooms}
             ratings={baselineRatings}
             roomBeats={roomBeats}
-            scopes={areaScope}
+            scopes={areaScopes}
             focusIds={focusAreaIds}
-            onScope={onRoomScope}
+            onLoadExample={!goals ? loadExample : undefined}
+            exampleWouldOverwrite={exampleWouldOverwrite}
+            areaRank={areaRank}
+            focusCount={focusCount}
+            onReorder={onReorderAreas}
+            onFocusCount={onFocusCount}
+            maintenance={maintenanceFloors}
+            onMaintenance={(id, t) => onAreaPlan(id, { maintenance: t })}
             activeAreaId={activeRoomId}
             onPick={openRoom}
             proseOpen={proseOpen}
@@ -7724,20 +10605,63 @@ export function VisionPlanLab() {
             renderRoomPanel={(roomId, close) => {
               const room = wheelRooms.find((r) => r.id === roomId)
               if (!room) return null
+              // M1 — the list door replaces the room panel while it is open:
+              // reviewing a whole pasted list beside a single-room journey
+              // would put two different scopes of work on one screen.
+              if (listOpen === roomId) {
+                return (
+                  <GoalListReview
+                    today={today}
+                    defaultAreaId={roomId}
+                    canAddRituals={!!ritual}
+                    onAccept={onAcceptGoalList}
+                    onClose={() => setListOpen(null)}
+                  />
+                )
+              }
+              // The reasons beat, immediately after intake. His order is goal
+              // → why written under it; a list of twelve goals and no reasons
+              // is twelve wishes. Leaving is always allowed — the header badge
+              // keeps asking, which is what "later" means here.
+              if (reasonsFor.length > 0) {
+                // Filtered by `reasonsFor` ONLY. Re-filtering on goalNeedsWhy
+                // here shrank the list as each why was written while the pass's
+                // own index advanced past it — so writing goal 1's reason
+                // silently skipped goal 2. The set is frozen at intake; the
+                // pass owns its own progress through it.
+                const pending = (goals ?? []).filter((g) => reasonsFor.includes(g.id))
+                if (pending.length > 0) {
+                  return (
+                    <ReasonsPass
+                      goals={pending}
+                      onWhy={(id, why) => editGoal(id, (g) => ({ ...g, why }))}
+                      onPainWhy={(id, painWhy) => editGoal(id, (g) => ({ ...g, painWhy }))}
+                      onReasons={(id, reasonsList) => editGoal(id, (g) => ({ ...g, reasonsList }))}
+                      onDone={() => setReasonsFor([])}
+                    />
+                  )
+                }
+              }
               return (
                 <RoomJourneyPanel
                   room={room}
                   dream={yourTens[roomId] ?? ""}
+                  zero={yourZeros[roomId] ?? ""}
                   rating={baselineRatings[roomId] ?? null}
                   why={areaPlans[roomId]?.purpose ?? ""}
                   identity={areaPlans[roomId]?.identity ?? ""}
                   goalsInRoom={(goals ?? []).filter((g) => goalFeedsArea(g, roomId))}
                   allGoals={goals ?? []}
-                  zero={yourZeros[roomId] ?? ""}
                   whyWork={areaPlans[roomId]?.whyWork ?? ""}
                   soft={areaPlans[roomId] ?? {}}
                   onWhyWork={(t) => onAreaPlan(roomId, { whyWork: t })}
                   onSoft={(kind, items) => onAreaPlan(roomId, { [kind]: items })}
+                  approachReps={approachReps}
+                  onApproachRep={onApproachRep}
+                  relationshipStatus={relationshipStatus}
+                  onRelationshipStatus={setRelationshipStatus}
+                  sessionJournals={sessionJournals}
+                  onLogSession={(j) => setSessionJournals((prev) => [...prev, j])}
                   onLinkGoals={linkGoals}
                   onUnlinkGoals={unlinkGoals}
                   suggestions={suggestions[roomId] ?? []}
@@ -7747,14 +10671,16 @@ export function VisionPlanLab() {
                   suggestedIds={suggestedIds}
                   today={today}
                   onDream={(t) => onRoomDream(roomId, t)}
-                  onZero={(t) => onRoomZero(roomId, t)}
+                  onZero={(t) => setYourZeros((prev) => ({ ...prev, [roomId]: t }))}
                   onAcceptSuggestion={(id) => acceptSuggestion(roomId, id)}
                   onDismissSuggestion={(id) => dismissSuggestion(roomId, id)}
                   onRating={(v) => onRoomRating(roomId, v)}
                   onWhy={(t) => onAreaPlan(roomId, { purpose: t })}
                   onIdentity={(t) => onAreaPlan(roomId, { identity: t })}
                   onPropose={() => void proposeRoomGoals(roomId)}
-                  onAddGoalRaw={(input) => onAddAreaGoal(roomId, input)}
+                  onAddGoalRaw={(input) => { onAddAreaGoal(roomId, input); maybeSuggestFromGoal(roomId, input.title) }}
+                  onOpenList={() => setListOpen(roomId)}
+                  onAddGoalAction={addAction}
                   onEditGoalTitle={editTitle}
                   onSetGoalType={setGoalType}
                   onEditGoalMeasure={editMeasure}
@@ -7787,42 +10713,37 @@ export function VisionPlanLab() {
 
           <div className="flex items-center gap-3 mt-3">
             <button
-              onClick={run}
+              onClick={() => void run()}
               disabled={busy || !text.trim()}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-200 hover:bg-violet-500/30 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Telescope className="size-4" />}
               {phase === "loading" ? (pct > 0 ? `Loading model ${pct}%` : "Loading model…") : phase === "matching" ? "Reading your vision…" : result ? "Re-read my vision" : "Build my plan"}
             </button>
-            {stale && <span className="text-[11px] text-amber-300/80">Text changed — re-read to update</span>}
+            {stale && <span className="text-[11px] text-amber-300/80">Text changed, re-read to update</span>}
           </div>
           <p className="text-[10px] text-zinc-600 mt-2">
             Your text is analyzed on your own device and never leaves this browser (first run downloads a ~50 MB model once). Only the optional coach suggestions call our server.
           </p>
           {!goals && (
             <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
-              <span className="text-[9px] uppercase tracking-wide text-zinc-500">Prose path — what Build does</span>
+              <span className="text-[9px] uppercase tracking-wide text-zinc-500">Prose path, what Build does</span>
               <ul className="mt-1 space-y-0.5 text-[11px] text-zinc-400">
                 <li>· Your sentences are matched to life areas on your device; anything that fits nowhere lands in the Goal Workshop for you to shape by hand.</li>
-                <li>· The coach drafts goals with drivers attached — outcomes get a date and a milestone ladder, practices get weekly habits. You edit everything.</li>
-                <li>· Room journeys don&apos;t need this button — their goals are made inside each room.</li>
+                <li>· The coach drafts goals with drivers attached. Outcomes get a date and a milestone ladder, practices get weekly habits. You edit everything.</li>
+                <li>· Room journeys don&apos;t need this button. Their goals are made inside each room.</li>
               </ul>
             </div>
           )}
           {text.trim().length > 40 && (
             <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
-              <span className="text-[9px] uppercase tracking-wide text-zinc-500">The make-it-pull test — before you read it in</span>
+              <span className="text-[9px] uppercase tracking-wide text-zinc-500">The make-it-pull test. Before you read it in</span>
               <ul className="mt-1 space-y-0.5 text-[11px] text-zinc-400">
-                <li>· Read it OUT LOUD. Does it pull? Rewrite any sentence that reads flat — &ldquo;language it in a way that inspires you.&rdquo;</li>
+                <li>· Read it OUT LOUD. Does it pull? Rewrite any sentence that reads flat. &ldquo;language it in a way that inspires you.&rdquo;</li>
                 <li>· Clarity is power: are there numbers in it? (A strong one has a weight, an income, an address in it.)</li>
-                <li>· Is there a WHO in it, not just a what — the person you&apos;ve become?</li>
+                <li>· Is there a WHO in it? The person you&apos;ve become?</li>
               </ul>
             </div>
-          )}
-          {!goals && (
-            <button onClick={loadExample} className="mt-3 text-xs px-3 py-1.5 rounded-lg border border-sky-400/30 bg-sky-500/[0.08] text-sky-200 hover:bg-sky-500/15 transition-colors">
-              Or see a filled example first — it's easier to write yours after reading one
-            </button>
           )}
 
           {phase === "error" && (
@@ -7850,8 +10771,8 @@ export function VisionPlanLab() {
                       <p className="text-sm text-emerald-100">{evening ? "That's enough for tonight." : "That's enough for one sitting."}</p>
                       <p className="text-[11px] text-zinc-400 mt-0.5">
                         {evening
-                          ? "Your first step is tomorrow morning: read your North Star below once, out loud. Everything else on this page will still be here in daylight — it's a plan, not homework due tonight."
-                          : "Your first step: read your North Star below once, out loud. The rest of this page will keep — it's a plan, not homework due today."}
+                          ? "Your first step is tomorrow morning: read your North Star below once, out loud. Everything else on this page will still be here in daylight. It is a plan, and it keeps."
+                          : "Your first step: read your North Star below once, out loud. The rest of this page will keep. It is a plan, and it keeps."}
                       </p>
                     </div>
                     <button onClick={() => setTonightDismissed(true)} aria-label="Dismiss" className="ml-auto text-zinc-600 hover:text-zinc-300 shrink-0"><X className="size-3.5" /></button>
@@ -7897,7 +10818,7 @@ export function VisionPlanLab() {
                   // coach is still drafting, a hard "0 of 12" would be false
                   // and the Area Sweep nudge premature.
                   if (goalPhase === "generating") {
-                    return <p className="text-[11px] text-zinc-500 mt-2">Counting which of the 12 life areas this lights up — done when the coach finishes drafting below.</p>
+                    return <p className="text-[11px] text-zinc-500 mt-2">Counting which of the 12 life areas this lights up. Done when the coach finishes drafting below.</p>
                   }
                   const covered = LIFE_MASTERY_AREAS.filter(
                     (a) => (goals ?? []).some((g) => goalFeedsArea(g, a.id)) || (yourTens[a.id] ?? "").trim(),
@@ -7906,7 +10827,7 @@ export function VisionPlanLab() {
                   const dark = LIFE_MASTERY_AREAS.length - covered.length
                   return (
                     <p className="text-[11px] text-zinc-500 mt-2">
-                      This lights up <span className="text-zinc-300 tabular-nums">{covered.length} of 12</span> life areas — the standard here: a vision for every room, even one sentence.{" "}
+                      This lights up <span className="text-zinc-300 tabular-nums">{covered.length} of 12</span> life areas. The ones you&apos;re focusing on need a real 10; the rest need a floor, not a paragraph.{" "}
                       <button
                         onClick={() => document.getElementById("lm-vision")?.scrollIntoView({ behavior: "smooth" })}
                         className="underline decoration-dotted text-zinc-300 hover:text-white transition-colors"
@@ -7924,7 +10845,7 @@ export function VisionPlanLab() {
             areas — don't make the user navigate on to discover it. */}
         {result && phase === "done" && result.intents.length === 0 && (
           <div className="max-w-3xl mx-auto text-center py-6 px-4 border border-white/10 rounded-2xl bg-white/[0.03] mb-6">
-            <p className="text-zinc-400 text-sm">Couldn&apos;t find any goal areas in that yet — open a room on the wheel above, or describe what you want more concretely in the box.</p>
+            <p className="text-zinc-400 text-sm">Couldn&apos;t find any goal areas in that yet. Open a room on the wheel above, or describe what you want more concretely in the box.</p>
           </div>
         )}
         </>)}
@@ -7933,187 +10854,17 @@ export function VisionPlanLab() {
         {/* v17 — STAGE 3: COMMIT. Design the mornings, size the week honestly,
             then sign. The signature is the hand-off into tracking, which is
             what its own copy always claimed it was. */}
-        {stage === "commit" && (<>
-  {/* PLM M3 — the ordered morning ritual, separate from goal habits */}
-  <div id="lm-ritual-builder" className="mt-10 scroll-mt-20">
-    <div className="flex items-center gap-2 mb-3">
-      <Sparkles className="size-3.5 text-violet-300" />
-      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-200/90">Design your morning ritual</span>
-      <span className="h-px flex-1 bg-gradient-to-r from-violet-400/30 to-transparent" />
-    </div>
-    <p className="text-xs text-zinc-500 mb-4">
-      How you start the day decides how the day goes. An ordered sequence you run every morning —
-      it lives above your goals on the Track view and doesn&apos;t count against your daily habit budget.
-    </p>
-    <PrincipleCardView id="ritual" />
-    <RitualBuilder
-      ritual={ritual}
-      vision={visionDisplayText || text}
-      onPreset={onRitualPreset}
-      onToggleStep={onRitualToggleStep}
-      onMove={onRitualMove}
-      onClear={() => setRitual(null)}
-      onWeeklyToggle={onWeeklyRitualToggle}
-    />
-  </div>
-
-  {/* M4 — balance the whole plan: priority, budget, dosing timeline */}
-  {balanced && (
-    <div id="lm-balance" className="mt-10 scroll-mt-20">
-      <div className="flex items-center gap-2 mb-3">
-        <TrendingUp className="size-3.5 text-sky-300" />
-        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-200/90">Balance your weeks</span>
-        <span className="h-px flex-1 bg-gradient-to-r from-sky-400/30 to-transparent" />
-      </div>
-      <p className="text-xs text-zinc-500 mb-4">
-        Goals phase in by priority so week one stays light. Drag to reprioritise; cap how much one day may ask of you.
-      </p>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <div>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
-            Priority — #1 starts first{focusAreaIds.length > 0 ? " · seeded by your focus rooms, drag to override" : ""}
-          </span>
-          <div className="mt-2">
-            <SortablePriorityList
-              items={activeGoals.map((g) => ({ id: g.id, label: g.title, color: g.pillarColor }))}
-              onReorder={reorderActiveGoals}
-            />
-          </div>
-
-          <div className="flex items-center gap-3 mt-4">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Daily budget</span>
-            <button
-              onClick={() => setDailyBudget((b) => Math.max(1, b - 1))}
-              disabled={dailyBudget <= 1}
-              className="size-6 rounded-md border border-white/15 text-zinc-300 hover:bg-white/10 disabled:opacity-30 flex items-center justify-center"
-              aria-label="Lower daily budget"
-            ><Minus className="size-3.5" /></button>
-            <span className="text-sm text-white font-medium tabular-nums">≤ {dailyBudget}/day</span>
-            <button
-              onClick={() => setDailyBudget((b) => Math.min(8, b + 1))}
-              disabled={dailyBudget >= 8}
-              className="size-6 rounded-md border border-white/15 text-zinc-300 hover:bg-white/10 disabled:opacity-30 flex items-center justify-center"
-              aria-label="Raise daily budget"
-            ><Plus className="size-3.5" /></button>
-          </div>
-
-          {/* Weekday load meter at steady state */}
-          <div className="mt-4">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">A steady week, per day</span>
-            <div className="flex items-end gap-1.5 mt-2 h-16">
-              {balanced.dayLoads.map((n, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-[10px] text-zinc-400 tabular-nums">{n}</span>
-                  <div
-                    className="w-full rounded-sm bg-sky-400/60"
-                    style={{ height: `${(n / Math.max(1, dailyBudget)) * 40}px`, minHeight: n > 0 ? 3 : 0 }}
-                  />
-                  <span className="text-[9px] text-zinc-600">{["M", "T", "W", "T", "F", "S", "S"][i]}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Phase-in timeline</span>
-          <div className="mt-2 space-y-2">
-            {balanced.weeks.map((w) => (
-              <div key={w.week} className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-white">Week {w.week}</span>
-                  <span className="text-[10px] text-zinc-500 tabular-nums">{w.load}/{w.cap} weekly slots</span>
-                  <div className="ml-auto h-1.5 w-24 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full rounded-full bg-sky-400/70" style={{ width: `${Math.min(100, (w.load / Math.max(1, w.cap)) * 100)}%` }} />
-                  </div>
-                </div>
-                {w.startingHabitIds.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {w.startingHabitIds.map((hid) => {
-                      const h = balanced.habits.find((x) => x.habitId === hid)!
-                      return (
-                        <span
-                          key={hid}
-                          className="text-[10px] px-2 py-0.5 rounded-full border"
-                          style={{ color: h.pillarColor, borderColor: `${h.pillarColor}59`, backgroundColor: `${h.pillarColor}1a` }}
-                        >
-                          + {h.title} · {h.daysPerWeek}×/wk
-                        </span>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {balanced.overflowHabitIds.length > 0 && (
-            <div className="mt-3 rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2">
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-300">
-                <AlertTriangle className="size-3.5" /> Doesn&apos;t fit your budget
-              </div>
-              <ul className="mt-1 space-y-0.5">
-                {balanced.overflowHabitIds.map((hid) => {
-                  const h = balanced.habits.find((x) => x.habitId === hid)!
-                  return <li key={hid} className="text-xs text-amber-200/80">{h.title} ({h.daysPerWeek}×/wk) — raise the budget or lower a priority</li>
-                })}
-              </ul>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* M5 — commit the plan and start tracking. Hybrid gate:
-          the vision comes first at the door, but nothing gets
-          TRACKED until the manifesto is signed. */}
-      <div className="text-center mt-8">
-        <button
-          onClick={confirmPlan}
-          disabled={!committedAt}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm font-semibold"
-        >
-          <Check className="size-4" />
-          {confirmed ? "Update plan & back to tracking" : "Save plan & start tracking"}
-        </button>
-        {!committedAt && (
-          <p className="text-[11px] text-amber-300/80 mt-2">
-            One thing before tracking begins: <button onClick={() => setStage("commit")} className="underline hover:text-amber-200">sign your manifesto</button> — you operate what you&apos;ve committed to.
-          </p>
-        )}
-        {balanced.overflowHabitIds.length > 0 && (
-          <p className="text-[11px] text-amber-300/80 mt-2">Heads up: habits over budget won&apos;t be scheduled until you make room.</p>
-        )}
-      </div>
-    </div>
-  )}
-
-        <div id="lm-foundation" className="mt-10">
-          <FoundationSection
-            part="manifesto"
-            committedAt={committedAt}
-            values={valuesList}
-            awayValues={awayValues}
-            manifestoName={manifestoName}
-            manifestoLines={manifestoLines}
-            valueRules={valueRules}
-            onManifestoName={setManifestoName}
-            onManifestoLines={setManifestoLines}
-            onValueRules={setValueRules}
-            onAddIncantation={(card) => setIncantations((p) => (p.includes(card) ? p : [...p, card]))}
-            onCommit={() => setCommittedAt(today)}
-            onSetValues={setValuesList}
-            onSetAway={setAwayValues}
-          />
-        </div>
-        </>)}
-
-        {/* v16 — STAGE 3: set up tracking. */}
-        {stage === "lifewide" && result && phase === "done" && (
-          result.intents.length === 0 ? (
+        {/* v25 — ORDER FIXED. Page 4 promises goals first, then the plan, then
+            signing. It used to render the morning ritual and the Start-tracking
+            signature ABOVE the goal workshop, so the thing the page is about sat
+            at the bottom, below the button that ends the flow. Goals now come
+            first and signing is last, which is both the page's own promise and
+            the source's order. */}
+        {page === "doing" && ((goals?.length ?? 0) > 0 || result) && phase !== "loading" && (
+          result && result.intents.length === 0 && !(goals?.length ?? 0) ? (
             <div className="text-center py-10 border border-white/10 rounded-2xl bg-white/[0.03]">
               <p className="text-zinc-400 text-sm">
-                Couldn&apos;t find any goal areas in that — try describing what you want more concretely.
+                Couldn&apos;t find any goal areas in that. Try describing what you want more concretely.
               </p>
             </div>
           ) : (
@@ -8121,57 +10872,69 @@ export function VisionPlanLab() {
               <p className="text-xs text-zinc-500 mb-3">
                 {areaGroups.length} life area{areaGroups.length === 1 ? "" : "s"} in your plan — drag to set priority · click a card to include or leave it out
               </p>
+            <PrincipleCardView id="vision" />
               <AreaBoard areas={areaGroups} deselected={deselected} onToggle={toggleArea} onReorder={reorderAreas} />
 
-              {/* The domino pick lives HERE in the main flow — the rooms are
-                  fresh in mind, and the pick seeds the goal schedule below. */}
+              {/* v23 — READ-ONLY summary. This used to be a second focus picker
+                  calling `onSetFocus` directly, which writes `focusAreaIds` but
+                  not `areaRank`/`focusCount` — so it silently disagreed with the
+                  rooms-screen ranker and the disagreement changed shape again on
+                  reload. The ranker is the single writer; this reflects it. */}
               <div id="lm-focus" className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 scroll-mt-20">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
-                  Your most important room{focusAreaIds.length > 0 ? ` — this season's focus (${focusAreaIds.length}/3)` : " — pick 1-3 for this season"}
+                  Your most important room{focusAreaIds.length > 0 ? " — this season's focus" : ""}
                 </p>
                 <p className="text-[11px] text-zinc-500 mt-1">
-                  Which room, conquered, lifts all the others? Its goals move to the front of the schedule and your weekly reviews lean on it — everything else stays in the plan at a steadier pace.
+                  Which room, conquered, lifts all the others? Its goals move to the front of the schedule and your weekly reviews lean on it. Everything else stays in the plan at a steadier pace.
                 </p>
                 <div className="flex items-center gap-1.5 flex-wrap mt-2">
-                  {LIFE_MASTERY_AREAS.map((a) => {
-                    const on = focusAreaIds.includes(a.id)
-                    return (
-                      <button
-                        key={a.id}
-                        onClick={() => onSetFocus(on ? focusAreaIds.filter((x) => x !== a.id) : [...focusAreaIds, a.id])}
-                        disabled={!on && focusAreaIds.length >= 3}
-                        aria-pressed={on}
-                        title={a.sublabel}
-                        className={`flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border transition-colors disabled:opacity-30 ${on ? "text-white bg-white/10" : "border-white/15 text-zinc-400 hover:text-zinc-200 hover:border-white/30"}`}
-                        style={on ? { borderColor: a.color } : undefined}
-                      >
-                        <span className="size-1.5 rounded-full" style={{ background: a.color, opacity: on ? 1 : 0.5 }} />
-                        {(areaPlans[a.id]?.name ?? "").trim() || a.label}
-                      </button>
-                    )
-                  })}
+                  {focusAreaIds.length === 0 ? (
+                    <span className="text-[11px] text-zinc-500">Not chosen yet.</span>
+                  ) : (
+                    focusAreaIds.map((id) => {
+                      const a = LIFE_MASTERY_AREA_MAP.get(id) ?? customAreas.find((c) => c.id === id)
+                      if (!a) return null
+                      const color = "color" in a ? a.color : "#a1a1aa"
+                      return (
+                        <span
+                          key={id}
+                          className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border text-white bg-white/10"
+                          style={{ borderColor: color }}
+                        >
+                          <span className="size-1.5 rounded-full" style={{ background: color }} />
+                          {(areaPlans[id]?.name ?? "").trim() || a.label}
+                        </span>
+                      )
+                    })
+                  )}
+                  <button
+                    onClick={() => { setPage("areas"); requestAnimationFrame(() => document.getElementById("lm-season-priority")?.scrollIntoView({ behavior: "smooth", block: "center" })) }}
+                    className="text-[11px] text-zinc-400 hover:text-zinc-200 underline underline-offset-2 ml-1"
+                  >
+                    {focusAreaIds.length === 0 ? "Choose it in Your rooms →" : "Change it in Your rooms →"}
+                  </button>
                 </div>
               </div>
 
-              {result.unmatched.length > 0 && (
+              {(result?.unmatched.length ?? 0) > 0 && result && (
                 <div className="mt-4 rounded-lg border border-amber-400/20 bg-amber-500/[0.04] px-3 py-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-200/80 mb-1">Couldn&apos;t place these — nothing you wrote gets dropped</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-200/80 mb-1">Couldn&apos;t place these. Nothing you wrote gets dropped</p>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    {result.unmatched.map((sp) => (
+                    {result?.unmatched.map((sp) => (
                       <span key={sp.text} className="flex items-center gap-1 text-[11px] text-zinc-400 border border-white/10 rounded-full px-2 py-0.5">
                         <span className="min-w-0">&ldquo;{sp.text}&rdquo;</span>
                         <button
                           onClick={() => setGoalInbox((prev) => (prev.includes(sp.text) ? prev : [...prev, sp.text]))}
                           disabled={goalInbox.includes(sp.text)}
                           className="text-[9px] px-1.5 py-px rounded-full border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 disabled:opacity-40 transition-colors shrink-0"
-                          title="Send to the Goal Workshop below — circle it into a goal, or consciously let it go"
+                          title="Send to the Goal Workshop below. Circle it into a goal, or consciously let it go"
                         >
                           {goalInbox.includes(sp.text) ? "in workshop" : "→ workshop"}
                         </button>
                       </span>
                     ))}
                   </div>
-                  <p className="text-[10px] text-zinc-600 mt-1">Mood words often don&apos;t map to an area — that&apos;s fine. Anything that&apos;s really a WANT belongs in the workshop.</p>
+                  <p className="text-[10px] text-zinc-600 mt-1">Mood words often don&apos;t map to an area. That&apos;s fine. Anything that&apos;s really a WANT belongs in the workshop.</p>
                 </div>
               )}
 
@@ -8191,7 +10954,7 @@ export function VisionPlanLab() {
                       onClick={generateGoals}
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-white/15 bg-white/[0.04] text-zinc-300 hover:bg-white/10 transition-all text-xs"
                     >
-                      <Wand2 className="size-3.5" /> {goals ? "Add AI suggestions beside your goals" : "Or let the coach suggest drafts — you stay the author"}
+                      <Wand2 className="size-3.5" /> {goals ? "Suggest a few more beside yours" : "Not sure where to start? Get a few suggestions"}
                     </button>
                   </div>
                 )}
@@ -8202,14 +10965,14 @@ export function VisionPlanLab() {
                       Designing your goals…
                     </span>
                     <p className="text-[11px] text-zinc-500">
-                      The coach is reading your vision and drafting concrete goals — this can take a minute.
+                      The coach is reading your vision and drafting concrete goals. This can take a minute.
                     </p>
                   </div>
                 )}
                 {goalPhase === "error" && (
                   <div className="text-center py-4">
-                    <p className="text-xs text-amber-300/90 mb-1">The coach couldn&apos;t draft suggestions{goalErr.toLowerCase().includes("auth") ? " — you may need to sign in" : ""}. ({goalErr})</p>
-                    <p className="text-[11px] text-zinc-500 mb-3">No blocker: the Goal Workshop above is the main path — you author the goals; the coach only ever suggests.</p>
+                    <p className="text-xs text-amber-300/90 mb-1">The coach couldn&apos;t draft suggestions{goalErr.toLowerCase().includes("auth") ? " you may need to sign in" : ""}. ({goalErr})</p>
+                    <p className="text-[11px] text-zinc-500 mb-3">No blocker: the Goal Workshop above is the main path. You author the goals; the coach only ever suggests.</p>
                     <button
                       onClick={generateGoals}
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/25 transition-all text-sm font-medium"
@@ -8224,13 +10987,13 @@ export function VisionPlanLab() {
                     <PrincipleCardView id="goals" />
                     <div className="flex items-center gap-2 mb-3">
                       <Wand2 className="size-3.5 text-emerald-300" />
-                      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-200/90">Your goals — you are the author; AI drafts are suggestions to edit or delete</span>
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-200/90">Your goals. Edit or delete anything that isn't yours</span>
                       <span className="h-px flex-1 bg-gradient-to-r from-emerald-400/30 to-transparent" />
-                      <button onClick={generateGoals} className="text-xs text-zinc-500 hover:text-white transition-colors">Redraw AI suggestions</button>
+                      <button onClick={generateGoals} className="text-xs text-zinc-500 hover:text-white transition-colors">Suggest a few more</button>
                     </div>
                     {activeGoals.length === 0 ? (
                       <p className="text-sm text-zinc-500 text-center py-8 border border-white/10 rounded-2xl bg-white/[0.03]">
-                        Every area is left out — click an area above to bring its goals back.
+                        Every area is left out. Click an area above to bring its goals back.
                       </p>
                     ) : (
                     <div className="grid gap-3 md:grid-cols-2 items-start">
@@ -8239,7 +11002,7 @@ export function VisionPlanLab() {
                           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                             <span
                               className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full border"
-                              style={{ color: g.pillarColor, borderColor: `${g.pillarColor}59`, backgroundColor: `${g.pillarColor}1f` }}
+                              style={{ color: pillarTextColor(g.pillarColor), borderColor: `${g.pillarColor}59`, backgroundColor: `${g.pillarColor}1f` }}
                             >
                               <span className="size-1.5 rounded-full" style={{ backgroundColor: g.pillarColor }} />
                               {g.pillarLabel}
@@ -8287,7 +11050,7 @@ export function VisionPlanLab() {
                           })()}
                           {/* PLM OS M3 — the goal as an affirmation sentence ("never 'I want'") */}
                           <label className="block mt-2">
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-300/80">Say it like it&apos;s done</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-300/80">The goal, written as already true</span>
                             <input
                               value={g.smartSentence ?? buildSmartSentence(g)}
                               onChange={(e) => editSmartSentence(g.id, e.target.value)}
@@ -8296,18 +11059,18 @@ export function VisionPlanLab() {
                             />
                           </label>
                           <label className="block mt-2">
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Your why — nobody writes this for you</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Why this goal must happen</span>
                             <textarea
                               value={g.why}
                               onChange={(e) => editWhy(g.id, e.target.value)}
                               rows={2}
-                              placeholder="Why MUST this happen? Borrowed reasons don't burn — write your own."
+                              placeholder="Why MUST this happen? Borrowed reasons don't burn. Write your own."
                               className={`mt-1 w-full bg-white/5 border rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/20 transition-colors resize-none ${g.why.trim() ? "border-white/10" : "border-amber-400/40"}`}
                             />
-                            {!g.why.trim() && <span className="text-[10px] text-amber-300/80">No why yet — the goal isn&apos;t qualified until the fuel is yours.</span>}
+                            {!g.why.trim() && <span className="text-[10px] text-amber-300/80">No why yet. The goal isn&apos;t qualified until the fuel is yours.</span>}
                           </label>
                           <label className="block mt-1.5">
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">…creating what feeling?</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">The feeling it gives you</span>
                             <input
                               value={g.feeling ?? ""}
                               onChange={(e) => editGoal(g.id, (gg) => ({ ...gg, feeling: e.target.value || null }))}
@@ -8317,7 +11080,7 @@ export function VisionPlanLab() {
                             />
                           </label>
                           <label className="block mt-2">
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">And if you don&apos;t? — the pain-why</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">What it costs you if you don&apos;t</span>
                             <input
                               value={g.painWhy ?? ""}
                               onChange={(e) => editPainWhy(g.id, e.target.value)}
@@ -8327,8 +11090,14 @@ export function VisionPlanLab() {
                             />
                           </label>
                           {/* M3 — belief check: under 7 → shrink the goal, don't force it */}
-                          <div className="flex items-center gap-3 mt-2.5" title="The rule: belief below 7/10 means the goal is too big right now — shrink it until you believe it.">
+                          <div className="flex items-center gap-3 mt-2.5" title="The rule: belief below 7/10 means the goal is too big right now. Shrink it until you believe it.">
                             <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 shrink-0">Belief</span>
+                            {/* v23 — phantom value. The thumb sat at 7 while the
+                                readout said "–", and a range input fires no
+                                change event when dragged to the value it is
+                                already on — so a user who genuinely meant 7
+                                could not record it. Dim when unset, and make
+                                the readout a button that commits the default. */}
                             <input
                               type="range"
                               min={0}
@@ -8336,12 +11105,17 @@ export function VisionPlanLab() {
                               value={g.beliefLevel ?? 7}
                               onChange={(e) => editBelief(g.id, Number(e.target.value))}
                               aria-label={`Belief level for ${g.title}`}
-                              className="flex-1"
-                              style={{ accentColor: (g.beliefLevel ?? 7) < BELIEF_SWEET_SPOT ? "#fbbf24" : g.pillarColor }}
+                              className={`flex-1 ${g.beliefLevel == null ? "opacity-40" : ""}`}
+                              style={{ accentColor: g.beliefLevel == null ? "#52525b" : g.beliefLevel < BELIEF_SWEET_SPOT ? "#fbbf24" : g.pillarColor }}
                             />
-                            <span className={`text-xs tabular-nums w-10 text-right shrink-0 ${g.beliefLevel == null ? "text-zinc-600" : g.beliefLevel < BELIEF_SWEET_SPOT ? "text-amber-300" : "text-zinc-300"}`}>
+                            <button
+                              onClick={() => editBelief(g.id, g.beliefLevel ?? 7)}
+                              aria-label={g.beliefLevel == null ? `Confirm belief 7 for ${g.title}` : `Belief ${g.beliefLevel} for ${g.title}`}
+                              title={g.beliefLevel == null ? "Tap to confirm 7, or slide to rate" : "Confirmed"}
+                              className={`text-xs tabular-nums w-10 text-right shrink-0 ${g.beliefLevel == null ? "text-zinc-400 underline decoration-dotted hover:text-white" : g.beliefLevel < BELIEF_SWEET_SPOT ? "text-amber-300" : "text-zinc-300"}`}
+                            >
                               {g.beliefLevel ?? "–"}/10
-                            </span>
+                            </button>
                           </div>
                           <div className="flex items-center gap-3 mt-1.5" title="Second gate: do you actually WANT it at 7+? Belief-10/desire-2 goals get abandoned the first hard week.">
                             <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 shrink-0">Desire</span>
@@ -8350,24 +11124,29 @@ export function VisionPlanLab() {
                               value={g.desireLevel ?? 7}
                               onChange={(e) => editGoal(g.id, (gg) => ({ ...gg, desireLevel: Number(e.target.value) }))}
                               aria-label={`Desire level for ${g.title}`}
-                              className="flex-1"
-                              style={{ accentColor: (g.desireLevel ?? 7) < BELIEF_SWEET_SPOT ? "#fbbf24" : g.pillarColor }}
+                              className={`flex-1 ${g.desireLevel == null ? "opacity-40" : ""}`}
+                              style={{ accentColor: g.desireLevel == null ? "#52525b" : g.desireLevel < BELIEF_SWEET_SPOT ? "#fbbf24" : g.pillarColor }}
                             />
-                            <span className={`text-xs tabular-nums w-10 text-right shrink-0 ${g.desireLevel == null ? "text-zinc-600" : g.desireLevel < BELIEF_SWEET_SPOT ? "text-amber-300" : "text-zinc-300"}`}>
+                            <button
+                              onClick={() => editGoal(g.id, (gg) => ({ ...gg, desireLevel: gg.desireLevel ?? 7 }))}
+                              aria-label={g.desireLevel == null ? `Confirm desire 7 for ${g.title}` : `Desire ${g.desireLevel} for ${g.title}`}
+                              title={g.desireLevel == null ? "Tap to confirm 7, or slide to rate" : "Confirmed"}
+                              className={`text-xs tabular-nums w-10 text-right shrink-0 ${g.desireLevel == null ? "text-zinc-400 underline decoration-dotted hover:text-white" : g.desireLevel < BELIEF_SWEET_SPOT ? "text-amber-300" : "text-zinc-300"}`}
+                            >
                               {g.desireLevel ?? "–"}/10
-                            </span>
+                            </button>
                           </div>
                           {((g.beliefLevel ?? 7) < BELIEF_SWEET_SPOT || (g.desireLevel ?? 7) < BELIEF_SWEET_SPOT) && (
                             <p className="text-[10px] text-amber-300/80 mt-1">
                               {(g.beliefLevel ?? 7) < BELIEF_SWEET_SPOT
-                                ? `Belief under ${BELIEF_SWEET_SPOT} — shrink it until you believe it: lower the target or push the date${g.measure ? ` (e.g. ${g.measure.target} → ${Math.round(g.measure.target / 2)} ${g.measure.unit})` : ""}.`
+                                ? `Belief under ${BELIEF_SWEET_SPOT}. Shrink it until you believe it: bring the target closer or push the date${g.measure ? ` (e.g. ${g.measure.target} → ${shrunkTarget(g.measure)} ${g.measure.unit})` : ""}.`
                                 : `Desire under ${BELIEF_SWEET_SPOT} — whose goal is this? Rewrite it toward what you actually want, or cut it.`}
                             </p>
                           )}
                           {/* v10 — his calibration: 80-90% sure, not certain */}
                           {(g.beliefLevel ?? 7) === 10 && (g.desireLevel ?? 7) >= BELIEF_SWEET_SPOT && (
                             <p className="text-[10px] text-zinc-500 mt-1">
-                              Belief 10/10? It might be too safe — the calibration sweet spot is 80-90% sure: big enough that it stretches you, close enough that you&apos;ll swing.
+                              Belief 10/10? It might be too safe. The calibration sweet spot is 80-90% sure: big enough that it stretches you, close enough that you&apos;ll swing.
                             </p>
                           )}
 
@@ -8375,7 +11154,7 @@ export function VisionPlanLab() {
                               A goal without a cost of missing has no teeth. */}
                           <div className="grid gap-1.5 sm:grid-cols-2 mt-2">
                             <label className="block">
-                              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300/70">The reward</span>
+                              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300/70">Reward when you land it</span>
                               <input
                                 value={g.reward ?? ""}
                                 onChange={(e) => editGoal(g.id, (gg) => ({ ...gg, reward: e.target.value || null }))}
@@ -8385,7 +11164,7 @@ export function VisionPlanLab() {
                               />
                             </label>
                             <label className="block">
-                              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-red-300/70">The stake</span>
+                              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-red-300/70">What you forfeit if you miss</span>
                               <input
                                 value={g.stake ?? ""}
                                 onChange={(e) => editGoal(g.id, (gg) => ({ ...gg, stake: e.target.value || null }))}
@@ -8395,7 +11174,7 @@ export function VisionPlanLab() {
                               />
                               {!(g.stake ?? "").trim() && (
                                 <span className="flex items-center gap-1 flex-wrap mt-1" title={CONSEQUENCE_RULES.join(" ")}>
-                                  <span className="text-[9px] text-zinc-600 shrink-0">stake menu — tap one or write your own:</span>
+                                  <span className="text-[9px] text-zinc-600 shrink-0">stake menu, tap one or write your own:</span>
                                   {CONSEQUENCE_MENU.slice(0, 6).map((opt) => (
                                     <button key={opt.text} onClick={() => editGoal(g.id, (gg) => ({ ...gg, stake: opt.text }))}
                                       className="text-[9px] px-1.5 py-0.5 rounded-full border border-white/15 text-zinc-500 hover:text-zinc-300 hover:bg-white/10 transition-colors">
@@ -8407,7 +11186,7 @@ export function VisionPlanLab() {
                             </label>
                           </div>
                           <label className="block mt-1.5">
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Pre-mortem — what will try to stop you?</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">What will try to stop you. And your counter-move</span>
                             <input
                               value={g.obstacles ?? ""}
                               onChange={(e) => editGoal(g.id, (gg) => ({ ...gg, obstacles: e.target.value || null }))}
@@ -8418,8 +11197,14 @@ export function VisionPlanLab() {
                           </label>
                           <ReasonsDrill
                             goalTitle={g.title}
+                            goalWhy={g.why}
                             reasons={g.reasonsList ?? []}
                             onAdd={(r) => editGoal(g.id, (gg) => ((gg.reasonsList ?? []).includes(r) ? gg : { ...gg, reasonsList: [...(gg.reasonsList ?? []), r] }))}
+                            onAddMany={(rs) => editGoal(g.id, (gg) => {
+                              const have = new Set((gg.reasonsList ?? []).map((x) => x.toLowerCase()))
+                              const add = rs.filter((r) => !have.has(r.toLowerCase()))
+                              return add.length ? { ...gg, reasonsList: [...(gg.reasonsList ?? []), ...add] } : gg
+                            })}
                             onRemove={(r) => editGoal(g.id, (gg) => ({ ...gg, reasonsList: (gg.reasonsList ?? []).filter((x) => x !== r) }))}
                           />
 
@@ -8571,7 +11356,7 @@ export function VisionPlanLab() {
                                   }}
                                   className="text-[11px] text-zinc-500 hover:text-zinc-300 underline decoration-dotted transition-colors self-start"
                                 >
-                                  + Ease into it — build a ramp instead of starting at full load
+                                  + Ease into it. Build a ramp instead of starting at full load
                                 </button>
                               )}
 
@@ -8614,6 +11399,8 @@ export function VisionPlanLab() {
                         onManifestoName={setManifestoName}
                         onManifestoLines={setManifestoLines}
                         onValueRules={setValueRules}
+                        ruleWork={ruleWork}
+                        onRuleWork={setRuleWork}
                         onAddIncantation={(card) => setIncantations((p) => (p.includes(card) ? p : [...p, card]))}
                         onCommit={() => setCommittedAt(today)}
                         onSetValues={setValuesList}
@@ -8631,9 +11418,9 @@ export function VisionPlanLab() {
                       <p className="text-xs text-zinc-500 mb-4 max-w-2xl">
                         How to read it: <span className="text-zinc-300">bottom-up, in order of importance</span>. Health + fitness is
                         the base because everything above runs on your body; mind &amp; beliefs sit next because your thoughts color
-                        your emotions; only then relationships, mission, money — you can&apos;t pour into those from an empty foundation.
-                        Spirituality is the dashed circle: not a level, the thing that surrounds all of it. The frame is the method —
-                        vision answers <span className="text-zinc-300">what</span>, purpose answers <span className="text-zinc-300">why</span>,
+                        your emotions; only then relationships, mission, money. You can&apos;t pour into those from an empty foundation.
+                        Spirituality is the dashed circle: not a level, the thing that surrounds all of it. The frame is the method.
+                        Vision answers <span className="text-zinc-300">what</span>, purpose answers <span className="text-zinc-300">why</span>,
                         goals answer <span className="text-zinc-300">how</span>. Dim rows = areas your plan doesn&apos;t feed yet:
                         add a goal or routine there, or leave them for a later season on purpose.
                       </p>
@@ -8645,7 +11432,7 @@ export function VisionPlanLab() {
                         journey (beat 1): a compact pointer replaces the grid. */}
                     <div id="lm-tens" className="mt-10 scroll-mt-20">
                       <p className="text-xs text-zinc-500">
-                        <span className="text-zinc-300">Your 10s live in the rooms now</span> — {Object.keys(yourTens).filter((k) => (yourTens[k] ?? "").trim()).length} of {LIFE_MASTERY_AREAS.length} written.{" "}
+                        <span className="text-zinc-300">Your 10s live in the rooms</span> — {Object.keys(yourTens).filter((k) => (yourTens[k] ?? "").trim()).length} of {LIFE_MASTERY_AREAS.length} written.{" "}
                         <button
                           onClick={() => document.getElementById("lm-vision")?.scrollIntoView({ behavior: "smooth" })}
                           className="underline decoration-dotted text-zinc-300 hover:text-white transition-colors"
@@ -8664,7 +11451,7 @@ export function VisionPlanLab() {
                         <span className="h-px flex-1 bg-gradient-to-r from-violet-400/30 to-transparent" />
                       </div>
                       <p className="text-xs text-zinc-500 mb-4">
-                        Your plan only contains what your vision asked for — these are the usual high-leverage habits.
+                        Your plan only contains what your vision asked for. These are the usual high-leverage habits.
                         Unfold a category to pick; the chips show which life areas it feeds.
                       </p>
                       <RoutineLibrary added={addedHabitIds} onToggleItem={toggleRoutineItem} />
@@ -8678,32 +11465,212 @@ export function VisionPlanLab() {
           )
         )}
 
-        {/* v17 — the stepper's Back/Next: one screen at a time, ending at the
-            signature. Rooms → Your life → Commit. */}
-        <div className="sticky bottom-0 -mx-6 mt-10 px-6 py-3 bg-zinc-950/90 backdrop-blur-sm border-t border-white/10 flex items-center justify-between gap-3">
-          {stage === "rooms" ? (
-            activeRoomId ? (
-              <button onClick={() => openRoom(null)} className="text-xs text-zinc-400 hover:text-white transition-colors">← Back to the wheel</button>
-            ) : <span />
-          ) : (
-            <button onClick={() => setStage(stage === "commit" ? "lifewide" : "rooms")} className="text-xs text-zinc-400 hover:text-white transition-colors">← Back</button>
-          )}
-          {stage === "rooms" && (
+        {/* v17 — STAGE 2: your life, whole. */}
+        {/* Gated on WORK EXISTING, not on the vision having been analysed.
+            `result` is only set by the prose path, so a user who pasted a list
+            or typed goals into a room saw a blank screen 2 — the same gate
+            that silently stopped their whole plan being saved. `areaGroups` is
+            derived from goals, not from intents, so it renders fine without it. */}
+        {page === "doing" && (<>
+  {/* PLM M3 — the ordered morning ritual, separate from goal habits */}
+  <div id="lm-ritual-builder" className="mt-10 scroll-mt-20">
+    <div className="flex items-center gap-2 mb-3">
+      <Sparkles className="size-3.5 text-violet-300" />
+      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-200/90">Design your morning ritual</span>
+      <span className="h-px flex-1 bg-gradient-to-r from-violet-400/30 to-transparent" />
+    </div>
+    <p className="text-xs text-zinc-500 mb-4">
+      How you start the day decides how the day goes. An ordered sequence you run every morning.
+      It lives above your goals on the Track view and doesn&apos;t count against your daily habit budget.
+    </p>
+    <PrincipleCardView id="ritual" />
+    <RitualBuilder
+      ritual={ritual}
+      vision={visionDisplayText || text}
+      onPreset={onRitualPreset}
+      onToggleStep={onRitualToggleStep}
+      onMove={onRitualMove}
+      onClear={() => setRitual(null)}
+      onWeeklyToggle={onWeeklyRitualToggle}
+      auditItems={ritualAudit}
+      onAuditChange={setRitualAudit}
+    />
+  </div>
+
+  {/* M4 — balance the whole plan: priority, budget, dosing timeline */}
+  {balanced && (
+    <div id="lm-balance" className="mt-10 scroll-mt-20">
+      <div className="flex items-center gap-2 mb-3">
+        <TrendingUp className="size-3.5 text-sky-300" />
+        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-200/90">Balance your weeks</span>
+        <span className="h-px flex-1 bg-gradient-to-r from-sky-400/30 to-transparent" />
+      </div>
+      <p className="text-xs text-zinc-500 mb-4">
+        Goals phase in by priority so week one stays light. Drag to reprioritise; cap how much one day may ask of you.
+      </p>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <div>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+            Priority — #1 starts first{focusAreaIds.length > 0 ? " · seeded by your focus rooms, drag to override" : ""}
+          </span>
+          <div className="mt-2">
+            <SortablePriorityList
+              items={activeGoals.map((g) => ({ id: g.id, label: g.title, color: g.pillarColor }))}
+              onReorder={reorderActiveGoals}
+            />
+          </div>
+
+          <div className="flex items-center gap-3 mt-4">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Daily budget</span>
             <button
-              onClick={() => { openRoom(null); setStage("lifewide") }}
-              disabled={!goals || goals.length === 0}
-              title={goals && goals.length > 0 ? undefined : "Set at least one goal in a room first"}
+              onClick={() => setDailyBudget((b) => Math.max(1, b - 1))}
+              disabled={dailyBudget <= 1}
+              className="size-6 rounded-md border border-white/15 text-zinc-300 hover:bg-white/10 disabled:opacity-30 flex items-center justify-center"
+              aria-label="Lower daily budget"
+            ><Minus className="size-3.5" /></button>
+            <span className="text-sm text-white font-medium tabular-nums">≤ {dailyBudget}/day</span>
+            <button
+              onClick={() => setDailyBudget((b) => Math.min(8, b + 1))}
+              disabled={dailyBudget >= 8}
+              className="size-6 rounded-md border border-white/15 text-zinc-300 hover:bg-white/10 disabled:opacity-30 flex items-center justify-center"
+              aria-label="Raise daily budget"
+            ><Plus className="size-3.5" /></button>
+          </div>
+
+          {/* Weekday load meter at steady state */}
+          <div className="mt-4">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">A steady week, per day</span>
+            <div className="flex items-end gap-1.5 mt-2 h-16">
+              {balanced.dayLoads.map((n, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                  <span className="text-[10px] text-zinc-400 tabular-nums">{n}</span>
+                  <div
+                    className="w-full rounded-sm bg-sky-400/60"
+                    style={{ height: `${(n / Math.max(1, dailyBudget)) * 40}px`, minHeight: n > 0 ? 3 : 0 }}
+                  />
+                  <span className="text-[9px] text-zinc-600">{["M", "T", "W", "T", "F", "S", "S"][i]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Phase-in timeline</span>
+          <div className="mt-2 space-y-2">
+            {balanced.weeks.map((w) => (
+              <div key={w.week} className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-white">Week {w.week}</span>
+                  <span className="text-[10px] text-zinc-500 tabular-nums">{w.load}/{w.cap} weekly slots</span>
+                  <div className="ml-auto h-1.5 w-24 rounded-full bg-white/10 overflow-hidden">
+                    <div className="h-full rounded-full bg-sky-400/70" style={{ width: `${Math.min(100, (w.load / Math.max(1, w.cap)) * 100)}%` }} />
+                  </div>
+                </div>
+                {w.startingHabitIds.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {w.startingHabitIds.map((hid) => {
+                      const h = balanced.habits.find((x) => x.habitId === hid)!
+                      return (
+                        <span
+                          key={hid}
+                          className="text-[10px] px-2 py-0.5 rounded-full border"
+                          style={{ color: pillarTextColor(h.pillarColor), borderColor: `${h.pillarColor}59`, backgroundColor: `${h.pillarColor}1a` }}
+                        >
+                          + {h.title} · {h.daysPerWeek}×/wk
+                        </span>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {balanced.overflowHabitIds.length > 0 && (
+            <div className="mt-3 rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2">
+              <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-300">
+                <AlertTriangle className="size-3.5" /> Doesn&apos;t fit your budget
+              </div>
+              <ul className="mt-1 space-y-0.5">
+                {balanced.overflowHabitIds.map((hid) => {
+                  const h = balanced.habits.find((x) => x.habitId === hid)!
+                  return <li key={hid} className="text-xs text-amber-200/80">{h.title} ({h.daysPerWeek}×/wk) — raise the budget or lower a priority</li>
+                })}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {balanced.overflowHabitIds.length > 0 && (
+        <p className="text-[11px] text-amber-300/80 mt-3 text-center">Heads up: habits over budget won&apos;t be scheduled until you make room.</p>
+      )}
+    </div>
+  )}
+
+        <div id="lm-foundation" className="mt-10">
+          <FoundationSection
+            part="manifesto"
+            committedAt={committedAt}
+            values={valuesList}
+            awayValues={awayValues}
+            manifestoName={manifestoName}
+            manifestoLines={manifestoLines}
+            valueRules={valueRules}
+            onManifestoName={setManifestoName}
+            onManifestoLines={setManifestoLines}
+            onValueRules={setValueRules}
+            ruleWork={ruleWork}
+            onRuleWork={setRuleWork}
+            onAddIncantation={(card) => setIncantations((p) => (p.includes(card) ? p : [...p, card]))}
+            onCommit={() => setCommittedAt(today)}
+            onSetValues={setValuesList}
+            onSetAway={setAwayValues}
+          />
+        </div>
+
+        {/* v17 — ONE terminal action. Signing IS the hand-off: the old flow
+            ended stage 3 in a text hint while the real product sat behind a
+            header pill you had to discover. */}
+        <div className="text-center mt-8">
+          <button
+            onClick={() => { if (!committedAt) setCommittedAt(today); confirmPlan() }}
+            disabled={!goals || goals.length === 0}
+            title={goals && goals.length > 0 ? undefined : "Set at least one goal first"}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm font-semibold"
+          >
+            <Check className="size-4" />
+            {confirmed ? "Update plan & back to tracking" : committedAt ? "Start tracking" : "Sign & start tracking"}
+          </button>
+          <p className="text-[11px] text-zinc-500 mt-2">
+            {confirmed
+              ? "Your plan is live. This returns you to it."
+              : "This signs your manifesto and opens your daily loop."}
+          </p>
+        </div>
+        </>)}
+
+        {/* v25 — the only navigation buttons in the whole intake sit here, at
+            the page boundary. Inside a page you scroll and the next question
+            appears on its own. */}
+        <div className="sticky bottom-0 -mx-6 mt-10 px-6 py-3 bg-zinc-950/90 backdrop-blur-sm border-t border-white/10 flex items-center justify-between gap-3">
+          {page === "areas" && activeRoomId ? (
+            <button onClick={() => openRoom(null)} className="text-xs text-zinc-400 hover:text-white transition-colors">← Back to the wheel</button>
+          ) : pageIndex > 0 ? (
+            <button onClick={() => setPage(visiblePages[pageIndex - 1].id)} className="text-xs text-zinc-400 hover:text-white transition-colors">← Back</button>
+          ) : <span />}
+          {nextPage ? (
+            <button
+              onClick={() => { openRoom(null); goNextIntakePage() }}
+              disabled={!isIntakePageComplete(liveState, page)}
+              title={blockingQuestion ? `Still open: ${blockingQuestion.question}` : undefined}
               className="inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
-              Next: your life whole →
+              {nextPageLabel} →
             </button>
-          )}
-          {stage === "lifewide" && (
-            <button onClick={() => setStage("commit")} className="inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 transition-all">
-              Next: commit →
-            </button>
-          )}
-          {stage === "commit" && (
+          ) : (
             <span className="text-[11px] text-zinc-500">Sign below to start tracking.</span>
           )}
         </div>

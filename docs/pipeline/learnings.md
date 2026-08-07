@@ -423,3 +423,30 @@ Gotchas found while building (all verified in data):
 
 ### Engine validation results (2026-07-25, held-out 30%)
 Metrics in `data/scenario-mining/REPORT.md`. Key result: **nice-guy distractors NEVER ranked #1 (29/29)** — the "too polite" judge failure mode is measurably absent. Real-line top-1 ~62-63% (chance 25%); most misses prefer a real coach line from ANOTHER situation (context softness, not taste failure); coach-swap separation 2.0 (orig 4.3 vs swapped 2.3) shows context sensitivity. **Outcome-prediction test is currently uninformative**: held-out labeled set was 100% closed (degenerate base rate) and labels are noisy (close regex missed "SMS you" — fixed, needs re-extract). POV-check (`principles/career.pov-check.md`): adversarial her-side re-read demoted 4 of 7 distilled moves to correlated-not-causal; core reframe = job-reveal is a READ point (her early reciprocity predicts outcome), not a leverage point. Judge/sim design should score calibration-to-her-state over move-execution.
+
+---
+
+## Full-corpus state audit + QT9 (2026-08-05) — the "done" number was 270 videos short at ingest
+
+QT8 finished 2026-07-23 (553/581 at 09, 28 settled) and the LLM driver printed `LLM-ALL COMPLETE` — but the corpus was **not** done. Re-derived every number from artifacts (not logs/summaries):
+
+| Layer | Count |
+|---|---|
+| Downloaded (raw16k+clean16k) | 1610 |
+| Stage 02 | 1584 |
+| Stage 05 | 1505 |
+| Stage 09 | 1295 |
+| In `embeddings_test` | 1025 → **1166 after this session** |
+
+- **270 stage-09 videos had never been ingested.** Ran the QA screen over all of them (`docs/pipeline/batches/FINAL-INGEST.txt`): PASS 141 / REVIEW 71 / BLOCK 58 → ingested the 141 (+3231 chunks, table now **32,126 chunks / 1166 videos**). The Jul-24 `BACKLOG-INGEST` screen had run but its ingest never landed for these.
+- **GOTCHA — indexing stage artifacts by FILENAME alone undercounts.** Stage dirs are `data/<stage>/<producer>/<Title [ID]>/…` for the EXT stages and `data/<stage>/<producer>/<ID>.json` for later ones. A `find`/walk that only regexes *file* names misses the EXT stages entirely; walking *directory* names too (and requiring the dir be non-empty, so an empty stage-02 dir = attempted-and-rejected, not done) is what makes the counts match reality. Audit script: scratchpad `state.py` pattern — index dir names + file names, skip empty dirs.
+- **34 orphan stage-09 videos have chunks but NO 06h/07/06b upstream at all** (April-era chunking path; upstream artifacts gone, and their download lives under a *different* producer folder than their 09 output — e.g. `coach_kyle_deep_videos` vs `coach_kyle_how_to_approach_a_girl`). The pre-ingest screen correctly fail-closes them as `unverifiable: missing/unparseable 06h confidence report` (30 of the 71 REVIEWs). Right fix is to re-run them 02→09 for real provenance, NOT to `--allow-review` them.
+- **212 of the 238 stage-05-ready-but-not-at-09 videos were never in QT8's sweep.** QT8 was built as "remaining processable" = it *excluded* everything quarantined at the time, so those videos have never been adjudicated under the post-2026-07-09 gates (transcript threshold 55→35, 06h gate 0.85→0.80, honored override confidence, 06f cosmetic/substantive split). Their newest quarantine rows are Feb–Jun. **A batch built as "not yet at 09 minus current quarantines" silently freezes the quarantined set out of every future gate improvement** — rebuild from `downloaded − at-09 − settled-ledger`, not from the previous batch's leftovers.
+- **26 of the 46 gap videos carrying `stage06b_reject` are not real rejects** — 18 have `fail_closed`/`llm_call_error` in their 06b output (outage artifacts) and 8 have no 06b file at all. Same lesson as QT3/LOWTX: scrub before you count.
+- **QT9 = `downloaded − at-09 − QT8-settled` = 287 videos** (75 need EXT 02→05, 212 are LLM-ready), 15 chunks of 20, launched `both`.
+
+### Driver generalized: one command per batch
+`qt8-pipeline.sh` / `qt8-guard.sh` were QT8-hardcoded. Folded into **`batch-pipeline.sh <BATCH> [ext|llm|both]`** and **`batch-guard.sh <BATCH>`** (logs `data/<BATCH>.{ext,llm}.log`, ledger `data/<BATCH>.settled.txt`, chunk manifests `docs/pipeline/batches/<BATCH>.<N>.txt`). The old names remain as one-line `exec` shims so the existing cron guard keeps working. Per the single-command rule: parameterize the entrypoint, don't add a parallel QT9 flow.
+
+### QT9.1 result + gotcha: `stage06_execution_error` is NOT always an outage
+QT9.1: **9/17 passed** — half of a chunk that was previously 100% quarantined now clears the current gates, confirming the stale-gate hypothesis. Of the 8 held: 1 `06b_reject`, 2 `06b_flag_severe`, 2 `06h_video_gate_block` (0.754 / 0.699 < 0.80) — all real. The other 3 were `stage06_execution_error`, which reads like an outage but wasn't: stage 06's own **deterministic validators** halt strict mode with exit 1 — `fragment_conversation_overload` (11 and 19 fragment conversations, threshold 8) and `infield_conversation_count_extreme` (22 conversations, threshold 12). Both are genuine compilation/over-segmentation blocks. **Before treating `stage06_execution_error` as a resumable outage, grep the run log for `ERROR: [` — a validator name means it's a real, deterministic block and re-running just repeats it.**
