@@ -299,7 +299,7 @@ export function slugKey(value: string | number | null): string {
   return value === null ? "none" : String(value)
 }
 
-/** Deterministic colour for labels that have no entity colour (tags, members) */
+/** Deterministic color for labels that have no entity color (tags, members) */
 export function hashColor(seed: string, palette: readonly string[]): string {
   let hash = 0
   for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0

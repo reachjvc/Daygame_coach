@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * Projects: list, full project editor (colour, client, privacy, billable rate
+ * Projects: list, full project editor (color, client, privacy, billable rate
  * with history, estimates, auto-estimates, fixed fee, recurrence, alerts,
  * tasks, template flag) and the project dashboard with forecast.
  */
@@ -349,14 +349,14 @@ function ProjectDialog({
           />
         </Field>
 
-        <Field label="Colour" className="sm:col-span-2">
+        <Field label="Color" className="sm:col-span-2">
           <div className="flex flex-wrap gap-1.5">
             {PROJECT_COLORS.map((color) => (
               <button
                 key={color}
                 type="button"
                 onClick={() => setDraft({ ...draft, color })}
-                aria-label={`Colour ${color}`}
+                aria-label={`Color ${color}`}
                 className={cn("size-6 rounded-full border-2", draft.color === color ? "border-foreground" : "border-transparent")}
                 style={{ backgroundColor: color }}
               />

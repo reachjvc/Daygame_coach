@@ -76,7 +76,7 @@ export function ProjectPicker({
         <span
           className={cn(
             "flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-secondary/60",
-            compact ? "max-w-[180px]" : "max-w-[260px]",
+            compact ? "max-w-[240px]" : "max-w-[280px]",
             project ? "text-foreground" : "text-muted-foreground",
           )}
         >

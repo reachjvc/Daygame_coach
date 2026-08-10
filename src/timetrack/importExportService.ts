@@ -91,9 +91,9 @@ export interface CsvImportResult {
 }
 
 function headerIndex(header: string[], ...names: string[]): number {
-  const normalised = header.map((h) => h.trim().toLowerCase())
+  const normalized = header.map((h) => h.trim().toLowerCase())
   for (const name of names) {
-    const index = normalised.indexOf(name.toLowerCase())
+    const index = normalized.indexOf(name.toLowerCase())
     if (index !== -1) return index
   }
   return -1
@@ -141,7 +141,7 @@ export function importEntriesCsv(
       if (!Number.isNaN(parsed.getTime())) startIso = parsed.toISOString()
     }
     if (!startIso && cell(idx.startDate)) {
-      const day = normaliseDate(cell(idx.startDate))
+      const day = normalizeDate(cell(idx.startDate))
       if (day) startIso = cell(idx.startTime) ? parseTimeInput(cell(idx.startTime), day) : `${day}T00:00:00.000Z`
     }
     if (!startIso) {
@@ -154,7 +154,7 @@ export function importEntriesCsv(
       if (!Number.isNaN(parsed.getTime())) stopIso = parsed.toISOString()
     }
     if (!stopIso && cell(idx.endDate)) {
-      const day = normaliseDate(cell(idx.endDate))
+      const day = normalizeDate(cell(idx.endDate))
       if (day) stopIso = cell(idx.endTime) ? parseTimeInput(cell(idx.endTime), day) : null
     }
     if (!stopIso && cell(idx.duration)) {
@@ -239,7 +239,7 @@ export function importEntriesCsv(
 }
 
 /** Accept YYYY-MM-DD, DD.MM.YYYY, DD/MM/YYYY and MM/DD/YYYY (unambiguous cases) */
-function normaliseDate(raw: string): string | null {
+function normalizeDate(raw: string): string | null {
   const text = raw.trim()
   if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text
   const dotted = /^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})$/.exec(text)

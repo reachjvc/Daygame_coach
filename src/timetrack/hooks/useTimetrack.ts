@@ -2,7 +2,7 @@
 
 /**
  * Time-tracking sandbox state: localStorage persistence, the one-second clock,
- * and the background behaviours Toggl's desktop app provides — Pomodoro,
+ * and the background behaviors Toggl's desktop app provides — Pomodoro,
  * idle detection, tracking reminders, project alerts and the (browser-scoped)
  * timeline recorder.
  *
@@ -92,13 +92,6 @@ export function useTimetrack() {
     }
   }, [])
 
-  // Surfaced after mount so the toast queue exists
-  useEffect(() => {
-    if (!state || !pendingLoadNotice.current) return
-    pushToast(pendingLoadNotice.current)
-    pendingLoadNotice.current = null
-  }, [state, pushToast])
-
   // --- persist on every change --------------------------------------------
   useEffect(() => {
     if (!state) return
@@ -128,6 +121,13 @@ export function useTimetrack() {
   const dismissToast = useCallback((id: number) => {
     setToasts((current) => current.filter((t) => t.id !== id))
   }, [])
+
+  // Report the demo re-dating once the toast queue is available
+  useEffect(() => {
+    if (!state || !pendingLoadNotice.current) return
+    pushToast(pendingLoadNotice.current)
+    pendingLoadNotice.current = null
+  }, [state, pushToast])
 
   const notify = useCallback((title: string, body: string) => {
     pushToast(`${title} — ${body}`)

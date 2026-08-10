@@ -13,6 +13,7 @@ Primary sources:
 | `Lp_GOrM16Xc` | "Determine and create your core life values". The whole values procedure. |
 | `8kco2rjijjE` | "How to manage your life". The **driving force**: vision, purpose, identity, code of conduct. |
 | `I1MhBE-0zxU` | Goal setting. "Who do you need to become" in its actual context. |
+| `Rw2qaMltFcY` | The life plan book. A vision AND a purpose for **each area**, then goals. |
 | `xTWuLHNc6aM` | Attracting people. Same "who do you need to become" job. |
 | `PliFBr__T7Y`, `OgRGJBpTOeU` | Morning ritual. Where all of it gets read back. |
 
@@ -129,7 +130,42 @@ affirmations as part of my morning ritual." Revisit "every year or two, because
 at different stages of your life your values will change", and whenever the
 vision changes.
 
-## 3. What this changed in `/test/life-mastery`
+## 3. He runs the same structure per area
+
+> "I have my vision, I have my purpose, but I also have **a vision and a purpose
+> for each area of my life**. And I have goals for each area as well… I've got my
+> vision here, I've got my purpose for my relationship, and then I've got my
+> goals, my one-year goals, my three-month goals, my monthly goals in that area.
+> So I do that for each area of my life." — `Rw2qaMltFcY`
+
+So per area: **vision → purpose → goals**, and separately **rituals** for each
+area ("you got to have a vision for each area of your life", `NidJpDcCkQs`).
+
+What he does NOT do per area is values and identity; those are whole-life in his
+material. Our flow already carried a per-area values list and a per-area identity
+line, which is ours rather than his, and they are worth keeping for one reason
+the transcripts do support: the whole-life list has to come from somewhere, and
+"what would you have to value to live at that 10" asked twelve times produces a
+far better pool than one blank box asked once.
+
+The gap was the **purpose**. We had the vision, the goals and the rituals per
+area and no purpose, which is the one of the four that decides whether the other
+three survive a bad month.
+
+## 4. Where the ordering belongs
+
+He teaches make-the-list-then-rank-it in one sitting. That works in a seminar,
+where the vision work has already happened over two days. In a page where the
+opening screen is a blank paragraph, ranking immediately means ranking the six
+words somebody could think of in the first two minutes.
+
+The material supports splitting it: the second list is explicitly derived from
+the vision ("once you know your vision, you make the list"), and he also derives
+values per area of life. So the fuller the picture, the better the list. Noticing
+happens on screen one; ordering happens on the review, after twelve areas have
+been rated, pictured, given a purpose, and asked what they demand of you.
+
+## 5. What this changed in `/test/life-mastery`
 
 | Finding | Change |
 |---|---|
@@ -142,3 +178,6 @@ vision changes.
 | At least seven | Shown as the target on the list |
 | Values audit the areas | An under-floor area with no value pointing at it says so |
 | Suggestions should come from the user | Value words are read out of the north star, the why, the area 10s and the goal whys, and offered first |
+| Vision + purpose + goals per area | `NsAreaReview.purpose` added, between the 10 and the goals |
+| The per-area values feed the whole-life list | Per-area values and identity moved into the area dialog; the review offers every value named anywhere that is not yet on the ordered list |
+| Ordering needs a full picture | `ValuesWork` splits into `mode="elicit"` (north star tab) and `mode="order"` (review) |

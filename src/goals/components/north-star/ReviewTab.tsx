@@ -35,7 +35,7 @@ import {
   wheelRatings,
 } from "@/src/goals/northStarService"
 import { AreaWheel } from "./AreaWheel"
-import { TagList } from "./GoalCard"
+import { ValuesWork, type ValuesHandlers } from "./ValuesWork"
 
 export interface ReviewHandlers {
   onAreaReview: (areaId: string, patch: Partial<import("@/src/goals/types").NsAreaReview>) => void
@@ -45,7 +45,12 @@ export interface ReviewHandlers {
   onGoToNow: () => void
 }
 
-export function ReviewTab({ plan, today, handlers }: { plan: NsPlan; today: string; handlers: ReviewHandlers }) {
+export function ReviewTab({ plan, today, handlers, valuesHandlers }: {
+  plan: NsPlan
+  today: string
+  handlers: ReviewHandlers
+  valuesHandlers: ValuesHandlers
+}) {
   // Nothing open to begin with. Defaulting to the first area meant the wheel's
   // first sector arrived already expanded, so clicking the most obvious thing on
   // the screen CLOSED it — the wheel is a toggle, and it was pre-toggled.
@@ -100,24 +105,19 @@ export function ReviewTab({ plan, today, handlers }: { plan: NsPlan; today: stri
         ))}
       </div>
 
+      {/* Ordering the values happens HERE, not on the opening screen.
+          On the north star tab you have written one paragraph, so a ranked list
+          is guesswork. By now you have rated twelve areas, written what a 10
+          looks like in each, said what each one asks of you and set goals, so
+          the pool is your whole plan and the order means something. */}
+      <ValuesWork plan={plan} handlers={valuesHandlers} mode="order" />
+
       {/* Whole-life. The per-area answers roll up into these. */}
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
         <h2 className="text-sm font-semibold text-zinc-200">And across the whole of it</h2>
         <p className="text-[12px] text-zinc-500 mt-1 leading-relaxed">
           You have answered these one area at a time. Now answer them for the person, because the person is what the areas have in common.
         </p>
-
-        {/* The values and the standards used to be asked here. Both moved to
-            the north star tab, where the rest of the driving force lives, so
-            this reads them back rather than asking twice. */}
-        {plan.values.length > 0 && (
-          <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5">
-            <p className="text-[11px] text-zinc-500">Your values, in the order you put them</p>
-            <p className="text-[12.5px] text-zinc-200 mt-1 leading-relaxed">
-              {plan.values.map((v, i) => `${i + 1}. ${v}`).join("   ")}
-            </p>
-          </div>
-        )}
 
         <div className="mt-5 space-y-3">
           {REVIEW_PROMPTS.map((p) => (
@@ -241,41 +241,39 @@ function AreaReviewCard({ area, plan, today, open, onToggle, handlers }: {
             )}
           </div>
 
-          {/* 4. Values, identity, and what might stop you. */}
-          <TagList
-            label={AREA_REVIEW_COPY.values.question}
-            hint={AREA_REVIEW_COPY.values.help}
-            placeholder="Vitality"
-            color={area.color}
-            items={review.values}
-            suggestions={NS_VALUE_SUGGESTIONS}
-            onChange={(values) => handlers.onAreaReview(area.id, { values })}
-          />
-
-          <div>
-            <p className="text-[12.5px] text-zinc-200">{AREA_REVIEW_COPY.identity.question}</p>
-            <p className="text-[11px] text-zinc-500 mt-0.5">{AREA_REVIEW_COPY.identity.help}</p>
-            <input
-              value={review.identity}
-              onChange={(e) => handlers.onAreaReview(area.id, { identity: e.target.value })}
-              placeholder="I am…"
-              aria-label={`Who you are in ${area.label}`}
-              className="w-full mt-1.5 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30 transition-colors"
-            />
-          </div>
-
-          <div>
-            <p className="text-[12.5px] text-zinc-200">{AREA_REVIEW_COPY.blockers.question}</p>
-            <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{AREA_REVIEW_COPY.blockers.help}</p>
-            <textarea
-              value={review.blockers}
-              onChange={(e) => handlers.onAreaReview(area.id, { blockers: e.target.value })}
-              placeholder="What has ended this for you before"
-              rows={2}
-              aria-label={`What might stop you in ${area.label}`}
-              className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
-            />
-          </div>
+          {/* 4. The rest of the area's answers, read back.
+              The purpose, the values it asks of you, who you are in it and what
+              might stop you are all written inside the area itself now, one
+              click from its rating. Repeating the inputs here would be two
+              places to change one answer, which is the rule the 10 and the
+              rating already follow. */}
+          {(review.purpose.trim() || review.values.length > 0 || review.identity.trim() || review.blockers.trim()) && (
+            <div className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2.5 space-y-1.5">
+              {review.purpose.trim() && (
+                <p className="text-[11.5px] text-zinc-300 leading-relaxed">
+                  <span className="text-zinc-500">Why it matters: </span>{review.purpose.trim()}
+                </p>
+              )}
+              {review.values.length > 0 && (
+                <p className="text-[11.5px] text-zinc-300">
+                  <span className="text-zinc-500">Asks you to value: </span>{review.values.join(" · ")}
+                </p>
+              )}
+              {review.identity.trim() && (
+                <p className="text-[11.5px] text-zinc-300">
+                  <span className="text-zinc-500">Who you are here: </span>{review.identity.trim()}
+                </p>
+              )}
+              {review.blockers.trim() && (
+                <p className="text-[11.5px] text-zinc-300 leading-relaxed">
+                  <span className="text-zinc-500">What might stop you: </span>{review.blockers.trim()}
+                </p>
+              )}
+              <button onClick={handlers.onGoToNow} className="text-[10.5px] text-zinc-500 hover:text-zinc-200 underline decoration-dotted transition-colors">
+                change these in {area.label}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

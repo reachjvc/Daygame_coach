@@ -346,6 +346,126 @@ export function Chain({ steps }: { steps: readonly { label: string; sub: string 
   )
 }
 
+/**
+ * The method as one picture: four steps left to right, and the branch for the
+ * day you miss looping back to the last step rather than to the first.
+ *
+ * Built from boxes and a labelled return bar rather than an SVG, so the text
+ * stays at readable size when the column is cropped to 9:16.
+ */
+export function MethodLoop({
+  steps,
+  miss,
+}: {
+  steps: readonly { n: string; label: string; detail: string }[]
+  miss: { label: string; detail: string }
+}) {
+  return (
+    <div>
+      <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {steps.map((s, i) => (
+          <li key={s.n} className="relative rounded-lg border border-border bg-card p-4">
+            <span className="font-mono text-xs tabular-nums text-primary">{s.n}</span>
+            <p className="mt-1.5 text-base font-semibold leading-snug text-foreground">{s.label}</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{s.detail}</p>
+            {i < steps.length - 1 ? (
+              <span
+                aria-hidden
+                className="absolute -right-3 top-1/2 hidden -translate-y-1/2 text-border lg:block"
+              >
+                ▶
+              </span>
+            ) : null}
+          </li>
+        ))}
+      </ol>
+
+      {/* the return path: back to step four, never back to step one */}
+      <div className="mt-3 flex items-stretch gap-3">
+        <div aria-hidden className="hidden w-3/4 items-end lg:flex">
+          <div className="h-6 w-full rounded-bl-lg border-b-2 border-l-2 border-dashed border-primary/50" />
+        </div>
+        <div className="flex-1 rounded-lg border border-primary/40 bg-primary/5 p-4">
+          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-primary">{miss.label}</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-foreground">{miss.detail}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** The same steps in several lives. A grid on wide, stacked cards when cropped. */
+export function AreaMatrix({
+  rows,
+  headings,
+}: {
+  rows: readonly { area: string; oneThing: string; rep: string; counts: string }[]
+  headings: readonly [string, string, string]
+}) {
+  return (
+    <>
+      {/* wide: one column per area, so the steps read across */}
+      <div className="hidden overflow-x-auto lg:block">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr>
+              <th className="w-40 border-b border-border pb-3 pr-4 text-left font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
+                Step
+              </th>
+              {rows.map((r) => (
+                <th
+                  key={r.area}
+                  className="border-b border-border px-4 pb-3 text-left text-base font-semibold text-foreground"
+                >
+                  {r.area}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {([["oneThing", headings[0]], ["rep", headings[1]], ["counts", headings[2]]] as const).map(
+              ([key, label]) => (
+                <tr key={key}>
+                  <th className="border-b border-border/60 py-4 pr-4 text-left align-top font-mono text-[11px] font-normal uppercase tracking-[0.08em] text-muted-foreground">
+                    {label}
+                  </th>
+                  {rows.map((r) => (
+                    <td
+                      key={r.area}
+                      className="border-b border-border/60 px-4 py-4 align-top text-base leading-snug text-foreground"
+                    >
+                      {r[key]}
+                    </td>
+                  ))}
+                </tr>
+              ),
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* cropped: one card per area */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:hidden">
+        {rows.map((r) => (
+          <div key={r.area} className="rounded-lg border border-border bg-card p-4">
+            <p className="text-base font-semibold text-foreground">{r.area}</p>
+            <dl className="mt-3 space-y-2">
+              {([[headings[0], r.oneThing], [headings[1], r.rep], [headings[2], r.counts]] as const).map(
+                ([k, v]) => (
+                  <div key={k}>
+                    <dt className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">{k}</dt>
+                    <dd className="text-sm leading-snug text-foreground">{v}</dd>
+                  </div>
+                ),
+              )}
+            </dl>
+          </div>
+        ))}
+      </div>
+    </>
+  )
+}
+
 /** A full-width block with the breathing room a scrolling shot needs. */
 export function Panel({
   eyebrow,

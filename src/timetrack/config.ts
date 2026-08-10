@@ -4,11 +4,19 @@
  */
 
 export const STORAGE_KEY = "toggl-clone:v1"
-export const STATE_VERSION = 1
+/** Bumped whenever stored state is no longer readable; a mismatch reseeds the demo */
+export const STATE_VERSION = 2
 /** Toggl requires a `created_with` on every entry (toggl) */
 export const CREATED_WITH = "daygame-coach /test/toggl"
+/**
+ * Marks the generated demo history. Entries carrying this tag get re-dated to
+ * today when the sandbox is reopened on a later day; entries you create never do.
+ */
+export const SEED_CREATED_WITH = "daygame-coach /test/toggl (demo data)"
+/** Warn about a timer left running longer than this (hours) */
+export const FORGOTTEN_TIMER_HOURS = 12
 
-/** Toggl's 15 project colours (toggl) */
+/** Toggl's 15 project colors (toggl) */
 export const PROJECT_COLORS = [
   "#0b83d9",
   "#9e5bd9",
@@ -133,7 +141,7 @@ export const SHORTCUTS = [
   { keys: "N", action: "New entry in timer mode & start tracking" },
   { keys: "M", action: "New entry in manual mode" },
   { keys: "C", action: "Continue the last time entry" },
-  { keys: "1 … 9", action: "Start the matching favourite" },
+  { keys: "1 … 9", action: "Start the matching favorite" },
   { keys: "@", action: "Open the project dropdown (in description)" },
   { keys: "#", action: "Open the tag dropdown (in description)" },
   { keys: "Shift + ?", action: "Show this shortcut list" },

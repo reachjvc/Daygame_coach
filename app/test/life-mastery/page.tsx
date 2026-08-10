@@ -1,7 +1,7 @@
 "use client"
 
-import { LifeMasteryFlow } from "@/src/goals/components/life-mastery/LifeMasteryFlow"
+import { NorthStarFlow } from "@/src/goals/components/north-star/NorthStarFlow"
 
-export default function LifeMasterySimpleTestPage() {
-  return <LifeMasteryFlow />
+export default function LifeMasteryTestPage() {
+  return <NorthStarFlow />
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -138,9 +138,21 @@ const testPages = [
     icon: Target,
   },
   {
-    name: "Life Mastery (simple)",
+    name: "Life Direction Intensive",
+    href: "/test/life-direction",
+    description: "Six gated sessions, about nine hours: baseline + constraints → reflect → direction (three scored futures, ranked values, fear-setting) → converge (dream dump, hour budget) → goals in twelve fields behind an 80% realism floor → install (ideal week, fit test, loops, accountability, prototype)",
+    icon: Signpost,
+  },
+  {
+    name: "Life Mastery (North Star)",
     href: "/test/life-mastery",
-    description: "Three steps: your vision and big why with every question in one place → 12 editable areas you type goals into → a why under every goal",
+    description: "Three tabs: north star + the full values exercise (two lists, pairwise ordering, conflicts) and the identity work → one surface with the area wheel, your 10 and rating in each, goals with curves, ramps and dates, plus the routine stack → review the goals against your 10",
+    icon: Telescope,
+  },
+  {
+    name: "Life Mastery (12 areas, v1)",
+    href: "/test/life-mastery-v1",
+    description: "The earlier three-step flow, kept for comparison: vision ladder → 12 editable areas you type goals into → a why under every goal",
     icon: Telescope,
   },
   {
@@ -154,6 +166,30 @@ const testPages = [
     href: "/test/test-chatbot",
     description: "AI Coach replica that retrieves from the isolated embeddings_test table (Ollama, premium-gated)",
     icon: HelpCircle,
+  },
+  {
+    name: "Change Your Life — research",
+    href: "/test/change-your-life",
+    description: "91 transcripts and 1,822 comments across 474M views: what the genre skips, where creators contradict each other, and the full ranked corpus",
+    icon: FileSearch,
+  },
+  {
+    name: "Change Your Life — prototype flow",
+    href: "/test/change-your-life/flow",
+    description: "The nine stages the research argues for: differential → constraints → candidates → one rep → ladder → relapse letter. Three of them can refuse you",
+    icon: Waypoints,
+  },
+  {
+    name: "Change Your Life — short script",
+    href: "/test/change-your-life/short",
+    description: "The 3-minute vertical, beat by beat: every line with the visual under it, plus the plain transcript",
+    icon: Clapperboard,
+  },
+  {
+    name: "Toggl-style time tracker",
+    href: "/test/toggl",
+    description: "Full Toggl Track clone: timer + favourites + shortcuts, calendar view with Google Calendar import, four report types, project dashboards with forecasts, team, approvals, Pomodoro & idle detection",
+    icon: Clock,
   },
 ]
 

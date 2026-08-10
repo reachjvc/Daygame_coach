@@ -239,7 +239,7 @@ export function emptyNsPlan(): NsPlan {
 }
 
 export function emptyAreaReview(): NsAreaReview {
-  return { ten: "", snapshot: "", fortnight: null, goalsAim: null, blockers: "", values: [], identity: "" }
+  return { ten: "", purpose: "", snapshot: "", fortnight: null, goalsAim: null, blockers: "", values: [], identity: "" }
 }
 
 /** The shape defaults a goal gets when it is created or flipped to a type. */
@@ -368,6 +368,7 @@ export function loadNsPlan(raw: string | null): NsPlan | null {
       const r = v as Record<string, unknown>
       review[k] = {
         ten: stringOr(r.ten, ""),
+        purpose: stringOr(r.purpose, ""),
         snapshot: stringOr(r.snapshot, ""),
         fortnight: typeof r.fortnight === "number" ? clamp(r.fortnight, 0, 10) : null,
         goalsAim: r.goalsAim === "yes" || r.goalsAim === "no" ? r.goalsAim : null,
@@ -1928,7 +1929,7 @@ export function planAsText(plan: NsPlan, today = todayISO()): string {
 
   const reviewed = plan.areas
     .map((a) => ({ a, r: areaReview(plan, a.id) }))
-    .filter(({ r }) => r.ten.trim() || r.snapshot.trim() || r.fortnight != null || r.identity.trim() || r.blockers.trim() || r.values.length > 0)
+    .filter(({ r }) => r.ten.trim() || r.purpose.trim() || r.snapshot.trim() || r.fortnight != null || r.identity.trim() || r.blockers.trim() || r.values.length > 0)
   if (reviewed.length > 0) {
     blocks.push(
       `WHERE I AM\n${reviewed
@@ -1936,6 +1937,7 @@ export function planAsText(plan: NsPlan, today = todayISO()): string {
           const avg = dailyAverage(plan, a.id, today)
           const lines = [`${a.label}${r.fortnight != null ? `: ${r.fortnight}/10 over the last two weeks` : ""}${avg != null ? ` (daily average ${avg})` : ""}`]
           if (r.ten.trim()) lines.push(`  A 10 here: ${r.ten.trim()}`)
+          if (r.purpose.trim()) lines.push(`  Why it matters: ${r.purpose.trim()}`)
           if (r.snapshot.trim()) lines.push(`  Right now: ${r.snapshot.trim()}`)
           if (r.goalsAim) lines.push(`  Goals aim at it: ${r.goalsAim}`)
           if (r.identity.trim()) lines.push(`  Who I am here: ${r.identity.trim()}`)

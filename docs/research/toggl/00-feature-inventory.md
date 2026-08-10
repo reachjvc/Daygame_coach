@@ -31,7 +31,7 @@ Everything below is from Toggl's own docs, not review sites.
 - **Tracking reminders** — days + time-of-day window; fire when nothing is running.
 
 ### Keyboard shortcuts (webapp, Timer page only, not while editing a field)
-`Shift+?` all shortcuts · `S` stop · `N` new + start (timer mode) · `M` manual mode · `C` continue last · `1,2,3…` start favourite N · `@` project dropdown · `#` tag dropdown.
+`Shift+?` all shortcuts · `S` stop · `N` new + start (timer mode) · `M` manual mode · `C` continue last · `1,2,3…` start favorite N · `@` project dropdown · `#` tag dropdown.
 
 ### Organising work
 - **Workspaces** (inside Organizations) → **Clients** → **Projects** → **Tasks** (sub-projects) → **Time entries**; **Tags** cross-cut.
@@ -60,7 +60,7 @@ Duration display format (Classic `1:30:00` / Improved `1:30` / Decimal `1.50`) �
 ### Integrations
 100+ · browser extensions (Chrome/Firefox/Edge) · **Google & Outlook Calendar** · Toggl Plan · Jira, Salesforce · QuickBooks invoicing · Zapier/Make · **API + webhooks**.
 
-## Google/Outlook Calendar integration — exact behaviour
+## Google/Outlook Calendar integration — exact behavior
 1. Profile page → Native Integrations / External Calendars → **Connect** → Google OAuth consent (view calendars) → pick which calendars → app reloads.
 2. Calendar view splits: **left = Toggl time entries, right = external events**.
 3. Click an event → start a time entry from it · copy it as a time entry · open the event · see which calendar it came from.
@@ -68,4 +68,4 @@ Duration display format (Classic `1:30:00` / Improved `1:30` / Decimal `1.50`) �
 5. Limits: **all-day events are never imported** (needs start+end time); window is **60 days back / 30 days forward**; events are private to the calendar owner; **entries are never updated/deleted when the event later changes**; auto-track skips creation when locked time / approved timesheets / required fields block it.
 
 ## Toggl Plan (reference only)
-Timeline + Kanban board views, colour-coded plans, **milestones** and holidays across timelines, **recurring tasks** (Starter), capacity plan adds flexible hours, availability overview, task estimates, time-off, archive.
+Timeline + Kanban board views, color-coded plans, **milestones** and holidays across timelines, **recurring tasks** (Starter), capacity plan adds flexible hours, availability overview, task estimates, time-off, archive.

@@ -44,6 +44,29 @@ export const CYL_CATEGORY_STATS: readonly CylCategoryStat[] = [
 
 export const CYL_MEDIAN_LIKE_RATE = 3.62
 
+/**
+ * How fast this genre actually talks, measured from the corpus rather than
+ * taken from a generic figure.
+ *
+ * Transcript word count ÷ runtime across the 91 videos that have both:
+ *   p10 149 · p25 168 · **median 188** · p75 210 · p90 235
+ *
+ * The usual "150–160 wpm" advice sits at this genre's tenth percentile, and the
+ * videos down there are the motivational-speech compilations — a register worth
+ * avoiding. The creators closest to this product run far faster: 267, 261, 240.
+ *
+ * At 188 wpm a three-minute vertical holds about 564 words.
+ *
+ * Caveat: auto-captions drop the odd word and b-roll or music lowers the
+ * apparent rate, so these read slightly slow if anything.
+ */
+export const CYL_GENRE_WPM = {
+  p25: 168,
+  median: 188,
+  p75: 210,
+  p90: 235,
+} as const
+
 // ------------------------------------------------------- what they improvised
 
 // -------------------------------------------------- how strong the evidence is
@@ -481,20 +504,20 @@ export const CYL_COUNT_FACTS: readonly CylCountFact[] = [
   {
     filled: 9,
     total: 91,
-    headline: "Nine of them give you a way to tell whether it is working.",
-    body: "Nine videos out of ninety-one hand you anything you could actually track — a calendar, a count, a log. The other eighty-two ask you to go on how you feel, which is the one instrument that stops working on a bad week.",
+    headline: "Nine give you a way to tell if it's working.",
+    body: "The rest say go on how you feel. That's the first thing to break on a bad week.",
   },
   {
     filled: 2,
     total: 91,
-    headline: "Two of them are honest about how long it takes.",
-    body: "Only two videos in the whole study will tell you the truth about the timescale. One says three to seven years. One says it lands somewhere between fifteen and two hundred and fifty days and that nobody can tell you which. Every other video leaves you to guess — and then you measure yourself against a guess.",
+    headline: "Two tell you how long it takes.",
+    body: "One says three to seven years. One says fifteen to two hundred and fifty days, and admits nobody can say which. The other eighty-nine let you guess, then you measure yourself against your own guess.",
   },
   {
     filled: 1,
     total: 91,
-    headline: "One of them tells you what to do after you miss a day.",
-    body: "Missing is the normal case. It is the thing that ends attempts. One video in ninety-one has a procedure for it; the rest go quiet at exactly the moment you need them, and you are left deciding on your own whether a missed Tuesday means you have failed.",
+    headline: "One tells you what to do after you miss a day.",
+    body: "Missing isn't the exception. It's the thing that ends it. Ninety of them go quiet right there.",
   },
 ] as const
 
@@ -527,57 +550,207 @@ export interface CylShowcasePanel {
   body: string
 }
 
-/** The narrative spine of the showcase, in scroll order. */
+/**
+ * The narrative spine of the showcase, in scroll order.
+ *
+ * Written to be **read aloud**, in the first person, by the person who owns the
+ * product. Not an analyst reporting a study.
+ *
+ *  1. The claim leads. The research is a receipt dropped in once, not the
+ *     credential the whole thing hangs off. "I read 91 videos" persuades nobody.
+ *  2. Short sentences. Say it once. If a line cannot be said out loud in one
+ *     breath it gets cut.
+ *  3. Speak to one person, as "you". No balanced clauses, no rule-of-three
+ *     flourishes, no dash-stacked asides.
+ *  4. **Give the thing away.** The second draft spent its whole length saying
+ *     nobody tells you what to do, and then also did not tell you what to do.
+ *     That is the exact failure the research is about, so a page shaped that way
+ *     refutes itself. Most of the page is now the substance; the gap in the
+ *     genre is one beat, and it exists to introduce the part we hand over.
+ */
 export const CYL_SHOWCASE: readonly CylShowcasePanel[] = [
   {
-    key: "scale",
-    eyebrow: "What this is",
-    headline: "Ninety-one videos about changing your life, read end to end.",
-    body: "Not skimmed, not summarised — every word of every transcript, three hundred thousand of them, plus the most-liked comments underneath. Together these videos have been watched four hundred and seventy-four million times. That is a lot of people asking the same question and getting, as it turns out, the same half of an answer.",
-  },
-  {
-    key: "shape",
-    eyebrow: "The pattern",
-    headline: "They are extremely good at describing your problem, and they stop there.",
-    body: "Almost every video in the study can tell you why you are stuck, often with uncomfortable accuracy. Then it delivers a reframe, and ends. What is missing is never the insight. It is the part that happens on Monday morning — what you actually do, how you know it counted, and what happens when it goes wrong.",
-  },
-  {
     key: "already-know",
-    eyebrow: "The audience already knows this",
-    headline: "The most-liked comment in the entire study is somebody pointing it out.",
-    body: "Thirty-three thousand people agreed with a comment telling everyone reading it to stop watching videos like the one they were watching, because they already know what to do. That number does not prove anything on its own — it shows the feeling is widely shared. What proves it is the ninety-one videos underneath: read end to end, they really do stop where the doing starts.",
+    eyebrow: "",
+    headline: "You already know what to do. That's the problem.",
+    body: "Every video you've watched told you the truth. Sleep more. Start small. Fix your environment. None of it was wrong, and none of it worked.",
+  },
+  {
+    key: "works",
+    eyebrow: "I read ninety-one of them properly",
+    headline: "Five things held up. Everything else was noise.",
+    body: "Every transcript, every top comment, half a billion views between them. Strip out the selling and this is what's left.",
+  },
+  {
+    key: "relapse",
+    eyebrow: "Do this before you need it",
+    headline: "Write the letter now, while nothing has gone wrong.",
+    body: "Missing a day isn't the exception, it's the thing that quietly ends most attempts, and out of ninety-one videos exactly one had anything to say about it. So here's the bit that gets left out.",
   },
   {
     key: "duration",
-    eyebrow: "The gap nobody fills",
-    headline: "Nobody agrees on how long any of this takes.",
-    body: "Ask this genre how long it takes to change your life and you will be told thirty days, one month, two years, three to seven years, and five to fifteen years — for the same request. So you pick up a plan with no timescale attached, you check your progress at week three against a number nobody gave you, and you conclude it works for other people.",
+    eyebrow: "The bit that catches everyone",
+    headline: "It takes longer than you want, and nobody can tell you exactly how long.",
+    body: "That isn't a dodge. It genuinely depends on where you're starting from, how much of your week is actually yours, and whether anyone around you makes it easier or harder. Below is every answer this genre gives, and the spread is the honest bit: they're different because you're all different.",
   },
   {
-    key: "constraints",
-    eyebrow: "The gap nobody fills",
-    headline: "Almost every plan assumes a life you might not have.",
-    body: "Free evenings. A kitchen you control. A room you can be alone in. Money for a gym. Nobody depending on you. These are never asked about — they are assumed, and the plan is built on top of them. Underneath fifteen of the ninety-one videos, on fourteen different channels, somebody explains that the plan does not survive contact with their actual life: two jobs, a shared house, children, a shift pattern, no money. These are almost never the top comment. You have to go looking.",
+    key: "loop",
+    eyebrow: "The whole method",
+    headline: "Four steps, and one rule for the day it goes wrong.",
+    body: "This is all of it. You can run it on paper this afternoon and it will work about as well as anything I could sell you.",
   },
   {
-    key: "improvised",
-    eyebrow: "What people did instead",
-    headline: "In forty-one of the ninety-one videos, a viewer wrote out the steps for everyone else.",
-    body: "Not a summary, and not praise. The actual instructions, typed into a comment as a numbered list, because the video said them out loud and never wrote them down. It happens under forty-one of these videos across twenty-eight unconnected channels — far and away the most consistent thing in the entire comment layer. Underneath others, people post a start date and a promise, then come back months or years later and edit the same comment to say what happened. Nobody organised any of this.",
-  },
-  {
-    key: "resonance",
-    eyebrow: "What actually connects",
-    headline: "Being understood beats being instructed — by a wide margin.",
-    body: "Measuring how many viewers actively liked a video, rather than how many the algorithm pushed it to, the pattern is consistent: the videos that name a condition precisely outperform the videos that hand out tips. Seven of the ten least-liked videos in the whole study are step-by-step lists.",
-  },
-  {
-    key: "answer",
-    eyebrow: "So we built the other half",
-    headline: "The missing piece is not more advice. It is everything after it.",
-    body: "Work out which problem is actually yours, because most people are treating the wrong one. Say out loud what your week can genuinely hold. Pick one thing and give the rest a date. Size it to your worst day, not your best. Write the letter you will need on the day you fall off, before you fall off. And be told, up front, how long this is likely to take.",
+    key: "areas",
+    eyebrow: "What it looks like",
+    headline: "The same four steps, in four different lives.",
+    body: "The steps are dull on their own, which is why most people nod at them and never run one. Here they are with the abstraction taken out.",
   },
 ] as const
+
+// ------------------------------------------------------------ the substance
+
+export interface CylPrinciple {
+  title: string
+  body: string
+}
+
+/** What survived reading all ninety-one. Given plainly, because the whole point
+ *  is that the genre withholds this behind another video. */
+/**
+ * Voice note. An earlier draft answered "sounds like AI" by cutting every
+ * sentence short, which just swapped one tell for another: uniformly clipped
+ * lines read as ad copy, and nobody writes that way either. These vary. Some run
+ * long and carry a subordinate clause, some land in four words, and there is
+ * connective tissue between them.
+ */
+export const CYL_WORKS: readonly CylPrinciple[] = [
+  {
+    title: "Stop trying to out-willpower it",
+    body: "Willpower runs on the newest part of your brain and your habits run on something older and faster, so most nights you're going to lose that fight. It isn't a character problem. What works is arranging things so the fight never starts, which usually just means the thing leaves the house.",
+  },
+  {
+    title: "Start smaller than feels serious",
+    body: "Not going to the gym. Putting your shoes on and walking out the front door. That sounds like a joke until you notice the thing you're actually bad at isn't the workout, it's turning up, and turning up is the part you have to train first.",
+  },
+  {
+    title: "You're collecting evidence about who you are",
+    body: "There's a real difference between saying you're trying to quit and saying you don't smoke. The first is a fight you're currently losing. The second is just a fact about you, and you get there by stacking up enough small pieces of evidence that arguing with it starts to feel stupid.",
+  },
+  {
+    title: "The motivation turns up afterwards",
+    body: "Nobody wants to before they start. The feeling you're waiting for is what you get paid in once you've begun, so sitting around waiting for it is a bit like waiting for the wages before you've done the shift.",
+  },
+  {
+    title: "Plan for a bad week, not a good one",
+    body: "Most advice quietly assumes a free evening, a kitchen nobody else has opinions about, and nobody who needs you at short notice. Build the version that still happens on a late shift when someone's ill, because that's the week that decides whether any of this survives.",
+  },
+] as const
+
+export interface CylLoopStep {
+  n: string
+  label: string
+  detail: string
+}
+
+/** The method as one picture: four steps and the branch for the day you miss. */
+export const CYL_LOOP: readonly CylLoopStep[] = [
+  { n: "01", label: "Pick one thing", detail: "One. The one you'd hate to still not have done in a year." },
+  { n: "02", label: "Shrink it", detail: "Until skipping it would be embarrassing rather than reasonable." },
+  { n: "03", label: "Say what counts", detail: "“Done when ______.” Tight enough to settle an argument at 11pm." },
+  { n: "04", label: "Do the rep", detail: "Today. Not once you've read a bit more about it." },
+] as const
+
+export const CYL_LOOP_MISS = {
+  label: "Missed a day?",
+  detail:
+    "Go back to step four tomorrow. Not to step one. The day you missed doesn't cancel the thirty before it, and the only rule that matters is that you don't miss twice in a row.",
+} as const
+
+export interface CylAreaExample {
+  area: string
+  oneThing: string
+  rep: string
+  counts: string
+}
+
+/**
+ * The same four steps in four different lives, because a method stated in the
+ * abstract is the thing people nod at and never run.
+ */
+export const CYL_AREAS: readonly CylAreaExample[] = [
+  {
+    area: "Getting fit",
+    oneThing: "Be someone who trains",
+    rep: "Shoes on, out the front door",
+    counts: "Both feet on the pavement",
+  },
+  {
+    area: "Meeting people",
+    oneThing: "Have a social life again",
+    rep: "Say one thing to one stranger",
+    counts: "You spoke first, whatever happened next",
+  },
+  {
+    area: "Money",
+    oneThing: "Stop dreading the bank app",
+    rep: "Open it and look at the number",
+    counts: "You saw it without closing the app",
+  },
+  {
+    area: "A skill you keep meaning to learn",
+    oneThing: "Actually play the thing",
+    rep: "Take it out of the case, play badly",
+    counts: "You made a sound on purpose",
+  },
+] as const
+
+/**
+ * The one exercise worth doing before anything goes wrong. Kept separate from
+ * the loop above, which already states the rule; this is the part nothing else
+ * in the genre covers.
+ */
+export const CYL_LETTER = {
+  instruction:
+    "Think of someone you actually care about, and imagine they've just told you they fell off the thing they were trying to do. Write down what you'd say to them. Not the encouraging version you'd put in a card, the real one, the mix of kind and blunt you'd only use with someone you know well.",
+  turn:
+    "Then cross out their name and write yours at the top. That's the letter, and it's the one you read on the day you'd otherwise quit.",
+  why:
+    "It works because the version of you reading it will be in no state to write it. People are reliably fairer to other people than to themselves, so you're borrowing your own judgement from a day when you had some.",
+} as const
+
+export interface CylAction {
+  n: number
+  title: string
+  body: string
+}
+
+/** The close. Four things, doable in two minutes, on the page. */
+export const CYL_DO_NOW: readonly CylAction[] = [
+  {
+    n: 1,
+    title: "Name one thing. Not five.",
+    body: "The one you'd hate to still not have done in a year.",
+  },
+  {
+    n: 2,
+    title: "Shrink it until it's almost nothing.",
+    body: "Small enough that skipping it would be embarrassing.",
+  },
+  {
+    n: 3,
+    title: "Write down what counts.",
+    body: "“Done when ______.” Specific enough that you can't argue at 11pm.",
+  },
+  {
+    n: 4,
+    title: "Write the letter.",
+    body: "The one for the day you fall off. Do it now, while nothing has gone wrong.",
+  },
+] as const
+
+/** The honest answer on timescale, given rather than withheld. */
+export const CYL_DURATION_ANSWER =
+  "What you can plan around: weeks before it stops feeling like a decision, months before you notice a difference, and longer than that before it's simply who you are. The mistake almost everyone makes is judging it at week three, which is the exact point where it feels like nothing is happening."
 
 export interface CylCandidatePrompt {
   id: string

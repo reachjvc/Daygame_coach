@@ -3,7 +3,7 @@
 /**
  * The timer bar: description + project + tags + billable, in either timer mode
  * (live start/stop) or manual mode (typed start/stop/duration), plus the
- * favourites strip and the autotracker suggestion.
+ * favorites strip and the autotracker suggestion.
  */
 
 import { useEffect, useState } from "react"
@@ -117,24 +117,18 @@ export function TimerBar({
     setDraft({ ...draft, description: "" })
   }
 
+  // Both helpers derive the new id from the current snapshot: React does not
+  // promise to run a setState updater before this function returns.
   const handleCreateProject = (name: string): Id => {
-    let created = -1
-    setState((current) => {
-      const result = createProject(current, { name }, new Date().toISOString())
-      created = result.id
-      return result.state
-    })
-    return created
+    const result = createProject(state, { name }, new Date().toISOString())
+    setState(() => result.state)
+    return result.id
   }
 
   const handleCreateTag = (name: string): Id => {
-    let created = -1
-    setState((current) => {
-      const result = createTag(current, name, new Date().toISOString())
-      created = result.id
-      return result.state
-    })
-    return created
+    const result = createTag(state, name, new Date().toISOString())
+    setState(() => result.state)
+    return result.id
   }
 
   return (
@@ -198,8 +192,8 @@ export function TimerBar({
           <button
             type="button"
             onClick={() => setState((current) => toggleFavorite(current, draft, new Date().toISOString()))}
-            title={isFavorite ? "Remove from favourites" : "Add to favourites"}
-            aria-label="Toggle favourite"
+            title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            aria-label="Toggle favorite"
             className={cn("rounded-md p-1.5 hover:bg-secondary/60", isFavorite ? "text-primary" : "text-muted-foreground")}
           >
             <IconFavorite className="size-4" />
@@ -251,7 +245,7 @@ export function TimerBar({
 }
 
 // ---------------------------------------------------------------------------
-// Favourites strip
+// Favorites strip
 // ---------------------------------------------------------------------------
 
 export function FavoritesBar({
@@ -266,7 +260,7 @@ export function FavoritesBar({
   if (state.favorites.length === 0) return null
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Favourites</span>
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Favorites</span>
       {state.favorites.map((favorite, index) => {
         const project = state.projects.find((p) => p.id === favorite.draft.projectId)
         return (
@@ -286,7 +280,7 @@ export function FavoritesBar({
               type="button"
               onClick={() => onRemove(favorite.id)}
               className="rounded-full p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
-              aria-label="Remove favourite"
+              aria-label="Remove favorite"
             >
               ×
             </button>

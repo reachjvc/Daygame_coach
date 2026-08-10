@@ -1,6 +1,10 @@
-# Life Mastery, simple flow — `/test/life-mastery`
+# Life Mastery, simple flow — `/test/life-mastery-v1`
 
-**Status:** shipped (sandbox). Full lab stays at `/test/vision-plan`, untouched.
+**Status:** superseded, kept reachable. Moved from `/test/life-mastery` when the
+North Star rebuild took that route — see `life-mastery-north-star.md`. Nothing
+here was deleted; the flow, its service (`lifeMasteryService.ts`) and its tests
+are untouched and it keeps its own localStorage key (`lm-simple-v1`), so the two
+never read each other's plans. Full lab stays at `/test/vision-plan`.
 
 ## What it is
 

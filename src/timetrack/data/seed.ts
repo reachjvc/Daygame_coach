@@ -180,7 +180,7 @@ export function createSeedState(nowIso: string): TimetrackState {
       id: projectRetainer,
       workspaceId: 1,
       clientId: clientAcme,
-      name: "Acme Retainer (fixed fee)",
+      name: "Acme Retainer",
       color: PROJECT_COLORS[3],
       active: true,
       isPrivate: false,

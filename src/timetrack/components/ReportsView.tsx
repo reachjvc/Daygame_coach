@@ -580,7 +580,7 @@ function SummaryTab({
                 metric === "billable" && report.totals.seconds > 0
                   ? `${Math.round((report.totals.billableSeconds / report.totals.seconds) * 100)}% of tracked time`
                   : metric === "total"
-                    ? `${report.totals.entryCount} entries · ${report.totals.activeDays} active days`
+                    ? `${report.totals.entryCount} ${report.totals.entryCount === 1 ? "entry" : "entries"} · ${report.totals.activeDays} active ${report.totals.activeDays === 1 ? "day" : "days"}`
                     : undefined
               }
               tone={metric === "profit" ? (value >= 0 ? "positive" : "negative") : "default"}
@@ -971,7 +971,7 @@ function ProfitabilityTab({
       />
 
       {rows.length === 0 ? (
-        <EmptyState title="Nothing to analyse in this range" />
+        <EmptyState title="Nothing to analyze in this range" />
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border bg-card">
           <table className="w-full min-w-[760px] text-sm">

@@ -4,6 +4,14 @@
 
 import type { LucideIcon } from "lucide-react"
 import type { GoalPeriod, LinkedMetric } from "@/src/db/goalTypes"
+import type {
+  LdiCadenceId,
+  LdiEnergyMark,
+  LdiOdysseyKind,
+  LdiProjectStatus,
+  LdiSessionId,
+} from "@/src/goals/data/lifeDirection"
+import type { PairwiseState } from "@/src/goals/data/valuesFramework"
 
 // Re-export types from DB layer for convenience
 export type {
@@ -1352,4 +1360,579 @@ export interface LifeMasteryProgress {
   goalsWithWhy: number
   /** Steps that are done, in flow order. */
   done: Record<LifeMasteryStepId, boolean>
+}
+
+// ---------------------------------------------------------------------------
+// The North Star flow (/test/life-mastery).
+//
+// Four tabs, in the order the work happens: your north star, the areas of your
+// life plus the routines under them, your goals, then the review that rates
+// where you actually are and checks the goals against it.
+//
+// Its own shape rather than a slice of VisionPlanState. That state carries the
+// whole daily / weekly / monthly system, and none of it belongs here. Nothing
+// in this flow touches the database; it lives in localStorage.
+// ---------------------------------------------------------------------------
+
+/**
+ * Three tabs. "plan" was folded into "now" — they were the same wheel opening
+ * the same dialog, one of them additionally listing the goals and routines.
+ */
+export type NorthStarTabId = "star" | "now" | "review"
+
+/** One area of life. The four defaults ship with the flow and are editable. */
+export interface NsArea {
+  id: string
+  label: string
+  /** One line under the name, so a renamed area still says what it covers. */
+  sublabel: string
+  color: string
+  /** True when the user added it themselves. */
+  custom: boolean
+}
+
+/**
+ * How a routine runs.
+ *   sequence — an ordered stack you walk top to bottom (morning, night).
+ *   weekly   — a set of habits with their own days-per-week (workouts, work).
+ */
+export type NsRoutineKind = "sequence" | "weekly"
+
+export interface NsRoutineStep {
+  id: string
+  title: string
+  /** Rough length, for the "~25 min" readout. Sequence routines only. */
+  minutes: number
+  /** Weekly routines only: how many days a week this one step runs. */
+  daysPerWeek: number
+  /** Set when the step came from a library, for the coverage badges. */
+  dimension: "mind" | "body" | "spirit" | null
+}
+
+/** A named training day inside a workout split. */
+export interface NsSplitDay {
+  id: string
+  name: string
+}
+
+export interface NsRoutine {
+  id: string
+  label: string
+  /** Which library this routine draws from. Key into ROUTINE_BLUEPRINTS. */
+  blueprintId: string
+  kind: NsRoutineKind
+  /** The area this routine serves, or null when it serves all of them. */
+  areaId: string | null
+  /**
+   * The other areas this routine lifts.
+   *
+   * A morning routine is filed under nothing in particular and quietly carries
+   * mind, emotions, health and spirituality. Naming that is the difference
+   * between "I have a morning routine somewhere" and seeing, inside Emotions,
+   * that something already runs there every day.
+   */
+  serves: string[]
+  steps: NsRoutineStep[]
+  /** Sequence routines: how many mornings a week you run the whole stack. */
+  daysPerWeek: number
+  /** Training days in order, when this routine is a workout week. */
+  splitDays: NsSplitDay[]
+}
+
+/** What could stop you, and what you will do when it does. */
+export interface NsObstacle {
+  id: string
+  what: string
+  counter: string
+}
+
+/**
+ * One limiting belief, worked through the procedure: name it, ask whether it
+ * is useful rather than whether it is true, find the counter-evidence, write
+ * the replacement.
+ */
+export interface NsBelief {
+  id: string
+  old: string
+  /** Whether they judged the old belief useful. "Yes" is a real answer that
+   * ends the exercise, so it is recorded rather than assumed. */
+  useful: boolean | null
+  evidence: string
+  replacement: string
+}
+
+/** A named checkpoint on a finish-line goal. Its rungs, since it has no number. */
+export interface NsCheckpoint {
+  id: string
+  title: string
+  done: boolean
+}
+
+export interface NsGoal {
+  id: string
+  areaId: string
+  title: string
+  /** Target, practice or finish line. Flippable at any time. */
+  type: VisionGoalType
+  /** Why you want it. The fuel. */
+  why: string
+  /** What it costs you if you never do it. */
+  painWhy: string
+  /** The goal as one sentence, starting "I will easily". */
+  sentence: string
+  targetDate: string | null
+  /** 0-10 that you can do it. Under 7 the goal wants shrinking. */
+  beliefLevel: number | null
+  /** 0-10 that you want it. Under 7 the goal wants dropping. */
+  desireLevel: number | null
+  /** Target goals: what the numbers are counted in. "kg", "a month", "%". */
+  unit: string
+  /**
+   * Target goals: where you are now, where you are going, and the curve of
+   * milestones between the two. The numbers live here and nowhere else, so a
+   * start edited on the curve and a start edited in the row can never disagree.
+   */
+  ladder: MilestoneLadderConfig | null
+  /** Practice goals: the steady-state weekly load. */
+  daysPerWeek: number
+  /** Practice goals: the ease-in phases before steady state. */
+  rampSteps: HabitRampStep[] | null
+  /**
+   * The actions. What you will actually DO about this on a Tuesday, as opposed
+   * to the outcome the title names. Same shape as the full lab's habits, so the
+   * lab's `goalNeedsAction` reads it directly. A goal that names somewhere to
+   * end up and nothing you can do is the commonest way a plan dies quietly.
+   */
+  habits: VisionHabit[]
+  /**
+   * The reasons drill: rapid-fire reasons this has to happen. The first ten are
+   * the surface; the ones worth having start after that.
+   */
+  reasonsList: string[]
+  /** The feeling clause of the sentence template ("…creating unstoppable energy"). */
+  feeling: string
+  /** Finish-line goals: the checkpoints that stand in for milestones. */
+  checkpoints: NsCheckpoint[]
+  /** Bigger goals this one feeds. Acyclic by construction. */
+  feedsGoalIds: string[]
+  /** What you give yourself when it lands. */
+  reward: string
+  /** What you forfeit if you miss. */
+  stake: string
+  obstacles: NsObstacle[]
+  beliefs: NsBelief[]
+  /** The values this one goal asks of you. */
+  values: string[]
+  /**
+   * Where this goal's current number comes from.
+   *
+   * `null` is the default and means you move the number yourself. `daily_area`
+   * means the page already has it: the goal's current value is the rolling
+   * average of the daily 0-10 ratings for its own area, so "raise my average
+   * emotional state to an 8" scores itself off the ratings you are already
+   * making instead of asking you to copy a figure across.
+   *
+   * Only meaningful on a target goal, which is the only shape with a number to
+   * climb. Kept on the goal rather than derived from the title, because two
+   * goals in the same area can want different sources.
+   */
+  metric: NsGoalMetricSource | null
+  /**
+   * Other areas this one goal lifts, beyond the area it is filed under.
+   *
+   * Some goals are not confined to their box. Quitting one thing makes four
+   * areas easier at once, and a goal that only ever shows up under Vices reads
+   * as a small thing you are doing on the side. Listed here, it shows up inside
+   * every area it actually serves.
+   */
+  serves: string[]
+}
+
+/** Where a target goal's current value is read from. */
+export type NsGoalMetricSource = "daily_area"
+
+/** The review answers for one area. */
+export interface NsAreaReview {
+  /** What a 10 looks like here, in your own words. His "vision" for the area. */
+  ten: string
+  /**
+   * Why this area matters to you. His "purpose", per area.
+   *
+   * "I have my vision, I have my purpose, but I also have a vision and a purpose
+   * for each area of my life, and I have goals for each area as well"
+   * (Rw2qaMltFcY). We had the vision, the goals and the rituals per area and no
+   * purpose, which is the one of the four that decides whether the other three
+   * survive a bad month.
+   */
+  purpose: string
+  /**
+   * Where you are in this area right now, in your own words. Optional.
+   *
+   * The rating says it was a 4. This says what a 4 felt like, which is the part
+   * nobody remembers six months later and the part that makes the next rating
+   * mean something.
+   */
+  snapshot: string
+  /** Your own rating for the last two weeks, 0-10. */
+  fortnight: number | null
+  /** Whether you say your current goals actually aim at your 10. */
+  goalsAim: "yes" | "no" | null
+  /** What could stop you in this area. */
+  blockers: string
+  /** The values this area asks of you. */
+  values: string[]
+  /** Who you are when this area is handled. */
+  identity: string
+}
+
+export interface NsPlan {
+  version: 1
+  /** How far out the north star sits: 5, 10 or 20 years. */
+  horizonYears: number
+  /** The north star itself, one paragraph, present tense. */
+  northStar: string
+  /** The optional ladder answers that assemble into the paragraph. */
+  rungs: Record<string, string>
+  areas: NsArea[]
+  routines: NsRoutine[]
+  goals: NsGoal[]
+  /** Keyed by area id. */
+  review: Record<string, NsAreaReview>
+  /** Whole-life review answers, keyed by REVIEW_PROMPTS id. */
+  answers: Record<string, string>
+  /**
+   * The values you have been living by so far, in no particular order.
+   *
+   * The first half of the values exercise, and the diagnosis in it. "Why do you
+   * have the life that you have" is answered by this list, and the interesting
+   * part is the diff between it and `values`. Unordered on purpose: ranking the
+   * past is work with no payoff.
+   */
+  currentValues: string[]
+  /** The values you are choosing for the life in the paragraph, in order. */
+  values: string[]
+  /**
+   * Goal ids in priority order, first = highest. Same invariant as the full
+   * lab's `priorityIds`: it covers every goal exactly once, so a goal's rank is
+   * just its index. Kept on the plan rather than as a number on each goal, so
+   * two goals can never both claim to be number three.
+   */
+  priorityIds: string[]
+  /**
+   * The one thing for this season.
+   *
+   * Separate from being ranked number one, and worth its own field. Rank one is
+   * the most important goal on a list of twenty. This is the goal that, if it
+   * happened, would make several of the others easier or unnecessary — the one
+   * you would keep if you had to drop everything else this quarter. Usually a
+   * goal, occasionally an area with nothing written under it yet, so it holds
+   * either kind of id.
+   */
+  seasonFocusId: string | null
+  /** Daily self-ratings. Date (YYYY-MM-DD) to area id to 0-10. */
+  daily: Record<string, Record<string, number>>
+  /** Monotonic id counter. Never reused, so a deleted row's id never comes back. */
+  seq: number
+  updatedAt: string | null
+}
+
+/** What the flow knows about how far along a plan is. */
+export interface NsProgress {
+  starWritten: boolean
+  areas: number
+  routines: number
+  routineSteps: number
+  goals: number
+  goalsWithWhy: number
+  goalsQualified: number
+  /** Goals naming an outcome with nothing you could do about it. */
+  goalsNeedingAction: number
+  areasWithGoals: number
+  areasRated: number
+  areasWithTen: number
+  done: Record<NorthStarTabId, boolean>
+}
+
+/** One option in a routine's step library. */
+export interface RoutineBlueprintStep {
+  id: string
+  title: string
+  /** Rough length. Used by sequence routines. */
+  minutes: number
+  /** Suggested days a week. Used by weekly routines. */
+  daysPerWeek: number
+  dimension: "mind" | "body" | "spirit" | null
+}
+
+/**
+ * A ready-made stack for a routine. Named rather than keyed by minutes, so a
+ * preset can be "the full ritual as the program teaches it" and not only a
+ * length.
+ */
+export interface RoutinePreset {
+  id: string
+  label: string
+  /** One line under the label, so picking one is a choice and not a guess. */
+  note: string
+  stepIds: string[]
+}
+
+/** A routine template: its library, its presets, and what it is for. */
+export interface RoutineBlueprint {
+  id: string
+  label: string
+  kind: NsRoutineKind
+  /** One line on why this routine earns its place in the stack. */
+  why: string
+  /** Which seed area it serves by default, or null for all of them. */
+  areaSeedId: string | null
+  /**
+   * The other areas this routine measurably lifts.
+   *
+   * A morning routine is not a health routine. It is the thing that carries
+   * mind, emotions, health and spirituality at once, and filing it under one of
+   * those, or under none, hides that. Listed so an area can show what already
+   * runs inside it before a single goal is written there.
+   */
+  servesAreaIds: string[]
+  /** The ready-made stacks offered on the card. Never empty. */
+  presets: RoutinePreset[]
+  library: RoutineBlueprintStep[]
+  /** True when this routine offers the training-split designer. */
+  split: boolean
+  /** Sequence routines: how many days a week the stack runs by default. */
+  daysPerWeek: number
+  /**
+   * The steps the routine ARRIVES with, in order. A routine card that opens
+   * empty is a second blank page, and the whole point of shipping a template
+   * library is that you start from something and edit it down.
+   */
+  defaultStepIds: string[]
+  /** The split a training week arrives with, when it has one. */
+  defaultSplitId: string | null
+}
+
+/** A whole-life question on the review tab. */
+export interface NsReviewPrompt {
+  id: string
+  question: string
+  help: string
+  placeholder: string
+  /** Rendered as one line per entry rather than a paragraph. */
+  list?: boolean
+}
+
+// =====================================================================
+// Life Direction Intensive
+//
+// A six-session process with its own state. Deliberately separate from
+// NsPlan, LifeMasteryPlan and VisionPlanState: those three already refuse
+// to merge with each other, and a fourth shape that borrowed fields from
+// all of them would inherit every one of their ambiguities.
+//
+// The rule that governs this block: a field is either STRUCTURAL (an id,
+// an index, a timestamp, something we derived) or AUTHORED (the user's own
+// words and judgements). Authored fields start empty and are never filled
+// on the user's behalf.
+// =====================================================================
+
+/** One thing that took up time in the last fortnight, and how it left them. */
+export interface LdiEnergyEntry {
+  id: string
+  /** AUTHORED. */
+  label: string
+  /** AUTHORED. Null until marked. */
+  mark: LdiEnergyMark | null
+}
+
+/** Declared once in session 0, enforced everywhere after it. */
+export interface LdiConstraints {
+  /** AUTHORED. Hours a week available for deliberate work. Null until answered. */
+  weeklyHours: number | null
+  /** AUTHORED. */
+  money: string
+  dependants: string
+  health: string
+  nonNegotiables: string
+}
+
+/** One of the three five-year futures, with its comparison scores. */
+export interface LdiOdyssey {
+  kind: LdiOdysseyKind
+  /** AUTHORED. */
+  title: string
+  body: string
+  /** AUTHORED. Scores keyed by LDI_ODYSSEY_SCORES id. Absent until rated. */
+  scores: Record<string, number>
+  /** AUTHORED. Whether the getting-there appeals, not only the arrival. */
+  processAppeals: boolean | null
+}
+
+/** The values work: elicited, then ranked by forced comparison. */
+export interface LdiValues {
+  /** AUTHORED. What they named, before ranking. */
+  candidates: string[]
+  /** STRUCTURAL. The ranker's state. Null until ranking starts. */
+  pairwise: PairwiseState | null
+  /** STRUCTURAL. Frozen result once ranking completes, best first. */
+  ranked: string[]
+  /** AUTHORED. States they are organising their life to avoid. */
+  away: string[]
+}
+
+export interface LdiFearSetting {
+  /** AUTHORED. */
+  option: string
+  worst: string
+  prevent: string
+  repair: string
+  benefits: string
+  costInaction: string
+}
+
+/** One item from the divergent dump, later tagged with a horizon. */
+export interface LdiDream {
+  id: string
+  /** AUTHORED. */
+  text: string
+  /** AUTHORED. One of LDI_HORIZONS. Null until tagged. */
+  horizonYears: number | null
+  /** AUTHORED. Which area it belongs to. Null until assigned. */
+  areaId: string | null
+}
+
+/** A goal in the eleven-field shape, plus the gates that guard it. */
+export interface LdiGoal {
+  id: string
+  /** STRUCTURAL. */
+  areaId: string
+  /** AUTHORED. */
+  title: string
+  /** AUTHORED. Keyed by LDI_GOAL_FIELDS id. Missing keys are unanswered. */
+  fields: Record<string, string>
+  /** AUTHORED. Percentages, null until answered. */
+  realismTheory: number | null
+  realismPractice: number | null
+  /** AUTHORED. Nought to ten. */
+  surpriseIfFailed: number | null
+  /** AUTHORED. The weekly countable that shows the work is happening. */
+  leadIndicator: string
+  /** AUTHORED. */
+  status: LdiProjectStatus
+  /** STRUCTURAL. Which dream it came from, when it came from one. */
+  sourceDreamId: string | null
+}
+
+/** A block on the ideal week grid. */
+export interface LdiWeekBlock {
+  id: string
+  /** STRUCTURAL. */
+  day: string
+  slot: string
+  /** AUTHORED. */
+  label: string
+  /** STRUCTURAL. Set when the block was placed for a specific goal. */
+  goalId: string | null
+  /** AUTHORED. Rough hours this block occupies, for the budget check. */
+  hours: number
+}
+
+export interface LdiAccountability {
+  /** AUTHORED. */
+  who: string
+  when: string
+  what: string
+}
+
+export interface LdiPrototype {
+  id: string
+  /** AUTHORED. */
+  assumption: string
+  test: string
+  signal: string
+  date: string | null
+}
+
+/** The whole intensive. One object, serialised to localStorage. */
+export interface LdiPlan {
+  /** STRUCTURAL. Schema version, for the load migration path. */
+  v: number
+
+  // session 0
+  /** AUTHORED. Keyed by LDI_INTAKE_ITEMS id. Missing means unanswered. */
+  intake: Record<string, number>
+  /** AUTHORED. Keyed by area id, nought to ten. Missing means unrated. */
+  wheel: Record<string, number>
+  energy: LdiEnergyEntry[]
+  constraints: LdiConstraints
+
+  // session 1
+  /** AUTHORED. Keyed by LDI_REFLECT_PROMPTS id. */
+  reflect: Record<string, string>
+  /** AUTHORED. One area per domain. */
+  focusAreaIds: string[]
+
+  // session 2
+  /** AUTHORED. Keyed by LDI_NORTH_STAR_PROMPTS id. */
+  northStar: Record<string, string>
+  /** AUTHORED. Keyed by LDI_LEGACY_PROMPTS id. */
+  legacy: Record<string, string>
+  /** AUTHORED. Keyed by eulogy stem index. */
+  eulogy: Record<string, string>
+  odyssey: LdiOdyssey[]
+  values: LdiValues
+  fear: LdiFearSetting
+
+  // session 3
+  dreams: LdiDream[]
+  /** AUTHORED. Keyed by area id. */
+  celebrations: Record<string, string>
+  /** AUTHORED. The active few. Capped deliberately. */
+  portfolioAreaIds: string[]
+  /** AUTHORED. Hours a week per area id. */
+  budget: Record<string, number>
+
+  // session 4
+  goals: LdiGoal[]
+
+  // session 5
+  week: LdiWeekBlock[]
+  /** AUTHORED. Which loops they committed to. */
+  cadences: LdiCadenceId[]
+  accountability: LdiAccountability
+  prototypes: LdiPrototype[]
+
+  /** STRUCTURAL. Sessions the user has explicitly marked finished. */
+  finished: LdiSessionId[]
+  /**
+   * STRUCTURAL. Sessions the user chose to enter without finishing the one
+   * before. Recorded rather than hidden: the checks still read as unmet and
+   * the session list shows the override, so nothing here inflates progress.
+   */
+  overrides: LdiSessionId[]
+  /** STRUCTURAL. */
+  seq: number
+  updatedAt: string
+}
+
+/** Per-session completion, derived from evidence rather than from visits. */
+export interface LdiSessionProgress {
+  id: LdiSessionId
+  /** How many of this session's required pieces have real answers. */
+  done: number
+  total: number
+  /** True when every required piece is answered. */
+  complete: boolean
+  /** True when the user may start it: the previous session is complete. */
+  unlocked: boolean
+  /** True when it is open only because the user chose to skip ahead. */
+  overridden: boolean
+}
+
+export interface LdiProgress {
+  sessions: LdiSessionProgress[]
+  done: number
+  total: number
+  /** The first session that is unlocked and not yet complete. */
+  nextSessionId: LdiSessionId | null
 }

@@ -456,6 +456,8 @@ export interface BulkEditPatch {
   taskId?: Id | null
   addTagIds?: Id[]
   removeTagIds?: Id[]
+  /** Replace the tag list outright (used when editing a collapsed group) */
+  tagIds?: Id[]
   billable?: boolean
   description?: string
 }
@@ -469,7 +471,7 @@ export function bulkEditEntries(
   const idSet = new Set(entryIds)
   const entries = state.entries.map((entry) => {
     if (!idSet.has(entry.id)) return entry
-    let tagIds = entry.tagIds
+    let tagIds = patch.tagIds ? [...patch.tagIds] : entry.tagIds
     if (patch.removeTagIds?.length) tagIds = tagIds.filter((id) => !patch.removeTagIds!.includes(id))
     if (patch.addTagIds?.length) tagIds = [...new Set([...tagIds, ...patch.addTagIds])]
     return {

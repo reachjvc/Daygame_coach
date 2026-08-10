@@ -3,7 +3,7 @@
 /**
  * Shell for the time-tracking sandbox at /test/toggl.
  * Owns navigation, the shared entry draft, keyboard shortcuts, toasts,
- * the alert centre, the idle prompt and the entry-detail modal.
+ * the alert center, the idle prompt and the entry-detail modal.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -174,7 +174,9 @@ export function TogglLab() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    // The theme's --input equals the card background, which makes bordered
+    // fields invisible on cards; give every field in the sandbox real contrast
+    <div className="min-h-screen bg-background [&_input[data-slot=input]]:border-border [&_input[data-slot=input]]:bg-background/60 [&_select]:bg-background/60">
       {/* header */}
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-2">

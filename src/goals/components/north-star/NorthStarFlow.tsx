@@ -97,6 +97,7 @@ export function NorthStarFlow() {
   const routineHandlers = useMemo(() => ({
     onRename: (id: string, label: string) => setPlan((p) => ns.updateRoutine(p, id, { label })),
     onArea: (id: string, areaId: string | null) => setPlan((p) => ns.updateRoutine(p, id, { areaId })),
+    onServes: (id: string, areaIds: string[]) => setPlan((p) => ns.setRoutineServes(p, id, areaIds)),
     onToggleStep: (id: string, stepId: string) => setPlan((p) => ns.toggleRoutineStep(p, id, stepId)),
     onAddCustomStep: (id: string, title: string, minutes: number, daysPerWeek: number) => setPlan((p) => ns.addCustomStep(p, id, title, minutes, daysPerWeek)),
     onRemoveStep: (id: string, stepId: string) => setPlan((p) => ns.removeStep(p, id, stepId)),
@@ -263,7 +264,7 @@ export function NorthStarFlow() {
             onNext={() => setTab("review")}
           />
         ) : (
-          <ReviewTab plan={plan} today={today} handlers={reviewHandlers} />
+          <ReviewTab plan={plan} today={today} handlers={reviewHandlers} valuesHandlers={valuesHandlers} />
         )}
 
         {/* What is still missing, in one place, instead of gates on the way
@@ -338,6 +339,7 @@ export function NorthStarFlow() {
             onRemoveArea={areaHandlers.onRemoveArea}
             onOpenRoutine={setOpenRoutineId}
             onSeasonFocus={setSeasonFocus}
+            onOpenArea={(id) => { setNowAreaId(id); setNowGoalId(null) }}
             onClose={() => { setNowAreaId(null); setNowGoalId(null) }}
           />
         )

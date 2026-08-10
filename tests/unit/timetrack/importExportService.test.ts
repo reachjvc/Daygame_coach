@@ -111,7 +111,7 @@ describe("JSON backup", () => {
 
   test("rejects malformed input", () => {
     expect(importStateJson("{not json").error).toMatch(/not valid JSON/)
-    expect(importStateJson('{"version":1}').error).toMatch(/missing entries/)
+    expect(importStateJson(JSON.stringify({ version: STATE_VERSION })).error).toMatch(/missing entries/)
   })
 })
 

@@ -553,7 +553,7 @@ describe("ratings", () => {
 describe("review", () => {
   it("returns an empty review for an area never opened", () => {
     expect(areaReview(emptyNsPlan(), "lm_health")).toEqual({
-      ten: "", snapshot: "", fortnight: null, goalsAim: null, blockers: "", values: [], identity: "",
+      ten: "", purpose: "", snapshot: "", fortnight: null, goalsAim: null, blockers: "", values: [], identity: "",
     })
   })
 
@@ -1515,5 +1515,51 @@ describe("what a 10 means is spelled out", () => {
     const plan = emptyNsPlan()
     expect(plan.areas.every((a) => areaReview(plan, a.id).ten === "")).toBe(true)
     expect(planIsUntouched(plan)).toBe(true)
+  })
+})
+
+describe("the purpose, per area", () => {
+  it("saves, survives storage, and reads back under the 10", () => {
+    // His own structure: "I've got my vision here, I've got my purpose for my
+    // relationship, and then I've got my goals... So I do that for each area of
+    // my life" (Rw2qaMltFcY). We had the vision, the goals and the rituals.
+    let plan = setAreaReview(emptyNsPlan(), "lm_relationship", {
+      ten: "Close, and we can say hard things",
+      purpose: "Because I do not want to end up polite and separate",
+    }, NOW)
+    plan = loadNsPlan(serializeNsPlan(plan))!
+    expect(areaReview(plan, "lm_relationship").purpose).toBe("Because I do not want to end up polite and separate")
+    expect(planAsText(plan, TODAY)).toContain("Why it matters: Because I do not want to end up polite and separate")
+  })
+
+  it("counts as work on the area, so an untouched plan is still untouched", () => {
+    expect(planIsUntouched(emptyNsPlan())).toBe(true)
+    const plan = setAreaReview(emptyNsPlan(), "lm_money", { purpose: "So I stop counting at the till" }, NOW)
+    expect(planIsUntouched(plan)).toBe(false)
+  })
+})
+
+describe("values are elicited on step 1 and ordered on step 3", () => {
+  it("pools everything written per area and per goal for the ordering screen", () => {
+    // The review's pool is the whole plan, which is the reason ordering waits
+    // until then: on the opening screen there is one paragraph and nothing else.
+    let plan = setValues(emptyNsPlan(), ["Freedom"], NOW)
+    plan = setAreaReview(plan, "lm_health", { values: ["Vitality", "Freedom"] }, NOW)
+    plan = addGoal(plan, "lm_money", "Ten thousand a month", "milestone_ladder", NOW)
+    plan = updateGoal(plan, plan.goals[0].id, { values: ["Discipline"] }, NOW)
+
+    const onList = new Set(plan.values.map((v) => v.toLowerCase()))
+    const unlisted = collectValues(plan).filter((v) => !onList.has(v.toLowerCase()))
+    // "Freedom" is already on the whole-life list and must not be offered twice.
+    expect(unlisted).toEqual(["Vitality", "Discipline"])
+  })
+
+  it("keeps both lists on one record, whichever screen wrote them", () => {
+    let plan = setCurrentValues(emptyNsPlan(), ["Security"], NOW)
+    plan = setValues(plan, ["Freedom", "Health"], NOW)
+    plan = rankValueAbove(plan, "Health", "Freedom", NOW)
+    const back = loadNsPlan(serializeNsPlan(plan))!
+    expect(back.currentValues).toEqual(["Security"])
+    expect(back.values).toEqual(["Health", "Freedom"])
   })
 })

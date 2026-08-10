@@ -17,7 +17,7 @@
 import { useState } from "react"
 import { Check, ChevronDown, Plus } from "lucide-react"
 import type { NsArea, NsPlan } from "@/src/goals/types"
-import { LIBRARY_COPY, TEMPLATE_PREVIEW_COPY } from "@/src/goals/data/northStar"
+import { LIBRARY_COPY, TEMPLATE_ADDED_COPY, TEMPLATE_PREVIEW_COPY } from "@/src/goals/data/northStar"
 import { PILLARS, type FrameworkTarget, type Template } from "@/src/goals/data/newGoalFramework"
 import {
   cumulativeUnit,
@@ -220,6 +220,15 @@ function TemplateCard({ template, plan, level, color, onAdd }: {
   onAdd: () => void
 }) {
   const [open, setOpen] = useState(false)
+  /**
+   * How many arrived when this card was last used.
+   *
+   * Adding nine goals at once used to be silent: the button greyed out and the
+   * nine appeared in a list further up the dialog, past the fold. The strip says
+   * what happened and, more importantly, that every one of them already carries
+   * a date and a shape you can change.
+   */
+  const [justAdded, setJustAdded] = useState(0)
   const targets = targetsForTemplate(template)
   const fresh = targets.filter((t) => !targetAlreadyAdded(plan, t))
   const levelValues = (template.levels[level] ?? template.levels[0])?.targetValues ?? {}
@@ -234,9 +243,21 @@ function TemplateCard({ template, plan, level, color, onAdd }: {
       </div>
       <p className="text-[10.5px] text-zinc-500 mt-0.5 leading-relaxed">{template.description}</p>
 
+      {justAdded > 0 && (
+        <div className="mt-1.5 rounded-md border border-emerald-400/25 bg-emerald-500/[0.06] px-2 py-1.5">
+          <p className="text-[10.5px] font-medium text-emerald-100/90">
+            {TEMPLATE_ADDED_COPY.title(justAdded, template.label)}
+          </p>
+          <p className="text-[10px] text-emerald-100/70 mt-0.5 leading-relaxed">{TEMPLATE_ADDED_COPY.help}</p>
+          <button onClick={() => setJustAdded(0)} className="text-[10px] text-zinc-500 hover:text-zinc-300 mt-0.5 transition-colors">
+            {TEMPLATE_ADDED_COPY.dismiss}
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-2 mt-1.5">
         <button
-          onClick={onAdd}
+          onClick={() => { setJustAdded(fresh.length); onAdd() }}
           disabled={fresh.length === 0}
           className="text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-zinc-100 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >

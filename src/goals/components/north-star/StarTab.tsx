@@ -175,12 +175,15 @@ export function StarTab({
         <StarQuestion prompt={starPrompt(STAR_WHY_ID)} plan={plan} onAnswer={onAnswer} />
       </div>
 
-      {/* The values, in full, between the purpose and the identity.
-          They sit here because they are derived from the paragraph ("once you
-          know your vision you make the list: what are the values I need to have
-          to create that life") and because the identity below is written out of
-          them. */}
-      <ValuesWork plan={plan} handlers={valuesHandlers} />
+      {/* The values, between the purpose and the identity, because they are
+          derived from the paragraph ("once you know your vision you make the
+          list: what are the values I need to have to create that life") and
+          because the identity below is written out of them.
+          ONLY THE NOTICING HALF. Ordering them is on the review, once you have
+          rated your areas and written what each one asks of you: on this screen
+          you have a paragraph and nothing else, and ranking a list you are still
+          discovering is guessing. */}
+      <ValuesWork plan={plan} handlers={valuesHandlers} mode="elicit" />
 
       {/* Who you are, how you show up, and only then the gap.
           The order and the reason for it are in STAR_PROMPTS' own comment: the

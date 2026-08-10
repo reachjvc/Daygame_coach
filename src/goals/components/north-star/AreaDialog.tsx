@@ -27,6 +27,7 @@ import {
   GOALS_INTRO,
   NS_DAILY_WINDOW,
   NS_FLOOR,
+  NS_VALUE_SUGGESTIONS,
   RATING_VARIANCE_NOTE,
   SEASON_FOCUS_COPY,
   SERVES_COPY,
@@ -43,7 +44,7 @@ import {
 import { AreaGoals } from "./AreaGoals"
 import { GoalLibrary } from "./GoalLibrary"
 import { ScoreRow } from "./ScoreRow"
-import type { GoalHandlers } from "./GoalCard"
+import { TagList, type GoalHandlers } from "./GoalCard"
 
 const COVERAGE_COPY: Record<"covered" | "thin" | "none", { label: string; color: string; note: string }> = {
   covered: {
@@ -79,6 +80,7 @@ export function AreaDialog({
   onRemoveArea,
   onOpenRoutine,
   onSeasonFocus,
+  onOpenArea,
   onClose,
 }: {
   area: NsArea
@@ -96,6 +98,8 @@ export function AreaDialog({
   onRemoveArea: (areaId: string) => void
   onOpenRoutine: (routineId: string) => void
   onSeasonFocus: (id: string) => void
+  /** Move straight to another area without closing and re-finding it. */
+  onOpenArea: (areaId: string) => void
   onClose: () => void
 }) {
   const review = areaReview(plan, area.id)
@@ -112,6 +116,10 @@ export function AreaDialog({
   const last = plan.areas.length <= 1
   const coverage = COVERAGE_COPY[areaCoverage(plan, area.id)]
   const isFocus = plan.seasonFocusId === area.id
+  // The wheel's own order, wrapping, so twelve areas can be walked in twelve
+  // clicks. Null on the last one only when there is nothing else to go to.
+  const index = plan.areas.findIndex((a) => a.id === area.id)
+  const nextArea = plan.areas.length > 1 ? plan.areas[(index + 1) % plan.areas.length] : null
   const [renaming, setRenaming] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [confirmExample, setConfirmExample] = useState(false)
@@ -295,6 +303,24 @@ export function AreaDialog({
             />
           </section>
 
+          {/* The purpose, per area. His own structure and the piece we did not
+              have: "I've got my vision here, I've got my purpose for my
+              relationship, and then I've got my goals... So I do that for each
+              area of my life" (Rw2qaMltFcY). It sits between the 10 and the
+              goals for the same reason his does. */}
+          <section>
+            <p className="text-[13px] text-zinc-200">{AREA_REVIEW_COPY.purpose.question}</p>
+            <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{AREA_REVIEW_COPY.purpose.help}</p>
+            <textarea
+              value={review.purpose}
+              onChange={(e) => onAreaReview(area.id, { purpose: e.target.value })}
+              placeholder={AREA_REVIEW_COPY.purpose.placeholder}
+              rows={2}
+              aria-label={`Why ${area.label} matters to you`}
+              className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
+            />
+          </section>
+
           {/* 2. The goals aimed at that 10, with the picture still on screen. */}
           <section className="pt-1 border-t border-white/10">
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mt-3 mb-2">
@@ -360,6 +386,49 @@ export function AreaDialog({
             )}
           </section>
 
+          {/* What this area asks of you, and who you are when it is handled.
+              These used to live on the review tab, one screen away from the area
+              they belong to, so they were only ever answered by somebody who
+              went looking. They are here now and the review reads them back.
+              The values written here are the pool the whole-life list is ordered
+              from, which is the other reason they belong next to the rating. */}
+          <section className="pt-1 border-t border-white/10">
+            <div className="mt-3">
+              <TagList
+                label={AREA_REVIEW_COPY.values.question}
+                hint={AREA_REVIEW_COPY.values.help}
+                placeholder="Vitality"
+                color={area.color}
+                items={review.values}
+                suggestions={NS_VALUE_SUGGESTIONS}
+                onChange={(values) => onAreaReview(area.id, { values })}
+              />
+            </div>
+            <div className="mt-4">
+              <p className="text-[12.5px] text-zinc-200">{AREA_REVIEW_COPY.identity.question}</p>
+              <p className="text-[11px] text-zinc-500 mt-0.5">{AREA_REVIEW_COPY.identity.help}</p>
+              <input
+                value={review.identity}
+                onChange={(e) => onAreaReview(area.id, { identity: e.target.value })}
+                placeholder="I am…"
+                aria-label={`Who you are in ${area.label}`}
+                className="w-full mt-1.5 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30 transition-colors"
+              />
+            </div>
+            <div className="mt-4">
+              <p className="text-[12.5px] text-zinc-200">{AREA_REVIEW_COPY.blockers.question}</p>
+              <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{AREA_REVIEW_COPY.blockers.help}</p>
+              <textarea
+                value={review.blockers}
+                onChange={(e) => onAreaReview(area.id, { blockers: e.target.value })}
+                placeholder="What has ended this for you before"
+                rows={2}
+                aria-label={`What might stop you in ${area.label}`}
+                className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
+              />
+            </div>
+          </section>
+
           {!last && (
             <section className="pt-1 border-t border-white/10">
               {confirmRemove ? (
@@ -377,6 +446,31 @@ export function AreaDialog({
               )}
             </section>
           )}
+
+          {/* Somewhere to go when you have finished.
+              Everything saves as you type, so the only thing missing was a way
+              OUT that was not "click the empty space behind the dialog" or hunt
+              for the small × in the corner. Done closes it; the second button
+              moves straight to the next area in the wheel's own order, which is
+              how you get through twelve of these without going back to the list
+              every time. */}
+          <section className="sticky bottom-0 -mx-6 px-6 pt-3 pb-1 bg-zinc-950 border-t border-white/10 flex flex-wrap items-center gap-2">
+            <span className="text-[10.5px] text-zinc-600 min-w-0 flex-1">{AREA_REVIEW_COPY.autosave}</span>
+            <button
+              onClick={onClose}
+              className="shrink-0 text-[12px] px-3 py-1.5 rounded-lg border border-white/15 text-zinc-200 hover:bg-white/10 transition-colors"
+            >
+              {AREA_REVIEW_COPY.done}
+            </button>
+            {nextArea && (
+              <button
+                onClick={() => onOpenArea(nextArea.id)}
+                className="shrink-0 text-[12px] px-3 py-1.5 rounded-lg border border-violet-500/40 bg-violet-500/15 text-violet-100 hover:bg-violet-500/25 transition-colors"
+              >
+                {AREA_REVIEW_COPY.next(nextArea.label)}
+              </button>
+            )}
+          </section>
         </div>
       </DialogContent>
     </Dialog>

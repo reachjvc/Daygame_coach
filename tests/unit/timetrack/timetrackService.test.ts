@@ -142,6 +142,29 @@ describe("bulk edit", () => {
       expect(e.billable).toBe(false)
     }
   })
+
+  test("tagIds replaces the tag list outright (used when editing a collapsed group)", () => {
+    const state = baseState({
+      entries: [
+        entry(1, "2026-08-09", "09:00", "10:00", { tagIds: [50] }),
+        entry(2, "2026-08-09", "10:00", "11:00", { tagIds: [51] }),
+      ],
+    })
+    const next = bulkEditEntries(state, [1, 2], { tagIds: [50, 51] }, NOW_ISO)
+    for (const e of next.entries) expect(e.tagIds).toEqual([50, 51])
+  })
+
+  test("only the listed entries change", () => {
+    const state = baseState({
+      entries: [
+        entry(1, "2026-08-09", "09:00", "10:00", { description: "target" }),
+        entry(2, "2026-08-09", "10:00", "11:00", { description: "bystander" }),
+      ],
+    })
+    const next = bulkEditEntries(state, [1], { description: "edited" }, NOW_ISO)
+    expect(next.entries.find((e) => e.id === 1)!.description).toBe("edited")
+    expect(next.entries.find((e) => e.id === 2)!.description).toBe("bystander")
+  })
 })
 
 describe("delete + undo", () => {

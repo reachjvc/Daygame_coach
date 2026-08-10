@@ -47,7 +47,7 @@ Negative-duration encoding, the 4-level rate hierarchy, and the grouping/sub-gro
 | Project colors (Toggl palette) | ✅ | 15 official hexes |
 | Estimates (hours or monetary), auto-estimates, fixed fee | ✅ | |
 | Recurring estimate periods | ✅ | weekly→yearly |
-| Project alerts at 50/75/80/90/100/150 % | ✅ | in-app alert centre |
+| Project alerts at 50/75/80/90/100/150 % | ✅ | in-app alert center |
 | Project dashboard w/ forecast + projected end date | ✅ | linear forecast from tracked pace |
 | Rate hierarchy workspace→member→project→task + historical rates | ✅ | |
 | Reports: Summary (bar+pie+group/subgroup), Detailed, Workload, Profitability | ✅ | |
@@ -70,7 +70,80 @@ Negative-duration encoding, the 4-level rate hierarchy, and the grouping/sub-gro
 | SSO, billing/subscription plans, QuickBooks invoicing, Jira/Salesforce/Zapier | ❌ | third-party accounts required |
 | Real multi-user teams, email delivery of reports/reminders | ❌ | no auth/mail wiring on a test page |
 
+## Where it lives
+```
+src/timetrack/
+├── types.ts                     # every entity, mirroring API v9 fields
+├── config.ts                    # Toggl palette, rounding/alert/format options, shortcuts
+├── icons.ts                     # single lucide import point for the slice
+├── timetrackService.ts          # entries, validation, rates, favorites, alerts, approvals
+├── timetrackFormatService.ts    # duration/time formats + input parsing + rounding
+├── reportsService.ts            # summary / detailed / workload / profitability + CSV
+├── calendarService.ts           # ICS parse + RRULE expansion + grid geometry
+├── calendarSyncService.ts       # server-only: ICS URL fetch, Google Calendar API
+├── projectDashboardService.ts   # burn-up, forecast, projected end date, pace verdict
+├── importExportService.ts       # workspace JSON backup + Toggl-shaped CSV import
+├── data/seed.ts                 # deterministic demo workspace (24 days of history)
+├── hooks/useTimetrack.ts        # persistence, clock, pomodoro, idle, reminders, timeline
+└── components/                  # TogglLab shell + Timer, Calendar, Reports, Projects, Manage, Settings
+app/test/toggl/page.tsx          # the page
+app/api/timetrack/calendar/route.ts  # 22-line wrapper over calendarSyncService
+tests/unit/timetrack/            # 135 unit tests
+```
+
+## Verified
+- `npm test`: 2664 passing (135 new), architecture test green.
+- Scripted browser audit, 42 checks, 0 console errors: timer start/stop, ticking tab title,
+  `S`/`C`/`1`/`Shift+?` shortcuts, entry menu + duplicate, bulk-edit bar, calendar week/day/zoom,
+  ICS import (4 events imported, 1 all-day skipped, recurring instances expanded across days),
+  all five report tabs, rounding changing the totals, projects table, project dashboard + editor,
+  clients/tags/team, all five settings tabs, required-fields enforcement (blocked then allowed),
+  reload persistence, and no horizontal overflow at 390 px. Screenshots in `.playwright-mcp/toggl-*.png`.
+- Bugs the audits caught and fixed:
+  1. the seed generated today's blocks past the current clock, so the demo showed time tracked in the future;
+  2. "continue last" could therefore continue a future-dated entry instead of the last real one;
+  3. reopening the sandbox on a later day left it showing only past dates (see Limits below);
+  4. new-entity ids were read out of a `setState` updater, which React need not run synchronously — an imported
+     calendar's events were tagged with a stale id and silently never rendered. Ids now come from the render snapshot;
+  5. edits made on a collapsed group only hit the first entry; they now apply to every entry in the group, like Toggl;
+  6. an inline description field kept stale text after a bulk edit changed it elsewhere;
+  7. dragging a calendar block also opened the entry editor on mouse-up;
+  8. calendar entries were squeezed into half of each day even with no calendar connected.
+- Cosmetic/copy pass: American spelling throughout (matching the rest of the app), visible field borders (the theme's
+  `--input` equals the card background, so bordered inputs were invisible), labeled calendar-import fields, no
+  unreadable text in sub-20-minute calendar blocks, correct singular/plural in report subtitles, and the calendar grid
+  opens on working hours instead of midnight.
+
+## Calendar import — the three methods, ranked by exposure
+
+| Method | Where the credential lives | Re-sync | When to use |
+|---|---|---|---|
+| **Upload `.ics`** (default) | none — a file you exported | re-export and re-upload | the safe default |
+| **Google Calendar API** | server only (`GOOGLE_SERVICE_ACCOUNT_JSON`); you share the calendar with its `client_email` | one click, no secret in the browser | best if the env var is set |
+| **Secret iCal address** | nowhere by default; opt-in checkbox stores it in `localStorage` | one click only if remembered, otherwise re-paste | last resort |
+
+Hardening applied to the secret-address path, since that URL *is* a bearer credential:
+- field is `type="password"`, `autocomplete="off"`, `spellcheck="false"`, and the value is never rendered back;
+- **not persisted** unless you tick "Remember this address in this browser" (off by default). Without it the calendar row
+  reads "not saved" and its Sync button becomes "Paste address to sync";
+- the API route strips the address out of any error message before returning it;
+- the route refuses loopback/private/link-local hosts, so it can't be used to probe the network;
+- the UI names the risk and points at Google's **Reset private URLs**.
+
+Verified by a scripted run (12 checks): masking, SSRF refusal, "not written to localStorage", the re-paste flow,
+opt-in persistence, and no address in error output.
+
 ## Limits worth knowing
-- **Storage is `localStorage` only** (namespace `toggl-clone:v1`). No Supabase table, no migration, no RLS — deliberate, since this is a `/test` sandbox.
-- **Google Calendar**: three import paths ship. The two zero-config ones (secret `.ics` address, `.ics` file upload) work today. Full OAuth "Connect" (multi-calendar picker + live refresh) needs a Google Cloud OAuth client ID/secret in env; the service-account path works if the calendar is shared with `GOOGLE_SERVICE_ACCOUNT_JSON`'s client email.
-- Toggl's "Timeline" needs OS-level process access; a browser page cannot see other apps. Partial analog implemented and labelled as such in the UI.
+- **Storage is `localStorage` only** (namespace `toggl-clone:v1`, `STATE_VERSION` 2 — a version bump reseeds the demo).
+  No Supabase table, no migration, no RLS — deliberate, since this is a `/test` sandbox.
+- **Demo data is re-dated on load.** The seeded history is anchored to the day it was generated, so reopening the sandbox
+  later used to show only past dates, an empty "Today", and a demo timer "running" for days. `demoDataService` now shifts
+  entries tagged `SEED_CREATED_WITH` forward so the newest demo day is today (never into the future), re-anchors the demo's
+  running timer to minutes ago, and reports what it moved in a toast. **Entries you create are never moved.**
+- A timer running longer than 12 h raises a "you probably forgot this" toast rather than being edited.
+- Full OAuth "Connect" (multi-calendar picker + background refresh) needs a Google Cloud OAuth client ID/secret in env.
+- Toggl's "Timeline" needs OS-level process access; a browser page cannot see other apps. Partial analog implemented and labeled as such in the UI.
+- **Icon governance**: `Timer` and `CalendarClock` are used elsewhere in the app but are not in
+  `src/shared/iconRoles.ts`, so the slice reuses the registered `Clock` (role: "duration/time display")
+  for timer affordances instead of registering new icons. Needs a decision if you'd rather register them.
+- Reports export CSV, JSON and print-to-PDF; XLSX would need a new dependency.

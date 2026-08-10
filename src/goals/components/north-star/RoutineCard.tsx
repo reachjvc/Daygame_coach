@@ -22,7 +22,7 @@
 import { useState } from "react"
 import { Check, ChevronDown, Minus, Plus, X } from "lucide-react"
 import type { NsArea, NsRoutine } from "@/src/goals/types"
-import { NS_SPLITS, ROUTINE_BLUEPRINT_MAP } from "@/src/goals/data/northStar"
+import { NS_SPLITS, ROUTINE_BLUEPRINT_MAP, SERVES_COPY } from "@/src/goals/data/northStar"
 import { routineCoverage, routineIsUntouched, routineMinutes, routineSummary, splitPreview } from "@/src/goals/northStarService"
 
 const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -30,6 +30,8 @@ const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 export interface RoutineHandlers {
   onRename: (routineId: string, label: string) => void
   onArea: (routineId: string, areaId: string | null) => void
+  /** The other areas this routine lifts, beyond the one it is filed under. */
+  onServes: (routineId: string, areaIds: string[]) => void
   onToggleStep: (routineId: string, stepId: string) => void
   onAddCustomStep: (routineId: string, title: string, minutes: number, daysPerWeek: number) => void
   onRemoveStep: (routineId: string, stepId: string) => void
@@ -127,8 +129,41 @@ export function RoutineCard({
         <div className="px-5 pb-4 space-y-3">
           {bp && <p className="text-[11.5px] text-zinc-500 leading-relaxed">{bp.why}</p>}
 
+          {/* Which areas this routine actually carries.
+              A morning routine is not a health routine. It holds up mind,
+              emotions, health and spirituality at once, and filing it under one
+              of them, or under none, meant opening Emotions showed nothing even
+              though something runs there every single day. Ticked here, it
+              appears inside each of those areas. */}
+          <div>
+            <p className="text-[11.5px] text-zinc-300">{SERVES_COPY.routine.label}</p>
+            <p className="text-[10.5px] text-zinc-600 mt-0.5 leading-relaxed">{SERVES_COPY.routine.help}</p>
+            <div className="flex flex-wrap gap-1.5 mt-1.5">
+              {areas.filter((a) => a.id !== routine.areaId).map((a) => {
+                const on = routine.serves.includes(a.id)
+                return (
+                  <button
+                    key={a.id}
+                    onClick={() =>
+                      handlers.onServes(routine.id, on ? routine.serves.filter((id) => id !== a.id) : [...routine.serves, a.id])
+                    }
+                    aria-pressed={on}
+                    className="text-[10.5px] px-2 py-0.5 rounded-full border transition-colors"
+                    style={
+                      on
+                        ? { borderColor: `${a.color}88`, backgroundColor: `${a.color}1f`, color: "#f4f4f5" }
+                        : { borderColor: "rgba(255,255,255,0.1)", color: "#71717a" }
+                    }
+                  >
+                    {a.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           <div className="flex flex-wrap items-center gap-2">
-            <label className="text-[11px] text-zinc-500" htmlFor={`area-${routine.id}`}>Serves</label>
+            <label className="text-[11px] text-zinc-500" htmlFor={`area-${routine.id}`}>Filed under</label>
             <select
               id={`area-${routine.id}`}
               value={routine.areaId ?? ""}

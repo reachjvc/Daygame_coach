@@ -82,6 +82,8 @@ export function CalendarView({
   const [drag, setDrag] = useState<DragState | null>(null)
   const gridRef = useRef<HTMLDivElement | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
+  /** Set right after a move/resize so the trailing click doesn't open the editor */
+  const suppressClick = useRef(false)
 
   const hourHeight = CALENDAR_ZOOMS.find((z) => z.id === zoom)!.hourHeight
   const minuteHeight = hourHeight / 60
@@ -96,6 +98,9 @@ export function CalendarView({
   const enabledCalendars = state.calendars.filter((c) => c.enabled)
   const events = state.events.filter((e) => enabledCalendars.some((c) => c.id === e.calendarId))
   const nowIso = () => new Date().toISOString()
+  /** Only give up half of each day to external events when there are some */
+  const splitColumns = events.length > 0
+  const entryLaneWidth = splitColumns ? 50 : 100
 
   const shift = (direction: number) => {
     setAnchor((current) => addDays(current, direction * (range === "day" ? 1 : 7)))
@@ -113,7 +118,8 @@ export function CalendarView({
       ...days.flatMap((day) => eventsForDay(events, day).map((event) => eventInterval(event, day).startMin)),
     ].filter((minutes) => minutes > 0)
     const earliest = starts.length > 0 ? Math.min(...starts) : minutesIntoDay(new Date(nowSec * 1000).toISOString())
-    container.scrollTop = Math.max(0, (earliest - 60) * minuteHeight)
+    // The extra 10px keeps the topmost hour label from being clipped
+    container.scrollTop = Math.max(0, (earliest - 60) * minuteHeight - 10)
     // Only re-anchor when the visible range or zoom changes, not every tick
   }, [days[0], days.length, minuteHeight]) // deps intentionally narrow: see comment above
 
@@ -151,16 +157,20 @@ export function CalendarView({
       }
     } else if (mode === "move" && drag.entryId && drag.durationMinutes) {
       const newStart = Math.max(0, drag.currentMinutes - (drag.grabOffset ?? 0))
-      setState((current) =>
-        updateEntry(
-          current,
-          drag.entryId!,
-          { start: isoAtMinutes(day, newStart), stop: isoAtMinutes(day, newStart + drag.durationMinutes!) },
-          nowIso(),
-        ).state,
-      )
+      if (newStart !== drag.startMinutes) {
+        suppressClick.current = true
+        setState((current) =>
+          updateEntry(
+            current,
+            drag.entryId!,
+            { start: isoAtMinutes(day, newStart), stop: isoAtMinutes(day, newStart + drag.durationMinutes!) },
+            nowIso(),
+          ).state,
+        )
+      }
     } else if (mode === "resize" && drag.entryId) {
       const end = Math.max(drag.startMinutes + 5, drag.currentMinutes)
+      suppressClick.current = true
       setState((current) => updateEntry(current, drag.entryId!, { stop: isoAtMinutes(day, end) }, nowIso()).state)
     }
     setDrag(null)
@@ -281,7 +291,7 @@ export function CalendarView({
                   {/* time entries — left half */}
                   {entryBlocks.map((block) => {
                     const entry = block.item
-                    const width = 50 / block.columns
+                    const width = entryLaneWidth / block.columns
                     const project = state.projects.find((p) => p.id === entry.projectId)
                     return (
                       <div
@@ -301,7 +311,13 @@ export function CalendarView({
                             durationMinutes: block.heightMinutes,
                           })
                         }}
-                        onClick={() => !drag && onEditEntry(entry)}
+                        onClick={() => {
+                          if (suppressClick.current) {
+                            suppressClick.current = false
+                            return
+                          }
+                          if (!drag) onEditEntry(entry)
+                        }}
                         className={cn(
                           "absolute z-10 cursor-grab overflow-hidden rounded border-l-2 px-1 py-0.5 text-[10px] leading-tight",
                           isRunning(entry) && "animate-pulse",
@@ -314,12 +330,19 @@ export function CalendarView({
                           backgroundColor: `${project?.color ?? "#525266"}33`,
                           borderColor: project?.color ?? "#525266",
                         }}
-                        title={`${entry.description || "(no description)"} · ${formatCompact(entrySeconds(entry, nowSec))}`}
+                        title={`${entry.description || "(no description)"} · ${project?.name ?? "No project"} · ${formatCompact(entrySeconds(entry, nowSec))}`}
                       >
-                        <p className="truncate font-medium">{entry.description || "(no description)"}</p>
-                        <p className="truncate text-muted-foreground">
-                          {project?.name ?? "No project"} · {formatCompact(entrySeconds(entry, nowSec))}
-                        </p>
+                        {/* Below ~22px there is no room for legible text — the tooltip carries it */}
+                        {block.heightMinutes * minuteHeight >= 22 && (
+                          <>
+                            <p className="truncate font-medium">{entry.description || "(no description)"}</p>
+                            {block.heightMinutes * minuteHeight >= 34 && (
+                              <p className="truncate text-muted-foreground">
+                                {project?.name ?? "No project"} · {formatCompact(entrySeconds(entry, nowSec))}
+                              </p>
+                            )}
+                          </>
+                        )}
                       </div>
                     )
                   })}
@@ -380,7 +403,10 @@ export function CalendarView({
                   {/* drag preview */}
                   {isDragDay && drag.mode === "create" && (
                     <div
-                      className="pointer-events-none absolute left-0 z-30 w-1/2 rounded border border-primary bg-primary/25 px-1 text-[10px]"
+                      className={cn(
+                        "pointer-events-none absolute left-0 z-30 rounded border border-primary bg-primary/25 px-1 text-[10px]",
+                        splitColumns ? "w-1/2" : "w-full",
+                      )}
                       style={{
                         top: Math.min(drag.startMinutes, drag.currentMinutes) * minuteHeight,
                         height: Math.max(4, Math.abs(drag.currentMinutes - drag.startMinutes) * minuteHeight),
@@ -397,9 +423,10 @@ export function CalendarView({
       </div>
 
       <p className="text-[11px] text-muted-foreground">
-        Drag on empty space to create an entry · drag a block to move it, its bottom edge to resize · click a block to
-        edit details. External events sit in the right half of each day and never change your entries — exactly like
-        Toggl, which also skips all-day events.
+        Drag empty space to create an entry · drag a block to move it, its bottom edge to resize · click it to edit.
+        {splitColumns
+          ? " Calendar events share each day on the right and never change your entries."
+          : " Connect a calendar to see your events beside your time."}
       </p>
     </div>
   )

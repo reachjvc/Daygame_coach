@@ -138,7 +138,7 @@ export interface Project {
   isPrivate: boolean
   billable: boolean
   currency: string
-  /** Current rate (latest of rateHistory, kept denormalised like Toggl's `rate`) */
+  /** Current rate (latest of rateHistory, kept denormalized like Toggl's `rate`) */
   rate: number | null
   rateHistory: RatePeriod[]
   estimateType: EstimateType

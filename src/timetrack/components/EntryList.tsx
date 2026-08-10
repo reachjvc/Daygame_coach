@@ -3,10 +3,10 @@
 /**
  * The timer-page entry list: day buckets with totals, collapsed identical
  * entries, inline editing of every field, per-entry menu (continue, duplicate,
- * split, favourite, copy start link, delete) and multi-select bulk edit.
+ * split, favorite, copy start link, delete) and multi-select bulk edit.
  */
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -289,6 +289,10 @@ function EntryFields({
   const running = isRunning(entry)
   const editable = canEditEntry(state, entry)
   const [description, setDescription] = useState(entry.description)
+  // Keep the field in step when the entry changes elsewhere (bulk edit, undo, group edit)
+  useEffect(() => {
+    setDescription(entry.description)
+  }, [entry.description])
   const [durationDraft, setDurationDraft] = useState<string | null>(null)
   const [startDraft, setStartDraft] = useState<string | null>(null)
   const [stopDraft, setStopDraft] = useState<string | null>(null)
@@ -296,6 +300,25 @@ function EntryFields({
   const nowIso = () => new Date().toISOString()
 
   const patch = (changes: Parameters<typeof updateEntry>[2]) => {
+    // An edit made on a collapsed group applies to every entry in it, like Toggl
+    if (row?.grouped) {
+      const ids = row.entries.map((e) => e.id)
+      setState((current) =>
+        bulkEditEntries(
+          current,
+          ids,
+          {
+            projectId: changes.projectId,
+            taskId: changes.taskId,
+            billable: changes.billable,
+            description: changes.description,
+            tagIds: changes.tagIds,
+          },
+          nowIso(),
+        ),
+      )
+      return
+    }
     setState((current) => {
       const result = updateEntry(current, entry.id, changes, nowIso())
       if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
@@ -359,13 +382,9 @@ function EntryFields({
         compact
         onChange={(projectId, taskId) => patch({ projectId, taskId })}
         onCreateProject={(name) => {
-          let created = -1
-          setState((current) => {
-            const result = createProject(current, { name }, nowIso())
-            created = result.id
-            return result.state
-          })
-          return created
+          const result = createProject(state, { name }, nowIso())
+          setState(() => result.state)
+          return result.id
         }}
       />
 
@@ -375,13 +394,9 @@ function EntryFields({
         align="right"
         onChange={(tagIds) => patch({ tagIds })}
         onCreateTag={(name) => {
-          let created = -1
-          setState((current) => {
-            const result = createTag(current, name, nowIso())
-            created = result.id
-            return result.state
-          })
-          return created
+          const result = createTag(state, name, nowIso())
+          setState(() => result.state)
+          return result.id
         }}
       />
 
@@ -478,7 +493,7 @@ function EntryFields({
             />
             <MenuItem
               icon={<IconFavorite className="size-3.5" />}
-              label={findFavorite(state, draftOf(entry)) ? "Remove favourite" : "Add to favourites"}
+              label={findFavorite(state, draftOf(entry)) ? "Remove favorite" : "Add to favorites"}
               onClick={() => {
                 setState((current) => toggleFavorite(current, draftOf(entry), nowIso()))
                 close()

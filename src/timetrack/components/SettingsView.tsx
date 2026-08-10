@@ -26,7 +26,7 @@ import {
   WEEK_STARTS,
 } from "../config"
 import { googleEventsToEvents, icsToEvents } from "../calendarService"
-import { IconAdd, IconCalendar, IconDelete, IconExport, IconImport, IconSpinner } from "../icons"
+import { IconAdd, IconAlert, IconCalendar, IconDelete, IconExport, IconImport, IconSpinner } from "../icons"
 import { addDays, dateKey, endOfDayIso, formatDuration, startOfDayIso } from "../timetrackFormatService"
 import { downloadFile, exportStateJson, importEntriesCsv, importStateJson } from "../importExportService"
 import {
@@ -603,37 +603,42 @@ export function IntegrationsPanel({
     )
   }
 
+  /**
+   * Returns the calendar id to import into, creating the row when needed.
+   * The id is taken from the current render's state rather than from inside a
+   * setState updater — React may run updaters later, and the caller needs the
+   * id immediately to tag the imported events.
+   */
   const ensureCalendar = (calendarSource: CalendarSource, calendarRef: string, label: string): Id => {
+    const name = label || "Calendar"
+    const existing = state.calendars.find(
+      (c) =>
+        c.source === calendarSource &&
+        // Match on the address when we kept it, otherwise fall back to the label
+        (c.ref !== "" ? c.ref === calendarRef : c.name === name),
+    )
+    if (existing) return existing.id
+
+    const id = state.nextId
     // A secret iCal address is a credential: only keep it when explicitly asked to
     const storedRef = calendarSource === "ics_url" && !rememberUrl ? "" : calendarRef
-    let id = -1
-    setState((current) => {
-      const existing = current.calendars.find(
-        (c) => c.source === calendarSource && c.ref !== "" && c.ref === calendarRef,
-      )
-      if (existing) {
-        id = existing.id
-        return current
-      }
-      id = current.nextId
-      return {
-        ...current,
-        nextId: current.nextId + 1,
-        calendars: [
-          ...current.calendars,
-          {
-            id,
-            name: label || "Calendar",
-            source: calendarSource,
-            ref: storedRef,
-            color: CALENDAR_COLORS[current.calendars.length % CALENDAR_COLORS.length],
-            enabled: true,
-            lastSyncedAt: null,
-            eventCount: 0,
-          },
-        ],
-      }
-    })
+    setState((current) => ({
+      ...current,
+      nextId: Math.max(current.nextId, id + 1),
+      calendars: [
+        ...current.calendars,
+        {
+          id,
+          name,
+          source: calendarSource,
+          ref: storedRef,
+          color: CALENDAR_COLORS[current.calendars.length % CALENDAR_COLORS.length],
+          enabled: true,
+          lastSyncedAt: null,
+          eventCount: 0,
+        },
+      ],
+    }))
     return id
   }
 
@@ -650,6 +655,11 @@ export function IntegrationsPanel({
       const id = existingId ?? ensureCalendar("ics_url", calendarRef, label)
       const result = icsToEvents(payload.ics, id, todayKey)
       mergeEvents(id, result.events, result)
+      // The checkbox decides on every import, including re-syncs of an existing row
+      setState((current) => ({
+        ...current,
+        calendars: current.calendars.map((c) => (c.id === id ? { ...c, ref: rememberUrl ? calendarRef : "" } : c)),
+      }))
       setRef("")
     } catch (error) {
       pushToast(error instanceof Error ? error.message : "Calendar import failed", "error")
@@ -718,9 +728,15 @@ export function IntegrationsPanel({
                   }
                   className="h-8 w-[180px]"
                 />
-                <span className="max-w-[220px] truncate text-xs text-muted-foreground">
-                  {calendar.source === "ics_url" ? "iCal URL" : calendar.source === "ics_file" ? "uploaded file" : "Google API"} ·{" "}
-                  {calendar.eventCount} events
+                <span className="max-w-[260px] truncate text-xs text-muted-foreground">
+                  {calendar.source === "ics_url"
+                    ? calendar.ref
+                      ? "secret iCal address (saved here)"
+                      : "secret iCal address (not saved)"
+                    : calendar.source === "ics_file"
+                      ? "uploaded file"
+                      : "Google Calendar API"}{" "}
+                  · {calendar.eventCount} events
                   {calendar.lastSyncedAt ? ` · synced ${new Date(calendar.lastSyncedAt).toLocaleString()}` : ""}
                 </span>
                 <div className="ml-auto flex items-center gap-2">
@@ -739,13 +755,29 @@ export function IntegrationsPanel({
                       size="sm"
                       variant="outline"
                       disabled={busy}
-                      onClick={() =>
-                        calendar.source === "ics_url"
-                          ? importFromUrl(calendar.ref, calendar.name, calendar.id)
-                          : importFromGoogleApi(calendar.ref, calendar.name, calendar.id)
-                      }
+                      onClick={() => {
+                        if (calendar.source === "google_api") {
+                          void importFromGoogleApi(calendar.ref, calendar.name, calendar.id)
+                          return
+                        }
+                        if (calendar.ref) {
+                          void importFromUrl(calendar.ref, calendar.name, calendar.id)
+                          return
+                        }
+                        // Address was deliberately not saved — ask for it again
+                        setSource("ics_url")
+                        setResyncCalendarId(calendar.id)
+                        setName(calendar.name)
+                        window.setTimeout(() => urlInput.current?.focus(), 50)
+                      }}
                     >
-                      {busy ? <IconSpinner className="size-4 animate-spin" /> : "Sync now"}
+                      {busy ? (
+                        <IconSpinner className="size-4 animate-spin" />
+                      ) : calendar.source === "ics_url" && !calendar.ref ? (
+                        "Paste address to sync"
+                      ) : (
+                        "Sync now"
+                      )}
                     </Button>
                   )}
                   <ConfirmButton
@@ -771,39 +803,18 @@ export function IntegrationsPanel({
             value={source}
             onChange={setSource}
             options={[
-              { id: "ics_url", label: "Google iCal URL" },
-              { id: "ics_file", label: "Upload .ics" },
+              { id: "ics_file", label: "Upload .ics (safest)" },
               { id: "google_api", label: "Google API" },
+              { id: "ics_url", label: "Secret address" },
             ]}
           />
-
-          {source === "ics_url" && (
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">
-                Google Calendar → Settings → your calendar → <strong>Integrate calendar</strong> → copy{" "}
-                <strong>Secret address in iCal format</strong>. Paste it here; it is fetched server-side and never stored
-                outside this browser. Works for Outlook/Apple published calendars too.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Label" className="h-9 w-[160px]" />
-                <Input
-                  value={ref}
-                  onChange={(event) => setRef(event.target.value)}
-                  placeholder="https://calendar.google.com/calendar/ical/…/basic.ics"
-                  className="h-9 flex-1"
-                />
-                <Button size="sm" disabled={busy || !ref.trim()} onClick={() => importFromUrl(ref.trim(), name)}>
-                  {busy ? <IconSpinner className="size-4 animate-spin" /> : <IconCalendar className="size-4" />} Import
-                </Button>
-              </div>
-            </div>
-          )}
 
           {source === "ics_file" && (
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground">
-                Google Calendar → Settings → <strong>Import &amp; export</strong> → Export gives a zip; unzip it and pick the
-                .ics file for the calendar you want.
+                The safest option: nothing to authorize and no credential to store. In Google Calendar go to{" "}
+                <strong>Settings → Import &amp; export → Export</strong>, unzip the download, and pick the .ics file for the
+                calendar you want. Re-export whenever you want fresh events.
               </p>
               <input
                 ref={fileInput}
@@ -825,24 +836,96 @@ export function IntegrationsPanel({
           {source === "google_api" && (
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground">
-                Reads a calendar through the Google Calendar API using this project&apos;s service account
-                (<code>GOOGLE_SERVICE_ACCOUNT_JSON</code>). Share the calendar with the service account&apos;s{" "}
-                <code>client_email</code> first, then enter the calendar id (usually your Gmail address).
+                Keeps the credential on the server: this app&apos;s service account (<code>GOOGLE_SERVICE_ACCOUNT_JSON</code>)
+                reads the calendar, and your browser only ever sees the events. In Google Calendar, share the calendar with
+                the service account&apos;s <code>client_email</code> (See all event details), then enter the calendar ID —
+                usually your Gmail address. Revoke access any time by removing that share.
               </p>
-              <div className="flex flex-wrap gap-2">
-                <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Label" className="h-9 w-[160px]" />
-                <Input value={ref} onChange={(event) => setRef(event.target.value)} placeholder="you@gmail.com" className="h-9 flex-1" />
-                <Button size="sm" disabled={busy || !ref.trim()} onClick={() => importFromGoogleApi(ref.trim(), name)}>
+              <div className="flex flex-wrap items-end gap-2">
+                <Field label="Name in this app" className="w-[160px]">
+                  <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Google Calendar" className="h-9" />
+                </Field>
+                <Field label="Calendar ID" className="min-w-[240px] flex-1">
+                  <Input
+                    value={ref}
+                    onChange={(event) => setRef(event.target.value)}
+                    placeholder="you@gmail.com"
+                    autoComplete="off"
+                    className="h-9"
+                  />
+                </Field>
+                <Button size="sm" className="h-9" disabled={busy || !ref.trim()} onClick={() => importFromGoogleApi(ref.trim(), name)}>
                   {busy ? <IconSpinner className="size-4 animate-spin" /> : <IconCalendar className="size-4" />} Import
                 </Button>
               </div>
+              <p className="text-[11px] text-muted-foreground">
+                A calendar ID is an identifier, not a password — sharing it grants nothing on its own.
+              </p>
+            </div>
+          )}
+
+          {source === "ics_url" && (
+            <div className="space-y-2">
+              <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2">
+                <IconAlert className="mt-0.5 size-4 shrink-0 text-destructive" />
+                <p className="text-xs">
+                  <strong>This address is a password.</strong> Anyone holding it can read that calendar forever, without
+                  signing in. Prefer <em>Upload .ics</em> or the <em>Google API</em> method above. If you do use it and it
+                  ever leaks, reset it in Google Calendar → Settings → your calendar → <strong>Reset private URLs</strong>.
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Google Calendar → <strong>Settings → your calendar → Integrate calendar</strong> → copy{" "}
+                <strong>Secret address in iCal format</strong>. It is sent once to this app&apos;s own server (Google serves
+                no CORS headers, so the browser cannot fetch it directly), used to read the events, and then discarded
+                unless you tick the box below. Published Outlook and Apple calendar links work here too.
+              </p>
+              <div className="flex flex-wrap items-end gap-2">
+                <Field label="Name in this app" className="w-[160px]">
+                  <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Google Calendar" className="h-9" />
+                </Field>
+                <Field label="Secret iCal address" className="min-w-[260px] flex-1">
+                  <Input
+                    ref={urlInput}
+                    type="password"
+                    value={ref}
+                    onChange={(event) => setRef(event.target.value)}
+                    placeholder="Paste it here — it stays hidden"
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="h-9"
+                  />
+                </Field>
+                <Button
+                  size="sm"
+                  className="h-9"
+                  disabled={busy || !ref.trim()}
+                  onClick={() => importFromUrl(ref.trim(), name, resyncCalendarId ?? undefined)}
+                >
+                  {busy ? <IconSpinner className="size-4 animate-spin" /> : <IconCalendar className="size-4" />}
+                  {resyncCalendarId ? "Sync" : "Import"}
+                </Button>
+              </div>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                <input type="checkbox" checked={rememberUrl} onChange={(event) => setRememberUrl(event.target.checked)} />
+                Remember this address in this browser so “Sync now” works later — it is stored unencrypted in
+                localStorage, so leave it off on a shared machine
+              </label>
+              {resyncCalendarId !== null && (
+                <p className="text-[11px] text-primary">
+                  Re-syncing an existing calendar. Its events will be replaced.{" "}
+                  <button type="button" className="underline" onClick={() => setResyncCalendarId(null)}>
+                    Cancel
+                  </button>
+                </p>
+              )}
             </div>
           )}
 
           <p className="border-t border-border pt-2 text-[11px] text-muted-foreground">
-            Toggl&apos;s one-click “Connect” button uses an OAuth consent screen. That needs a Google Cloud OAuth client id
-            and secret in this app&apos;s environment; until those exist, the three methods above cover the same import
-            without asking you to authorise anything.
+            Toggl&apos;s one-click “Connect” button uses a Google OAuth consent screen, which needs an OAuth client ID and
+            secret in this app&apos;s environment. Until those exist, the three methods above import the same events — and
+            the first two never put a calendar credential in your browser.
           </p>
         </div>
       </SectionCard>

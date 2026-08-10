@@ -131,21 +131,21 @@ export const STAR_PROMPTS: NsReviewPrompt[] = [
   {
     id: "identity_total",
     question: "Who are you committed to being?",
-    help: "Your identity, in the present tense, as lines that start with I am. Not who you will be once it works. If you looked your own name up in the dictionary, what would it say about you? You will not outperform who you believe you are.",
+    help: "Your identity, in the present tense, as lines that start with I am. Write who you are today, not who you will be once it works. His way in: if you looked your own name up in the dictionary, what would it say about you?",
     placeholder: "I am…",
     list: true,
   },
   {
     id: "conduct",
     question: "How are you committed to showing up?",
-    help: "Your standards. Identity is who you are, standards are how that shows up in a room, on a bad day, and when nobody is checking. His own list is short and starts every line with to be.",
+    help: "Your standards. Identity is who you are. Standards are how that shows up in a room, on a bad day, and when nobody is checking. His own list is short and every line starts with to be.",
     placeholder: "To be…",
     list: true,
   },
   {
     id: "become",
     question: "And who do you need to become to have all of this?",
-    help: "This is the gap, and it is a different question from the two above. Those are who you are. This is what the person in the paragraph has that you do not have yet, in character, skills, focus, self-discipline and daily habits. This is the part that becomes work.",
+    help: "A different question from the two above. Those are who you are. This is what the person in your paragraph has that you do not have yet: character, skills, focus, self-discipline, daily habits. Whatever you write here is what you go and work on.",
     placeholder: "Character, skills, focus, self-discipline, daily habits",
   },
   {
@@ -175,41 +175,49 @@ export const STAR_PROMPTS: NsReviewPrompt[] = [
 // are just emotions" and "family" or "money" is the means to one.
 
 export const VALUES_INTRO = {
-  title: "Your values, in order",
-  help: "Your values decide the life you get, because they decide what you do when two things you want will not both fit in a Tuesday. This is the one exercise on this page worth an afternoon.",
+  title: "What matters to you",
+  help: "Your values are what you fall back on when two things you want will not both fit in the same day. Write them down here. You put them in order later, on the review, once you have seen where you stand.",
   minimum: 7,
-  minimumNote: "Aim for at least seven. Ten or fifteen is fine.",
-  daily: "When the order is right, write it out and put it somewhere you see it. It is the list you read every morning, and it is worth redoing every year or two, because your values move when your life does.",
+  minimumNote: "Seven or more is a good list.",
+  daily: "Write the finished list out and keep it somewhere you see it. Redo it every year or two.",
+  /** Shown at the bottom of the elicitation half, saying where the rest is. */
+  laterHint: "You order this list on the review, after you have rated your areas and written the values each one asks for.",
 }
 
 export const VALUES_PAST = {
   question: "What has been most important to you in your life so far?",
-  help: "Answer fast and do not tidy it. Write one, then ask yourself what else, and keep going. This is not the list you want. It is the list that built the life you already have, which is why it is worth looking at.",
+  help: "Answer fast and do not tidy it up. Write one, then ask yourself what else, and keep going. This is the list that built the life you already have.",
   placeholder: "Whatever comes up first",
 }
 
 export const VALUES_NEEDED = {
   question: "And what would your values need to be to create that life?",
-  help: "Read your paragraph again, then answer this. Some of these will already be on the list above. The ones that are not are the change.",
+  help: "Read your paragraph again, then answer this. Some of these are already on the list above. The ones that are not are what has to change.",
   placeholder: "Freedom",
 }
 
 /** Said under the two lists once both have something in them. */
 export const VALUES_DIFF = {
-  added: "New on this list, and not something you have been living by:",
+  added: "New here, and not something you have been living by:",
   dropped: "You have been living by these and left them off:",
-  droppedNote: "Leaving one off is a decision, and often the right one. It is only worth a second look.",
+  droppedNote: "That is often the right call. Just worth seeing once.",
 }
 
 export const VALUES_ORDER = {
+  title: "Put your values in order",
   question: "Now put them in order",
   help: "Whatever is number one, everything else gets filtered through it. Order them by answering one pair at a time.",
   duel: "Which of these two is more important to you?",
-  duelNote: "There is no right answer and you can redo this whenever you like.",
+  duelNote: "There is no right answer, and you can redo this whenever you like.",
   start: "Order them, one pair at a time",
   restart: "Order them again",
   done: "That is the order.",
   manual: "Or move one directly with the arrows.",
+  /** Shown when the ordering half has no list to work on yet. */
+  empty: "Nothing to order yet. Write your values on the north star tab first, and the values each area asks for as you rate them.",
+  /** Above the list, naming where the pool came from. */
+  pooled: "Everything you have written: the whole-life list, plus the values each area and each goal asked for.",
+  pull: "add the ones I wrote per area",
 }
 
 /**
@@ -224,7 +232,7 @@ export const VALUES_ORDER = {
  */
 export const VALUES_MEANS = {
   question: (item: string) => `What is the feeling you are really after from ${item.toLowerCase()}?`,
-  help: "Underneath a value is an emotion. Money is not the value, what money is for is the value. Same with family, a business, a body. Naming the feeling is what makes the list usable.",
+  help: "Underneath most values there is an emotion. With money, the value is what the money is for. Same with family, a business, a body. Write the feeling and the list gets easier to use.",
   keep: "keep both",
   replace: "replace it",
   skip: "it is already the feeling",
@@ -264,17 +272,17 @@ export const VALUE_CONFLICTS: Array<{ above: string[]; below: string[]; note: st
   {
     above: ["success", "achievement", "money", "wealth", "business", "career", "ambition"],
     below: ["happiness", "happy", "joy", "fulfilment", "fulfillment", "peace"],
-    note: "You have put success above happiness. That means you only let yourself feel good once you are winning, and the goalposts move. He spent years there and calls it the mistake he would undo first.",
+    note: "With success above happiness you only let yourself feel good once you are winning, and the bar keeps moving. He lived that way for years and says it is the thing he would change first.",
   },
   {
     above: ["fitness", "physique", "aesthetics", "performance"],
     below: ["health", "vitality", "energy", "wellbeing", "longevity"],
-    note: "Fitness above health is how people end up in the best shape of their life and the worst health of it. Fitness is what the body can do today. Health is whether it is still there in twenty years.",
+    note: "He put fitness above health for a while, did two fitness competitions, and was the most ripped and the least healthy he has ever been. Fitness is what your body can do today. Health is whether it is still there in twenty years.",
   },
   {
     above: ["business", "work", "career", "money", "wealth", "success"],
     below: ["love", "family", "connection", "intimacy", "relationship", "friendship"],
-    note: "Work is sitting above the people. That is the order that has you answering email before you have said good morning to anyone, and it is the one people report regretting.",
+    note: "Work is sitting above the people. His version of this: if you check email first thing in the morning, you are valuing the business above everything else on the list.",
   },
 ]
 
@@ -688,7 +696,7 @@ export const GOAL_METRIC_COPY = {
 /** Said over a set of goals that just arrived together from a template. */
 export const TEMPLATE_ADDED_COPY = {
   title: (n: number, label: string) => `${n} ${n === 1 ? "goal" : "goals"} added from ${label}`,
-  help: "Every one of them arrived with a date a year out and its own shape. Open any of them to move the date, drag the climb, or change the ramp.",
+  help: "They all arrived with a date a year out and their own shape. Open any of them to move the date, drag the climb, or change the ramp.",
   shape: "Shape them",
   dismiss: "got it",
 }
@@ -702,7 +710,7 @@ export const TEMPLATE_PREVIEW_COPY = {
 /** The nudge that replaces gating. Nothing is ever blocked; it is just listed. */
 export const TODO_COPY = {
   title: "Still to fill in",
-  help: "Nothing here stops you moving on, and a date or a why is a fine thing to add in a week. This is only so it does not go quiet.",
+  help: "None of this stops you moving on. A date or a why can wait a week. It is listed here so you can find it again.",
   none: "Nothing outstanding.",
 }
 
@@ -781,7 +789,7 @@ export const FLOOR_LINE = {
     `${total - rated} ${total - rated === 1 ? "area" : "areas"} still unrated. Once they all have a number this will tell you which are under the floor.`,
   under: (names: string) => `Under a seven right now: ${names}.`,
   none: "Nothing under a seven right now.",
-  note: "Seven is the floor, not the aim. Which of these you actually work on this season is your call, and two or three carry most years.",
+  note: "Seven is the floor. Which of these you work on this season is your call, and two or three areas carry most years.",
 }
 
 /**
@@ -860,12 +868,12 @@ export const RATING_VARIANCE_NOTE = {
  */
 export const SEASON_FOCUS_COPY = {
   title: "Your one thing this season",
-  help: "Of everything on this page, which one, if it happened, would make the rest easier? Not the most important. The one that unlocks the others. Quitting one thing, or one habit installed, often moves four areas at once.",
+  help: "Of everything on this page, which one, if it happened, would make the rest easier? Often it is not the biggest goal. Quitting one thing, or getting one habit in place, can move four areas at once.",
   empty: "Nothing picked yet.",
   pick: "Make this my one thing",
   clear: "not this one",
   banner: (label: string) => `This season: ${label}`,
-  bannerNote: "Everything else can slip a week. This one does not.",
+  bannerNote: "If a week goes badly, this is the one that still gets done.",
   areaOption: "Or pick a whole area, if you have not written the goal yet.",
 }
 
@@ -873,11 +881,11 @@ export const SEASON_FOCUS_COPY = {
 export const SERVES_COPY = {
   goal: {
     label: "What else does this lift?",
-    help: "Some goals do not stay in their box. Sleeping properly, or dropping one thing, moves several areas at once. Ticking them here makes this goal show up inside each of those areas.",
+    help: "Some goals move more than one part of your life. Sleeping properly, or dropping one thing, lifts several at once. Tick them and this goal shows up inside each of those areas.",
   },
   routine: {
     label: "Which areas does this routine carry?",
-    help: "A morning routine is not filed under one part of your life. Say which parts it actually holds up and each of them will show it.",
+    help: "A morning routine is not filed under one part of your life. Say which parts it holds up and each of them will show it.",
   },
   /** Shown inside an area, listing what already runs there from elsewhere. */
   inArea: "Also working on this area:",
@@ -938,16 +946,32 @@ export const AREA_REVIEW_COPY = {
    * nothing.
    */
   tenGuide: [
-    "Your 10 is yours. His 10 in his body is 170 pounds at 6 percent and six hours of sleep. Somebody else's is being pain free and having energy all day. Neither is more correct.",
-    "It moves. A 10 at this stage of your life is not a 10 in ten years, and you are meant to rewrite it as you grow rather than keep score against an old one.",
-    "Write the version of this area you could genuinely be living inside a year or two. Set it at billionaire and you will read yourself a 2 every week for a decade, which tells you nothing you can act on.",
+    "Your 10 is yours. His 10 for his body is 170 pounds at 6 percent body fat and six hours of sleep. Somebody else's is being pain free with energy all day. Both are fine.",
+    "It moves. A 10 at this stage of your life will not be a 10 in ten years. Rewrite it as you grow.",
+    "Write the version of this area you could be living inside a year or two. If you set it at billionaire, you will rate yourself a 2 every week for a decade and learn nothing from it.",
   ],
   tenGuideTitle: "What counts as a 10?",
+  /**
+   * The purpose, per area. His structure, and the piece we did not have.
+   *
+   * "I've got my vision here, I've got my purpose for my relationship, and then
+   * I've got my goals, my one-year goals, my three-month goals, my monthly goals
+   * in that area. So I do that for each area of my life" (Rw2qaMltFcY).
+   */
+  purpose: {
+    question: "Why does this area matter to you?",
+    help: "Your reason for this one part of your life. It is what you read when you do not feel like doing the goals underneath it.",
+    placeholder: "This part of my life matters because…",
+  },
   snapshot: {
     question: "Where are you right now, in a sentence or two?",
-    help: "Optional, and the most useful thing on this page in six months. The number tells you it was a 4. This tells you what a 4 felt like, which is the part you will not remember.",
+    help: "Optional. The number says it was a 4. This says what a 4 felt like, which you will not remember in six months.",
     placeholder: "Right now, honestly…",
   },
+  /** The footer, so you can leave an area without clicking into empty space. */
+  done: "Done",
+  next: (label: string) => `Next: ${label}`,
+  autosave: "Saved as you type.",
   rating: { question: "Over the last two weeks, where have you been?", help: "Against the 10 you just wrote. Be honest rather than kind." },
   goalsAim: { question: "Do your goals here actually move you toward that 10?", help: "Read your goals in this area against the picture. If the answer is no, that is useful. Change the goals." },
   values: { question: "What would you have to value to live at that 10?", help: "One word or a short phrase per line. These are the ones this area asks for." },

@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils"
 import {
   generateMilestoneLadder,
   interpolateWithControlPoints,
-  roundToNiceNumber,
 } from "../milestoneService"
 import { getCurveTheme } from "../curveThemes"
 import type { MilestoneLadderConfig, GeneratedMilestone, CurveThemeId } from "../types"
@@ -256,7 +255,19 @@ export function MilestoneCurveEditor({
     })
     .join(" ")
 
-  // Y-axis labels
+  /**
+   * Y-axis labels.
+   *
+   * An axis tick has to say the value at the height it is drawn at. These used
+   * to be passed through `roundToNiceNumber`, which is the right function for
+   * picking milestone VALUES off a ladder and the wrong one for a tick: on a
+   * 100 → 140 goal it turned the quarter marks 110 / 120 / 130 into
+   * 100 / 100 / 150, so the axis read downward past its own midpoint and two
+   * ticks at different heights carried the same number.
+   *
+   * The quarter of the way up IS the value. Only the float tail is rounded off,
+   * so a 0 → 3 range still labels 0.75 rather than collapsing to 1.
+   */
   const yLabels = useMemo(
     () =>
       [0, 0.25, 0.5, 0.75, 1].map((t) => ({
@@ -265,7 +276,7 @@ export function MilestoneCurveEditor({
             ? config.start
             : t === 1
               ? config.target
-              : roundToNiceNumber(config.start + (config.target - config.start) * t),
+              : Math.round((config.start + (config.target - config.start) * t) * 100) / 100,
         y: toSvg(0, t).y,
         isEndpoint: t === 0 || t === 1,
       })),
