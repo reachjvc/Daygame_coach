@@ -26,26 +26,30 @@ import type {
 export const NORTH_STAR_STORAGE_KEY = "north-star-v1"
 
 /**
- * Three tabs, not four.
+ * Four tabs, split by the question each one answers.
  *
- * "Where you are" and "Areas, routines & goals" were the same screen wearing two
- * hats: the same twelve-sector wheel, opening the same area dialog, one of them
- * additionally listing the goals and the routines. Nobody could say what the
- * second one was for, because the honest answer was "the first one, plus more of
- * it". They are one surface now: rate an area, picture your 10 in it, write the
- * goals aimed at that 10, and the routines that run underneath all of it.
+ * "Where you are" and "Areas, routines & goals" were once the same screen twice
+ * over, so they were merged. Merged, one screen carried the whole assessment
+ * (the rating, the 10, the why, the identity, the values) AND every goal in
+ * twelve areas, and the assessment work sat underneath a goal editor nobody
+ * scrolled past. The split now runs along the honest line:
+ *
+ *   now  — where you stand, and what already runs underneath.
+ *   plan — what you are going to do about it.
  */
-export const TAB_ORDER: NorthStarTabId[] = ["star", "now", "review"]
+export const TAB_ORDER: NorthStarTabId[] = ["star", "now", "plan", "review"]
 
 export const TAB_LABELS: Record<NorthStarTabId, string> = {
   star: "North star",
-  now: "Your life",
+  now: "Where you are",
+  plan: "Your goals",
   review: "Review",
 }
 
 export const TAB_BLURBS: Record<NorthStarTabId, string> = {
   star: "The life you are aiming at, why it matters, and who you would have to be.",
-  now: "Rate the twelve areas, write your 10 in each, and the goals and routines under them.",
+  now: "Rate each area on the wheel, picture your 10, and say why it matters and who you are in it.",
+  plan: "The goals aimed at each 10, and the routines running underneath them.",
   review: "Whether the goals point at your 10, and what has stopped you before.",
 }
 
@@ -128,18 +132,48 @@ export const STAR_PROMPTS: NsReviewPrompt[] = [
     help: "This is the part you re-read on a day you do not feel like it, so it is worth more than the wording of the paragraph. Write the reasons that get you up. Then write what it costs you if you never get there.",
     placeholder: "This matters to me because…",
   },
+  /**
+   * The identity and the standards, and why they are two questions.
+   *
+   * They read as one question, and the page used to make that worse: both were
+   * phrased "committed to", and both are lists of good qualities in the present
+   * tense. He blurs it himself, saying of the STANDARDS list "this is who I'm
+   * committed to being, this is the standards that I want to live my life by"
+   * (8kco2rjijjE).
+   *
+   * The difference is real and it is visible in his own two lists:
+   *
+   *   Identity — a self-portrait. "I'm an extraordinarily loving man… I'm an
+   *   amazing friend, son, brother, uncle, strategist, marketer, entrepreneur…
+   *   I'm an athlete, bodybuilder and fitness model… I'm a Muay Thai fighter."
+   *   Nouns as much as adjectives, long, rangy, and about what is TRUE of you.
+   *   He conditions it weekly until it is: "when you condition that you start to
+   *   become that."
+   *
+   *   Standards — a bar. "to be fun playful outrageous, to be loving and caring,
+   *   to be confident… to be disciplined… to be outgoing social and friendly."
+   *   Short by his own account, every line "to be", and the thing you can fall
+   *   short of on a Tuesday and come back to.
+   *
+   * So: what is true of you, and what you hold yourself to. The questions say
+   * that now, and each carries a few words of his own answer, because seeing "an
+   * amazing friend, son, brother" beside "to be disciplined" settles it faster
+   * than any explanation of the difference.
+   */
   {
     id: "identity_total",
-    question: "Who are you committed to being?",
-    help: "Your identity, in the present tense, as lines that start with I am. Write who you are today, not who you will be once it works. His way in: if you looked your own name up in the dictionary, what would it say about you?",
+    question: "Who are you?",
+    help: "Your identity, in the present tense, as lines that start with I am. Not who you will be once it works: who you are, read back every week until it is simply true. Put the roles in as well as the qualities. His way in: if you looked your own name up in the dictionary, what would it say about you?",
     placeholder: "I am…",
+    example: "His: “I'm an extraordinarily loving man… I'm an amazing friend, son, brother, uncle… I'm an athlete, bodybuilder and fitness model.”",
     list: true,
   },
   {
     id: "conduct",
-    question: "How are you committed to showing up?",
-    help: "Your standards. Identity is who you are. Standards are how that shows up in a room, on a bad day, and when nobody is checking. His own list is short and every line starts with to be.",
+    question: "What do you hold yourself to?",
+    help: "Your standards, and a different thing from the identity above. That one is what is true of you. This is the bar you set: what you can fall short of on a bad Tuesday and come back to. His own list is short and every line starts with to be.",
     placeholder: "To be…",
+    example: "His: “to be fun, playful, outrageous. To be loving and caring. To be disciplined. To be outgoing, social and friendly.”",
     list: true,
   },
   {
@@ -176,7 +210,7 @@ export const STAR_PROMPTS: NsReviewPrompt[] = [
 
 export const VALUES_INTRO = {
   title: "What matters to you",
-  help: "Your values are what you fall back on when two things you want will not both fit in the same day. Write them down here. You put them in order later, on the review, once you have seen where you stand.",
+  help: "A value is what you fall back on when two things you want will not both fit in the same day. Two lists: what has actually been driving you so far, then what that paragraph would need. They are rarely the same, and the difference is the point. You put them in order later, on the review, once you have seen where you stand.",
   minimum: 7,
   minimumNote: "Seven or more is a good list.",
   daily: "Write the finished list out and keep it somewhere you see it. Redo it every year or two.",
@@ -184,16 +218,79 @@ export const VALUES_INTRO = {
   laterHint: "You order this list on the review, after you have rated your areas and written the values each one asks for.",
 }
 
+/**
+ * Pass 1. His question, and the prompting he does around it.
+ *
+ * The question is verbatim: "I want you to ask yourself this question, what's
+ * been most important to me in my life?" (Lp_GOrM16Xc). An earlier pass here
+ * rewrote it, on the theory that it reads as a question about events. It does
+ * read that way ON ITS OWN — and the fix is not a better question, because he
+ * never asks it on its own. Within seconds of asking he does four things, and
+ * all four are what makes it answerable:
+ *
+ *   1. "what's the first answer that comes up… just trust whatever comes up,
+ *      don't think about it too much, don't overanalyze"  → `first`
+ *   2. he reads a menu out loud, and it is the actual scaffolding: "security,
+ *      has it been being safe, has it been happiness, has it been success, has
+ *      it been money, has it been family, has it been love, has it been passion,
+ *      has it been friends, has it been travel"           → `MENU`
+ *   3. "what else has been important for you in life… and you're going to keep
+ *      asking yourself that question, you're going to go deep"  → `again`
+ *   4. "try to steer your focus and direction to the emotion, the core emotion
+ *      that you've been after to experience"              → `emotion`
+ *
+ * Nobody produces a value cold. He knows that, and the menu plus the repeated
+ * "what else" IS the method. The page asks his question and does his prompting.
+ */
 export const VALUES_PAST = {
-  question: "What has been most important to you in your life so far?",
-  help: "Answer fast and do not tidy it up. Write one, then ask yourself what else, and keep going. This is the list that built the life you already have.",
-  placeholder: "Whatever comes up first",
+  question: "What has been most important to you in your life?",
+  help: "Write the first thing that comes up and do not think about it too hard. The first answer is the honest one. It is one word or a short phrase, not a story: what you have actually been chasing and protecting until now.",
+  /** His spoken prompt, and the name of the group that carries his words. */
+  first: "Has it been…",
+  /** Asked again after every answer. The repetition is the exercise. */
+  again: "And what else has been important to you?",
+  againNote: "Keep going until nothing else comes up. Most people have more than they think.",
+  emotion: "If you write something like family, money or your business, steer it toward the feeling underneath. That is the value.",
+  placeholder: "Type whatever comes up first and press enter",
 }
 
+/**
+ * His menu, in his order, spoken as "has it been X?" while the viewer writes.
+ * These come first in the suggestion row on the past list, because they are the
+ * prompt rather than our idea of a good starting set.
+ *
+ * Two words are his spoken form said the library's way: "being safe" is Safety
+ * and "friends" is Friendship. Same value either way, and shipping two words for
+ * one thing means somebody adds both and then ranks them against each other.
+ */
+export const VALUES_PAST_MENU = [
+  "Security", "Safety", "Happiness", "Success", "Money", "Family", "Love", "Passion", "Friendship", "Travel",
+]
+
 export const VALUES_NEEDED = {
-  question: "And what would your values need to be to create that life?",
-  help: "Read your paragraph again, then answer this. Some of these are already on the list above. The ones that are not are what has to change.",
-  placeholder: "Freedom",
+  question: "What do your values need to be to create the life you want?",
+  /** Names the group of words read back out of the user's own writing. */
+  lead: "From your paragraph",
+  help: "Read your paragraph again, then answer this. Same shape: one word or a short phrase each. Some of them are already on the list above. The ones that are not are what has to change.",
+  placeholder: "Type whatever the paragraph asks of you and press enter",
+}
+
+/**
+ * The browse panel under both lists, and inside an area.
+ *
+ * The search box adds as well as filters. Somebody looking for "enjoyment" and
+ * not finding it was told "type it in the box above", which is one instruction
+ * too many at exactly the wrong moment: they are already typing, in a box, and
+ * the box they are typing in did nothing with the word. So a word that is not on
+ * the list turns into a button that adds it.
+ */
+export const VALUES_BROWSE = {
+  more: (n: number) => `Show all ${n} values`,
+  search: "Search, or type a value of your own",
+  add: (q: string) => `Add “${q}”`,
+  addNote: "Not on our list is not a problem. Your word is the one that counts.",
+  none: "Nothing matches that.",
+  note: "Words to pick from, grouped. Anything you type counts the same.",
 }
 
 /** Said under the two lists once both have something in them. */
@@ -379,6 +476,10 @@ export const LIBRARY_COPY = {
   levelHelp: "Pick the level that matches where you are today, and the numbers come in at that size.",
   pillarPrompt: "This is your own area, so pick the library that fits it best.",
   added: "already added",
+  /** The peek controls, in place of the disclosures these used to be. */
+  more: (n: number) => `Show all ${n} goals`,
+  moreSets: (n: number) => `Show all ${n} sets`,
+  sets: (n: number) => `${n} sets`,
 }
 
 /** Suggestions for a new area, so the button is not another blank box. */
@@ -394,11 +495,13 @@ export const AREAS_INTRO = {
 }
 
 export const ROUTINES_INTRO = {
-  title: "Routines",
+  title: "What runs underneath",
   /** Shown while the Edit toggle is on. */
   help: "Open one and cut what is not yours. Editing something down is far easier than writing it from nothing.",
   /** Shown the rest of the time. */
-  resting: "What you do on an ordinary Tuesday whether you feel like it or not.",
+  resting: "Your ordinary Tuesday, whether you feel like it or not.",
+  /** Beside the goals wheel, where the four live. */
+  beside: "The part of the plan that runs whether or not you open this page. Click one to build it.",
 }
 
 /**
@@ -459,7 +562,7 @@ export const ROUTINE_BLUEPRINTS: RoutineBlueprint[] = [
   },
   {
     id: "night",
-    label: "Night routine",
+    label: "Evening routine",
     kind: "sequence",
     why: "Good days are set up the night before. Wind down, reset the room, protect your sleep.",
     areaSeedId: "lm_health",
@@ -543,7 +646,7 @@ export const ROUTINE_BLUEPRINTS: RoutineBlueprint[] = [
   },
   {
     id: "work",
-    label: "Work routine",
+    label: "Business routine",
     kind: "weekly",
     why: "Output compounds from a few protected habits. Everything else is noise with a calendar invite.",
     areaSeedId: "lm_mission",
@@ -566,6 +669,46 @@ export const ROUTINE_BLUEPRINTS: RoutineBlueprint[] = [
       { id: "craft", title: "Sharpen your craft", minutes: 30, daysPerWeek: 3, dimension: "mind" },
       { id: "ship", title: "Ship one visible thing", minutes: 60, daysPerWeek: 2, dimension: "mind" },
       { id: "no-social", title: "No social media before noon", minutes: 1, daysPerWeek: 5, dimension: "mind" },
+    ],
+  },
+  {
+    /**
+     * The one that is made of things you do NOT do.
+     *
+     * Every other routine here adds something to the week. This one takes
+     * something out, and it is usually the faster lift: dropping one thing moves
+     * mind, emotions, health and money at once, which is exactly the shape the
+     * season-focus question is looking for. Each line is a day you stay clean of
+     * it, so seven days a week is the line held all week.
+     */
+    id: "vices",
+    label: "Vices",
+    kind: "weekly",
+    why: "The fastest way to lift four areas at once is usually to stop doing one thing. Name what you are quitting and how many days a week you hold it.",
+    areaSeedId: "lm_mindset",
+    servesAreaIds: ["lm_health", "lm_emotions", "lm_spirituality"],
+    daysPerWeek: 7,
+    split: false,
+    defaultStepIds: ["no-phone-bed", "no-scroll-am"],
+    defaultSplitId: null,
+    presets: [
+      { id: "screens", label: "Screens", note: "The phone ones. Start here if you are not sure.", stepIds: ["no-phone-bed", "no-scroll-am", "no-social-noon"] },
+      { id: "substances", label: "Substances", note: "Drink, smoke, weed.", stepIds: ["no-drink-week", "no-smoke", "no-weed"] },
+      { id: "hard", label: "The hard reset", note: "For a season where the point is to stop.", stepIds: ["no-porn", "no-drink-week", "no-scroll-am", "no-phone-bed", "no-junk", "no-gaming-week"] },
+    ],
+    library: [
+      { id: "no-phone-bed", title: "No phone in bed", minutes: 0, daysPerWeek: 7, dimension: "mind" },
+      { id: "no-scroll-am", title: "No scrolling in the first hour", minutes: 0, daysPerWeek: 7, dimension: "mind" },
+      { id: "no-social-noon", title: "No social media before noon", minutes: 0, daysPerWeek: 5, dimension: "mind" },
+      { id: "no-porn", title: "No porn", minutes: 0, daysPerWeek: 7, dimension: "spirit" },
+      { id: "no-drink-week", title: "No drinking on weeknights", minutes: 0, daysPerWeek: 5, dimension: "body" },
+      { id: "no-smoke", title: "No smoking or vaping", minutes: 0, daysPerWeek: 7, dimension: "body" },
+      { id: "no-weed", title: "No weed", minutes: 0, daysPerWeek: 7, dimension: "body" },
+      { id: "no-junk", title: "No junk food", minutes: 0, daysPerWeek: 6, dimension: "body" },
+      { id: "no-gaming-week", title: "No gaming on weeknights", minutes: 0, daysPerWeek: 5, dimension: "mind" },
+      { id: "no-gambling", title: "No betting", minutes: 0, daysPerWeek: 7, dimension: "mind" },
+      { id: "no-spend", title: "Nothing bought on impulse", minutes: 0, daysPerWeek: 7, dimension: "mind" },
+      { id: "no-snooze", title: "No snooze button", minutes: 0, daysPerWeek: 7, dimension: "body" },
     ],
   },
   {
@@ -624,8 +767,15 @@ export const ROUTINE_BLUEPRINTS: RoutineBlueprint[] = [
 
 export const ROUTINE_BLUEPRINT_MAP = new Map(ROUTINE_BLUEPRINTS.map((b) => [b.id, b]))
 
-/** The three that ship in the stack, in order. */
-export const DEFAULT_ROUTINE_IDS = ["morning", "night", "manifestation"]
+/**
+ * The four that ship in the stack beside the wheel, in order.
+ *
+ * Morning and evening bracket the day, business is where the output comes from,
+ * and vices is the one made of things you stop. Manifestation is still in the
+ * library and one click away; it was cut from the default four because reading
+ * the north star out loud is already a step in the morning routine.
+ */
+export const DEFAULT_ROUTINE_IDS = ["morning", "night", "work", "vices"]
 
 /** Standard split templates for the training week. */
 export const NS_SPLITS: Array<{ id: string; label: string; days: string[]; perWeek: number }> = [
@@ -765,11 +915,21 @@ export const NS_QUALIFY_THRESHOLD = 7
 // ---------------------------------------------------------------- tab 4
 
 export const NOW_INTRO = {
-  title: "Your life, area by area",
-  help: "Before you decide where you are going, be honest about where you are standing. Rate each area against your own 10, write what that 10 actually looks like, and put the goals under it.",
-  order: "Write the 10 first. A rating with no picture behind it is a mood, and somebody else's 10 in your health is not yours.",
-  optional: "You do not have to do all twelve. The ones you rate are the ones the wheel fills in.",
-  next: "Now check the plan against it →",
+  title: "Where you are, area by area",
+  help: "Before you decide where you are going, be honest about where you are standing. Open an area and write what a 10 looks like, rate yourself against it, then say why it matters, who you are in it, and what it asks of you.",
+  order: "Write the 10 first. A rating with no picture behind it is a mood, and somebody else's 10 in your health is not yours. You do not have to do all twelve.",
+  next: "Now write the goals →",
+}
+
+/** Tab 3. The goals, and nothing else. */
+export const PLAN_INTRO = {
+  title: "What you are going to do about it",
+  help: "One area at a time. Its 10 and its rating come with it, so every goal is written against the picture it is supposed to close. The routines beside the wheel are the part that runs every week whatever else happens.",
+  order: "Write the goal, then the reason under it. The reason is what you re-read on a day you do not feel like it.",
+  empty: "Nothing written yet. Open an area and add the first one.",
+  next: "Now check them against your 10 →",
+  /** Said on an area that has a 10 written and nothing aimed at it. */
+  gap: (names: string) => `Pictured but nothing aimed at it yet: ${names}.`,
 }
 
 /**
@@ -916,6 +1076,32 @@ export const GOAL_TOOL_LINKS: Array<{ match: string[]; label: string; tab: North
   },
 ]
 
+/**
+ * Milestone celebrations, on a finish-line goal.
+ *
+ * A finish line pays out once, at the end. "Bench 36 kg dumbbells for 6 reps" is
+ * correctly a finish line — you did it or you did not — and it is also obviously
+ * a climb, and the climb is where the year actually happens. So the number comes
+ * out of the title, the rungs are generated at even intervals, and each one has
+ * a place to write what you do when you get there.
+ */
+export const MILESTONE_COPY = {
+  title: "Milestone celebrations",
+  help: "This one has a number in it, so it has a climb underneath it. Set the rungs and say what you do when you reach each one. A finish line that only pays out at the end is a long time to work with nothing to feel.",
+  from: "From",
+  to: "To",
+  count: "Rungs",
+  unit: "Unit",
+  make: "Set the milestones",
+  remake: "Redo the milestones",
+  replaceNote: (n: number) => `This replaces the ${n} ${n === 1 ? "milestone" : "milestones"} already here. Checkpoints you wrote yourself stay.`,
+  celebrate: "What you do when you get here",
+  celebratePlaceholder: "Tell someone. Take the night off. Buy the thing.",
+  celebrateHint: "Small and soon beats big and never. It only counts if you actually do it.",
+  none: "No number in this goal's title, so there is nothing to space out. Write the checkpoints yourself below.",
+  offer: "Turn this into a climb",
+}
+
 /** Said on a goal whose title already exists as a step in one of the routines. */
 export const GOAL_IN_ROUTINE = (routine: string, step: string) =>
   `Already in your ${routine}, as "${step}". Keeping the goal is fine; the routine is where it actually happens.`
@@ -968,6 +1154,12 @@ export const AREA_REVIEW_COPY = {
     help: "Optional. The number says it was a 4. This says what a 4 felt like, which you will not remember in six months.",
     placeholder: "Right now, honestly…",
   },
+  /** The two dialogs are one area split in half, so each points at the other. */
+  toGoals: (label: string) => `Write the goals for ${label} →`,
+  toGoalsHelp: "The goals live on the next tab. This one is the picture they are aimed at.",
+  fromGoals: "Your 10 in this area",
+  fromGoalsEdit: "edit the picture",
+  fromGoalsEmpty: "No 10 written for this area yet. Write it first, on Where you are, and the goals have something to aim at.",
   /** The footer, so you can leave an area without clicking into empty space. */
   done: "Done",
   next: (label: string) => `Next: ${label}`,
@@ -975,6 +1167,8 @@ export const AREA_REVIEW_COPY = {
   rating: { question: "Over the last two weeks, where have you been?", help: "Against the 10 you just wrote. Be honest rather than kind." },
   goalsAim: { question: "Do your goals here actually move you toward that 10?", help: "Read your goals in this area against the picture. If the answer is no, that is useful. Change the goals." },
   values: { question: "What would you have to value to live at that 10?", help: "One word or a short phrase per line. These are the ones this area asks for." },
+  /** Names the short row read off their own writing, above the full library. */
+  valuesLead: (label: string) => `For ${label.toLowerCase()}`,
   identity: { question: "Who are you when this area is handled?", help: "Present tense, starting with I am. You will not outperform who you believe you are." },
   blockers: { question: "What might stop you here?", help: "Name it now, while it is theoretical and cheap. It is much harder to think clearly about it in the middle of week six." },
 }
@@ -1002,7 +1196,120 @@ export const REVIEW_PROMPTS: NsReviewPrompt[] = [
   },
 ]
 
-/** Suggestions for the values exercise, to prime recall. Free-add always works. */
+/**
+ * The full value list, grouped, to browse.
+ *
+ * Twenty words in a chip row was the whole pool, and twelve of them fitted on
+ * screen. Twelve words is not a list you can find yourself in: the point of
+ * offering words at all is that naming a value is a recall problem, and recall
+ * needs a big enough field to recognise something in.
+ *
+ * MEANS VALUES ARE IN HERE ON PURPOSE. Family, money, fitness and status are not
+ * emotions, and they are what people actually say. Refusing them, or leaving
+ * them off the list, is the thing that ends the exercise. They earn the "worth a
+ * second look" question when they land in the ordered list, which is his own
+ * correction and is a question rather than a rejection.
+ *
+ * Groups are for scanning, nothing more. No value is filed anywhere twice.
+ */
+export const NS_VALUE_GROUPS: Array<{ label: string; color: string; values: string[] }> = [
+  {
+    label: "Freedom",
+    color: "#38bdf8",
+    values: ["Freedom", "Independence", "Autonomy", "Flexibility", "Simplicity", "Space", "Balance", "Self-reliance", "Adventure", "Travel"],
+  },
+  {
+    label: "People",
+    color: "#f43f5e",
+    values: ["Love", "Connection", "Intimacy", "Family", "Friendship", "Belonging", "Loyalty", "Community", "Partnership", "Being liked", "Generosity", "Forgiveness"],
+  },
+  {
+    label: "Growth",
+    color: "#6366f1",
+    values: ["Growth", "Learning", "Mastery", "Curiosity", "Wisdom", "Progress", "Craft", "Competence", "Self-awareness", "Reading"],
+  },
+  {
+    label: "Body",
+    color: "#22c55e",
+    values: ["Health", "Vitality", "Energy", "Strength", "Fitness", "Looking strong", "Rest", "Longevity", "Sleep", "Sobriety"],
+  },
+  {
+    label: "Work and money",
+    color: "#84cc16",
+    values: ["Achievement", "Success", "Ambition", "Excellence", "Winning", "Wealth", "Money", "Security", "Stability", "Recognition", "Status", "Reputation", "Hard work", "Results"],
+  },
+  {
+    label: "Meaning",
+    color: "#eab308",
+    values: ["Purpose", "Meaning", "Contribution", "Service", "Impact", "Legacy", "Justice", "Mentorship", "Leaving things better"],
+  },
+  {
+    label: "Spirit",
+    color: "#c084fc",
+    values: ["Faith", "Spirituality", "Peace", "Presence", "Mindfulness", "Stillness", "Solitude", "Nature", "Gratitude", "Acceptance", "Devotion", "Hope"],
+  },
+  {
+    label: "Joy",
+    color: "#ec4899",
+    values: ["Joy", "Enjoyment", "Happiness", "Contentment", "Satisfaction", "Fun", "Play", "Humour", "Passion", "Ease", "Novelty", "Spontaneity", "Beauty", "Pleasure", "Excitement", "Wonder"],
+  },
+  {
+    label: "Character",
+    color: "#14b8a6",
+    values: ["Integrity", "Honesty", "Authenticity", "Courage", "Discipline", "Consistency", "Determination", "Responsibility", "Humility", "Respect", "Fairness", "Trust", "Kindness", "Compassion", "Empathy", "Patience", "Resilience", "Optimism", "Self-respect"],
+  },
+  {
+    label: "Making things",
+    color: "#f97316",
+    values: ["Creativity", "Self-expression", "Imagination", "Originality", "Vision", "Building things", "Order", "Clarity", "Focus"],
+  },
+  {
+    label: "Standing",
+    color: "#94a3b8",
+    values: ["Confidence", "Leadership", "Influence", "Boldness", "Certainty", "Control", "Being needed", "Approval", "Safety", "Comfort"],
+  },
+]
+
+/** The colour a value carries wherever it is shown, from the group it is in. */
+export const VALUE_COLOR = new Map(
+  NS_VALUE_GROUPS.flatMap((g) => g.values.map((v) => [v.toLowerCase(), g.color] as const)),
+)
+
+/**
+ * The values each of the twelve areas usually asks for.
+ *
+ * A generic twenty-word row under "what would you have to value to live at that
+ * 10 in Money?" offered Adventure and Faith and left out Security, which is the
+ * one nearly everybody writes. The area knows what it is about; the short list
+ * should too.
+ *
+ * These are only the fallback. `areaValueSuggestions` reads the user's own 10,
+ * purpose and north star first, so somebody who wrote "a year of costs in the
+ * bank and I stop counting at the till" is offered Security and Abundance off
+ * their own paragraph before any of this.
+ */
+export const AREA_VALUE_SUGGESTIONS: Record<string, string[]> = {
+  lm_health: ["Health", "Vitality", "Energy", "Rest", "Sleep", "Longevity", "Discipline", "Sobriety"],
+  lm_fitness: ["Strength", "Fitness", "Discipline", "Consistency", "Looking strong", "Determination", "Resilience", "Energy"],
+  lm_mindset: ["Clarity", "Focus", "Growth", "Learning", "Optimism", "Resilience", "Self-awareness", "Wisdom"],
+  lm_emotions: ["Happiness", "Joy", "Gratitude", "Peace", "Contentment", "Acceptance", "Presence", "Enjoyment"],
+  lm_relationship: ["Love", "Intimacy", "Passion", "Trust", "Loyalty", "Honesty", "Partnership", "Patience"],
+  lm_mission: ["Purpose", "Meaning", "Mastery", "Craft", "Impact", "Excellence", "Contribution", "Ambition"],
+  lm_money: ["Security", "Freedom", "Wealth", "Stability", "Independence", "Generosity", "Discipline", "Simplicity"],
+  lm_family: ["Family", "Love", "Connection", "Loyalty", "Presence", "Patience", "Trust", "Belonging"],
+  lm_friends: ["Friendship", "Connection", "Belonging", "Community", "Fun", "Loyalty", "Generosity", "Humour"],
+  lm_fun: ["Fun", "Play", "Adventure", "Novelty", "Spontaneity", "Enjoyment", "Travel", "Wonder"],
+  lm_contribution: ["Contribution", "Service", "Generosity", "Impact", "Kindness", "Compassion", "Legacy", "Justice"],
+  lm_spirituality: ["Faith", "Spirituality", "Peace", "Presence", "Stillness", "Gratitude", "Devotion", "Acceptance"],
+}
+
+/** Every value in the library, flat, for search and for counting. */
+export const NS_VALUE_LIBRARY = NS_VALUE_GROUPS.flatMap((g) => g.values)
+
+/**
+ * The short row shown inline, to prime recall before anybody opens the browser.
+ * The rest of the library is one click away.
+ */
 export const NS_VALUE_SUGGESTIONS = [
   "Freedom", "Growth", "Family", "Love", "Health", "Contribution", "Faith",
   "Adventure", "Security", "Creativity", "Connection", "Achievement",

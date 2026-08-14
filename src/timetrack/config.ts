@@ -74,7 +74,7 @@ export const WEEK_STARTS = [
 export const ROUNDING_MINUTES = [1, 5, 6, 10, 15, 30, 60] as const
 
 export const ROUNDING_MODES = [
-  { id: "nearest", label: "Nearest" },
+  { id: "nearest", label: "Round to nearest" },
   { id: "up", label: "Round up" },
   { id: "down", label: "Round down" },
 ] as const
@@ -138,7 +138,7 @@ export const CURRENCIES = ["USD", "EUR", "GBP", "NOK", "SEK", "DKK", "CHF", "AUD
 /** Webapp shortcuts, Timer page only, inactive while a field is focused (toggl) */
 export const SHORTCUTS = [
   { keys: "S", action: "Stop the running time entry" },
-  { keys: "N", action: "New entry in timer mode & start tracking" },
+  { keys: "N", action: "Start a new entry in timer mode" },
   { keys: "M", action: "New entry in manual mode" },
   { keys: "C", action: "Continue the last time entry" },
   { keys: "1 … 9", action: "Start the matching favorite" },
@@ -185,8 +185,8 @@ export const WEBHOOK_EVENTS = [
 
 /** Member audit buckets (toggl: filter members by how much they tracked) */
 export const AUDIT_BUCKETS = [
-  { id: "none", label: "Tracked nothing", maxHours: 0 },
-  { id: "under_10", label: "Under 10 h", maxHours: 10 },
-  { id: "under_20", label: "Under 20 h", maxHours: 20 },
-  { id: "under_40", label: "Under 40 h", maxHours: 40 },
+  { id: "none", label: "Tracked nothing at all", maxHours: 0 },
+  { id: "under_10", label: "Under 10 hours", maxHours: 10 },
+  { id: "under_20", label: "Under 20 hours", maxHours: 20 },
+  { id: "under_40", label: "Under 40 hours", maxHours: 40 },
 ] as const

@@ -74,6 +74,11 @@ function StarQuestion({ prompt, plan, onAnswer }: {
         aria-label={prompt.question}
         className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
       />
+      {/* His own answer, a few words of it. Carried by the two prompts that
+          read as the same question until you see them side by side. */}
+      {prompt.example && (
+        <p className="text-[10.5px] text-zinc-600 mt-1 leading-relaxed">{prompt.example}</p>
+      )}
     </div>
   )
 }

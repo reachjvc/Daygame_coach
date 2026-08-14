@@ -44,6 +44,8 @@ interface DropdownProps {
   panelClassName?: string
   openOnMount?: boolean
   onOpenChange?: (open: boolean) => void
+  /** Required when the trigger is icon-only, so it has an accessible name */
+  ariaLabel?: string
 }
 
 export function Dropdown({
@@ -55,6 +57,7 @@ export function Dropdown({
   panelClassName,
   openOnMount = false,
   onOpenChange,
+  ariaLabel,
 }: DropdownProps) {
   const [open, setOpen] = useState(openOnMount)
   const ref = useClickOutside<HTMLDivElement>(() => {
@@ -72,7 +75,14 @@ export function Dropdown({
 
   return (
     <div ref={ref} className={cn("relative", className)}>
-      <button type="button" onClick={toggle} className="w-full text-left">
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={ariaLabel}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        className="w-full text-left"
+      >
         {trigger(open)}
       </button>
       {open && (
@@ -120,7 +130,7 @@ export function Modal({
   }, [onClose])
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/60 p-4 sm:p-8">
+    <div className="fixed inset-0 z-[9600] flex items-start justify-center overflow-y-auto bg-black/60 p-4 sm:p-8">
       <div className={cn("w-full rounded-lg border border-border bg-card shadow-2xl", wide ? "max-w-4xl" : "max-w-lg")}>
         <div className="flex items-center justify-between border-b border-border px-5 py-3">
           <h3 className="text-sm font-semibold">{title}</h3>
@@ -142,7 +152,8 @@ export function Modal({
 export function Field({ label, hint, children, className }: { label: string; hint?: string; children: ReactNode; className?: string }) {
   return (
     <label className={cn("block space-y-1", className)}>
-      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
+      {/* block, so a narrow input still sits below its label rather than beside it */}
+      <span className="block text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
       {children}
       {hint && <span className="block text-xs text-muted-foreground">{hint}</span>}
     </label>
@@ -430,7 +441,7 @@ export function DonutChart({
   let offset = 0
 
   if (total === 0) {
-    return <p className="py-8 text-center text-xs text-muted-foreground">No tracked time in this range</p>
+    return <p className="py-8 text-center text-xs text-muted-foreground">Nothing tracked in this range</p>
   }
 
   return (

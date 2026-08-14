@@ -39,6 +39,14 @@ import { ConfirmButton, EmptyState, SectionCard, Segmented } from "./primitives"
 
 type ManageTab = "clients" | "tags" | "team"
 
+/** Buttons name the action; the pill beside them shows the current status */
+const APPROVAL_ACTIONS = [
+  { status: "submitted", label: "Submit" },
+  { status: "approved", label: "Approve" },
+  { status: "rejected", label: "Reject" },
+  { status: "open", label: "Reopen" },
+] as const
+
 export function ManageView({
   state,
   setState,
@@ -90,7 +98,7 @@ function ClientsPanel({
   return (
     <SectionCard
       title="Clients"
-      description="Group projects under the client they belong to."
+      description="Group projects under the client they are for."
       actions={
         <div className="flex gap-2">
           <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="New client" className="h-8 w-[180px]" />
@@ -108,7 +116,7 @@ function ClientsPanel({
       }
     >
       {state.clients.length === 0 ? (
-        <EmptyState title="No clients yet" />
+        <EmptyState title="No clients yet" hint="Add one above, then pick it when you create a project." />
       ) : (
         <ul className="divide-y divide-border">
           {state.clients.map((client) => {
@@ -164,7 +172,7 @@ function TagsPanel({
   return (
     <SectionCard
       title="Tags"
-      description="Renaming a tag updates every entry that uses it; deleting removes it from those entries."
+      description="Renaming a tag updates every entry using it. Deleting one removes it from those entries."
       actions={
         <div className="flex gap-2">
           <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="New tag" className="h-8 w-[160px]" />
@@ -182,7 +190,7 @@ function TagsPanel({
       }
     >
       {state.tags.length === 0 ? (
-        <EmptyState title="No tags yet" />
+        <EmptyState title="No tags yet" hint="Add one above, or type # in a description to create one on the fly." />
       ) : (
         <ul className="divide-y divide-border">
           {state.tags.map((tag) => (
@@ -271,8 +279,8 @@ function TeamPanel({
               <tr>
                 <th className="px-2 py-2 text-left font-medium">Member</th>
                 <th className="px-2 py-2 text-left font-medium">Access</th>
-                <th className="px-2 py-2 text-right font-medium">Billable rate</th>
-                <th className="px-2 py-2 text-right font-medium">Cost / h</th>
+                <th className="px-2 py-2 text-right font-medium">Rate/hour</th>
+                <th className="px-2 py-2 text-right font-medium">Cost/hour</th>
                 <th className="px-2 py-2 text-left font-medium">Groups</th>
                 <th className="px-2 py-2 text-right font-medium">Tracked (week)</th>
                 <th className="px-2 py-2" />
@@ -288,7 +296,10 @@ function TeamPanel({
                   <tr key={member.id}>
                     <td className="px-2 py-2">
                       <p className="font-medium">
-                        {member.name} {member.isSelf && <span className="text-xs text-muted-foreground">(you)</span>}
+                        {member.name}
+                        {member.isSelf && member.name !== "You" && (
+                          <span className="ml-1 text-xs text-muted-foreground">(you)</span>
+                        )}
                       </p>
                       <p className="text-xs text-muted-foreground">{member.email}</p>
                     </td>
@@ -376,7 +387,7 @@ function TeamPanel({
           </table>
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Members here are local records in the sandbox — no invitations are sent and nobody else can sign in.
+          Members here are records in this browser only. No invitations are sent and nobody else can sign in.
         </p>
       </SectionCard>
 
@@ -420,10 +431,10 @@ function TeamPanel({
 
         <SectionCard
           title="Member audit"
-          description={`Who tracked too little between ${formatDate(auditRange.start, state.user.dateFormat)} and ${formatDate(auditRange.end, state.user.dateFormat)}`}
+          description={`Members below the selected amount between ${formatDate(auditRange.start, state.user.dateFormat)} and ${formatDate(auditRange.end, state.user.dateFormat)}.`}
           actions={
             <MiniSelect
-              className="w-[150px]"
+              className="w-[180px]"
               value={auditBucket}
               onChange={setAuditBucket}
               options={AUDIT_BUCKETS.map((b) => ({ id: b.id, label: b.label }))}
@@ -431,7 +442,7 @@ function TeamPanel({
           }
         >
           {audit.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Everyone is above this threshold.</p>
+            <p className="text-xs text-muted-foreground">Everyone tracked more than this.</p>
           ) : (
             <ul className="divide-y divide-border">
               {audit.map(({ member, seconds }) => (
@@ -475,7 +486,7 @@ function TeamPanel({
                 <span className="tabular-nums text-muted-foreground">{formatDuration(tracked, state.user.durationFormat)}</span>
                 <span
                   className={cn(
-                    "rounded-full px-2 py-0.5 text-[11px]",
+                    "rounded-full px-2 py-0.5 text-[11px] capitalize",
                     status === "approved" && "bg-[#2da608]/20 text-[#2da608]",
                     status === "submitted" && "bg-primary/20 text-primary",
                     status === "rejected" && "bg-destructive/20 text-destructive",
@@ -485,18 +496,20 @@ function TeamPanel({
                   {status}
                 </span>
                 <div className="ml-auto flex gap-1">
-                  {(["submitted", "approved", "rejected", "open"] as const).map((next) => (
+                  {APPROVAL_ACTIONS.map((action) => (
                     <Button
-                      key={next}
+                      key={action.status}
                       size="sm"
                       variant="ghost"
                       className="h-7"
-                      disabled={status === next}
+                      disabled={status === action.status}
                       onClick={() =>
-                        setState((current) => setApprovalStatus(current, member.id, approvalWeek, next, new Date().toISOString()))
+                        setState((current) =>
+                          setApprovalStatus(current, member.id, approvalWeek, action.status, new Date().toISOString()),
+                        )
                       }
                     >
-                      {next === "open" ? "reopen" : next}
+                      {action.label}
                     </Button>
                   ))}
                 </div>

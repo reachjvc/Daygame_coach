@@ -572,8 +572,8 @@ export const CYL_SHOWCASE: readonly CylShowcasePanel[] = [
   {
     key: "already-know",
     eyebrow: "",
-    headline: "You already know what to do. That's the problem.",
-    body: "Every video you've watched told you the truth. Sleep more. Start small. Fix your environment. None of it was wrong, and none of it worked.",
+    headline: "The advice was never the problem.",
+    body: "Every video you've watched told you the truth. Sleep more. Start small. Fix your environment. None of it was wrong, and none of it worked, and after a while you start to suspect the fault is you.",
   },
   {
     key: "works",
@@ -591,7 +591,7 @@ export const CYL_SHOWCASE: readonly CylShowcasePanel[] = [
     key: "duration",
     eyebrow: "The bit that catches everyone",
     headline: "It takes longer than you want, and nobody can tell you exactly how long.",
-    body: "That isn't a dodge. It genuinely depends on where you're starting from, how much of your week is actually yours, and whether anyone around you makes it easier or harder. Below is every answer this genre gives, and the spread is the honest bit: they're different because you're all different.",
+    body: "That isn't a dodge. It depends on where you're starting, how much of your week is yours, and who's around you. Below is every answer this genre gives, and the spread across them is the honest part of it.",
   },
   {
     key: "loop",
@@ -626,23 +626,23 @@ export interface CylPrinciple {
 export const CYL_WORKS: readonly CylPrinciple[] = [
   {
     title: "Stop trying to out-willpower it",
-    body: "Willpower runs on the newest part of your brain and your habits run on something older and faster, so most nights you're going to lose that fight. It isn't a character problem. What works is arranging things so the fight never starts, which usually just means the thing leaves the house.",
+    body: "Willpower runs on the newest part of your brain and habits run on something older and faster, so most nights you lose that fight. Rather than getting better at losing it, arrange things so it never starts, which usually just means taking the thing out of the house.",
   },
   {
     title: "Start smaller than feels serious",
-    body: "Not going to the gym. Putting your shoes on and walking out the front door. That sounds like a joke until you notice the thing you're actually bad at isn't the workout, it's turning up, and turning up is the part you have to train first.",
+    body: "Not going to the gym. Putting your shoes on and walking out the door. What you're bad at isn't the workout, it's turning up, and that's the bit you train first.",
   },
   {
     title: "You're collecting evidence about who you are",
-    body: "There's a real difference between saying you're trying to quit and saying you don't smoke. The first is a fight you're currently losing. The second is just a fact about you, and you get there by stacking up enough small pieces of evidence that arguing with it starts to feel stupid.",
+    body: "There's a difference between saying you're trying to quit and saying you don't smoke. One is a fight you're losing, the other is just true, and you get from the first to the second by quietly stacking up evidence.",
   },
   {
     title: "The motivation turns up afterwards",
-    body: "Nobody wants to before they start. The feeling you're waiting for is what you get paid in once you've begun, so sitting around waiting for it is a bit like waiting for the wages before you've done the shift.",
+    body: "Nobody wants to before they start. The feeling you're waiting for is what you get paid once you've begun, so waiting on it is like waiting for wages before the shift.",
   },
   {
     title: "Plan for a bad week, not a good one",
-    body: "Most advice quietly assumes a free evening, a kitchen nobody else has opinions about, and nobody who needs you at short notice. Build the version that still happens on a late shift when someone's ill, because that's the week that decides whether any of this survives.",
+    body: "Most advice assumes a free evening and a kitchen nobody else has opinions about. Build the version that still happens on a late shift when someone's ill, because that's the week that decides whether any of it survives.",
   },
 ] as const
 
@@ -711,11 +711,11 @@ export const CYL_AREAS: readonly CylAreaExample[] = [
  */
 export const CYL_LETTER = {
   instruction:
-    "Think of someone you actually care about, and imagine they've just told you they fell off the thing they were trying to do. Write down what you'd say to them. Not the encouraging version you'd put in a card, the real one, the mix of kind and blunt you'd only use with someone you know well.",
+    "Think of someone you actually care about, and imagine they've just told you they fell off. Write down what you'd say to them. Not the card version. The real one.",
   turn:
-    "Then cross out their name and write yours at the top. That's the letter, and it's the one you read on the day you'd otherwise quit.",
+    "Then cross out their name and write yours at the top, and that's the letter you read on the day you'd otherwise quit.",
   why:
-    "It works because the version of you reading it will be in no state to write it. People are reliably fairer to other people than to themselves, so you're borrowing your own judgement from a day when you had some.",
+    "You'll be in no state to write it on the day you need it. People are fairer to others than to themselves, so borrow your own judgement from a day you had some.",
 } as const
 
 export interface CylAction {
@@ -750,7 +750,7 @@ export const CYL_DO_NOW: readonly CylAction[] = [
 
 /** The honest answer on timescale, given rather than withheld. */
 export const CYL_DURATION_ANSWER =
-  "What you can plan around: weeks before it stops feeling like a decision, months before you notice a difference, and longer than that before it's simply who you are. The mistake almost everyone makes is judging it at week three, which is the exact point where it feels like nothing is happening."
+  "Weeks before it stops feeling like a decision, months before you notice anything, and longer than that before it's simply who you are. Almost everyone judges it at week three, which is the exact point where it feels like nothing is happening."
 
 export interface CylCandidatePrompt {
   id: string

@@ -14,6 +14,7 @@
 
 import {
   AREA_COLOR_POOL,
+  AREA_VALUE_SUGGESTIONS,
   DEFAULT_AREAS,
   DEFAULT_GOAL_MONTHS,
   DEFAULT_ROUTINE_IDS,
@@ -22,6 +23,7 @@ import {
   NS_FLOOR,
   NS_QUALIFY_THRESHOLD,
   NS_SPLITS,
+  NS_VALUE_SUGGESTIONS,
   REVIEW_PROMPTS,
   ROUTINE_BLUEPRINT_MAP,
   ROUTINE_BLUEPRINTS,
@@ -34,6 +36,19 @@ import {
   VALUES_INTRO,
 } from "@/src/goals/data/northStar"
 import { AREA_LIBRARY_PILLAR } from "@/src/goals/data/northStar"
+import {
+  GUIDE_QUESTION_ORDER,
+  type GuideQuestionId,
+} from "@/src/goals/data/northStarGuide"
+import {
+  AREA_OFFERS,
+  LOAD_CEILING,
+  OBJECTIVE_ACTION,
+  OBJECTIVE_ROUTINE_NEEDS,
+  practiceLabel,
+  type AreaOffer,
+  type RoutineNeed,
+} from "@/src/goals/data/northStarBuild"
 import {
   OBJECTIVES,
   SHARED_DRIVERS,
@@ -232,6 +247,7 @@ export function emptyNsPlan(): NsPlan {
     values: [],
     priorityIds: [],
     seasonFocusId: null,
+    seasonAreaIds: [],
     daily: {},
     seq,
     updatedAt: null,
@@ -440,6 +456,7 @@ export function loadNsPlan(raw: string | null): NsPlan | null {
     priorityIds,
     // Points at a goal or an area. Anything else, including a goal deleted
     // since, drops to null rather than leaving the banner naming nothing.
+    seasonAreaIds: readStringList(obj.seasonAreaIds).filter((id) => areaIds.has(id)),
     seasonFocusId:
       typeof obj.seasonFocusId === "string" && (goalIdSet.has(obj.seasonFocusId) || areaIds.has(obj.seasonFocusId))
         ? obj.seasonFocusId
@@ -504,7 +521,12 @@ function readGoal(g: Record<string, unknown>): NsGoal {
       ? (g.checkpoints as unknown[])
           .filter((c): c is Record<string, unknown> => !!c && typeof c === "object")
           .filter((c) => typeof c.id === "string" && typeof c.title === "string")
-          .map((c) => ({ id: String(c.id), title: String(c.title), done: c.done === true }))
+          .map((c) => ({
+            id: String(c.id),
+            title: String(c.title),
+            done: c.done === true,
+            celebration: typeof c.celebration === "string" ? c.celebration : "",
+          }))
       : [],
     habits: Array.isArray(g.habits)
       ? (g.habits as unknown[])
@@ -541,6 +563,7 @@ function readGoal(g: Record<string, unknown>): NsGoal {
     // this came out of a browser.
     metric: g.metric === "daily_area" && type === "milestone_ladder" ? "daily_area" : null,
     serves: readStringList(g.serves),
+    asked: readStringList(g.asked),
   }
 }
 
@@ -917,6 +940,7 @@ export function addGoal(plan: NsPlan, areaId: string, title: string, type: Visio
     values: [],
     metric: null,
     serves: [],
+    asked: [],
   }
   // Appended, so a new goal is the lowest priority until you say otherwise.
   // Nothing already ranked gets renumbered by someone else's arrival.
@@ -1072,7 +1096,15 @@ export function goalNeedsAction(goal: NsGoal): boolean {
   if (goal.type === "habit_ramp") return false
   return labGoalNeedsAction({
     habits: goal.habits,
-    tasks: goal.checkpoints.map((c) => ({ id: c.id, title: c.title, dueOffsetDays: 0 })),
+    // Hand-written checkpoints only. A generated milestone is a number on the
+    // way to the number — "Bench 24 kg" on the way to 28 — and counting it as
+    // an action meant that answering "where are you today", which spaces the
+    // rungs, silently satisfied "what will you actually do about it". The goal
+    // came out the far end of the guide with a climb and still nothing to do on
+    // a Tuesday, which is the exact gap this predicate exists to name.
+    tasks: goal.checkpoints
+      .filter((c) => !c.id.startsWith("m"))
+      .map((c) => ({ id: c.id, title: c.title, dueOffsetDays: 0 })),
     // Deliberately null even for a target. The lab lets a measure stand in for
     // an action because its goals are born carrying a habit; ours are not, so
     // "climb to 140kg" with no training action is a real gap worth naming.
@@ -1181,7 +1213,9 @@ export function addCheckpoint(plan: NsPlan, goalId: string, title: string, now =
   const goal = plan.goals.find((g) => g.id === goalId)
   if (!goal) return plan
   const { plan: withSeq, id } = nextId(plan, "c")
-  const checkpoint: NsCheckpoint = { id, title: trimmed, done: false }
+  // `celebration` is set empty rather than left off, so a checkpoint made here
+  // and the same one read back off disk are the same object.
+  const checkpoint: NsCheckpoint = { id, title: trimmed, done: false, celebration: "" }
   return updateGoal(withSeq, goalId, { checkpoints: [...goal.checkpoints, checkpoint] }, now)
 }
 
@@ -1189,6 +1223,93 @@ export function updateCheckpoint(plan: NsPlan, goalId: string, checkpointId: str
   const goal = plan.goals.find((g) => g.id === goalId)
   if (!goal) return plan
   return updateGoal(plan, goalId, { checkpoints: goal.checkpoints.map((c) => (c.id === checkpointId ? { ...c, ...patch } : c)) }, now)
+}
+
+/**
+ * The number a finish-line goal is really about, read out of its own title.
+ *
+ * "Bench 36 kg dumbbells for 6 reps" is typed as a finish line, correctly: you
+ * either did it or you did not. But there is obviously a climb underneath it,
+ * and the user should not have to retype the number to get the rungs. The FIRST
+ * number wins, because that is the one people put the target in — the 6 in "for
+ * 6 reps" is the shape of the rep, not the thing that grows.
+ *
+ * `prefix` is whatever came before the number, so the milestones can be called
+ * "Bench 30 kg" rather than "30 kg" sitting under a title you have to re-read.
+ */
+export function parseGoalTarget(title: string): { value: number; unit: string; prefix: string } | null {
+  // Letters rather than a-z, because "10 læser" is not ten l. A unit is any
+  // word in any alphabet, which is what \p{L} means.
+  const match = /(-?\d+(?:[.,]\d+)?)\s*(\p{L}{1,12}|%|µ)?/u.exec(title)
+  if (!match) return null
+  const value = Number(match[1].replace(",", "."))
+  if (!Number.isFinite(value)) return null
+  // Words that are never a unit. "36 dumbbells" is not 36 dumbbells.
+  const raw = (match[2] ?? "").trim()
+  const unit = /^(for|in|by|to|of|at|and|the|a|x)$/i.test(raw) ? "" : raw
+  const prefix = title.slice(0, match.index).trim().replace(/[,:–-]$/, "").trim()
+  return { value, unit, prefix }
+}
+
+/**
+ * Evenly spaced values from where you are to where you are going.
+ *
+ * The target is always the last one, so ticking the last milestone and hitting
+ * the goal are the same event rather than two things that nearly agree. Works
+ * downhill as well as up, because "under 80 kg" is the same climb in reverse.
+ */
+export function milestoneValues(from: number, to: number, count: number): number[] {
+  const steps = Math.max(1, Math.min(12, Math.round(count)))
+  const span = to - from
+  if (span === 0) return [to]
+  const size = span / steps
+  // One decimal only when whole numbers would collapse two rungs into one.
+  const decimals = Math.abs(size) < 1 ? 1 : 0
+  const out: number[] = []
+  for (let i = 1; i <= steps; i += 1) {
+    const value = Number((from + size * i).toFixed(decimals))
+    if (out[out.length - 1] !== value) out.push(value)
+  }
+  if (out[out.length - 1] !== to) out.push(to)
+  return out
+}
+
+/**
+ * Turn a finish line into a climb: one checkpoint per milestone, in order.
+ *
+ * Replaces any milestones generated before, and leaves checkpoints the user
+ * wrote by hand alone. Regenerating with a different count is the common case
+ * (four felt like a lot, try three), and it must not leave the old four behind.
+ */
+export function setMilestones(
+  plan: NsPlan,
+  goalId: string,
+  spec: { from: number; to: number; count: number; unit?: string; prefix?: string },
+  now = nowIso(),
+): NsPlan {
+  const goal = plan.goals.find((g) => g.id === goalId)
+  if (!goal) return plan
+  const values = milestoneValues(spec.from, spec.to, spec.count)
+  const unit = (spec.unit ?? "").trim()
+  const prefix = (spec.prefix ?? "").trim()
+  const kept = goal.checkpoints.filter((c) => !c.id.startsWith("m"))
+  let next = plan
+  const made: NsCheckpoint[] = []
+  for (const value of values) {
+    const seeded = nextId(next, "m")
+    next = seeded.plan
+    const label = `${value}${unit ? ` ${unit}` : ""}`
+    made.push({ id: seeded.id, title: prefix ? `${prefix} ${label}` : label, done: false, celebration: "" })
+  }
+  // The generated rungs come first: they are the order of the climb, and a
+  // hand-written "book the platform" belongs after it rather than interleaved
+  // at whatever position it happened to be added.
+  return updateGoal(next, goalId, { checkpoints: [...made, ...kept] }, now)
+}
+
+/** Milestones this goal already carries, as opposed to written checkpoints. */
+export function milestoneCheckpoints(goal: NsGoal): NsCheckpoint[] {
+  return goal.checkpoints.filter((c) => c.id.startsWith("m"))
 }
 
 export function removeCheckpoint(plan: NsPlan, goalId: string, checkpointId: string, now = nowIso()): NsPlan {
@@ -1457,19 +1578,74 @@ export function derivedValueSuggestions(plan: NsPlan): string[] {
   ]
     .join(" \n ")
     .toLowerCase()
+  return rankCuedValues(corpus)
+}
+
+/**
+ * The short list of values offered inside ONE area, in the order it earns.
+ *
+ * Three sources, best first:
+ *   1. What they wrote about THIS area. The 10 is a paragraph about what good
+ *      looks like here, and it is the closest thing on the page to an answer.
+ *   2. What they wrote in the north star, which is the same trick one level up.
+ *   3. What this area usually asks for, as the floor, so a blank area still
+ *      offers Security under Money rather than a generic twenty words.
+ *
+ * A value already on the area's list is dropped, so the row is always things
+ * they could add rather than a mirror of what is there.
+ */
+export function areaValueSuggestions(plan: NsPlan, areaId: string, limit = 8): string[] {
+  const review = areaReview(plan, areaId)
+  const fromArea = cuedValues([review.ten, review.purpose, review.snapshot, review.identity].join(" \n "))
+  const fromStar = cuedValues([plan.northStar, answerOf(plan, STAR_WHY_ID)].join(" \n "))
+  const floor = AREA_VALUE_SUGGESTIONS[areaId] ?? NS_VALUE_SUGGESTIONS
+  const taken = new Set(review.values.map((v) => v.trim().toLowerCase()))
+  const out: string[] = []
+  for (const value of [...fromArea, ...fromStar, ...floor]) {
+    const key = value.toLowerCase()
+    if (taken.has(key)) continue
+    taken.add(key)
+    out.push(value)
+    if (out.length >= limit) break
+  }
+  return out
+}
+
+/** Values whose cues appear in a piece of the user's own writing, best first. */
+function cuedValues(text: string): string[] {
+  return rankCuedValues(text.toLowerCase())
+}
+
+/**
+ * Score every value against a piece of writing, most-cued first.
+ *
+ * WHOLE WORDS ONLY. This used to count occurrences with `split(cue)`, on the
+ * reasoning that cues contain spaces and escaping them for a regex bought
+ * nothing. It bought word boundaries, and without them "stop counting at the
+ * till" scored Achievement, because "top" is inside "stop". Every cue is now a
+ * `\b…\b` match, which still handles the multi-word cues ("in the bank", "my own
+ * hours") because the boundary only has to hold at each end.
+ */
+function rankCuedValues(corpus: string): string[] {
   if (!corpus.trim()) return []
   const scored: Array<{ value: string; hits: number }> = []
   for (const { value, cues } of VALUE_CUES) {
     let hits = 0
-    for (const cue of cues) {
-      // Split on the cue rather than a global regex: cues contain spaces and
-      // punctuation-adjacent words, and escaping each one for RegExp buys
-      // nothing over counting occurrences directly.
-      hits += corpus.split(cue).length - 1
-    }
+    for (const cue of cues) hits += (corpus.match(cueRegex(cue)) ?? []).length
     if (hits > 0) scored.push({ value, hits })
   }
   return scored.sort((a, b) => b.hits - a.hits || a.value.localeCompare(b.value)).map((s) => s.value)
+}
+
+const CUE_REGEX = new Map<string, RegExp>()
+
+function cueRegex(cue: string): RegExp {
+  const cached = CUE_REGEX.get(cue)
+  if (cached) return cached
+  const escaped = cue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const made = new RegExp(`\\b${escaped}\\b`, "g")
+  CUE_REGEX.set(cue, made)
+  return made
 }
 
 /**
@@ -1771,11 +1947,13 @@ export function nsProgress(plan: NsPlan): NsProgress {
     areasWithTen,
     done: {
       star: starWritten,
-      // The rating, the picture, and the goals now share one tab, so the tick
-      // has to mean all three: at least one area looked at properly, and every
-      // goal written carrying the reason that keeps it alive. Editing a routine
-      // is real work but it is not a plan.
-      now: areasRated > 0 && areasWithTen > 0 && goals > 0 && goalsWithWhy === goals,
+      // The assessment tab. At least one area looked at properly, which means
+      // the picture AND the number, in that order. Editing a routine is real
+      // work but it is not an assessment.
+      now: areasRated > 0 && areasWithTen > 0,
+      // The goals tab. Something written, and every one of them carrying the
+      // reason that keeps it alive in March.
+      plan: goals > 0 && goalsWithWhy === goals,
       review: plan.goals.length > 0 && plan.areas.some((a) => areaReview(plan, a.id).goalsAim != null),
     },
   }
@@ -1785,7 +1963,8 @@ export function nsProgress(plan: NsPlan): NsProgress {
 export function tabHasContent(plan: NsPlan, tab: NorthStarTabId): boolean {
   const p = nsProgress(plan)
   if (tab === "star") return p.starWritten || starWorkWritten(plan)
-  if (tab === "now") return p.areasRated > 0 || p.areasWithTen > 0 || areasTouched(plan) || p.goals > 0
+  if (tab === "now") return p.areasRated > 0 || p.areasWithTen > 0 || areasTouched(plan)
+  if (tab === "plan") return p.goals > 0
   return plan.areas.some((a) => areaReview(plan, a.id).goalsAim != null) || REVIEW_PROMPTS.some((q) => answerOf(plan, q.id).trim())
 }
 
@@ -1816,14 +1995,14 @@ export function planTodos(plan: NsPlan, today = todayISO()): Array<{ id: string;
   const noTen = plan.areas.filter((a) => !areaReview(plan, a.id).ten.trim()).length
   if (noTen > 0 && noTen < plan.areas.length) out.push({ id: "ten", text: `${noTen} areas with no 10 written`, tab: "now" })
   if (plan.goals.length === 0) {
-    out.push({ id: "goals", text: "No goals written yet", tab: "now" })
+    out.push({ id: "goals", text: "No goals written yet", tab: "plan" })
   } else {
     const noWhy = plan.goals.filter((g) => !goalHasWhy(g)).length
-    if (noWhy > 0) out.push({ id: "goalwhy", text: `${noWhy} ${noWhy === 1 ? "goal needs" : "goals need"} a why`, tab: "now" })
+    if (noWhy > 0) out.push({ id: "goalwhy", text: `${noWhy} ${noWhy === 1 ? "goal needs" : "goals need"} a why`, tab: "plan" })
     const noDate = plan.goals.filter((g) => !g.targetDate).length
-    if (noDate > 0) out.push({ id: "goaldate", text: `${noDate} ${noDate === 1 ? "goal has" : "goals have"} no date`, tab: "now" })
+    if (noDate > 0) out.push({ id: "goaldate", text: `${noDate} ${noDate === 1 ? "goal has" : "goals have"} no date`, tab: "plan" })
     const noAction = plan.goals.filter(goalNeedsAction).length
-    if (noAction > 0) out.push({ id: "goalaction", text: `${noAction} ${noAction === 1 ? "goal names" : "goals name"} an outcome with no action`, tab: "now" })
+    if (noAction > 0) out.push({ id: "goalaction", text: `${noAction} ${noAction === 1 ? "goal names" : "goals name"} an outcome with no action`, tab: "plan" })
   }
   const unsupported = areasWithoutValueSupport(plan, today)
   if (unsupported.length > 0) {
@@ -1857,6 +2036,7 @@ export function planIsUntouched(plan: NsPlan): boolean {
     plan.values.length === 0 &&
     plan.currentValues.length === 0 &&
     plan.seasonFocusId == null &&
+    plan.seasonAreaIds.length === 0 &&
     !areasTouched(plan)
   )
 }
@@ -2096,6 +2276,16 @@ export function addGoalFromTarget(plan: NsPlan, areaId: string, targetId: string
     daysPerWeek: shape.daysPerWeek,
   }, now)
   for (const title of shape.checkpointTitles) next = addCheckpoint(next, goal.id, title, now)
+  // The Tuesday. A catalogue target arrives with a shape, a number and a date,
+  // and used to arrive with nothing you can actually do, which is the gap the
+  // amber "what will you do about this?" panel then reported back as the user's
+  // omission. Only goals that would otherwise be flagged get one, so a practice
+  // (which is its own action) and a finish line with stages in it are untouched.
+  const action = defaultActionForTarget(target)
+  if (action) {
+    const made = next.goals.find((g) => g.id === goal.id)
+    if (made && goalNeedsAction(made)) next = addAction(next, goal.id, action.title, action.daysPerWeek, now)
+  }
   return next
 }
 
@@ -2123,4 +2313,857 @@ export function targetsForTemplate(template: Template): FrameworkTarget[] {
   return TARGETS.filter(
     (t) => template.objectiveIds.includes(t.objectiveId) && template.targetOverrides[t.id] === true,
   )
+}
+
+// ------------------------------------------------------------------ the board
+
+/**
+ * What one area offers: its goals, its goal sets, and its practices.
+ *
+ * The pillar map is a five-into-twelve fit, so five areas landed on `meaning`
+ * and three on `relations` and were offered each other's objectives. The board
+ * shows every area at once, where that reads as the same card four times, so
+ * the explicit per-area assignment in `AREA_OFFERS` wins wherever it exists and
+ * the pillar library is the fallback for an area the user added themselves.
+ */
+export function areaOffer(area: NsArea): AreaOffer | null {
+  const offer = AREA_OFFERS[area.id]
+  if (offer) return offer
+  const pillarId = libraryPillarForArea(area)
+  if (!pillarId) return null
+  return { objectiveIds: OBJECTIVES.filter((o) => o.pillarId === pillarId).map((o) => o.id), practices: [] }
+}
+
+/**
+ * The goal sets on offer in this area.
+ *
+ * Matched on the template's PRIMARY objective — the first in its list, which is
+ * the one it is named after — rather than on any objective it touches. "Find
+ * The One" also switches on Build Inner Game, and Build Inner Game belongs to
+ * Mind & Beliefs, so matching on any overlap put the dating templates inside
+ * Mind & Beliefs: the same collision the per-area assignment exists to close,
+ * arriving by a different door.
+ */
+export function areaTemplates(area: NsArea): Template[] {
+  const offer = areaOffer(area)
+  if (!offer || offer.objectiveIds.length === 0) return []
+  const wanted = new Set(offer.objectiveIds)
+  return TEMPLATES.filter((t) => wanted.has(t.objectiveIds[0]))
+}
+
+/** The single goals on offer in this area, grouped by the objective they serve. */
+export function areaObjectives(area: NsArea): Array<{ objective: Objective; targets: FrameworkTarget[] }> {
+  const offer = areaOffer(area)
+  if (!offer) return []
+  return offer.objectiveIds
+    .map((id) => OBJECTIVES.find((o) => o.id === id))
+    .filter((o): o is Objective => !!o)
+    .map((objective) => ({ objective, targets: TARGETS.filter((t) => t.objectiveId === objective.id) }))
+}
+
+/** The practices on offer in this area, resolved against their blueprints. */
+export function areaPractices(area: NsArea): Array<{ blueprintId: string; stepId: string; title: string; minutes: number; daysPerWeek: number; routine: string }> {
+  const offer = areaOffer(area)
+  if (!offer) return []
+  return offer.practices
+    .map((p) => {
+      const resolved = practiceLabel(p.blueprintId, p.stepId)
+      return resolved ? { ...p, ...resolved } : null
+    })
+    .filter((p): p is NonNullable<typeof p> => !!p)
+}
+
+/** The line said above an area the goal catalogue genuinely does not cover. */
+export function areaOfferNote(area: NsArea): string | null {
+  return AREA_OFFERS[area.id]?.note ?? null
+}
+
+export function objectiveForTarget(targetId: string): Objective | null {
+  const target = TARGETS.find((t) => t.id === targetId)
+  if (!target) return null
+  return OBJECTIVES.find((o) => o.id === target.objectiveId) ?? null
+}
+
+/**
+ * The action a catalogue goal should arrive carrying, or null when the
+ * objective has none written.
+ *
+ * Null rather than a generic "work on <title>" on purpose: a placeholder action
+ * silences the amber panel without giving the user anything to do, which is
+ * worse than the gap it hides.
+ */
+export function defaultActionForTarget(target: FrameworkTarget): { title: string; daysPerWeek: number } | null {
+  return OBJECTIVE_ACTION[target.objectiveId] ?? null
+}
+
+// -- routines a goal drags in ------------------------------------------------
+
+/**
+ * The routines a set of objectives needs, merged.
+ *
+ * Two objectives that both want the training week produce one need, with the
+ * steps unioned. The first preset and split win, because a preset is an order
+ * and applying two of them in sequence just means the second one erased the
+ * first.
+ */
+export function routineNeedsForObjectives(objectiveIds: string[]): RoutineNeed[] {
+  const merged = new Map<string, RoutineNeed>()
+  for (const id of objectiveIds) {
+    for (const need of OBJECTIVE_ROUTINE_NEEDS[id] ?? []) {
+      const seen = merged.get(need.blueprintId)
+      if (!seen) {
+        merged.set(need.blueprintId, { ...need, stepIds: [...need.stepIds] })
+        continue
+      }
+      for (const step of need.stepIds) if (!seen.stepIds.includes(step)) seen.stepIds.push(step)
+    }
+  }
+  return [...merged.values()]
+}
+
+/** The needs behind one template, via the objectives it switches on. */
+export function routineNeedsForTemplate(template: Template): RoutineNeed[] {
+  return routineNeedsForObjectives(template.objectiveIds)
+}
+
+/** The needs behind one target, via its objective. */
+export function routineNeedsForTarget(targetId: string): RoutineNeed[] {
+  const target = TARGETS.find((t) => t.id === targetId)
+  return target ? routineNeedsForObjectives([target.objectiveId]) : []
+}
+
+/**
+ * The routines the goals ALREADY in one area are asking for and have not got.
+ *
+ * A goal set offers its routine on the card, but a goal picked one chip at a
+ * time never passed a card, and it arrives carrying an action — "Strength
+ * session, 4×/wk" — with nowhere for that session to live. This is the same
+ * question asked from the other end: given what is actually in this area, what
+ * is missing underneath it.
+ *
+ * Goals are matched back to the catalogue by title, the same way
+ * `targetAlreadyAdded` matches forward, so a goal the user typed themselves
+ * asks for nothing rather than guessing.
+ */
+export function unmetRoutineNeeds(plan: NsPlan, areaId: string): RoutineNeed[] {
+  const byLabel = new Map(TARGETS.map((t) => [t.label.trim().toLowerCase(), t]))
+  const objectiveIds = new Set<string>()
+  for (const goal of plan.goals) {
+    if (goal.areaId !== areaId) continue
+    const target = byLabel.get(goal.title.trim().toLowerCase())
+    if (target) objectiveIds.add(target.objectiveId)
+  }
+  return routineNeedsForObjectives([...objectiveIds]).filter((need) => routineNeedState(plan, need) !== "met")
+}
+
+/**
+ * Where a need stands against the plan: absent, present but missing steps, or
+ * already covered. Drives whether the board offers it, and how loudly.
+ */
+export function routineNeedState(plan: NsPlan, need: RoutineNeed): "missing" | "partial" | "met" {
+  const routine = plan.routines.find((r) => r.blueprintId === need.blueprintId)
+  if (!routine) return "missing"
+  const have = new Set(routine.steps.map((s) => s.id))
+  return need.stepIds.every((id) => have.has(id)) ? "met" : "partial"
+}
+
+/**
+ * Put a routine need into the plan.
+ *
+ * A routine that is not there yet arrives seeded, then takes the preset and the
+ * split, then the need's own steps on top — the preset is the shape of the
+ * thing and the steps are what this particular goal requires of it. A routine
+ * that is already there only gets the missing steps, because replacing the
+ * stack of a routine somebody has already built is data loss dressed as help.
+ */
+export function applyRoutineNeed(plan: NsPlan, need: RoutineNeed, now = nowIso()): NsPlan {
+  let next = plan
+  let routine = next.routines.find((r) => r.blueprintId === need.blueprintId)
+  if (!routine) {
+    next = addRoutine(next, need.blueprintId, now)
+    routine = next.routines[next.routines.length - 1]
+    if (!routine) return plan
+    if (need.presetId) next = applyRoutinePreset(next, routine.id, need.presetId, now)
+    if (need.splitId) next = applySplit(next, routine.id, need.splitId, now)
+  }
+  const id = routine.id
+  const have = new Set((next.routines.find((r) => r.id === id)?.steps ?? []).map((s) => s.id))
+  for (const stepId of need.stepIds) {
+    if (!have.has(stepId)) next = toggleRoutineStep(next, id, stepId, now)
+  }
+  return next
+}
+
+// -- practices ---------------------------------------------------------------
+
+/** Is this practice already running in the plan? */
+export function practiceIsOn(plan: NsPlan, blueprintId: string, stepId: string): boolean {
+  const routine = plan.routines.find((r) => r.blueprintId === blueprintId)
+  return !!routine?.steps.some((s) => s.id === stepId)
+}
+
+/**
+ * Turn a practice on, adding the routine it belongs to if the stack has not got
+ * one yet. This is the cascade running upward: a small thing you said yes to in
+ * an area becomes a step in a routine that then shows up under every area that
+ * routine serves.
+ */
+export function addPractice(plan: NsPlan, blueprintId: string, stepId: string, now = nowIso()): NsPlan {
+  const bp = ROUTINE_BLUEPRINT_MAP.get(blueprintId)
+  if (!bp || !bp.library.some((s) => s.id === stepId)) return plan
+  let next = plan
+  let routine = next.routines.find((r) => r.blueprintId === blueprintId)
+  if (!routine) {
+    next = addRoutine(next, blueprintId, now)
+    routine = next.routines[next.routines.length - 1]
+    if (!routine) return plan
+  }
+  if (routine.steps.some((s) => s.id === stepId)) return next
+  return toggleRoutineStep(next, routine.id, stepId, now)
+}
+
+/** Turn a practice off. The routine stays; emptying somebody's stack is not our call. */
+export function removePractice(plan: NsPlan, blueprintId: string, stepId: string, now = nowIso()): NsPlan {
+  const routine = plan.routines.find((r) => r.blueprintId === blueprintId)
+  if (!routine || !routine.steps.some((s) => s.id === stepId)) return plan
+  return toggleRoutineStep(plan, routine.id, stepId, now)
+}
+
+// ---------------------------------------------------------------- the cascade
+
+/**
+ * The chain, counted.
+ *
+ * Every level of this plan is made of the one above it, and until this existed
+ * nothing on the page ever said so: the north star was on tab 1, the areas on
+ * tab 2, the goals inside a dialog on tab 3, the milestones one level inside
+ * those, and the routines in a sidebar that knew about none of it. One row of
+ * numbers is the cheapest possible way to show that it is one machine.
+ */
+export interface NsCascade {
+  starWritten: boolean
+  areas: number
+  areasWithTen: number
+  goals: number
+  milestones: number
+  actions: number
+  routines: number
+  routineSteps: number
+}
+
+export function planCascade(plan: NsPlan, today = todayISO()): NsCascade {
+  return {
+    starWritten: plan.northStar.trim().length > 0,
+    areas: plan.areas.length,
+    areasWithTen: plan.areas.filter((a) => areaReview(plan, a.id).ten.trim().length > 0).length,
+    goals: plan.goals.length,
+    milestones: plan.goals.reduce((sum, g) => sum + goalMilestones(g, today).length, 0),
+    actions: weeklyLoad(plan).actions,
+    routines: plan.routines.length,
+    routineSteps: plan.routines.reduce((sum, r) => sum + r.steps.length, 0),
+  }
+}
+
+/**
+ * What the plan costs in an ordinary week.
+ *
+ * The counterweight to a board that puts eighteen goals one click away. Minutes
+ * come off the routines, which are the only part of the plan that carries a
+ * duration; actions are counted as sessions because an action has a frequency
+ * and no length.
+ *
+ * DISTINCT actions, by title. One training week moves the bench, the squat and
+ * the deadlift, so three goals correctly share one action, and counting it three
+ * times would invent a load that nobody is carrying.
+ */
+export function weeklyLoad(plan: NsPlan): { minutes: number; actions: number; over: boolean } {
+  const minutes = plan.routines.reduce((sum, r) => {
+    if (r.kind === "sequence") return sum + routineMinutes(r) * r.daysPerWeek
+    return sum + r.steps.reduce((s, step) => s + step.minutes * step.daysPerWeek, 0)
+  }, 0)
+  const seen = new Map<string, number>()
+  for (const goal of plan.goals) {
+    for (const habit of goal.habits) {
+      const key = habit.title.trim().toLowerCase()
+      if (!key) continue
+      seen.set(key, Math.max(seen.get(key) ?? 0, habit.daysPerWeek))
+    }
+  }
+  const actions = [...seen.values()].reduce((sum, n) => sum + n, 0)
+  return {
+    minutes,
+    actions,
+    over: minutes > LOAD_CEILING.minutesPerWeek || actions > LOAD_CEILING.actionsPerWeek,
+  }
+}
+
+// ---------------------------------------------------------------- the timeline
+
+/** One dated thing to hit, on the way to a goal. */
+export interface NsMilestone {
+  id: string
+  goalId: string
+  areaId: string
+  /** What you will have done. "Squat 120 kg", "4×/wk for 8 weeks", "First sale". */
+  label: string
+  /** ISO date it lands on, spread between today and the goal's date. */
+  date: string
+  kind: "rung" | "phase" | "checkpoint" | "finish"
+  done: boolean
+}
+
+/**
+ * Every rung of one goal, dated.
+ *
+ * All three shapes have a climb in them and none of them showed it anywhere but
+ * inside the goal's own card:
+ *
+ *   a target    → the ladder's values, evenly spaced between now and the date
+ *   a practice  → each ramp phase, dated by the weeks it runs for
+ *   a finish    → its checkpoints, evenly spaced, then the finish itself
+ *
+ * Undated goals produce nothing rather than a guess. Every goal arrives dated a
+ * year out, so this is the rare case of somebody having cleared the date.
+ */
+export function goalMilestones(goal: NsGoal, today = todayISO()): NsMilestone[] {
+  if (!goal.targetDate) return []
+  const out: NsMilestone[] = []
+  const span = daysBetween(today, goal.targetDate)
+  if (span <= 0) return []
+
+  if (goal.type === "milestone_ladder" && goal.ladder) {
+    const values = milestoneValues(goal.ladder.start, goal.ladder.target, goal.ladder.steps)
+    values.forEach((value, i) => {
+      out.push({
+        id: `${goal.id}-r${i}`,
+        goalId: goal.id,
+        areaId: goal.areaId,
+        label: `${goal.title}: ${value}${goal.unit ? ` ${goal.unit}` : ""}`,
+        date: addDaysISO(today, Math.round((span * (i + 1)) / values.length)),
+        kind: i === values.length - 1 ? "finish" : "rung",
+        done: false,
+      })
+    })
+    return out
+  }
+
+  if (goal.type === "habit_ramp") {
+    const phases = goal.rampSteps ?? []
+    if (phases.length === 0) return []
+    let offset = 0
+    phases.forEach((phase, i) => {
+      offset += phase.durationWeeks * 7
+      if (offset > span) return
+      out.push({
+        id: `${goal.id}-p${i}`,
+        goalId: goal.id,
+        areaId: goal.areaId,
+        label: `${goal.title}: ${phase.frequencyPerWeek}×/wk held for ${phase.durationWeeks} weeks`,
+        date: addDaysISO(today, offset),
+        kind: i === phases.length - 1 ? "finish" : "phase",
+        done: false,
+      })
+    })
+    return out
+  }
+
+  const checkpoints = goal.checkpoints
+  checkpoints.forEach((c, i) => {
+    out.push({
+      id: `${goal.id}-c${c.id}`,
+      goalId: goal.id,
+      areaId: goal.areaId,
+      label: `${goal.title}: ${c.title}`,
+      date: addDaysISO(today, Math.round((span * (i + 1)) / (checkpoints.length + 1))),
+      kind: "checkpoint",
+      done: c.done,
+    })
+  })
+  out.push({
+    id: `${goal.id}-finish`,
+    goalId: goal.id,
+    areaId: goal.areaId,
+    label: goal.title,
+    date: goal.targetDate,
+    kind: "finish",
+    done: false,
+  })
+  return out
+}
+
+/** Whole days from one ISO date to another. Negative when the second is earlier. */
+export function daysBetween(fromISO: string, toISO: string): number {
+  const from = Date.parse(`${fromISO}T00:00:00Z`)
+  const to = Date.parse(`${toISO}T00:00:00Z`)
+  if (!Number.isFinite(from) || !Number.isFinite(to)) return 0
+  return Math.round((to - from) / 86400000)
+}
+
+/**
+ * The plan as a run of months, each carrying what lands in it.
+ *
+ * The point of this is the shape rather than the detail: a year with things in
+ * it every month reads as a plan, and a year with everything piled into the last
+ * month reads — correctly — as twelve goals all quietly dated a year out.
+ */
+export function planTimeline(plan: NsPlan, today = todayISO(), months = 12): Array<{ key: string; label: string; milestones: NsMilestone[] }> {
+  const all = plan.goals.flatMap((g) => goalMilestones(g, today))
+  const buckets: Array<{ key: string; label: string; milestones: NsMilestone[] }> = []
+  const start = monthKey(today)
+  for (let i = 0; i < months; i += 1) {
+    const iso = addMonthsISO(`${start}-01`, i)
+    buckets.push({ key: monthKey(iso), label: shortMonth(iso), milestones: [] })
+  }
+  const byKey = new Map(buckets.map((b) => [b.key, b]))
+  for (const milestone of all) {
+    const bucket = byKey.get(monthKey(milestone.date))
+    // Anything past the window is folded into the last month rather than
+    // dropped, so the count on screen is the whole plan and not a slice of it.
+    if (bucket) bucket.milestones.push(milestone)
+    else if (milestone.date > buckets[buckets.length - 1].key) buckets[buckets.length - 1].milestones.push(milestone)
+  }
+  for (const bucket of buckets) bucket.milestones.sort((a, b) => a.date.localeCompare(b.date))
+  return buckets
+}
+
+function monthKey(iso: string): string {
+  return iso.slice(0, 7)
+}
+
+const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+function shortMonth(iso: string): string {
+  const month = SHORT_MONTHS[Number(iso.slice(5, 7)) - 1] ?? ""
+  return `${month} ${iso.slice(2, 4)}`
+}
+
+// ------------------------------------------------------------------- the guide
+
+/**
+ * A dump of goals, in the user's own words, one per line.
+ *
+ * People arrive with a list, and it is numbered, or bulleted, or indented,
+ * because it was written in a notes app. Stripping that is the difference
+ * between "paste your goals in" working and it producing eleven goals called
+ * "1." — and it is a five-line function, which is a good trade for the one
+ * moment in this flow where somebody's existing work comes in whole.
+ */
+export function parseGoalDump(text: string): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const raw of text.split("\n")) {
+    const line = raw
+      // Leading list furniture: "1.", "1)", "12a.", "-", "*", "•", "–".
+      .replace(/^\s*(?:\d+[a-z]?\s*[.)]\s*|[-*•–]\s+)/i, "")
+      .trim()
+    if (!line) continue
+    const key = line.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(line.slice(0, 200))
+  }
+  return out
+}
+
+/**
+ * How often, said in a sentence. English and Danish, because this plan is
+ * written in both and half the lines in it are frequencies.
+ *
+ * "Træn 5x om ugen" is not a climb to five. It is the most obvious practice on
+ * the page, and reading it as a target produces a goal that says you are at
+ * zero trainings and going to five, forever. The daily words are separate
+ * because "hver dag" carries no number at all.
+ */
+const PER_WEEK =
+  // Up to three words may sit between the number and the frequency, because
+  // people write "1 youtube video om ugen" rather than "1 om ugen".
+  /(\d+)\s*(?:x|×|gange|times)?\s*(?:[\wæøåÆØÅ'-]+[ ]+){0,3}?(?:om ugen|i ugen|per uge|pr\.? uge|ugentligt|\/\s*uge|a week|per week|\/\s*wk|weekly)/gi
+const DAILY = /\b(?:hver dag|hverdag|dagligt|daglig|every day|everyday|daily|each day)\b/i
+
+/**
+ * What one written line is, structurally.
+ *
+ * Read off the words rather than asked about, because being asked "is this a
+ * target, a practice or a finish line?" eleven times in a row is a form, and
+ * the answer is usually sitting in the sentence:
+ *
+ *   "Træn 5x om ugen"        → a practice, five times a week
+ *   "Stræk ud hver dag"      → a practice, seven
+ *   "1 video om ugen, 2, 3"  → a practice that ramps 1 → 2 → 3
+ *   "Bænk 28 kg, 3x6-8"      → a climb to 28 (not to 3: the 3 is the set count)
+ *   "10 pullups, fra 7"      → a climb to 10, and it already told us it starts at 7
+ *   "1 Muscle Up"            → a finish line. A climb to one is not a climb.
+ *   "Ingen smerte i ryggen"  → a finish line, the honest default
+ *
+ * Every one of these is flippable on the goal card afterwards. Guessing well
+ * and being wrong sometimes beats asking everybody everything.
+ */
+export function shapeFromTitle(title: string): {
+  type: VisionGoalType
+  unit: string
+  target: number | null
+  /** Where the line says it starts, when it says. */
+  start: number | null
+  daysPerWeek: number
+  rampSteps: HabitRampStep[] | null
+} {
+  const weekly = [...title.matchAll(PER_WEEK)].map((m) => clamp(Number(m[1]), 1, 30))
+  if (weekly.length > 0) {
+    // Several frequencies in one line is somebody writing a ramp by hand:
+    // "Udgiv 1 youtube video om ugen, 2 om ugen, 3 om ugen".
+    const steps = weekly.length > 1 ? weekly.map((n) => ({ frequencyPerWeek: n, durationWeeks: 8 })) : null
+    return {
+      type: "habit_ramp",
+      unit: "",
+      target: null,
+      start: null,
+      daysPerWeek: clamp(weekly[weekly.length - 1], 1, 7),
+      rampSteps: steps,
+    }
+  }
+  if (DAILY.test(title)) {
+    return { type: "habit_ramp", unit: "", target: null, start: null, daysPerWeek: 7, rampSteps: null }
+  }
+  const parsed = parseGoalTarget(title)
+  // A climb to one has no rungs in it, and "1 Muscle Up" is the clearest finish
+  // line anybody has ever written.
+  if (!parsed || parsed.value <= 1) {
+    return { type: "achievement", unit: "", target: null, start: null, daysPerWeek: 3, rampSteps: null }
+  }
+  // "Få 10 downloads, 100 downloads, 1000" is one climb that keeps going up,
+  // and reading only the first number finishes it at ten.
+  const rising = risingNumbers(title)
+  if (rising.length >= 2) {
+    return {
+      type: "milestone_ladder",
+      unit: parsed.unit,
+      target: rising[rising.length - 1],
+      start: rising[0],
+      daysPerWeek: 3,
+      rampSteps: null,
+    }
+  }
+  const from = /(?:\bfra\b|\bfrom\b|\bup from\b)\s*(\d+(?:[.,]\d+)?)/i.exec(title)
+  const start = from ? Number(from[1].replace(",", ".")) : null
+  return {
+    type: "milestone_ladder",
+    unit: parsed.unit,
+    target: parsed.value,
+    // Only when it is genuinely below the target. "fra 7" on a goal of 10 is a
+    // starting point; a bigger number is something else in the sentence.
+    start: start != null && Number.isFinite(start) && start < parsed.value ? start : null,
+    daysPerWeek: 3,
+    rampSteps: null,
+  }
+}
+
+/**
+ * Add a written list of goals, shaping each one from what it says.
+ *
+ * The rungs of a climb are deliberately NOT generated here, unless the line
+ * said where it starts. Spacing a ladder from a start nobody confirmed produces
+ * a climb that reads as authoritative and is made up, and "where are you today"
+ * is the guide's first question for exactly that reason.
+ */
+export function addGoalsFromDump(plan: NsPlan, areaId: string, text: string, now = nowIso()): NsPlan {
+  let next = plan
+  for (const title of parseGoalDump(text)) {
+    const shape = shapeFromTitle(title)
+    const before = next.goals.length
+    next = addGoal(next, areaId, title, shape.type, now)
+    if (next.goals.length === before) continue
+    const goal = next.goals[next.goals.length - 1]
+    if (shape.type === "habit_ramp") {
+      next = updateGoal(next, goal.id, { daysPerWeek: shape.daysPerWeek, rampSteps: shape.rampSteps }, now)
+      continue
+    }
+    if (shape.type === "milestone_ladder" && shape.target != null) {
+      next = updateGoal(next, goal.id, {
+        unit: shape.unit,
+        ladder: { start: shape.start ?? 0, target: shape.target, steps: 4, curveTension: 0, controlPoints: [], pins: [] },
+      }, now)
+      // The line already answered "where are you today", so the rungs can be
+      // spaced now and the guide has one less thing to ask.
+      if (shape.start != null) next = setLadderStart(next, goal.id, shape.start, now)
+    }
+  }
+  return next
+}
+
+/**
+ * The actions this area already has running, offered as answers.
+ *
+ * "No pain in my back" wants stretching, water, walking differently — and the
+ * routine blueprints that serve Health are already full of exactly those, in
+ * somebody's own words. Reusing them beats an empty text box, and beats
+ * inventing a suggestion engine that guesses from the goal's wording, which
+ * cannot work at all for a plan written in Danish.
+ */
+export function suggestedActions(plan: NsPlan, goal: NsGoal): Array<{ title: string; daysPerWeek: number }> {
+  const out: Array<{ title: string; daysPerWeek: number }> = []
+  const seen = new Set<string>()
+  const add = (title: string, daysPerWeek: number) => {
+    const key = title.trim().toLowerCase()
+    if (!key || seen.has(key)) return
+    seen.add(key)
+    out.push({ title, daysPerWeek: clamp(daysPerWeek, 1, 7) })
+  }
+  // What the catalogue says this kind of goal is kept by, when it came from there.
+  const byLabel = TARGETS.find((t) => t.label.trim().toLowerCase() === goal.title.trim().toLowerCase())
+  if (byLabel) {
+    const action = defaultActionForTarget(byLabel)
+    if (action) add(action.title, action.daysPerWeek)
+  }
+  const area = plan.areas.find((a) => a.id === goal.areaId)
+  if (area) for (const p of areaPractices(area)) add(p.title, p.daysPerWeek)
+  // Then anything else running in a routine that serves this area.
+  for (const bp of ROUTINE_BLUEPRINTS) {
+    if (bp.areaSeedId !== goal.areaId && !bp.servesAreaIds.includes(goal.areaId)) continue
+    for (const step of bp.library) add(step.title, step.daysPerWeek)
+  }
+  return out.slice(0, 10)
+}
+
+/**
+ * The next question this goal is missing an answer to, or null when it is done.
+ *
+ * Asked in a fixed order because the order is an argument: whether it is yours
+ * to decide comes before where you are, which comes before what you will do,
+ * which comes before when — and the two whys come last, when the goal is real
+ * enough to have a reason. Anything already answered or skipped is behind us.
+ */
+export function nextGuideQuestion(goal: NsGoal): GuideQuestionId | null {
+  const asked = new Set(goal.asked)
+  for (const id of GUIDE_QUESTION_ORDER) {
+    if (asked.has(id)) continue
+    if (!guideQuestionApplies(goal, id)) continue
+    return id
+  }
+  return null
+}
+
+/** Whether one question is worth asking about this goal at all. */
+export function guideQuestionApplies(goal: NsGoal, id: GuideQuestionId): boolean {
+  if (id === "control") {
+    // Only of a finish line. A number you climb to is already something you do,
+    // and a weekly practice is the most yours-to-decide thing on the page.
+    return goal.type === "achievement"
+  }
+  if (id === "start") return goal.type === "milestone_ladder" && !!goal.ladder
+  // A practice IS the action, which is the same rule the amber panel uses.
+  if (id === "actions") return goalNeedsAction(goal)
+  if (id === "date") return true
+  if (id === "why") return !goal.why.trim()
+  return !goal.painWhy.trim()
+}
+
+/** Remember that a question was put to this goal, answered or skipped. */
+export function markAsked(plan: NsPlan, goalId: string, id: GuideQuestionId, now = nowIso()): NsPlan {
+  const goal = plan.goals.find((g) => g.id === goalId)
+  if (!goal || goal.asked.includes(id)) return plan
+  return updateGoal(plan, goalId, { asked: [...goal.asked, id] }, now)
+}
+
+/**
+ * The queue: every goal with something still missing, one question each.
+ *
+ * ROUND ROBIN, not goal by goal. Taking one goal all the way through means the
+ * first thing on the list is asked five questions in a row — where are you, what
+ * will you do, is it yours, by when, why, what does it cost — before the second
+ * thing is looked at once. That is the slog this whole screen exists to stop,
+ * and it also gets the priorities backwards: the first question about your
+ * fourth goal matters more than the fifth question about your first.
+ *
+ * So goals are ordered by how many questions they have already been through,
+ * then by the season's areas, then by the order they were written. Answer one
+ * and that goal goes to the back of the round.
+ */
+export function guideQueue(plan: NsPlan, areaIds: string[] = []): Array<{ goal: NsGoal; question: GuideQuestionId }> {
+  const priority = new Map(areaIds.map((id, i) => [id, i]))
+  const order = new Map(plan.goals.map((g, i) => [g.id, i]))
+  return plan.goals
+    .map((goal) => ({ goal, question: nextGuideQuestion(goal) }))
+    .filter((row): row is { goal: NsGoal; question: GuideQuestionId } => row.question !== null)
+    .sort((a, b) =>
+      a.goal.asked.length - b.goal.asked.length ||
+      (priority.get(a.goal.areaId) ?? 99) - (priority.get(b.goal.areaId) ?? 99) ||
+      (order.get(a.goal.id) ?? 0) - (order.get(b.goal.id) ?? 0),
+    )
+}
+
+/**
+ * How much of the plan is through the guide.
+ *
+ * Counted in QUESTIONS rather than in finished goals. Round robin means nothing
+ * is finished until nearly everything is, so a bar counting finished goals sits
+ * at zero through twenty answers and then fills all at once — which reads as
+ * broken, and is the opposite of what a progress bar is for.
+ */
+export function guideProgress(plan: NsPlan): { ready: number; total: number; answered: number; questions: number } {
+  let answered = 0
+  let questions = 0
+  for (const goal of plan.goals) {
+    for (const id of GUIDE_QUESTION_ORDER) {
+      const asked = goal.asked.includes(id)
+      if (!asked && !guideQuestionApplies(goal, id)) continue
+      questions += 1
+      if (asked) answered += 1
+    }
+  }
+  return {
+    ready: plan.goals.filter((g) => nextGuideQuestion(g) === null).length,
+    total: plan.goals.length,
+    answered,
+    questions,
+  }
+}
+
+/**
+ * Answer "where are you today" on a climb.
+ *
+ * Sets the bottom of the ladder AND spaces the rungs, because those are one
+ * action rather than two: a start without rungs is a number nobody asked for,
+ * and rungs generated before the start was known would have been made up.
+ */
+export function setLadderStart(plan: NsPlan, goalId: string, start: number, now = nowIso()): NsPlan {
+  const goal = plan.goals.find((g) => g.id === goalId)
+  if (!goal || !goal.ladder) return plan
+  const next = updateGoal(plan, goalId, { ladder: { ...goal.ladder, start }, asked: [...goal.asked, "start"] }, now)
+  const parsed = parseGoalTarget(goal.title)
+  /**
+   * Fewer rungs than asked for, when the climb is shorter than the rungs.
+   *
+   * Seven pull-ups to ten across four rungs is 7.8, 8.5, 9.3, 10, and nobody
+   * has ever done eight tenths of a pull-up. Where the whole climb is a handful
+   * of whole numbers, the rungs are those numbers.
+   */
+  const span = Math.abs(goal.ladder.target - start)
+  const count = span >= 1 && span < goal.ladder.steps ? Math.round(span) : goal.ladder.steps
+  return setMilestones(next, goalId, {
+    from: start,
+    to: goal.ladder.target,
+    count,
+    unit: goal.unit || parsed?.unit || "",
+    prefix: parsed?.prefix ?? "",
+  }, now)
+}
+
+/**
+ * Answer "no, other people decide it".
+ *
+ * The big one is kept and moved above the goals rather than deleted — being out
+ * of your hands is not the same as being wrong to want — and the thing the
+ * person does control becomes a real goal underneath it, linked. "Publish one
+ * article a week" feeds "internationally bestselling author", and the second
+ * one stops pretending to be something you can schedule.
+ */
+export function addControllableGoal(plan: NsPlan, bigGoalId: string, title: string, now = nowIso()): NsPlan {
+  const big = plan.goals.find((g) => g.id === bigGoalId)
+  if (!big || !title.trim()) return plan
+  const parsed = parseGoalTarget(title)
+  let next = addGoal(plan, big.areaId, title, parsed ? "milestone_ladder" : "achievement", now)
+  const made = next.goals[next.goals.length - 1]
+  if (!made) return plan
+  if (parsed) {
+    next = updateGoal(next, made.id, {
+      unit: parsed.unit,
+      ladder: { start: 0, target: parsed.value, steps: 4, curveTension: 0, controlPoints: [], pins: [] },
+    }, now)
+  }
+  return linkGoal(next, made.id, bigGoalId, now)
+}
+
+/**
+ * Pick an area for the season, or unpick it. Order is the priority, so the
+ * order they are clicked in is the order they matter in — and unpicking the
+ * middle one does not renumber the others' meaning, it just closes the gap.
+ */
+export function toggleSeasonArea(plan: NsPlan, areaId: string, now = nowIso()): NsPlan {
+  if (!plan.areas.some((a) => a.id === areaId)) return plan
+  const has = plan.seasonAreaIds.includes(areaId)
+  return touch({
+    ...plan,
+    seasonAreaIds: has ? plan.seasonAreaIds.filter((id) => id !== areaId) : [...plan.seasonAreaIds, areaId],
+    // Unpicking the area that was also the one thing leaves a focus pointing at
+    // something the user has just said they are not doing this season.
+    seasonFocusId: has && plan.seasonFocusId === areaId ? null : plan.seasonFocusId,
+  }, now)
+}
+
+/** The picked areas as objects, in picked order. */
+export function seasonAreas(plan: NsPlan): NsArea[] {
+  return plan.seasonAreaIds
+    .map((id) => plan.areas.find((a) => a.id === id))
+    .filter((a): a is NsArea => !!a)
+}
+
+/**
+ * What a climb is actually asking of you, per month.
+ *
+ * "Bænk 28 kg — where are you today?" is only half a question. Twenty-two to
+ * twenty-eight by next August is half a kilo a month, which is slower than
+ * doing nothing on purpose; zero to a hundred in the same year is eight a
+ * month, which is not a plan. The user asked whether their number is realistic
+ * and the page had the start, the target and the date sitting right there and
+ * said nothing about any of it.
+ *
+ * Arithmetic only. No opinion about kilos or pull-ups or subscribers, because
+ * this does not know what the unit is and pretending otherwise is how a tool
+ * starts confidently telling people their goals are wrong. It reports the rate,
+ * and names the three cases that are structural rather than physiological:
+ * you are already there, the climb is so slow the date is doing no work, and
+ * the climb multiplies what you have several times over.
+ */
+export function climbPace(goal: NsGoal, today = todayISO()): {
+  perMonth: number
+  months: number
+  verdict: "done" | "slow" | "steady" | "steep"
+} | null {
+  if (goal.type !== "milestone_ladder" || !goal.ladder || !goal.targetDate) return null
+  const { start, target } = goal.ladder
+  const days = daysBetween(today, goal.targetDate)
+  if (days <= 0) return null
+  const months = days / 30.44
+  /**
+   * Only the one case that is unambiguous.
+   *
+   * "Already past it" cannot be told from "downhill" by looking at the numbers:
+   * a start of 30 against a target of 28 is somebody who can already bench 28,
+   * or somebody getting down to 28, and nothing in the data says which. So the
+   * verdict is only given where the two numbers are the same, and the rest of
+   * the time this reports a rate and keeps its opinions to itself.
+   */
+  const distance = Math.abs(target - start)
+  if (distance === 0) return { perMonth: 0, months, verdict: "done" }
+  const perMonth = distance / months
+  // Against what you have, not against an absolute: two kilos a month is
+  // nothing on a squat and a lot on a bodyweight target.
+  const base = Math.abs(start) > 0 ? Math.abs(start) : distance
+  const monthlyShare = perMonth / base
+  if (monthlyShare < 0.01) return { perMonth, months, verdict: "slow" }
+  if (monthlyShare > 0.25) return { perMonth, months, verdict: "steep" }
+  return { perMonth, months, verdict: "steady" }
+}
+
+/**
+ * A line naming several rising numbers is one climb, not the first of them.
+ *
+ * "Få 10 downloads på en onepager, få 100 downloads etc" and "Få 100
+ * subscribers, 1000, osv" are the same shape: a milestone that keeps going up.
+ * Reading only the first number turns a person's whole ladder into its bottom
+ * rung and then calls it finished at ten downloads.
+ */
+export function risingNumbers(title: string): number[] {
+  const found = [...title.matchAll(/(\d+(?:[.,]\d+)?)/g)]
+    .map((m) => Number(m[1].replace(",", ".")))
+    .filter((n) => Number.isFinite(n))
+    // A year is a deadline, not a rung. "Squat 100 kg by 2027" was reading as a
+    // climb from a hundred kilos to the year two thousand and twenty-seven.
+    .filter((n) => !(n >= 1900 && n <= 2100 && Number.isInteger(n)))
+  if (found.length < 2) return []
+  // Strictly rising, and each one a real step up rather than "3x6-8".
+  for (let i = 1; i < found.length; i += 1) {
+    if (found[i] <= found[i - 1] * 1.5) return []
+  }
+  return found
 }

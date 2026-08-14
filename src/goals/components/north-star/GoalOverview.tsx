@@ -22,13 +22,15 @@ import { PriorityBadge } from "./GoalCard"
 
 const TYPE_ICON: Record<string, string> = { milestone_ladder: "🎯", habit_ramp: "🔁", achievement: "🏁" }
 
-export function GoalOverview({ plan, today, onOpenGoal, onSetPriority, onMovePriority }: {
+export function GoalOverview({ plan, today, onOpenGoal, onSetPriority, onMovePriority, emptyHint }: {
   plan: NsPlan
   today: string
   /** Opens the goal's area and expands the goal inside it. */
   onOpenGoal: (goal: NsGoal) => void
   onSetPriority: (goalId: string, rank: number) => void
   onMovePriority: (goalId: string, dir: -1 | 1) => void
+  /** What to click when there is nothing here, in the words of the surface. */
+  emptyHint?: string
 }) {
   const goals = goalsByPriority(plan)
   const areaById = new Map(plan.areas.map((a) => [a.id, a]))
@@ -38,7 +40,7 @@ export function GoalOverview({ plan, today, onOpenGoal, onSetPriority, onMovePri
     return (
       <div className="border-t border-white/10 px-5 py-4">
         <p className="text-[12px] text-zinc-500">
-          No goals yet. Click an area on the wheel above to write the first one.
+          {emptyHint ?? "No goals yet. Click an area on the wheel above to write the first one."}
         </p>
       </div>
     )

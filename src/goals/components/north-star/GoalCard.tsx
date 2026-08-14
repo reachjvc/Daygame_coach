@@ -22,6 +22,7 @@ import {
   GOAL_DATE_PRESETS,
   GOAL_IN_ROUTINE,
   GOAL_METRIC_COPY,
+  MILESTONE_COPY,
   NS_GOAL_TYPES,
   NS_PAIN_WHY_QUESTION,
   NS_QUALIFY_THRESHOLD,
@@ -31,6 +32,7 @@ import {
   OBSTACLE_PRESETS,
   SEASON_FOCUS_COPY,
   SERVES_COPY,
+  VALUE_COLOR,
 } from "@/src/goals/data/northStar"
 import {
   goalAlreadyInRoutine,
@@ -44,6 +46,9 @@ import {
   goalNeedsAction,
   goalToolLink,
   matchingDatePreset,
+  milestoneCheckpoints,
+  milestoneValues,
+  parseGoalTarget,
   presetDate,
   qualifyWarnings,
   suggestSentence,
@@ -68,7 +73,9 @@ export interface GoalHandlers {
   onUpdateBelief: (goalId: string, beliefId: string, patch: { old?: string; useful?: boolean | null; evidence?: string; replacement?: string }) => void
   onRemoveBelief: (goalId: string, beliefId: string) => void
   onAddCheckpoint: (goalId: string, title: string) => void
-  onUpdateCheckpoint: (goalId: string, checkpointId: string, patch: { title?: string; done?: boolean }) => void
+  onUpdateCheckpoint: (goalId: string, checkpointId: string, patch: { title?: string; done?: boolean; celebration?: string }) => void
+  /** Turn a finish line with a number in it into a climb with rungs. */
+  onSetMilestones: (goalId: string, spec: { from: number; to: number; count: number; unit?: string; prefix?: string }) => void
   onRemoveCheckpoint: (goalId: string, checkpointId: string) => void
   onSetPriority: (goalId: string, rank: number) => void
   onMovePriority: (goalId: string, dir: -1 | 1) => void
@@ -741,30 +748,48 @@ function Checkpoints({ goal, color, handlers }: { goal: NsGoal; color: string; h
     <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Checkpoints</p>
       <p className="text-[11px] text-zinc-500 mt-0.5">A finish line has no number to climb, so name the points along the way. It is done when it is done.</p>
+
+      <MilestoneBuilder goal={goal} color={color} handlers={handlers} />
+
       {goal.checkpoints.length > 0 && (
         <ul className="mt-2 space-y-1">
           {goal.checkpoints.map((c) => (
-            <li key={c.id} className="group/cp flex items-center gap-2">
-              <button
-                onClick={() => handlers.onUpdateCheckpoint(goal.id, c.id, { done: !c.done })}
-                aria-pressed={c.done}
-                aria-label={`${c.done ? "Undo" : "Mark done"}: ${c.title}`}
-                className="size-4 rounded-md border flex items-center justify-center shrink-0 transition-colors"
-                style={c.done ? { backgroundColor: color, borderColor: color } : { borderColor: "rgba(255,255,255,0.25)" }}
-              >
-                {c.done && <Check className="size-2.5 text-zinc-950" />}
-              </button>
-              <input
-                value={c.title}
-                onChange={(e) => handlers.onUpdateCheckpoint(goal.id, c.id, { title: e.target.value })}
-                aria-label="Checkpoint"
-                className={`flex-1 min-w-0 bg-transparent border-b border-transparent hover:border-white/10 focus:border-white/25 text-[12.5px] focus:outline-none py-0.5 transition-colors ${c.done ? "text-zinc-500 line-through" : "text-zinc-200"}`}
-              />
-              <button
-                onClick={() => handlers.onRemoveCheckpoint(goal.id, c.id)}
-                aria-label={`Remove checkpoint ${c.title}`}
-                className="shrink-0 text-zinc-700 hover:text-rose-300 opacity-0 group-hover/cp:opacity-100 focus:opacity-100 transition-all"
-              ><X className="size-3" /></button>
+            <li key={c.id} className="group/cp">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlers.onUpdateCheckpoint(goal.id, c.id, { done: !c.done })}
+                  aria-pressed={c.done}
+                  aria-label={`${c.done ? "Undo" : "Mark done"}: ${c.title}`}
+                  className="size-4 rounded-md border flex items-center justify-center shrink-0 transition-colors"
+                  style={c.done ? { backgroundColor: color, borderColor: color } : { borderColor: "rgba(255,255,255,0.25)" }}
+                >
+                  {c.done && <Check className="size-2.5 text-zinc-950" />}
+                </button>
+                <input
+                  value={c.title}
+                  onChange={(e) => handlers.onUpdateCheckpoint(goal.id, c.id, { title: e.target.value })}
+                  aria-label="Checkpoint"
+                  className={`flex-1 min-w-0 bg-transparent border-b border-transparent hover:border-white/10 focus:border-white/25 text-[12.5px] focus:outline-none py-0.5 transition-colors ${c.done ? "text-zinc-500 line-through" : "text-zinc-200"}`}
+                />
+                <button
+                  onClick={() => handlers.onRemoveCheckpoint(goal.id, c.id)}
+                  aria-label={`Remove checkpoint ${c.title}`}
+                  className="shrink-0 text-zinc-700 hover:text-rose-300 opacity-0 group-hover/cp:opacity-100 focus:opacity-100 transition-all"
+                ><X className="size-3" /></button>
+              </div>
+              {/* Only the generated rungs carry a celebration. A checkpoint you
+                  wrote by hand is usually a step rather than a moment, and a
+                  reward box on every line turns twelve of them into homework. */}
+              {c.id.startsWith("m") && (
+                <input
+                  value={c.celebration ?? ""}
+                  onChange={(e) => handlers.onUpdateCheckpoint(goal.id, c.id, { celebration: e.target.value })}
+                  placeholder={MILESTONE_COPY.celebratePlaceholder}
+                  aria-label={`${MILESTONE_COPY.celebrate}: ${c.title}`}
+                  className="w-full ml-6 mt-0.5 bg-transparent border-b border-transparent hover:border-white/10 focus:border-white/25 text-[11px] text-zinc-400 placeholder:text-zinc-700 focus:outline-none py-0.5 transition-colors"
+                  style={{ width: "calc(100% - 1.5rem)" }}
+                />
+              )}
             </li>
           ))}
         </ul>
@@ -780,6 +805,125 @@ function Checkpoints({ goal, color, handlers }: { goal: NsGoal; color: string; h
           aria-label={`Add a checkpoint to ${goal.title}`}
           className="flex-1 min-w-0 bg-transparent border-b border-white/10 focus:border-white/30 text-[12.5px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none py-0.5 transition-colors"
         />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Milestone celebrations: the climb under a finish line.
+ *
+ * The number comes out of the title, so "Bench 36 kg dumbbells for 6 reps"
+ * arrives with 36 kg already in the box and a starting point you set once. What
+ * you get is four rungs, in order, each with a place to say what you do when you
+ * reach it. Regenerating replaces the generated rungs and leaves the checkpoints
+ * you wrote yourself where they are.
+ */
+function MilestoneBuilder({ goal, color, handlers }: { goal: NsGoal; color: string; handlers: GoalHandlers }) {
+  const parsed = parseGoalTarget(goal.title)
+  const existing = milestoneCheckpoints(goal)
+  const [open, setOpen] = useState(false)
+  const [from, setFrom] = useState(() => (parsed ? String(Math.max(0, Math.round(parsed.value * 0.7))) : ""))
+  const [to, setTo] = useState(() => (parsed ? String(parsed.value) : ""))
+  const [unit, setUnit] = useState(parsed?.unit ?? "")
+  const [count, setCount] = useState(4)
+
+  if (!parsed) return null
+
+  const numbers = { from: Number(from), to: Number(to) }
+  const ready = Number.isFinite(numbers.from) && Number.isFinite(numbers.to) && from.trim() !== "" && to.trim() !== ""
+  const preview = ready ? milestoneValues(numbers.from, numbers.to, count) : []
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="mt-2 inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg border transition-colors"
+        style={{ borderColor: `${color}55`, backgroundColor: `${color}14`, color: "#e4e4e7" }}
+      >
+        <Plus className="size-3" />
+        {existing.length > 0 ? MILESTONE_COPY.remake : MILESTONE_COPY.offer}
+      </button>
+    )
+  }
+
+  return (
+    <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
+      <div className="flex items-baseline gap-2">
+        <p className="text-[12px] text-zinc-200">{MILESTONE_COPY.title}</p>
+        <button onClick={() => setOpen(false)} className="ml-auto text-[10px] text-zinc-600 hover:text-zinc-300">close</button>
+      </div>
+      <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{MILESTONE_COPY.help}</p>
+
+      <div className="flex flex-wrap items-end gap-2 mt-2">
+        <label className="text-[10px] text-zinc-500">
+          {MILESTONE_COPY.from}
+          <input
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            inputMode="decimal"
+            className="block w-16 mt-0.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[12px] text-zinc-100 focus:outline-none focus:border-white/30 tabular-nums"
+          />
+        </label>
+        <label className="text-[10px] text-zinc-500">
+          {MILESTONE_COPY.to}
+          <input
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            inputMode="decimal"
+            className="block w-16 mt-0.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[12px] text-zinc-100 focus:outline-none focus:border-white/30 tabular-nums"
+          />
+        </label>
+        <label className="text-[10px] text-zinc-500">
+          {MILESTONE_COPY.unit}
+          <input
+            value={unit}
+            onChange={(e) => setUnit(e.target.value)}
+            className="block w-20 mt-0.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[12px] text-zinc-100 focus:outline-none focus:border-white/30"
+          />
+        </label>
+        <label className="text-[10px] text-zinc-500">
+          {MILESTONE_COPY.count}
+          <select
+            value={count}
+            onChange={(e) => setCount(Number(e.target.value))}
+            className="block mt-0.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[12px] text-zinc-200 focus:outline-none"
+          >
+            {[2, 3, 4, 5, 6, 8, 10].map((n) => <option key={n} value={n} className="bg-zinc-900">{n}</option>)}
+          </select>
+        </label>
+      </div>
+
+      {preview.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1 mt-2">
+          {preview.map((v, i) => (
+            <span
+              key={`${v}-${i}`}
+              className="text-[10.5px] px-2 py-0.5 rounded-full border tabular-nums"
+              style={{ borderColor: `${color}55`, backgroundColor: `${color}14`, color: "#e4e4e7" }}
+            >
+              {v}{unit ? ` ${unit}` : ""}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {existing.length > 0 && (
+        <p className="text-[10px] text-zinc-600 mt-1.5">{MILESTONE_COPY.replaceNote(existing.length)}</p>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2 mt-2">
+        <button
+          onClick={() => {
+            handlers.onSetMilestones(goal.id, { from: numbers.from, to: numbers.to, count, unit, prefix: parsed.prefix })
+            setOpen(false)
+          }}
+          disabled={!ready}
+          className="text-[11.5px] px-2.5 py-1 rounded-lg border border-violet-500/40 bg-violet-500/15 text-violet-100 hover:bg-violet-500/25 disabled:opacity-40 transition-colors"
+        >
+          {MILESTONE_COPY.make}
+        </button>
+        <span className="text-[10px] text-zinc-600 min-w-0 flex-1">{MILESTONE_COPY.celebrateHint}</span>
       </div>
     </div>
   )
@@ -1070,13 +1214,19 @@ export function Rating({ label, value, color, onChange, ariaLabel }: {
 }
 
 /** A list you add to three words at a time. No forms, no modals. */
-export function TagList({ label, hint, placeholder, color, items, suggestions, onChange }: {
+export function TagList({ label, hint, placeholder, color, items, suggestions, suggestionsLabel, onChange }: {
   label: string
   hint?: string
   placeholder: string
   color: string
   items: string[]
   suggestions?: string[]
+  /**
+   * A line directly above the chip row. The values exercise needs one, because
+   * there the chips are not garnish: they are the coach reading a menu out loud
+   * while you write, and the line is the question that menu answers.
+   */
+  suggestionsLabel?: string
   onChange: (items: string[]) => void
 }) {
   const [draft, setDraft] = useState("")
@@ -1093,11 +1243,17 @@ export function TagList({ label, hint, placeholder, color, items, suggestions, o
       {hint && <p className="text-[10.5px] text-zinc-600 mt-0.5">{hint}</p>}
       {items.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-1.5">
-          {items.map((it, i) => (
+          {items.map((it, i) => {
+            // A value keeps the colour of the group it came from, so the same
+            // word is the same colour in the picker, on this list, and in the
+            // ordered list on the review. Anything typed that we do not know
+            // falls back to the surface's own colour.
+            const tone = VALUE_COLOR.get(it.trim().toLowerCase()) ?? color
+            return (
             <span
               key={`${it}-${i}`}
               className="group/tag inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] text-zinc-200"
-              style={{ borderColor: `${color}55`, background: `${color}12` }}
+              style={{ borderColor: `${tone}66`, background: `${tone}1a` }}
             >
               {it}
               <button
@@ -1106,7 +1262,8 @@ export function TagList({ label, hint, placeholder, color, items, suggestions, o
                 className="opacity-0 group-hover/tag:opacity-100 focus:opacity-100 text-zinc-500 hover:text-rose-300 transition-all"
               ><X className="size-2.5" /></button>
             </span>
-          ))}
+            )
+          })}
         </div>
       )}
       <input
@@ -1118,8 +1275,11 @@ export function TagList({ label, hint, placeholder, color, items, suggestions, o
         placeholder={placeholder}
         className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-1 text-[12.5px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30 transition-colors"
       />
+      {suggestions && suggestionsLabel && (
+        <p className="text-[10.5px] text-zinc-500 mt-1.5">{suggestionsLabel}</p>
+      )}
       {suggestions && (
-        <div className="flex flex-wrap gap-1 mt-1.5">
+        <div className={`flex flex-wrap gap-1 ${suggestionsLabel ? "mt-1" : "mt-1.5"}`}>
           {/* The same suggestion word can appear on two lists on one screen
               (an area's values and the whole-life values). "+ Freedom" twice
               is unambiguous by position and identical to a screen reader, so

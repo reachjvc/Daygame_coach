@@ -21,7 +21,6 @@ import {
   AREA_REVIEW_COPY,
   GAP_WARNING,
   NS_FLOOR,
-  NS_VALUE_SUGGESTIONS,
   REVIEW_INTRO,
   REVIEW_PROMPTS,
 } from "@/src/goals/data/northStar"

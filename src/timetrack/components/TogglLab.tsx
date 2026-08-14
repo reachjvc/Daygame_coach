@@ -52,7 +52,7 @@ const NAV: { id: Screen; label: string; icon: typeof IconTimer }[] = [
   { id: "calendar", label: "Calendar", icon: IconCalendar },
   { id: "reports", label: "Reports", icon: IconReports },
   { id: "projects", label: "Projects", icon: IconProjects },
-  { id: "manage", label: "Clients · Tags · Team", icon: IconTeam },
+  { id: "manage", label: "Manage", icon: IconTeam },
   { id: "settings", label: "Settings", icon: IconSettings },
 ]
 
@@ -168,7 +168,7 @@ export function TogglLab() {
   if (!state || !reportConfig) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
-        Loading the time-tracking sandbox…
+        Loading your time tracker…
       </div>
     )
   }
@@ -178,7 +178,7 @@ export function TogglLab() {
     // fields invisible on cards; give every field in the sandbox real contrast
     <div className="min-h-screen bg-background [&_input[data-slot=input]]:border-border [&_input[data-slot=input]]:bg-background/60 [&_select]:bg-background/60">
       {/* header */}
-      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur">
+      <header className="sticky top-0 z-[9500] border-b border-border bg-card/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-2">
           <Link href="/test" className="text-xs text-muted-foreground hover:text-foreground">
             ← /test
@@ -201,6 +201,7 @@ export function TogglLab() {
             <Dropdown
               align="right"
               width="w-80"
+              ariaLabel="Project alerts"
               onOpenChange={(open) => {
                 if (open && unreadAlerts.length > 0) setState((current) => markAlertsRead(current))
               }}
@@ -416,7 +417,7 @@ export function TogglLab() {
       )}
 
       {/* toasts */}
-      <div className="pointer-events-none fixed bottom-4 left-1/2 z-[70] flex w-full max-w-md -translate-x-1/2 flex-col gap-2 px-4">
+      <div className="pointer-events-none fixed bottom-4 left-1/2 z-[9700] flex w-full max-w-md -translate-x-1/2 flex-col gap-2 px-4">
         {toasts.map((toast) => (
           <div
             key={toast.id}

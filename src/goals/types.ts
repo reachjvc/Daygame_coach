@@ -1375,10 +1375,14 @@ export interface LifeMasteryProgress {
 // ---------------------------------------------------------------------------
 
 /**
- * Three tabs. "plan" was folded into "now" — they were the same wheel opening
- * the same dialog, one of them additionally listing the goals and routines.
+ * Four tabs, split by the question each one answers.
+ *
+ * "now" is where you stand: the rating, the 10, the why, the identity and the
+ * values, area by area, with the routines that already run underneath. "plan"
+ * is what you are going to do about it: the goals. They were one tab, and the
+ * assessment work was buried under the goal-writing on the same screen.
  */
-export type NorthStarTabId = "star" | "now" | "review"
+export type NorthStarTabId = "star" | "now" | "plan" | "review"
 
 /** One area of life. The four defaults ship with the flow and are editable. */
 export interface NsArea {
@@ -1466,6 +1470,14 @@ export interface NsCheckpoint {
   id: string
   title: string
   done: boolean
+  /**
+   * What you do to mark it, when it is one of the milestones on the way.
+   *
+   * A finish line pays out once, at the end, which is a long time to work with
+   * nothing to feel. Naming what happens at 28 kg turns the climb into a series
+   * of things that land. Optional, and empty on a plain checkpoint.
+   */
+  celebration?: string
 }
 
 export interface NsGoal {
@@ -1546,6 +1558,15 @@ export interface NsGoal {
    * every area it actually serves.
    */
   serves: string[]
+  /**
+   * The guide's questions this goal has been through, answered or skipped.
+   *
+   * Recorded rather than derived, because "has no why yet" and "was asked and
+   * said no" are different states that look identical in the data. Without
+   * this, skipping a question means being asked it again on the next pass
+   * forever, which is how a guide turns into nagging.
+   */
+  asked: string[]
 }
 
 /** Where a target goal's current value is read from. */
@@ -1629,6 +1650,15 @@ export interface NsPlan {
    * either kind of id.
    */
   seasonFocusId: string | null
+  /**
+   * The areas picked for this season, in the order they were picked.
+   *
+   * Separate from `seasonFocusId`, which is the single one thing. This is the
+   * two or three you are actually working on, and the rest of the twelve hold
+   * where they are. It is an ordered list because "which of these matters most"
+   * is the question people can answer and "rate all twelve" is not.
+   */
+  seasonAreaIds: string[]
   /** Daily self-ratings. Date (YYYY-MM-DD) to area id to 0-10. */
   daily: Record<string, Record<string, number>>
   /** Monotonic id counter. Never reused, so a deleted row's id never comes back. */
@@ -1720,6 +1750,16 @@ export interface NsReviewPrompt {
   placeholder: string
   /** Rendered as one line per entry rather than a paragraph. */
   list?: boolean
+  /**
+   * A few words of his own answer, under the box.
+   *
+   * Only where two prompts are near neighbours and the difference between them
+   * is easier to show than to state. The identity and the standards are the
+   * pair: both are lists of good qualities in the present tense, and no amount
+   * of explanation separates them as fast as seeing "I'm an amazing friend,
+   * son, brother" next to "to be disciplined".
+   */
+  example?: string
 }
 
 // =====================================================================

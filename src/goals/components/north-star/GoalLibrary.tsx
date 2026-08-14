@@ -15,12 +15,11 @@
  */
 
 import { useState } from "react"
-import { Check, ChevronDown, Plus } from "lucide-react"
+import { Check, Plus } from "lucide-react"
 import type { NsArea, NsPlan } from "@/src/goals/types"
 import { LIBRARY_COPY, TEMPLATE_ADDED_COPY, TEMPLATE_PREVIEW_COPY } from "@/src/goals/data/northStar"
 import { PILLARS, type FrameworkTarget, type Template } from "@/src/goals/data/newGoalFramework"
 import {
-  cumulativeUnit,
   libraryFor,
   libraryPillarForArea,
   shapeFromTarget,
@@ -28,6 +27,7 @@ import {
   targetsForTemplate,
   templatesFor,
 } from "@/src/goals/northStarService"
+import { Peek } from "./Peek"
 
 const SHAPE_ICON: Record<string, string> = { milestone_ladder: "🎯", habit_ramp: "🔁", achievement: "🏁" }
 
@@ -36,9 +36,10 @@ const LEVEL_LABELS = ["Beginner", "Intermediate", "Advanced"]
 /**
  * What one library row is, in a few characters.
  *
- * The unit runs through `cumulativeUnit` because three framework targets count a
- * running total while carrying a per-week unit: Build Hours is 1 → 500 with the
- * unit "hours/week", which read as "500 hours a week" and is 71 hours a day.
+ * The unit comes off `shapeFromTarget`, which runs it through `cumulativeUnit`,
+ * because three framework targets count a running total while carrying a
+ * per-week unit: Build Hours is 1 → 500 with the unit "hours/week", which read
+ * as "500 hours a week" and is 71 hours a day.
  */
 function targetDetail(target: FrameworkTarget, valueOverride?: number): string {
   const shape = shapeFromTarget(target, valueOverride)
@@ -60,8 +61,6 @@ export function GoalLibrary({ area, plan, onAddTarget, onAddTemplate }: {
   // rather than stored: which catalogue you browse is a choice about right now.
   const [picked, setPicked] = useState<string | null>(null)
   const pillarId = seeded ?? picked
-  const [open, setOpen] = useState(false)
-  const [openObjective, setOpenObjective] = useState<string | null>(null)
   const [level, setLevel] = useState(1)
 
   if (!pillarId) {
@@ -73,7 +72,7 @@ export function GoalLibrary({ area, plan, onAddTarget, onAddTemplate }: {
           {PILLARS.map((p) => (
             <button
               key={p.id}
-              onClick={() => { setPicked(p.id); setOpen(true) }}
+              onClick={() => setPicked(p.id)}
               className="text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-zinc-300 hover:bg-white/10 hover:border-white/30 transition-colors"
             >
               {p.label}
@@ -90,16 +89,21 @@ export function GoalLibrary({ area, plan, onAddTarget, onAddTemplate }: {
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.02]">
-      <button onClick={() => setOpen((v) => !v)} aria-expanded={open} className="w-full flex items-center gap-2 px-3 py-2.5 text-left group">
-        <ChevronDown className={`size-3.5 shrink-0 text-zinc-500 transition-transform ${open ? "" : "-rotate-90"}`} />
-        <span className="text-[12.5px] text-zinc-200 group-hover:text-white transition-colors">{LIBRARY_COPY.title}</span>
+      <div className="flex items-center gap-2 px-3 pt-2.5">
+        <span className="text-[12.5px] text-zinc-200">{LIBRARY_COPY.title}</span>
         <span className="ml-auto text-[10.5px] text-zinc-500 tabular-nums shrink-0">
-          {total} to choose from · {templates.length} sets
+          {total} to choose from · {LIBRARY_COPY.sets(templates.length)}
         </span>
-      </button>
+      </div>
 
-      {open && (
-        <div className="px-3 pb-3 space-y-3">
+      {/* Always on the page, cut off with a fade. This was a disclosure holding
+          a row of disclosures, so an area opened on two closed rows and a count,
+          and nothing about it said what was inside.
+          TWO PEEKS, NOT ONE AROUND BOTH. One fade over the lot cut through the
+          middle of the template card, so the preview of a goal library showed no
+          goals. The sets peek previews sets and the goals peek previews goals. */}
+      <div className="px-3 pb-3 pt-1.5">
+        <div className="space-y-3">
           <p className="text-[11px] text-zinc-500 leading-relaxed">{LIBRARY_COPY.help}</p>
 
           {templates.length > 0 && (
@@ -130,40 +134,38 @@ export function GoalLibrary({ area, plan, onAddTarget, onAddTemplate }: {
                   thing on this page that most needs to be a considered choice,
                   so what is in it is one click away and shows the numbers at the
                   level currently picked. */}
-              <div className="grid gap-1.5 sm:grid-cols-2 mt-2">
-                {templates.map((t) => (
-                  <TemplateCard
-                    key={t.id}
-                    template={t}
-                    plan={plan}
-                    level={level}
-                    color={area.color}
-                    onAdd={() => onAddTemplate(area.id, t.id, level)}
-                  />
-                ))}
+              <div className="mt-2">
+                <Peek more={LIBRARY_COPY.moreSets(templates.length)} collapsedHeight={130}>
+                  <div className="grid gap-1.5 sm:grid-cols-2">
+                    {templates.map((t) => (
+                      <TemplateCard
+                        key={t.id}
+                        template={t}
+                        plan={plan}
+                        level={level}
+                        color={area.color}
+                        onAdd={() => onAddTemplate(area.id, t.id, level)}
+                      />
+                    ))}
+                  </div>
+                </Peek>
               </div>
             </div>
           )}
 
+          <Peek more={LIBRARY_COPY.more(total)} collapsedHeight={200}>
           <div className="space-y-1.5">
             {groups.map(({ objective, targets }) => {
-              const isOpen = openObjective === objective.id
               const added = targets.filter((t) => targetAlreadyAdded(plan, t)).length
               return (
                 <div key={objective.id} className="rounded-lg border border-white/10 bg-white/[0.02]">
-                  <button
-                    onClick={() => setOpenObjective(isOpen ? null : objective.id)}
-                    aria-expanded={isOpen}
-                    className="w-full flex items-center gap-2 px-2.5 py-1.5 text-left group"
-                  >
-                    <ChevronDown className={`size-3 shrink-0 text-zinc-600 transition-transform ${isOpen ? "" : "-rotate-90"}`} />
-                    <span className="text-[12px] text-zinc-200 group-hover:text-white transition-colors">{objective.label}</span>
+                  <div className="flex items-center gap-2 px-2.5 pt-1.5">
+                    <span className="text-[12px] text-zinc-200">{objective.label}</span>
                     <span className="ml-auto text-[10px] text-zinc-600 tabular-nums shrink-0">
                       {added > 0 ? `${added}/${targets.length}` : targets.length}
                     </span>
-                  </button>
-                  {isOpen && (
-                    <ul className="px-2.5 pb-2 space-y-0.5">
+                  </div>
+                  <ul className="px-2.5 pb-2 space-y-0.5">
                       <li className="text-[10.5px] text-zinc-600 leading-relaxed pb-1">{objective.description}</li>
                       {targets.map((t) => {
                         const already = targetAlreadyAdded(plan, t)
@@ -191,14 +193,14 @@ export function GoalLibrary({ area, plan, onAddTarget, onAddTemplate }: {
                           </li>
                         )
                       })}
-                    </ul>
-                  )}
+                  </ul>
                 </div>
               )
             })}
           </div>
+          </Peek>
         </div>
-      )}
+      </div>
     </div>
   )
 }

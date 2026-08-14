@@ -3,21 +3,24 @@
 /**
  * /test/life-mastery — the North Star flow.
  *
- * Three tabs, and they are tabs rather than steps on purpose. The order is the
+ * Four tabs, and they are tabs rather than steps on purpose. The order is the
  * order the work wants to happen in, but somebody who arrives wanting to jot
  * three goals down should be able to, and forcing the sequence on them only
  * loses the goals. Nothing on any tab is gated either: a goal with no date and
  * no why still saves, and what is outstanding is listed in one panel under
  * every tab rather than standing in the way.
  *
- *   1. North star — the life you are aiming at, why, your values, who you are.
- *   2. Your life  — the twelve areas, your 10 and rating in each, the goals
- *                   aimed at them, and the routines running underneath.
- *   3. Review     — whether the goals point at that 10, and what stops you.
+ *   1. North star    — the life you are aiming at, why, your values, who you are.
+ *   2. Where you are — the twelve areas: your 10, your rating, why the area
+ *                      matters, what it asks you to value, who you are in it,
+ *                      and the four routines already running underneath.
+ *   3. Your goals    — what you are going to do about it, area by area.
+ *   4. Review        — whether the goals point at that 10, and what stops you.
  *
- * Tab 2 used to be two tabs showing the same wheel and the same dialog, which
- * meant the ratings and the goals they are supposed to justify were never on
- * screen together. Inside an area the 10 is still written before the rating.
+ * Tabs 2 and 3 were one tab. Merged, the assessment sat above a goal editor tall
+ * enough to bury it, so the rating was the only part of it anyone finished. They
+ * split along the honest line: where you stand, then what you will do. Each has
+ * its own dialog for one area, and each links to the other half.
  *
  * Runs on localStorage, calls no API, and touches no database. The twelve-area
  * version this replaced is preserved at /test/life-mastery-v1, and the whole
@@ -29,10 +32,14 @@ import Link from "next/link"
 import { ArrowLeft, Check, ChevronDown } from "lucide-react"
 import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlan, VisionGoalType } from "@/src/goals/types"
 import { NORTH_STAR_STORAGE_KEY, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY } from "@/src/goals/data/northStar"
+import type { RoutineNeed } from "@/src/goals/data/northStarBuild"
+import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
 import * as ns from "@/src/goals/northStarService"
 import { StarTab } from "./StarTab"
 import { NowTab } from "./NowTab"
+import { PlanTab } from "./PlanTab"
 import { AreaDialog } from "./AreaDialog"
+import { AreaGoalsDialog } from "./AreaGoalsDialog"
 import { ReviewTab } from "./ReviewTab"
 
 export function NorthStarFlow() {
@@ -42,9 +49,10 @@ export function NorthStarFlow() {
   const [confirmReset, setConfirmReset] = useState(false)
   const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle")
   const [readBackOpen, setReadBackOpen] = useState(false)
-  // The area dialog is owned here, so the same one serves the "where you are"
-  // wheel and the plan wheel and there is only ever one open.
+  // Both area dialogs are owned here, so only one is ever open and moving from
+  // an area's rating to its goals is a tab switch rather than a re-find.
   const [nowAreaId, setNowAreaId] = useState<string | null>(null)
+  const [planAreaId, setPlanAreaId] = useState<string | null>(null)
   const [nowGoalId, setNowGoalId] = useState<string | null>(null)
   // Owned here too, so opening a routine from inside an area dialog can close
   // the dialog and expand the routine on the surface underneath.
@@ -131,7 +139,8 @@ export function NorthStarFlow() {
       setPlan((p) => ns.updateBelief(p, id, beliefId, patch)),
     onRemoveBelief: (id: string, beliefId: string) => setPlan((p) => ns.removeBelief(p, id, beliefId)),
     onAddCheckpoint: (id: string, title: string) => setPlan((p) => ns.addCheckpoint(p, id, title)),
-    onUpdateCheckpoint: (id: string, checkpointId: string, patch: { title?: string; done?: boolean }) => setPlan((p) => ns.updateCheckpoint(p, id, checkpointId, patch)),
+    onUpdateCheckpoint: (id: string, checkpointId: string, patch: { title?: string; done?: boolean; celebration?: string }) => setPlan((p) => ns.updateCheckpoint(p, id, checkpointId, patch)),
+    onSetMilestones: (id: string, spec: { from: number; to: number; count: number; unit?: string; prefix?: string }) => setPlan((p) => ns.setMilestones(p, id, spec)),
     onRemoveCheckpoint: (id: string, checkpointId: string) => setPlan((p) => ns.removeCheckpoint(p, id, checkpointId)),
     onSetPriority: (id: string, rank: number) => setPlan((p) => ns.setGoalPriority(p, id, rank)),
     onMovePriority: (id: string, dir: -1 | 1) => setPlan((p) => ns.moveGoalPriority(p, id, dir)),
@@ -150,9 +159,24 @@ export function NorthStarFlow() {
     onAreaReview: (areaId: string, patch: Partial<NsAreaReview>) => setPlan((p) => ns.setAreaReview(p, areaId, patch)),
     onDailyRating: (date: string, areaId: string, score: number) => setPlan((p) => ns.setDailyRating(p, date, areaId, score)),
     onAnswer: (promptId: string, text: string) => setPlan((p) => ns.setAnswer(p, promptId, text)),
-    onGoToGoals: () => setTab("now"),
+    onGoToGoals: () => setTab("plan"),
     onGoToNow: () => setTab("now"),
   }), [])
+
+  /** The two halves of one area, and the move between them. */
+  const openAreaGoals = useCallback((areaId: string) => {
+    setNowAreaId(null)
+    setPlanAreaId(areaId)
+    setNowGoalId(null)
+    setTab("plan")
+  }, [])
+
+  const openAreaRating = useCallback((areaId: string) => {
+    setPlanAreaId(null)
+    setNowGoalId(null)
+    setNowAreaId(areaId)
+    setTab("now")
+  }, [])
 
   const setSeasonFocus = useCallback((id: string) => setPlan((p) => ns.setSeasonFocus(p, id)), [])
 
@@ -168,10 +192,65 @@ export function NorthStarFlow() {
     setPlan((p) => ns.addGoalsFromTemplate(p, areaId, templateId, levelIndex))
   }, [])
 
+  /**
+   * The board's own handlers.
+   *
+   * The two that are new are the cascade: `onApplyNeed` puts the routine a goal
+   * set runs on into the stack, and `onTogglePractice` turns a routine step on
+   * from inside an area, adding the routine if the stack has not got one. Both
+   * go through the same service functions the routine cards use, so a routine
+   * built from a goal and a routine built by hand are the same object.
+   */
+  const boardHandlers = useMemo(() => ({
+    onAddTemplate: (areaId: string, templateId: string, level: number) =>
+      setPlan((p) => ns.addGoalsFromTemplate(p, areaId, templateId, level)),
+    onAddTarget: (areaId: string, targetId: string) => setPlan((p) => ns.addGoalFromTarget(p, areaId, targetId)),
+    onApplyNeed: (need: RoutineNeed) => setPlan((p) => ns.applyRoutineNeed(p, need)),
+    onTogglePractice: (blueprintId: string, stepId: string, on: boolean) =>
+      setPlan((p) => (on ? ns.addPractice(p, blueprintId, stepId) : ns.removePractice(p, blueprintId, stepId))),
+    onSeasonFocus: (areaId: string) => setPlan((p) => ns.setSeasonFocus(p, areaId)),
+    onOpenArea: (areaId: string) => { setPlanAreaId(areaId); setNowGoalId(null) },
+  }), [])
+
+  /**
+   * The guide's handlers.
+   *
+   * Every answer also marks its question asked, which is why they are separate
+   * calls rather than one generic `answer(goalId, question, value)`: what "date"
+   * writes and what "why" writes are different fields with different shapes, and
+   * flattening that would put a switch inside the service to undo it again.
+   */
+  const guideHandlers = useMemo(() => ({
+    onToggleArea: (areaId: string) => setPlan((p) => ns.toggleSeasonArea(p, areaId)),
+    onAddArea: (label: string) => setPlan((p) => ns.addArea(p, label)),
+    onAddDump: (areaId: string, text: string) => setPlan((p) => ns.addGoalsFromDump(p, areaId, text)),
+    onAddTemplate: (areaId: string, templateId: string, level: number) =>
+      setPlan((p) => ns.addGoalsFromTemplate(p, areaId, templateId, level)),
+    onApplyNeed: (need: RoutineNeed) => setPlan((p) => ns.applyRoutineNeed(p, need)),
+    onTogglePractice: (blueprintId: string, stepId: string, on: boolean) =>
+      setPlan((p) => (on ? ns.addPractice(p, blueprintId, stepId) : ns.removePractice(p, blueprintId, stepId))),
+    onRemoveGoal: (goalId: string) => setPlan((p) => ns.removeGoal(p, goalId)),
+    onLadderStart: (goalId: string, start: number) => setPlan((p) => ns.setLadderStart(p, goalId, start)),
+    onAction: (goalId: string, title: string, daysPerWeek: number) =>
+      setPlan((p) => ns.markAsked(ns.addAction(p, goalId, title, daysPerWeek), goalId, "actions")),
+    onDate: (goalId: string, date: string) =>
+      setPlan((p) => ns.markAsked(ns.updateGoal(p, goalId, { targetDate: date || null }), goalId, "date")),
+    onText: (goalId: string, field: "why" | "painWhy", text: string) =>
+      setPlan((p) => ns.markAsked(ns.updateGoal(p, goalId, { [field]: text }), goalId, field === "why" ? "why" : "cost")),
+    onControllable: (goalId: string, title: string) =>
+      setPlan((p) => ns.markAsked(ns.addControllableGoal(p, goalId, title), goalId, "control")),
+    onSkip: (goalId: string, question: GuideQuestionId) => setPlan((p) => ns.markAsked(p, goalId, question)),
+    onOpenArea: (areaId: string) => { setPlanAreaId(areaId); setNowGoalId(null) },
+  }), [])
+
   const reset = () => {
     setPlan(ns.emptyNsPlan())
     setConfirmReset(false)
     setTab("star")
+    setNowAreaId(null)
+    setPlanAreaId(null)
+    setNowGoalId(null)
+    setOpenRoutineId(null)
   }
 
   const copy = async () => {
@@ -255,12 +334,25 @@ export function NorthStarFlow() {
             openId={nowAreaId}
             setOpenId={setNowAreaId}
             areaHandlers={areaHandlers}
-            routineHandlers={routineHandlers}
+            onSeasonFocus={setSeasonFocus}
+            onNext={() => setTab("plan")}
+          />
+        ) : tab === "plan" ? (
+          <PlanTab
+            plan={plan}
+            today={today}
+            openId={planAreaId}
+            setOpenId={setPlanAreaId}
             goalHandlers={goalHandlers}
+            routineHandlers={routineHandlers}
+            onAddRoutine={areaHandlers.onAddRoutine}
+            onOpenGoal={(areaId, goalId) => { setPlanAreaId(areaId); setNowGoalId(goalId) }}
             openRoutineId={openRoutineId}
             setOpenRoutineId={setOpenRoutineId}
-            onOpenGoal={(areaId, goalId) => { setNowAreaId(areaId); setNowGoalId(goalId) }}
             onSeasonFocus={setSeasonFocus}
+            boardHandlers={boardHandlers}
+            guideHandlers={guideHandlers}
+            onGoToTab={setTab}
             onNext={() => setTab("review")}
           />
         ) : (
@@ -327,20 +419,38 @@ export function NorthStarFlow() {
             area={area}
             plan={plan}
             today={today ?? ns.todayISO()}
+            onAreaReview={reviewHandlers.onAreaReview}
+            onDailyRating={reviewHandlers.onDailyRating}
+            onUpdateArea={areaHandlers.onUpdateArea}
+            onRemoveArea={areaHandlers.onRemoveArea}
+            onOpenRoutine={(id) => { setNowAreaId(null); setOpenRoutineId(id); setTab("plan") }}
+            onSeasonFocus={setSeasonFocus}
+            onOpenArea={(id) => setNowAreaId(id)}
+            onGoToGoals={openAreaGoals}
+            onClose={() => setNowAreaId(null)}
+          />
+        )
+      })()}
+
+      {tab === "plan" && planAreaId && (() => {
+        const area = plan.areas.find((a) => a.id === planAreaId)
+        if (!area) return null
+        return (
+          <AreaGoalsDialog
+            area={area}
+            plan={plan}
+            today={today ?? ns.todayISO()}
             openGoalId={nowGoalId}
             onOpenGoal={(id) => setNowGoalId(nowGoalId === id ? null : id)}
             goalHandlers={goalHandlers}
             onAddGoal={addGoal}
             onAddTarget={addTarget}
             onAddTemplate={addTemplate}
-            onAreaReview={reviewHandlers.onAreaReview}
-            onDailyRating={reviewHandlers.onDailyRating}
-            onUpdateArea={areaHandlers.onUpdateArea}
-            onRemoveArea={areaHandlers.onRemoveArea}
-            onOpenRoutine={setOpenRoutineId}
+            onOpenRoutine={(id) => { setPlanAreaId(null); setOpenRoutineId(id) }}
             onSeasonFocus={setSeasonFocus}
-            onOpenArea={(id) => { setNowAreaId(id); setNowGoalId(null) }}
-            onClose={() => { setNowAreaId(null); setNowGoalId(null) }}
+            onOpenArea={(id) => { setPlanAreaId(id); setNowGoalId(null) }}
+            onGoToRating={openAreaRating}
+            onClose={() => { setPlanAreaId(null); setNowGoalId(null) }}
           />
         )
       })()}

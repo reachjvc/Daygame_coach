@@ -174,10 +174,16 @@ const testPages = [
     icon: FileSearch,
   },
   {
-    name: "Change Your Life — prototype flow",
-    href: "/test/change-your-life/flow",
-    description: "The nine stages the research argues for: differential → constraints → candidates → one rep → ladder → relapse letter. Three of them can refuse you",
+    name: "Change Your Life — the ladder",
+    href: "/test/change-your-life/start",
+    description: "The actual offering: two questions, then one rung a day. Rungs are supplied, misses never reset, and the letter surfaces on the second miss",
     icon: Waypoints,
+  },
+  {
+    name: "Change Your Life — nine-stage design study",
+    href: "/test/change-your-life/flow",
+    description: "The full flow the research argues for. Kept as a reference — too much setup to be the product, but the refusals in it are the interesting part",
+    icon: ListChecks,
   },
   {
     name: "Change Your Life — short script",

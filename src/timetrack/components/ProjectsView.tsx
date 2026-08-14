@@ -127,7 +127,7 @@ export function ProjectsView({
       </div>
 
       {projects.length === 0 ? (
-        <EmptyState title="No projects here" hint="Create one, or switch the filter above." />
+        <EmptyState title="No projects here" hint="Create one, or switch the filter above to see archived projects and templates." />
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border bg-card">
           <table className="w-full min-w-[880px] text-sm">
@@ -368,27 +368,27 @@ function ProjectDialog({
           <ToggleRow label="Billable by default" checked={draft.billable} onChange={(billable) => setDraft({ ...draft, billable })} />
           <ToggleRow
             label="Private project"
-            hint="Only invited members can see it"
+            hint="Only the members you add below can see it"
             checked={draft.isPrivate}
             onChange={(isPrivate) => setDraft({ ...draft, isPrivate })}
           />
           <ToggleRow
             label="Use as template"
-            hint="Templates can be copied into new projects with their tasks"
+            hint="Templates can be copied into new projects, tasks included"
             checked={draft.template}
             onChange={(template) => setDraft({ ...draft, template })}
           />
         </div>
 
-        <Field label="Hourly rate">
+        <Field label="Hourly rate" className="w-48">
           <Input
             type="number"
             value={draft.rate ?? ""}
             onChange={(event) => setDraft({ ...draft, rate: event.target.value ? Number(event.target.value) : null })}
-            placeholder="Inherits member / workspace rate"
+            placeholder="Falls back to the member or workspace rate"
           />
         </Field>
-        <Field label="Currency">
+        <Field label="Currency" className="w-40">
           <MiniSelect
             value={draft.currency}
             onChange={(currency) => setDraft({ ...draft, currency })}
@@ -421,7 +421,7 @@ function ProjectDialog({
           />
         </Field>
         {draft.estimateType === "hours" ? (
-          <Field label="Estimated hours" hint="Leave empty for no estimate">
+          <Field label="Estimated hours" className="w-40" hint="Leave empty for no estimate">
             <Input
               value={estimateInput}
               onChange={(event) => setEstimateInput(event.target.value)}
@@ -430,7 +430,7 @@ function ProjectDialog({
             />
           </Field>
         ) : (
-          <Field label="Monetary budget">
+          <Field label="Monetary budget" className="w-48">
             <Input
               type="number"
               value={draft.estimatedAmount ?? ""}
@@ -444,13 +444,13 @@ function ProjectDialog({
         <div className="space-y-1 sm:col-span-2">
           <ToggleRow
             label="Auto-estimates"
-            hint="Sum the task estimates instead of setting a project estimate"
+            hint="Add up the task estimates instead of setting one for the project"
             checked={draft.autoEstimates}
             onChange={(autoEstimates) => setDraft({ ...draft, autoEstimates })}
           />
           <ToggleRow
             label="Recurring estimate"
-            hint="Reset the estimate every period"
+            hint="Start the estimate over every period"
             checked={draft.recurring}
             onChange={(recurring) => setDraft({ ...draft, recurring, recurringPeriod: recurring ? draft.recurringPeriod ?? "monthly" : null })}
           />
@@ -475,7 +475,7 @@ function ProjectDialog({
           </>
         )}
 
-        <Field label="Fixed fee">
+        <Field label="Fixed fee" className="w-48">
           <Input
             type="number"
             value={draft.fixedFee ?? ""}
@@ -500,7 +500,7 @@ function ProjectDialog({
           </Field>
         </div>
 
-        <Field label="Alerts" className="sm:col-span-2" hint="Fires once per period when the threshold is crossed">
+        <Field label="Alerts" className="sm:col-span-2" hint="Each one fires once per period, the first time you cross it">
           <div className="space-y-2">
             {(["estimate", "fixed_fee"] as const).map((basis) => (
               <div key={basis} className="flex flex-wrap items-center gap-1.5">
@@ -572,7 +572,7 @@ function ProjectDialog({
                       }),
                     )
                   }
-                  placeholder="est. h"
+                  placeholder="Est. hours"
                   className="h-8 w-[80px]"
                 />
                 <MiniSelect

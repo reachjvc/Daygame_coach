@@ -8,17 +8,16 @@
  *
  *  - **It gives the method away.** An earlier draft spent its whole length
  *    saying nobody tells you what to do, and then did not tell you what to do.
- *    That shape refutes its own argument. The bulk of the page is now substance;
- *    the gap in the genre appears once, and only to introduce the part handed
- *    over next.
- *  - First person, one claim per panel, said once. If a line can't be spoken in
- *    one breath it isn't here.
- *  - It ends on something doable in two minutes, not on a list of product
- *    features that mean nothing to someone seeing them cold.
+ *    That shape refutes its own argument.
+ *  - Varied sentence length. An earlier fix for "sounds like AI" cut every line
+ *    short, which is just a different tell — nobody writes in uniform beats.
+ *  - It ends on something doable, not on a list of product features that mean
+ *    nothing to someone seeing them cold.
  *  - Few boxes. Type and space do the work, because a screen of bordered cards
  *    reads as a dashboard rather than as somebody talking.
  *  - No creator names and no attributed quotes. On camera those become callouts
  *    of specific people.
+ *  - The CTA may only promise what the tool actually does today.
  */
 
 import { useEffect, useRef, useState } from "react"
@@ -31,9 +30,9 @@ import {
   CYL_DURATIONS,
   CYL_DURATION_ANSWER,
   CYL_GENRE_WPM,
+  CYL_LETTER,
   CYL_LOOP,
   CYL_LOOP_MISS,
-  CYL_RELAPSE_RULES,
   CYL_SHOWCASE,
   CYL_WORKS,
 } from "@/src/goals/data/changeYourLife"
@@ -59,26 +58,33 @@ function Block({
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-primary">{p.eyebrow}</p>
       ) : null}
       <h2
+        data-spoken
         className={`${p.eyebrow ? "mt-3" : ""} max-w-3xl font-semibold leading-[1.08] tracking-tight text-foreground text-balance ${
           first ? "text-4xl md:text-6xl" : "text-3xl md:text-5xl"
         }`}
       >
         {p.headline}
       </h2>
-      <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">{p.body}</p>
+      <p data-spoken className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
+        {p.body}
+      </p>
       {children ? <div className="mt-10">{children}</div> : null}
     </section>
   )
 }
 
-/** A numbered piece of the method. The number is real sequence or real count. */
+/** A numbered piece of the method. The number is a real sequence, not decoration. */
 function Item({ n, title, body }: { n: string; title: string; body: string }) {
   return (
     <li className="grid grid-cols-[2rem_1fr] gap-4 py-6 md:grid-cols-[3rem_1fr] md:gap-6">
       <span className="font-mono text-lg tabular-nums text-primary md:text-xl">{n}</span>
       <div>
-        <h3 className="text-xl font-semibold leading-snug text-foreground text-balance md:text-2xl">{title}</h3>
-        <p className="mt-2 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">{body}</p>
+        <h3 data-spoken className="text-xl font-semibold leading-snug text-foreground text-balance md:text-2xl">
+          {title}
+        </h3>
+        <p data-spoken className="mt-2 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
+          {body}
+        </p>
       </div>
     </li>
   )
@@ -91,14 +97,21 @@ function mmss(seconds: number): string {
 export function ShowcaseView() {
   const [frame, setFrame] = useState<"wide" | "vertical">("wide")
   const column = useRef<HTMLDivElement>(null)
-  const [words, setWords] = useState(0)
+  const [count, setCount] = useState({ spoken: 0, onPage: 0 })
 
-  // Measure what is actually on screen rather than tracking a number by hand,
-  // so the read time stays honest when the copy changes. Runs once: the copy is
-  // static and the frame toggle only changes the column width.
+  // Measured from the DOM rather than tracked by hand, so it stays honest when
+  // the copy changes. Only [data-spoken] counts toward the read time: the
+  // matrix, the loop cards and the chart get shown while you talk over them,
+  // and counting those made the estimate almost twice the real length.
   useEffect(() => {
-    const text = column.current?.innerText ?? ""
-    setWords(text.split(/\s+/).filter(Boolean).length)
+    const root = column.current
+    if (!root) return
+    const words = (t: string) => t.split(/\s+/).filter(Boolean).length
+    const spoken = [...root.querySelectorAll<HTMLElement>("[data-spoken]")].reduce(
+      (n, el) => n + words(el.innerText),
+      0,
+    )
+    setCount({ spoken, onPage: words(root.innerText) })
   }, [])
 
   return (
@@ -121,13 +134,13 @@ export function ShowcaseView() {
           </button>
         ))}
         <span className="text-xs text-muted-foreground">Scroll this on camera.</span>
-        {words > 0 ? (
+        {count.spoken > 0 ? (
           <span
             className="ml-auto font-mono text-[10px] tabular-nums text-muted-foreground"
-            title={`${words} words. This genre reads at 188 wpm median, measured across the 91 videos; the fast end runs 240+.`}
+            title={`${count.spoken} spoken words of ${count.onPage} on the page. The rest is the matrix, the loop and the chart, which you show rather than read. This genre reads at 188 wpm median across the 91 videos; the fast end runs 240+.`}
           >
-            {words}w · {mmss((words / CYL_GENRE_WPM.median) * 60)} read ·{" "}
-            {mmss((words / CYL_GENRE_WPM.p90) * 60)} fast
+            {mmss((count.spoken / CYL_GENRE_WPM.median) * 60)} spoken ·{" "}
+            {mmss((count.spoken / CYL_GENRE_WPM.p90) * 60)} fast · {count.spoken}/{count.onPage}w
           </span>
         ) : null}
       </div>
@@ -138,10 +151,13 @@ export function ShowcaseView() {
       >
         <Block k="already-know" first>
           <figure>
-            <blockquote className="border-l-2 border-primary pl-5 text-2xl font-medium leading-snug text-foreground text-balance md:text-3xl">
+            <blockquote
+              data-spoken
+              className="border-l-2 border-primary pl-5 text-2xl font-medium leading-snug text-foreground text-balance md:text-3xl"
+            >
               “Stop watching these videos. You already know what to do.”
             </blockquote>
-            <figcaption className="mt-4 pl-5 text-sm text-muted-foreground">
+            <figcaption data-spoken className="mt-4 pl-5 text-sm text-muted-foreground">
               Top comment on one of them, and thirty-three thousand people agreed with it.
             </figcaption>
           </figure>
@@ -156,6 +172,10 @@ export function ShowcaseView() {
           </ol>
         </Block>
 
+        <Block k="loop">
+          <MethodLoop steps={CYL_LOOP} miss={CYL_LOOP_MISS} />
+        </Block>
+
         <Block k="relapse">
           <div className="mb-10">
             <DotGrid total={MISSED_DAY.total} filled={MISSED_DAY.filled} size="large" />
@@ -163,45 +183,52 @@ export function ShowcaseView() {
               1 <span className="text-muted-foreground">of 91</span>
             </p>
           </div>
-          <ol className="divide-y divide-border border-y border-border">
-            {CYL_RELAPSE_RULES.map((r, i) => (
-              <Item key={r.title} n={String(i + 1).padStart(2, "0")} title={r.title} body={r.body} />
-            ))}
-          </ol>
-        </Block>
-
-        <Block k="duration">
-          <DurationChart rows={CYL_DURATIONS} />
-          <p className="mt-10 max-w-2xl border-l-2 border-primary pl-5 text-xl leading-snug text-foreground md:text-2xl">
-            {CYL_DURATION_ANSWER}
-          </p>
-        </Block>
-
-        <Block k="loop">
-          <MethodLoop steps={CYL_LOOP} miss={CYL_LOOP_MISS} />
+          <div className="max-w-2xl space-y-5 rounded-lg border border-primary/40 bg-primary/5 p-6">
+            <p data-spoken className="text-lg leading-relaxed text-foreground">
+              {CYL_LETTER.instruction}
+            </p>
+            <p data-spoken className="text-lg leading-relaxed text-foreground">
+              {CYL_LETTER.turn}
+            </p>
+            <p data-spoken className="text-base leading-relaxed text-muted-foreground">
+              {CYL_LETTER.why}
+            </p>
+          </div>
         </Block>
 
         <Block k="areas">
           <AreaMatrix rows={CYL_AREAS} headings={["The one thing", "The rep", "It counts when"]} />
+        </Block>
 
+        <Block k="duration">
+          <DurationChart rows={CYL_DURATIONS} />
+          <p
+            data-spoken
+            className="mt-10 max-w-2xl border-l-2 border-primary pl-5 text-xl leading-snug text-foreground md:text-2xl"
+          >
+            {CYL_DURATION_ANSWER}
+          </p>
+
+          {/* Only what the tool actually does today. It hands over the ladder and
+              one rung; it does not resurface the letter on a schedule or track
+              you against a horizon, so it must not claim to. */}
           <div className="mt-14 border-t border-border pt-10">
-            <p className="max-w-2xl text-xl leading-relaxed text-foreground md:text-2xl">
-              None of that needs an app, and I'd rather you started this afternoon on paper than waited for anything
+            <p data-spoken className="max-w-2xl text-xl leading-relaxed text-foreground md:text-2xl">
+              None of that needs an app, and I'd rather you did it on paper this afternoon than waited for anything
               from me.
             </p>
-            <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              What paper won't do is keep the letter where you'll find it on the bad day, remember what you decided
-              counted, or tell you that you're four months into a two-year thing at the exact moment you're about to
-              call it off. That part I built, and it's free.
+            <p data-spoken className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+              If you'd rather not work out the rungs yourself, this hands them to you. Two questions, then it shows
+              you one thing to do today and gets out of the way. Tomorrow it shows you the next one.
             </p>
-            <div className="mt-7">
-              <Button asChild>
-                <Link href="/test/change-your-life/flow">Set it up</Link>
+            <div className="mt-7 flex flex-wrap items-center gap-4">
+              <Button asChild size="lg">
+                <Link href="/test/change-your-life/start">Give me today&apos;s one thing</Link>
               </Button>
+              <span className="text-sm text-muted-foreground">Free, no account, setup is under a minute.</span>
             </div>
           </div>
         </Block>
-
       </div>
     </div>
   )

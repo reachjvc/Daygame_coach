@@ -5,7 +5,7 @@ no database. Replaced the 12-area flow, which moved to `/test/life-mastery-v1`.
 
 ## Shape
 
-Three tabs, switchable at any time. Order is the order the work wants to happen
+Four tabs, switchable at any time. Order is the order the work wants to happen
 in; **nothing is gated anywhere**, and what is outstanding is listed in one
 panel under every tab instead (`planTodos`).
 
@@ -18,29 +18,201 @@ panel under every tab instead (`planTodos`).
    (see below), then a card holding **who are you committed to being**
    (identity), **how are you committed to showing up** (standards), **who do you
    need to become** (the gap) and **your affirmations**.
-2. **Your life.** The wheel, the twelve rows under it, every goal in priority
-   order, and the routines. Clicking an area anywhere opens the one dialog that
-   holds **everything about that area**: what it covers, what a 10 in it looks
-   like, your rating and today's score, a snapshot, **why it matters to you**,
-   the goals aimed at it, everything else reaching it, **what it asks you to
-   value**, **who you are in it**, and what might stop you. Editing structure
-   (rename/add/remove an area, rename or remove a routine) is a single **Edit
-   toggle**; opening an area or a routine is not editing, so both work in either
-   mode.
-3. **Review.** Reads each area's answers back beside its goals, asks whether the
+2. **Where you are.** The wheel, and nothing competing with it. Clicking an area
+   opens the assessment dialog: what it covers, what a 10 in it looks like, your
+   rating and today's score, a snapshot, **why it matters to you**, **what it
+   asks you to value**, **who you are in it**, what might stop you, and what
+   already runs there. It links straight to the same area's goals. There is no
+   twelve-row list under the wheel any more — that was the wheel again as text,
+   same names, same numbers, same click, same dialog, and it pushed everything
+   else off the screen.
+3. **Your goals.** Five things, in the order the cascade runs: the **chain
+   counted on one line** (`CascadeBar`), the **guided build** (`GuidedBuild`), the
+   **same wheel** doing a different job (a sector opens the goals; sub-labels
+   count goals rather than repeating the rating, via `subMode="goals"`) with the
+   **routines beside it, editable**, the twelve areas as rows carrying their 10,
+   coverage dot and goal count, then every goal in priority order, then the
+   **milestone timeline** (`MilestoneTimeline`). The goals dialog **carries that
+   area's 10 and purpose read-only at the top** and links back to the
+   assessment. Goal library, the milestone builder and everything else reaching
+   the area live here.
+
+   **The routines live on this tab, not the assessment.** A routine is the part
+   of the plan that runs whether or not you open the page, which makes it the
+   other half of "what are you going to do", and nothing at all to do with
+   rating where you stand. Its Edit toggle is structural only (rename, remove,
+   add); opening a routine and changing what is in it works either way.
+
+### The guide: write your own, then be asked what is missing
+
+The build board — every area, every set, every target, every practice, on screen
+at once — lasted one afternoon. Fresh, tab 3 was **9.7 screens tall with 329
+controls on it**, and it was built on the wrong premise: that the hard part is
+choosing. It is not. A real list looks like *"ingen smerte i ryggen"*, *"bænk 28
+kg 3x6-8"*, *"10 pullups, fra 7"*, *"1 muscle up"*, *"internationalt
+bedstsælgende forfatter"*, *"Masters in League of Legends"* — and the 166-target
+catalogue contains approximately none of it.
+
+So `GuidedBuild` is three steps, and the middle one is a text box:
+
+1. **Your season.** Pick two or three areas, in order (`seasonAreaIds`). Add your
+   own — people's areas are Dating, Virksomhed, Morgenrutine, not ours.
+2. **Your goals.** A textarea, one per line, in their own words. `parseGoalDump`
+   strips the numbering people paste in ("1.", "12a.", "-", "•").
+   `shapeFromTitle` reads the shape out of the sentence, in English and Danish,
+   because half of these lines are frequencies: "Træn 5x om ugen" is a practice
+   at five, not a climb to five; "hver dag" is seven; "1 video om ugen, 2, 3" is
+   a ramp; "Bænk 28 kg, 3x6-8" is a climb to 28 (not to 3 — that is the set
+   count); "10 pullups, fra 7" already said where it starts, so its rungs are
+   spaced immediately; "1 Muscle Up" is a finish line, because a climb to one is
+   not a climb. The catalogue sits under the box as an offer.
+3. **Make them real.** The queue. One goal, one question, skip always available
+   and remembered (`asked` on the goal — "has no why" and "was asked and said no"
+   look identical otherwise). Order: where are you today → what will you actually
+   do → is this yours to decide → by when → why → what it costs you.
+
+Three things took a second pass:
+
+- **Actionability leads.** `control` was asked first, so the guide's opening line
+  to somebody was "is this one yours to decide?" about *no pain in my back* —
+  obviously theirs, and the useful question is how it becomes something you do.
+  It now comes after `actions`, where it is earned: you have just tried to name
+  what you would do about *internationally bestselling author* and found nothing.
+  Answering "no, other people decide it" keeps the big one and hangs a
+  controllable goal under it (`addControllableGoal` → `linkGoal`).
+- **Round robin, not goal by goal.** Finishing one goal before looking at the
+  next means the first thing on the list is asked five questions before the
+  second is asked one — and the first question about your fourth goal matters
+  more than the fifth about your first. `guideQueue` sorts by how many questions
+  a goal has already had. Progress counts **questions**, not finished goals, or
+  the bar sits at zero for twenty answers and then fills at once.
+
+- **The guide ends in the payoff, and the page stops arguing with it.** It used
+  to finish on one green sentence with the year it had just built three screens
+  further down and nothing connecting them, under a tab that still carried a
+  wheel, a twelve-row area list that was the wheel again as text, and a second
+  goal editor in a dialog. The area list is gone — the same argument that took
+  the identical list off tab 2 — the intro card is gone, and step 3 now ends
+  with what the answers made: the counts, the week it costs, the next three
+  dated things, and a jump to the timeline. Fresh, the tab is **2.9 screens**.
+- **"Been through", not "ready".** A goal every question was skipped on has been
+  through the guide and is ready for nothing. Saying otherwise had the page
+  calling the plan finished directly above its own list of what was missing
+  from it.
+
+`climbPace` answers the question the user actually asked — *er det realistisk* —
+as arithmetic and nothing more: 22 → 28 kg by next August is half a kilo a
+month, and a year to move one kilo off a hundred means the date is doing no
+work. It has no view on kilos, because it does not know what the unit is. It
+only judges the one case the numbers settle: no distance at all. "Already past
+it" is deliberately not judged — a start of 30 against a target of 28 is either
+somebody who can already bench it or somebody getting down to it.
+
+`risingNumbers` reads "Få 10 downloads, 100 downloads, 1000 downloads" as one
+climb from 10 to 1000 rather than as a goal finished at ten. Years are stripped
+first, or "Squat 100 kg by 2027" climbs to the year 2027.
+
+`suggestedActions` answers "what will you do about it" from the routine
+blueprints that already serve the area — real steps, already written, no
+guessing from the goal's wording, which could not work for a plan written in
+Danish anyway.
+
+### The cascade: goal → action → routine
+
+Tab 3 could add goals long before it could show that they are part of one
+machine. The library sat one area at a time inside a dialog behind two collapsed
+fades, a catalogue goal arrived with a number and a date and nothing you could do
+on a Tuesday, and the routines were a sidebar that knew about none of it. Four
+pieces close that, all wired through `northStarBuild.ts`:
+
+- **The board** (`BuildBoard`, now last on the tab and closed by default) shows every area at once with
+  three kinds of offer. A **goal set** brings several goals AND the routine they
+  are kept by, as a checkbox that starts ticked. A **goal** is one of them alone.
+  A **practice** is not a goal: it is a step that goes straight into a routine,
+  adding the routine to the stack if it is not there yet (`addPractice`).
+- **Goals arrive with their Tuesday.** `OBJECTIVE_ACTION` gives each objective
+  the action its goals are actually kept by, attached by `addGoalFromTarget` only
+  to goals that would otherwise trip `goalNeedsAction` — so a practice (which is
+  its own action) and a staged finish line are untouched, and a whole template
+  now imports with nothing flagged.
+- **A goal picked alone still asks.** `unmetRoutineNeeds` reads the goals already
+  in an area, matches them back to the catalogue by title, and names the routine
+  underneath them that is missing. A goal the user typed themselves asks for
+  nothing rather than guessing.
+- **The load meter** is the counterweight: a board that puts eighteen goals one
+  click away needs a number that pushes back. Routine minutes plus DISTINCT
+  actions — one training week moves three lifts, so three goals correctly share
+  one action. The ceiling is 30 h because the shipped stack already costs 20, and
+  a warning that is amber before you choose anything is a warning nobody reads.
+
+**One catalogue, twelve areas.** `AREA_LIBRARY_PILLAR` is a five-into-twelve fit,
+so five areas landed on `meaning` and three on `relations` and were offered each
+other's objectives — Family was offered Get a Girlfriend. Survivable one dialog
+at a time; on a board it is the same card four times. `AREA_OFFERS` assigns the
+objectives by hand, templates match on their **primary** objective (the first in
+the list, the one they are named after) so Find The One cannot reach Mind &
+Beliefs through Build Inner Game, and the four areas the catalogue genuinely
+cannot cover — Family, Friends, Fun, Contribution — say so and offer practices
+instead.
+
+### The milestone timeline
+
+Every shape in this flow has a climb inside it and none of them showed it outside
+the goal's own card: a target has its ladder rungs, a practice its ramp phases, a
+finish line its checkpoints. `goalMilestones` dates all three and `planTimeline`
+buckets them into months. It is also the honest diagnostic — goals arrive dated a
+year out, so a plan with every dot in the last column is telling you nobody has
+set a real date yet.
+4. **Review.** Reads each area's answers back beside its goals, asks whether the
    goals actually aim at the 10, then **orders your values** and asks the
    whole-life questions. No inputs are duplicated here: one answer, one place to
    change it.
 
-### Why tab 2 is one tab and not two
+### Why the assessment and the goals are two tabs
 
-"Where you are" and "Areas, routines & goals" rendered the **same** twelve-sector
-wheel, opening the **same** area dialog; the second one additionally listed the
-goals and the routines. There was no answer to "what is the difference", because
-the honest answer was "this one, plus more of it" — and paying for that with a
-tab meant the ratings and the goals they are supposed to justify were never on
-screen together. `NorthStarTabId` lost `"plan"`; `nsProgress().done.now` now
-means all of it (an area rated and pictured **and** every goal carrying a why).
+They were merged into one, correctly: "Where you are" and "Areas, routines &
+goals" had rendered the **same** twelve-sector wheel opening the **same** dialog.
+But merged, one screen carried the whole assessment (10, rating, snapshot,
+purpose, values, identity, blockers) **and** the goal editor for twelve areas,
+and the assessment sat above a control tall enough to bury it. So the split now
+runs along the honest line rather than the duplicated one: **where you stand**,
+then **what you will do about it**. Each half has its own dialog for one area and
+a one-click link to the other half (`onGoToGoals` / `onGoToRating`, which switch
+tab and re-open the same area).
+
+**The wheel appears on both, and that is not the old duplication.** What made the
+old pair pointless was that the same wheel opened the same dialog onto the same
+work. Here the wheel is the navigator and the picture of the whole life at once,
+and the work behind a sector differs by tab: the assessment on 2, the goals on 3.
+Its sub-labels follow (`subMode`). The rail does NOT appear on both — the
+routines live on tab 3 only.
+
+`nsProgress().done.now` means an area rated **and** pictured; `.done.plan` means
+goals written **and** every one carrying a why. Goal todos in `planTodos` point
+at `"plan"`, rating and 10 todos at `"now"`.
+
+### The routine stack beside the goals wheel
+
+`DEFAULT_ROUTINE_IDS` is `morning · night · work · vices` — four cards in a rail
+to the right of the wheel on **tab 3**. They sat beside the assessment wheel
+first, which read well and was wrong: a routine is not a reading of where you
+stand, it is the part of the plan that runs regardless. Clicking one expands the
+full two-column builder **underneath** both columns rather than inside the rail.
+Manifestation dropped out of the default four (reading the north star out loud is
+already a morning step) and is one click away in the library.
+
+**All four ship pre-filled** — `seedRoutine` applies each blueprint's
+`defaultStepIds`, so a new plan opens with morning at 6 steps, evening 4,
+business 3, vices 2. That is deliberate (editing something down beats writing it
+from nothing) and it is labelled: an untouched routine says "our starting stack,
+edit it", and `routineIsUntouched` keeps it out of the progress counts so a
+default nobody chose never reads back as a decision they made.
+
+**Vices** is the new blueprint and the only one made of things you do *not* do:
+weekly, with each step's days-per-week meaning days held clean. Presets: screens,
+substances, the hard reset. It is filed under Mind & Beliefs and serves health,
+emotions and spirituality, which is the shape the season-focus question is
+looking for — dropping one thing lifts four areas at once.
 
 ## The values exercise, and why the identity questions were reordered
 
@@ -84,11 +256,59 @@ the 10 and the rating already set: one answer, one place.
 
 **The values list became the exercise** (`Lp_GOrM16Xc`), not a chip row:
 
-- **Two passes.** `plan.currentValues` — "what has been most important to you in
-  your life so far", the list that built the life you already have — and
-  `plan.values`, what would have to be important to create the paragraph. The
-  **diff** between them is the insight, and the page prints it. We only ever
-  asked the second one, so nothing could be compared.
+- **Two passes.** `plan.currentValues` — the list that built the life you
+  already have — and `plan.values`, what would have to be important to create the
+  paragraph. The **diff** between them is the insight, and the page prints it. We
+  only ever asked the second one, so nothing could be compared.
+- **Pass 1 asks his question and ships his prompting.** The question is verbatim
+  ("what's been most important to me in my life?"). A build in between rewrote it
+  to "What have you been living by so far?" on the theory that it reads as a
+  question about events. Re-checking the transcript killed that: he asks it
+  exactly that way, and he never asks it bare. Within seconds he (1) says take
+  the first answer and do not overanalyse, (2) **reads a menu out loud** —
+  "security, has it been being safe, has it been happiness, has it been success,
+  has it been money, has it been family, has it been love, has it been passion,
+  has it been friends, has it been travel", (3) asks "what else has been
+  important for you" over and over, and (4) steers you toward the emotion
+  underneath. All four are on the page now: the help, `VALUES_PAST_MENU` under a
+  "Has it been…" line (`TagList`'s `suggestionsLabel`), "And what else has been
+  important to you?" printed from the first answer onward, and the emotion steer.
+  Nobody produces a value cold; the menu and the loop ARE the method.
+- **The past list is not cued off the user's own paragraph.** The second list is,
+  correctly. Cueing the first one off the life you just described gives you the
+  same list twice and destroys the diff the exercise exists for.
+- **Each area asks for its own values.** `areaValueSuggestions(plan, areaId)`
+  reads that area's own 10, purpose, snapshot and identity first, then the north
+  star, then `AREA_VALUE_SUGGESTIONS[areaId]` as the floor. Money offering
+  Adventure and Faith while leaving out Security was the generic row doing its
+  worst; a Money 10 saying "a year of costs in the bank and I stop counting at
+  the till" now leads with Abundance and Security, off their own sentence.
+  Fixing this exposed a real bug in the cue scan: it counted substrings, so
+  "stop counting" scored **Achievement** because "top" is inside "stop". Cues are
+  `\b…\b` matches now, which also fixes `derivedValueSuggestions`.
+- **Every value carries a colour**, from the group it belongs to (`VALUE_COLOR`),
+  in the picker and on the chips it becomes. Eleven groups of identical grey
+  chips is a wall you have to read; colour makes the block you want findable
+  before you have read a word.
+- **A library you can find yourself in, and a way past it.** Naming a value is a
+  recall problem: you recognise it, you cannot produce it cold. The pool was 20
+  words with 12 of them on screen, which shows the shape and cannot be answered
+  with. `NS_VALUE_GROUPS` is 131 words in 11 groups, shown by `ValueBrowser`
+  under every values box (both lists, and each area's). **Means values are in it
+  on purpose** — family, money, fitness, status are what people actually say, and
+  they earn the drill below rather than being left off.
+- **Each list leads with the prompt that belongs to it.** `ValueBrowser` takes a
+  `lead` group shown above the library's own: his "Has it been…" menu on the
+  past list, the words read out of the user's own writing on the second, the
+  common ones inside an area. Nothing is offered twice on one panel.
+- **The search box adds as well as filters.** A list of 131 will always be
+  missing somebody's word, and "enjoyment is not here, now what" is the moment
+  the exercise stops. Anything typed that is not already a word becomes an
+  `Add “enjoyment”` button (enter works too), so not-on-our-list costs one click
+  rather than a hunt for the right box. The main inputs say "type … and press
+  enter" for the same reason: a bare box with a placeholder did not read as one
+  you could put your own word in.
+- **The panel is not a dropdown.** See "Peek instead of disclosure" below.
 - **Means vs ends.** "Family", "money" and "think better thoughts" are all fine
   to type; each earns one follow-up, "what is the feeling you are really after
   from that?", because "at the core of it our values are just emotions". Never a
@@ -295,6 +515,62 @@ they all carry a date, and that the climb and the ramp are editable per goal.
   not a gap. It now lists only areas with a 10 written and no goal aimed at it.
 - Old saves keep their own `areas` array, so nothing needs migrating.
 
+## Milestone celebrations, under a finish line
+
+"Bench 36 kg dumbbells for 6 reps" is correctly typed as a finish line — you did
+it or you did not — and it is also obviously a climb, and the climb is where the
+year actually happens. A finish line that pays out once, at the end, is a long
+time to work with nothing to feel.
+
+`parseGoalTarget` reads the number out of the title (**the first** number: the 6
+in "for 6 reps" is the shape of the rep, not the thing that grows) along with its
+unit and the words before it. `milestoneValues(from, to, count)` spaces the rungs
+evenly and **always finishes on the target**, so ticking the last rung and hitting
+the goal are one event. It works downhill too, because "under 80 kg" is the same
+climb in reverse. `setMilestones` writes them as checkpoints with `m`-prefixed
+ids, which is how it knows to replace its own rungs on a redo and leave
+hand-written checkpoints alone.
+
+Each generated rung carries `NsCheckpoint.celebration` — what you do when you get
+there. Only the generated ones: a reward box on every hand-written checkpoint
+turns twelve of them into homework.
+
+## Peek instead of disclosure, on anything you browse
+
+`Peek` (`components/north-star/Peek.tsx`) shows the first screenful of a long
+list, fades the cut-off, and puts a "Show all N" pill under it. The fade only
+appears when something is genuinely hidden, measured with a `ResizeObserver`,
+because a fade over a list that already fits is a lie about there being more.
+
+It replaced three disclosures, and the reason is the same each time: **a closed
+row tells you a count and hides every reason to open it.** "Browse all 131
+values" does not say that values come in groups, or that one of the groups is
+Body, or that any of it resembles what you were trying to think of. The flow had
+reached a disclosure inside a disclosure inside a dialog.
+
+| Was | Now |
+|---|---|
+| "Browse all 131 values" dropdown | every category on the page, four words each, faded, `Show all 131 values` |
+| "Common goals · 75 to choose from" dropdown, holding a dropdown per objective | the library on the page; the objective rows are flat sections; `Show all 75 goals` |
+| 18-item routine step library at full height | five steps and a fade, `Show all 18 steps` |
+
+The goal library needed **two** peeks rather than one around the lot: a single
+fade cut through the middle of the template card, so the preview of a goal
+library showed no goals. Sets peek at sets, goals peek at goals.
+
+**The value list clips by COUNT, not height** (`PeekButton`, the control on its
+own). Two passes got this wrong before it landed. Wrapped chip rows put Health
+beside Vitality beside Energy with the headings a row apart, so the groups
+stopped reading as groups. CSS `columns` fixed the direction and broke the same
+thing again: balancing eleven groups into three columns and then clipping the
+height showed three headings and hid the other eight, which is the disclosure
+problem with extra steps. Now every category is a grid cell, its words run down
+inside it, and each shows four with a fade of its own. What is on screen is the
+shape of the whole list.
+
+Built from what the project already had: `V11ViewD`'s column overflow gradient
+and `RecentSessionsCard`'s "N more" pill.
+
 ## The area dialog has a way out
 
 Everything in it saves as you type, and the only way to leave was clicking the
@@ -389,9 +665,11 @@ Escape and the backdrop close it; the layout underneath never moves.
   the value cue table and the conflict rules, routine blueprints
 - `src/goals/northStarService.ts` — pure logic (~70 exported functions)
 - `src/goals/components/north-star/` — `NorthStarFlow` · `StarTab` ·
-  `ValuesWork` · `AreaWheel` · `NowTab` · `AreaDialog` · `GoalOverview` ·
+  `ValuesWork` + `ValueBrowser` · `Peek` (the fade-and-show-all primitive) ·
+  `AreaWheel` · `NowTab` + `AreaDialog` (tab 2, the assessment) ·
+  `PlanTab` + `AreaGoalsDialog` (tab 3, the goals) · `GoalOverview` ·
   `GoalLibrary` · `RoutineCard` · `AreaGoals` · `GoalCard` · `ScoreRow` ·
-  `ReviewTab`. `PlanTab` is gone: it folded into `NowTab`.
+  `ReviewTab`.
 - `src/goals/types.ts` — `Ns*` types (slice rule: types live in types.ts)
 - `docs/research/life-mastery/values-and-identity.md` — the transcript reading
   behind the values and identity work
@@ -428,9 +706,23 @@ people report regretting") with what he actually says about himself.
 
 ## Verified
 
-`npm test`: 2681 tests. The only failures are in `tests/unit/timetrack/`, which
-is order-dependent and fails a different file on different runs, including with
-these changes stashed. `northStarService.test.ts` is 154 tests, up from 116.
+Third pass, after the assessment/goals split (the tab rail now reads **four**
+tabs, so the "three tabs" in the older log below is history): `npm test` 2682
+passed, 1 skipped, no failures. In the browser at 1440px and 820px — rating
+Health 6/10 from the wheel dialog ticks tab 2 green; "Write the goals for Health
+→" switches to tab 3 with that area's dialog open and its 10 printed at the top;
+a goal typed there lands in the priority list and in the todo panel as "1 goal
+needs a why" pointing at `plan`; the four-card routine rail sits beside the
+wheel and Vices expands its builder full width underneath. Then, keeping the
+wheel on tab 3 as well: its sub-labels read "1 goal" / "no goals", a sector opens
+the goals dialog, and the Business routine pointer lands back on tab 2 with that
+routine expanded. No console errors from this page (the dev overlay was showing
+an unrelated parse error in `ShowcaseView.tsx`, mid-edit elsewhere).
+
+`npm test` (earlier round): 2681 tests. The only failures were in
+`tests/unit/timetrack/`, which is order-dependent and fails a different file on
+different runs, including with those changes stashed. `northStarService.test.ts`
+is 154 tests, up from 116.
 
 Second scripted pass, after the split: step 1 shows the two lists and **no** duel
 or order control, and says where the ordering happens; the area dialog carries

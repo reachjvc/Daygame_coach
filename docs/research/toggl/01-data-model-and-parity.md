@@ -114,6 +114,39 @@ tests/unit/timetrack/            # 135 unit tests
   unreadable text in sub-20-minute calendar blocks, correct singular/plural in report subtitles, and the calendar grid
   opens on working hours instead of midnight.
 
+## Copy and UX conventions (second pass)
+- **Voice**: plain language over jargon. No `localStorage`, "CORS", "payload" or "sandbox" in user-facing text; the
+  facts stay, the wording explains them ("saved in this browser only", "your browser is not allowed to fetch that
+  address directly, so this app's server does it").
+- **Buttons are verbs.** Timesheet approvals used to be labeled with the resulting status (`submitted`, `approved`,
+  `reopen`) next to a status pill; they now read Submit / Approve / Reject / Reopen, with the pill capitalized.
+  Bulk-edit reads "Mark billable" / "Mark non-billable".
+- **Units are spelled out** where a label had room: "Default billable rate (per hour)", "Rate/hour", "Cost/hour",
+  "Under 10 hours". `labour` (the Toggl API field name) stays in code but never appears in the UI as British spelling.
+- **One term per concept**: "(no description)" everywhere (never "Untitled"); "time entry"; "member"; "workspace".
+- **Empty states name the next action** ("Add one above, then pick it when you create a project"), rather than
+  restating the emptiness.
+- **Destructive confirmation shows state**: the reset button is neutral until armed, then turns red and reads
+  "Yes, replace everything" — previously it was red in both states, so arming gave no feedback.
+- **Numeric fields are sized to their content** instead of stretching across the card, and `Field` labels always sit
+  above their input (the label `<span>` was inline, so narrow inputs jumped up onto the label's line).
+- Nav item renamed from "Clients · Tags · Team" to **Manage**; the sub-tabs inside already name the three screens.
+- The Data screen now shows the demo/own entry split (`64 time entries (62 demo, 2 yours)`) and states the re-dating
+  rule, so the behavior is visible rather than surprising.
+
+### Layout / a11y issues the copy pass exposed
+- Number inputs stretched across half a card ("Work interval (minutes)" was ~550px wide for two digits); numeric
+  fields are now sized to their content.
+- `Field`'s label was an inline `<span>`, so a narrow input jumped up onto the label's line. Now `block`.
+- Truncated dropdown values ("Round to near…", "Under 10 hour…") — those selects were widened.
+- The header's running-entry Stop button was a **12×12px** hit target; now 24×24 with a hover surface.
+- **The Next dev-tools portal swallowed clicks across the right side of the sticky header** — the alert bell, the
+  shortcut button and the header Stop button were all genuinely unclickable while running `next dev` (verified with a
+  real mouse click, not just a hit-test). Fixed by raising the sandbox's layers while preserving their order:
+  header `z-[9500]` < modal `z-[9600]` < toasts `z-[9700]`.
+- Icon-only dropdown triggers (alert bell, the row's ⋮ menu) had no accessible name; `Dropdown` now takes `ariaLabel`
+  and sets `aria-expanded`/`aria-haspopup`.
+
 ## Calendar import — the three methods, ranked by exposure
 
 | Method | Where the credential lives | Re-sync | When to use |

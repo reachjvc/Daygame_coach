@@ -41,13 +41,13 @@ import { useState } from "react"
 import { ChevronDown, X } from "lucide-react"
 import type { NsPlan } from "@/src/goals/types"
 import {
-  NS_VALUE_SUGGESTIONS,
   VALUES_DIFF,
   VALUES_INTRO,
   VALUES_MEANS,
   VALUES_NEEDED,
   VALUES_ORDER,
   VALUES_PAST,
+  VALUES_PAST_MENU,
 } from "@/src/goals/data/northStar"
 import {
   collectValues,
@@ -59,6 +59,7 @@ import {
   valuesShortBy,
 } from "@/src/goals/northStarService"
 import { TagList } from "./GoalCard"
+import { ValueBrowser } from "./ValueBrowser"
 
 export interface ValuesHandlers {
   onCurrentValues: (values: string[]) => void
@@ -97,7 +98,15 @@ export function ValuesWork({ plan, handlers, mode }: {
    * then ours. Somebody who has just described waking up near the water with
    * their kids should be offered Freedom and Family off their own paragraph.
    */
-  const suggestions = [...new Set([...derivedValueSuggestions(plan), ...collectValues(plan), ...NS_VALUE_SUGGESTIONS])]
+  /**
+   * The words read out of the user's own writing, plus anything they named
+   * inside an area or a goal. These lead the SECOND list only. On the first one
+   * they are the wrong prompt: that list is about the life you already have, and
+   * cueing it off the life you just described is how you get the same list twice
+   * and lose the diff the exercise exists for. The first list leads with his
+   * menu instead.
+   */
+  const own = [...new Set([...derivedValueSuggestions(plan), ...collectValues(plan)])]
 
   /**
    * Values named inside an area or a goal that never made it onto the whole-life
@@ -126,9 +135,19 @@ export function ValuesWork({ plan, handlers, mode }: {
     )
   }
 
+  /** Nothing is ever added twice, whichever route it came in by. */
+  const addTo = (list: string[], set: (next: string[]) => void) => (value: string) => {
+    if (list.some((v) => v.trim().toLowerCase() === value.trim().toLowerCase())) return
+    set([...list, value])
+  }
+
   /** Steps 1 and 2: the two lists, and what they say about each other. */
   const lists = (
     <>
+      {/* Pass 1, with his own prompting around it. Nobody produces a value
+          cold: he asks the question, then reads a menu out loud, then asks
+          "what else" over and over. The menu leads the suggestion row, and the
+          "what else" is printed under the box from the first answer onward. */}
       <div className="mt-4">
         <TagList
           label={VALUES_PAST.question}
@@ -136,8 +155,21 @@ export function ValuesWork({ plan, handlers, mode }: {
           placeholder={VALUES_PAST.placeholder}
           color="#71717a"
           items={plan.currentValues}
-          suggestions={suggestions}
           onChange={handlers.onCurrentValues}
+        />
+        {plan.currentValues.length > 0 && (
+          <p className="text-[11.5px] text-zinc-300 mt-2">
+            {VALUES_PAST.again}
+            <span className="block text-[10.5px] text-zinc-600 mt-0.5">{VALUES_PAST.againNote}</span>
+          </p>
+        )}
+        <p className="text-[10.5px] text-zinc-600 mt-1.5 leading-relaxed">{VALUES_PAST.emotion}</p>
+        {/* His menu leads, and it keeps his words: "has it been…". */}
+        <ValueBrowser
+          items={plan.currentValues}
+          label={VALUES_PAST.question}
+          lead={{ label: VALUES_PAST.first, values: VALUES_PAST_MENU }}
+          onAdd={addTo(plan.currentValues, handlers.onCurrentValues)}
         />
       </div>
 
@@ -148,8 +180,16 @@ export function ValuesWork({ plan, handlers, mode }: {
           placeholder={VALUES_NEEDED.placeholder}
           color="#c084fc"
           items={plan.values}
-          suggestions={suggestions}
           onChange={handlers.onValues}
+        />
+        {/* Here the lead is their own writing. Somebody who has just described
+            waking up near the water with their kids is offered Freedom and
+            Family off their own page before ours. */}
+        <ValueBrowser
+          items={plan.values}
+          label={VALUES_NEEDED.question}
+          lead={own.length > 0 ? { label: VALUES_NEEDED.lead, values: own } : undefined}
+          onAdd={addTo(plan.values, handlers.onValues)}
         />
         <p className="text-[10.5px] text-zinc-600 mt-1.5">
           {short > 0

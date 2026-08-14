@@ -88,7 +88,7 @@ export function useTimetrack() {
     const loaded = loadState(new Date().toISOString())
     setStateRaw(loaded.state)
     if (loaded.refreshed && loaded.refreshed.shifted > 0) {
-      pendingLoadNotice.current = `Demo history re-dated to today (${loaded.refreshed.shifted} demo entries moved ${loaded.refreshed.days} day${loaded.refreshed.days === 1 ? "" : "s"} forward). Your own entries were not touched.`
+      pendingLoadNotice.current = `Moved ${loaded.refreshed.shifted} demo entries forward ${loaded.refreshed.days} day${loaded.refreshed.days === 1 ? "" : "s"} so this opens on the current week. Entries you created were not changed.`
     }
   }, [])
 
@@ -280,8 +280,9 @@ export function useTimetrack() {
     const forgotten = forgottenTimer(state, nowSec)
     if (!forgotten) return
     forgottenWarned.current = true
+    const what = forgotten.entry.description.trim()
     pushToast(
-      `"${forgotten.entry.description || "Untitled"}" has been running for ${Math.round(forgotten.hours)} hours — stop it if you forgot it.`,
+      `${what ? `“${what}”` : "A timer"} has been running for ${Math.round(forgotten.hours)} hours. Stop it if you forgot about it.`,
       "error",
     )
   }, [state, nowSec, pushToast])
@@ -378,7 +379,7 @@ export function useTimetrack() {
       resetSandbox() {
         const nowIso = new Date().toISOString()
         setStateRaw(createSeedState(nowIso))
-        pushToast("Sandbox reset to the seeded demo workspace")
+        pushToast("Reset to the demo workspace")
       },
       replaceState(next: TimetrackState) {
         setStateRaw(next)

@@ -24,6 +24,7 @@ import { Check, ChevronDown, Minus, Plus, X } from "lucide-react"
 import type { NsArea, NsRoutine } from "@/src/goals/types"
 import { NS_SPLITS, ROUTINE_BLUEPRINT_MAP, SERVES_COPY } from "@/src/goals/data/northStar"
 import { routineCoverage, routineIsUntouched, routineMinutes, routineSummary, splitPreview } from "@/src/goals/northStarService"
+import { Peek } from "./Peek"
 
 const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -216,9 +217,12 @@ export function RoutineCard({
           )}
 
           <div className="grid gap-3 md:grid-cols-2 items-start">
-            {/* The library */}
+            {/* The library. Eighteen morning steps is a column taller than the
+                stack beside it, so it shows the first few and fades, the same
+                way the value list does. */}
             <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Pick your steps</p>
+              <Peek more={`Show all ${(bp?.library ?? []).length} steps`} collapsedHeight={200}>
               <ul className="mt-2 space-y-1">
                 {(bp?.library ?? []).map((item) => {
                   const added = inStack.has(item.id)
@@ -246,6 +250,7 @@ export function RoutineCard({
                   )
                 })}
               </ul>
+              </Peek>
 
               <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-white/5">
                 <input

@@ -46,6 +46,7 @@ export function AreaWheel({
   activeId,
   onPick,
   centreLabel,
+  subMode = "rating",
 }: {
   areas: NsArea[]
   /** Area id to 0-10. Missing means not rated yet. */
@@ -55,6 +56,13 @@ export function AreaWheel({
   activeId: string | null
   onPick: (id: string) => void
   centreLabel?: string
+  /**
+   * What the little line under each area name says. The fill is always the
+   * rating, because that is what the wheel IS; the sub-label follows whichever
+   * tab you are on, so the goals tab counts goals instead of repeating the
+   * number the previous tab already showed.
+   */
+  subMode?: "rating" | "goals"
 }) {
   const n = Math.max(1, areas.length)
   const seg = 360 / n
@@ -129,7 +137,13 @@ export function AreaWheel({
         const cos = Math.cos(((mid - 90) * Math.PI) / 180)
         const anchor = cos > 0.25 ? "start" : cos < -0.25 ? "end" : "middle"
         const label = a.label.length > 16 ? `${a.label.slice(0, 15)}…` : a.label
-        const sub = rating != null ? `${rating}/10` : goals > 0 ? `${goals} ${goals === 1 ? "goal" : "goals"}` : "not rated"
+        const goalsSub = goals > 0 ? `${goals} ${goals === 1 ? "goal" : "goals"}` : "no goals"
+        const sub = subMode === "goals"
+          ? goalsSub
+          : rating != null ? `${rating}/10` : goals > 0 ? goalsSub : "not rated"
+        const subColor = subMode === "goals"
+          ? (goals > 0 ? a.color : "#71717a")
+          : rating != null && rating < NS_FLOOR ? "#fbbf24" : rating != null ? a.color : "#71717a"
         const pressProps = {
           role: "button",
           tabIndex: 0,
@@ -195,7 +209,7 @@ export function AreaWheel({
               textAnchor={anchor}
               dominantBaseline="middle"
               fontSize="8.5"
-              fill={rating != null && rating < NS_FLOOR ? "#fbbf24" : rating != null ? a.color : "#71717a"}
+              fill={subColor}
               onClick={() => onPick(a.id)}
               className="cursor-pointer tabular-nums"
             >

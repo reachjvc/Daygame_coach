@@ -28,6 +28,7 @@ import {
 import { googleEventsToEvents, icsToEvents } from "../calendarService"
 import { IconAdd, IconAlert, IconCalendar, IconDelete, IconExport, IconImport, IconSpinner } from "../icons"
 import { addDays, dateKey, endOfDayIso, formatDuration, startOfDayIso } from "../timetrackFormatService"
+import { demoDataSummary } from "../demoDataService"
 import { downloadFile, exportStateJson, importEntriesCsv, importStateJson } from "../importExportService"
 import {
   addAutotracker,
@@ -121,7 +122,7 @@ function ProfilePanel({
     setState((current) => ({ ...current, user: { ...current.user, ...changes } }))
 
   return (
-    <SectionCard title="Profile" description="These preferences change how times and dates are displayed everywhere.">
+    <SectionCard title="Profile" description="How times, dates and durations are shown across every screen.">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Name">
           <Input value={state.user.name} onChange={(event) => patch({ name: event.target.value })} />
@@ -194,21 +195,21 @@ function WorkspacePanel({
           <Field label="Workspace name">
             <Input value={state.workspace.name} onChange={(event) => patch({ name: event.target.value })} />
           </Field>
-          <Field label="Default currency">
+          <Field label="Default currency" className="w-40">
             <MiniSelect
               value={state.workspace.defaultCurrency}
               onChange={(defaultCurrency) => patch({ defaultCurrency })}
               options={CURRENCIES.map((c) => ({ id: c, label: c }))}
             />
           </Field>
-          <Field label="Default billable rate / h">
+          <Field label="Default billable rate/hour" className="w-48">
             <Input
               type="number"
               value={state.workspace.defaultHourlyRate ?? ""}
               onChange={(event) => patch({ defaultHourlyRate: event.target.value ? Number(event.target.value) : null })}
             />
           </Field>
-          <Field label="Default labour cost / h" hint="Used for Cost and Profit metrics">
+          <Field label="Default labor cost/hour" className="w-48" hint="What an hour of work costs you. Drives the Cost and Profit figures">
             <Input
               type="number"
               value={state.workspace.defaultLabourCost ?? ""}
@@ -230,7 +231,7 @@ function WorkspacePanel({
         </div>
       </SectionCard>
 
-      <SectionCard title="Default report rounding" description="Reports start with this rounding; each report can override it.">
+      <SectionCard title="Default report rounding" description="New reports start with this setting. Any report can override it.">
         <div className="flex flex-wrap items-center gap-3">
           <ToggleRow
             label="Round by default"
@@ -238,7 +239,7 @@ function WorkspacePanel({
             onChange={(enabled) => patch({ rounding: { ...state.workspace.rounding, enabled } })}
           />
           <MiniSelect
-            className="w-[130px]"
+            className="w-[160px]"
             value={state.workspace.rounding.mode}
             onChange={(mode) => patch({ rounding: { ...state.workspace.rounding, mode: mode as "nearest" } })}
             options={ROUNDING_MODES.map((m) => ({ id: m.id, label: m.label }))}
@@ -254,7 +255,7 @@ function WorkspacePanel({
 
       <SectionCard
         title="Required fields"
-        description="Entries cannot be saved until these are filled — enforced on the timer, the calendar and CSV import."
+        description="Entries cannot be saved until these are filled in. Applies to the timer, the calendar and CSV import."
       >
         {(["description", "project", "task", "tag"] as const).map((field) => (
           <ToggleRow
@@ -266,7 +267,7 @@ function WorkspacePanel({
         ))}
       </SectionCard>
 
-      <SectionCard title="Locking" description="Both rules block edits, exactly like Toggl's locked entries and approvals.">
+      <SectionCard title="Locking" description="Both rules stop finished time entries from being changed.">
         <Field label="Lock time entries on or before" hint="Leave empty to allow editing any date">
           <Input
             type="date"
@@ -307,7 +308,7 @@ function AutomationPanel({
 
   return (
     <div className="space-y-4">
-      <SectionCard title="Pomodoro" description="Stops the timer when a work interval ends and prompts you after the break.">
+      <SectionCard title="Pomodoro" description="Stops the timer when a work interval ends, then prompts you when the break is over.">
         <ToggleRow
           label="Enable Pomodoro"
           checked={state.pomodoro.enabled}
@@ -317,7 +318,7 @@ function AutomationPanel({
           }}
         />
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Work interval (minutes)">
+          <Field label="Work interval (minutes)" className="w-48">
             <Input
               type="number"
               value={state.pomodoro.workMinutes}
@@ -326,7 +327,7 @@ function AutomationPanel({
               }
             />
           </Field>
-          <Field label="Break interval (minutes)">
+          <Field label="Break interval (minutes)" className="w-48">
             <Input
               type="number"
               value={state.pomodoro.breakMinutes}
@@ -354,13 +355,13 @@ function AutomationPanel({
         />
       </SectionCard>
 
-      <SectionCard title="Idle detection" description="If you stop interacting while the timer runs, you get asked whether to keep the idle time.">
+      <SectionCard title="Idle detection" description="If you stop using the computer while a timer runs, you get asked whether to keep that time.">
         <ToggleRow
           label="Detect idle time"
           checked={state.idle.enabled}
           onChange={(enabled) => setState((current) => ({ ...current, idle: { ...current.idle, enabled } }))}
         />
-        <Field label="Prompt after (minutes)">
+        <Field label="Prompt after (minutes)" className="w-48">
           <Input
             type="number"
             className="w-[120px]"
@@ -370,7 +371,7 @@ function AutomationPanel({
         </Field>
       </SectionCard>
 
-      <SectionCard title="Tracking reminders" description="Nags you while nothing is running inside your working window.">
+      <SectionCard title="Tracking reminders" description="Reminds you to start a timer during the hours you set below.">
         <ToggleRow
           label="Enable reminders"
           checked={state.reminders.enabled}
@@ -406,7 +407,7 @@ function AutomationPanel({
           })}
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
-          <Field label="From hour">
+          <Field label="From hour" className="w-28">
             <Input
               type="number"
               value={state.reminders.fromHour}
@@ -415,7 +416,7 @@ function AutomationPanel({
               }
             />
           </Field>
-          <Field label="To hour">
+          <Field label="To hour" className="w-28">
             <Input
               type="number"
               value={state.reminders.toHour}
@@ -424,7 +425,7 @@ function AutomationPanel({
               }
             />
           </Field>
-          <Field label="Every N minutes">
+          <Field label="Remind every (minutes)" className="w-40">
             <Input
               type="number"
               value={state.reminders.everyMinutes}
@@ -438,7 +439,7 @@ function AutomationPanel({
 
       <SectionCard
         title="AutoTracker"
-        description="Keyword rules that suggest a project while you type a description."
+        description="Suggests a project as soon as your description contains one of these keywords."
         actions={
           <div className="flex flex-wrap gap-2">
             <Input
@@ -498,7 +499,7 @@ function AutomationPanel({
 
       <SectionCard
         title="Timeline recorder"
-        description="Toggl's desktop Timeline records every application you use. A web page cannot see other apps, so this records only how long this tab stays visible — enable it to convert those blocks into entries."
+        description="Toggl's desktop app records every application you use. A web page cannot see other apps, so this records only how long this tab stays open. Turn any block into a time entry below."
       >
         <ToggleRow
           label="Record this tab's activity"
@@ -596,10 +597,13 @@ export function IntegrationsPanel({
         c.id === calendarId ? { ...c, lastSyncedAt: new Date().toISOString(), eventCount: events.length } : c,
       ),
     }))
+    const skipped = [
+      stats.skippedAllDay > 0 ? `${stats.skippedAllDay} all-day` : null,
+      stats.skippedOutOfWindow ? `${stats.skippedOutOfWindow} outside the date window` : null,
+    ].filter(Boolean)
     pushToast(
-      `Imported ${events.length} events · skipped ${stats.skippedAllDay} all-day${
-        stats.skippedOutOfWindow ? ` and ${stats.skippedOutOfWindow} outside the window` : ""
-      }`,
+      `Imported ${events.length} ${events.length === 1 ? "event" : "events"}` +
+        (skipped.length > 0 ? ` (skipped ${skipped.join(" and ")})` : ""),
     )
   }
 
@@ -712,7 +716,7 @@ export function IntegrationsPanel({
         description={`Events appear in the right column of the calendar view. All-day events are skipped and the window is ${CALENDAR_WINDOW_DAYS_BACK} days back / ${CALENDAR_WINDOW_DAYS_FORWARD} days forward — the same rules Toggl applies.`}
       >
         {state.calendars.length === 0 ? (
-          <EmptyState title="No calendar connected yet" hint="Pick a method below." />
+          <EmptyState title="No calendar connected yet" hint="Choose a method below to bring your events in beside your tracked time." />
         ) : (
           <ul className="divide-y divide-border">
             {state.calendars.map((calendar) => (
@@ -876,9 +880,9 @@ export function IntegrationsPanel({
               </div>
               <p className="text-xs text-muted-foreground">
                 Google Calendar → <strong>Settings → your calendar → Integrate calendar</strong> → copy{" "}
-                <strong>Secret address in iCal format</strong>. It is sent once to this app&apos;s own server (Google serves
-                no CORS headers, so the browser cannot fetch it directly), used to read the events, and then discarded
-                unless you tick the box below. Published Outlook and Apple calendar links work here too.
+                <strong>Secret address in iCal format</strong>. Your browser is not allowed to fetch that address
+                directly, so it is sent once to this app&apos;s own server, used to read the events, and then discarded
+                unless you check the box below. Published Outlook and Apple calendar links work here too.
               </p>
               <div className="flex flex-wrap items-end gap-2">
                 <Field label="Name in this app" className="w-[160px]">
@@ -908,8 +912,8 @@ export function IntegrationsPanel({
               </div>
               <label className="flex items-center gap-2 text-xs text-muted-foreground">
                 <input type="checkbox" checked={rememberUrl} onChange={(event) => setRememberUrl(event.target.checked)} />
-                Remember this address in this browser so “Sync now” works later — it is stored unencrypted in
-                localStorage, so leave it off on a shared machine
+                Remember this address so “Sync now” works later. It is saved as plain text in this browser, so leave
+                this off on a shared computer
               </label>
               {resyncCalendarId !== null && (
                 <p className="text-[11px] text-primary">
@@ -932,7 +936,7 @@ export function IntegrationsPanel({
 
       <SectionCard
         title="Webhooks"
-        description="Toggl can POST entry and project events to a URL. Here the payloads are logged locally rather than sent."
+        description="Toggl posts entry and project events to a URL you choose. Here they are recorded below instead of being sent anywhere."
         actions={
           <div className="flex gap-2">
             <Input value={hookUrl} onChange={(event) => setHookUrl(event.target.value)} placeholder="https://example.com/hook" className="h-8 w-[220px]" />
@@ -998,17 +1002,18 @@ function DataPanel({
 }) {
   const jsonInput = useRef<HTMLInputElement | null>(null)
   const csvInput = useRef<HTMLInputElement | null>(null)
+  const entryMix = demoDataSummary(state)
 
   return (
     <div className="space-y-4">
-      <SectionCard title="Backup" description="Everything lives in this browser's localStorage — export if you want to keep it.">
+      <SectionCard title="Backup" description="This workspace is saved in this browser only. Export a copy to keep it or move it to another browser.">
         <div className="flex flex-wrap gap-2">
           <Button
             size="sm"
             variant="outline"
-            onClick={() => downloadFile(`toggl-sandbox-${new Date().toISOString().slice(0, 10)}.json`, exportStateJson(state), "application/json")}
+            onClick={() => downloadFile(`toggl-workspace-${new Date().toISOString().slice(0, 10)}.json`, exportStateJson(state), "application/json")}
           >
-            <IconExport className="size-4" /> Export workspace JSON
+            <IconExport className="size-4" /> Export a backup
           </Button>
           <input
             ref={jsonInput}
@@ -1029,14 +1034,14 @@ function DataPanel({
             }}
           />
           <Button size="sm" variant="outline" onClick={() => jsonInput.current?.click()}>
-            <IconImport className="size-4" /> Restore workspace JSON
+            <IconImport className="size-4" /> Restore from a backup
           </Button>
         </div>
       </SectionCard>
 
       <SectionCard
         title="Import time entries from CSV"
-        description="Accepts Toggl's export columns: Description, Project, Client, Task, Tags, Billable, Start date, Start time, End date, End time, Duration. Missing clients, projects, tasks and tags are created."
+        description="Takes a Toggl export directly: Description, Project, Client, Task, Tags, Billable, Start date, Start time, End date, End time, Duration. Anything missing — clients, projects, tasks, tags — is created for you."
       >
         <input
           ref={csvInput}
@@ -1068,9 +1073,20 @@ function DataPanel({
         </Button>
       </SectionCard>
 
-      <SectionCard title="Sandbox" description="Counts in this workspace right now.">
+      <SectionCard
+        title="This workspace"
+        description="What this workspace holds right now. Demo entries are moved forward to the current week each time you open this page, so it never looks stale. Entries you create are left exactly where they are."
+      >
         <ul className="grid gap-1 text-sm sm:grid-cols-2">
-          <li>{state.entries.length} time entries</li>
+          <li>
+            {state.entries.length} time entries
+            {entryMix.demo > 0 && (
+              <span className="text-muted-foreground">
+                {" "}
+                ({entryMix.demo} demo, {entryMix.mine} yours)
+              </span>
+            )}
+          </li>
           <li>{state.projects.length} projects</li>
           <li>{state.clients.length} clients</li>
           <li>{state.tasks.length} tasks</li>
@@ -1080,8 +1096,8 @@ function DataPanel({
           <li>{state.savedReports.length} saved reports</li>
         </ul>
         <div className="mt-3">
-          <ConfirmButton variant="destructive" confirmLabel="Really reset?" onConfirm={resetSandbox}>
-            Reset to seeded demo data
+          <ConfirmButton variant="outline" confirmLabel="Yes, replace everything" onConfirm={resetSandbox}>
+            Reset to demo data
           </ConfirmButton>
         </div>
       </SectionCard>

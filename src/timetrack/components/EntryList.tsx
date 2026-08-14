@@ -96,7 +96,7 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry }: E
   }
 
   if (entries.length === 0) {
-    return <EmptyState title="No time entries yet" hint="Start the timer above, or switch to manual mode to add a past entry." />
+    return <EmptyState title="No time entries yet" hint="Start the timer above, or switch to manual mode to add time you already worked." />
   }
 
   return (
@@ -461,6 +461,7 @@ function EntryFields({
       <Dropdown
         align="right"
         width="w-48"
+        ariaLabel="More actions for this time entry"
         trigger={() => (
           <span className="block rounded-md p-1.5 text-muted-foreground hover:bg-secondary/60">
             <IconMenu className="size-4" />
@@ -619,10 +620,10 @@ function BulkEditBar({
       />
       <TagPicker state={state} tagIds={[]} onChange={(tagIds) => apply({ addTagIds: tagIds })} />
       <Button size="sm" variant="ghost" className="h-7" onClick={() => apply({ billable: true })}>
-        Billable
+        Mark billable
       </Button>
       <Button size="sm" variant="ghost" className="h-7" onClick={() => apply({ billable: false })}>
-        Non-billable
+        Mark non-billable
       </Button>
       <div className="ml-auto flex items-center gap-2">
         <Button size="sm" variant="destructive" className="h-7" onClick={onDelete}>

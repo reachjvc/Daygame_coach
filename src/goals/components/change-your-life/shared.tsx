@@ -387,7 +387,7 @@ export function MethodLoop({
         </div>
         <div className="flex-1 rounded-lg border border-primary/40 bg-primary/5 p-4">
           <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-primary">{miss.label}</p>
-          <p className="mt-1.5 text-sm leading-relaxed text-foreground">{miss.detail}</p>
+          <p data-spoken className="mt-1.5 text-sm leading-relaxed text-foreground">{miss.detail}</p>
         </div>
       </div>
     </div>

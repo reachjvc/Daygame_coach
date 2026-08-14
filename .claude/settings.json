@@ -77,28 +77,6 @@
         ]
       }
     ],
-    "PreToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo '⚠️ REMINDER: Update relevant doc BEFORE summarizing to user'"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo '📝 File modified. Did you update the corresponding doc?'"
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [

@@ -231,7 +231,7 @@ export function TimerBar({
         <div className="flex items-center gap-2 border-t border-border px-3 py-2 text-xs">
           <IconAuto className="size-3.5 text-primary" />
           <span className="text-muted-foreground">
-            AutoTracker: “{suggestion.keyword}” usually means
+            AutoTracker: “{suggestion.keyword}” usually goes to
           </span>
           {suggestionProject && <ColorDot color={suggestionProject.color} />}
           <span>{suggestionProject?.name ?? "no project"}</span>
@@ -310,8 +310,15 @@ export function RunningPill({
       <span className="max-w-[160px] truncate">{running.description || "(no description)"}</span>
       {project && <ColorDot color={project.color} />}
       <span className="tabular-nums">{formatClock(entrySeconds(running, nowSec))}</span>
-      <button type="button" onClick={onStop} className="text-muted-foreground hover:text-foreground" aria-label="Stop timer">
-        <IconStop className="size-3" />
+      {/* A 12px icon is not a clickable target; give it a real hit area */}
+      <button
+        type="button"
+        onClick={onStop}
+        className="-mr-1 flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+        aria-label="Stop the running timer"
+        title="Stop the running timer"
+      >
+        <IconStop className="size-3.5" />
       </button>
     </div>
   )

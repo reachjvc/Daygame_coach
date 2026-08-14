@@ -117,7 +117,7 @@ export function ReportsView({
     if (config.tab === "detailed") downloadFile(`detailed-${stamp}.csv`, detailedToCsv(detailed, currency), "text/csv")
     else if (config.tab === "workload") downloadFile(`workload-${stamp}.csv`, workloadToCsv(workload), "text/csv")
     else downloadFile(`summary-${stamp}.csv`, summaryToCsv(summary, config.grouping), "text/csv")
-    pushToast("Export downloaded")
+    pushToast("Report exported")
   }
 
   return (
@@ -347,6 +347,7 @@ function FilterBar({
                 Round time entries
               </label>
               <MiniSelect
+                className="w-full"
                 value={config.rounding.mode}
                 onChange={(mode) => onUpdate({ rounding: { ...config.rounding, mode: mode as "nearest" } })}
                 options={ROUNDING_MODES.map((m) => ({ id: m.id, label: m.label }))}
@@ -659,7 +660,7 @@ function SummaryTab({
           }
         >
           {report.rows.length === 0 ? (
-            <EmptyState title="Nothing tracked in this range" />
+            <EmptyState title="Nothing tracked in this range" hint="Widen the dates, or clear a filter." />
           ) : (
             <div className="space-y-1">
               {report.rows.map((row) => (
@@ -876,7 +877,7 @@ function WorkloadTab({
       </div>
 
       {report.rows.length === 0 ? (
-        <EmptyState title="Nothing tracked in this range" />
+        <EmptyState title="Nothing tracked in this range" hint="Widen the dates, or clear a filter." />
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border bg-card">
           <table className="w-full min-w-[700px] text-sm">
@@ -971,7 +972,7 @@ function ProfitabilityTab({
       />
 
       {rows.length === 0 ? (
-        <EmptyState title="Nothing to analyze in this range" />
+        <EmptyState title="Nothing to analyze in this range" hint="Profitability needs billable time, rates or a fixed fee." />
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border bg-card">
           <table className="w-full min-w-[760px] text-sm">
@@ -1052,7 +1053,7 @@ function SavedTab({
     return (
       <EmptyState
         title="No saved reports yet"
-        hint="Configure a report on any tab, then use “Save report”. Saved reports keep their filters, grouping and rounding, and can be shared as a link."
+        hint="Set up a report on any tab, then choose “Save report”. Saved reports keep their filters, grouping and rounding, and can be shared as a link."
       />
     )
   }

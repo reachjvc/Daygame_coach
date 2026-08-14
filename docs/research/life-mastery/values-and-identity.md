@@ -47,9 +47,34 @@ the bug, not having both.
 
 **"How are you committed to showing up?" is a third thing** — the **code of
 conduct**, his standards: "to be fun playful outrageous, to be loving and caring,
-to be confident… those are the standards I just remind myself every week." Ours
-lives on the review tab under `conduct`. It belongs with the other three, because
-he groups them: "so these **four things** are the driving force."
+to be confident… those are the standards I just remind myself every week." It
+belongs with the other three, because he groups them: "so these **four things**
+are the driving force."
+
+#### But identity and conduct read as one question, and nearly are
+
+Re-checked after "isn't that the same thing?". They are close enough that **he
+blurs them himself**: describing the STANDARDS list he says "this is who I'm
+committed to being, this is the standards that I want to live my life by". Our
+page made it worse by phrasing both prompts as "committed to", so the screen
+showed two lists of good qualities in the present tense with near-identical
+headings.
+
+The difference is in the two lists, not in his framing:
+
+| | Identity | Code of conduct |
+|---|---|---|
+| Prompt | "who am I committed to being, if I were to look my name up in the dictionary what would it say about me" | "how you're committed to showing up… standards you have set to live your life by" |
+| His answer | "I'm an extraordinarily loving man… I'm an amazing friend, son, brother, uncle, strategist, marketer… I'm an athlete, bodybuilder and fitness model… I'm a Muay Thai fighter" | "to be fun playful outrageous, to be loving and caring, to be confident… to be disciplined… to be outgoing social and friendly" |
+| Shape | long, rangy, nouns as much as adjectives | short by his own account, every line "to be" |
+| What it is | what is TRUE of you, conditioned weekly until it is ("when you condition that you start to become that") | the bar you set, which you can fall short of on a Tuesday and come back to |
+
+So: **what is true of you** vs **what you hold yourself to**. The page asks "Who
+are you?" and "What do you hold yourself to?", neither says "committed to", and
+each prints a few words of his own list under the box. Seeing "an amazing friend,
+son, brother" beside "to be disciplined" separates them faster than any
+explanation does, which is why `NsReviewPrompt` grew an `example` field rather
+than the help text growing another sentence.
 
 ### The driving force, in his order
 
@@ -79,6 +104,36 @@ already ship.
 
 We only ever asked pass 2, so nothing could be compared and the exercise had no
 diagnosis in it.
+
+**The question is never asked bare, and that is the part that makes it work.**
+Re-checked against the transcript after "people don't think in terms of values
+without prompting". He asks his question and then, in the same breath, does four
+things:
+
+1. **Take the first answer.** "as I ask you that question right now, what's the
+   first answer that comes up… just trust whatever comes up, don't think about
+   it too much, don't overanalyze it, don't get too much in your head, because
+   oftentimes the first answer is in our gut, it's really our intuition."
+2. **He reads a menu out loud.** Verbatim, in this order: *"security, um, has it
+   been being safe, has it been happiness, has it been success, has it been
+   money, has it been family, has it been love, has it been passion, has it been
+   friends, has it been travel — what has it really been for you?"* This is the
+   scaffolding. It is not a suggestion row we invented for the page; it is how he
+   gets an answer out of somebody who has never thought in these terms.
+3. **He loops it.** "and then I want to ask yourself the question again, what
+   else has been important for you in life… ask again what else has been
+   important for you in your life, write that down, again… you're going to keep
+   asking yourself that question, you're going to go deep."
+4. **He steers to the emotion, in pass 1, not only at ordering time.** "try to
+   steer that your focus and direction to the emotion, the core emotion that
+   you've been after to experience, the emotional states, and write those down."
+
+So the page asks his question verbatim and ships all four: the "first answer"
+instruction as the help, the menu as the chip row under a "Has it been…" line,
+"And what else has been important to you?" printed from the first answer onward,
+and the emotion steer beside the box. An earlier build rewrote the question
+instead ("What have you been living by so far?"), which was a fix aimed at the
+wrong thing — the question was never the problem, the missing prompting was.
 
 **Means values vs ends values.** This is the answer to "what if somebody types
 something that is not a value".
