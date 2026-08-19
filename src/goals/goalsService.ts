@@ -12,6 +12,7 @@ import type { TargetOverride } from "./data/newGoalFramework"
 import { generateMilestoneLadder, computeRampMilestoneDates } from "./milestoneService"
 import { getTemplatesByCategory, GOAL_TEMPLATE_MAP, getL2AchievementsForL3, getDaygamePathL1, getAreaCatalog } from "./data/goalGraph"
 import { LIFE_AREAS } from "./data/lifeAreas"
+import { isNonRegistryTemplateId } from "./data/templateNamespaces"
 import { detectTierUpgrades } from "./badgeEngineService"
 
 /**
@@ -66,6 +67,29 @@ export function buildGoalTree(goals: GoalWithProgress[]): GoalTreeNode[] {
  * Flatten a goal tree back into a flat array of GoalWithProgress.
  * Performs a depth-first traversal, stripping the `children` property.
  */
+/**
+ * The same tree, holding only goals from one template namespace.
+ *
+ * For an embedded goals hub that is showing ONE plan rather than the account:
+ * the North Star track step renders the real hub under its own list, and a hub
+ * showing every goal you have ever made does not answer "is the plan I just
+ * built running" — it buries it.
+ *
+ * A goal that matches keeps its matching descendants. A goal that does not is
+ * removed and its matching descendants are **promoted** into its place rather
+ * than deleted with it, so a plan goal hanging off a goal made by hand still
+ * appears instead of vanishing with its parent.
+ */
+export function pruneTreeByTemplatePrefix(tree: GoalTreeNode[], prefix: string): GoalTreeNode[] {
+  const walk = (nodes: GoalTreeNode[]): GoalTreeNode[] =>
+    nodes.flatMap((node) => {
+      const children = walk(node.children)
+      if (node.template_id?.startsWith(prefix)) return [{ ...node, children }]
+      return children
+    })
+  return walk(tree)
+}
+
 export function flattenTree(tree: GoalTreeNode[]): GoalWithProgress[] {
   const result: GoalWithProgress[] = []
   function walk(nodes: GoalTreeNode[]) {
@@ -1083,16 +1107,17 @@ export function applyPreviewState(
  * template_ids are NOT cascade-archived — they become roots instead.
  * Custom goals (no template_id) are never orphaned.
  *
- * Framework-plan goals (`fw:*`) live in a separate namespace that is intentionally
- * absent from GOAL_TEMPLATE_MAP — they are validated/persisted via the new-goals
- * plan path, not the goalGraph registry. They must NOT be treated as orphans, or
- * the hub's auto-archive sweep (/api/goals/tree) would wipe a user's whole plan
- * on first load.
+ * Goals in a non-registry namespace (`fw:*`, `ns:*`) are intentionally absent
+ * from GOAL_TEMPLATE_MAP — they are written by the new-goals plan path and the
+ * North Star track step, not by the goalGraph registry. They must NOT be
+ * treated as orphans, or the hub's auto-archive sweep (/api/goals/tree) would
+ * wipe a user's whole plan on first load. See `templateNamespaces.ts`; adding a
+ * prefix there is what keeps this sweep from eating the next one.
  */
 export function getOrphanedGoalIds(goals: GoalWithProgress[]): string[] {
   const orphans: string[] = []
   for (const g of goals) {
-    if (g.template_id && !g.template_id.startsWith("fw:") && !GOAL_TEMPLATE_MAP[g.template_id]) {
+    if (g.template_id && !isNonRegistryTemplateId(g.template_id) && !GOAL_TEMPLATE_MAP[g.template_id]) {
       orphans.push(g.id)
     }
   }

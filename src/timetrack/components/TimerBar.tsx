@@ -33,7 +33,7 @@ import {
 } from "../timetrackService"
 import type { EntryDraft, Id, TimetrackState } from "../types"
 import { BillableToggle, DescriptionField, ProjectPicker, TagPicker } from "./pickers"
-import { ColorDot } from "./primitives"
+import { ColorDot, touchTarget } from "./primitives"
 
 export type TimerMode = "timer" | "manual"
 
@@ -106,14 +106,12 @@ export function TimerBar({
       shifted.setDate(shifted.getDate() + 1)
       stopIso = shifted.toISOString()
     }
-    setState((current) => {
-      const result = createManualEntry(current, { draft, start, stop: stopIso }, new Date().toISOString())
-      if (result.violations.length > 0) {
-        pushToast(result.violations[0].message, "error")
-        return current
-      }
-      return result.state
-    })
+    const result = createManualEntry(state, { draft, start, stop: stopIso }, new Date().toISOString())
+    if (result.violations.length > 0) {
+      pushToast(result.violations[0].message, "error")
+      return
+    }
+    setState(() => result.state)
     setDraft({ ...draft, description: "" })
   }
 
@@ -160,15 +158,15 @@ export function TimerBar({
           <BillableToggle billable={draft.billable} onChange={(billable) => setDraft({ ...draft, billable })} />
 
           {mode === "manual" ? (
-            <div className="flex items-center gap-1">
-              <Input value={manualStart} onChange={(e) => setManualStart(e.target.value)} className="h-8 w-[70px] text-center" aria-label="Start time" />
+            <div className="flex w-full flex-wrap items-center gap-1 sm:w-auto">
+              <Input value={manualStart} onChange={(e) => setManualStart(e.target.value)} className="h-10 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="Start time" />
               <span className="text-muted-foreground">–</span>
-              <Input value={manualStop} onChange={(e) => setManualStop(e.target.value)} className="h-8 w-[70px] text-center" aria-label="End time" />
+              <Input value={manualStop} onChange={(e) => setManualStop(e.target.value)} className="h-10 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="End time" />
               <Input
                 type="date"
                 value={manualDay}
                 onChange={(e) => setManualDay(e.target.value)}
-                className="h-8 w-[140px]"
+                className="h-10 w-[150px] sm:h-8 sm:w-[140px]"
                 aria-label="Date"
               />
             </div>
@@ -185,7 +183,7 @@ export function TimerBar({
                 if (event.key === "Enter" && running) commitRunningDuration()
               }}
               aria-label="Duration"
-              className="h-8 w-[92px] text-center tabular-nums"
+              className="h-10 w-[100px] text-center tabular-nums sm:h-8 sm:w-[92px]"
             />
           )}
 
@@ -194,9 +192,9 @@ export function TimerBar({
             onClick={() => setState((current) => toggleFavorite(current, draft, new Date().toISOString()))}
             title={isFavorite ? "Remove from favorites" : "Add to favorites"}
             aria-label="Toggle favorite"
-            className={cn("rounded-md p-1.5 hover:bg-secondary/60", isFavorite ? "text-primary" : "text-muted-foreground")}
+            className={cn(touchTarget, "rounded-md hover:bg-secondary/60", isFavorite ? "text-primary" : "text-muted-foreground")}
           >
-            <IconFavorite className="size-4" />
+            <IconFavorite className="size-5 sm:size-4" />
           </button>
 
           <div className="mx-1 hidden h-6 w-px bg-border lg:block" />
@@ -206,21 +204,32 @@ export function TimerBar({
             onClick={() => setMode(mode === "timer" ? "manual" : "timer")}
             title={mode === "timer" ? "Switch to manual mode (M)" : "Switch to timer mode (N)"}
             aria-label="Toggle timer or manual mode"
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary/60"
+            className={cn(touchTarget, "rounded-md text-muted-foreground hover:bg-secondary/60")}
           >
-            {mode === "timer" ? <IconEdit className="size-4" /> : <IconTimer className="size-4" />}
+            {mode === "timer" ? <IconEdit className="size-5 sm:size-4" /> : <IconTimer className="size-5 sm:size-4" />}
           </button>
 
           {mode === "manual" ? (
-            <Button size="sm" onClick={addManualEntry}>
+            <Button size="sm" className="ml-auto min-w-[104px] flex-1 sm:flex-none" onClick={addManualEntry}>
               Add
             </Button>
           ) : running ? (
-            <Button size="sm" variant="destructive" onClick={onStop} aria-label="Stop timer">
+            <Button
+              size="sm"
+              variant="destructive"
+              className="ml-auto min-w-[104px] flex-1 sm:flex-none"
+              onClick={onStop}
+              aria-label="Stop timer"
+            >
               <IconStop className="size-4" /> Stop
             </Button>
           ) : (
-            <Button size="sm" onClick={onStart} aria-label="Start timer">
+            <Button
+              size="sm"
+              className="ml-auto min-w-[104px] flex-1 sm:flex-none"
+              onClick={onStart}
+              aria-label="Start timer"
+            >
               <IconStart className="size-4" /> Start
             </Button>
           )}
@@ -259,16 +268,16 @@ export function FavoritesBar({
 }) {
   if (state.favorites.length === 0) return null
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Favorites</span>
+    <div className="-mx-3 flex items-center gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:flex-wrap sm:px-0 sm:pb-0">
+      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Favorites</span>
       {state.favorites.map((favorite, index) => {
         const project = state.projects.find((p) => p.id === favorite.draft.projectId)
         return (
           <div
             key={favorite.id}
-            className="group flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-2 pr-1 text-xs"
+            className="group flex shrink-0 items-center gap-2 rounded-full border border-border bg-card py-1.5 pl-2 pr-1 text-xs sm:py-1"
           >
-            <button type="button" onClick={() => onStart(favorite.draft)} className="flex items-center gap-1.5">
+            <button type="button" onClick={() => onStart(favorite.draft)} className="flex min-h-10 items-center gap-1.5 sm:min-h-0">
               {index < 9 && (
                 <span className="rounded bg-secondary px-1 text-[10px] tabular-nums text-muted-foreground">{index + 1}</span>
               )}
@@ -279,7 +288,7 @@ export function FavoritesBar({
             <button
               type="button"
               onClick={() => onRemove(favorite.id)}
-              className="rounded-full p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
+              className="hidden size-5 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100 sm:flex"
               aria-label="Remove favorite"
             >
               ×
@@ -305,16 +314,17 @@ export function RunningPill({
   if (!running) return null
   const project = state.projects.find((p) => p.id === running.projectId)
   return (
-    <div className="flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs">
+    <div className="flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-2 py-1 text-xs sm:px-3">
       <span className="size-2 animate-pulse rounded-full bg-primary" />
-      <span className="max-w-[160px] truncate">{running.description || "(no description)"}</span>
+      {/* the description would crowd out the workspace name on a phone */}
+      <span className="hidden max-w-[160px] truncate sm:inline">{running.description || "(no description)"}</span>
       {project && <ColorDot color={project.color} />}
       <span className="tabular-nums">{formatClock(entrySeconds(running, nowSec))}</span>
       {/* A 12px icon is not a clickable target; give it a real hit area */}
       <button
         type="button"
         onClick={onStop}
-        className="-mr-1 flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+        className="-mr-1 flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground sm:size-6"
         aria-label="Stop the running timer"
         title="Stop the running timer"
       >

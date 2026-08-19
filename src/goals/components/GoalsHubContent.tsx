@@ -20,7 +20,7 @@ import { TreeOfLifeView } from "./tree-of-life"
 import { ViewSwitcher } from "./views/ViewSwitcher"
 import { ActionToast } from "./ActionToast"
 import { FireStreakBadge } from "@/src/tracking/components/FireStreakBadge"
-import { flattenTree, getCelebrationTier, generateDirtyDogInserts, buildMilestoneCelebrationData } from "../goalsService"
+import { flattenTree, getCelebrationTier, generateDirtyDogInserts, buildMilestoneCelebrationData, pruneTreeByTemplatePrefix } from "../goalsService"
 import type { GoalWithProgress, GoalTreeNode, GoalViewMode, CelebrationTier, MilestoneCelebrationData } from "../types"
 
 const VIEW_STORAGE_KEY = "goals-view-mode"
@@ -33,7 +33,26 @@ function getInitialView(): GoalViewMode {
   return "today"
 }
 
-export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setupPath?: string } = {}) {
+/**
+ * `scope` narrows the hub to one template namespace.
+ *
+ * Used by the North Star track step, which embeds this component under its own
+ * list: without it the step answers "here is every goal on your account" when
+ * the question is "is the plan I just built running". Unset — every other
+ * caller — nothing changes.
+ *
+ * It also hides the controls that CREATE goals, because a goal made in a scoped
+ * hub gets no matching template id and would disappear the moment it was
+ * saved: a button that appears to work and does not. Reordering, incrementing,
+ * editing and the weekly review all still work on what is shown.
+ */
+export function GoalsHubContent({
+  setupPath = "/dashboard/goals/setup",
+  scope,
+}: {
+  setupPath?: string
+  scope?: { templatePrefix: string; title: string; subtitle: string }
+} = {}) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [goals, setGoals] = useState<GoalWithProgress[]>([])
@@ -42,6 +61,9 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
   const [error, setError] = useState<string | null>(null)
 
   const [viewMode, setViewMode] = useState<GoalViewMode>(getInitialView)
+  // The stored preference is shared with the full hub, so a scoped one can open
+  // on a view it does not offer.
+  const activeView: GoalViewMode = scope && viewMode === "tree-of-life" ? "today" : viewMode
 
   const [celebration, setCelebration] = useState<{ tier: CelebrationTier; title: string; source?: "setup" | "goal" } | null>(null)
   const [completingGoal, setCompletingGoal] = useState<GoalWithProgress | null>(null)
@@ -80,7 +102,8 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
       const response = await fetch("/api/goals/tree?includeArchived=true")
       if (!response.ok) throw new Error("Failed to fetch goals")
       const data = await response.json()
-      const treeData: GoalTreeNode[] = Array.isArray(data) ? data : []
+      const all: GoalTreeNode[] = Array.isArray(data) ? data : []
+      const treeData = scope ? pruneTreeByTemplatePrefix(all, scope.templatePrefix) : all
       setTree(treeData)
       setGoals(flattenTree(treeData))
       setError(null)
@@ -89,7 +112,7 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [scope?.templatePrefix])
 
 
   useEffect(() => {
@@ -355,7 +378,7 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
       )
     }
 
-    switch (viewMode) {
+    switch (activeView) {
       case "today":
         return (
           <DailyActionView
@@ -432,34 +455,47 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
         <div className="flex items-center gap-3">
           <Aperture className="size-7" />
           <div>
-            <h1 className="text-2xl font-bold">Goals</h1>
+            <h1 className="text-2xl font-bold">{scope?.title ?? "Goals"}</h1>
             <p className="text-sm hidden sm:block text-muted-foreground">
-              Track progress across all areas of your life
+              {scope?.subtitle ?? "Track progress across all areas of your life"}
             </p>
           </div>
         </div>
         {goals.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
-            <ViewSwitcher activeView={viewMode} onViewChange={handleViewChange} />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 h-8 px-3"
-              onClick={() => router.push(setupPath)}
-              title="Preview setup wizard (new user view)"
-              data-testid="goals-preview-setup-toggle"
-            >
-              <Eye className="size-4" />
-              <span className="text-xs hidden sm:inline">Setup Preview</span>
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleCreateGoal}
-              data-testid="goals-new-goal-button"
-            >
-              <Plus className="size-4 mr-1" />
-              New Goal
-            </Button>
+            {/* "Life" fetches its own tree straight from the API and would
+                ignore the scope, showing the whole account inside a view that
+                claims to be one plan. */}
+            <ViewSwitcher
+              activeView={activeView}
+              onViewChange={handleViewChange}
+              hide={scope ? ["tree-of-life"] : undefined}
+            />
+            {/* Anything that makes a NEW goal is off in a scoped hub: the goal
+                would carry no matching template id and vanish on save. */}
+            {!scope && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 h-8 px-3"
+                  onClick={() => router.push(setupPath)}
+                  title="Preview setup wizard (new user view)"
+                  data-testid="goals-preview-setup-toggle"
+                >
+                  <Eye className="size-4" />
+                  <span className="text-xs hidden sm:inline">Setup Preview</span>
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleCreateGoal}
+                  data-testid="goals-new-goal-button"
+                >
+                  <Plus className="size-4 mr-1" />
+                  New Goal
+                </Button>
+              </>
+            )}
             <Button
               variant={isCustomizeMode ? "secondary" : "ghost"}
               size="icon"
@@ -481,14 +517,18 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
                   <CalendarCheck className="size-4" />
                   Weekly Review
                 </button>
-                <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors" onClick={() => setShowCatalog(true)}>
-                  <Library className="size-4" />
-                  Browse Catalog
-                </button>
-                <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors" onClick={() => router.push(setupPath)}>
-                  <Aperture className="size-4" />
-                  Setup Wizard
-                </button>
+                {!scope && (
+                  <>
+                    <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors" onClick={() => setShowCatalog(true)}>
+                      <Library className="size-4" />
+                      Browse Catalog
+                    </button>
+                    <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors" onClick={() => router.push(setupPath)}>
+                      <Aperture className="size-4" />
+                      Setup Wizard
+                    </button>
+                  </>
+                )}
                 <div className="my-1 border-t border-border" />
                 <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors" onClick={() => setIsTimeSettingsOpen(true)}>
                   <Clock className="size-4" />

@@ -195,14 +195,14 @@ function WorkspacePanel({
           <Field label="Workspace name">
             <Input value={state.workspace.name} onChange={(event) => patch({ name: event.target.value })} />
           </Field>
-          <Field label="Default currency" className="w-40">
+          <Field label="Default currency" className="w-full sm:w-40">
             <MiniSelect
               value={state.workspace.defaultCurrency}
               onChange={(defaultCurrency) => patch({ defaultCurrency })}
               options={CURRENCIES.map((c) => ({ id: c, label: c }))}
             />
           </Field>
-          <Field label="Default billable rate/hour" className="w-48">
+          <Field label="Default billable rate/hour" className="w-full sm:w-48">
             <Input
               type="number"
               value={state.workspace.defaultHourlyRate ?? ""}
@@ -273,7 +273,7 @@ function WorkspacePanel({
             type="date"
             value={state.workspace.lockEntriesBefore ?? ""}
             onChange={(event) => patch({ lockEntriesBefore: event.target.value || null })}
-            className="w-[200px]"
+            className="w-full sm:w-[200px]"
           />
         </Field>
         <ToggleRow
@@ -318,7 +318,7 @@ function AutomationPanel({
           }}
         />
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Work interval (minutes)" className="w-48">
+          <Field label="Work interval (minutes)" className="w-full sm:w-48">
             <Input
               type="number"
               value={state.pomodoro.workMinutes}
@@ -327,7 +327,7 @@ function AutomationPanel({
               }
             />
           </Field>
-          <Field label="Break interval (minutes)" className="w-48">
+          <Field label="Break interval (minutes)" className="w-full sm:w-48">
             <Input
               type="number"
               value={state.pomodoro.breakMinutes}
@@ -361,7 +361,7 @@ function AutomationPanel({
           checked={state.idle.enabled}
           onChange={(enabled) => setState((current) => ({ ...current, idle: { ...current.idle, enabled } }))}
         />
-        <Field label="Prompt after (minutes)" className="w-48">
+        <Field label="Prompt after (minutes)" className="w-full sm:w-48">
           <Input
             type="number"
             className="w-[120px]"
@@ -407,7 +407,7 @@ function AutomationPanel({
           })}
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
-          <Field label="From hour" className="w-28">
+          <Field label="From hour" className="w-full sm:w-28">
             <Input
               type="number"
               value={state.reminders.fromHour}
@@ -416,7 +416,7 @@ function AutomationPanel({
               }
             />
           </Field>
-          <Field label="To hour" className="w-28">
+          <Field label="To hour" className="w-full sm:w-28">
             <Input
               type="number"
               value={state.reminders.toHour}
@@ -425,7 +425,7 @@ function AutomationPanel({
               }
             />
           </Field>
-          <Field label="Remind every (minutes)" className="w-40">
+          <Field label="Remind every (minutes)" className="w-full sm:w-40">
             <Input
               type="number"
               value={state.reminders.everyMinutes}
@@ -446,7 +446,7 @@ function AutomationPanel({
               value={rule.keyword}
               onChange={(event) => setRule({ ...rule, keyword: event.target.value })}
               placeholder="Keyword"
-              className="h-8 w-[140px]"
+              className="h-9 w-full sm:h-8 sm:w-[140px]"
             />
             <MiniSelect
               className="w-[160px]"
@@ -730,7 +730,7 @@ export function IntegrationsPanel({
                       calendars: current.calendars.map((c) => (c.id === calendar.id ? { ...c, name: event.target.value } : c)),
                     }))
                   }
-                  className="h-8 w-[180px]"
+                  className="h-9 w-full sm:h-8 sm:w-[180px]"
                 />
                 <span className="max-w-[260px] truncate text-xs text-muted-foreground">
                   {calendar.source === "ics_url"
@@ -846,10 +846,10 @@ export function IntegrationsPanel({
                 usually your Gmail address. Revoke access any time by removing that share.
               </p>
               <div className="flex flex-wrap items-end gap-2">
-                <Field label="Name in this app" className="w-[160px]">
+                <Field label="Name in this app" className="w-full sm:w-[160px]">
                   <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Google Calendar" className="h-9" />
                 </Field>
-                <Field label="Calendar ID" className="min-w-[240px] flex-1">
+                <Field label="Calendar ID" className="w-full flex-1 sm:min-w-[240px]">
                   <Input
                     value={ref}
                     onChange={(event) => setRef(event.target.value)}
@@ -885,10 +885,10 @@ export function IntegrationsPanel({
                 unless you check the box below. Published Outlook and Apple calendar links work here too.
               </p>
               <div className="flex flex-wrap items-end gap-2">
-                <Field label="Name in this app" className="w-[160px]">
+                <Field label="Name in this app" className="w-full sm:w-[160px]">
                   <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Google Calendar" className="h-9" />
                 </Field>
-                <Field label="Secret iCal address" className="min-w-[260px] flex-1">
+                <Field label="Secret iCal address" className="w-full flex-1 sm:min-w-[260px]">
                   <Input
                     ref={urlInput}
                     type="password"
@@ -939,7 +939,7 @@ export function IntegrationsPanel({
         description="Toggl posts entry and project events to a URL you choose. Here they are recorded below instead of being sent anywhere."
         actions={
           <div className="flex gap-2">
-            <Input value={hookUrl} onChange={(event) => setHookUrl(event.target.value)} placeholder="https://example.com/hook" className="h-8 w-[220px]" />
+            <Input value={hookUrl} onChange={(event) => setHookUrl(event.target.value)} placeholder="https://example.com/hook" className="h-9 w-full sm:h-8 sm:w-[220px]" />
             <Button
               size="sm"
               onClick={() => {

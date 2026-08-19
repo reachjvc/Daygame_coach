@@ -8,6 +8,7 @@ import { ProgramCatalog } from "./ProgramCatalog"
 import { ProgramDetail } from "./ProgramDetail"
 import { TodaySessionWidget } from "./TodaySessionWidget"
 import { ProgressionView } from "./ProgressionView"
+import { EditActiveProgram } from "./EditActiveProgram"
 import { useActiveEnrollments, useEnrollment } from "../hooks/useEnrollment"
 import { getProgram } from "../data/catalog"
 import { LEVEL_LABELS } from "../config"
@@ -105,6 +106,9 @@ function ActiveProgram({ enrollmentId, onExit }: { enrollmentId: string; onExit:
         unit={detail.enrollment.unitSystem}
         onLogged={refresh}
       />
+      {/* The program is not fixed once it is running — the gym changes, the
+          shoulder changes. Weights carry over across an edit. */}
+      <EditActiveProgram enrollment={detail.enrollment} onSaved={refresh} />
       <ProgressionView
         enrollmentId={enrollmentId}
         logs={detail.logs}

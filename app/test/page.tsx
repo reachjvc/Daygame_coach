@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard, Waves } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -190,6 +190,12 @@ const testPages = [
     href: "/test/change-your-life/short",
     description: "The 3-minute vertical, beat by beat: every line with the visual under it, plus the plain transcript",
     icon: Clapperboard,
+  },
+  {
+    name: "Quitting a vice",
+    href: "/test/quit-vice",
+    description: "Four flows built on four positions the research disagrees about: watch it first (expected vs actual payoff), a negotiated bounded experiment with a daily task, one unconditional line, or pure environment design — plus an urge tool, a lapse debrief and a card that work with no setup. No streak counter anywhere, on purpose",
+    icon: Waves,
   },
   {
     name: "Toggl-style time tracker",

@@ -20,10 +20,11 @@
  */
 
 import { useState } from "react"
+import Link from "next/link"
 import { Check, ChevronDown, Minus, Plus, X } from "lucide-react"
 import type { NsArea, NsRoutine } from "@/src/goals/types"
-import { NS_SPLITS, ROUTINE_BLUEPRINT_MAP, SERVES_COPY } from "@/src/goals/data/northStar"
-import { routineCoverage, routineIsUntouched, routineMinutes, routineSummary, splitPreview } from "@/src/goals/northStarService"
+import { NS_SPLITS, ROUTINES_INTRO, ROUTINE_BLUEPRINT_MAP, SERVES_COPY } from "@/src/goals/data/northStar"
+import { presetCost, routineCoverage, routineIsUntouched, routineMinutes, routineSummary, splitPreview } from "@/src/goals/northStarService"
 import { Peek } from "./Peek"
 
 const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -37,6 +38,8 @@ export interface RoutineHandlers {
   onAddCustomStep: (routineId: string, title: string, minutes: number, daysPerWeek: number) => void
   onRemoveStep: (routineId: string, stepId: string) => void
   onStepDays: (routineId: string, stepId: string, daysPerWeek: number) => void
+  /** How long the person thinks this step takes them, not the library's guess. */
+  onStepMinutes: (routineId: string, stepId: string, minutes: number) => void
   onMoveStep: (routineId: string, index: number, dir: -1 | 1) => void
   onPreset: (routineId: string, presetId: string) => void
   onClearSteps: (routineId: string) => void
@@ -110,7 +113,12 @@ export function RoutineCard({
             {untouched && <span className="ml-1.5 text-zinc-600">· our starting stack, edit it</span>}
           </span>
         </span>
-        {editing && (confirmRemove ? (
+        {/* REMOVING A WHOLE ROUTINE IS NOT AN "EDIT MODE" THING.
+            Somebody who accepted the Mind routine and does not want it had to
+            find a pencil, switch a mode on, then find an × — or untick eight
+            steps one at a time. Taking it was one click; putting it back is
+            one click, on the card, confirmed once. */}
+        {(editing || open) && (confirmRemove ? (
           <span className="flex items-center gap-2 shrink-0 text-[11px]">
             <button onClick={() => handlers.onRemoveRoutine(routine.id)} className="text-rose-300 hover:text-rose-200">remove?</button>
             <button onClick={() => setConfirmRemove(false)} className="text-zinc-500 hover:text-zinc-300">keep</button>
@@ -129,6 +137,24 @@ export function RoutineCard({
       {open && (
         <div className="px-5 pb-4 space-y-3">
           {bp && <p className="text-[11.5px] text-zinc-500 leading-relaxed">{bp.why}</p>}
+
+          {/* The vices routine is a list of days you hold a line, which is the
+              right shape for counting and no help at all on the evening you do
+              not hold it. The proper work behind one of these lines — what it
+              actually gives you, what sets it off, what you say when it is
+              offered, and what happens after you slip — is a module of its own,
+              so the routine links to it rather than trying to be it. */}
+          {routine.blueprintId === "vices" && (
+            <Link
+              href="/test/quit-vice"
+              className="block rounded-xl border border-violet-400/25 bg-violet-500/[0.06] px-3.5 py-2.5 hover:border-violet-400/50 hover:bg-violet-500/[0.1] transition-colors"
+            >
+              <span className="block text-[12px] text-violet-100">Working on one of these properly →</span>
+              <span className="block text-[10.5px] text-violet-200/60 mt-0.5 leading-relaxed">
+                Four ways through quitting something, an urge tool that needs no setup, and a debrief for after a slip. Ticking a box here is the scoreboard; that is the work.
+              </span>
+            </Link>
+          )}
 
           {/* Which areas this routine actually carries.
               A morning routine is not a health routine. It holds up mind,
@@ -198,16 +224,33 @@ export function RoutineCard({
           {presets.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Start from a preset</span>
-              {presets.map((preset) => (
-                <button
-                  key={preset.id}
-                  onClick={() => handlers.onPreset(routine.id, preset.id)}
-                  title={preset.note}
-                  className="text-[11px] px-2.5 py-1 rounded-lg border border-white/15 text-zinc-300 hover:bg-white/10 hover:border-white/30 transition-colors"
-                >
-                  {preset.label}
-                </button>
-              ))}
+              {presets.map((preset) => {
+                /**
+                 * The cost, computed from the steps rather than read off the
+                 * name. A preset called "60 min" that turns on 53 minutes of
+                 * steps is the page lying about the one number it exists to
+                 * tell you, and every one of them was out by between 3 and 29
+                 * minutes.
+                 */
+                const cost = bp ? presetCost(bp, preset.id) : null
+                const timeNamed = /^\d+\s*min$/i.test(preset.label)
+                return (
+                  <button
+                    key={preset.id}
+                    onClick={() => handlers.onPreset(routine.id, preset.id)}
+                    title={preset.note}
+                    className="inline-flex items-baseline gap-1 text-[11px] px-2.5 py-1 rounded-lg border border-white/15 text-zinc-300 hover:bg-white/10 hover:border-white/30 transition-colors"
+                  >
+                    {!timeNamed && <span>{preset.label}</span>}
+                    {cost && (
+                      <span className={timeNamed ? "" : "text-zinc-500"}>
+                        {sequence ? `${cost.minutes} min` : `${cost.sessions}×/wk`}
+                      </span>
+                    )}
+                    <span className="text-[9.5px] text-zinc-600 tabular-nums">{cost?.steps}</span>
+                  </button>
+                )
+              })}
               {routine.steps.length > 0 && (
                 <button onClick={() => handlers.onClearSteps(routine.id)} className="ml-auto text-[10px] text-zinc-600 hover:text-rose-300 transition-colors">
                   clear
@@ -221,7 +264,16 @@ export function RoutineCard({
                 stack beside it, so it shows the first few and fades, the same
                 way the value list does. */}
             <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Pick your steps</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                Pick your steps
+                {/* What is on, counted, at the top of the list you are clicking
+                    in. Without it the only feedback for a click is a checkbox
+                    twenty rows long, and "am I sure that went on?" is what the
+                    first user through actually asked. */}
+                <span className="ml-1.5 text-zinc-600 tabular-nums normal-case tracking-normal">
+                  {inStack.size === 0 ? "none on yet" : `${inStack.size} on`}
+                </span>
+              </p>
               <Peek more={`Show all ${(bp?.library ?? []).length} steps`} collapsedHeight={200}>
               <ul className="mt-2 space-y-1">
                 {(bp?.library ?? []).map((item) => {
@@ -231,8 +283,13 @@ export function RoutineCard({
                       <button
                         onClick={() => handlers.onToggleStep(routine.id, item.id)}
                         aria-pressed={added}
+                        /* ON IS THE BRIGHT STATE. It used to be the dim one:
+                           picking a step greyed its text to zinc-400 while the
+                           ones you had not picked stayed at zinc-100, so the
+                           whole list read as "everything is on except the thing
+                           I just clicked". */
                         className={`w-full flex items-center gap-2.5 rounded-lg border px-2.5 py-1.5 text-left transition-all ${
-                          added ? "border-white/20 bg-white/[0.07]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.05]"
+                          added ? "border-white/30 bg-white/[0.10]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.05]"
                         }`}
                       >
                         <span
@@ -241,7 +298,8 @@ export function RoutineCard({
                         >
                           {added ? <Check className="size-2.5 text-zinc-950" /> : <Plus className="size-2.5 text-zinc-400" />}
                         </span>
-                        <span className={`text-[12.5px] min-w-0 ${added ? "text-zinc-400" : "text-zinc-100"}`}>{item.title}</span>
+                        <span className={`text-[12.5px] min-w-0 ${added ? "text-white font-medium" : "text-zinc-300"}`}>{item.title}</span>
+                        {added && <span className="text-[10px] text-zinc-500 shrink-0">on · tap to remove</span>}
                         <span className="ml-auto text-[10.5px] text-zinc-500 tabular-nums shrink-0">
                           {sequence ? `${item.minutes}m` : `${item.daysPerWeek}×`}
                         </span>
@@ -302,6 +360,15 @@ export function RoutineCard({
                 )}
               </div>
 
+              {/* WHICH HALF THIS IS. A routine is systems, all the way down —
+                  the steps in it are things you do, never things you achieve.
+                  Said here because the page now makes that distinction
+                  everywhere else and this card was silent about it. */}
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600 mt-2">
+                {ROUTINES_INTRO.systemsLabel}
+              </p>
+              <p className="text-[10.5px] text-zinc-500 mt-0.5 leading-relaxed">{ROUTINES_INTRO.systemsNote}</p>
+
               {routine.steps.length === 0 ? (
                 <p className="text-[12px] text-zinc-500 mt-2 leading-relaxed">
                   Nothing in it yet. Pick from the left, or start from a preset. On a chaotic day any one step counts.
@@ -315,9 +382,15 @@ export function RoutineCard({
                         style={{ backgroundColor: `${color}26`, color }}
                       >{i + 1}</span>
                       <span className="text-[12.5px] text-zinc-200 min-w-0 flex-1">{step.title}</span>
-                      {sequence ? (
-                        <span className="text-[10.5px] text-zinc-500 tabular-nums shrink-0">{step.minutes}m</span>
-                      ) : (
+                      {/* HOW LONG IT TAKES YOU, not how long the library thinks.
+                          This was printed as text, so a step arrived at the
+                          blueprint's number and stayed there — and the totals
+                          under it, the presets, and the weekly load were all
+                          adding up somebody else's minutes. Two people doing
+                          the same stretch are not doing it for the same two
+                          minutes. Weekly steps get the box too: their minutes
+                          are what `weeklyLoad` multiplies by the days. */}
+                      {!sequence && (
                         <select
                           value={step.daysPerWeek}
                           onChange={(e) => handlers.onStepDays(routine.id, step.id, Number(e.target.value))}
@@ -327,6 +400,11 @@ export function RoutineCard({
                           {[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n} className="bg-zinc-900">{n}×/wk</option>)}
                         </select>
                       )}
+                      <StepMinutes
+                        minutes={step.minutes}
+                        title={step.title}
+                        onChange={(n) => handlers.onStepMinutes(routine.id, step.id, n)}
+                      />
                       <span className="flex items-center gap-0.5 shrink-0">
                         <button
                           onClick={() => handlers.onMoveStep(routine.id, i, -1)}
@@ -343,7 +421,7 @@ export function RoutineCard({
                         <button
                           onClick={() => handlers.onRemoveStep(routine.id, step.id)}
                           aria-label={`Remove ${step.title}`}
-                          className="size-4.5 rounded text-zinc-600 hover:text-rose-300 flex items-center justify-center opacity-0 group-hover/step:opacity-100 focus:opacity-100 transition-all"
+                          className="size-4.5 rounded text-zinc-600 hover:text-rose-300 flex items-center justify-center transition-colors"
                         ><X className="size-3" /></button>
                       </span>
                     </li>
@@ -448,7 +526,7 @@ function SplitDesigner({ routine, color, handlers }: { routine: NsRoutine; color
                 onClick={() => handlers.onRemoveSplitDay(routine.id, d.id)}
                 disabled={routine.splitDays.length <= 1}
                 aria-label={`Remove ${d.name}`}
-                className="size-4.5 rounded text-zinc-600 hover:text-rose-300 disabled:opacity-25 flex items-center justify-center opacity-0 group-hover/day:opacity-100 focus:opacity-100 transition-all"
+                className="size-4.5 rounded text-zinc-600 hover:text-rose-300 disabled:opacity-25 flex items-center justify-center transition-colors"
               ><X className="size-3" /></button>
             </span>
           </li>
@@ -475,5 +553,47 @@ function SplitDesigner({ routine, color, handlers }: { routine: NsRoutine; color
         </p>
       )}
     </div>
+  )
+}
+
+
+/**
+ * The minutes on one step, editable in place.
+ *
+ * Held locally while it is being typed, because a controlled input wired
+ * straight to the plan fights you the moment you clear it to type a new
+ * number: "10" backspaced to "" becomes 0, which re-renders as "0" with the
+ * cursor after it. It commits on every valid keystroke and tidies up on blur.
+ */
+function StepMinutes({ minutes, title, onChange }: { minutes: number; title: string; onChange: (minutes: number) => void }) {
+  const [draft, setDraft] = useState(String(minutes))
+  const [editing, setEditing] = useState(false)
+
+  // Somebody else's change to this step — a preset, an undo — wins while the
+  // box is not being typed in.
+  if (!editing && draft !== String(minutes)) setDraft(String(minutes))
+
+  return (
+    <span className="inline-flex items-baseline gap-0.5 shrink-0">
+      <input
+        value={draft}
+        onChange={(e) => {
+          const next = e.target.value.replace(/[^\d]/g, "").slice(0, 3)
+          setDraft(next)
+          if (next !== "") onChange(Math.min(180, Number(next)))
+        }}
+        onFocus={() => setEditing(true)}
+        onBlur={() => {
+          setEditing(false)
+          const n = draft === "" ? minutes : Math.min(180, Number(draft))
+          setDraft(String(n))
+          onChange(n)
+        }}
+        inputMode="numeric"
+        aria-label={`Minutes for ${title}`}
+        className="w-7 bg-transparent border-b border-white/10 hover:border-white/25 focus:border-white/40 text-[10.5px] text-zinc-300 text-right tabular-nums focus:outline-none transition-colors"
+      />
+      <span className="text-[10.5px] text-zinc-600">m</span>
+    </span>
   )
 }

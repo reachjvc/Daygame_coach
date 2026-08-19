@@ -17,7 +17,18 @@ import { fiveKToTenK } from "./cardio/fiveKToTenK"
 import { recommendedRoutine } from "./calisthenics/recommendedRoutine"
 import { splitsMobility } from "./flexibility/splitsMobility"
 import { sprintTriathlon, olympicTriathlon, halfIronman } from "./endurance/triathlon"
+import { customProgram } from "./customProgram"
 
+/**
+ * The programs you can BROWSE. The custom shell is deliberately not here.
+ *
+ * It is a real program as far as `getProgram`/`requireProgram` are concerned —
+ * an enrollment has to resolve through it — but it is not something anybody
+ * picks off a list, because until you have designed it there is nothing in it.
+ * Keeping it out of this array keeps it out of `programsByDiscipline`,
+ * `programsForLevel` and the catalog UI in one move rather than by filtering at
+ * each call site.
+ */
 export const ALL_PROGRAMS: ProgramDefinition[] = [
   strongLifts5x5,
   wendler531,
@@ -34,8 +45,11 @@ export const ALL_PROGRAMS: ProgramDefinition[] = [
   halfIronman,
 ]
 
+/** Every program that can be RESOLVED, including the custom shell. */
+const RESOLVABLE: ProgramDefinition[] = [...ALL_PROGRAMS, customProgram]
+
 export function getProgram(id: string): ProgramDefinition | undefined {
-  return ALL_PROGRAMS.find((p) => p.id === id)
+  return RESOLVABLE.find((p) => p.id === id)
 }
 
 export function requireProgram(id: string): ProgramDefinition {

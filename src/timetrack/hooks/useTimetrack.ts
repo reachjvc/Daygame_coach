@@ -46,24 +46,57 @@ export interface IdlePrompt {
 
 export type PomodoroPhase = "idle" | "work" | "break"
 
-function loadState(nowIso: string): { state: TimetrackState; refreshed: DemoRefreshResult | null } {
-  if (typeof window === "undefined") return { state: createSeedState(nowIso), refreshed: null }
+interface LoadResult {
+  state: TimetrackState
+  refreshed: DemoRefreshResult | null
+  /** Set when saved data was discarded, so the user is told rather than silently reset */
+  discarded: string | null
+}
+
+function loadState(nowIso: string): LoadResult {
+  if (typeof window === "undefined") return { state: createSeedState(nowIso), refreshed: null, discarded: null }
+
+  let raw: string | null = null
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as TimetrackState
-      const usable =
-        parsed && parsed.workspace && Array.isArray(parsed.entries) && parsed.version === STATE_VERSION
-      if (usable) {
-        // Re-date the demo history so the sandbox never opens on stale days
-        const refreshed = refreshDemoHistory(parsed, nowIso)
-        return { state: refreshed.state, refreshed }
-      }
-    }
+    raw = window.localStorage.getItem(STORAGE_KEY)
   } catch {
-    // Corrupt payload — fall through to a fresh seed rather than crashing
+    return {
+      state: createSeedState(nowIso),
+      refreshed: null,
+      discarded: "This browser blocked local storage, so nothing you do here will be saved.",
+    }
   }
-  return { state: createSeedState(nowIso), refreshed: null }
+  if (!raw) return { state: createSeedState(nowIso), refreshed: null, discarded: null }
+
+  let parsed: TimetrackState | null = null
+  try {
+    parsed = JSON.parse(raw) as TimetrackState
+  } catch {
+    return {
+      state: createSeedState(nowIso),
+      refreshed: null,
+      discarded: "Saved data could not be read, so it was replaced with fresh demo data.",
+    }
+  }
+
+  if (!parsed?.workspace || !Array.isArray(parsed.entries)) {
+    return {
+      state: createSeedState(nowIso),
+      refreshed: null,
+      discarded: "Saved data was incomplete, so it was replaced with fresh demo data.",
+    }
+  }
+  if (parsed.version !== STATE_VERSION) {
+    return {
+      state: createSeedState(nowIso),
+      refreshed: null,
+      discarded: `Saved data came from an older version of this page (v${String(parsed.version)}), so it was replaced with fresh demo data.`,
+    }
+  }
+
+  // Re-date the demo history so the page never opens on stale days
+  const refreshed = refreshDemoHistory(parsed, nowIso)
+  return { state: refreshed.state, refreshed, discarded: null }
 }
 
 export function useTimetrack() {
@@ -80,27 +113,23 @@ export function useTimetrack() {
   const lastReminder = useRef(0)
   const timelineStart = useRef<number | null>(null)
   const pomodoroLastEntry = useRef<number | null>(null)
-  const pendingLoadNotice = useRef<string | null>(null)
+  const pendingLoadNotice = useRef<{ text: string; tone: "info" | "error" } | null>(null)
   const forgottenWarned = useRef(false)
+  const saveFailed = useRef(false)
 
   // --- load once on the client ---------------------------------------------
   useEffect(() => {
     const loaded = loadState(new Date().toISOString())
     setStateRaw(loaded.state)
-    if (loaded.refreshed && loaded.refreshed.shifted > 0) {
-      pendingLoadNotice.current = `Moved ${loaded.refreshed.shifted} demo entries forward ${loaded.refreshed.days} day${loaded.refreshed.days === 1 ? "" : "s"} so this opens on the current week. Entries you created were not changed.`
+    if (loaded.discarded) {
+      pendingLoadNotice.current = { text: loaded.discarded, tone: "error" }
+    } else if (loaded.refreshed && loaded.refreshed.shifted > 0) {
+      pendingLoadNotice.current = {
+        text: `Moved ${loaded.refreshed.shifted} demo entries forward ${loaded.refreshed.days} day${loaded.refreshed.days === 1 ? "" : "s"} so this opens on the current week. Entries you created were not changed.`,
+        tone: "info",
+      }
     }
   }, [])
-
-  // --- persist on every change --------------------------------------------
-  useEffect(() => {
-    if (!state) return
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-    } catch {
-      // Quota exceeded — the sandbox keeps working in memory
-    }
-  }, [state])
 
   // --- one-second clock ---------------------------------------------------
   useEffect(() => {
@@ -122,10 +151,29 @@ export function useTimetrack() {
     setToasts((current) => current.filter((t) => t.id !== id))
   }, [])
 
+  // --- persist on every change --------------------------------------------
+  useEffect(() => {
+    if (!state) return
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+      saveFailed.current = false
+    } catch {
+      // Losing writes silently would look like the page is saving when it is not.
+      // Warn once per failure streak rather than on every keystroke.
+      if (!saveFailed.current) {
+        saveFailed.current = true
+        pushToast(
+          "Could not save to this browser (storage is full or blocked). Your changes are only in memory now — export a backup from Settings → Data.",
+          "error",
+        )
+      }
+    }
+  }, [state, pushToast])
+
   // Report the demo re-dating once the toast queue is available
   useEffect(() => {
     if (!state || !pendingLoadNotice.current) return
-    pushToast(pendingLoadNotice.current)
+    pushToast(pendingLoadNotice.current.text, pendingLoadNotice.current.tone)
     pendingLoadNotice.current = null
   }, [state, pushToast])
 
@@ -343,38 +391,35 @@ export function useTimetrack() {
   const actions = useMemo(
     () => ({
       start(draft: EntryDraft) {
-        const nowIso = new Date().toISOString()
-        setState((current) => {
-          const result = startTimer(current, draft, nowIso)
-          if (result.violations.length > 0) {
-            pushToast(result.violations[0].message, "error")
-            return current
-          }
-          return result.state
-        })
+        if (!state) return
+        const result = startTimer(state, draft, new Date().toISOString())
+        if (result.violations.length > 0) {
+          pushToast(result.violations[0].message, "error")
+          return
+        }
+        setState(() => result.state)
       },
       stop() {
         const nowIso = new Date().toISOString()
         setState((current) => stopTimer(current, nowIso).state)
       },
       continueLast() {
+        if (!state) return
         const nowIso = new Date().toISOString()
-        setState((current) => {
-          const nowEpoch = epochSeconds(nowIso)
-          const stopped = current.entries
-            .filter((e) => !isRunning(e) && !e.serverDeletedAt)
-            .sort((a, b) => epochSeconds(b.start) - epochSeconds(a.start))
-          // Manual mode can create entries dated in the future; "continue last"
-          // means the most recent entry that has actually started
-          const last = stopped.find((e) => epochSeconds(e.start) <= nowEpoch) ?? stopped[0]
-          if (!last) return current
-          const result = continueEntry(current, last.id, nowIso)
-          if (result.violations.length > 0) {
-            pushToast(result.violations[0].message, "error")
-            return current
-          }
-          return result.state
-        })
+        const nowEpoch = epochSeconds(nowIso)
+        const stopped = state.entries
+          .filter((e) => !isRunning(e) && !e.serverDeletedAt)
+          .sort((a, b) => epochSeconds(b.start) - epochSeconds(a.start))
+        // Manual mode can create entries dated in the future; "continue last"
+        // means the most recent entry that has actually started
+        const last = stopped.find((e) => epochSeconds(e.start) <= nowEpoch) ?? stopped[0]
+        if (!last) return
+        const result = continueEntry(state, last.id, nowIso)
+        if (result.violations.length > 0) {
+          pushToast(result.violations[0].message, "error")
+          return
+        }
+        setState(() => result.state)
       },
       resetSandbox() {
         const nowIso = new Date().toISOString()
@@ -385,7 +430,7 @@ export function useTimetrack() {
         setStateRaw(next)
       },
     }),
-    [pushToast, setState],
+    [pushToast, setState, state],
   )
 
   const requestNotificationPermission = useCallback(async () => {

@@ -12,6 +12,15 @@ import { cn } from "@/lib/utils"
 import { NO_PROJECT_COLOR } from "../config"
 import { IconCheck, IconClose, IconDown } from "../icons"
 
+/**
+ * Icon-only controls need a 44px target on phones; 32px is fine with a mouse.
+ * Apply to every button whose content is just an icon.
+ */
+export const touchTarget = "flex size-11 shrink-0 items-center justify-center sm:size-8"
+
+/** Menu/option rows: comfortable on a phone, compact on a pointer device */
+export const touchRow = "min-h-11 sm:min-h-0 sm:py-1.5"
+
 // ---------------------------------------------------------------------------
 // Popover / dropdown
 // ---------------------------------------------------------------------------
@@ -88,7 +97,9 @@ export function Dropdown({
       {open && (
         <div
           className={cn(
-            "absolute z-50 mt-1 rounded-md border border-border bg-card shadow-xl",
+            // Clamp to the viewport so a fixed panel width cannot cause
+            // horizontal scrolling on a phone
+            "absolute z-50 mt-1 max-w-[calc(100vw-1.5rem)] overflow-x-hidden rounded-md border border-border bg-card shadow-xl",
             align === "right" ? "right-0" : "left-0",
             width,
             panelClassName,
@@ -130,16 +141,29 @@ export function Modal({
   }, [onClose])
 
   return (
-    <div className="fixed inset-0 z-[9600] flex items-start justify-center overflow-y-auto bg-black/60 p-4 sm:p-8">
-      <div className={cn("w-full rounded-lg border border-border bg-card shadow-2xl", wide ? "max-w-4xl" : "max-w-lg")}>
-        <div className="flex items-center justify-between border-b border-border px-5 py-3">
+    <div className="fixed inset-0 z-[9600] flex items-stretch justify-center overflow-y-auto bg-black/60 sm:items-start sm:p-8">
+      <div
+        className={cn(
+          // Full-screen sheet on a phone, centred dialog on a pointer device
+          "flex max-h-none w-full flex-col bg-card shadow-2xl sm:max-h-[85vh] sm:rounded-lg sm:border sm:border-border",
+          wide ? "sm:max-w-4xl" : "sm:max-w-lg",
+        )}
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3 sm:px-5">
           <h3 className="text-sm font-semibold">{title}</h3>
-          <button type="button" onClick={onClose} className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground">
-            <IconClose className="size-4" />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className={cn(touchTarget, "rounded text-muted-foreground hover:bg-secondary hover:text-foreground")}
+          >
+            <IconClose className="size-5 sm:size-4" />
           </button>
         </div>
-        <div className="px-5 py-4">{children}</div>
-        {footer && <div className="flex justify-end gap-2 border-t border-border px-5 py-3">{footer}</div>}
+        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">{children}</div>
+        {footer && (
+          <div className="flex shrink-0 justify-end gap-2 border-t border-border px-4 py-3 sm:px-5">{footer}</div>
+        )}
       </div>
     </div>
   )
@@ -172,21 +196,25 @@ export function Segmented<T extends string | number>({
   size?: "default" | "sm"
 }) {
   return (
-    <div className="inline-flex rounded-md border border-border bg-secondary/40 p-0.5">
-      {options.map((option) => (
-        <button
-          key={String(option.id)}
-          type="button"
-          onClick={() => onChange(option.id)}
-          className={cn(
-            "rounded px-3 font-medium transition-colors",
-            size === "sm" ? "h-7 text-xs" : "h-8 text-sm",
-            value === option.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          {option.label}
-        </button>
-      ))}
+    // max-w-full + overflow lets a long set of options scroll rather than
+    // widening the page on a phone
+    <div className="-mx-3 max-w-[calc(100%+1.5rem)] overflow-x-auto px-3 sm:mx-0 sm:max-w-full sm:px-0">
+      <div className="inline-flex rounded-md border border-border bg-secondary/40 p-0.5">
+        {options.map((option) => (
+          <button
+            key={String(option.id)}
+            type="button"
+            onClick={() => onChange(option.id)}
+            className={cn(
+              "shrink-0 whitespace-nowrap rounded px-3 font-medium transition-colors",
+              size === "sm" ? "h-9 text-xs sm:h-7" : "h-10 text-sm sm:h-8",
+              value === option.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
@@ -215,14 +243,14 @@ export function ToggleRow({
         aria-label={label}
         onClick={() => onChange(!checked)}
         className={cn(
-          "relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors",
+          "relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors sm:h-5 sm:w-9",
           checked ? "bg-primary" : "bg-border",
         )}
       >
         <span
           className={cn(
-            "absolute top-0.5 size-4 rounded-full bg-background transition-transform",
-            checked ? "translate-x-[18px]" : "translate-x-0.5",
+            "absolute top-0.5 size-5 rounded-full bg-background transition-transform sm:size-4",
+            checked ? "translate-x-[22px] sm:translate-x-[18px]" : "translate-x-0.5",
           )}
         />
       </button>
@@ -247,7 +275,7 @@ export function CheckOption({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-secondary/60"
+      className={cn("flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-secondary/60", touchRow)}
     >
       <span className={cn("flex size-4 shrink-0 items-center justify-center rounded border", checked ? "border-primary bg-primary text-primary-foreground" : "border-border")}>
         {checked && <IconCheck className="size-3" />}
@@ -321,8 +349,8 @@ export function SectionCard({
   return (
     <section className={cn("rounded-lg border border-border bg-card", className)}>
       {(title || actions) && (
-        <header className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
-          <div>
+        <header className="flex flex-wrap items-start justify-between gap-2 border-b border-border px-4 py-3 sm:gap-3">
+          <div className="min-w-0 flex-1">
             {title && <h3 className="text-sm font-semibold">{title}</h3>}
             {description && <p className="text-xs text-muted-foreground">{description}</p>}
           </div>
@@ -346,11 +374,11 @@ export function StatTile({
   tone?: "default" | "positive" | "negative"
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card px-4 py-3">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+    <div className="rounded-lg border border-border bg-card px-3 py-2.5 sm:px-4 sm:py-3">
+      <p className="text-[10px] uppercase tracking-wide text-muted-foreground sm:text-xs">{label}</p>
       <p
         className={cn(
-          "mt-1 text-xl font-semibold tabular-nums",
+          "mt-1 text-lg font-semibold tabular-nums sm:text-xl",
           tone === "positive" && "text-[#2da608]",
           tone === "negative" && "text-destructive",
         )}
@@ -445,8 +473,8 @@ export function DonutChart({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-6">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
+    <div className="flex flex-col items-center gap-4 sm:flex-row sm:flex-wrap sm:gap-6">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="max-w-full shrink-0">
         <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
           {slices.map((slice) => {
             const fraction = slice.value / total
@@ -472,7 +500,7 @@ export function DonutChart({
           {formatValue(total)}
         </text>
       </svg>
-      <ul className="min-w-[160px] flex-1 space-y-1">
+      <ul className="w-full flex-1 space-y-1 sm:min-w-[160px]">
         {slices.slice(0, 8).map((slice) => (
           <li key={slice.key} className="flex items-center gap-2 text-xs">
             <ColorDot color={slice.color} />

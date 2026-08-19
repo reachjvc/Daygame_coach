@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { listActiveEnrollments, enrollInProgram } from "@/src/db/programRepo"
+import { CustomScheduleSchema } from "@/src/programs/schemas"
 import { z } from "zod"
 
 const EnrollSchema = z.object({
@@ -9,6 +10,7 @@ const EnrollSchema = z.object({
   unitSystem: z.enum(["kg", "lb"]),
   oneRepMaxes: z.record(z.string(), z.number().positive()).optional(),
   workingWeights: z.record(z.string(), z.number().positive()).optional(),
+  customSchedule: CustomScheduleSchema.nullish(),
 })
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })

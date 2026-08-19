@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * The guided build. Three steps, and the middle one is a text box.
+ * The guided build. Three steps, and the middle one is five doors.
  *
  * What this replaced was a board: every area on screen at once, every goal set,
  * every target, every practice — 329 controls and nine screens of scrolling,
@@ -11,10 +11,18 @@
  * curated targets contains almost none of them.
  *
  * So the order changed. You say which two or three areas this season is about,
- * you write your goals in your own words, and then the app does the part you
- * cannot do alone: asks, one question at a time, what is missing from each one.
- * Where are you now. What will you actually do about it. By when. Why. What it
- * costs you if you never do it.
+ * you get your goals down however you can get them down, and then the app does
+ * the part you cannot do alone: asks, one question at a time, what is missing
+ * from each one. Where are you now. What will you actually do about it. By
+ * when. Why. What it costs you if you never do it.
+ *
+ * THE MIDDLE STEP USED TO BE A TEXT BOX AND NOTHING ELSE, which assumed the
+ * hard part was TYPING. That is not it either. The person who cannot fill that
+ * box in cannot fill it in because "what are your goals" is a question almost
+ * nobody can answer cold — and every one of them can describe a good Tuesday,
+ * or cut up the 10 they wrote one tab back, or say what has been annoying them
+ * for a year. So there are five doors into the same list, and which one is
+ * easy is a fact about the person rather than about goal-setting.
  *
  * The catalogue is still here, under all of it, as an offer rather than a
  * cover charge.
@@ -22,9 +30,9 @@
 
 import { useState } from "react"
 import { Check, Plus, X } from "lucide-react"
-import type { NsArea, NsGoal, NsPlan } from "@/src/goals/types"
-import { GOAL_DATE_PRESETS, NS_FLOOR } from "@/src/goals/data/northStar"
-import { GUIDE_COPY, GUIDE_QUESTIONS, SEASON_AREA_LIMIT, type GuideQuestionId } from "@/src/goals/data/northStarGuide"
+import type { MilestoneLadderConfig, NsArea, NsGoal, NsPlan, VisionGoalType } from "@/src/goals/types"
+import { GOAL_DATE_PRESETS } from "@/src/goals/data/northStar"
+import { GUIDE_COPY, GUIDE_QUESTIONS, type GuideQuestionId } from "@/src/goals/data/northStarGuide"
 import {
   areaPractices,
   areaReview,
@@ -42,32 +50,63 @@ import {
   seasonAreas,
   suggestedActions,
   targetsForTemplate,
-  wheelRatings,
 } from "@/src/goals/northStarService"
 import type { RoutineNeed } from "@/src/goals/data/northStarBuild"
+import { START_RAMPS, type StartRampId } from "@/src/goals/data/northStarStart"
+import { AreaBuilder } from "./AreaBuilder"
+import { ExperiencesRamp, type ExperienceHandlers } from "./Experiences"
+import { IdealDayRamp, type IdealDayHandlers } from "./IdealDay"
+import { QuestionsRamp, RampBar, RampChooser, RampHeader, TenRamp } from "./StartRamps"
+import { WeekGrid, type WeekHandlers } from "./WeekGrid"
+import { SentenceBox } from "./SentenceBox"
 
-export interface GuideHandlers {
-  onToggleArea: (areaId: string) => void
-  onAddArea: (label: string) => void
+export interface GuideHandlers extends IdealDayHandlers, WeekHandlers, ExperienceHandlers {
   onAddDump: (areaId: string, text: string) => void
   onAddTemplate: (areaId: string, templateId: string, level: number) => void
+  /** One ready-made goal from the catalogue, added where the area is. */
+  onAddTarget: (areaId: string, targetId: string) => void
   onApplyNeed: (need: RoutineNeed) => void
   onTogglePractice: (blueprintId: string, stepId: string, on: boolean) => void
   onRemoveGoal: (goalId: string) => void
+  /** A whole set, put back: every goal in this area that arrived with it. */
+  onRemoveTemplate: (areaId: string, templateId: string) => void
+  /** Rewording a goal after it exists — the thing there was no way to do. */
+  onUpdateGoal: (goalId: string, patch: { title: string }) => void
   /** The guide's answers. Each one also marks the question asked. */
   onLadderStart: (goalId: string, start: number) => void
+  /** Dragging the curve: the spacing of the rungs is the person's choice. */
+  onLadder: (goalId: string, ladder: MilestoneLadderConfig) => void
+  /**
+   * The rungs, written out by hand.
+   *
+   * "5 pull-ups → 10 pull-ups → muscle-up" is a climb whose last rung is a
+   * different move, and no arithmetic between two numbers will ever produce
+   * it. Asked for repeatedly; it existed only inside the goal dialog, which is
+   * not where anybody scales anything any more.
+   */
+  onProgression: (goalId: string, rungs: string[]) => void
+  /** The scaling tool's other output: evenly spaced rungs from a range. */
+  onMilestones: (goalId: string, spec: { from: number; to: number; count: number; unit?: string; prefix?: string }) => void
   onAction: (goalId: string, title: string, daysPerWeek: number) => void
   onDate: (goalId: string, date: string) => void
   onText: (goalId: string, field: "why" | "painWhy", text: string) => void
   onControllable: (goalId: string, title: string) => void
+  /** The builder finishes a goal in place, so it removes actions and reshapes. */
+  onRemoveAction: (goalId: string, habitId: string) => void
+  onSetType: (goalId: string, type: VisionGoalType) => void
+  /** A driver's rate, which is the whole of what a driver is. */
+  onDriverDays: (goalId: string, daysPerWeek: number) => void
+  /** How much a week, and what it is counted in. A null count drops it. */
+  onDriverCount: (goalId: string, count: number | null, unit: string) => void
+  /** The number to climb to, when the sentence did not carry one. */
+  onSetTarget: (goalId: string, target: number, unit: string) => void
   onSkip: (goalId: string, question: GuideQuestionId) => void
   onOpenArea: (areaId: string) => void
 }
 
-type Step = 0 | 1 | 2
+type Step = 0 | 1
 
 export function GuidedBuild({ plan, today, handlers }: { plan: NsPlan; today: string; handlers: GuideHandlers }) {
-  const picked = seasonAreas(plan)
   /**
    * Where to open.
    *
@@ -75,19 +114,21 @@ export function GuidedBuild({ plan, today, handlers }: { plan: NsPlan; today: st
    * to be asked which areas they picked; they want the questions. Somebody
    * arriving at an empty page does not want a queue of nothing.
    */
-  const [step, setStep] = useState<Step>(() => (plan.goals.length > 0 ? 2 : picked.length > 0 ? 1 : 0))
+  const [step, setStep] = useState<Step>(() => (plan.goals.length > 0 ? 1 : 0))
   const progress = guideProgress(plan)
   const queue = guideQueue(plan, plan.seasonAreaIds)
 
   const steps: Array<{ id: Step; label: string; sub: string }> = [
-    { id: 0, label: "Your season", sub: picked.length > 0 ? `${picked.length} picked` : "pick two or three" },
-    { id: 1, label: "Your goals", sub: plan.goals.length > 0 ? `${plan.goals.length} written` : "in your own words" },
-    { id: 2, label: "Make them real", sub: queue.length > 0 ? GUIDE_COPY.queueLeft(queue.length) : "nothing missing" },
+    // The sub-label ADVERTISES the doors. A returning plan opens on the queue,
+    // so without this the only sign that this step is six ways in rather than a
+    // text box is a count of what is already written.
+    { id: 0, label: "Your goals", sub: plan.goals.length > 0 ? `${plan.goals.length} written · 6 ways in` : "6 ways in" },
+    { id: 1, label: "Make them real", sub: queue.length > 0 ? GUIDE_COPY.queueLeft(queue.length) : "nothing missing" },
   ]
 
   return (
     <section id="ns-board" className="rounded-2xl border border-white/10 bg-white/[0.03] scroll-mt-4 overflow-hidden">
-      <nav className="grid grid-cols-3 border-b border-white/10">
+      <nav className="grid grid-cols-2 border-b border-white/10">
         {steps.map((s, i) => {
           const active = s.id === step
           return (
@@ -109,124 +150,101 @@ export function GuidedBuild({ plan, today, handlers }: { plan: NsPlan; today: st
         })}
       </nav>
 
-      {step === 0 && <SeasonStep plan={plan} today={today} handlers={handlers} onNext={() => setStep(1)} />}
-      {step === 1 && <WriteStep plan={plan} handlers={handlers} onNext={() => setStep(2)} />}
-      {step === 2 && <QueueStep plan={plan} today={today} queue={queue} progress={progress} handlers={handlers} onBack={() => setStep(1)} />}
+      {step === 0 && <WriteStep plan={plan} today={today} handlers={handlers} onNext={() => setStep(1)} />}
+      {step === 1 && <QueueStep plan={plan} today={today} queue={queue} progress={progress} handlers={handlers} onBack={() => setStep(0)} />}
     </section>
   )
 }
 
 // ------------------------------------------------------------------- step one
 
-/** Which areas this season is about, in the order they matter. */
-function SeasonStep({ plan, today, handlers, onNext }: {
-  plan: NsPlan
-  today: string
-  handlers: GuideHandlers
-  onNext: () => void
-}) {
-  const [adding, setAdding] = useState("")
-  const ratings = wheelRatings(plan, today)
-  const picked = plan.seasonAreaIds
-
-  return (
-    <div className="px-5 py-4">
-      <h2 className="text-sm font-semibold text-zinc-200">{GUIDE_COPY.areasTitle}</h2>
-      <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{GUIDE_COPY.areasHelp}</p>
-
-      <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 mt-3">
-        {plan.areas.map((area) => {
-          const rank = picked.indexOf(area.id)
-          const on = rank >= 0
-          const rating = ratings[area.id] ?? null
-          return (
-            <button
-              key={area.id}
-              onClick={() => handlers.onToggleArea(area.id)}
-              aria-pressed={on}
-              className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors ${
-                on ? "border-violet-400/50 bg-violet-500/10" : "border-white/10 bg-white/[0.02] hover:border-white/25"
-              }`}
-            >
-              <span
-                className={`inline-flex items-center justify-center size-5 rounded-full text-[10px] tabular-nums shrink-0 ${
-                  on ? "bg-violet-500/30 text-violet-50" : "bg-white/5 text-zinc-600"
-                }`}
-              >
-                {on ? rank + 1 : ""}
-              </span>
-              <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: area.color }} />
-              <span className="min-w-0 flex-1">
-                <span className={`block text-[12.5px] truncate ${on ? "text-white" : "text-zinc-300"}`}>{area.label}</span>
-                <span className="block text-[10px] text-zinc-600 truncate">{area.sublabel}</span>
-              </span>
-              <span className={`text-[10.5px] tabular-nums shrink-0 ${
-                rating == null ? "text-zinc-700" : rating < NS_FLOOR ? "text-amber-300/80" : "text-zinc-500"
-              }`}>
-                {rating != null ? `${rating}/10` : "–"}
-              </span>
-            </button>
-          )
-        })}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2 mt-3">
-        <input
-          value={adding}
-          onChange={(e) => setAdding(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key !== "Enter" || !adding.trim()) return
-            e.preventDefault()
-            handlers.onAddArea(adding)
-            setAdding("")
-          }}
-          placeholder={GUIDE_COPY.areasAddPlaceholder}
-          aria-label={GUIDE_COPY.areasAdd}
-          className="min-w-0 flex-1 bg-transparent border-b border-white/10 focus:border-white/30 text-[12.5px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none py-1 transition-colors"
-        />
-        <button
-          onClick={() => { if (adding.trim()) { handlers.onAddArea(adding); setAdding("") } }}
-          disabled={!adding.trim()}
-          className="shrink-0 inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg border border-white/15 text-zinc-300 hover:bg-white/10 disabled:opacity-30 transition-colors"
-        >
-          <Plus className="size-3" />
-          {GUIDE_COPY.areasAdd}
-        </button>
-      </div>
-
-      {picked.length > SEASON_AREA_LIMIT && (
-        <p className="text-[11px] text-amber-200/80 mt-2.5 leading-relaxed">{GUIDE_COPY.areasTooMany}</p>
-      )}
-
-      <div className="flex items-center gap-3 mt-4">
-        <span className="text-[11px] text-zinc-500">{GUIDE_COPY.areasPicked(picked.length)}</span>
-        <button
-          onClick={onNext}
-          disabled={picked.length === 0}
-          className="ml-auto text-[12.5px] font-medium px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        >
-          {GUIDE_COPY.areasNext}
-        </button>
-      </div>
-    </div>
-  )
-}
+/**
+ * The season step used to be here, and it is a tab now.
+ *
+ * Picking two or three areas out of twelve is not a step inside the goals
+ * screen, it is the decision the goals screen depends on — and having it in
+ * both places meant two area pickers that could disagree about what the season
+ * was. It lives on `FocusTab`, with the one thing and the ordering.
+ */
 
 // ------------------------------------------------------------------- step two
 
-/** The text box. The one place somebody's own list arrives whole. */
-function WriteStep({ plan, handlers, onNext }: { plan: NsPlan; handlers: GuideHandlers; onNext: () => void }) {
+/**
+ * The five doors, and whichever one is open.
+ *
+ * THE ROW OF DOORS IS ALWAYS ON SCREEN. It was not, for one version: a plan
+ * with goals in it opened straight into the text box, on the argument that
+ * somebody returning knows what they want. What that actually did was hide
+ * every new way in behind a default — you had to already know the doors existed
+ * to go and look for them, which is the exact failure this screen was built to
+ * fix, reintroduced one level down. The first user through it said "I don't see
+ * the flow as being changed", and they were right.
+ *
+ * So: the five are a row, always, and the one that is open expands underneath.
+ * A first-timer with nothing written gets the full cards instead of the row,
+ * because the row is a reminder and the cards are an explanation.
+ */
+function WriteStep({ plan, today, handlers, onNext }: { plan: NsPlan; today: string; handlers: GuideHandlers; onNext: () => void }) {
   const areas = seasonAreas(plan)
   const [index, setIndex] = useState(0)
   const area = areas[index] ?? areas[0]
   const [text, setText] = useState("")
+  const [ramp, setRamp] = useState<StartRampId | null>(() => (plan.goals.length > 0 ? "write" : null))
+
+  /**
+   * The builder first, and the season guard after it.
+   *
+   * This guard used to run first and returned "you have not said what this
+   * season is about yet" whenever `seasonAreaIds` was empty — which is the state
+   * a fresh plan is in, and the state the partial reset leaves you in. So the
+   * builder, which handles an unpicked season perfectly well by offering all
+   * twelve areas, never rendered at all. The doors below it are the part that
+   * genuinely needs one area chosen.
+   */
+  if (ramp === null) {
+    return (
+      <div>
+        <AreaBuilder plan={plan} today={today} handlers={handlers} />
+        <div className="px-5 pb-4">
+          {areas.length === 0 && (
+            <button
+              onClick={() => handlers.onGoToTab("focus")}
+              className="text-[11.5px] text-zinc-500 hover:text-zinc-200 underline decoration-dotted underline-offset-2 transition-colors"
+            >
+              {GUIDE_COPY.noSeasonGo}
+            </button>
+          )}
+          <details className="mt-2 group/ways">
+            <summary className="cursor-pointer list-none text-[11px] text-zinc-500 hover:text-zinc-200 transition-colors">
+              {GUIDE_COPY.otherWays}
+            </summary>
+            <div className="mt-3">
+              <RampChooser plan={plan} area={area ?? null} onPick={setRamp} />
+            </div>
+          </details>
+        </div>
+        <NextStep onNext={onNext} plan={plan} />
+      </div>
+    )
+  }
 
   if (!area) {
-    return <p className="px-5 py-4 text-[12px] text-zinc-500">Pick an area on the step before this one and its goals go here.</p>
+    return (
+      <div className="px-5 py-4">
+        <p className="text-[12px] text-zinc-500">{GUIDE_COPY.noSeason}</p>
+        <button
+          onClick={() => handlers.onGoToTab("focus")}
+          className="mt-2 text-[12px] font-medium px-3 py-1.5 rounded-lg border border-white/15 text-zinc-100 hover:bg-white/10 transition-colors"
+        >
+          {GUIDE_COPY.noSeasonGo}
+        </button>
+      </div>
+    )
   }
 
   const lines = parseGoalDump(text)
   const existing = goalsInArea(plan, area.id)
+  const scope = START_RAMPS.find((r) => r.id === ramp)?.scope ?? "area"
 
   const add = () => {
     if (lines.length === 0) return
@@ -234,9 +252,25 @@ function WriteStep({ plan, handlers, onNext }: { plan: NsPlan; handlers: GuideHa
     setText("")
   }
 
+  // The two life-wide doors are their own screens: no area strip above them, no
+  // this-area goal list under them, because neither is about one area.
+  if (ramp === "day" || ramp === "week" || ramp === "experiences") {
+    return (
+      <div className="px-5 py-4">
+        <RampBar ramp={ramp} onPick={setRamp} />
+        {ramp === "day" && <IdealDayRamp plan={plan} handlers={handlers} onBack={() => setRamp(null)} />}
+        {ramp === "week" && <WeekGrid plan={plan} handlers={handlers} onBack={() => setRamp(null)} />}
+        {ramp === "experiences" && <ExperiencesRamp plan={plan} handlers={handlers} onBack={() => setRamp(null)} />}
+        <NextStep onNext={onNext} plan={plan} />
+      </div>
+    )
+  }
+
   return (
     <div className="px-5 py-4">
-      {areas.length > 1 && (
+      <RampBar ramp={ramp} onPick={setRamp} />
+
+      {scope === "area" && areas.length > 1 && (
         <div className="flex flex-wrap gap-1.5 mb-3">
           {areas.map((a, i) => (
             <button
@@ -255,32 +289,39 @@ function WriteStep({ plan, handlers, onNext }: { plan: NsPlan; handlers: GuideHa
         </div>
       )}
 
-      <h2 className="text-sm font-semibold text-zinc-200">{GUIDE_COPY.writeTitle(area.label)}</h2>
-      <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{GUIDE_COPY.writeHelp}</p>
-      {areaReview(plan, area.id).ten.trim() && (
-        <p className="text-[11px] text-zinc-500 mt-1.5 border-l-2 pl-2 leading-relaxed" style={{ borderColor: area.color }}>
-          Your 10 here: {areaReview(plan, area.id).ten}
-        </p>
-      )}
+      {ramp === "ten" && <TenRamp plan={plan} area={area} today={today} handlers={handlers} onBack={() => setRamp(null)} />}
 
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        rows={7}
-        placeholder={GUIDE_COPY.writePlaceholder}
-        aria-label={GUIDE_COPY.writeTitle(area.label)}
-        className="w-full mt-2.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-700 focus:outline-none focus:border-white/30 transition-colors leading-relaxed resize-y"
-      />
-      <div className="flex flex-wrap items-center gap-2 mt-1.5">
-        <p className="text-[10.5px] text-zinc-600 min-w-0 flex-1 leading-relaxed">{GUIDE_COPY.writeNumbers}</p>
-        <button
-          onClick={add}
-          disabled={lines.length === 0}
-          className="shrink-0 text-[12px] px-3 py-1 rounded-lg border border-white/15 text-zinc-100 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        >
-          {lines.length > 0 ? `${GUIDE_COPY.writeAdd} (${lines.length})` : GUIDE_COPY.writeAdd}
-        </button>
-      </div>
+      {ramp === "questions" && <QuestionsRamp plan={plan} area={area} handlers={handlers} onBack={() => setRamp(null)} />}
+
+      {ramp === "write" && (
+        <>
+          <RampHeader title={GUIDE_COPY.writeTitle(area.label)} help={GUIDE_COPY.writeHelp} onBack={() => setRamp(null)} />
+          {areaReview(plan, area.id).ten.trim() && (
+            <p className="text-[11px] text-zinc-500 mt-1.5 border-l-2 pl-2 leading-relaxed" style={{ borderColor: area.color }}>
+              Your 10 here: {areaReview(plan, area.id).ten}
+            </p>
+          )}
+
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={7}
+            placeholder={GUIDE_COPY.writePlaceholder}
+            aria-label={GUIDE_COPY.writeTitle(area.label)}
+            className="w-full mt-2.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-700 focus:outline-none focus:border-white/30 transition-colors leading-relaxed resize-y"
+          />
+          <div className="flex flex-wrap items-center gap-2 mt-1.5">
+            <p className="text-[10.5px] text-zinc-600 min-w-0 flex-1 leading-relaxed">{GUIDE_COPY.writeNumbers}</p>
+            <button
+              onClick={add}
+              disabled={lines.length === 0}
+              className="shrink-0 text-[12px] px-3 py-1 rounded-lg border border-white/15 text-zinc-100 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              {lines.length > 0 ? `${GUIDE_COPY.writeAdd} (${lines.length})` : GUIDE_COPY.writeAdd}
+            </button>
+          </div>
+        </>
+      )}
 
       {existing.length > 0 && (
         <ul className="mt-3 space-y-1">
@@ -298,17 +339,17 @@ function WriteStep({ plan, handlers, onNext }: { plan: NsPlan; handlers: GuideHa
               <button
                 onClick={() => handlers.onRemoveGoal(goal.id)}
                 aria-label={`Remove ${goal.title}`}
-                className="shrink-0 text-zinc-700 hover:text-rose-300 opacity-0 group-hover/g:opacity-100 focus:opacity-100 transition-all"
+                className="shrink-0 text-zinc-700 hover:text-rose-300 transition-colors"
               ><X className="size-3" /></button>
             </li>
           ))}
         </ul>
       )}
 
-      <Offers plan={plan} area={area} handlers={handlers} />
+      {ramp !== null && <Offers plan={plan} area={area} handlers={handlers} />}
 
       <div className="flex items-center gap-3 mt-4">
-        {index < areas.length - 1 ? (
+        {scope === "area" && index < areas.length - 1 ? (
           <button
             onClick={() => setIndex(index + 1)}
             className="text-[12px] text-zinc-400 hover:text-white transition-colors"
@@ -316,14 +357,27 @@ function WriteStep({ plan, handlers, onNext }: { plan: NsPlan; handlers: GuideHa
             Next area: {areas[index + 1].label} →
           </button>
         ) : <span />}
-        <button
-          onClick={onNext}
-          className="ml-auto text-[12.5px] font-medium px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 transition-colors"
-        >
-          {plan.goals.length > 0 ? GUIDE_COPY.writeNext : GUIDE_COPY.writeSkip}
-        </button>
+        <NextStep onNext={onNext} plan={plan} />
       </div>
     </div>
+  )
+}
+
+/**
+ * On to the questions.
+ *
+ * The same button under every door, because every door ends in the same place
+ * and a person who came in through the week grid should not have to find their
+ * way back to the text box to get out.
+ */
+function NextStep({ plan, onNext }: { plan: NsPlan; onNext: () => void }) {
+  return (
+    <button
+      onClick={onNext}
+      className="ml-auto block mt-4 text-[12.5px] font-medium px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 transition-colors"
+    >
+      {plan.goals.length > 0 ? GUIDE_COPY.writeNext : GUIDE_COPY.writeSkip}
+    </button>
   )
 }
 
@@ -337,8 +391,11 @@ function WriteStep({ plan, handlers, onNext }: { plan: NsPlan; handlers: GuideHa
  */
 function Offers({ plan, area, handlers }: { plan: NsPlan; area: NsArea; handlers: GuideHandlers }) {
   const [open, setOpen] = useState(false)
+  /** Which set is being read before it is accepted. */
+  const [preview, setPreview] = useState<string | null>(null)
   const templates = areaTemplates(area)
   const practices = areaPractices(area)
+  const previewTemplate = templates.find((t) => t.id === preview) ?? null
   if (templates.length === 0 && practices.length === 0) return null
 
   return (
@@ -363,10 +420,13 @@ function Offers({ plan, area, handlers }: { plan: NsPlan; area: NsArea; handlers
                 return (
                   <button
                     key={t.id}
-                    onClick={() => handlers.onAddTemplate(area.id, t.id, 1)}
+                    onClick={() => setPreview(preview === t.id ? null : t.id)}
+                    aria-pressed={preview === t.id}
                     disabled={fresh.length === 0}
                     title={t.description}
-                    className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-white/10 text-zinc-200 hover:bg-white/10 hover:border-white/30 disabled:opacity-40 disabled:cursor-default transition-colors"
+                    className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border transition-colors disabled:opacity-40 disabled:cursor-default ${
+                      preview === t.id ? "border-violet-400/50 bg-violet-500/15 text-violet-50" : "border-white/10 text-zinc-200 hover:bg-white/10 hover:border-white/30"
+                    }`}
                   >
                     {fresh.length === 0 ? <Check className="size-2.5" /> : <Plus className="size-2.5 text-zinc-500" />}
                     {t.label}
@@ -374,6 +434,43 @@ function Offers({ plan, area, handlers }: { plan: NsPlan; area: NsArea; handlers
                   </button>
                 )
               })}
+            </div>
+          )}
+
+          {/* WHAT A SET CONTAINS, BEFORE IT IS IN YOUR PLAN.
+              Clicking a set used to write every goal in it straight into the
+              plan, showing only a count on the way past — so somebody ended up
+              with "No Screens Before Bed" among their goals and, correctly,
+              said they never chose it. A set is still one click to accept; it
+              is now one click to READ first. */}
+          {previewTemplate && (
+            <div className="rounded-xl border border-white/15 bg-white/[0.04] p-3">
+              <p className="text-[11.5px] text-zinc-300">{GUIDE_COPY.setPreview(previewTemplate.label)}</p>
+              {previewTemplate.description && (
+                <p className="text-[10.5px] text-zinc-500 mt-0.5 leading-relaxed">{previewTemplate.description}</p>
+              )}
+              <ul className="mt-2 space-y-0.5">
+                {targetsForTemplate(previewTemplate).map((target) => {
+                  const already = plan.goals.some((g) => g.title.trim().toLowerCase() === target.label.trim().toLowerCase())
+                  return (
+                    <li key={target.id} className="flex items-baseline gap-1.5 text-[11.5px]">
+                      <span className={already ? "text-zinc-600 line-through" : "text-zinc-200"}>{target.label}</span>
+                      {already && <span className="text-[10px] text-zinc-600">{GUIDE_COPY.setAlready}</span>}
+                    </li>
+                  )
+                })}
+              </ul>
+              <div className="flex items-center gap-3 mt-2.5">
+                <button onClick={() => setPreview(null)} className="text-[11px] text-zinc-500 hover:text-zinc-200 transition-colors">
+                  {GUIDE_COPY.setCancel}
+                </button>
+                <button
+                  onClick={() => { handlers.onAddTemplate(area.id, previewTemplate.id, 1); setPreview(null) }}
+                  className="ml-auto text-[12px] font-medium px-3 py-1 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 transition-colors"
+                >
+                  {GUIDE_COPY.setAdd(targetsForTemplate(previewTemplate).filter((x) => !plan.goals.some((g) => g.title.trim().toLowerCase() === x.label.trim().toLowerCase())).length)}
+                </button>
+              </div>
             </div>
           )}
           {practices.length > 0 && (
@@ -439,7 +536,7 @@ function QueueStep({ plan, today, queue, progress, handlers, onBack }: {
         <span className="text-[11px] text-zinc-500 tabular-nums">{GUIDE_COPY.queueProgress(progress.ready, progress.total)}</span>
         <span className="text-[11px] text-zinc-600 tabular-nums">{GUIDE_COPY.queueAnswered(progress.answered, progress.questions)}</span>
         <button onClick={onBack} className="ml-auto shrink-0 text-[11px] text-zinc-500 hover:text-zinc-200 transition-colors">
-          ← write more goals
+          ← add more goals, five ways in
         </button>
       </div>
       <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{GUIDE_COPY.queueHelp}</p>
@@ -621,6 +718,21 @@ function QuestionCard({ plan, today, goal, question, remaining, handlers }: {
               {preset.label}
             </button>
           ))}
+          {/* The one people actually have.
+              Four round numbers and no way to type a real date is fine for
+              "sometime next year" and useless for the goals that have a day
+              already: a wedding, a trip, a competition, the month the lease
+              ends. Those are the dated goals people care most about hitting. */}
+          <label className="inline-flex items-center gap-1.5 text-[11.5px] text-zinc-500">
+            or
+            <input
+              type="date"
+              value={goal.targetDate ?? ""}
+              onChange={(e) => handlers.onDate(goal.id, e.target.value)}
+              aria-label="Pick your own date"
+              className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[11.5px] text-zinc-200 focus:outline-none focus:border-white/30 transition-colors [color-scheme:dark]"
+            />
+          </label>
           <span className="text-[10.5px] text-zinc-600 basis-full mt-0.5">
             Currently {formatTargetDate(goal.targetDate) || "no date"}.
           </span>
@@ -628,13 +740,11 @@ function QuestionCard({ plan, today, goal, question, remaining, handlers }: {
       )}
 
       {(question === "why" || question === "cost") && (
-        <textarea
+        <SentenceBox
           value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={2}
+          onChange={setText}
           placeholder={spec.placeholder}
-          aria-label={spec.ask(goal.title)}
-          autoFocus
+          label={spec.ask(goal.title)}
           className="w-full mt-3 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-2 text-[13px] text-zinc-100 placeholder:text-zinc-700 focus:outline-none focus:border-white/30 transition-colors leading-relaxed resize-y"
         />
       )}

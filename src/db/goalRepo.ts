@@ -251,6 +251,11 @@ export async function createGoal(
     milestone_config: goal.milestone_config ?? null,
     ramp_steps: goal.ramp_steps ?? null,
     goal_phase: goal.goal_phase ?? null,
+    // CreateGoalSchema has accepted this since it was added and neither insert
+    // path wrote it, so a goal created with its reason attached arrived with
+    // the reason gone and nothing said so. Only the update path set it, which
+    // is why editing a goal appeared to "add" a field creating one could not.
+    motivation_note: goal.motivation_note ?? null,
   }
 
   // Starting values for backfill (pre-app history)
@@ -436,6 +441,10 @@ export async function createGoalBatch(
         milestone_config: insert.milestone_config ?? null,
         ramp_steps: insert.ramp_steps ?? null,
         goal_phase: insert.goal_phase ?? null,
+        // Same silent drop as createGoal above. The North Star track step sends
+        // the goal's why here, and a plan that loses its reasons on the way in
+        // is a list of chores.
+        motivation_note: insert.motivation_note ?? null,
         ...(insert.aligned_values !== undefined ? { aligned_values: insert.aligned_values } : {}),
       })
       .select()

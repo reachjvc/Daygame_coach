@@ -52,6 +52,7 @@ export default defineConfig({
         /goals-hub\.spec\.ts/,
         /goals-data-consistency\.spec\.ts/,
         /goals-tour\.spec\.ts/,
+        /life-mastery-track\.spec\.ts/,
         // Mobile-specific tests run in dedicated cross-browser projects
         /mobile\//,
         // Integration tests run in dedicated project after session chain
@@ -144,6 +145,17 @@ export default defineConfig({
         storageState: 'tests/e2e/.auth/user.json',
       },
     },
+    // Creates goals on the same shared user, so it queues behind the others
+    // rather than racing them for the same account's goal list.
+    {
+      name: 'goals-3',
+      testMatch: /life-mastery-track\.spec\.ts/,
+      dependencies: ['goals-2'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
+    },
 
     // === Session-creating tests (chained to run ONE file at a time) ===
     // These files create/end sessions via UI for the same user. Since only one session
@@ -210,6 +222,7 @@ export default defineConfig({
         /mobile\/mobile-goals\.spec\.ts/,
         /mobile\/mobile-tracking\.spec\.ts/,
         /mobile\/mobile-scenarios\.spec\.ts/,
+        /mobile\/mobile-toggl\.spec\.ts/,
       ],
       dependencies: ['setup'],
       use: {

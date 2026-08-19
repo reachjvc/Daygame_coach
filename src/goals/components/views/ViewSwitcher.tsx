@@ -7,6 +7,12 @@ import type { GoalViewMode } from "../../types"
 interface ViewSwitcherProps {
   activeView: GoalViewMode
   onViewChange: (view: GoalViewMode) => void
+  /**
+   * Views to leave out. For a caller that cannot honour one — the scoped hub
+   * cannot scope "Life", which fetches its own unfiltered data — offering it
+   * would put an unrelated view behind a button that looks like the others.
+   */
+  hide?: GoalViewMode[]
 }
 
 const VIEW_OPTIONS: { mode: GoalViewMode; icon: typeof Sun; label: string }[] = [
@@ -17,10 +23,11 @@ const VIEW_OPTIONS: { mode: GoalViewMode; icon: typeof Sun; label: string }[] = 
   { mode: "orrery", icon: Orbit, label: "Orrery" },
 ]
 
-export function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
+export function ViewSwitcher({ activeView, onViewChange, hide }: ViewSwitcherProps) {
+  const options = hide?.length ? VIEW_OPTIONS.filter((o) => !hide.includes(o.mode)) : VIEW_OPTIONS
   return (
     <div className="flex items-center rounded-lg border border-border p-0.5" data-testid="goals-view-switcher">
-      {VIEW_OPTIONS.map(({ mode, icon: Icon, label }) => {
+      {options.map(({ mode, icon: Icon, label }) => {
         const isActive = activeView === mode
         return (
           <Button

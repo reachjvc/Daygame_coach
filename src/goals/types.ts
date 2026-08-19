@@ -14,6 +14,13 @@ import type {
 import type { PairwiseState } from "@/src/goals/data/valuesFramework"
 
 // Re-export types from DB layer for convenience
+import type {
+  GoalType as GoalTypeName,
+  GoalNature as GoalNatureName,
+  GoalTrackingType as GoalTrackingTypeName,
+  GoalPeriod as GoalPeriodName,
+} from "@/src/db/goalTypes"
+
 export type {
   GoalType,
   GoalPeriod,
@@ -1382,7 +1389,129 @@ export interface LifeMasteryProgress {
  * is what you are going to do about it: the goals. They were one tab, and the
  * assessment work was buried under the goal-writing on the same screen.
  */
-export type NorthStarTabId = "star" | "now" | "plan" | "review"
+/**
+ * The tabs, in order.
+ *
+ * `focus` is the newest and the one that changes the shape of the flow: where
+ * you are is a picture of twelve areas, and the goals tab used to open straight
+ * onto all twelve of them. Choosing what this season is about is its own piece
+ * of work — pick the two or three, name the one thing, then rank what you have
+ * — and doing it inside the goals tab made a screen that was already too much.
+ */
+/**
+ * Seven steps. Milestones and systems briefly had one each; they are two views
+ * of the same page now — the areas and the routines are the same twelve and
+ * four either way, and paging between them lost that.
+ */
+export type NorthStarTabId = "star" | "now" | "one" | "pick" | "templates" | "customize" | "systems" | "milestones" | "focus" | "values" | "commit" | "track" | "today"
+
+/**
+ * One plan goal, shaped for `POST /api/goals/batch`.
+ *
+ * A subset of `CreateGoalSchema` plus the batch route's two temp-id fields —
+ * only the columns the North Star flow can honestly fill. Deliberately not
+ * `UserGoalInsert`: that type carries linked metrics, display categories and
+ * phases that this flow has no opinion about, and a partial of it would let a
+ * field be set here that nothing in the plan ever populates.
+ */
+export interface NsTrackInsert {
+  /** The plan goal's id. `createGoalBatch` maps it to the real row's uuid. */
+  _tempId: string
+  /** The plan goal this one feeds, when that goal is in the same push. */
+  _tempParentId: string | null
+  /** The real uuid of the goal this one feeds, when it is already in the hub. */
+  parent_goal_id?: string
+  title: string
+  life_area: string
+  category: string
+  /** Always `ns:<plan goal id>` — the join, and what makes a re-push idempotent. */
+  template_id: string
+  target_value: number
+  current_value?: number
+  tracking_type: GoalTrackingTypeName
+  period: GoalPeriodName
+  goal_type: GoalTypeName
+  goal_nature: GoalNatureName
+  description?: string
+  motivation_note?: string
+  target_date?: string
+  custom_end_date?: string
+  aligned_values?: string[]
+  milestone_config?: Record<string, unknown>
+  ramp_steps?: Record<string, unknown>[]
+}
+
+/** One row of the track step's list: a plan goal and what it becomes. */
+export interface NsTrackRow {
+  goalId: string
+  title: string
+  areaLabel: string
+  areaColor: string
+  /** How it will be counted: every week, up a ladder, or once. */
+  shape: "weekly" | "climb" | "finish"
+  /** The numbers in one phrase — "4× a week", "80 → 100", "done or not done". */
+  readout: string
+  /** Whether a row with this template id is in the goals hub right now. */
+  pushed: boolean
+}
+
+
+/**
+ * Where one value has already been named, and how loudly.
+ *
+ * `hits` is 1 for anything picked by hand. A piece of writing can cue the same
+ * value several times ("my kids", "family", "my daughter" in one paragraph),
+ * and that count is the whole point of keeping it.
+ */
+export interface NsValueMention {
+  /**
+   * "past" and "chosen" are the two whole-life lists, "area" a value clicked
+   * inside one area, "goal" one attached to a goal, "one" one picked against
+   * the one thing. "writing" is the only kind nobody clicked: it was read out
+   * of their own prose by cue word, and it is a guess.
+   */
+  kind: "past" | "chosen" | "area" | "goal" | "one" | "writing"
+  /** Where it was named, in the user's own nouns: "Health", "Buy the flat". */
+  where: string
+  /** The step it was named on, so a row can send you back to it. */
+  tab: NorthStarTabId
+  /** Set on area mentions, so the row can reopen that area. */
+  areaId?: string
+  /** Set on goal mentions, so the row can reopen that goal. */
+  goalId?: string
+  /** Times named here. Picks are 1; cued writing can be more. */
+  hits: number
+}
+
+/** One value, with every place it has already come up gathered under it. */
+export interface NsValueEvidence {
+  value: string
+  /** In the order the flow collects them: the lists, then areas, goals, prose. */
+  mentions: NsValueMention[]
+  /**
+   * The areas it was named in, distinct, in wheel order.
+   *
+   * THE PRIORITISING SIGNAL, and the reason it is separate from `places`.
+   * Breadth is not volume: a value named in Health, Relationship and Money runs
+   * through three parts of somebody's life, and one named three times inside
+   * Health runs through one part loudly. Both are "3 places" and only the first
+   * is load-bearing, so the surface colours these rather than counting places.
+   */
+  areas: string[]
+  /** Distinct places it was named. */
+  places: number
+  /** Total times, cue hits included. */
+  hits: number
+  /** 1-based place on the ordered list, or null when it never got there. */
+  rank: number | null
+  /** On the list that built the life they already have. */
+  past: boolean
+  /**
+   * Named by hand at least once, rather than only read out of a paragraph.
+   * The line between something they said and something we guessed.
+   */
+  chosen: boolean
+}
 
 /** One area of life. The four defaults ship with the flow and are editable. */
 export interface NsArea {
@@ -1411,6 +1540,32 @@ export interface NsRoutineStep {
   daysPerWeek: number
   /** Set when the step came from a library, for the coverage badges. */
   dimension: "mind" | "body" | "spirit" | null
+  /**
+   * The milestones this step is here to move.
+   *
+   * A system with nothing on the other end of it is a chore. "Train chest
+   * twice a week" is worth doing on a Tuesday you do not feel like it because
+   * of the bench number it is walking towards, and the page can only say so if
+   * somebody has told it which number.
+   */
+  servesGoalIds: string[]
+  /**
+   * Where this step sits in the week, when it sits anywhere.
+   *
+   * `daysPerWeek` says how often, and that is all most steps ever need: three
+   * workouts a week is three workouts a week whichever days they land on. These
+   * two say WHICH days and at WHAT time, and they exist for the one screen that
+   * cannot work without them — the week you block out yourself, where "3×/wk"
+   * cannot be drawn and "Monday 07:00" can.
+   *
+   * `days` is 0-6 with 0 = Monday, and an empty list means unplaced rather than
+   * never: every step written before this screen existed has one, and they show
+   * up in the tray beside the grid rather than vanishing. `startMin` is minutes
+   * into the day. Placing a step keeps `daysPerWeek` in step with `days.length`,
+   * so the load readouts stay true whichever screen edited it.
+   */
+  days: number[]
+  startMin: number | null
 }
 
 /** A named training day inside a workout split. */
@@ -1505,8 +1660,21 @@ export interface NsGoal {
    * start edited on the curve and a start edited in the row can never disagree.
    */
   ladder: MilestoneLadderConfig | null
-  /** Practice goals: the steady-state weekly load. */
+  /** Practice goals: the steady-state weekly load, in DAYS you do it. */
   daysPerWeek: number
+  /**
+   * HOW MUCH A WEEK, when the driver counts things rather than days.
+   *
+   * "Approaches 20×/wk" and "Gym 4×/wk" were the same number in the same field,
+   * and they are not the same question: one is how many times you went out, the
+   * other is how many approaches you made. Worse, the field is days, so a
+   * catalogue driver of twenty approaches a week was clamped to 7 and printed
+   * as "7× a week" — the number the person chose, destroyed and then misread.
+   *
+   * So a driver can carry both: `daysPerWeek` is how often, this is how much,
+   * counted in `unit`. Null for a driver that is only ever a frequency.
+   */
+  perWeek: number | null
   /** Practice goals: the ease-in phases before steady state. */
   rampSteps: HabitRampStep[] | null
   /**
@@ -1527,6 +1695,16 @@ export interface NsGoal {
   checkpoints: NsCheckpoint[]
   /** Bigger goals this one feeds. Acyclic by construction. */
   feedsGoalIds: string[]
+  /**
+   * Written as an answer to "what needs to happen for the one thing to work".
+   *
+   * The one thing is a sentence rather than a goal — it is usually bigger than
+   * any single one, and often not a thing you do at all — so what it feeds
+   * cannot be expressed with `feedsGoalIds`. This marks the goals that exist
+   * because of it, which is what lets the page show them together and what
+   * stops the goals list from looking like it wrote itself.
+   */
+  servesOneThing: boolean
   /** What you give yourself when it lands. */
   reward: string
   /** What you forfeit if you miss. */
@@ -1659,11 +1837,64 @@ export interface NsPlan {
    * is the question people can answer and "rate all twelve" is not.
    */
   seasonAreaIds: string[]
+  /**
+   * Things to have done, as opposed to things to achieve.
+   *
+   * A separate list on purpose. "See the northern lights", "learn to surf", "a
+   * threesome" are not goals and putting them through the goal machinery makes
+   * that obvious in the worst way: it asks where you are today, what you will
+   * do on a Tuesday, what it costs you if you never do it. None of those
+   * questions have answers here, and being asked them turns a list that is
+   * supposed to be fun into six forms.
+   *
+   * So: no date required, no rungs, no why demanded, no question queue. Write
+   * as many as you like, tick them off, and promote the one you decide to
+   * actually chase into a real goal.
+   */
+  experiences: NsExperience[]
   /** Daily self-ratings. Date (YYYY-MM-DD) to area id to 0-10. */
   daily: Record<string, Record<string, number>>
+  /**
+   * WHAT YOU ACTUALLY DID, day by day: date (YYYY-MM-DD) to routine step ids.
+   *
+   * The drivers are goals and are counted in `user_goals` once they have been
+   * pushed — a row, a streak, a weekly reset, all of it already built. A
+   * routine step is not a goal and never becomes one: "cold shower" is a line
+   * in a morning stack, and there is nothing on the other side to count it. So
+   * the ticks live here, next to the steps they belong to.
+   *
+   * Absent on every save written before this existed, which is why the loader
+   * defaults it rather than requiring it.
+   */
+  logged: Record<string, string[]>
+  /**
+   * A line about the day, by date. Optional, and usually the most useful thing
+   * on the page a month later: the ratings say a number went down and this says
+   * why.
+   */
+  notes: Record<string, string>
   /** Monotonic id counter. Never reused, so a deleted row's id never comes back. */
   seq: number
   updatedAt: string | null
+}
+
+/** One thing to have done. */
+export interface NsExperience {
+  id: string
+  title: string
+  /** Optional. Plenty of these belong to no area on the wheel, and that is fine. */
+  areaId: string | null
+  done: boolean
+  /** The day you did it, when you tick it. */
+  doneOn: string | null
+  /**
+   * The goal this became, if you decided to actually chase it.
+   *
+   * The experience stays in the list rather than being moved out of it: the
+   * list is a record of what you want to have done, and deleting the line the
+   * moment it gets serious is the one moment it earned its place.
+   */
+  goalId: string | null
 }
 
 /** What the flow knows about how far along a plan is. */

@@ -44,6 +44,7 @@ import {
   starWorkTotal,
 } from "@/src/goals/northStarService"
 import { ValuesWork, type ValuesHandlers } from "./ValuesWork"
+import { SentenceBox } from "./SentenceBox"
 
 /**
  * The prompts are laid out by hand rather than mapped, because the values list
@@ -239,15 +240,18 @@ export function StarTab({
                 <p className="text-[11px] text-zinc-500 mt-0.5">{rung.help}</p>
                 <div className="flex items-baseline gap-2 mt-1.5">
                   <span className="text-[12px] text-zinc-500 shrink-0 pt-1.5">{rung.lead}</span>
-                  <textarea
-                    id={`rung-${rung.id}`}
-                    value={rungAnswer(plan, rung.id)}
-                    onChange={(e) => onRung(rung.id, e.target.value)}
-                    placeholder={rung.placeholder}
-                    rows={2}
-                    aria-label={rung.question}
-                    className="flex-1 min-w-0 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
-                  />
+                  {/* Wrapped, because the box now carries a hint line under it
+                      and this row is a flex. */}
+                  <div className="flex-1 min-w-0">
+                    <SentenceBox
+                      id={`rung-${rung.id}`}
+                      value={rungAnswer(plan, rung.id)}
+                      onChange={(text) => onRung(rung.id, text)}
+                      placeholder={rung.placeholder}
+                      label={rung.question}
+                      className="w-full rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
+                    />
+                  </div>
                 </div>
               </div>
             ))}

@@ -166,6 +166,24 @@ Hardening applied to the secret-address path, since that URL *is* a bearer crede
 Verified by a scripted run (12 checks): masking, SSRF refusal, "not written to localStorage", the re-paste flow,
 opt-in persistence, and no address in error output.
 
+## Known gaps (not "done")
+- **`npm run build` has never been run against this feature** — only `next dev`. Types and lint are clean, but a
+  production build is unverified.
+- ~~Mobile is spot-checked, not walked.~~ **Done** — see `docs/plans/toggl-mobile.md`: bottom tab bar, compact
+  entry rows, card lists instead of wide tables, a report filter sheet, full-screen modals and 44px targets, covered
+  by `tests/e2e/mobile/mobile-toggl.spec.ts`.
+- **No keyboard-only or screen-reader pass.** `Modal` does not trap focus or restore it on close, and tab order has
+  not been reviewed. Icon-only controls now have names, which is a start, not an audit.
+- **Performance is fine at demo size and untested beyond it.** Reports and day grouping recompute every second (the
+  clock tick is in the memo deps), and the whole workspace is re-serialized to localStorage on every keystroke.
+  At ~60 entries that is invisible; at thousands it would not be.
+- **Colors are hardcoded for the dark theme** (billable green `#2da608`, the Toggl project palette). If a light theme
+  ever lands, these need tokens.
+- Calendar blocks can be dragged within a day but not across days; split always cuts at the midpoint (the service
+  accepts an explicit time, the UI does not expose it).
+- The header/modal/toast `z-index` values are a workaround for the Next dev-tools overlay and could need revisiting if
+  that overlay changes.
+
 ## Limits worth knowing
 - **Storage is `localStorage` only** (namespace `toggl-clone:v1`, `STATE_VERSION` 2 — a version bump reseeds the demo).
   No Supabase table, no migration, no RLS — deliberate, since this is a `/test` sandbox.

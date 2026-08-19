@@ -100,8 +100,8 @@ function ClientsPanel({
       title="Clients"
       description="Group projects under the client they are for."
       actions={
-        <div className="flex gap-2">
-          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="New client" className="h-8 w-[180px]" />
+        <div className="flex w-full gap-2 sm:w-auto">
+          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="New client" className="h-9 w-full sm:h-8 sm:w-[180px]" />
           <Button
             size="sm"
             onClick={() => {
@@ -130,7 +130,7 @@ function ClientsPanel({
                 <Input
                   value={client.name}
                   onChange={(event) => setState((current) => updateClient(current, client.id, { name: event.target.value }))}
-                  className={cn("h-8 w-[220px]", client.archived && "opacity-60")}
+                  className={cn("h-9 w-full sm:h-8 sm:w-[220px]", client.archived && "opacity-60")}
                 />
                 <span className="text-xs text-muted-foreground">
                   {projectIds.length} project{projectIds.length === 1 ? "" : "s"} · {formatDuration(tracked, state.user.durationFormat)} tracked
@@ -174,8 +174,8 @@ function TagsPanel({
       title="Tags"
       description="Renaming a tag updates every entry using it. Deleting one removes it from those entries."
       actions={
-        <div className="flex gap-2">
-          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="New tag" className="h-8 w-[160px]" />
+        <div className="flex w-full gap-2 sm:w-auto">
+          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="New tag" className="h-9 w-full sm:h-8 sm:w-[160px]" />
           <Button
             size="sm"
             onClick={() => {
@@ -198,7 +198,7 @@ function TagsPanel({
               <Input
                 value={tag.name}
                 onChange={(event) => setState((current) => updateTag(current, tag.id, event.target.value))}
-                className="h-8 w-[220px]"
+                className="h-9 w-full sm:h-8 sm:w-[220px]"
               />
               <span className="text-xs text-muted-foreground">used on {tagUsageCount(state, tag.id)} entries</span>
               <ConfirmButton size="icon-sm" onConfirm={() => setState((current) => deleteTag(current, tag.id))}>
@@ -244,18 +244,18 @@ function TeamPanel({
         title="Members"
         description="Access levels mirror Toggl: basic tracks time, manager sees team reports, admin manages the workspace."
         actions={
-          <div className="flex flex-wrap gap-2">
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
             <Input
               value={invite.name}
               onChange={(event) => setInvite({ ...invite, name: event.target.value })}
               placeholder="Name"
-              className="h-8 w-[130px]"
+              className="h-9 w-full sm:h-8 sm:w-[130px]"
             />
             <Input
               value={invite.email}
               onChange={(event) => setInvite({ ...invite, email: event.target.value })}
               placeholder="email@example.com"
-              className="h-8 w-[180px]"
+              className="h-9 w-full sm:h-8 sm:w-[180px]"
             />
             <Button
               size="sm"
@@ -273,7 +273,75 @@ function TeamPanel({
           </div>
         }
       >
-        <div className="overflow-x-auto">
+        {/* phones: one card per member */}
+        <ul className="space-y-3 sm:hidden">
+          {state.members.map((member) => {
+            const tracked = sumSeconds(
+              entriesInRange(liveEntries(state).filter((e) => e.userId === member.id), auditRange.start, auditRange.end),
+              nowSec,
+            )
+            return (
+              <li key={member.id} className="rounded-lg border border-border p-3">
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{member.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{member.email}</p>
+                  </div>
+                  <span className="shrink-0 text-sm tabular-nums">
+                    {formatDuration(tracked, state.user.durationFormat)}
+                  </span>
+                  {!member.isSelf && (
+                    <ConfirmButton size="icon-sm" onConfirm={() => setState((current) => deleteMember(current, member.id))}>
+                      <IconDelete className="size-4" />
+                    </ConfirmButton>
+                  )}
+                </div>
+                <div className="mt-2 grid grid-cols-3 gap-2">
+                  <label className="space-y-1">
+                    <span className="block text-[10px] uppercase text-muted-foreground">Access</span>
+                    <MiniSelect
+                      value={member.role}
+                      onChange={(role) => setState((current) => updateMember(current, member.id, { role: role as MemberRole }))}
+                      options={[
+                        { id: "basic", label: "Basic" },
+                        { id: "manager", label: "Manager" },
+                        { id: "admin", label: "Admin" },
+                      ]}
+                    />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="block text-[10px] uppercase text-muted-foreground">Rate/hour</span>
+                    <Input
+                      type="number"
+                      value={member.hourlyRate ?? ""}
+                      onChange={(event) =>
+                        setState((current) =>
+                          updateMember(current, member.id, { hourlyRate: event.target.value ? Number(event.target.value) : null }),
+                        )
+                      }
+                      className="h-9 text-right"
+                    />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="block text-[10px] uppercase text-muted-foreground">Cost/hour</span>
+                    <Input
+                      type="number"
+                      value={member.labourCost ?? ""}
+                      onChange={(event) =>
+                        setState((current) =>
+                          updateMember(current, member.id, { labourCost: event.target.value ? Number(event.target.value) : null }),
+                        )
+                      }
+                      className="h-9 text-right"
+                    />
+                  </label>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full min-w-[760px] text-sm">
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
@@ -395,7 +463,7 @@ function TeamPanel({
         <SectionCard
           title="Groups"
           actions={
-            <div className="flex gap-2">
+            <div className="flex w-full gap-2 sm:w-auto">
               <Input value={groupName} onChange={(event) => setGroupName(event.target.value)} placeholder="Group name" className="h-8 w-[140px]" />
               <Button
                 size="sm"

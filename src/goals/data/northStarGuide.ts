@@ -66,7 +66,7 @@ export const GUIDE_QUESTIONS: Record<GuideQuestionId, GuideQuestion> = {
     ask: (title) => `${title} — where are you today?`,
     note: "The number you can hit right now, honestly. It decides whether this is a stretch or a fantasy, and it is what the rungs get spaced between.",
     kind: "number",
-    placeholder: "e.g. 22",
+    placeholder: "today's number",
   },
   actions: {
     id: "actions",
@@ -106,6 +106,17 @@ export const GUIDE_COPY = {
   areasNext: "Now write the goals →",
   areasTooMany: "That is a lot for one season. It will still work; you will just be thinner across all of them.",
 
+  /**
+   * No season picked yet.
+   *
+   * The area picker moved to its own tab, so this is a pointer rather than the
+   * old "go back one step" — and it is a pointer rather than twelve areas
+   * appearing here, because the whole reason the tab exists is that twelve at
+   * once is what overwhelmed people.
+   */
+  noSeason: "You have not said what this season is about yet, so there is no area to write goals in.",
+  noSeasonGo: "Pick your focus areas →",
+
   // -- step 2
   writeTitle: (area: string) => `Your goals in ${area}`,
   writeHelp: "In your own words, one per line. Write them the way you would say them out loud — this is not a form, and nothing here has to be phrased properly.",
@@ -113,7 +124,20 @@ export const GUIDE_COPY = {
   writeAdd: "Add these",
   writeAdded: (n: number) => `${n} added`,
   writeNumbers: "Anything with a number in it becomes a climb with rungs automatically. Everything else becomes a finish line, and you can change either.",
+  otherWays: "Other ways in — paste a list, start from your 10, describe a day, block out a week",
   writeOr: "Or start from ones other people set:",
+  /**
+   * A set, read before it is accepted.
+   *
+   * Clicking a set used to write every goal in it into the plan and show only a
+   * count on the way past. Somebody ended up with "No Screens Before Bed" in
+   * their goals and said, correctly, that they never chose it. Nothing writes
+   * several goals into somebody's plan unnamed.
+   */
+  setPreview: (label: string) => `“${label}” would add these goals:`,
+  setAlready: "already yours",
+  setCancel: "not this one",
+  setAdd: (n: number) => (n === 1 ? "Add this goal" : `Add these ${n} goals`),
   writeNext: "Now let's make them real →",
   writeSkip: "I have written enough",
 

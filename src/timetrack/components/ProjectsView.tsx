@@ -110,7 +110,7 @@ export function ProjectsView({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search projects…"
-          className="h-9 w-[220px]"
+          className="h-10 w-full sm:h-9 sm:w-[220px]"
         />
         <Segmented
           value={filter}
@@ -121,7 +121,7 @@ export function ProjectsView({
             { id: "templates", label: "Templates" },
           ]}
         />
-        <Button size="sm" className="ml-auto" onClick={() => setEditing("new")}>
+        <Button size="sm" className="w-full sm:ml-auto sm:w-auto" onClick={() => setEditing("new")}>
           <IconAdd className="size-4" /> New project
         </Button>
       </div>
@@ -129,7 +129,54 @@ export function ProjectsView({
       {projects.length === 0 ? (
         <EmptyState title="No projects here" hint="Create one, or switch the filter above to see archived projects and templates." />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-card">
+        <>
+        {/* phones: one card per project */}
+        <ul className="space-y-2 sm:hidden">
+          {projects.map((project) => {
+            const period = projectPeriod(project, todayKey)
+            const tracked = sumSeconds(
+              entriesInRange(liveEntries(state).filter((e) => e.projectId === project.id), period.start, period.end),
+              nowSec,
+            )
+            const estimate = projectEstimateSeconds(state, project)
+            return (
+              <li key={project.id} className="rounded-lg border border-border bg-card p-3">
+                <div className="flex items-center gap-2">
+                  <ColorDot color={project.color} />
+                  <button
+                    type="button"
+                    onClick={() => onFocusProject(project.id)}
+                    className="min-h-9 min-w-0 flex-1 truncate text-left text-sm font-medium"
+                  >
+                    {project.name}
+                  </button>
+                  <span className="shrink-0 text-sm tabular-nums">
+                    {formatDuration(tracked, state.user.durationFormat)}
+                  </span>
+                  <Button size="icon-sm" variant="ghost" onClick={() => setEditing(project)} aria-label="Edit project">
+                    <IconEdit className="size-4" />
+                  </Button>
+                </div>
+                <p className="mt-1 truncate text-xs text-muted-foreground">
+                  {state.clients.find((c) => c.id === project.clientId)?.name ?? "No client"}
+                  {project.template && " · template"}
+                  {project.recurring && ` · ${project.recurringPeriod}`}
+                </p>
+                {estimate && (
+                  <div className="mt-2 space-y-1">
+                    <ProgressBar value={tracked} max={estimate} color={project.color} />
+                    <p className="text-[11px] text-muted-foreground">
+                      {formatDuration(tracked, state.user.durationFormat)} of{" "}
+                      {formatDuration(estimate, state.user.durationFormat)} this period
+                    </p>
+                  </div>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+
+        <div className="hidden overflow-x-auto rounded-lg border border-border bg-card sm:block">
           <table className="w-full min-w-[880px] text-sm">
             <thead className="border-b border-border bg-secondary/30 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
@@ -232,6 +279,7 @@ export function ProjectsView({
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       {editing && (
@@ -380,7 +428,7 @@ function ProjectDialog({
           />
         </div>
 
-        <Field label="Hourly rate" className="w-48">
+        <Field label="Hourly rate" className="w-full sm:w-48">
           <Input
             type="number"
             value={draft.rate ?? ""}
@@ -388,7 +436,7 @@ function ProjectDialog({
             placeholder="Falls back to the member or workspace rate"
           />
         </Field>
-        <Field label="Currency" className="w-40">
+        <Field label="Currency" className="w-full sm:w-40">
           <MiniSelect
             value={draft.currency}
             onChange={(currency) => setDraft({ ...draft, currency })}
@@ -430,7 +478,7 @@ function ProjectDialog({
             />
           </Field>
         ) : (
-          <Field label="Monetary budget" className="w-48">
+          <Field label="Monetary budget" className="w-full sm:w-48">
             <Input
               type="number"
               value={draft.estimatedAmount ?? ""}
@@ -475,7 +523,7 @@ function ProjectDialog({
           </>
         )}
 
-        <Field label="Fixed fee" className="w-48">
+        <Field label="Fixed fee" className="w-full sm:w-48">
           <Input
             type="number"
             value={draft.fixedFee ?? ""}
@@ -701,7 +749,7 @@ function ProjectDashboardPanel({
         </div>
       )}
 
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         <StatTile label="Tracked" value={formatDuration(dashboard.trackedSeconds, state.user.durationFormat)} sub={verdict.label} />
         <StatTile
           label="Estimate used"

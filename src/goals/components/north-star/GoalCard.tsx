@@ -34,7 +34,9 @@ import {
   SERVES_COPY,
   VALUE_COLOR,
 } from "@/src/goals/data/northStar"
+import { BUILDER_COPY } from "@/src/goals/data/northStarStart"
 import {
+  areaGoalExample,
   goalAlreadyInRoutine,
   goalCanUseDailyMetric,
   goalGaps,
@@ -47,7 +49,11 @@ import {
   goalToolLink,
   matchingDatePreset,
   milestoneCheckpoints,
+  isLiftClimb,
+  liftProgression,
   milestoneValues,
+  parseProgression,
+  weeksUntil,
   parseGoalTarget,
   presetDate,
   qualifyWarnings,
@@ -57,6 +63,7 @@ import {
 import { HORIZON_META, formatCountdown } from "@/src/goals/horizonService"
 import { REASON_PROMPTS } from "@/src/goals/visionPlanService"
 import { MilestoneCurveEditor } from "../MilestoneCurveEditor"
+import { SentenceBox } from "./SentenceBox"
 
 export interface GoalHandlers {
   onUpdate: (goalId: string, patch: Partial<Omit<NsGoal, "id">>) => void
@@ -76,6 +83,7 @@ export interface GoalHandlers {
   onUpdateCheckpoint: (goalId: string, checkpointId: string, patch: { title?: string; done?: boolean; celebration?: string }) => void
   /** Turn a finish line with a number in it into a climb with rungs. */
   onSetMilestones: (goalId: string, spec: { from: number; to: number; count: number; unit?: string; prefix?: string }) => void
+  onSetProgression: (goalId: string, rungs: string[]) => void
   onRemoveCheckpoint: (goalId: string, checkpointId: string) => void
   onSetPriority: (goalId: string, rank: number) => void
   onMovePriority: (goalId: string, dir: -1 | 1) => void
@@ -206,6 +214,14 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
               className="size-5 rounded border border-white/15 text-zinc-400 hover:bg-white/10 disabled:opacity-30 flex items-center justify-center"
             ><Minus className="size-3" /></button>
             <span className="text-[11px] text-zinc-300 tabular-nums w-11 text-center">{goal.daysPerWeek}×/wk</span>
+            {/* HOW MUCH, WHEN THE DRIVER COUNTS THINGS. The stepper is days and
+                only days, so a goal meaning twenty approaches showed a 3 and
+                said nothing about the twenty. */}
+            {goal.perWeek != null && (
+              <span className="text-[10px] text-zinc-500 tabular-nums shrink-0">
+                {goal.perWeek}{goal.unit.trim() ? ` ${goal.unit.trim()}` : ""}/wk
+              </span>
+            )}
             <button
               onClick={() => handlers.onUpdate(goal.id, { daysPerWeek: Math.min(7, goal.daysPerWeek + 1) })}
               disabled={goal.daysPerWeek >= 7}
@@ -264,11 +280,13 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
           </button>
         )}
 
-        <button
-          onClick={() => handlers.onRemove(goal.id)}
-          aria-label={`Remove goal ${goal.title}`}
-          className="shrink-0 text-zinc-700 hover:text-rose-300 opacity-0 group-hover/row:opacity-100 focus:opacity-100 transition-all"
-        ><X className="size-3.5" /></button>
+        {/* ALWAYS VISIBLE. Delete used to appear on hover, which meant it did
+            not exist on a touch screen and, on a desktop, only for somebody who
+            already suspected it was there — "how do I delete or deselect goals"
+            was the first question asked about this row. The confirm step is the
+            other half: a goal is somebody's writing, and one stray click on an
+            always-visible X would be worse than the hidden one. */}
+        <RemoveGoal title={goal.title} onRemove={() => handlers.onRemove(goal.id)} />
       </div>
 
       {/* The full list of what is missing, only once the card is open. The
@@ -434,6 +452,11 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
                 themeId="orrery"
                 targetDate={goal.targetDate ?? undefined}
               />
+              {/* The curve is one way to shape a climb and it only shapes
+                  numbers. A lift also climbs in reps, and "5 pull-ups → 10 →
+                  muscle-up" is a ladder whose last rung is a different move —
+                  neither of those is a point you can drag on an axis. */}
+              <MilestoneBuilder goal={goal} color={color} today={today} handlers={handlers} />
             </div>
           )}
 
@@ -449,7 +472,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
           )}
 
           {isFinish && (
-            <Checkpoints goal={goal} color={color} handlers={handlers} />
+            <Checkpoints goal={goal} color={color} today={today} handlers={handlers} />
           )}
 
           {/* The why. One question at a time, changeable when it runs dry. */}
@@ -492,12 +515,11 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
 
           <div>
             <p className="text-[13px] text-zinc-200">{NS_PAIN_WHY_QUESTION}</p>
-            <textarea
+            <SentenceBox
               value={goal.painWhy}
-              onChange={(e) => handlers.onUpdate(goal.id, { painWhy: e.target.value })}
+              onChange={(text) => handlers.onUpdate(goal.id, { painWhy: text })}
               placeholder="What it takes from you if next year looks like this one"
-              rows={2}
-              aria-label={`What it costs you to skip: ${goal.title}`}
+              label={`What it costs you to skip: ${goal.title}`}
               className="w-full mt-2 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
             />
           </div>
@@ -737,7 +759,7 @@ function RampEditor({ steps, fallbackFreq, color, onChange }: {
 }
 
 /** A finish line has no number to climb, so its rungs are named checkpoints. */
-function Checkpoints({ goal, color, handlers }: { goal: NsGoal; color: string; handlers: GoalHandlers }) {
+function Checkpoints({ goal, color, today, handlers }: { goal: NsGoal; color: string; today: string; handlers: GoalHandlers }) {
   const [draft, setDraft] = useState("")
   const add = () => {
     if (!draft.trim()) return
@@ -749,7 +771,7 @@ function Checkpoints({ goal, color, handlers }: { goal: NsGoal; color: string; h
       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Checkpoints</p>
       <p className="text-[11px] text-zinc-500 mt-0.5">A finish line has no number to climb, so name the points along the way. It is done when it is done.</p>
 
-      <MilestoneBuilder goal={goal} color={color} handlers={handlers} />
+      <MilestoneBuilder goal={goal} color={color} today={today} handlers={handlers} />
 
       {goal.checkpoints.length > 0 && (
         <ul className="mt-2 space-y-1">
@@ -819,20 +841,59 @@ function Checkpoints({ goal, color, handlers }: { goal: NsGoal; color: string; h
  * reach it. Regenerating replaces the generated rungs and leaves the checkpoints
  * you wrote yourself where they are.
  */
-function MilestoneBuilder({ goal, color, handlers }: { goal: NsGoal; color: string; handlers: GoalHandlers }) {
+/**
+ * THE SCALING TOOL, AND IT IS NOT ONLY THE DIALOG'S.
+ *
+ * The three shapes a climb comes in — weight and reps together, a number
+ * getting bigger, or a written progression whose last rung is a different move
+ * — used to exist only inside the goal dialog, so the step whose whole job is
+ * writing what you want could set a date and a target and then had nothing to
+ * say about the road between them. The handler prop is narrowed to the two
+ * calls it actually makes, so the achievements row can pass its own.
+ */
+export interface MilestoneBuilderHandlers {
+  onSetMilestones: (goalId: string, spec: { from: number; to: number; count: number; unit?: string; prefix?: string }) => void
+  onSetProgression: (goalId: string, rungs: string[]) => void
+}
+
+export function MilestoneBuilder({ goal, color, today, handlers }: { goal: NsGoal; color: string; today: string; handlers: MilestoneBuilderHandlers }) {
   const parsed = parseGoalTarget(goal.title)
   const existing = milestoneCheckpoints(goal)
+  /** This area's climb, so Money is never shown a set of pull-ups. */
+  const example = areaGoalExample(goal.areaId)
   const [open, setOpen] = useState(false)
   const [from, setFrom] = useState(() => (parsed ? String(Math.max(0, Math.round(parsed.value * 0.7))) : ""))
   const [to, setTo] = useState(() => (parsed ? String(parsed.value) : ""))
   const [unit, setUnit] = useState(parsed?.unit ?? "")
   const [count, setCount] = useState(4)
-
-  if (!parsed) return null
+  /**
+   * Three shapes, because one of them was never going to fit everything: a
+   * bench goes up in weight and reps together, a bodyweight goal goes up in
+   * moves, and plenty of climbs really are just a number getting bigger.
+   */
+  // No number in the title is the case that most needs this: "muscle-up" has
+  // no arithmetic in it and a ladder all the same, so it opens on the written
+  // one rather than not opening at all.
+  const [shape, setShape] = useState<"reps" | "weight" | "own">(() =>
+    !parsed ? "own" : isLiftClimb(parsed.unit) ? "reps" : "weight")
+  const [sets, setSets] = useState(3)
+  const [repLow, setRepLow] = useState(6)
+  const [repHigh, setRepHigh] = useState(8)
+  const [own, setOwn] = useState("")
 
   const numbers = { from: Number(from), to: Number(to) }
-  const ready = Number.isFinite(numbers.from) && Number.isFinite(numbers.to) && from.trim() !== "" && to.trim() !== ""
-  const preview = ready ? milestoneValues(numbers.from, numbers.to, count) : []
+  const ready = shape === "own"
+    ? true
+    : Number.isFinite(numbers.from) && Number.isFinite(numbers.to) && from.trim() !== "" && to.trim() !== ""
+  const weeks = weeksUntil(goal.targetDate, today)
+  const ownRungs = parseProgression(own)
+  const preview: string[] = !ready
+    ? []
+    : shape === "own"
+      ? ownRungs
+      : shape === "reps"
+        ? liftProgression(numbers.from, numbers.to, unit, { count, sets, repLow, repHigh, weeks })
+        : milestoneValues(numbers.from, numbers.to, count, unit).map((v) => `${v}${unit ? ` ${unit}` : ""}`)
 
   if (!open) {
     return (
@@ -842,7 +903,7 @@ function MilestoneBuilder({ goal, color, handlers }: { goal: NsGoal; color: stri
         style={{ borderColor: `${color}55`, backgroundColor: `${color}14`, color: "#e4e4e7" }}
       >
         <Plus className="size-3" />
-        {existing.length > 0 ? MILESTONE_COPY.remake : MILESTONE_COPY.offer}
+        {existing.length > 0 ? MILESTONE_COPY.remake : parsed ? MILESTONE_COPY.offer : MILESTONE_COPY.offerOwn}
       </button>
     )
   }
@@ -855,6 +916,35 @@ function MilestoneBuilder({ goal, color, handlers }: { goal: NsGoal; color: stri
       </div>
       <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{MILESTONE_COPY.help}</p>
 
+      <div className="flex flex-wrap gap-1 mt-2" role="group" aria-label="Shape of the climb">
+        {([["reps", MILESTONE_COPY.shapeReps], ["weight", MILESTONE_COPY.shapeWeight], ["own", MILESTONE_COPY.shapeOwn]] as const)
+          .filter(([id]) => parsed || id === "own")
+          .map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() => setShape(id)}
+            aria-pressed={shape === id}
+            className={`text-[10.5px] px-2 py-0.5 rounded-full border transition-colors ${
+              shape === id ? "border-white/35 bg-white/10 text-zinc-100" : "border-white/10 text-zinc-500 hover:text-zinc-300"
+            }`}
+          >{label}</button>
+        ))}
+      </div>
+
+      {shape === "own" ? (
+        <div className="mt-2">
+          <p className="text-[11px] text-zinc-300">{MILESTONE_COPY.ownAsk}</p>
+          <p className="text-[10px] text-zinc-600 mt-0.5 leading-relaxed">{MILESTONE_COPY.ownNote(example.rungs)}</p>
+          <textarea
+            value={own}
+            onChange={(e) => setOwn(e.target.value)}
+            rows={4}
+            placeholder={MILESTONE_COPY.ownPlaceholder(example.rungs)}
+            aria-label={MILESTONE_COPY.ownAsk}
+            className="w-full mt-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-[12px] text-zinc-100 placeholder:text-zinc-700 focus:outline-none focus:border-white/30 leading-relaxed resize-y"
+          />
+        </div>
+      ) : (
       <div className="flex flex-wrap items-end gap-2 mt-2">
         <label className="text-[10px] text-zinc-500">
           {MILESTONE_COPY.from}
@@ -892,7 +982,18 @@ function MilestoneBuilder({ goal, color, handlers }: { goal: NsGoal; color: stri
             {[2, 3, 4, 5, 6, 8, 10].map((n) => <option key={n} value={n} className="bg-zinc-900">{n}</option>)}
           </select>
         </label>
+        {shape === "reps" && (
+          <>
+            <NumberPick label={MILESTONE_COPY.sets} value={sets} onChange={setSets} options={[1, 2, 3, 4, 5]} />
+            <NumberPick label={MILESTONE_COPY.repsLow} value={repLow} onChange={setRepLow} options={[1, 2, 3, 4, 5, 6, 8, 10, 12]} />
+            <NumberPick label={MILESTONE_COPY.repsHigh} value={repHigh} onChange={setRepHigh} options={[3, 4, 5, 6, 8, 10, 12, 15, 20]} />
+          </>
+        )}
       </div>
+      )}
+
+      {shape === "reps" && <p className="text-[10px] text-zinc-600 mt-1.5 leading-relaxed">{MILESTONE_COPY.repsNote}</p>}
+      {shape === "reps" && weeks > 0 && <p className="text-[10px] text-zinc-600 mt-0.5">{MILESTONE_COPY.weeksNote(weeks)}</p>}
 
       {preview.length > 0 && (
         <div className="flex flex-wrap items-center gap-1 mt-2">
@@ -902,7 +1003,7 @@ function MilestoneBuilder({ goal, color, handlers }: { goal: NsGoal; color: stri
               className="text-[10.5px] px-2 py-0.5 rounded-full border tabular-nums"
               style={{ borderColor: `${color}55`, backgroundColor: `${color}14`, color: "#e4e4e7" }}
             >
-              {v}{unit ? ` ${unit}` : ""}
+              {v}
             </span>
           ))}
         </div>
@@ -915,13 +1016,20 @@ function MilestoneBuilder({ goal, color, handlers }: { goal: NsGoal; color: stri
       <div className="flex flex-wrap items-center gap-2 mt-2">
         <button
           onClick={() => {
-            handlers.onSetMilestones(goal.id, { from: numbers.from, to: numbers.to, count, unit, prefix: parsed.prefix })
+            // Everything except the plain number climb arrives as written
+            // rungs, because that is what they are: "24 kg 3×6" is not a value
+            // on an axis, and neither is "muscle-up".
+            if (shape === "weight" && parsed) {
+              handlers.onSetMilestones(goal.id, { from: numbers.from, to: numbers.to, count, unit, prefix: parsed.prefix })
+            } else {
+              handlers.onSetProgression(goal.id, preview)
+            }
             setOpen(false)
           }}
-          disabled={!ready}
+          disabled={!ready || preview.length === 0}
           className="text-[11.5px] px-2.5 py-1 rounded-lg border border-violet-500/40 bg-violet-500/15 text-violet-100 hover:bg-violet-500/25 disabled:opacity-40 transition-colors"
         >
-          {MILESTONE_COPY.make}
+          {shape === "own" ? MILESTONE_COPY.ownMake : MILESTONE_COPY.make}
         </button>
         <span className="text-[10px] text-zinc-600 min-w-0 flex-1">{MILESTONE_COPY.celebrateHint}</span>
       </div>
@@ -1060,12 +1168,11 @@ function BeliefBlock({ goal, color, handlers }: { goal: NsGoal; color: string; h
                 <>
                   <div>
                     <p className="text-[11px] text-zinc-400">{BELIEF_STEP_COPY.evidence.label}</p>
-                    <textarea
+                    <SentenceBox
                       value={b.evidence}
-                      onChange={(e) => handlers.onUpdateBelief(goal.id, b.id, { evidence: e.target.value })}
+                      onChange={(text) => handlers.onUpdateBelief(goal.id, b.id, { evidence: text })}
                       placeholder={BELIEF_STEP_COPY.evidence.placeholder}
-                      rows={2}
-                      aria-label={BELIEF_STEP_COPY.evidence.label}
+                      label={BELIEF_STEP_COPY.evidence.label}
                       className="w-full mt-1 rounded-md border border-white/10 bg-white/[0.02] px-2 py-1 text-[11.5px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/25 resize-y"
                     />
                   </div>
@@ -1406,6 +1513,10 @@ function ActionBlock({ goal, color, needsAction, handlers }: {
           ? "It names where you want to end up and nothing you can do on a Tuesday. One action is enough to start."
           : "The things you repeat that move this. The goal is the destination, these are the miles."}
       </p>
+      {/* THE EXAMPLE IN THE BOX BELOW COMES FROM THE AREA. It read "squat
+          session · walk 30 minutes · one sales call" in Family and in Money,
+          which is the page illustrating somebody else's life at the moment it
+          asks for yours. */}
 
       {goal.habits.length > 0 && (
         <ul className="mt-2 space-y-1">
@@ -1442,7 +1553,7 @@ function ActionBlock({ goal, color, needsAction, handlers }: {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add() } }}
-          placeholder="e.g. squat session · walk 30 minutes · one sales call"
+          placeholder={BUILDER_COPY.actionPlaceholder(areaGoalExample(goal.areaId).action)}
           aria-label={`Add an action for ${goal.title}`}
           className="flex-1 min-w-0 bg-transparent border-b border-white/10 focus:border-white/30 text-[12.5px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none py-0.5 transition-colors"
         />
@@ -1548,5 +1659,50 @@ function ReasonsDrill({ goal, color, handlers }: { goal: NsGoal; color: string; 
         </div>
       )}
     </div>
+  )
+}
+
+
+/**
+ * Delete a goal, in two clicks and no hover.
+ *
+ * Visible at rest so it can be found, and confirmed so it cannot be hit by
+ * accident. The confirm is inline rather than a dialog: a modal over a list of
+ * twenty goals loses the one you were pointing at.
+ */
+function RemoveGoal({ title, onRemove }: { title: string; onRemove: () => void }) {
+  const [confirming, setConfirming] = useState(false)
+  if (!confirming) {
+    return (
+      <button
+        onClick={() => setConfirming(true)}
+        aria-label={`Remove goal ${title}`}
+        title={`Remove ${title}`}
+        className="shrink-0 text-zinc-600 hover:text-rose-300 transition-colors"
+      ><X className="size-3.5" /></button>
+    )
+  }
+  return (
+    <span className="shrink-0 inline-flex items-center gap-1.5 text-[10.5px]">
+      <button onClick={onRemove} className="text-rose-300 hover:text-rose-200 transition-colors">delete</button>
+      <button onClick={() => setConfirming(false)} className="text-zinc-500 hover:text-zinc-300 transition-colors">keep</button>
+    </span>
+  )
+}
+
+
+/** A labelled number picker, for the reps and sets on a lift's progression. */
+function NumberPick({ label, value, onChange, options }: { label: string; value: number; onChange: (n: number) => void; options: number[] }) {
+  return (
+    <label className="text-[10px] text-zinc-500">
+      {label}
+      <select
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="block mt-0.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[12px] text-zinc-200 focus:outline-none"
+      >
+        {options.map((n) => <option key={n} value={n} className="bg-zinc-900">{n}</option>)}
+      </select>
+    </label>
   )
 }

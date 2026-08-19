@@ -38,6 +38,7 @@ import { areaReach, areaReview, areaValueSuggestions, dailyAverage, dailyCount, 
 import { ScoreRow } from "./ScoreRow"
 import { TagList } from "./GoalCard"
 import { ValueBrowser } from "./ValueBrowser"
+import { SentenceBox } from "./SentenceBox"
 
 export function AreaDialog({
   area,
@@ -236,12 +237,11 @@ export function AreaDialog({
           <section>
             <p className="text-[13px] text-zinc-200">{AREA_REVIEW_COPY.snapshot.question}</p>
             <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{AREA_REVIEW_COPY.snapshot.help}</p>
-            <textarea
+            <SentenceBox
               value={review.snapshot}
-              onChange={(e) => onAreaReview(area.id, { snapshot: e.target.value })}
+              onChange={(text) => onAreaReview(area.id, { snapshot: text })}
               placeholder={AREA_REVIEW_COPY.snapshot.placeholder}
-              rows={2}
-              aria-label={`Where you are right now in ${area.label}`}
+              label={`Where you are right now in ${area.label}`}
               className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
             />
           </section>
@@ -253,12 +253,11 @@ export function AreaDialog({
           <section>
             <p className="text-[13px] text-zinc-200">{AREA_REVIEW_COPY.purpose.question}</p>
             <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{AREA_REVIEW_COPY.purpose.help}</p>
-            <textarea
+            <SentenceBox
               value={review.purpose}
-              onChange={(e) => onAreaReview(area.id, { purpose: e.target.value })}
+              onChange={(text) => onAreaReview(area.id, { purpose: text })}
               placeholder={AREA_REVIEW_COPY.purpose.placeholder}
-              rows={2}
-              aria-label={`Why ${area.label} matters to you`}
+              label={`Why ${area.label} matters to you`}
               className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
             />
           </section>
@@ -306,12 +305,11 @@ export function AreaDialog({
             <div className="mt-4">
               <p className="text-[12.5px] text-zinc-200">{AREA_REVIEW_COPY.blockers.question}</p>
               <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{AREA_REVIEW_COPY.blockers.help}</p>
-              <textarea
+              <SentenceBox
                 value={review.blockers}
-                onChange={(e) => onAreaReview(area.id, { blockers: e.target.value })}
+                onChange={(text) => onAreaReview(area.id, { blockers: text })}
                 placeholder="What has ended this for you before"
-                rows={2}
-                aria-label={`What might stop you in ${area.label}`}
+                label={`What might stop you in ${area.label}`}
                 className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
               />
             </div>

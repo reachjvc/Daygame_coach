@@ -50,6 +50,15 @@ export type LoadScheme =
 
 /** How a load exercise progresses after a logged session / cycle. */
 export type LoadProgressionRule =
+  /**
+   * Hold the weight; the lifter decides when it moves.
+   *
+   * For a program somebody wrote themselves, where "add 2.5 kg whenever you hit
+   * your reps" is an opinion they did not ask for. The engine leaves the
+   * working weight exactly where it is and reports no change, so the lift still
+   * gets prescribed and logged — it simply does not ratchet.
+   */
+  | { kind: "none" }
   | {
       kind: "linear_load"
       incrementKg: number
@@ -79,6 +88,46 @@ export interface LoadExercise {
   metricType: "load"
   scheme: LoadScheme
   progression: LoadProgressionRule
+  /**
+   * Lifts sharing a group id are a superset — done alternating, one after the
+   * other, rather than straight through.
+   *
+   * A FLAT TAG, NOT NESTING. Nesting supersets inside the day would change the
+   * shape every consumer walks (the engine, the prescription, the log, the
+   * workout_sets bridge) to express something that is really just "these belong
+   * together". As a tag it is invisible to all of them: each lift is still
+   * prescribed, logged and progressed on its own rule, which is what a superset
+   * actually is — two exercises interleaved, not one merged exercise.
+   */
+  supersetGroup?: string
+  /**
+   * Drops taken off the LAST set: strip weight, go again, without racking.
+   *
+   * A MODIFIER, NOT A SCHEME, for the same reason a superset is a tag. "3×8
+   * with two drops" is still three sets of eight as far as prescription,
+   * logging and progression are concerned — the drops are extra work done at
+   * the end of the last one, at whatever weight is left, to failure. Encoding
+   * them as sets would make the engine think the working weight fell and deload
+   * a lift that is going fine.
+   *
+   * So nothing in `applyLog` reads this. It rides through to the session so the
+   * person doing it on Tuesday is told, and no further.
+   */
+  dropSets?: number
+  /** Free text under the lift — tempo, cues, "left side first". */
+  note?: string
+  /**
+   * How the weight is loaded, which decides what a *loadable* weight is.
+   *
+   * A barbell cannot go below the bar, so a barbell lift rounds up to it. A
+   * dumbbell lateral raise, a cable pushdown and a bodyweight push-up have no
+   * such floor, and forcing them to 20 kg turns a 6 kg raise into a 20 kg one.
+   *
+   * ABSENT MEANS BARBELL, so every catalog program keeps the exact rounding it
+   * had before this field existed — it is the lifts a user adds themselves,
+   * which are far more often accessories, that need the other answer.
+   */
+  loadStyle?: "barbell" | "free"
 }
 
 // ============================================================================
@@ -166,7 +215,23 @@ export interface DayTemplate {
   id: string // "A" / "B" / "ohp-day"
   label: string
   exercises: LoadExercise[] // M1: load only
+  /**
+   * The day of the week this session is done on. 1 = Monday … 7 = Sunday.
+   *
+   * ABSENT MEANS "IN ORDER, WHENEVER" — which is how every cited program in the
+   * catalog works and must keep working: StrongLifts is three sessions a week
+   * alternating A/B/A, and pinning those to weekdays would be inventing a rule
+   * its source does not have. A program somebody writes themselves usually DOES
+   * have weekdays ("Push is Monday"), so the field is theirs to set.
+   *
+   * When every day carries one, the next session is chosen by today's date
+   * rather than by the cursor. When none do, the cursor walks the list as
+   * before. Those are the only two states; a half-assigned week is refused at
+   * the point of editing rather than resolved by guessing.
+   */
+  weekday?: number
 }
+
 
 /**
  * Scheduling shape (hybrid model — load is log-driven sequential).
@@ -237,6 +302,17 @@ export interface ProgramEnrollment {
   cursor: EnrollmentCursor
   is_active: boolean
   started_at: string
+  /**
+   * The user's own version of the schedule, or null to follow the catalog.
+   *
+   * COPY-ON-WRITE, not a diff. Null until the first edit, so an untouched
+   * enrollment keeps picking up catalog corrections; the first edit snapshots
+   * the whole resolved schedule and the user owns it from then on. A diff
+   * against catalog ids would have to guess what a renamed or retired
+   * exercise id meant on the next catalog change, and guessing quietly is
+   * the failure mode this codebase does not allow.
+   */
+  customSchedule: ProgramSchedule | null
 }
 
 // ============================================================================
@@ -257,6 +333,10 @@ export interface PrescribedExercise {
   name: string
   sets: PrescribedSet[]
   note?: string
+  /** Set when this lift is part of a superset — same id = done alternating. */
+  supersetGroup?: string
+  /** Drops off the last set, if the author asked for them. Display only. */
+  dropSets?: number
   bodyweight?: boolean // skill/hold: no external weight to show
   repUnit?: "reps" | "sec" // what the logged number means (default reps)
 }
@@ -271,6 +351,16 @@ export interface SessionPrescription {
   enduranceSets?: EnduranceSet[] // cardio: interval/steady blocks
   summary?: string // one-line human summary (e.g. "8×(jog 60s / walk 90s)")
   isFinalSession?: boolean // program graduated — no further sessions
+  /**
+   * True when the week says today is a rest day.
+   *
+   * The prescription still carries the NEXT session so the screen can show what
+   * is coming, but it must not be presented as today's work — a 3-day week
+   * whose rest days quietly prescribe the next session is a 7-day week.
+   */
+  restDay?: boolean
+  /** The ISO weekday this session is pinned to, when the week is on a calendar. */
+  scheduledWeekday?: number
 }
 
 // ============================================================================
@@ -330,6 +420,7 @@ export interface ProgramEnrollmentRow {
   is_active: boolean
   started_at: string
   created_at: string
+  custom_schedule: ProgramSchedule | null
 }
 
 export interface ProgramSessionLogRow {
@@ -364,4 +455,46 @@ export interface ProgramSelection {
   unitSystem: UnitSystem
   oneRepMaxes?: Record<string, number>
   workingWeights?: Record<string, number>
+  /** The user's edited schedule, if they changed anything. Null/absent = catalog. */
+  customSchedule?: ProgramSchedule | null
 }
+
+/**
+ * One movement in the swap/add pool.
+ *
+ * Editing a program means being able to put a different lift in a slot, and a
+ * lift the engine has never seen needs the same three things every catalog
+ * exercise has: how it is prescribed, how it progresses, and where somebody at
+ * this level starts. `suggestedKg` is a starting point the editor shows and the
+ * user confirms — it is never silently enrolled, because `seedEnrollment`
+ * requires a working weight for every exercise and throws without one.
+ */
+export interface LibraryExercise {
+  id: string
+  name: string
+  pattern: MovementPattern
+  /** Compound lifts default to linear loading, accessories to double progression. */
+  compound: boolean
+  /**
+   * Barbell-loaded, and therefore floored at the bar. Distinct from `compound`:
+   * a dip is a compound movement with no bar under it.
+   */
+  barbell: boolean
+  defaultSets: number
+  defaultRepMin: number
+  defaultRepMax: number
+  suggestedKg: Record<LevelId, number>
+}
+
+export type MovementPattern =
+  | "squat"
+  | "hinge"
+  | "horizontal_push"
+  | "vertical_push"
+  | "horizontal_pull"
+  | "vertical_pull"
+  | "lunge"
+  | "arms"
+  | "shoulders"
+  | "core"
+  | "calves"

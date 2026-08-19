@@ -1,47 +1,450 @@
 # Life Mastery, North Star flow — `/test/life-mastery`
 
-**Status:** shipped (sandbox). localStorage only (`north-star-v1`), no LLM, no API,
-no database. Replaced the 12-area flow, which moved to `/test/life-mastery-v1`.
+**Status:** shipped (sandbox). localStorage (`north-star-v1`) is the source of
+truth, no LLM. A **copy** of the plan is mirrored to `plan_snapshots` so the
+people building it can read what real people wrote — see below. Replaced the
+12-area flow, which moved to `/test/life-mastery-v1`.
+
+**The last step, Track, is the one exception to all of that**: it pushes the plan's
+goals into `user_goals` and renders the real goals hub on them, so the plan can
+actually be run rather than only read back. See "The last step — Track" below.
+
+## Reading what people actually wrote
+
+The flow ran entirely in the browser, which meant the only way to learn where it
+loses people was to sit next to one. `plan_snapshots` fixes that.
+
+- **Migration:** `supabase/migrations/20260814_create_plan_snapshots.sql`. Run it
+  before testing — nothing works without it, and the write route 500s.
+- **Keyed by a random browser UUID** (`north-star-client-id` in localStorage),
+  not an account, not an email, no IP. One row per browser, upserted, with a
+  `revision` counter — a row per keystroke would be a million copies of the same
+  plan growing by one word. `user_id` is present and unused, so the signed-in
+  version can attach snapshots without a second migration.
+- **RLS is on with no policies**, which in Postgres means `anon` and
+  `authenticated` can do nothing at all with the table. The only way in is the
+  service role, from `POST /api/plan-snapshots` (write, unauthenticated by
+  design, validated by `planSnapshotService`: UUID-shaped id, 256 KB cap) and
+  `GET /api/admin/plan-snapshots` (read, `X-Admin-Key` against
+  `ADMIN_SECRET_KEY`, header only so it cannot land in a log or a referrer).
+  An unauthenticated page writes here, so the entrance is one controlled route
+  rather than a public insert grant.
+- **The page says so**, in the footer, with the off switch beside it — and
+  turning it off deletes what that browser already sent, because an off switch
+  that leaves the collection behind is not an off switch.
+- **This holds sex-life and health free text and the names of third parties.**
+  It is not analytics. Before this goes anywhere near real users it needs a
+  lawful basis, a retention job and a delete-on-request path; none of those
+  exist yet, and the decision to defer them was taken knowingly.
+
+Read it with:
+
+```
+curl -s localhost:3000/api/admin/plan-snapshots \
+  -H "X-Admin-Key: $ADMIN_SECRET_KEY" | jq '.snapshots[] | {client_id, goal_count, updated_at}'
+curl -s "localhost:3000/api/admin/plan-snapshots?clientId=<id>" \
+  -H "X-Admin-Key: $ADMIN_SECRET_KEY" | jq -r .plan_text
+```
 
 ## Shape
 
-Four tabs, switchable at any time. Order is the order the work wants to happen
-in; **nothing is gated anywhere**, and what is outstanding is listed in one
-panel under every tab instead (`planTodos`).
+**Thirteen steps, and the order is the argument — until step 4, where it stops
+being one.**
 
-1. **North star.** One question — "Imagine an ideal future. Who are you? What do
-   you do?" — with a hint naming health, wealth, relationships and meaning, and
-   explicit permission to be unrealistic. Horizon picker (5 · 10 · 20). The
-   7-rung ladder from v1 survives as a collapsed escape hatch that assembles a
-   draft; replacing an already-written star asks first. Then, in his order:
-   **why is this important to you** (purpose), the **values exercise in full**
-   (see below), then a card holding **who are you committed to being**
-   (identity), **how are you committed to showing up** (standards), **who do you
-   need to become** (the gap) and **your affirmations**.
-2. **Where you are.** The wheel, and nothing competing with it. Clicking an area
-   opens the assessment dialog: what it covers, what a 10 in it looks like, your
-   rating and today's score, a snapshot, **why it matters to you**, **what it
-   asks you to value**, **who you are in it**, what might stop you, and what
-   already runs there. It links straight to the same area's goals. There is no
-   twelve-row list under the wheel any more — that was the wheel again as text,
-   same names, same numbers, same click, same dialog, and it pushed everything
-   else off the screen.
-3. **Your goals.** Five things, in the order the cascade runs: the **chain
-   counted on one line** (`CascadeBar`), the **guided build** (`GuidedBuild`), the
-   **same wheel** doing a different job (a sector opens the goals; sub-labels
-   count goals rather than repeating the rating, via `subMode="goals"`) with the
-   **routines beside it, editable**, the twelve areas as rows carrying their 10,
-   coverage dot and goal count, then every goal in priority order, then the
-   **milestone timeline** (`MilestoneTimeline`). The goals dialog **carries that
-   area's 10 and purpose read-only at the top** and links back to the
-   assessment. Goal library, the milestone builder and everything else reaching
-   the area live here.
+1. **North star** — the life you are aiming at, why it matters, who you would have to be.
+2. **Your 10s** — the wheel, a rating and a picture of a 10 in each of the twelve areas.
+3. **The one thing** — the single change that would make the rest far more
+   likely, why it matters, who it asks you to be, and what has to happen for it.
+4. **Where to start** — the fork. Three doors, no recommendation: brainstorm
+   what you want, build the systems, or start with one routine.
+5. **Templates** — the catalogue. Every area open, ten of each kind you can
+   take, the rest a button away, and a box on every area for what the list made
+   you think of.
+6. **Systems** — what you actually do about it week in week out, the routines
+   underneath it, and what each system is pointed at.
+7. **Experiences** — everything you want to experience and have done in each area,
+   written into one box at the top of the area: the achievement, where you are,
+   by when, and the rungs it scales into. One-timers that are not goals (a trip,
+   a car, an experience) live here too.
+8. **Focus & season** — which two or three areas this season is about, picked on
+   the wheel, and the two lists read back: what you want to experience, and what
+   is running that would get you there.
+9. **Values & identity** — what you are ranking your life by, in order.
+10. **Commit** — read the whole plan back, name what could go wrong, and say yes
+   to it in your own words, dated.
+12. **Track** — what the next weeks look like, and push the goals into your
+   real goals so they get counted.
+13. **Today** — the one step that asks what you DID: today's list, ticked off,
+   how each area felt, and a line about the day.
 
-   **The routines live on this tab, not the assessment.** A routine is the part
-   of the plan that runs whether or not you open the page, which makes it the
-   other half of "what are you going to do", and nothing at all to do with
-   rating where you stand. Its Edit toggle is structural only (rename, remove,
-   add); opening a routine and changing what is in it works either way.
+**Step 4 is a fork, not a stage.** Everything before it is one order because it
+is one argument. After the one thing the order stops being an argument: wanting
+first, systems first and one-routine-first are three different people, not three
+stages. So the step asks which, and sends you to step 5, step 6, or straight
+into one routine on step 6, expanded. `PathPicker`, `START_PATHS` and
+`ROUTINE_DOORS`.
+
+**Milestones and systems are two steps again.** They were merged into one page
+with a switch under the wheel; the fork is what killed that, because a door that
+lands you on a page with a toggle somewhere on it has not taken you anywhere.
+They share one component (`MilestonesTab`, `step: BuildStep`) because the thing
+you work in is identical — same wheel, same twelve areas, same builder — and the
+rail is now the switch. The catalogue is not a third half: it rides along with
+the systems step as a second tab (`templates`, owned by the shell so arriving
+always lands on the work).
+
+**The catalogue is a step, and it comes before both build steps** (2026-08-17,
+user decision: "templates, then systems, then achievements"). `templates` is a
+`NorthStarTabId` of its own between the fork and Systems, `BuildBoard` is the
+page, and `SCORED_TABS` excludes it — like the fork it carries no ring, because
+a dot on "have you had a look" scores browsing. What you take from it is scored
+where it lands. `MilestonesTab` lost the tab strip that switched to it, so the
+build steps show their step name, their count and the link to the other one.
+
+On the board itself:
+
+- **Every area open, ten of each kind.** It was twelve areas with everything
+  under each, held down by pixel-height fades — a page that looks like it is
+  hiding something. `TakeTen` shows ten sets, ten goals (capped across the
+  area's objectives, not per objective — `capGroups`) and ten practices, with
+  "Show all N in <area>" for the rest. A row you are done with folds away; an
+  accordion that closed the other eleven lasted one build and was wrong.
+- **A box on every area** (`AddOwn`, `onAddOwn` → `addGoalsFromDump`). The
+  catalogue's real work is reminding you of the thing that is not in it — you
+  read "wind-down routine" and think of the one you actually want — and that
+  thought used to have to survive a trip to another step.
+- **The routine line stopped lying.** "The goals here run on your Evening
+  routine, and it is not in your stack yet" was printed at somebody who has an
+  evening routine: every plan is seeded with the routine blueprints, so
+  `routineNeedState` returns `partial` — exists, missing steps — essentially
+  always, and the copy only had the `missing` sentence. Two sentences now
+  (`BOARD_COPY.partialTitle` / `unmetTitle`), one per need rather than joined,
+  with the button to match ("Add the missing steps to Evening routine").
+
+**Taking something back is the same size of click as taking it** (2026-08-18,
+reported from the page: "i might have clicked mind routine, but dont want it…
+dont want to declick 8 manually"). One press on a set writes five to nine goals
+and one press on a routine offer fills a card; undoing either meant a confirm
+per row, or per step, several steps into the flow.
+
+- `templatesInArea(plan, areaId)` says which sets an area is carrying and which
+  goals are theirs — matched by title, the same way `targetAlreadyAdded` matches
+  forward, since a goal does not carry the set it arrived in. Partial sets
+  count: five taken and one deleted is still a set you can put back.
+- `removeTemplateGoals(plan, areaId, templateId)` removes exactly those, and
+  nothing the person wrote themselves. Idempotent.
+- It is offered in both places the person could be standing: on the set's own
+  card in the catalogue ("remove the 7 goals it added") and inside the area on
+  Achievements ("Took a set you do not want? — Remove Mobility & Flexibility —
+  7 goals"). Confirmed once, never silent.
+- **A routine is dropped on its own card**, and no longer only in edit mode:
+  `RoutineCard` shows the remove control whenever the card is open.
+- **And taking a set back takes back what it put in your routines**
+  (`templateFootprint`). Removing the goals while leaving the training week it
+  brought running every Tuesday was a half-undo — "that doesn't make sense that
+  it doesn't change". So: the goals, the steps the set's needs put in a routine,
+  and the routine itself when it is not one of the four the plan ships with and
+  has nothing else left in it. Two things survive on purpose — a step another
+  surviving set still needs, and any step the person added themselves, which is
+  why a routine holding their own work is emptied of the set's steps rather than
+  deleted. The `keep` set is read off the plan **as it would be after the goals
+  go**, because templates overlap by title: asked before the removal, half the
+  Fitness catalogue looks "partly present" on the strength of goals that are
+  about to vanish, and nothing is ever removed. Both confirms name the whole
+  cost out loud: "Remove all 7? and the 1 step it put in your Evening routine
+  and your Training week, which is only here for it".
+
+**"Achievements" is "Experiences", the season is picked on the wheel, and the
+plan reads back as two lists** (2026-08-18, user decision).
+
+- The step is **Experiences** everywhere a person reads it (`TAB_LABELS`,
+  `HALVES_COPY`, and the copy that referred to "the achievements step"). The
+  model keeps `milestones` as the step id and `achievement` as the one-off goal
+  type — renaming a model to follow a label is how "milestone" came to mean two
+  things in the first place.
+- **Focus picks on the wheel.** It was twelve cards under a step that had
+  already shown the wheel twice: same names, same numbers, same click, which is
+  the wheel again as a list. `AreaWheel` takes `selectedIds` and a `season`
+  sub-mode — a picked sector lights and its sub-label becomes "#1 this season" —
+  and the picked areas are listed underneath, in order, each with the first line
+  of your own 10 for that area (which the cards carried and a wheel cannot) and
+  a way to drop it.
+- **Drivers on top, the wanting folded away, and a delete on every row.** This
+  step is about what happens next, and what happens next is the rates — the only
+  thing on the page you can act on today — so they come first. The list of what
+  you want is the reference you check them against and the longest list in the
+  plan, so it opens shut, with the finding still on the closed heading: "2 of
+  them have nothing running at them — open it to see which." And reading the
+  whole plan back in one list is exactly when somebody spots a line they do not
+  want, so each row carries an × (confirm once, in place) instead of sending
+  them two screens away to the area to do it.
+- **Routine steps are drivers too** (2026-08-18, "where has deep work gone? i
+  dont see it as a driver, even tho ive chosen the business routine"). It had
+  gone nowhere: the list was built from `plan.goals`, and ninety minutes of deep
+  work is a step inside a routine. So a block headed "the rates you hold and the
+  things you do on an ordinary week" was showing the smaller half of them. Steps
+  now list under the goal-shaped drivers, each saying which routine it is in and
+  at what rate, opening that routine on Systems where a step is actually edited;
+  the count includes them. The same blind spot made the whole section print
+  "nothing written yet" over a business routine running five days a week — both
+  emptiness checks now ask whether anything RUNS, not whether a goal exists.
+- **"Your goals, across every area" is two lists** (`OVERVIEW_COPY`). One column
+  called goals put "See the northern lights" next to "Train four times a week"
+  and asked which came first, which is not a question. Now: **What you want to
+  experience** — "nothing here is a plan and none of it is meant to be… the one
+  question to ask of it: is anything you actually do going to get you there?",
+  counted as "3 · 1 with something running at them" — and **What drives them**,
+  the rates, in the order your energy goes in. The split is `isMilestone`, the
+  same predicate the two build steps file by.
+
+**The sweep for that whole class of bug** (2026-08-18, "check for all sorts of
+these happenings across the goals etc., instead of me finding them one by one").
+The reports so far had four shapes: a number silently moved into the wrong
+field, copy asserting a state nobody checked, a list built from one source when
+two exist, and the same total computed twice. Grepped for each shape across the
+slice; six more instances, all fixed:
+
+| Where | What it did |
+|---|---|
+| `shapeFromTitle` | The catalogue path was fixed for volume drivers and the TYPED one was not: "20 approaches a week" still ran through `clamp(20, 1, 7)` and came back as seven days. |
+| `planAsText`, `GoalCard`, the link picker, `GoalOverview` | Six surfaces printed `${daysPerWeek}× a week` by hand, so the goal meaning twenty approaches read as "3× a week" — including in the text you sign. One `goalRateLabel()` now, called by all of them. |
+| `systemMilestones` | Picked the "dominant" step at the ROUTINE's frequency while dividing by a total computed at the STEP's, so a stretch done once a week inside a daily routine looked seven times its size and could name the whole thing. |
+| `routineWeeklySessions` vs `routineSummary` vs `presetCost` | Three definitions of "sessions a week" for one routine: max, sum, sum. One now, and the summary calls it instead of keeping its own copy. |
+| The wheel on the build steps | Counted every goal in an area while the step showed one half of them, so an area holding one driver said "1 goal" over an empty Experiences list. It counts what the step shows. |
+| `Generate` | Ticking a suggested "experience" wrote into `plan.experiences`, whose only surface was removed — a write into a store nothing reads. Both kinds land in the area as goals now. |
+
+Left deliberately: `weeklyLoad.actions` counts sessions, not volume (twenty
+approaches is three actions, and the meter is about time in the week);
+`updateStep` still caps a step at 180 minutes, which is a real cap on a real
+input and says so.
+
+**"Approaches 20×/wk" was two questions in one field** (2026-08-18, "is it times
+you went out or total approaches a week? those need to be different things").
+They are different, and only one of them existed: `daysPerWeek` is days, so the
+catalogue's twenty-approaches-a-week driver was `clamp(20, 1, 7)` — the number
+the person accepted, destroyed, and then printed as "7× a week". `NsGoal` gains
+`perWeek` (how much, counted in `unit`) beside `daysPerWeek` (how often).
+`shapeFromTarget` fills it for drivers that count THINGS and leaves it null for
+drivers that count turning up — `countsThings()` reads the label, because a
+"…Sessions" driver is a frequency (four gym sessions IS four days) and the
+framework has no field that says so. The row asks both ("How many days a week?"
+and "And how many a week, if you count them?") and reads back "20 approaches a
+week · 3 days". Saved plans load with `perWeek: null`, which is what every one
+of them meant.
+
+**Four things reported while walking it** (2026-08-18):
+
+- **The whole list, on the page that writes it.** The Experiences step showed
+  nothing you had written until you clicked an area, so checking whether you had
+  already said something meant opening twelve of them. Everything so far now
+  sits under the wheel, grouped by area and deliberately unranked — ordering is
+  the focus step's job.
+- **A header per routine on Focus & season**, instead of "in your business
+  routine" repeated under every step: the routine's name, its colour and what it
+  costs a week, with its steps indented under it.
+- **The commit page can change the plan** (`COMMIT_EDIT_COPY`, `tools` on
+  `CommitTab`). Reading it back whole is exactly when somebody sees the goal
+  they no longer want, the one they forgot, and the driver pointed at nothing —
+  and all this page could do about any of it was send them four steps back. It
+  now carries a one-line quick-add into any area, the two lists with their
+  deletes, and the systems step's "what is running at what" linking view.
+- **Delete on every row of the focus read-back**, confirmed once in place.
+
+**The scaling tool is on the achievements step** (2026-08-18). `MilestoneBuilder`
+— the three shapes a climb comes in: weight and reps together, a number getting
+bigger, and a written progression whose last rung is a different move — lived
+only inside the goal dialog. So the step whose whole job is writing what you
+want could set a target and a date and then had nothing to say about the road
+between them; all it offered was a one-line "or write the steps yourself" box,
+a third of the job. It is exported from `GoalCard` with its handler prop
+narrowed to the two calls it makes (`onSetMilestones`, `onSetProgression`,
+reaching `GuideHandlers.onMilestones` / `onProgression`), rendered on every open
+row, and `WrittenRungs` is deleted — one tool where there were two. `Flat bench
+100 kg` now scales to nine dated rungs from the row itself. Its written-rungs
+example is per-area as well (`MILESTONE_COPY.ownNote` / `ownPlaceholder` take
+the area's climb), because the moment it left the dialog it started showing
+Money a set of pull-ups — the rule `AREA_GOAL_EXAMPLES` and
+`northStarAreaBoxes.test.tsx` already enforce.
+
+**The prompts under the box are the open area's, and nothing else** (2026-08-18,
+"if i click money, the suggestions should only be around money that i see").
+`WANT_EXAMPLES` was twenty across the whole life, shown under every area with a
+coloured badge saying which area each belonged to — so opening Money offered a
+muscle-up, a book and ten days of silence, and the one chip that answered the
+question on screen was three rows down. It is six per area now, filtered to the
+area you opened, and the badge is gone with the mixing: on a list that is all
+one area it was the same word twelve times. An area somebody invented has none
+and shows none, rather than borrowing another life's.
+
+**The goal's name is the field, not a label above one** (2026-08-18, "if i
+change a name of a goal, i cant actually edit the name"). The row was a button
+printing the title, and the editable copy appeared one line below it once the
+row was open — so the obvious move, click the name and type, opened the row and
+did nothing, while the thing that worked looked like a duplicate of the line
+above. `AchievementRow` now renders the title as an input at rest (transparent
+until hovered, saved on blur or Enter); the chevron, the meta line and the
+status chip open the row. The second editor is gone.
+
+**Two numbers on that page were wrong, and one stack was chosen by nobody**
+(2026-08-17, both reported from the page):
+
+- **A routine need used to drag its whole preset in.** `applyRoutineNeed`
+  applied `need.presetId` when it had to create the routine, so one goal in
+  Friends produced a Connection routine holding four steps — and the catalogue
+  then showed "Give one genuine compliment" and "Reach out to one friend"
+  already ticked. Nobody had ticked them. It now adds only `need.stepIds`; the
+  split still comes (a split is the shape of the week, not work added to it) and
+  the presets stay one click away on the routine card. Same verdict as
+  `seedSteps` returning `[]`: the click is the person's.
+- **The weekly hours were billed at the wrong frequency.** A sequence routine
+  was charged `all its minutes × the routine's days`, ignoring each step's own
+  rate: two lines written three mornings a week were counted seven times. A
+  morning routine of water 2 min ×7, move 20 min ×3, journal 10 min ×2 read as
+  **3.7 h** and is **1.6 h**. `routineWeeklyMinutes` now takes
+  `min(step.daysPerWeek, routine.daysPerWeek)` for a sequence (a step cannot run
+  on a day the block does not) and the step's own rate for a weekly routine (ten
+  thousand steps six days is not capped by a four-day training week), and
+  `weeklyLoad` calls it instead of keeping a second copy of the arithmetic.
+
+**The achievements step is the dump, and nothing else** (2026-08-17). It opened
+on a Templates tab, a catalogue inside every area ("Or start from what people
+set in Health"), a strip naming the lines that had been filed as systems, and a
+Things-to-experience list at the bottom — four ways of being handed or told
+something, on the one step whose whole job is getting what THIS person wants out
+of their head. All four are gone from it:
+
+- `templates` left the page entirely — it is step 5 now (above).
+- `AreaOffers` — catalogue and the "Suggest some from my 10" panel with it — is
+  gated to `half === "systems"` in `AreaBuilder`.
+- The other-half strip (`elsewhere`) is systems-only. **Known cost:** a rate
+  typed on the achievements step ("no weed 7× a week") is still filed as a
+  system, and now moves there with nothing said. The line is in the plan and on
+  the Systems step; it is not on the page you typed it into.
+- `ExperienceList` has no surface on this step. The model (`plan.experiences`)
+  and the component are untouched, and the AI panel on the systems step can
+  still write to it — so anything already there is kept and unreadable. Either
+  give it a home or take the writer out.
+
+What replaces them is one box: `AreaWants`, above the area's 10 and identity
+rather than under them, asking for everything in that area in any order, with
+the copy saying out loud that prioritising and systems come later and that
+leaving early is allowed. Every line lands as a real goal (`addGoalsFromDump`),
+so `AreaBuilder` in the panel is `intake={false}` — it lists what the box wrote
+and each row still opens into where you are, by when and what you will do. The
+10 sits under the box because reading a picture of the finished thing first
+narrows what gets written; `AreaReminder` renders nothing when neither the 10
+nor the identity exists.
+
+**Routines exist on the systems step and nowhere else.** A routine is always a
+system and never a milestone, so the stack beside the wheel, the expanded
+routine card, what a routine adds up to inside an area, and "what already runs
+here" in the area builder are all gated to `step === "systems"`. Opening Health
+under Milestones used to lead with hours and streaks read off the morning
+routine, offered as milestones — the doing step answering the wanting step's
+question, before the person had written anything of their own.
+
+**"Achievement" is the word the person reads; "milestone" is a rung.** The step
+is called Achievements, and so is everything on it, because "milestone" was
+doing two jobs on one page — the thing you want to have done, and the dated
+rungs on the way up to it, so "16 milestones" under a list of 5 was correct
+twice and legible neither time. The model keeps `milestone_ladder`,
+`milestoneGoals` and the `milestones` step id: renaming a model to follow a
+label is how the two words got mixed in the first place.
+
+**The achievements step lists achievements only, and says where the rest went.**
+No whole-plan goal list and no year-as-things-to-hit timeline — both listed
+everything, so a Tuesday run sat in the list of things you want to have
+achieved, which is the distinction the step exists to draw; ordering lives on
+Focus & season, which is the step about choosing between what is written. A
+line typed here that reads as a rate ("workout 5× a week") is still filed as a
+system, and it is not printed here in any form — not even as a grey chip under
+the list, because "Consistent Bedtime" sitting under the things you want to
+have achieved is the thing the split exists to stop. One muted sentence names
+the count and the step it went to ("1 line you wrote here is a rate … lives on
+the Systems step"), and that step does the showing. Filing a line somewhere
+this page will never show it, and saying nothing, is how a text box loses
+somebody's work.
+
+**A line about something you are NOT doing is a system.** "No weed" is not
+something you have achieved by March — it is a line you hold every day, which
+is a rate. Read as an achievement it sat on the list of things you want to have
+done, being asked when it would be finished. `readsAsAbstinence` covers the
+unambiguous forms (quit / stop / cut out / give up / no more, plus bare "no X"
+where X is something a person does), runs AFTER the rate patterns so "no
+drinking on weeknights" keeps its five days, and deliberately does not catch
+"no pain in my back" — filing that as a daily rate would be the page telling
+somebody their back pain is a habit. `loadNsPlan` repairs the ones written
+before the rule: type and rate only, everything else the person wrote survives,
+and the three kind buttons in the row overrule it.
+
+**Twenty examples under the intake box, badged by area.** The box takes one
+line at a time with an Add button (a five-row textarea asks for a finished
+answer, which is what nobody has yet), and under it sit twenty concrete wants
+from across all twelve areas — "read a book" next to "buy a Ferrari 458",
+because the pair is the permission. Each carries its area in the area's own
+wheel colour and lands THERE when clicked, never in the area that happens to be
+open; a taken one greys out with a tick rather than writing a duplicate.
+`WANT_EXAMPLES` in `northStarStart.ts`.
+
+**Two steps, two rings.** Step 5 fills when every milestone has a why and a
+date; step 6 fills when something is running and no milestone is left with
+nothing pointed at it. The join is scored where it can be fixed.
+
+The third door is four doors, on the card rather than behind it: **morning**,
+**evening** and **business** open the routine that already exists in every plan,
+and **quit a vice** leaves for `/test/quit-vice`, because quitting is its own
+piece of work with its own research under it and is not a routine.
+
+**The fork carries no ring.** `SCORED_TABS` is `TAB_ORDER` minus `pick`: a ring
+says how full a step is, and this one holds nothing — its doors write into the
+steps they open. `stepState(plan, "pick")` is always `empty`, and the rail's
+"every ring is reachable" invariant runs over `SCORED_TABS`.
+
+**The goals come before the focus.** They were the other way round, which asked
+somebody to choose the two or three areas of their season before they had
+written down what they wanted in any of them — choosing between things they had
+not named yet. You write everything, then choose. The ordering step on the focus
+tab only works in that order too: there is nothing to rank until the goals exist.
+
+**The values exercise moved late**, off the north star and into step 5, for the
+same reason: ranking what matters is easier once you can see what you have
+actually asked your life for.
+
+**The last step is an act, not a form.** A plan that ends when the last box is
+filled ends without anybody saying yes to it. `CommitTab` reads the plan back
+whole, carries the old Review tab's work (what could stop you, do the goals aim
+at the 10), and takes the commitment in the person's own words with a date on
+it. `nsProgress.done.commit` ticks on that sentence, never on the boxes above it.
+
+### The goals step is the wheel, and the step has an end
+
+Tab 3 opened on a line of counts, a season banner and a card holding a builder,
+six doors and a question queue — three screens before the picture of the life
+they were about. It opens on the **wheel** now: click an area and its builder
+appears underneath with that area's 10 as a reminder above it; click a routine
+and its builder expands as before. The twelve 10s are no longer listed as text
+under the wheel — that was the wheel again as words, and it pushed the work down
+the page. The doors and the queue moved to a collapsed line *below* the work.
+
+**One click used to open two editors.** The wheel's `openId` also drove the old
+`AreaGoalsDialog`, so a single click opened the inline builder and a modal on
+top of it. The dialog is now for one goal, opened deliberately from a goal row,
+which is where its depth (the curve editor, obstacles, beliefs) is wanted.
+
+**Preset times were hand-typed and wrong.** Every one of them, by 3 to 29
+minutes: morning's "60 min" turned on 53 minutes of steps, evening's "30 min"
+turned on 39, manifestation's "60 min" cost 31. `presetCost` derives the number
+from the steps the preset actually turns on, so it re-prices itself when a step
+changes and cannot drift again. The buttons now read `18 min · 6`, `53 min · 9`.
+
+**The step has an end.** The only obvious way forward was the footer's "Focus &
+season →", which walks somebody to the next step regardless of whether this one
+is finished — while the flow's whole argument is that you write everything down
+before choosing between it. The step now closes with what is still open in its
+own words ("3 areas you pictured have nothing aimed at them", "1 goal names an
+outcome with nothing you would do") and a button that reads **Move on anyway →**
+until there is nothing left, when it turns green and reads as the finish. It
+gates nothing.
 
 ### The guide: write your own, then be asked what is missing
 
@@ -53,10 +456,13 @@ kg 3x6-8"*, *"10 pullups, fra 7"*, *"1 muscle up"*, *"internationalt
 bedstsælgende forfatter"*, *"Masters in League of Legends"* — and the 166-target
 catalogue contains approximately none of it.
 
-So `GuidedBuild` is three steps, and the middle one is a text box:
+So `GuidedBuild` is three steps, and the middle one is five doors:
 
 1. **Your season.** Pick two or three areas, in order (`seasonAreaIds`). Add your
-   own — people's areas are Dating, Virksomhed, Morgenrutine, not ours.
+   own — people's areas are Dating, Virksomhed, Morgenrutine, not ours. Each area
+   card carries the first line of your own 10 where its generic sublabel was:
+   "Energy, Vitality, Well-Being" is what the area is called, what you wrote is
+   why this is the one to pick.
 2. **Your goals.** A textarea, one per line, in their own words. `parseGoalDump`
    strips the numbering people paste in ("1.", "12a.", "-", "•").
    `shapeFromTitle` reads the shape out of the sentence, in English and Danish,
@@ -116,6 +522,218 @@ first, or "Squat 100 kg by 2027" climbs to the year 2027.
 blueprints that already serve the area — real steps, already written, no
 guessing from the goal's wording, which could not work for a plan written in
 Danish anyway.
+
+### Five doors into step 2, because the box assumed the hard part was typing
+
+The guide asked the right questions of a goal that existed and had nothing to
+say about the moment before that: a heading, a text box, and a cursor. The
+premise was wrong in the same way the board's was. The hard part is not
+choosing, and it is not typing either — it is that *"what are your goals"* is a
+question almost nobody can answer cold, while every one of the same people can
+describe a good Tuesday.
+
+So step 2 opens on a chooser (`START_RAMPS`, `northStarStart.ts`), and every
+door ends in the same place — lines through `addGoalsFromDump`, then the queue.
+**The six doors are a permanent row** (`RampBar`): the first version opened a
+returning plan straight into the text box, which hid every new way in behind a
+default — the same failure this screen exists to fix, one level down. The first
+user through it said "I don't see the flow as being changed", and they were
+right. The row is on screen the whole time, the step's sub-label reads "6 ways
+in", and the queue links back to it.
+
+- **I know what I want** — the box, unchanged.
+- **Start from my 10** — `tenCandidates` cuts the area's `review.ten` on line
+  breaks, sentence ends and semicolons, drops anything under eight characters
+  and anything already a goal, and offers the pieces **unticked**. The split is
+  mechanical because it cannot tell "I wake up without an alarm" (scenery) from
+  "I bench 28 kg" (a goal) — the person who wrote the paragraph does that in
+  four seconds. Under it, the one question the rating makes possible and nothing
+  else on the page asks: *you rated this a 4 and described a 10, so what is the
+  first thing that would make it a 5?*
+- **Describe my ideal day** — a written Tuesday (a working day: anybody can
+  picture a good Sunday and it asks nothing of you). `parseIdealDay` reads the
+  clock faces and **leaves bare numbers alone** — "10 pull-ups" is a line people
+  write in a day, and a parser greedy enough to read the 10 as ten o'clock eats
+  the best line on the page. Length comes from the gap to the next timed line,
+  clamped to 5–90 minutes, or a plan claims thirty-five hours a week of morning
+  routine. Every line's destination shows before anything is added: **tracked**
+  by default (a routine step on all seven days, at that hour, in the routine
+  that owns it — `DAY_WINDOWS`: morning before 09:00, the working day until
+  17:00, evening after), or **a goal** for the lines with a real target in them.
+  Areas are guessed by `guessAreaId` from a keyword table, English and Danish;
+  a word two areas both claim is dropped from the index rather than arbitrated,
+  and an unplaceable line says "pick an area" and blocks the Add rather than
+  quietly landing in Health.
+- **Ask me questions** — five questions that are easier than a blank page
+  (what you have been meaning to do for a year, what is annoying you week in and
+  week out, what the person you want to be would have done this week). Answers
+  are kept in `plan.answers`, so the three lines you did not tick are the next
+  three goals a week later.
+- **Things to experience** — the bucket list, and the reason it is not the goal
+  list: "see the northern lights" put through the goal machinery gets asked
+  where you are today and what it costs you if you never do it, and neither
+  question has an answer. `NsExperience` carries no date, no rungs and no
+  queue — write, tick off, and `promoteExperience` turns the one you decide to
+  chase into a finish-line goal (never a climb, whatever numbers are in the
+  sentence) while the line stays on the list, marked.
+- **Block out my week** — `WeekGrid`. Not a picture of the plan: every block IS
+  a routine step, which is why `NsRoutineStep` gained `days` (0-6, Monday first)
+  and `startMin`. Click a slot to draw one, click a block to edit it, or pick
+  something out of the tray — everything already running that has never been
+  given a time, which the first time you open it is all four routines. Taking a
+  block off the grid unplaces the step rather than deleting somebody's routine.
+  `daysPerWeek` is kept equal to `days.length` in both directions, or the load
+  readout disagrees with the picture directly above it, and the picture is the
+  one people believe.
+
+`plan.answers` keeps what the two writing doors typed, under a `start:` prefix.
+The loader's allow-list — right for prompts, which get deleted — was dropping
+them, so a written-out Tuesday survived until the page was refreshed and not one
+second longer. Fixed with the prefix and a regression test.
+
+### The thread across the notes, and the mechanism that did not work
+
+Every field that asks what is in the way — each area's blockers and snapshot,
+each goal's obstacles and beliefs — was read one at a time and never across, so
+somebody could write the same obstacle into four areas and get four unrelated
+notes. Reported by the first user through: "I wrote on my various things that a
+major reason why I couldn't reach a bunch of my 10s was weed, and your system
+hasn't picked up on this."
+
+**The first fix was wrong and is worth recording.** `recurringBlockers` split
+those fields into words, dropped a stopword list, and reported anything in two
+or more areas. It passed a test containing the word "weed" and, on the first
+real plan it met, produced **"dont"** — then offered "Deal with dont" as the most
+important thing of the season. Word frequency finds what somebody types most,
+not what is in their way, and the stopword list is not the bug: every wrong word
+can be added to it, the next plan brings different ones, and what accumulates is
+a lexicon that must grow forever and still cannot tell a noun from a negation in
+two languages.
+
+So it is a judgement, and judgement is what the model call is for. `findThread`
+reads the notes area by area, must quote **at least two sentences from two
+different areas** or return `found: false`, and returns the thing plus what it
+is costing and one thing to start this week. It is a button, not something the
+page volunteers, and the finding is shown with its own quotes so it can be
+argued with rather than believed. `tests/unit/goals/northStarService.test.ts`
+keeps the "dont" plan as a regression: nothing in the deterministic path may put
+a word like that in front of somebody.
+
+**The signed-out trap, and what it now says.** This page works signed out on
+purpose; the route behind this one button does not, because it calls a paid
+model and is gated to `ALLOWED_AI_EMAILS`. Signed out, every press returns 403 —
+and the panel used to report that as *"That did not come back. Try again"*,
+which sends somebody round a loop that cannot succeed. 403 is now its own state
+with its own sentence, saying that this one button needs a signed-in allowlisted
+account and that the rest of the page does not. Covered by
+`tests/e2e/life-mastery-thread.spec.ts`, which stubs 403, 500, `found: false`
+and a real finding rather than calling the model.
+
+**The bug behind "it gave me nothing", and the two real causes.** Signed out,
+the route 403s — that is the first cause, and it now says so. The second was a
+genuine defect: `THREAD` and `GENERATED` capped their string fields
+(`suggestion` at 120 characters and so on), so a reply that was correct in every
+way except that one sentence ran a few characters long **failed the Zod parse**,
+which `ask` throws on, which the route reported as an error. A good finding was
+being discarded over punctuation. The caps have moved out of the schema and into
+`clamp`, applied after parsing, and the prompt now states the same limits so it
+rarely fires. Structure is still strict — a missing field or a number where a
+title belongs still fails loudly.
+
+Everything that looks like "nothing" now reads differently: **403** (sign in),
+**CLI not found / not logged in / timed out / unreadable reply** (each names its
+own fix, via `generateFailureReason`), and **`found: false`** — which is a real
+answer and says so, because a tool that has to find a pattern will always find
+one. Verified end to end against the real CLI: a three-area weed thread comes
+back in about ten seconds with its quotes, and two unrelated notes correctly
+return `found: false` rather than erroring.
+
+Covered by `tests/unit/goals/northStarGenerate.test.ts` (the schemas must accept
+an over-long string; `clamp`; every branch of `generateFailureReason`, including
+that it never tells somebody to retry a condition retrying cannot fix) and
+`tests/e2e/life-mastery-thread.spec.ts` (403, 500, `found: false`, and a real
+finding, all stubbed — no model call, so the suite costs nothing).
+
+### The one thing, offered rather than asked for
+
+**What is offered is actionable or it is not offered.** The first version
+sourced candidates from the 10s and duly offered somebody *"I wake up happy and
+excited to start the day"* as their most important thing this season — scenery,
+with no Tuesday on which you can do it. The 10s are written as states because
+that is what "what does a 10 look like" asks for, which makes them the wrong
+source. `readsAsActionable` is the gate: a number, a frequency, or a leading
+verb; first-person state openers ("I am", "I feel", "Jeg vågner") are rejected.
+
+Ranked: the recurring blocker, then goals already written (actionable by
+construction — they went through "is this yours to decide" and "what will you
+actually do"), then the actions written under them, then clauses of a 10 that
+name a number. The north star and the identity answers are deliberately absent:
+they are what the one thing is aimed AT, and offering them back as the thing
+itself is how somebody ends up with "I wake up happy" as their season. An
+unrated area is silence, not a zero, and never sorts to the top.
+
+**Turning a 10 into something you would do** is the one job no regex can take.
+The generate button in the 10 door runs in `mode: "actions"` — a different
+prompt that reads the state and returns things with a number or a frequency in
+them, each quoting the part of the 10 it came from.
+
+Clicking one fills the sentence and, when the candidate IS an area or a goal,
+points `seasonFocusId` at it too — so the banner and the wheel agree with the
+sentence instead of merely quoting it. By this tab somebody has written a north
+star, said who they must become, and pictured a 10 in every area they care
+about; asking them to type the single most important thing on a blank line
+under all of that is the blank page for the third time on one page, and the
+answer was already on file.
+
+### Selected state, and how to delete things
+
+Two things the first user through could not tell:
+
+- **"I'm not sure when I've clicked a morning routine on."** The step library
+  had it backwards: picking a step dimmed its text to `zinc-400` while unpicked
+  steps stayed at `zinc-100`, so the list read as *everything is on except the
+  thing I just clicked*. On is now the bright state — white, medium weight,
+  "on · tap to remove" beside it — and the section header counts what is on.
+- **"How do I delete or deselect goals?"** Every remove control was
+  `opacity-0 group-hover`: invisible until hovered, and on a touch screen
+  non-existent. They are visible at rest now — goals, experiences, ideal-day
+  lines, routine steps and split days. The goal row's delete gained an inline
+  confirm at the same time, because an always-visible X on somebody's writing
+  needs one.
+
+### One model call, behind one button
+
+`northStarGenerateService.ts` + `POST /api/test/north-star-generate` is the only
+thing on this page that leaves the browser. Everything else is deterministic,
+which is right — offline, free, testable, and it never invents a goal nobody
+meant — and it has one hard limit: it can only rearrange what somebody already
+typed, and the person who cannot type anything is who the doors are for.
+
+Claude Opus 5, one call per press, a Zod schema capping the answer at 8 goals
+and 12 experiences. Candidates arrive **unticked**, each with one line saying
+what in the person's own words it came from — without that the list is an oracle,
+and an oracle is not something you can disagree with. It sits in the three doors
+that hold free text: the 10, the five questions, and the experiences list.
+
+Guards, same as every other AI route here: **off in production**, allowlisted
+accounts only, 4000-char input cap, and only the fields the ask needs are sent —
+never the whole plan, never the north star, never the ratings. The button says
+what it does before it does it, and the copy claims no privacy the page cannot
+keep: this page already mirrors plans to a server table, and this additionally
+sends the text to Anthropic.
+
+**Nothing is preselected any more.** Routines used to arrive carrying fifteen
+steps across four routines before anybody had written a word — generous while
+you build it, a demand when you meet it ("too many things are preselected, I feel
+overwhelmed"). `seedSteps` returns `[]`; every blueprint keeps three presets, so
+the whole stack is one click away. The difference is whose click it is.
+
+**The empty tab.** Before there is one goal, the cascade line reads zeros, the
+timeline says nothing is dated and the catalogue has nothing to offer. All three
+are hidden until the first goal exists. The wheel stays — it is the only thing
+on the screen already carrying the person's own work — and under it `TensReminder`
+lists every area with a 10 written, its rating beside it, because that pair is
+how you decide which area to write in.
 
 ### The cascade: goal → action → routine
 
@@ -341,6 +959,276 @@ the 10 and the rating already set: one answer, one place.
   nothing in the values list pointing at it. This is his client who wanted to
   change his health and had never written health down. Surfaced on the review tab
   and in the todo panel.
+- **The step opens with the work already done, not a blank list.** By step 9 the
+  same question has been answered in five or six boxes — a word tapped off the
+  menu on the first list, a chip clicked inside Health, a value hung on one goal,
+  a paragraph that says "my kids" twice — and every one of those answers used to
+  be thrown away the moment its box closed. `valueEvidence(plan)` gathers them:
+  one row per value, every box it turned up in, how many times, and its place on
+  the order if it ever got one. `ValuesSoFar` renders it above both halves of
+  `ValuesWork`, split into **named but not on your order yet** and **on your
+  order**, so the finding — you wrote Vitality under three areas and it is
+  deciding nothing — is the first thing on the step.
+  - **Where-chips are live.** Each one opens the box it came from: an area chip
+    reopens that area's dialog on step 2, a goal chip opens that goal on step 7.
+    "You said Freedom under Career" is only useful if you can go and re-read it.
+  - **A click and a guess are drawn apart and never merged.** Values read out of
+    prose by cue word are dashed, labelled `read from your writing`, and sort
+    below anything picked by hand however loudly they were cued. `chosen` on the
+    row is the flag. Nothing is ever added for you — the list that decides your
+    Tuesdays stays authored.
+  - **A box that was clicked is not also credited for cueing.** Health showed up
+    twice on every row where somebody had both written a 10 and clicked a chip in
+    it, once as the click and once as our reading of the paragraph beside it. One
+    box listed twice reads as a bug; the click is the better evidence and the
+    guess next to it is dropped.
+  - **Places and hits are both kept.** "You keep coming back to this" (three cue
+    hits in one paragraph) and "you said it in three different rooms" (three
+    boxes) are different facts, and collapsing them loses the first.
+- **Breadth is the weight, and it is a colour, not a score.** The first cut of
+  the roster printed `named 3 times, across 3 places` as prose mid-row, which is
+  a sentence you have to parse eleven of rather than a column you can rank. Two
+  problems under that: **volume is not breadth** — a value named in Health,
+  Relationship and Money runs through three parts of a life, one named three
+  times inside Health runs through one part loudly, and both read as "3 places"
+  — and the areas were invisible as areas although every `NsArea` carries the
+  wheel's `color`. So `NsValueEvidence.areas` is the distinct areas a value was
+  named in, **in wheel order** so two rows print the same colours in the same
+  run and can be compared by eye, and the row leads with one dot per area in
+  that area's own colour, then `3 areas · 3 times` right-aligned in a fixed
+  column. The sort is breadth-first inside each of the clicked and cued groups.
+  **No score.** A computed number deciding which of somebody's values outranks
+  which is the authorship this flow does not take; the dots report what they
+  wrote and the ordering downstairs is still theirs.
+- **Five rows, then the rest.** Clipped by count, not height — `PeekButton`
+  rather than `Peek`, the same call the value library makes — because a height
+  clip cuts through the middle of a row and half a value with its evidence
+  sliced off is worse than five whole ones. A twelve-area plan makes thirty of
+  these, and thirty rows above the exercise is a wall, not a head start.
+
+## The last step — Track: where the plan stops being a document
+
+Ten steps produce a plan in localStorage. Nothing in it moves on a Tuesday, and
+a plan that is only ever read back is a plan nobody runs. Track is the one
+place the flow crosses over.
+
+**What it does.** Lists every goal in the plan with what it becomes over there,
+pushes the ticked ones to `POST /api/goals/batch`, and then renders
+`GoalsHubContent` — the same component `/dashboard/goals` renders — directly
+underneath, on the rows it just created. Tracking happens on the page the plan
+was written on.
+
+**The step opens on what you will actually be doing, not on a goal list.**
+`TrackSchedule`, above everything else, with a week/day toggle:
+
+- **By week** — a grid, activities down, eight weeks across, the count in each
+  cell. This is the only place the plan says what it turns *into*: a driver
+  ramping 2× → 3× → 4× is a different promise from 4× starting Monday, and the
+  week it steps up is marked rather than left to be found by comparing columns.
+  A total row underneath says how many times a week the whole thing costs.
+- **By day** — the next seven days from today, with what sits on each and at
+  what time. Only things that have been given days are drawn; a driver saying
+  "4× a week" names no Tuesday and is listed underneath as "runs weekly, no day
+  chosen" instead of being invented onto one.
+
+**Milestones and experiences are not in it, on purpose.** Reported as: "milestones
+are not that, they are separate from what we track each week." They are right —
+"bench 100 kg" and "see the northern lights" are what the doing is *for*, and a
+weekly grid holding them reads as a week you failed at them, every week, until
+the one you did not. The schedule is built from `isSystem` goals and routine
+steps only; `trackActivities` is the one place that decides, and a test asserts
+a milestone and an achievement never appear in it.
+
+Ramps come from the goal's own `rampSteps`, walked week by week
+(`activityPerWeek`); past the end of the ramp it is the steady rate.
+
+**The embedded hub is scoped to this plan.** It shipped unscoped and that was
+wrong on the first look: reported as "you're just pointing to the goals page,
+it doesn't represent ONLY the things I picked". A hub showing every goal on the
+account does not answer "is the plan I just built running" — it buries it under
+everything else. `GoalsHubContent` takes an optional `scope`
+(`{ templatePrefix, title, subtitle }`); the track step passes `ns:<run>:` and
+gets its own goals and nothing else, with a line underneath pointing at
+`/dashboard/goals` for the rest. Every other caller passes nothing and is
+unchanged. Pruning is `pruneTreeByTemplatePrefix`, which **promotes** a matching
+goal whose parent does not match rather than dropping it with the parent.
+
+Two things a scoped hub turns off, because they would appear to work and not:
+the controls that create goals (New Goal, Setup Preview, Browse Catalog, Setup
+Wizard — a goal made there gets no matching tag and vanishes on save), and the
+"Life" view, which fetches its own tree straight from the API and would show the
+whole account inside a view claiming to be one plan. Incrementing, editing,
+reordering, milestones and the weekly review all still work on what is shown.
+
+**What it will not do.**
+
+- **It does not push on its own.** Writing to somebody's real goals is not a
+  side effect of opening a tab. Nothing moves until the button is pressed.
+- **It does not push twice.** Every row is tagged
+  `template_id: ns:<run>:<plan goal id>` and `createGoalBatch` already dedupes
+  on `template_id`, so a second press picks up what is new and leaves the rest,
+  including the progress on it.
+- **It does not touch anything else.** A goal made by hand has no `ns:` tag and
+  is never matched, updated or counted here. Everything this created is
+  `template_id LIKE 'ns:%'` — findable, and removable, on its own.
+
+**Signed out it says so and stops**, rather than failing at the button. The
+other ten steps ask nothing of you; this one is rows on an account.
+
+### The run id, and the reset that would otherwise collide
+
+Plan goal ids are `g1`, `g2`, … off `plan.seq`, and **"clear everything" sets
+that counter back to zero**. A tag of `ns:g1` would therefore name two different
+goals on two sides of a reset, and the dedupe would map the new one onto the old
+one's row: a goal that never appears, under a title from a plan you threw away.
+
+So the tag carries a run id — `NS_TRACK_RUN_KEY` (`north-star-track-run`),
+minted on first load and **reminted by `reset()`**, which is exactly the
+boundary `seq` restarts on. It is its own localStorage key rather than a field
+on the plan: it is about where the plan has been sent, not about the plan, and
+nothing that loads a saved plan should have to migrate for it. Note that
+"clear the goals, keep my 10s" (`resetGoalsAndFocus`) keeps `seq`, so it needs
+no new run and gets none.
+
+Goals already tracked are left alone by a reset. They are real rows with real
+progress, and deleting somebody's goals is not what "clear this page" asks for.
+
+### The mapping, and the one shape that had to be refused
+
+`northStarTrackService.ts`, pure. Three shapes in, three out:
+
+| Plan | Becomes | Because |
+|---|---|---|
+| driver (`habit_ramp`) | weekly counter, target `perWeek ?? daysPerWeek` | a rate you hold. Twenty approaches a week and four gym days a week are different questions and the plan already keeps them apart |
+| target (`milestone_ladder`) | counter, `current`=start, `target`=target, `milestone_config`=the ladder | a number you climb, and the hub draws the same rungs the plan drew |
+| finish line (`achievement`) | boolean, target 1 | done or not done |
+
+**A descending ladder is refused as a counter.** `computeGoalProgress` is
+`current / target` and completion is `current >= target`, so "95 kg now, 85 kg
+by June" pushed as a counter reads 100% and completes on the day it is created.
+It goes over as a finish line instead, with both numbers written into the
+description. A goal that lies about itself is worse than a goal that counts
+less finely.
+
+**Twelve areas stay twelve.** The hub has five configured life areas; the wheel
+has twelve. Folding twelve into five makes Health and Fitness one bucket and
+Family, Friends, Fun and Contribution all "Custom" — the wheel, thrown away on
+the way out of the door. So `areaSlug` gives each area its own id
+(`lm_` stripped; a custom area slugged from its label) and
+`getLifeAreaConfig` degrades gracefully for one it does not know, title-casing
+the id as the name. Twelve named groups with the generic icon, rather than five
+with the right icons. Icons for eight new areas are a decision for
+`iconRoles.ts`, not for a mapping function.
+
+**Parents.** `feedsGoalIds` becomes `parent_goal_id`. Within one push the batch
+route resolves `_tempParentId` only against temp ids it has already inserted, so
+`buildTrackInserts` emits parents first. A parent that is **already** in the hub
+gets its real uuid instead — which is what makes pushing five goals now and five
+next week build the same tree as pushing ten at once, rather than ten orphans.
+
+### Two bugs this uncovered, both silent
+
+**The hub was archiving the whole plan on first render.**
+`GET /api/goals/tree` sweeps up any goal whose `template_id` is not in
+`GOAL_TEMPLATE_MAP` and archives it. Every pushed goal carries an `ns:` tag that
+is deliberately not in that registry, so the push returned 201 and the goals
+were gone by the time the hub underneath finished loading. Nothing errored
+anywhere. `getOrphanedGoalIds` already carried a comment predicting exactly this
+for `fw:` goals — "would wipe a user's whole plan on first load" — so the
+namespaces are now declared in one place, `src/goals/data/templateNamespaces.ts`,
+read by both the producer and the sweep.
+
+**`motivation_note` was accepted and dropped on every create.** Both
+`CreateGoalSchema` and `BatchCreateGoalSchema` take it; neither `createGoal` nor
+`createGoalBatch` ever wrote it. Only the update path set it, which is why
+editing a goal appeared to add a field that creating one could not. The why is
+the fuel; a plan that loses its reasons on the way in is a list of chores. Both
+insert paths write it now.
+
+### Verified
+
+`tests/unit/goals/northStarTrack.test.ts` (21) covers the mapping, the tag, the
+ordering and the archive exemption. `tests/e2e/life-mastery-track.spec.ts` runs
+the crossing against the real database on the shared test user: the list reads
+back before anything is written, the push creates three goals of three shapes,
+the why arrives with them, a second push from a fresh load finds them instead of
+repeating them, and the embedded hub shows them. It deletes exactly the rows it
+created, by id — never `DELETE /api/goals`, which would take the account's whole
+goal list. Serial, because both tests push the same plan to the same account.
+
+### Still open
+
+- **The push still sends everything; only the schedule is filtered.** A
+  milestone pushed from here becomes a real goal and shows in the hub below —
+  it is just not in the week grid, because it is not a weekly activity. If the
+  milestones should not be pushed at all yet, that is a one-line change to what
+  `buildTrackInserts` defaults to.
+
+- **`aligned_values`, `milestone_config` and `ramp_steps` cross over; the rest
+  of the goal does not.** Obstacles, beliefs, checkpoints, the reasons drill,
+  the pain-why, belief and desire levels have no column and are not sent. They
+  stay in the plan, which is still the document.
+- **The plan is per-browser and the goals are per-account.** Opening the flow on
+  a second machine mints a second run id and would push a second copy. The plan
+  itself does not sync either, so this is consistent rather than fixed.
+- **Nothing pushes back.** Ticking a goal off in the hub does not mark anything
+  in the plan. The plan is what you decided; the hub is what you are doing.
+
+## The last step but one — Today: the only screen that asks what you did
+
+Everything else in the flow is a decision. This one assumes the deciding is
+done and asks the question a plan needs answered over and over — **did you do
+it** — with as little between the question and the answer as possible. One
+list, today's date at the top, nothing to configure.
+
+**What is on today comes first**, then everything else that runs weekly, still
+inputtable. A plan that only accepts the sessions it predicted quietly
+under-counts the weeks somebody actually had: approaches done on an unplanned
+Wednesday still happened.
+
+### Two stores, and the row says which one it is writing to
+
+- **A routine step is not a goal** and never becomes one — "cold shower" is a
+  line in a morning stack with nothing on the other side to count it. Its tick
+  lives on the plan, in `plan.logged` (date → step ids), beside the step.
+- **A driver IS a goal.** Once pushed on the track step it is a row in
+  `user_goals` with a target, a period and a weekly reset already built, so the
+  count goes there: `POST /api/goals/{id}/increment`, then a re-read rather than
+  a local guess, because the goal may have rolled into a new week between the
+  page loading and the button.
+- **A driver that has not been pushed is shown and cannot be counted**, with a
+  link to the step that fixes it. It deliberately gets no local tally: a second
+  count would disagree with the real one the moment it was pushed, and the loser
+  of that disagreement is whichever number the person happened to trust.
+
+### How today went
+
+The twelve areas, each with the same 0-10 row the wheel uses (`ScoreRow`), and
+**the same store** — `plan.daily`, which is what `dailyAverage` on step 2 reads.
+Rating a day here moves the rolling average there: two screens asking one
+question, not two questions. Clicking the same number again clears it, as
+everywhere else.
+
+Under it, one free-text line about the day (`plan.notes`, by date), committed on
+blur rather than on each keystroke — it sits under a list whose every row
+re-renders on a save, and typing a paragraph through that is typing into a page
+that moves.
+
+### Old saves
+
+`logged` and `notes` are absent from every plan written before this, so the
+loader defaults them rather than requiring them. A tick pointing at a step that
+has since been deleted is dropped on load, because it would otherwise render as
+a blank row nobody can explain.
+
+### Verified
+
+`northStarTrack.test.ts` covers the day mapping, the tick round-trip, the
+"survives a reload" invariant across tick + rating + note, the deleted-step
+case, and the deliberate absence of a local tally on an unpushed driver.
+`life-mastery-track.spec.ts` proves it against the real database: `+1` moves
+`current_value` on the real goal and `−1` puts it back, and a tick, a rating and
+a note are all still there after a reload.
 
 ## The goal system is the full lab's
 
@@ -428,6 +1316,19 @@ three shapes:
   untouched default**; turning it off never rewrites a number.
 - **"needs a why" is a button.** It was a label, and the why lives inside the
   card, so the row told you what was wrong and gave you nowhere to fix it.
+- **NOT EVERY RUN NEEDS A WHY.** A practice is finished when it has a rate.
+  "Run four times a week" says what you do and how often; there is nothing to
+  climb to, no finish line to date, and no reason it owes anybody. It was being
+  asked for a why, a date, a belief rating, a desire rating and a one-sentence
+  version of itself — five boxes for a run — so every practice sat there saying
+  "needs work" while being complete, and the panel said "5 goals need a why"
+  when four of them were runs, which teaches people to stop reading the count.
+  `goalGaps` now returns early for a system with only "a rate" if it has none;
+  `goalNeedsWhy` / `goalNeedsDate` are the shared predicates the counts and the
+  outstanding-work chips filter on. The why box stays on every goal — somebody
+  who has a reason for their Tuesday runs should be able to write it — it is
+  just never asked for. Milestones are asked for both, unchanged: the why is
+  most of whether you still want it in February.
 - **A goal that is really one of our tools says so.** The business template ships
   "Weekly Review", which is what the review tab does; `goalToolLink` links it
   there. `goalAlreadyInRoutine` says when a goal duplicates a routine step, so
@@ -531,6 +1432,29 @@ climb in reverse. `setMilestones` writes them as checkpoints with `m`-prefixed
 ids, which is how it knows to replace its own rungs on a redo and leave
 hand-written checkpoints alone.
 
+**A number is not always an amount** (2026-08-18, "buy a ferarri 458 … it scaled
+it from 0-458"). Written in Money as something to experience, it came back as a
+`milestone_ladder` climbing from nought to four hundred and fifty-eight — of
+what, the page never said, because there is no unit and there was never going to
+be one. 458 is the car's name, the same as "an iPhone 15" or "a Porsche 911".
+And "buy a Ferrari 458" is one of `WANT_EXAMPLES`, so the offer somebody is most
+likely to click was the one that broke. `parseGoalTarget` now returns null where
+an article ("a", "an", "the", "en", "et") stands within the two words in front of
+a number that carries **no unit**: the article says the count is one, so the
+number belongs to the noun's name. Near the number on purpose — "buy a house and
+save 500000" is still five hundred thousand — and a number with a unit is an
+amount whatever precedes it ("do a 5k", "en artikel som 10 læser"). Null is not a
+failure here: the goal files as a plain achievement with a date and actions,
+which is all a car needs.
+
+**The noun can stand behind the number** — the same blindness, reported in the
+same breath. `get 28 kg bench 3 sets 8 reps by april` took `get` as the prefix
+and threw the rest away, so the rungs read "get 22.5 kg". Where the words in
+front of the number are one colourless verb (`get`, `hit`, `reach`, `nå`, `få`
+…), the word **immediately** behind the unit becomes the label instead: "bench
+22.5 kg", "squat 75 kg". Immediately and no further, or "reach 80 kg by december"
+labels the climb *december*.
+
 Each generated rung carries `NsCheckpoint.celebration` — what you do when you get
 there. Only the generated ones: a reward box on every hand-written checkpoint
 turns twelve of them into homework.
@@ -601,6 +1525,226 @@ Escape and the backdrop close it; the layout underneath never moves.
 
 ## Decisions worth keeping
 
+- **A routine is neither half. It is the background.** It improves every area
+  by default (`serves` starts as all of them — the blueprint's guess at which
+  four a morning routine lifts was wrong in the same direction every time), it
+  is labelled "The background" rather than "Systems", and its steps are no
+  longer listed as "pointed at nothing". Calling "make your bed" an
+  outstanding task is the page asking somebody to justify their morning. What a
+  routine ADDS UP TO is still offered as a milestone, separately.
+- **Three suggestions, not fifteen.** `areaSystemMilestones` returns the
+  strongest one per routine, capped at three, as chips rather than a bordered
+  card with a note under every line. Opening Mind & Beliefs produced fifteen
+  derived milestones, several of them the same sentence about a different
+  routine — a wall reads as work, not as something to celebrate.
+- **No values on the milestones step.** Shown, then editable, now gone: that
+  step is what you want and what you will do about it, and a ranking exercise
+  in the corner of it is a third subject. Values are written at step 2 and
+  ranked at step 6.
+
+- **Each half offers its own kind, or nothing.** `areaOffersFor(area, half)`:
+  targets and whole sets are milestones, practices are systems, and neither
+  list appears in the other half. Switching Fitness to Systems used to change a
+  line of copy and leave the catalogue offering "Bench Press 1RM" as a thing to
+  do on a Tuesday. The box's own words change too — "Everything you want in
+  Fitness" becomes "What you will actually do in Fitness"
+  (`SYSTEM_BUILDER_COPY`), because a right prefill under a wrong label is the
+  same bug in words. Pinned per area in `northStarOffers.test.ts`.
+- **One title, one kind.** "Weekly review" was a catalogue target AND a
+  practice, so the same words arrived as two different kinds of thing depending
+  on the tab. Where a title is on offer as a practice, the practice wins and
+  the target drops out of the milestone half.
+- **Every example in an empty box comes from the area it is in.**
+  `AREA_GOAL_EXAMPLES` gives each of the twelve a `want`, an `action`, its
+  `units` and a `rungs` progression; `areaGoalExample(areaId)` is the only way
+  the builder gets one, and an area somebody invented gets the neutral set
+  (which describes the shape of the box instead of illustrating it). This was
+  reported twice: Relationship's goal box said "e.g. Flat bench 100 kg", the
+  rung box offered pull-ups, the action box asked about training chest, and the
+  note explaining what a target is used the same lift. A placeholder is a
+  prefill — it is the page saying what goes here — so one string across twelve
+  areas showed eleven of them somebody else's life.
+  - The catalogue's rule now governs the examples too, and it lives in one
+    place: `tests/unit/goals/fixtures/areaLanguage.ts`. An area may speak its
+    neighbours' language and never a stranger's, decided against
+    `AREA_KEYWORDS`. Plurals count now ("5 pull-ups" walked through the exact
+    token match that caught "bench").
+  - **The test renders the builder** (`northStarAreaBoxes.test.tsx`), because
+    right data in a component that still holds a hardcoded string is exactly
+    the bug that shipped. It walks all twelve areas in both halves, opens a
+    goal and its progression box, and lints every placeholder AND the copy
+    around them. `northStarOffers.test.ts` holds the data itself to the same
+    rule.
+- **Templates is the third tab, beside Milestones and Systems.** The catalogue
+  was at the bottom of the page inside a closed disclosure and hidden entirely
+  until the plan already had a goal in it, so the one person who most needs a
+  ready-made set — somebody looking at an empty area — was the one person who
+  could not see that 23 of them exist. It is `BuildBoard`, unchanged, rendered
+  in the tab; "Open it and write your own" switches back to Milestones with the
+  area open.
+
+- **A milestone is served, not actioned.** "Needs an action" never appears on a
+  milestone now. Bench, squat and a muscle-up are three milestones and one
+  system — you go to the gym four times a week — and asking each of them what
+  it will do about itself gets the same sentence three times.
+  `milestoneHasSystem` asks the question that matters: is anything moving this,
+  anywhere in the plan. One link answers it for every milestone that shares the
+  system.
+- **Nothing invents sets and reps.** "Flat bench 100 kg" names a weight and
+  says nothing about 3×8; the timeline used to stagger reps for anything in
+  kilos. `liftProgression` is still there and still right — it runs when
+  somebody picks "weight and reps", which is the difference between offering
+  and deciding.
+- **The spacing is the person's choice.** The curve editor opens under the
+  rungs in the area builder, and "write the steps yourself" sits beside *Scale
+  it* — whatever is written there replaces anything computed. The example the
+  box shows is the area's own (`5 pull-ups → 10 pull-ups → muscle-up` in
+  Fitness, `a call every month → a call every week → a visit every month` in
+  Family).
+  It existed only in the goal dialog before, which is not where anybody scales
+  anything, so from the page it did not exist.
+- **Written rungs carry dates.** `datedRungs` spreads them between today and
+  the goal's date, last one landing on it. A rung with no date is a rung you
+  are never behind on.
+
+- **Nine steps: star · 10s · the one thing · where to start · milestones ·
+  systems · focus · values · commit.** Milestones and systems were two steps,
+  then one page with a toggle under the wheel, and are two again — the merge
+  read well until step 4 started sending people to one half by name. They share
+  a body and differ in what they show: the routines and the linking are on
+  systems, the timeline and the experiences list are on milestones. One line of
+  copy on each says which is which, because nobody arrives knowing.
+- **A routine is ALWAYS a system. What it adds up to is the milestone.**
+  "Morning routine" is not something you achieve; 400 hours of deep work is.
+  `systemMilestones` reads the numbers off the routine as built — 90 minutes ×
+  5 days is 7.5 hours a week, so a year of it is 400 hours — and offers hours,
+  sessions and a 90-days-in-a-row streak (the last only where the routine runs
+  most days). It is named after the work, not the container: nobody is proud of
+  hours of "business routine". Created through `addSystemMilestone`, it arrives
+  already linked to the steps that produce it, so it is never a wish.
+- **An area's offered milestones fit the systems already in it.**
+  `areaSystemMilestones` shows what that area's routines add up to, before any
+  catalogue gets a word in.
+- **Nothing links itself.** `linkStepToGoal` and `feedsGoalIds` are only ever
+  set by a person clicking. A step and a goal can share an area, a language and
+  an owner and still have nothing to do with each other.
+- **Three circles, not a green tick.** `stepState` returns `empty` / `started` /
+  `done`, in amber — the tick used to appear the moment a step held one
+  sentence, which is a scoreboard congratulating somebody for arriving.
+  `nsProgress.done` is derived from it, so the rail and the "still to fill in"
+  list cannot disagree. `northStarSteps.test.ts` pins the properties: nothing
+  done before started, nothing goes backwards as you write, every step
+  reachable, every step covered.
+- **Values are edited where they are read.** The area reminder's values can be
+  added to, dropped and reordered in place — an hour spent writing down what
+  you want is the most likely hour to change what you think you value.
+- **Minutes on a routine step are the person's estimate.** They were printed as
+  text, so a step arrived with the library's guess and stayed; the totals, the
+  presets and the weekly load were all adding up somebody else's minutes.
+
+- **Nothing is offered for the one thing.** The suggestion list under it is
+  gone, and so is `oneThingCandidates`: a row of plausible answers under the
+  most important question in the flow is a nudge to pick instead of to think,
+  and the sentence somebody clicks is not the sentence they would have written.
+  Two rounds of filtering went into keeping states out of that list; the box
+  cannot offer anybody anything, which settles it. `readsAsActionable` survives
+  with a different job — keeping the clauses of a 10 from being offered as
+  goals, which is a list somebody still meets.
+- **"Look for the thread" is removed.** It did not work well enough to keep.
+  Gone with it: `Thread.tsx`, the route's `thread` mode, `findThread`, the
+  THREAD schema and prompt, `THREAD_COPY`, and
+  `tests/e2e/life-mastery-thread.spec.ts`. The candidate generator behind the
+  same route stays — the area builder and the experiences list still use it.
+
+- **Seven steps, and the third one is a single sentence.** 1 North star · 2 Your
+  10s · **3 The one thing** · 4 All goals · 5 Focus & season · 6 Values &
+  identity · 7 Commit. Step 3 asks the one change that would make the next few
+  years far more likely, then why it matters, what it costs if it does not
+  happen, who you would have to be, what it is in service of, and what has to
+  happen for it. "All goals" moved to 4 unchanged.
+- **The requirements ARE the goals.** "What needs to happen for it to work"
+  writes each line as a real goal through the same shaping as anything typed
+  into an area, filed by `guessAreaId` with the area shown as a chip you can
+  change before it lands. `servesOneThing` marks them, `markServesOneThing`
+  links a goal that already existed, and the goals page opens with them listed
+  under the sentence — so the list reads as "what this needs" rather than as
+  twelve empty areas. Written as notes it would have been a reflection
+  exercise; written as goals it is the plan.
+- **One place to write the one thing.** Step 3 owns it. Focus shows it
+  read-only with a link back, and the goals page shows it as what the list is
+  for. Same `ONE_ANSWERS.oneThing` key it has always had, because people have
+  it written already and a rename would silently empty their page.
+- **The step is not done on a sentence alone.** `done.one` wants the sentence
+  AND at least one thing that has to happen for it. A tab that ticks green on
+  the easy half is a tab that lies.
+- **A rate written in words is still a rate.** "Train chest twice a week"
+  arrived as a finish line with an invented rate of three and was then asked
+  for a date — the page asking when you plan to stop training. `WORD_PER_WEEK`
+  reads once/twice/three times and the Danish equivalents.
+
+- **Six profiles, kept as a test.** `tests/unit/goals/northStarPersonas.test.ts`
+  runs whole plans in the shapes people actually arrive in — a lifter, a
+  calisthenics one with no numbers, a money one, one who wrote the same thing
+  twice, one who wrote only feelings, and one who has written nothing — because
+  every rule here was right for the person it was written for and wrong for
+  somebody else. Three bugs came out of the first run: a driver being told it
+  needed a date, "Life feels light again" offered as a one thing, and revenue
+  rungs at 4150 kr.
+- **A driver has a rate, not a deadline.** "No weed, 7× a week" was asked when
+  it would be finished, which is the page asking when you plan to start again.
+  Drivers need a rate and nothing else; targets need the date.
+- **Money has a grid too.** `unitGrain` takes the span, so a climb of thousands
+  lands on 4000/6000/8000 rather than 4150/6100/8050. Same rule as the plates:
+  the unit moves in round numbers, so the rungs do.
+- **A state is not a one thing, whoever the subject is.** The filter rejected
+  "I wake up happy" and let "Life feels light again" through, and let "Be
+  happier" through by trusting that anything somebody wrote in the goal box was
+  actionable. State verbs are rejected wherever they sit, and written goals go
+  through the same gate as the 10s.
+
+- **Enter keeps the sentence.** Every short answer here was a bare
+  `<textarea rows={2}>`, so Enter pushed the text out of a two-line window and
+  nothing acknowledged the key — it saved on every keystroke, which is exactly
+  why it looked broken. `SentenceBox` commits, trims, blurs, and says "kept";
+  Shift+Enter is still a new line. Prose boxes (north star, ideal day,
+  experiences) keep the plain textarea, because there Enter really is a new
+  line. `tests/unit/goals/northStarKeys.test.tsx` fails the build on any new
+  one- or two-row textarea in the folder that goes around it — the fix was nine
+  boxes, and the next short box somebody adds would have been the tenth.
+
+- **The one thing opens the goals page.** It also stays on Focus — same
+  `ONE_THING_KEY`, one shared `OneThingCard`. Asked after twelve areas are full
+  it is an audit of a list; asked before, it decides what the list is for.
+- **No copy invents a number.** The start box said "e.g. 72" under a goal of
+  36 kg. An example number cannot see what was typed above it, so it contradicts
+  the person whenever their number is smaller. Boxes get labels
+  (`startPlaceholder`, `targetPlaceholder`), never examples, and
+  `northStarService.test.ts` fails the build on any `e.g. <digit>` that reappears
+  in the north-star components or copy.
+- **Rungs land on numbers that exist.** `unitGrain` snaps intermediate rungs to
+  the grid the unit moves on (2.5 kg, 5 lb, whole reps); the ends are never
+  rounded, because they are the person's own measurement and their own target.
+  A climb too short for the grid falls back to `fineGrain` rather than
+  collapsing to one rung. 33 kg was the report; 8.5 pull-ups was the same bug.
+- **A lift climbs in reps as well as weight.** `liftProgression` holds the
+  weight, builds the reps, then jumps by a constant loadable amount — the timeline
+  (`goalMilestones`) uses the same function, so one climb no longer gets two
+  different answers on two screens.
+- **Progressions can be written, not only computed.** `parseProgression` +
+  `setProgression` take "5 pull-ups → 10 pull-ups → muscle-up", whose last rung
+  is a different move and cannot come out of arithmetic. Offered beside the
+  curve editor, and on goals whose title holds no number at all — the case that
+  needs it most.
+- **Duplicates get named, never merged.** A routine step and an area goal can be
+  the same thing, and which one somebody writes first is unknowable. The area
+  builder lists what already runs there (`running`) before the input, and
+  `goalEchoes` names the collision on the row with a one-click "drop this copy".
+  Nothing is deleted on the person's behalf.
+- **Suggested actions must share a word with the goal.** "Big glass of water"
+  was offered under a bench press because they share an area. Sharing an area is
+  not evidence one gets you the other; an empty suggestion row with the
+  write-your-own box under it is the honest answer.
+
 - **Only the goal views swap; nothing else does.** An earlier pass had the
   routines share the slot with the area panel, so clicking an area made the
   entire morning routine disappear along with the plan. The overview and the
@@ -663,17 +1807,31 @@ Escape and the backdrop close it; the layout underneath never moves.
 
 - `src/goals/data/northStar.ts` — all copy, the twelve areas, the 10 examples,
   the value cue table and the conflict rules, routine blueprints
+- `src/goals/northStarGenerateService.ts` — the one model call: schema, prompt,
+  caps. Route: `app/api/test/north-star-generate/route.ts` (dev-only, allowlisted)
+- `src/goals/data/northStarStart.ts` — the six doors into step 2: their copy,
+  the five starter questions, the day windows, the area keyword table
 - `src/goals/northStarService.ts` — pure logic (~70 exported functions)
+- `src/goals/northStarTrackService.ts` — the plan → `user_goals` mapping, pure
+- `src/goals/data/templateNamespaces.ts` — the template-id namespaces the hub's
+  auto-archive sweep must not eat (`fw:`, `ns:`)
+- `src/goals/components/north-star/TrackTab.tsx` + `TrackSchedule.tsx` — the
+  track step and its week/day schedule
 - `src/goals/components/north-star/` — `NorthStarFlow` · `StarTab` ·
-  `ValuesWork` + `ValueBrowser` · `Peek` (the fade-and-show-all primitive) ·
+  `ValuesWork` + `ValueBrowser` + `ValuesSoFar` (the evidence roster) ·
+  `Peek` (the fade-and-show-all primitive) ·
   `AreaWheel` · `NowTab` + `AreaDialog` (tab 2, the assessment) ·
-  `PlanTab` + `AreaGoalsDialog` (tab 3, the goals) · `GoalOverview` ·
+  `PlanTab` + `AreaGoalsDialog` (tab 3, the goals) · `GuidedBuild` ·
+  `StartRamps` (the chooser, the row, the 10 and the questions) · `IdealDay` ·
+  `WeekGrid` · `Experiences` · `Generate` · `FocusTab` · `GoalOverview` ·
   `GoalLibrary` · `RoutineCard` · `AreaGoals` · `GoalCard` · `ScoreRow` ·
   `ReviewTab`.
 - `src/goals/types.ts` — `Ns*` types (slice rule: types live in types.ts)
 - `docs/research/life-mastery/values-and-identity.md` — the transcript reading
   behind the values and identity work
-- `tests/unit/goals/northStarService.test.ts` — 150 tests
+- `tests/unit/goals/northStarService.test.ts` — 254 tests
+- `tests/unit/goals/northStarTrack.test.ts` — the mapping, 21 tests
+- `tests/e2e/life-mastery-track.spec.ts` — the crossing, against the real DB
 
 ## Reused rather than rebuilt
 
@@ -705,6 +1863,23 @@ people report regretting") with what he actually says about himself.
 - Nothing is persisted to the database; this is a sandbox.
 
 ## Verified
+
+Fourth pass, the five doors into step 2: `npm test` **2839 passed, 1 skipped**.
+In the browser, from cleared localStorage — the empty tab is wheel, routines and
+"you have not pictured a 10 in any area yet" with no cascade of zeros, no empty
+timeline and no catalogue; picking two areas and pressing on lands on the
+chooser. A written Tuesday parsed nine lines, read "12.00: Walk outside" as noon
+and left "10 pull-ups" as a goal with its number intact, guessed Fitness /
+Mission & Purpose / Mind & Beliefs, held the Add button until the four it could
+not place had areas, and put the tracked lines in the morning, business and
+evening routines at their own hours across all seven days. The week grid drew
+them, placed "Big glass of water" from the tray onto Monday 11:00 (`daysPerWeek`
+following `days` down to 1), and drew a new block from an empty slot. The 10
+door cut a seeded Fitness paragraph into four pieces, added two as a climb to 28
+and a finish line, and asked what would make a 4 into a 5. **One real bug found
+this way**: `loadNsPlan` dropped every `start:` answer, so the written day and
+the five questions did not survive a refresh — fixed, with a regression test.
+
 
 Third pass, after the assessment/goals split (the tab rail now reads **four**
 tabs, so the "three tabs" in the older log below is history): `npm test` 2682
@@ -744,7 +1919,58 @@ against the ladder; the template preview shows "Deep Work Hours 1 → 500 hours 
 total" rather than 500 hours a week. No console errors, no horizontal overflow at
 390px.
 
-Icon note: the values reorder controls use `ChevronDown` rotated, which is how
-`PriorityBadge` and `RoutineCard` already do reorder. `ArrowUp`/`ArrowDown` were
-tried first and would have been a new context for an icon already in use
-elsewhere, which needs sign-off.
+## Reranking values is a drag, not a pair of arrows
+
+Values are put in order in two places, and **both** are now dragged:
+
+- **Step 6**, the whole-life list — grip, rank, label; the whole strip is the
+  handle, so the grab target is the row rather than an icon.
+- **Step 4**, inside an area (click Fitness) — the "this area asks you to value"
+  chips, dragged in their wrapped row.
+
+The up/down arrows are gone from both. They cost five clicks and a recount to say
+"Health is really number two", and moving a value five places meant watching it
+swap past each neighbour one at a time — the sort of friction that ends the
+exercise before the conflicts get read. On the chips they were worse than slow:
+two 16px chevrons wedged inside an 11px pill, and in a wrapped row "up" and
+"down" do not mean up and down, because the chip at the end of line one sits
+above the chip at the start of line two.
+
+- `moveValueTo(plan, value, toIndex)` replaced `moveValue(…, dir)`, and
+  `moveAreaValueTo(plan, areaId, value, toIndex)` replaced `moveAreaValue(…, dir)`:
+  a drop lands on an index, and everything between the item and its destination
+  slides along rather than the two ends swapping. Out-of-range clamps, because a
+  drop past the last one means "last".
+- The plumbing is shared, in `src/goals/components/north-star/valueDrag.ts` —
+  `useValueDrag` for the list, `useValueHandle` for one item. Each site keeps its
+  own markup and strategy: `verticalListSortingStrategy` for the column,
+  `rectSortingStrategy` for the wrapped chips, which is the one that understands
+  an item moving between lines.
+- It reuses the project's existing `@dnd-kit` idiom (`SortablePriorityList`,
+  `WidgetGrid`): `PointerSensor{distance: 8}` so an item's own × still takes a
+  click, `KeyboardSensor` + `sortableKeyboardCoordinates` so the same reorder
+  works without a mouse (tab to a value, space, arrows, space; escape cancels),
+  and `touch-none` on the handle so a phone lifts the item instead of scrolling.
+- Rank numbers are **live during the drag**: `useSortable().newIndex + 1`, the
+  place the item would take if you dropped now. A first attempt faded them
+  instead, because items slide while their numbers travel with them and the
+  column would read 1, 4, 2, 3 — but on a list whose whole subject is the number,
+  watching the numbers rearrange under your hand IS the feedback. Deriving it
+  from dnd-kit's own state also means there is no local "am I dragging" flag that
+  can get stuck showing nothing.
+- The duel is untouched: it is still the fast way to a first order, and the drag
+  is how you fix one answer without sitting through the interview again.
+
+Verified headless against the running app, on both surfaces: drag up, drag down,
+live mid-drag renumbering, keyboard move, escape-cancels-cleanly, remove and add
+still working after a drag, no overflow at 390px, and the order surviving a
+reload. Note for the next scripted pass: `scrollIntoViewIfNeeded` is not enough
+before a drag — it counts an item under the sticky footer as visible, and the
+press then lands on the footer. Centre the item, and take no screenshots mid-drag
+(Playwright disables animations for those, which cancels the lift).
+
+Icon note: the drag handle is `GripVertical`, the handle every other sortable
+list in the project already uses — same role, no new context. The old arrows used
+`ChevronDown` rotated, which is how `PriorityBadge` and `RoutineCard` do reorder;
+`ArrowUp`/`ArrowDown` were rejected then as a new context for an icon in use
+elsewhere.

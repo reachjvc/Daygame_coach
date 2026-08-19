@@ -48,13 +48,14 @@ import {
   setEntryDuration,
   splitEntry,
   startLinkFor,
+  tagNames,
   toggleFavorite,
   updateEntry,
   weekTotalSeconds,
 } from "../timetrackService"
 import type { EntryRow, Id, TimeEntry, TimetrackState } from "../types"
 import { BillableToggle, ProjectPicker, TagPicker } from "./pickers"
-import { ColorDot, Dropdown, EmptyState } from "./primitives"
+import { ColorDot, Dropdown, EmptyState, touchRow, touchTarget } from "./primitives"
 
 interface EntryListProps {
   state: TimetrackState
@@ -66,6 +67,8 @@ interface EntryListProps {
 
 export function EntryList({ state, setState, nowSec, pushToast, onEditEntry }: EntryListProps) {
   const [selected, setSelected] = useState<Id[]>([])
+  // Checkboxes are noise on a phone until you actually want to bulk-edit
+  const [selectionMode, setSelectionMode] = useState(false)
   const [expanded, setExpanded] = useState<string[]>([])
   const [visibleDays, setVisibleDays] = useState(7)
 
@@ -85,13 +88,11 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry }: E
   const nowIso = () => new Date().toISOString()
 
   const removeEntries = (ids: Id[]) => {
-    setState((current) => {
-      const result = deleteEntries(current, ids, nowIso())
-      pushToast(`${ids.length} time ${ids.length === 1 ? "entry" : "entries"} deleted`, "info", () =>
-        setState((latest) => restoreEntries(latest, result.removed)),
-      )
-      return result.state
-    })
+    const result = deleteEntries(state, ids, nowIso())
+    setState(() => result.state)
+    pushToast(`${ids.length} time ${ids.length === 1 ? "entry" : "entries"} deleted`, "info", () =>
+      setState((latest) => restoreEntries(latest, result.removed)),
+    )
     setSelected((current) => current.filter((id) => !ids.includes(id)))
   }
 
@@ -108,9 +109,10 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry }: E
             {formatDuration(weekSeconds, state.user.durationFormat)}
           </span>
         </p>
-        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+        <label className="flex min-h-9 items-center gap-2 text-xs text-muted-foreground">
           <input
             type="checkbox"
+            className="size-4"
             checked={state.user.groupSimilarEntries}
             onChange={(event) =>
               setState((current) => ({ ...current, user: { ...current.user, groupSimilarEntries: event.target.checked } }))
@@ -134,17 +136,31 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry }: E
         <section key={group.date} className="overflow-hidden rounded-lg border border-border bg-card">
           <header className="flex items-center justify-between gap-2 border-b border-border bg-secondary/30 px-3 py-2">
             <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                aria-label={`Select all entries on ${group.date}`}
-                checked={group.rows.flatMap((r) => r.entries.map((e) => e.id)).every((id) => selected.includes(id))}
-                onChange={() => toggleSelect(group.rows.flatMap((r) => r.entries.map((e) => e.id)))}
-              />
+              {selectionMode && (
+                <input
+                  type="checkbox"
+                  aria-label={`Select all entries on ${group.date}`}
+                  checked={group.rows.flatMap((r) => r.entries.map((e) => e.id)).every((id) => selected.includes(id))}
+                  onChange={() => toggleSelect(group.rows.flatMap((r) => r.entries.map((e) => e.id)))}
+                />
+              )}
               <h3 className="text-sm font-semibold">{formatDayHeader(group.date, todayKey)}</h3>
             </div>
-            <span className="text-xs tabular-nums text-muted-foreground">
-              {formatDuration(group.totalSeconds, state.user.durationFormat)}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs tabular-nums text-muted-foreground">
+                {formatDuration(group.totalSeconds, state.user.durationFormat)}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectionMode((on) => !on)
+                  if (selectionMode) setSelected([])
+                }}
+                className="min-h-9 px-1 text-xs text-muted-foreground hover:text-foreground"
+              >
+                {selectionMode ? "Done" : "Select"}
+              </button>
+            </div>
           </header>
 
           <ul className="divide-y divide-border">
@@ -155,6 +171,7 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry }: E
                 state={state}
                 setState={setState}
                 nowSec={nowSec}
+                selectionMode={selectionMode}
                 selected={selected}
                 onToggleSelect={toggleSelect}
                 expanded={expanded.includes(row.key)}
@@ -192,6 +209,7 @@ function EntryRowView({
   state,
   setState,
   nowSec,
+  selectionMode,
   selected,
   onToggleSelect,
   expanded,
@@ -204,6 +222,7 @@ function EntryRowView({
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
   nowSec: number
+  selectionMode: boolean
   selected: Id[]
   onToggleSelect: (ids: Id[]) => void
   expanded: boolean
@@ -224,6 +243,7 @@ function EntryRowView({
         state={state}
         setState={setState}
         nowSec={nowSec}
+        selectionMode={selectionMode}
         checked={allSelected}
         onCheck={() => onToggleSelect(ids)}
         onDelete={() => onDelete(ids)}
@@ -241,6 +261,7 @@ function EntryRowView({
                 state={state}
                 setState={setState}
                 nowSec={nowSec}
+                selectionMode={selectionMode}
                 checked={selected.includes(entry.id)}
                 onCheck={() => onToggleSelect([entry.id])}
                 onDelete={() => onDelete([entry.id])}
@@ -262,6 +283,7 @@ function EntryFields({
   state,
   setState,
   nowSec,
+  selectionMode,
   checked,
   onCheck,
   onDelete,
@@ -276,6 +298,7 @@ function EntryFields({
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
   nowSec: number
+  selectionMode: boolean
   checked: boolean
   onCheck: () => void
   onDelete: () => void
@@ -319,11 +342,12 @@ function EntryFields({
       )
       return
     }
-    setState((current) => {
-      const result = updateEntry(current, entry.id, changes, nowIso())
-      if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
-      return result.state
-    })
+    const result = updateEntry(state, entry.id, changes, nowIso())
+    if (result.violations.length > 0) {
+      pushToast(result.violations[0].message, "error")
+      return
+    }
+    setState(() => result.state)
   }
 
   const commitTime = (which: "start" | "stop", raw: string) => {
@@ -346,9 +370,89 @@ function EntryFields({
     setState((current) => setEntryDuration(current, entry.id, parsed, nowIso()))
   }
 
+  const continueButton = (
+    <button
+      type="button"
+      onClick={() => {
+        const result = continueEntry(state, entry.id, nowIso())
+        if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
+        else setState(() => result.state)
+      }}
+      title="Continue this entry (C)"
+      aria-label="Continue this entry"
+      className={cn(touchTarget, "rounded-md text-primary hover:bg-secondary/60")}
+    >
+      <IconStart className="size-5 sm:size-4" />
+    </button>
+  )
+
+  const menu = (
+    <EntryMenu
+      entry={entry}
+      state={state}
+      setState={setState}
+      running={running}
+      project={project}
+      onDelete={onDelete}
+      pushToast={pushToast}
+      onEditEntry={onEditEntry}
+      nowIso={nowIso}
+    />
+  )
+
   return (
-    <div className={cn("flex flex-wrap items-center gap-2 px-3 py-2", running && "bg-primary/5")}>
-      <input type="checkbox" checked={checked} onChange={onCheck} aria-label="Select time entry" />
+    <>
+      {/* --- phones: two compact lines; the row itself opens the detail sheet --- */}
+      <div className={cn("flex items-center gap-1 px-3 py-2 sm:hidden", running && "bg-primary/5")}>
+        {selectionMode && (
+          <label className="flex size-11 shrink-0 items-center justify-center">
+            <input type="checkbox" checked={checked} onChange={onCheck} aria-label="Select time entry" className="size-5" />
+          </label>
+        )}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => onEditEntry(entry)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") onEditEntry(entry)
+          }}
+          className="min-w-0 flex-1 py-1 text-left"
+        >
+          <div className="flex items-baseline gap-2">
+            {row?.grouped && (
+              <span className="shrink-0 rounded bg-primary/15 px-1 text-[11px] font-semibold text-primary">
+                {row.entries.length}
+              </span>
+            )}
+            <span className={cn("min-w-0 flex-1 truncate text-sm", !entry.description && "text-muted-foreground")}>
+              {entry.description || "(no description)"}
+            </span>
+            <span className="shrink-0 text-sm font-medium tabular-nums">
+              {running ? formatClock(seconds) : formatDuration(seconds, state.user.durationFormat)}
+            </span>
+          </div>
+          <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+            {project && <ColorDot color={project.color} />}
+            <span className="min-w-0 flex-1 truncate">
+              {project ? project.name : "No project"}
+              {entry.tagIds.length > 0 && ` · ${tagNames(state, entry.tagIds).join(", ")}`}
+            </span>
+            {!row?.grouped && !entry.duronly && (
+              <span className="shrink-0 tabular-nums">
+                {formatTimeLabel(entry.start, state)}–{entry.stop ? formatTimeLabel(entry.stop, state) : "now"}
+              </span>
+            )}
+          </div>
+        </div>
+        {continueButton}
+        {menu}
+      </div>
+
+      {/* --- pointer devices: the full inline-editable row --- */}
+      <div className={cn("hidden flex-wrap items-center gap-2 px-3 py-2 sm:flex", running && "bg-primary/5")}>
+        {selectionMode && (
+          <input type="checkbox" checked={checked} onChange={onCheck} aria-label="Select time entry" />
+        )}
 
       {row?.grouped ? (
         <button
@@ -442,29 +546,43 @@ function EntryFields({
         className="w-[74px] rounded bg-transparent text-right text-sm tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60 disabled:opacity-100"
       />
 
-      <button
-        type="button"
-        onClick={() =>
-          setState((current) => {
-            const result = continueEntry(current, entry.id, nowIso())
-            if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
-            return result.state
-          })
-        }
-        title="Continue this entry (C)"
-        aria-label="Continue this entry"
-        className="rounded-md p-1.5 text-primary hover:bg-secondary/60"
-      >
-        <IconStart className="size-4" />
-      </button>
+      {continueButton}
+      {menu}
+      </div>
+    </>
+  )
+}
 
+/** Per-entry action menu, shared by the phone and pointer layouts */
+function EntryMenu({
+  entry,
+  state,
+  setState,
+  running,
+  project,
+  onDelete,
+  pushToast,
+  onEditEntry,
+  nowIso,
+}: {
+  entry: TimeEntry
+  state: TimetrackState
+  setState: (updater: (current: TimetrackState) => TimetrackState) => void
+  running: boolean
+  project: TimetrackState["projects"][number] | undefined
+  onDelete: () => void
+  pushToast: (text: string, tone?: "info" | "error", undo?: () => void) => void
+  onEditEntry: (entry: TimeEntry) => void
+  nowIso: () => string
+}) {
+  return (
       <Dropdown
         align="right"
         width="w-48"
         ariaLabel="More actions for this time entry"
         trigger={() => (
-          <span className="block rounded-md p-1.5 text-muted-foreground hover:bg-secondary/60">
-            <IconMenu className="size-4" />
+          <span className={cn(touchTarget, "rounded-md text-muted-foreground hover:bg-secondary/60")}>
+            <IconMenu className="size-5 sm:size-4" />
           </span>
         )}
       >
@@ -484,11 +602,11 @@ function EntryFields({
               disabled={running || entry.duration <= MIN_SPLIT_SECONDS}
               hint={entry.duration <= MIN_SPLIT_SECONDS ? "Needs > 10 min" : undefined}
               onClick={() => {
-                setState((current) => {
-                  const result = splitEntry(current, entry.id, null, nowIso())
+                {
+                  const result = splitEntry(state, entry.id, null, nowIso())
                   if (result.error) pushToast(result.error, "error")
-                  return result.state
-                })
+                  else setState(() => result.state)
+                }
                 close()
               }}
             />
@@ -541,7 +659,6 @@ function EntryFields({
           </div>
         )}
       </Dropdown>
-    </div>
   )
 }
 
@@ -576,6 +693,7 @@ function MenuItem({
       disabled={disabled}
       className={cn(
         "flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-secondary/60 disabled:opacity-40",
+        touchRow,
         destructive && "text-destructive",
       )}
     >
@@ -608,7 +726,7 @@ function BulkEditBar({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
+    <div className="fixed inset-x-2 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-[9400] flex flex-wrap items-center gap-2 rounded-lg border border-primary/40 bg-card px-3 py-2 text-sm shadow-xl sm:static sm:inset-auto sm:bg-primary/10 sm:shadow-none">
       <span className="font-medium">{selected.length} selected</span>
       <div className="mx-1 h-5 w-px bg-border" />
       <ProjectPicker
@@ -661,11 +779,12 @@ export function EntryDetailModalBody({
       pushToast("End must be after start", "error")
       return
     }
-    setState((current) => {
-      const result = updateEntry(current, entry.id, { description, start: startIso, stop: stopIso }, nowIso())
-      if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
-      return result.state
-    })
+    const result = updateEntry(state, entry.id, { description, start: startIso, stop: stopIso }, nowIso())
+    if (result.violations.length > 0) {
+      pushToast(result.violations[0].message, "error")
+      return
+    }
+    setState(() => result.state)
   }
 
   return (

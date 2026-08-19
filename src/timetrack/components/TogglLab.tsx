@@ -43,7 +43,7 @@ import { ProjectsView } from "./ProjectsView"
 import { ReportsView } from "./ReportsView"
 import { SettingsView, type SettingsTab } from "./SettingsView"
 import { FavoritesBar, RunningPill, TimerBar, type TimerMode } from "./TimerBar"
-import { Dropdown, Modal, SectionCard } from "./primitives"
+import { Dropdown, Modal, SectionCard, touchTarget } from "./primitives"
 
 type Screen = "timer" | "calendar" | "reports" | "projects" | "manage" | "settings"
 
@@ -102,14 +102,9 @@ export function TogglLab() {
     if (params.get("start") !== "1") return
     const linkDraft = draftFromStartLink(state, params)
     setDraft(linkDraft)
-    setState((current) => {
-      const result = startTimer(current, linkDraft, new Date().toISOString())
-      if (result.violations.length > 0) {
-        pushToast(result.violations[0].message, "error")
-        return current
-      }
-      return result.state
-    })
+    const started = startTimer(state, linkDraft, new Date().toISOString())
+    if (started.violations.length > 0) pushToast(started.violations[0].message, "error")
+    else setState(() => started.state)
     window.history.replaceState({}, "", window.location.pathname)
   }, [state !== null]) // deps intentionally narrow: see comment above
 
@@ -179,24 +174,27 @@ export function TogglLab() {
     <div className="min-h-screen bg-background [&_input[data-slot=input]]:border-border [&_input[data-slot=input]]:bg-background/60 [&_select]:bg-background/60">
       {/* header */}
       <header className="sticky top-0 z-[9500] border-b border-border bg-card/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-2">
-          <Link href="/test" className="text-xs text-muted-foreground hover:text-foreground">
-            ← /test
+        <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
+          <Link href="/test" className="-ml-1 flex h-9 shrink-0 items-center px-1 text-xs text-muted-foreground hover:text-foreground">
+            ← <span className="hidden sm:inline">/test</span>
           </Link>
-          <h1 className="text-sm font-semibold">{state.workspace.name}</h1>
-          <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+          <h1 className="truncate text-sm font-semibold">{state.workspace.name}</h1>
+          <span className="hidden rounded bg-secondary px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground sm:inline">
             Toggl-style time tracker
           </span>
 
-          <div className="ml-auto flex flex-wrap items-center gap-2">
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
             {pomodoro.phase !== "idle" && (
-              <span className="flex items-center gap-1 rounded-full border border-border px-2 py-1 text-xs">
+              <span className="hidden items-center gap-1 rounded-full border border-border px-2 py-1 text-xs sm:flex">
                 {pomodoro.phase === "break" ? <IconBreak className="size-3.5" /> : <IconTimer className="size-3.5" />}
                 {pomodoro.phase === "break" ? "Break" : "Focus"} {formatClock(pomodoro.secondsLeft)}
                 {pomodoro.cycles > 0 && <span className="text-muted-foreground">· {pomodoro.cycles} done</span>}
               </span>
             )}
-            <RunningPill state={state} nowSec={nowSec} onStop={actions.stop} />
+            {/* On a phone the timer card already shows this, so only surface it elsewhere */}
+            <div className={cn(screen === "timer" && "hidden sm:block")}>
+              <RunningPill state={state} nowSec={nowSec} onStop={actions.stop} />
+            </div>
 
             <Dropdown
               align="right"
@@ -206,8 +204,8 @@ export function TogglLab() {
                 if (open && unreadAlerts.length > 0) setState((current) => markAlertsRead(current))
               }}
               trigger={() => (
-                <span className="relative block rounded-md p-1.5 text-muted-foreground hover:bg-secondary/60">
-                  <IconBell className="size-4" />
+                <span className={cn(touchTarget, "relative rounded-md text-muted-foreground hover:bg-secondary/60")}>
+                  <IconBell className="size-5 sm:size-4" />
                   {unreadAlerts.length > 0 && (
                     <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[9px] text-white">
                       {unreadAlerts.length}
@@ -239,13 +237,18 @@ export function TogglLab() {
               )}
             </Dropdown>
 
-            <Button variant="ghost" size="sm" onClick={() => setShortcutsOpen(true)} className="text-xs">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShortcutsOpen(true)}
+              className="hidden text-xs sm:inline-flex"
+            >
               ⇧?
             </Button>
           </div>
         </div>
 
-        <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4">
+        <nav className="mx-auto hidden max-w-6xl gap-1 overflow-x-auto px-4 sm:flex">
           {NAV.map((item) => {
             const Icon = item.icon
             return (
@@ -271,7 +274,7 @@ export function TogglLab() {
         </nav>
       </header>
 
-      <main className="mx-auto max-w-6xl space-y-4 px-4 py-4">
+      <main className="mx-auto max-w-6xl space-y-4 px-3 pb-24 pt-3 sm:px-4 sm:py-4">
         {screen === "timer" && (
           <>
             <TimerBar
@@ -361,6 +364,35 @@ export function TogglLab() {
         )}
       </main>
 
+      {/* bottom navigation (phones) */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-[9500] flex border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
+        aria-label="Sections"
+      >
+        {NAV.map((item) => {
+          const Icon = item.icon
+          const active = screen === item.id
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => {
+                setScreen(item.id)
+                if (item.id !== "projects") setFocusProjectId(null)
+              }}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium",
+                active ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              <Icon className="size-5" />
+              {item.label}
+            </button>
+          )
+        })}
+      </nav>
+
       {/* shortcut overlay */}
       {shortcutsOpen && (
         <Modal title="Keyboard shortcuts" onClose={() => setShortcutsOpen(false)}>
@@ -417,7 +449,7 @@ export function TogglLab() {
       )}
 
       {/* toasts */}
-      <div className="pointer-events-none fixed bottom-4 left-1/2 z-[9700] flex w-full max-w-md -translate-x-1/2 flex-col gap-2 px-4">
+      <div className="pointer-events-none fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 z-[9700] flex w-full max-w-md -translate-x-1/2 flex-col gap-2 px-3 sm:bottom-4 sm:px-4">
         {toasts.map((toast) => (
           <div
             key={toast.id}

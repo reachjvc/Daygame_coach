@@ -44,6 +44,7 @@ export function AreaWheel({
   ratings,
   goalCounts,
   activeId,
+  selectedIds,
   onPick,
   centreLabel,
   subMode = "rating",
@@ -54,6 +55,16 @@ export function AreaWheel({
   /** Area id to how many goals sit in it. */
   goalCounts: Record<string, number>
   activeId: string | null
+  /**
+   * The areas this season is about, in the order they were picked.
+   *
+   * The focus step used to be twelve cards under the wheel — the wheel again as
+   * a list, with the same names, the same numbers and the same click. Picking a
+   * season is choosing PARTS OF ONE PICTURE, which is what the wheel is, so the
+   * sectors carry the choice: picked ones are lit and their sub-label is the
+   * rank rather than the score.
+   */
+  selectedIds?: string[]
   onPick: (id: string) => void
   centreLabel?: string
   /**
@@ -62,8 +73,9 @@ export function AreaWheel({
    * tab you are on, so the goals tab counts goals instead of repeating the
    * number the previous tab already showed.
    */
-  subMode?: "rating" | "goals"
+  subMode?: "rating" | "goals" | "season"
 }) {
+  const picked = selectedIds ?? []
   const n = Math.max(1, areas.length)
   const seg = 360 / n
   const rated = areas.filter((a) => ratings[a.id] != null)
@@ -132,23 +144,32 @@ export function AreaWheel({
         const mid = i * seg + seg / 2
         const rating = ratings[a.id] ?? null
         const goals = goalCounts[a.id] ?? 0
-        const active = a.id === activeId
+        const rank = picked.indexOf(a.id)
+        const active = a.id === activeId || rank >= 0
         const [lx, ly] = polar(C, C, R + 17, mid)
         const cos = Math.cos(((mid - 90) * Math.PI) / 180)
         const anchor = cos > 0.25 ? "start" : cos < -0.25 ? "end" : "middle"
         const label = a.label.length > 16 ? `${a.label.slice(0, 15)}…` : a.label
         const goalsSub = goals > 0 ? `${goals} ${goals === 1 ? "goal" : "goals"}` : "no goals"
+        const ratingSub = rating != null ? `${rating}/10` : goals > 0 ? goalsSub : "not rated"
         const sub = subMode === "goals"
           ? goalsSub
-          : rating != null ? `${rating}/10` : goals > 0 ? goalsSub : "not rated"
+          : subMode === "season"
+            ? (rank >= 0 ? `#${rank + 1} this season` : ratingSub)
+            : ratingSub
         const subColor = subMode === "goals"
           ? (goals > 0 ? a.color : "#71717a")
-          : rating != null && rating < NS_FLOOR ? "#fbbf24" : rating != null ? a.color : "#71717a"
+          : subMode === "season" && rank >= 0
+            ? a.color
+            : rating != null && rating < NS_FLOOR ? "#fbbf24" : rating != null ? a.color : "#71717a"
         const pressProps = {
           role: "button",
           tabIndex: 0,
           "aria-pressed": active,
-          "aria-label": `${a.label}. ${goals} ${goals === 1 ? "goal" : "goals"}.${rating != null ? ` Rated ${rating} out of 10.` : ""} Open it.`,
+          "aria-label":
+            subMode === "season"
+              ? `${a.label}.${rating != null ? ` Rated ${rating} out of 10.` : ""} ${rank >= 0 ? `Picked, number ${rank + 1} this season. Click to drop it.` : "Click to make it one of this season's areas."}`
+              : `${a.label}. ${goals} ${goals === 1 ? "goal" : "goals"}.${rating != null ? ` Rated ${rating} out of 10.` : ""} Open it.`,
           onClick: () => onPick(a.id),
           onKeyDown: (e: React.KeyboardEvent) => {
             if (e.key === "Enter" || e.key === " ") {

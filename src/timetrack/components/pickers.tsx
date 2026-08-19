@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils"
 import { IconAdd, IconClose, IconDown, IconMoney, IconTag } from "../icons"
 import { activeToken, removeToken } from "../timetrackService"
 import type { Id, TimetrackState } from "../types"
-import { CheckOption, ColorDot, Dropdown, useClickOutside } from "./primitives"
+import { CheckOption, ColorDot, Dropdown, touchRow, touchTarget, useClickOutside } from "./primitives"
 
 // ---------------------------------------------------------------------------
 // Project + task picker
@@ -75,7 +75,7 @@ export function ProjectPicker({
       trigger={() => (
         <span
           className={cn(
-            "flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-secondary/60",
+            "flex min-h-11 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-secondary/60 sm:min-h-0",
             compact ? "max-w-[240px]" : "max-w-[280px]",
             project ? "text-foreground" : "text-muted-foreground",
           )}
@@ -105,7 +105,7 @@ export function ProjectPicker({
                 onChange(null, null)
                 close()
               }}
-              className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-muted-foreground hover:bg-secondary/60"
+              className={cn("flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-muted-foreground hover:bg-secondary/60", touchRow)}
             >
               <ColorDot color={null} />
               No project
@@ -127,6 +127,7 @@ export function ProjectPicker({
                         }}
                         className={cn(
                           "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-secondary/60",
+                          touchRow,
                           candidate.id === projectId && !taskId && "text-primary",
                         )}
                       >
@@ -222,7 +223,7 @@ export function TagPicker({
       trigger={() => (
         <span
           className={cn(
-            "flex max-w-[200px] items-center gap-1.5 rounded-md px-2 py-1.5 text-sm hover:bg-secondary/60",
+            "flex min-h-11 max-w-[200px] items-center gap-1.5 rounded-md px-2 py-1.5 text-sm hover:bg-secondary/60 sm:min-h-0",
             selected.length ? "text-foreground" : "text-muted-foreground",
           )}
         >
@@ -300,11 +301,12 @@ export function BillableToggle({
       aria-label={billable ? "Billable" : "Non-billable"}
       aria-pressed={billable}
       className={cn(
-        "rounded-md p-1.5 transition-colors hover:bg-secondary/60 disabled:opacity-40",
+        touchTarget,
+        "rounded-md transition-colors hover:bg-secondary/60 disabled:opacity-40",
         billable ? "text-[#2da608]" : "text-muted-foreground",
       )}
     >
-      <IconMoney className="size-4" />
+      <IconMoney className="size-5 sm:size-4" />
     </button>
   )
 }
@@ -411,7 +413,7 @@ export function DescriptionField({
         }}
         onKeyUp={(event) => syncToken(value, event.currentTarget.selectionStart ?? value.length)}
         onKeyDown={handleKeyDown}
-        className="h-10 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+        className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground sm:h-10"
       />
       {token && suggestions.length > 0 && (
         <div className="absolute left-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-md border border-border bg-card shadow-xl">
@@ -486,7 +488,7 @@ export function MiniSelect({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-8 w-full appearance-none rounded-md border border-border bg-transparent pl-2 pr-7 text-sm outline-none"
+        className="h-10 w-full appearance-none rounded-md border border-border bg-transparent pl-2 pr-7 text-sm outline-none sm:h-8"
       >
         {options.map((option) => (
           <option key={option.id} value={option.id} className="bg-card">
@@ -494,7 +496,7 @@ export function MiniSelect({
           </option>
         ))}
       </select>
-      <IconDown className="pointer-events-none absolute right-2 top-2.5 size-3 text-muted-foreground" />
+      <IconDown className="pointer-events-none absolute right-2 top-3.5 size-3 text-muted-foreground sm:top-2.5" />
     </div>
   )
 }

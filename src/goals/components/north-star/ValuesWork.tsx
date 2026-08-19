@@ -33,12 +33,14 @@
  * Sources and quotes: docs/research/life-mastery/values-and-identity.md.
  */
 
-import { useState } from "react"
-// ChevronDown, rotated, is how this component family already does reorder:
-// PriorityBadge and RoutineCard's step and split-day movers all use it. Not
-// ArrowUp/ArrowDown, which carry other meanings elsewhere in the project and
-// would need sign-off to bring into a new context.
-import { ChevronDown, X } from "lucide-react"
+import { useState, type ReactNode } from "react"
+// ChevronDown for the disclosure. Reordering is a drag now, so it wears
+// GripVertical — the handle every other sortable list in the project uses
+// (SortablePriorityList, WidgetGrid, GoalCategorySection), same role, no new
+// meaning borrowed.
+import { ChevronDown, GripVertical, X } from "lucide-react"
+import { DndContext } from "@dnd-kit/core"
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import type { NsPlan } from "@/src/goals/types"
 import {
   VALUES_DIFF,
@@ -60,12 +62,60 @@ import {
 } from "@/src/goals/northStarService"
 import { TagList } from "./GoalCard"
 import { ValueBrowser } from "./ValueBrowser"
+import { useValueDrag, useValueHandle } from "./valueDrag"
 
 export interface ValuesHandlers {
   onCurrentValues: (values: string[]) => void
   onValues: (values: string[]) => void
-  onMoveValue: (value: string, dir: -1 | 1) => void
+  /** Drop `value` at `toIndex`, sliding everything between along. */
+  onMoveValue: (value: string, toIndex: number) => void
   onRankAbove: (winner: string, loser: string) => void
+}
+
+/**
+ * One draggable row of the order. Plumbing in `valueDrag.ts`, shared with the
+ * area chips on the milestones step.
+ *
+ * The whole grip+rank+label strip is the handle, so the grab target is the row
+ * rather than a 20px icon; the buttons on the right stay clickable because they
+ * are outside it.
+ *
+ * The number printed is the live one: mid-drag it reads the place this row would
+ * take if you let go now, so the column renumbers under your hand instead of
+ * lying until the drop.
+ */
+function SortableValue({ id, label, children, trailing }: {
+  id: string
+  label: string
+  /** The row's own controls, right-aligned and outside the drag handle. */
+  trailing: ReactNode
+  /** Anything that opens underneath the row, e.g. the means-value drill. */
+  children?: ReactNode
+}) {
+  const { ref, style, handle, isDragging, rank } = useValueHandle(id)
+  return (
+    <li ref={ref} style={style} className={isDragging ? "relative" : undefined}>
+      <div
+        className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 transition-colors ${
+          isDragging
+            ? "border-violet-400/50 bg-violet-500/10 shadow-lg shadow-black/40"
+            : "border-white/10 bg-white/[0.02]"
+        }`}
+      >
+        <div
+          className="flex min-w-0 flex-1 items-center gap-2 cursor-grab active:cursor-grabbing touch-none select-none"
+          aria-label={`Reorder ${label}`}
+          {...handle}
+        >
+          <GripVertical className="size-3.5 shrink-0 text-zinc-600" />
+          <span className="text-[11px] tabular-nums text-zinc-500 w-4 shrink-0">{rank}.</span>
+          <span className="min-w-0 flex-1 text-[13px] text-zinc-100">{label}</span>
+        </div>
+        {trailing}
+      </div>
+      {children}
+    </li>
+  )
 }
 
 export function ValuesWork({ plan, handlers, mode }: {
@@ -87,6 +137,8 @@ export function ValuesWork({ plan, handlers, mode }: {
   const [drilling, setDrilling] = useState<string | null>(null)
   const [drillDraft, setDrillDraft] = useState("")
   const [listsOpen, setListsOpen] = useState(false)
+
+  const { ids, dnd } = useValueDrag(plan.values, handlers.onMoveValue)
 
   const diff = valuesDiff(plan)
   const conflicts = valueConflicts(plan)
@@ -310,79 +362,77 @@ export function ValuesWork({ plan, handlers, mode }: {
           )}
 
           {/* The list itself, always visible, always directly editable. The duel
-              is the fast way to an order and the arrows are the way to fix one
-              answer without redoing the interview. */}
-          <ol className="mt-3 space-y-1">
-            {plan.values.map((value, i) => {
-              const means = looksLikeMeansValue(value)
-              return (
-                <li key={`${value}-${i}`}>
-                  <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-1.5">
-                    <span className="text-[11px] tabular-nums text-zinc-500 w-5 shrink-0">{i + 1}.</span>
-                    <span className="min-w-0 flex-1 text-[13px] text-zinc-100">{value}</span>
-                    {means && (
-                      <button
-                        onClick={() => { setDrilling(drilling === value ? null : value); setDrillDraft("") }}
-                        aria-expanded={drilling === value}
-                        className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full border border-amber-400/30 text-amber-200/80 hover:bg-amber-400/10 transition-colors"
-                      >
-                        {VALUES_MEANS.hint}
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handlers.onMoveValue(value, -1)}
-                      disabled={i === 0}
-                      aria-label={`Move ${value} up`}
-                      className="shrink-0 size-5 rounded border border-white/10 text-zinc-500 hover:text-zinc-200 hover:border-white/30 disabled:opacity-25 flex items-center justify-center transition-colors"
-                    ><ChevronDown className="size-3 rotate-180" /></button>
-                    <button
-                      onClick={() => handlers.onMoveValue(value, 1)}
-                      disabled={i === plan.values.length - 1}
-                      aria-label={`Move ${value} down`}
-                      className="shrink-0 size-5 rounded border border-white/10 text-zinc-500 hover:text-zinc-200 hover:border-white/30 disabled:opacity-25 flex items-center justify-center transition-colors"
-                    ><ChevronDown className="size-3" /></button>
-                    <button
-                      onClick={() => handlers.onValues(plan.values.filter((_, n) => n !== i))}
-                      aria-label={`Remove ${value}`}
-                      className="shrink-0 text-zinc-700 hover:text-rose-300 transition-colors"
-                    ><X className="size-3" /></button>
-                  </div>
-
-                  {drilling === value && (
-                    <div className="mt-1 ml-7 rounded-lg border border-amber-400/20 bg-amber-500/[0.04] p-3">
-                      <p className="text-[12px] text-zinc-200">{VALUES_MEANS.question(value)}</p>
-                      <p className="text-[10.5px] text-zinc-500 mt-0.5 leading-relaxed">{VALUES_MEANS.help}</p>
-                      <input
-                        autoFocus
-                        value={drillDraft}
-                        onChange={(e) => setDrillDraft(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") finishDrill(value, "replace") }}
-                        placeholder="Freedom, security, connection…"
-                        aria-label={VALUES_MEANS.question(value)}
-                        className="w-full mt-2 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-1 text-[12.5px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-400/40 transition-colors"
-                      />
-                      <div className="flex flex-wrap items-center gap-2 mt-2">
+              is the fast way to a first order; dragging is how you fix one
+              answer, or five, without sitting through the interview again.
+              Nudging a row a place at a time was the old way, and it turned
+              "Health is really number two" into five clicks and a recount. */}
+          <DndContext {...dnd}>
+            <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+              <ol className="mt-3 space-y-1">
+                {plan.values.map((value, i) => {
+                  const means = looksLikeMeansValue(value)
+                  return (
+                    <SortableValue
+                      key={ids[i]}
+                      id={ids[i]}
+                      label={value}
+                      trailing={<>
+                        {means && (
+                          <button
+                            onClick={() => { setDrilling(drilling === value ? null : value); setDrillDraft("") }}
+                            aria-expanded={drilling === value}
+                            className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full border border-amber-400/30 text-amber-200/80 hover:bg-amber-400/10 transition-colors"
+                          >
+                            {VALUES_MEANS.hint}
+                          </button>
+                        )}
                         <button
-                          onClick={() => finishDrill(value, "replace")}
-                          disabled={!drillDraft.trim()}
-                          className="text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-zinc-200 hover:bg-white/10 disabled:opacity-30 transition-colors"
-                        >{VALUES_MEANS.replace}</button>
-                        <button
-                          onClick={() => finishDrill(value, "add")}
-                          disabled={!drillDraft.trim()}
-                          className="text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-zinc-200 hover:bg-white/10 disabled:opacity-30 transition-colors"
-                        >{VALUES_MEANS.keep}</button>
-                        <button
-                          onClick={() => { setDrilling(null); setDrillDraft("") }}
-                          className="text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors"
-                        >{VALUES_MEANS.skip}</button>
-                      </div>
-                    </div>
-                  )}
-                </li>
-              )
-            })}
-          </ol>
+                          onClick={() => handlers.onValues(plan.values.filter((_, n) => n !== i))}
+                          aria-label={`Remove ${value}`}
+                          className="shrink-0 text-zinc-700 hover:text-rose-300 transition-colors"
+                        ><X className="size-3" /></button>
+                      </>}
+                    >
+                      {drilling === value && (
+                        <div className="mt-1 ml-9 rounded-lg border border-amber-400/20 bg-amber-500/[0.04] p-3">
+                          <p className="text-[12px] text-zinc-200">{VALUES_MEANS.question(value)}</p>
+                          <p className="text-[10.5px] text-zinc-500 mt-0.5 leading-relaxed">{VALUES_MEANS.help}</p>
+                          <input
+                            autoFocus
+                            value={drillDraft}
+                            onChange={(e) => setDrillDraft(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") finishDrill(value, "replace") }}
+                            placeholder="Freedom, security, connection…"
+                            aria-label={VALUES_MEANS.question(value)}
+                            className="w-full mt-2 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-1 text-[12.5px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-400/40 transition-colors"
+                          />
+                          <div className="flex flex-wrap items-center gap-2 mt-2">
+                            <button
+                              onClick={() => finishDrill(value, "replace")}
+                              disabled={!drillDraft.trim()}
+                              className="text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-zinc-200 hover:bg-white/10 disabled:opacity-30 transition-colors"
+                            >{VALUES_MEANS.replace}</button>
+                            <button
+                              onClick={() => finishDrill(value, "add")}
+                              disabled={!drillDraft.trim()}
+                              className="text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-zinc-200 hover:bg-white/10 disabled:opacity-30 transition-colors"
+                            >{VALUES_MEANS.keep}</button>
+                            <button
+                              onClick={() => { setDrilling(null); setDrillDraft("") }}
+                              className="text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                            >{VALUES_MEANS.skip}</button>
+                          </div>
+                        </div>
+                      )}
+                    </SortableValue>
+                  )
+                })}
+              </ol>
+            </SortableContext>
+          </DndContext>
+          {plan.values.length > 1 && (
+            <p className="text-[10.5px] text-zinc-600 mt-1.5">{VALUES_ORDER.dragNote}</p>
+          )}
         </div>
       )}
 

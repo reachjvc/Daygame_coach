@@ -365,9 +365,32 @@ export const BOARD_COPY = {
   practiceHelp: "These go straight into a routine. Turning one on adds the routine to your stack if it is not there yet.",
   needsLabel: "Comes with",
   needsHelp: "The routine this actually runs on. Toggle it off if you already have your own.",
-  /** Said when goals are already in an area and the routine under them is not. */
+  /**
+   * Said when goals are already in an area and what they run on is not there.
+   *
+   * THERE ARE TWO OF THESE, because there are two states and one of them was
+   * being told the other one's sentence: somebody with an evening routine of
+   * their own, missing two of the steps these goals want, was told it "is not
+   * in your stack yet" — about a routine they built. A page that tells you you
+   * do not have the thing you are looking at is not worth reading twice.
+   */
   unmetTitle: (routines: string) => `The goals here run on your ${routines}, and it is not in your stack yet.`,
+  partialTitle: (routines: string) => `The goals here run on your ${routines}, and it is missing some of the steps they want.`,
   unmetAdd: (label: string) => `Add ${label}`,
+  partialAdd: (label: string) => `Add the missing steps to ${label}`,
+  /** Undoing a set, in one click, wherever the set is offered. */
+  takeBack: (n: number) => `remove the ${n} ${n === 1 ? "goal" : "goals"} it added`,
+  takeBackConfirm: (n: number) => `Remove all ${n}?`,
+  /** Named in the confirm, because a set puts steps in a routine as well. */
+  takeBackAlso: (steps: number, routines: string) =>
+    `and the ${steps} ${steps === 1 ? "step" : "steps"} it put in your ${routines}`,
+  takeBackAlsoRoutine: (routines: string) => `and your ${routines}, which is only here for it`,
+  takeBackYes: "remove them",
+  takeBackNo: "keep them",
+  /** The box on every area, for the thing the catalogue just reminded you of. */
+  ownTitle: "Or write your own, here",
+  ownHelp: "The list above is other people's. Anything it made you think of goes straight into this area — one line, same as on the build steps.",
+  ownAdd: "Add",
   empty: "Write a 10 for an area on the previous tab and it turns up here.",
   showAll: "Show every area",
   showPictured: "Only the areas I have pictured",

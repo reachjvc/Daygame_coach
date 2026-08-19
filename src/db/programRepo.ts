@@ -17,13 +17,23 @@ import {
   toKg,
 } from "@/src/programs/programsService"
 import { requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
+import {
+  clampCursorDay,
+  effectiveProgram,
+  isCustomizable,
+  seedForAddedExercises,
+} from "@/src/programs/customize"
+import { dayForWeekday, isWeekdayAnchored } from "@/src/programs/builder"
+import { isoWeekday } from "@/src/programs/config"
 import { DISCIPLINES, BRIDGE_SESSION_TYPE, BRIDGE_DEFAULT_DURATION_MIN, BRIDGE_DEFAULT_INTENSITY } from "@/src/programs/config"
 import type {
   ApplyLogResult,
   LevelId,
+  ProgramDefinition,
   ProgramEnrollment,
   ProgramEnrollmentRow,
   ProgramSessionLogInput,
+  ProgramSchedule,
   ProgramSessionLogRow,
   SessionPrescription,
   UnitSystem,
@@ -45,7 +55,20 @@ function toDomain(row: ProgramEnrollmentRow): ProgramEnrollment {
     cursor: row.cursor,
     is_active: row.is_active,
     started_at: row.started_at,
+    customSchedule: row.custom_schedule ?? null,
   }
+}
+
+/**
+ * The program this enrollment actually runs.
+ *
+ * THE customization boundary. The engine is pure and knows nothing about
+ * user edits; it just reads `program.schedule`. Resolving here — once, on the
+ * way out of the database — means every prescription, progression and bridge
+ * downstream operates on the user's version automatically.
+ */
+function programFor(enrollment: ProgramEnrollment) {
+  return effectiveProgram(requireProgram(enrollment.program_id), enrollment.customSchedule)
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100
@@ -88,9 +111,19 @@ export async function getEnrollmentById(userId: string, id: string): Promise<Pro
  */
 export async function enrollInProgram(
   userId: string,
-  input: { programId: string; level: LevelId; unitSystem: UnitSystem; oneRepMaxes?: Record<string, number>; workingWeights?: Record<string, number> }
+  input: {
+    programId: string
+    level: LevelId
+    unitSystem: UnitSystem
+    oneRepMaxes?: Record<string, number>
+    workingWeights?: Record<string, number>
+    customSchedule?: ProgramSchedule | null
+  }
 ): Promise<{ enrollment: ProgramEnrollment; prescription: SessionPrescription }> {
-  const { program, level } = resolveProgramForLevel(input.programId, input.level)
+  const { program: catalogProgram, level } = resolveProgramForLevel(input.programId, input.level)
+  // Seed against the schedule the user is actually enrolling in, so a lift they
+  // added is seeded and one they removed is not.
+  const program = effectiveProgram(catalogProgram, input.customSchedule)
   const { exerciseState, cursor } = seedEnrollment(program, level, input.unitSystem, input.oneRepMaxes, input.workingWeights)
 
   const supabase = await createServerSupabaseClient()
@@ -112,6 +145,7 @@ export async function enrollInProgram(
       exercise_state: exerciseState,
       cursor,
       is_active: true,
+      custom_schedule: input.customSchedule ?? null,
     })
     .select()
     .single()
@@ -129,7 +163,14 @@ export async function enrollInProgram(
  */
 export async function ensureEnrollment(
   userId: string,
-  selection: { programId: string; level: LevelId; unitSystem: UnitSystem; oneRepMaxes?: Record<string, number>; workingWeights?: Record<string, number> }
+  selection: {
+    programId: string
+    level: LevelId
+    unitSystem: UnitSystem
+    oneRepMaxes?: Record<string, number>
+    workingWeights?: Record<string, number>
+    customSchedule?: ProgramSchedule | null
+  }
 ): Promise<{ enrollment: ProgramEnrollment; created: boolean }> {
   const resolvedId = resolveProgramForLevel(selection.programId, selection.level).program.id
   const existing = (await listActiveEnrollments(userId)).find((e) => e.program_id === resolvedId)
@@ -141,11 +182,12 @@ export async function ensureEnrollment(
 /** All active enrollments as plan-builder selections (one per discipline) — for GET rehydrate. */
 export async function listActiveSelections(
   userId: string
-): Promise<{ programId: string; level: LevelId; unitSystem: UnitSystem }[]> {
+): Promise<{ programId: string; level: LevelId; unitSystem: UnitSystem; customSchedule: ProgramSchedule | null }[]> {
   return (await listActiveEnrollments(userId)).map((e) => ({
     programId: e.program_id,
     level: e.level,
     unitSystem: e.unitSystem,
+    customSchedule: e.customSchedule,
   }))
 }
 
@@ -169,21 +211,109 @@ export async function resetEnrollment(userId: string, id: string): Promise<Progr
   return toDomain(data as ProgramEnrollmentRow)
 }
 
+/**
+ * Replace the schedule of a live enrollment with the user's edited version.
+ *
+ * Editing mid-program must not cost progress: every lift that survives the edit
+ * keeps its working weight, training max and fail count, because
+ * `seedForAddedExercises` only fills state that is MISSING. Lifts that were
+ * removed keep their state too — dormant, and restored if the user puts the
+ * exercise back — since dropping it would silently reset a squat to the seed
+ * weight for anyone who dropped a day for a fortnight.
+ *
+ * Passing null restores the catalog program, which is the only way back.
+ */
+export async function updateEnrollmentSchedule(
+  userId: string,
+  enrollmentId: string,
+  schedule: ProgramSchedule | null,
+  workingWeights: Record<string, number> = {}
+): Promise<{ enrollment: ProgramEnrollment; prescription: SessionPrescription }> {
+  const enr = await getEnrollmentById(userId, enrollmentId)
+  if (!enr) throw new Error("Enrollment not found")
+  const catalogProgram = requireProgram(enr.program_id)
+  if (schedule && !isCustomizable(catalogProgram)) {
+    throw new Error(`${catalogProgram.name} is a week-by-week plan and cannot be edited`)
+  }
+
+  const program = effectiveProgram(catalogProgram, schedule)
+  const exerciseState = schedule
+    ? seedForAddedExercises(schedule, enr.exerciseState, workingWeights, enr.unitSystem)
+    : enr.exerciseState
+  const cursor = { ...enr.cursor, dayIndex: clampCursorDay(program.schedule, enr.cursor.dayIndex) }
+
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("program_enrollments")
+    .update({ custom_schedule: schedule, exercise_state: exerciseState, cursor })
+    .eq("id", enrollmentId)
+    .eq("user_id", userId)
+    .select()
+    .single()
+  if (error) throw new Error(`Failed to save program changes: ${error.message}`)
+
+  const enrollment = toDomain(data as ProgramEnrollmentRow)
+  return { enrollment, prescription: computePrescription(programFor(enrollment), enrollment) }
+}
+
 // ---------------------------------------------------------------------------
 // Today's session
 // ---------------------------------------------------------------------------
 
+/**
+ * Today's session.
+ *
+ * TWO SCHEDULING MODES, and which one applies is a property of the program
+ * rather than a setting. A cited program is a SEQUENCE — StrongLifts is A/B/A
+ * whenever you get to the gym, and its cursor is the source of truth, because
+ * missing Tuesday must not skip Workout B. A program somebody wrote themselves
+ * and pinned to weekdays is a CALENDAR — "Push is Monday" means today's session
+ * is decided by today's date, and the cursor follows rather than leads.
+ *
+ * `isWeekdayAnchored` is all-or-nothing (see `builder.ts`), so there is never a
+ * schedule that is half of each and no case where this has to guess.
+ */
 export async function getTodaySession(userId: string, enrollmentId: string): Promise<SessionPrescription> {
   const enr = await getEnrollmentById(userId, enrollmentId)
   if (!enr) throw new Error("Enrollment not found")
-  return computePrescription(requireProgram(enr.program_id), enr)
+  const program = programFor(enr)
+  if (!isWeekdayAnchored(program.schedule)) return computePrescription(program, enr)
+
+  const days = (program.schedule as { days: Array<{ id: string; weekday?: number }> }).days
+  const todayIso = isoWeekday(new Date())
+  const today = dayForWeekday(program.schedule, todayIso)
+
+  // A REST DAY IS A REAL ANSWER. The next session is still computed so the
+  // screen can say what is coming, but it is flagged rather than served as
+  // today's work — otherwise a three-day week silently becomes a seven-day one.
+  const target =
+    today ??
+    // The soonest day at or after today, wrapping into next week.
+    [...days]
+      .filter((d) => d.weekday != null)
+      .sort(
+        (a, b) =>
+          ((a.weekday! - todayIso + 7) % 7) - ((b.weekday! - todayIso + 7) % 7)
+      )[0]
+  if (!target) return computePrescription(program, enr)
+
+  const dayIndex = days.findIndex((d) => d.id === target.id)
+  const prescription = computePrescription(program, {
+    ...enr,
+    cursor: { ...enr.cursor, dayIndex },
+  })
+  return {
+    ...prescription,
+    ...(today ? {} : { restDay: true }),
+    ...(target.weekday != null ? { scheduledWeekday: target.weekday } : {}),
+  }
 }
 
 /** Missed-session catch-up: advance the cursor without logging/progressing. */
 export async function skipSession(userId: string, enrollmentId: string): Promise<SessionPrescription> {
   const enr = await getEnrollmentById(userId, enrollmentId)
   if (!enr) throw new Error("Enrollment not found")
-  const program = requireProgram(enr.program_id)
+  const program = programFor(enr)
   const { enrollment } = applyLog(program, enr, {
     enrollment_id: enr.id,
     dayId: "",
@@ -208,13 +338,13 @@ export async function logProgramSession(
 ): Promise<ApplyLogResult & { next: SessionPrescription }> {
   const enr = await getEnrollmentById(userId, enrollmentId)
   if (!enr) throw new Error("Enrollment not found")
-  const program = requireProgram(enr.program_id)
+  const program = programFor(enr)
   const result = applyLog(program, enr, { ...logInput, enrollment_id: enr.id })
 
   // Persist new engine state, the session log, and the workout_logs bridge.
   await persistState(userId, result.enrollment)
   await insertSessionLog(userId, enr.id, logInput, rpe, notes)
-  await bridgeToWorkoutLogs(userId, program.id, enr.unitSystem, logInput)
+  await bridgeToWorkoutLogs(userId, program, enr.unitSystem, logInput)
 
   return { ...result, next: computePrescription(program, result.enrollment) }
 }
@@ -257,11 +387,10 @@ async function insertSessionLog(
  */
 async function bridgeToWorkoutLogs(
   userId: string,
-  programId: string,
+  program: ProgramDefinition,
   unit: UnitSystem,
   logInput: Omit<ProgramSessionLogInput, "enrollment_id">
 ): Promise<void> {
-  const program = requireProgram(programId)
 
   if (program.metricType === "endurance") {
     const duration = Math.min(599, Math.max(1, Math.round(logInput.durationMin ?? BRIDGE_DEFAULT_DURATION_MIN)))

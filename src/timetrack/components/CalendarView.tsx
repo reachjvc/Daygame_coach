@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { CALENDAR_ZOOMS } from "../config"
+import { useIsMobile } from "../hooks/useIsMobile"
 import { IconCalendar, IconNext, IconPrev, IconStart } from "../icons"
 import {
   dayColumnSeconds,
@@ -75,8 +76,15 @@ export function CalendarView({
   onEditEntry: (entry: TimeEntry) => void
   onOpenIntegrations: () => void
 }) {
+  const isMobile = useIsMobile()
   const todayKey = dateKey(new Date(nowSec * 1000))
   const [range, setRange] = useState<Range>("week")
+  const [rangeTouched, setRangeTouched] = useState(false)
+
+  // A seven-column week is unreadable at phone width, so start on a single day
+  useEffect(() => {
+    if (!rangeTouched) setRange(isMobile ? "day" : "week")
+  }, [isMobile, rangeTouched])
   const [zoom, setZoom] = useState<ZoomId>("normal")
   const [anchor, setAnchor] = useState(todayKey)
   const [drag, setDrag] = useState<DragState | null>(null)
@@ -138,22 +146,17 @@ export function CalendarView({
 
     if (mode === "create") {
       if (to - from >= 5) {
-        setState((current) => {
-          const result = createManualEntry(
-            current,
-            {
-              draft: { description: "", projectId: null, taskId: null, tagIds: [], billable: current.workspace.projectsBillableByDefault },
-              start: isoAtMinutes(day, from),
-              stop: isoAtMinutes(day, to),
-            },
-            nowIso(),
-          )
-          if (result.violations.length > 0) {
-            pushToast(result.violations[0].message, "error")
-            return current
-          }
-          return result.state
-        })
+        const result = createManualEntry(
+          state,
+          {
+            draft: { description: "", projectId: null, taskId: null, tagIds: [], billable: state.workspace.projectsBillableByDefault },
+            start: isoAtMinutes(day, from),
+            stop: isoAtMinutes(day, to),
+          },
+          nowIso(),
+        )
+        if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
+        else setState(() => result.state)
       }
     } else if (mode === "move" && drag.entryId && drag.durationMinutes) {
       const newStart = Math.max(0, drag.currentMinutes - (drag.grabOffset ?? 0))
@@ -199,18 +202,23 @@ export function CalendarView({
           <Segmented
             size="sm"
             value={range}
-            onChange={setRange}
+            onChange={(next) => {
+              setRangeTouched(true)
+              setRange(next)
+            }}
             options={[
               { id: "day", label: "Day" },
               { id: "week", label: "Week" },
             ]}
           />
-          <Segmented
-            size="sm"
-            value={zoom}
-            onChange={setZoom}
-            options={CALENDAR_ZOOMS.map((z) => ({ id: z.id, label: z.label }))}
-          />
+          <span className="hidden sm:inline-flex">
+            <Segmented
+              size="sm"
+              value={zoom}
+              onChange={setZoom}
+              options={CALENDAR_ZOOMS.map((z) => ({ id: z.id, label: z.label }))}
+            />
+          </span>
           <Button variant="outline" size="sm" onClick={onOpenIntegrations}>
             <IconCalendar className="size-4" />
             {enabledCalendars.length > 0 ? `${enabledCalendars.length} calendar${enabledCalendars.length > 1 ? "s" : ""}` : "Connect calendar"}
@@ -220,7 +228,7 @@ export function CalendarView({
 
       <div className="overflow-hidden rounded-lg border border-border bg-card">
         {/* day headers */}
-        <div className="flex border-b border-border bg-secondary/30">
+        <div className={cn("flex border-b border-border bg-secondary/30", range === "week" && "min-w-[640px] sm:min-w-0")}>
           <div className="w-12 shrink-0 border-r border-border" />
           {days.map((day) => (
             <div key={day} className="flex-1 border-r border-border px-2 py-1.5 last:border-r-0">
@@ -235,8 +243,8 @@ export function CalendarView({
         </div>
 
         {/* grid */}
-        <div ref={scrollRef} className="max-h-[70vh] overflow-y-auto">
-          <div ref={gridRef} className="relative flex">
+        <div ref={scrollRef} className="max-h-[70vh] overflow-auto">
+          <div ref={gridRef} className={cn("relative flex", range === "week" && "min-w-[640px] sm:min-w-0")}>
             {/* hour gutter */}
             <div className="w-12 shrink-0 border-r border-border">
               {Array.from({ length: 24 }, (_, hour) => (
@@ -264,6 +272,7 @@ export function CalendarView({
                   className="relative flex-1 border-r border-border last:border-r-0"
                   style={{ height: hourHeight * 24 }}
                   onMouseDown={(event) => {
+                    if (isMobile) return
                     if ((event.target as HTMLElement).closest("[data-block]")) return
                     const minutes = minutesFromEvent(event.clientY, dayIndex)
                     setDrag({ day, startMinutes: minutes, currentMinutes: minutes, mode: "create" })
@@ -299,6 +308,7 @@ export function CalendarView({
                         data-block
                         onMouseDown={(mouseEvent) => {
                           mouseEvent.stopPropagation()
+                          if (isMobile) return
                           const minutes = minutesFromEvent(mouseEvent.clientY, dayIndex)
                           const isResize = mouseEvent.nativeEvent.offsetY > block.heightMinutes * minuteHeight - 8
                           setDrag({
@@ -370,29 +380,22 @@ export function CalendarView({
                           color={calendar?.color ?? "#4285f4"}
                           calendarName={calendar?.name ?? "Calendar"}
                           onStart={(draft) => {
-                            setState((current) => {
-                              const result = startTimer(current, draft, nowIso())
-                              if (result.violations.length > 0) {
-                                pushToast(result.violations[0].message, "error")
-                                return current
-                              }
-                              return result.state
-                            })
+                            const result = startTimer(state, draft, nowIso())
+                            if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
+                            else setState(() => result.state)
                           }}
                           onCopy={(draft) => {
-                            setState((current) => {
-                              const result = createManualEntry(
-                                current,
-                                { draft, start: event.start, stop: event.end, sourceEventId: event.id },
-                                nowIso(),
-                              )
-                              if (result.violations.length > 0) {
-                                pushToast(result.violations[0].message, "error")
-                                return current
-                              }
-                              pushToast("Calendar event copied as a time entry")
-                              return result.state
-                            })
+                            const result = createManualEntry(
+                              state,
+                              { draft, start: event.start, stop: event.end, sourceEventId: event.id },
+                              nowIso(),
+                            )
+                            if (result.violations.length > 0) {
+                              pushToast(result.violations[0].message, "error")
+                              return
+                            }
+                            setState(() => result.state)
+                            pushToast("Calendar event copied as a time entry")
                           }}
                           timeFormat={state.user.timeFormat}
                         />
@@ -423,7 +426,9 @@ export function CalendarView({
       </div>
 
       <p className="text-[11px] text-muted-foreground">
-        Drag empty space to create an entry · drag a block to move it, its bottom edge to resize · click it to edit.
+        {isMobile
+          ? "Tap a block to edit it. Use the timer to start new entries."
+          : "Drag empty space to create an entry · drag a block to move it, its bottom edge to resize · click it to edit."}
         {splitColumns
           ? " Calendar events share each day on the right and never change your entries."
           : " Connect a calendar to see your events beside your time."}

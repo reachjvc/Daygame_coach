@@ -22,15 +22,23 @@
  * Practices exist because four of the twelve areas have nothing in the goal
  * catalogue and pretending otherwise was worse than saying so. Family does not
  * want a target; it wants a phone call every week.
+ *
+ * ONE AREA AT A TIME, TEN OFFERS AT A TIME (2026-08-17). Twelve areas with
+ * every offer under each of them is nine screens of scroll and the fades that
+ * held it down made the page look like it was hiding things. Clicking an area
+ * opens it — the same click as the wheel everywhere else in this flow — and
+ * inside it each kind shows ten you can take, with the rest one button away.
+ * Ten is enough to see what this area is about and few enough to read.
  */
 
-import { useState } from "react"
-import { Check, Plus } from "lucide-react"
+import { useState, type ReactNode } from "react"
+import { Check, ChevronDown, Plus } from "lucide-react"
 import type { NsArea, NsPlan } from "@/src/goals/types"
 import { NS_FLOOR, ROUTINE_BLUEPRINT_MAP, SEASON_FOCUS_COPY, TEMPLATE_ADDED_COPY } from "@/src/goals/data/northStar"
 import { BOARD_COPY, LOAD_CEILING, type RoutineNeed } from "@/src/goals/data/northStarBuild"
 import type { Template } from "@/src/goals/data/newGoalFramework"
 import {
+  areaGoalExample,
   areaObjectives,
   areaOfferNote,
   areaPractices,
@@ -42,11 +50,12 @@ import {
   shapeFromTarget,
   targetAlreadyAdded,
   targetsForTemplate,
+  templateFootprint,
   unmetRoutineNeeds,
   weeklyLoad,
   wheelRatings,
 } from "@/src/goals/northStarService"
-import { Peek } from "./Peek"
+import { WorkoutPrograms } from "./WorkoutPrograms"
 
 const SHAPE_ICON: Record<string, string> = { milestone_ladder: "🎯", habit_ramp: "🔁", achievement: "🏁" }
 const LEVEL_LABELS = ["Beginner", "Intermediate", "Advanced"]
@@ -58,7 +67,39 @@ export interface BoardHandlers {
   onTogglePractice: (blueprintId: string, stepId: string, on: boolean) => void
   onSeasonFocus: (areaId: string) => void
   onOpenArea: (areaId: string) => void
+  /** A whole set, put back: every goal in that area that arrived with it. */
+  onRemoveTemplate: (areaId: string, templateId: string) => void
+  /** One line, straight into that area — the same dump the build steps take. */
+  onAddOwn: (areaId: string, text: string) => void
+  /**
+   * A training program was started. The day names come back so the plan's
+   * workout routine can be set to the week that is now actually being tracked.
+   */
+  onProgramStarted: (dayNames: string[]) => void
 }
+
+/**
+ * WHY THE TRAINING PROGRAMS ARE NOT INSIDE THE FITNESS CARD.
+ *
+ * They were, and they were invisible. Three things hid them, and only the third
+ * is about scrolling:
+ *
+ *   1. THE AREA FILTER. Once any area has a 10 written, this board shows only
+ *      the areas that have one. A plan with a 10 for Money and none for Fitness
+ *      renders no Fitness card at all — so the programs were behind a "show
+ *      all" toggle nobody had a reason to press.
+ *   2. THE AREA MIGHT NOT EXIST. Areas are renameable and removable, and a key
+ *      on `lm_fitness` means somebody who deleted or replaced Fitness could
+ *      never reach a training program again.
+ *   3. IT WAS THE LAST THING ON THE LONGEST CARD, under fifty-two goals and a
+ *      row of practices.
+ *
+ * A program is also not the same KIND of thing as the three offers on an area
+ * card. A set, a goal and a practice all drop something into your plan; a
+ * program is the training week itself, with the sessions filled in and an
+ * engine behind it, and starting one writes to the database. It gets its own
+ * place on the tab.
+ */
 
 export function BuildBoard({ plan, today, handlers }: {
   plan: NsPlan
@@ -72,6 +113,16 @@ export function BuildBoard({ plan, today, handlers }: {
    */
   const [level, setLevel] = useState(1)
   const [showAll, setShowAll] = useState(false)
+  /**
+   * WHICH AREAS ARE SHUT, not which one is open.
+   *
+   * It was an accordion for an afternoon — one area open at a time, the rest
+   * collapsed — and that closed eleven areas somebody was reading. A catalogue
+   * is for scanning: every area opens showing ten of each kind, which is short
+   * enough that twelve of them is a page rather than a wall, and any row you
+   * are finished with can be folded away.
+   */
+  const [shut, setShut] = useState<string[]>([])
 
   const ratings = wheelRatings(plan, today)
   const pictured = plan.areas.filter((a) => areaReview(plan, a.id).ten.trim().length > 0)
@@ -116,6 +167,10 @@ export function BuildBoard({ plan, today, handlers }: {
         </div>
       </div>
 
+      <div className="px-5 py-4 border-b border-white/10">
+        <WorkoutPrograms onProgramStarted={handlers.onProgramStarted} />
+      </div>
+
       {shown.length === 0 ? (
         <p className="px-5 py-4 text-[12px] text-zinc-500">{BOARD_COPY.empty}</p>
       ) : (
@@ -128,6 +183,8 @@ export function BuildBoard({ plan, today, handlers }: {
               level={level}
               rating={ratings[area.id] ?? null}
               handlers={handlers}
+              open={!shut.includes(area.id)}
+              onToggle={() => setShut((s) => (s.includes(area.id) ? s.filter((id) => id !== area.id) : [...s, area.id]))}
             />
           ))}
         </div>
@@ -171,12 +228,15 @@ function LoadMeter({ load }: { load: { minutes: number; actions: number; over: b
   )
 }
 
-function AreaRow({ area, plan, level, rating, handlers }: {
+function AreaRow({ area, plan, level, rating, handlers, open, onToggle }: {
   area: NsArea
   plan: NsPlan
   level: number
   rating: number | null
   handlers: BoardHandlers
+  /** Whether this area's offers are showing. */
+  open: boolean
+  onToggle: () => void
 }) {
   const templates = areaTemplates(area)
   const objectives = areaObjectives(area)
@@ -194,7 +254,15 @@ function AreaRow({ area, plan, level, rating, handlers }: {
     <div className="px-5 py-4 border-b border-white/[0.07] last:border-b-0">
       <div className="flex flex-wrap items-center gap-2">
         <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: area.color }} />
-        <button onClick={() => handlers.onOpenArea(area.id)} className="text-[13px] font-medium text-zinc-100 hover:text-white transition-colors">
+        {/* The name opens the area's offers. Leaving for the area's own page
+            is the link at the bottom of them, so a click here never costs you
+            the catalogue. */}
+        <button
+          onClick={onToggle}
+          aria-expanded={open}
+          className="flex items-center gap-1.5 text-[13px] font-medium text-zinc-100 hover:text-white transition-colors"
+        >
+          <ChevronDown className={`size-3.5 text-zinc-500 transition-transform ${open ? "" : "-rotate-90"}`} />
           {area.label}
         </button>
         {isFocus && (
@@ -222,33 +290,38 @@ function AreaRow({ area, plan, level, rating, handlers }: {
         </span>
       </div>
 
+      {!open ? null : (
+      <>
       {note && <p className="text-[10.5px] text-zinc-500 mt-1 leading-relaxed">{note}</p>}
 
       {templates.length > 0 && (
         <div className="mt-2.5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">{BOARD_COPY.goalsLabel}</p>
-          {/* Fitness offers nine sets. Nine cards, each repeating that it comes
-              with the training week, is a wall rather than a menu, so the same
-              fade the goals below use holds them at two rows until asked. */}
-          <div className="mt-1.5">
-            <Peek more={`Show all ${templates.length} sets in ${area.label}`} collapsedHeight={templates.length > 4 ? 210 : 400}>
+          {/* Ten, then the rest on request. It was a fade holding two rows,
+              which reads as the page hiding something rather than as a
+              sensible number of things to look at. */}
+          <TakeTen count={templates.length} noun="sets" area={area.label}>
+            {(n) => (
               <div className="grid gap-1.5 sm:grid-cols-2">
-                {templates.map((t) => (
+                {templates.slice(0, n).map((t) => (
                   <SetCard key={t.id} template={t} plan={plan} area={area} level={level} handlers={handlers} />
                 ))}
               </div>
-            </Peek>
-          </div>
+            )}
+          </TakeTen>
         </div>
       )}
 
       {objectives.length > 0 && (
         <div className="mt-2.5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">{BOARD_COPY.targetsLabel}</p>
-          <div className="mt-1.5">
-            <Peek more={`Show all ${objectives.reduce((n, g) => n + g.targets.length, 0)} goals in ${area.label}`} collapsedHeight={104}>
+          <TakeTen count={objectives.reduce((n, g) => n + g.targets.length, 0)} noun="goals" area={area.label}>
+            {(limit) => (
               <div className="space-y-2">
-                {objectives.map(({ objective, targets }) => (
+                {/* The cap is on the AREA, not on each objective: ten goals
+                    you can take from Fitness, in the objectives they belong
+                    to, rather than ten from each of six objectives. */}
+                {capGroups(objectives, limit).map(({ objective, targets }) => (
                   <div key={objective.id}>
                     <p className="text-[10.5px] text-zinc-500">{objective.label}</p>
                     <div className="flex flex-wrap gap-1 mt-1">
@@ -275,8 +348,8 @@ function AreaRow({ area, plan, level, rating, handlers }: {
                   </div>
                 ))}
               </div>
-            </Peek>
-          </div>
+            )}
+          </TakeTen>
         </div>
       )}
 
@@ -285,22 +358,28 @@ function AreaRow({ area, plan, level, rating, handlers }: {
           never passed a card, and it arrives carrying an action with nowhere
           for that action to happen. */}
       {unmet.length > 0 && (
-        <div className="mt-2.5 rounded-lg border border-amber-400/20 bg-amber-500/[0.05] px-2.5 py-2">
-          <p className="text-[11px] text-amber-100/90">
-            {BOARD_COPY.unmetTitle(unmet.map(routineLabel).join(" and "))}
-          </p>
-          <p className="text-[10px] text-amber-100/60 mt-0.5 leading-relaxed">{unmet[0].why}</p>
-          <div className="flex flex-wrap gap-1.5 mt-1.5">
-            {unmet.map((need) => (
-              <button
-                key={need.blueprintId}
-                onClick={() => handlers.onApplyNeed(need)}
-                className="text-[10.5px] px-2 py-0.5 rounded-full border border-amber-400/30 text-amber-100 hover:bg-amber-500/15 transition-colors"
-              >
-                {BOARD_COPY.unmetAdd(routineLabel(need))}
-              </button>
-            ))}
-          </div>
+        <div className="mt-2.5 rounded-lg border border-amber-400/20 bg-amber-500/[0.05] px-2.5 py-2 space-y-2">
+          {/* ONE LINE PER NEED, because the sentence depends on the state.
+              They were joined into a single "and it is not in your stack yet",
+              which is false for a routine you already have and are only
+              missing steps of. */}
+          {unmet.map((need) => {
+            const partial = routineNeedState(plan, need) === "partial"
+            return (
+              <div key={need.blueprintId}>
+                <p className="text-[11px] text-amber-100/90">
+                  {partial ? BOARD_COPY.partialTitle(routineLabel(need)) : BOARD_COPY.unmetTitle(routineLabel(need))}
+                </p>
+                <p className="text-[10px] text-amber-100/60 mt-0.5 leading-relaxed">{need.why}</p>
+                <button
+                  onClick={() => handlers.onApplyNeed(need)}
+                  className="mt-1.5 text-[10.5px] px-2 py-0.5 rounded-full border border-amber-400/30 text-amber-100 hover:bg-amber-500/15 transition-colors"
+                >
+                  {partial ? BOARD_COPY.partialAdd(routineLabel(need)) : BOARD_COPY.unmetAdd(routineLabel(need))}
+                </button>
+              </div>
+            )
+          })}
         </div>
       )}
 
@@ -308,8 +387,10 @@ function AreaRow({ area, plan, level, rating, handlers }: {
         <div className="mt-2.5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-600">{BOARD_COPY.practicesLabel}</p>
           <p className="text-[10.5px] text-zinc-600 mt-0.5 leading-relaxed">{BOARD_COPY.practiceHelp}</p>
+          <TakeTen count={practices.length} noun="practices" area={area.label}>
+            {(n) => (
           <div className="flex flex-wrap gap-1 mt-1.5">
-            {practices.map((p) => {
+            {practices.slice(0, n).map((p) => {
               const on = practiceIsOn(plan, p.blueprintId, p.stepId)
               return (
                 <button
@@ -330,20 +411,135 @@ function AreaRow({ area, plan, level, rating, handlers }: {
               )
             })}
           </div>
+            )}
+          </TakeTen>
         </div>
       )}
 
-      {templates.length === 0 && objectives.length === 0 && practices.length === 0 && (
-        <p className="text-[11px] text-zinc-600 mt-1.5">
-          Nothing curated for this area.{" "}
-          <button onClick={() => handlers.onOpenArea(area.id)} className="text-zinc-400 hover:text-white underline underline-offset-2 transition-colors">
-            Open it and write your own
-          </button>
-          .
-        </p>
+      {/* YOUR OWN, HERE, WHILE THE LIST IS STILL IN FRONT OF YOU.
+          A catalogue's real work is reminding you of the thing that is not in
+          it — you read "wind-down routine" and think of the one you actually
+          want — and until now that thought had to survive a trip to another
+          step. It lands in this area exactly as it would there. */}
+      <AddOwn area={area} onAdd={handlers.onAddOwn} />
+
+      {/* THE WAY OUT OF THE CATALOGUE, said once per area rather than only when
+          there is nothing on offer. Whatever you took from here, the rest of
+          this area is yours to write. */}
+      <p className="text-[11px] text-zinc-600 mt-2.5">
+        {templates.length === 0 && objectives.length === 0 && practices.length === 0 ? "Nothing curated for this area. " : ""}
+        <button onClick={() => handlers.onOpenArea(area.id)} className="text-zinc-400 hover:text-white underline underline-offset-2 transition-colors">
+          Open {area.label} and write your own
+        </button>
+      </p>
+      </>
       )}
     </div>
   )
+}
+
+
+/**
+ * The box under every area's offers.
+ *
+ * Closed until asked for: an open input under twelve areas is twelve cursors
+ * competing with the thing you came here to read. Open, it is the one-line
+ * adder from the build steps, writing into the same place.
+ */
+function AddOwn({ area, onAdd }: { area: NsArea; onAdd: (areaId: string, text: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [text, setText] = useState("")
+  const add = () => {
+    if (!text.trim()) return
+    onAdd(area.id, text)
+    setText("")
+  }
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="mt-2.5 text-[11px] text-zinc-500 hover:text-zinc-200 underline decoration-dotted underline-offset-2 transition-colors"
+      >
+        {BOARD_COPY.ownTitle}
+      </button>
+    )
+  }
+  return (
+    <div className="mt-2.5 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-2">
+      <p className="text-[10.5px] text-zinc-500 leading-relaxed">{BOARD_COPY.ownHelp}</p>
+      <div className="flex items-center gap-2 mt-1.5">
+        <Plus className="size-3 text-zinc-600 shrink-0" />
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add() } }}
+          placeholder={`e.g. ${areaGoalExample(area.id).want}`}
+          aria-label={`${BOARD_COPY.ownTitle} — ${area.label}`}
+          className="min-w-0 flex-1 bg-transparent border-b border-white/15 focus:border-white/35 text-[12.5px] text-zinc-100 placeholder:text-zinc-700 focus:outline-none py-1 transition-colors"
+        />
+        <button
+          onClick={add}
+          disabled={!text.trim()}
+          className="shrink-0 text-[11.5px] px-2.5 py-1 rounded-lg border border-white/15 text-zinc-100 hover:bg-white/10 disabled:opacity-30 transition-colors"
+        >
+          {BOARD_COPY.ownAdd}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+
+/**
+ * Ten of them, then the rest if you ask.
+ *
+ * Every kind of offer used to be held down by a fade at a pixel height, which
+ * is a page saying "there is more here" without saying how much more, and it
+ * cut a row of chips in half to do it. A number is better: ten to look at, the
+ * count of what is left, one button.
+ */
+const TAKE = 10
+
+function TakeTen({ count, noun, area, children }: {
+  count: number
+  noun: string
+  area: string
+  /** Rendered with the number to show, so each kind keeps its own layout. */
+  children: (limit: number) => ReactNode
+}) {
+  const [all, setAll] = useState(false)
+  const limit = all ? count : TAKE
+  return (
+    <div className="mt-1.5">
+      {children(limit)}
+      {count > TAKE && (
+        <button
+          onClick={() => setAll(!all)}
+          className="mt-1.5 text-[10.5px] text-zinc-500 hover:text-zinc-200 transition-colors"
+        >
+          {all ? `Show ten of them` : `Show all ${count} ${noun} in ${area}`}
+        </button>
+      )}
+    </div>
+  )
+}
+
+
+/**
+ * The first N targets across an area's objectives, with the grouping intact.
+ *
+ * Capping each objective separately would show six of them at three each, which
+ * is not ten goals to choose from — it is a sample of everything.
+ */
+function capGroups<T extends { objective: { id: string; label: string }; targets: unknown[] }>(groups: T[], limit: number): T[] {
+  const out: T[] = []
+  let left = limit
+  for (const group of groups) {
+    if (left <= 0) break
+    out.push({ ...group, targets: group.targets.slice(0, left) } as T)
+    left -= Math.min(left, group.targets.length)
+  }
+  return out
 }
 
 /**
@@ -374,8 +570,20 @@ function SetCard({ template, plan, area, level, handlers }: {
    * so the card says what it did and where it went.
    */
   const [justAdded, setJustAdded] = useState<{ goals: number; added: string[]; extended: string[] } | null>(null)
+  const [confirming, setConfirming] = useState(false)
   const targets = targetsForTemplate(template)
   const fresh = targets.filter((t) => !targetAlreadyAdded(plan, t))
+  /**
+   * What of this set is in the plan, and therefore what taking it back costs.
+   *
+   * Not only the goals: a set puts steps into a routine too, and removing the
+   * goals while leaving a training week running is the half-undo that made no
+   * sense from the page.
+   */
+  const footprint = templateFootprint(plan, area.id, template.id)
+  const taken = footprint.goalIds
+  const alsoRoutines = [...new Set(footprint.steps.filter((x) => !footprint.routineIds.includes(x.routineId)).map((x) => x.routineLabel))]
+  const goneRoutines = plan.routines.filter((r) => footprint.routineIds.includes(r.id)).map((r) => r.label)
   const needs = routineNeedsForTemplate(template)
   const unmet = needs.filter((n) => routineNeedState(plan, n) !== "met")
   const levelValues = (template.levels[level] ?? template.levels[0])?.targetValues ?? {}
@@ -460,6 +668,37 @@ function SetCard({ template, plan, area, level, handlers }: {
         >
           {open ? "hide what is in it" : "see what is in it"}
         </button>
+        {/* TAKING IT BACK IS THE SAME SIZE OF CLICK AS TAKING IT.
+            One press wrote five goals into the area; undoing that meant five
+            confirms on five rows further down the flow. Only shown once some
+            of it is actually in the plan, and it removes the goals — the
+            routine it brought is dropped on its own card, because a stack
+            somebody has since edited is not this card's to delete. */}
+        {(taken.length > 0 || footprint.steps.length > 0) && (
+          confirming ? (
+            <span className="inline-flex flex-wrap items-center gap-2 text-[10.5px]">
+              <span className="text-zinc-400">
+                {BOARD_COPY.takeBackConfirm(taken.length)}
+                {alsoRoutines.length > 0 && ` ${BOARD_COPY.takeBackAlso(footprint.steps.filter((x) => !footprint.routineIds.includes(x.routineId)).length, alsoRoutines.join(" and "))}`}
+                {goneRoutines.length > 0 && ` ${BOARD_COPY.takeBackAlsoRoutine(goneRoutines.join(" and "))}`}
+              </span>
+              <button
+                onClick={() => { handlers.onRemoveTemplate(area.id, template.id); setConfirming(false); setJustAdded(null) }}
+                className="text-rose-300 hover:text-rose-200 transition-colors"
+              >{BOARD_COPY.takeBackYes}</button>
+              <button onClick={() => setConfirming(false)} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+                {BOARD_COPY.takeBackNo}
+              </button>
+            </span>
+          ) : (
+            <button
+              onClick={() => setConfirming(true)}
+              className="text-[10.5px] text-zinc-500 hover:text-rose-200 transition-colors"
+            >
+              {BOARD_COPY.takeBack(taken.length)}
+            </button>
+          )
+        )}
       </div>
 
       {open && (

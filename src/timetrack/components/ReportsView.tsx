@@ -66,7 +66,7 @@ import type {
   TimetrackState,
 } from "../types"
 import { MiniSelect } from "./pickers"
-import { CheckOption, ColorDot, DonutChart, Dropdown, EmptyState, ProgressBar, SectionCard, StackedBarChart, StatTile } from "./primitives"
+import { CheckOption, ColorDot, DonutChart, Dropdown, EmptyState, Modal, ProgressBar, SectionCard, StackedBarChart, StatTile } from "./primitives"
 
 const TABS: { id: ReportTab; label: string }[] = [
   { id: "summary", label: "Summary" },
@@ -123,14 +123,14 @@ export function ReportsView({
   return (
     <div className="space-y-4">
       {/* tabs */}
-      <div className="flex flex-wrap items-center gap-1 border-b border-border">
+      <div className="-mx-3 flex items-center gap-1 overflow-x-auto border-b border-border px-3 sm:mx-0 sm:flex-wrap sm:px-0">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => update({ tab: tab.id })}
             className={cn(
-              "-mb-px border-b-2 px-3 py-2 text-sm font-medium",
+              "-mb-px shrink-0 whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium sm:py-2",
               config.tab === tab.id
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground",
@@ -201,6 +201,7 @@ function FilterBar({
   onSave: (name: string) => void
 }) {
   const [saveName, setSaveName] = useState("")
+  const [sheetOpen, setSheetOpen] = useState(false)
   const { filters } = config
   const filterCount = activeFilterCount(filters)
   const spanDays = Math.max(1, Math.round((new Date(filters.range.end).getTime() - new Date(filters.range.start).getTime()) / 86_400_000) + 1)
@@ -214,9 +215,88 @@ function FilterBar({
     })
   }
 
+  const controls = (
+    <FilterControls
+      state={state}
+      config={config}
+      todayKey={todayKey}
+      filters={filters}
+      filterCount={filterCount}
+      saveName={saveName}
+      setSaveName={setSaveName}
+      onUpdate={onUpdate}
+      onUpdateFilters={onUpdateFilters}
+      onExport={onExport}
+      onSave={onSave}
+      shiftRange={shiftRange}
+    />
+  )
+
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card p-2">
-      <Button variant="ghost" size="icon-sm" onClick={() => shiftRange(-1)} aria-label="Previous period">
+      {/* Phones get a date row plus one sheet holding every other control */}
+      <div className="flex w-full items-center gap-1 sm:hidden">
+        <Button variant="ghost" size="icon-sm" onClick={() => shiftRange(-1)} aria-label="Previous period">
+          <IconPrev className="size-4" />
+        </Button>
+        <button
+          type="button"
+          onClick={() => setSheetOpen(true)}
+          className="min-h-11 min-w-0 flex-1 truncate rounded-md border border-border px-3 py-2 text-sm"
+        >
+          {formatDate(filters.range.start, state.user.dateFormat)} – {formatDate(filters.range.end, state.user.dateFormat)}
+        </button>
+        <Button variant="ghost" size="icon-sm" onClick={() => shiftRange(1)} aria-label="Next period">
+          <IconNext className="size-4" />
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setSheetOpen(true)}>
+          <IconFilter className="size-4" />
+          {filterCount > 0 ? filterCount : "Filters"}
+        </Button>
+      </div>
+
+      {sheetOpen && (
+        <Modal title="Report settings" onClose={() => setSheetOpen(false)}>
+          <div className="space-y-4">{controls}</div>
+        </Modal>
+      )}
+
+      <div className="hidden w-full flex-wrap items-center gap-2 sm:flex">{controls}</div>
+    </div>
+  )
+}
+
+/** Shared by the desktop filter bar and the phone sheet */
+function FilterControls({
+  state,
+  config,
+  todayKey,
+  filters,
+  filterCount,
+  saveName,
+  setSaveName,
+  onUpdate,
+  onUpdateFilters,
+  onExport,
+  onSave,
+  shiftRange,
+}: {
+  state: TimetrackState
+  config: ReportConfig
+  todayKey: string
+  filters: ReportConfig["filters"]
+  filterCount: number
+  saveName: string
+  setSaveName: (value: string) => void
+  onUpdate: (patch: Partial<ReportConfig>) => void
+  onUpdateFilters: (patch: Partial<ReportConfig["filters"]>) => void
+  onExport: (kind: "csv" | "json" | "print") => void
+  onSave: (name: string) => void
+  shiftRange: (direction: number) => void
+}) {
+  return (
+    <>
+      <Button variant="ghost" size="icon-sm" className="hidden sm:inline-flex" onClick={() => shiftRange(-1)} aria-label="Previous period">
         <IconPrev className="size-4" />
       </Button>
       <Dropdown
@@ -299,7 +379,7 @@ function FilterBar({
         onChange={(memberIds) => onUpdateFilters({ memberIds })}
       />
       <MiniSelect
-        className="w-[130px]"
+        className="w-full sm:w-[130px]"
         value={filters.billable}
         onChange={(value) => onUpdateFilters({ billable: value as ReportConfig["filters"]["billable"] })}
         options={[
@@ -421,7 +501,7 @@ function FilterBar({
           )}
         </Dropdown>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -541,7 +621,7 @@ function SummaryTab({
           align="right"
           width="w-56"
           trigger={() => (
-            <span className="flex h-7 items-center gap-1 rounded-md border border-border px-2 text-xs text-muted-foreground">
+            <span className="flex h-9 items-center gap-1 rounded-md border border-border px-2 text-xs text-muted-foreground sm:h-7">
               Metrics ({config.summaryMetrics.length}/{MAX_SUMMARY_METRICS})
               <IconDown className="size-3" />
             </span>
@@ -568,7 +648,7 @@ function SummaryTab({
           )}
         </Dropdown>
       </div>
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         {config.summaryMetrics.map((metric) => {
           const { value, kind } = metricValue(report, metric)
           const definition = SUMMARY_METRICS.find((m) => m.id === metric)!
@@ -593,15 +673,15 @@ function SummaryTab({
       <SectionCard
         title="Tracked over time"
         actions={
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
             <MiniSelect
-              className="w-[120px]"
+              className="w-full sm:w-[120px]"
               value={config.chartMetric}
               onChange={(value) => onUpdate({ chartMetric: value as ReportConfig["chartMetric"] })}
               options={CHART_METRICS.map((m) => ({ id: m.id, label: m.label }))}
             />
             <MiniSelect
-              className="w-[110px]"
+              className="w-full sm:w-[110px]"
               value={config.chartInterval}
               onChange={(value) => onUpdate({ chartInterval: value as ReportConfig["chartInterval"] })}
               options={[
@@ -611,7 +691,7 @@ function SummaryTab({
               ]}
             />
             <MiniSelect
-              className="w-[140px]"
+              className="w-full sm:w-[140px]"
               value={config.chartStackBy ?? "none"}
               onChange={(value) => onUpdate({ chartStackBy: value === "none" ? null : (value as GroupingDimension) })}
               options={[{ id: "none", label: "No stacking" }, ...GROUPING_DIMENSIONS.map((d) => ({ id: d.id, label: `Stack by ${d.label.toLowerCase()}` }))]}
@@ -627,7 +707,7 @@ function SummaryTab({
           title="Breakdown"
           actions={
             <MiniSelect
-              className="w-[140px]"
+              className="w-full sm:w-[140px]"
               value={config.pieGroupBy}
               onChange={(value) => onUpdate({ pieGroupBy: value as GroupingDimension })}
               options={GROUPING_DIMENSIONS.map((d) => ({ id: d.id, label: d.label }))}
@@ -643,15 +723,15 @@ function SummaryTab({
         <SectionCard
           title="Grouping"
           actions={
-            <div className="flex items-center gap-2">
+            <div className="flex w-full items-center gap-2 sm:w-auto">
               <MiniSelect
-                className="w-[120px]"
+                className="w-full sm:w-[120px]"
                 value={config.grouping}
                 onChange={(value) => onUpdate({ grouping: value as GroupingDimension })}
                 options={GROUPING_DIMENSIONS.map((d) => ({ id: d.id, label: d.label }))}
               />
               <MiniSelect
-                className="w-[130px]"
+                className="w-full sm:w-[130px]"
                 value={config.subGrouping ?? "none"}
                 onChange={(value) => onUpdate({ subGrouping: value === "none" ? null : (value as GroupingDimension) })}
                 options={[{ id: "none", label: "No sub-group" }, ...GROUPING_DIMENSIONS.map((d) => ({ id: d.id, label: d.label }))]}
@@ -708,7 +788,7 @@ function GroupRow({
         type="button"
         onClick={onToggle}
         disabled={row.children.length === 0}
-        className="flex w-full items-center gap-2 rounded px-1 py-1.5 text-left text-sm hover:bg-secondary/40 disabled:cursor-default"
+        className="flex min-h-11 w-full items-center gap-2 rounded px-1 py-1.5 text-left text-sm hover:bg-secondary/40 disabled:cursor-default sm:min-h-0"
       >
         {row.children.length > 0 ? (
           <IconDown className={cn("size-3 shrink-0 transition-transform", expanded && "rotate-180")} />
@@ -717,12 +797,12 @@ function GroupRow({
         )}
         <ColorDot color={row.color} />
         <span className="min-w-0 flex-1 truncate">{row.label}</span>
-        <span className="w-24 shrink-0">
+        <span className="hidden w-24 shrink-0 sm:block">
           <ProgressBar value={row.seconds} max={total} color={row.color ?? undefined} height={4} />
         </span>
         <span className="w-12 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{Math.round(share)}%</span>
         {row.revenue > 0 && (
-          <span className="w-24 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+          <span className="hidden w-24 shrink-0 text-right text-xs tabular-nums text-muted-foreground sm:block">
             {formatMoney(row.revenue, currency)}
           </span>
         )}
@@ -771,7 +851,42 @@ function DetailedTab({
   if (rows.length === 0) return <EmptyState title="No time entries match these filters" />
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border bg-card">
+    <>
+      {/* phones: one card per entry */}
+      <ul className="space-y-2 sm:hidden">
+        {rows.map((row) => (
+          <li key={row.entryId} className="rounded-lg border border-border bg-card p-3">
+            <div className="flex items-baseline gap-2">
+              <span className="min-w-0 flex-1 truncate text-sm">{row.description || "(no description)"}</span>
+              <span className="shrink-0 text-sm font-medium tabular-nums">
+                {formatDuration(row.seconds, state.user.durationFormat)}
+              </span>
+            </div>
+            <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+              {row.projectName && <ColorDot color={row.projectColor} />}
+              <span className="min-w-0 flex-1 truncate">
+                {row.projectName ?? "No project"}
+                {row.taskName ? ` · ${row.taskName}` : ""}
+                {row.clientName ? ` · ${row.clientName}` : ""}
+              </span>
+              {row.billable && <span className="shrink-0">{formatMoney(row.amount, currency)}</span>}
+            </div>
+            <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+              <span className="tabular-nums">
+                {formatDate(dateKey(row.start), state.user.dateFormat)} {formatTimeOfDay(row.start, state.user.timeFormat)}
+                {row.stop ? `–${formatTimeOfDay(row.stop, state.user.timeFormat)}` : " – running"}
+              </span>
+              {row.tagNames.length > 0 && <span className="min-w-0 flex-1 truncate">{row.tagNames.join(", ")}</span>}
+            </div>
+          </li>
+        ))}
+        <li className="rounded-lg border border-border bg-secondary/30 px-3 py-2 text-sm font-medium">
+          {rows.length} entries · {formatDuration(totalSeconds, state.user.durationFormat)} ·{" "}
+          {formatMoney(totalAmount, currency)}
+        </li>
+      </ul>
+
+      <div className="hidden overflow-x-auto rounded-lg border border-border bg-card sm:block">
       <table className="w-full min-w-[900px] text-sm">
         <thead className="border-b border-border bg-secondary/30 text-xs uppercase tracking-wide text-muted-foreground">
           <tr>
@@ -831,7 +946,8 @@ function DetailedTab({
           </tr>
         </tfoot>
       </table>
-    </div>
+      </div>
+    </>
   )
 }
 
@@ -860,13 +976,13 @@ function WorkloadTab({
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <MiniSelect
-          className="w-[140px]"
+          className="w-full sm:w-[140px]"
           value={config.grouping}
           onChange={(value) => onUpdate({ grouping: value as GroupingDimension })}
           options={GROUPING_DIMENSIONS.map((d) => ({ id: d.id, label: `Group by ${d.label.toLowerCase()}` }))}
         />
         <MiniSelect
-          className="w-[130px]"
+          className="w-full sm:w-[130px]"
           value={config.workloadValueMode}
           onChange={(value) => onUpdate({ workloadValueMode: value as ReportConfig["workloadValueMode"] })}
           options={[
@@ -880,6 +996,9 @@ function WorkloadTab({
         <EmptyState title="Nothing tracked in this range" hint="Widen the dates, or clear a filter." />
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border bg-card">
+          <p className="border-b border-border px-3 py-2 text-[11px] text-muted-foreground sm:hidden">
+            Swipe sideways to see every day.
+          </p>
           <table className="w-full min-w-[700px] text-sm">
             <thead className="border-b border-border bg-secondary/30 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
@@ -965,7 +1084,7 @@ function ProfitabilityTab({
   return (
     <div className="space-y-3">
       <MiniSelect
-        className="w-[160px]"
+        className="w-full sm:w-[160px]"
         value={config.grouping}
         onChange={(value) => onUpdate({ grouping: value as GroupingDimension })}
         options={GROUPING_DIMENSIONS.map((d) => ({ id: d.id, label: `Group by ${d.label.toLowerCase()}` }))}
@@ -974,7 +1093,39 @@ function ProfitabilityTab({
       {rows.length === 0 ? (
         <EmptyState title="Nothing to analyze in this range" hint="Profitability needs billable time, rates or a fixed fee." />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-card">
+        <>
+        <ul className="space-y-2 sm:hidden">
+          {rows.map((row) => (
+            <li key={row.key} className="rounded-lg border border-border bg-card p-3">
+              <div className="flex items-center gap-1.5">
+                <ColorDot color={row.color} />
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">{row.label}</span>
+                <span className={cn("shrink-0 text-sm font-medium tabular-nums", row.profit < 0 && "text-destructive")}>
+                  {formatMoney(row.profit, currency)}
+                </span>
+              </div>
+              <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                <div className="flex justify-between">
+                  <dt>Tracked</dt>
+                  <dd className="tabular-nums">{formatDuration(row.seconds, state.user.durationFormat)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt>Margin</dt>
+                  <dd className="tabular-nums">{Math.round(row.margin * 100)}%</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt>Revenue</dt>
+                  <dd className="tabular-nums">{formatMoney(row.revenue, currency)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt>Cost</dt>
+                  <dd className="tabular-nums">{formatMoney(row.cost, currency)}</dd>
+                </div>
+              </dl>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden overflow-x-auto rounded-lg border border-border bg-card sm:block">
           <table className="w-full min-w-[760px] text-sm">
             <thead className="border-b border-border bg-secondary/30 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
@@ -1029,6 +1180,7 @@ function ProfitabilityTab({
             </tfoot>
           </table>
         </div>
+        </>
       )}
     </div>
   )

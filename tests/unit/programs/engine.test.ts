@@ -48,6 +48,7 @@ function enroll(
     cursor,
     is_active: true,
     started_at: "2026-01-01",
+    customSchedule: null,
   }
 }
 
@@ -398,7 +399,7 @@ describe("expanded catalog", () => {
           )
         : undefined
       const { exerciseState, cursor } = seedEnrollment(program, level, "kg", oneRms)
-      const e: ProgramEnrollment = { id: "x", user_id: "u", program_id: program.id, level, unitSystem: "kg", exerciseState, cursor, is_active: true, started_at: "2026-01-01" }
+      const e: ProgramEnrollment = { id: "x", user_id: "u", program_id: program.id, level, unitSystem: "kg", exerciseState, cursor, is_active: true, started_at: "2026-01-01", customSchedule: null }
       expect(() => computePrescription(program, e)).not.toThrow()
     }
   })

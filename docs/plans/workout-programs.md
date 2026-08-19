@@ -35,7 +35,85 @@ Engine dispatches on `metricType`: load (linear/percentage_tm/double_progression
 
 **Goals-hub integration: DONE.** Programs are a first-class item in the new-goals plan builder (`/test/new-goals`): when the **Get Strong** objective is in the plan, a green "HEALTH · Training program" panel appears under Health (StrongLifts 5×5 / 5/3/1, level + units + per-lift overrides / 1RMs). On plan **Save** the user is enrolled idempotently (`programRepo.ensureEnrollment` — no-op if already enrolled, so re-save never wipes progress; only switching programs replaces). Carried via `programSelection` in the plan flow state + `NewGoalsPlanSchema`; GET `/api/goals/plan` rehydrates it from the active strength enrollment. Full authed E2E verified: plan→pick→save→enrollment shows in `/test/programs` My Programs. Picker = `src/programs/components/ProgramPicker.tsx`; gated block in `GoalsConfigStep.tsx`.
 
-What M1 deliberately does NOT do yet: standalone `/programs` route (only `/test/programs` + the goals-hub panel); manual-deload UX (engine auto-deloads); assistance-lift prescriptions for 5/3/1 (main lifts only, cited). Endurance/calisthenics/flexibility programs (M2–M4) — the picker only shows strength today. Catalog expansion (Starting Strength, GZCLP, PPL…) = add data files + list in `catalog.ts`.
+---
+
+## PROGRAMS ARE EDITABLE, AND THEY LIVE ON THE LIFE-MASTERY TEMPLATES TAB (2026-08-18)
+
+**The gap this closed.** `/test/life-mastery` could say "four workouts a week" and produce a split of *day names* (Push / Pull / Legs) with nothing underneath them, while the 13 cited programs sat at `/test/programs` where nobody planning their life would find them. And a catalog program could not be changed at all — the rack has no leg press, the shoulder will not overhead press, and the only answers were "follow it anyway" or "don't use the app for training".
+
+**1. Full editing, copy-on-write** — `src/programs/customize.ts`.
+- `custom_schedule` is **NULL until the first edit**, so an untouched enrollment keeps picking up catalog corrections. The first edit snapshots the *whole* resolved schedule and the user owns it from then on.
+- **Not a diff.** A patch keyed by catalog day/exercise ids has to guess what a renamed or retired id means on the next catalog change, and every answer is a silent guess at read time (CLAUDE.md no-fallback).
+- **The engine did not change.** `effectiveProgram(program, customSchedule)` returns the definition with the user's schedule swapped in; `programRepo.programFor()` resolves it once, on the way out of the DB. Every prescription, progression and bridge downstream runs the user's version without knowing customization exists.
+- Ops: rename / reorder / add / remove days; swap / add / remove / reorder exercises; edit sets & reps.
+- **Swap takes the replacement's own prescription**, never the old slot's — 5×5 carried onto a Lateral Raise, or a %TM wave onto a Face Pull, prescribes something nobody should do.
+- **Refused on purpose, visibly:** 5/3/1 main lifts won't take a sets/reps edit (the wave *is* the program); endurance plans aren't editable at all (week 6 only means something because weeks 1–5 happened).
+- **No guessed weights.** `seedEnrollment` already throws without a working weight, so any added/swapped lift asks for a starting number, with a library suggestion shown for confirmation. `src/programs/data/exerciseLibrary.ts` = ~55 lifts grouped by movement pattern; swapping offers like-for-like first.
+- **Editing mid-program costs no progress.** `seedForAddedExercises` only fills state that is *missing*; surviving lifts keep working weight, TM and fail count, and a removed lift keeps its state so putting it back doesn't reset it.
+- **An empty training day is never startable** — `scheduleProblems()` names the day in the UI, and the wire schema enforces `.min(1)` exercises per day independently. An empty day would prescribe a session with nothing in it, advance the cursor and log a workout that didn't happen.
+
+**2. On the Templates tab, as its own top-level section** — `src/goals/components/north-star/WorkoutPrograms.tsx`, mounted in `BuildBoard.tsx` directly under the board header, above the area rows. **It was first put inside the Fitness area card and was effectively invisible**, for three reasons worth not repeating: (a) the board's area filter (`shown = showAll || pictured.length === 0 ? plan.areas : pictured`) hides every area without a "10" written, so any real plan with one 10 elsewhere rendered no Fitness card at all; (b) areas are renameable/removable, so keying on `lm_fitness` could strand a user permanently; (c) it sat under 52 goals and a practices row, ~1700px down. A program is also not the same *kind* of offer as a set/goal/practice — those drop something into the plan, a program IS the training week and starting one writes to the DB. Pick → edit → **Start tracking this** creates a *real DB enrollment*. Needs an account and says so; editing works signed out. Starting also writes the program's days into the plan's workout routine via `ns.applyProgramToWorkoutRoutine`, so the week on screen and the week being tracked can no longer disagree.
+
+**3. Editable after it's running** — `src/programs/components/EditActiveProgram.tsx`, in `ProgramsApp`. Most real edits happen in week three.
+
+**4. A CUSTOMIZE STEP — design a week from scratch (2026-08-18).** Rail tab 6 on `/test/life-mastery`, between Templates and Systems, in a **sky accent** rather than the rail's violet and with **no progress ring** (`WORKSHOP_TABS` in `northStar.ts`): it is a tool, not a section of the plan, and a ring there would score somebody on having designed a training program.
+
+- `src/programs/builder.ts` (authoring ops) + `components/CustomProgramBuilder.tsx` (UI) + `north-star/CustomizeTab.tsx` (the step). **Reuses `customize.ts` for days/lifts** — a day is a day whether the program was cited or invented, and a second copy would mean two sets of rules about empty days and id collisions.
+- **Enrolled against a SHELL program** (`data/customProgram.ts`, id `custom`): everything downstream of an enrollment is reached through `requireProgram(program_id)`, so a self-designed week is an ordinary enrollment whose `custom_schedule` is the design. Resolvable via `getProgram`, deliberately absent from `ALL_PROGRAMS` so it never appears in a browse list. **Seeds nothing at any level** → `seedEnrollment` throws unless every lift is given a weight, which is right when there is no cited source to suggest from.
+- **Supersets are a flat `supersetGroup` tag on the exercise, not nesting.** Nesting would change the shape the engine, prescription, log and workout_sets bridge all walk, to express "these belong together" — and each lift in a superset is still prescribed, logged and progressed on its own rule, which the tag preserves exactly. Joined by pairing NEIGHBOURS (a superset is back-to-back, so letters-from-a-dropdown would allow pairs five rows apart); labels `A1/A2` renumber on reorder; unpairing releases a survivor left alone, since a group of one is not a superset.
+- **Progression is a choice per lift**: add weight each time (linear), add reps then weight (double progression), or **"leave it to me"** — a new `{ kind: "none" }` rule that holds the weight and reports a `hold` change rather than being omitted. It needed a real branch in `applyLog`; the previous `else` assumed percentage-of-TM. `percentage_tm` is deliberately NOT offered — a weekly set table is a program's structure, not one lift's setting.
+- Also: straight-sets ↔ rep-range toggle (carries the reps across), per-lift weight step in the user's own unit, per-lift notes (reach the session prescription). **Priority = order**, not a separate field — an "importance" flag with no effect on what gets prescribed would be decoration; the order IS the session, and the first lift is marked `main`.
+- Own localStorage key `custom-program-v1`, not part of the plan: "start over" on the plan must not delete somebody's training week. Only the day names cross into the plan, and only once started.
+
+**CLICKING IS THE WAY IN; WRITING IS A DRAWER (2026-08-18, after "i cant add lifts like a normal person… I didnt want to write in coding language using symbols, but just wanting to pick and click easily").**
+
+I misread the previous complaint. "Not humanlike to separate with a comma" meant *the picking should be easy*, not *let me type it*. Shipping a `3x8 @60` syntax as the primary input was the wrong fix — it is still typing, and now it is typing syntax.
+
+- **`ExercisePalette` is always open** inside a day. Every lift on screen, tabbed by body part, **one click adds** and the palette stays put so the next one is also one click. The old flow — "add a lift" → type → click a result — was three actions per lift with a blank box that told you nothing about what existed.
+- **`Stepper` for sets and reps**: −/+ taps rather than select-all-and-retype. Still typable underneath for 8→20.
+- **The written form moved behind "Paste or write it instead"**, shut by default. The parser and its 37 tests stay — pasting a program you already have is genuinely faster — it is just no longer the way in.
+- Preserves the concurrently-added pool work it sits on: `searchLibrary` (hyphen-insensitive, prefix-ranked) powers the filter, and `customLibraryEntry` still offers "add X as your own" when the 153-lift pool genuinely has nothing.
+
+**THE OLD PRIMARY, NOW THE DRAWER: WRITING THE PROGRAM OUT (2026-08-18, after "how i write the lifts makes no sense at all").** The first builder made you click "add a lift" → search → click a chip, once per lift per day. Nobody writes five training days that way. `src/programs/programText.ts` parses a whole week typed the way you would write it on paper:
+
+```
+Mon Push
+Bench Press 3x8 @60
+Overhead Press 3x8 @40
++ Lateral Raise 3x12-20 @6
+
+Tue Pull
+Deadlift 1x5 @100
+```
+
+Rules, deliberately few: blank line starts a day · the first line of a block is its name · `3x8` sets×reps, `3x8-12` a rep range · `@60` starting weight, `@bw` bodyweight · a leading `+`/`&` supersets with the line above. Also handles `3 x 8`, `3×8`, decimals, and unit suffixes.
+
+- **NOTHING IS SILENTLY DROPPED.** An unreadable line returns in `problems` with its line number and reason and is shown under the box — the failure mode being avoided is pasting five days, keeping four, and finding out in the gym.
+- **UNKNOWN LIFTS ARE KEPT** under the name you wrote ("Zercher Squat"), as `loadStyle: "free"`. A recognised name gets the library's canonical spelling (so the `workout_sets` bridge matches) and its defaults; catalog aliases resolve ("Squat" → Back Squat).
+- **Round-trips.** `formatProgramText` regenerates the box from the design, so reordering a day with the arrows below flows back up rather than leaving two versions of the truth. `carryAuthoredSettings` preserves progression rules and notes (which have no written form) across a re-apply, matched on id AND name so a replaced lift never inherits the old one's settings.
+- The structured editor stays, demoted to "adjust afterwards".
+
+⚠️ **SECOND BUG FIXED — bodyweight was impossible to enrol.** `@bw` is weight 0, and every gate demanded `> 0`: the UI's "needs a starting weight", the wire schema's `.positive()`, and `seedForAddedExercises`. Push-ups, dips and unweighted pull-ups could not be started at all. Now 0 is a legitimate answer everywhere and only absent-or-negative is missing. The trap this walked into — `Number("") === 0`, which would turn every blank box into a deliberate bodyweight entry — is why `numericWeights`/`hasWeight` (in `builder.ts`) check the RAW STRING first; use them rather than parsing weight boxes inline.
+
+⚠️ **BUG FIXED WHILE BUILDING THIS — `roundToLoadable` floored EVERY weight at the barbell** (20 kg / 45 lb), so a 6 kg lateral raise was prescribed at 20 kg and a bodyweight push-up at 20 kg. It barely showed while the app held only barbell programs; a self-designed week is mostly accessories and it showed immediately. Now takes a `loadStyle` (`"barbell"` default | `"free"`); `LoadExercise.loadStyle` is **absent on every catalog program**, so their rounding is byte-identical to before. `LibraryExercise.barbell` says which is which — distinct from `compound` (a dip is compound with no bar under it).
+
+**5. A SHARED SET OF SHAPES — `src/programs/components/ui.tsx` (2026-08-18, after "the layout looks like a 10 year old made it").** The first builder used **seven font sizes in one component** and **three button languages in a single row** — lowercase text links ("close", "edit", "set up", "swap") next to bare icon buttons next to loose bordered chips. Each was a defensible local choice; together they read as unfinished. The fix was having a set to choose from, not making better one-off decisions.
+
+- **Four type sizes, no others on these screens:** `TYPE.label` 10px uppercase · `TYPE.meta`/`hint` 11px · `TYPE.body` 12.5px · `TYPE.title` 13px. Every program surface is now 10/11/12.5 only.
+- **Two button languages:** `IconButton` (reversible row manipulation — move, remove, expand; 44px touch target, 28px with a mouse, aria-label required) and `Segmented` (a choice between named alternatives). Anything else is an `Action` with a border and a label. The lowercase text links are gone.
+- **`Segmented` replaces loose chips** for kg/lb, straight-sets/rep-range and progression: one bordered group with dividers, because loose chips do not say the options belong to each other — which is exactly why "kg lb" read as two unrelated buttons.
+- **`Field` puts the label above the box and the unit inside it.** The row used to read "sets 3 reps 8 start at 60 kg" — a broken sentence rather than a form, saying the unit again after every number.
+- Watch for the flex trap: `Segmented`/`Field` sit inside `flex flex-col` groups and stretched full-width until given `w-fit self-start`.
+
+**6. Real route** — `app/programs/page.tsx`. **Not in the main nav**; where it belongs in the app's IA is a product decision. Enrollment already bridges to `workout_logs`, so sessions reach dashboard metrics regardless.
+
+⚠️ **MIGRATION REQUIRED: `supabase/migrations/20260818_program_custom_schedule.sql`** (one `ADD COLUMN IF NOT EXISTS custom_schedule JSONB`). The enroll INSERT now writes this column, so **enrollment breaks entirely until it is applied** — not just customized enrollment. No new RLS policy: `program_enrollments` already carries own-row CRUD, and this is the user's own training plan sitting beside `exercise_state`.
+
+Wire validation: `src/programs/schemas.ts` — a custom schedule is the only free-form JSON in this slice that the engine then executes, so every numeric field is bounded (set/rep counts, increments, percentages), not just typed. Tests: `customize.test.ts` (43) + `builder.test.ts` (47) + `programText.test.ts` (37) + 8 in `northStarService.test.ts`. Full suite green (3458).
+
+---
+
+What M1 deliberately does NOT do yet: manual-deload UX (engine auto-deloads); assistance-lift prescriptions for 5/3/1 (main lifts only, cited); the main-nav entry for `/programs`. Catalog expansion (Starting Strength, GZCLP, PPL…) = add data files + list in `catalog.ts`.
 
 ---
 
@@ -165,3 +243,55 @@ Surface from `health_fitness` in the goals hub (reuse `GoalsHubContent` patterns
 - Default available-plate sets (kg/lb) for rounding — confirm at M1.
 
 *Resolved:* scheduling = **hybrid**; scope = **fitness-only** (engine kept extensible but no generic non-fitness registry now).
+
+## The lift pool, your own lifts, and drop sets
+
+**The pool went from 55 lifts to 153.** Fifty-five is enough to swap a lift in a
+cited program and not enough to design a week from scratch, which is what the
+Customize step asks people to do. Every movement pattern in `PATTERN_ORDER` got
+filled out — box squats and belt squats, good mornings and rack pulls, T-bar and
+seal rows, weighted and neutral-grip pull-ups, the cable and machine variants of
+every raise, planks and carries. Original entries still lead their group in the
+picker; the additions sit under them, because the common lift should be the
+first thing you see.
+
+**Search was punctuation-sensitive and that was the reported bug**: "we have
+assisted pull up, but not an actual pull up". Both were in the pool. Neither
+could be found, because the names carry hyphens — Pull-up, Chin-up, Push-up,
+T-Bar Row — and nobody types the hyphen, so a raw `includes` matched nothing and
+the picker answered "nothing called that" about a lift it was holding.
+`searchLibrary` now squashes everything that is not a letter or a digit, ranks a
+name that STARTS with the query above one that merely contains it, and carries a
+small alias table for the words people use that are not the canonical name
+("military press", "press up", "rfess"). Matches on an alias sort last.
+
+**You can write your own lift.** `customLibraryEntry(name, pattern)` builds a
+library-shaped entry that goes straight into the day being edited. It does NOT
+join `EXERCISE_LIBRARY`: that pool is what everyone's editor offers and what
+every catalog program is checked against, and growing it from user input would
+make one person's "Cable Thing" everybody's and make `patternForName` answer
+differently depending on who asked. The pattern is asked for rather than
+guessed, because it decides what the swap picker offers in that slot later. It
+arrives free-loaded with no starting weight: guessing barbell floors a 6 kg
+movement at the 20 kg bar, and a made-up suggestion under a made-up lift is a
+number pretending to be advice.
+
+**Drop sets are a modifier, exactly like supersets.** `dropSets?: number` on
+`LoadExercise`, 1–4, set from a `Segmented` on the lift row and cleared by the
+same control. **Nothing in `applyLog` reads it.** Drops are extra work at a
+weight you did not choose; counted as sets they would tell the engine the
+working weight had collapsed and deload a lift that is going fine. It rides
+through `carried()` into the prescription so the person training on Tuesday is
+told, and no further.
+
+It also round-trips through the written form. `formatProgramText` writes
+`Bench Press 3x8 @60 +2 drops` and `parseProgramText` reads it back — it had to,
+because the parser's last rule is "whatever is left is the name", so an unread
+suffix would come back as a lift called "Bench Press +2 drops", matching nothing
+in the library and nothing in `workout_sets`. The trailing marker cannot be
+confused with the leading superset `+`, which is anchored to the start of a line.
+
+Covered by `tests/unit/programs/lifts.test.ts` (21): the hyphen spellings, the
+ranking, no duplicate ids or names, every pattern populated, every entry
+resolving to its own pattern, the custom entry staying out of the shared pool,
+and drops leaving scheme and progression untouched while surviving the text.

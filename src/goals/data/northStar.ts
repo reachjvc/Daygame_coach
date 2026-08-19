@@ -26,6 +26,96 @@ import type {
 export const NORTH_STAR_STORAGE_KEY = "north-star-v1"
 
 /**
+ * The id of THIS run of the plan, minted on first use and reminted by
+ * "start over".
+ *
+ * Plan goal ids are `g1`, `g2`, … off a counter that starts again at zero when
+ * everything is cleared, so they identify a goal within one run and no further.
+ * Pushed goals are tagged with both, and the tag is what stops a fresh `g1`
+ * from being matched onto the row of a `g1` from a plan that no longer exists.
+ * Its own key rather than a field on the plan: it is about where the plan has
+ * been sent, not about the plan, and nothing that reads a saved plan should
+ * have to migrate for it.
+ */
+export const NS_TRACK_RUN_KEY = "north-star-track-run"
+
+/**
+ * Step 11's copy.
+ *
+ * It says what is about to happen to somebody's real goals before it happens,
+ * in the words they would use. "Push to the database" is our word for it; what
+ * they are doing is starting to tick things off.
+ */
+/**
+ * The schedule on the track step.
+ *
+ * Says what it is showing and, just as importantly, what it is not: a weekly
+ * view that quietly leaves the milestones out looks like a weekly view that
+ * forgot them.
+ */
+/**
+ * The today step's copy.
+ *
+ * Short, because the step is one question asked every day and anything else on
+ * it is something to read past. The only long line is the one that explains why
+ * a driver cannot be counted yet, which is the only thing here that can leave
+ * somebody stuck.
+ */
+export const TODAY_COPY = {
+  help: "Tick off what you have done. Nothing to set up here — this is the plan you already made, on today.",
+  loading: "Opening today…",
+  empty:
+    "Nothing running yet. Once there are routines or drivers in the plan, this is where you say what you did.",
+  nothingOn: "Nothing is scheduled for today. Anything you did anyway is below.",
+  doneSuffix: "done",
+  allDone: "That is today's list, done.",
+  notTracked: "not counted yet",
+  restTitle: "Everything else that runs",
+  restHelp:
+    "Not on today, and you may have done it anyway. A plan that only accepts the sessions it predicted under-counts the weeks you actually had.",
+  signedOut:
+    "Ticks save on this device. Counting the drivers needs you signed in — they are goals on your account, not notes in a browser.",
+  feltTitle: "How today went",
+  feltHelp:
+    "Rate each area on how it actually felt today, 0 to 10. Same scale as the wheel and the same store, so this is what the rolling average on Your 10s is made of. Skip any of them; click a number again to clear it.",
+  noteLabel: "Anything worth remembering about today",
+  notePlaceholder: "What happened, what got in the way, what you would do again.",
+  noteSaved: "Saves when you click away.",
+} as const
+
+export const SCHEDULE_COPY = {
+  title: "What you will actually be doing",
+  help:
+    "Everything in the plan that repeats, and how often. Week by week so you can see what it turns into — an ease-in that starts at two a week and reaches four is a different promise from four a week starting Monday.",
+  empty:
+    "Nothing repeating in the plan yet. Systems and drivers — the things you do week in week out — show up here once there are some.",
+  activityHeader: "What runs",
+  totalRow: "Times a week, all in",
+  stepsUp: "Goes up this week",
+  today: "Today",
+  nothingOn: "Nothing on",
+  looseTitle: "Runs weekly, no day chosen",
+  looseHelp:
+    "These say how often and not when, which is a finished answer for most of them. Give them days on Systems if you want them on the calendar.",
+  notMilestones:
+    "Milestones and one-off experiences are not here on purpose. They are what the above is for, not something you do on a Tuesday — a weekly grid would show you behind on them every week until the week you are not.",
+} as const
+
+export const TRACK_COPY = {
+  title: "Start tracking these",
+  help:
+    "Everything up to here saved on this device only. Tick the goals you actually want to count from now on and they become real goals on your account — the same ones the goals page counts, streaks and resets each week. Nothing is sent until you press the button, and pressing it again later picks up whatever is new without touching what is already running.",
+  empty: "No goals in the plan yet. Write some on Experiences or Systems and they will show up here.",
+  allTracked: "Everything in the plan is being tracked.",
+  hubTitle: "This plan, running",
+  hubHelp: "The real goals page, showing only what you pushed from this plan. Tick things off here and it counts.",
+  hubScoped: "Only this plan's goals are shown here. Everything else on your account is on",
+  signedOutTitle: "This step needs you signed in",
+  signedOut:
+    "The rest of the flow runs in this browser and asks nothing of you. This step cannot: tracking a goal means a row on your account, counted every day, kept when you open the app on your phone. Sign in and the plan is still here when you come back — it is saved on this device, not on the account.",
+} as const
+
+/**
  * Four tabs, split by the question each one answers.
  *
  * "Where you are" and "Areas, routines & goals" were once the same screen twice
@@ -37,20 +127,122 @@ export const NORTH_STAR_STORAGE_KEY = "north-star-v1"
  *   now  — where you stand, and what already runs underneath.
  *   plan — what you are going to do about it.
  */
-export const TAB_ORDER: NorthStarTabId[] = ["star", "now", "plan", "review"]
+/**
+ * Six steps, in the order the work actually wants to happen.
+ *
+ * THE GOALS COME BEFORE THE FOCUS. They were the other way round, which asked
+ * somebody to pick the two or three areas of their season before they had
+ * written down what they wanted in any of them — choosing between things they
+ * had not named yet. You write everything first, then choose. The ordering step
+ * on the focus tab only makes sense in that order too: there is nothing to rank
+ * until the goals exist.
+ *
+ * The values exercise moved out of the north star and into its own late step
+ * for the same reason: ranking what matters is easier once you can see what you
+ * have actually asked your life for.
+ */
+/**
+ * Seven steps, and the third one is a single sentence.
+ *
+ * "All goals" used to be third, which meant the first thing anybody did after
+ * picturing twelve areas was start listing things they wanted in all twelve.
+ * Somebody who has just answered "what one change would make the next few
+ * years work" lists differently: the list becomes what that change needs,
+ * rather than everything that came to mind, area by area.
+ */
+/**
+ * AND THE FOURTH IS A FORK, NOT A STEP.
+ *
+ * Everything before it is one order because it is one argument. After the one
+ * thing the order stops being an argument: wanting first, systems first and
+ * one-routine-first are three different people, not three stages, so step four
+ * asks which and sends you there. It is in the rail like the rest because a
+ * fork you cannot get back to is a gate, and it carries no dot — there is
+ * nothing on it to fill in.
+ */
+/**
+ * AND THE TWO HALVES ARE TWO STEPS AGAIN, because the fork asks for them by
+ * name.
+ *
+ * They were merged into one page with a switch under the wheel, on the argument
+ * that the same twelve areas and four routines are what both halves are written
+ * into. That is still true, and it is why the two steps share a body. What the
+ * merge cost is the thing step four now depends on: "brainstorm what you want"
+ * and "build the systems" are two different pieces of work, and a door that
+ * lands you on one page with a toggle somewhere on it has not taken you
+ * anywhere. A step you can be sent to, and be finished with, has to be a step.
+ */
+/**
+ * AND THE CATALOGUE IS A STEP, BEFORE BOTH OF THEM.
+ *
+ * It was a tab riding on the two build steps, which put "here is what other
+ * people set" on the same surface as "write what you want" — and being handed a
+ * ready-made list while the box is still empty is how somebody ends up with
+ * somebody else's plan. As its own step it is what it actually is: a place you
+ * walk through, take what is yours from, and leave. It comes before Systems and
+ * Achievements because a browse is the cheapest thing to do first, and it
+ * carries no ring — see SCORED_TABS.
+ */
+export const TAB_ORDER: NorthStarTabId[] = ["star", "now", "one", "pick", "templates", "customize", "systems", "milestones", "focus", "values", "commit", "track", "today"]
+
+/**
+ * The steps that are a WORKSHOP rather than a part of the plan.
+ *
+ * Templates hands you somebody else's ready-made work, and Customize is a bench
+ * you build your own on. Neither is a section of the document the other steps
+ * are writing, so both are marked differently in the rail — a different accent,
+ * and no progress ring — and "I have not filled this in" never reads as "I am
+ * behind on my plan".
+ */
+export const WORKSHOP_TABS: NorthStarTabId[] = ["templates", "customize"]
+
+/**
+ * The steps that carry a ring on the rail, which is every step but the fork.
+ *
+ * A ring says how full a step is, and the fork has nothing in it to fill — its
+ * three doors write into the steps they open. Scoring somebody on having chosen
+ * a door is the sort of tick that made the old green ones meaningless. Kept
+ * here rather than as a check in the rail's JSX so that the invariant "every
+ * ring can be filled" has one list to run over.
+ *
+ * The catalogue and the track step are out for the same reason: neither holds
+ * anything you wrote. Track is a mirror of the goals the other steps produced,
+ * and a ring on it would be scoring the plan twice.
+ */
+export const SCORED_TABS: NorthStarTabId[] = TAB_ORDER.filter(
+  (tab) => tab !== "pick" && tab !== "templates" && tab !== "customize" && tab !== "track" && tab !== "today"
+)
 
 export const TAB_LABELS: Record<NorthStarTabId, string> = {
   star: "North star",
-  now: "Where you are",
-  plan: "Your goals",
-  review: "Review",
+  now: "Your 10s",
+  one: "The one thing",
+  pick: "Where to start",
+  templates: "Templates",
+  customize: "Customize",
+  systems: "Systems",
+  milestones: "Experiences",
+  focus: "Focus & season",
+  values: "Values & identity",
+  commit: "Commit",
+  track: "Track",
+  today: "Today",
 }
 
 export const TAB_BLURBS: Record<NorthStarTabId, string> = {
   star: "The life you are aiming at, why it matters, and who you would have to be.",
-  now: "Rate each area on the wheel, picture your 10, and say why it matters and who you are in it.",
-  plan: "The goals aimed at each 10, and the routines running underneath them.",
-  review: "Whether the goals point at your 10, and what has stopped you before.",
+  now: "Rate each area on the wheel and picture what a 10 looks like in it.",
+  one: "The single change that would make the rest far more likely, and what it needs from you.",
+  pick: "Three ways on from here: what you want, what you will do, or one routine.",
+  templates: "Ready-made sets, goals and practices for every area. Take what is yours, ignore the rest.",
+  customize: "Design your own training week from scratch — days, lifts, rep schemes, progression, supersets.",
+  systems: "What you actually do about it week in week out, and what each one is pointed at.",
+  milestones: "Everything you want to experience and have done, area by area. Loose, greedy, nothing final.",
+  focus: "Which areas this season is about, and what comes after it.",
+  values: "What you are ranking your life by, in order, and who that makes you.",
+  commit: "Read it back, say what could go wrong, and commit to it.",
+  track: "Push the goals into your real goals and tick them off day by day.",
+  today: "What you can put in for today, and nothing else. Tick off what you did.",
 }
 
 // ---------------------------------------------------------------- tab 1
@@ -309,12 +501,70 @@ export const VALUES_ORDER = {
   start: "Order them, one pair at a time",
   restart: "Order them again",
   done: "That is the order.",
-  manual: "Or move one directly with the arrows.",
+  /** Under the list. Says the drag exists and how to do it without a mouse. */
+  dragNote: "Drag any value to move it. Keyboard: tab to a value, space to lift it, arrows to move, space to drop.",
   /** Shown when the ordering half has no list to work on yet. */
   empty: "Nothing to order yet. Write your values on the north star tab first, and the values each area asks for as you rate them.",
   /** Above the list, naming where the pool came from. */
   pooled: "Everything you have written: the whole-life list, plus the values each area and each goal asked for.",
   pull: "add the ones I wrote per area",
+}
+
+/**
+ * The roster of everything already said to matter, and where it was said.
+ *
+ * By this step somebody has answered "what matters to you" five or six times in
+ * five or six different boxes — a menu tapped on the first list, a chip clicked
+ * inside Health, a value hung off one goal, a paragraph about waking up near the
+ * water with their kids. Every one of those was an answer, and each one used to
+ * be thrown away the moment its box closed, so the ordering step opened blank
+ * and asked a seventh time. This is that work, handed back.
+ *
+ * The copy never claims the cued ones were said. "You clicked this" and "we read
+ * this out of your paragraph" are different sentences and stay different.
+ */
+export const VALUES_EVIDENCE = {
+  title: "Everything you have already said matters",
+  help:
+    "Gathered from every box you have filled in so far: both lists, the values each area asked for, the ones you hung on a goal, and the words you kept using in your own writing. Nothing here is on your order unless you put it there.",
+  /** The two buckets. */
+  missing: "Named, but not on your order yet",
+  missingHelp: "You said these somewhere. They are not deciding anything until they are on the list.",
+  listed: "On your order",
+  listedHelp: "Where each one came from, so the order reads as something you built rather than something you typed once.",
+  /** The `where` label for each kind. Areas and goals use their own names. */
+  past: "Lived by so far",
+  chosen: "Your order",
+  oneThing: "The one thing",
+  northStar: "Your north star",
+  untitledGoal: "An untitled goal",
+  /**
+   * The magnitude, right-aligned so the column can be ranked without reading.
+   *
+   * AREAS FIRST, because breadth is the thing worth prioritising by and volume
+   * is not: three areas is a value running through three parts of your life,
+   * three times inside one area is the same part said loudly. A row named only
+   * in the whole-life lists or the north star belongs to no area, and says how
+   * many times instead of claiming a nought.
+   */
+  count: (areas: number, hits: number) => {
+    const times = hits === 1 ? "once" : `${hits} times`
+    if (areas === 0) return `named ${times}`
+    return `${areas === 1 ? "1 area" : `${areas} areas`} · ${times}`
+  },
+  /** On the dots. Named areas, so a colour nobody memorised still reads. */
+  areasIn: (labels: string[]) => `Named in ${labels.join(", ")}`,
+  /** Marks the mentions nobody clicked. */
+  cued: "read from your writing",
+  cuedNote: "Cue words in something you wrote. A guess, not something you said — click it in if it is right.",
+  add: "add to my order",
+  addAll: "add all of these to my order",
+  /** The clip. Five rows is a comparison; thirty is a wall. */
+  showAll: (n: number) => `Show all ${n}`,
+  showFewer: "Show fewer",
+  /** Nothing anywhere yet. */
+  empty: "Nothing yet. Rate an area, write your north star or set a goal, and everything you say matters shows up here.",
+  jump: (where: string) => `Go to ${where}`,
 }
 
 /**
@@ -495,6 +745,17 @@ export const AREAS_INTRO = {
 }
 
 export const ROUTINES_INTRO = {
+  /**
+   * A routine is neither half, and saying so is the point.
+   *
+   * It was labelled "Systems · what you do", which made it a third thing to
+   * categorise and justify. A routine is the background: it runs, it lifts
+   * every area a bit, and it does not need a milestone pointed at it to be
+   * worth doing. What it ADDS UP TO can be a milestone, and that is offered
+   * separately.
+   */
+  systemsLabel: "The background",
+  systemsNote: "Not an achievement and not a system — it just runs, and it lifts every area a little. Nothing here needs justifying.",
   title: "What runs underneath",
   /** Shown while the Edit toggle is on. */
   help: "Open one and cut what is not yours. Editing something down is far easier than writing it from nothing.",
@@ -918,11 +1179,41 @@ export const NOW_INTRO = {
   title: "Where you are, area by area",
   help: "Before you decide where you are going, be honest about where you are standing. Open an area and write what a 10 looks like, rate yourself against it, then say why it matters, who you are in it, and what it asks of you.",
   order: "Write the 10 first. A rating with no picture behind it is a mood, and somebody else's 10 in your health is not yours. You do not have to do all twelve.",
-  next: "Now write the goals →",
+  next: "Now say what you will do →",
 }
 
 /** Tab 3. The goals, and nothing else. */
 export const PLAN_INTRO = {
+  /** Written at step 3; shown here as what the list is for. */
+  oneEcho: "This year is for",
+  oneNeeds: (n: number) => `${n} ${n === 1 ? "goal is" : "goals are"} already on this page because of it:`,
+  oneNothingYet: "What has to happen for it? Each line becomes a real goal, filed where it belongs.",
+  oneNeedsPlaceholder: "Something that has to be true",
+  oneNeedsAdd: "Add",
+  oneEdit: "Change it at step 3",
+
+  /** One per step: there are no routines on the milestones step to click. */
+  wheelHint: "Click an area to write what you want in it.",
+  wheelHintSystems: "Click an area to say what you will do in it, or click a routine to build it.",
+  wheelFill: "The fill is your rating. The line under each name is what you have aimed at it.",
+  tenReminder: "Your 10 here:",
+  identityReminder: "Who you are here:",
+  valuesReminder: "This area asks you to value",
+  valuesAdd: "add one",
+  /** Under the chips, because a drag nobody notices is a drag nobody uses. */
+  valuesDrag: "Drag to reorder — the first one wins when two of them collide.",
+  doneTitle: "This step is done",
+  doneHelp: "Every goal has a date and something you will actually do, every area you pictured has something aimed at it, and your routines have something in them.",
+  openTitle: "Before you move on",
+  openHelp: "None of this blocks you. It is what is still open here, and this step is the one where everything gets written down — choosing between it comes next.",
+  openNoGoals: "No goals written yet",
+  openGaps: (n: number) => `${n} ${n === 1 ? "area you pictured has" : "areas you pictured have"} nothing aimed at ${n === 1 ? "it" : "them"}`,
+  openDates: (n: number) => `${n} ${n === 1 ? "goal has" : "goals have"} no date`,
+  openActions: (n: number) => `${n} ${n === 1 ? "goal names" : "goals name"} an outcome with nothing you would do`,
+  openRoutines: "Nothing in any routine yet",
+  nextAnyway: "Move on anyway →",
+  moreWays: "Other ways to add goals",
+  moreWaysHelp: "Paste a list, start from your 10, describe a day, block out a week — and the questions still open on what you have written.",
   title: "What you are going to do about it",
   help: "One area at a time. Its 10 and its rating come with it, so every goal is written against the picture it is supposed to close. The routines beside the wheel are the part that runs every week whatever else happens.",
   order: "Write the goal, then the reason under it. The reason is what you re-read on a day you do not feel like it.",
@@ -1065,7 +1356,7 @@ export const GOAL_TOOL_LINKS: Array<{ match: string[]; label: string; tab: North
   {
     match: ["weekly review", "weekly reflection"],
     label: "Run it on the Review tab",
-    tab: "review",
+      tab: "commit",
     note: "This page has the review built in. The Review tab reads every area's 10 back beside its goals and asks whether they still aim at it.",
   },
   {
@@ -1085,6 +1376,118 @@ export const GOAL_TOOL_LINKS: Array<{ match: string[]; label: string; tab: North
  * out of the title, the rungs are generated at even intervals, and each one has
  * a place to write what you do when you get there.
  */
+/**
+ * Step 4 says what it is for, in four short lines beside the wheel.
+ *
+ * Somebody who does not know the difference between this step and the next one
+ * writes half a plan on each. The line about coming back is load-bearing: a
+ * step that feels final gets the safe answer rather than the true one.
+ */
+/**
+ * Step 5 says what a system is, and what it is not.
+ *
+ * The distinction is the point of splitting the step in two: a milestone is
+ * what you want, a system is what runs. People arrive knowing the first and
+ * having never written the second, and the page is only worth the extra click
+ * if it says so plainly.
+ */
+/**
+ * The switch between the two halves, and the one line each that says which is
+ * which. People do not arrive knowing the difference, and the difference is
+ * the only reason the two halves are labelled at all.
+ */
+export const HALVES_COPY = {
+  /**
+   * ACHIEVEMENTS, NOT MILESTONES, in everything the person reads.
+   *
+   * "Milestone" was doing two jobs on one page: the thing you want to have
+   * done, and the dated rungs on the way up to it — so "16 milestones" under a
+   * list of 5 milestones was correct twice and legible neither time. The thing
+   * you want is an achievement; the rungs inside it stay milestones. The code
+   * keeps `milestone_ladder`, `milestoneGoals` and the `milestones` step id,
+   * because renaming a model to follow a label is how the two words got mixed
+   * in the first place.
+   */
+  milestones: {
+    label: "Experiences",
+    line: "What you want to have experienced and achieved. Numbers, things, moments — the half that pulls you.",
+  },
+  systems: {
+    label: "Systems",
+    line: "What you actually do, week in week out. The half that moves it. Your routines are always systems.",
+  },
+  /**
+   * THE CATALOGUE IS A TAB, NOT A FOOTNOTE.
+   *
+   * It spent a while at the bottom of the page inside a closed disclosure, and
+   * hidden entirely until the plan had a goal in it — so the one person who
+   * most needs a ready-made set, somebody staring at an empty area, was the one
+   * person who could not see that 26 of them exist. It sits beside the two
+   * halves it feeds, because that is what it is: the third way to fill them.
+   */
+  templates: {
+    label: "Templates",
+    line: "Ready-made sets, single goals and practices for every area, sized Beginner to Advanced. A set arrives with its numbers, its dates and the routine that keeps it. Pick instead of writing, then edit anything.",
+  },
+  /** The other step, from each of them. */
+  toSystems: "what moves it →",
+  toMilestones: "← what it is for",
+  derivedTitle: "What your routines already add up to",
+  derivedHelp:
+    "A routine is a system, never an experience — the total is: 400 hours of deep work, 90 days in a row. Counted from the routine you built.",
+  derivedAdd: "make this one of them",
+  derivedFrom: (routine: string) => `from your ${routine.toLowerCase()}`,
+} as const
+
+export const SYSTEMS_COPY = {
+  title: "What actually moves it",
+  help:
+    "The last step was what you want. This one is what you do: the routines, the weekly rates, the thing you do on a Tuesday you do not feel like it. Something you want with nothing running at it never happens, and something you do every week that is pointed at nothing is a chore.",
+  back: "Nothing here is final either. Go back a step whenever you want to add something you have thought of since.",
+
+  linkTitle: "What is running at what",
+  linkHelp: "Point each system at what it moves. Nothing links itself — a routine step and a goal can share an area and have nothing to do with each other.",
+  linkAdd: "link one",
+  nothingRunning: "Nothing is running at this yet.",
+  nothingToLink: "Nothing to link yet. Add a routine step above, or write a weekly rate below.",
+  noMilestones: "Nothing written on the Experiences step yet. That is where they go.",
+  kind: { step: "routine", driver: "weekly", action: "action" } as Record<string, string>,
+
+  wishesTitle: (n: number) => `${n} ${n === 1 ? "thing you want has" : "things you want have"} nothing running at ${n === 1 ? "it" : "them"}`,
+  wishesHelp: "Which makes them wishes rather than plans. Either point something at them, or let them be — a wish you have named is still worth having.",
+  orphansTitle: (n: number) => `${n} ${n === 1 ? "system is" : "systems are"} pointed at nothing`,
+  orphansHelp: "Not wrong — plenty of good habits serve nothing in particular. Worth a look, though: this is where the busy weeks come from.",
+
+  writeTitle: "Write a system of your own",
+  writeHelp: "Something you will do, at a rate you will hold: four sessions a week, thirty minutes on a Sunday. It lands in the area you pick.",
+} as const
+
+export const MILESTONES_COPY = {
+  noteTitle: "What this step is",
+  noteBody:
+    "Everything you want to have achieved, area by area. Numbers you want to hit, things you want to own, things you want to have done. This is the motivating half — it is meant to pull you.",
+  noteNext:
+    "Write it all down, including the ones you would not say out loud. It is far easier to cut a list than to invent one.",
+  noteBack:
+    "What you will actually DO about any of it is the next step, and nothing here is final — you can come back and change it whenever you like.",
+  tabCount: (n: number) => `${n} written`,
+  /**
+   * The whole list, on the page that writes it, before an area is picked.
+   *
+   * The wheel is the way into an area and it was also the only thing on this
+   * step until you clicked one, so what you had already written was invisible
+   * from the page that writes it — twelve areas to open to find out whether you
+   * had said something twice.
+   */
+  allTitle: "Everything you have written so far",
+  allHelp: "Across every area, in no order — putting them in order is the focus step, and there is no rush to. Click one to open it, or an area to keep writing there.",
+  allCount: (n: number) => `${n} in total`,
+  tabCountSystems: (n: number) => `${n} running`,
+  tabCountTemplates: (n: number) => `${n} sets on offer`,
+  experiencesHelp:
+    "The ones that are not goals: a car, a country, a night you want to have had. Write them anyway — they pull as hard as the numbers, and harder on a bad week.",
+} as const
+
 export const MILESTONE_COPY = {
   title: "Milestone celebrations",
   help: "This one has a number in it, so it has a climb underneath it. Set the rungs and say what you do when you reach each one. A finish line that only pays out at the end is a long time to work with nothing to feel.",
@@ -1100,6 +1503,35 @@ export const MILESTONE_COPY = {
   celebrateHint: "Small and soon beats big and never. It only counts if you actually do it.",
   none: "No number in this goal's title, so there is nothing to space out. Write the checkpoints yourself below.",
   offer: "Turn this into a climb",
+  /** Same offer where the title holds no number to space out. */
+  offerOwn: "Write the steps to this",
+
+  /**
+   * Weight alone is not a progression, and no generated ladder knows that a
+   * muscle-up is what comes after ten pull-ups.
+   */
+  shapeReps: "Weight and reps",
+  shapeWeight: "Weight only",
+  shapeOwn: "Write my own",
+  repsNote: "How lifts actually go up: hold the weight until the top set is easy, then take the jump and lose the reps again.",
+  sets: "Sets",
+  repsLow: "Reps after a jump",
+  repsHigh: "Reps before the next one",
+  ownAsk: "Your progression, in order",
+  /**
+   * THE EXAMPLE COMES FROM THE AREA, never from this file.
+   *
+   * It illustrated a written ladder with "5 pull-ups → 10 pull-ups →
+   * muscle-up" in all twelve areas, which was fine while this tool only opened
+   * inside the goal dialog and became Money being shown pull-ups the moment
+   * the achievements step started offering it. Same rule as `AREA_GOAL_EXAMPLES`
+   * and the same test enforces it.
+   */
+  ownNote: (rungs: string[]) =>
+    `One rung per line, or separate them with arrows. They do not have to be numbers: "${rungs.join(" → ")}" is a ladder.`,
+  ownPlaceholder: (rungs: string[]) => rungs.join("\n"),
+  ownMake: "Use these rungs",
+  weeksNote: (weeks: number) => `Paced across the ${weeks} weeks to your date.`,
 }
 
 /** Said on a goal whose title already exists as a step in one of the routines. */
@@ -1318,3 +1750,133 @@ export const NS_VALUE_SUGGESTIONS = [
 
 /** Said once, under the wheel, when an area has a 10 and no goals. */
 export const GAP_WARNING = "You have written a 10 here and no goal that aims at it. Either add one, or accept that this area is holding its floor this season."
+
+
+// ---------------------------------------------------------------- tab 3, focus
+
+/**
+ * Focus, and why it is a tab rather than a step inside the goals.
+ *
+ * "Where you are" hands you twelve rated areas, and the goals tab used to open
+ * on all twelve at once with a catalogue under them. Somebody looking at that
+ * is not being asked to write goals, they are being asked to hold their whole
+ * life in their head and start somewhere — and the first person through said
+ * exactly that: too much is preselected, I feel overwhelmed.
+ *
+ * Choosing is the work this tab does. Three questions, in the order they can
+ * actually be answered: which two or three areas is this season about, what is
+ * the ONE thing, and — once there are goals — what order do they go in.
+ */
+/**
+ * The two halves of the plan, named where they are read back together.
+ *
+ * One list called "your goals" put "See the northern lights" and "Train four
+ * times a week" in the same column under the same word, and they do opposite
+ * jobs: the first is there to be recognised and to pull — its only question is
+ * whether what you run will actually get you there — the second is what runs.
+ */
+/**
+ * The plan, editable, on the page that asks you to sign it.
+ *
+ * Reading it back whole is when somebody sees the goal they no longer want, the
+ * one they forgot, and the driver pointed at nothing. Sending them four steps
+ * back to act on any of it is how a plan gets signed and quietly abandoned.
+ */
+export const COMMIT_EDIT_COPY = {
+  title: "Change anything, here",
+  help: "Reading it back is when you notice what is wrong with it. Add what is missing, drop what you do not want, and point the things you do every week at what they are for — all of it saves the same as it does anywhere else.",
+  add: "Add",
+  addArea: "Which area",
+  addPlaceholder: "Something you have just remembered",
+  empty: "Nothing in the plan yet. Add the first thing here, or walk back through the steps.",
+} as const
+
+export const OVERVIEW_COPY = {
+  wantedTitle: "What you want to experience",
+  wantedHelp:
+    "Nothing here is a plan and none of it is meant to be. It is the pull — the reason any of the rest is worth doing. The one question to ask of it: is anything you actually do going to get you there?",
+  wantedCount: (n: number, carried: number) => `${n} · ${carried} with something running at ${carried === 1 ? "it" : "them"}`,
+  /**
+   * Said on the closed heading, so folding it away never hides the finding.
+   *
+   * The one thing worth knowing without opening the list is how much of what
+   * you want has nothing pointed at it — which is the whole question this page
+   * asks of it.
+   */
+  wantedClosed: (unserved: number) =>
+    unserved > 0
+      ? `Closed, because this step is about what runs. ${unserved} of ${unserved === 1 ? "them has" : "them have"} nothing running at ${unserved === 1 ? "it" : "them"} — open it to see which.`
+      : "Closed, because this step is about what runs. Everything in it has something running at it. Open it to read them back.",
+  drivingTitle: "What drives them",
+  drivingHelp:
+    "The rates you hold and the things you do on an ordinary week — your own, and every step in your routines. These are what move the list below, and the order here is the order your energy goes in.",
+  drivingCount: (n: number) => `${n} running`,
+  /** The header on a routine's block of steps: what it is and what it costs. */
+  routineRate: (steps: number, daysPerWeek: number | null) =>
+    daysPerWeek != null
+      ? `${steps} ${steps === 1 ? "step" : "steps"} · ${daysPerWeek} ${daysPerWeek === 1 ? "day" : "days"} a week`
+      : `${steps} ${steps === 1 ? "step" : "steps"}`,
+} as const
+
+export const FOCUS_COPY = {
+  intro: "Twelve areas is a picture of a life. Two or three is a season. This is where you say which ones, and what the single most important thing is.",
+  areasTitle: "What is this season about?",
+  areasHelp: "Pick two or three. Not because the rest do not matter, but because a season spent on nine areas is a season spent on none, and the others hold where they are while you work on these.",
+  areasNone: "Nothing picked yet, so the build steps are still showing you all twelve.",
+  areasPicked: (n: number) => `${n} picked, in the order they matter`,
+  areasTooMany: "That is a lot for one season. It will still work, you will just be thinner across all of them.",
+  wheelHint: "Click a slice to make it one of this season's areas. Click it again to drop it.",
+  areasAdd: "None of these? Add your own",
+  areasAddPlaceholder: "e.g. Dating, Business, Morning routine",
+
+  oneTitle: "And the one thing?",
+  oneHelp: "Not your most important goal — the one that, if it happened, would make several of the others easier or unnecessary. The one you would keep if you had to drop everything else this quarter.",
+
+  oneWrite: "Say it in your own words",
+  oneFromYou: "Or take one of these — they are your own words, from the pages before this:",
+  onePlaceholder: "If only one thing changes this year, it is…",
+  onePick: "Or point at one of these",
+  oneNone: "Nothing named yet",
+  /** Shown here, written at step 3. */
+  oneEcho: "Your one thing",
+  oneEchoEdit: "change it at step 3",
+  oneClear: "not this one",
+  oneAreas: "Areas",
+  oneGoals: "Goals",
+
+  orderTitle: "What you want, and what will get you there",
+  orderHelp: "Two lists, on purpose. The first is what you want to experience — it is there to be recognised and to pull, and its only question is whether anything you run reaches it. The second is what runs, in the order your energy goes in.",
+  orderEmpty: "Nothing written yet. Once you have named some of what you want, this is where you say which comes first.",
+  orderGo: "Write what you want →",
+
+  next: "Now write the goals →",
+}
+
+
+// ------------------------------------------------------------- the last step
+
+/**
+ * Commit, and why it is a step rather than a full stop.
+ *
+ * A plan that ends when the last box is filled ends without anybody saying yes
+ * to it. The difference between a document and a decision is that somebody
+ * signed the second one — so the last thing this flow does is read the whole
+ * plan back, ask what could go wrong, and take the commitment in the person's
+ * own words with the date on it.
+ */
+export const COMMIT_COPY = {
+  title: "This is what you have built",
+  help: "Read it once, whole, before you say yes to it. Everything here came from something you wrote.",
+  summary: (goals: number, milestones: number, hours: number) =>
+    `${goals} ${goals === 1 ? "goal" : "goals"}, ${milestones} dated ${milestones === 1 ? "milestone" : "milestones"}, and about ${hours} hours a week of routines.`,
+  read: "Read the whole plan →",
+  hide: "Close it",
+
+  commitTitle: "Commit to it",
+  commitHelp: "In your own words: what are you actually saying yes to, and until when? This is the sentence you re-read in March on a day you do not feel like it.",
+  commitPlaceholder: "I am committing to…",
+  notYet: "Not committed yet.",
+  committed: (date: string) => `Committed on ${date}.`,
+  commit: "I commit to this",
+  uncommit: "Take it back",
+}

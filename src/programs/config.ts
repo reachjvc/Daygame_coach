@@ -34,6 +34,35 @@ export const LEVEL_LABELS: Record<LevelId, string> = {
 export const LEVEL_ORDER: LevelId[] = ["beginner", "intermediate", "advanced"]
 
 // ============================================================================
+// Days of the week
+//
+// ISO-8601 numbering (1 = Monday … 7 = Sunday) rather than JavaScript's
+// Sunday-first `getDay()`, because a training week starts on Monday for
+// everyone who writes one down. Conversion from a Date happens in one place:
+// `isoWeekday()` below.
+// ============================================================================
+
+export const WEEKDAYS: Array<{ value: number; short: string; long: string }> = [
+  { value: 1, short: "Mon", long: "Monday" },
+  { value: 2, short: "Tue", long: "Tuesday" },
+  { value: 3, short: "Wed", long: "Wednesday" },
+  { value: 4, short: "Thu", long: "Thursday" },
+  { value: 5, short: "Fri", long: "Friday" },
+  { value: 6, short: "Sat", long: "Saturday" },
+  { value: 7, short: "Sun", long: "Sunday" },
+]
+
+export const WEEKDAY_SHORT: Record<number, string> = Object.fromEntries(
+  WEEKDAYS.map((d) => [d.value, d.short])
+)
+
+/** A Date to an ISO weekday. JS gives 0 for Sunday; ISO wants 7. */
+export function isoWeekday(date: Date): number {
+  const js = date.getDay()
+  return js === 0 ? 7 : js
+}
+
+// ============================================================================
 // Units & plate loading
 //
 // Working weights are stored in the user's chosen unit; increments are

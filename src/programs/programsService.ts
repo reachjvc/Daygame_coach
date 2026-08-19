@@ -41,9 +41,29 @@ export function fromKg(weightKg: number, unit: UnitSystem): number {
   return unit === "kg" ? weightKg : weightKg / KG_PER_LB
 }
 
-/** Round to a loadable weight given a standard bar + smallest plate pair. */
-export function roundToLoadable(weight: number, unit: UnitSystem): number {
+/**
+ * Round to a weight that can actually be loaded.
+ *
+ * BARBELL (the default, and what every catalog program gets): floored at the
+ * bar, because you cannot squat 15 kg on a 20 kg bar.
+ *
+ * FREE (dumbbells, cables, machines, bodyweight): no floor. The bar minimum
+ * applied to everything used to turn a 6 kg lateral raise into a 20 kg one and
+ * a bodyweight push-up into 20 kg of nothing. It rarely showed while the only
+ * lifts in the app were a catalog of barbell programs; a self-designed week is
+ * mostly accessories, and it showed immediately.
+ */
+export function roundToLoadable(
+  weight: number,
+  unit: UnitSystem,
+  style: "barbell" | "free" = "barbell"
+): number {
   const cfg = UNIT_CONFIG[unit]
+  if (style === "free") {
+    // Still snapped to a sensible step so the prescription is not 7.3 kg, but
+    // allowed all the way down to nothing for bodyweight work.
+    return Math.max(0, Math.round(weight / cfg.loadGranularity) * cfg.loadGranularity)
+  }
   if (weight <= cfg.barWeight) return cfg.barWeight
   const rounded = Math.round(weight / cfg.loadGranularity) * cfg.loadGranularity
   return Math.max(cfg.barWeight, rounded)
@@ -114,13 +134,15 @@ export function seedEnrollment(
       // linear_load and double_progression both ratchet an absolute working weight.
       const override = workingWeightOverrides?.[ex.id]
       const seedKg = levelSeed.seedWorkingWeightKg?.[ex.id]
+      // An override of 0 is bodyweight and counts as an answer; only an absent
+      // one falls through to the level's seed.
       if (override == null && seedKg == null) {
         throw new Error(`Level ${level} of ${program.id} missing seed weight for ${ex.id}`)
       }
       const workingWeight =
         override != null
-          ? roundToLoadable(override, unitSystem)
-          : roundToLoadable(fromKg(seedKg!, unitSystem), unitSystem)
+          ? roundToLoadable(override, unitSystem, ex.loadStyle)
+          : roundToLoadable(fromKg(seedKg!, unitSystem), unitSystem, ex.loadStyle)
       exerciseState[ex.id] = { workingWeight, consecutiveFails: 0 }
     }
   }
@@ -156,7 +178,7 @@ export function computePrescription(
         weight,
         weightKg: round2(toKg(weight, unit)),
       }))
-      return { exerciseId: ex.id, name: ex.name, sets }
+      return { exerciseId: ex.id, name: ex.name, sets, ...carried(ex) }
     }
 
     if (ex.scheme.kind === "rep_range") {
@@ -170,7 +192,7 @@ export function computePrescription(
         weight,
         weightKg: round2(toKg(weight, unit)),
       }))
-      return { exerciseId: ex.id, name: ex.name, sets, note: `${repMin}–${repMax} reps` }
+      return { exerciseId: ex.id, name: ex.name, sets, ...carried(ex), note: ex.note ?? `${repMin}–${repMax} reps` }
     }
 
     // percentage_tm
@@ -178,7 +200,7 @@ export function computePrescription(
     const weekSpec = ex.scheme.setsByWeek[week]
     if (!weekSpec) throw new Error(`${ex.id} has no sets for week ${week}`)
     const sets = weekSpec.map((s, i) => {
-      const weight = roundToLoadable(tm * s.pctTM, unit)
+      const weight = roundToLoadable(tm * s.pctTM, unit, ex.loadStyle)
       return {
         setNumber: i + 1,
         reps: s.reps,
@@ -187,7 +209,7 @@ export function computePrescription(
         weightKg: round2(toKg(weight, unit)),
       }
     })
-    return { exerciseId: ex.id, name: ex.name, sets, note: `TM ${tm}${unit}` }
+    return { exerciseId: ex.id, name: ex.name, sets, ...carried(ex), note: ex.note ?? `TM ${tm}${unit}` }
   })
 
   return {
@@ -197,6 +219,25 @@ export function computePrescription(
     cycle: enrollment.cursor.cycle,
     week,
     exercises,
+  }
+}
+
+/**
+ * The parts of a lift that are the author's, not the engine's.
+ *
+ * A superset tag, a drop-set count and a hand-written note mean nothing to the
+ * progression maths,
+ * but they are the whole difference between "Bench Press 3×8" and what the
+ * person actually intended to do on Tuesday, so the prescription has to carry
+ * them through to the session widget rather than compute them away.
+ */
+function carried(ex: LoadExercise): { supersetGroup?: string; dropSets?: number; note?: string } {
+  return {
+    ...(ex.supersetGroup ? { supersetGroup: ex.supersetGroup } : {}),
+    // Drops are the author's too. The maths ignores them; the person doing it
+    // on Tuesday must not have to.
+    ...(ex.dropSets ? { dropSets: ex.dropSets } : {}),
+    ...(ex.note ? { note: ex.note } : {}),
   }
 }
 
@@ -225,7 +266,20 @@ export function applyLog(
     const prev = enrollment.exerciseState[ex.id]
     if (!prev) throw new Error(`Enrollment ${enrollment.id} missing state for ${ex.id}`)
 
-    if (ex.progression.kind === "linear_load") {
+    if (ex.progression.kind === "none") {
+      // Held on purpose. Carried into nextState unchanged so the weight
+      // survives, and reported as no change rather than omitted, so a custom
+      // program's session summary does not look like the lift was skipped.
+      nextState[ex.id] = prev
+      changes.push({
+        exerciseId: ex.id,
+        name: ex.name,
+        kind: "hold",
+        fromWeight: prev.workingWeight ?? 0,
+        toWeight: prev.workingWeight ?? 0,
+        reason: "You set this one to hold — change the weight yourself when you are ready.",
+      })
+    } else if (ex.progression.kind === "linear_load") {
       changes.push(progressLinear(ex, prev, entry, unit, nextState))
     } else if (ex.progression.kind === "double_progression") {
       changes.push(progressDouble(ex, prev, entry, unit, nextState))
@@ -261,14 +315,14 @@ function progressLinear(
   const hit = didHitLinear(ex.scheme.sets, ex.scheme.reps, entry)
 
   if (hit) {
-    const toWeight = roundToLoadable(fromWeight + increment, unit)
+    const toWeight = roundToLoadable(fromWeight + increment, unit, ex.loadStyle)
     nextState[ex.id] = { workingWeight: toWeight, consecutiveFails: 0 }
     return { exerciseId: ex.id, name: ex.name, kind: "advance", fromWeight, toWeight, reason: `Hit all reps → +${increment}${unit}` }
   }
 
   const fails = (prev.consecutiveFails ?? 0) + 1
   if (fails >= rule.deloadAfterFails) {
-    const toWeight = roundToLoadable(fromWeight * (1 - rule.deloadPct), unit)
+    const toWeight = roundToLoadable(fromWeight * (1 - rule.deloadPct), unit, ex.loadStyle)
     nextState[ex.id] = { workingWeight: toWeight, consecutiveFails: 0 }
     return { exerciseId: ex.id, name: ex.name, kind: "deload", fromWeight, toWeight, reason: `${fails} fails → deload ${Math.round(rule.deloadPct * 100)}%` }
   }
@@ -296,7 +350,7 @@ function progressDouble(
   const allAtFloor = done.filter((s) => s.reps >= repMin).length >= nSets
 
   if (hitTop) {
-    const toWeight = roundToLoadable(fromWeight + increment, unit)
+    const toWeight = roundToLoadable(fromWeight + increment, unit, ex.loadStyle)
     nextState[ex.id] = { workingWeight: toWeight, consecutiveFails: 0 }
     return { exerciseId: ex.id, name: ex.name, kind: "advance", fromWeight, toWeight, reason: `Hit ${repMax} on all sets → +${increment}${unit}` }
   }
@@ -308,7 +362,7 @@ function progressDouble(
 
   const fails = (prev.consecutiveFails ?? 0) + 1
   if (fails >= rule.deloadAfterFails) {
-    const toWeight = roundToLoadable(fromWeight * (1 - (rule.deloadPct ?? 0.1)), unit)
+    const toWeight = roundToLoadable(fromWeight * (1 - (rule.deloadPct ?? 0.1)), unit, ex.loadStyle)
     nextState[ex.id] = { workingWeight: toWeight, consecutiveFails: 0 }
     return { exerciseId: ex.id, name: ex.name, kind: "deload", fromWeight, toWeight, reason: `${fails} sessions under ${repMin} → deload` }
   }
