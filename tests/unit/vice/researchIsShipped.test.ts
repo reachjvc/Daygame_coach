@@ -185,6 +185,15 @@ describe("a user can actually reach the research", () => {
     expect(src, "no component imports the testimonials").toMatch(/from "\.\.?\/(data\/)?testimonials"/)
   })
 
+  it("puts techniques where the moment calls for them, not only in a library", () => {
+    // 196 techniques reachable from exactly one tab in one dialog is a
+    // library. A library only serves somebody already browsing, and the
+    // people this module is for are not browsing.
+    const src = allComponentSource()
+    const inline = (src.match(/TechniqueHints/g) ?? []).length
+    expect(inline, "techniques appear in no contextual surface").toBeGreaterThanOrEqual(4)
+  })
+
   it("renders the techniques somewhere", () => {
     const src = allComponentSource()
     expect(

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CheckCircle2 } from "lucide-react"
-import { UNIT_CONFIG } from "../config"
+import { UNIT_CONFIG, WEEKDAY_SHORT } from "../config"
 import type { EnduranceSet, ProgressionChange, SessionPrescription, UnitSystem } from "../types"
 
 // Total prescribed minutes of an endurance session (for the workout-log bridge).
@@ -19,19 +19,43 @@ interface Props {
   prescription: SessionPrescription
   unit: UnitSystem
   onLogged: () => void
+  /**
+   * Every session in the program, so you can log the one you actually did.
+   *
+   * The app's guess — the cursor, or today's weekday — is a good default and a
+   * bad rule: people swap Push and Pull, train Legs twice, or come back on a
+   * rest day. Absent for endurance plans, whose weeks are fixed.
+   */
+  days?: Array<{ id: string; label: string; weekday?: number }>
+  onPickDay?: (dayId: string) => void
 }
 
-export function TodaySessionWidget({ enrollmentId, prescription, unit, onLogged }: Props) {
-  // actual reps keyed by `${exerciseId}:${setNumber}`, seeded to prescribed reps.
+export function TodaySessionWidget({
+  enrollmentId,
+  prescription,
+  unit,
+  onLogged,
+  days,
+  onPickDay,
+}: Props) {
+  // What you actually did, keyed by `${exerciseId}:${setNumber}` and seeded to
+  // what was prescribed — so an as-prescribed session is one button.
   const [reps, setReps] = useState<Record<string, string>>({})
+  const [weights, setWeights] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [changes, setChanges] = useState<ProgressionChange[] | null>(null)
 
   useEffect(() => {
-    const seed: Record<string, string> = {}
-    for (const ex of prescription.exercises)
-      for (const s of ex.sets) seed[`${ex.exerciseId}:${s.setNumber}`] = String(s.reps)
-    setReps(seed)
+    const seedReps: Record<string, string> = {}
+    const seedWeights: Record<string, string> = {}
+    for (const ex of prescription.exercises) {
+      for (const s of ex.sets) {
+        seedReps[`${ex.exerciseId}:${s.setNumber}`] = String(s.reps)
+        seedWeights[`${ex.exerciseId}:${s.setNumber}`] = String(s.weight)
+      }
+    }
+    setReps(seedReps)
+    setWeights(seedWeights)
     setChanges(null)
   }, [prescription])
 
@@ -42,11 +66,18 @@ export function TodaySessionWidget({ enrollmentId, prescription, unit, onLogged 
     try {
       const entries = prescription.exercises.map((ex) => ({
         exerciseId: ex.exerciseId,
-        sets: ex.sets.map((s) => ({
-          setNumber: s.setNumber,
-          reps: Number(reps[`${ex.exerciseId}:${s.setNumber}`] ?? s.reps),
-          weight: s.weight,
-        })),
+        sets: ex.sets.map((s) => {
+          const key = `${ex.exerciseId}:${s.setNumber}`
+          // The weight you ACTUALLY lifted, not the one that was prescribed.
+          // A blank box falls back to the prescription rather than to zero,
+          // which would log a bodyweight set for a barbell lift.
+          const typed = Number(weights[key])
+          return {
+            setNumber: s.setNumber,
+            reps: Number(reps[key] ?? s.reps),
+            weight: Number.isFinite(typed) && typed >= 0 ? typed : s.weight,
+          }
+        }),
       }))
       const body = {
         dayId: prescription.dayId,
@@ -76,13 +107,48 @@ export function TodaySessionWidget({ enrollmentId, prescription, unit, onLogged 
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">
-          Today — {prescription.dayLabel}
+          {prescription.restDay ? "Rest day" : "Today"} — {prescription.dayLabel}
           <span className="ml-2 text-xs font-normal text-muted-foreground">
             Cycle {prescription.cycle} · Week {prescription.week}
           </span>
         </CardTitle>
+        {prescription.restDay && (
+          <p className="text-xs text-muted-foreground">
+            Nothing is scheduled today. This is what is next — log it anyway if you did it.
+          </p>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* WHICH SESSION YOU ACTUALLY DID. The default is the app's best guess
+            and people routinely do something else. */}
+        {days && days.length > 1 && onPickDay && (
+          <div>
+            <p className="mb-1 text-xs text-muted-foreground">Logging</p>
+            <div className="flex flex-wrap gap-1.5">
+              {days.map((d) => {
+                const active = d.id === prescription.dayId
+                return (
+                  <button
+                    key={d.id}
+                    type="button"
+                    onClick={() => onPickDay(d.id)}
+                    aria-pressed={active}
+                    className={`rounded-md border px-2.5 py-1 text-xs transition-colors ${
+                      active
+                        ? "border-sky-400/50 bg-sky-500/15 text-sky-200"
+                        : "border-white/12 text-muted-foreground hover:bg-white/[0.06]"
+                    }`}
+                  >
+                    {d.label}
+                    {d.weekday != null && (
+                      <span className="ml-1 opacity-60">{WEEKDAY_SHORT[d.weekday]}</span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
         {isEndurance && (
           <div className="space-y-2">
             {prescription.summary && (
@@ -123,13 +189,25 @@ export function TodaySessionWidget({ enrollmentId, prescription, unit, onLogged 
                   <div key={s.setNumber} className="flex items-center gap-2 text-sm">
                     {!ex.bodyweight && (
                       <>
-                        <span className="w-24 text-muted-foreground">{s.weight} {ul}</span>
-                        <span className="text-muted-foreground">×</span>
+                        {/* The weight is an INPUT, not a label. You lift what
+                            you lift; the prescription is the starting point. */}
+                        <Input
+                          type="number"
+                          inputMode="decimal"
+                          aria-label={`Weight lifted on set ${s.setNumber} of ${ex.name} in ${ul}`}
+                          className="h-8 w-20"
+                          value={weights[`${ex.exerciseId}:${s.setNumber}`] ?? ""}
+                          onChange={(e) =>
+                            setWeights((w) => ({ ...w, [`${ex.exerciseId}:${s.setNumber}`]: e.target.value }))
+                          }
+                        />
+                        <span className="text-muted-foreground">{ul} ×</span>
                       </>
                     )}
                     <Input
                       type="number"
                       inputMode="numeric"
+                      aria-label={`Reps done on set ${s.setNumber} of ${ex.name}`}
                       className="h-8 w-20"
                       value={reps[`${ex.exerciseId}:${s.setNumber}`] ?? ""}
                       onChange={(e) => setReps((r) => ({ ...r, [`${ex.exerciseId}:${s.setNumber}`]: e.target.value }))}

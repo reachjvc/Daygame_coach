@@ -1,27 +1,14 @@
-import { createServerSupabaseClient } from "@/src/db/server"
 import { redirect } from "next/navigation"
-import { GoalSetupWizard } from "@/src/goals/components/setup/GoalSetupWizard"
 
-export default async function GoalSetupPage() {
-  const supabase = await createServerSupabaseClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect("/auth/login")
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("has_purchased")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile?.has_purchased) {
-    redirect("/dashboard")
-  }
-
-  return <GoalSetupWizard />
+/**
+ * The old setup wizard's URL, kept pointing somewhere true.
+ *
+ * The wizard is archived at /test/archive/goal-setup and the live flow is Life
+ * Mastery at /dashboard/goals/plan. This route stays because it is in
+ * bookmarks, in the mobile tab bar's hidden-route list and in old links, and a
+ * 404 on a path the product used to send everybody to is a worse answer than a
+ * redirect.
+ */
+export default function GoalSetupPage() {
+  redirect("/dashboard/goals/plan")
 }

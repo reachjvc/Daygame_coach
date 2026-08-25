@@ -18,7 +18,7 @@ import type { ViceHandlers, ViceState } from "../types"
 import { IFTHEN, TRIPWIRE } from "../data/copy"
 import { planProblem, plansOfKind } from "../viceService"
 import { Chip, Empty, PrimaryButton, QuietButton, Why } from "./Ui"
-import { OneVoice } from "./Voices"
+import { OneVoice, TechniqueHints } from "./Voices"
 
 export function TripwireTool({ state, on, onClose }: {
   state: ViceState
@@ -113,6 +113,8 @@ export function TripwireTool({ state, on, onClose }: {
         )}
 
         {existing.length === 0 && !added && <Empty>{TRIPWIRE.empty}</Empty>}
+
+        <TechniqueHints stage="goodStretch" viceId={state.viceId} heading="What people did at this point" />
 
         <Why label="what the thought means"><p>{TRIPWIRE.note}</p></Why>
 

@@ -26,7 +26,7 @@
  * coin-flip on a touchscreen.
  */
 
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import type { LucideIcon } from "lucide-react"
 
 export const TYPE = {
@@ -180,12 +180,17 @@ export function Field({
 }
 
 /**
- * A number you change by tapping, not by typing.
+ * A number you can tap OR type.
  *
- * Sets and reps are small whole numbers that move by one, and making somebody
- * select-all-and-retype to go from 3 to 4 is the same class of friction as
- * making them search for a bench press. The value is still typable for the
- * person going from 8 to 20, but the common move is a tap.
+ * Sets and reps are small whole numbers that usually move by one, so −/+ is the
+ * common move. But 8 → 20 is twelve taps, and a control that only steps is a
+ * control that punishes the person who already knows the number. The middle is
+ * a real input: type into it, or step it, whichever is fewer actions for you.
+ *
+ * Typed text is held locally and only committed on blur or Enter, so typing "1"
+ * on the way to "12" does not apply a one-rep prescription and fight the cursor.
+ * An empty or nonsense box reverts to the last good value rather than throwing
+ * a validation error mid-keystroke.
  */
 export function Stepper({
   label,
@@ -203,29 +208,54 @@ export function Stepper({
   ariaLabel?: string
 }) {
   const name = ariaLabel ?? label
+  const [draft, setDraft] = useState<string | null>(null)
+
+  function commit() {
+    const n = Number(draft)
+    setDraft(null)
+    if (draft !== null && draft.trim() !== "" && Number.isInteger(n) && n >= min && n <= max && n !== value) {
+      onChange(n)
+    }
+  }
+
+  /** Stepping while a draft is open should move from what is on screen. */
+  function step(by: -1 | 1) {
+    const base = draft !== null && Number.isInteger(Number(draft)) ? Number(draft) : value
+    setDraft(null)
+    const next = Math.min(max, Math.max(min, base + by))
+    if (next !== value) onChange(next)
+  }
+
   return (
     <div className="flex w-fit flex-col gap-1 self-start">
       <span className={TYPE.label}>{label}</span>
       <div className="inline-flex w-fit items-center overflow-hidden rounded-md border border-white/12 divide-x divide-white/10">
         <button
           type="button"
-          onClick={() => onChange(Math.max(min, value - 1))}
+          onClick={() => step(-1)}
           disabled={value <= min}
           aria-label={`One fewer ${name}`}
           className="flex h-9 w-9 sm:h-7 sm:w-7 items-center justify-center text-zinc-400 transition-colors hover:bg-white/10 hover:text-zinc-100 disabled:opacity-25 disabled:hover:bg-transparent"
         >
           −
         </button>
-        <span
+        <input
+          type="number"
+          inputMode="numeric"
           aria-label={name}
-          aria-live="polite"
-          className="flex h-9 sm:h-7 min-w-9 items-center justify-center bg-black/25 px-1 text-[12.5px] tabular-nums text-zinc-100"
-        >
-          {value}
-        </span>
+          value={draft ?? String(value)}
+          onChange={(e) => setDraft(e.target.value)}
+          onFocus={(e) => e.currentTarget.select()}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") (e.target as HTMLInputElement).blur()
+            if (e.key === "Escape") setDraft(null)
+          }}
+          className="h-9 w-11 sm:h-7 sm:w-10 border-0 bg-black/25 text-center text-[12.5px] tabular-nums text-zinc-100 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-sky-400/50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        />
         <button
           type="button"
-          onClick={() => onChange(Math.min(max, value + 1))}
+          onClick={() => step(1)}
           disabled={value >= max}
           aria-label={`One more ${name}`}
           className="flex h-9 w-9 sm:h-7 sm:w-7 items-center justify-center text-zinc-400 transition-colors hover:bg-white/10 hover:text-zinc-100 disabled:opacity-25 disabled:hover:bg-transparent"

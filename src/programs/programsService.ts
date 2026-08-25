@@ -256,7 +256,19 @@ export function applyLog(
   }
   if (program.metricType === "skill_tier") return applySkillLog(program, enrollment, log)
   if (program.metricType === "hold_range") return applyHoldLog(program, enrollment, log)
-  const day = dayAt(program, enrollment.cursor.dayIndex)
+
+  /**
+   * THE DAY THAT WAS ACTUALLY DONE, not the one the cursor was pointing at.
+   *
+   * These are the same thing right up until somebody is allowed to say "I did
+   * Pull today, not Push" — and then reading the cursor progresses the wrong
+   * lifts: bench goes up because you rowed. The log names its day, so the log
+   * decides. An unrecognised or absent dayId (the skip path sends "") falls
+   * back to the cursor, which is the only case where there is nothing better.
+   */
+  const loggedIndex = dayIndexOf(program, log.dayId)
+  const dayIndex = loggedIndex >= 0 ? loggedIndex : enrollment.cursor.dayIndex
+  const day = dayAt(program, dayIndex)
   const unit = enrollment.unitSystem
   const nextState: Record<string, ExerciseState> = { ...enrollment.exerciseState }
   const changes: ProgressionChange[] = []
@@ -293,10 +305,19 @@ export function applyLog(
     enrollment: {
       ...enrollment,
       exerciseState: nextState,
-      cursor: advanceCursor(program, enrollment.cursor),
+      // Advance from the day that was DONE, so logging out of order continues
+      // from there rather than resuming a sequence nobody is following.
+      cursor: advanceCursor(program, { ...enrollment.cursor, dayIndex }),
     },
     changes,
   }
+}
+
+/** Index of a day by id, or -1. */
+function dayIndexOf(program: ProgramDefinition, dayId: string): number {
+  const s = program.schedule
+  if (s.kind !== "linear_rotation" && s.kind !== "weekly_waved") return -1
+  return s.days.findIndex((d) => d.id === dayId)
 }
 
 function progressLinear(

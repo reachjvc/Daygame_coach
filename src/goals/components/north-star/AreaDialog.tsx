@@ -20,7 +20,7 @@
  * who you are when it is handled, and what has ended it for you before.
  */
 
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { ArrowRight, ChevronDown } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { NsArea, NsAreaReview, NsPlan } from "@/src/goals/types"
@@ -52,6 +52,7 @@ export function AreaDialog({
   onSeasonFocus,
   onOpenArea,
   onGoToGoals,
+  banner,
   onClose,
 }: {
   area: NsArea
@@ -67,6 +68,15 @@ export function AreaDialog({
   onOpenArea: (areaId: string) => void
   /** Straight to this area's goals, on the tab where the goals live. */
   onGoToGoals: (areaId: string) => void
+  /**
+   * SOMETHING THE FLOW WANTS SAID AT THE TOP OF THIS DIALOG.
+   *
+   * A slot rather than an errand prop: this dialog has no business knowing why
+   * it was opened. It exists because a modal makes the page behind it inert, so
+   * a "back to today" ribbon left out there would be a way back you can see and
+   * cannot click.
+   */
+  banner?: ReactNode
   onClose: () => void
 }) {
   const review = areaReview(plan, area.id)
@@ -138,6 +148,8 @@ export function AreaDialog({
           {area.sublabel && <p className="text-[11.5px] text-zinc-500 -mt-1">{area.sublabel}</p>}
           {blueprint && <p className="text-[11.5px] text-zinc-400 -mt-0.5">{blueprint.prompt}</p>}
         </DialogHeader>
+
+        {banner}
 
         <div className="space-y-5">
           {/* 1. The 10 first. A rating with nothing behind it is a mood. */}

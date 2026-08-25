@@ -355,7 +355,7 @@ export function TogglLab() {
             setState={setState}
             nowSec={nowSec}
             pushToast={pushToast}
-            resetSandbox={actions.resetSandbox}
+            resetWorkspace={actions.resetWorkspace}
             replaceState={actions.replaceState}
             requestNotificationPermission={requestNotificationPermission}
             tab={settingsTab}

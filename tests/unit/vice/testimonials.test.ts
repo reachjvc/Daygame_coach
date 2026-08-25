@@ -142,3 +142,108 @@ describe("filtering", () => {
     }
   })
 })
+
+/**
+ * Quotes must actually be about the vice they are filed under.
+ *
+ * This exists because of a specific failure. Eighteen accounts were harvested
+ * for "getting ready to quit weed", selected by whitelisting handles off
+ * 190-character previews, and shipped without anyone reading them in full.
+ * Four were about something else entirely — quitting drinking, hanging out
+ * with random people, turning to food — and two more were mis-staged. Nearly
+ * forty percent of what went out was wrong, and every existing test passed,
+ * because nothing checked whether a quote was on its own topic.
+ *
+ * Automated topicality is imperfect, so this is deliberately a floor: it
+ * catches the class of error that actually happened — a quote filed under one
+ * vice while talking exclusively about another.
+ */
+
+/**
+ * Distinctive terms only.
+ *
+ * The first version of this used loose stems and produced mostly noise:
+ * `bet\w*` matched "better", "drink" matched "I don't drink caffeine", and
+ * "sober" and "relapse" were treated as alcohol- and porn-specific when both
+ * are used by everyone. Anything ambiguous is left out — "smoking" in
+ * particular belongs to weed and nicotine equally.
+ */
+const DISTINCTIVE: Record<string, RegExp> = {
+  weed: /\b(weed|cannabis|thc|joint|bong|stoned|t-?break|tolerance break)\b/i,
+  alcohol: /\b(alcohol|booze|beer|wine|pint|drunk|hangover|drinking)\b/i,
+  nicotine: /\b(cigarettes?|vap(?:e|ing)|nicotine|tobacco)\b/i,
+  gambling: /\b(gambling|casino|slot machine|betting|wager|bookie)\b/i,
+  porn: /\b(porn|pmo|nofap|masturbat\w*)\b/i,
+}
+
+describe("every quote is about the vice it is filed under", () => {
+  it("does not file a quote under one vice while naming only another", () => {
+    // Deliberately narrow: it only fires when a quote names a *different*
+    // vice distinctively and never names its own. Many legitimate accounts
+    // describe the experience — cravings, sleep, withdrawal — without naming
+    // the substance at all, and those are not errors.
+    // A source can settle it on its own: r/leaves and r/Petioles are cannabis
+    // subreddits whatever a given post happens to mention. A weed quitter
+    // describing how they started drinking instead is correctly filed under
+    // weed — substitution to another substance is a documented pattern, not a
+    // filing error.
+    const SOURCE_SETTLES: Record<string, RegExp> = {
+      weed: /r\/leaves|r\/Petioles/i,
+      alcohol: /r\/stopdrinking|r\/dryalcoholics/i,
+      nicotine: /r\/stopsmoking|r\/QuitVaping/i,
+      gambling: /r\/problemgambling/i,
+      porn: /r\/pornfree|r\/NoFap|pmohackbook/i,
+    }
+
+    const wrong: string[] = []
+    for (const t of TESTIMONIALS) {
+      if (t.vices.length !== 1) continue
+      const vice = t.vices[0]
+      const settles = SOURCE_SETTLES[vice]
+      if (settles && (settles.test(t.source) || settles.test(t.url))) continue
+      const own = DISTINCTIVE[vice]
+      if (!own || own.test(t.quote)) continue
+      for (const [other, re] of Object.entries(DISTINCTIVE)) {
+        if (other === vice) continue
+        if (re.test(t.quote)) {
+          wrong.push(`${t.id} filed as ${vice} but names ${other}: ${t.quote.slice(0, 80)}`)
+          break
+        }
+      }
+    }
+    expect(wrong, `mis-filed quotes:\n  ${wrong.join("\n  ")}`).toEqual([])
+  })
+
+  it("is somebody talking, not a researcher writing about them", () => {
+    // Fifteen entries turned out to be two separate quotes glued together with
+    // an ellipsis, and three were the research agent's own third-person
+    // write-up presented as testimony. Both read as real and neither is.
+    const COMPOSITE = /"\s*(?:…|\[\.…\]|\.\.\.)\s*"/
+    const THIRD = /\b(he|she|they)\s+(?:was|were|had|went|said|played|decided|stopped)\b/i
+    const FIRST = /\b(I|I'm|I've|my|me)\b/
+    for (const t of TESTIMONIALS) {
+      expect(t.quote, `${t.id} is two quotes glued together`).not.toMatch(COMPOSITE)
+      if (THIRD.test(t.quote)) {
+        expect(FIRST.test(t.quote.split(".")[0]), `${t.id} reads as a third-person summary`).toBe(true)
+      }
+    }
+  })
+
+  it("carries no scraped artefacts — greetings, escapes or truncation", () => {
+    for (const t of TESTIMONIALS) {
+      expect(t.quote, `${t.id} opens with a forum greeting`).not.toMatch(
+        /^(hello|hi|hey)\s+(leaves|r\/|everyone|all|guys|folks)\b/i,
+      )
+      expect(t.quote, `${t.id} contains a markdown escape`).not.toMatch(/\\[~*_]/)
+      // Four quotes named a different person inside the text than the handle
+      // field credited, because the extractor swallowed the next line's byline.
+      // A quote attributed to the wrong person is worse than no quote.
+      const named = t.quote.match(/—\s*(u\/[A-Za-z0-9_-]+)/)
+      expect(named, `${t.id} carries an attribution inside the quote text`).toBeNull()
+      // Two timestamps from one video, or three reviewers, joined into one blob.
+      expect(t.quote, `${t.id} joins two spans into one quote`).not.toMatch(
+        /"\s*(?:—\s*\[\d+:\d+\]|\(\d+ stars?\)|(?:un)?verified reviewer)/,
+      )
+    }
+  })
+})

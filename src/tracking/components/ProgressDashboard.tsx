@@ -7,6 +7,7 @@ import { Play } from "lucide-react"
 import { MobileTabBar } from "@/components/MobileTabBar"
 import Link from "next/link"
 import { QuickAddModal } from "./QuickAddModal"
+import { SeasonBand } from "@/src/goals/components/north-star/SeasonBand"
 import {
   DashboardSkeleton,
   QuickStatsGrid,
@@ -59,6 +60,12 @@ export function ProgressDashboard() {
           </Button>
         </Link>
       </div>
+
+      {/* THE ONE THING AND THIS SEASON, above everything.
+          The two decisions the plan hangs off, on the page opened daily. It
+          reads the Life Mastery plan out of localStorage and adds nothing to
+          the load: no fetch, and it renders nothing until the plan is read. */}
+      <SeasonBand />
 
       {/* Quick Stats */}
       <QuickStatsGrid stats={state.stats} />

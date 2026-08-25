@@ -14,6 +14,7 @@
 
 import {
   CREATED_WITH,
+  FORGOTTEN_TIMER_HOURS,
   MIN_SPLIT_SECONDS,
   PROJECT_COLORS,
   RECURRING_PERIODS,
@@ -1198,4 +1199,16 @@ export function draftFromStartLink(state: TimetrackState, params: URLSearchParam
       .filter((id) => state.tags.some((t) => t.id === id)),
     billable: params.get("billable") === "1",
   }
+}
+
+/**
+ * A timer running for an implausible length of time is almost always one that
+ * was forgotten. Toggl nags rather than editing it, so this only reports.
+ */
+export function forgottenTimer(state: TimetrackState, nowSec: number): { entry: TimeEntry; hours: number } | null {
+  const running = runningEntry(state)
+  if (!running) return null
+  const hours = entrySeconds(running, nowSec) / 3600
+  if (hours < FORGOTTEN_TIMER_HOURS) return null
+  return { entry: running, hours }
 }

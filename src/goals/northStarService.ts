@@ -24,6 +24,8 @@ import {
   NS_QUALIFY_THRESHOLD,
   NS_SPLITS,
   NS_VALUE_SUGGESTIONS,
+  PRACTICE_DESTINATIONS,
+  RECAP_PRACTICES,
   REVIEW_PROMPTS,
   ROUTINE_BLUEPRINT_MAP,
   ROUTINE_BLUEPRINTS,
@@ -35,6 +37,8 @@ import {
   VALUE_ENDS_WORDS,
   VALUES_EVIDENCE,
   VALUES_INTRO,
+  WRITE_FALLBACK_QUESTION,
+  WRITE_PHRASES,
 } from "@/src/goals/data/northStar"
 import { AREA_LIBRARY_PILLAR, TAB_ORDER } from "@/src/goals/data/northStar"
 import {
@@ -85,6 +89,9 @@ import type {
   NsAreaReview,
   NsBelief,
   NsCheckpoint,
+  NsDailyField,
+  NsFieldKind,
+  NsSubStep,
   NsExperience,
   NsGoal,
   NsObstacle,
@@ -100,6 +107,8 @@ import type {
   VisionGoalType,
   VisionHabit,
 } from "@/src/goals/types"
+/** A value, not a type: the loader checks a saved kind against it. */
+import { NS_FIELD_KINDS } from "@/src/goals/types"
 
 // ------------------------------------------------------------------ helpers
 
@@ -199,7 +208,67 @@ export function matchingDatePreset(date: string | null, today = todayISO()): str
  * which morning you are free.
  */
 function stepFromLibrary(s: RoutineBlueprintStep): NsRoutineStep {
-  return { id: s.id, title: s.title, minutes: s.minutes, daysPerWeek: s.daysPerWeek, dimension: s.dimension, days: [], startMin: null, servesGoalIds: [] }
+  return {
+    id: s.id,
+    title: s.title,
+    minutes: s.minutes,
+    daysPerWeek: s.daysPerWeek,
+    dimension: s.dimension,
+    days: [],
+    startMin: null,
+    servesGoalIds: [],
+    // Arrives already pointing at the thing it names, so nobody has to wire up
+    // "read your north star" by hand before it means anything. Authored on the
+    // library entry wins: "see one scene from it" is about the north star to
+    // any reader and holds no phrase a matcher could find.
+    goesTo: s.goesTo ?? inferStepDestination(s.title),
+    // And arrives with its question, so a row whose words ask you to write has
+    // somewhere to write. Authored, for the same reason.
+    asks: s.asks ?? inferStepQuestion(s.title),
+  }
+}
+
+/**
+ * WHICH PIECE OF THE PLAN A STEP IS TALKING ABOUT, from its own words.
+ *
+ * Matched on the phrase rather than on a library id, because the commonest
+ * version of this row is one somebody typed themselves — "Read my north star
+ * before bed" is not in any library and is unmistakably about the north star.
+ * The phrases are `RECAP_PRACTICES`', so the recap's offer and this door can
+ * never come to disagree about what a row means.
+ *
+ * Runs when a step is created and when a plan written before this is loaded.
+ * NEVER on rename: silently rewiring a step somebody has just retitled is worse
+ * than leaving it pointing nowhere.
+ */
+export function inferStepDestination(title: string): string | null {
+  const text = title.toLowerCase()
+  for (const [key, practice] of Object.entries(RECAP_PRACTICES)) {
+    const destination = PRACTICE_DESTINATIONS[key as keyof typeof RECAP_PRACTICES]
+    if (!destination) continue
+    if (practice.phrases.some((phrase) => text.includes(phrase))) return destination
+  }
+  return null
+}
+
+/**
+ * WHETHER A STEP IS ASKING FOR WORDS, from its own words.
+ *
+ * The library entries say so outright — `asks` is authored on them, because the
+ * words are ours and guessing at our own copy would be a strange thing to do.
+ * This runs for the other half: a step somebody typed, on the same rule and at
+ * the same three moments as `inferStepDestination` — created, and loaded from a
+ * plan written before this existed. Never on rename.
+ *
+ * The question it hands back is the step's own title. "Write down what went
+ * well today" is already a question in every sense that matters, and inventing
+ * a better one on somebody's behalf is how a box ends up labelled something
+ * they did not write.
+ */
+export function inferStepQuestion(title: string): string | null {
+  const text = title.toLowerCase()
+  if (!WRITE_PHRASES.some((phrase) => text.includes(phrase))) return null
+  return title.trim() || WRITE_FALLBACK_QUESTION
 }
 
 /**
@@ -298,6 +367,9 @@ export function emptyNsPlan(): NsPlan {
     daily: {},
     logged: {},
     notes: {},
+    fields: [],
+    journal: {},
+    subSteps: [],
     seq,
     updatedAt: null,
   }
@@ -406,6 +478,29 @@ export function loadNsPlan(raw: string | null): NsPlan | null {
                     // steps: linked to nothing, which is where every step
                     // starts until somebody says what it is for.
                     servesGoalIds: readStringList(s.servesGoalIds),
+                    /**
+                     * ABSENT IS NOT THE SAME AS NULL, and this is the whole
+                     * migration.
+                     *
+                     * A step saved before rows could be doors has no key here,
+                     * and the honest thing for "Read your north star out loud"
+                     * on an existing plan is to arrive already pointing at the
+                     * north star — that row said the right words months before
+                     * this existed. `null` means somebody cleared it, and
+                     * inference must never argue with that.
+                     */
+                    goesTo:
+                      "goesTo" in s
+                        ? (typeof s.goesTo === "string" && s.goesTo.trim() ? s.goesTo : null)
+                        : inferStepDestination(String(s.title)),
+                    /* The same migration, for the same reason: a plan written
+                       before a step could ask you anything has no key here, and
+                       "Write three gratitudes" on it has been a bare checkbox
+                       for months. `null` is a question somebody cleared. */
+                    asks:
+                      "asks" in s
+                        ? (typeof s.asks === "string" && s.asks.trim() ? s.asks.trim() : null)
+                        : inferStepQuestion(String(s.title)),
                   }))
               : [],
             daysPerWeek: clamp(numberOr(r.daysPerWeek, bp.daysPerWeek), 1, 7),
@@ -502,14 +597,104 @@ export function loadNsPlan(raw: string | null): NsPlan | null {
     }
   }
 
+  const experiences: NsExperience[] = Array.isArray(obj.experiences)
+    ? (obj.experiences as unknown[])
+        .filter((e): e is Record<string, unknown> => !!e && typeof e === "object")
+        .filter((e) => typeof e.id === "string" && typeof e.title === "string" && String(e.title).trim())
+        .map((e) => ({
+          id: String(e.id),
+          title: String(e.title),
+          // An experience filed under an area that no longer exists is still
+          // a thing you want to have done. It loses the tag, not the line.
+          areaId: typeof e.areaId === "string" && areaIds.has(e.areaId) ? e.areaId : null,
+          done: e.done === true,
+          doneOn: typeof e.doneOn === "string" && /^\d{4}-\d{2}-\d{2}$/.test(e.doneOn) ? e.doneOn : null,
+          goalId: typeof e.goalId === "string" ? e.goalId : null,
+        }))
+        // Same rule as `feedsGoalIds`: a pointer at a goal that did not
+        // survive the load would render as "already in your goals" over a
+        // goal nobody can open.
+        .map((e) => ({ ...e, goalId: e.goalId && goals.some((g) => g.id === e.goalId) ? e.goalId : null }))
+    : []
+
   // Ticks against routine steps that still exist. A step deleted since it was
   // ticked leaves a tick pointing at nothing, which would render as a blank row.
   const stepIds = new Set(routines.flatMap((r) => r.steps.map((st) => st.id)))
+  const loggableIds = new Set(stepIds)
+
+  /**
+   * The to-do lists under the bigger things, dropped when the bigger thing is.
+   *
+   * A field re-homes to the day when its target goes, because a question
+   * stands on its own. A sub-step does not: "write the outline" means nothing
+   * once the thing it was an outline for has been deleted, and showing it
+   * under the day would be showing a fragment of a plan that no longer exists.
+   *
+   * Parsed before `logged` because its ids are tickable too — one store for
+   * "what got done today", not two that can disagree.
+   */
+  const subStepTargets = new Set<string>([
+    ...linkedGoals.map((g) => g.id),
+    ...stepIds,
+    ...experiences.map((e) => e.id),
+  ])
+  const subSteps: NsSubStep[] = Array.isArray(obj.subSteps)
+    ? (obj.subSteps as unknown[])
+        .filter((u): u is Record<string, unknown> => !!u && typeof u === "object")
+        .filter((u) => typeof u.id === "string" && typeof u.targetId === "string" && String(u.title ?? "").trim())
+        .filter((u) => subStepTargets.has(String(u.targetId)))
+        .map((u) => ({ id: String(u.id), targetId: String(u.targetId), title: String(u.title) }))
+    : []
+  /**
+   * The text fields, and what they are still attached to.
+   *
+   * A target that did not survive the load — a step deleted, a goal removed,
+   * an experience cleared — RE-HOMES the field to the day instead of dropping
+   * it. `logged` prunes ticks the same way and that is right for a tick: it is
+   * one bit and the thing it pointed at is gone. A field is a question somebody
+   * wrote and months of answers underneath it, and deleting all of that to
+   * tidy up a dangling id is the plan destroying the only part of itself it
+   * cannot regenerate.
+   */
+  const fieldTargets = new Set<string>([
+    ...linkedGoals.map((g) => g.id),
+    ...stepIds,
+    ...experiences.map((e) => e.id),
+  ])
+  const fields: NsDailyField[] = Array.isArray(obj.fields)
+    ? (obj.fields as unknown[])
+        .filter((f): f is Record<string, unknown> => !!f && typeof f === "object")
+        .filter((f) => typeof f.id === "string")
+        .map((f) => ({
+          id: String(f.id),
+          label: stringOr(f.label, ""),
+          targetId: typeof f.targetId === "string" && fieldTargets.has(f.targetId) ? f.targetId : null,
+          // Every field written before reading was a thing a field could do is
+          // one that asks a question, which is what it has been doing. Read off
+          // the one list of kinds, so adding a kind cannot leave the loader
+          // quietly downgrading it to a write box on the next reload.
+          kind: NS_FIELD_KINDS.includes(f.kind as NsFieldKind) ? (f.kind as NsFieldKind) : ("write" as const),
+          readSourceId: typeof f.readSourceId === "string" ? f.readSourceId : null,
+        }))
+    : []
+
+  /**
+   * A GO FIELD CARRIES ITS OWN TICK, so its id is tickable too.
+   *
+   * Parsed here rather than after `logged` for that one reason: a field can
+   * hang on the day itself, where no step carries a tick for it, so "read my
+   * north star" is ticked under the field's own id. Loaded any later and the
+   * prune below would throw every one of those ticks away on the next reload —
+   * silently, since a dropped id looks exactly like a day you did nothing.
+   */
+  for (const field of fields) loggableIds.add(field.id)
+  for (const sub of subSteps) loggableIds.add(sub.id)
+
   const logged: Record<string, string[]> = {}
   if (obj.logged && typeof obj.logged === "object") {
     for (const [date, v] of Object.entries(obj.logged as Record<string, unknown>)) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Array.isArray(v)) continue
-      const ids = (v as unknown[]).filter((id): id is string => typeof id === "string" && stepIds.has(id))
+      const ids = (v as unknown[]).filter((id): id is string => typeof id === "string" && loggableIds.has(id))
       if (ids.length > 0) logged[date] = ids
     }
   }
@@ -519,6 +704,22 @@ export function loadNsPlan(raw: string | null): NsPlan | null {
     for (const [date, v] of Object.entries(obj.notes as Record<string, unknown>)) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || typeof v !== "string") continue
       if (v.trim()) notes[date] = v
+    }
+  }
+
+  // Answers to fields that still exist. A field the user deleted took its
+  // answers with it deliberately, so a stale entry here is a leftover, not a
+  // record: it can never be shown and never be edited.
+  const fieldIds = new Set(fields.map((f) => f.id))
+  const journal: Record<string, Record<string, string>> = {}
+  if (obj.journal && typeof obj.journal === "object") {
+    for (const [date, v] of Object.entries(obj.journal as Record<string, unknown>)) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !v || typeof v !== "object") continue
+      const row: Record<string, string> = {}
+      for (const [fieldId, text] of Object.entries(v as Record<string, unknown>)) {
+        if (fieldIds.has(fieldId) && typeof text === "string" && text.trim()) row[fieldId] = text
+      }
+      if (Object.keys(row).length > 0) journal[date] = row
     }
   }
 
@@ -564,25 +765,7 @@ export function loadNsPlan(raw: string | null): NsPlan | null {
     // Points at a goal or an area. Anything else, including a goal deleted
     // since, drops to null rather than leaving the banner naming nothing.
     seasonAreaIds: readStringList(obj.seasonAreaIds).filter((id) => areaIds.has(id)),
-    experiences: Array.isArray(obj.experiences)
-      ? (obj.experiences as unknown[])
-          .filter((e): e is Record<string, unknown> => !!e && typeof e === "object")
-          .filter((e) => typeof e.id === "string" && typeof e.title === "string" && String(e.title).trim())
-          .map((e) => ({
-            id: String(e.id),
-            title: String(e.title),
-            // An experience filed under an area that no longer exists is still
-            // a thing you want to have done. It loses the tag, not the line.
-            areaId: typeof e.areaId === "string" && areaIds.has(e.areaId) ? e.areaId : null,
-            done: e.done === true,
-            doneOn: typeof e.doneOn === "string" && /^\d{4}-\d{2}-\d{2}$/.test(e.doneOn) ? e.doneOn : null,
-            goalId: typeof e.goalId === "string" ? e.goalId : null,
-          }))
-          // Same rule as `feedsGoalIds`: a pointer at a goal that did not
-          // survive the load would render as "already in your goals" over a
-          // goal nobody can open.
-          .map((e) => ({ ...e, goalId: e.goalId && goals.some((g) => g.id === e.goalId) ? e.goalId : null }))
-      : [],
+    experiences,
     seasonFocusId:
       typeof obj.seasonFocusId === "string" && (goalIdSet.has(obj.seasonFocusId) || areaIds.has(obj.seasonFocusId))
         ? obj.seasonFocusId
@@ -590,6 +773,9 @@ export function loadNsPlan(raw: string | null): NsPlan | null {
     daily,
     logged,
     notes,
+    fields,
+    journal,
+    subSteps,
     // A save written before the counter existed, or edited by hand, still must
     // never hand out an id that is already in use.
     seq: Math.max(numberOr(obj.seq, 0), highestSeq(ids)),
@@ -898,6 +1084,12 @@ export function addCustomStep(
     days,
     startMin: placement?.startMin != null ? clamp(Math.round(placement.startMin), 0, 24 * 60 - 1) : null,
     servesGoalIds: [],
+    // Somebody who writes "read my north star before bed" has said where it
+    // goes; making them then pick it off a list would be asking twice.
+    goesTo: inferStepDestination(trimmed),
+    // Same rule for the other direction: "write down what went well" is a row
+    // that needs a box, and it should not have to be built next to itself.
+    asks: inferStepQuestion(trimmed),
   }
   return withRoutine(withSeq, routineId, (r) => ({ ...r, steps: [...r.steps, step] }), now)
 }
@@ -905,6 +1097,22 @@ export function addCustomStep(
 /** Days 0-6, no duplicates, in week order. */
 function cleanDays(days: number[]): number[] {
   return [...new Set(days.map((d) => Math.round(d)).filter((d) => d >= 0 && d <= 6))].sort((a, b) => a - b)
+}
+
+/**
+ * CHANGE, OR SILENCE, THE QUESTION A STEP ASKS.
+ *
+ * A blank question is stored as null — the step goes back to being a tick — and
+ * that is deliberately not the same as never having had one: the loader's
+ * inference reads `null` as a decision and leaves it alone, so a step somebody
+ * quietened does not come back asking on the next reload.
+ *
+ * Nothing already written under it is touched. The answers live in
+ * `plan.journal` keyed by the step, and clearing a question is somebody saying
+ * "stop asking me this", never "delete the last three months of it".
+ */
+export function setStepAsks(plan: NsPlan, routineId: string, stepId: string, question: string | null, now = nowIso()): NsPlan {
+  return updateStep(plan, routineId, stepId, { asks: question?.trim() ? question.trim() : null }, now)
 }
 
 export function removeStep(plan: NsPlan, routineId: string, stepId: string, now = nowIso()): NsPlan {
@@ -2490,6 +2698,211 @@ export function dayNote(plan: NsPlan, date: string): string {
   return plan.notes[date] ?? ""
 }
 
+// ------------------------------------------------------ your own text fields
+
+/**
+ * ASK YOURSELF SOMETHING, EVERY DAY, IN WORDS.
+ *
+ * The plan counts and rates: a tick against a step, a number against a driver,
+ * a 0-10 against an area. None of that holds "one key learning of today", and
+ * that line is the one people already keep by hand — against a goal, not
+ * against the day, because the learning belongs to the thing that taught it.
+ *
+ * A field is declared once and answered daily. `targetId` is whatever it hangs
+ * off: a goal, a routine step, an experience, or null for the day itself.
+ * Unvalidated on purpose — see the loader, which is where a target that has
+ * since been deleted is re-homed rather than dropped.
+ */
+export function addDailyField(
+  plan: NsPlan,
+  targetId: string | null,
+  label = "",
+  kind: NsFieldKind = "write",
+  now = nowIso()
+): NsPlan {
+  const { plan: next, id } = nextId(plan, "f")
+  return touch({ ...next, fields: [...next.fields, { id, label, targetId, kind, readSourceId: null }] }, now)
+}
+
+/**
+ * Flip a field between asking and showing.
+ *
+ * The answers stay put. A field flipped to `read` stops showing its box, and
+ * flipping it back has to bring the writing back with it — otherwise one
+ * mis-click on a dropdown is how a month of entries disappears.
+ */
+export function setDailyFieldKind(plan: NsPlan, id: string, kind: NsFieldKind, now = nowIso()): NsPlan {
+  if (!plan.fields.some((f) => f.id === id)) return plan
+  return touch({ ...plan, fields: plan.fields.map((f) => (f.id === id ? { ...f, kind } : f)) }, now)
+}
+
+/** Which piece of the plan a read field shows. See `readSources`. */
+export function setDailyFieldSource(plan: NsPlan, id: string, readSourceId: string | null, now = nowIso()): NsPlan {
+  if (!plan.fields.some((f) => f.id === id)) return plan
+  return touch({ ...plan, fields: plan.fields.map((f) => (f.id === id ? { ...f, readSourceId } : f)) }, now)
+}
+
+export function renameDailyField(plan: NsPlan, id: string, label: string, now = nowIso()): NsPlan {
+  if (!plan.fields.some((f) => f.id === id)) return plan
+  return touch({ ...plan, fields: plan.fields.map((f) => (f.id === id ? { ...f, label } : f)) }, now)
+}
+
+/** Move a field to something else, or to the day itself. */
+export function moveDailyField(plan: NsPlan, id: string, targetId: string | null, now = nowIso()): NsPlan {
+  if (!plan.fields.some((f) => f.id === id)) return plan
+  return touch({ ...plan, fields: plan.fields.map((f) => (f.id === id ? { ...f, targetId } : f)) }, now)
+}
+
+/**
+ * Delete a field AND everything written under it.
+ *
+ * The answers go with it rather than being left keyed to an id nothing can
+ * name: an orphan entry can never be shown or edited again, so keeping it is
+ * not keeping anything. The button that calls this says so out loud.
+ */
+export function removeDailyField(plan: NsPlan, id: string, now = nowIso()): NsPlan {
+  if (!plan.fields.some((f) => f.id === id)) return plan
+  const journal: Record<string, Record<string, string>> = {}
+  for (const [date, row] of Object.entries(plan.journal)) {
+    const kept = Object.fromEntries(Object.entries(row).filter(([fieldId]) => fieldId !== id))
+    if (Object.keys(kept).length > 0) journal[date] = kept
+  }
+  return touch({ ...plan, fields: plan.fields.filter((f) => f.id !== id), journal }, now)
+}
+
+/**
+ * What you wrote in one field on one day. Blank clears it, and an emptied day
+ * is deleted, so "wrote nothing" and "wrote and cleared" are one state — the
+ * same rule `setDayNote` and `toggleStepLogged` follow.
+ */
+/**
+ * EVERY ID THE JOURNAL WILL ACCEPT AN ANSWER FOR.
+ *
+ * Two things can ask you a question: a field somebody added, and a routine step
+ * whose own words ask for words ("Write three gratitudes"). Both write into
+ * `plan.journal` under their own id, because an answer to a question is the
+ * same kind of fact whichever of the two asked it, and a second store for the
+ * second kind would be a second archive to go looking through.
+ *
+ * The guard exists so a stale id — a field deleted in another tab, a step
+ * removed from a routine — cannot write a dated blob nothing can label.
+ */
+export function journalQuestionIds(plan: NsPlan): Set<string> {
+  const ids = new Set(plan.fields.map((f) => f.id))
+  for (const routine of plan.routines) for (const step of routine.steps) if (step.asks?.trim()) ids.add(step.id)
+  return ids
+}
+
+export function setJournalEntry(plan: NsPlan, date: string, fieldId: string, text: string, now = nowIso()): NsPlan {
+  if (!journalQuestionIds(plan).has(fieldId)) return plan
+  const row = { ...(plan.journal[date] ?? {}) }
+  if (text.trim()) row[fieldId] = text
+  else delete row[fieldId]
+  const journal = { ...plan.journal }
+  if (Object.keys(row).length > 0) journal[date] = row
+  else delete journal[date]
+  return touch({ ...plan, journal }, now)
+}
+
+export function journalEntry(plan: NsPlan, date: string, fieldId: string): string {
+  return plan.journal[date]?.[fieldId] ?? ""
+}
+
+/**
+ * EVERY OTHER DAY YOU ANSWERED THIS ONE, newest first.
+ *
+ * The point of writing the same line every day is reading the run of them back
+ * — a month of "one key learning" is the only place a pattern shows up, and it
+ * was unreachable: the box holds today and the store is keyed by date, so the
+ * previous thirty answers existed and had nowhere to be seen.
+ *
+ * `except` is today, left out because the box above the list already holds it
+ * and a day appearing twice reads as two different answers.
+ */
+export function journalHistory(plan: NsPlan, fieldId: string, except?: string): { date: string; text: string }[] {
+  return Object.entries(plan.journal)
+    .filter(([date]) => date !== except)
+    .map(([date, row]) => ({ date, text: row[fieldId] ?? "" }))
+    .filter((entry) => entry.text.trim().length > 0)
+    .sort((a, b) => b.date.localeCompare(a.date))
+}
+
+/** The fields hung off one thing, or off the day when `targetId` is null. */
+export function dailyFieldsFor(plan: NsPlan, targetId: string | null): NsDailyField[] {
+  return plan.fields.filter((f) => f.targetId === targetId)
+}
+
+// ------------------------------------------------------------ the sub-steps
+
+/**
+ * BREAK A BIG WEEKLY THING INTO THE ACTIONS THAT FINISH IT.
+ *
+ * "Gym 5× a week" is the thing itself; "create a piece of content" is four
+ * things wearing one title, and a list that draws them identically leaves the
+ * second one un-startable on the morning you have twenty minutes. So anything
+ * on Today can carry a to-do list of its own.
+ *
+ * A blank title is refused rather than added as an empty row: the input is
+ * cleared by Enter and Enter on an empty box is not an instruction.
+ */
+export function addSubStep(plan: NsPlan, targetId: string, title: string, now = nowIso()): NsPlan {
+  if (!title.trim()) return plan
+  const { plan: next, id } = nextId(plan, "u")
+  return touch({ ...next, subSteps: [...next.subSteps, { id, targetId, title: title.trim() }] }, now)
+}
+
+export function renameSubStep(plan: NsPlan, id: string, title: string, now = nowIso()): NsPlan {
+  if (!plan.subSteps.some((u) => u.id === id)) return plan
+  return touch({ ...plan, subSteps: plan.subSteps.map((u) => (u.id === id ? { ...u, title } : u)) }, now)
+}
+
+/**
+ * Delete a sub-step, and every tick that was against it.
+ *
+ * The tick lives in `plan.logged` beside the routine steps' own, so leaving it
+ * would leave a day counting something that no longer exists — and, worse, a
+ * later sub-step could never reuse the id (they come off the same counter, so
+ * it cannot) and the count would simply be one too high forever.
+ */
+export function removeSubStep(plan: NsPlan, id: string, now = nowIso()): NsPlan {
+  if (!plan.subSteps.some((u) => u.id === id)) return plan
+  const logged: Record<string, string[]> = {}
+  for (const [date, ids] of Object.entries(plan.logged)) {
+    const kept = ids.filter((loggedId) => loggedId !== id)
+    if (kept.length > 0) logged[date] = kept
+  }
+  return touch({ ...plan, subSteps: plan.subSteps.filter((u) => u.id !== id), logged }, now)
+}
+
+/** Move one sub-step up or down its own list. Other targets' lists never move. */
+export function moveSubStep(plan: NsPlan, id: string, delta: number, now = nowIso()): NsPlan {
+  const sub = plan.subSteps.find((u) => u.id === id)
+  if (!sub) return plan
+  const siblings = plan.subSteps.filter((u) => u.targetId === sub.targetId)
+  const from = siblings.findIndex((u) => u.id === id)
+  const to = from + delta
+  if (to < 0 || to >= siblings.length) return plan
+  const reordered = [...siblings]
+  reordered.splice(to, 0, ...reordered.splice(from, 1))
+  // Rebuilt in place: the other targets' sub-steps keep their positions in the
+  // flat list, so reordering one list cannot shuffle another.
+  let next = 0
+  const subSteps = plan.subSteps.map((u) => (u.targetId === sub.targetId ? reordered[next++] : u))
+  return touch({ ...plan, subSteps }, now)
+}
+
+/** The to-do list under one thing, in the order it was written. */
+export function subStepsFor(plan: NsPlan, targetId: string): NsSubStep[] {
+  return plan.subSteps.filter((u) => u.targetId === targetId)
+}
+
+/** How much of one thing's list is ticked off on a day. */
+export function subStepProgress(plan: NsPlan, date: string, targetId: string): { done: number; total: number } {
+  const list = subStepsFor(plan, targetId)
+  const ticked = plan.logged[date] ?? []
+  return { done: list.filter((u) => ticked.includes(u.id)).length, total: list.length }
+}
+
 /** What one area was rated on one day, or null when it was not. */
 export function dailyRating(plan: NsPlan, date: string, areaId: string): number | null {
   return plan.daily[date]?.[areaId] ?? null
@@ -2798,6 +3211,21 @@ export function stepState(plan: NsPlan, tab: NorthStarTabId): NsStepState {
   if (tab === "track" || tab === "today") return "empty"
 
   /**
+   * Nor the journal. It holds a great deal that somebody wrote and none of it
+   * is a part of the plan: a ring here would be a page telling you that you are
+   * behind on your own diary.
+   */
+  if (tab === "journal") return "empty"
+
+  /**
+   * Nor the last step. It is the other twelve, read back — a ring on it would
+   * fill itself off work that has already been scored where it was done, and
+   * "you have not finished reading your own plan" is not a thing to tell
+   * anybody.
+   */
+  if (tab === "recap") return "empty"
+
+  /**
    * TWO STEPS, TWO RINGS, and the join is scored on the second one.
    *
    * They were one step with one ring while they were one page. Split back
@@ -2861,7 +3289,7 @@ export function tabHasContent(plan: NsPlan, tab: NorthStarTabId): boolean {
   // A fork holds nothing of its own, so it never reads back as anything, and
   // neither does a catalogue — what you took from it is in the other steps.
   // Track is the same: it is the goals, somewhere else, not more of them.
-  if (tab === "pick" || tab === "templates" || tab === "track" || tab === "today") return false
+  if (tab === "pick" || tab === "templates" || tab === "track" || tab === "today" || tab === "recap") return false
   if (tab === "one") return answerOf(plan, ONE_THING_KEY).trim().length > 0 || plan.goals.some((g) => g.servesOneThing)
   return plan.areas.some((a) => areaReview(plan, a.id).goalsAim != null) || REVIEW_PROMPTS.some((q) => answerOf(plan, q.id).trim())
 }
@@ -2950,6 +3378,121 @@ export function planIsUntouched(plan: NsPlan): boolean {
  * it whether they were edited or kept, because a stack you looked at and kept
  * is a stack you chose.
  */
+// ------------------------------------------------ the plan as a daily practice
+//
+// Four parts of this plan are also things you DO every day: reading the north
+// star, saying your identity lines, saying your affirmations, and reading the
+// whole driving force. Each is already a step in a routine library and already
+// ticks off on the Today step. What follows lets the page that shows you the
+// writing also carry the tick for it, writing to the same day's log, so the two
+// screens can never disagree about whether it happened.
+
+/** One practice the plan already runs, and whether it has been done today. */
+export interface NsPractice {
+  /** The log key. A library step's id, or the id of a step somebody wrote. */
+  stepId: string
+  title: string
+  routineId: string
+  routineLabel: string
+  doneToday: boolean
+}
+
+/** The same practice when the plan does not run it yet, and what saying yes costs. */
+export interface NsPracticeOffer {
+  blueprintId: string
+  stepId: string
+  title: string
+  routineLabel: string
+  /** True when saying yes also creates the routine, rather than adding to one. */
+  addsRoutine: boolean
+}
+
+/** The library step behind a candidate, or null if the library moved under us. */
+function libraryStep(blueprintId: string, stepId: string) {
+  const bp = ROUTINE_BLUEPRINT_MAP.get(blueprintId)
+  const step = bp?.library.find((s) => s.id === stepId)
+  return bp && step ? { bp, step } : null
+}
+
+/**
+ * What this part of the plan is, as a thing you do — already running, or on offer.
+ *
+ * `running` is everything the plan already has that IS this practice: the
+ * library step if it is turned on, plus any step somebody wrote in their own
+ * words whose title carries the practice's phrase. Both are returned because
+ * both are true — somebody with "read your north star out loud" in a morning
+ * stack AND "read the star before bed" in an evening one really does read it
+ * twice, and hiding one of them would make the page lie about their week.
+ *
+ * `offer` is set only when NOTHING is running, so the page never proposes a
+ * second copy of something already on the list.
+ */
+export function practiceState(
+  plan: NsPlan,
+  key: keyof typeof RECAP_PRACTICES,
+  date = todayISO()
+): { running: NsPractice[]; offer: NsPracticeOffer | null } {
+  const spec = RECAP_PRACTICES[key]
+  const ids = new Set(spec.candidates.map((c) => c.stepId))
+  const running: NsPractice[] = []
+
+  for (const routine of plan.routines) {
+    for (const step of routine.steps) {
+      const byId = ids.has(step.id)
+      const byPhrase = spec.phrases.some((phrase) => step.title.toLowerCase().includes(phrase))
+      if (!byId && !byPhrase) continue
+      running.push({
+        stepId: step.id,
+        title: step.title,
+        routineId: routine.id,
+        routineLabel: routine.label,
+        doneToday: (plan.logged[date] ?? []).includes(step.id),
+      })
+    }
+  }
+  if (running.length > 0) return { running, offer: null }
+
+  // Nothing runs it. Offer the first candidate whose routine already exists,
+  // because turning a step on inside a stack somebody already keeps is a much
+  // smaller thing to do to their plan than starting them a new stack.
+  const owned = spec.candidates.find((c) => plan.routines.some((r) => r.blueprintId === c.blueprintId))
+  const pick = owned ?? spec.candidates[0]
+  if (!pick) return { running, offer: null }
+  const found = libraryStep(pick.blueprintId, pick.stepId)
+  if (!found) return { running, offer: null }
+  return {
+    running,
+    offer: {
+      blueprintId: pick.blueprintId,
+      stepId: pick.stepId,
+      title: found.step.title,
+      routineLabel: found.bp.label,
+      addsRoutine: owned == null,
+    },
+  }
+}
+
+/**
+ * Start running a practice: turn its library step on, adding its routine first
+ * if the plan has not got one.
+ *
+ * Ticking today is the CALLER's second call, on purpose — this writes the plan
+ * and the log is a different store with a different lifetime, and a function
+ * that quietly did both would be the only writer in this file that does.
+ */
+export function trackPractice(plan: NsPlan, blueprintId: string, stepId: string, now = nowIso()): NsPlan {
+  if (!libraryStep(blueprintId, stepId)) return plan
+  let next = plan
+  let routine = next.routines.find((r) => r.blueprintId === blueprintId)
+  if (!routine) {
+    next = addRoutine(next, blueprintId, now)
+    routine = next.routines[next.routines.length - 1]
+  }
+  if (!routine) return plan
+  if (routine.steps.some((s) => s.id === stepId)) return next
+  return toggleRoutineStep(next, routine.id, stepId, now)
+}
+
 export function planAsText(plan: NsPlan, today = todayISO()): string {
   if (planIsUntouched(plan)) return ""
   const areaLabel = new Map(plan.areas.map((a) => [a.id, a.label]))

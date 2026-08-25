@@ -14,7 +14,7 @@ test.describe('Mobile goals', () => {
   })
 
   test('setup wizard loads and fits mobile viewport', async ({ page }) => {
-    await page.goto('/dashboard/goals/setup', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goal-setup', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     await expect(page.getByRole('heading', { name: /shape your path/i })).toBeVisible({ timeout: AUTH_TIMEOUT })

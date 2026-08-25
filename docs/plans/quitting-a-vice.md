@@ -41,6 +41,121 @@ picker is worse than not showing them the picture.
 The four change-flows are four because the research disagrees with itself in ways that
 cannot be averaged out. Averaging them is how you get a flow that suits nobody.
 
+## The nine modules — the teaching spine
+
+`/test/quit-vice/learn`. Until this existed the module was a **toolbox**:
+reactive tools you open when something is happening, two assessment flows, a
+checklist and a library. All useful, none of it teaching anything. There was no
+sequence, nothing saying what a person would understand afterwards, and the
+strongest findings in the corpus sat inside `Why` disclosures on screens people
+only reach in a crisis.
+
+Nine modules, each **one idea → one exercise → real accounts**, in that order,
+because the idea makes the exercise worth doing and the accounts make the idea
+believable.
+
+| # | module | exercise it reuses |
+|---|---|---|
+| 1 | You cannot see this one from inside | the `where` flow |
+| 2 | What it actually gives you | the `gives` flow |
+| 3 | The room matters more than the resolve | the shortlist |
+| 4 | A constraint you can undo alone is not a constraint | the shortlist |
+| 5 | What to do when it is actually happening | the urge tool |
+| 6 | The dangerous week is the good one | the tripwire |
+| 7 | A lapse is information about a method | the lapse debrief |
+| 8 | What was different the time it worked | the attempt review |
+| 9 | Reading other people is itself the technique | the accounts |
+
+Rules, enforced by `tests/unit/vice/modules.test.ts`:
+
+- **Ordered by what generates awareness**, not by what a programme would do
+  first. The count comes before any technique, because ~95% of people who met
+  criteria and got no help said they did not think they needed any. Nothing
+  asks for a decision until module 6.
+- **Every module reuses an exercise that already exists.** A module is a frame
+  around a tool, never a second place to do the same work.
+- **Nothing is a prerequisite** — readiness-gating is contradicted by the
+  corpus, where two durable quits began with no wish to stop at all.
+- **The takeaway stands alone.** Somebody who reads only that line has the
+  useful part; a test caps it at 26 words.
+- **Nine, and no tenth.** The page says outright there is no daily module and
+  no reason to be here every day, since a high proportion of recovery-focused
+  activity carries OR 5.00 for a use episode. The read-count is explicitly not
+  a score and skipping is named as a normal way to use it.
+
+## The short version
+
+`/test/quit-vice/shortlist` — the fifth path, and the only one built from the
+evidence ranking rather than from a single school of thought. Ten items in
+`data/shortlist.ts`, ordered by how many **distinct source files** name that
+family, with the count shown beside each so a thin one can be discounted on
+sight. The component sorts by that number rather than trusting the array, since
+a nine-source item displayed below an eight-source one makes the page's own
+claim visibly false.
+
+Three findings shape it more than the ranking does:
+
+- **Environment beats disposition** — the strongest single mechanism claim in
+  the corpus, five studies. So the top of the list is physical, not mental.
+- **A constraint you can revoke alone is not a constraint.** Gambling blockers
+  get beaten by offshore sites and app-offloading; porn blockers "work only
+  when somebody else holds the key". Every item carries a *needs somebody else*
+  badge where that applies, per item rather than explained once.
+- **Six of the ten happen away from the screen, and the page says so.**
+  Engagement volume predicts nothing good across three independent designs and
+  a high *proportion* of recovery-focused activity carries OR 5.00 for a use
+  episode. The count is explicitly not a streak, and when the list is complete
+  the page tells people to come back less often — which is the opposite of what
+  a retention-optimised product would say and what the evidence supports.
+
+The four longer flows stay. Each walks a genuine position the literature takes
+and they disagree with each other on purpose. This one sits above them because
+it is the shortest and the best-evidenced, not because they are wrong.
+
+## The hub is grouped by where a person is
+
+Not by what kind of object a screen contains. An earlier version had **"My
+card" under "Something is happening now"**, beside an urge in progress — a card
+is a thing you made weeks ago, and grouping by object type is how a hub becomes
+a menu nobody can parse. The arc, from the corpus:
+
+| heading | what belongs there |
+|---|---|
+| **Right now** | An urge. I just did it. Minutes, not sessions. |
+| **Where I am with it** | Whether it is a problem · what it gives me · it is going well · I have tried before · ways to change it |
+| **Things I have written** | The card. Possessions, not moments. |
+| **What other people did** | The accounts and the techniques. |
+
+Plus the way out, always reachable and never buried.
+
+## "I have tried before"
+
+The corpus's own highest-value question was *what was different on the attempt
+that finally worked*, and until now the module had no surface for it at all —
+despite most people who resolve having several attempts behind them.
+
+`data/again.ts` is built directly on the five themes the nicotine file
+identified and the other substances echo:
+
+1. **The internal argument was over before day one** — less need for willpower, not more
+2. **Absolutism about the first one**, learned from the specific prior failure
+3. **A pharmacological change**, not a psychological one — one account failed dozens of times then succeeded first try on medication
+4. **Removing the second substance** — several treat the drink as the actual failure point of every previous attempt
+5. **A changed cue set** — a route, a job, a house
+
+The screen asks how the last attempt *ended* and answers that specific ending,
+because theme 2 is that the rule which finally works is learned from the
+particular failure rather than adopted in general. What is conspicuously absent
+from every "this time" account — more motivation, more facts about harm,
+stronger reasons — is absent here too, and a test asserts the words "try
+harder" never appear.
+
+**The counter-evidence is kept.** Not every durable quit has a story: one man
+succeeded at the worst moment of his life describing himself as having the
+weakest will of anyone, another with no wish to stop at all. A screen that
+insisted on a narrative would be lying to those people, so there is a "what if
+none of this fits" toggle that says so.
+
 ## Three versions over one state
 
 The module grew to roughly **9,700 words of copy — about forty-four minutes of

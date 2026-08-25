@@ -1,6 +1,6 @@
 /**
  * The awareness flow's content: the count, the arithmetic, the feedback and the
- * three doors.
+ * doors out of it.
  *
  * Why this flow exists at all, in one number. Across three separate waves of the
  * US national household survey, around ninety-five percent of the people who met
@@ -310,28 +310,39 @@ export const TRAJECTORY = {
  * authority on their own situation and then tells them what to do about it has
  * undone itself on the last screen.
  */
-export const DOORS = {
+export const DOORS: {
+  title: string
+  blurb: string
+  reflect: { id: string; label: string; rows: number }
+  options: Array<{ id: string; label: string; help: string; flow?: string; tool?: string }>
+} = {
   title: "So what now",
-  blurb: "Three of them. This page does not have a view about which, and it is not going to pretend otherwise.",
+  blurb: "Four of them. This page does not have a view about which, and it is not going to pretend otherwise.",
   reflect: { id: "where.made-of-it", label: "Before you pick: what do you make of all that?", rows: 3 },
   options: [
     {
       id: "watch",
       label: "Keep watching it",
       help: "No change to anything. Log the next couple of weeks and let the numbers accumulate.",
-      to: "map" as const,
+      flow: "map",
     },
     {
-      id: "change",
-      label: "Change something",
-      help: "An experiment, a line, or a rearranged week. Three ways, described honestly.",
-      to: "hub" as const,
+      id: "gives",
+      label: "Look at what it gives me",
+      help: "The other half, and the one most accounts of this leave out entirely.",
+      flow: "gives",
+    },
+    {
+      id: "again",
+      label: "I have tried to stop before",
+      help: "What was different on the attempt that worked, which is answerable.",
+      tool: "again",
     },
     {
       id: "help",
       label: "This is past what a page can do",
-      help: "What treatment actually is, what it costs, and who to ring. Including if the answer is right now.",
-      to: "help" as const,
+      help: "What treatment actually is, what it costs, and who to ring.",
+      tool: "help",
     },
   ],
 } as const

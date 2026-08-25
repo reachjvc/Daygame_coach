@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 
-import { MIN_SPLIT_SECONDS } from "@/src/timetrack/config"
+import { FORGOTTEN_TIMER_HOURS, MIN_SPLIT_SECONDS } from "@/src/timetrack/config"
 import { epochSeconds } from "@/src/timetrack/timetrackFormatService"
 import {
   activeToken,
@@ -13,6 +13,7 @@ import {
   duplicateEntry,
   entrySeconds,
   evaluateAlerts,
+  forgottenTimer,
   isRunning,
   matchAutotracker,
   projectPeriod,
@@ -379,5 +380,29 @@ describe("manual entries and start links", () => {
     expect(params.get("tags")).toBe("50,51")
     expect(params.get("task")).toBe("40")
     expect(params.get("billable")).toBe("1")
+  })
+})
+
+describe("forgotten timer", () => {
+  const nowSec = epochSeconds(NOW_ISO)
+
+  test("reports a timer running longer than the threshold", () => {
+    const start = new Date((nowSec - (FORGOTTEN_TIMER_HOURS + 2) * 3600) * 1000).toISOString()
+    const state = baseState({
+      entries: [{ ...entry(1, "2026-08-09", "09:00", "10:00"), start, stop: null, duration: -epochSeconds(start) }],
+    })
+    expect(forgottenTimer(state, nowSec)?.hours).toBeCloseTo(FORGOTTEN_TIMER_HOURS + 2, 1)
+  })
+
+  test("stays quiet for a normal running timer", () => {
+    const start = new Date((nowSec - 1800) * 1000).toISOString()
+    const state = baseState({
+      entries: [{ ...entry(1, "2026-08-10", "09:00", "10:00"), start, stop: null, duration: -epochSeconds(start) }],
+    })
+    expect(forgottenTimer(state, nowSec)).toBeNull()
+  })
+
+  test("stays quiet when nothing is running", () => {
+    expect(forgottenTimer(baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00")] }), nowSec)).toBeNull()
   })
 })

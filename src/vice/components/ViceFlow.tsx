@@ -2,7 +2,7 @@
 
 /**
  * The chrome around a flow: the rail, the current step, the footer, and the
- * three tools that are reachable from every screen.
+ * tools, all of which are reachable from every screen.
  *
  * Nothing gates. Every step is reachable at any time, no step blocks on a word
  * count, and the rail's ticks are descriptive rather than permissive — the same
@@ -14,7 +14,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { ArrowLeft, Check, ChevronDown } from "lucide-react"
-import type { ViceFlowId, ViceHandlers } from "../types"
+import type { ViceFlowId, ViceHandlers, ViceToolId } from "../types"
 import { PROVENANCE } from "../data/copy"
 import { flowOf, flowProgress, stepIsDone, viceAsText, viceStateIsUntouched, votesCast } from "../viceService"
 import { useViceState } from "../hooks/useViceState"
@@ -25,13 +25,16 @@ import { StepCount, StepDoors, StepFeedback, StepTrajectory, StepUsage } from ".
 import { StepBeliefTest, StepBeliefs, StepFutures, StepLetter, StepValues } from "./steps/GivesSteps"
 import { CardTool, LapseTool, UrgeTool } from "./Tools"
 import { HelpDoor } from "./HelpDoor"
+import { AgainTool } from "./Again"
+import { VoicesDialog } from "./Voices"
+import { TripwireTool } from "./Tripwire"
 import { QuietButton, Why } from "./Ui"
 
 export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
   const flow = flowOf(flowId)
   const { state, loaded, today, handlers, reset } = useViceState(flowId)
   const [stepId, setStepId] = useState(flow.steps[0].id)
-  const [tool, setTool] = useState<"none" | "urge" | "lapse" | "card" | "help">("none")
+  const [tool, setTool] = useState<ViceToolId | "none">("none")
   const [confirmReset, setConfirmReset] = useState(false)
   const [railOpen, setRailOpen] = useState(false)
   const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle")
@@ -53,7 +56,7 @@ export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
 
   /** The shell owns the dialogs, so it supplies the handlers the hook cannot. */
   const on: ViceHandlers = useMemo(
-    () => ({ ...handlers, openUrge: () => setTool("urge"), openHelp: () => setTool("help"), goToStep, nextStep }),
+    () => ({ ...handlers, openUrge: () => setTool("urge"), openHelp: () => setTool("help"), openTool: setTool, goToStep, nextStep }),
     [handlers, goToStep],
   )
 
@@ -99,7 +102,7 @@ export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
         <div className="flex items-center justify-between gap-3 mb-6">
           <Link href="/test/quit-vice" className="inline-flex items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors">
             <ArrowLeft className="size-3.5" />
-            All four
+            Back
           </Link>
           {confirmReset ? (
             <span className="flex items-center gap-2 text-[11px]">
@@ -254,14 +257,14 @@ export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
         )}
       </div>
 
-      {/* The toolbar. Same three things on every screen of every flow. */}
+      {/* The toolbar. The same acute tools on every screen of every flow. */}
       <div className="sticky bottom-0 bg-zinc-950/90 backdrop-blur-sm border-t border-white/10">
         <div className="max-w-3xl mx-auto px-6 py-3 flex items-center gap-2">
           <button
             onClick={() => setTool("urge")}
             className="text-[13px] font-medium px-3.5 py-2 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 transition-colors"
           >
-            An urge, now
+            An urge, right now
           </button>
           <button
             onClick={() => setTool("lapse")}
@@ -292,6 +295,9 @@ export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
       {tool === "lapse" && loaded && <LapseTool state={state} on={on} onClose={() => setTool("none")} />}
       {tool === "card" && loaded && <CardTool state={state} on={on} onClose={() => setTool("none")} />}
       {tool === "help" && loaded && <HelpDoor state={state} on={on} onClose={() => setTool("none")} />}
+      {tool === "again" && loaded && <AgainTool state={state} on={on} onClose={() => setTool("none")} />}
+      {tool === "voices" && loaded && <VoicesDialog viceId={state.viceId} onClose={() => setTool("none")} />}
+      {tool === "tripwire" && loaded && <TripwireTool state={state} on={on} onClose={() => setTool("none")} />}
     </div>
   )
 }

@@ -28,7 +28,6 @@ import {
 import { googleEventsToEvents, icsToEvents } from "../calendarService"
 import { IconAdd, IconAlert, IconCalendar, IconDelete, IconExport, IconImport, IconSpinner } from "../icons"
 import { addDays, dateKey, endOfDayIso, formatDuration, startOfDayIso } from "../timetrackFormatService"
-import { demoDataSummary } from "../demoDataService"
 import { downloadFile, exportStateJson, importEntriesCsv, importStateJson } from "../importExportService"
 import {
   addAutotracker,
@@ -58,7 +57,7 @@ export function SettingsView({
   setState,
   nowSec,
   pushToast,
-  resetSandbox,
+  resetWorkspace,
   replaceState,
   requestNotificationPermission,
   tab,
@@ -68,7 +67,7 @@ export function SettingsView({
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
   nowSec: number
   pushToast: (text: string, tone?: "info" | "error") => void
-  resetSandbox: () => void
+  resetWorkspace: () => void
   replaceState: (next: TimetrackState) => void
   requestNotificationPermission: () => Promise<boolean>
   tab: SettingsTab
@@ -101,7 +100,7 @@ export function SettingsView({
       )}
       {tab === "integrations" && <IntegrationsPanel state={state} setState={setState} nowSec={nowSec} pushToast={pushToast} />}
       {tab === "data" && (
-        <DataPanel state={state} setState={setState} pushToast={pushToast} resetSandbox={resetSandbox} replaceState={replaceState} />
+        <DataPanel state={state} setState={setState} pushToast={pushToast} resetWorkspace={resetWorkspace} replaceState={replaceState} />
       )}
     </div>
   )
@@ -991,18 +990,17 @@ function DataPanel({
   state,
   setState,
   pushToast,
-  resetSandbox,
+  resetWorkspace,
   replaceState,
 }: {
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
   pushToast: (text: string, tone?: "info" | "error") => void
-  resetSandbox: () => void
+  resetWorkspace: () => void
   replaceState: (next: TimetrackState) => void
 }) {
   const jsonInput = useRef<HTMLInputElement | null>(null)
   const csvInput = useRef<HTMLInputElement | null>(null)
-  const entryMix = demoDataSummary(state)
 
   return (
     <div className="space-y-4">
@@ -1075,18 +1073,10 @@ function DataPanel({
 
       <SectionCard
         title="This workspace"
-        description="What this workspace holds right now. Demo entries are moved forward to the current week each time you open this page, so it never looks stale. Entries you create are left exactly where they are."
+        description="What this workspace holds right now. Everything here is yours — this page ships with no sample data."
       >
         <ul className="grid gap-1 text-sm sm:grid-cols-2">
-          <li>
-            {state.entries.length} time entries
-            {entryMix.demo > 0 && (
-              <span className="text-muted-foreground">
-                {" "}
-                ({entryMix.demo} demo, {entryMix.mine} yours)
-              </span>
-            )}
-          </li>
+          <li>{state.entries.length} time entries</li>
           <li>{state.projects.length} projects</li>
           <li>{state.clients.length} clients</li>
           <li>{state.tasks.length} tasks</li>
@@ -1096,8 +1086,8 @@ function DataPanel({
           <li>{state.savedReports.length} saved reports</li>
         </ul>
         <div className="mt-3">
-          <ConfirmButton variant="outline" confirmLabel="Yes, replace everything" onConfirm={resetSandbox}>
-            Reset to demo data
+          <ConfirmButton variant="outline" confirmLabel="Yes, delete everything" onConfirm={resetWorkspace}>
+            Clear this workspace
           </ConfirmButton>
         </div>
       </SectionCard>

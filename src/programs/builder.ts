@@ -436,13 +436,13 @@ export function setWeekday(
  * the half-assigned state so it is fixed rather than interpreted.
  */
 export function isWeekdayAnchored(schedule: ProgramSchedule): boolean {
-  if (schedule.kind === "endurance_weeks") return false
+  if (schedule.kind !== "linear_rotation" && schedule.kind !== "weekly_waved") return false
   return schedule.days.length > 0 && schedule.days.every((d) => d.weekday != null)
 }
 
 /** The day to do on a given ISO weekday, if this schedule is anchored. */
 export function dayForWeekday(schedule: ProgramSchedule, weekday: number) {
-  if (schedule.kind === "endurance_weeks") return undefined
+  if (schedule.kind !== "linear_rotation" && schedule.kind !== "weekly_waved") return undefined
   return schedule.days.find((d) => d.weekday === weekday)
 }
 
@@ -465,9 +465,10 @@ export function designProblems(schedule: ProgramSchedule): string[] {
     if (day.exercises.length === 0) problems.push(`${day.label} has no lifts in it yet.`)
   }
   // Half a week on the calendar and half of it in sequence is not a schedule.
-  const assigned = days.filter((d) => d.weekday != null)
-  if (assigned.length > 0 && assigned.length < days.length) {
-    const missing = days.filter((d) => d.weekday == null).map((d) => d.label)
+  const dated = days as Array<{ label: string; weekday?: number }>
+  const assigned = dated.filter((d) => d.weekday != null)
+  if (assigned.length > 0 && assigned.length < dated.length) {
+    const missing = dated.filter((d) => d.weekday == null).map((d) => d.label)
     problems.push(
       missing.length === 1
         ? `${missing[0]} has no day of the week. Give it one, or clear the others to train in order instead.`

@@ -472,6 +472,9 @@ export interface ProgramSelection {
 export interface LibraryExercise {
   id: string
   name: string
+  /** What it trains — the index for FINDING it. */
+  group: BodyGroup
+  /** What job it does — the index for SWAPPING it. */
   pattern: MovementPattern
   /** Compound lifts default to linear loading, accessories to double progression. */
   compound: boolean
@@ -485,6 +488,28 @@ export interface LibraryExercise {
   defaultRepMax: number
   suggestedKg: Record<LevelId, number>
 }
+
+/**
+ * How lifts are GROUPED FOR BROWSING, which is a different question from how
+ * they are grouped for swapping.
+ *
+ * `MovementPattern` answers "what else could go in this slot" — it is why
+ * swapping a Bench Press offers the other horizontal pushes. It is the wrong
+ * index for finding a lift, and using it for both is why the Shoulders tab held
+ * lateral raises but not the shoulder press (filed under Vertical push), and
+ * why the Squat tab held the Leg Press.
+ *
+ * Nobody walks into a gym thinking "vertical push". They think "shoulders".
+ */
+export type BodyGroup =
+  | "chest"
+  | "back"
+  | "shoulders"
+  | "arms"
+  | "quads"
+  | "hamstrings_glutes"
+  | "calves"
+  | "core"
 
 export type MovementPattern =
   | "squat"

@@ -548,6 +548,22 @@ export const LAPSE = {
      */
     notStartingOver: "You are not starting over. Nothing you worked out has been taken off you, and you know one more thing about it than you did yesterday.",
   },
+  /**
+   * Where to go from here.
+   *
+   * Until this existed the debrief ended at "Done" and closed — the moment the
+   * module had least to say and the corpus has most. Two onward routes, both
+   * earned: the attempt review, because a lapse is the specific ending it keys
+   * its answer on, and the tripwire when the honest answer is that things had
+   * been going well.
+   */
+  onward: {
+    label: "Now what",
+    again: "Look at what was different last time",
+    againWhy: "This just became your most recent ending, which is what the useful rule gets learned from.",
+    tripwire: "Write a rule for the next good stretch",
+    tripwireWhy: "If this came out of a good run rather than a bad day, that is the pattern worth planning for.",
+  },
 } as const
 
 // ---------------------------------------------------------------- if-then

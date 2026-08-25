@@ -14,13 +14,13 @@
  */
 
 import Link from "next/link"
-import type { ViceHandlers, ViceState } from "../types"
+import type { ViceHandlers, ViceState, ViceToolId } from "../types"
 import { PLAIN } from "../data/plain"
 
 export function HubPlain({ state, on, openTool }: {
   state: ViceState
   on: ViceHandlers
-  openTool: (t: "urge" | "lapse" | "card" | "help" | "voices" | "tripwire") => void
+  openTool: (t: ViceToolId) => void
 }) {
   void state
   void on
@@ -55,11 +55,23 @@ export function HubPlain({ state, on, openTool }: {
         })}
       </div>
 
+      <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-5">
+        {PLAIN.footers.map((f) => (
+          <button
+            key={f.id}
+            onClick={() => openTool(f.tool)}
+            className="text-[12px] text-zinc-500 hover:text-white underline underline-offset-2 decoration-white/20 transition-colors"
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       {/* One quiet line, because somebody in real trouble has to be able to
           get out of this page without reading anything first. */}
       <button
         onClick={() => openTool("help")}
-        className="mt-5 text-[12px] text-zinc-500 hover:text-white underline underline-offset-2 decoration-white/20 transition-colors"
+        className="mt-2 text-[12px] text-zinc-500 hover:text-white underline underline-offset-2 decoration-white/20 transition-colors"
       >
         {PLAIN.helpLink}
       </button>

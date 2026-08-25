@@ -61,3 +61,44 @@ export function getNowInTimezone(timezone: string | null): Date {
     return new Date()
   }
 }
+
+/** The cadences a goal's counter can run on. Mirrors `user_goals.period`. */
+export type GoalPeriod = "daily" | "weekly" | "monthly" | "yearly"
+
+/**
+ * YYYY-MM-DD read off a Date's own wall-clock fields.
+ *
+ * NOT `toISOString().split("T")[0]`, which converts to UTC first and so shifts
+ * the day by the process's offset — a Monday 20:00 in New York comes back as
+ * Tuesday, a Monday 00:30 in Berlin as Sunday. Every period boundary in this
+ * file is a wall-clock date, so it has to be formatted as one.
+ */
+export function toDateISO(date: Date): string {
+  const y = String(date.getFullYear()).padStart(4, "0")
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+}
+
+/**
+ * The first day of the period containing `now`, as YYYY-MM-DD.
+ *
+ * Weeks run Monday 00:00 to Sunday 23:59: Sunday night is still last week's,
+ * and the count starts again the moment Monday does. `now` is a wall-clock
+ * Date — pass `getNowInTimezone(tz)`, not a UTC instant.
+ */
+export function periodStartFor(period: GoalPeriod, now: Date): string {
+  if (period === "daily") return toDateISO(now)
+  if (period === "yearly") return toDateISO(new Date(now.getFullYear(), 0, 1))
+  if (period === "monthly") return toDateISO(new Date(now.getFullYear(), now.getMonth(), 1))
+  // Monday-based: JS Sunday is 0, and Sunday belongs to the week that started
+  // six days earlier, not to the one starting tomorrow.
+  const weekday = (now.getDay() + 6) % 7
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - weekday)
+  return toDateISO(monday)
+}
+
+/** `periodStartFor` for the user's own timezone rather than the server's. */
+export function periodStartInTimezone(period: GoalPeriod, timezone: string | null): string {
+  return periodStartFor(period, getNowInTimezone(timezone))
+}

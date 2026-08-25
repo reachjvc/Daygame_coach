@@ -17,7 +17,86 @@
  * Bodyweight movements carry 0 and are logged as bodyweight.
  */
 
-import type { LibraryExercise, MovementPattern } from "../types"
+import type { BodyGroup, LibraryExercise, MovementPattern } from "../types"
+
+// ---------------------------------------------------------------------------
+// Browsing: by body part
+// ---------------------------------------------------------------------------
+
+export const BODY_GROUP_LABELS: Record<BodyGroup, string> = {
+  chest: "Chest",
+  back: "Back",
+  shoulders: "Shoulders",
+  arms: "Arms",
+  quads: "Quads",
+  hamstrings_glutes: "Hams & glutes",
+  calves: "Calves",
+  core: "Core",
+}
+
+/** Big muscles first, because that is the order a session is written in. */
+export const BODY_GROUP_ORDER: BodyGroup[] = [
+  "chest",
+  "back",
+  "shoulders",
+  "arms",
+  "quads",
+  "hamstrings_glutes",
+  "calves",
+  "core",
+]
+
+/**
+ * The body part a movement pattern trains, which is right for almost every
+ * lift in the pool.
+ *
+ * `lunge` folds into quads rather than standing alone: a Bulgarian split squat
+ * is a leg exercise, and a tab called "Single leg" is a category only a coach
+ * would look under.
+ */
+const GROUP_FOR_PATTERN: Record<MovementPattern, BodyGroup> = {
+  squat: "quads",
+  lunge: "quads",
+  hinge: "hamstrings_glutes",
+  horizontal_push: "chest",
+  vertical_push: "shoulders",
+  horizontal_pull: "back",
+  vertical_pull: "back",
+  shoulders: "shoulders",
+  arms: "arms",
+  core: "core",
+  calves: "calves",
+}
+
+/**
+ * The handful of lifts whose body part is not their pattern's.
+ *
+ * A Face Pull is a horizontal pull that trains rear delts, and somebody
+ * building a shoulder day looks for it under Shoulders. Kept as an explicit
+ * list because it is short and the exceptions are the interesting part.
+ */
+/** A body part's most typical pattern — for lifts the user invents. */
+const PATTERN_FOR_GROUP: Record<BodyGroup, MovementPattern> = {
+  chest: "horizontal_push",
+  back: "horizontal_pull",
+  shoulders: "shoulders",
+  arms: "arms",
+  quads: "squat",
+  hamstrings_glutes: "hinge",
+  calves: "calves",
+  core: "core",
+}
+
+const GROUP_OVERRIDES: Record<string, BodyGroup> = {
+  lib_face_pull: "shoulders",
+  lib_rear_delt_row: "shoulders",
+  lib_straight_arm_pulldown: "back",
+  lib_back_extension: "hamstrings_glutes",
+  lib_farmers_carry: "core",
+  lib_sled_push: "quads",
+  lib_wrist_curl: "arms",
+  lib_reverse_wrist_curl: "arms",
+}
 
 export const PATTERN_LABELS: Record<MovementPattern, string> = {
   squat: "Squat",
@@ -68,6 +147,9 @@ const make = (barbell: boolean) => (
 ): LibraryExercise => ({
   id: `lib_${id}`,
   name,
+  // Derived rather than typed out 153 times: a hand-written group on every row
+  // is 153 chances to file a lift somewhere nobody will look for it.
+  group: GROUP_OVERRIDES[`lib_${id}`] ?? GROUP_FOR_PATTERN[pattern],
   pattern,
   compound,
   barbell,
@@ -257,6 +339,22 @@ export const EXERCISE_LIBRARY: LibraryExercise[] = [
   free("donkey_calf_raise", "Donkey Calf Raise", "calves", false, 4, 10, 20, 30, 55, 85),
   free("single_leg_calf_raise", "Single-Leg Calf Raise", "calves", false, 4, 10, 20, 0, 10, 24),
   free("leg_press_calf_raise", "Leg Press Calf Raise", "calves", false, 4, 12, 20, 50, 90, 140),
+
+  // ---- machines and accessories the pool was missing ----
+  // Reported as absent while building a leg day. The pool was strong on
+  // barbell work and thin on the machines most gyms actually have.
+  free("hip_abduction", "Hip Abduction", "hinge", false, 3, 12, 20, 25, 45, 70),
+  free("hip_adduction", "Hip Adduction", "hinge", false, 3, 12, 20, 25, 45, 70),
+  free("glute_bridge", "Glute Bridge", "hinge", false, 3, 10, 15, 20, 60, 100),
+  free("frog_pump", "Frog Pump", "hinge", false, 3, 15, 25, 0, 20, 40),
+  free("smith_machine_lunge", "Smith Machine Lunge", "lunge", false, 3, 8, 12, 20, 40, 60),
+  free("leg_press_single", "Single-Leg Press", "squat", false, 3, 10, 15, 40, 70, 110),
+  free("seated_hip_abduction", "Seated Hip Abduction", "hinge", false, 3, 15, 25, 25, 45, 70),
+  free("cable_lateral_raise_single", "Single-Arm Cable Lateral Raise", "shoulders", false, 3, 12, 20, 4, 9, 14),
+  free("machine_shrug", "Machine Shrug", "shoulders", false, 3, 10, 15, 40, 80, 130),
+  free("cable_shrug", "Cable Shrug", "shoulders", false, 3, 10, 15, 35, 70, 110),
+  free("smith_machine_shoulder_press", "Smith Machine Shoulder Press", "vertical_push", false, 3, 8, 12, 25, 45, 70),
+  free("cable_rear_delt_fly", "Cable Rear Delt Fly", "shoulders", false, 3, 12, 20, 6, 12, 18),
 ]
 
 /**
@@ -337,14 +435,17 @@ export function searchLibrary(query: string, limit = 14): LibraryExercise[] {
  * Weights start at zero on every level: we have no idea what they lift, and a
  * made-up suggestion under a made-up lift is a number pretending to be advice.
  */
-export function customLibraryEntry(name: string, pattern: MovementPattern): LibraryExercise | null {
+export function customLibraryEntry(name: string, group: BodyGroup): LibraryExercise | null {
   const clean = name.trim().replace(/\s+/g, " ").slice(0, 120)
   if (!clean) return null
   const slug = norm(clean).slice(0, 40) || "lift"
   return {
     id: `custom_${slug}`,
     name: clean,
-    pattern,
+    group,
+    // A representative pattern for the body part, so a custom lift still has
+    // something sensible to offer when somebody swaps it later.
+    pattern: PATTERN_FOR_GROUP[group],
     // Double progression, which is the accessory rule and the safe default for
     // something we know nothing about.
     compound: false,
@@ -360,6 +461,11 @@ export const LIBRARY_BY_ID = new Map(EXERCISE_LIBRARY.map((e) => [e.id, e]))
 
 export function libraryExercise(id: string): LibraryExercise | undefined {
   return LIBRARY_BY_ID.get(id)
+}
+
+/** Everything that trains this body part — the browse index. */
+export function libraryByGroup(group: BodyGroup): LibraryExercise[] {
+  return EXERCISE_LIBRARY.filter((e) => e.group === group)
 }
 
 export function libraryByPattern(pattern: MovementPattern): LibraryExercise[] {

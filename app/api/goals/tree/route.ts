@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { getGoalTree, getUserGoals, archiveGoalsBatch, syncLinkedGoals, resetDailyGoals, resetWeeklyGoals, resetMonthlyGoals, resetYearlyGoals } from "@/src/db/goalRepo"
+import { getGoalTree, getUserGoals, archiveGoalsBatch, syncLinkedGoals, rollGoalPeriods } from "@/src/db/goalRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { getOrphanedGoalIds } from "@/src/goals/goalsService"
 
@@ -12,10 +12,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const tz = await getUserTimezone(auth.userId)
-    await resetDailyGoals(auth.userId, tz).catch(() => {})
-    await resetWeeklyGoals(auth.userId, tz).catch(() => {})
-    await resetMonthlyGoals(auth.userId, tz).catch(() => {})
-    await resetYearlyGoals(auth.userId, tz).catch(() => {})
+    await rollGoalPeriods(auth.userId, tz)
     await syncLinkedGoals(auth.userId, tz).catch((e) => console.error("syncLinkedGoals failed:", e))
 
     // Auto-archive goals referencing deleted templates (idempotent)

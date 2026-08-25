@@ -15,6 +15,7 @@
  * and the link back is one click.
  */
 
+import type { ReactNode } from "react"
 import { ArrowLeft } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { NsArea, NsPlan, VisionGoalType } from "@/src/goals/types"
@@ -62,6 +63,7 @@ export function AreaGoalsDialog({
   onSeasonFocus,
   onOpenArea,
   onGoToRating,
+  banner,
   onClose,
 }: {
   area: NsArea
@@ -79,6 +81,15 @@ export function AreaGoalsDialog({
   onOpenArea: (areaId: string) => void
   /** Back to the assessment for this same area, on the tab it lives on. */
   onGoToRating: (areaId: string) => void
+  /**
+   * SOMETHING THE FLOW WANTS SAID AT THE TOP OF THIS DIALOG.
+   *
+   * A slot rather than an errand prop: this dialog has no business knowing why
+   * it was opened. It exists because a modal makes the page behind it inert,
+   * so a "back to today" ribbon left out there would be a way back you can see
+   * and cannot click.
+   */
+  banner?: ReactNode
   onClose: () => void
 }) {
   const review = areaReview(plan, area.id)
@@ -108,6 +119,8 @@ export function AreaGoalsDialog({
             </span>
           </DialogTitle>
         </DialogHeader>
+
+        {banner}
 
         <div className="space-y-5">
           {/* The picture the goals underneath are aimed at. */}

@@ -22,6 +22,9 @@ import {
   setNote,
   setProgression,
   setSchemeKind,
+  dayForWeekday,
+  isWeekdayAnchored,
+  setWeekday,
   supersetGroups,
   supersetLabel,
   unjoin,
@@ -35,6 +38,9 @@ import { libraryExercise } from "@/src/programs/data/exerciseLibrary"
 import { effectiveProgram } from "@/src/programs/customize"
 import { CustomScheduleSchema } from "@/src/programs/schemas"
 import type { LoadExercise, ProgramEnrollment, ProgramSchedule } from "@/src/programs/types"
+
+/** Days with their weekday, which the AnyDay union does not carry. */
+const dated = (s: ProgramSchedule) => scheduleDays(s) as Array<{ label: string; weekday?: number }>
 
 const lifts = (s: ProgramSchedule, dayId: string) =>
   scheduleDays(s).find((d) => d.id === dayId)!.exercises as LoadExercise[]
@@ -534,5 +540,172 @@ describe("buildExercise", () => {
     const compound = buildExercise(libraryExercise("lib_back_squat")!, "x1")
     expect(compound.scheme.kind).toBe("linear")
     expect(compound.progression.kind).toBe("linear_load")
+  })
+})
+
+// ---------------------------------------------------------------------------
+
+describe("days of the week", () => {
+  function twoDays() {
+    let s = addDay(emptyCustomSchedule(), "Push")
+    s = addExercise(s, scheduleDays(s)[0].id, libraryExercise("lib_bench_press")!).schedule
+    s = addDay(s, "Pull")
+    s = addExercise(s, scheduleDays(s)[1].id, libraryExercise("lib_barbell_row")!).schedule
+    return { schedule: s, push: scheduleDays(s)[0].id, pull: scheduleDays(s)[1].id }
+  }
+
+  test("a day can be pinned to a weekday and unpinned again", () => {
+    const { schedule, push } = twoDays()
+    const mon = setWeekday(schedule, push, 1)
+    expect(dated(mon)[0].weekday).toBe(1)
+    expect(dated(setWeekday(mon, push, null))[0].weekday).toBeUndefined()
+  })
+
+  test("two days cannot share a weekday — the other one gives it up", () => {
+    const { schedule, push, pull } = twoDays()
+    let s = setWeekday(schedule, push, 3)
+    s = setWeekday(s, pull, 3)
+    expect(dated(s)[0].weekday).toBeUndefined()
+    expect(dated(s)[1].weekday).toBe(3)
+  })
+
+  test("a weekday outside Monday–Sunday is refused", () => {
+    const { schedule, push } = twoDays()
+    for (const bad of [0, 8, 1.5]) {
+      expect(() => setWeekday(schedule, push, bad)).toThrow(/Monday through Sunday/)
+    }
+  })
+
+  test("a week is anchored only when EVERY day has one", () => {
+    const { schedule, push, pull } = twoDays()
+    expect(isWeekdayAnchored(schedule)).toBe(false)
+    const half = setWeekday(schedule, push, 1)
+    expect(isWeekdayAnchored(half)).toBe(false)
+    expect(isWeekdayAnchored(setWeekday(half, pull, 4))).toBe(true)
+  })
+
+  test("a half-assigned week is reported, not interpreted", () => {
+    const { schedule, push } = twoDays()
+    const half = setWeekday(schedule, push, 1)
+    expect(designProblems(half)[0]).toMatch(/Pull has no day of the week/)
+    // Fully assigned, or fully unassigned, are both fine.
+    expect(designProblems(schedule)).toEqual([])
+  })
+
+  test("dayForWeekday finds the session for a given day", () => {
+    const { schedule, push, pull } = twoDays()
+    let s = setWeekday(schedule, push, 1)
+    s = setWeekday(s, pull, 4)
+    expect(dayForWeekday(s, 1)?.label).toBe("Push")
+    expect(dayForWeekday(s, 4)?.label).toBe("Pull")
+    expect(dayForWeekday(s, 6)).toBeUndefined() // a rest day
+  })
+
+  test("weekdays survive the wire schema, and a bad one does not", () => {
+    const { schedule, push, pull } = twoDays()
+    let s = setWeekday(schedule, push, 1)
+    s = setWeekday(s, pull, 7)
+    expect(CustomScheduleSchema.safeParse(s).success).toBe(true)
+
+    const bad = structuredClone(s) as unknown as { days: Array<Record<string, unknown>> }
+    bad.days[0].weekday = 9
+    expect(CustomScheduleSchema.safeParse(bad).success).toBe(false)
+  })
+
+  test("catalog programs stay unanchored, so their sequence is untouched", () => {
+    for (const id of ["stronglifts-5x5", "upper-lower", "wendler-531"]) {
+      expect(isWeekdayAnchored(requireProgram(id).schedule)).toBe(false)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+
+describe("logging the session you actually did", () => {
+  /** Two days, each with one distinct lift, so progression is attributable. */
+  function twoDayProgram() {
+    let s = addDay(emptyCustomSchedule(), "Push")
+    const push = scheduleDays(s)[0].id
+    const bench = addExercise(s, push, libraryExercise("lib_bench_press")!)
+    s = bench.schedule
+    s = addDay(s, "Pull")
+    const pull = scheduleDays(s)[1].id
+    const row = addExercise(s, pull, libraryExercise("lib_barbell_row")!)
+    s = row.schedule
+    return { schedule: s, push, pull, bench: bench.exerciseId, row: row.exerciseId }
+  }
+
+  function logAll(program: ReturnType<typeof effectiveProgram>, enr: ProgramEnrollment, dayId: string) {
+    // Unknown ids fall back to the cursor, mirroring what applyLog does.
+    const found = scheduleDays(program.schedule).findIndex((d) => d.id === dayId)
+    const dayIndex = found >= 0 ? found : enr.cursor.dayIndex
+    const rx = computePrescription(program, { ...enr, cursor: { ...enr.cursor, dayIndex } })
+    return applyLog(program, enr, {
+      enrollment_id: enr.id,
+      dayId,
+      cycle: 1,
+      week: 1,
+      entries: rx.exercises.map((e) => ({
+        exerciseId: e.exerciseId,
+        sets: e.sets.map((s) => ({ setNumber: s.setNumber, reps: s.repRangeMax ?? s.reps, weight: s.weight })),
+      })),
+    })
+  }
+
+  test("logging the second day progresses THAT day's lift, not the cursor's", () => {
+    const { schedule, pull, bench, row } = twoDayProgram()
+    const enr = enrollCustom(schedule, { [bench]: 60, [row]: 50 })
+    const program = effectiveProgram(customProgram, schedule)
+    expect(enr.cursor.dayIndex).toBe(0) // the app is offering Push
+
+    // …but Pull is what got done.
+    const result = logAll(program, enr, pull)
+    expect(result.enrollment.exerciseState[row].workingWeight).toBe(52.5)
+    // Bench must not move. It was the bug: the cursor said Push, so bench went
+    // up because the user rowed.
+    expect(result.enrollment.exerciseState[bench].workingWeight).toBe(60)
+  })
+
+  test("the cursor continues from the day that was done, not the one skipped", () => {
+    const { schedule, pull, bench, row } = twoDayProgram()
+    const enr = enrollCustom(schedule, { [bench]: 60, [row]: 50 })
+    const program = effectiveProgram(customProgram, schedule)
+    // Logged Pull (index 1) → next is index 0 again, having wrapped.
+    expect(logAll(program, enr, pull).enrollment.cursor.dayIndex).toBe(0)
+    // Logged Push (index 0) → next is Pull.
+    expect(logAll(program, enr, scheduleDays(program.schedule)[0].id).enrollment.cursor.dayIndex).toBe(1)
+  })
+
+  test("an unknown day id falls back to the cursor rather than throwing", () => {
+    const { schedule, bench, row } = twoDayProgram()
+    const enr = enrollCustom(schedule, { [bench]: 60, [row]: 50 })
+    const program = effectiveProgram(customProgram, schedule)
+    expect(() => logAll(program, enr, "")).not.toThrow()
+  })
+
+  test("the weight actually lifted is what progresses, not the prescription", () => {
+    const { schedule, push, bench, row } = twoDayProgram()
+    const enr = enrollCustom(schedule, { [bench]: 60, [row]: 50 })
+    const program = effectiveProgram(customProgram, schedule)
+    const rx = computePrescription(program, enr)
+
+    // Prescribed 60, actually did 65 for all reps.
+    const result = applyLog(program, enr, {
+      enrollment_id: enr.id,
+      dayId: push,
+      cycle: 1,
+      week: 1,
+      entries: [
+        {
+          exerciseId: bench,
+          sets: rx.exercises[0].sets.map((s) => ({ setNumber: s.setNumber, reps: s.reps, weight: 65 })),
+        },
+      ],
+    })
+    // Linear loading ratchets from the working weight, and the session counts
+    // as made — the point is that logging a heavier set is recorded and does
+    // not fail or get silently rewritten to the prescription.
+    expect(result.enrollment.exerciseState[bench].consecutiveFails).toBe(0)
+    expect(result.changes.find((c) => c.exerciseId === bench)?.kind).toBe("advance")
   })
 })

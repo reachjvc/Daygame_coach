@@ -70,9 +70,39 @@ export const TODAY_COPY = {
   doneSuffix: "done",
   allDone: "That is today's list, done.",
   notTracked: "not counted yet",
-  restTitle: "Everything else that runs",
+  /* THE COUNT, IN WORDS, NEXT TO THE BUTTON THAT MOVES IT.
+     It used to be a bare "+1" at the end of the row with the numbers on the
+     line above it in a list of four other facts, so the one control on the
+     screen that writes to your real goals read as the least important thing on
+     it. Reported from the page: "I hate the +1 thing, it is just not intuitive
+     at all." */
+  countOne: "Log one",
+  countOneAria: (title: string) => `Log one ${title}`,
+  countUndo: "Undo one",
+  countUndoAria: (title: string) => `Take one back off ${title}`,
+  countProgress: (current: number, target: number) => `${current} of ${target} this week`,
+  countSoFar: (current: number) => `${current} this week`,
+  /* Every row that IS a goal opens the goal. The date, the curve and the rate
+     are all on that card, and Today is where you find out they are wrong. */
+  openGoal: (title: string) => `Open ${title} to change its date or its numbers`,
+  /* The way back to where a thing is edited. Lowercase, like "start over" and
+     "not counted yet": it is a way out of this screen, not an action on it. */
+  change: "change",
+  changeRoutine: (label: string) => `Change the ${label}`,
+  changeDrivers: "Change what you are counting each week",
+  changeStanding: "Change your milestones and experiences",
+  standingTitle: "Not a weekly thing",
+  standingHelp:
+    "What you are climbing towards and what you want to have done. Neither happens on a Tuesday, so neither counts towards today — but the day you finally do one, this is where you say so.",
+  standingMilestone: "a milestone, counted on your goals page",
+  standingNoDate: "no date yet",
+  standingDoneOn: "done",
+  anyDayTitle: "Any day this week",
+  anyDayHelp:
+    "These say how often and not when — once a week, four times a week — so today is as good a day as any. Tick one off if today was the day. Whether you are behind on them is a question about the week, not about this morning.",
+  restTitle: "On other days",
   restHelp:
-    "Not on today, and you may have done it anyway. A plan that only accepts the sessions it predicted under-counts the weeks you actually had.",
+    "The plan puts these on days that are not today, and you may have done one anyway. A plan that only accepts the sessions it predicted under-counts the weeks you actually had.",
   signedOut:
     "Ticks save on this device. Counting the drivers needs you signed in — they are goals on your account, not notes in a browser.",
   feltTitle: "How today went",
@@ -81,6 +111,355 @@ export const TODAY_COPY = {
   noteLabel: "Anything worth remembering about today",
   notePlaceholder: "What happened, what got in the way, what you would do again.",
   noteSaved: "Saves when you click away.",
+  /* YOUR OWN QUESTIONS, in your own words. The plan counts and rates; none of
+     that holds "one key learning of today", and that line is the one most
+     people already keep by hand — usually against the thing that taught it
+     rather than against the day. */
+  fieldsTitle: "Your own text fields",
+  fieldsHelp:
+    "A question you answer in words, day after day. Attach one to anything in the plan and it appears on that row; attach one to the day and it sits under the note.",
+  fieldsEmpty: "None yet. Add one and it shows up wherever you attach it.",
+  fieldAdd: "Add a text field",
+  fieldAddHere: "add a text field",
+  fieldAddedTo: (title: string) => `Add a text field to ${title}`,
+  fieldLabelAria: "What this field asks",
+  /* The placeholder SUGGESTS. It is never written into the label: a question
+     the user did not ask reads back a month later as one they did. */
+  fieldLabelPlaceholder: "One key learning of today",
+  fieldUnnamed: "Untitled field",
+  fieldPlaceholder: "In your own words.",
+  fieldAttachedTo: "Attached to",
+  fieldOnTheDay: "The day itself",
+  fieldRemove: (label: string) => `Remove ${label} and everything written under it`,
+  /* WHICH DIRECTION THE FIELD RUNS. "Write" asks you something; "read" shows
+     you something you already wrote — the difference between "one key
+     learning of today" and "read your north star out loud". */
+  fieldKindLabel: "Kind",
+  fieldKindWrite: "Write today",
+  fieldKindRead: "Read it back",
+  /* THE THIRD DIRECTION. Read quotes the thing here; this one takes you to
+     where it lives, which is the only version that also lets you change it. */
+  fieldKindGo: "Go to it",
+  fieldShows: "Shows",
+  fieldShowsNothing: "Pick something to read",
+  fieldGoes: "Goes to",
+  fieldGoesNothing: "Pick somewhere to go",
+  /* Said plainly rather than reading a blank box every morning. */
+  fieldSourceMissing: "That is empty, or no longer in your plan. Pick something else.",
+  fieldSourceUnset: "Nothing picked to read yet.",
+  fieldGoUnset: "Nowhere picked to go yet.",
+  fieldOpen: "Open",
+  fieldOpenAria: (label: string, where: string) => `${label} — open ${where}`,
+  /* A go field carries its OWN tick. A read field sits under a step that
+     already has one; a go field can hang on the day itself, where nothing
+     else does. */
+  fieldGoDoneAria: (label: string) => `Did ${label}`,
+  fieldPastOpen: (n: number) => (n === 1 ? "1 earlier day" : `${n} earlier days`),
+  fieldPastNone: "Nothing written on any other day yet.",
+  /**
+   * The way out of a question the row asks you.
+   *
+   * A step that asks for words arrives with its box, which is the fix. The
+   * escape has to be on the box, because somebody who keeps that particular
+   * practice on paper will otherwise go looking for it in the routine builder
+   * and not find it. It stops the asking and keeps every answer already given —
+   * said out loud, because "remove" next to three months of writing is a
+   * frightening word.
+   */
+  askOff: "stop asking this here (what you have written is kept)",
+  /**
+   * AND THE WAY BACK, which the first build of this forgot.
+   *
+   * A question that can be turned off and not on is a worse dead end than the
+   * one it replaced: silencing "Write three gratitudes" left a row that had
+   * been a box and was now a checkbox, with nothing on it saying how to undo
+   * that. Every row can be asked to ask something, including the ones our
+   * library never gave a question to — somebody whose "Cold shower finish"
+   * wants a line about the water temperature is not wrong.
+   */
+  askOn: "ask me something here",
+  askOnAria: (title: string) => `Give ${title} a question to ask you every day`,
+  askEdit: "change the question",
+  askEditAria: (title: string) => `Change the question ${title} asks`,
+  askPlaceholder: "What should this row ask you?",
+  askSave: "Ask this",
+  askCancel: "Cancel",
+  fieldPastAria: (label: string) => `Earlier days for ${label}`,
+  /* THE TO-DO LIST UNDER A BIGGER WEEKLY THING. "Gym 5× a week" is the thing
+     itself; "create a piece of content" is four things wearing one title. */
+  subAdd: "add a step",
+  subAddAria: (title: string) => `Add a step to ${title}`,
+  subPlaceholder: "What has to happen — Enter to add",
+  subTitleAria: (title: string) => `Step: ${title}`,
+  subRemove: (title: string) => `Remove the step ${title}`,
+  subUp: "Move up",
+  subDown: "Move down",
+  subDone: (done: number, total: number) => `${done}/${total} steps`,
+} as const
+
+/**
+ * WHAT A ROW CAN SHOW YOU, named for a picker.
+ *
+ * The labels are questions and possessives rather than field names, because
+ * the person choosing is answering "what do I want to read at 07:00" and not
+ * "which property of the plan object".
+ */
+/**
+ * THE BAND AT THE TOP OF THE TRACKING PAGE.
+ *
+ * The one thing and the season's areas are the two decisions the whole plan
+ * hangs off, and they were only visible inside the flow that wrote them — so
+ * the page somebody opens every day to log approaches said nothing about what
+ * this season is for.
+ */
+export const SEASON_BAND_COPY = {
+  oneThingLabel: "The one thing",
+  seasonLabel: "This season",
+  noneTitle: "Your plan",
+  noneHelp:
+    "Your one thing and the areas this season is about show up here once you have set them. Everything else on this page keeps working either way.",
+  noFocus: "Nothing named yet",
+  noAreas: "No areas picked yet",
+  openPlan: "Open your plan",
+  openToday: "Today",
+  todayProgress: (done: number, total: number) => `${done} of ${total} done today`,
+  build: "Build your plan",
+} as const
+
+/**
+ * The north star paragraph's own element id, so a field can land on it.
+ *
+ * Here rather than inline in the tab, because two files need to agree on it and
+ * a hand-typed string in each is how a link quietly starts scrolling nowhere.
+ */
+export const STAR_ANCHOR = "north-star-paragraph"
+
+/**
+ * The driving force, on the recap page, which is where all five of its parts
+ * already are. Named here so the source and the section cannot drift apart.
+ */
+export const RECAP_DRIVING_ANCHOR = "recap-driving-force"
+
+/**
+ * THE RIBBON ON THE SCREEN YOU WERE SENT TO.
+ *
+ * A jump with no way back is a trapdoor. Today sends you to your north star at
+ * 07:00; if arriving means finding your way back through a rail of thirteen
+ * steps, the honest thing to do at 07:00 is not click it.
+ *
+ * So the errand comes with you: what you came to do, the tick for it, and the
+ * way back to the row you left.
+ */
+export const ERRAND_COPY = {
+  from: "From today",
+  done: "Mark it done",
+  isDone: "Done today",
+  back: "Back to today",
+  backAria: "Back to today, where you came from",
+  dismiss: "Stay here",
+  dismissAria: "Stop showing this, stay on this step",
+} as const
+
+export const READ_COPY = {
+  starGroup: "Your star",
+  valuesGroup: "Your values",
+  areasGroup: "Areas",
+  goalsGroup: "Goals",
+  starLabel: "Your north star, the paragraph",
+  valuesLabel: "Your values, in order",
+  areaTen: (area: string) => `What a 10 looks like — ${area}`,
+  areaPurpose: (area: string) => `Why ${area} matters to you`,
+  areaIdentity: (area: string) => `Who you are when ${area} is handled`,
+  /* The goal, not a paragraph of it: the row that means "open this and change
+     it" rather than "read this back". */
+  goalItself: (goal: string) => `The goal: ${goal}`,
+  goalWhy: (goal: string) => `Why: ${goal}`,
+  goalSentence: (goal: string) => `As one sentence: ${goal}`,
+  goalPain: (goal: string) => `What it costs you to skip: ${goal}`,
+  goalReasons: (goal: string) => `Your reasons: ${goal}`,
+  /**
+   * THE WHOLE DOCUMENT, as one thing you can be sent to.
+   *
+   * "Read your driving force. Vision, purpose, identity, standards, values" was
+   * the one canon row that pointed nowhere, on the reasoning that no single
+   * source IS the driving force and aiming it at one of five parts would be a
+   * guess. That was right about the guess and wrong about the conclusion: the
+   * answer is not to point it at a part, it is to make the whole a source.
+   * Composed live from the five pieces, so it can never quote a stale copy.
+   */
+  drivingLabel: "Your driving force, all five parts",
+  /**
+   * "Re-read the why under one goal" — and WHICH goal.
+   *
+   * The row says "one goal" and means it: any of them will do, and the point of
+   * the practice is that you re-read a reason rather than a particular reason.
+   * A picker would be asking somebody to answer a question the row deliberately
+   * leaves open, so it resolves to the goal the plan already puts first, and
+   * says which one on the arrow so it is never a mystery door.
+   */
+  topWhyLabel: (goal: string) => `Why you are doing it: ${goal}`,
+  drivingHeadings: {
+    star: "The vision",
+    why: "Why it matters",
+    identity: "Who I am",
+    conduct: "What I hold myself to",
+    values: "My values, in order",
+  },
+} as const
+
+/**
+ * WHERE THE WRITING GOES, said once.
+ *
+ * A destination id is either a piece of the plan you READ (`readSources`) or a
+ * page of the journal you WRITE. The second kind is prefixed so the two can
+ * share one id space and one picker without a step ever having to say which
+ * sort it holds.
+ */
+/**
+ * WHEN A STEP SOMEBODY TYPED IS ASKING FOR WORDS.
+ *
+ * Our own library says so outright — `asks` is authored on the entry. This is
+ * for the other half: "Write down what went well", "Journal for ten minutes",
+ * "Two lines on the session". Those are not ticks, and a row that offers only a
+ * checkbox for them is the same bug the authored field exists to fix.
+ *
+ * Deliberately narrow, and every phrase is a VERB about writing rather than a
+ * topic. "Read ten pages" contains no promise to write anything down;
+ * "gratitude" on its own is a subject, not an instruction. A miss leaves a tick,
+ * which is honest — a false hit puts a box under a row that never asked for
+ * one, and the person then has to work out why it is there.
+ */
+export const WRITE_PHRASES = ["journal", "write ", "write down", "note down", "two lines", "one line", "jot down", "in writing"] as const
+
+/** What a step somebody typed gets asked, when nothing better is known. */
+export const WRITE_FALLBACK_QUESTION = "What do you want to write?"
+
+export const JOURNAL_PREFIX = "journal:"
+export const JOURNAL_ALL_ID = "journal:all"
+
+/**
+ * THE PAGE THE WRITING STEPS LEAD TO.
+ *
+ * Reported from the page: *"journal … doesnt lead anywhere (should lead to a
+ * page where we journal, like field reports, weekly reviews, and user should be
+ * able to write, possibly select standard questions, and see ALL old reports)."*
+ *
+ * Three things, and the tab is all three: today's questions with a box under
+ * each, a library of standard questions to add more, and every entry ever
+ * written underneath. Nothing here is a second store — the boxes write to
+ * `plan.journal` and the archive reads it back, which is the same pair the
+ * Today rows already use.
+ */
+export const JOURNAL_COPY = {
+  tab: "Journal",
+  title: "Your journal",
+  help: "Everything you write, in one place. The questions your routines ask, the ones you add yourself, and every answer you have ever given them.",
+  todayTitle: "Today",
+  todayHelp: "Every question that is being asked of you today. Answering one here is the same tick as answering it on Today.",
+  todayEmpty: "Nothing is asking you anything today. Add a question below, or put a routine step that asks one into your week.",
+  noteLabel: "The day itself",
+  notePlaceholder: "Anything about today that does not belong under a question.",
+  fromRoutine: (routine: string) => `from ${routine}`,
+  ownQuestion: "your own question",
+  addTitle: "Add a question",
+  addHelp: "Pick one that is already written, or write your own. It appears here and under the row it belongs to every day from now on.",
+  addOwn: "Write your own",
+  addOwnPlaceholder: "What do you want to ask yourself?",
+  add: "Add",
+  added: "Already asked",
+  setsTitle: "Or a whole set",
+  setsHelp: "Several questions at once, for the reviews people actually keep.",
+  addSet: (n: number) => `Add all ${n}`,
+  archiveTitle: "Everything you have written",
+  archiveHelp: "Newest first. Every question, every day it was answered.",
+  archiveEmpty: "Nothing written yet. The first answer you give any question above shows up here.",
+  archiveCount: (entries: number, days: number) =>
+    `${entries} ${entries === 1 ? "entry" : "entries"} across ${days} ${days === 1 ? "day" : "days"}`,
+  archiveFilter: "Show",
+  archiveAll: "Every question",
+  gone: "a question you have since removed",
+  remove: "remove",
+  removeAria: (label: string) => `Remove the question “${label}”. Everything already written under it is kept.`,
+  removeHelp: "Removing a question stops it being asked. Nothing you have written under it is deleted — it stays in the archive below.",
+} as const
+
+/**
+ * QUESTIONS THAT ARE ALREADY WRITTEN, so nobody faces a blank field named
+ * "label".
+ *
+ * The complaint that produced the journal was not only that it led nowhere; it
+ * was that the way to make it lead somewhere was to invent the question
+ * yourself. These are the ones that recur across every journalling practice
+ * worth copying, grouped the way somebody picks them: the day, the work, the
+ * hard days, the week.
+ */
+export const JOURNAL_PROMPTS: Array<{ id: string; group: string; question: string }> = [
+  { id: "jp-grateful", group: "The day", question: "Three things you are grateful for" },
+  { id: "jp-good", group: "The day", question: "One good thing about today" },
+  { id: "jp-learn", group: "The day", question: "One key learning of today" },
+  { id: "jp-proud", group: "The day", question: "What are you happy, proud and grateful for today?" },
+  { id: "jp-mood", group: "The day", question: "How did the day go?" },
+  { id: "jp-three", group: "The work", question: "The three that matter today" },
+  { id: "jp-mit", group: "The work", question: "What was the most important thing you did?" },
+  { id: "jp-avoid", group: "The work", question: "What did you avoid, and why?" },
+  { id: "jp-tomorrow", group: "The work", question: "Tomorrow's one important thing" },
+  { id: "jp-hard", group: "The hard days", question: "What is actually bothering you?" },
+  { id: "jp-story", group: "The hard days", question: "What are you telling yourself about it that may not be true?" },
+  { id: "jp-advice", group: "The hard days", question: "What would you tell a friend in this exact position?" },
+  { id: "jp-cost", group: "The hard days", question: "What does it cost you to stay here?" },
+]
+
+/**
+ * THE REVIEWS, as sets rather than single questions.
+ *
+ * A weekly review is not one box, and offering it as one is how it stops
+ * getting done. Each set adds its questions in order; they then live exactly
+ * like every other question — asked on their day, answered anywhere, kept in
+ * the archive.
+ */
+export const JOURNAL_SETS: Array<{ id: string; title: string; note: string; questions: string[] }> = [
+  {
+    id: "weekly-review",
+    title: "Weekly review",
+    note: "The four that make a week worth looking back at. Once a week, same day.",
+    questions: [
+      "What went well this week?",
+      "What did not, and what was actually in your control?",
+      "What did you learn?",
+      "What is the one thing that has to happen next week?",
+    ],
+  },
+  {
+    id: "field-report",
+    title: "Field report",
+    note: "For a thing you went out and did. Written the same day, while it is still accurate.",
+    questions: [
+      "What did you actually do?",
+      "What worked?",
+      "Where did it go wrong, and at which moment?",
+      "What are you doing differently next time?",
+    ],
+  },
+  {
+    id: "morning-pages",
+    title: "Morning pages",
+    note: "One box, no question. Write until you have nothing left, then stop.",
+    questions: ["Today's page. Whatever is there."],
+  },
+]
+
+/**
+ * How often something runs, in words.
+ *
+ * One place, because the Today list and the schedule both say it and a plan
+ * that calls the same step "once a week" on one screen and "1× a week" on the
+ * other is two plans.
+ */
+export const CADENCE_COPY = {
+  everyDay: "Every day",
+  weekdays: "Weekdays",
+  onceAWeek: "Once a week",
+  timesAWeek: (n: number) => `${n}× a week`,
 } as const
 
 export const SCHEDULE_COPY = {
@@ -94,6 +473,23 @@ export const SCHEDULE_COPY = {
   stepsUp: "Goes up this week",
   today: "Today",
   nothingOn: "Nothing on",
+  /* The group everything without an hour lands in. A driver says "twenty
+     approaches a week" and names no time of day, so it has no place in the
+     morning and no place at night — it has a week. */
+  driversGroup: "Any time this week",
+  groupHint: "Open a routine to tick its steps off.",
+  tickHint: "Tick what you have done today.",
+  /* What a group's members are called. A routine has steps; the group of
+     things that name no hour has goals, and calling those "steps" would name
+     twenty approaches a week as a line in a stack. */
+  stepNoun: ["step", "steps"],
+  goalNoun: ["goal", "goals"],
+  /* The two headers the picker needs and the schedule never draws, because
+     neither is a weekly rhythm: a milestone is a number you climb and an
+     experience is a thing to have had. Both can still have a text field hung
+     off them, so both need naming somewhere. */
+  milestoneGroup: "Milestones",
+  experienceGroup: "Experiences",
   looseTitle: "Runs weekly, no day chosen",
   looseHelp:
     "These say how often and not when, which is a finished answer for most of them. Give them days on Systems if you want them on the calendar.",
@@ -183,18 +579,37 @@ export const TRACK_COPY = {
  * Achievements because a browse is the cheapest thing to do first, and it
  * carries no ring — see SCORED_TABS.
  */
-export const TAB_ORDER: NorthStarTabId[] = ["star", "now", "one", "pick", "templates", "customize", "systems", "milestones", "focus", "values", "commit", "track", "today"]
+/**
+ * AND THE WHOLE THING, READ BACK, IS THE LAST STEP.
+ *
+ * Everything before it asks a question. This one asks nothing: it is the plan
+ * itself, laid out — the paragraph, why it matters, who you say you are, what
+ * you hold yourself to, your affirmations, your values in order, the twelve
+ * areas with the 10 you wrote in each, the goals, the routines and the list of
+ * things to have done. A plan you can only re-read by walking twelve steps is
+ * a plan nobody re-reads, and it is re-reading that does the work.
+ *
+ * Last, because it is a mirror: it can only be whole once the steps in front of
+ * it are. It carries no ring for the same reason Track carries none — nothing
+ * on it is yours until one of the other steps wrote it, and scoring it would be
+ * scoring the same work twice.
+ */
+export const TAB_ORDER: NorthStarTabId[] = ["star", "now", "one", "pick", "templates", "systems", "milestones", "focus", "values", "commit", "track", "today", "journal", "recap"]
 
 /**
  * The steps that are a WORKSHOP rather than a part of the plan.
  *
- * Templates hands you somebody else's ready-made work, and Customize is a bench
- * you build your own on. Neither is a section of the document the other steps
- * are writing, so both are marked differently in the rail — a different accent,
- * and no progress ring — and "I have not filled this in" never reads as "I am
- * behind on my plan".
+ * Templates hands you ready-made work and a bench to build your own on. It is
+ * not a section of the document the other steps are writing, so it is marked
+ * differently in the rail — a different accent, and no progress ring — and "I
+ * have not filled this in" never reads as "I am behind on my plan".
+ *
+ * BUILDING YOUR OWN LIVES INSIDE IT rather than beside it. It was its own step
+ * for an afternoon, and that was wrong twice over: it asked somebody to decide
+ * between "a program" and "my program" before seeing either, and it put two
+ * answers to one question in two different places in the rail.
  */
-export const WORKSHOP_TABS: NorthStarTabId[] = ["templates", "customize"]
+export const WORKSHOP_TABS: NorthStarTabId[] = ["templates"]
 
 /**
  * The steps that carry a ring on the rail, which is every step but the fork.
@@ -210,7 +625,7 @@ export const WORKSHOP_TABS: NorthStarTabId[] = ["templates", "customize"]
  * and a ring on it would be scoring the plan twice.
  */
 export const SCORED_TABS: NorthStarTabId[] = TAB_ORDER.filter(
-  (tab) => tab !== "pick" && tab !== "templates" && tab !== "customize" && tab !== "track" && tab !== "today"
+  (tab) => tab !== "pick" && tab !== "templates" && tab !== "track" && tab !== "today" && tab !== "journal" && tab !== "recap"
 )
 
 export const TAB_LABELS: Record<NorthStarTabId, string> = {
@@ -219,7 +634,6 @@ export const TAB_LABELS: Record<NorthStarTabId, string> = {
   one: "The one thing",
   pick: "Where to start",
   templates: "Templates",
-  customize: "Customize",
   systems: "Systems",
   milestones: "Experiences",
   focus: "Focus & season",
@@ -227,6 +641,8 @@ export const TAB_LABELS: Record<NorthStarTabId, string> = {
   commit: "Commit",
   track: "Track",
   today: "Today",
+  journal: "Journal",
+  recap: "Everything",
 }
 
 export const TAB_BLURBS: Record<NorthStarTabId, string> = {
@@ -235,7 +651,6 @@ export const TAB_BLURBS: Record<NorthStarTabId, string> = {
   one: "The single change that would make the rest far more likely, and what it needs from you.",
   pick: "Three ways on from here: what you want, what you will do, or one routine.",
   templates: "Ready-made sets, goals and practices for every area. Take what is yours, ignore the rest.",
-  customize: "Design your own training week from scratch — days, lifts, rep schemes, progression, supersets.",
   systems: "What you actually do about it week in week out, and what each one is pointed at.",
   milestones: "Everything you want to experience and have done, area by area. Loose, greedy, nothing final.",
   focus: "Which areas this season is about, and what comes after it.",
@@ -243,6 +658,8 @@ export const TAB_BLURBS: Record<NorthStarTabId, string> = {
   commit: "Read it back, say what could go wrong, and commit to it.",
   track: "Push the goals into your real goals and tick them off day by day.",
   today: "What you can put in for today, and nothing else. Tick off what you did.",
+  journal: "Everything you write: the questions your routines ask, the ones you add, and every answer you have given them.",
+  recap: "The whole plan on one page: your star, your values, who you are, your areas and your goals. Edit any of it here.",
 }
 
 // ---------------------------------------------------------------- tab 1
@@ -806,16 +1223,16 @@ export const ROUTINE_BLUEPRINTS: RoutineBlueprint[] = [
       { id: "water", title: "Big glass of water", minutes: 1, daysPerWeek: 7, dimension: "body" },
       { id: "bed", title: "Make your bed", minutes: 2, daysPerWeek: 7, dimension: "body" },
       { id: "star", title: "Read your north star out loud", minutes: 2, daysPerWeek: 7, dimension: "spirit" },
-      { id: "driving-force", title: "Read your driving force. Vision, purpose, identity, standards, values", minutes: 5, daysPerWeek: 7, dimension: "spirit" },
-      { id: "questions", title: "Ask yourself what you are happy, proud and grateful for", minutes: 5, daysPerWeek: 7, dimension: "mind" },
+      { id: "driving-force", title: "Read your driving force. Vision, purpose, identity, standards, values", minutes: 5, daysPerWeek: 7, dimension: "spirit", goesTo: "driving" },
+      { id: "questions", title: "Ask yourself what you are happy, proud and grateful for", minutes: 5, daysPerWeek: 7, dimension: "mind", asks: "What are you happy, proud and grateful for today?" },
       { id: "incantations", title: "Speak your incantations out loud, with your whole body", minutes: 5, daysPerWeek: 7, dimension: "spirit" },
-      { id: "gratitude", title: "Write three gratitudes", minutes: 3, daysPerWeek: 7, dimension: "spirit" },
+      { id: "gratitude", title: "Write three gratitudes", minutes: 3, daysPerWeek: 7, dimension: "spirit", asks: "Three things you are grateful for" },
       { id: "breath", title: "Breathwork", minutes: 5, daysPerWeek: 7, dimension: "body" },
       { id: "meditate", title: "Meditate", minutes: 10, daysPerWeek: 7, dimension: "spirit" },
       { id: "move", title: "Move. Stretch, walk, or a quick workout", minutes: 10, daysPerWeek: 6, dimension: "body" },
       { id: "read", title: "Read ten pages", minutes: 15, daysPerWeek: 6, dimension: "mind" },
-      { id: "journal", title: "Journal", minutes: 5, daysPerWeek: 7, dimension: "mind" },
-      { id: "plan", title: "Plan the day. Pick the three that matter", minutes: 5, daysPerWeek: 7, dimension: "mind" },
+      { id: "journal", title: "Journal", minutes: 5, daysPerWeek: 7, dimension: "mind", asks: "Today's page. Whatever is there.", goesTo: "journal:all" },
+      { id: "plan", title: "Plan the day. Pick the three that matter", minutes: 5, daysPerWeek: 7, dimension: "mind", asks: "The three that matter today" },
       { id: "cold", title: "Cold shower finish", minutes: 3, daysPerWeek: 5, dimension: "body" },
       { id: "sun", title: "Daylight on your face", minutes: 10, daysPerWeek: 7, dimension: "body" },
       { id: "nophone", title: "No phone for the first thirty minutes", minutes: 1, daysPerWeek: 7, dimension: "mind" },
@@ -838,16 +1255,16 @@ export const ROUTINE_BLUEPRINTS: RoutineBlueprint[] = [
       { id: "60", label: "60 min", note: "Adds looking back at the day and a fixed bedtime.", stepIds: ["tomorrow", "cleanup", "screens", "layout", "stretch", "reflect", "good-thing", "read-bed", "bedtime"] },
     ],
     library: [
-      { id: "tomorrow", title: "Write down tomorrow's one important thing", minutes: 3, daysPerWeek: 7, dimension: "mind" },
+      { id: "tomorrow", title: "Write down tomorrow's one important thing", minutes: 3, daysPerWeek: 7, dimension: "mind", asks: "Tomorrow's one important thing" },
       { id: "cleanup", title: "Ten minute reset of the space", minutes: 10, daysPerWeek: 7, dimension: "body" },
       { id: "screens", title: "Screens off an hour before bed", minutes: 1, daysPerWeek: 7, dimension: "mind" },
       { id: "layout", title: "Lay out clothes and gym bag", minutes: 3, daysPerWeek: 6, dimension: "body" },
       { id: "stretch", title: "Wind down stretch", minutes: 5, daysPerWeek: 6, dimension: "body" },
-      { id: "reflect", title: "Two lines on how the day went", minutes: 5, daysPerWeek: 7, dimension: "mind" },
-      { id: "good-thing", title: "One good thing about today", minutes: 2, daysPerWeek: 7, dimension: "spirit" },
+      { id: "reflect", title: "Two lines on how the day went", minutes: 5, daysPerWeek: 7, dimension: "mind", asks: "How did the day go?" },
+      { id: "good-thing", title: "One good thing about today", minutes: 2, daysPerWeek: 7, dimension: "spirit", asks: "One good thing about today" },
       { id: "read-bed", title: "Read in bed", minutes: 15, daysPerWeek: 6, dimension: "mind" },
       { id: "bedtime", title: "Same bedtime", minutes: 1, daysPerWeek: 7, dimension: "body" },
-      { id: "gratitude-night", title: "Say thank you for one person", minutes: 2, daysPerWeek: 7, dimension: "spirit" },
+      { id: "gratitude-night", title: "Say thank you for one person", minutes: 2, daysPerWeek: 7, dimension: "spirit", asks: "Who you said thank you for, and what for" },
     ],
   },
   {
@@ -868,14 +1285,14 @@ export const ROUTINE_BLUEPRINTS: RoutineBlueprint[] = [
     ],
     library: [
       { id: "read-star", title: "Read your north star out loud", minutes: 3, daysPerWeek: 7, dimension: "spirit" },
-      { id: "see-scene", title: "Close your eyes and see one scene from it", minutes: 5, daysPerWeek: 7, dimension: "spirit" },
-      { id: "feel-it", title: "Feel it as though it already happened", minutes: 5, daysPerWeek: 7, dimension: "spirit" },
+      { id: "see-scene", title: "Close your eyes and see one scene from it", minutes: 5, daysPerWeek: 7, dimension: "spirit", goesTo: "star" },
+      { id: "feel-it", title: "Feel it as though it already happened", minutes: 5, daysPerWeek: 7, dimension: "spirit", goesTo: "star" },
       { id: "incantations", title: "Speak your incantations out loud, with your whole body", minutes: 5, daysPerWeek: 7, dimension: "spirit" },
       { id: "identity-lines", title: "Say your identity lines. The ones that start with I am", minutes: 3, daysPerWeek: 7, dimension: "mind" },
-      { id: "why-read", title: "Re-read the why under one goal", minutes: 3, daysPerWeek: 7, dimension: "mind" },
-      { id: "gratitude-deep", title: "Sit with three things you are grateful for until you feel them", minutes: 5, daysPerWeek: 7, dimension: "spirit" },
-      { id: "act-as-if", title: "Pick one thing that person would do today, and do it", minutes: 2, daysPerWeek: 7, dimension: "mind" },
-      { id: "future-letter", title: "Write two lines from the version of you who already has it", minutes: 5, daysPerWeek: 3, dimension: "mind" },
+      { id: "why-read", title: "Re-read the why under one goal", minutes: 3, daysPerWeek: 7, dimension: "mind", goesTo: "why:top" },
+      { id: "gratitude-deep", title: "Sit with three things you are grateful for until you feel them", minutes: 5, daysPerWeek: 7, dimension: "spirit", asks: "The three you sat with until you felt them" },
+      { id: "act-as-if", title: "Pick one thing that person would do today, and do it", minutes: 2, daysPerWeek: 7, dimension: "mind", asks: "The one thing that person would do today, that you did" },
+      { id: "future-letter", title: "Write two lines from the version of you who already has it", minutes: 5, daysPerWeek: 3, dimension: "mind", asks: "Two lines from the version of you who already has it" },
       { id: "visual-board", title: "Look at your pictures of it", minutes: 3, daysPerWeek: 7, dimension: "spirit" },
     ],
   },
@@ -922,11 +1339,11 @@ export const ROUTINE_BLUEPRINTS: RoutineBlueprint[] = [
       { id: "deep", label: "Deep", note: "For a season where the work is the point.", stepIds: ["mit", "deep", "shutdown", "weekly-review", "craft", "ship", "no-social", "money-day"] },
     ],
     library: [
-      { id: "mit", title: "One most important task, done first", minutes: 90, daysPerWeek: 5, dimension: "mind" },
+      { id: "mit", title: "One most important task, done first", minutes: 90, daysPerWeek: 5, dimension: "mind", asks: "The most important thing you did today" },
       { id: "deep", title: "Ninety minutes of deep work", minutes: 90, daysPerWeek: 5, dimension: "mind" },
       { id: "shutdown", title: "Daily shutdown. Clear the inbox, plan tomorrow", minutes: 15, daysPerWeek: 5, dimension: "mind" },
       { id: "money-day", title: "Thirty minutes with your numbers, same day each week", minutes: 30, daysPerWeek: 1, dimension: "mind" },
-      { id: "weekly-review", title: "Weekly review", minutes: 30, daysPerWeek: 1, dimension: "mind" },
+      { id: "weekly-review", title: "Weekly review", minutes: 30, daysPerWeek: 1, dimension: "mind", goesTo: "journal:weekly-review" },
       { id: "craft", title: "Sharpen your craft", minutes: 30, daysPerWeek: 3, dimension: "mind" },
       { id: "ship", title: "Ship one visible thing", minutes: 60, daysPerWeek: 2, dimension: "mind" },
       { id: "no-social", title: "No social media before noon", minutes: 1, daysPerWeek: 5, dimension: "mind" },
@@ -1019,7 +1436,7 @@ export const ROUTINE_BLUEPRINTS: RoutineBlueprint[] = [
       { id: "reading", title: "Read non-fiction", minutes: 20, daysPerWeek: 4, dimension: "mind" },
       { id: "learn", title: "Half an hour learning a skill", minutes: 30, daysPerWeek: 3, dimension: "mind" },
       { id: "nature", title: "Time outside with no headphones", minutes: 30, daysPerWeek: 2, dimension: "spirit" },
-      { id: "write", title: "Write two hundred words about anything", minutes: 20, daysPerWeek: 3, dimension: "mind" },
+      { id: "write", title: "Write two hundred words about anything", minutes: 20, daysPerWeek: 3, dimension: "mind", asks: "Two hundred words" },
       { id: "low-screen", title: "One low-screen evening", minutes: 120, daysPerWeek: 2, dimension: "mind" },
       { id: "breath-long", title: "Long breathwork or meditation sit", minutes: 20, daysPerWeek: 2, dimension: "spirit" },
     ],
@@ -1789,6 +2206,191 @@ export const COMMIT_EDIT_COPY = {
   addArea: "Which area",
   addPlaceholder: "Something you have just remembered",
   empty: "Nothing in the plan yet. Add the first thing here, or walk back through the steps.",
+} as const
+
+/**
+ * The last step's words: the plan, whole, with nothing being asked of you.
+ *
+ * Every other step is a form. This one is a document, and the copy has to say
+ * so — no question marks, no counts of what is missing, no "you have not
+ * finished this". The outstanding list already lives under every tab and does
+ * that job; a page you go to in order to remember who you decided to be should
+ * not open by telling you what you owe it.
+ *
+ * `openHint` is the one instruction on the page, and it says the two things
+ * that are not obvious: the collapsed cards open, and everything is editable
+ * where it stands rather than four steps back.
+ */
+/**
+ * THE PARTS OF THE PLAN THAT ARE ALSO A DAILY PRACTICE.
+ *
+ * Reading your north star is a step in the morning stack. Saying your identity
+ * lines and your affirmations are steps in the manifestation stack. Reading the
+ * whole driving force is a step too. All four already exist in the routine
+ * libraries and are already ticked off on Today — and until now, somebody who
+ * had just READ the paragraph on the recap page had to leave it, open Today,
+ * find the stack, unfold it and tick a line whose whole content they had just
+ * finished doing. The doing and the ticking were two screens apart.
+ *
+ * So each block that IS a practice carries the tick for it.
+ *
+ * `candidates` is where the practice lives in the libraries, best first: the
+ * one whose routine somebody already has wins, and only if they have none of
+ * them does saying yes create a routine. `phrases` is the second way in — a
+ * step somebody wrote in their own words ("Read my north star before work")
+ * never has a library id, and offering to add a second copy of a thing they
+ * already track would be the page failing to see its own plan. A phrase is
+ * distinctive enough to be a match rather than a guess.
+ */
+export const RECAP_PRACTICES: Record<
+  "star" | "identity" | "affirmations" | "whole",
+  { candidates: Array<{ blueprintId: string; stepId: string }>; phrases: string[] }
+> = {
+  star: {
+    candidates: [
+      { blueprintId: "morning", stepId: "star" },
+      { blueprintId: "manifestation", stepId: "read-star" },
+    ],
+    phrases: ["north star"],
+  },
+  identity: {
+    candidates: [{ blueprintId: "manifestation", stepId: "identity-lines" }],
+    phrases: ["identity line"],
+  },
+  affirmations: {
+    candidates: [
+      { blueprintId: "morning", stepId: "incantations" },
+      { blueprintId: "manifestation", stepId: "incantations" },
+    ],
+    phrases: ["affirmation", "incantation"],
+  },
+  whole: {
+    candidates: [{ blueprintId: "morning", stepId: "driving-force" }],
+    phrases: ["driving force"],
+  },
+}
+
+/**
+ * WHICH PIECE OF THE PLAN A PRACTICE IS FOR, so a row can send you to it.
+ *
+ * `RECAP_PRACTICES` already knows which library steps practise which block, and
+ * which distinctive phrases recognise a step somebody wrote in their own words
+ * ("Read my north star before bed"). This is the other half of that pair: the
+ * `readSources` id each one should land on. One list, so the recap's offer and
+ * the Today row's door can never come to disagree about what "read your north
+ * star" means.
+ *
+ * `whole` is the whole document — vision, purpose, identity, standards, values.
+ * It pointed nowhere for a while, because no single source is it and aiming the
+ * row at one of five parts would have been a guess. The way out was not to
+ * guess: `readSources` composes the five into one source, `driving`, so this
+ * row goes to the thing it names like every other row does.
+ */
+export const PRACTICE_DESTINATIONS: Record<keyof typeof RECAP_PRACTICES, string | null> = {
+  star: "star",
+  identity: "answer:identity_total",
+  affirmations: "answer:affirmations",
+  /**
+   * The whole document, and it took a second look to see it was a destination.
+   *
+   * This was null, on the reasoning that no single source IS the driving force
+   * and pointing the row at one of its five parts would be a guess. The guess
+   * was the mistake, not the pointing: the driving force is the recap page,
+   * which is those five parts in order, so it composes into a source of its own
+   * and the row goes to the thing it names like every other row.
+   */
+  whole: "driving",
+}
+
+/**
+ * WHERE A ROW GOES, said on the row.
+ *
+ * Reported from the page (2026-08-23): *"i still dont go there when i click it
+ * on the today page… and i cant see where i would change it."* The control
+ * existed and lived at the bottom of Today in a section called "Your own text
+ * fields", which is the wrong name for it and the wrong place: somebody looking
+ * at a row that says "read your north star out loud" is not going to go and
+ * build a second thing to sit next to it.
+ */
+export const GOES_TO_COPY = {
+  /* The arrow carries the meaning; the label says what is at the other end. */
+  prefix: "goes to",
+  open: "Open",
+  openAria: (title: string, where: string) => `${title} — open ${where}`,
+  set: "send this somewhere",
+  setAria: (title: string) => `Send ${title} somewhere — pick what it opens`,
+  change: "change",
+  changeAria: (title: string) => `Change where ${title} sends you`,
+  pick: "Goes to",
+  nowhere: "Nowhere — just a tick",
+  /* A destination that names something still empty. Said, rather than drawn as
+     a door onto a blank page. */
+  missing: "What this points at is empty, or no longer in your plan.",
+  done: "Close",
+} as const
+
+export const RECAP_COPY = {
+  title: "Everything, in one place",
+  help: "Your plan as one document. Read it back when you need reminding what you decided and who you said you were.",
+  openHint: "Click any heading to open it. Anything you can read here you can change here.",
+  edit: "edit",
+  done: "done",
+  empty: "Nothing written yet. Start on the north star and this page fills itself in.",
+
+  starTitle: "My north star",
+  starHorizon: (years: number) => `${years} years out`,
+  starEmpty: "No paragraph yet.",
+  whyTitle: "Why it matters",
+
+  oneTitle: "The one thing this season",
+  oneEmpty: "Not chosen yet.",
+
+  identityTitle: "Who I am",
+  identityHelp: "Read out loud, in the present tense, until it is simply true.",
+
+  valuesTitle: "My values, in order",
+  valuesHelp: "Whatever is first, everything else is filtered through it.",
+  valuesPast: "What I have been living by",
+  valuesAdded: "New on the list",
+  valuesDropped: "No longer on it",
+  valuesEmpty: "No values chosen yet.",
+
+  areasTitle: "My areas",
+  areasHelp: "The 10 you wrote for each, and where you said you were.",
+  areaTen: "A 10 here",
+  areaPurpose: "Why it matters",
+  areaIdentity: "Who I am here",
+  areaValues: "Asks me to value",
+  areaOpen: "open this area",
+  areaUnrated: "not rated",
+
+  goalsTitle: "My goals",
+  routinesTitle: "My routines",
+  routinesEmpty: "Nothing running weekly yet.",
+  experiencesTitle: "Things to have done",
+  experiencesEmpty: "Nothing on the list yet.",
+  experiencesAdd: "One per line",
+
+  /**
+   * The tick, and what it must not overclaim.
+   *
+   * "I read it today" and not "done": the tick records the practice, and the
+   * practice is the reading. It writes to the same day's log the Today step
+   * writes to, so the two screens never disagree about whether it happened.
+   */
+  practiceTick: "I read it today",
+  practiceDone: "Read today",
+  practiceStart: "Track this",
+  practiceStartHelp: "Adds it to a routine and ticks off today.",
+  practiceWhere: (routine: string) => `in ${routine}`,
+  practiceAdds: (routine: string) => `will start a ${routine.toLowerCase()}`,
+  wholeTitle: "You have read the whole thing",
+  wholeHelp: "The paragraph, the reason, who you are, what you hold yourself to, your values. That is the driving force, and reading it is the practice.",
+
+  closingTitle: "What I said about the rest",
+  commitTitle: "What I committed to",
+  commitOn: (date: string) => `Committed ${date}`,
+  commitNone: "Not committed to yet.",
 } as const
 
 export const OVERVIEW_COPY = {

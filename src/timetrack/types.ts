@@ -40,6 +40,8 @@ export interface UserSettings {
   /** Toggl groups identical entries when this is on */
   groupSimilarEntries: boolean
   showTimelineRecorder: boolean
+  /** Hides the "this workspace ships with sample data" notice once dismissed */
+  demoNoticeDismissed?: boolean
 }
 
 // ---------------------------------------------------------------------------

@@ -651,7 +651,7 @@ describe("progress", () => {
     let plan = emptyNsPlan()
     // `pick` is the fork after the one thing: it holds nothing, so it is never
     // done however finished the rest of the plan is.
-    expect(nsProgress(plan).done).toEqual({ star: false, now: false, one: false, pick: false, templates: false, customize: false, systems: false, milestones: false, focus: false, values: false, commit: false, track: false, today: false })
+    expect(nsProgress(plan).done).toEqual({ star: false, now: false, one: false, pick: false, templates: false, systems: false, milestones: false, focus: false, values: false, commit: false, track: false, today: false, journal: false, recap: false })
 
     plan = setNorthStar(plan, "I wake up near the water.", NOW)
     // Routines arrive empty, so adding a step is the edit.
@@ -1298,30 +1298,42 @@ describe("the order of the flow", () => {
      * Today sits after Track because a driver you have not pushed is a driver
      * nothing can count.
      */
-    expect(TAB_ORDER).toEqual(["star", "now", "one", "pick", "templates", "customize", "systems", "milestones", "focus", "values", "commit", "track", "today"])
+    /**
+     * AND THE WHOLE THING, READ BACK, IS LAST.
+     *
+     * The recap is a mirror of the twelve steps in front of it, so it cannot
+     * sit among them: it is where somebody lands when they come BACK to the
+     * plan, rather than a place they pass through while writing it.
+     */
+    /**
+     * AND THE JOURNAL SITS BESIDE TODAY, not among the steps that write the plan.
+     *
+     * It is the third practice screen — Track pushes the goals, Today ticks
+     * them off, Journal holds what you wrote while doing it — so it belongs
+     * with those two and not in the run of steps that decide what the plan is.
+     */
+    expect(TAB_ORDER).toEqual(["star", "now", "one", "pick", "templates", "systems", "milestones", "focus", "values", "commit", "track", "today", "journal", "recap"])
+    expect(TAB_ORDER.indexOf("journal")).toBe(TAB_ORDER.indexOf("today") + 1)
+    expect(TAB_ORDER[TAB_ORDER.length - 1]).toBe("recap")
     expect(TAB_ORDER.indexOf("today")).toBe(TAB_ORDER.indexOf("track") + 1)
     expect(TAB_ORDER.indexOf("track")).toBe(TAB_ORDER.indexOf("commit") + 1)
-    expect(TAB_ORDER.indexOf("customize")).toBe(TAB_ORDER.indexOf("templates") + 1)
+    expect(TAB_ORDER).not.toContain("customize")
     // And the two halves the fork names are two steps, next to each other.
     expect(TAB_ORDER.indexOf("milestones")).toBe(TAB_ORDER.indexOf("systems") + 1)
     expect(TAB_ORDER.indexOf("pick")).toBe(TAB_ORDER.indexOf("one") + 1)
   })
 
-  it("scores nothing on the build-your-own step, and keeps it out of the plan", () => {
+  it("marks the catalogue step a workshop, and never scores it", () => {
     /**
-     * A ring on Customize would score somebody on having designed a training
-     * program, which is not part of writing a life plan and is not something
-     * most people will do at all. It is a tool in the rail, like the fork and
-     * the catalogue.
+     * A ring on Templates would score somebody on having browsed, and on having
+     * designed a training program — neither is part of writing a life plan, and
+     * most people will do neither.
      */
-    expect(SCORED_TABS).not.toContain("customize")
-    expect(WORKSHOP_TABS).toContain("customize")
-    expect(WORKSHOP_TABS).toContain("templates")
+    expect(SCORED_TABS).not.toContain("templates")
+    expect(WORKSHOP_TABS).toEqual(["templates"])
     const plan = emptyNsPlan()
-    expect(stepState(plan, "customize")).toBe("empty")
-    expect(tabHasContent(plan, "customize")).toBe(false)
     // And it never blocks: nothing on it can appear in the outstanding list.
-    expect(planTodos(plan, TODAY).some((t) => t.tab === "customize")).toBe(false)
+    expect(planTodos(plan, TODAY).some((t) => t.tab === "templates")).toBe(false)
   })
 
   it("scores nothing on the catalogue step either", () => {
@@ -1331,6 +1343,23 @@ describe("the order of the flow", () => {
     expect(stepState(plan, "templates")).toBe("empty")
     expect(tabHasContent(plan, "templates")).toBe(false)
     expect(planTodos(plan, NOW).some((t) => t.tab === "templates")).toBe(false)
+  })
+
+  it("scores nothing on the recap, however full the plan is", () => {
+    /**
+     * THE ONE RULE THE RECAP HAS TO KEEP.
+     *
+     * Every word on it was written on another step and is scored there. A ring
+     * would fill itself off that work a second time, and "you have not finished
+     * reading your own plan" is not a thing to tell anybody about a page whose
+     * whole job is being somewhere worth coming back to.
+     */
+    expect(SCORED_TABS).not.toContain("recap")
+    expect(WORKSHOP_TABS).not.toContain("recap")
+    const plan = setNorthStar(emptyNsPlan(), "I wake up near the water.", NOW)
+    expect(stepState(plan, "recap")).toBe("empty")
+    expect(tabHasContent(plan, "recap")).toBe(false)
+    expect(planTodos(plan, TODAY).some((t) => t.tab === "recap")).toBe(false)
   })
 
   it("scores nothing on the fork and reads nothing back from it", () => {

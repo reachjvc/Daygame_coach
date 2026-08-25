@@ -48,7 +48,24 @@ interface HubGoal {
   template_id?: string | null
 }
 
-export function TrackTab({ plan, runId, today }: { plan: NsPlan; runId: string; today: string }) {
+export function TrackTab({
+  plan,
+  runId,
+  today,
+  onToggleStep,
+}: {
+  plan: NsPlan
+  runId: string
+  today: string
+  /**
+   * Ticking one of today's routine steps off from inside the schedule.
+   *
+   * The same handler the Today step uses, writing to the same `plan.logged`,
+   * because two screens showing the morning routine must not keep two
+   * different answers to "did you read your north star".
+   */
+  onToggleStep: (stepId: string) => void
+}) {
   const [auth, setAuth] = useState<Auth>("checking")
   const [hubGoals, setHubGoals] = useState<HubGoal[]>([])
   const [selected, setSelected] = useState<Set<string> | null>(null)
@@ -168,7 +185,7 @@ export function TrackTab({ plan, runId, today }: { plan: NsPlan; runId: string; 
   if (auth === "checking") {
     return (
       <div className="space-y-5">
-        <TrackSchedule plan={plan} today={today} />
+        <TrackSchedule plan={plan} today={today} onToggleStep={onToggleStep} />
         <p className="text-sm text-zinc-500">Checking your goals…</p>
       </div>
     )
@@ -180,7 +197,7 @@ export function TrackTab({ plan, runId, today }: { plan: NsPlan; runId: string; 
         {/* The schedule is read off the plan and needs no account, so being
             signed out costs you the counting, not the answer to "what am I
             doing next week". */}
-        <TrackSchedule plan={plan} today={today} />
+        <TrackSchedule plan={plan} today={today} onToggleStep={onToggleStep} />
         <section className="rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-6">
           <h2 className="text-sm font-semibold text-zinc-200">{TRACK_COPY.signedOutTitle}</h2>
           <p className="text-[12px] text-zinc-400 mt-2 leading-relaxed max-w-prose">{TRACK_COPY.signedOut}</p>
@@ -199,7 +216,7 @@ export function TrackTab({ plan, runId, today }: { plan: NsPlan; runId: string; 
     <div className="space-y-5">
       {/* What you will be doing comes first. "Which of these should be counted"
           is a question you can only answer once you have seen the weeks. */}
-      <TrackSchedule plan={plan} today={today} />
+      <TrackSchedule plan={plan} today={today} onToggleStep={onToggleStep} />
 
       <section className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
         <div className="px-5 pt-4">

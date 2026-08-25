@@ -31,7 +31,7 @@ test.describe('Goals Setup Tour', () => {
 
   /** Navigate wizard to Goals step so the tour renders. */
   async function navigateToGoalsStep(page: Page) {
-    await page.goto('/dashboard/goals/setup', { timeout: NAV_TIMEOUT })
+    await page.goto('/test/archive/goal-setup', { timeout: NAV_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     const ftoButton = page.locator('#btn-path-fto')

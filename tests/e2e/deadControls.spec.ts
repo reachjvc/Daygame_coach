@@ -31,7 +31,12 @@ async function sweep(page: Page, tag: string): Promise<string[]> {
     const nav = document.querySelector('nav[aria-label="Steps"]') as HTMLElement | null
 
     const probe = async (btn: HTMLButtonElement, where: string) => {
-      const text = (btn.textContent || "").replace(/\s+/g, " ").trim().slice(0, 44)
+      // A control labelled only by aria-label is correctly labelled — icon
+      // buttons and checkboxes have no text node and should not be reported.
+      const text = ((btn.textContent || "").trim() || btn.getAttribute("aria-label") || "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 44)
       if (!text) { faults.push(`NO LABEL @ ${where}`); return }
       // Reset controls and the copy confirmation are excluded: one is
       // destructive, the other intentionally shows transient text.
@@ -100,6 +105,22 @@ test("no dead controls on the hub, in any version", async ({ page }) => {
     all.push(...(await sweep(page, `hub:${v}`)))
   }
   expect(all, `dead controls:\n  ${all.join("\n  ")}`).toEqual([])
+})
+
+test("no dead controls in the nine modules", async ({ page }) => {
+  test.setTimeout(120000)
+  await page.goto(`${HUB}/learn`, { waitUntil: "domcontentloaded" })
+  await settled(page)
+  const faults = await sweep(page, "learn")
+  expect(faults, `dead controls:\n  ${faults.join("\n  ")}`).toEqual([])
+})
+
+test("no dead controls on the short version", async ({ page }) => {
+  test.setTimeout(120000)
+  await page.goto(`${HUB}/shortlist`, { waitUntil: "domcontentloaded" })
+  await settled(page)
+  const faults = await sweep(page, "shortlist")
+  expect(faults, `dead controls:\n  ${faults.join("\n  ")}`).toEqual([])
 })
 
 for (const flow of FLOWS) {

@@ -13,15 +13,15 @@
 import { useState } from "react"
 import Link from "next/link"
 import { ChevronDown } from "lucide-react"
-import type { ViceFlowId } from "../types"
+import type { ViceFlowId, ViceToolId } from "../types"
 import { GUIDED } from "../data/plain"
 import { VICE_FLOWS } from "../data/flows"
 
-type ToolId = "urge" | "lapse" | "card" | "help" | "voices" | "tripwire"
+
 
 const CHANGE_FLOWS = VICE_FLOWS.filter((f) => f.id !== "where" && f.id !== "gives")
 
-export function HubGuided({ openTool }: { openTool: (t: ToolId) => void }) {
+export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
   // The acute door starts open. Somebody arriving mid-urge should not have to
   // tap a disclosure before they can reach the ninety seconds — that is one
   // interaction too many at the only moment the timing really matters. The
@@ -57,11 +57,22 @@ export function HubGuided({ openTool }: { openTool: (t: ToolId) => void }) {
                       return (
                         <button
                           key={item.id}
-                          onClick={() => openTool(item.tool as ToolId)}
+                          onClick={() => openTool(item.tool as ViceToolId)}
                           className="block w-full rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5 text-left text-[13.5px] text-zinc-200 hover:border-violet-400/40 transition-colors"
                         >
                           {item.label}
                         </button>
+                      )
+                    }
+                    if ("href" in item && item.href) {
+                      return (
+                        <Link
+                          key={item.id}
+                          href={item.href}
+                          className="block rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5 text-[13.5px] text-zinc-200 hover:border-violet-400/40 transition-colors"
+                        >
+                          {item.label}
+                        </Link>
                       )
                     }
                     if ("flow" in item && item.flow) {
@@ -89,7 +100,19 @@ export function HubGuided({ openTool }: { openTool: (t: ToolId) => void }) {
                         </button>
                         {showFlows && (
                           <div className="mt-1.5 space-y-1.5 pl-3 border-l border-white/10">
-                            <p className="text-[11.5px] text-zinc-600 leading-relaxed">{GUIDED.changeIntro}</p>
+                            {/* First, because it is the only one built from the
+                                evidence ranking rather than from one school of
+                                thought — and the shortest by a distance. */}
+                            <Link
+                              href="/test/quit-vice/shortlist"
+                              className="block rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 hover:text-white hover:bg-white/[0.03] transition-colors"
+                            >
+                              The short version
+                              <span className="block text-[11px] text-zinc-600">
+                                Ten things, ranked by the evidence. Most happen away from here.
+                              </span>
+                            </Link>
+                            <p className="text-[11.5px] text-zinc-600 leading-relaxed pt-1">{GUIDED.changeIntro}</p>
                             {CHANGE_FLOWS.map((f) => (
                               <Link
                                 key={f.id}

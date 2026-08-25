@@ -21,7 +21,7 @@ import { BODY_PLACES, BODY_TEXTURES } from "../data/vices"
 import { FEELINGS, LAPSE, PERMISSION_THOUGHTS, RESPOND, URGE } from "../data/copy"
 import { cueForUrge, emptyEpisode, futureCues, refusalLadder, urgeSummary } from "../viceService"
 import { Chip, ChipBank, Empty, Field, LineList, Panel, PrimaryButton, QuietButton, Scale, Why } from "./Ui"
-import { OneVoice } from "./Voices"
+import { OneVoice, TechniqueHints } from "./Voices"
 
 // ---------------------------------------------------------------- urge
 
@@ -489,6 +489,33 @@ export function LapseTool({ state, on, onClose }: { state: ViceState; on: ViceHa
             />
           </div>
         </Panel>
+
+        {/* The debrief used to end here and close. That is the point at which
+            this module had least to say and the corpus has most: a lapse is
+            the specific ending the attempt review keys its answer on. */}
+        <div className="mt-4">
+          <TechniqueHints stage="lapse" viceId={state.viceId} />
+        </div>
+
+        <div className="mt-4">
+          <p className="text-[12px] text-zinc-500 mb-2">{LAPSE.onward.label}</p>
+          <div className="grid gap-2">
+            <button
+              onClick={() => on.openTool("again")}
+              className="rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5 text-left hover:border-violet-400/40 transition-colors"
+            >
+              <span className="block text-[13.5px] text-zinc-100">{LAPSE.onward.again}</span>
+              <span className="block text-[11.5px] text-zinc-500 mt-0.5 leading-snug">{LAPSE.onward.againWhy}</span>
+            </button>
+            <button
+              onClick={() => on.openTool("tripwire")}
+              className="rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5 text-left hover:border-violet-400/40 transition-colors"
+            >
+              <span className="block text-[13.5px] text-zinc-100">{LAPSE.onward.tripwire}</span>
+              <span className="block text-[11.5px] text-zinc-500 mt-0.5 leading-snug">{LAPSE.onward.tripwireWhy}</span>
+            </button>
+          </div>
+        </div>
 
         <div className="mt-4">
           <PrimaryButton onClick={onClose}>Done</PrimaryButton>

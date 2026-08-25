@@ -10,7 +10,9 @@ import { TodaySessionWidget } from "./TodaySessionWidget"
 import { ProgressionView } from "./ProgressionView"
 import { EditActiveProgram } from "./EditActiveProgram"
 import { useActiveEnrollments, useEnrollment } from "../hooks/useEnrollment"
-import { getProgram } from "../data/catalog"
+import { getProgram, requireProgram } from "../data/catalog"
+import { effectiveProgram } from "../customize"
+import { computePrescription } from "../programsService"
 import { LEVEL_LABELS } from "../config"
 
 type View =
@@ -94,17 +96,48 @@ export function ProgramsApp() {
 
 function ActiveProgram({ enrollmentId, onExit }: { enrollmentId: string; onExit: () => void }) {
   const { detail, loading, refresh } = useEnrollment(enrollmentId)
+  /** A session the user picked instead of the one the app offered. */
+  const [pickedDayId, setPickedDayId] = useState<string | null>(null)
 
   if (loading || !detail) return <p className="text-sm text-muted-foreground">Loading session…</p>
+
+  /**
+   * RECOMPUTED ON THE CLIENT, not fetched.
+   *
+   * The engine is pure and takes the program and the enrollment, both of which
+   * are already here — so showing a different day's session is a function call
+   * rather than a round trip. The server still owns what happens on log.
+   */
+  const program = effectiveProgram(
+    requireProgram(detail.enrollment.program_id),
+    detail.enrollment.customSchedule
+  )
+  const days =
+    program.schedule.kind === "linear_rotation" || program.schedule.kind === "weekly_waved"
+      ? program.schedule.days.map((d) => ({ id: d.id, label: d.label, weekday: d.weekday }))
+      : undefined
+  const pickedIndex = days?.findIndex((d) => d.id === pickedDayId) ?? -1
+  const prescription =
+    pickedIndex >= 0
+      ? computePrescription(program, {
+          ...detail.enrollment,
+          cursor: { ...detail.enrollment.cursor, dayIndex: pickedIndex },
+        })
+      : detail.prescription
 
   return (
     <div className="space-y-4">
       <Button variant="ghost" size="sm" onClick={onExit}>← My programs</Button>
       <TodaySessionWidget
         enrollmentId={enrollmentId}
-        prescription={detail.prescription}
+        prescription={prescription}
         unit={detail.enrollment.unitSystem}
-        onLogged={refresh}
+        days={days}
+        onPickDay={setPickedDayId}
+        onLogged={() => {
+          setPickedDayId(null)
+          refresh()
+        }}
       />
       {/* The program is not fixed once it is running — the gym changes, the
           shoulder changes. Weights carry over across an edit. */}

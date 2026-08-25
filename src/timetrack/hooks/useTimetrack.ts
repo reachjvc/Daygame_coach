@@ -12,8 +12,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { STATE_VERSION, STORAGE_KEY } from "../config"
-import { createSeedState } from "../data/seed"
-import { forgottenTimer, refreshDemoHistory, type DemoRefreshResult } from "../demoDataService"
+import { createEmptyWorkspace } from "../data/emptyWorkspace"
+import { removeDemoData } from "../demoDataService"
 import {
   dateKey,
   epochSeconds,
@@ -21,6 +21,7 @@ import {
 import {
   continueEntry,
   entrySeconds,
+  forgottenTimer,
   evaluateAlerts,
   isRunning,
   runningEntry,
@@ -48,55 +49,59 @@ export type PomodoroPhase = "idle" | "work" | "break"
 
 interface LoadResult {
   state: TimetrackState
-  refreshed: DemoRefreshResult | null
   /** Set when saved data was discarded, so the user is told rather than silently reset */
   discarded: string | null
+  /** Sample rows this page used to seed, cleaned out of an existing browser */
+  cleanedDemoEntries: number
 }
 
 function loadState(nowIso: string): LoadResult {
-  if (typeof window === "undefined") return { state: createSeedState(nowIso), refreshed: null, discarded: null }
+  if (typeof window === "undefined") {
+    return { state: createEmptyWorkspace(nowIso), discarded: null, cleanedDemoEntries: 0 }
+  }
 
   let raw: string | null = null
   try {
     raw = window.localStorage.getItem(STORAGE_KEY)
   } catch {
     return {
-      state: createSeedState(nowIso),
-      refreshed: null,
+      state: createEmptyWorkspace(nowIso),
       discarded: "This browser blocked local storage, so nothing you do here will be saved.",
+      cleanedDemoEntries: 0,
     }
   }
-  if (!raw) return { state: createSeedState(nowIso), refreshed: null, discarded: null }
+  if (!raw) return { state: createEmptyWorkspace(nowIso), discarded: null, cleanedDemoEntries: 0 }
 
   let parsed: TimetrackState | null = null
   try {
     parsed = JSON.parse(raw) as TimetrackState
   } catch {
     return {
-      state: createSeedState(nowIso),
-      refreshed: null,
-      discarded: "Saved data could not be read, so it was replaced with fresh demo data.",
+      state: createEmptyWorkspace(nowIso),
+      discarded: "Saved data could not be read, so this workspace was started fresh.",
+      cleanedDemoEntries: 0,
     }
   }
 
   if (!parsed?.workspace || !Array.isArray(parsed.entries)) {
     return {
-      state: createSeedState(nowIso),
-      refreshed: null,
-      discarded: "Saved data was incomplete, so it was replaced with fresh demo data.",
+      state: createEmptyWorkspace(nowIso),
+      discarded: "Saved data was incomplete, so this workspace was started fresh.",
+      cleanedDemoEntries: 0,
     }
   }
   if (parsed.version !== STATE_VERSION) {
     return {
-      state: createSeedState(nowIso),
-      refreshed: null,
-      discarded: `Saved data came from an older version of this page (v${String(parsed.version)}), so it was replaced with fresh demo data.`,
+      state: createEmptyWorkspace(nowIso),
+      discarded: `Saved data came from an older version of this page (v${String(parsed.version)}), so this workspace was started fresh.`,
+      cleanedDemoEntries: 0,
     }
   }
 
-  // Re-date the demo history so the page never opens on stale days
-  const refreshed = refreshDemoHistory(parsed, nowIso)
-  return { state: refreshed.state, refreshed, discarded: null }
+  // This page used to seed sample entries. Strip any that are still stored,
+  // keeping everything the user created.
+  const cleaned = removeDemoData(parsed)
+  return { state: cleaned.state, discarded: null, cleanedDemoEntries: cleaned.removedEntries }
 }
 
 export function useTimetrack() {
@@ -123,9 +128,9 @@ export function useTimetrack() {
     setStateRaw(loaded.state)
     if (loaded.discarded) {
       pendingLoadNotice.current = { text: loaded.discarded, tone: "error" }
-    } else if (loaded.refreshed && loaded.refreshed.shifted > 0) {
+    } else if (loaded.cleanedDemoEntries > 0) {
       pendingLoadNotice.current = {
-        text: `Moved ${loaded.refreshed.shifted} demo entries forward ${loaded.refreshed.days} day${loaded.refreshed.days === 1 ? "" : "s"} so this opens on the current week. Entries you created were not changed.`,
+        text: `Removed ${loaded.cleanedDemoEntries} sample entries this page used to ship with. Your own entries are untouched.`,
         tone: "info",
       }
     }
@@ -421,10 +426,9 @@ export function useTimetrack() {
         }
         setState(() => result.state)
       },
-      resetSandbox() {
-        const nowIso = new Date().toISOString()
-        setStateRaw(createSeedState(nowIso))
-        pushToast("Reset to the demo workspace")
+      resetWorkspace() {
+        setStateRaw(createEmptyWorkspace(new Date().toISOString()))
+        pushToast("Workspace cleared")
       },
       replaceState(next: TimetrackState) {
         setStateRaw(next)

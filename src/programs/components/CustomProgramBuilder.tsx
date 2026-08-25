@@ -52,17 +52,20 @@ import {
   setProgression,
   setSchemeKind,
   setDropSets,
+  setWeekday,
   supersetLabel,
   unjoin,
 } from "../builder"
 import {
-  PATTERN_LABELS,
-  PATTERN_ORDER,
+  BODY_GROUP_LABELS,
+  BODY_GROUP_ORDER,
   customLibraryEntry,
-  libraryByPattern,
+  libraryByGroup,
   searchLibrary,
 } from "../data/exerciseLibrary"
+import { searchCustomLifts } from "../customLifts"
 import { CUSTOM_PROGRAM_ID } from "../data/customProgram"
+import { WEEKDAYS } from "../config"
 import {
   PROGRAM_TEXT_PLACEHOLDER,
   carryAuthoredSettings,
@@ -70,7 +73,7 @@ import {
   parseProgramText,
 } from "../programText"
 import { UNIT_CONFIG } from "../config"
-import type { LibraryExercise, LoadExercise, MovementPattern, ProgramSchedule, UnitSystem } from "../types"
+import type { BodyGroup, LibraryExercise, LoadExercise, ProgramSchedule, UnitSystem } from "../types"
 
 export const BUILDER_STORAGE_KEY = "custom-program-v1"
 
@@ -98,6 +101,15 @@ interface Props {
   onWeight: (exerciseId: string, raw: string) => void
   /** Replace every weight at once — what applying written text does. */
   onWeights: (weights: Record<string, string>) => void
+  /**
+   * Lifts this person invented, offered back in a tab of their own.
+   *
+   * Kept by the caller rather than here because they outlive any one program:
+   * "One Arm Tricep" is still your lift after you rewrite the week around it.
+   */
+  ownLifts: LibraryExercise[]
+  onRememberLift: (entry: LibraryExercise) => void
+  onForget: (id: string) => void
   /** Day names go into the plan's workout routine once it is started. */
   onStarted: (dayNames: string[]) => void
 }
@@ -110,6 +122,9 @@ export function CustomProgramBuilder({
   weights,
   onWeight,
   onWeights,
+  ownLifts,
+  onRememberLift,
+  onForget,
   onStarted,
 }: Props) {
   const [newDay, setNewDay] = useState("")
@@ -125,7 +140,15 @@ export function CustomProgramBuilder({
   const [applied, setApplied] = useState(false)
   /** The written form is a drawer, shut by default — clicking is the way in. */
   const [writing, setWriting] = useState(false)
-  const [openDay, setOpenDay] = useState<string | null>(null)
+  /**
+   * WHICH DAYS ARE SHUT, not which one is open.
+   *
+   * A day you have not put lifts in yet is the day you came here to work on, so
+   * it opens itself; anything you are finished with can be folded away. It was
+   * one-open-at-a-time and closed-by-default, which meant six empty days and no
+   * visible way to put a lift in any of them.
+   */
+  const [shutDays, setShutDays] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [state, setState] = useState<"idle" | "saving" | "done">("idle")
 
@@ -144,6 +167,11 @@ export function CustomProgramBuilder({
   }
 
   const days = scheduleDays(schedule)
+  const takenWeekdays = new Map<number, string>()
+  for (const d of days) {
+    const w = (d as { weekday?: number }).weekday
+    if (w != null) takenWeekdays.set(w, d.label)
+  }
   const problems = designProblems(schedule)
   const allLifts = days.flatMap((d) => d.exercises as LoadExercise[])
   const missingWeights = allLifts.filter((e) => !hasWeight(weights, e.id))
@@ -301,8 +329,19 @@ export function CustomProgramBuilder({
                 day={day as { id: string; label: string; exercises: LoadExercise[] }}
                 index={i}
                 dayCount={days.length}
-                open={openDay === day.id}
-                onToggle={() => setOpenDay(openDay === day.id ? null : day.id)}
+                ownLifts={ownLifts}
+                onAddLift={(entry) => {
+                  onRememberLift(entry)
+                  apply(() => addExercise(schedule, day.id, entry).schedule)
+                }}
+                onForget={onForget}
+                takenWeekdays={takenWeekdays}
+                open={!shutDays.includes(day.id) || day.exercises.length === 0}
+                onToggle={() =>
+                  setShutDays((cur) =>
+                    cur.includes(day.id) ? cur.filter((id) => id !== day.id) : [...cur, day.id]
+                  )
+                }
                 unit={unit}
                 weights={weights}
                 onWeight={onWeight}
@@ -371,6 +410,10 @@ function DayCard({
   day,
   index,
   dayCount,
+  ownLifts,
+  onAddLift,
+  onForget,
+  takenWeekdays,
   open,
   onToggle,
   unit,
@@ -379,9 +422,14 @@ function DayCard({
   apply,
   schedule,
 }: {
-  day: { id: string; label: string; exercises: LoadExercise[] }
+  day: { id: string; label: string; exercises: LoadExercise[]; weekday?: number }
   index: number
   dayCount: number
+  ownLifts: LibraryExercise[]
+  onAddLift: (entry: LibraryExercise) => void
+  onForget: (id: string) => void
+  /** Weekday → the day that already holds it, so a clash can be explained. */
+  takenWeekdays: Map<number, string>
   open: boolean
   onToggle: () => void
   unit: UnitSystem
@@ -430,12 +478,61 @@ function DayCard({
             disabled={dayCount <= 1}
             tone="danger"
           />
-          <IconButton
-            icon={open ? ChevronUp : ChevronDown}
-            label={open ? `Collapse ${day.label}` : `Open ${day.label}`}
-            onClick={onToggle}
-          />
         </span>
+        {/* NOT A FOURTH CHEVRON. It was one, sitting beside move-up, move-down
+            and remove — four identical icon buttons, one of which was the only
+            way to put a lift in the day. Nobody found it. It says what it does
+            now, and an empty day cannot be collapsed at all, because collapsing
+            the thing you have not filled in yet is never what you meant. */}
+        <button
+          type="button"
+          onClick={onToggle}
+          disabled={day.exercises.length === 0}
+          className={`shrink-0 rounded-md border px-2.5 py-1.5 text-[11px] transition-colors disabled:opacity-40 ${
+            day.exercises.length === 0
+              ? "border-sky-400/40 bg-sky-500/15 text-sky-100"
+              : "border-white/12 text-zinc-300 hover:bg-white/[0.07] hover:text-zinc-100"
+          }`}
+        >
+          {day.exercises.length === 0 ? "Add lifts ↓" : open ? "Hide lifts" : "Add lifts"}
+        </button>
+      </div>
+
+      {/* WHICH DAY OF THE WEEK. Always visible, not behind the disclosure: the
+          week is the thing being designed, and "Push is Monday" is a fact about
+          the day rather than a setting on it. */}
+      <div className="flex flex-wrap items-center gap-1.5 border-t border-white/8 px-2.5 py-2">
+        <span className={TYPE.label}>On</span>
+        {WEEKDAYS.map((w) => {
+          const active = day.weekday === w.value
+          const takenBy = takenWeekdays.get(w.value)
+          const clash = !active && takenBy != null
+          return (
+            <button
+              key={w.value}
+              type="button"
+              onClick={() => apply(() => setWeekday(schedule, day.id, active ? null : w.value))}
+              aria-pressed={active}
+              title={
+                active
+                  ? `${day.label} is on ${w.long} — tap to unset`
+                  : clash
+                    ? `${w.long} is ${takenBy} — moving it here frees that day up`
+                    : `Put ${day.label} on ${w.long}`
+              }
+              className={`rounded-md border px-2 py-1 text-[11px] transition-colors ${
+                active
+                  ? "border-sky-400/45 bg-sky-500/15 text-sky-100"
+                  : clash
+                    ? "border-white/8 text-zinc-600 hover:border-white/20 hover:text-zinc-400"
+                    : "border-white/12 text-zinc-400 hover:bg-white/[0.07] hover:text-zinc-200"
+              }`}
+            >
+              {w.short}
+            </button>
+          )
+        })}
+        {day.weekday == null && <span className={TYPE.meta}>Not set — trained in order</span>}
       </div>
 
       {open && (
@@ -460,10 +557,10 @@ function DayCard({
             />
           ))}
           <ExercisePalette
-            onAdd={(entry: LibraryExercise) =>
-              apply(() => addExercise(schedule, day.id, entry).schedule)
-            }
+            onAdd={onAddLift}
             alreadyIn={new Set(day.exercises.map((e) => e.name.toLowerCase()))}
+            ownLifts={ownLifts}
+            onForget={onForget}
           />
         </div>
       )}
@@ -562,12 +659,26 @@ function LiftRow({
               onChange={(n) => apply(() => updateExerciseScheme(schedule, dayId, exercise.id, { sets: n }))}
             />
             {scheme.kind === "linear" ? (
-              <Stepper
-                label="Reps"
-                value={scheme.reps}
-                ariaLabel={`reps for ${exercise.name}`}
-                onChange={(n) => apply(() => updateExerciseScheme(schedule, dayId, exercise.id, { reps: n }))}
-              />
+              <>
+                <Stepper
+                  label="Reps"
+                  value={scheme.reps}
+                  ariaLabel={`reps for ${exercise.name}`}
+                  onChange={(n) => apply(() => updateExerciseScheme(schedule, dayId, exercise.id, { reps: n }))}
+                />
+                {/* THE WAY TO A REP RANGE, on the row. It was only reachable by
+                    opening the settings and flipping "Prescribed as", so the
+                    second number simply did not exist as far as anyone could
+                    tell. */}
+                <button
+                  type="button"
+                  onClick={() => apply(() => setSchemeKind(schedule, dayId, exercise.id, "rep_range"))}
+                  title={`Give ${exercise.name} a rep range instead of a fixed number`}
+                  className="h-9 shrink-0 self-end rounded-md border border-white/12 px-2 text-[11px] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-zinc-200 sm:h-7"
+                >
+                  → range
+                </button>
+              </>
             ) : (
               <>
                 <Stepper
@@ -582,6 +693,14 @@ function LiftRow({
                   ariaLabel={`top of the rep range for ${exercise.name}`}
                   onChange={(n) => apply(() => updateExerciseScheme(schedule, dayId, exercise.id, { repMax: n }))}
                 />
+                <button
+                  type="button"
+                  onClick={() => apply(() => setSchemeKind(schedule, dayId, exercise.id, "linear"))}
+                  title={`Give ${exercise.name} a fixed number of reps instead of a range`}
+                  className="h-9 shrink-0 self-end rounded-md border border-white/12 px-2 text-[11px] text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-zinc-200 sm:h-7"
+                >
+                  → fixed
+                </button>
               </>
             )}
           </>
@@ -596,6 +715,50 @@ function LiftRow({
           invalid={!(weight.trim() !== "" && Number(weight) >= 0)}
           ariaLabel={`Starting weight for ${exercise.name} in ${unit}`}
         />
+
+        {/* SUPERSET AND DROP SETS, ON THE ROW. They were behind the settings
+            icon, which is the same mistake as burying the lift picker: a thing
+            you are asked about in the gym should not need a disclosure to
+            reach. The settings panel still holds the rarer choices. */}
+        <div className="flex items-end gap-2">
+          <div className="flex w-fit flex-col gap-1 self-start">
+            <span className={TYPE.label}>Superset</span>
+            <button
+              type="button"
+              onClick={() =>
+                apply(() =>
+                  exercise.supersetGroup
+                    ? unjoin(schedule, dayId, exercise.id)
+                    : joinWithNext(schedule, dayId, index)
+                )
+              }
+              disabled={!exercise.supersetGroup && !canPair}
+              title={
+                exercise.supersetGroup
+                  ? `Unpair ${exercise.name}`
+                  : canPair
+                    ? `Superset ${exercise.name} with the lift below`
+                    : "Nothing under this one to pair with"
+              }
+              className={`h-9 sm:h-7 rounded-md border px-2.5 text-[11px] transition-colors disabled:opacity-25 ${
+                exercise.supersetGroup
+                  ? "border-sky-400/45 bg-sky-500/15 text-sky-100"
+                  : "border-white/12 text-zinc-400 hover:bg-white/[0.07] hover:text-zinc-200"
+              }`}
+            >
+              {exercise.supersetGroup ? `Paired ${label}` : "+ pair below"}
+            </button>
+          </div>
+
+          <Stepper
+            label="Drop sets"
+            value={exercise.dropSets ?? 0}
+            min={0}
+            max={4}
+            ariaLabel={`drop sets on ${exercise.name}`}
+            onChange={(n) => apply(() => setDropSets(schedule, dayId, exercise.id, n))}
+          />
+        </div>
       </div>
 
       {open && (
@@ -768,40 +931,132 @@ function IncrementField({
 function ExercisePalette({
   onAdd,
   alreadyIn,
+  ownLifts,
+  onForget,
 }: {
   onAdd: (entry: LibraryExercise) => void
   /** Names already in this day, so the palette shows what you have taken. */
   alreadyIn: Set<string>
+  /** Lifts this person invented, offered back so they are typed once. */
+  ownLifts: LibraryExercise[]
+  onForget: (id: string) => void
 }) {
-  const [group, setGroup] = useState<MovementPattern>(PATTERN_ORDER[0])
+  /** "yours" is a tab, not a body part — it only exists once you have made one. */
+  const [group, setGroup] = useState<BodyGroup | "yours">(BODY_GROUP_ORDER[0])
+  /**
+   * Where a lift you invent gets filed. Follows the body-part tab you last
+   * chose, and keeps its value while the Yours tab is open — which is not a
+   * body part and so cannot answer "what does this train".
+   */
+  const [ownGroup, setOwnGroup] = useState<BodyGroup>(BODY_GROUP_ORDER[0])
   const [filter, setFilter] = useState("")
+  /** The "my own exercise" box, open only when asked for. */
+  const [ownName, setOwnName] = useState<string | null>(null)
 
   const query = filter.trim()
-  const shown = query ? searchLibrary(query) : libraryByPattern(group)
+  const shown = query
+    ? // Your own lifts come first when searching: you named them, so if you are
+      // typing that name it is almost certainly the one you mean.
+      [...searchCustomLifts(ownLifts, query), ...searchLibrary(query)]
+    : group === "yours"
+      ? ownLifts
+      : libraryByGroup(group as BodyGroup)
   // Offered only when the filter genuinely matches nothing in the pool.
-  const custom = query && shown.length === 0 ? customLibraryEntry(query, group) : null
+  const custom = query && shown.length === 0 ? customLibraryEntry(query, ownGroup) : null
 
   return (
     <div className="mt-1.5 rounded-md border border-white/10 bg-black/25 p-2.5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <GroupLabel>Add a lift — one tap</GroupLabel>
-        <input
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          placeholder="Or search…"
-          aria-label="Search the lift list"
-          className="w-32 rounded-md border border-white/12 bg-black/30 px-2 py-1 text-[11px] text-zinc-100 placeholder:text-zinc-600 transition-colors focus:border-sky-400/50 focus:outline-none"
-        />
+        <div className="flex items-center gap-1.5">
+          {/* ADDING YOUR OWN, SAID OUT LOUD. It was possible all along, but only
+              appeared once you had searched for something the pool did not
+              have — which nobody does on purpose, so it may as well not have
+              existed. */}
+          <button
+            type="button"
+            onClick={() => setOwnName(ownName === null ? "" : null)}
+            className="rounded-md border border-dashed border-white/20 px-2 py-1 text-[11px] text-zinc-400 transition-colors hover:border-sky-400/40 hover:text-sky-200"
+          >
+            {ownName === null ? "+ my own" : "cancel"}
+          </button>
+          <input
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Or search…"
+            aria-label="Search the lift list"
+            className="w-28 rounded-md border border-white/12 bg-black/30 px-2 py-1 text-[11px] text-zinc-100 placeholder:text-zinc-600 transition-colors focus:border-sky-400/50 focus:outline-none"
+          />
+        </div>
       </div>
+
+      {ownName !== null && (
+        <div className="mt-2 rounded-md border border-dashed border-sky-400/30 bg-sky-500/[0.04] p-2">
+          <GroupLabel>Your own exercise</GroupLabel>
+          <p className={`mt-1 ${TYPE.hint}`}>
+            Anything the list does not have. It goes into this program only — it does not join
+            everybody else&apos;s library, and it starts with no suggested weight because we have no
+            idea what you lift. Filed under <strong className="text-zinc-400">{BODY_GROUP_LABELS[ownGroup]}</strong>;
+            pick a different tab above to file it elsewhere.
+          </p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <input
+              value={ownName}
+              autoFocus
+              onChange={(e) => setOwnName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter") return
+                const entry = customLibraryEntry(ownName, ownGroup)
+                if (entry) {
+                  onAdd(entry)
+                  setOwnName("")
+                }
+              }}
+              placeholder="Name it — Sled Push, Reverse Hyper…"
+              aria-label="Name of your own exercise"
+              className="min-w-0 flex-1 rounded-md border border-white/12 bg-black/30 px-2 py-1 text-[12px] text-zinc-100 placeholder:text-zinc-600 focus:border-sky-400/50 focus:outline-none"
+            />
+            <Action
+              variant="primary"
+              disabled={!customLibraryEntry(ownName, ownGroup)}
+              onClick={() => {
+                const entry = customLibraryEntry(ownName, ownGroup)
+                if (!entry) return
+                onAdd(entry)
+                setOwnName("")
+              }}
+            >
+              Add it
+            </Action>
+          </div>
+        </div>
+      )}
 
       {/* Body-part tabs, hidden while searching because a search crosses them. */}
       {!query && (
         <div className="mt-2 flex flex-wrap gap-1">
-          {PATTERN_ORDER.map((p) => (
+          {ownLifts.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setGroup("yours")}
+              aria-pressed={group === "yours"}
+              className={`rounded-md px-2 py-1 text-[11px] transition-colors ${
+                group === "yours"
+                  ? "bg-sky-500/20 text-sky-100"
+                  : "text-sky-300/70 hover:bg-white/[0.07] hover:text-sky-200"
+              }`}
+            >
+              Yours ({ownLifts.length})
+            </button>
+          )}
+          {BODY_GROUP_ORDER.map((p) => (
             <button
               key={p}
               type="button"
-              onClick={() => setGroup(p)}
+              onClick={() => {
+                setGroup(p)
+                setOwnGroup(p)
+              }}
               aria-pressed={group === p}
               className={`rounded-md px-2 py-1 text-[11px] transition-colors ${
                 group === p
@@ -809,10 +1064,17 @@ function ExercisePalette({
                   : "text-zinc-400 hover:bg-white/[0.07] hover:text-zinc-200"
               }`}
             >
-              {PATTERN_LABELS[p]}
+              {BODY_GROUP_LABELS[p]}
             </button>
           ))}
         </div>
+      )}
+
+      {group === "yours" && !query && (
+        <p className={`mt-2 ${TYPE.hint}`}>
+          Lifts you named. Adding one again is the same lift, so its weights and
+          progress carry on from where they left off.
+        </p>
       )}
 
       <div className="mt-2 flex flex-wrap gap-1.5">
@@ -822,6 +1084,11 @@ function ExercisePalette({
             entry={entry}
             already={alreadyIn.has(entry.name.toLowerCase())}
             onAdd={onAdd}
+            /* Forgetting is offered only in the Yours tab, where the list is
+               yours to keep tidy — a typo you made once should not follow you
+               around forever. It removes the lift from the palette, never from
+               a program already using it. */
+            onForget={group === "yours" ? () => onForget(entry.id) : undefined}
           />
         ))}
 
@@ -858,29 +1125,48 @@ function LiftChip({
   entry,
   already,
   onAdd,
+  onForget,
 }: {
   entry: LibraryExercise
   already: boolean
   onAdd: (entry: LibraryExercise) => void
+  onForget?: () => void
 }) {
   return (
-    <button
-      type="button"
-      onClick={() => onAdd(entry)}
-      title={already ? `${entry.name} is already in this day` : `Add ${entry.name}`}
-      className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[12px] transition-colors ${
+    <span
+      className={`inline-flex items-center overflow-hidden rounded-md border transition-colors ${
         already
-          ? "border-sky-400/30 bg-sky-500/10 text-sky-200/80"
-          : "border-white/12 bg-white/[0.03] text-zinc-200 hover:border-sky-400/40 hover:bg-sky-500/10 hover:text-sky-100"
+          ? "border-sky-400/30 bg-sky-500/10"
+          : "border-white/12 bg-white/[0.03] hover:border-sky-400/40"
       }`}
     >
-      {already ? (
-        <Check className="size-3 shrink-0" />
-      ) : (
-        <Plus className="size-3 shrink-0 text-zinc-500" />
+      <button
+        type="button"
+        onClick={() => onAdd(entry)}
+        title={already ? `${entry.name} is already in this day` : `Add ${entry.name}`}
+        className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] transition-colors ${
+          already ? "text-sky-200/80" : "text-zinc-200 hover:bg-sky-500/10 hover:text-sky-100"
+        }`}
+      >
+        {already ? (
+          <Check className="size-3 shrink-0" />
+        ) : (
+          <Plus className="size-3 shrink-0 text-zinc-500" />
+        )}
+        {entry.name}
+      </button>
+      {onForget && (
+        <button
+          type="button"
+          onClick={onForget}
+          aria-label={`Forget ${entry.name}`}
+          title={`Forget ${entry.name} — it stays in any program already using it`}
+          className="border-l border-white/10 px-1.5 py-1.5 text-zinc-600 transition-colors hover:bg-rose-500/15 hover:text-rose-300"
+        >
+          <X className="size-3" />
+        </button>
       )}
-      {entry.name}
-    </button>
+    </span>
   )
 }
 

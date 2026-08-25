@@ -1403,7 +1403,38 @@ export interface LifeMasteryProgress {
  * of the same page now — the areas and the routines are the same twelve and
  * four either way, and paging between them lost that.
  */
-export type NorthStarTabId = "star" | "now" | "one" | "pick" | "templates" | "customize" | "systems" | "milestones" | "focus" | "values" | "commit" | "track" | "today"
+export type NorthStarTabId = "star" | "now" | "one" | "pick" | "templates" | "systems" | "milestones" | "focus" | "values" | "commit" | "track" | "today" | "journal" | "recap"
+
+/**
+ * WHERE A PIECE OF THE PLAN LIVES, written down as somewhere you can be sent.
+ *
+ * The flow has always been able to jump — the wheel opens an area, a goal row
+ * opens its card, a Today row opens its routine — but every jump was a literal
+ * hand-written by the call site: `setPlanAreaId(x); setNowGoalId(y);
+ * setTab("systems")`. That is fine while the destinations are known at the time
+ * the code is written and useless the moment the USER picks one, which is what
+ * a "go to it" field is: somebody chooses, on Today, that this row means "and
+ * now go and read the thing".
+ *
+ * So a destination becomes a value. `readSources` hands one out per readable
+ * piece of the plan, the field stores which source it names, and the flow has a
+ * single `goTo` that knows how to arrive anywhere.
+ */
+export interface NsPlace {
+  tab: NorthStarTabId
+  /** Opens that area's dialog, on the tabs that draw one. */
+  areaId?: string
+  /** Opens that goal's card. Needs `areaId`: the dialog is per area. */
+  goalId?: string
+  /**
+   * A DOM id on the destination screen to scroll to once it is drawn.
+   *
+   * Landing on the right tab is not the same as landing on the right
+   * paragraph: the star step holds five boxes and "why is this important to
+   * you" is the third of them.
+   */
+  anchor?: string
+}
 
 /**
  * One plan goal, shaped for `POST /api/goals/batch`.
@@ -1566,6 +1597,50 @@ export interface NsRoutineStep {
    */
   days: number[]
   startMin: number | null
+  /**
+   * WHERE THIS STEP SENDS YOU, by `readSources` id. Null for a step that is
+   * only ever a tick.
+   *
+   * "Read your north star out loud" is a line in a morning stack and, as a tick
+   * on its own, a lie: the paragraph it names lives four steps and two clicks
+   * away, so the step either sends you off the screen at 07:00 or gets ticked
+   * without being done. Reported from the page (2026-08-23), on clicking that
+   * exact row and staying where they were: *"i still dont go there when i click
+   * it… and i cant see where i would change it."*
+   *
+   * A read field could already quote something on the row, but that made
+   * somebody BUILD a second thing next to a row that already said the right
+   * words. The step carries it now, so the row you already have is the door.
+   *
+   * **Absent is not the same as null.** A step saved before this existed has no
+   * key at all and the loader infers one from its own words; `null` is a
+   * destination somebody cleared, and inference must never argue with that.
+   * Inference runs when a step is created and when an old plan is loaded —
+   * never on rename, because silently rewiring a step somebody just retitled is
+   * worse than leaving it pointing nowhere.
+   */
+  goesTo: string | null
+  /**
+   * THE QUESTION THIS STEP ASKS YOU, in words, every day it runs. Null for a
+   * step that is only ever a tick.
+   *
+   * Reported from the page: rows whose words ask for writing — "Write three
+   * gratitudes", "Journal", "Two lines on how the day went" — arrived as a
+   * checkbox and nothing else. Ticking "Journal" without writing anything is
+   * the row lying about what happened, and the box you would have written in
+   * had to be BUILT, by hand, in a section at the bottom of Today.
+   *
+   * So the step carries its own question and the answer goes in
+   * `plan.journal`, keyed by the step's id — the same store, the same shape and
+   * the same archive as a question somebody added themselves. One journal, two
+   * ways for a question to get into it.
+   *
+   * **Absent is not the same as null**, on the rule `goesTo` follows: a step
+   * saved before this existed has no key and its question is inferred from its
+   * own words; `null` is a question somebody cleared, and inference must never
+   * argue with that. Inference never runs on rename.
+   */
+  asks: string | null
 }
 
 /** A named training day inside a workout split. */
@@ -1873,9 +1948,113 @@ export interface NsPlan {
    * why.
    */
   notes: Record<string, string>
+  /**
+   * THE QUESTIONS YOU ASKED YOURSELF, in your own words rather than a number.
+   *
+   * The ratings say a 4 and `notes` says why, once, for the whole day. Neither
+   * can hold "one key learning of today" against the thing that taught it, and
+   * that is the entry most people already keep by hand: a line per goal, per
+   * routine, per day, written and then re-read a month later.
+   *
+   * So: any number of named text fields, each hung off whatever it belongs to
+   * — a driver, a routine step, a milestone, an experience, or the day itself
+   * — declared here once and answered every day in `journal`. Empty on every
+   * plan that has not asked for one, which is most of them.
+   */
+  fields: NsDailyField[]
+  /**
+   * WHAT YOU WROTE, by date, by field id.
+   *
+   * Same shape as `daily` and for the same reason: the answer belongs to a day
+   * and the field belongs to the plan, so renaming a field does not rewrite
+   * five months of answers and deleting one does not leave a dated blob nobody
+   * can label. A blank answer is deleted rather than stored, so "wrote nothing"
+   * and "wrote and cleared" are one state.
+   */
+  journal: Record<string, Record<string, string>>
+  /**
+   * The to-do lists under the bigger weekly things. See `NsSubStep`.
+   *
+   * Held on the plan rather than on the routine step, because the things that
+   * want breaking down are not all routine steps: a driver ("write a piece of
+   * content"), a milestone, an experience booked for next month. One list, one
+   * id space, and the row each one belongs to finds its own.
+   */
+  subSteps: NsSubStep[]
   /** Monotonic id counter. Never reused, so a deleted row's id never comes back. */
   seq: number
   updatedAt: string | null
+}
+
+/**
+ * A question you answer in words, day after day.
+ *
+ * `targetId` is what it hangs off — a goal id (driver or milestone), a routine
+ * step id, an experience id — or null for the day itself. One id space, no
+ * kind tag: every one of those ids comes off the same counter, so a field can
+ * name any of them without the plan having to say which sort it is, and the
+ * Today screen finds it by asking each row "is anything hung off you".
+ *
+ * A field whose target is deleted is re-homed to the day rather than dropped:
+ * the label and everything written under it are the user's words, and losing a
+ * month of them because a routine step was renamed away is not a trade the
+ * plan gets to make on their behalf.
+ */
+export interface NsDailyField {
+  id: string
+  /** AUTHORED. The question. Starts empty; the placeholder suggests, never fills. */
+  label: string
+  /** What it is attached to, or null for the day itself. */
+  targetId: string | null
+  /**
+   * WHICH DIRECTION THE FIELD RUNS, and it is the whole difference.
+   *
+   *   write — it asks you something and you answer it today. "One key learning."
+   *   read  — it shows you something you already wrote and you read it. "Read
+   *           your north star out loud" is a line in a morning stack that is
+   *           useless as a tick on its own: the paragraph it names lives four
+   *           steps away, so the honest version of that step is the paragraph
+   *           itself, on the row, at 07:00.
+   */
+  kind: NsFieldKind
+  /**
+   * Read fields: which piece of the plan is shown, by `readSources` id. Null
+   * until picked, and deliberately not pruned when what it names goes away —
+   * the row says the source is missing rather than quietly reading nothing.
+   */
+  readSourceId: string | null
+}
+
+export type NsFieldKind = "write" | "read" | "go"
+
+/** Every kind, for the loader and the picker. One list, so they cannot drift. */
+export const NS_FIELD_KINDS: readonly NsFieldKind[] = ["write", "read", "go"]
+
+/**
+ * ONE ACTION ON THE WAY TO A BIGGER ONE.
+ *
+ * Reported from the page: "I have a weekly thing of creating content. That's
+ * really a bigger thing… I want to be able to add sub-steps to it, so I can
+ * generate my own little to-do list of actions to take in order to complete
+ * that main action." Not every weekly line is the same size — "gym 5× a week"
+ * IS the thing, and "create content" is four things wearing one title, and a
+ * list that draws them identically leaves the second one un-startable.
+ *
+ * `targetId` is the same id space the fields use: a driver, a routine step, a
+ * milestone, an experience. Ticks go in `plan.logged` beside the steps' own,
+ * because a sub-step is exactly the same kind of fact — a thing you did on a
+ * day — and a second store for it would be a second answer to one question.
+ *
+ * Unlike a field, a sub-step is DEFINED by what it breaks down: "write the
+ * outline" means nothing once the thing it was an outline for is gone. So the
+ * loader drops orphans rather than re-homing them.
+ */
+export interface NsSubStep {
+  id: string
+  /** What it is a step of. Never null: a sub-step of nothing is not a thing. */
+  targetId: string
+  /** AUTHORED. */
+  title: string
 }
 
 /** One thing to have done. */
@@ -1923,6 +2102,32 @@ export interface RoutineBlueprintStep {
   /** Suggested days a week. Used by weekly routines. */
   daysPerWeek: number
   dimension: "mind" | "body" | "spirit" | null
+  /**
+   * THE QUESTION THIS STEP ASKS, when its words ask for words.
+   *
+   * "Write three gratitudes" and "Two lines on how the day went" are not ticks.
+   * They name something you are supposed to WRITE, and a row that offers only a
+   * checkbox for them is a box you cannot type into — the exact complaint this
+   * field exists to answer. A step that carries a question gets a box under it
+   * on Today, with every previous day's answer under that.
+   *
+   * Authored here rather than guessed from the title, because the library is
+   * ours and the words are ours. `inferStepQuestion` is the fallback, and it is
+   * for steps somebody typed themselves.
+   *
+   * Absent means the step is a tick and nothing else, which most of them are.
+   */
+  asks?: string
+  /**
+   * WHERE THIS STEP SENDS YOU, by `destinations` id, authored.
+   *
+   * `inferStepDestination` reads a title for the phrases that are unmistakable
+   * ("north star", "identity line"). That is the right rule for a step somebody
+   * wrote themselves and the wrong one for ours: "Close your eyes and see one
+   * scene from it" is unmistakably about the north star to a person and holds
+   * no phrase a matcher could find. Authored wins; inference fills the rest.
+   */
+  goesTo?: string
 }
 
 /**

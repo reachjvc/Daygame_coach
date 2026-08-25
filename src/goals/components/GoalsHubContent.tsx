@@ -47,7 +47,7 @@ function getInitialView(): GoalViewMode {
  * editing and the weekly review all still work on what is shown.
  */
 export function GoalsHubContent({
-  setupPath = "/dashboard/goals/setup",
+  setupPath = "/dashboard/goals/plan",
   scope,
 }: {
   setupPath?: string
@@ -321,7 +321,7 @@ export function GoalsHubContent({
     try {
       const response = await fetch("/api/goals", { method: "DELETE" })
       if (!response.ok) throw new Error("Failed to delete all goals")
-      router.push("/dashboard/goals/setup")
+      router.push("/dashboard/goals/plan")
     } catch {
       showToast("Failed to delete goals", "error")
       setIsDeletingAll(false)
@@ -480,11 +480,11 @@ export function GoalsHubContent({
                   size="sm"
                   className="gap-1.5 h-8 px-3"
                   onClick={() => router.push(setupPath)}
-                  title="Preview setup wizard (new user view)"
+                  title="Open your Life Mastery plan"
                   data-testid="goals-preview-setup-toggle"
                 >
                   <Eye className="size-4" />
-                  <span className="text-xs hidden sm:inline">Setup Preview</span>
+                  <span className="text-xs hidden sm:inline">Your plan</span>
                 </Button>
                 <Button
                   size="sm"
@@ -525,7 +525,7 @@ export function GoalsHubContent({
                     </button>
                     <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors" onClick={() => router.push(setupPath)}>
                       <Aperture className="size-4" />
-                      Setup Wizard
+                      Life Mastery plan
                     </button>
                   </>
                 )}

@@ -17,7 +17,7 @@
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import type { ViceHandlers } from "../types"
+import type { ViceHandlers, ViceToolId } from "../types"
 import { VICE_FLOWS } from "../data/flows"
 import { PROVENANCE, TRIPWIRE } from "../data/copy"
 import { daysHeld, flowOf, inHazardWindow, payoffSummary, plansOfKind, urgeSummary, viceStateIsUntouched, votesCast } from "../viceService"
@@ -26,6 +26,7 @@ import { CardTool, LapseTool, UrgeTool } from "./Tools"
 import { HelpDoor } from "./HelpDoor"
 import { VoicesDialog } from "./Voices"
 import { TripwireTool } from "./Tripwire"
+import { AgainTool } from "./Again"
 import { HubPlain } from "./HubPlain"
 import { HubGuided } from "./HubGuided"
 import { VersionSwitcher } from "./VersionSwitcher"
@@ -43,10 +44,10 @@ const CHANGE_FLOWS = VICE_FLOWS.filter((flow) => !OPEN_FLOWS.some((f) => f.id ==
 export function ViceHub() {
   const { state, loaded, handlers } = useViceState(null)
   const { version, setVersion, loaded: versionLoaded } = useViceVersion()
-  const [tool, setTool] = useState<"none" | "urge" | "lapse" | "card" | "help" | "voices" | "tripwire">("none")
+  const [tool, setTool] = useState<ViceToolId | "none">("none")
 
   const on: ViceHandlers = useMemo(
-    () => ({ ...handlers, openUrge: () => setTool("urge"), openHelp: () => setTool("help"), goToStep: () => {} }),
+    () => ({ ...handlers, openUrge: () => setTool("urge"), openHelp: () => setTool("help"), openTool: setTool, goToStep: () => {} }),
     [handlers],
   )
 
@@ -78,30 +79,69 @@ export function ViceHub() {
         <header className="mt-6 mb-7">
           <h1 className="text-2xl font-semibold">Quitting something</h1>
           <p className="text-sm text-zinc-400 mt-1 leading-relaxed">
-            Two ways to work out where you stand, four ways through it once you have, and three things that work with none of it.
+            What to do now, where you are with it, and what other people actually did.
           </p>
         </header>
 
-        {/* First, and above the flows on purpose. Roughly half the attempts
-            that work are not planned in advance, so the door has to open for
-            somebody who arrived mid-urge with no intention of reading anything. */}
-        <section className="mb-8">
+        {/* Grouped by where a person is, not by what kind of object the
+            screen contains. "My card" used to sit under "Right now" beside an
+            urge in progress, which is a filing error: a card is a thing you
+            made weeks ago, not something that is happening to you. */}
+        <section className="mb-7">
           <h2 className="text-[13px] font-semibold text-zinc-200 mb-2">Right now</h2>
           <div className="grid gap-2 sm:grid-cols-2">
             <button
               onClick={() => setTool("urge")}
               className="rounded-xl border border-violet-400/40 bg-violet-500/10 p-3.5 text-left hover:bg-violet-500/15 transition-colors"
             >
-              <span className="block text-[14px] font-medium text-violet-100">An urge, now</span>
+              <span className="block text-[14px] font-medium text-violet-100">An urge, right now</span>
               <span className="block text-[11px] text-violet-200/60 mt-0.5 leading-snug">Ninety seconds. Nothing to set up.</span>
             </button>
             <button
               onClick={() => setTool("lapse")}
               className="rounded-xl border border-white/10 bg-white/[0.02] p-3.5 text-left hover:border-white/25 transition-colors"
             >
-              <span className="block text-[14px] font-medium text-zinc-100">It already happened</span>
+              <span className="block text-[14px] font-medium text-zinc-100">I just did it</span>
               <span className="block text-[11px] text-zinc-500 mt-0.5 leading-snug">No counter to reset. There is not one.</span>
             </button>
+          </div>
+        </section>
+
+        <section className="mb-7">
+          <Link
+            href="/test/quit-vice/learn"
+            className="block rounded-2xl border border-sky-400/25 bg-sky-500/[0.05] p-4 hover:border-sky-400/50 transition-colors"
+          >
+            <span className="block text-[15px] font-semibold text-sky-50">Nine things worth understanding</span>
+            <span className="block text-[13px] text-zinc-300 mt-1 leading-relaxed">
+              One idea each, one exercise, and people who have been through it. Start here if you are not sure.
+            </span>
+          </Link>
+        </section>
+
+        <section className="mb-7">
+          <h2 className="text-[13px] font-semibold text-zinc-200 mb-2">Where you are with it</h2>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <button
+              onClick={() => setTool("tripwire")}
+              className="rounded-xl border border-white/10 bg-white/[0.02] p-3.5 text-left hover:border-white/25 transition-colors"
+            >
+              <span className="block text-[14px] font-medium text-zinc-100">It is going well</span>
+              <span className="block text-[11px] text-zinc-500 mt-0.5 leading-snug">The moment people describe going wrong.</span>
+            </button>
+            <button
+              onClick={() => setTool("again")}
+              className="rounded-xl border border-white/10 bg-white/[0.02] p-3.5 text-left hover:border-white/25 transition-colors"
+            >
+              <span className="block text-[14px] font-medium text-zinc-100">I have tried before</span>
+              <span className="block text-[11px] text-zinc-500 mt-0.5 leading-snug">What was different the time it worked.</span>
+            </button>
+          </div>
+        </section>
+
+        <section className="mb-7">
+          <h2 className="text-[13px] font-semibold text-zinc-200 mb-2">Yours, and other people&rsquo;s</h2>
+          <div className="grid gap-2 sm:grid-cols-2">
             <button
               onClick={() => setTool("card")}
               className="rounded-xl border border-white/10 bg-white/[0.02] p-3.5 text-left hover:border-white/25 transition-colors"
@@ -109,31 +149,19 @@ export function ViceHub() {
               <span className="block text-[14px] font-medium text-zinc-100">My card</span>
               <span className="block text-[11px] text-zinc-500 mt-0.5 leading-snug">Three reasons and one line.</span>
             </button>
-            {/* Fourth, and it needs no setup at all — which is why it is up
-                here with the other three rather than filed under reading.
-                In the one community with good measured outcomes this was the
-                most-valued thing on offer. */}
             <button
               onClick={() => setTool("voices")}
               className="rounded-xl border border-white/10 bg-white/[0.02] p-3.5 text-left hover:border-white/25 transition-colors"
             >
-              <span className="block text-[14px] font-medium text-zinc-100">What other people said</span>
-              <span className="block text-[11px] text-zinc-500 mt-0.5 leading-snug">Real accounts, cited. Nothing to set up.</span>
+              <span className="block text-[14px] font-medium text-zinc-100">What other people did</span>
+              <span className="block text-[11px] text-zinc-500 mt-0.5 leading-snug">Real accounts and techniques, cited.</span>
             </button>
           </div>
-          {/* Not styled as an alarm. Somebody who wants it will find it, and
-              making it loud would make the page feel like it expects a crisis. */}
           <button
             onClick={() => setTool("help")}
             className="mt-2 text-[12px] text-zinc-500 hover:text-white underline underline-offset-2 decoration-white/20 transition-colors"
           >
             If this is past what a page can do — who to ring, and what treatment actually is
-          </button>
-          <button
-            onClick={() => setTool("tripwire")}
-            className="mt-1.5 block text-[12px] text-zinc-500 hover:text-white underline underline-offset-2 decoration-white/20 transition-colors"
-          >
-            A rule for the week it is going well — the moment people actually describe going wrong
           </button>
         </section>
 
@@ -153,7 +181,7 @@ export function ViceHub() {
         {started && (
           <section className="mb-8">
             <div className="flex items-baseline gap-2 mb-2">
-              <h2 className="text-[13px] font-semibold text-zinc-200">Where you are</h2>
+              <h2 className="text-[13px] font-semibold text-zinc-200">Your numbers</h2>
               {state.viceLabel && <span className="text-[11px] text-zinc-600">{state.viceLabel}</span>}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -190,7 +218,17 @@ export function ViceHub() {
         </section>
 
         <section>
-          <h2 className="text-[13px] font-semibold text-zinc-200 mb-2">Four ways through it</h2>
+          <Link
+            href="/test/quit-vice/shortlist"
+            className="mb-3 block rounded-2xl border border-emerald-400/25 bg-emerald-500/[0.05] p-4 hover:border-emerald-400/50 transition-colors"
+          >
+            <span className="block text-[15px] font-semibold text-emerald-50">The short version</span>
+            <span className="block text-[13px] text-zinc-300 mt-1 leading-relaxed">
+              Ten things, in the order the evidence puts them. Six of them happen away from this page.
+            </span>
+          </Link>
+
+          <h2 className="text-[13px] font-semibold text-zinc-200 mb-2">Or one of the four longer ways</h2>
           <div className="space-y-2.5">
             {CHANGE_FLOWS.map((flow) => (
               <Link
@@ -260,6 +298,7 @@ export function ViceHub() {
       {tool === "help" && loaded && <HelpDoor state={state} on={on} onClose={() => setTool("none")} />}
       {tool === "voices" && loaded && <VoicesDialog viceId={state.viceId} onClose={() => setTool("none")} />}
       {tool === "tripwire" && loaded && <TripwireTool state={state} on={on} onClose={() => setTool("none")} />}
+      {tool === "again" && loaded && <AgainTool state={state} on={on} onClose={() => setTool("none")} />}
     </div>
   )
 }

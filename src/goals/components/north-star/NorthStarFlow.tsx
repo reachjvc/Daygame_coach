@@ -57,9 +57,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, ChevronDown } from "lucide-react"
-import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlan, VisionGoalType } from "@/src/goals/types"
-import { COMMIT_EDIT_COPY, NORTH_STAR_STORAGE_KEY, NS_TRACK_RUN_KEY, SCORED_TABS, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, WORKSHOP_TABS } from "@/src/goals/data/northStar"
+import { ArrowLeft, Check, ChevronDown } from "lucide-react"
+import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlace, NsPlan, VisionGoalType } from "@/src/goals/types"
+import { COMMIT_EDIT_COPY, ERRAND_COPY, NORTH_STAR_STORAGE_KEY, NS_TRACK_RUN_KEY, SCORED_TABS, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, WORKSHOP_TABS } from "@/src/goals/data/northStar"
 import type { RoutineNeed } from "@/src/goals/data/northStarBuild"
 import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
 import * as ns from "@/src/goals/northStarService"
@@ -75,13 +75,14 @@ import { OneThingTab, type OneThingTabHandlers } from "./OneThingTab"
 import { PathPicker } from "./PathPicker"
 import { TrackTab } from "./TrackTab"
 import { TodayTab } from "./TodayTab"
+import { JournalTab } from "./JournalTab"
 import { AreaDialog } from "./AreaDialog"
 import { AreaGoalsDialog } from "./AreaGoalsDialog"
 import { ReviewTab } from "./ReviewTab"
 import { CommitTab } from "./CommitTab"
 import { ValuesSoFar } from "./ValuesSoFar"
 import { ValuesWork } from "./ValuesWork"
-import { CustomizeTab } from "./CustomizeTab"
+import { RecapTab, type RecapHandlers } from "./RecapTab"
 
 /**
  * A fresh run id: what pushed goals are tagged with alongside their plan id.
@@ -95,10 +96,33 @@ function newRunId(): string {
   return Math.random().toString(36).slice(2, 10)
 }
 
-export function NorthStarFlow() {
+/**
+ * WHERE THE BACK LINK GOES, because this flow now has two homes.
+ *
+ * It was built as a test page and its way out said so. It is also the live
+ * goal flow at /dashboard/goals/plan, and a link to /test on somebody's real
+ * plan is a door out of the product. Defaults kept as they were, so the test
+ * page needs no argument.
+ */
+export function NorthStarFlow({
+  backHref = "/test",
+  backLabel = "Test pages",
+  initialTab = "star",
+}: {
+  backHref?: string
+  backLabel?: string
+  /**
+   * Which step to open on. The rail still reaches every other one.
+   *
+   * Exists so something outside the flow can link INTO a step — the tracking
+   * dashboard's band points at Today, and landing on the north star paragraph
+   * instead would be a link that goes to the right page and the wrong screen.
+   */
+  initialTab?: NorthStarTabId
+} = {}) {
   const [plan, setPlan] = useState<NsPlan>(ns.emptyNsPlan)
   const [loaded, setLoaded] = useState(false)
-  const [tab, setTab] = useState<NorthStarTabId>("star")
+  const [tab, setTab] = useState<NorthStarTabId>(initialTab)
   const [confirmReset, setConfirmReset] = useState(false)
   /**
    * WHICH RUN OF THE PLAN THIS IS, for the goals pushed on the track step.
@@ -124,6 +148,73 @@ export function NorthStarFlow() {
   const [today, setToday] = useState<string | null>(null)
   /** Whether the server copy is running, so the footer can say so honestly. */
   const [synced, setSynced] = useState<"off" | "on" | "failed" | "unknown">("unknown")
+  /**
+   * THE ERRAND YOU ARE ON, when something sent you here.
+   *
+   * A jump with no way back is a trapdoor. Today can now send you to your north
+   * star at 07:00, and if arriving means finding your own way back through a
+   * rail of thirteen steps then the sensible thing to do at 07:00 is not click
+   * it. So the errand travels: what you came to do, the tick for it, and the
+   * way back to the row you left.
+   *
+   * `tickId` is the id the tick goes under in `plan.logged` — the field's own
+   * — so ticking it here and ticking it on Today are one fact. Null for a jump
+   * that is not a thing to be done, like a goal row opened to move its date.
+   */
+  const [errand, setErrand] = useState<{ label: string; tickId: string | null; back: NorthStarTabId; backAnchor?: string } | null>(null)
+  /**
+   * Somewhere to scroll once the destination has drawn.
+   *
+   * Held rather than scrolled inline because the element does not exist yet at
+   * the moment the tab changes: `setTab` queues a render, and
+   * `getElementById` on the step you are leaving finds nothing.
+   */
+  const [anchor, setAnchor] = useState<string | null>(null)
+  useEffect(() => {
+    if (!anchor) return
+    const el = document.getElementById(anchor)
+    // Cleared either way. A missing anchor is a destination that moved, and
+    // retrying every render would be a scroll that never stops trying.
+    setAnchor(null)
+    el?.scrollIntoView({ behavior: "smooth", block: "center" })
+  }, [anchor, tab])
+
+  /**
+   * ARRIVE ANYWHERE, from one call.
+   *
+   * Every jump in this flow used to be hand-written at its call site —
+   * `setPlanAreaId(x); setNowGoalId(y); setTab("systems")` — which is fine
+   * while the destination is known when the code is written, and impossible
+   * the moment the USER picks one. A "go to it" field is exactly that: it
+   * names a piece of the plan, and `readSources` says where that lives.
+   *
+   * The dialogs are closed on the way in as well as opened, because arriving
+   * on a step with the previous errand's area dialog still over it is arriving
+   * at the wrong place.
+   */
+  const goTo = useCallback((place: NsPlace, on?: { label: string; tickId: string | null; back: NorthStarTabId; backAnchor?: string }) => {
+    setNowAreaId(place.tab === "now" || place.tab === "recap" ? place.areaId ?? null : null)
+    setPlanAreaId(place.tab === "milestones" || place.tab === "systems" ? place.areaId ?? null : null)
+    setNowGoalId(place.goalId ?? null)
+    setOpenRoutineId(null)
+    setTab(place.tab)
+    setErrand(on ?? null)
+    setAnchor(place.anchor ?? null)
+  }, [])
+
+  /** Back where you came from, with the row you left scrolled to. */
+  const endErrand = useCallback((go: boolean) => {
+    setErrand((e) => {
+      if (e && go) {
+        setNowAreaId(null)
+        setPlanAreaId(null)
+        setNowGoalId(null)
+        setTab(e.back)
+        setAnchor(e.backAnchor ?? null)
+      }
+      return null
+    })
+  }, [])
 
   useEffect(() => {
     setToday(ns.todayISO())
@@ -211,6 +302,13 @@ export function NorthStarFlow() {
     onAddCustomStep: (id: string, title: string, minutes: number, daysPerWeek: number) => setPlan((p) => ns.addCustomStep(p, id, title, minutes, daysPerWeek)),
     onRemoveStep: (id: string, stepId: string) => setPlan((p) => ns.removeStep(p, id, stepId)),
     onStepDays: (id: string, stepId: string, daysPerWeek: number) => setPlan((p) => ns.updateStep(p, id, stepId, { daysPerWeek })),
+    /* The step's own time of day is kept: choosing Tuesday should not lose
+       "07:00". `placeStep` keeps daysPerWeek in step with the days. */
+    onStepWeekdays: (id: string, stepId: string, days: number[]) =>
+      setPlan((p) => {
+        const startMin = p.routines.find((r) => r.id === id)?.steps.find((s) => s.id === stepId)?.startMin ?? null
+        return ns.placeStep(p, id, stepId, days, startMin)
+      }),
     onStepMinutes: (id: string, stepId: string, minutes: number) => setPlan((p) => ns.updateStep(p, id, stepId, { minutes })),
     onMoveStep: (id: string, index: number, dir: -1 | 1) => setPlan((p) => ns.moveStep(p, id, index, dir)),
     onPreset: (id: string, presetId: string) => setPlan((p) => ns.applyRoutinePreset(p, id, presetId)),
@@ -286,6 +384,45 @@ export function NorthStarFlow() {
     onGoToGoals: () => setTab("milestones"),
     onGoToNow: () => setTab("now"),
   }), [])
+
+  /**
+   * The last step's handlers. Every one of them already exists on another step
+   * — this is the same writing, on the page that reads it back, because the
+   * moment somebody notices a value they no longer hold is the moment they are
+   * reading the list, not the moment they next reach step ten.
+   */
+  const recapHandlers = useMemo<RecapHandlers>(() => ({
+    onStar: (text: string) => setPlan((p) => ns.setNorthStar(p, text)),
+    onHorizon: (years: number) => setPlan((p) => ns.setHorizon(p, years)),
+    onAnswer: (promptId: string, text: string) => setPlan((p) => ns.setAnswer(p, promptId, text)),
+    onAreaReview: (areaId: string, patch: Partial<NsAreaReview>) => setPlan((p) => ns.setAreaReview(p, areaId, patch)),
+    onAddExperiences: (text: string) => setPlan((p) => ns.addExperiences(p, text)),
+    onToggleExperience: (id: string) => setPlan((p) => ns.toggleExperienceDone(p, id, today ?? ns.todayISO())),
+    onRemoveExperience: (id: string) => setPlan((p) => ns.removeExperience(p, id)),
+    /**
+     * The tick, and the two writes behind it.
+     *
+     * Ticking goes to the SAME store the Today step ticks into — the day's log
+     * on the plan, keyed by step id — so reading the north star here and
+     * reading it there are one event, not two tallies that drift apart.
+     *
+     * Starting one does both halves in a press: turn the step on in the routine
+     * it belongs to, then tick today, because somebody pressing it has just
+     * read the thing and today's is already done.
+     */
+    onTickPractice: (stepId: string) =>
+      setPlan((p) => nsTrack.toggleStepLogged(p, today ?? ns.todayISO(), stepId)),
+    onTrackPractice: (blueprintId: string, stepId: string) =>
+      setPlan((p) => {
+        const tracked = ns.trackPractice(p, blueprintId, stepId)
+        // Unchanged means the library moved under us; ticking a step that is
+        // not there would write a log line nothing can ever show.
+        if (tracked === p) return p
+        return nsTrack.stepLogged(tracked, today ?? ns.todayISO(), stepId)
+          ? tracked
+          : nsTrack.toggleStepLogged(tracked, today ?? ns.todayISO(), stepId)
+      }),
+  }), [today])
 
   /** The two halves of one area, and the move between them. */
   const openAreaGoals = useCallback((areaId: string) => {
@@ -489,13 +626,35 @@ export function NorthStarFlow() {
     }
   }
 
+  /**
+   * WHICH DIALOG IS UP, because the ribbon has to be inside it.
+   *
+   * A modal makes everything behind it inert — a ribbon left on the page under
+   * an open goal card is a way back you can see and cannot click — so the same
+   * element is handed to the dialog instead of drawn on the page.
+   */
+  const areaDialogOpen = (tab === "now" || tab === "recap") && !!nowAreaId
+  const goalDialogOpen = (tab === "milestones" || tab === "systems") && !!planAreaId && !!nowGoalId
+  const ribbon = errand ? (
+    <ErrandRibbon
+      label={errand.label}
+      done={errand.tickId ? nsTrack.stepLogged(plan, today ?? ns.todayISO(), errand.tickId) : null}
+      onTick={() => {
+        const id = errand.tickId
+        if (id) setPlan((p) => nsTrack.toggleStepLogged(p, today ?? ns.todayISO(), id))
+      }}
+      onBack={() => endErrand(true)}
+      onDismiss={() => endErrand(false)}
+    />
+  ) : null
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="max-w-5xl mx-auto px-6 py-10 pb-28">
         <div className="flex items-center justify-between gap-3 mb-6">
-          <Link href="/test" className="inline-flex items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors">
+          <Link href={backHref} className="inline-flex items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors">
             <ArrowLeft className="size-3.5" />
-            Test pages
+            {backLabel}
           </Link>
           {confirmReset ? (
             /* Two resets, because they are asked for at different moments. The
@@ -573,6 +732,8 @@ export function NorthStarFlow() {
           })}
         </nav>
 
+        {ribbon && !areaDialogOpen && !goalDialogOpen && <div className="mb-5">{ribbon}</div>}
+
         {!loaded || !today ? (
           <p className="text-sm text-zinc-500">Opening your plan…</p>
         ) : tab === "star" ? (
@@ -626,13 +787,6 @@ export function NorthStarFlow() {
             today={today}
             handlers={{ ...boardHandlers, onOpenArea: (id: string) => { boardHandlers.onOpenArea(id); setTab("milestones") } }}
           />
-        ) : tab === "customize" ? (
-          /* THE BENCH. Templates hands you a cited program to take or adapt;
-             this is the empty page for somebody who already knows what their
-             week is and wants the app to track it rather than propose it.
-             Its own storage key: a half-built program is not part of the plan
-             and should not travel with a "start over". */
-          <CustomizeTab onProgramStarted={boardHandlers.onProgramStarted} />
         ) : tab === "focus" ? (
           <FocusTab
             plan={plan}
@@ -701,6 +855,10 @@ export function NorthStarFlow() {
               today={today ?? ns.todayISO()}
               runId={runId}
               onToggleStep={(stepId) => setPlan((p) => nsTrack.toggleStepLogged(p, today ?? ns.todayISO(), stepId))}
+              /* The experience's own store, the same one the Experiences step
+                 writes — a thing you wanted to have done is ticked once, and
+                 which screen you were on when you ticked it does not matter. */
+              onToggleExperience={(id) => setPlan((p) => ns.toggleExperienceDone(p, id, today ?? ns.todayISO()))}
               /* The SAME store the wheel's rating uses, so a day rated here
                  moves the rolling average step 2 reads back. Two screens
                  asking one question, not two questions. */
@@ -712,17 +870,148 @@ export function NorthStarFlow() {
                 )
               }
               onNote={(text) => setPlan((p) => ns.setDayNote(p, today ?? ns.todayISO(), text))}
+              /* The user's own questions. Declared on the plan, answered by
+                 date — so renaming one later leaves every answer under it
+                 alone, and deleting one takes its answers with it rather than
+                 leaving dated text nothing can label. */
+              onAddField={(targetId) => setPlan((p) => ns.addDailyField(p, targetId))}
+              onRenameField={(id, label) => setPlan((p) => ns.renameDailyField(p, id, label))}
+              onMoveField={(id, targetId) => setPlan((p) => ns.moveDailyField(p, id, targetId))}
+              onRemoveField={(id) => setPlan((p) => ns.removeDailyField(p, id))}
+              onWriteField={(fieldId, text) => setPlan((p) => ns.setJournalEntry(p, today ?? ns.todayISO(), fieldId, text))}
+              onFieldKind={(id, kind) => setPlan((p) => ns.setDailyFieldKind(p, id, kind))}
+              onFieldSource={(id, sourceId) => setPlan((p) => ns.setDailyFieldSource(p, id, sourceId))}
+              /* The to-do list under a bigger weekly thing. Its ticks go
+                 through `onToggleStep` above — one store for what got done
+                 today, whether the thing was a step or a step of a step. */
+              onAddSubStep={(targetId, title) => setPlan((p) => ns.addSubStep(p, targetId, title))}
+              onRenameSubStep={(id, title) => setPlan((p) => ns.renameSubStep(p, id, title))}
+              onMoveSubStep={(id, delta) => setPlan((p) => ns.moveSubStep(p, id, delta))}
+              onRemoveSubStep={(id) => setPlan((p) => ns.removeSubStep(p, id))}
               onGoToTrack={() => setTab("track")}
+              /* The same jump the wheel and the area dialogs make: the routine
+                 opens expanded on the step that edits it, rather than leaving
+                 somebody to find it again. */
+              onOpenRoutine={(routineId) => { setPlanAreaId(null); setOpenRoutineId(routineId); setTab("systems") }}
+              /* THE FIELD THE USER MADE INTO A DOOR.
+                 Resolved here rather than on Today: the field names a source,
+                 the source knows where it lives, and the screen you are
+                 leaving has no business knowing which tab holds what. */
+              onOpenField={(fieldId) => {
+                const field = plan.fields.find((f) => f.id === fieldId)
+                /* `destinations` and not `readSources`: a go field can name the
+                   journal, which has no text to quote and is exactly where a
+                   row that says "Journal" belongs. */
+                const source = nsTrack.destination(plan, field?.readSourceId ?? null)
+                if (!field || !source) return
+                goTo(source.home, {
+                  label: field.label.trim() || source.label,
+                  tickId: field.id,
+                  back: "today",
+                  backAnchor: `field-${field.id}`,
+                })
+              }}
+              /* THE ROW THAT ALREADY SAID THE RIGHT WORDS.
+                 "Read your north star out loud" is a step in a morning stack,
+                 and until this it was a tick with the paragraph it names four
+                 steps away. The tick that travels is the STEP's own, so
+                 marking it done at the destination is marking the row done. */
+              onOpenStep={(stepId) => {
+                const step = plan.routines.flatMap((r) => r.steps).find((s) => s.id === stepId)
+                const source = nsTrack.destination(plan, step?.goesTo ?? null)
+                if (!step || !source) return
+                goTo(source.home, {
+                  label: step.title,
+                  tickId: step.id,
+                  back: "today",
+                  backAnchor: `row-${step.id}`,
+                })
+              }}
+              onStepGoesTo={(routineId, stepId, sourceId) =>
+                setPlan((p) => ns.updateStep(p, routineId, stepId, { goesTo: sourceId }))
+              }
+              /* Silencing a step's question, from the box it draws. Nothing
+                 already written under it is touched — see `setStepAsks`. */
+              onStepAsks={(routineId, stepId, question) => setPlan((p) => ns.setStepAsks(p, routineId, stepId, question))}
+              /* A row that IS a goal, opened as one — and brought back. */
+              onOpenGoal={(goalId) => {
+                const goal = plan.goals.find((g) => g.id === goalId)
+                if (!goal) return
+                goTo(
+                  { tab: ns.isMilestone(goal) ? "milestones" : "systems", areaId: goal.areaId, goalId: goal.id },
+                  { label: goal.title, tickId: null, back: "today" }
+                )
+              }}
+              onGoToTab={(t) => setTab(t)}
             />
           ) : (
             <p className="text-sm text-zinc-500">Opening today…</p>
           )
+        ) : tab === "journal" ? (
+          /* WHERE THE WRITING LIVES.
+             Every other tab that asks for words asks for one kind of them, in
+             one box, on the step that wanted it. This one is all of them: the
+             questions being asked today, the library of ones already written,
+             and every answer ever given, which is the part that makes writing
+             the same line daily worth anything. */
+          <JournalTab
+            plan={plan}
+            today={today ?? ns.todayISO()}
+            onWriteField={(id, text) => setPlan((p) => ns.setJournalEntry(p, today ?? ns.todayISO(), id, text))}
+            onNote={(text) => setPlan((p) => ns.setDayNote(p, today ?? ns.todayISO(), text))}
+            /* A question added here hangs off the day rather than off a row:
+               nothing on this page is about one step, and re-homing it is a
+               dropdown away on Today. */
+            onAddQuestion={(question) => setPlan((p) => ns.addDailyField(p, null, question))}
+            onRemoveField={(id) => setPlan((p) => ns.removeDailyField(p, id))}
+            onStepAsks={(routineId, stepId, question) => setPlan((p) => ns.setStepAsks(p, routineId, stepId, question))}
+          />
+        ) : tab === "recap" ? (
+          /* THE PLAN, WHOLE, AND NOTHING BEING ASKED OF YOU.
+             Twelve steps wrote this and none of them can show it: each one
+             holds its own quarter of the answer and the only way to re-read the
+             lot was the plain-text dump at the bottom of the page. This is that
+             dump laid out — the star, the reason, the identity, the
+             affirmations, the values in order, the areas, the goals, the
+             routines — with every block editable where it stands. */
+          <RecapTab
+            plan={plan}
+            today={today}
+            handlers={recapHandlers}
+            valuesHandlers={valuesHandlers}
+            onOpenArea={(areaId) => setNowAreaId(areaId)}
+            onOpenRoutine={(routineId) => { setPlanAreaId(null); setOpenRoutineId(routineId); setTab("systems") }}
+            onGoToTab={(t) => setTab(t)}
+            goals={
+              <>
+                <QuickAdd plan={plan} onAdd={(areaId, text) => setPlan((p) => ns.addGoalsFromDump(p, areaId, text))} />
+                <GoalOverview
+                  plan={plan}
+                  today={today}
+                  onOpenGoal={(goal) => { setPlanAreaId(goal.areaId); setNowGoalId(goal.id); setTab(ns.isMilestone(goal) ? "milestones" : "systems") }}
+                  onSetPriority={goalHandlers.onSetPriority}
+                  onMovePriority={goalHandlers.onMovePriority}
+                  onRemoveGoal={(goalId) => setPlan((p) => ns.removeGoal(p, goalId))}
+                  onOpenRoutine={(routineId) => { setPlanAreaId(null); setOpenRoutineId(routineId); setTab("systems") }}
+                  emptyHint={COMMIT_EDIT_COPY.empty}
+                />
+              </>
+            }
+          />
         ) : tab === "track" ? (
           /* The one step that leaves the browser. Everything else here is a
              document; this is the same goals hub /dashboard/goals renders,
              on the rows the plan just created. */
           runId ? (
-            <TrackTab plan={plan} runId={runId} today={today ?? ns.todayISO()} />
+            <TrackTab
+              plan={plan}
+              runId={runId}
+              today={today ?? ns.todayISO()}
+              /* The SAME tick the Today step writes. The schedule shows
+                 today's morning routine here too, and two screens showing one
+                 routine must not keep two answers to "did you read it". */
+              onToggleStep={(stepId) => setPlan((p) => nsTrack.toggleStepLogged(p, today ?? ns.todayISO(), stepId))}
+            />
           ) : (
             /* Renders nothing at all if this is left as `runId && …`, which is
                the worst thing a step can do: no list, no error, no explanation,
@@ -818,7 +1107,7 @@ export function NorthStarFlow() {
         )}
       </div>
 
-      {tab === "now" && nowAreaId && (() => {
+      {(tab === "now" || tab === "recap") && nowAreaId && (() => {
         const area = plan.areas.find((a) => a.id === nowAreaId)
         if (!area) return null
         return (
@@ -834,7 +1123,11 @@ export function NorthStarFlow() {
             onSeasonFocus={setSeasonFocus}
             onOpenArea={(id) => setNowAreaId(id)}
             onGoToGoals={openAreaGoals}
-            onClose={() => setNowAreaId(null)}
+            banner={ribbon}
+            /* Closing IS the way back when something sent you here. Anything
+               else strands you on the assessment step wondering where Today
+               went. */
+            onClose={() => (errand ? endErrand(true) : setNowAreaId(null))}
           />
         )
       })()}
@@ -863,7 +1156,12 @@ export function NorthStarFlow() {
             onSeasonFocus={setSeasonFocus}
             onOpenArea={(id) => { setPlanAreaId(id); setNowGoalId(null) }}
             onGoToRating={openAreaRating}
-            onClose={() => { setPlanAreaId(null); setNowGoalId(null) }}
+            banner={ribbon}
+            onClose={() => {
+              if (errand) return endErrand(true)
+              setPlanAreaId(null)
+              setNowGoalId(null)
+            }}
           />
         )
       })()}
@@ -917,6 +1215,74 @@ export function NorthStarFlow() {
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+
+/**
+ * THE ERRAND, ON THE SCREEN IT SENT YOU TO.
+ *
+ * Three things, because a jump needs all three to be worth making: what you
+ * came here to do, the tick for it, and the way back. Without the third it is a
+ * trapdoor — Today sends you to your north star at 07:00 and leaves you to find
+ * your own way back through a rail of thirteen steps — and a trapdoor is a door
+ * nobody uses twice.
+ *
+ * The tick writes to the same place Today's does, so "read my north star" ticked
+ * here is ticked there. Rendered both in the page and inside the two dialogs: a
+ * modal makes everything behind it inert, so a ribbon that only lived on the
+ * page would be a way back you can see and cannot click.
+ */
+function ErrandRibbon({
+  label,
+  done,
+  onTick,
+  onBack,
+  onDismiss,
+}: {
+  label: string
+  /** Null when there is nothing to tick — a goal opened to move its date. */
+  done: boolean | null
+  onTick: () => void
+  onBack: () => void
+  onDismiss: () => void
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-violet-400/35 bg-violet-500/10 px-4 py-2.5">
+      <span className="min-w-0 flex-1">
+        <span className="block text-[10px] uppercase tracking-wide text-violet-300/70">{ERRAND_COPY.from}</span>
+        <span className="block text-[12.5px] text-zinc-100 truncate">{label}</span>
+      </span>
+      {done !== null && (
+        <button
+          onClick={onTick}
+          aria-pressed={done}
+          className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11.5px] transition-colors ${
+            done
+              ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-200"
+              : "border-white/15 text-zinc-300 hover:border-white/35 hover:text-white"
+          }`}
+        >
+          <Check className="size-3.5" />
+          {done ? ERRAND_COPY.isDone : ERRAND_COPY.done}
+        </button>
+      )}
+      <button
+        onClick={onBack}
+        aria-label={ERRAND_COPY.backAria}
+        className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-violet-400/40 bg-violet-500/20 px-2.5 py-1.5 text-[11.5px] text-violet-50 hover:bg-violet-500/30 transition-colors"
+      >
+        <ArrowLeft className="size-3.5" />
+        {ERRAND_COPY.back}
+      </button>
+      <button
+        onClick={onDismiss}
+        aria-label={ERRAND_COPY.dismissAria}
+        className="shrink-0 text-[10.5px] text-zinc-500 hover:text-zinc-300 transition-colors"
+      >
+        {ERRAND_COPY.dismiss}
+      </button>
     </div>
   )
 }

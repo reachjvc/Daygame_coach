@@ -94,8 +94,8 @@ test.describe("the hub", () => {
 
     // The tools sit above the flows on purpose: somebody arriving mid-urge
     // must not have to pick a methodology first.
-    await expect(page.getByRole("button", { name: /An urge, now/ })).toBeVisible()
-    await expect(page.getByRole("button", { name: /It already happened/ })).toBeVisible()
+    await expect(page.getByRole("button", { name: /An urge, right now/ })).toBeVisible()
+    await expect(page.getByRole("button", { name: /I just did it/ })).toBeVisible()
     await expect(page.getByRole("button", { name: /My card/ })).toBeVisible()
 
     expect(errors).toEqual([])
@@ -103,7 +103,7 @@ test.describe("the hub", () => {
 
   test("shows no progress panel before anything is written", async ({ page }) => {
     await fresh(page)
-    await expect(page.getByText("Where you are")).toHaveCount(0)
+    await expect(page.getByText("Your numbers")).toHaveCount(0)
   })
 })
 
@@ -114,7 +114,7 @@ test.describe("the urge tool", () => {
     const errors = watchConsole(page)
     await fresh(page)
 
-    await page.getByRole("button", { name: /An urge, now/ }).click()
+    await page.getByRole("button", { name: /An urge, right now/ }).click()
     const dialog = page.getByRole("dialog")
     await expect(dialog).toBeVisible()
 
@@ -147,7 +147,7 @@ test.describe("the urge tool", () => {
     await expect(dialog).toBeHidden()
 
     // It landed in the log, and the hub now says so.
-    await expect(page.getByText("Where you are")).toBeVisible()
+    await expect(page.getByText("Your numbers")).toBeVisible()
     await expect(page.getByText("urges came and went without you acting")).toBeVisible()
 
     expect(errors).toEqual([])
@@ -155,7 +155,7 @@ test.describe("the urge tool", () => {
 
   test("hands an urge that was acted on straight to the debrief", async ({ page }) => {
     await fresh(page)
-    await page.getByRole("button", { name: /An urge, now/ }).click()
+    await page.getByRole("button", { name: /An urge, right now/ }).click()
     const dialog = page.getByRole("dialog")
 
     await dialog.getByRole("button", { name: "None of those" }).click()
@@ -172,7 +172,7 @@ test.describe("the urge tool", () => {
 test.describe("the lapse tool", () => {
   test("opens with no setup and offers nothing that resets", async ({ page }) => {
     await fresh(page)
-    await page.getByRole("button", { name: /It already happened/ }).click()
+    await page.getByRole("button", { name: /I just did it/ }).click()
     const dialog = page.getByRole("dialog")
 
     await expect(dialog.getByRole("heading", { name: "You logged it" })).toBeVisible()
@@ -188,12 +188,12 @@ test.describe("the lapse tool", () => {
 
   test("keeps what was typed after closing and reopening", async ({ page }) => {
     await fresh(page)
-    await page.getByRole("button", { name: /It already happened/ }).click()
+    await page.getByRole("button", { name: /I just did it/ }).click()
     const field = page.getByRole("dialog").getByLabel("What happened just before?")
     await field.fill("Got in at seven with nothing on")
     await page.getByRole("dialog").getByRole("button", { name: "Done" }).click()
 
-    await page.getByRole("button", { name: /It already happened/ }).click()
+    await page.getByRole("button", { name: /I just did it/ }).click()
     await expect(page.getByRole("dialog").getByLabel("What happened just before?")).toHaveValue("Got in at seven with nothing on")
   })
 })
@@ -415,7 +415,7 @@ test.describe("reachability", () => {
     for (const flow of FLOWS) {
       await page.goto(`${HUB}/${flow}`, { waitUntil: "domcontentloaded" })
       await settled(page)
-      await page.getByRole("link", { name: "All four" }).click()
+      await page.getByRole("link", { name: "Back" }).click()
       await expect(page.getByRole("heading", { name: "Quitting something" })).toBeVisible()
     }
   })
@@ -677,7 +677,7 @@ test.describe("what it gives you", () => {
     await expect(page.getByText("1 of 4 written.")).toBeVisible()
 
     // The whole point of writing them short: they are used at the decision.
-    await page.getByRole("button", { name: /An urge, now/ }).click()
+    await page.getByRole("button", { name: /An urge, right now/ }).click()
     const dialog = page.getByRole("dialog")
     await dialog.getByRole("button", { name: "None of those" }).click()
     await dialog.getByRole("button", { name: "Next", exact: true }).click()
@@ -721,7 +721,7 @@ test.describe("the tripwire", () => {
     const errors = watchConsole(page)
     await fresh(page)
 
-    await page.getByRole("button", { name: /A rule for the week it is going well/ }).click()
+    await page.getByRole("button", { name: /It is going well/ }).click()
     const dialog = page.getByRole("dialog")
     await expect(dialog.getByRole("heading", { name: /A rule for the week it is going well/ })).toBeVisible()
 
@@ -740,7 +740,7 @@ test.describe("the tripwire", () => {
 
   test("refuses a tripwire phrased as what you will not do", async ({ page }) => {
     await fresh(page)
-    await page.getByRole("button", { name: /A rule for the week it is going well/ }).click()
+    await page.getByRole("button", { name: /It is going well/ }).click()
     const dialog = page.getByRole("dialog")
 
     await dialog.getByRole("button", { name: "I have earned this" }).click()
@@ -753,7 +753,7 @@ test.describe("the tripwire", () => {
 test.describe("the urge response is a choice, not one answer", () => {
   test("offers four responses and reorders them for a cue-rich room", async ({ page }) => {
     await fresh(page)
-    await page.getByRole("button", { name: /An urge, now/ }).click()
+    await page.getByRole("button", { name: /An urge, right now/ }).click()
     const dialog = page.getByRole("dialog")
 
     await dialog.getByRole("button", { name: "None of those" }).click()
@@ -773,7 +773,7 @@ test.describe("the urge response is a choice, not one answer", () => {
 
   test("writes the tape forward rather than only timing a wait", async ({ page }) => {
     await fresh(page)
-    await page.getByRole("button", { name: /An urge, now/ }).click()
+    await page.getByRole("button", { name: /An urge, right now/ }).click()
     const dialog = page.getByRole("dialog")
     await dialog.getByRole("button", { name: "None of those" }).click()
     await dialog.getByRole("button", { name: "Next", exact: true }).click()
@@ -817,11 +817,11 @@ test.describe("the version switcher", () => {
       await expect(group.getByRole("button", { name: label })).toBeVisible()
     }
     await group.getByRole("button", { name: "Plain" }).click()
-    await expect(page.getByRole("heading", { name: "What is going on?" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Where are you?" })).toBeVisible()
 
     await page.reload({ waitUntil: "domcontentloaded" })
     await settled(page)
-    await expect(page.getByRole("heading", { name: "What is going on?" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Where are you?" })).toBeVisible()
   })
 
   test("shows dramatically less at once in the lean versions", async ({ page }) => {
@@ -844,7 +844,7 @@ test.describe("the version switcher", () => {
     const group = page.getByRole("group", { name: "How much to show" })
 
     await group.getByRole("button", { name: "Everything" }).click()
-    await page.getByRole("button", { name: /A rule for the week it is going well/ }).click()
+    await page.getByRole("button", { name: /It is going well/ }).click()
     let dialog = page.getByRole("dialog")
     await dialog.getByRole("button", { name: "I have earned this" }).click()
     await dialog.getByRole("textbox").last().fill("ring Sam before I do anything")
@@ -853,7 +853,7 @@ test.describe("the version switcher", () => {
 
     // Same work, different door.
     await group.getByRole("button", { name: "Plain" }).click()
-    await page.getByRole("button", { name: /It is going well, actually/ }).click()
+    await page.getByRole("button", { name: /It is going well/ }).click()
     dialog = page.getByRole("dialog")
     await expect(dialog.getByText("ring Sam before I do anything")).toBeVisible()
   })
@@ -870,7 +870,7 @@ test.describe("the version switcher", () => {
     // Somebody arriving mid-urge must not have to open a disclosure first.
     await expect(page.getByRole("button", { name: "An urge, right now" })).toBeVisible()
     // The considered door stays shut; nothing behind it is urgent.
-    await expect(page.getByRole("link", { name: /Whether this is actually a problem/ })).toHaveCount(0)
+    await expect(page.getByRole("link", { name: /Whether this is a problem/ })).toHaveCount(0)
   })
 
   test("routes the plain answers to the right places", async ({ page }) => {
@@ -881,5 +881,176 @@ test.describe("the version switcher", () => {
     await page.getByRole("link", { name: /I do not know if this is a problem/ }).click()
     await expect(page).toHaveURL(/\/where$/)
     await expect(page.getByRole("heading", { name: /Find out where this actually is/ })).toBeVisible()
+  })
+})
+
+
+// ------------------------------------------------- having tried before
+
+/**
+ * The relapse route.
+ *
+ * The corpus's own highest-value finding — what was different on the attempt
+ * that finally worked — had no surface at all until now, despite most people
+ * who resolve having several attempts behind them.
+ */
+test.describe("I have tried before", () => {
+  test("keys its answer to how the last attempt actually ended", async ({ page }) => {
+    await fresh(page)
+    await page.getByRole("button", { name: /I have tried before/ }).click()
+    const dialog = page.getByRole("dialog")
+    await expect(dialog.getByRole("heading", { name: /You have been here before/ })).toBeVisible()
+
+    await dialog.getByRole("button", { name: /I felt fine, and thought I could handle it/ }).click()
+    // The dominant pattern across eight sources gets the answer written for it,
+    // not a generic one.
+    await expect(dialog.getByText(/most-reported pattern in the whole corpus/)).toBeVisible()
+
+    await dialog.getByRole("button", { name: /I had just one, and that was that/ }).click()
+    await expect(dialog.getByText(/the rule stopped being negotiable/)).toBeVisible()
+  })
+
+  test("says plainly when nothing structural is in place", async ({ page }) => {
+    await fresh(page)
+    await page.getByRole("button", { name: /I have tried before/ }).click()
+    const dialog = page.getByRole("dialog")
+    await dialog.getByRole("button", { name: /It just quietly faded out/ }).click()
+    // Not softened: an empty list is the finding.
+    await expect(dialog.getByText(/Nothing ticked/)).toBeVisible()
+
+    await dialog.getByRole("button", { name: /There is medication involved/ }).click()
+    await expect(dialog.getByText(/Nothing ticked/)).toHaveCount(0)
+  })
+
+  test("keeps the counter-evidence reachable", async ({ page }) => {
+    await fresh(page)
+    await page.getByRole("button", { name: /I have tried before/ }).click()
+    const dialog = page.getByRole("dialog")
+    await dialog.getByRole("button", { name: /what if none of this fits/ }).click()
+    await expect(dialog.getByText(/weakest will of anyone/)).toBeVisible()
+  })
+})
+
+test.describe("the hub groups sensibly", () => {
+  test("does not file the card under things that are happening now", async ({ page }) => {
+    await fresh(page)
+    // "My card" is a thing you made, not an event. It used to sit beside an
+    // urge in progress, which is what made the hub unreadable.
+    const nowHeading = page.getByRole("heading", { name: "Right now" })
+    await expect(nowHeading).toBeVisible()
+    await expect(page.getByRole("heading", { name: /Yours, and other people/ })).toBeVisible()
+  })
+})
+
+// ----------------------------------------------------------- the short version
+
+/**
+ * The fifth path: the evidence ranking as a checklist, most of it off-screen.
+ *
+ * It exists because the four change-flows each walk one school of thought and
+ * the longest asks twenty-five minutes across twelve screens before anything
+ * changes in the room the person actually drinks in.
+ */
+test.describe("the short version", () => {
+  test("is reachable, ranked, and honest about the count", async ({ page }) => {
+    const errors = watchConsole(page)
+    await page.goto(`${HUB}/shortlist`, { waitUntil: "domcontentloaded" })
+    await settled(page)
+
+    await expect(page.getByRole("heading", { name: "The short version" })).toBeVisible()
+    await expect(page.getByText("0/10 in place")).toBeVisible()
+
+    // Displayed order must match the displayed source counts, or the page's
+    // own claim about being evidence-ordered is visibly false.
+    const counts = await page.locator("li >> text=/^\\d+ sources$/").allTextContents()
+    const nums = counts.map((c) => Number(c.split(" ")[0]))
+    expect(nums.length).toBeGreaterThan(5)
+    expect([...nums]).toEqual([...nums].sort((a, b) => b - a))
+
+    expect(errors).toEqual([])
+  })
+
+  test("ticks persist and the count follows", async ({ page }) => {
+    await page.goto(`${HUB}/shortlist`, { waitUntil: "domcontentloaded" })
+    await page.evaluate(() => window.localStorage.removeItem("quit-vice-v1"))
+    await page.reload({ waitUntil: "domcontentloaded" })
+    await settled(page)
+
+    await page.getByRole("checkbox", { name: /Get it out of the house/ }).click()
+    await expect(page.getByText("1/10 in place")).toBeVisible()
+
+    await page.reload({ waitUntil: "domcontentloaded" })
+    await settled(page)
+    await expect(page.getByText("1/10 in place")).toBeVisible()
+  })
+
+  test("marks the constraints that need another person", async ({ page }) => {
+    await page.goto(`${HUB}/shortlist`, { waitUntil: "domcontentloaded" })
+    await settled(page)
+    // A constraint you can revoke alone is not a constraint — the clearest
+    // cross-behaviour finding in the corpus, marked per item.
+    await expect(page.getByText("needs somebody else").first()).toBeVisible()
+  })
+})
+
+// ----------------------------------------------------------- the modules
+
+/**
+ * The teaching spine.
+ *
+ * Before this the module was a toolbox with no sequence and nothing that said
+ * what a person would understand afterwards. The strongest findings in the
+ * research sat inside disclosures on screens people only reach in a crisis.
+ */
+test.describe("nine things worth understanding", () => {
+  test("lists all nine and opens one into idea, exercise and an account", async ({ page }) => {
+    const errors = watchConsole(page)
+    await page.goto(`${HUB}/learn`, { waitUntil: "domcontentloaded" })
+    await settled(page)
+
+    await expect(page.getByRole("heading", { name: "Nine things worth understanding" })).toBeVisible()
+    await expect(page.getByRole("listitem")).toHaveCount(9)
+
+    await page.getByRole("button", { name: /The dangerous week is the good one/ }).click()
+    // Takeaway first — somebody who reads only that line has the useful part.
+    await expect(page.getByText(/red flag rather than a green one/)).toBeVisible()
+    // Then the exercise, which reuses a tool rather than duplicating it.
+    await expect(page.getByRole("button", { name: /Write the tripwire/ })).toBeVisible()
+    // Then somebody who was in that spot.
+    await expect(page.getByText("Somebody who was here")).toBeVisible()
+
+    expect(errors).toEqual([])
+  })
+
+  test("runs the exercise from inside the module", async ({ page }) => {
+    await page.goto(`${HUB}/learn`, { waitUntil: "domcontentloaded" })
+    await settled(page)
+    await page.getByRole("button", { name: /The dangerous week is the good one/ }).click()
+    await page.getByRole("button", { name: /Write the tripwire/ }).click()
+    await expect(page.getByRole("dialog").getByRole("heading", { name: /A rule for the week/ })).toBeVisible()
+  })
+
+  test("tracks reading without turning it into a score", async ({ page }) => {
+    await page.goto(`${HUB}/learn`, { waitUntil: "domcontentloaded" })
+    await page.evaluate(() => window.localStorage.removeItem("quit-vice-v1"))
+    await page.reload({ waitUntil: "domcontentloaded" })
+    await settled(page)
+
+    await expect(page.getByText("0/9 read")).toBeVisible()
+    await page.getByRole("button", { name: /You cannot see this one from inside/ }).click()
+    await page.getByRole("button", { name: "mark as read" }).click()
+    await expect(page.getByText("1/9 read")).toBeVisible()
+
+    // Survives a reload, and skipping is stated as normal rather than a gap.
+    await page.reload({ waitUntil: "domcontentloaded" })
+    await settled(page)
+    await expect(page.getByText("1/9 read")).toBeVisible()
+  })
+
+  test("says there is no reason to be here daily", async ({ page }) => {
+    await page.goto(`${HUB}/learn`, { waitUntil: "domcontentloaded" })
+    await settled(page)
+    // The opposite of a retention-optimised product, and what the evidence says.
+    await expect(page.getByText(/no daily module/)).toBeVisible()
   })
 })

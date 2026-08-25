@@ -10,20 +10,36 @@ import { test, expect, type Page } from '@playwright/test'
 const PAGE = '/test/toggl'
 const STORAGE_KEY = 'toggl-clone:v1'
 
-/** ICS fixture: one timed event, one recurring event, one all-day event (must be skipped) */
+/**
+ * ICS fixture: one timed event today plus an all-day event (which must be skipped).
+ * Timestamps are relative to today, or the event lands outside the visible range.
+ */
+function icsStamp(hour: number, minute = 0): string {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(hour)}${pad(minute)}00Z`
+}
+
+function tomorrowDate(): string {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}`
+}
+
 const ICS_FIXTURE = [
   'BEGIN:VCALENDAR',
   'VERSION:2.0',
   'BEGIN:VEVENT',
   'UID:e2e-1@test',
-  'DTSTART:20260810T090000Z',
-  'DTEND:20260810T100000Z',
+  `DTSTART:${icsStamp(9)}`,
+  `DTEND:${icsStamp(10)}`,
   'SUMMARY:Imported standup',
   'END:VEVENT',
   'BEGIN:VEVENT',
   'UID:e2e-2@test',
-  'DTSTART;VALUE=DATE:20260812',
-  'DTEND;VALUE=DATE:20260813',
+  `DTSTART;VALUE=DATE:${tomorrowDate()}`,
+  `DTEND;VALUE=DATE:${tomorrowDate()}`,
   'SUMMARY:All day offsite',
   'END:VEVENT',
   'END:VCALENDAR',
@@ -35,6 +51,24 @@ async function openFreshSandbox(page: Page) {
   await page.reload({ waitUntil: 'domcontentloaded' })
   await page.getByRole('heading', { name: 'My Workspace' }).waitFor({ timeout: 20000 })
   await page.waitForTimeout(600)
+}
+
+/** Track one entry through the UI, since the workspace starts empty */
+async function trackEntry(page: Page, description: string, seconds = 1200) {
+  await page.getByPlaceholder('What are you working on?').fill(description)
+  await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
+  await page.waitForTimeout(700)
+  await page.locator('main').getByRole('button', { name: 'Stop timer' }).click()
+  await page.waitForTimeout(400)
+}
+
+/** Create a project from the timer bar's picker */
+async function createProject(page: Page, name: string) {
+  const timerBar = page.locator('main > div').first()
+  await timerBar.locator('button').first().click()
+  await page.getByPlaceholder('Search projects…').fill(name)
+  await page.getByRole('button', { name: `Create “${name}”` }).click()
+  await page.waitForTimeout(400)
 }
 
 const nav = (page: Page, name: string | RegExp) =>
@@ -56,34 +90,34 @@ test.describe('Toggl-style time tracker', () => {
     await page.unrouteAll({ behavior: 'ignoreErrors' })
   })
 
-  test('opens on today with a running timer, never on stale dates', async ({ page }) => {
+  test('a new workspace starts completely empty', async ({ page }) => {
     await openFreshSandbox(page)
 
-    await expect(page.locator('section > header h3').first()).toHaveText('Today')
-    await expect(page.locator('main').getByRole('button', { name: 'Stop timer' })).toBeVisible()
-
+    await expect(page.getByText('No time entries yet')).toBeVisible()
     const state = await readState(page)
-    const running = state.entries.filter((e: { duration: number }) => e.duration < 0)
-    expect(running).toHaveLength(1)
-    // nothing may be tracked in the future
-    const now = Date.now()
-    for (const entry of state.entries) {
-      if (entry.stop) expect(new Date(entry.stop).getTime()).toBeLessThanOrEqual(now + 60_000)
-    }
+    expect(state.entries).toHaveLength(0)
+    expect(state.projects).toHaveLength(0)
+    expect(state.clients).toHaveLength(0)
+    expect(state.tags).toHaveLength(0)
+    expect(state.favorites).toHaveLength(0)
+    // only you, so rates and reports have an owner
+    expect(state.members).toHaveLength(1)
+    expect(state.members[0].isSelf).toBe(true)
   })
 
-  test('re-dates stale demo data instead of showing past dates', async ({ page }) => {
+  test('sample data left in an existing browser is cleaned out on load', async ({ page }) => {
     await openFreshSandbox(page)
-    // Age every stored entry by three days, as if the page were reopened later
+    await trackEntry(page, 'my own work')
+
+    // plant a legacy sample row the way older builds stored it
     await page.evaluate((key) => {
       const state = JSON.parse(window.localStorage.getItem(key)!)
-      const shift = 3 * 86_400_000
-      state.entries = state.entries.map((e: { start: string; stop: string | null; duration: number }) => ({
-        ...e,
-        start: new Date(new Date(e.start).getTime() - shift).toISOString(),
-        stop: e.stop ? new Date(new Date(e.stop).getTime() - shift).toISOString() : null,
-        duration: e.duration < 0 ? e.duration + 3 * 86_400 : e.duration,
-      }))
+      state.entries.push({
+        ...state.entries[0],
+        id: 9999,
+        description: 'Client sync',
+        createdWith: 'daygame-coach /test/toggl (demo data)',
+      })
       window.localStorage.setItem(key, JSON.stringify(state))
     }, STORAGE_KEY)
 
@@ -91,8 +125,9 @@ test.describe('Toggl-style time tracker', () => {
     await page.getByRole('heading', { name: 'My Workspace' }).waitFor()
     await page.waitForTimeout(900)
 
-    await expect(page.locator('section > header h3').first()).toHaveText('Today')
-    await expect(page.getByText(/Moved \d+ demo entries forward/)).toBeVisible()
+    const state = await readState(page)
+    expect(state.entries.map((e: { description: string }) => e.description)).toEqual(['my own work'])
+    await expect(page.getByText(/Removed 1 sample entries/)).toBeVisible()
   })
 
   test('starts and stops the timer, and mirrors it in the tab title', async ({ page }) => {
@@ -112,10 +147,9 @@ test.describe('Toggl-style time tracker', () => {
     await expect(page.getByRole('banner')).not.toContainText('E2E entry')
   })
 
-  test('keyboard shortcuts continue the last entry and start a favorite', async ({ page }) => {
+  test('keyboard shortcuts continue the last entry', async ({ page }) => {
     await openFreshSandbox(page)
-    await page.locator('main').getByRole('button', { name: 'Stop timer' }).click()
-    await page.waitForTimeout(400)
+    await trackEntry(page, 'shortcut source')
 
     await blur(page)
     await page.keyboard.press('c')
@@ -126,10 +160,6 @@ test.describe('Toggl-style time tracker', () => {
     await blur(page)
     await page.keyboard.press('s')
     await page.waitForTimeout(400)
-    await blur(page)
-    await page.keyboard.press('1')
-    await page.waitForTimeout(600)
-    await expect(page.getByRole('banner')).toContainText('Timer UI polish')
 
     await blur(page)
     await page.keyboard.press('Shift+?')
@@ -180,7 +210,6 @@ test.describe('Toggl-style time tracker', () => {
 
   test('enforces required fields, then saves once they are filled', async ({ page }) => {
     await openFreshSandbox(page)
-    await page.locator('main').getByRole('button', { name: 'Stop timer' }).click()
 
     await nav(page, 'Settings').click()
     await page.getByRole('button', { name: 'Workspace', exact: true }).click()
@@ -189,15 +218,12 @@ test.describe('Toggl-style time tracker', () => {
     await nav(page, 'Timer').click()
     await page.waitForTimeout(500)
     const timerBar = page.locator('main > div').first()
-    await timerBar.locator('button').first().click()
-    await page.getByText('No project', { exact: true }).first().click()
     await page.getByPlaceholder('What are you working on?').fill('Blocked entry')
     await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
     // exactly one toast, not one per React render pass
     await expect(page.getByText(/Project is required/)).toHaveCount(1)
 
-    await timerBar.locator('button').first().click()
-    await page.getByText('Coach App Build', { exact: true }).first().click()
+    await createProject(page, 'Client work')
     await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
     await page.waitForTimeout(600)
     await expect(page.getByRole('banner')).toContainText('Blocked entry')
@@ -205,6 +231,7 @@ test.describe('Toggl-style time tracker', () => {
 
   test('reports tabs render and rounding changes the total', async ({ page }) => {
     await openFreshSandbox(page)
+    await trackEntry(page, 'reportable work')
     await nav(page, 'Reports').click()
     await page.waitForTimeout(800)
 
@@ -241,7 +268,6 @@ test.describe('Toggl-style time tracker', () => {
 
   test('survives a reload and stays usable on a narrow viewport', async ({ page }) => {
     await openFreshSandbox(page)
-    await page.locator('main').getByRole('button', { name: 'Stop timer' }).click()
     await page.getByPlaceholder('What are you working on?').fill('Persisted entry')
     await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
     await page.waitForTimeout(700)

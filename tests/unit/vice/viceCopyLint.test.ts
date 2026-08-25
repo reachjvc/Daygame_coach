@@ -219,6 +219,10 @@ describe("quit-a-vice copy lint", () => {
     prose("LAPSE.chain.pivot", LAPSE.chain.pivot)
     prose("LAPSE.chain.pivotHelp", LAPSE.chain.pivotHelp)
     prose("LAPSE.chain.earliest", LAPSE.chain.earliest)
+    label("LAPSE.onward.label", LAPSE.onward.label)
+    for (const k of ["again", "againWhy", "tripwire", "tripwireWhy"] as const) {
+      prose(`LAPSE.onward.${k}`, LAPSE.onward[k])
+    }
     label("LAPSE.next.title", LAPSE.next.title)
     LAPSE.next.lines.forEach((l, i) => prose(`LAPSE.next.lines[${i}]`, l))
     prose("LAPSE.next.field", LAPSE.next.field)

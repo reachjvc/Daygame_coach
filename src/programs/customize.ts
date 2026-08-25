@@ -271,7 +271,23 @@ export function addExercise(
   if (schedule.kind !== "linear_rotation" && schedule.kind !== "weekly_waved") {
     throw new Error("Only load programs take exercises from the library")
   }
-  const exerciseId = freshId(entry.id, allExerciseIds(schedule))
+  /**
+   * THE SAME LIFT ON TWO DAYS IS ONE LIFT.
+   *
+   * Ids are how progression is tracked: `exerciseState` is keyed by them, so
+   * two ids means two working weights. Suffixing every add gave Bench Press on
+   * Push A and `bench_press_2` on Push B — the same bar, the same body, and two
+   * separate numbers that drift apart. Your bench is your bench.
+   *
+   * The suffix survives for the case it was written for: the SAME lift twice in
+   * ONE day (a top set and a back-off) is two slots, and they have to be
+   * distinguishable or the log cannot say which one it is talking about.
+   */
+  const idsInThisDay = new Set(
+    (scheduleDays(schedule).find((d) => d.id === dayId)?.exercises ?? []).map((e) => e.id)
+  )
+  const existingElsewhere = allExerciseIds(schedule).has(entry.id) && !idsInThisDay.has(entry.id)
+  const exerciseId = existingElsewhere ? entry.id : freshId(entry.id, allExerciseIds(schedule))
   const exercise = loadExerciseFromLibrary(entry, exerciseId)
   const next = mapDay(schedule, dayId, (d) => ({ ...d, exercises: [...(d.exercises as LoadExercise[]), exercise] }))
   return { schedule: next, exerciseId }

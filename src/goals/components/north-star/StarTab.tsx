@@ -31,6 +31,7 @@ import {
   LADDER_INTRO,
   NORTH_STAR_REREAD,
   NORTH_STAR_SCREEN,
+  STAR_ANCHOR,
   STAR_PROMPTS,
   STAR_WHY_ID,
   STAR_WORK_INTRO,
@@ -150,7 +151,10 @@ export function StarTab({
         <p className="text-[12.5px] text-zinc-400 mt-1.5 leading-relaxed">{NORTH_STAR_SCREEN.hint}</p>
         <p className="text-[12px] text-zinc-500 mt-2 leading-relaxed">{NORTH_STAR_SCREEN.help}</p>
 
+        {/* The id is how a "go to it" field on Today lands on the paragraph
+            itself rather than on the top of a step that holds five boxes. */}
         <textarea
+          id={STAR_ANCHOR}
           value={plan.northStar}
           onChange={(e) => onStar(e.target.value)}
           placeholder={NORTH_STAR_SCREEN.placeholder}

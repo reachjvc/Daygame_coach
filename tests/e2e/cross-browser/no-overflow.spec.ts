@@ -7,9 +7,10 @@ const AUTH_TIMEOUT = 15000
 
 const BETA_PAGES = [
   { name: 'Dashboard', path: '/dashboard' },
-  // Goals may redirect to /dashboard/goals/setup — both are tested
-  { name: 'Goals (setup)', path: '/dashboard/goals/setup' },
-  { name: 'Goals Setup', path: '/dashboard/goals/setup' },
+  // Goals redirects to /dashboard/goals/plan on an empty account — both are
+  // tested, plus the archived wizard that used to be what it redirected to.
+  { name: 'Goals (plan)', path: '/dashboard/goals/plan' },
+  { name: 'Goals Setup (archived)', path: '/test/archive/goal-setup' },
   { name: 'Tracking', path: '/dashboard/tracking' },
   { name: 'Tracking History', path: '/dashboard/tracking/history' },
   { name: 'Scenarios', path: '/dashboard/scenarios' },

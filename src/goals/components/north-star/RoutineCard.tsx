@@ -38,6 +38,15 @@ export interface RoutineHandlers {
   onAddCustomStep: (routineId: string, title: string, minutes: number, daysPerWeek: number) => void
   onRemoveStep: (routineId: string, stepId: string) => void
   onStepDays: (routineId: string, stepId: string, daysPerWeek: number) => void
+  /**
+   * WHICH DAYS this step is on, chosen here rather than only on the week grid.
+   *
+   * A rate is a complete answer — "twice a week" is a real plan — but it is not
+   * the only one somebody has, and the routine is where the answer occurs to
+   * them: you pick "write on the book" and you already know it is Tuesday and
+   * Saturday. An empty list puts it back to a rate on no particular day.
+   */
+  onStepWeekdays: (routineId: string, stepId: string, days: number[]) => void
   /** How long the person thinks this step takes them, not the library's guess. */
   onStepMinutes: (routineId: string, stepId: string, minutes: number) => void
   onMoveStep: (routineId: string, index: number, dir: -1 | 1) => void
@@ -51,6 +60,56 @@ export interface RoutineHandlers {
   onMoveSplitDay: (routineId: string, index: number, dir: -1 | 1) => void
   onRemoveSplitDay: (routineId: string, dayId: string) => void
   onClearSplit: (routineId: string) => void
+}
+
+/**
+ * The seven days, as toggles, under one step.
+ *
+ * None chosen is a real state and the common one — it means "this often, no
+ * particular day", which is what most of a plan is. Choosing days changes what
+ * the step IS on the other screens: it stops being "2× a week, any day" in
+ * "Any day this week" and starts landing on those days' own lists.
+ */
+function StepDays({
+  days,
+  title,
+  onPick,
+}: {
+  days: number[]
+  title: string
+  onPick: (days: number[]) => void
+}) {
+  const toggle = (day: number) => {
+    const next = days.includes(day) ? days.filter((d) => d !== day) : [...days, day].sort((a, b) => a - b)
+    onPick(next)
+  }
+  return (
+    <span className="flex items-center gap-1 shrink-0">
+      {WEEKDAY_SHORT.map((label, day) => {
+        const on = days.includes(day)
+        return (
+          <button
+            key={day}
+            onClick={() => toggle(day)}
+            aria-pressed={on}
+            aria-label={`${label} for ${title}`}
+            title={label}
+            className={`size-4.5 rounded text-[9px] font-medium flex items-center justify-center transition-colors ${
+              on ? "bg-violet-500/25 text-violet-100 border border-violet-400/40" : "border border-white/10 text-zinc-600 hover:text-zinc-300 hover:border-white/25"
+            }`}
+          >
+            {label[0]}
+          </button>
+        )
+      })}
+      {/* WHAT NO DAYS MEANS, said rather than left as seven empty boxes. The
+          rate itself is already in the box beside this one, so this says only
+          the part that box cannot: whether it landed on days. */}
+      <span className="text-[9.5px] text-zinc-600 tabular-nums whitespace-nowrap">
+        {days.length > 0 ? `${days.length}×/wk` : "any day"}
+      </span>
+    </span>
+  )
 }
 
 export function RoutineCard({
@@ -376,7 +435,8 @@ export function RoutineCard({
               ) : (
                 <ol className="mt-2 space-y-1">
                   {routine.steps.map((step, i) => (
-                    <li key={step.id} className="group/step flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5">
+                    <li key={step.id} className="group/step rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5">
+                      <div className="flex items-center gap-2">
                       <span
                         className="text-[10px] font-bold size-4.5 rounded-full flex items-center justify-center shrink-0 tabular-nums"
                         style={{ backgroundColor: `${color}26`, color }}
@@ -390,7 +450,10 @@ export function RoutineCard({
                           the same stretch are not doing it for the same two
                           minutes. Weekly steps get the box too: their minutes
                           are what `weeklyLoad` multiplies by the days. */}
-                      {!sequence && (
+                      {/* THE RATE, until days are chosen — after which the days
+                          ARE the rate and two controls saying different numbers
+                          is a step that cannot say how often it runs. */}
+                      {!sequence && step.days.length === 0 && (
                         <select
                           value={step.daysPerWeek}
                           onChange={(e) => handlers.onStepDays(routine.id, step.id, Number(e.target.value))}
@@ -424,6 +487,23 @@ export function RoutineCard({
                           className="size-4.5 rounded text-zinc-600 hover:text-rose-300 flex items-center justify-center transition-colors"
                         ><X className="size-3" /></button>
                       </span>
+                      </div>
+
+                      {/* WHICH DAYS, on its own line under the step.
+                          Days were only choosable on the week grid, which is a
+                          different screen from the one you are on when you
+                          decide — you pick "write on the book" already knowing
+                          it is Tuesday and Saturday. A step with days lands on
+                          those days' own lists on Today; one without stays a
+                          rate on no particular day, which is a finished answer
+                          and stays the default. */}
+                      <div className="flex items-center gap-2 mt-1.5 pl-6.5">
+                        <StepDays
+                          days={step.days}
+                          title={step.title}
+                          onPick={(days) => handlers.onStepWeekdays(routine.id, step.id, days)}
+                        />
+                      </div>
                     </li>
                   ))}
                 </ol>

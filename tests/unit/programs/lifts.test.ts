@@ -12,7 +12,10 @@
 
 import { describe, test, expect } from "vitest"
 import {
+  BODY_GROUP_LABELS,
+  BODY_GROUP_ORDER,
   EXERCISE_LIBRARY,
+  libraryByGroup,
   PATTERN_ORDER,
   customLibraryEntry,
   libraryExercise,
@@ -201,5 +204,89 @@ describe("drop sets", () => {
     const { schedule, dayId } = oneLiftDay()
     const id = lifts(schedule)[0].id
     expect(CustomScheduleSchema.safeParse(setDropSets(schedule, dayId, id, 3)).success).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+
+describe("finding a lift where you would look for it", () => {
+  /**
+   * The report: "they are not all squats in squats, and things like certain leg
+   * exercises, or shoulder press, isnt there, and dumbell shrug etc".
+   *
+   * Almost nothing was actually absent. Shoulder Press and Dumbbell Shrug were
+   * both in the pool — filed under "Vertical push", which is not a place anyone
+   * looks. The browse index was movement patterns; people browse by body part.
+   */
+  test("every lift has a body group, and every group has lifts", () => {
+    for (const e of EXERCISE_LIBRARY) {
+      expect(BODY_GROUP_ORDER, `${e.name} has group ${e.group}`).toContain(e.group)
+    }
+    for (const g of BODY_GROUP_ORDER) {
+      expect(libraryByGroup(g).length, `${g} is empty`).toBeGreaterThan(0)
+    }
+  })
+
+  test("shoulder presses are under Shoulders, not hidden in a push pattern", () => {
+    const names = libraryByGroup("shoulders").map((e) => e.name)
+    expect(names).toContain("Overhead Press")
+    expect(names).toContain("Dumbbell Shoulder Press")
+    expect(names).toContain("Machine Shoulder Press")
+    expect(names).toContain("Arnold Press")
+  })
+
+  test("both shrugs are under Shoulders", () => {
+    const names = libraryByGroup("shoulders").map((e) => e.name)
+    expect(names).toContain("Barbell Shrug")
+    expect(names).toContain("Dumbbell Shrug")
+  })
+
+  test("the Quads group is quad work — and not everything is a squat", () => {
+    const names = libraryByGroup("quads").map((e) => e.name)
+    expect(names).toContain("Leg Press")
+    expect(names).toContain("Leg Extension")
+    expect(names).toContain("Bulgarian Split Squat")
+    // The tab is named for what it trains, so a Leg Press in it is not a lie.
+    expect(BODY_GROUP_LABELS.quads).toBe("Quads")
+  })
+
+  test("hamstring and glute work is its own group, not buried under a hinge", () => {
+    const names = libraryByGroup("hamstrings_glutes").map((e) => e.name)
+    for (const n of ["Leg Curl", "Seated Leg Curl", "Romanian Deadlift", "Hip Thrust", "Good Morning"]) {
+      expect(names, n).toContain(n)
+    }
+  })
+
+  test("rear-delt work is filed by what it trains, not by how it moves", () => {
+    // A Face Pull is a horizontal pull; nobody builds a shoulder day and looks
+    // for it under Back.
+    expect(libraryByGroup("shoulders").map((e) => e.name)).toContain("Face Pull")
+    expect(libraryByGroup("back").map((e) => e.name)).not.toContain("Face Pull")
+  })
+
+  test("chest and back are not mixed together", () => {
+    expect(libraryByGroup("chest").map((e) => e.name)).toContain("Bench Press")
+    expect(libraryByGroup("back").map((e) => e.name)).toContain("Pull-up")
+    expect(libraryByGroup("chest").map((e) => e.name)).not.toContain("Pull-up")
+  })
+
+  test("the machines a leg day actually uses are in the pool", () => {
+    const all = EXERCISE_LIBRARY.map((e) => e.name)
+    for (const n of ["Hip Abduction", "Hip Adduction", "Glute Bridge", "Single-Leg Press"]) {
+      expect(all, n).toContain(n)
+    }
+  })
+
+  test("swapping still offers like-for-like, which is a different question", () => {
+    // Grouping for browse must not disturb grouping for swap: a Bench Press
+    // still offers the other horizontal pushes, not everything labelled Chest.
+    expect(patternForName("Bench Press")).toBe("horizontal_push")
+    expect(patternForName("Overhead Press")).toBe("vertical_push")
+  })
+
+  test("a lift you write yourself is filed under the body part you picked", () => {
+    const own = customLibraryEntry("Reverse Hyper Machine", "hamstrings_glutes")!
+    expect(own.group).toBe("hamstrings_glutes")
+    expect(own.pattern).toBe("hinge")
   })
 })

@@ -187,6 +187,11 @@ opt-in persistence, and no address in error output.
 ## Limits worth knowing
 - **Storage is `localStorage` only** (namespace `toggl-clone:v1`, `STATE_VERSION` 2 — a version bump reseeds the demo).
   No Supabase table, no migration, no RLS — deliberate, since this is a `/test` sandbox.
+- **The workspace ships with sample data**, tagged `SEED_CREATED_WITH`, so no screen is ever empty. It is *not*
+  labelled per row, which reads as "entries I never created" — so the Timer screen shows a dismissible notice while
+  samples exist, and **Settings → Data → "Remove sample data (keep mine)"** deletes them. A sample project, client,
+  tag or member is only removed when every entry referencing it was sample data; if you tracked your own time
+  against one, it stays.
 - **Demo data is re-dated on load.** The seeded history is anchored to the day it was generated, so reopening the sandbox
   later used to show only past dates, an empty "Today", and a demo timer "running" for days. `demoDataService` now shifts
   entries tagged `SEED_CREATED_WITH` forward so the newest demo day is today (never into the future), re-anchors the demo's

@@ -86,6 +86,7 @@ export function useViceState(flowId: ViceFlowId | null) {
       // no-ops rather than optional so no step has to null-check a handler.
       openUrge: () => {},
       openHelp: () => {},
+      openTool: () => {},
       goToStep: () => {},
       nextStep: () => {},
     }

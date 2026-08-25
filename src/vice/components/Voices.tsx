@@ -250,3 +250,50 @@ export function VoicesDialog({ viceId, onClose }: { viceId: string | null; onClo
     </Dialog>
   )
 }
+
+/**
+ * A few techniques, inline, for the moment the person is actually in.
+ *
+ * The 196 catalogued techniques were reachable in exactly one place: a tab
+ * inside the reading dialog. That is a library, and a library is only useful
+ * to somebody already browsing. These put the three with the most independent
+ * cross-source agreement in front of a person at the point the moment calls
+ * for them — after a lapse, during a good stretch — with the source count
+ * visible so a one-source idea can be discounted on sight.
+ */
+export function TechniqueHints({ stage, viceId, limit = 3, heading }: {
+  stage: string
+  viceId: string | null
+  limit?: number
+  heading?: string
+}) {
+  const picks = TECHNIQUES.filter(
+    (t) =>
+      t.kind === "technique" &&
+      t.stages.includes(stage) &&
+      (t.vices.length === 0 || viceId === null || t.vices.includes(viceId)),
+  )
+    .sort((a, b) => b.recurrence - a.recurrence || a.name.localeCompare(b.name))
+    .slice(0, limit)
+
+  if (picks.length === 0) return null
+
+  return (
+    <div>
+      <p className="text-[12px] text-zinc-500 mb-1.5">{heading ?? "What people actually did"}</p>
+      <ul className="space-y-1.5">
+        {picks.map((t) => (
+          <li key={t.id} className="rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5">
+            <p className="flex items-baseline gap-2 text-[13px] text-zinc-100">
+              {t.name}
+              <span className="ml-auto shrink-0 text-[10.5px] text-zinc-600 tabular-nums">
+                {t.recurrence > 1 ? `${t.recurrence} sources` : "1 source"}
+              </span>
+            </p>
+            <p className="text-[12px] text-zinc-400 mt-0.5 leading-relaxed">{t.does}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}

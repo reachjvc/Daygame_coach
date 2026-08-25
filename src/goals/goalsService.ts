@@ -414,6 +414,32 @@ export function computeProjectedDate(goal: GoalWithProgress): ProjectedDateInfo 
 }
 
 /**
+ * A counter that belongs to a period that is over.
+ *
+ * THE BUG THIS IS: a weekly goal's `current_value` is the count for the week
+ * named by its `period_start_date` and for no other week. Nothing about the row
+ * says so, so a screen that reads the row on Tuesday and finds last Monday's
+ * date shows last week's number as if it were this week's, and a `+1` adds to
+ * it. Today did exactly that: it read `/api/goals`, which never rolled a
+ * period, and reported a week the user had not started yet.
+ *
+ * `currentStart` is `periodStartFor(period, now)` — Monday for a week, so a
+ * count stops at Sunday 23:59 and starts again at Monday 00:00.
+ *
+ * Daily is `!==` rather than `<` so a row somehow dated in the future still
+ * gets pulled back onto today, which is what the daily reset has always done.
+ */
+export function isPeriodStale(
+  period: string,
+  periodStartDate: string | null,
+  currentStart: string
+): boolean {
+  if (!periodStartDate) return true
+  if (period === "daily") return periodStartDate !== currentStart
+  return periodStartDate < currentStart
+}
+
+/**
  * Determine if a goal should auto-consume a streak freeze during reset.
  * Conditions: goal incomplete, has streak worth protecting, freeze available, not already frozen today.
  */

@@ -118,6 +118,10 @@ export type ViceFlowId = "map" | "experiment" | "line" | "week" | "where" | "giv
  */
 export type ViceCriterionAnswer = "yes" | "no" | "unsure"
 
+/** Every dialog either shell can open. One list, so the hub and the flow
+ *  shell cannot drift apart in what they make reachable. */
+export type ViceToolId = "urge" | "lapse" | "card" | "help" | "voices" | "tripwire" | "again"
+
 /** Where the help screen looks for actual services. */
 export type HelpLocale = "uk" | "us" | "other"
 
@@ -427,6 +431,16 @@ export interface ViceHandlers {
   openHelp: () => void
   /** Open the always-available urge tool from inside a step. */
   openUrge: () => void
+  /**
+   * Hand off to another tool.
+   *
+   * Until this existed the only link between any two tools was urge → lapse,
+   * and everything else was an isolated dialog that dead-ended at "close".
+   * That is most of why the module read as a menu rather than a path: you
+   * finished the lapse debrief and the page had nothing to say about what
+   * follows, even though the research is specific about what does.
+   */
+  openTool: (tool: ViceToolId) => void
   /** Jump to another step in the current flow. */
   goToStep: (stepId: string) => void
   /** Move to the next step. Supplied by the flow shell. */

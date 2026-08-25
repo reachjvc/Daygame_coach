@@ -43,6 +43,8 @@ import {
 import { fromKg, roundToLoadable } from "@/src/programs/programsService"
 import { hasWeight, numericWeights } from "@/src/programs/builder"
 import { ProgramEditor } from "@/src/programs/components/ProgramEditor"
+import { Segmented } from "@/src/programs/components/ui"
+import { BuildYourOwn } from "./BuildYourOwn"
 import type { Discipline, LevelId, ProgramSchedule, UnitSystem } from "@/src/programs/types"
 
 /** The disciplines offered under Fitness, in the order people ask for them. */
@@ -65,6 +67,8 @@ interface Props {
 }
 
 export function WorkoutPrograms({ onProgramStarted }: Props) {
+  /** Take one that exists, or build your own. Two answers to the same question. */
+  const [mode, setMode] = useState<"ready" | "own">("ready")
   const [discipline, setDiscipline] = useState<Discipline>("strength")
   const [programId, setProgramId] = useState<string | null>(null)
   const [level, setLevel] = useState<LevelId>("intermediate")
@@ -179,9 +183,25 @@ export function WorkoutPrograms({ onProgramStarted }: Props) {
     }
   }
 
+  if (mode === "own") {
+    return (
+      <div>
+        <ModeSwitch mode={mode} onMode={setMode} />
+        {/* THE BENCH, ON THE SAME PAGE AS THE CATALOGUE. It was its own step in
+            the rail, which asked somebody to choose between "a program" and "my
+            program" before they had seen either, and put two answers to one
+            question in two different places. */}
+        <div className="mt-3">
+          <BuildYourOwn onProgramStarted={onProgramStarted} />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
-      <h2 className="text-sm font-semibold text-zinc-200">{PROGRAM_COPY.title}</h2>
+      <ModeSwitch mode={mode} onMode={setMode} />
+      <h2 className="mt-3 text-sm font-semibold text-zinc-200">{PROGRAM_COPY.title}</h2>
       <p className="text-[12.5px] text-zinc-400 mt-1 leading-relaxed">{PROGRAM_COPY.help}</p>
 
       {/* Discipline */}
@@ -453,5 +473,37 @@ function SeededWeights({
         ))}
       </div>
     </div>
+  )
+}
+
+
+/**
+ * Ready-made, or your own. One question, two answers, side by side.
+ */
+function ModeSwitch({
+  mode,
+  onMode,
+}: {
+  mode: "ready" | "own"
+  onMode: (mode: "ready" | "own") => void
+}) {
+  return (
+    <Segmented
+      label="Where your program comes from"
+      value={mode}
+      onChange={onMode}
+      options={[
+        {
+          value: "ready" as const,
+          label: "Take a ready-made one",
+          hint: "Thirteen cited programs, all fully editable once you pick one.",
+        },
+        {
+          value: "own" as const,
+          label: "Build my own",
+          hint: "An empty week: your days, your lifts, your rep schemes.",
+        },
+      ]}
+    />
   )
 }

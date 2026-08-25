@@ -1,67 +1,108 @@
 /**
- * Everything the plain version says. All of it fits on one screen.
+ * The two lean front doors.
  *
- * The word budget is the design. The full hub runs to several hundred words
- * before a person can do anything; this is under sixty, because the research
- * on unplanned quit attempts says roughly half of the attempts that work were
- * not planned, and a page that requires reading is shut to those people.
+ * Both are organised by **where a person is**, not by what kind of thing the
+ * screen contains. An earlier version grouped by "is something happening now",
+ * which put "My card" — a thing you made weeks ago — under the same heading as
+ * an urge in progress. That is a filing system, and a filing system is not an
+ * answer to "what do I do".
+ *
+ * The arc, from the research corpus:
+ *
+ *   1. Not sure there is a problem      → ~95% who met criteria and got no
+ *                                          help said they did not think they
+ *                                          needed any
+ *   2. Thinking about it                → the internal argument, which the
+ *                                          corpus says is settled *before* a
+ *                                          successful attempt starts
+ *   3. Right now, acute                 → an urge, or one that just happened
+ *   4. It is going well                 → the hazard window, eight sources
+ *   5. Been here before                 → most people who resolve have several
+ *                                          attempts behind them
+ *   6. Past what a page can do          → always reachable, never buried
+ *
+ * Things a person *made* (their card, their plans) are their own heading,
+ * because they are possessions rather than moments.
  */
+
 export const PLAIN: {
   question: string
   answers: Array<{
     id: string
     label: string
     sub?: string
-    tool?: "urge" | "lapse" | "card" | "help" | "voices" | "tripwire"
+    tool?: "urge" | "lapse" | "card" | "help" | "voices" | "tripwire" | "again"
     flow?: "where" | "gives" | "map" | "experiment" | "line" | "week"
   }>
+  footers: Array<{ id: string; label: string; tool: "card" | "voices" }>
   helpLink: string
 } = {
-  question: "What is going on?",
+  question: "Where are you?",
   answers: [
-    { id: "urge", label: "I want to do it right now", sub: "Ninety seconds, nothing to set up.", tool: "urge" as const },
-    { id: "lapse", label: "I already did", sub: "No counter to reset. There is not one.", tool: "lapse" as const },
-    { id: "good", label: "It is going well, actually", sub: "The moment people describe going wrong.", tool: "tripwire" as const },
-    { id: "unsure", label: "I do not know if this is a problem", sub: "Fifteen minutes. No label at the end.", flow: "where" as const },
-    { id: "others", label: "I want to read what other people did", sub: "Real accounts and what they tried. Nothing to set up.", tool: "voices" as const },
+    { id: "urge", label: "I want to do it right now", sub: "Ninety seconds. Nothing to set up.", tool: "urge" },
+    { id: "lapse", label: "I just did it", sub: "No counter to reset. There is not one.", tool: "lapse" },
+    { id: "good", label: "It is going well", sub: "The moment people describe going wrong.", tool: "tripwire" },
+    { id: "again", label: "I have tried before", sub: "What was different the time it worked.", tool: "again" },
+    { id: "unsure", label: "I do not know if this is a problem", sub: "Fifteen minutes. No label at the end.", flow: "where" },
+  ],
+  /**
+   * Two quiet footers rather than answers, because neither is a reply to
+   * "where are you" — but leaving the card out entirely was worse. It is the
+   * one thing this module tells people to open at eleven at night, and the
+   * most eleven-at-night version of the hub did not offer it.
+   */
+  footers: [
+    { id: "card", label: "My card", tool: "card" as const },
+    { id: "voices", label: "What other people did", tool: "voices" as const },
   ],
   helpLink: "If this is past what a page can do",
 }
 
 /**
- * The guided version: two doors, and what is behind each.
- *
- * The organising question is not "which methodology" but "is something
- * happening now, or are you working something out" — which is the only
- * distinction that actually changes what a person needs. Methodology choice
- * sits one level down, where somebody who wants it will find it and everybody
- * else will not have to read it.
+ * The guided version: the same arc, grouped, with what you own kept separate
+ * from what is happening to you.
  */
 export const GUIDED = {
   doors: [
     {
       id: "now",
-      label: "Something is happening now",
-      sub: "Or it just did.",
+      label: "Right now",
+      sub: "Minutes, not sessions.",
       items: [
         { id: "urge", label: "An urge, right now", tool: "urge" as const },
-        { id: "lapse", label: "It already happened", tool: "lapse" as const },
-        { id: "card", label: "My card", tool: "card" as const },
-        { id: "voices", label: "What other people said", tool: "voices" as const },
+        { id: "lapse", label: "I just did it", tool: "lapse" as const },
       ],
     },
     {
-      id: "work",
-      label: "I want to work something out",
+      id: "where",
+      label: "Where I am with it",
       sub: "Nothing here asks you to decide anything today.",
       items: [
-        { id: "where", label: "Whether this is actually a problem", flow: "where" as const },
+        { id: "learn", label: "Nine things worth understanding", href: "/test/quit-vice/learn" as const },
+        { id: "unsure", label: "Whether this is a problem", flow: "where" as const },
         { id: "gives", label: "What it gives me, honestly", flow: "gives" as const },
-        { id: "change", label: "How to change it", flows: true as const },
-        { id: "tripwire", label: "A rule for when it goes well", tool: "tripwire" as const },
+        { id: "good", label: "It is going well at the moment", tool: "tripwire" as const },
+        { id: "again", label: "I have tried before", tool: "again" as const },
+        { id: "change", label: "Ways to actually change it", flows: true as const },
+      ],
+    },
+    {
+      id: "mine",
+      label: "Things I have written",
+      sub: "Yours, and they stay on this device.",
+      items: [
+        { id: "card", label: "My card", tool: "card" as const },
+      ],
+    },
+    {
+      id: "others",
+      label: "What other people did",
+      sub: "Real accounts, and the techniques they name.",
+      items: [
+        { id: "voices", label: "Accounts and techniques", tool: "voices" as const },
       ],
     },
   ],
   changeIntro: "Four ways, built on positions the research genuinely disagrees about.",
   helpLink: "If this is past what a page can do",
-}
+} as const

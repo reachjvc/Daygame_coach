@@ -23,6 +23,14 @@ import {
   emptyCustomSchedule,
 } from "@/src/programs/components/CustomProgramBuilder"
 import { scheduleDays } from "@/src/programs/customize"
+import {
+  CUSTOM_LIFTS_STORAGE_KEY,
+  forgetCustomLift,
+  parseCustomLifts,
+  rememberCustomLift,
+  serializeCustomLifts,
+} from "@/src/programs/customLifts"
+import type { LibraryExercise } from "@/src/programs/types"
 import type { ProgramSchedule, UnitSystem } from "@/src/programs/types"
 
 export const BUILD_OWN_INTRO = {
@@ -63,6 +71,15 @@ export function BuildYourOwn({ onProgramStarted }: { onProgramStarted: (dayNames
   const [schedule, setSchedule] = useState<ProgramSchedule>(emptyCustomSchedule)
   const [unit, setUnit] = useState<UnitSystem>("kg")
   const [weights, setWeights] = useState<Record<string, string>>({})
+  /**
+   * SEPARATE STORAGE FROM THE DESIGN, on purpose.
+   *
+   * A lift you invented outlives the week you invented it in. Clearing the
+   * program, or rewriting it from scratch, must not make you type "One Arm
+   * Tricep" again — and because its id is derived from its name, the progress
+   * already logged against it is still its progress when you add it back.
+   */
+  const [ownLifts, setOwnLifts] = useState<LibraryExercise[]>([])
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
@@ -72,6 +89,7 @@ export function BuildYourOwn({ onProgramStarted }: { onProgramStarted: (dayNames
       setUnit(saved.unit)
       setWeights(saved.weights)
     }
+    setOwnLifts(parseCustomLifts(window.localStorage.getItem(CUSTOM_LIFTS_STORAGE_KEY)))
     setLoaded(true)
   }, [])
 
@@ -81,6 +99,11 @@ export function BuildYourOwn({ onProgramStarted }: { onProgramStarted: (dayNames
     if (!loaded) return
     window.localStorage.setItem(BUILDER_STORAGE_KEY, JSON.stringify({ schedule, unit, weights }))
   }, [schedule, unit, weights, loaded])
+
+  useEffect(() => {
+    if (!loaded) return
+    window.localStorage.setItem(CUSTOM_LIFTS_STORAGE_KEY, serializeCustomLifts(ownLifts))
+  }, [ownLifts, loaded])
 
   return (
     <div className="rounded-2xl border border-sky-400/20 bg-sky-500/[0.03]">
@@ -100,6 +123,14 @@ export function BuildYourOwn({ onProgramStarted }: { onProgramStarted: (dayNames
             weights={weights}
             onWeight={(id, raw) => setWeights((w) => ({ ...w, [id]: raw }))}
             onWeights={setWeights}
+            ownLifts={ownLifts}
+            /* Only lifts that are actually somebody's own are remembered; the
+               153-lift pool does not need a copy of itself in localStorage. */
+            onRememberLift={(entry) => {
+              if (!entry.id.startsWith("custom_")) return
+              setOwnLifts((cur) => rememberCustomLift(cur, entry))
+            }}
+            onForget={(id) => setOwnLifts((cur) => forgetCustomLift(cur, id))}
             onStarted={onProgramStarted}
           />
         )}

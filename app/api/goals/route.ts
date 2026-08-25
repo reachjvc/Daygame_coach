@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { getUserGoals, getGoalsByCategory, getGoalsByLifeArea, createGoal, deleteAllGoals, DuplicateGoalError } from "@/src/db/goalRepo"
+import { getUserGoals, getGoalsByCategory, getGoalsByLifeArea, createGoal, deleteAllGoals, rollGoalPeriods, DuplicateGoalError } from "@/src/db/goalRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { CreateGoalSchema } from "@/src/db/goalSchemas"
 
@@ -14,6 +14,9 @@ export async function GET(request: Request) {
     const lifeArea = searchParams.get("life_area")
     const category = searchParams.get("category")
     const tz = await getUserTimezone(auth.userId)
+    // Expired counters are rolled before they are read: a weekly total that
+    // belongs to last week must not come back as this week's.
+    await rollGoalPeriods(auth.userId, tz)
     const goals = lifeArea
       ? await getGoalsByLifeArea(auth.userId, lifeArea, tz)
       : category ? await getGoalsByCategory(auth.userId, category, tz) : await getUserGoals(auth.userId, false, tz)

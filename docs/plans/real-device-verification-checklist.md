@@ -51,7 +51,7 @@
 
 ## Sequence 3: Setup Wizard Long Form
 
-**Page**: /dashboard/goals/setup → Step 2 (Goals step)
+**Page**: /test/archive/goal-setup → Step 2 (Goals step) — the wizard moved there when Life Mastery took over /dashboard/goals/plan
 
 **Steps**:
 1. Complete step 1 (select a path)

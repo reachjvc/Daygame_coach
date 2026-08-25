@@ -14,6 +14,8 @@ Next.js + TypeScript + Supabase. Feature slices in `src/<slice>/`, routes in `ap
 - Never delete code whose purpose you can't explain.
 - Never write a `.png` outside `.playwright-mcp/`.
 - Never ship a known-wrong edge case as "acceptable for v1" — fix the design before implementing.
+- Never verify content by a proxy for it. A handle, a filename, a URL, a truncated preview and a passing shape-test are all metadata; the defect lives in the part you didn't open.
+- Never call a bulk transform done without reading a random sample of its output in full. Mechanical extraction protects against fabrication, not against wrongness.
 
 ## Stop and ask first
 - Any INSERT/UPDATE/DELETE RLS policy, or anything touching auth, payments, or permissions.

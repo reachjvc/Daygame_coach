@@ -5,9 +5,9 @@ truth, no LLM. A **copy** of the plan is mirrored to `plan_snapshots` so the
 people building it can read what real people wrote — see below. Replaced the
 12-area flow, which moved to `/test/life-mastery-v1`.
 
-**The last step, Track, is the one exception to all of that**: it pushes the plan's
+**Track is the one exception to all of that**: it pushes the plan's
 goals into `user_goals` and renders the real goals hub on them, so the plan can
-actually be run rather than only read back. See "The last step — Track" below.
+actually be run rather than only read back. See "Track — where the plan stops being a document" below.
 
 ## Reading what people actually wrote
 
@@ -72,10 +72,17 @@ being one.**
 9. **Values & identity** — what you are ranking your life by, in order.
 10. **Commit** — read the whole plan back, name what could go wrong, and say yes
    to it in your own words, dated.
-12. **Track** — what the next weeks look like, and push the goals into your
+11. **Track** — what the next weeks look like, and push the goals into your
    real goals so they get counted.
-13. **Today** — the one step that asks what you DID: today's list, ticked off,
+12. **Today** — the one step that asks what you DID: today's list, ticked off,
    how each area felt, and a line about the day.
+13. **Everything** — the plan, whole, on one page: the paragraph, the reason
+   under it, who you said you are, what you hold yourself to, your
+   affirmations, your values in order, the twelve areas with the 10 you wrote
+   in each, the goals, the routines and the list of things to have done. Every
+   block reads back as prose and carries one `edit` link that swaps it, and
+   only it, into the box the writing step uses. See "The last step —
+   Everything" below.
 
 **Step 4 is a fork, not a stage.** Everything before it is one order because it
 is one argument. After the one thing the order stops being an argument: wanting
@@ -1006,7 +1013,7 @@ the 10 and the rating already set: one answer, one place.
   sliced off is worse than five whole ones. A twelve-area plan makes thirty of
   these, and thirty rows above the exercise is a wall, not a head start.
 
-## The last step — Track: where the plan stops being a document
+## Track — where the plan stops being a document
 
 Ten steps produce a plan in localStorage. Nothing in it moves on a Tuesday, and
 a plan that is only ever read back is a plan nobody runs. Track is the one
@@ -1021,7 +1028,7 @@ was written on.
 **The step opens on what you will actually be doing, not on a goal list.**
 `TrackSchedule`, above everything else, with a week/day toggle:
 
-- **By week** — a grid, activities down, eight weeks across, the count in each
+- **By week** — a grid, routines down, eight weeks across, the count in each
   cell. This is the only place the plan says what it turns *into*: a driver
   ramping 2× → 3× → 4× is a different promise from 4× starting Monday, and the
   week it steps up is marked rather than left to be found by comparing columns.
@@ -1030,6 +1037,48 @@ was written on.
   what time. Only things that have been given days are drawn; a driver saying
   "4× a week" names no Tuesday and is listed underneath as "runs weekly, no day
   chosen" instead of being invented onto one.
+
+**Nothing in it is listed flat.** Reported as: "read your north star and so on
+— let them be part of the morning routine in a visual way, as parts that fall
+out of it." They are right. "Read your north star out loud" is not a task; it
+is the third line of a stack you run once, at seven, and listed as a peer of
+"bench press" it reads as one more chore on a list of nineteen while the stack
+itself is nowhere on the screen. So both views are **headers first**: one per
+routine, the steps folded inside, and a chevron to open one.
+
+`trackGroups` (pure, in `northStarTrackService.ts`) decides the grouping and
+the order for both views, so a step cannot sit under one header in one and a
+different header in the other. Three decisions in it:
+
+- **Grouped by routine id, not label.** Two routines are allowed to be called
+  the same thing, and one header holding both would be a lie about the plan.
+- **Ordered by the clock**, earliest first — morning, work, night — because the
+  only ordering a day has is the clock. A routine whose steps have no time yet
+  keeps the plan's own order *behind* the timed ones: it is unplaced, not last
+  thing at night.
+- **Drivers get one group at the end, "Any time this week."** A driver says
+  twenty approaches a week and names no hour, so it has no position in a day
+  and inventing one would put it at midnight.
+
+Defaults, per view: the week grid opens every header (it is a table of numbers
+and the grouping is what gives it its shape); a day opens only today's (six
+open stacks is the flat list this replaces). The step's own sub-label is
+dropped when it only repeats the header above it — a routine filed under no
+area borrows its own name for one, and the line read "Morning routine" under
+every step of the morning routine.
+
+**Today's steps tick off here**, inside the header, writing to `plan.logged` —
+the same store the Today step reads, so the two agree rather than keeping two
+tallies of the same morning. Only today: a tick is a record of something you
+did, and a checkbox on Thursday invites a log that says you did Thursday on
+Monday. Other days show their steps read-only, and the header carries "1/4" for
+today and a plain count for the rest.
+
+**Which view opens first is decided by the plan.** The day view leads, since it
+is the one you work off — but it can only draw what has been given days, and a
+plan whose steps say "5× a week" and name no Tuesday would open on seven cards
+reading "Nothing on". That plan opens on the week grid instead. Once somebody
+picks a view, their pick stands.
 
 **Milestones and experiences are not in it, on purpose.** Reported as: "milestones
 are not that, they are separate from what we track each week." They are right —
@@ -1147,8 +1196,12 @@ insert paths write it now.
 
 ### Verified
 
-`tests/unit/goals/northStarTrack.test.ts` (21) covers the mapping, the tag, the
-ordering and the archive exemption. `tests/e2e/life-mastery-track.spec.ts` runs
+`tests/unit/goals/northStarTrack.test.ts` covers the mapping, the tag, the
+ordering and the archive exemption, and — for the grouping — that a routine's
+steps land under it rather than flat, that headers sort by the clock with the
+unplaced ones behind them, that two routines sharing a label stay apart, that
+drivers gather into one group at the end, and that a group's "1/4" counts the
+day's own ticks and never counts a driver. `tests/e2e/life-mastery-track.spec.ts` runs
 the crossing against the real database on the shared test user: the list reads
 back before anything is written, the push creates three goals of three shapes,
 the why arrives with them, a second push from a fresh load finds them instead of
@@ -1174,6 +1227,48 @@ goal list. Serial, because both tests push the same plan to the same account.
 - **Nothing pushes back.** Ticking a goal off in the hub does not mark anything
   in the plan. The plan is what you decided; the hub is what you are doing.
 
+## Wired into the product
+
+It was a test page. It is now the goal flow the product actually uses, and the
+setup wizard it replaced is archived rather than deleted.
+
+| where | what is there now |
+|---|---|
+| `/dashboard/goals/plan` | **Life Mastery, live.** Same guards the wizard had (signed in, paid), standalone shell, back link to the hub instead of to `/test`. `?step=<tab>` opens a step — an unknown step opens at the start rather than 404ing |
+| `/dashboard/goals/setup` | redirect to `/dashboard/goals/plan`. Kept because it is in bookmarks, in the mobile tab bar's hidden-route list and in old links |
+| `/dashboard/goals` | an empty account redirects to the plan, not the wizard. The hub's "Your plan" button and its "Life Mastery plan" menu item both open it |
+| `/test/archive/goal-setup` | **the old onboarding, still working.** Not a mock: it writes real goals to the account and returns to the real hub, exactly as it did in the product. Listed under Archives on `/test` |
+| `/test/life-mastery` | unchanged — the same flow, with its `/test` back link |
+
+The three e2e specs that cover the wizard (`goals-tour`, `mobile-goals`,
+`goals-cross`) now point at the archive route, so the coverage moved with the
+flow instead of being deleted with the URL.
+
+**Nothing about the flow itself changed.** It is still localStorage-first —
+twelve of thirteen steps touch no API — and Track is still the one step that
+writes, pushing `ns:<run>:<goal>` rows into `user_goals`. Being live means the
+account is there when Track is pressed, not that anything else now needs one.
+
+### The one thing and this season, on the tracking dashboard
+
+Reported from the page: "I want it to go on this page, keeping the old
+functionality, but linked to the new way of doing things. I also want the one
+and our season's priority at the top."
+
+`SeasonBand` sits above the stats on `/dashboard/tracking`: the one thing, the
+season's areas as coloured chips, "N of M done today" and a link straight into
+Today (`?step=today`). Everything already on that page is untouched.
+
+Two decisions in it worth keeping:
+
+- **It reads the plan where the plan lives** — localStorage, the same key the
+  flow writes. So on a second browser it says "build your plan" rather than
+  pretending the account has none. It costs no request.
+- **An untouched plan counts as no plan.** Merely opening the flow writes one,
+  so "is there a key" would have put *Nothing named yet / No areas picked yet*
+  at the top of the dashboard of somebody who has never filled anything in.
+  `planIsUntouched` decides, and the invitation shows instead.
+
 ## The last step but one — Today: the only screen that asks what you did
 
 Everything else in the flow is a decision. This one assumes the deciding is
@@ -1186,16 +1281,78 @@ inputtable. A plan that only accepts the sessions it predicted quietly
 under-counts the weeks somebody actually had: approaches done on an unplanned
 Wednesday still happened.
 
+**Three lists, because the plan gives three answers about today.** Reported as:
+"I need to be able to differentiate between things I am supposed to do today,
+things I might do today, and things from my weekly or monthly or yearly list
+that I might check off." `TodayItem.when` was a boolean and the middle answer
+fell into the false half — the weekly review and the piece of content written
+once a week sat in "everything else that runs" beside Thursday's stack, which
+reads as *not your problem today* for the two things that are exactly today's
+problem if today is the day you do them. `todayWhen` now returns three:
+
+| `when` | what the plan said | where it goes |
+|---|---|---|
+| `today` | days include today, or seven a week | today's list, and today's count |
+| `anyDay` | a rate naming no day: once a week, twenty a week; every driver | **Any day this week** — tickable, not counted against today |
+| `otherDay` | placed, and placed elsewhere | **On other days** — still tickable, since you may have done it anyway |
+
+**Every row says how often it runs** (`cadenceLabel`): "Every day", "Weekdays",
+"Mon · Thu" while the days still fit on a line, "Once a week", "3× a week", and
+a driver's own unit — "20 approaches a week". A business routine holding "one
+most important task" and "write a piece of content" as identical rows, one
+daily and one weekly, with nothing on either saying which, is a list that
+invites a tick on the wrong day.
+
+**Every header has a way out of the list.** You find out a routine is wrong by
+running it, and the screen where you run it is this one — 07:00 turns out to be
+a 21:00 thing, the weekly review wants a day. Each group header carries a
+`change` link: a routine opens **expanded, on the Systems step** (the same
+`setOpenRoutineId` + `setTab` jump the wheel and the area dialogs make), the
+driver group opens Systems, and the section below opens Experiences. Before
+this, Today was tick-only and the sole way out was "not counted yet" on an
+unpushed driver.
+
+**And one folded section for what is not a rhythm at all** (`standingItems`):
+milestones, soonest date first, and the experiences after them. Only the
+experiences tick — they carry `done`/`doneOn` on the plan, so a tick has
+somewhere true to live. A milestone does not: its progress is the goal row in
+the hub once pushed, and a second tick here would be a second tally disagreeing
+with the first, the same trap the unpushed drivers avoid. Neither counts
+towards today, for the reason neither is in the week grid.
+
+**Both lists are grouped, not flat**, by the same `trackGroups` the schedule
+uses — one header per routine, in clock order, steps folded inside, and the
+driver group last. Reported against the old flat version: nineteen lines
+reading "Read your north star out loud — Morning routine · 2 min" hide the four
+stacks they belong to, and the routine name repeated under every row is the
+header the list was missing. It is a header now, carrying the clock time and
+"1/3" for the day; the row underneath keeps only what the header does not, its
+minutes. Today's list opens; "everything else that runs" stays folded, since it
+is by definition what did not come up today. `groupSummary` lives in the
+service beside `trackGroups` so the two screens cannot drift apart on the
+wording.
+
 ### Two stores, and the row says which one it is writing to
 
 - **A routine step is not a goal** and never becomes one — "cold shower" is a
   line in a morning stack with nothing on the other side to count it. Its tick
   lives on the plan, in `plan.logged` (date → step ids), beside the step.
 - **A driver IS a goal.** Once pushed on the track step it is a row in
-  `user_goals` with a target, a period and a weekly reset already built, so the
-  count goes there: `POST /api/goals/{id}/increment`, then a re-read rather than
-  a local guess, because the goal may have rolled into a new week between the
-  page loading and the button.
+  `user_goals` with a target and a period, so the count goes there:
+  `POST /api/goals/{id}/increment`, then a re-read rather than a local guess,
+  because the goal may have rolled into a new week between the page loading and
+  the button.
+- **The week the count belongs to is `period_start_date`, and it expires.**
+  `current_value` is the count for that period and no other, so it is rolled
+  before it is read: `rollGoalPeriods` runs in `GET /api/goals` (what Today
+  fetches), in `GET /api/goals/tree`, and inside `incrementGoalProgress` so a
+  `+1` cannot land on a week that is over. Weeks are Monday-based **in the
+  user's timezone** — a count runs to Sunday 23:59 and starts again at Monday
+  00:00 — and the boundary is formatted off the wall clock (`periodStartFor`),
+  never via `toISOString`, which converts to UTC first and moves the day.
+  Today showed last week's number as this week's for exactly as long as
+  `/api/goals` did not roll. Pinned by `tests/unit/goals/goalPeriodRoll.test.ts`
+  and `tests/unit/goals/goalsReadRolls.test.ts`.
 - **A driver that has not been pushed is shown and cannot be counted**, with a
   link to the step that fixes it. It deliberately gets no local tally: a second
   count would disagree with the real one the moment it was pushed, and the loser
@@ -1213,6 +1370,136 @@ Under it, one free-text line about the day (`plan.notes`, by date), committed on
 blur rather than on each keystroke — it sits under a list whose every row
 re-renders on a save, and typing a paragraph through that is typing into a page
 that moves.
+
+### Your own text fields
+
+Reported from the page: "something like my daily thing I track of 'one key
+learning of today' or these kind of text fields — allow me on the Today page to
+assign a text field to whatever goals I want."
+
+The plan could count a thing, rate an area and hold one note about the whole
+day. None of those is a question hung off the goal that provoked the answer,
+and that is the entry most people already keep by hand.
+
+So: **any number of named text fields, each attached to whatever it belongs
+to** — a driver, a routine step, a milestone, an experience, or the day itself
+— declared once on the plan (`plan.fields`) and answered by date
+(`plan.journal[date][fieldId]`). A field appears as a write box on its own
+row, so "one key learning" is written next to the thing that taught it; the
+ones attached to the day sit under the day's note.
+
+**Made in one place, answered everywhere.** Naming a field, moving it and
+deleting it happen in *Your own text fields* at the bottom of the screen, so no
+row on the list above carries three controls it needs on the day it is set up
+and never again. The picker (`fieldTargets`) offers every part of the plan
+grouped by the header it appears under on Today — including milestones and
+experiences, which the week grid never draws.
+
+**A new field starts unnamed and attached to the day.** Nothing is written on
+anybody's behalf: the placeholder suggests "One key learning of today" and the
+label stays empty until somebody types one.
+
+**What happens to the writing** is the part that decides whether this is safe
+to use:
+
+| event | the answers |
+|---|---|
+| the question is renamed | untouched — they are keyed by field id and date, not by label |
+| the thing it was attached to is deleted | untouched; the field **re-homes to the day**. `logged` prunes a tick whose step is gone and that is right for a tick, but deleting months of writing to tidy up a dangling id is not a trade the plan gets to make |
+| the field itself is deleted | deleted with it, deliberately — an entry keyed to a field nothing can name is unreadable and uneditable, so keeping it keeps nothing. The button says so |
+
+**A folded section opens when it holds a box.** The standing section and the
+other-days list are closed by default, which is right for rows you are not being
+asked about today. A text field is being asked about today wherever it hangs, so
+attaching one to a milestone opens the section it landed in — watching it vanish
+is the same bug as never having added it.
+
+Written like the day note: held locally, committed on blur, Enter keeps it. The
+box saves on blur rather than on each keystroke because it sits inside a list
+whose every row re-renders on a save; Enter is handled where it stands rather
+than through `SentenceBox`, which saves on every keystroke, and the hint string
+is imported from it so the two cannot come to say different things about the
+same key.
+
+**Two kinds of field, because a row can run in two directions** (`NsFieldKind`):
+
+- **Write today** — it asks you something and you answer it. "One key learning
+  of today."
+- **Read it back** — it shows you something you already wrote. Reported from
+  the page: "I have writing like 'read my north star' — I want to see that I
+  want to read my north star and immediately be able to read it." As a tick on
+  its own that row is useless: the paragraph it names is four steps away, so
+  the step either sends you off the screen at 07:00 or gets ticked without
+  being done. The paragraph goes **on the row**, resolved live by
+  `readSources` — there is one copy of it, not a copy and a stale quote, so
+  editing the star changes what the morning shows.
+
+`readSources` offers the star, every answered star/review prompt (the
+affirmations, the identity, the standards, the why), the values in order, each
+area's 10 / purpose / identity, and each goal's why, sentence, cost and
+reasons — **only where something has actually been written**, since a picker
+full of blank promises is how somebody attaches a row to nothing and reads an
+empty box every morning. A source that is gone or empty says so on the row.
+Flipping a field between the two kinds never touches its answers: one mis-click
+on a dropdown must not be how a month of entries disappears.
+
+**The run of answers, which is the whole reason to write the same line daily.**
+Reported as: "I want to be able to write my key learning directly, tick that it
+is done, but also easily access past responses." They existed — `plan.journal`
+is keyed by date — and had nowhere to be seen. Every write box now carries a
+folded "N earlier days" (`journalHistory`, newest first, today left out because
+the box above already holds it).
+
+### Sub-steps: the to-do list under a bigger weekly thing
+
+Reported from the page: "I have a weekly thing of creating content. That's
+really a bigger thing… I want to add sub-steps to it, so I can generate my own
+little to-do list of actions to take in order to complete that main action. It
+is a little different than workout 5× a week, because that's just the thing
+itself."
+
+Not every weekly line is the same size. "Gym 5× a week" **is** the thing;
+"write a piece of content" is four things wearing one title, and a list that
+draws them identically leaves the second one un-startable on a morning with
+twenty minutes in it. So anything on Today — a driver, a routine step, a
+milestone, an experience — can carry an ordered checklist of its own
+(`plan.subSteps`, added inline on the row, reorderable, renameable in place).
+
+**The ticks go in `plan.logged`, beside the routine steps' own.** A sub-step
+done today is the same kind of fact as a step done today, and a second store
+for it would be a second answer to one question. The parent row shows "2/5
+steps"; that count is deliberately **not** added to the day's own total, or a
+day with one big item broken into six would read as six things to do.
+
+**Where it differs from a field**: a field re-homes to the day when its target
+is deleted, because a question stands on its own. A sub-step does not — "write
+the outline" is defined by the thing it breaks down — so the loader drops
+orphans, and deleting one takes its tick with it (ids come off a monotonic
+counter, so a stranded tick would count a thing that no longer exists forever).
+
+### Picking the days, where the days occur to you
+
+Days were only choosable on the week grid, which is a different screen from the
+one you are on when you decide. Reported as: "in the routine itself, users
+should be able to select which days they want to work — same with me inputting
+'write on book 2× a week'. It is fine that it is just 2× a week, randomly, but I
+should also always be able to assign it a specific day."
+
+So every step in `RoutineCard` carries seven toggles under it (`StepDays`).
+Picking days calls `placeStep`, which keeps `daysPerWeek` in step with what was
+picked and keeps the step's own `startMin`, so choosing Tuesday does not lose
+07:00. The step then lands on those days' lists on Today and in the schedule's
+day view; with no days it stays a rate on no particular day, which is a finished
+answer and still the default.
+
+**The rate box disappears once days are chosen**, because the days are the rate
+at that point and two controls saying different numbers is a step that cannot
+say how often it runs.
+
+**The one thing this cannot express** is "twice a week, one of which is
+Tuesday". A step is either a rate on no day or a set of named days; naming one
+day of a 2×/week step makes it 1×/week, which the picker says out loud beside
+the toggles rather than doing quietly.
 
 ### Old saves
 
@@ -1974,3 +2261,253 @@ list in the project already uses — same role, no new context. The old arrows u
 `ChevronDown` rotated, which is how `PriorityBadge` and `RoutineCard` do reorder;
 `ArrowUp`/`ArrowDown` were rejected then as a new context for an icon in use
 elsewhere.
+
+## The last step — Everything: the plan on one page
+
+Twelve steps write this plan and not one of them can show it. Each holds a
+quarter of the answer — the paragraph on step 1, the identity and the
+affirmations under it, the 10s on step 2, the values on step 9 — and the only
+way to re-read the lot was the plain-text dump folded away at the bottom of
+every tab. That dump is the right *content* and the wrong *object*: a
+`<pre>` block of shouted headings is an export, not a page you go to on a
+Tuesday morning to remember who you decided to be.
+
+Step 13 is that dump laid out. `RecapTab`, wired in `NorthStarFlow`, copy in
+`RECAP_COPY`.
+
+**Read first, edit second.** Everything renders as prose. The steps that wrote
+this material are forms and should be — boxes are what you want while you are
+deciding — but a box is a bad way to be *reminded* of something, and "what did I
+say my values were" is not a question anybody answers by scrolling past twelve
+labelled textareas. So each block reads back, and each carries one `edit` link
+that swaps that block, and only that block, into the editor its writing step
+uses: the north star's twelve-row box, `ValuesWork mode="order"` with its drag
+list and its pair questions, `GoalOverview` with the quick-add above it. One
+block is in edit mode at a time, so the page never turns back into a form.
+
+**Nothing is counted on it.** No rings — `recap` is out of `SCORED_TABS`, and
+`stepState` returns `empty` for it however full the plan is, because every word
+on it was written on another step and is scored there. No "3 of 5 answered", no
+list of what is missing inside the document. A page whose whole job is being
+somewhere worth returning to must not greet you with what you owe it. (The
+shell's own "still to fill in" panel still renders under it, at the very bottom,
+after the whole document — that is a footer, not a greeting, and reading the
+plan back is exactly when a gap is worth naming.)
+
+**What is open on arrival, and what is folded.** Open: the north star and its
+why, the one thing, who you are, the values. Those are what somebody came here
+for. Folded: the areas, the goals, the routines, the experiences, the closing
+answers — long, situational, and a page that opens as a list of closed headings
+has reminded nobody of anything.
+
+**The areas open their own dialog.** Clicking an area card sets `nowAreaId` and
+`AreaDialog` renders over the recap, exactly as it does on step 2 — the same
+rating, the same 10, the same values. Nothing about an area is re-implemented
+here; the card is a read-back and a door.
+
+**The one thing is the sentence, not the ticked goal** (2026-08-19, "it takes
+flat bench as my one thing, even though i input 100 days of no weed"). Two
+fields carry almost the same name: `seasonFocusId` is the goal you would keep if
+you dropped everything else, ticked weeks ago on a goal card, and the step 3
+sentence is what every other surface in the flow calls the one thing
+(`MilestonesTab`, `FocusTab`, both via `ONE_ANSWERS.oneThing`). The recap read
+the first and printed it as the answer to the second. It reads the sentence now,
+with `SEASON_FOCUS_COPY.banner(...)` under it naming the marked goal for what it
+is — dropping it would have lost a real answer to a different question.
+
+**The tick lives on the thing you just read.** Four parts of this plan are also
+daily practices — reading the north star, saying your identity lines, saying
+your affirmations, reading the whole driving force — and all four are already
+steps in the routine libraries that already tick off on Today. Before this,
+somebody who had just read the paragraph here had to leave the page, open Today,
+unfold the stack and find the line whose entire content they had just done.
+
+- `RECAP_PRACTICES` maps each block to its library steps, best candidate first,
+  plus the distinctive phrases that recognise a step somebody wrote in their own
+  words ("Read my north star before bed") so the page never offers a second copy
+  of something already on the list.
+- `practiceState(plan, key, date)` returns everything running it and, **only
+  when nothing is**, one offer. `trackPractice(plan, blueprintId, stepId)` turns
+  the step on, adding its routine first if the plan has not got one — which only
+  the identity lines need, since they live solely in the manifestation stack.
+- The tick writes `plan.logged[date]`, keyed by step id: **the same store the
+  Today step writes to**, so the two screens can never disagree about whether it
+  happened. It is never a second tally.
+- Pressing the offer does both halves at once — turn it on, tick today — because
+  somebody pressing it has just read the thing.
+
+Tests: `tests/unit/goals/northStarRecap.test.tsx` renders it and asserts what is
+on the screen without clicking, that the values keep their rank order, that the
+empty plan says so instead of drawing empty blocks, the two rules above, that
+the one thing is the sentence and not the ticked goal, and the whole practice
+path — offer, no-duplicate, own-words match, shared log, routine added only when
+it has to be.
+
+## A field can be a door, and the door brings you back
+
+Reported from the page (2026-08-21): *"I want to be able to select a field and
+change it. Like my north star. I want to click that, and then go to the north
+star, so that field should ultimately ALWAYS be coded as 'when user clicks that,
+they go to the place where the information is, and then they get an option to
+read it, and easily track it, and go back to where they were' — but importantly,
+users should be able to decide that a field is that type of field themselves."*
+
+A read field **quotes** the thing on the Today row. That is right for a
+paragraph you re-read at 07:00 and wrong for anything you might want to *change*
+while you are looking at it: a goal's date, its curve, how many times a week it
+runs. Those controls exist, three tabs away, and a blockquote on Today is a
+picture of them.
+
+So a field has a third direction. `NsFieldKind` is `"write" | "read" | "go"`,
+picked in the same Kind dropdown on the same field the user already owns — not a
+second kind of thing to add — and read and go share one source picker, because
+the difference between them is what happens when you arrive, not what you are
+allowed to point at.
+
+**Every readable piece of the plan now says where it lives.** `ReadSource.home`
+is an `NsPlace` — a tab, optionally an area and a goal to open, optionally a DOM
+id to scroll to. Every jump in this flow used to be hand-written at its call
+site (`setPlanAreaId(x); setNowGoalId(y); setTab("systems")`), which is fine
+while the destination is known when the code is written and impossible the
+moment the *user* picks one. `goTo(place, errand)` in `NorthStarFlow` is the one
+way to arrive anywhere.
+
+Where each source goes: the star to step 1, scrolled to the paragraph itself
+(`STAR_ANCHOR`) rather than the top of a step holding five boxes; a star
+question to step 1 and a review question to Commit, because the two prompt sets
+read alike and are written three steps apart; an area's 10, purpose and identity
+to that area's own dialog; a goal to its card, on the step that holds goals of
+its kind.
+
+**The errand travels with you.** A jump with no way back is a trapdoor, and a
+trapdoor is a door nobody uses twice. `ErrandRibbon` carries three things — what
+you came to do, the tick for it, and the way back — and the tick writes
+`plan.logged[date]` under the field's own id, the same store the routine steps
+use, so a thing ticked at the destination is ticked on the row you left. "Back
+to today" returns to the tab you came from and scrolls to that row
+(`id="field-<id>"`). "Stay here" drops the errand and leaves you where you are,
+which is the honest option once you have arrived and found something else to do.
+
+The ribbon renders **inside the two dialogs as well as on the page**: a modal
+makes everything behind it inert, so a way back left out on the page under an
+open goal card is one you can see and cannot click. `AreaDialog` and
+`AreaGoalsDialog` take a `banner` slot — a slot, not an errand prop, because
+neither dialog has any business knowing why it was opened — and closing either
+of them *while on an errand* is itself the way back, rather than stranding
+somebody on the assessment step wondering where Today went.
+
+**A go field carries its own tick, and that was a silent data bug.** A go field
+can hang on the day itself, where no step carries a tick for it. Its id
+therefore goes into `plan.logged` — and the loader parsed `fields` *after*
+`logged`, so every one of those ticks was pruned on the next reload as an
+unknown id. Silently: a dropped id looks exactly like a day you did nothing.
+Fields are parsed before `logged` now and registered in `loggableIds`. The
+loader also reads the kind off `NS_FIELD_KINDS` instead of `f.kind === "read"`,
+which would have quietly downgraded every go field to a text box overnight.
+
+### The rows that are goals now open as goals
+
+The driver rows and the milestone rows on Today **are** plan goals —
+`TrackActivity.id` and `StandingItem.id` are both the plan goal id — and until
+now the only thing you could do to one from this screen was count it. Everything
+you find out on Today is a change to the goal card: the date is wrong, four a
+week is three, the curve starts too high. The title opens it, with the same
+errand ribbon carrying you back, and a milestone's date chip opens it too —
+amber when there is no date, because "no date yet" is the commonest thing that
+list reports and the fix was three clicks and a search away.
+
+`GoalCard`'s `perWeek` was printed, not edited: the one number on the card that
+says how big the week actually is was the only one you could not change without
+deleting the goal and picking it again. Twenty approaches a week turning out to
+be twelve is the commonest thing anybody learns in the first fortnight.
+
+### "+1" was not a control anybody could read
+
+Reported the same day: *"I hate the '+1' thing, it is just not intuitive at
+all."* A bare `+1` sat at the right-hand end of a driver row with "3 of 20 this
+week" buried mid-sentence in the grey line above it, between the cadence and the
+area name. So the one control on this screen that writes to somebody's *real*
+goals looked like the smallest thing on it, and what it would do to the count
+was on a different line from the count.
+
+Now: the count and a bar for it sit under the title where the eye already is; a
+bar only when there is a target to be a fraction of, because a bar with no end
+is a picture of nothing. The button says **Log one** in words. **Undo one** is a
+quiet link that only exists once there is something to take back — an undo is
+not a control you need to see before you have done anything.
+
+### The first build put the control in the wrong place
+
+Reported on trying it (2026-08-23), after clicking "Read your north star out
+loud" on Today and staying exactly where they were: *"i still dont go there when
+i click it on the today page… and i cant see where i would change it."*
+
+Both halves were one mistake. A row **could** be a door — but only by building a
+second thing to sit next to it, from a section at the bottom of Today called
+"Your own text fields". That is neither where somebody is looking nor a name
+that means *this is where doors are made*, and it asks somebody staring at a row
+that already says the right words to go and construct a duplicate of it.
+
+So the **step itself** carries the destination. `NsRoutineStep.goesTo` is a
+`readSources` id, the row says where it goes, and the control to set or change
+it is on the row — `GoesTo` in `TodayTab`, drawn as a sibling of the row and
+never inside it, because a step's row is a `<label>` wrapping its checkbox and a
+button inside that label would tick the step every time somebody tried to open
+the thing it names.
+
+**The canon rows arrive already wired.** `inferStepDestination(title)` matches
+on `RECAP_PRACTICES`' phrases — the same list the recap uses to recognise a step
+somebody wrote in their own words — and `PRACTICE_DESTINATIONS` says which
+source each practice lands on: the star, the identity lines, the affirmations.
+`whole` is deliberately null: the driving force **is** the whole document, and
+aiming that row at one of its five parts would be worse than letting somebody
+choose. Matching on the phrase rather than a library id means "Read my north
+star before bed", which is in no library, works too.
+
+**Absent is not null, and that distinction is the migration.** A step saved
+before this existed has no key, and the honest thing for a row that has said
+"read your north star out loud" for months is to arrive pointing at it — so the
+loader infers when the key is absent. `null` is a destination somebody
+*cleared*, and inference must never argue with that. Inference also runs when a
+step is created (`stepFromLibrary`, `addCustomStep`) and **never on rename**:
+silently rewiring a row because its new title happens to contain two words is
+worse than leaving it where it was.
+
+The step's own id is what travels as the errand's `tickId`, so *Mark it done* at
+the destination ticks **the row**, not a second thing beside it.
+
+### Verified
+
+In the browser on a real saved plan, 2026-08-21: added a field, set its kind to
+*Go to it*, pointed it at the north star and hung it on the "Read your north
+star out loud" step; the row drew with its tick, its source line and Open;
+Open landed on step 1 scrolled to the paragraph with the ribbon up; *Mark it
+done* flipped to *Done today*; *Back to today* returned to the row, ticked, with
+the ribbon gone. Reloaded — the kind, the source and the tick all survived. A
+driver title opened its goal card in the dialog with the ribbon inside it, and
+*Back to today* closed the dialog and returned. The counter, against a stubbed
+goals response: 3 → *Log one* → 4 → *Undo one* → 3, and *Undo one* disappears at
+0.
+
+And on the same plan, 2026-08-23, on the row itself rather than a field built
+next to it: the existing "Read your north star out loud" step loaded already
+carrying `goesTo: "star"` with nothing configured; the row drew *→ Your north
+star, the paragraph* with *change* beside it, and every other row drew *send this
+somewhere*; opening it landed on step 1 at the paragraph with the ribbon up;
+*Mark it done* ticked **the step** (`logged` gained `qa2`) and *Back to today*
+returned to the row, ticked. Pointing a bare row at "What a 10 looks like —
+Fitness" opened the Fitness dialog with the ribbon inside it. Clearing a
+destination back to *Nowhere* survived a reload as `null` rather than being
+re-inferred.
+
+Tests: `tests/unit/goals/northStarTrack.test.ts` — "a field that takes you to the
+thing instead of quoting it" (every source has a destination the rail can draw,
+the star lands on the paragraph, the two prompt sets land on their own steps,
+areas and goals open their own dialogs, the goal itself is offered even when
+nothing has been written about it, the kind and the tick survive a round trip,
+flipping read → go keeps what it points at) and "a routine step that goes to the
+thing it names" (the canon rows and somebody's own wording both infer, a guess
+is refused where there is no single answer, a step arrives wired, an old plan
+migrates but a clearing is never overridden, a rename never rewires, a
+hand-picked destination survives a reload, and a destination whose source is
+still empty resolves to nothing rather than a door onto a blank page).

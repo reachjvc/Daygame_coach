@@ -216,10 +216,27 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
             <span className="text-[11px] text-zinc-300 tabular-nums w-11 text-center">{goal.daysPerWeek}×/wk</span>
             {/* HOW MUCH, WHEN THE DRIVER COUNTS THINGS. The stepper is days and
                 only days, so a goal meaning twenty approaches showed a 3 and
-                said nothing about the twenty. */}
+                said nothing about the twenty.
+
+                It was printed, not edited — so the one number on the card that
+                says how big the week actually is was the only one you could not
+                change without deleting the goal and picking it again. Twenty a
+                week turning out to be twelve is the commonest thing anybody
+                learns in the first fortnight. */}
             {goal.perWeek != null && (
-              <span className="text-[10px] text-zinc-500 tabular-nums shrink-0">
-                {goal.perWeek}{goal.unit.trim() ? ` ${goal.unit.trim()}` : ""}/wk
+              <span className="flex items-center gap-1 shrink-0">
+                <input
+                  type="number"
+                  min={1}
+                  value={goal.perWeek}
+                  onChange={(e) => {
+                    const n = Number(e.target.value)
+                    handlers.onUpdate(goal.id, { perWeek: Number.isFinite(n) && n > 0 ? Math.round(n) : null })
+                  }}
+                  aria-label={`How many ${goal.unit.trim() || "times"} a week for ${goal.title}`}
+                  className="w-14 bg-white/5 border border-white/10 rounded-md px-1.5 py-1 text-[11px] text-zinc-200 focus:outline-none focus:border-white/25 tabular-nums"
+                />
+                <span className="text-[10px] text-zinc-500">{goal.unit.trim() ? `${goal.unit.trim()}/wk` : "/wk"}</span>
               </span>
             )}
             <button

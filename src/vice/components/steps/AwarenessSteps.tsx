@@ -12,8 +12,9 @@
  */
 
 import { useState } from "react"
+import Link from "next/link"
 import { AlertTriangle, ArrowRight } from "lucide-react"
-import type { ViceCriterionAnswer } from "../../types"
+import type { ViceCriterionAnswer, ViceToolId } from "../../types"
 import { COUNT, DOORS, FEEDBACK, INCONGRUENCE, TRAJECTORY, USAGE, criteriaFor } from "../../data/awareness"
 import {
   criteriaBand,
@@ -428,7 +429,8 @@ export function StepDoors({ step, state, on }: StepProps) {
 
       <div className="grid gap-2.5 mt-5">
         {DOORS.options.map((option) => {
-          const shared = "rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left hover:border-violet-400/40 hover:bg-violet-500/[0.05] transition-colors group block w-full"
+          const shared =
+            "rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left hover:border-violet-400/40 hover:bg-violet-500/[0.05] transition-colors group block w-full"
           const inner = (
             <>
               <span className="flex items-center gap-2 text-[15px] font-semibold text-zinc-100 group-hover:text-white transition-colors">
@@ -438,17 +440,21 @@ export function StepDoors({ step, state, on }: StepProps) {
               <span className="block text-[12.5px] text-zinc-400 mt-1 leading-relaxed">{option.help}</span>
             </>
           )
-          if (option.to === "help") {
+          // Tools open in place; flows navigate. Both used to be raw anchors
+          // pointing at the hub, which meant a full page reload and, after the
+          // hub was regrouped, a landing spot where the thing they had just
+          // chosen was two taps further down.
+          if (option.tool) {
             return (
-              <button key={option.id} type="button" onClick={on.openHelp} className={shared}>
+              <button key={option.id} type="button" onClick={() => on.openTool(option.tool as ViceToolId)} className={shared}>
                 {inner}
               </button>
             )
           }
           return (
-            <a key={option.id} href={option.to === "map" ? "/test/quit-vice/map" : "/test/quit-vice"} className={shared}>
+            <Link key={option.id} href={`/test/quit-vice/${option.flow}`} className={shared}>
               {inner}
-            </a>
+            </Link>
           )
         })}
       </div>

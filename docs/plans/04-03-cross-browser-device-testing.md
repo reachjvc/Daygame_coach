@@ -162,7 +162,7 @@ Also add mobile authenticated projects:
 
 Tests (run on Firefox + WebKit):
 1. Login → redirect to dashboard → session cookie persists across navigation
-2. Login → navigate to /dashboard/goals → server-side redirect to /dashboard/goals/setup when 0 goals
+2. Login → navigate to /dashboard/goals → server-side redirect to /dashboard/goals/plan (Life Mastery) when 0 goals
 3. Login → navigate to protected route → verify no auth redirect loop
 4. Login → API call (create goal via form) → verify cookie sent → goal created
 5. Login → refresh page → session maintained (not logged out)
@@ -269,7 +269,7 @@ Tests (run on iPhone 14 + Pixel 7, authenticated):
 For every beta page, verify `document.documentElement.scrollWidth <= document.documentElement.clientWidth`:
 1. /dashboard
 2. /dashboard/goals
-3. /dashboard/goals/setup (each step)
+3. /test/archive/goal-setup (each step) — the archived wizard
 4. /dashboard/tracking
 5. /dashboard/tracking/session
 6. /dashboard/tracking/history

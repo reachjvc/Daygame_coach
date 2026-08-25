@@ -1,7 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard, Waves } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard, Waves, Archive, Aperture } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -144,9 +145,9 @@ const testPages = [
     icon: Signpost,
   },
   {
-    name: "Life Mastery (North Star)",
+    name: "Life Mastery (North Star) — CANON",
     href: "/test/life-mastery",
-    description: "Three tabs: north star + the full values exercise (two lists, pairwise ordering, conflicts) and the identity work → one surface with the area wheel, your 10 and rating in each, goals with curves, ramps and dates, plus the routine stack → review the goals against your 10",
+    description: "The canonical life-planning flow, and the only one not in Archives. Thirteen steps, all reachable at any time: north star and values → your 10 and rating in each of the twelve areas → the one thing → the fork (want / will do / one routine) → templates, custom weeks, systems, experiences → focus, values, commit → track (pushes into real goals) → today",
     icon: Telescope,
   },
   {
@@ -198,6 +199,12 @@ const testPages = [
     icon: Waves,
   },
   {
+    name: "Goal setup wizard (the old onboarding)",
+    href: "/test/archive/goal-setup",
+    description: "What every new account used to land in, before Life Mastery took the job at /dashboard/goals/plan: three paths (fast track / build your own / browse), the catalogue, the driven tour, the summary. Still live — it writes real goals to your account and returns to the real hub",
+    icon: Aperture,
+  },
+  {
     name: "Toggl-style time tracker",
     href: "/test/toggl",
     description: "Full Toggl Track clone: timer + favourites + shortcuts, calendar view with Google Calendar import, four report types, project dashboards with forecasts, team, approvals, Pomodoro & idle detection",
@@ -205,7 +212,50 @@ const testPages = [
   },
 ]
 
+/**
+ * WHAT THE ARCHIVE TAB HOLDS.
+ *
+ * Every earlier attempt at the same problem the North Star flow now owns:
+ * turning a life into areas, areas into goals, and goals into something you
+ * do on a Tuesday. They are kept reachable rather than deleted, because each
+ * one is the record of a decision — but none of them is canon, and nothing
+ * new should be built on them or copied out of them without saying so.
+ *
+ * /test/life-mastery is the canon and is deliberately NOT in this list.
+ *
+ * Moving a page between the two tabs is one line here. Nothing else reads it.
+ */
+const ARCHIVED_HREFS = new Set<string>([
+  // The life-mastery lineage proper — the same flow, earlier
+  "/test/life-mastery-v1",
+  "/test/vision-plan",
+  "/test/life-direction",
+  // Goal-framework attempts the North Star flow absorbed
+  "/test/new-goals",
+  "/test/goal-model",
+  "/test/goal-scorecard",
+  "/test/goalsv11",
+  "/test/old-variants",
+  // The onboarding Life Mastery replaced in the product
+  "/test/archive/goal-setup",
+  // Pieces of those flows, explored on their own
+  "/test/values-curation",
+  "/test/curve-customization",
+  "/test/curve_editor",
+  "/test/direction-colors",
+  "/test/tour-variants",
+])
+
+const ARCHIVE_NOTE =
+  "Earlier attempts at the flow that now lives at /test/life-mastery. Kept for the record and for the decisions inside them. None of these is canon: don't build on one, and don't copy a life-area list, a goal shape or a curve out of one without checking it against the canon first."
+
+
 export default function TestPagesIndex() {
+  const [tab, setTab] = useState<"current" | "archive">("current")
+  const current = testPages.filter((p) => !ARCHIVED_HREFS.has(p.href))
+  const archived = testPages.filter((p) => ARCHIVED_HREFS.has(p.href))
+  const shown = tab === "current" ? current : archived
+
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-4xl px-8 py-12">
@@ -226,9 +276,39 @@ export default function TestPagesIndex() {
           </p>
         </div>
 
+        {/* Current / Archives. Two tabs rather than two pages, so the archive
+            is one click from the thing that replaced it. */}
+        <div className="mb-6 flex items-center gap-2 border-b border-border">
+          {([
+            { id: "current" as const, label: "Current", count: current.length, Icon: Beaker },
+            { id: "archive" as const, label: "Archives", count: archived.length, Icon: Archive },
+          ]).map(({ id, label, count, Icon }) => (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              aria-current={tab === id ? "page" : undefined}
+              className={`-mb-px flex items-center gap-2 border-b-2 px-3 py-2 text-sm transition-colors ${
+                tab === id
+                  ? "border-primary text-foreground font-medium"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Icon className="size-4" />
+              {label}
+              <span className="text-xs text-muted-foreground">{count}</span>
+            </button>
+          ))}
+        </div>
+
+        {tab === "archive" && (
+          <p className="mb-6 rounded-lg border border-border bg-card/50 p-4 text-sm text-muted-foreground">
+            {ARCHIVE_NOTE}
+          </p>
+        )}
+
         {/* Test Pages Grid */}
         <div className="grid gap-4 md:grid-cols-2">
-          {testPages.map((page) => {
+          {shown.map((page) => {
             const Icon = page.icon
             return (
               <Link

@@ -65,6 +65,49 @@ Engine dispatches on `metricType`: load (linear/percentage_tm/double_progression
 - Also: straight-sets ↔ rep-range toggle (carries the reps across), per-lift weight step in the user's own unit, per-lift notes (reach the session prescription). **Priority = order**, not a separate field — an "importance" flag with no effect on what gets prescribed would be decoration; the order IS the session, and the first lift is marked `main`.
 - Own localStorage key `custom-program-v1`, not part of the plan: "start over" on the plan must not delete somebody's training week. Only the day names cross into the plan, and only once started.
 
+**YOUR OWN LIFTS ARE REMEMBERED, AND THEY ARE ONE LIFT (2026-08-19, reported: "if i add a new exercise, like one arm tricep, it should become auto-filled the next time… since i want to track progress on the individual lifts").**
+
+⚠️ **BUG FIXED: the same lift on two days was two lifts.** `addExercise` ran every add through `freshId`, so Bench Press on Push A and `lib_bench_press_2` on Push B were two entries in `exerciseState` — two working weights for one bar, drifting apart. Ids are how progression is tracked. It now **reuses the id when the lift already exists on another day**, and keeps the suffix only for the same lift twice in ONE day (top set + back-off), where the log has to tell the slots apart.
+
+- **`src/programs/customLifts.ts`** — a per-browser store (`custom-lifts-v1`), separate from the design's storage because a lift you invented outlives the week you invented it in. Deduped on id, newest first, capped at 200, and hostile input loses the list rather than the page.
+- **A "Yours (n)" tab** appears in the palette once you have made one, ahead of the body parts, with a per-lift **forget** button (removes it from the palette, never from a program already using it). Searching puts your own lifts above the pool — you named it, so if you are typing that name it is the one you mean.
+- **Identity was already deterministic**: `customLibraryEntry` derives the id from the name (`custom_onearmtricep`), so "One Arm Tricep", "one arm tricep" and "  One  Arm  Tricep  " were always one lift. Remembering it is what stops you retyping it; the id is what makes the progress accumulate.
+- Only `custom_`-prefixed lifts are remembered — the 153-lift pool does not need a copy of itself in localStorage.
+
+**BROWSE BY BODY PART, SWAP BY MOVEMENT PATTERN (2026-08-19, reported: "they are not all squats in squats… shoulder press isnt there, and dumbell shrug etc").**
+
+Almost nothing was actually missing. Shoulder Press and Dumbbell Shrug were both in the 153-lift pool, filed under **Vertical push** — not a place anyone looks. The palette used `MovementPattern` as its browse index, and that is the wrong index for FINDING a lift:
+
+- `pattern` answers *"what else could go in this slot"* → still drives the swap picker, unchanged.
+- **`BodyGroup` (new) answers *"where do I find it"*** → drives the palette tabs: Chest · Back · Shoulders · Arms · Quads · Hams & glutes · Calves · Core.
+
+`group` is **derived** from the pattern via `GROUP_FOR_PATTERN` plus a short `GROUP_OVERRIDES` list, not typed onto 153 rows — a hand-written group per row is 153 chances to file a lift where nobody looks. The overrides are the interesting cases: a Face Pull is a horizontal pull that belongs on a shoulder day. `lunge` folds into Quads because "Single leg" is a category only a coach browses under. Tab names now describe what a lift *trains*, so a Leg Press under **Quads** is no longer a lie the way a Leg Press under "Squat" was.
+
+Also added the machines the pool was genuinely thin on: Hip Abduction/Adduction, Glute Bridge, Frog Pump, Single-Leg Press, Smith Machine Lunge/Shoulder Press, Machine & Cable Shrug, Cable Rear Delt Fly (165 total). `customLibraryEntry` now takes a `BodyGroup`. Findability is locked by `tests/unit/programs/lifts.test.ts`.
+
+✅ **MIGRATION APPLIED (2026-08-19).** `20260818_program_custom_schedule.sql` pushed to remote (`supabase db push --linked`, project `vcjzbmtcgmjrvvklzqaq`) and confirmed — nothing pending. The CLI *is* available and the project *is* linked, contrary to the older note in this doc; `supabase migration list --linked` shows local-vs-remote state and is the way to check what a push would apply before running it.
+
+**`Stepper` VALUES ARE TYPABLE, NOT JUST TAPPABLE (reported: "i still cannot write another rep range, only click it down or up").** −/+ is right for 3→4 and punishing for 8→20. The middle is now a real input: typed text is held locally and committed on blur/Enter (Escape reverts), so typing "1" en route to "12" does not apply a one-rep prescription; stepping while a draft is open steps from what is on screen.
+
+**ADDING YOUR OWN EXERCISE IS A VISIBLE BUTTON (reported: "I also need to be able to add my own exercise").** `customLibraryEntry` already supported it, but the offer only appeared once you had searched for something the 153-lift pool did not have — which nobody does deliberately, so it may as well not have existed. There is now a **+ my own** button in the palette header; the lift is filed under the currently-selected body-part tab and goes into that program only.
+
+**LOGGING WHAT YOU ACTUALLY DID (2026-08-19).**
+
+- ⚠️ **BUG FIXED: `applyLog` progressed the day at the CURSOR, ignoring `log.dayId`.** Harmless while the app chose the session for you; wrong the moment day-picking exists — log Pull and bench went up because you rowed. It now resolves the day from the log (`dayIndexOf`), falls back to the cursor for the skip path (`dayId: ""`), and advances **from the day that was done** so out-of-order logging continues from there.
+- **A day picker on the session widget** — every session in the program, with its weekday, so the app's guess (cursor, or today's date) is a default rather than a rule. The alternate day's prescription is recomputed **on the client**: the engine is pure and the program + enrollment are already loaded, so it is a function call, not a round trip. The server still owns what happens on log.
+- **Weight per set is an input, not a label.** Only reps were editable; the weight was hardcoded from the prescription. A blank box falls back to the prescribed weight, never to 0 (which would log a barbell lift as bodyweight). Reps + kg per set were already the storage shape and already bridge to `workout_sets`.
+- **Rest days are labelled** in the widget rather than presented as today's work.
+
+**FINDABILITY FIXES (same session, both reported).** The disclosure that opened a day was a **fourth chevron** beside move-up/move-down/remove — four identical icon buttons, one of which was the only way to add a lift. Nobody found it. Now: a labelled **Add lifts** button, empty days open themselves and cannot be collapsed, and several days can be open at once. Separately, the rep RANGE was only reachable by opening the per-lift settings and flipping "Prescribed as" — there is now a **→ range / → fixed** switch on the row itself.
+
+**BUILD-YOUR-OWN IS AN OPTION ON THE TEMPLATES STEP, AND THE WEEK HAS WEEKDAYS (2026-08-19).**
+
+- **No separate Customize tab.** "Take a ready-made one" / "Build my own" is a `Segmented` at the top of the Templates program section — two answers to one question, behind one switch. The tab briefly in the rail asked people to choose between them before seeing either. `CustomizeTab.tsx` → `BuildYourOwn.tsx`; `customize` removed from `NorthStarTabId`/`TAB_ORDER`/`WORKSHOP_TABS`.
+- **`DayTemplate.weekday`** (ISO 1=Mon…7=Sun, `WEEKDAYS`/`isoWeekday` in `config.ts`). Weekday chips are always visible on the day card, not behind the disclosure — the week is the thing being designed. **One day per weekday**: assigning a taken weekday takes it off the other day and says so, rather than refusing the move.
+- **Two scheduling modes, decided by the program not a setting.** `isWeekdayAnchored` is ALL-OR-NOTHING; a half-assigned week is reported by `designProblems`, never interpreted. Anchored → `getTodaySession` picks the day matching today's date. Unanchored (every cited program, unchanged) → the cursor walks the list, so missing Tuesday does not skip Workout B.
+- **Rest days are real.** On an anchored week with nothing today, the prescription carries the *next* session flagged `restDay: true` + `scheduledWeekday`, so a 3-day week cannot silently become a 7-day one.
+- **Superset and drop sets moved onto the lift row** from behind the settings icon — same mistake as burying the lift picker: something you are asked about in the gym should not need a disclosure.
+
 **CLICKING IS THE WAY IN; WRITING IS A DRAWER (2026-08-18, after "i cant add lifts like a normal person… I didnt want to write in coding language using symbols, but just wanting to pick and click easily").**
 
 I misread the previous complaint. "Not humanlike to separate with a comma" meant *the picking should be easy*, not *let me type it*. Shipping a `3x8 @60` syntax as the primary input was the wrong fix — it is still typing, and now it is typing syntax.

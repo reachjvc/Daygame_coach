@@ -26,9 +26,11 @@ export default async function GoalsPage() {
     redirect("/dashboard")
   }
 
+  // Nothing on the account yet: the flow that fills it is Life Mastery now,
+  // not the archived setup wizard.
   const goalCount = await getUserGoalCount(user.id)
   if (goalCount === 0) {
-    redirect("/dashboard/goals/setup")
+    redirect("/dashboard/goals/plan")
   }
 
   return (

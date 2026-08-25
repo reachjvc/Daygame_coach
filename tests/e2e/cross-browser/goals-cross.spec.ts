@@ -16,7 +16,7 @@ test.describe('Cross-browser goals', () => {
   })
 
   test('setup wizard renders and path selection works', async ({ page }) => {
-    await page.goto('/dashboard/goals/setup', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goal-setup', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     // Step 1: Direction step visible

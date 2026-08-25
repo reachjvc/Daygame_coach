@@ -19,8 +19,8 @@ import type { UserTrackingStatsRow } from "./trackingTypes"
 import { getOrCreateUserTrackingStats, getWeeklyApproachQualityAvg, getHighQualityApproachCount } from "./trackingRepo"
 import { getScenarioStats, type ScenarioStats } from "./scenarioRepo"
 import { getISOWeekString } from "../tracking/trackingService"
-import { getTodayInTimezone, getNowInTimezone } from "../shared/dateUtils"
-import { shouldAutoFreeze } from "../goals/goalsService"
+import { getTodayInTimezone, getNowInTimezone, periodStartFor, type GoalPeriod } from "../shared/dateUtils"
+import { shouldAutoFreeze, isPeriodStale } from "../goals/goalsService"
 
 // ============================================
 // Duplicate Prevention
@@ -539,6 +539,11 @@ export async function incrementGoalProgress(
 ): Promise<GoalWithProgress> {
   const supabase = await createServerSupabaseClient()
 
+  // ROLL BEFORE YOU ADD. Without this a `+1` pressed on Tuesday lands on top
+  // of last week's total — the page can have been open since before the week
+  // turned over, and the count it is adding to is not this week's.
+  await rollGoalPeriods(userId, timezone)
+
   // First get current value
   const { data: current, error: fetchError } = await supabase
     .from("user_goals")
@@ -639,252 +644,128 @@ export async function resetGoalPeriod(
 // ============================================
 
 /**
- * Reset all daily goals for a user
- * Updates streak based on completion status before resetting
+ * ROLLING A COUNTER INTO THE PERIOD IT IS ACTUALLY IN.
+ *
+ * `current_value` is the count for the period named by `period_start_date` and
+ * for no other. Nothing on the row enforces that, so until this runs, a weekly
+ * row read on Tuesday still holds last week's number — which is what Today was
+ * showing, and what `+1` was adding to.
+ *
+ * One SELECT for every cadence rather than four, because every read path now
+ * calls this and a page should not pay four round trips to find out that
+ * nothing has expired.
+ *
+ * The boundaries come from `periodStartFor`, so a week ends at Sunday 23:59 in
+ * the USER'S timezone and the next one starts at Monday 00:00.
+ */
+const RESET_COLUMNS =
+  "id, current_value, target_value, current_streak, best_streak, period, period_start_date, streak_freezes_available, streak_freezes_used, last_freeze_date, linked_metric"
+
+async function resetGoalsForPeriods(
+  userId: string,
+  periods: GoalPeriod[],
+  timezone: string | null
+): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+  const today = getTodayInTimezone(timezone)
+  const now = getNowInTimezone(timezone)
+  const starts = new Map(periods.map((p) => [p as string, periodStartFor(p, now)]))
+
+  const { data: rows, error: fetchError } = await supabase
+    .from("user_goals")
+    .select(RESET_COLUMNS)
+    .eq("user_id", userId)
+    .in("period", periods)
+    .eq("is_active", true)
+    .eq("is_archived", false)
+
+  if (fetchError) {
+    throw new Error(`Failed to fetch goals to reset: ${fetchError.message}`)
+  }
+
+  const goals = (rows ?? []).filter((g) =>
+    isPeriodStale(g.period as string, g.period_start_date as string | null, starts.get(g.period as string)!)
+  )
+  if (goals.length === 0) return 0
+
+  // Snapshot BEFORE reset — the pre-reset value is the record of the period
+  // that just ended, and the heatmap and the weekly review both read it.
+  await snapshotGoals(userId, goals, today).catch(() => {})
+
+  // Linked goals are zeroed here too, then syncLinkedGoals puts the right
+  // value back. That keeps period_start_date, streaks and snapshots honest for
+  // every goal rather than only the ones nothing else writes to.
+  for (const goal of goals) {
+    const wasComplete = goal.current_value >= goal.target_value
+
+    const updateData: Record<string, unknown> = {
+      current_value: 0,
+      period_start_date: starts.get(goal.period as string)!,
+    }
+
+    if (!wasComplete) {
+      // Not completed: the streak breaks, unless a freeze can absorb it.
+      if (shouldAutoFreeze(goal, today)) {
+        updateData.streak_freezes_available = goal.streak_freezes_available - 1
+        updateData.streak_freezes_used = goal.streak_freezes_used + 1
+        updateData.last_freeze_date = today
+      } else {
+        updateData.current_streak = 0
+      }
+    }
+
+    await supabase
+      .from("user_goals")
+      .update(updateData)
+      .eq("id", goal.id)
+      .eq("user_id", userId)
+  }
+
+  return goals.length
+}
+
+/**
+ * Every cadence, rolled in one pass.
+ *
+ * Call this before READING goals as much as before writing them: a count that
+ * has expired is wrong on the screen the moment the period turns over, not the
+ * next time somebody happens to open the dashboard.
+ */
+export async function rollGoalPeriods(userId: string, timezone: string | null = null): Promise<number> {
+  return resetGoalsForPeriods(userId, ["daily", "weekly", "monthly", "yearly"], timezone)
+}
+
+/**
+ * Reset all daily goals for a user.
+ * Updates streak based on completion status before resetting.
  */
 export async function resetDailyGoals(userId: string, timezone: string | null = null): Promise<number> {
-  const supabase = await createServerSupabaseClient()
-  const today = getTodayInTimezone(timezone)
-
-  // Get all active daily goals that haven't already been reset today
-  const { data: goals, error: fetchError } = await supabase
-    .from("user_goals")
-    .select("id, current_value, target_value, current_streak, best_streak, period, period_start_date, streak_freezes_available, streak_freezes_used, last_freeze_date")
-    .eq("user_id", userId)
-    .eq("period", "daily")
-    .eq("is_active", true)
-    .eq("is_archived", false)
-    .neq("period_start_date", today) // Skip goals already reset today
-
-  if (fetchError) {
-    throw new Error(`Failed to fetch daily goals: ${fetchError.message}`)
-  }
-
-  if (!goals || goals.length === 0) {
-    return 0
-  }
-
-  // Snapshot BEFORE reset — capture pre-reset state for heatmap/review
-  await snapshotGoals(userId, goals, today).catch(() => {})
-
-  // Reset each goal
-  for (const goal of goals) {
-    const wasComplete = goal.current_value >= goal.target_value
-
-    const updateData: Record<string, unknown> = {
-      current_value: 0,
-      period_start_date: today,
-    }
-
-    if (!wasComplete) {
-      // Check if we should auto-freeze instead of killing streak
-      if (shouldAutoFreeze(goal, today)) {
-        updateData.streak_freezes_available = goal.streak_freezes_available - 1
-        updateData.streak_freezes_used = goal.streak_freezes_used + 1
-        updateData.last_freeze_date = today
-      } else {
-        updateData.current_streak = 0
-      }
-    }
-
-    await supabase
-      .from("user_goals")
-      .update(updateData)
-      .eq("id", goal.id)
-      .eq("user_id", userId)
-  }
-
-  return goals.length
+  return resetGoalsForPeriods(userId, ["daily"], timezone)
 }
 
 /**
- * Reset all weekly goals for a user when a new week starts.
- * Mirrors resetDailyGoals but uses Monday-based week boundaries.
- * Idempotent: skips goals whose period_start_date is already in the current week.
+ * Reset all weekly goals whose week is over. Weeks are Monday-based: a count
+ * runs to Sunday 23:59 and the next one starts at Monday 00:00.
+ * Idempotent — a goal already on this week's Monday is left alone.
  */
 export async function resetWeeklyGoals(userId: string, timezone: string | null = null): Promise<number> {
-  const supabase = await createServerSupabaseClient()
-  const now = getNowInTimezone(timezone)
-  const today = getTodayInTimezone(timezone)
-
-  // Compute this week's Monday (ISO: Mon=1 ... Sun=7)
-  const dayOfWeek = now.getDay() || 7 // Convert Sun=0 to 7
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - dayOfWeek + 1)
-  const mondayStr = monday.toISOString().split("T")[0]
-
-  // Get all active weekly goals whose period_start_date is before this Monday
-  const { data: goals, error: fetchError } = await supabase
-    .from("user_goals")
-    .select("id, current_value, target_value, current_streak, best_streak, period, period_start_date, streak_freezes_available, streak_freezes_used, last_freeze_date, linked_metric")
-    .eq("user_id", userId)
-    .eq("period", "weekly")
-    .eq("is_active", true)
-    .eq("is_archived", false)
-    .lt("period_start_date", mondayStr) // Only goals from a previous week
-
-  if (fetchError) {
-    throw new Error(`Failed to fetch weekly goals: ${fetchError.message}`)
-  }
-
-  if (!goals || goals.length === 0) {
-    return 0
-  }
-
-  // Snapshot ALL weekly goals BEFORE reset — capture pre-reset state for heatmap/review
-  await snapshotGoals(userId, goals, today).catch(() => {})
-
-  // Reset all weekly goals (including linked ones).
-  // Linked goals get current_value set to 0 here, then syncLinkedGoals
-  // (called after this in the tree route) immediately sets the correct value.
-  // This ensures period_start_date, streak logic, and snapshots work for ALL goals.
-  for (const goal of goals) {
-    const wasComplete = goal.current_value >= goal.target_value
-
-    const updateData: Record<string, unknown> = {
-      current_value: 0,
-      period_start_date: mondayStr,
-    }
-
-    if (!wasComplete) {
-      if (shouldAutoFreeze(goal, today)) {
-        updateData.streak_freezes_available = goal.streak_freezes_available - 1
-        updateData.streak_freezes_used = goal.streak_freezes_used + 1
-        updateData.last_freeze_date = today
-      } else {
-        updateData.current_streak = 0
-      }
-    }
-
-    await supabase
-      .from("user_goals")
-      .update(updateData)
-      .eq("id", goal.id)
-      .eq("user_id", userId)
-  }
-
-  return goals.length
+  return resetGoalsForPeriods(userId, ["weekly"], timezone)
 }
 
 /**
- * Reset all monthly goals for a user whose period started before the 1st of the current month.
- * Mirrors the weekly reset pattern: snapshot → zero out → handle streaks/freezes.
- * Idempotent: skips goals whose period_start_date is already in the current month.
+ * Reset all monthly goals whose period started before the 1st of this month.
+ * Idempotent: skips goals whose period_start_date is already in this month.
  */
 export async function resetMonthlyGoals(userId: string, timezone: string | null = null): Promise<number> {
-  const supabase = await createServerSupabaseClient()
-  const now = getNowInTimezone(timezone)
-  const today = getTodayInTimezone(timezone)
-
-  // Compute the 1st of the current month
-  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-  const firstOfMonthStr = firstOfMonth.toISOString().split("T")[0]
-
-  const { data: goals, error: fetchError } = await supabase
-    .from("user_goals")
-    .select("id, current_value, target_value, current_streak, best_streak, period, period_start_date, streak_freezes_available, streak_freezes_used, last_freeze_date, linked_metric")
-    .eq("user_id", userId)
-    .eq("period", "monthly")
-    .eq("is_active", true)
-    .eq("is_archived", false)
-    .lt("period_start_date", firstOfMonthStr)
-
-  if (fetchError) {
-    throw new Error(`Failed to fetch monthly goals: ${fetchError.message}`)
-  }
-
-  if (!goals || goals.length === 0) {
-    return 0
-  }
-
-  await snapshotGoals(userId, goals, today).catch(() => {})
-
-  for (const goal of goals) {
-    const wasComplete = goal.current_value >= goal.target_value
-
-    const updateData: Record<string, unknown> = {
-      current_value: 0,
-      period_start_date: firstOfMonthStr,
-    }
-
-    if (!wasComplete) {
-      if (shouldAutoFreeze(goal, today)) {
-        updateData.streak_freezes_available = goal.streak_freezes_available - 1
-        updateData.streak_freezes_used = goal.streak_freezes_used + 1
-        updateData.last_freeze_date = today
-      } else {
-        updateData.current_streak = 0
-      }
-    }
-
-    await supabase
-      .from("user_goals")
-      .update(updateData)
-      .eq("id", goal.id)
-      .eq("user_id", userId)
-  }
-
-  return goals.length
+  return resetGoalsForPeriods(userId, ["monthly"], timezone)
 }
 
 /**
- * Reset all yearly goals for a user whose period started before January 1st of the current year.
- * Mirrors the weekly/monthly reset pattern: snapshot → zero out → handle streaks/freezes.
- * Idempotent: skips goals whose period_start_date is already in the current year.
+ * Reset all yearly goals whose period started before January 1st of this year.
+ * Idempotent: skips goals whose period_start_date is already in this year.
  */
 export async function resetYearlyGoals(userId: string, timezone: string | null = null): Promise<number> {
-  const supabase = await createServerSupabaseClient()
-  const now = getNowInTimezone(timezone)
-  const today = getTodayInTimezone(timezone)
-
-  const jan1 = new Date(now.getFullYear(), 0, 1)
-  const jan1Str = jan1.toISOString().split("T")[0]
-
-  const { data: goals, error: fetchError } = await supabase
-    .from("user_goals")
-    .select("id, current_value, target_value, current_streak, best_streak, period, period_start_date, streak_freezes_available, streak_freezes_used, last_freeze_date, linked_metric")
-    .eq("user_id", userId)
-    .eq("period", "yearly")
-    .eq("is_active", true)
-    .eq("is_archived", false)
-    .lt("period_start_date", jan1Str)
-
-  if (fetchError) {
-    throw new Error(`Failed to fetch yearly goals: ${fetchError.message}`)
-  }
-
-  if (!goals || goals.length === 0) {
-    return 0
-  }
-
-  await snapshotGoals(userId, goals, today).catch(() => {})
-
-  for (const goal of goals) {
-    const wasComplete = goal.current_value >= goal.target_value
-
-    const updateData: Record<string, unknown> = {
-      current_value: 0,
-      period_start_date: jan1Str,
-    }
-
-    if (!wasComplete) {
-      if (shouldAutoFreeze(goal, today)) {
-        updateData.streak_freezes_available = goal.streak_freezes_available - 1
-        updateData.streak_freezes_used = goal.streak_freezes_used + 1
-        updateData.last_freeze_date = today
-      } else {
-        updateData.current_streak = 0
-      }
-    }
-
-    await supabase
-      .from("user_goals")
-      .update(updateData)
-      .eq("id", goal.id)
-      .eq("user_id", userId)
-  }
-
-  return goals.length
+  return resetGoalsForPeriods(userId, ["yearly"], timezone)
 }
 
 // ============================================
