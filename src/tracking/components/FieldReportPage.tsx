@@ -7,8 +7,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Aperture, Loader2, FileText, ArrowLeft, Clock, MapPin, TrendingUp, Check, Settings2, ArrowRight, Lock, Star, X, Heart, Trash2, Save } from "lucide-react"
-import Link from "next/link"
+import { Aperture, Loader2, FileText, ArrowLeft, Clock, MapPin, TrendingUp, Check, Settings2, ArrowRight, Star, X, Heart, Trash2, Save } from "lucide-react"
 import type { FieldReportTemplateRow, FieldReportRow, SessionWithApproaches, ApproachOutcome, TemplateField } from "@/src/db/trackingTypes"
 import type { GoalWithProgress } from "@/src/db/goalTypes"
 import type { SessionSummaryData, FieldDefinition } from "../types"
@@ -23,6 +22,7 @@ import { ResearchDomainsSection } from "./ResearchDomainsSection"
 import { CustomReportBuilder } from "./CustomReportBuilder"
 import { DatePicker } from "./DatePicker"
 import { FieldPickerPanel, createCustomTextField } from "./FieldPickerPanel"
+import { BackLink } from "@/components/BackLink"
 
 interface FieldReportPageProps {
   userId: string
@@ -355,7 +355,6 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
   // Split templates into favorites and non-favorites
   const { favoriteTemplates, nonFavoriteTemplates } = useMemo(() => {
     const favorites: FieldReportTemplateRow[] = []
-    const nonFavorites: FieldReportTemplateRow[] = []
 
     // Filter out deprecated "customizable" template
     const activeTemplates = templates.filter(t => t.slug !== "customizable")
@@ -717,13 +716,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
   if (isEditMode && submitError && !existingReport) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <Link
-          href="/dashboard/tracking/history"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="size-4" />
-          Back to History
-        </Link>
+        <BackLink fallback="/dashboard/tracking/history" fallbackLabel="History" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors" />
         <Card className="p-4 sm:p-6 rounded-2xl border-destructive/50">
           <div className="text-center">
             <FileText className="size-12 mx-auto mb-4 text-muted-foreground/30" />
@@ -769,13 +762,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
     return (
       <div className="max-w-6xl mx-auto px-4 py-8" data-testid="field-report-template-selection">
         <div className="mb-8">
-          <Link
-            href="/dashboard/tracking"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4"
-          >
-            <ArrowLeft className="size-4" />
-            Back to Tracking
-          </Link>
+          <BackLink fallback="/dashboard/tracking" fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
           <h1 className="text-3xl font-bold">Write Field Report</h1>
           <p className="text-muted-foreground mt-2">
             {sessionData ? "Review your session and choose a template" : "Choose a template that fits your session"}

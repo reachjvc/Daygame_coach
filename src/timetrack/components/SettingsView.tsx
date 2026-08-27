@@ -354,12 +354,17 @@ function AutomationPanel({
         />
       </SectionCard>
 
-      <SectionCard title="Idle detection" description="If you stop using the computer while a timer runs, you get asked whether to keep that time.">
+      <SectionCard title="Idle detection" description="Asks what to do with the gap when a timer runs and nothing happens on this page.">
         <ToggleRow
           label="Detect idle time"
           checked={state.idle.enabled}
           onChange={(enabled) => setState((current) => ({ ...current, idle: { ...current.idle, enabled } }))}
         />
+        <p className="mb-2 text-xs text-muted-foreground">
+          A web page can only see activity on its own tab, so this cannot tell being away from your desk from working
+          in another app. It only asks while this tab is the one you are looking at, and switching away resets the
+          count — which is why it is off unless you turn it on.
+        </p>
         <Field label="Prompt after (minutes)" className="w-full sm:w-48">
           <Input
             type="number"
@@ -520,27 +525,25 @@ function AutomationPanel({
                     variant="ghost"
                     className="h-7"
                     disabled={block.converted}
-                    onClick={() =>
-                      setState((current) => {
-                        const result = createManualEntry(
-                          current,
-                          {
-                            draft: { description: block.label, projectId: null, taskId: null, tagIds: [], billable: false },
-                            start: block.start,
-                            stop: block.end,
-                          },
-                          new Date().toISOString(),
-                        )
-                        if (result.violations.length > 0) {
-                          pushToast(result.violations[0].message, "error")
-                          return current
-                        }
-                        return {
-                          ...result.state,
-                          timeline: result.state.timeline.map((b) => (b.id === block.id ? { ...b, converted: true } : b)),
-                        }
-                      })
-                    }
+                    onClick={() => {
+                      const result = createManualEntry(
+                        state,
+                        {
+                          draft: { description: block.label, projectId: null, taskId: null, tagIds: [], billable: false },
+                          start: block.start,
+                          stop: block.end,
+                        },
+                        new Date().toISOString(),
+                      )
+                      if (result.violations.length > 0) {
+                        pushToast(result.violations[0].message, "error")
+                        return
+                      }
+                      setState(() => ({
+                        ...result.state,
+                        timeline: result.state.timeline.map((b) => (b.id === block.id ? { ...b, converted: true } : b)),
+                      }))
+                    }}
                   >
                     {block.converted ? "Converted" : "Convert"}
                   </Button>
@@ -1051,19 +1054,17 @@ function DataPanel({
             event.target.value = ""
             if (!file) return
             const text = await file.text()
-            setState((current) => {
-              const result = importEntriesCsv(current, text, new Date().toISOString())
-              pushToast(
-                result.skipped.length === 0
-                  ? `Imported ${result.imported} entries`
-                  : `Imported ${result.imported}, skipped ${result.skipped.length}: ${result.skipped
-                      .slice(0, 3)
-                      .map((s) => `line ${s.line} (${s.reason})`)
-                      .join("; ")}`,
-                result.skipped.length > 0 ? "error" : "info",
-              )
-              return result.state
-            })
+            const result = importEntriesCsv(state, text, new Date().toISOString())
+            setState(() => result.state)
+            pushToast(
+              result.skipped.length === 0
+                ? `Imported ${result.imported} entries`
+                : `Imported ${result.imported}, skipped ${result.skipped.length}: ${result.skipped
+                    .slice(0, 3)
+                    .map((s) => `line ${s.line} (${s.reason})`)
+                    .join("; ")}`,
+              result.skipped.length > 0 ? "error" : "info",
+            )
           }}
         />
         <Button size="sm" variant="outline" onClick={() => csvInput.current?.click()}>

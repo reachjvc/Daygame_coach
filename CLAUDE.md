@@ -14,6 +14,7 @@ Next.js + TypeScript + Supabase. Feature slices in `src/<slice>/`, routes in `ap
 - Never delete code whose purpose you can't explain.
 - Never write a `.png` outside `.playwright-mcp/`.
 - Never ship a known-wrong edge case as "acceptable for v1" — fix the design before implementing.
+- Never call work done, settled or working before a second pass has attacked it — the failure list ships with the work. See `.claude/rules/finished-work.md`.
 - Never verify content by a proxy for it. A handle, a filename, a URL, a truncated preview and a passing shape-test are all metadata; the defect lives in the part you didn't open.
 - Never call a bulk transform done without reading a random sample of its output in full. Mechanical extraction protects against fabrication, not against wrongness.
 
@@ -35,7 +36,7 @@ Warn about security risk every time it comes up, even when the user didn't raise
 Enforced by `tests/unit/architecture.test.ts` — run it rather than memorizing it. Business logic lives in `*Service.ts`, DB access only in `src/db/*Repo.ts`, types in each slice's `types.ts`, API routes under 50 lines, multi-file icons registered in `iconRoles.ts`.
 
 ## Where the rest lives
-- `.claude/rules/` — pipeline, database, UI, testing, plans. Load automatically when you touch matching files.
+- `.claude/rules/` — pipeline, database, UI, testing, plans, finished work. Load automatically when you touch matching files.
 - `docs/pipeline/learnings.md` — read before any pipeline work
 - `docs/testing_behavior.md` — read before writing tests
 - `docs/slices/SLICE_*.md` — slice specs

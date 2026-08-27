@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
+import { BackLink } from "@/components/BackLink"
 
 type UserSpending = {
   user_id: string
@@ -192,7 +193,10 @@ export default function AdminAIUsagePage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">AI Usage Dashboard</h1>
+          <div>
+            <BackLink fallback="/dashboard" fallbackLabel="Dashboard" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-2" />
+            <h1 className="text-3xl font-bold">AI Usage Dashboard</h1>
+          </div>
           <div className="flex gap-4">
             <button
               onClick={fetchData}

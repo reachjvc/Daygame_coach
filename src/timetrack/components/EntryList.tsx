@@ -255,7 +255,7 @@ function EntryRowView({
       {row.grouped && expanded && (
         <ul className="divide-y divide-border border-t border-border bg-secondary/20">
           {row.entries.map((entry) => (
-            <li key={entry.id} className="pl-8">
+            <li key={entry.id}>
               <EntryFields
                 entry={entry}
                 state={state}
@@ -403,7 +403,7 @@ function EntryFields({
   return (
     <>
       {/* --- phones: two compact lines; the row itself opens the detail sheet --- */}
-      <div className={cn("flex items-center gap-1 px-3 py-2 sm:hidden", running && "bg-primary/5")}>
+      <div className={cn("flex items-center gap-1 px-3 py-2 sm:hidden", nested && "pl-7", running && "bg-primary/5")}>
         {selectionMode && (
           <label className="flex size-11 shrink-0 items-center justify-center">
             <input type="checkbox" checked={checked} onChange={onCheck} aria-label="Select time entry" className="size-5" />
@@ -448,106 +448,136 @@ function EntryFields({
         {menu}
       </div>
 
-      {/* --- pointer devices: the full inline-editable row --- */}
-      <div className={cn("hidden flex-wrap items-center gap-2 px-3 py-2 sm:flex", running && "bg-primary/5")}>
-        {selectionMode && (
-          <input type="checkbox" checked={checked} onChange={onCheck} aria-label="Select time entry" />
+      {/* --- pointer devices: the full inline-editable row ---
+          A grid, not a flex row: every row shares one column template, so the
+          project, tag, time and duration columns line up across the whole list
+          whether or not a row carries a group badge or a long description. */}
+      <div
+        className={cn(
+          "hidden items-center gap-2 px-3 py-2 sm:grid",
+          // The description keeps a hard minimum — a bare `1fr` loses to the
+          // fixed tracks and collapses to nothing on a narrow window. Between
+          // 640 and 768px the start/end times drop out (they are still in the
+          // detail sheet) so the project and tag columns keep usable width.
+          selectionMode
+            ? "sm:grid-cols-[16px_24px_minmax(150px,1fr)_minmax(0,200px)_minmax(0,140px)_32px_0px_78px_auto] md:grid-cols-[16px_24px_minmax(150px,1fr)_minmax(0,200px)_minmax(0,140px)_32px_120px_78px_auto]"
+            : "sm:grid-cols-[24px_minmax(150px,1fr)_minmax(0,200px)_minmax(0,140px)_32px_0px_78px_auto] md:grid-cols-[24px_minmax(150px,1fr)_minmax(0,200px)_minmax(0,140px)_32px_120px_78px_auto]",
+          running && "bg-primary/5",
+        )}
+      >
+        {selectionMode && <input type="checkbox" checked={checked} onChange={onCheck} aria-label="Select time entry" />}
+
+        {row?.grouped ? (
+          <button
+            type="button"
+            onClick={onToggleExpand}
+            className="flex size-6 items-center justify-center rounded bg-primary/15 text-[11px] font-semibold text-primary"
+            aria-label={expanded ? "Collapse group" : "Expand group"}
+          >
+            {row.entries.length}
+          </button>
+        ) : (
+          <span />
         )}
 
-      {row?.grouped ? (
-        <button
-          type="button"
-          onClick={onToggleExpand}
-          className="flex size-6 items-center justify-center rounded bg-primary/15 text-[11px] font-semibold text-primary"
-          aria-label={expanded ? "Collapse group" : "Expand group"}
-        >
-          {row.entries.length}
-        </button>
-      ) : (
-        !nested && <span className="w-6" />
-      )}
+        <input
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          onBlur={() => description !== entry.description && patch({ description })}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") event.currentTarget.blur()
+          }}
+          disabled={!editable}
+          placeholder="(no description)"
+          className={cn(
+            "w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:opacity-60",
+            nested && "pl-4",
+          )}
+        />
 
-      <input
-        value={description}
-        onChange={(event) => setDescription(event.target.value)}
-        onBlur={() => description !== entry.description && patch({ description })}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") event.currentTarget.blur()
-        }}
-        disabled={!editable}
-        placeholder="(no description)"
-        className="min-w-[120px] flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:opacity-60"
-      />
+        <ProjectPicker
+          state={state}
+          projectId={entry.projectId}
+          taskId={entry.taskId}
+          compact
+          fill
+          onChange={(projectId, taskId) => patch({ projectId, taskId })}
+          onCreateProject={(name) =>
+            // create + assign in a single update: two separate setState calls both
+            // computed from this render's state would overwrite each other
+            setState((current) => {
+              const created = createProject(current, { name }, nowIso())
+              return updateEntry(created.state, entry.id, { projectId: created.id, taskId: null }, nowIso()).state
+            })
+          }
+        />
 
-      <ProjectPicker
-        state={state}
-        projectId={entry.projectId}
-        taskId={entry.taskId}
-        compact
-        onChange={(projectId, taskId) => patch({ projectId, taskId })}
-        onCreateProject={(name) => {
-          const result = createProject(state, { name }, nowIso())
-          setState(() => result.state)
-          return result.id
-        }}
-      />
+        <TagPicker
+          state={state}
+          tagIds={entry.tagIds}
+          align="right"
+          fill
+          onChange={(tagIds) => patch({ tagIds })}
+          onCreateTag={(name) =>
+            setState((current) => {
+              const created = createTag(current, name, nowIso())
+              const target = current.entries.find((e) => e.id === entry.id)
+              const tagIds = [...new Set([...(target?.tagIds ?? []), created.id])]
+              return updateEntry(created.state, entry.id, { tagIds }, nowIso()).state
+            })
+          }
+        />
 
-      <TagPicker
-        state={state}
-        tagIds={entry.tagIds}
-        align="right"
-        onChange={(tagIds) => patch({ tagIds })}
-        onCreateTag={(name) => {
-          const result = createTag(state, name, nowIso())
-          setState(() => result.state)
-          return result.id
-        }}
-      />
+        <BillableToggle billable={entry.billable} onChange={(billable) => patch({ billable })} disabled={!editable} />
 
-      <BillableToggle billable={entry.billable} onChange={(billable) => patch({ billable })} disabled={!editable} />
-
-      {!entry.duronly && !row?.grouped && (
-        <div className="hidden items-center gap-1 text-xs sm:flex">
-          <input
-            value={startDraft ?? formatTimeLabel(entry.start, state)}
-            onChange={(event) => setStartDraft(event.target.value)}
-            onBlur={() => {
-              if (startDraft !== null) commitTime("start", startDraft)
-              setStartDraft(null)
-            }}
-            disabled={!editable}
-            aria-label="Start time"
-            className="w-[52px] rounded bg-transparent text-center tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60"
-          />
-          <span className="text-muted-foreground">–</span>
-          <input
-            value={stopDraft ?? (entry.stop ? formatTimeLabel(entry.stop, state) : "now")}
-            onChange={(event) => setStopDraft(event.target.value)}
-            onBlur={() => {
-              if (stopDraft !== null && !running) commitTime("stop", stopDraft)
-              setStopDraft(null)
-            }}
-            disabled={!editable || running}
-            aria-label="End time"
-            className="w-[52px] rounded bg-transparent text-center tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60 disabled:text-muted-foreground"
-          />
+        {/* the cell itself always stays in flow: a display:none grid child is
+          skipped by auto-placement and shifts every later column */}
+        <div className="flex items-center justify-end overflow-hidden">
+          {!entry.duronly && !row?.grouped && (
+            <div className="hidden items-center gap-1 text-xs md:flex">
+              <input
+                value={startDraft ?? formatTimeLabel(entry.start, state)}
+                onChange={(event) => setStartDraft(event.target.value)}
+                onBlur={() => {
+                  if (startDraft !== null) commitTime("start", startDraft)
+                  setStartDraft(null)
+                }}
+                disabled={!editable}
+                aria-label="Start time"
+                className="w-[52px] rounded bg-transparent text-center tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60"
+              />
+              <span className="text-muted-foreground">–</span>
+              <input
+                value={stopDraft ?? (entry.stop ? formatTimeLabel(entry.stop, state) : "now")}
+                onChange={(event) => setStopDraft(event.target.value)}
+                onBlur={() => {
+                  if (stopDraft !== null && !running) commitTime("stop", stopDraft)
+                  setStopDraft(null)
+                }}
+                disabled={!editable || running}
+                aria-label="End time"
+                className="w-[52px] rounded bg-transparent text-center tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60 disabled:text-muted-foreground"
+              />
+            </div>
+          )}
         </div>
-      )}
 
-      <input
-        value={durationDraft ?? (running ? formatClock(seconds) : formatDuration(seconds, state.user.durationFormat))}
-        onChange={(event) => setDurationDraft(event.target.value)}
-        onBlur={() => {
-          if (durationDraft !== null && !running && !row?.grouped) commitDuration(durationDraft)
-          setDurationDraft(null)
-        }}
-        disabled={!editable || running || row?.grouped}
-        aria-label="Duration"
-        className="w-[74px] rounded bg-transparent text-right text-sm tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60 disabled:opacity-100"
-      />
+        <input
+          value={durationDraft ?? (running ? formatClock(seconds) : formatDuration(seconds, state.user.durationFormat))}
+          onChange={(event) => setDurationDraft(event.target.value)}
+          onBlur={() => {
+            if (durationDraft !== null && !running && !row?.grouped) commitDuration(durationDraft)
+            setDurationDraft(null)
+          }}
+          disabled={!editable || running || row?.grouped}
+          aria-label="Duration"
+          className="w-full rounded bg-transparent text-right text-sm tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60 disabled:opacity-100"
+        />
 
-      {continueButton}
-      {menu}
+        <div className="flex items-center justify-end">
+          {continueButton}
+          {menu}
+        </div>
       </div>
     </>
   )
@@ -839,17 +869,18 @@ export function EntryDetailModalBody({
                   key={member.id}
                   type="button"
                   onClick={() =>
-                    setState((current) =>
-                      updateEntry(
-                        current,
-                        entry.id,
-                        {
-                          sharedWith: shared
-                            ? entry.sharedWith.filter((id) => id !== member.id)
-                            : [...entry.sharedWith, member.id],
-                        },
-                        nowIso(),
-                      ).state,
+                    setState(
+                      (current) =>
+                        updateEntry(
+                          current,
+                          entry.id,
+                          {
+                            sharedWith: shared
+                              ? entry.sharedWith.filter((id) => id !== member.id)
+                              : [...entry.sharedWith, member.id],
+                          },
+                          nowIso(),
+                        ).state,
                     )
                   }
                   className={cn(
@@ -870,8 +901,7 @@ export function EntryDetailModalBody({
       </div>
       <p className="text-[11px] text-muted-foreground">
         Created with {entry.createdWith}
-        {entry.sourceEventId ? " · imported from a calendar event" : ""} · last updated{" "}
-        {new Date(entry.at).toLocaleString()}
+        {entry.sourceEventId ? " · imported from a calendar event" : ""} · last updated {new Date(entry.at).toLocaleString()}
       </p>
     </div>
   )

@@ -115,18 +115,18 @@ export function TimerBar({
     setDraft({ ...draft, description: "" })
   }
 
-  // Both helpers derive the new id from the current snapshot: React does not
-  // promise to run a setState updater before this function returns.
-  const handleCreateProject = (name: string): Id => {
+  // The draft lives in local state, so these create the entity and select it
+  // here rather than handing an id back to the picker.
+  const handleCreateProject = (name: string) => {
     const result = createProject(state, { name }, new Date().toISOString())
     setState(() => result.state)
-    return result.id
+    setDraft({ ...draft, projectId: result.id, taskId: null })
   }
 
-  const handleCreateTag = (name: string): Id => {
+  const handleCreateTag = (name: string) => {
     const result = createTag(state, name, new Date().toISOString())
     setState(() => result.state)
-    return result.id
+    setDraft({ ...draft, tagIds: [...new Set([...draft.tagIds, result.id])] })
   }
 
   return (

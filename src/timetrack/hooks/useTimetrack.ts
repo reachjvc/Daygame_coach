@@ -11,13 +11,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { STATE_VERSION, STORAGE_KEY } from "../config"
+import { DEFAULT_IDLE, LEGACY_IDLE_DEFAULT, STATE_VERSION, STORAGE_KEY } from "../config"
 import { createEmptyWorkspace } from "../data/emptyWorkspace"
 import { removeDemoData } from "../demoDataService"
-import {
-  dateKey,
-  epochSeconds,
-} from "../timetrackFormatService"
+import { dateKey, epochSeconds, formatIdleSpan } from "../timetrackFormatService"
 import {
   continueEntry,
   entrySeconds,
@@ -40,6 +37,8 @@ export interface ToastMessage {
 
 export interface IdlePrompt {
   entryId: number
+  /** What the timer was tracking, so the prompt can name it */
+  description: string
   /** When interaction stopped */
   idleSinceIso: string
   idleSeconds: number
@@ -53,6 +52,8 @@ interface LoadResult {
   discarded: string | null
   /** Sample rows this page used to seed, cleaned out of an existing browser */
   cleanedDemoEntries: number
+  /** True when the old always-on idle default was switched off */
+  idleDefaultChanged?: boolean
 }
 
 function loadState(nowIso: string): LoadResult {
@@ -101,7 +102,22 @@ function loadState(nowIso: string): LoadResult {
   // This page used to seed sample entries. Strip any that are still stored,
   // keeping everything the user created.
   const cleaned = removeDemoData(parsed)
-  return { state: cleaned.state, discarded: null, cleanedDemoEntries: cleaned.removedEntries }
+
+  // Idle detection used to be on with a 5-minute threshold, which fired at
+  // anyone running a timer while working in another app. Move that default off.
+  const onLegacyIdleDefault =
+    cleaned.state.idle.enabled === LEGACY_IDLE_DEFAULT.enabled &&
+    cleaned.state.idle.minutes === LEGACY_IDLE_DEFAULT.minutes
+  const state = onLegacyIdleDefault
+    ? { ...cleaned.state, idle: { ...cleaned.state.idle, ...DEFAULT_IDLE } }
+    : cleaned.state
+
+  return {
+    state,
+    discarded: null,
+    cleanedDemoEntries: cleaned.removedEntries,
+    idleDefaultChanged: onLegacyIdleDefault,
+  }
 }
 
 export function useTimetrack() {
@@ -128,6 +144,11 @@ export function useTimetrack() {
     setStateRaw(loaded.state)
     if (loaded.discarded) {
       pendingLoadNotice.current = { text: loaded.discarded, tone: "error" }
+    } else if (loaded.idleDefaultChanged) {
+      pendingLoadNotice.current = {
+        text: "Idle detection is now off by default — it could not tell working in another app from being away. Turn it back on in Settings → Automation.",
+        tone: "info",
+      }
     } else if (loaded.cleanedDemoEntries > 0) {
       pendingLoadNotice.current = {
         text: `Removed ${loaded.cleanedDemoEntries} sample entries this page used to ship with. Your own entries are untouched.`,
@@ -220,17 +241,27 @@ export function useTimetrack() {
     }
     const events = ["mousemove", "mousedown", "keydown", "wheel", "touchstart"]
     for (const name of events) window.addEventListener(name, mark, { passive: true })
+    // Coming back to the tab is activity: the clock restarts rather than
+    // counting the whole time you spent in another app as idle
+    document.addEventListener("visibilitychange", mark)
+    window.addEventListener("focus", mark)
     return () => {
       for (const name of events) window.removeEventListener(name, mark)
+      document.removeEventListener("visibilitychange", mark)
+      window.removeEventListener("focus", mark)
     }
   }, [])
 
   useEffect(() => {
     if (!state?.idle.enabled || !running || idlePrompt) return
+    // Only meaningful while this page is the thing you are looking at. Working
+    // in another window is not idleness, and this page cannot see it.
+    if (document.visibilityState !== "visible" || !document.hasFocus()) return
     const idleMs = Date.now() - lastInteraction.current
     if (idleMs < state.idle.minutes * 60_000) return
     setIdlePrompt({
       entryId: running.id,
+      description: running.description,
       idleSinceIso: new Date(lastInteraction.current).toISOString(),
       idleSeconds: Math.floor(idleMs / 1000),
     })
@@ -264,7 +295,12 @@ export function useTimetrack() {
         )
         return restarted.state
       })
-      pushToast(action === "discard" ? "Idle time discarded, timer restarted" : "Idle time discarded, timer stopped")
+      const span = formatIdleSpan(prompt.idleSeconds)
+      pushToast(
+        action === "discard"
+          ? `Dropped ${span} and started a fresh entry`
+          : `Dropped ${span} and stopped the timer`,
+      )
     },
     [idlePrompt, pushToast, setState],
   )

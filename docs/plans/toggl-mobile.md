@@ -51,7 +51,8 @@ loading state until client state exists.
 
 ## Result
 
-Re-measured on iPhone 14 (390px) and 360px Android after the work:
+Re-measured on iPhone 14 (390px) and 360px Android after the work (measurements taken while the page still
+seeded sample data; it now starts empty):
 
 | Metric | Before | After |
 |---|---|---|

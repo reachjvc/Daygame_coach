@@ -2112,7 +2112,7 @@ Escape and the backdrop close it; the layout underneath never moves.
   `StartRamps` (the chooser, the row, the 10 and the questions) · `IdealDay` ·
   `WeekGrid` · `Experiences` · `Generate` · `FocusTab` · `GoalOverview` ·
   `GoalLibrary` · `RoutineCard` · `AreaGoals` · `GoalCard` · `ScoreRow` ·
-  `ReviewTab`.
+  `ReviewTab` · `JournalTab` (step 13, the writing and its archive).
 - `src/goals/types.ts` — `Ns*` types (slice rule: types live in types.ts)
 - `docs/research/life-mastery/values-and-identity.md` — the transcript reading
   behind the values and identity work
@@ -2511,3 +2511,217 @@ is refused where there is no single answer, a step arrives wired, an old plan
 migrates but a clearing is never overridden, a rename never rewires, a
 hand-picked destination survives a reload, and a destination whose source is
 still empty resolves to nothing rather than a door onto a blank page).
+
+## Every row must keep the promise its own words make
+
+Reported from the page (2026-08-25): *"we still have multiple things that lead
+nowhere. For example things that exist in templates already, like reading my
+driving force … or journal, that doesnt lead anywhere (should lead to a page
+where we journal, like field reports, weekly reviews, and user should be able to
+write, possibly select standard questions, and see ALL old reports)."* And then
+the general form of it: *"I am interested in making sure we dont have fields
+that users want to input into, where it is not possible, so i am not asking you
+to specifically fix those things, but to develop the system more fully so NO
+mistakes are there, for ALL boxes."*
+
+Both reports were one bug wearing two hats. **A routine step's title is a
+promise.** "Read your driving force" promises a document; "Write three
+gratitudes" promises somewhere to write three gratitudes. The row could keep the
+first kind — `goesTo`, added the week before — and had no way at all to keep the
+second: a step that asked for words offered a checkbox, and the box you would
+have written in had to be *built*, by hand, in a section at the bottom of Today
+called "Your own text fields". Ticking "Journal" without writing anything is the
+row lying about what happened.
+
+### A step carries its question the way it carries its door
+
+`NsRoutineStep.asks: string | null` — the question this step asks you, every day
+it runs. Answers go in `plan.journal` keyed by the **step's** id: the same
+store, the same shape and the same archive as a question somebody added
+themselves, because an answer is the same kind of fact whichever of the two
+asked it, and a second store would be a second archive to go looking through.
+
+Authored on the library entry (`RoutineBlueprintStep.asks`) rather than guessed
+from our own copy. `inferStepQuestion` is the fallback and it is for steps
+somebody typed — narrow, every phrase a *verb about writing* rather than a
+topic, because a false hit puts a box under a row that never asked for one.
+
+`asks` follows `goesTo`'s migration rule exactly: **absent is not null.** A plan
+saved before this existed has no key and its question is inferred from its own
+words; `null` is a question somebody cleared, and inference never argues with
+that. Never on rename.
+
+**And the way back, which the first build forgot.** A question that can be
+silenced and not restored is a *worse* dead end than the bare checkbox it
+replaced — the row that had a box yesterday has none today and says nothing
+about why. The `Asks` control on every Today row does both, and it is on every
+row and not only the ones our library gave a question to: somebody whose "Cold
+shower finish" wants a line about the water temperature is not wrong. Silencing
+a question never deletes what is written under it, and the copy says so out
+loud, because "remove" next to three months of writing is a frightening word.
+
+### The driving force is a destination after all
+
+`PRACTICE_DESTINATIONS.whole` was `null`, on the reasoning that no single source
+*is* the driving force and aiming the row at one of its five parts would be a
+guess. The reasoning was right about the guess and wrong about the conclusion:
+the answer is not to point at a part, it is to make the whole a source.
+`readSources` composes `driving` live from the five — vision, purpose, identity,
+standards, values — homed on the recap page at `RECAP_DRIVING_ANCHOR`, which is
+those five parts in order. It disappears on its own when nothing under it has
+been written, like every other source.
+
+`why:top` is the same move for "Re-read the why under one goal", which pointed
+nowhere for the same reason. That row names no particular goal *on purpose* —
+the practice is re-reading a reason, not a specific reason — so making somebody
+pick one would be answering a question the row leaves open. It resolves to the
+goal the plan already puts first and carries that goal's name on the arrow.
+
+### The id space grew one prefix
+
+A destination used to have to be something you had already written, which is
+right for "read your north star" and useless for "Journal". `destinations()` is
+`readSources()` plus the journal: `journal:all` is the page, `journal:<setId>`
+is the page opened on one of the standard sets, which is how "Weekly review"
+leads to four questions instead of to a checkbox. `readSource` still backs the
+**read** fields, which quote their source and so can only name something with
+words in it; `destination` backs the go fields and every step's own door.
+
+### Step 13 — Journal
+
+Three complaints, three sections, in that order:
+
+- **Today** — every question being asked of you this day, with a box under each.
+  A step's question and one you added sit in one list: the difference between
+  them matters when you are setting them up and never when you are answering
+  them. A step placed on Thursday asks you nothing on a Monday.
+- **Add a question** — thirteen standard ones already written, grouped by the
+  day, the work and the hard days, and three **sets**: weekly review, field
+  report, morning pages. The complaint was not only that the journal led
+  nowhere; it was that the way to make it lead somewhere was to invent the
+  question yourself. A weekly review is not one box, and offering it as one is
+  how it stops getting done.
+- **Everything you have written** — every answer, every day, newest first,
+  filterable to one question.
+
+The archive reads the **store**, not the questions, and that is its one
+non-obvious rule: somebody who stops asking "one key learning" after four months
+has four months of answers, and a join that dropped them to keep the list tidy
+would be deleting a diary to make the code simpler. Those rows say what they can
+honestly say — *a question you have since removed* — rather than showing an
+orphaned paragraph under a blank label.
+
+Nothing on the page is a second store. The boxes write `plan.journal` and
+`plan.notes`; the Today rows write the same two. A gratitude written here at
+21:00 is the same entry as the one written on the row at 07:00.
+
+### The regression test is about meaning, not shape
+
+`tests/unit/goals/northStarPromises.test.ts` runs over **every** library step of
+every blueprint and checks the promise, not the field: a title that says read
+must name a destination that *resolves against a filled-in plan*; a title that
+says write must carry a question *and* round-trip an answer through the store
+and back. "Has a non-empty `goesTo`" would pass on a step pointing at a deleted
+goal, and "`asks` is a string" would pass on the string `"asks"`. The read/write
+phrase lists are written in the test rather than imported from the code they
+check — a test that asks the code what the code meant cannot catch the code
+being wrong about it.
+
+It found one the sweep had missed on its own: `why-read`.
+
+**One row is knowingly left as a tick**, named in the test rather than silently
+skipped: `visual-board` — "Look at your pictures of it" — names a thing this app
+has no store for, and inventing a destination for it would be the row lying
+differently.
+
+### `null` meant two things, and that is why none of the above reached anybody
+
+Reported immediately after the first build (2026-08-25): *"when i click journal,
+i still dont go anywhere."*
+
+Every check above passed, and every one of them ran against a plan built **after**
+the change. On the plan somebody already had, `journal` and `driving-force` were
+stored with `goesTo: null` — because that is what creation wrote whenever
+inference found nothing — and the loader read that null as *"somebody cleared
+it"*, which it was documented as meaning and was forbidden to overrule. Both
+headline fixes were invisible to every existing user. Verifying the constructor
+and calling the feature done is the shape of the bug, not a detail of it.
+
+`NS_PLAN_VERSION` is 2. On a **v1** save, a step that is still a library step —
+same id, same title, so nobody has made it their own — adopts what the library
+now says about it, for `goesTo` and for `asks`; the library's authored question
+also beats `inferStepQuestion`'s fallback, which hands back the *title*
+("Write three gratitudes", an instruction) where the library has the *question*
+("Three things you are grateful for"). The plan is re-saved as v2, where `null`
+means what it always said and a clearing is permanent. A save so old it has no
+`goesTo` key at all still infers, as before.
+
+Tests are in `northStarPromises.test.ts` under "a plan saved before any of this
+adopts what the library now says", and they run the **migration**, not the
+constructor: a hand-rewound v1 save, checked for the journal's door, the driving
+force's document, the library's question over the title, a retitled row left
+alone, the re-stamp, and a clearing made on v2 surviving a reload.
+
+### Two fields were both called "the one thing"
+
+Reported the same day: *"the one thing on the tracking page, is still not linked
+correctly to what is actually my one thing"*, and then *"It still says this
+season is for flat benching, but where is that coming from (even if it says that
+quitting weed for 100 days is the one thing)."*
+
+Step 3 asks for a **sentence** and keeps it in `answers[ONE_THING_KEY]`, with the
+why, the cost, the identity, the values and the requirements hung off it. That is
+the one thing, it is what `RecapTab` prints and what `FocusTab` echoes, and
+`SeasonBand` on the tracking dashboard was printing `seasonFocusId` under that
+heading instead — a different decision, stored two steps later, whose only
+control was a button that said **"Make this my one thing"** on every goal card,
+every area dialog and the build board.
+
+`FocusTab` had already settled this — it carries the note *"THE ONE THING IS NOT
+HERE ANY MORE. It has step 3 to itself"* and only echoes the sentence. The
+buttons were the leftover, and they kept writing a competing answer months after
+the question moved. Hence a plan whose one thing is "quitting weed for 100 days"
+and whose season says "flat benching", with nothing on either screen saying which
+was which or where the second came from.
+
+- `SeasonBand` prints the sentence under "The one thing".
+- `seasonFocusId` keeps its place under **"What this season protects"** — it is a
+  real decision (the goal a bad week still gets done) and deleting it to fix a
+  label would be fixing one wrong thing by removing a right one — and the band
+  says *"a goal or area you picked on your plan"* beside it, because *where is
+  that coming from* was the question.
+- `SEASON_FOCUS_COPY` is renamed throughout: `pick` is "Make this the season's
+  focus", and the three components that hard-coded `"my one thing this season"`
+  inline now read `SEASON_FOCUS_COPY.picked`.
+
+The lint that stops a fourth recurrence is on the copy object, not the
+components: nothing describing `seasonFocusId` may contain "one thing", except
+`help`, which must — naming what it is *not* is the fastest way to settle which
+of the two you are looking at.
+
+### Verified on the page
+
+First against a plan built after the change, which proved only the new-plan path;
+then, after the report above, against a **v1-shaped** save — version 1, `goesTo`
+present and null, no `asks` key — which is the one that mattered. On that save:
+`Journal` drew *→ Your journal* and opened step 13 with the errand ribbon;
+`Read your driving force` drew *→ Your driving force, all five parts*;
+`Write three gratitudes`, `Plan the day` and `One most important task` each drew
+their box with the library's wording; and the plan re-stamped itself to v2 on the
+first write. On `/dashboard/tracking` the band read *THE ONE THING — Quitting weed
+for 100 days.* over *WHAT THIS SEASON PROTECTS — Flat benching — a goal or area
+you picked on your plan.*
+
+With a plan built after the change (morning, evening, manifestation and business
+routines, a north star, a why, an identity, standards, values and a goal with a
+reason):
+*Read your driving force* drew *→ Your driving force, all five parts* and opened
+the recap page scrolled to the driving-force section with the errand ribbon up;
+*Weekly review* opened step 13 scrolled to the weekly-review set; the four
+writing rows in the morning stack each drew their box; text typed into a box on
+Today and into one on the journal page both reached `localStorage` under the
+step's id and appeared in the archive under the right date; removing the
+gratitude question left `asks: null`, kept *Coffee, the sea, my brother.* in the
+archive and labelled it *a question you have since removed*; and *ask me
+something here* on the same row put the question back with the old answer still
+under it.

@@ -4,13 +4,14 @@
  */
 
 export const STORAGE_KEY = "toggl-clone:v1"
-/** Bumped whenever stored state is no longer readable; a mismatch reseeds the demo */
+/** Bumped whenever stored state is no longer readable; a mismatch starts a fresh workspace */
 export const STATE_VERSION = 2
 /** Toggl requires a `created_with` on every entry (toggl) */
 export const CREATED_WITH = "daygame-coach /test/toggl"
 /**
- * Marks the generated demo history. Entries carrying this tag get re-dated to
- * today when the sandbox is reopened on a later day; entries you create never do.
+ * This page used to seed sample entries carrying this tag. Nothing generates
+ * them any more; the constant remains so a browser that still has them stored
+ * gets them cleaned out on load. See demoDataService.
  */
 export const SEED_CREATED_WITH = "daygame-coach /test/toggl (demo data)"
 /** Warn about a timer left running longer than this (hours) */
@@ -165,7 +166,14 @@ export const DEFAULT_POMODORO = {
   notify: true,
 } as const
 
-export const DEFAULT_IDLE = { enabled: true, minutes: 5 } as const
+/**
+ * Off by default: a web page can only see activity on its own tab, so it cannot
+ * tell "away from the desk" from "working in another app".
+ */
+export const DEFAULT_IDLE = { enabled: false, minutes: 10 } as const
+
+/** The settings an older build shipped, migrated away from on load */
+export const LEGACY_IDLE_DEFAULT = { enabled: true, minutes: 5 } as const
 
 export const DEFAULT_REMINDERS = {
   enabled: false,

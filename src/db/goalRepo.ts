@@ -16,8 +16,7 @@ import type {
 } from "./goalTypes"
 import { computeGoalProgress } from "./goalTypes"
 import type { UserTrackingStatsRow } from "./trackingTypes"
-import { getOrCreateUserTrackingStats, getWeeklyApproachQualityAvg, getHighQualityApproachCount } from "./trackingRepo"
-import { getScenarioStats, type ScenarioStats } from "./scenarioRepo"
+import { resolveMetricValues } from "./metricsRepo"
 import { getISOWeekString } from "../tracking/trackingService"
 import { getTodayInTimezone, getNowInTimezone, periodStartFor, type GoalPeriod } from "../shared/dateUtils"
 import { shouldAutoFreeze, isPeriodStale } from "../goals/goalsService"
@@ -773,57 +772,12 @@ export async function resetYearlyGoals(userId: string, timezone: string | null =
 // ============================================
 
 /**
- * Get the metric value from tracking stats based on linked_metric type.
- * Weekly metrics validate that current_week matches the actual current week —
- * if the week rolled over but no new session was logged, weekly values return 0.
+ * Re-exported so existing callers keep working. The implementation lives in
+ * metricsRepo, which is the single place a metric turns into a number — the
+ * dashboard tiles read the same function, so a tile and a goal card can no
+ * longer disagree about how many approaches happened this week.
  */
-export function getMetricValue(
-  stats: UserTrackingStatsRow,
-  metric: LinkedMetric,
-  timezone: string | null = null
-): number {
-  if (metric === null) return 0
-
-  const currentWeek = getISOWeekString(getNowInTimezone(timezone))
-  const isCurrentWeek = stats.current_week === currentWeek
-
-  switch (metric) {
-    case "approaches_weekly":
-      return isCurrentWeek ? stats.current_week_approaches : 0
-    case "sessions_weekly":
-      return isCurrentWeek ? stats.current_week_sessions : 0
-    case "numbers_weekly":
-      return isCurrentWeek ? (stats.current_week_numbers ?? 0) : 0
-    case "instadates_weekly":
-      return isCurrentWeek ? (stats.current_week_instadates ?? 0) : 0
-    case "field_reports_weekly":
-      return isCurrentWeek ? (stats.current_week_field_reports ?? 0) : 0
-    case "approaches_cumulative":
-      return stats.total_approaches
-    case "sessions_cumulative":
-      return stats.total_sessions
-    case "numbers_cumulative":
-      return stats.total_numbers
-    case "instadates_cumulative":
-      return stats.total_instadates
-    case "field_reports_cumulative":
-      return stats.total_field_reports
-    case "approach_quality_avg_weekly":
-      console.warn(`[getMetricValue] approach_quality_avg_weekly should be handled by syncLinkedGoals directly (requires async DB query). Returning 0.`)
-      return 0
-    case "high_quality_approaches_cumulative":
-      console.warn(`[getMetricValue] high_quality_approaches_cumulative should be handled by syncLinkedGoals directly (requires async DB query). Returning 0.`)
-      return 0
-    case "scenario_sessions_cumulative":
-    case "scenario_types_cumulative":
-    case "scenario_high_scores_cumulative":
-      console.warn(`[getMetricValue] ${metric} should be handled by syncLinkedGoals directly (requires async DB query). Returning 0.`)
-      return 0
-    default:
-      console.warn(`[getMetricValue] Unknown linked_metric "${metric}". Returning 0 — goal progress may be incorrect.`)
-      return 0
-  }
-}
+export { getMetricValue } from "./metricsRepo"
 
 /**
  * Sync all goals with linked metrics to current tracking data
@@ -832,50 +786,6 @@ export function getMetricValue(
 export async function syncLinkedGoals(userId: string, timezone: string | null = null): Promise<number> {
   const supabase = await createServerSupabaseClient()
 
-  // Get user's tracking stats (create row if missing so linked goals always sync)
-  let stats = await getOrCreateUserTrackingStats(userId)
-
-  // Recompute weekly counters from actual data each sync.
-  // Pre-computed counters can drift when different tracking paths (session vs approach
-  // vs field-report) advance current_week without resetting each other's counters.
-  const computedWeek = getISOWeekString(getNowInTimezone(timezone))
-  if (stats.current_week === computedWeek) {
-    const now = getNowInTimezone(timezone)
-    const dayOfWeek = now.getDay() || 7
-    const monday = new Date(now)
-    monday.setDate(now.getDate() - dayOfWeek + 1)
-    monday.setHours(0, 0, 0, 0)
-    const mondayISO = monday.toISOString()
-
-    // Count actual sessions this week
-    const { count: sessionCount } = await supabase
-      .from("sessions")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .gte("started_at", mondayISO)
-
-    // Count actual approaches this week
-    const { count: approachCount } = await supabase
-      .from("approaches")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .gte("created_at", mondayISO)
-
-    const realSessions = sessionCount ?? 0
-    const realApproaches = approachCount ?? 0
-
-    if (realSessions !== stats.current_week_sessions || realApproaches !== stats.current_week_approaches) {
-      console.warn(`[syncLinkedGoals] repairing weekly counters: sessions ${stats.current_week_sessions} → ${realSessions}, approaches ${stats.current_week_approaches} → ${realApproaches}`)
-      const { updateUserTrackingStats } = await import("./trackingRepo")
-      await updateUserTrackingStats(userId, {
-        current_week_sessions: realSessions,
-        current_week_approaches: realApproaches,
-      })
-      stats = { ...stats, current_week_sessions: realSessions, current_week_approaches: realApproaches }
-    }
-  }
-
-  // Get all active goals with linked metrics
   const { data: goals, error: fetchError } = await supabase
     .from("user_goals")
     .select("id, linked_metric, current_value")
@@ -892,139 +802,16 @@ export async function syncLinkedGoals(userId: string, timezone: string | null = 
     return 0
   }
 
-  // Pre-fetch async metrics (only if any goal uses them)
-  const needsQualityAvg = goals.some(g => g.linked_metric === "approach_quality_avg_weekly")
-  let qualityAvg = 0
-  if (needsQualityAvg) {
-    const now = getNowInTimezone(timezone)
-    const dayOfWeek = now.getDay() || 7 // 1=Mon..7=Sun
-    const monday = new Date(now)
-    monday.setDate(now.getDate() - dayOfWeek + 1)
-    monday.setHours(0, 0, 0, 0)
-    qualityAvg = await getWeeklyApproachQualityAvg(userId, monday.toISOString())
-  }
-
-  const needsHighQuality = goals.some(g => g.linked_metric === "high_quality_approaches_cumulative")
-  let highQualityCount = 0
-  if (needsHighQuality) {
-    highQualityCount = await getHighQualityApproachCount(userId)
-  }
-
-  const SCENARIO_METRICS = ["scenario_sessions_cumulative", "scenario_types_cumulative", "scenario_high_scores_cumulative"]
-  const needsScenarioStats = goals.some(g => SCENARIO_METRICS.includes(g.linked_metric ?? ""))
-  let scenarioStats: ScenarioStats | null = null
-  if (needsScenarioStats) {
-    scenarioStats = await getScenarioStats(userId)
-  }
-
-  // Pre-fetch health metrics (only if any goal uses them)
-  const HEALTH_METRICS = [
-    "body_weight_current", "sleep_hours_avg_weekly",
-    "gym_sessions_weekly", "gym_sessions_cumulative",
-    "nutrition_quality_avg_weekly",
-    "cardio_sessions_weekly", "training_hours_cumulative",
-    "consecutive_training_weeks",
-    "bench_press_1rm", "squat_1rm", "deadlift_1rm",
-    "overhead_press_1rm", "pullups_max_reps",
-    "progress_photos_cumulative", "protein_days_hit_weekly",
-    "calorie_days_hit_weekly",
-    "weight_lost_from_peak", "weight_gained_from_lowest",
-    "body_measurements_count",
-    "mobility_sessions_weekly", "yoga_sessions_weekly",
-    "flexibility_hours_cumulative",
-    "running_sessions_weekly", "running_distance_cumulative",
-    "longest_run_km", "consecutive_cardio_weeks",
-  ]
-  const needsHealthMetrics = goals.some(g => HEALTH_METRICS.includes(g.linked_metric ?? ""))
-  const healthValues: Record<string, number> = {}
-  if (needsHealthMetrics) {
-    const hr = await import("./healthRepo")
-    const needs = (m: string) => goals.some(g => g.linked_metric === m)
-
-    const fetches = await Promise.allSettled([
-      needs("body_weight_current") ? hr.getLatestWeight(userId) : null,
-      needs("sleep_hours_avg_weekly") ? hr.getSleepWeeklyAvgHours(userId) : null,
-      needs("gym_sessions_weekly") ? hr.getWorkoutWeeklyCount(userId) : null,
-      needs("gym_sessions_cumulative") ? hr.getWorkoutCumulativeCount(userId) : null,
-      needs("nutrition_quality_avg_weekly") ? hr.getNutritionWeeklyAvg(userId) : null,
-      needs("cardio_sessions_weekly") ? hr.getCardioWeeklyCount(userId) : null,
-      needs("training_hours_cumulative") ? hr.getTrainingHoursCumulative(userId) : null,
-      needs("consecutive_training_weeks") ? hr.getConsecutiveTrainingWeeks(userId) : null,
-      needs("bench_press_1rm") ? hr.getExerciseMax(userId, "bench press") : null,
-      needs("squat_1rm") ? hr.getExerciseMax(userId, "squat") : null,
-      needs("deadlift_1rm") ? hr.getExerciseMax(userId, "deadlift") : null,
-      needs("overhead_press_1rm") ? hr.getExerciseMax(userId, "overhead press") : null,
-      needs("pullups_max_reps") ? hr.getPullUpsMax(userId) : null,
-      needs("progress_photos_cumulative") ? hr.getProgressPhotoCount(userId) : null,
-      needs("protein_days_hit_weekly") ? hr.getProteinDaysHitWeekly(userId) : null,
-      needs("calorie_days_hit_weekly") ? hr.getCalorieDaysHitWeekly(userId) : null,
-      needs("weight_lost_from_peak") ? hr.getWeightLostFromPeak(userId) : null,
-      needs("weight_gained_from_lowest") ? hr.getWeightGainedFromLowest(userId) : null,
-      needs("body_measurements_count") ? hr.getBodyMeasurementCount(userId) : null,
-      needs("mobility_sessions_weekly") ? hr.getMobilitySessionsWeekly(userId) : null,
-      needs("yoga_sessions_weekly") ? hr.getYogaSessionsWeekly(userId) : null,
-      needs("flexibility_hours_cumulative") ? hr.getFlexibilityHoursCumulative(userId) : null,
-      needs("running_sessions_weekly") ? hr.getRunningSessionsWeekly(userId) : null,
-      needs("running_distance_cumulative") ? hr.getRunningDistanceCumulative(userId) : null,
-      needs("longest_run_km") ? hr.getLongestRunKm(userId) : null,
-      needs("consecutive_cardio_weeks") ? hr.getConsecutiveCardioWeeks(userId) : null,
-    ])
-
-    const resolve = (i: number): number => {
-      const r = fetches[i]
-      if (r.status !== "fulfilled" || r.value === null || r.value === undefined) return 0
-      if (typeof r.value === "number") return r.value
-      if (typeof r.value === "object" && "weight_kg" in (r.value as Record<string, unknown>)) return (r.value as { weight_kg: number }).weight_kg
-      return 0
-    }
-
-    healthValues.body_weight_current = resolve(0)
-    healthValues.sleep_hours_avg_weekly = resolve(1)
-    healthValues.gym_sessions_weekly = resolve(2)
-    healthValues.gym_sessions_cumulative = resolve(3)
-    healthValues.nutrition_quality_avg_weekly = resolve(4)
-    healthValues.cardio_sessions_weekly = resolve(5)
-    healthValues.training_hours_cumulative = resolve(6)
-    healthValues.consecutive_training_weeks = resolve(7)
-    healthValues.bench_press_1rm = resolve(8)
-    healthValues.squat_1rm = resolve(9)
-    healthValues.deadlift_1rm = resolve(10)
-    healthValues.overhead_press_1rm = resolve(11)
-    healthValues.pullups_max_reps = resolve(12)
-    healthValues.progress_photos_cumulative = resolve(13)
-    healthValues.protein_days_hit_weekly = resolve(14)
-    healthValues.calorie_days_hit_weekly = resolve(15)
-    healthValues.weight_lost_from_peak = resolve(16)
-    healthValues.weight_gained_from_lowest = resolve(17)
-    healthValues.body_measurements_count = resolve(18)
-    healthValues.mobility_sessions_weekly = resolve(19)
-    healthValues.yoga_sessions_weekly = resolve(20)
-    healthValues.flexibility_hours_cumulative = resolve(21)
-    healthValues.running_sessions_weekly = resolve(22)
-    healthValues.running_distance_cumulative = resolve(23)
-    healthValues.longest_run_km = resolve(24)
-    healthValues.consecutive_cardio_weeks = resolve(25)
-  }
+  const metrics = [...new Set(goals.map((g) => g.linked_metric).filter((m): m is string => !!m))]
+  const values = await resolveMetricValues(userId, metrics, timezone)
 
   let updatedCount = 0
 
   for (const goal of goals) {
-    const metric = goal.linked_metric as LinkedMetric
-    const newValue = HEALTH_METRICS.includes(metric ?? "")
-      ? (healthValues[metric ?? ""] ?? 0)
-      : metric === "approach_quality_avg_weekly"
-        ? qualityAvg
-        : metric === "high_quality_approaches_cumulative"
-          ? highQualityCount
-          : metric === "scenario_sessions_cumulative"
-            ? (scenarioStats?.totalSessions ?? 0)
-            : metric === "scenario_types_cumulative"
-              ? (scenarioStats?.uniqueTypes ?? 0)
-              : metric === "scenario_high_scores_cumulative"
-                ? (scenarioStats?.highScoreCount ?? 0)
-                : getMetricValue(stats, metric, timezone)
+    // A goal counter is a number by definition, so an unresolvable metric lands
+    // as 0 here. Tiles keep the null and render "—" instead.
+    const newValue = values[goal.linked_metric ?? ""] ?? 0
 
-    // Only update if value changed
     if (newValue !== goal.current_value) {
       const { error } = await supabase
         .from("user_goals")
@@ -1082,6 +869,54 @@ export async function snapshotGoals(
     return 0
   }
   return rows.length
+}
+
+/**
+ * The goals behind a set of goal-derived metric ids, scoped to their owner.
+ *
+ * The user_id filter is the security boundary, not a convenience: a
+ * goal-derived metric id (`goal:<uuid>:<view>`) sits in a dashboard_widgets row
+ * the user can write, so an id naming somebody else's goal must come back empty
+ * rather than resolving.
+ */
+export async function getGoalsByIds(userId: string, goalIds: string[]): Promise<UserGoalRow[]> {
+  if (goalIds.length === 0) return []
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("user_goals")
+    .select("*")
+    .eq("user_id", userId)
+    .in("id", goalIds)
+
+  if (error) throw new Error(`Failed to fetch goals by id: ${error.message}`)
+  return (data ?? []) as UserGoalRow[]
+}
+
+/**
+ * Everything a goal has accumulated, across every period it has run.
+ *
+ * A recurring goal's `current_value` is only this period's count — it is zeroed
+ * on every rollover. The history lives in daily_goal_snapshots, written just
+ * before each reset, so lifetime = sum of snapshots + the period in progress.
+ *
+ * CAVEAT worth knowing before trusting the number: snapshots only exist from
+ * the point the goal was created onwards, and only for periods that actually
+ * rolled over while the app was in use. A goal whose periods were never rolled
+ * has no snapshots and reports just its current period.
+ */
+export async function getGoalAccumulatedTotal(userId: string, goalId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("daily_goal_snapshots")
+    .select("current_value")
+    .eq("user_id", userId)
+    .eq("goal_id", goalId)
+
+  if (error) throw new Error(`Failed to fetch goal history: ${error.message}`)
+
+  return (data ?? []).reduce((sum, row) => sum + ((row.current_value as number) ?? 0), 0)
 }
 
 /**

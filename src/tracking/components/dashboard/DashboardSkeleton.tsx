@@ -2,7 +2,17 @@
 
 import { Card } from "@/components/ui/card"
 
-export function DashboardSkeleton() {
+/**
+ * `cardsOnly` skips the header and stat-row placeholders.
+ *
+ * The dashboard renders its header, season band and stat tiles immediately —
+ * the tiles come pre-resolved from the server — and only the cards below wait
+ * on the five tracking fetches. Drawing placeholder bars over content that is
+ * already on screen would be a step backwards from a blank space.
+ */
+export function DashboardSkeleton({ cardsOnly = false }: { cardsOnly?: boolean }) {
+  if (cardsOnly) return <DashboardCardsSkeleton />
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Header skeleton */}
@@ -67,6 +77,46 @@ export function DashboardSkeleton() {
           </div>
         </Card>
       </div>
+    </div>
+  )
+}
+
+/** The cards below the stat row, while the tracking fetches are in flight. */
+function DashboardCardsSkeleton() {
+  return (
+    <div className="grid md:grid-cols-2 gap-6">
+      <Card className="p-4 sm:p-6">
+        <div className="h-6 w-32 bg-muted rounded animate-pulse mb-4" />
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-12 bg-muted rounded-lg animate-pulse" />
+          ))}
+        </div>
+      </Card>
+
+      <Card className="p-4 sm:p-6">
+        <div className="h-6 w-44 bg-muted rounded animate-pulse mb-4" />
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+              <div className="size-12 rounded-full bg-muted animate-pulse" />
+              <div className="flex-1">
+                <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+                <div className="h-3 w-36 bg-muted rounded animate-pulse mt-1" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="p-4 sm:p-6 md:col-span-2">
+        <div className="h-6 w-36 bg-muted rounded animate-pulse mb-4" />
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-20 bg-muted/30 rounded-lg animate-pulse" />
+          ))}
+        </div>
+      </Card>
     </div>
   )
 }

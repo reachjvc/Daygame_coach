@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  ArrowLeft,
   Clock,
   MapPin,
   Footprints,
@@ -30,13 +29,14 @@ import type { SessionWithApproaches, ApproachRow } from "@/src/db/trackingTypes"
 import type { ApproachFormData } from "../types"
 import { OUTCOME_OPTIONS, MOOD_OPTIONS, APPROACH_TAGS } from "../config"
 import { getOutcomeLabel, getOutcomeColor, getOutcomeEmoji } from "../trackingDisplayService"
+import { BackLink } from "@/components/BackLink"
 
 interface SessionDetailPageProps {
   userId: string
   sessionId: string
 }
 
-export function SessionDetailPage({ userId, sessionId }: SessionDetailPageProps) {
+export function SessionDetailPage({ sessionId }: SessionDetailPageProps) {
   const router = useRouter()
 
   // Core data
@@ -330,13 +330,7 @@ export function SessionDetailPage({ userId, sessionId }: SessionDetailPageProps)
   if (error || !session) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <Link
-          href="/dashboard/tracking"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
-        >
-          <ArrowLeft className="size-4" />
-          Back to Dashboard
-        </Link>
+        <BackLink fallback="/dashboard/tracking" fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6" />
         <Card className="p-8 text-center">
           <AlertCircle className="size-12 mx-auto mb-4 text-muted-foreground opacity-50" />
           <h2 className="text-xl font-semibold mb-2">{error || "Session not found"}</h2>
@@ -361,13 +355,7 @@ export function SessionDetailPage({ userId, sessionId }: SessionDetailPageProps)
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       {/* Back link */}
-      <Link
-        href="/dashboard/tracking"
-        className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
-      >
-        <ArrowLeft className="size-4" />
-        Back to Dashboard
-      </Link>
+      <BackLink fallback="/dashboard/tracking" fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6" />
 
       {/* Header */}
       <div className="mb-6">

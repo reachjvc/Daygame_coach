@@ -26,6 +26,21 @@ import type {
 export const NORTH_STAR_STORAGE_KEY = "north-star-v1"
 
 /**
+ * WHICH RULES A SAVED PLAN WAS WRITTEN UNDER.
+ *
+ * v1 → v2 exists for one thing: on a v1 save, a step's `goesTo: null` cannot be
+ * told apart from "nothing was known here", because creation wrote `null`
+ * whenever inference found nothing. Rows the library had no destination for at
+ * the time — "Journal", "Read your driving force" — therefore stored a decision
+ * they never made, and could never adopt the destination the library was later
+ * given. See `stepGoesTo`.
+ *
+ * The plan is re-saved as v2 on the next write, after which `null` means what
+ * it always said it meant and a cleared row stays cleared.
+ */
+export const NS_PLAN_VERSION = 2
+
+/**
  * The id of THIS run of the plan, minted on first use and reminted by
  * "start over".
  *
@@ -214,6 +229,28 @@ export const TODAY_COPY = {
  */
 export const SEASON_BAND_COPY = {
   oneThingLabel: "The one thing",
+  /**
+   * AND IT MUST BE THE ONE THEY WROTE.
+   *
+   * Reported from the page (2026-08-25): *"the one thing on the tracking page,
+   * is still not linked correctly to what is actually my one thing."*
+   *
+   * Two different fields in this plan are called the one thing. Step 3 asks for
+   * a SENTENCE — the single change that would make the rest more likely — and
+   * keeps it in `answers[ONE_ANSWERS.oneThing]`, with the why, the cost, the
+   * identity and the requirements hung off it; that is the one the recap prints
+   * and the one anybody means. `seasonFocusId` is a different decision made two
+   * steps later — WHICH GOAL OR AREA this season is for — and its own copy also
+   * calls itself "your one thing this season", which is how the band came to
+   * label a picked goal's title as somebody's one thing.
+   *
+   * The band prints the sentence now. The season focus is not deleted: it is a
+   * real decision and it keeps its place, under a name that says what it is.
+   */
+  focusLabel: "What this season protects",
+  noSeasonFocus: "Nothing picked yet",
+  /** Said on the band, because "where is that coming from" was the question. */
+  focusFrom: "a goal or area you picked on your plan",
   seasonLabel: "This season",
   noneTitle: "Your plan",
   noneHelp:
@@ -1734,11 +1771,37 @@ export const RATING_VARIANCE_NOTE = {
  * unnecessary. That is a different question and it is worth asking on its own,
  * because the answer is usually not the goal at rank one.
  */
+/**
+ * THE SEASON'S FOCUS — and why it is no longer allowed to call itself the one
+ * thing.
+ *
+ * Reported from the page (2026-08-25): *"It still says this season is for flat
+ * benching, but where is that coming from (even if it says that quitting weed
+ * for 100 days is the one thing)."*
+ *
+ * It was coming from this copy. `seasonFocusId` is set by exactly one control —
+ * a button that said **"Make this my one thing"**, sitting on every goal card,
+ * every area dialog and the build board — while step 3 asks for the one thing
+ * as a SENTENCE and keeps it somewhere else entirely. Two fields, one name, two
+ * places to answer it, and no way to tell from either screen which one you were
+ * looking at.
+ *
+ * The flow had already settled this. `FocusTab` carries the note *"THE ONE
+ * THING IS NOT HERE ANY MORE. It has step 3 to itself"* and only echoes the
+ * sentence. The buttons were the leftover, and they kept writing a competing
+ * answer months after the question moved.
+ *
+ * So the name goes back to the sentence and this keeps what it actually is: the
+ * goal or area a bad week still protects. Nothing is deleted — it is a real
+ * decision, and `clear` has always been there to undo it.
+ */
 export const SEASON_FOCUS_COPY = {
-  title: "Your one thing this season",
-  help: "Of everything on this page, which one, if it happened, would make the rest easier? Often it is not the biggest goal. Quitting one thing, or getting one habit in place, can move four areas at once.",
+  title: "What this season protects",
+  help: "Of everything on this page, which one, if a week goes badly, still gets done? Often it is not the biggest goal. This is not your one thing — that is the sentence you wrote at step 3 — it is the goal or area this season is built around.",
   empty: "Nothing picked yet.",
-  pick: "Make this my one thing",
+  pick: "Make this the season's focus",
+  /** Shown on the row that is already it. */
+  picked: "this season's focus",
   clear: "not this one",
   banner: (label: string) => `This season: ${label}`,
   bannerNote: "If a week goes badly, this is the one that still gets done.",

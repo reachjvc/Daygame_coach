@@ -8,15 +8,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import {
   Loader2,
-  ArrowLeft,
   Sun,
   Check,
   Plus,
   X,
   Heart,
 } from "lucide-react"
-import Link from "next/link"
 import { VoiceRecorderButton } from "./VoiceRecorderButton"
+import { BackLink } from "@/components/BackLink"
 
 type FieldType = "scale" | "textarea" | "text" | "tristate"
 
@@ -189,13 +188,7 @@ export function DailyReviewPage({ userId }: DailyReviewPageProps) {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8" data-testid="daily-review-page">
       <div className="mb-8">
-        <Link
-          href="/dashboard/tracking"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4"
-        >
-          <ArrowLeft className="size-4" />
-          Back to Tracking
-        </Link>
+        <BackLink fallback="/dashboard/tracking" fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-amber-500/10">
             <Sun className="size-6 text-amber-500" />

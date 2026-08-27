@@ -37,8 +37,17 @@ import type { NsPlan } from "@/src/goals/types"
 import { NORTH_STAR_STORAGE_KEY, SEASON_BAND_COPY } from "@/src/goals/data/northStar"
 import { loadNsPlan, planIsUntouched, seasonFocus, todayISO } from "@/src/goals/northStarService"
 import { todayItems, todayProgress } from "@/src/goals/northStarTrackService"
+import { withReturn } from "@/src/shared/returnTo"
 
 const PLAN_PATH = "/dashboard/goals/plan"
+/**
+ * WHERE THESE LINKS CAME FROM, carried on the link.
+ *
+ * This band lives on the tracking page, and the plan it opens has its own back
+ * control aimed at the goals hub. Without the return address, opening your plan
+ * from here and pressing back lands you somewhere you have never been.
+ */
+const HERE = "/dashboard/tracking"
 
 export function SeasonBand() {
   const [plan, setPlan] = useState<NsPlan | null>(null)
@@ -64,7 +73,7 @@ export function SeasonBand() {
             <p className="text-sm text-muted-foreground mt-1 max-w-prose">{SEASON_BAND_COPY.noneHelp}</p>
           </div>
           <Link
-            href={PLAN_PATH}
+            href={withReturn(PLAN_PATH, HERE)}
             className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted/50 transition-colors shrink-0"
           >
             {SEASON_BAND_COPY.build}
@@ -117,7 +126,7 @@ export function SeasonBand() {
 
         <div className="flex flex-col items-stretch gap-2 shrink-0">
           <Link
-            href={`${PLAN_PATH}?step=today`}
+            href={withReturn(`${PLAN_PATH}?step=today`, HERE)}
             className="inline-flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
             data-testid="season-band-today"
           >
@@ -127,7 +136,7 @@ export function SeasonBand() {
             </span>
           </Link>
           <Link
-            href={PLAN_PATH}
+            href={withReturn(PLAN_PATH, HERE)}
             className="inline-flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
           >
             {SEASON_BAND_COPY.openPlan}

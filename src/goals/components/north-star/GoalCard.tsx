@@ -374,7 +374,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
               }`}
               title={SEASON_FOCUS_COPY.help}
             >
-              {isFocus ? "my one thing this season" : SEASON_FOCUS_COPY.pick}
+              {isFocus ? SEASON_FOCUS_COPY.picked : SEASON_FOCUS_COPY.pick}
             </button>
             <span className="text-[10.5px] text-zinc-600 basis-full">{NS_GOAL_TYPES.find((t) => t.type === goal.type)?.hint}</span>
           </div>

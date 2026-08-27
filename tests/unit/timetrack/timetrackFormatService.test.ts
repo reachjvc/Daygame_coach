@@ -10,6 +10,7 @@ import {
   formatDate,
   formatDayHeader,
   formatDuration,
+  formatIdleSpan,
   formatTimeOfDay,
   parseDurationInput,
   parseTimeInput,
@@ -143,5 +144,28 @@ describe("date helpers", () => {
     const iso = new Date(2026, 7, 10, 15, 5).toISOString()
     expect(formatTimeOfDay(iso, "h24")).toBe("15:05")
     expect(formatTimeOfDay(iso, "h12")).toBe("3:05 PM")
+  })
+})
+
+describe("idle spans read as plain language", () => {
+  test("seconds", () => {
+    expect(formatIdleSpan(1)).toBe("1 second")
+    expect(formatIdleSpan(45)).toBe("45 seconds")
+  })
+
+  test("minutes — never 0.05 or 0:03", () => {
+    expect(formatIdleSpan(180)).toBe("3 minutes")
+    expect(formatIdleSpan(300)).toBe("5 minutes")
+    expect(formatIdleSpan(60)).toBe("1 minute")
+  })
+
+  test("hours, with minutes only when there are some", () => {
+    expect(formatIdleSpan(3600)).toBe("1 hour")
+    expect(formatIdleSpan(3900)).toBe("1 hour 5 minutes")
+    expect(formatIdleSpan(7200)).toBe("2 hours")
+  })
+
+  test("never negative", () => {
+    expect(formatIdleSpan(-10)).toBe("0 seconds")
   })
 })

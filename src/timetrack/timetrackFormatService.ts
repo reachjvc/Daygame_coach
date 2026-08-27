@@ -124,6 +124,23 @@ export function formatClock(totalSeconds: number): string {
   return `${negative ? "-" : ""}${h}:${pad2(m)}:${pad2(s)}`
 }
 
+/**
+ * Plain-language span for prompts: "45 seconds", "12 minutes", "1 hour 5 minutes".
+ * The h:mm and decimal formats are for tracked time, not for short gaps.
+ */
+export function formatIdleSpan(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.round(totalSeconds))
+  if (seconds < 60) return `${seconds} second${seconds === 1 ? "" : "s"}`
+
+  const minutes = Math.round(seconds / 60)
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"}`
+
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  const hourPart = `${hours} hour${hours === 1 ? "" : "s"}`
+  return rest === 0 ? hourPart : `${hourPart} ${rest} minute${rest === 1 ? "" : "s"}`
+}
+
 /** Compact label for charts and totals, e.g. "3h 05m" / "12m" */
 export function formatCompact(totalSeconds: number): string {
   const { h, m } = splitDuration(totalSeconds)

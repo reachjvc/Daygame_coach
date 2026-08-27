@@ -3,20 +3,9 @@
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { useState } from "react"
-import {
-  LayoutDashboard,
-  Aperture,
-  BarChart3,
-  Swords,
-  Menu,
-  Castle,
-  HelpCircle,
-  BookOpen,
-  Settings,
-  LogOut,
-  X,
-} from "lucide-react"
+import { Menu, LogOut, X } from "lucide-react"
 import { signOut } from "@/app/actions/auth"
+import { TABS, MORE_ITEMS } from "@/components/navTabs"
 
 /** Routes where the tab bar should be hidden (they have their own bottom bars). */
 const HIDDEN_ROUTE_PREFIXES = [
@@ -25,19 +14,6 @@ const HIDDEN_ROUTE_PREFIXES = [
   "/dashboard/tracking/review",
 ]
 
-const TABS = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", exact: true },
-  { label: "Goals", icon: Aperture, href: "/dashboard/goals", exact: false },
-  { label: "Tracking", icon: BarChart3, href: "/dashboard/tracking", exact: false },
-  { label: "Scenarios", icon: Swords, href: "/dashboard/scenarios", exact: false },
-] as const
-
-const MORE_ITEMS = [
-  { label: "The Lair", icon: Castle, href: "/lair" },
-  { label: "Ask Coach", icon: HelpCircle, href: "/dashboard/qa" },
-  { label: "Articles", icon: BookOpen, href: "/dashboard/articles" },
-  { label: "Settings", icon: Settings, href: "/dashboard/settings" },
-] as const
 
 function isActive(pathname: string, href: string, exact: boolean) {
   if (exact) return pathname === href

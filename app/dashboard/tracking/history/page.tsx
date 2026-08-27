@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
   Loader2,
-  ArrowLeft,
   FileText,
   MapPin,
   ChevronDown,
@@ -22,6 +21,7 @@ import { useFieldReports } from "@/src/tracking/hooks"
 import { getSystemTemplateInfo, TEMPLATE_COLORS, type TemplateSlug } from "@/src/tracking/data/templates"
 import { TEMPLATE_ICONS } from "@/src/tracking/components/templateIcons"
 import type { FieldReportRow } from "@/src/db/trackingTypes"
+import { BackLink } from "@/components/BackLink"
 
 type FilterMode = "all" | "submitted" | "drafts"
 
@@ -53,13 +53,7 @@ export default function FieldReportHistoryPage() {
     <div className="max-w-4xl mx-auto px-4 py-8" data-testid="tracking-history-page">
       {/* Header */}
       <div className="mb-8">
-        <Link
-          href="/dashboard/tracking"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4"
-        >
-          <ArrowLeft className="size-4" />
-          Back to Tracking
-        </Link>
+        <BackLink fallback="/dashboard/tracking" fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
         <h1 className="text-3xl font-bold">Field Report History</h1>
         <p className="text-muted-foreground mt-2">
           Review your past field reports and reflections

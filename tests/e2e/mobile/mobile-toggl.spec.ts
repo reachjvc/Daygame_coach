@@ -36,6 +36,15 @@ async function goTo(page: Page, name: string) {
   await page.waitForTimeout(700)
 }
 
+/** The workspace starts empty, so tests that need rows create them */
+async function trackEntry(page: Page, description: string) {
+  await page.getByPlaceholder('What are you working on?').fill(description)
+  await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
+  await page.waitForTimeout(700)
+  await page.locator('main').getByRole('button', { name: 'Stop timer' }).click()
+  await page.waitForTimeout(400)
+}
+
 const pageOverflow = (page: Page) =>
   page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
@@ -47,6 +56,7 @@ test.describe('time tracker on a phone', () => {
 
   test('every screen fits the viewport with no horizontal scrolling', async ({ page }) => {
     await openFreshSandbox(page)
+    await trackEntry(page, 'phone entry')
 
     for (const screen of ['Timer', 'Calendar', 'Reports', 'Projects', 'Manage', 'Settings']) {
       if (screen !== 'Timer') await goTo(page, screen)
@@ -79,6 +89,7 @@ test.describe('time tracker on a phone', () => {
 
   test('entry rows are compact and open the detail sheet on tap', async ({ page }) => {
     await openFreshSandbox(page)
+    await trackEntry(page, 'phone entry')
 
     const firstRow = page.locator('ul.divide-y > li').first()
     await firstRow.locator('[role="button"]').first().click()
@@ -96,6 +107,7 @@ test.describe('time tracker on a phone', () => {
 
   test('bulk selection is opt-in, so checkboxes do not clutter the list', async ({ page }) => {
     await openFreshSandbox(page)
+    await trackEntry(page, 'phone entry')
 
     await expect(page.locator('input[aria-label="Select time entry"]')).toHaveCount(0)
     await page.getByRole('button', { name: 'Select' }).first().click()
@@ -105,6 +117,7 @@ test.describe('time tracker on a phone', () => {
 
   test('report filters live in a sheet instead of a wall of controls', async ({ page }) => {
     await openFreshSandbox(page)
+    await trackEntry(page, 'phone entry')
     await goTo(page, 'Reports')
 
     await page.getByRole('button', { name: /Filters/ }).click()
@@ -125,12 +138,9 @@ test.describe('time tracker on a phone', () => {
   test('primary controls are large enough to tap', async ({ page }) => {
     await openFreshSandbox(page)
 
-    for (const name of ['Start timer', 'Stop timer']) {
-      const button = page.locator('main').getByRole('button', { name }).first()
-      if (!(await button.count())) continue
-      const box = await button.boundingBox()
-      expect(box!.height, `${name} is too short to tap`).toBeGreaterThanOrEqual(36)
-    }
+    const startButton = page.locator('main').getByRole('button', { name: 'Start timer' }).first()
+    const startBox = await startButton.boundingBox()
+    expect(startBox!.height, 'the start button is too short to tap').toBeGreaterThanOrEqual(36)
 
     // every tab in the bottom bar
     const tabs = page.locator('nav[aria-label="Sections"] button')

@@ -21,6 +21,7 @@ import {
   GOAL_DATE_PRESETS,
   NS_DAILY_WINDOW,
   NS_FLOOR,
+  NS_PLAN_VERSION,
   NS_QUALIFY_THRESHOLD,
   NS_SPLITS,
   NS_VALUE_SUGGESTIONS,
@@ -265,6 +266,69 @@ export function inferStepDestination(title: string): string | null {
  * a better one on somebody's behalf is how a box ends up labelled something
  * they did not write.
  */
+/**
+ * WHETHER A SAVED STEP IS STILL OURS, so the library may speak for it.
+ *
+ * The migrations below adopt what the library now says about a step. They may
+ * only do that for a step somebody has left alone: the id says which library
+ * entry it came from, and the title says they have not since made it their own.
+ * A row somebody retitled is theirs, and the library has no business rewriting
+ * where it goes or what it asks.
+ */
+function isUntouchedLibraryStep(saved: Record<string, unknown>, bp: RoutineBlueprint): RoutineBlueprintStep | null {
+  const entry = bp.library.find((l) => l.id === String(saved.id))
+  if (!entry) return null
+  return String(saved.title).trim() === entry.title.trim() ? entry : null
+}
+
+/**
+ * WHERE A SAVED STEP GOES, and the one migration that had to be version-gated.
+ *
+ * Three cases, and the third is the bug this exists to fix:
+ *
+ *   - **No key at all.** A save from before rows could be doors. Inferred from
+ *     the step's own words: "Read your north star out loud" said the right
+ *     thing months before this existed.
+ *   - **A string.** Somebody's choice, or ours. Kept.
+ *   - **`null`.** Documented as "somebody cleared it", and on a v2 save that is
+ *     exactly what it is. On a **v1** save it is not: creation wrote `null`
+ *     whenever inference found nothing, so every row the library had no
+ *     destination for at the time — "Journal", "Read your driving force" —
+ *     stored a `null` that meant *nothing was known*, and was then read back
+ *     as a decision nothing was allowed to overrule. Reported from the page:
+ *     *"when i click journal, i still dont go anywhere"* — after the library
+ *     had been given the destination, on a plan that could never adopt it.
+ *
+ * So on a v1 save, an untouched library step adopts what the library now says.
+ * It is one-time: the plan is re-saved as v2, where `null` means what it always
+ * said it meant and a clearing is permanent.
+ */
+function stepGoesTo(saved: Record<string, unknown>, bp: RoutineBlueprint, planVersion: number): string | null {
+  if (!("goesTo" in saved)) return inferStepDestination(String(saved.title))
+  if (typeof saved.goesTo === "string" && saved.goesTo.trim()) return saved.goesTo
+  if (planVersion >= NS_PLAN_VERSION) return null
+  return isUntouchedLibraryStep(saved, bp)?.goesTo ?? null
+}
+
+/** The same three cases for the question a step asks. See `stepGoesTo`. */
+function stepAsks(saved: Record<string, unknown>, bp: RoutineBlueprint, planVersion: number): string | null {
+  if ("asks" in saved) {
+    if (typeof saved.asks === "string" && saved.asks.trim()) return saved.asks.trim()
+    if (planVersion >= NS_PLAN_VERSION) return null
+  }
+  /**
+   * The library's own wording wins over the title.
+   *
+   * `inferStepQuestion` hands back the step's title, which is right for a row
+   * somebody typed and poor for ours: "Write three gratitudes" is an
+   * instruction and "Three things you are grateful for" is a question, and the
+   * question is what goes above the box.
+   */
+  const entry = isUntouchedLibraryStep(saved, bp)
+  if (entry?.asks) return entry.asks
+  return "asks" in saved ? null : inferStepQuestion(String(saved.title))
+}
+
 export function inferStepQuestion(title: string): string | null {
   const text = title.toLowerCase()
   if (!WRITE_PHRASES.some((phrase) => text.includes(phrase))) return null
@@ -349,7 +413,7 @@ export function emptyNsPlan(): NsPlan {
     return seeded.routine
   })
   return {
-    version: 1,
+    version: NS_PLAN_VERSION,
     horizonYears: DEFAULT_HORIZON,
     northStar: "",
     rungs: {},
@@ -421,6 +485,14 @@ export function loadNsPlan(raw: string | null): NsPlan | null {
   }
   if (!parsed || typeof parsed !== "object") return null
   const obj = parsed as Record<string, unknown>
+  /**
+   * WHICH RULES THIS SAVE WAS WRITTEN UNDER. See `NS_PLAN_VERSION`.
+   *
+   * Only the step migration reads it, and it reads it for one reason: on a v1
+   * save, `goesTo: null` cannot be told apart from "nothing was known here",
+   * because that is what creation wrote when nothing was.
+   */
+  const planVersion = typeof obj.version === "number" && Number.isFinite(obj.version) ? obj.version : 1
 
   const areas: NsArea[] = Array.isArray(obj.areas)
     ? (obj.areas as unknown[])
@@ -489,18 +561,8 @@ export function loadNsPlan(raw: string | null): NsPlan | null {
                      * this existed. `null` means somebody cleared it, and
                      * inference must never argue with that.
                      */
-                    goesTo:
-                      "goesTo" in s
-                        ? (typeof s.goesTo === "string" && s.goesTo.trim() ? s.goesTo : null)
-                        : inferStepDestination(String(s.title)),
-                    /* The same migration, for the same reason: a plan written
-                       before a step could ask you anything has no key here, and
-                       "Write three gratitudes" on it has been a bare checkbox
-                       for months. `null` is a question somebody cleared. */
-                    asks:
-                      "asks" in s
-                        ? (typeof s.asks === "string" && s.asks.trim() ? s.asks.trim() : null)
-                        : inferStepQuestion(String(s.title)),
+                    goesTo: stepGoesTo(s, bp, planVersion),
+                    asks: stepAsks(s, bp, planVersion),
                   }))
               : [],
             daysPerWeek: clamp(numberOr(r.daysPerWeek, bp.daysPerWeek), 1, 7),
@@ -748,7 +810,7 @@ export function loadNsPlan(raw: string | null): NsPlan | null {
   const ids = [...resolvedAreas.map((a) => a.id), ...routines.map((r) => r.id), ...linkedGoals.map((g) => g.id)]
 
   return {
-    version: 1,
+    version: NS_PLAN_VERSION,
     horizonYears: HORIZON_CHOICES.includes(obj.horizonYears as (typeof HORIZON_CHOICES)[number])
       ? (obj.horizonYears as number)
       : DEFAULT_HORIZON,

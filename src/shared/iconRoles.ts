@@ -62,7 +62,7 @@ export const UTILITY_ICONS = new Set([
 // ask the user first.
 // ---------------------------------------------------------------------------
 export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
-  Activity: ["health tracking panel header"],
+  Activity: ["health tracking panel header", "mobility/yoga metric tiles"],
   Award: ["achievements", "milestone badges"],
   Ban: ["vices/elimination life area"],
   Beaker: ["test pages (dev only)"],
@@ -90,7 +90,7 @@ export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   Link: ["auto-synced metrics"],
   Lock: ["locked/premium content"],
   Map: ["strategic view"],
-  MapPin: ["location in reports"],
+  MapPin: ["location in reports", "unique-locations metric tile"],
   MessageCircle: ["chat", "coach"],
   MessageSquare: ["messaging"],
   Mic: ["voice recording"],
@@ -102,7 +102,7 @@ export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   ShieldCheck: ["safety", "protection", "key stats"],
   BarChart3: ["feature highlight", "marketing stats", "tracking bottom tab"],
   CircleDot: ["individual L1 goal header", "goal widgets empty state", "generic objective icon"],
-  ClipboardCheck: ["structured review templates", "checklist-style reviews"],
+  ClipboardCheck: ["structured review templates", "checklist-style reviews", "weekly-review-count metric tile"],
   Compass: ["navigation", "direction", "principles section"],
   Crosshair: ["site logo/branding", "evaluator calibration"],
   Dumbbell: ["fitness life area", "technique focus"],
@@ -136,6 +136,7 @@ export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   TreePine: ["tree of life view mode", "tree of life empty state"],
   TrendingUp: ["growth metrics", "progress indicators", "milestone progress"],
   Trophy: ["achievement badges", "completion step"],
+  UtensilsCrossed: ["nutrition metrics — protein days, calorie days, nutrition quality"],
   Users: ["social life area", "common humanity"],
   Wand2: ["AI enhancement"],
   Wind: ["endurance/cardio objective icon"],

@@ -285,3 +285,98 @@ export interface FireStreakBadgeProps {
   /** "pill" = compact inline, "card" = full-width milestone-style card */
   variant?: "pill" | "card"
 }
+
+// ============================================
+// Metric catalogue & dashboard widgets
+// ============================================
+
+/**
+ * What span of time a metric answers for.
+ * - `weekly` / `monthly` reset with the period
+ * - `cumulative` is lifetime
+ * - `current` is a latest-reading (body weight)
+ * - `streak` counts consecutive periods
+ */
+export type MetricWindow = "daily" | "weekly" | "monthly" | "cumulative" | "current" | "streak"
+
+/** How a raw number is rendered. Drives the unit suffix and rounding. */
+export type MetricFormat =
+  | "count" | "hours" | "minutes" | "kg" | "km"
+  | "percent" | "rating" | "weeks" | "days" | "reps"
+
+/** Where the number comes from. Each source has one fetch path in metricsRepo. */
+export type MetricSource = "tracking_stats" | "approaches" | "health" | "scenarios" | "goal"
+
+/**
+ * One trackable thing, described well enough to put in a picker.
+ *
+ * Every value in LINKED_METRICS has an entry here, so a goal's `linked_metric`
+ * always names a catalogue entry. The reverse does not hold: entries with
+ * `linkedMetric: null` (week streak, unique locations) can be shown on the
+ * dashboard but cannot back a goal, because nothing syncs them to goal progress.
+ */
+export interface MetricDef {
+  id: string
+  /** Full sentence-ish name for the picker: "Approaches this week". */
+  label: string
+  /** Short name for a tile, where the window is implied by context. */
+  tileLabel: string
+  /** LifeAreaId — which area's section of the picker this shows under. */
+  area: string
+  /** Sub-heading inside the area, e.g. "Field work", "Strength". */
+  group: string
+  window: MetricWindow
+  format: MetricFormat
+  /** One line explaining what is counted, shown under the label in the picker. */
+  description: string
+  source: MetricSource
+  /** The goal-sync metric this is the same number as, or null if none exists. */
+  linkedMetric: import("@/src/db/goalTypes").LinkedMetric
+  icon: import("lucide-react").LucideIcon
+  /** Tailwind text colour class for the icon, matching the life area. */
+  accent: string
+}
+
+/** The five ways a goal can be read as a metric when it has no backend of its own. */
+export type GoalMetricView = "period" | "streak" | "percent" | "total" | "best"
+
+/**
+ * A resolved reading. `value: null` means the source produced nothing — a tile
+ * renders "—" and `reason`, never a zero it made up.
+ */
+export interface MetricValue {
+  id: string
+  value: number | null
+  /** Why the value is null. Required whenever value is null. */
+  reason?: string
+  /** Goal target, for goal-derived metrics that have one. */
+  target?: number | null
+  /** Overrides the catalogue label — carries the goal's own title. */
+  label?: string
+  format?: MetricFormat
+}
+
+export type DashboardWidgetType = "metric_tile"
+
+/** One widget in one slot of one dashboard. Mirrors a dashboard_widgets row. */
+export interface DashboardWidget {
+  id: string
+  dashboard_key: string
+  position: number
+  widget_type: DashboardWidgetType
+  metric_id: string | null
+  config: Record<string, unknown>
+}
+
+/** What the client sends to replace a layout. Position is the array index. */
+export interface DashboardWidgetInput {
+  widget_type: DashboardWidgetType
+  metric_id: string | null
+  config?: Record<string, unknown>
+}
+
+/** GET /api/tracking/dashboard — the layout plus a reading for each widget. */
+export interface DashboardLayoutResponse {
+  widgets: DashboardWidget[]
+  values: MetricValue[]
+}

@@ -381,7 +381,7 @@ export function AreaDialog({
                   : "border-white/10 text-zinc-500 hover:text-zinc-200 hover:border-white/25"
               }`}
             >
-              {isFocus ? "my one thing this season" : SEASON_FOCUS_COPY.pick}
+              {isFocus ? SEASON_FOCUS_COPY.picked : SEASON_FOCUS_COPY.pick}
             </button>
           </section>
 

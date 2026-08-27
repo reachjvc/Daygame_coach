@@ -56,7 +56,6 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import Link from "next/link"
 import { ArrowLeft, Check, ChevronDown } from "lucide-react"
 import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlace, NsPlan, VisionGoalType } from "@/src/goals/types"
 import { COMMIT_EDIT_COPY, ERRAND_COPY, NORTH_STAR_STORAGE_KEY, NS_TRACK_RUN_KEY, SCORED_TABS, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, WORKSHOP_TABS } from "@/src/goals/data/northStar"
@@ -74,7 +73,7 @@ import { BuildBoard } from "./BuildBoard"
 import { OneThingTab, type OneThingTabHandlers } from "./OneThingTab"
 import { PathPicker } from "./PathPicker"
 import { TrackTab } from "./TrackTab"
-import { TodayTab } from "./TodayTab"
+import { TodayTab, type TodayHubGoal } from "./TodayTab"
 import { JournalTab } from "./JournalTab"
 import { AreaDialog } from "./AreaDialog"
 import { AreaGoalsDialog } from "./AreaGoalsDialog"
@@ -83,6 +82,7 @@ import { CommitTab } from "./CommitTab"
 import { ValuesSoFar } from "./ValuesSoFar"
 import { ValuesWork } from "./ValuesWork"
 import { RecapTab, type RecapHandlers } from "./RecapTab"
+import { BackLink } from "@/components/BackLink"
 
 /**
  * A fresh run id: what pushed goals are tagged with alongside their plan id.
@@ -108,6 +108,7 @@ export function NorthStarFlow({
   backHref = "/test",
   backLabel = "Test pages",
   initialTab = "star",
+  goalsPromise,
 }: {
   backHref?: string
   backLabel?: string
@@ -119,6 +120,16 @@ export function NorthStarFlow({
    * instead would be a link that goes to the right page and the wrong screen.
    */
   initialTab?: NorthStarTabId
+  /**
+   * The account's goals, as a promise the server started and did not await.
+   *
+   * Only the Today step needs them, and only to tick its rows off. Handing over
+   * the promise removes that step's own /api/goals round-trip without holding
+   * the page back: the query runs while the browser parses and reads the plan
+   * out of localStorage. The flow stays localStorage-first and fetches nothing
+   * on mount.
+   */
+  goalsPromise?: Promise<TodayHubGoal[] | null> | null
 } = {}) {
   const [plan, setPlan] = useState<NsPlan>(ns.emptyNsPlan)
   const [loaded, setLoaded] = useState(false)
@@ -652,10 +663,13 @@ export function NorthStarFlow({
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="max-w-5xl mx-auto px-6 py-10 pb-28">
         <div className="flex items-center justify-between gap-3 mb-6">
-          <Link href={backHref} className="inline-flex items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors">
-            <ArrowLeft className="size-3.5" />
-            {backLabel}
-          </Link>
+          {/* The props stay, as the fallback: a return address on the link
+              wins, so arriving here from the tracking page goes back there. */}
+          <BackLink
+            fallback={backHref}
+            fallbackLabel={backLabel}
+            className="inline-flex items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors"
+          />
           {confirmReset ? (
             /* Two resets, because they are asked for at different moments. The
                goals and the season are downstream of a decision and get redone
@@ -851,6 +865,7 @@ export function NorthStarFlow({
              date, with a tick against each line. */
           runId ? (
             <TodayTab
+              goalsPromise={goalsPromise}
               plan={plan}
               today={today ?? ns.todayISO()}
               runId={runId}

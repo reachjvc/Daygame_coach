@@ -14,11 +14,13 @@
  */
 
 import { ProgramsApp } from "@/src/programs/components/ProgramsApp"
+import { BackLink } from "@/components/BackLink"
 
 export default function ProgramsPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-4xl px-4 py-8">
+        <BackLink fallback="/dashboard" fallbackLabel="Dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4" />
         <h1 className="text-2xl font-bold mb-1">Training</h1>
         <p className="mb-6 text-sm text-muted-foreground">
           Your programs, today&apos;s session, and everything you have logged. Change any program at

@@ -34,7 +34,6 @@ import {
   Sun,
   Heart,
 } from "lucide-react"
-import Link from "next/link"
 import type {
   ReviewTemplateRow,
   TemplateField,
@@ -46,6 +45,7 @@ import { GoalsSummarySection } from "./GoalsSummarySection"
 import { FieldPickerPanel, createCustomTextField } from "./FieldPickerPanel"
 import type { FieldDefinition, FieldCategory, DailyWeekSummary } from "../types"
 import { CATEGORY_INFO, FIELD_LIBRARY } from "../config"
+import { BackLink } from "@/components/BackLink"
 
 // Template icon mapping: slug → lucide icon + color tint
 type IconComponent = typeof Zap
@@ -347,13 +347,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8" data-testid="weekly-review-page">
         <div className="mb-8">
-          <Link
-            href="/dashboard/tracking"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4"
-          >
-            <ArrowLeft className="size-4" />
-            Back to Tracking
-          </Link>
+          <BackLink fallback="/dashboard/tracking" fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
           <h1 className="text-3xl font-bold">Weekly Review</h1>
           <p className="text-muted-foreground mt-2">
             Reflect on your week and set intentions for the next one

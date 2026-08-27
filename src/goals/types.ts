@@ -1860,7 +1860,12 @@ export interface NsAreaReview {
 }
 
 export interface NsPlan {
-  version: 1
+  /**
+   * Which rules this plan was written under. See `NS_PLAN_VERSION` — a loaded
+   * plan is always stamped with the current one, so this is the version of the
+   * RULES and not of the file it came from.
+   */
+  version: number
   /** How far out the north star sits: 5, 10 or 20 years. */
   horizonYears: number
   /** The north star itself, one paragraph, present tense. */

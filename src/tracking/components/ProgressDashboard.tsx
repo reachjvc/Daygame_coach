@@ -8,9 +8,10 @@ import { MobileTabBar } from "@/components/MobileTabBar"
 import Link from "next/link"
 import { QuickAddModal } from "./QuickAddModal"
 import { SeasonBand } from "@/src/goals/components/north-star/SeasonBand"
+import type { DashboardLayoutResponse } from "../types"
 import {
   DashboardSkeleton,
-  QuickStatsGrid,
+  StatTileGrid,
   QuickActionsCard,
   RecentMilestonesCard,
   RecentSessionsCard,
@@ -24,7 +25,7 @@ const AchievementsModal = lazy(() =>
   import("./dashboard/AchievementsModal").then(m => ({ default: m.AchievementsModal }))
 )
 
-export function ProgressDashboard() {
+export function ProgressDashboard({ initialDashboard }: { initialDashboard?: DashboardLayoutResponse }) {
   const { state, deleteSession, deleteFieldReport, refresh } = useTrackingStats()
   const [achievementsOpen, setAchievementsOpen] = useState(false)
   const [quickAddOpen, setQuickAddOpen] = useState(false)
@@ -38,10 +39,6 @@ export function ProgressDashboard() {
       }
     }
   }, [state.isLoading])
-
-  if (state.isLoading) {
-    return <DashboardSkeleton />
-  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 pb-tab-bar" data-testid="tracking-dashboard">
@@ -67,9 +64,12 @@ export function ProgressDashboard() {
           the load: no fetch, and it renders nothing until the plan is read. */}
       <SeasonBand />
 
-      {/* Quick Stats */}
-      <QuickStatsGrid stats={state.stats} />
+      {/* Stat tiles — user-configurable; see StatTileGrid */}
+      <StatTileGrid initial={initialDashboard} />
 
+      {state.isLoading ? (
+        <DashboardSkeleton cardsOnly />
+      ) : (
       <div className="grid md:grid-cols-2 gap-6">
         {/* Quick Actions */}
         <QuickActionsCard onQuickAddClick={() => setQuickAddOpen(true)} />
@@ -120,6 +120,7 @@ export function ProgressDashboard() {
           />
         </div>
       </div>
+      )}
 
       {/* Quick Add Modal */}
       <QuickAddModal

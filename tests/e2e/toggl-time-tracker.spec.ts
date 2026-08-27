@@ -54,7 +54,7 @@ async function openFreshSandbox(page: Page) {
 }
 
 /** Track one entry through the UI, since the workspace starts empty */
-async function trackEntry(page: Page, description: string, seconds = 1200) {
+async function trackEntry(page: Page, description: string) {
   await page.getByPlaceholder('What are you working on?').fill(description)
   await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
   await page.waitForTimeout(700)
@@ -66,7 +66,7 @@ async function trackEntry(page: Page, description: string, seconds = 1200) {
 async function createProject(page: Page, name: string) {
   const timerBar = page.locator('main > div').first()
   await timerBar.locator('button').first().click()
-  await page.getByPlaceholder('Search projects…').fill(name)
+  await page.getByPlaceholder('Search or add a project…').fill(name)
   await page.getByRole('button', { name: `Create “${name}”` }).click()
   await page.waitForTimeout(400)
 }
@@ -132,7 +132,6 @@ test.describe('Toggl-style time tracker', () => {
 
   test('starts and stops the timer, and mirrors it in the tab title', async ({ page }) => {
     await openFreshSandbox(page)
-    await page.locator('main').getByRole('button', { name: 'Stop timer' }).click()
 
     await page.getByPlaceholder('What are you working on?').fill('E2E entry')
     await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
@@ -217,7 +216,6 @@ test.describe('Toggl-style time tracker', () => {
 
     await nav(page, 'Timer').click()
     await page.waitForTimeout(500)
-    const timerBar = page.locator('main > div').first()
     await page.getByPlaceholder('What are you working on?').fill('Blocked entry')
     await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
     // exactly one toast, not one per React render pass
@@ -253,6 +251,81 @@ test.describe('Toggl-style time tracker', () => {
     await selects.nth(1).selectOption('60')
     await page.waitForTimeout(600)
     expect(await totalTile.innerText()).not.toEqual(before)
+  })
+
+  test('creating a tag or project from an entry row saves both the entity and the link', async ({ page }) => {
+    await openFreshSandbox(page)
+    await trackEntry(page, 'book writing')
+
+    const row = page.locator('ul.divide-y > li').first()
+
+    await row.getByRole('button', { name: 'Tags' }).click()
+    await expect(page.getByText('No tags yet — type a name to add one')).toBeVisible()
+    await page.getByPlaceholder('Search or add a tag…').fill('focus')
+    await page.getByRole('button', { name: /Create/ }).click()
+    await page.waitForTimeout(600)
+
+    await row.getByRole('button', { name: 'Project' }).click()
+    await page.getByPlaceholder('Search or add a project…').fill('Book')
+    await page.getByRole('button', { name: /Create/ }).click()
+    await page.waitForTimeout(600)
+
+    const state = await readState(page)
+    const entry = state.entries[0]
+
+    // the entity itself must exist — an earlier build linked the entry to an id
+    // that was never saved, because two state updates overwrote each other
+    expect(state.tags.map((t: { name: string }) => t.name)).toEqual(['focus'])
+    expect(state.projects.map((p: { name: string }) => p.name)).toEqual(['Book'])
+    expect(entry.tagIds).toHaveLength(1)
+    expect(state.tags.some((t: { id: number }) => t.id === entry.tagIds[0])).toBe(true)
+    expect(state.projects.some((p: { id: number }) => p.id === entry.projectId)).toBe(true)
+
+    await expect(row).toContainText('focus')
+    await expect(row).toContainText('Book')
+  })
+
+  test('idle detection is off by default and never fires while you work elsewhere', async ({ page }) => {
+    await openFreshSandbox(page)
+
+    // a web page cannot tell "away from the desk" from "in another app"
+    const idle = await readState(page).then((s) => s.idle)
+    expect(idle.enabled).toBe(false)
+
+    // turn it on with a zero threshold so the check runs on the next tick
+    await page.evaluate((key) => {
+      const state = JSON.parse(window.localStorage.getItem(key)!)
+      state.idle = { enabled: true, minutes: 0 }
+      window.localStorage.setItem(key, JSON.stringify(state))
+    }, STORAGE_KEY)
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await page.getByRole('heading', { name: 'My Workspace' }).waitFor()
+    await page.waitForTimeout(600)
+
+    // pretend the tab is in the background before tracking starts: time spent
+    // in another app is work, not idling
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { get: () => 'hidden', configurable: true })
+      document.hasFocus = () => false
+    })
+
+    await page.getByPlaceholder('What are you working on?').fill('Design review')
+    await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
+    await page.waitForTimeout(3000)
+    await expect(page.getByText(/No activity for/)).toHaveCount(0)
+
+    // back on the page and not touching it — now the question is fair
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { get: () => 'visible', configurable: true })
+      document.hasFocus = () => true
+    })
+    await expect(page.getByText(/No activity for/)).toBeVisible({ timeout: 5000 })
+
+    // and it reads as language, not as 0.05 hours
+    await expect(page.locator('h3').filter({ hasText: /No activity for/ })).toContainText(/second|minute/)
+    await expect(page.getByRole('button', { name: /Count them/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Drop them, keep tracking/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Drop them and stop/ })).toBeVisible()
   })
 
   test('warns instead of silently losing data when saving fails', async ({ page }) => {

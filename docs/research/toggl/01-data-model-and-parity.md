@@ -60,7 +60,7 @@ Negative-duration encoding, the 4-level rate hierarchy, and the grouping/sub-gro
 | Required fields, locked entries before date, timesheet approvals | ✅ | enforced on save |
 | Duration/time/date format, first day of week, currency | ✅ | |
 | Pomodoro (work+break intervals, notifications, continue) | ✅ | Web Notification API |
-| Idle detection → keep/discard | ✅ | inactivity listener |
+| Idle detection → keep/discard | ⚠️ off by default | a page only sees its own tab, so it cannot tell "away from the desk" from "working in another app"; the check pauses whenever the tab is not visible and focused |
 | AutoTracker keyword → project | ✅ | keyword rules on description |
 | Timeline (auto app/browser recording) | ⚠️ partial | browser sandbox: records only this tab's visibility+route, not OS apps |
 | CSV import of time entries / full JSON backup | ✅ | |
@@ -108,11 +108,30 @@ tests/unit/timetrack/            # 135 unit tests
   5. edits made on a collapsed group only hit the first entry; they now apply to every entry in the group, like Toggl;
   6. an inline description field kept stale text after a bulk edit changed it elsewhere;
   7. dragging a calendar block also opened the entry editor on mouse-up;
-  8. calendar entries were squeezed into half of each day even with no calendar connected.
+  8. calendar entries were squeezed into half of each day even with no calendar connected;
+  9. creating a tag or project **from an entry row** silently lost it: the picker created the entity in one
+     `setState` and then assigned it in a second one computed from the same stale snapshot, so the assignment
+     overwrote the creation. The entry ended up pointing at an id that was never saved. Create-and-select is now a
+     single update, and the picker no longer round-trips the new id.
 - Cosmetic/copy pass: American spelling throughout (matching the rest of the app), visible field borders (the theme's
   `--input` equals the card background, so bordered inputs were invisible), labeled calendar-import fields, no
   unreadable text in sub-20-minute calendar blocks, correct singular/plural in report subtitles, and the calendar grid
   opens on working hours instead of midnight.
+
+## Guard against the state-update bug class
+Three separate bugs in this slice had one cause: composing state across two updates in a single handler, each
+computed from the same stale render snapshot, or running a side effect inside an updater (React StrictMode invokes
+updaters twice). Two tests now hold the line:
+
+- `tests/unit/timetrack/statefulPickers.test.tsx` — renders the entry list and timer bar **in StrictMode** and
+  asserts that creating a tag or project from a row saves the entity *and* links it, that creating twice keeps both,
+  and that one validation failure raises exactly one toast. Verified to fail when the fix is reverted.
+- `tests/unit/timetrack/stateUpdateSafety.test.ts` — scans `src/timetrack` for the shapes themselves: a side effect
+  inside a `setState` updater, an id read out of an updater, and "create an entity from the snapshot, then write
+  state again". Each rule was checked by reintroducing the original bug and confirming it fires.
+
+Writing the guard immediately surfaced two more live instances (the CSV import and the timeline "Convert" button both
+toasted from inside an updater), which are now fixed.
 
 ## Copy and UX conventions (second pass)
 - **Voice**: plain language over jargon. No `localStorage`, "CORS", "payload" or "sandbox" in user-facing text; the
@@ -187,16 +206,15 @@ opt-in persistence, and no address in error output.
 ## Limits worth knowing
 - **Storage is `localStorage` only** (namespace `toggl-clone:v1`, `STATE_VERSION` 2 — a version bump reseeds the demo).
   No Supabase table, no migration, no RLS — deliberate, since this is a `/test` sandbox.
-- **The workspace ships with sample data**, tagged `SEED_CREATED_WITH`, so no screen is ever empty. It is *not*
-  labelled per row, which reads as "entries I never created" — so the Timer screen shows a dismissible notice while
-  samples exist, and **Settings → Data → "Remove sample data (keep mine)"** deletes them. A sample project, client,
-  tag or member is only removed when every entry referencing it was sample data; if you tracked your own time
-  against one, it stays.
-- **Demo data is re-dated on load.** The seeded history is anchored to the day it was generated, so reopening the sandbox
-  later used to show only past dates, an empty "Today", and a demo timer "running" for days. `demoDataService` now shifts
-  entries tagged `SEED_CREATED_WITH` forward so the newest demo day is today (never into the future), re-anchors the demo's
-  running timer to minutes ago, and reports what it moved in a toast. **Entries you create are never moved.**
+- **The workspace starts empty.** No sample entries, projects, clients or tags — only the workspace record, you as
+  its single member, and default preferences (`data/emptyWorkspace.ts`). Earlier builds seeded 24 days of fake
+  history, which read as "entries I never created"; `demoDataService` now exists solely to strip those rows from a
+  browser that still stores them, keeping anything you created. Settings → Data → **Clear this workspace** empties it.
 - A timer running longer than 12 h raises a "you probably forgot this" toast rather than being edited.
+- **Idle detection is opt-in.** Toggl's desktop app reads OS-level idle; a web page can only see activity on its own
+  tab, so the old always-on 5-minute default fired at anyone running a timer while working in another app. It now
+  defaults to off with a 10-minute threshold, only asks while the tab is visible *and* focused, and treats returning
+  to the tab as activity. Browsers that stored the old default are migrated once, with a notice.
 - Full OAuth "Connect" (multi-calendar picker + background refresh) needs a Google Cloud OAuth client ID/secret in env.
 - Toggl's "Timeline" needs OS-level process access; a browser page cannot see other apps. Partial analog implemented and labeled as such in the UI.
 - **Icon governance**: `Timer` and `CalendarClock` are used elsewhere in the app but are not in

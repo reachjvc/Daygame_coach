@@ -27,7 +27,7 @@ import {
 } from "../icons"
 import { useTimetrack } from "../hooks/useTimetrack"
 import { defaultReportConfig, decodeReportConfig } from "../reportsService"
-import { dateKey, formatClock, formatDuration } from "../timetrackFormatService"
+import { dateKey, formatClock, formatIdleSpan, formatTimeOfDay } from "../timetrackFormatService"
 import {
   draftFromStartLink,
   emptyDraft,
@@ -43,7 +43,7 @@ import { ProjectsView } from "./ProjectsView"
 import { ReportsView } from "./ReportsView"
 import { SettingsView, type SettingsTab } from "./SettingsView"
 import { FavoritesBar, RunningPill, TimerBar, type TimerMode } from "./TimerBar"
-import { Dropdown, Modal, SectionCard, touchTarget } from "./primitives"
+import { Dropdown, Modal, touchTarget } from "./primitives"
 
 type Screen = "timer" | "calendar" | "reports" | "projects" | "manage" | "settings"
 
@@ -55,6 +55,35 @@ const NAV: { id: Screen; label: string; icon: typeof IconTimer }[] = [
   { id: "manage", label: "Manage", icon: IconTeam },
   { id: "settings", label: "Settings", icon: IconSettings },
 ]
+
+/** One idle choice: what happens to the minutes, then what happens to the timer */
+function IdleChoice({
+  label,
+  detail,
+  onClick,
+  primary,
+}: {
+  label: string
+  detail: string
+  onClick: () => void
+  primary?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "w-full rounded-lg border px-3 py-2.5 text-left transition-colors",
+        primary
+          ? "border-primary bg-primary/10 hover:bg-primary/15"
+          : "border-border hover:bg-secondary/50",
+      )}
+    >
+      <span className="block text-sm font-medium">{label}</span>
+      <span className="block text-xs text-muted-foreground">{detail}</span>
+    </button>
+  )
+}
 
 export function TogglLab() {
   const controller = useTimetrack()
@@ -426,25 +455,39 @@ export function TogglLab() {
 
       {/* idle prompt */}
       {idlePrompt && (
-        <Modal title="You were away" onClose={() => resolveIdle("keep")}>
-          <SectionCard>
-            <p className="text-sm">
-              The timer kept running while nothing happened for{" "}
-              <strong>{formatDuration(idlePrompt.idleSeconds, state.user.durationFormat)}</strong>, since{" "}
-              {new Date(idlePrompt.idleSinceIso).toLocaleTimeString()}.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => resolveIdle("keep")}>
-                Keep the idle time
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => resolveIdle("discard")}>
-                <IconUndo className="size-4" /> Discard and keep tracking
-              </Button>
-              <Button size="sm" variant="destructive" onClick={() => resolveIdle("discard_and_stop")}>
-                Discard and stop
-              </Button>
-            </div>
-          </SectionCard>
+        <Modal
+          title={`No activity for ${formatIdleSpan(idlePrompt.idleSeconds)}`}
+          onClose={() => resolveIdle("keep")}
+        >
+          <p className="text-sm">
+            <strong>{idlePrompt.description.trim() || "Your timer"}</strong> has been running since{" "}
+            {formatTimeOfDay(idlePrompt.idleSinceIso, state.user.timeFormat)} with nothing happening on this page.
+            What should happen to those {formatIdleSpan(idlePrompt.idleSeconds)}?
+          </p>
+
+          <div className="mt-4 space-y-2">
+            <IdleChoice
+              label="Count them"
+              detail={`Leave the ${formatIdleSpan(idlePrompt.idleSeconds)} on this entry and keep the timer running.`}
+              onClick={() => resolveIdle("keep")}
+              primary
+            />
+            <IdleChoice
+              label="Drop them, keep tracking"
+              detail={`End this entry at ${formatTimeOfDay(idlePrompt.idleSinceIso, state.user.timeFormat)} and start a fresh one from now.`}
+              onClick={() => resolveIdle("discard")}
+            />
+            <IdleChoice
+              label="Drop them and stop"
+              detail={`End this entry at ${formatTimeOfDay(idlePrompt.idleSinceIso, state.user.timeFormat)} and leave the timer stopped.`}
+              onClick={() => resolveIdle("discard_and_stop")}
+            />
+          </div>
+
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            This page can only see activity on its own tab, so it only asks while you are looking at it. Turn the check
+            off in Settings → Automation.
+          </p>
         </Modal>
       )}
 

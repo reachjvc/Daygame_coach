@@ -40,12 +40,18 @@ import { dailyFieldsFor, dailyRating, formatTargetDate, journalEntry, journalHis
 import { ScoreRow } from "./ScoreRow"
 import { SENTENCE_HINT } from "./SentenceBox"
 
-interface HubGoal {
+/**
+ * The slice of a hub goal this screen reads. Exported so the flow above can
+ * accept the server-read list and hand it down without redeclaring the shape.
+ */
+export interface TodayHubGoal {
   id: string
   template_id?: string | null
   current_value?: number
   target_value?: number
 }
+
+type HubGoal = TodayHubGoal
 
 const longDate = (iso: string) => {
   const [y, m, d] = iso.split("-").map(Number)
@@ -628,6 +634,7 @@ function SubSteps({
 }
 
 export function TodayTab({
+  goalsPromise,
   plan,
   today,
   runId,
@@ -734,6 +741,17 @@ export function TodayTab({
   /** Change, or silence, the question a routine step asks. Never deletes an answer. */
   onStepAsks: (routineId: string, stepId: string, question: string | null) => void
   onGoToTab: (tab: NorthStarTabId) => void
+  /**
+   * The hub goals, as a promise the server started before this ever mounted.
+   *
+   * This screen used to open on "loading…" for as long as its own /api/goals
+   * call took, and that call could not even start until the page's JS had
+   * downloaded and mounted. Awaiting a promise the server already started
+   * replaces that round-trip with one that has had a head start. `load` stays
+   * for the refreshes that follow an action, and is the fallback if the
+   * server's read failed.
+   */
+  goalsPromise?: Promise<HubGoal[] | null> | null
 }) {
   const [hubGoals, setHubGoals] = useState<HubGoal[] | null>(null)
   const [signedOut, setSignedOut] = useState(false)
@@ -789,8 +807,20 @@ export function TodayTab({
   }, [])
 
   useEffect(() => {
-    load()
-  }, [load])
+    if (!goalsPromise) {
+      load()
+      return
+    }
+    let cancelled = false
+    goalsPromise.then((goals: HubGoal[] | null) => {
+      if (cancelled) return
+      // A null means the server's read failed — ask for them the old way rather
+      // than showing an empty day.
+      if (goals === null) load()
+      else setHubGoals(goals)
+    })
+    return () => { cancelled = true }
+  }, [load, goalsPromise])
 
   const items = useMemo(
     () => todayItems(plan, today, hubGoals ?? [], runId),

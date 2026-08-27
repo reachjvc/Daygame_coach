@@ -130,6 +130,28 @@ export const CreateReviewSchema = z.object({
 })
 
 // ============================================
+// Dashboard layout
+// ============================================
+
+/**
+ * What the manage dialog PUTs. Slot order is array order — position is not sent,
+ * so a reorder cannot disagree with itself.
+ *
+ * The count bounds and "is this a real metric" check live in
+ * dashboardService.validateWidgets, which knows the catalogue; this schema only
+ * guarantees the shape.
+ */
+export const DashboardWidgetInputSchema = z.object({
+  widget_type: z.literal("metric_tile"),
+  metric_id: z.string().min(1).max(128),
+  config: z.record(z.string(), z.unknown()).optional(),
+})
+
+export const DashboardLayoutSchema = z.object({
+  widgets: z.array(DashboardWidgetInputSchema).max(64),
+})
+
+// ============================================
 // Type Exports (inferred from schemas)
 // ============================================
 
@@ -141,3 +163,4 @@ export type CreateFieldReportInput = z.infer<typeof CreateFieldReportSchema>
 export type UpdateFieldReportInput = z.infer<typeof UpdateFieldReportSchema>
 export type FavoriteActionInput = z.infer<typeof FavoriteActionSchema>
 export type CreateReviewInput = z.infer<typeof CreateReviewSchema>
+export type DashboardLayoutInput = z.infer<typeof DashboardLayoutSchema>

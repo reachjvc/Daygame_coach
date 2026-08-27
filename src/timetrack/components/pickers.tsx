@@ -26,6 +26,7 @@ export function ProjectPicker({
   onChange,
   onCreateProject,
   compact,
+  fill,
   align = "left",
   autoOpen,
   onClose,
@@ -35,8 +36,10 @@ export function ProjectPicker({
   projectId: Id | null
   taskId: Id | null
   onChange: (projectId: Id | null, taskId: Id | null) => void
-  onCreateProject?: (name: string) => Id
+  onCreateProject?: (name: string) => void
   compact?: boolean
+  /** stretch to the width of the surrounding grid cell instead of hugging the label */
+  fill?: boolean
   align?: "left" | "right"
   autoOpen?: boolean
   onClose?: () => void
@@ -64,6 +67,7 @@ export function ProjectPicker({
   return (
     <Dropdown
       align={align}
+      className={fill ? "min-w-0" : undefined}
       width="w-80"
       openOnMount={autoOpen}
       onOpenChange={(open) => {
@@ -76,7 +80,7 @@ export function ProjectPicker({
         <span
           className={cn(
             "flex min-h-11 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-secondary/60 sm:min-h-0",
-            compact ? "max-w-[240px]" : "max-w-[280px]",
+            fill ? "w-full" : compact ? "max-w-[240px]" : "max-w-[280px]",
             project ? "text-foreground" : "text-muted-foreground",
           )}
         >
@@ -94,7 +98,7 @@ export function ProjectPicker({
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search projects…"
+              placeholder="Search or add a project…"
               className="h-8"
             />
           </div>
@@ -157,7 +161,9 @@ export function ProjectPicker({
               </div>
             ))}
             {grouped.length === 0 && (
-              <p className="px-3 py-3 text-xs text-muted-foreground">No project matches “{query}”</p>
+              <p className="px-3 py-3 text-xs text-muted-foreground">
+                {state.projects.length === 0 ? "No projects yet — type a name to add one" : `No project matches “${query}”`}
+              </p>
             )}
           </div>
           {onCreateProject && query.trim() && (
@@ -167,8 +173,8 @@ export function ProjectPicker({
                 variant="outline"
                 className="w-full"
                 onClick={() => {
-                  const id = onCreateProject(query.trim())
-                  onChange(id, null)
+                  // creating and selecting happen in one state update upstream
+                  onCreateProject(query.trim())
                   close()
                 }}
               >
@@ -191,6 +197,7 @@ export function TagPicker({
   tagIds,
   onChange,
   onCreateTag,
+  fill,
   align = "left",
   autoOpen,
   onClose,
@@ -199,7 +206,9 @@ export function TagPicker({
   state: TimetrackState
   tagIds: Id[]
   onChange: (tagIds: Id[]) => void
-  onCreateTag?: (name: string) => Id
+  onCreateTag?: (name: string) => void
+  /** stretch to the width of the surrounding grid cell instead of hugging the label */
+  fill?: boolean
   align?: "left" | "right"
   autoOpen?: boolean
   onClose?: () => void
@@ -212,6 +221,7 @@ export function TagPicker({
   return (
     <Dropdown
       align={align}
+      className={fill ? "min-w-0" : undefined}
       width="w-64"
       openOnMount={autoOpen}
       onOpenChange={(open) => {
@@ -223,7 +233,8 @@ export function TagPicker({
       trigger={() => (
         <span
           className={cn(
-            "flex min-h-11 max-w-[200px] items-center gap-1.5 rounded-md px-2 py-1.5 text-sm hover:bg-secondary/60 sm:min-h-0",
+            "flex min-h-11 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm hover:bg-secondary/60 sm:min-h-0",
+            fill ? "w-full" : "max-w-[200px]",
             selected.length ? "text-foreground" : "text-muted-foreground",
           )}
         >
@@ -239,7 +250,7 @@ export function TagPicker({
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search tags…"
+              placeholder="Search or add a tag…"
               className="h-8"
             />
           </div>
@@ -254,7 +265,11 @@ export function TagPicker({
                 }
               />
             ))}
-            {visible.length === 0 && <p className="px-3 py-3 text-xs text-muted-foreground">No tag matches</p>}
+            {visible.length === 0 && (
+              <p className="px-3 py-3 text-xs text-muted-foreground">
+                {state.tags.length === 0 ? "No tags yet — type a name to add one" : "No tag matches"}
+              </p>
+            )}
           </div>
           {onCreateTag && query.trim() && !state.tags.some((t) => t.name.toLowerCase() === query.trim().toLowerCase()) && (
             <div className="border-t border-border p-2">
@@ -263,8 +278,7 @@ export function TagPicker({
                 variant="outline"
                 className="w-full"
                 onClick={() => {
-                  const id = onCreateTag(query.trim())
-                  onChange([...tagIds, id])
+                  onCreateTag(query.trim())
                   setQuery("")
                   close()
                 }}
