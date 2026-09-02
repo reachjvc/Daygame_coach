@@ -45,16 +45,51 @@ function assertPublicUrl(raw: string): URL {
   return url
 }
 
+const MAX_REDIRECTS = 3
+
+/**
+ * Fetch, following redirects by hand so every hop is re-checked.
+ *
+ * `redirect: "follow"` would validate only the address the user typed: a public
+ * URL that answers 302 -> http://169.254.169.254/ (the cloud metadata service)
+ * would be followed without a second look. Each hop goes back through
+ * assertPublicUrl.
+ *
+ * Known residual risk: this cannot stop DNS rebinding, where a hostname passes
+ * the check and then resolves to a private address microseconds later at connect
+ * time. Closing that needs resolve-then-connect-by-IP, which Node's fetch does
+ * not expose. Accepted, not solved.
+ */
+async function fetchFollowingSafeRedirects(
+  startUrl: URL,
+  init: RequestInit
+): Promise<Response> {
+  let url = startUrl
+
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    const response = await fetch(url, { ...init, redirect: "manual" })
+
+    if (response.status < 300 || response.status > 399) return response
+
+    const location = response.headers.get("location")
+    if (!location) return response
+
+    // Re-run the full check on the new address, relative hops included.
+    url = assertPublicUrl(new URL(location, url).toString())
+  }
+
+  throw new Error(`Calendar address redirected more than ${MAX_REDIRECTS} times`)
+}
+
 export async function fetchIcsFromUrl(raw: string): Promise<string> {
   const url = assertPublicUrl(raw)
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchFollowingSafeRedirects(url, {
       signal: controller.signal,
       headers: { Accept: "text/calendar, text/plain;q=0.8" },
-      redirect: "follow",
       cache: "no-store",
     })
     if (!response.ok) {

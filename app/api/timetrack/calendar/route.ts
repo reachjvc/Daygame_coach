@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server"
 
+import { requireAuth } from "@/src/db/auth"
 import { fetchIcsFromUrl, listGoogleCalendarEvents } from "@/src/timetrack/calendarSyncService"
 
 /** Fetch an external calendar for the /test/toggl sandbox (ICS URL or Google API). */
 export async function POST(request: Request) {
+  // This route makes the server fetch a caller-supplied URL. Even with the
+  // private-address checks in calendarSyncService, it must not be an open
+  // outbound proxy for anonymous callers.
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   const body = (await request.json()) as { source?: string; ref?: string; timeMin?: string; timeMax?: string }
   const ref = body.ref?.trim()
   if (!ref) return NextResponse.json({ error: "Missing calendar reference" }, { status: 400 })

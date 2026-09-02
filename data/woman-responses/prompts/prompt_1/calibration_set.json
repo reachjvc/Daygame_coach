@@ -1,0 +1,1181 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-02-12T18:17:05.231Z",
+  "total_turns_analyzed": 395,
+  "selected_count": 76,
+  "counterintuitive_count": 41,
+  "examples": [
+    {
+      "phase": "hook",
+      "context": "He just stopped her on the street.",
+      "him": "Can I help you find anything?",
+      "her": "Oh my god, yes. Did you need help with anything?",
+      "score": 9,
+      "why": "she asked back, she laughed",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": true,
+      "video_id": "1FHmVCWuPhU",
+      "turn": 1,
+      "interest_before": 4
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"We'll find you, we're headed over now.\"",
+      "him": "Look really cute. Oh, I was just, I wasn't going for the strangers, that's concerning. No, I just wanted to say I thought you look cute.",
+      "her": "I know you're so like warm and welcoming.",
+      "score": 9,
+      "why": "she flirted",
+      "his_move": [
+        "statement",
+        "cold_read"
+      ],
+      "counterintuitive": true,
+      "video_id": "5sTASDqe0u8",
+      "turn": 8,
+      "interest_before": 4
+    },
+    {
+      "phase": "vibe",
+      "context": "He just stopped her on the street.",
+      "him": "What kind of Uber drivers do you usually get?",
+      "her": "I never take an Uber.",
+      "score": 9,
+      "why": "brief answer",
+      "his_move": [
+        "question_interview"
+      ],
+      "counterintuitive": true,
+      "video_id": "9I7JBV15FNM",
+      "turn": 1,
+      "interest_before": 4
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Yeah... I mean I was getting [cut off]\"",
+      "him": "[keeps talking, building rapport]",
+      "her": "Yeah you could take my number, like if that's what you were asking...",
+      "score": 9,
+      "why": "she flirted",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": true,
+      "video_id": "FNpZs1VhwaA",
+      "turn": 6,
+      "interest_before": 6
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"I was going to go down the escalator, but that's the escalator, so I'm going ...\"",
+      "him": "I'm 35. I think you're too young for me.",
+      "her": "I'm not 18, but I have daddy issues. You have daddy issues so it's not a problem.",
+      "score": 9,
+      "why": "she gave detail, she flirted",
+      "his_move": [
+        "statement",
+        "tease"
+      ],
+      "counterintuitive": true,
+      "video_id": "FNpZs1VhwaA",
+      "turn": 8,
+      "interest_before": 7
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Ah, last year.\"",
+      "him": "Yes, and my clothes were in Costanera, in the center of Costanera, in a laundry room, and I didn't have clothes for like a month, like three shirts, three pants, ah, fuck. Yes, but why are you here?",
+      "her": "I came to meet you.",
+      "score": 9,
+      "why": "she flirted",
+      "his_move": [
+        "statement",
+        "question_interview"
+      ],
+      "counterintuitive": true,
+      "video_id": "H3_8iPikhDw",
+      "turn": 7,
+      "interest_before": 5
+    },
+    {
+      "phase": "hook",
+      "context": "He just stopped her on the street.",
+      "him": "Can I help you find anything?",
+      "her": "It was hilarious, it cracked me up. Can I help you find anything?",
+      "score": 9,
+      "why": "she laughed",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": true,
+      "video_id": "ZQoGfv-wH4k",
+      "turn": 1,
+      "interest_before": 4
+    },
+    {
+      "phase": "hook",
+      "context": "He just stopped her on the street.",
+      "him": "Excuse me, hi. It was like an athletic event to come talk to you guys. I want to give you my friend, I don't need him anymore, okay? You can keep him. I saw you with your red hair and you looked absolutely adorable. What is your name? Austin, nice to meet you. Tell whoever you're talking to that you met a very beautiful young man in a wheelchair and you have to like talk for like a minute, you'll give them a call back.",
+      "her": "Awesome. Free ride. I'm in. Here, kiss before you...",
+      "score": 9,
+      "why": "she flirted, minimal response",
+      "his_move": [
+        "statement",
+        "cold_read",
+        "tease"
+      ],
+      "counterintuitive": true,
+      "video_id": "n0smMRCqVmc",
+      "turn": 1,
+      "interest_before": 4
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"No, I don't.\"",
+      "him": "So you're like a new student at U of T trying to get your life together? My name's Austin, by the way.",
+      "her": "Okay, cool. You look Russian, that's why.",
+      "score": 7,
+      "why": "minimal response",
+      "his_move": [
+        "cold_read",
+        "statement"
+      ],
+      "counterintuitive": true,
+      "video_id": "-gg0Ykxalkk",
+      "turn": 2,
+      "interest_before": 3
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Okay, cool. You look Russian, that's why.\"",
+      "him": "Am I just not allowed to walk on this beautiful street of Bloor? Do you have an accent or is it just you're like kind of early in the morning?",
+      "her": "No, I'm not Russian at all. I've only been to Russia for a couple of months. Fuck off! I don't have an accent. Basically. No, just really. Very really.",
+      "score": 7,
+      "why": "she gave detail, she tested him",
+      "his_move": [
+        "tease",
+        "question_interview"
+      ],
+      "counterintuitive": true,
+      "video_id": "-gg0Ykxalkk",
+      "turn": 3,
+      "interest_before": 4
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"I never even said it.\"",
+      "him": "Sounds kind of Irish. I'm Austin. Are you from Toronto or no?",
+      "her": "Tell me about yourself? 18. No, I'm from Windsor.",
+      "score": 7,
+      "why": "she asked back, brief answer",
+      "his_move": [
+        "cold_read",
+        "question_interview"
+      ],
+      "counterintuitive": true,
+      "video_id": "-gg0Ykxalkk",
+      "turn": 6,
+      "interest_before": 4
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Tell me about yourself? 18. No, I'm from Windsor.\"",
+      "him": "Oh my god, I have really bad memories of Windsor.",
+      "her": "Where are you studying? Oh, you're from Ryerson.",
+      "score": 7,
+      "why": "she asked back, brief answer",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": true,
+      "video_id": "-gg0Ykxalkk",
+      "turn": 7,
+      "interest_before": 5
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Yeah.\"",
+      "him": "You're gonna have PTSD from that event. Hey, how are you?",
+      "her": "No, it's okay. I'm from Columbus, Ohio, we don't really have pigeons.",
+      "score": 7,
+      "why": "she gave detail",
+      "his_move": [
+        "tease",
+        "statement"
+      ],
+      "counterintuitive": true,
+      "video_id": "-ymOG7QMrBA",
+      "turn": 2,
+      "interest_before": 4
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Well, I don't know what I'm doing tomorrow, but...\"",
+      "him": "It's going to be so many of my friends there, but you can join us. It's a really cool movie. It's about artists, famous artists, Basquiat.",
+      "her": "Basquiat, yeah. I know Basquiat. You know, right?",
+      "score": 7,
+      "why": "she gave detail, she asked back",
+      "his_move": [
+        "statement",
+        "logistics"
+      ],
+      "counterintuitive": true,
+      "video_id": "-ymOG7QMrBA",
+      "turn": 8,
+      "interest_before": 5
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Hi.\"",
+      "him": "It was so funny, it cracked me up.",
+      "her": "And it was so funny like it was hilarious.",
+      "score": 7,
+      "why": "she gave detail, she laughed",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": true,
+      "video_id": "1FHmVCWuPhU",
+      "turn": 6,
+      "interest_before": 6
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"But I just saw you. Yeah, I know.\"",
+      "him": "Where were you headed? Yeah, it's all good.",
+      "her": "Yeah, wait one second. Sorry, I was just talking to my friend.",
+      "score": 7,
+      "why": "brief answer, she mentioned being busy",
+      "his_move": [
+        "question_interview"
+      ],
+      "counterintuitive": true,
+      "video_id": "5sTASDqe0u8",
+      "turn": 6,
+      "interest_before": 3
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"This way, yeah. I got here like 10 minutes ago.\"",
+      "him": "What do you do for fun?",
+      "her": "What do you do for fun?",
+      "score": 7,
+      "why": "she asked back",
+      "his_move": [
+        "question_interview"
+      ],
+      "counterintuitive": true,
+      "video_id": "5sTASDqe0u8",
+      "turn": 12,
+      "interest_before": 4
+    },
+    {
+      "phase": "invest",
+      "context": "She just said: \"I'm just gonna settle for subpar food and then...\"",
+      "him": "I'm really good. Yeah, we could cook again. How should I save you, my wife?",
+      "her": "Really? Are we on that level already? No, I mean, I like you, I think you're cute, I enjoy talking...",
+      "score": 7,
+      "why": "she flirted, she tested him",
+      "his_move": [
+        "statement",
+        "tease",
+        "logistics"
+      ],
+      "counterintuitive": true,
+      "video_id": "5sTASDqe0u8",
+      "turn": 16,
+      "interest_before": 6
+    },
+    {
+      "phase": "hook",
+      "context": "He just stopped her on the street.",
+      "him": "Hey, excuse me. Hi. Hey, what's up? Can you hear me okay?",
+      "her": "Yeah. Yeah.",
+      "score": 7,
+      "why": "minimal response",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": true,
+      "video_id": "6ImEzB6NhiI",
+      "turn": 1,
+      "interest_before": 4
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Yeah. Yeah.\"",
+      "him": "I saw you walking by with the all blue and the tan and just looking cute. I just want to say what's up. Where are you from?",
+      "her": "Where are you from?",
+      "score": 7,
+      "why": "she asked back",
+      "his_move": [
+        "statement",
+        "question_interview"
+      ],
+      "counterintuitive": true,
+      "video_id": "6ImEzB6NhiI",
+      "turn": 2,
+      "interest_before": 5
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Yeah, I am. No, I'm 5'2\". 5'1\".\"",
+      "him": "It's a good height. You have a cute face. You got a nice tan.",
+      "her": "Yeah. Thank you. You don't seem like a party girl. No? No, I'm more fit girl.",
+      "score": 7,
+      "why": "she asked back, brief answer",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": true,
+      "video_id": "6ImEzB6NhiI",
+      "turn": 4,
+      "interest_before": 6
+    },
+    {
+      "phase": "invest",
+      "context": "She just said: \"That's concerning.\"",
+      "him": "Did you date anybody else or no?",
+      "her": "Just the one weird guy? No, that was a short thing in my life. Oh okay, I had three boyfriends. I thought the only one you dated was that one guy. No no, I had three boyfriends in Argentina. Talking too much and you're not...",
+      "score": 7,
+      "why": "she gave detail, she tested him",
+      "his_move": [
+        "question_interview"
+      ],
+      "counterintuitive": true,
+      "video_id": "6ImEzB6NhiI",
+      "turn": 11,
+      "interest_before": 7
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"I never take an Uber.\"",
+      "him": "Oh gotta have you take your first Uber then. Because it's a new experience. You're getting into a stranger's car and they just drive you around, doesn't that sound exciting?",
+      "her": "Sure. I don't even trust my friends to drive me around half the time.",
+      "score": 7,
+      "why": "she gave detail, she laughed",
+      "his_move": [
+        "statement",
+        "tease"
+      ],
+      "counterintuitive": true,
+      "video_id": "9I7JBV15FNM",
+      "turn": 2,
+      "interest_before": 6
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"[goes along with the adventure]\"",
+      "him": "The bottom of this felt like a combination of muddy, slimy, and rocky. It was pretty disgusting. We are taking a shower at my place later.",
+      "her": "A hundred percent.",
+      "score": 7,
+      "why": "she flirted, minimal response",
+      "his_move": [
+        "statement",
+        "logistics"
+      ],
+      "counterintuitive": true,
+      "video_id": "9I7JBV15FNM",
+      "turn": 5,
+      "interest_before": 8
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"What kind of spider is that? You turn on the spider woman what?\"",
+      "him": "Is this the plur lifestyle bracelet?",
+      "her": "Oh my god, player peace love unity.",
+      "score": 7,
+      "why": "she gave detail",
+      "his_move": [
+        "question_interview"
+      ],
+      "counterintuitive": true,
+      "video_id": "9I7JBV15FNM",
+      "turn": 7,
+      "interest_before": 7
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Yes.\"",
+      "him": "Oh, okay. I only know a few things in Swedish...",
+      "her": "Oh, really?",
+      "score": 7,
+      "why": "she asked back",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": true,
+      "video_id": "D1t_K8hjJzc",
+      "turn": 3,
+      "interest_before": 4
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"I just do marketing. Like, that's not it, yeah. It's boring.\"",
+      "him": "Oh, but you surely do something away from the marketing though, right?",
+      "her": "Yeah, but I do a bit of art.",
+      "score": 7,
+      "why": "she gave detail",
+      "his_move": [
+        "question_interview"
+      ],
+      "counterintuitive": true,
+      "video_id": "DPieYj7nji0",
+      "turn": 3,
+      "interest_before": 4
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Like once a year, yeah.\"",
+      "him": "You've got like a really London accent, right? Were you born here?",
+      "her": "No, I moved here when I was seven.",
+      "score": 7,
+      "why": "she gave detail",
+      "his_move": [
+        "cold_read",
+        "question_interview"
+      ],
+      "counterintuitive": true,
+      "video_id": "DPieYj7nji0",
+      "turn": 12,
+      "interest_before": 5
+    },
+    {
+      "phase": "hook",
+      "context": "He just stopped her on the street.",
+      "him": "Oh my god, dude, I think I almost took you out. Holy shit. Are you okay?",
+      "her": "Yeah.",
+      "score": 5,
+      "why": "minimal response",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": false,
+      "video_id": "-ymOG7QMrBA",
+      "turn": 1,
+      "interest_before": 4
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"No, it's okay. I'm from Columbus, Ohio, we don't really have pigeons.\"",
+      "him": "I just thought you were cute. I wanted to say hi. I mean, I don't know. What are you up to right now?",
+      "her": "I don't know. It'll never come back to me.",
+      "score": 5,
+      "why": "brief answer",
+      "his_move": [
+        "statement",
+        "question_interview"
+      ],
+      "counterintuitive": false,
+      "video_id": "-ymOG7QMrBA",
+      "turn": 3,
+      "interest_before": 5
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Oh my god, yes. Did you need help with anything?\"",
+      "him": "Yes, actually. Do you know where the trash bags are?",
+      "her": "Trash bags? Let's see, trash bag. Let's try it out over here. Maybe.",
+      "score": 6,
+      "why": "she gave detail",
+      "his_move": [
+        "question_interview"
+      ],
+      "counterintuitive": false,
+      "video_id": "1FHmVCWuPhU",
+      "turn": 2,
+      "interest_before": 6
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Trash bags? Let's see, trash bag. Let's try it out over here. Maybe.\"",
+      "him": "I don't work here. I just... Wait, who are you on the phone with?",
+      "her": "My dad. Can I call you right back?",
+      "score": 6,
+      "why": "brief answer",
+      "his_move": [
+        "statement",
+        "question_interview"
+      ],
+      "counterintuitive": false,
+      "video_id": "1FHmVCWuPhU",
+      "turn": 3,
+      "interest_before": 6
+    },
+    {
+      "phase": "hook",
+      "context": "He just stopped her on the street.",
+      "him": "I was on the way to, but then I saw you and you looked very like German and blonde and cute. I want to say hi.",
+      "her": "Hi, I'm not German. I'm Swedish.",
+      "score": 5,
+      "why": "brief answer",
+      "his_move": [
+        "statement",
+        "cold_read"
+      ],
+      "counterintuitive": false,
+      "video_id": "D1t_K8hjJzc",
+      "turn": 1,
+      "interest_before": 4
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Hi, I'm not German. I'm Swedish.\"",
+      "him": "You're Swedish. Are you actually from Sweden?",
+      "her": "Yes.",
+      "score": 5,
+      "why": "brief answer",
+      "his_move": [
+        "question_interview"
+      ],
+      "counterintuitive": false,
+      "video_id": "D1t_K8hjJzc",
+      "turn": 2,
+      "interest_before": 4
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Oh, really?\"",
+      "him": "yeah so I know like lingonberry yeah if you had those you like that yeah and then very typical with the meatballs",
+      "her": "like stressed or something well it's more of like the city",
+      "score": 5,
+      "why": "brief answer",
+      "his_move": [
+        "statement",
+        "tease"
+      ],
+      "counterintuitive": false,
+      "video_id": "D1t_K8hjJzc",
+      "turn": 4,
+      "interest_before": 5
+    },
+    {
+      "phase": "hook",
+      "context": "He just stopped her on the street.",
+      "him": "Excuse me. This is like really random and spontaneous, but what's life with a bit of spontaneity, you know? I saw you, the way you dressed is like really hip-hop style and you look like a dancer. Are you a dancer?",
+      "her": "No, I'm not.",
+      "score": 5,
+      "why": "brief answer",
+      "his_move": [
+        "statement",
+        "cold_read"
+      ],
+      "counterintuitive": false,
+      "video_id": "DPieYj7nji0",
+      "turn": 1,
+      "interest_before": 4
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"No, I'm not.\"",
+      "him": "Oh, that's so... What is it that you do then? You look kind of creative like that, right?",
+      "her": "I just do marketing. Like, that's not it, yeah. It's boring.",
+      "score": 5,
+      "why": "she gave detail",
+      "his_move": [
+        "question_interview",
+        "cold_read"
+      ],
+      "counterintuitive": false,
+      "video_id": "DPieYj7nji0",
+      "turn": 2,
+      "interest_before": 4
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"[stops walking, looks at him]\"",
+      "him": "I'm actually meeting up with friends in like two minutes, but I just thought you were cute so I was like let's go see the cute hispanic girl. Turns out she's... now I'm like all thrown off.",
+      "her": "[phone rings, picks up]",
+      "score": 5,
+      "why": "she mentioned being busy",
+      "his_move": [
+        "statement",
+        "tease"
+      ],
+      "counterintuitive": false,
+      "video_id": "FNpZs1VhwaA",
+      "turn": 3,
+      "interest_before": 4
+    },
+    {
+      "phase": "invest",
+      "context": "She just said: \"I mean you'd have to make a good impression. Yeah, no, you're really sweet.\"",
+      "him": "Really sweet?",
+      "her": "Yeah. Did you give off, like, fuckboy-like vibes, though?",
+      "score": 6,
+      "why": "she asked back, she tested him",
+      "his_move": [
+        "question_interview"
+      ],
+      "counterintuitive": false,
+      "video_id": "FNpZs1VhwaA",
+      "turn": 10,
+      "interest_before": 8
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Yes?\"",
+      "him": "Okay. You look very Italian. Where are you from?",
+      "her": "No? Chile.",
+      "score": 5,
+      "why": "brief answer",
+      "his_move": [
+        "cold_read",
+        "question_interview"
+      ],
+      "counterintuitive": false,
+      "video_id": "H3_8iPikhDw",
+      "turn": 3,
+      "interest_before": 4
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"I was in Chile. Have you been there? No, not in Pascua Island. You need to kn...\"",
+      "him": "But it's your country. Wait, where else? I think those are the coolest ones. Yeah, I was with goats.",
+      "her": "But what's your city? Next to it is Santiago.",
+      "score": 5,
+      "why": "she asked back",
+      "his_move": [
+        "statement",
+        "tease"
+      ],
+      "counterintuitive": false,
+      "video_id": "H3_8iPikhDw",
+      "turn": 5,
+      "interest_before": 5
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"But what's your city? Next to it is Santiago.\"",
+      "him": "Ah, ok, ok. Close. Yeah, it's crazy. And then I was there with the fires and chaos and everything.",
+      "her": "Ah, last year.",
+      "score": 5,
+      "why": "minimal response",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": false,
+      "video_id": "H3_8iPikhDw",
+      "turn": 6,
+      "interest_before": 5
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Why are you wearing a uniform?\"",
+      "him": "My mother in Sweden, she makes the best meatballs.",
+      "her": "That's okay. I'm actually Swedish, so...",
+      "score": 5,
+      "why": "brief answer",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": false,
+      "video_id": "KURlBcRF6-M",
+      "turn": 3,
+      "interest_before": 4
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"No way! I love fish. No, I'm honestly okay.\"",
+      "him": "Take your bite.",
+      "her": "Oh, I wouldn't be able to. It's good. Weak stomach. I can't do it.",
+      "score": 5,
+      "why": "she deflected",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": false,
+      "video_id": "KURlBcRF6-M",
+      "turn": 6,
+      "interest_before": 4
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Very good chatter.\"",
+      "him": "I'm a good chatter? Thank you.",
+      "her": "Yeah.",
+      "score": 6,
+      "why": "minimal response",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": false,
+      "video_id": "KURlBcRF6-M",
+      "turn": 9,
+      "interest_before": 6
+    },
+    {
+      "phase": "invest",
+      "context": "She just said: \"You seem cool.\"",
+      "him": "Later we'll go skating on a lake.",
+      "her": "We could do that.",
+      "score": 6,
+      "why": "brief answer",
+      "his_move": [
+        "logistics"
+      ],
+      "counterintuitive": false,
+      "video_id": "KURlBcRF6-M",
+      "turn": 13,
+      "interest_before": 6
+    },
+    {
+      "phase": "hook",
+      "context": "He just stopped her on the street.",
+      "him": "You mind if I have a seat?",
+      "her": "Go for it.",
+      "score": 5,
+      "why": "minimal response",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": false,
+      "video_id": "KuiM4A2P5fA",
+      "turn": 1,
+      "interest_before": 4
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Go for it.\"",
+      "him": "I used to live here, but I'm just visiting. It's a good people-watching spot.",
+      "her": "Yeah. It is.",
+      "score": 5,
+      "why": "minimal response",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": false,
+      "video_id": "KuiM4A2P5fA",
+      "turn": 2,
+      "interest_before": 4
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Yeah. It is.\"",
+      "him": "I arrived yesterday.",
+      "her": "Oh, I don't live there.",
+      "score": 5,
+      "why": "brief answer",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": false,
+      "video_id": "KuiM4A2P5fA",
+      "turn": 3,
+      "interest_before": 4
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Thank you.\"",
+      "him": "You were coming my way and I was like, yeah, you just like... it's like the fashion. Your energy is very strong.",
+      "her": "Thank you. Yeah.",
+      "score": 5,
+      "why": "minimal response",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": false,
+      "video_id": "MF3GUEB03-o",
+      "turn": 2,
+      "interest_before": 5
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Thank you. Yeah.\"",
+      "him": "What's your name?",
+      "her": "Nice to meet you as well, yeah.",
+      "score": 5,
+      "why": "brief answer",
+      "his_move": [
+        "question_interview"
+      ],
+      "counterintuitive": false,
+      "video_id": "MF3GUEB03-o",
+      "turn": 3,
+      "interest_before": 5
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Hi, how are you?\"",
+      "him": "Good. You're just really pretty. I wanted to say hi.",
+      "her": "Oh, thank you.",
+      "score": 5,
+      "why": "minimal response",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": false,
+      "video_id": "WbMjgv4XcwE",
+      "turn": 2,
+      "interest_before": 5
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Oh, thank you.\"",
+      "him": "Yeah, I just I didn't know if we had like met before. I was like, I don't care.",
+      "her": "No, we definitely haven't.",
+      "score": 5,
+      "why": "brief answer",
+      "his_move": [
+        "cold_read"
+      ],
+      "counterintuitive": false,
+      "video_id": "WbMjgv4XcwE",
+      "turn": 3,
+      "interest_before": 5
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Really? I'm not about it. I don't love photos.\"",
+      "him": "Do you think I should try to hit on this other girl now that like you're not into it?",
+      "her": "I mean, try your luck.",
+      "score": 3,
+      "why": "brief answer, she deflected",
+      "his_move": [
+        "meta",
+        "tease"
+      ],
+      "counterintuitive": true,
+      "video_id": "KuiM4A2P5fA",
+      "turn": 5,
+      "interest_before": 5
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Yeah. It's cute though, right?\"",
+      "him": "Maybe that's what caught my eye. I was walking by and you were like shiny. No, that's not what it was, I just thought you looked cute honestly. You guys are going this way, I'm actually headed home but I'll walk with you for like one block and then I'll get going.",
+      "her": "Work and then waking up early to go to the gym.",
+      "score": 3,
+      "why": "she gave detail",
+      "his_move": [
+        "statement",
+        "logistics"
+      ],
+      "counterintuitive": true,
+      "video_id": "e2dLEB-AwmA",
+      "turn": 15,
+      "interest_before": 7
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Kind of.\"",
+      "him": "So it doesn't even matter. You met a daily vlogger. It's time to step up, right? I'll grab your number before you have to rush off.",
+      "her": "I don't want to give out my number though.",
+      "score": 3,
+      "why": "she deflected",
+      "his_move": [
+        "tease",
+        "logistics"
+      ],
+      "counterintuitive": true,
+      "video_id": "fbRpUOxqWcs",
+      "turn": 7,
+      "interest_before": 4
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"No, would you be down to escort me to juice and Java?\"",
+      "him": "Can I trust you though? I heard Finnish guys are very very shy.",
+      "her": "Yeah.",
+      "score": 3,
+      "why": "minimal response, she laughed",
+      "his_move": [
+        "tease"
+      ],
+      "counterintuitive": true,
+      "video_id": "jPHmLAZON_s",
+      "turn": 7,
+      "interest_before": 7
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Awesome. Free ride. I'm in. Here, kiss before you...\"",
+      "him": "Do you guys need a picture? Come on a coffee date with me right now.",
+      "her": "Yeah, I need a picture with her. It is 1.30! What are you talking about coffee?",
+      "score": 3,
+      "why": "brief answer, she tested him",
+      "his_move": [
+        "question_interview",
+        "logistics"
+      ],
+      "counterintuitive": true,
+      "video_id": "n0smMRCqVmc",
+      "turn": 2,
+      "interest_before": 7
+    },
+    {
+      "phase": "invest",
+      "context": "She just said: \"This is real smooth. Don't worry. Exactly.\"",
+      "him": "I did it cause it looks like it's real natural. Just punch it in.",
+      "her": "Yep.",
+      "score": 3,
+      "why": "minimal response",
+      "his_move": [
+        "statement",
+        "logistics"
+      ],
+      "counterintuitive": true,
+      "video_id": "n0smMRCqVmc",
+      "turn": 4,
+      "interest_before": 7
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Best. You were very hesitant, you were like, ahhh. I think it's the entire trip.\"",
+      "him": "You're a foreigner, of course you would think this is cool.",
+      "her": "It's tall.",
+      "score": 3,
+      "why": "brief answer",
+      "his_move": [
+        "tease"
+      ],
+      "counterintuitive": true,
+      "video_id": "qxJbBcLOnbg",
+      "turn": 6,
+      "interest_before": 8
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"I'd be a lemur.\"",
+      "him": "I had a horrible childhood. You were abused.",
+      "her": "It's not even funny.",
+      "score": 3,
+      "why": "she tested him",
+      "his_move": [
+        "tease"
+      ],
+      "counterintuitive": true,
+      "video_id": "qxJbBcLOnbg",
+      "turn": 8,
+      "interest_before": 8
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Testing. I used to code for Netflix actually. Really? Yeah, I got fired from ...\"",
+      "him": "Where's the next place you want to go? What are you doing tomorrow?",
+      "her": "Studying probably.",
+      "score": 3,
+      "why": "brief answer",
+      "his_move": [
+        "logistics",
+        "question_interview"
+      ],
+      "counterintuitive": true,
+      "video_id": "x2kk9HoXjnI",
+      "turn": 4,
+      "interest_before": 6
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"No, they don't really have any like smoothies. There's like Panera Smoothies,...\"",
+      "him": "Would you be interested in going to like a park street festival or something?",
+      "her": "I probably... you know, but I'd probably be like a group. I wouldn't just be by myself. So probably be with my guys.",
+      "score": 3,
+      "why": "she deflected",
+      "his_move": [
+        "logistics"
+      ],
+      "counterintuitive": true,
+      "video_id": "yjfSA5SpqCY",
+      "turn": 5,
+      "interest_before": 5
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Oh, wow, that's tough. You did get the hat.\"",
+      "him": "I had to get the hat, you know.",
+      "her": "I did, yeah.",
+      "score": 3,
+      "why": "minimal response",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": false,
+      "video_id": "MF3GUEB03-o",
+      "turn": 5,
+      "interest_before": 6
+    },
+    {
+      "phase": "close",
+      "context": "She just said: \"I have a boyfriend. Yes, we live together like right there.\"",
+      "him": "All right.",
+      "her": "All right.",
+      "score": 4,
+      "why": "she exited",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": false,
+      "video_id": "MF3GUEB03-o",
+      "turn": 8,
+      "interest_before": 3
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Nice to meet you, Kyle.\"",
+      "him": "Are you living here or what?",
+      "her": "No, no.",
+      "score": 3,
+      "why": "brief answer",
+      "his_move": [
+        "question_interview"
+      ],
+      "counterintuitive": false,
+      "video_id": "d8H9RlGpS0g",
+      "turn": 5,
+      "interest_before": 5
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Why are you taking offense to that? I'm gonna prove you wrong.\"",
+      "him": "What do I need to know about this girl? You guys are close friends, right? What would you say is like... She's goofy?",
+      "her": "She works at a gym.",
+      "score": 3,
+      "why": "brief answer",
+      "his_move": [
+        "question_interview"
+      ],
+      "counterintuitive": false,
+      "video_id": "e2dLEB-AwmA",
+      "turn": 7,
+      "interest_before": 7
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Oh, shoot, like really? So you just living here? Just got here. So you spent ...\"",
+      "him": "Not so much, honestly.",
+      "her": "You just moved to Miami.",
+      "score": 3,
+      "why": "she tested him",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": false,
+      "video_id": "e2dLEB-AwmA",
+      "turn": 10,
+      "interest_before": 7
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Oh my gosh.\"",
+      "him": "There's this really great restaurant called Bar Taco in Hyde Park. So do you have a number?",
+      "her": "I have a boyfriend.",
+      "score": 1,
+      "why": "she deflected",
+      "his_move": [
+        "logistics"
+      ],
+      "counterintuitive": true,
+      "video_id": "qWqNDrjfUvc",
+      "turn": 6,
+      "interest_before": 5
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"De Chile. Si, Santiago.\"",
+      "him": "Do you have a number I can text you at?",
+      "her": "Probably not. Because I have somebody back home.",
+      "score": 1,
+      "why": "she deflected",
+      "his_move": [
+        "logistics"
+      ],
+      "counterintuitive": true,
+      "video_id": "wrxnZi--o9g",
+      "turn": 9,
+      "interest_before": 5
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Oh my god.\"",
+      "him": "Do you have a number?",
+      "her": "I have a boyfriend. I'm sorry.",
+      "score": 1,
+      "why": "she deflected",
+      "his_move": [
+        "logistics"
+      ],
+      "counterintuitive": true,
+      "video_id": "x2kk9HoXjnI",
+      "turn": 7,
+      "interest_before": 6
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Yes, I have it.\"",
+      "him": "What's your name?",
+      "her": "No speak English. Italian.",
+      "score": 1,
+      "why": "she deflected",
+      "his_move": [
+        "question_interview"
+      ],
+      "counterintuitive": false,
+      "video_id": "iOSpNACA9VI",
+      "turn": 4,
+      "interest_before": 5
+    },
+    {
+      "phase": "invest",
+      "context": "She just said: \"Okay. Sounds good.\"",
+      "him": "We're going home. Yeah, we're thinking about going home.",
+      "her": "We are pretty tired. We're going home.",
+      "score": 1,
+      "why": "she exited, she mentioned being busy",
+      "his_move": [
+        "statement"
+      ],
+      "counterintuitive": false,
+      "video_id": "iOSpNACA9VI",
+      "turn": 16,
+      "interest_before": 6
+    },
+    {
+      "phase": "hook",
+      "context": "She just said: \"Yep.\"",
+      "him": "I watched my weight. What are you up to right now? I'm waiting for a friend.",
+      "her": "Thank you. Are you gonna get wasted? I have a boyfriend.",
+      "score": 1,
+      "why": "minimal response, she deflected",
+      "his_move": [
+        "statement",
+        "question_interview"
+      ],
+      "counterintuitive": false,
+      "video_id": "n0smMRCqVmc",
+      "turn": 5,
+      "interest_before": 6
+    },
+    {
+      "phase": "vibe",
+      "context": "She just said: \"Yes.\"",
+      "him": "How did you not make it to Miami? That's like the wonderful place.",
+      "her": "It's like a 4 hour drive.",
+      "score": 1,
+      "why": "brief answer",
+      "his_move": [
+        "question_interview"
+      ],
+      "counterintuitive": false,
+      "video_id": "qxJbBcLOnbg",
+      "turn": 3,
+      "interest_before": 9
+    },
+    {
+      "phase": "close",
+      "context": "She just said: \"13...\"",
+      "him": "Okay, cool. What are you going to the city center for?",
+      "her": "Zara. For what? To go and buy something in Zara.",
+      "score": 6,
+      "why": "she gave detail",
+      "his_move": [
+        "question_interview"
+      ],
+      "counterintuitive": false,
+      "video_id": "d8H9RlGpS0g",
+      "turn": 16,
+      "interest_before": 7
+    }
+  ]
+}

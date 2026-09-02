@@ -16,6 +16,7 @@
     "ingest": "node node_modules/tsx/dist/cli.mjs scripts/training-data/08.ingest.ts",
     "seed:values": "tsx scripts/seed_values.ts",
     "audit": "bash scripts/audit-session.sh",
+    "audit:rls": "tsx scripts/audit-rls.ts",
     "prepare": "husky"
   },
   "dependencies": {

@@ -3,5 +3,13 @@
 
 # But keep this .gitignore file
 !.gitignore
+
+# ...and the eval prompts, which the running app reads at request time (156K).
+# Excluding them made every production build fail: src/scenarios/keepitgoing/
+# chat.ts reads this directory, and a build server never had it.
+!woman-responses/
+woman-responses/*
+!woman-responses/prompts/
+!woman-responses/prompts/**
 # Hugging Face token (keep private)
 data/token/huggingface

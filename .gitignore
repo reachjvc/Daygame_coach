@@ -40,7 +40,12 @@ next-env.d.ts
 .vercel
 
 # Training data (large local assets)
-/data
+/data/*
+# ...except the eval prompts, which the running app reads at request time.
+# 156K. Excluding them made every production build fail with a bare ENOENT.
+!/data/woman-responses/
+/data/woman-responses/*
+!/data/woman-responses/prompts/
 /batch-views
 training-data
 training-data/**

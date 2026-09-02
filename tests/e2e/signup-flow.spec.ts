@@ -4,6 +4,11 @@ import { SELECTORS } from './helpers/selectors'
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
 
+// Serial: one of these tests intercepts a network route, and a parallel worker
+// hitting the same page mid-interception sees the stub. Required by
+// tests/unit/e2e-isolation.test.ts.
+test.describe.configure({ mode: 'serial' })
+
 test.describe('Signup Flow', () => {
   test('should show signup form', async ({ page }) => {
     // Arrange: Navigate to signup page
@@ -55,15 +60,44 @@ test.describe('Signup Flow', () => {
     await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.signup.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    // Assert: All input fields should have required attribute
-    const fullNameInput = page.getByTestId(SELECTORS.signup.fullNameInput)
-    const emailInput = page.getByTestId(SELECTORS.signup.emailInput)
-    const passwordInput = page.getByTestId(SELECTORS.signup.passwordInput)
-    const repeatPasswordInput = page.getByTestId(SELECTORS.signup.repeatPasswordInput)
+    // Assert: All input fields should have required attribute. The name is
+    // mandatory on purpose -- the onboarding flow and the dashboard greeting
+    // both expect a name to exist.
+    await expect(page.getByTestId(SELECTORS.signup.fullNameInput)).toHaveAttribute('required', '', { timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.signup.emailInput)).toHaveAttribute('required', '', { timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.signup.passwordInput)).toHaveAttribute('required', '', { timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.signup.repeatPasswordInput)).toHaveAttribute('required', '', { timeout: ACTION_TIMEOUT })
+  })
 
-    await expect(fullNameInput).toHaveAttribute('required', '', { timeout: ACTION_TIMEOUT })
-    await expect(emailInput).toHaveAttribute('required', '', { timeout: ACTION_TIMEOUT })
-    await expect(passwordInput).toHaveAttribute('required', '', { timeout: ACTION_TIMEOUT })
-    await expect(repeatPasswordInput).toHaveAttribute('required', '', { timeout: ACTION_TIMEOUT })
+  test('sends the confirmation link to /auth/confirm, not straight to /dashboard', async ({ page }) => {
+    // This is the regression guard for the defect that broke every real signup:
+    // the emailed link carries a one-time code that must be exchanged for a
+    // session. Pointing it at /dashboard meant the code was never redeemed and
+    // the confirmed user was bounced back to the login page.
+    await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.signup.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    // Intercept before it reaches Supabase: this test must not create a live
+    // account or trigger a bouncing confirmation email. We only care what the
+    // client asked for.
+    let redirectTo = ''
+    await page.route('**/auth/v1/signup**', async (route) => {
+      redirectTo = new URL(route.request().url()).searchParams.get('redirect_to') ?? ''
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ id: 'stub', email: 'stub@example.com' }),
+      })
+    })
+
+    await page.getByTestId(SELECTORS.signup.emailInput).fill('e2e-redirect-check@example.com', { timeout: ACTION_TIMEOUT })
+    await page.getByTestId(SELECTORS.signup.passwordInput).fill('CorrectHorse9!', { timeout: ACTION_TIMEOUT })
+    await page.getByTestId(SELECTORS.signup.repeatPasswordInput).fill('CorrectHorse9!', { timeout: ACTION_TIMEOUT })
+    await page.getByTestId(SELECTORS.signup.submitButton).click({ timeout: ACTION_TIMEOUT })
+
+    await page.waitForURL(/\/auth\/sign-up-success/, { timeout: AUTH_TIMEOUT })
+
+    expect(redirectTo).toContain('/auth/confirm')
+    expect(redirectTo).not.toMatch(/\/dashboard(\?|$)/)
   })
 })

@@ -7,30 +7,30 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { safeNextPath } from "@/src/shared/safeRedirect"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Crosshair } from "lucide-react"
 
-const POST_LOGIN_KEY = "postLoginNext"
+/** Messages for the ?error= codes set by /auth/confirm. */
+const NOTICES: Record<string, string> = {
+  missing_code:
+    "That confirmation link was incomplete. Try opening it again from your email, or request a new one.",
+  confirm_failed:
+    "That link has expired or was already used. Confirmation links work once, within an hour.",
+}
 
 export default function LoginPageClient() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [cookieNext, setCookieNext] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const nextPath = searchParams.get("next")
 
-  useEffect(() => {
-    const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${POST_LOGIN_KEY}=([^;]+)`))
-    if (match) {
-      setCookieNext(decodeURIComponent(match[1]))
-      document.cookie = `${POST_LOGIN_KEY}=; path=/; max-age=0`
-    }
-  }, [])
+  const notice = NOTICES[searchParams.get("error") ?? ""]
+  const justReset = searchParams.get("reset") === "1"
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,14 +39,13 @@ export default function LoginPageClient() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
-      const desiredNext = nextPath ?? cookieNext
-      const safeNext = desiredNext && desiredNext.startsWith("/") ? desiredNext : null
-      const redirectUrl = safeNext ? `/redirect?next=${encodeURIComponent(safeNext)}` : "/redirect"
+
+      const next = searchParams.get("next")
+      const redirectUrl = next
+        ? `/redirect?next=${encodeURIComponent(safeNextPath(next))}`
+        : "/redirect"
       router.push(redirectUrl)
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
@@ -69,6 +68,22 @@ export default function LoginPageClient() {
               <CardDescription>Enter your email below to login to your account</CardDescription>
             </CardHeader>
             <CardContent>
+              {justReset && (
+                <p
+                  className="mb-4 rounded-md bg-primary/10 p-3 text-sm text-primary"
+                  data-testid="login-reset-success"
+                >
+                  Your password has been changed. Log in with the new one.
+                </p>
+              )}
+              {notice && (
+                <p
+                  className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive"
+                  data-testid="login-notice-message"
+                >
+                  {notice}
+                </p>
+              )}
               <form onSubmit={handleLogin}>
                 <div className="flex flex-col gap-6">
                   <div className="grid gap-2">
@@ -84,7 +99,16 @@ export default function LoginPageClient() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Password</Label>
+                      <Link
+                        href="/auth/forgot-password"
+                        className="text-sm underline underline-offset-4 text-muted-foreground"
+                        data-testid="login-forgot-link"
+                      >
+                        Forgot your password?
+                      </Link>
+                    </div>
                     <Input
                       id="password"
                       type="password"
@@ -94,8 +118,17 @@ export default function LoginPageClient() {
                       data-testid="login-password-input"
                     />
                   </div>
-                  {error && <p className="text-sm text-red-500" data-testid="login-error-message">{error}</p>}
-                  <Button type="submit" className="w-full" disabled={isLoading} data-testid="login-submit-button">
+                  {error && (
+                    <p className="text-sm text-red-500" data-testid="login-error-message">
+                      {error}
+                    </p>
+                  )}
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isLoading}
+                    data-testid="login-submit-button"
+                  >
                     {isLoading ? "Logging in..." : "Login"}
                   </Button>
                 </div>

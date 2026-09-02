@@ -38,7 +38,9 @@ export default function SignUpPage() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          // Must land on /auth/confirm: the link carries a one-time code that has
+          // to be exchanged for a session before any protected page will load.
+          emailRedirectTo: `${window.location.origin}/auth/confirm?next=/redirect`,
           data: {
             full_name: fullName,
           },

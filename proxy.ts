@@ -1,7 +1,24 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
+/**
+ * Next 16 renamed middleware.ts to proxy.ts. This is the edge guard: it decides
+ * who may reach a route at all. It is NOT the data boundary -- RLS is.
+ */
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // The /api/test/* routes are unauthenticated sandbox endpoints for the /test
+  // pages. They read and write real data, so they must never answer in
+  // production. Gated here, in one place, rather than in ten route files.
+  if (pathname.startsWith("/api/test/")) {
+    const allowed =
+      process.env.NODE_ENV !== "production" || process.env.ENABLE_TEST_ROUTES === "true"
+    if (!allowed) {
+      return new NextResponse(null, { status: 404 })
+    }
+  }
+
   const response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -33,12 +50,18 @@ export async function proxy(request: NextRequest) {
   // 3. RLS still protects data in API routes
   const { data: { session } } = await supabase.auth.getSession()
 
-  // Protected routes that require authentication
-  const isProtectedRoute = request.nextUrl.pathname.startsWith("/dashboard")
+  const isProtectedRoute =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/preferences") ||
+    pathname.startsWith("/programs") ||
+    pathname.startsWith("/lair") ||
+    pathname.startsWith("/qa")
 
   if (isProtectedRoute && !session) {
     const redirectUrl = new URL("/auth/login", request.url)
-    redirectUrl.searchParams.set("redirectTo", request.nextUrl.pathname)
+    // Must be `next`: that is the parameter the login page reads to send the
+    // user back where they were headed.
+    redirectUrl.searchParams.set("next", pathname)
     return NextResponse.redirect(redirectUrl)
   }
 
@@ -47,7 +70,11 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all dashboard routes
     "/dashboard/:path*",
+    "/preferences/:path*",
+    "/programs/:path*",
+    "/lair/:path*",
+    "/qa/:path*",
+    "/api/test/:path*",
   ],
 }

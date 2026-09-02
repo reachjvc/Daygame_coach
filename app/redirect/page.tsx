@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { createServerSupabaseClient } from "@/src/db/server"
+import { safeNextPath } from "@/src/shared/safeRedirect"
 
 /**
  * Post-login redirect handler.
@@ -35,10 +36,7 @@ export default async function RedirectPage({
   const params = await searchParams
   const requestedNext =
     typeof params?.next === "string" ? params.next : undefined
-  const safeNext =
-    requestedNext && requestedNext.startsWith("/")
-      ? requestedNext
-      : "/dashboard"
+  const safeNext = safeNextPath(requestedNext, "/dashboard")
 
   if (profile?.onboarding_completed) {
     redirect(safeNext)

@@ -76,15 +76,50 @@ const QUALITY_INSTRUCTIONS: Record<Language, Record<ResponseQuality, string>> = 
 import * as fs from "fs"
 import * as path from "path"
 
-// Load the newest eval prompt (highest prompt_N directory)
 const PROMPTS_DIR = path.join(process.cwd(), "data/woman-responses/prompts")
-const latestPrompt = fs.readdirSync(PROMPTS_DIR)
-  .filter(d => /^prompt_\d+$/.test(d))
-  .sort((a, b) => parseInt(b.split("_")[1]) - parseInt(a.split("_")[1]))[0]
-const EVAL_PROMPT_PATH = path.join(PROMPTS_DIR, latestPrompt, "EVAL_SYSTEM_PROMPT.md")
-const EVAL_SYSTEM_PROMPT = fs.existsSync(EVAL_PROMPT_PATH)
-  ? fs.readFileSync(EVAL_PROMPT_PATH, "utf-8")
-  : (() => { throw new Error(`Eval prompt not found: ${EVAL_PROMPT_PATH}. Run: npx tsx scripts/build-eval-prompt.ts`) })()
+
+let cachedEvalPrompt: string | null = null
+
+/**
+ * Load the newest eval prompt (highest prompt_N directory), on first use.
+ *
+ * This deliberately does NOT run at module load. It used to, and that broke
+ * every deployment: `next build` evaluates modules, so a missing prompts
+ * directory aborted the whole build with a bare ENOENT that named no cause.
+ * The directory lives under /data, which .gitignore excludes wholesale, so it
+ * was never present on a build server.
+ *
+ * Reading lazily means the build succeeds and, if the data really is absent,
+ * the one feature that needs it fails loudly on first request instead of
+ * taking the entire site down. Still no silent fallback -- it throws.
+ */
+function getEvalSystemPrompt(): string {
+  if (cachedEvalPrompt !== null) return cachedEvalPrompt
+
+  if (!fs.existsSync(PROMPTS_DIR)) {
+    throw new Error(
+      `Eval prompts directory not found: ${PROMPTS_DIR}. ` +
+      `It is excluded by .gitignore's /data rule -- check that ` +
+      `data/woman-responses/prompts is committed and deployed.`
+    )
+  }
+
+  const latestPrompt = fs.readdirSync(PROMPTS_DIR)
+    .filter(d => /^prompt_\d+$/.test(d))
+    .sort((a, b) => parseInt(b.split("_")[1]) - parseInt(a.split("_")[1]))[0]
+
+  if (!latestPrompt) {
+    throw new Error(`No prompt_N directory inside ${PROMPTS_DIR}`)
+  }
+
+  const evalPromptPath = path.join(PROMPTS_DIR, latestPrompt, "EVAL_SYSTEM_PROMPT.md")
+  if (!fs.existsSync(evalPromptPath)) {
+    throw new Error(`Eval prompt not found: ${evalPromptPath}. Run: npx tsx scripts/build-eval-prompt.ts`)
+  }
+
+  cachedEvalPrompt = fs.readFileSync(evalPromptPath, "utf-8")
+  return cachedEvalPrompt
+}
 
 export async function evaluateWithAI(
   userMessage: string,
@@ -154,7 +189,8 @@ Evaluate in ${language === "da" ? "Danish" : "English"}. Score based on likely e
 
   // Use Claude Code if enabled (no tracking for local CLI)
   if (useClaudeCode()) {
-    const fullPrompt = `${EVAL_SYSTEM_PROMPT}\n\n${userPrompt}`
+    const evalSystemPrompt = getEvalSystemPrompt()
+    const fullPrompt = `${evalSystemPrompt}\n\n${userPrompt}`
     const parsed = queryClaudeCodeJSON<EvalResult & { line_score?: number; trajectory_score?: number; trajectory_signals?: string }>(fullPrompt)
     return {
       score: Math.max(1, Math.min(10, parsed.line_score ?? parsed.score)),
@@ -174,16 +210,16 @@ Evaluate in ${language === "da" ? "Danish" : "English"}. Score based on likely e
   console.log("[evaluateWithAI] PROMPT DEBUG:", {
     model,
     envModel: process.env.AI_MODEL,
-    systemPromptLength: EVAL_SYSTEM_PROMPT.length,
+    systemPromptLength: getEvalSystemPrompt().length,
     userPromptLength: userPrompt.length,
-    systemPromptPreview: EVAL_SYSTEM_PROMPT.substring(0, 100) + "...",
+    systemPromptPreview: getEvalSystemPrompt().substring(0, 100) + "...",
     userPromptFull: userPrompt,
-    estimatedTokens: Math.ceil((EVAL_SYSTEM_PROMPT.length + userPrompt.length) / 4),
+    estimatedTokens: Math.ceil((getEvalSystemPrompt().length + userPrompt.length) / 4),
   })
 
   const result = await generateText({
     model: anthropic(model),
-    system: EVAL_SYSTEM_PROMPT,
+    system: getEvalSystemPrompt(),
     messages: [{ role: "user", content: userPrompt }],
     maxOutputTokens: 250,
     temperature: 0.3,
@@ -214,7 +250,7 @@ Evaluate in ${language === "da" ? "Danish" : "English"}. Score based on likely e
         cacheReadTokens: result.providerMetadata?.anthropic?.cacheReadInputTokens as number | undefined,
       },
       responseTimeMs: Date.now() - startTime,
-      systemPrompt: EVAL_SYSTEM_PROMPT,
+      systemPrompt: getEvalSystemPrompt(),
       userPrompt,
       aiResponse: result.text,
     })
