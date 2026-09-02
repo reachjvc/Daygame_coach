@@ -5,6 +5,9 @@
  */
 
 import { createServerSupabaseClient } from "./supabase"
+import { getNowInTimezone, periodStartFor, startOfDayInstant } from "../shared/dateUtils"
+import { weeklyStreakRun } from "../shared/streakRuns"
+import { previousPeriodStart, toZonedDate, toDateISO, isStreakCurrent } from "../shared/dateUtils"
 import type {
   WeightLogRow,
   WeightLogInsert,
@@ -21,6 +24,57 @@ import type {
   BodyMeasurementRow,
   BodyMeasurementInsert,
 } from "@/src/health/types"
+
+/**
+ * Monday 00:00 in the ACCOUNT HOLDER'S city, as the absolute instant it
+ * happened — `logged_at` is a `timestamptz`, so the boundary has to be one too.
+ *
+ * This replaced nine hand-written copies of the same six lines, every one of
+ * which used `new Date()` (the server's clock) and `monday.toISOString()`
+ * (midnight in the SERVER's zone). For a Copenhagen user that moved the week
+ * boundary by two hours, so a Sunday-evening workout counted towards the week
+ * that had already ended.
+ */
+function weekStartInstant(timezone: string): string {
+  return startOfDayInstant(periodStartFor("weekly", getNowInTimezone(timezone)), timezone)
+}
+
+/**
+ * HOW MANY WEEKS IN A ROW SOMETHING WAS LOGGED.
+ *
+ * Two bugs lived in the two copies this replaces, and both were live:
+ *
+ * 1. **It could only ever return 0.** The two lists it compared were built with
+ *    different formulas — one normalised to midnight before converting to a
+ *    string, the other did not — so for any user east of London the week labels
+ *    were a day apart and never matched.
+ *
+ * 2. **It wiped the streak every Monday.** It started at the current week and
+ *    stopped at the first week with nothing in it. Before you had trained this
+ *    week, that was this week, so ten weeks in a row read as 0 until you
+ *    trained again. A run is over when a week has ENDED without being extended;
+ *    the week you are still inside has not ended.
+ *
+ * Both are gone because there is now one implementation of "a run of
+ * consecutive periods" (`streakRuns.ts`) and one implementation of "which week
+ * is this instant in" (`periodStartFor` on a zoned date).
+ */
+function weeksTrainedInARow(loggedAt: string[], timezone: string): number {
+  const thisWeek = periodStartFor("weekly", getNowInTimezone(timezone))
+  const mondays = loggedAt.map((at) =>
+    periodStartFor("weekly", toZonedDate(new Date(at), timezone))
+  )
+  const { run, last } = weeklyStreakRun(mondays, (monday) =>
+    previousPeriodStart("weekly", monday)
+  )
+
+  // A health metric is computed for the screen and stored nowhere, so it gates
+  // here rather than at a separate read. Same rule as every other streak: this
+  // week and last week are both alive, because the user has not yet run out of
+  // time to extend either.
+  return isStreakCurrent("weekly", last, thisWeek) ? run : 0
+}
+
 
 // ============================================
 // Weight Logs
@@ -47,6 +101,7 @@ export async function getWeightLogs(userId: string, days: number = 30): Promise<
     .eq("user_id", userId)
     .gte("logged_at", since.toISOString())
     .order("logged_at", { ascending: true })
+    .order("created_at", { ascending: true })
   if (error) throw new Error(`Failed to get weight logs: ${error.message}`)
   return (data ?? []) as WeightLogRow[]
 }
@@ -58,6 +113,7 @@ export async function getLatestWeight(userId: string): Promise<WeightLogRow | nu
     .select("*")
     .eq("user_id", userId)
     .order("logged_at", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(1)
     .single()
   if (error) {
@@ -102,6 +158,7 @@ export async function getSleepLogs(userId: string, days: number = 30): Promise<S
     .eq("user_id", userId)
     .gte("logged_at", since.toISOString())
     .order("logged_at", { ascending: true })
+    .order("created_at", { ascending: true })
   if (error) throw new Error(`Failed to get sleep logs: ${error.message}`)
   return (data ?? []) as SleepLogRow[]
 }
@@ -157,6 +214,7 @@ export async function getWorkoutLogs(userId: string, days: number = 90): Promise
     .eq("user_id", userId)
     .gte("logged_at", since.toISOString())
     .order("logged_at", { ascending: true })
+    .order("created_at", { ascending: true })
   if (error) throw new Error(`Failed to get workout logs: ${error.message}`)
   return (data ?? []) as WorkoutLogRow[]
 }
@@ -202,6 +260,7 @@ export async function getLastWorkoutSets(userId: string, exercise: string): Prom
     .select("id")
     .eq("user_id", userId)
     .order("logged_at", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(10)
   if (logsError) throw new Error(`Failed to query workout logs: ${logsError.message}`)
   if (!logs || logs.length === 0) return []
@@ -222,19 +281,15 @@ export async function getLastWorkoutSets(userId: string, exercise: string): Prom
   return sets.filter((s) => s.log_id === firstLogId) as WorkoutSetRow[]
 }
 
-export async function getWorkoutWeeklyCount(userId: string): Promise<number> {
+export async function getWorkoutWeeklyCount(userId: string, timezone: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  const now = new Date()
-  const dayOfWeek = now.getDay() || 7
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - dayOfWeek + 1)
-  monday.setHours(0, 0, 0, 0)
+  const weekStart = weekStartInstant(timezone)
 
   const { count, error } = await supabase
     .from("workout_logs")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
-    .gte("logged_at", monday.toISOString())
+    .gte("logged_at", weekStart)
   if (error) throw new Error(`Failed to count weekly workouts: ${error.message}`)
   return count ?? 0
 }
@@ -328,23 +383,20 @@ export async function getNutritionLogs(userId: string, days: number = 30): Promi
     .eq("user_id", userId)
     .gte("logged_at", since.toISOString())
     .order("logged_at", { ascending: true })
+    .order("created_at", { ascending: true })
   if (error) throw new Error(`Failed to get nutrition logs: ${error.message}`)
   return (data ?? []) as NutritionLogRow[]
 }
 
-export async function getNutritionWeeklyAvg(userId: string): Promise<number | null> {
+export async function getNutritionWeeklyAvg(userId: string, timezone: string): Promise<number | null> {
   const supabase = await createServerSupabaseClient()
-  const now = new Date()
-  const dayOfWeek = now.getDay() || 7
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - dayOfWeek + 1)
-  monday.setHours(0, 0, 0, 0)
+  const weekStart = weekStartInstant(timezone)
 
   const { data, error } = await supabase
     .from("nutrition_logs")
     .select("quality_score")
     .eq("user_id", userId)
-    .gte("logged_at", monday.toISOString())
+    .gte("logged_at", weekStart)
   if (error) throw new Error(`Failed to get nutrition avg: ${error.message}`)
   if (!data || data.length === 0) return null
   return data.reduce((sum, d) => sum + d.quality_score, 0) / data.length
@@ -364,20 +416,16 @@ export async function deleteNutritionLog(userId: string, logId: string): Promise
 // Aggregation Helpers for Linked Metrics
 // ============================================
 
-export async function getCardioWeeklyCount(userId: string): Promise<number> {
+export async function getCardioWeeklyCount(userId: string, timezone: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  const now = new Date()
-  const dayOfWeek = now.getDay() || 7
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - dayOfWeek + 1)
-  monday.setHours(0, 0, 0, 0)
+  const weekStart = weekStartInstant(timezone)
 
   const { count, error } = await supabase
     .from("workout_logs")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
     .eq("session_type", "cardio")
-    .gte("logged_at", monday.toISOString())
+    .gte("logged_at", weekStart)
   if (error) throw new Error(`Failed to count cardio sessions: ${error.message}`)
   return count ?? 0
 }
@@ -394,40 +442,16 @@ export async function getTrainingHoursCumulative(userId: string): Promise<number
   return Math.round(totalMin / 60)
 }
 
-export async function getConsecutiveTrainingWeeks(userId: string): Promise<number> {
+export async function getConsecutiveTrainingWeeks(userId: string, timezone: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  // Get all workout dates, determine which ISO weeks have ≥1 workout, count streak from current week backward
   const { data, error } = await supabase
     .from("workout_logs")
     .select("logged_at")
     .eq("user_id", userId)
-    .order("logged_at", { ascending: false })
   if (error) throw new Error(`Failed to get training weeks: ${error.message}`)
   if (!data || data.length === 0) return 0
 
-  const weeksWithWorkouts = new Set<string>()
-  for (const row of data) {
-    const d = new Date(row.logged_at)
-    const dayOfWeek = d.getDay() || 7
-    const monday = new Date(d)
-    monday.setDate(d.getDate() - dayOfWeek + 1)
-    weeksWithWorkouts.add(monday.toISOString().split("T")[0])
-  }
-
-  // Count consecutive weeks backward from current week
-  const now = new Date()
-  const dayOfWeek = now.getDay() || 7
-  const currentMonday = new Date(now)
-  currentMonday.setDate(now.getDate() - dayOfWeek + 1)
-  currentMonday.setHours(0, 0, 0, 0)
-
-  let streak = 0
-  const checkDate = new Date(currentMonday)
-  while (weeksWithWorkouts.has(checkDate.toISOString().split("T")[0])) {
-    streak++
-    checkDate.setDate(checkDate.getDate() - 7)
-  }
-  return streak
+  return weeksTrainedInARow(data.map((row) => row.logged_at as string), timezone)
 }
 
 export async function getExerciseMax(userId: string, exercise: string): Promise<number> {
@@ -470,23 +494,62 @@ export async function getProgressPhotoCount(userId: string): Promise<number> {
   return count ?? 0
 }
 
-export async function getProteinDaysHitWeekly(userId: string, target: number = 150): Promise<number> {
+/**
+ * DAYS this week on which the total protein reached the target.
+ *
+ * "Days", not log rows. This counted rows: two meals over 150g on the same day
+ * scored 2, and a day made of three 60g meals — 180g, target hit — scored 0,
+ * because no single row cleared the bar. A daily target is a fact about a day,
+ * so the day is what has to be added up.
+ *
+ * The day is the user's day, from `toZonedDate`: a meal at 23:30 belongs to the
+ * evening the user ate it.
+ */
+export async function getProteinDaysHitWeekly(userId: string, timezone: string, target: number = 150): Promise<number> {
+  return countDaysMeetingTarget(userId, timezone, "protein_g", (total) => total >= target)
+}
+
+/**
+ * DAYS this week on which the total stayed inside the calorie target.
+ *
+ * Two faults, both live: it counted rows rather than days, and it counted rows
+ * where calories were **at or above** the target — the opposite of "stayed
+ * inside". A day of heavy eating scored higher than a day of discipline.
+ */
+export async function getCalorieDaysHitWeekly(userId: string, timezone: string, target: number = 2000): Promise<number> {
+  return countDaysMeetingTarget(userId, timezone, "calories", (total) => total <= target)
+}
+
+/**
+ * How many of this week's days, summed over their own logs, meet a condition.
+ *
+ * A day with no logs at all is not counted either way — an empty day is a day
+ * with no evidence, not a day inside the calorie target.
+ */
+async function countDaysMeetingTarget(
+  userId: string,
+  timezone: string,
+  column: "protein_g" | "calories",
+  meets: (dayTotal: number) => boolean
+): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  const now = new Date()
-  const dayOfWeek = now.getDay() || 7
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - dayOfWeek + 1)
-  monday.setHours(0, 0, 0, 0)
 
   const { data, error } = await supabase
     .from("nutrition_logs")
-    .select("protein_g")
+    .select(`logged_at, ${column}`)
     .eq("user_id", userId)
-    .gte("logged_at", monday.toISOString())
-    .not("protein_g", "is", null)
-  if (error) throw new Error(`Failed to get protein days: ${error.message}`)
+    .gte("logged_at", weekStartInstant(timezone))
+    .not(column, "is", null)
+  if (error) throw new Error(`Failed to read nutrition logs: ${error.message}`)
   if (!data) return 0
-  return data.filter((d) => (d.protein_g ?? 0) >= target).length
+
+  const perDay = new Map<string, number>()
+  for (const row of data as Array<Record<string, unknown>>) {
+    const day = toDateISO(toZonedDate(new Date(row.logged_at as string), timezone))
+    perDay.set(day, (perDay.get(day) ?? 0) + Number(row[column] ?? 0))
+  }
+
+  return [...perDay.values()].filter(meets).length
 }
 
 export async function getPullUpsMax(userId: string): Promise<number> {
@@ -537,6 +600,7 @@ export async function getBodyMeasurements(userId: string, days: number = 90): Pr
     .eq("user_id", userId)
     .gte("logged_at", since.toISOString())
     .order("logged_at", { ascending: true })
+    .order("created_at", { ascending: true })
   if (error) throw new Error(`Failed to get body measurements: ${error.message}`)
   return (data ?? []) as BodyMeasurementRow[]
 }
@@ -565,24 +629,6 @@ export async function deleteBodyMeasurement(userId: string, id: string): Promise
 // Additional Aggregation Helpers
 // ============================================
 
-export async function getCalorieDaysHitWeekly(userId: string, target: number = 2000): Promise<number> {
-  const supabase = await createServerSupabaseClient()
-  const now = new Date()
-  const dayOfWeek = now.getDay() || 7
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - dayOfWeek + 1)
-  monday.setHours(0, 0, 0, 0)
-
-  const { data, error } = await supabase
-    .from("nutrition_logs")
-    .select("calories")
-    .eq("user_id", userId)
-    .gte("logged_at", monday.toISOString())
-    .not("calories", "is", null)
-  if (error) throw new Error(`Failed to get calorie days: ${error.message}`)
-  if (!data) return 0
-  return data.filter((d) => (d.calories ?? 0) >= target).length
-}
 
 export async function getWeightLostFromPeak(userId: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
@@ -591,6 +637,7 @@ export async function getWeightLostFromPeak(userId: string): Promise<number> {
     .select("weight_kg")
     .eq("user_id", userId)
     .order("logged_at", { ascending: true })
+    .order("created_at", { ascending: true })
   if (error) throw new Error(`Failed to get weight history: ${error.message}`)
   if (!data || data.length < 2) return 0
   const peak = Math.max(...data.map((d) => d.weight_kg))
@@ -606,6 +653,7 @@ export async function getWeightGainedFromLowest(userId: string): Promise<number>
     .select("weight_kg")
     .eq("user_id", userId)
     .order("logged_at", { ascending: true })
+    .order("created_at", { ascending: true })
   if (error) throw new Error(`Failed to get weight history: ${error.message}`)
   if (!data || data.length < 2) return 0
   const lowest = Math.min(...data.map((d) => d.weight_kg))
@@ -614,38 +662,30 @@ export async function getWeightGainedFromLowest(userId: string): Promise<number>
   return gained > 0 ? Math.round(gained * 10) / 10 : 0
 }
 
-export async function getMobilitySessionsWeekly(userId: string): Promise<number> {
+export async function getMobilitySessionsWeekly(userId: string, timezone: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  const now = new Date()
-  const dayOfWeek = now.getDay() || 7
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - dayOfWeek + 1)
-  monday.setHours(0, 0, 0, 0)
+  const weekStart = weekStartInstant(timezone)
 
   const { count, error } = await supabase
     .from("workout_logs")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
     .eq("session_type", "mobility")
-    .gte("logged_at", monday.toISOString())
+    .gte("logged_at", weekStart)
   if (error) throw new Error(`Failed to count mobility sessions: ${error.message}`)
   return count ?? 0
 }
 
-export async function getYogaSessionsWeekly(userId: string): Promise<number> {
+export async function getYogaSessionsWeekly(userId: string, timezone: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  const now = new Date()
-  const dayOfWeek = now.getDay() || 7
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - dayOfWeek + 1)
-  monday.setHours(0, 0, 0, 0)
+  const weekStart = weekStartInstant(timezone)
 
   const { count, error } = await supabase
     .from("workout_logs")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
     .eq("session_type", "yoga")
-    .gte("logged_at", monday.toISOString())
+    .gte("logged_at", weekStart)
   if (error) throw new Error(`Failed to count yoga sessions: ${error.message}`)
   return count ?? 0
 }
@@ -662,20 +702,16 @@ export async function getFlexibilityHoursCumulative(userId: string): Promise<num
   return Math.round(data.reduce((sum, d) => sum + d.duration_min, 0) / 60)
 }
 
-export async function getRunningSessionsWeekly(userId: string): Promise<number> {
+export async function getRunningSessionsWeekly(userId: string, timezone: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  const now = new Date()
-  const dayOfWeek = now.getDay() || 7
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - dayOfWeek + 1)
-  monday.setHours(0, 0, 0, 0)
+  const weekStart = weekStartInstant(timezone)
 
   const { count, error } = await supabase
     .from("workout_logs")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
     .eq("session_type", "running")
-    .gte("logged_at", monday.toISOString())
+    .gte("logged_at", weekStart)
   if (error) throw new Error(`Failed to count running sessions: ${error.message}`)
   return count ?? 0
 }
@@ -708,54 +744,28 @@ export async function getLongestRunKm(userId: string): Promise<number> {
   return data[0].distance_km ?? 0
 }
 
-export async function getConsecutiveCardioWeeks(userId: string): Promise<number> {
+export async function getConsecutiveCardioWeeks(userId: string, timezone: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from("workout_logs")
     .select("logged_at")
     .eq("user_id", userId)
     .in("session_type", ["cardio", "running"])
-    .order("logged_at", { ascending: false })
   if (error) throw new Error(`Failed to get cardio weeks: ${error.message}`)
   if (!data || data.length === 0) return 0
 
-  const weeksWithCardio = new Set<string>()
-  for (const row of data) {
-    const d = new Date(row.logged_at)
-    const dayOfWeek = d.getDay() || 7
-    const monday = new Date(d)
-    monday.setDate(d.getDate() - dayOfWeek + 1)
-    weeksWithCardio.add(monday.toISOString().split("T")[0])
-  }
-
-  const now = new Date()
-  const dayOfWeek = now.getDay() || 7
-  const currentMonday = new Date(now)
-  currentMonday.setDate(now.getDate() - dayOfWeek + 1)
-  currentMonday.setHours(0, 0, 0, 0)
-
-  let streak = 0
-  const checkDate = new Date(currentMonday)
-  while (weeksWithCardio.has(checkDate.toISOString().split("T")[0])) {
-    streak++
-    checkDate.setDate(checkDate.getDate() - 7)
-  }
-  return streak
+  return weeksTrainedInARow(data.map((row) => row.logged_at as string), timezone)
 }
 
-export async function getSleepWeeklyAvgHours(userId: string): Promise<number | null> {
+export async function getSleepWeeklyAvgHours(userId: string, timezone: string): Promise<number | null> {
   const supabase = await createServerSupabaseClient()
-  const now = new Date()
-  const dayOfWeek = now.getDay() || 7
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - dayOfWeek + 1)
-  monday.setHours(0, 0, 0, 0)
+  const weekStart = weekStartInstant(timezone)
 
   const { data, error } = await supabase
     .from("sleep_logs")
     .select("bedtime, wake_time")
     .eq("user_id", userId)
-    .gte("logged_at", monday.toISOString())
+    .gte("logged_at", weekStart)
   if (error) throw new Error(`Failed to get sleep avg: ${error.message}`)
   if (!data || data.length === 0) return null
 

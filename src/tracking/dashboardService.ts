@@ -87,7 +87,7 @@ export function validateWidgets(widgets: DashboardWidgetInput[]): DashboardWidge
 export async function resolveMetrics(
   userId: string,
   metricIds: string[],
-  timezone: string | null = null
+  timezone: string
 ): Promise<MetricValue[]> {
   const goalRefs = metricIds
     .map((id) => ({ id, parsed: parseGoalMetricId(id) }))

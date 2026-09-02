@@ -12,7 +12,6 @@ import {
   updateVoiceLanguage as repoUpdateVoiceLanguage,
   updatePreferredLanguage as repoUpdatePreferredLanguage,
   updateTimezone as repoUpdateTimezone,
-  updateWeekStartDay as repoUpdateWeekStartDay,
   updateCurveStyle as repoUpdateCurveStyle,
   getActiveSubscriptionPurchase,
   updateSubscriptionStatus,
@@ -144,20 +143,13 @@ export async function handleUpdateTimezone(
 // Week Start Day
 // ============================================
 
-/**
- * Update week start day for a user.
- * Validates that the value is 0-6 (Sunday through Saturday).
+/*
+ * `handleUpdateWeekStartDay` lived here and was removed with its repo function.
+ * It validated and stored a number that nothing read: every period in the app is
+ * Monday-based via `periodStartFor`, so choosing a different reset day changed
+ * nothing while the settings dialog said it had. The column keeps what people
+ * chose; the write path returns when something honours it.
  */
-export async function handleUpdateWeekStartDay(
-  userId: string,
-  day: number
-): Promise<void> {
-  if (!Number.isInteger(day) || day < 0 || day > 6) {
-    throw createSettingsError("Invalid week start day (must be 0-6)", "INVALID_INPUT")
-  }
-
-  await repoUpdateWeekStartDay(userId, day)
-}
 
 // ============================================
 // Curve Style

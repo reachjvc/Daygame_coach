@@ -102,7 +102,7 @@ export async function updatePreferredLanguage(language: string): Promise<void> {
 export async function updateCurveStyle(style: string): Promise<void> {
   const userId = await requireAuth()
   await handleUpdateCurveStyle(userId, style)
-  revalidatePath("/dashboard/goals")
+  revalidatePath("/dashboard/goals/plan")
 }
 
 /**

@@ -34,7 +34,7 @@ test.describe('Mobile goals', () => {
       data: { title: 'Mobile Goal 2', category: 'custom', target_value: 3, life_area: 'custom' },
     })
 
-    await page.goto('/dashboard/goals', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     await expect(page.getByTestId(SELECTORS.goals.viewSwitcher)).toBeVisible({ timeout: AUTH_TIMEOUT })
@@ -52,7 +52,7 @@ test.describe('Mobile goals', () => {
     })
     const goal = await resp.json()
 
-    await page.goto('/dashboard/goals', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     const goalCard = page.getByTestId(SELECTORS.goals.goalCard(goal.id))
@@ -73,7 +73,7 @@ test.describe('Mobile goals', () => {
     })
     const goal = await resp.json()
 
-    await page.goto('/dashboard/goals', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     const goalCard = page.getByTestId(SELECTORS.goals.goalCard(goal.id))
@@ -95,7 +95,7 @@ test.describe('Mobile goals', () => {
       data: { title: 'Starter', category: 'custom', target_value: 5, life_area: 'custom' },
     })
 
-    await page.goto('/dashboard/goals', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     await page.getByTestId(SELECTORS.goals.newGoalButton).click({ timeout: ACTION_TIMEOUT })
@@ -116,7 +116,7 @@ test.describe('Mobile goals', () => {
       data: { title: 'Delete Me Mobile', category: 'custom', target_value: 5, life_area: 'custom' },
     })
 
-    await page.goto('/dashboard/goals', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     await page.getByTestId(SELECTORS.goals.customizeButton).click({ timeout: ACTION_TIMEOUT })
@@ -138,7 +138,7 @@ test.describe('Mobile goals', () => {
       data: { title: 'View Switcher', category: 'custom', target_value: 5, life_area: 'custom' },
     })
 
-    await page.goto('/dashboard/goals', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     const views = ['today', 'hierarchy', 'tree', 'orrery'] as const

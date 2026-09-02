@@ -58,7 +58,7 @@ would be fabrication.
 **R2. A default timezone is a silent fallback wearing a hat.** Making
 `profiles.timezone` `not null default 'UTC'` guarantees the column is populated
 and guarantees a Copenhagen user silently gets UTC days if detection ever fails.
-Handled by Q1's mismatch banner — the value is never missing, and never wrong
+Handled by DQ1's mismatch banner — the value is never missing, and never wrong
 without saying so.
 
 **R3. Phase 2 touches 24 sites across repos and services.** A mechanical
@@ -80,7 +80,7 @@ horizon calculation must add calendar days in the user's zone, never seconds.
 **R6. The week-start fix changes existing behaviour.** Users whose setting says
 Sunday have been getting Monday resets. Honouring the setting will move their
 week boundary once. That is the correct end state and it is still a visible
-change; Q3 covers it.
+change; DQ3 covers it.
 
 **R7. This plan cannot prove the absence of the bug, only its absence from the
 places it found.** The guard in Phase 5 catches the two known patterns
@@ -227,7 +227,7 @@ Copenhagen days.
 3. **The seven client components** stop calling `new Date()` for a day:
    `DailyReviewPage`, `WeeklyReviewPage`, `FieldReportPage`, `DatePicker`,
    `QuickAddModal`, `CustomReportBuilder`, `SessionTrackerPage`.
-4. **Mismatch banner** (Q1): where the provider mounts, compare the stored zone
+4. **Mismatch banner** (DQ1): where the provider mounts, compare the stored zone
    with `Intl.DateTimeFormat().resolvedOptions().timeZone`. If they differ, show
    a one-line prompt offering to switch. Never switch silently.
 
@@ -286,21 +286,21 @@ patterns, not behaviour.
 
 # Open questions, each with a recommendation
 
-**Q1. What happens when the browser's zone disagrees with the setting?** A
+**DQ1. What happens when the browser's zone disagrees with the setting?** A
 traveller, or a laptop set to UTC.
 **Recommendation: the setting always wins, and the app says so.** A one-line
 banner — *"Your timezone is set to Europe/Copenhagen but this device says
 America/New_York. Switch?"* — with a button. Never switch silently: somebody on
 a two-week trip does not want their week boundary moving twice.
 
-**Q2. Should `profiles.timezone` default to `'UTC'` or be `not null` with no
+**DQ2. Should `profiles.timezone` default to `'UTC'` or be `not null` with no
 default?**
 **Recommendation: default `'UTC'`.** No-default means any insert path that
 forgets it fails, including ones we have not written yet, and the failure lands
-on a user mid-signup. The default plus Q1's banner gives the same safety without
+on a user mid-signup. The default plus DQ1's banner gives the same safety without
 the cliff. R2 is the honest cost.
 
-**Q3. The week-start setting currently does nothing. Honour it or remove it?**
+**DQ3. The week-start setting currently does nothing. Honour it or remove it?**
 **Recommendation: honour it.** The dialog already promises it, users can already
 set it, and one of the four live accounts is set to Sunday today while its goals
 reset on Monday (B5). `periodStartFor` takes a `weekStartsOn` argument (0–6, defaulting
@@ -308,20 +308,20 @@ to Monday), and `resetWeeklyGoals` passes the user's. Expect one visible boundar
 shift for anyone whose setting says Sunday — worth announcing. Removing the
 control instead is cheaper but means deleting a feature people may already use.
 
-**Q4. How is "90 days" counted across a DST change?**
+**DQ4. How is "90 days" counted across a DST change?**
 **Recommendation: calendar days in the user's zone**, via
 `addDaysInTimezone`. Never `+ 90 * 86400 * 1000`. See R5.
 
-**Q5. Do we fix the dates already stored?**
+**DQ5. Do we fix the dates already stored?**
 **Recommendation: no.** See R1 — the information needed does not exist. Say so
 plainly if a user ever asks why an old entry looks a day off.
 
-**Q6. Where does the vice module get a timezone, given it is signed out?**
+**DQ6. Where does the vice module get a timezone, given it is signed out?**
 **Recommendation: the browser's zone, passed explicitly** at the call site so
 the choice is visible. When quit-vice gets a real route and an account, it moves
 to the profile's zone with the rest.
 
-**Q7. Should the Life Mastery flow use the profile's zone or the browser's?** It
+**DQ7. Should the Life Mastery flow use the profile's zone or the browser's?** It
 runs signed out for twelve of thirteen steps.
 **Recommendation: the browser's while signed out, the profile's once signed in**,
 resolved in one place (`NorthStarFlow`) and passed down — not decided per

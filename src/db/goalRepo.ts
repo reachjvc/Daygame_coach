@@ -4,21 +4,20 @@
  * All database access for user_goals table.
  */
 
-import { createServerSupabaseClient } from "./supabase"
+import { createServerSupabaseClient, createAdminSupabaseClient } from "./supabase"
 import type {
   UserGoalRow,
   UserGoalInsert,
   UserGoalUpdate,
   GoalWithProgress,
   GoalTreeNode,
-  LinkedMetric,
   DailyGoalSnapshotRow,
 } from "./goalTypes"
 import { computeGoalProgress } from "./goalTypes"
-import type { UserTrackingStatsRow } from "./trackingTypes"
 import { resolveMetricValues } from "./metricsRepo"
-import { getISOWeekString } from "../tracking/trackingService"
 import { getTodayInTimezone, getNowInTimezone, periodStartFor, type GoalPeriod } from "../shared/dateUtils"
+import { ROLLING_PERIODS } from "./goalEnums"
+import { metricFitsPeriod } from "../tracking/metricsService"
 import { shouldAutoFreeze, isPeriodStale } from "../goals/goalsService"
 
 // ============================================
@@ -33,6 +32,31 @@ export class DuplicateGoalError extends Error {
     super(`Duplicate goal: ${reason} (existing: ${existingGoalId})`)
     this.name = "DuplicateGoalError"
   }
+}
+
+/**
+ * A goal whose linked metric measures a different span of time than its period.
+ *
+ * Named rather than swallowed: nulling the metric silently would leave the user
+ * with a goal that quietly stopped counting, and CLAUDE.md forbids a silent
+ * fallback. The API turns this into a 400 with the reason.
+ */
+export class GoalMetricPeriodError extends Error {
+  constructor(
+    public readonly metric: string,
+    public readonly period: string
+  ) {
+    super(
+      `The metric "${metric}" does not measure a ${period} period, so it cannot keep a ${period} goal up to date.`
+    )
+    this.name = "GoalMetricPeriodError"
+  }
+}
+
+/** Throws unless the metric's window matches the goal's cadence. No metric passes. */
+function assertMetricFitsPeriod(metric: string | null | undefined, period: string): void {
+  if (!metric) return
+  if (!metricFitsPeriod(metric, period)) throw new GoalMetricPeriodError(metric, period)
 }
 
 /**
@@ -97,7 +121,7 @@ async function checkGoalDuplicate(
  * Get all active (non-archived) goals for a user.
  * Pass includeArchived=true to also return archived goals (for customize mode).
  */
-export async function getUserGoals(userId: string, includeArchived = false, timezone: string | null = null): Promise<GoalWithProgress[]> {
+export async function getUserGoals(userId: string, includeArchived = false, timezone: string): Promise<GoalWithProgress[]> {
   const supabase = await createServerSupabaseClient()
 
   let query = supabase
@@ -125,7 +149,7 @@ export async function getUserGoals(userId: string, includeArchived = false, time
 export async function getGoalsByCategory(
   userId: string,
   category: string,
-  timezone: string | null = null
+  timezone: string
 ): Promise<GoalWithProgress[]> {
   const supabase = await createServerSupabaseClient()
 
@@ -150,7 +174,7 @@ export async function getGoalsByCategory(
 export async function getGoalsByLifeArea(
   userId: string,
   lifeArea: string,
-  timezone: string | null = null
+  timezone: string
 ): Promise<GoalWithProgress[]> {
   const supabase = await createServerSupabaseClient()
 
@@ -175,7 +199,7 @@ export async function getGoalsByLifeArea(
 export async function getGoalById(
   userId: string,
   goalId: string,
-  timezone: string | null = null
+  timezone: string
 ): Promise<GoalWithProgress | null> {
   const supabase = await createServerSupabaseClient()
 
@@ -203,12 +227,28 @@ export async function getGoalById(
 /**
  * Create a new goal
  */
+/**
+ * The period a new goal's count belongs to, in the user's calendar.
+ *
+ * A `custom` goal is a milestone — it runs to its own end date and never rolls,
+ * so its period starts the day it was created. Everything else starts on the
+ * boundary it will next roll on, or its first period is short: a weekly goal
+ * created on Wednesday counts a three-day "week" unless it is stamped Monday.
+ */
+function periodStartDateFor(period: string, timezone: string): string {
+  if (period === "custom") return getTodayInTimezone(timezone)
+  return periodStartFor(period as GoalPeriod, getNowInTimezone(timezone))
+}
+
 export async function createGoal(
   userId: string,
   goal: UserGoalInsert,
-  timezone: string | null = null
+  timezone: string
 ): Promise<GoalWithProgress> {
   const supabase = await createServerSupabaseClient()
+
+  // A linked metric must measure the same span of time the goal counts over.
+  assertMetricFitsPeriod(goal.linked_metric, goal.period ?? "weekly")
 
   // Duplicate check — throws DuplicateGoalError if match found
   await checkGoalDuplicate(supabase, userId, goal)
@@ -234,6 +274,10 @@ export async function createGoal(
     category,
     tracking_type: goal.tracking_type ?? "counter",
     period: goal.period ?? "weekly",
+    // The period this goal's count belongs to. Without it the column falls back
+    // to `CURRENT_DATE` — the DATABASE's date, in UTC — so a weekly goal created
+    // on a Wednesday was stamped Wednesday and its first week ran three days.
+    period_start_date: periodStartDateFor(goal.period ?? "weekly", timezone),
     target_value: goal.target_value,
     custom_end_date: goal.custom_end_date ?? null,
     linked_metric: goal.linked_metric ?? null,
@@ -352,7 +396,7 @@ export async function createGoal(
 export async function createGoalBatch(
   userId: string,
   goals: (UserGoalInsert & { _tempId: string; _tempParentId: string | null })[],
-  timezone: string | null = null
+  timezone: string
 ): Promise<GoalWithProgress[]> {
   const supabase = await createServerSupabaseClient()
   const tempToReal = new Map<string, string>()
@@ -414,6 +458,10 @@ export async function createGoalBatch(
       continue
     }
 
+    // Same rule as createGoal — the batch path is how the framework flows and
+    // the catalogue picker create goals, and they never went through the form.
+    assertMetricFitsPeriod(insert.linked_metric, insert.period ?? "weekly")
+
     // Insert the goal
     const { data, error } = await supabase
       .from("user_goals")
@@ -423,6 +471,7 @@ export async function createGoalBatch(
         category,
         tracking_type: insert.tracking_type ?? "counter",
         period: insert.period ?? "weekly",
+        period_start_date: periodStartDateFor(insert.period ?? "weekly", timezone),
         target_value: insert.target_value,
         ...(insert.current_value !== undefined ? { current_value: insert.current_value } : {}),
         custom_end_date: insert.custom_end_date ?? null,
@@ -502,7 +551,7 @@ export async function updateGoal(
   userId: string,
   goalId: string,
   update: UserGoalUpdate,
-  timezone: string | null = null
+  timezone: string
 ): Promise<GoalWithProgress> {
   const supabase = await createServerSupabaseClient()
 
@@ -510,6 +559,21 @@ export async function updateGoal(
   const updateData = { ...update }
   if (updateData.life_area && !updateData.category) {
     updateData.category = updateData.life_area
+  }
+
+  // Either half of the pair can be edited alone, so the check needs the other
+  // half as it will be AFTER the update, not as it was sent.
+  if (updateData.linked_metric !== undefined || updateData.period !== undefined) {
+    const { data: existing } = await supabase
+      .from("user_goals")
+      .select("period, linked_metric")
+      .eq("id", goalId)
+      .eq("user_id", userId)
+      .single()
+    assertMetricFitsPeriod(
+      updateData.linked_metric !== undefined ? updateData.linked_metric : existing?.linked_metric,
+      (updateData.period !== undefined ? updateData.period : existing?.period) ?? "weekly"
+    )
   }
 
   const { data, error } = await supabase
@@ -534,7 +598,7 @@ export async function incrementGoalProgress(
   userId: string,
   goalId: string,
   amount: number = 1,
-  timezone: string | null = null
+  timezone: string
 ): Promise<GoalWithProgress> {
   const supabase = await createServerSupabaseClient()
 
@@ -595,14 +659,14 @@ export async function incrementGoalProgress(
 export async function resetGoalPeriod(
   userId: string,
   goalId: string,
-  timezone: string | null = null
+  timezone: string
 ): Promise<GoalWithProgress> {
   const supabase = await createServerSupabaseClient()
 
   // Get current state to check if goal was completed
   const { data: current, error: fetchError } = await supabase
     .from("user_goals")
-    .select("current_value, target_value, current_streak")
+    .select("current_value, target_value, current_streak, period")
     .eq("id", goalId)
     .eq("user_id", userId)
     .single()
@@ -613,10 +677,13 @@ export async function resetGoalPeriod(
 
   const wasComplete = current.current_value >= current.target_value
 
-  // If goal wasn't completed, reset streak
+  // The new period starts on its BOUNDARY, not today. Stamping today made a
+  // manually-reset weekly goal run Wednesday-to-Wednesday while every other
+  // weekly goal ran Monday-to-Monday, and `isPeriodStale` then rolled it a
+  // second time on the next real Monday.
   const updateData: Record<string, unknown> = {
     current_value: 0,
-    period_start_date: getTodayInTimezone(timezone),
+    period_start_date: periodStartDateFor(current.period as string, timezone),
   }
 
   if (!wasComplete) {
@@ -663,7 +730,7 @@ const RESET_COLUMNS =
 async function resetGoalsForPeriods(
   userId: string,
   periods: GoalPeriod[],
-  timezone: string | null
+  timezone: string
 ): Promise<number> {
   const supabase = await createServerSupabaseClient()
   const today = getTodayInTimezone(timezone)
@@ -689,7 +756,18 @@ async function resetGoalsForPeriods(
 
   // Snapshot BEFORE reset — the pre-reset value is the record of the period
   // that just ended, and the heatmap and the weekly review both read it.
-  await snapshotGoals(userId, goals, today).catch(() => {})
+  //
+  // STAMPED WITH THE PERIOD THAT ENDED, NOT THE DAY THE ROLL RAN. `snapshot_date`
+  // is read as "the day this happened": goalsService filters `snapshot_date >=
+  // <this Monday>` for the weekly rollup, so a week that ended on Sunday and was
+  // rolled on Monday would have been counted as THIS week's. Grouping by
+  // `period_start_date` also keeps one row per period rather than one per
+  // rollover, which is what the unique index on (goal_id, snapshot_date) wants.
+  //
+  // Not swallowed any more: snapshotGoals logs the goal ids and throws in test.
+  for (const goal of goals) {
+    await snapshotGoals(userId, [goal], (goal.period_start_date as string | null) ?? today)
+  }
 
   // Linked goals are zeroed here too, then syncLinkedGoals puts the right
   // value back. That keeps period_start_date, streaks and snapshots honest for
@@ -730,42 +808,24 @@ async function resetGoalsForPeriods(
  * has expired is wrong on the screen the moment the period turns over, not the
  * next time somebody happens to open the dashboard.
  */
-export async function rollGoalPeriods(userId: string, timezone: string | null = null): Promise<number> {
-  return resetGoalsForPeriods(userId, ["daily", "weekly", "monthly", "yearly"], timezone)
+export async function rollGoalPeriods(userId: string, timezone: string): Promise<number> {
+  return resetGoalsForPeriods(userId, [...ROLLING_PERIODS], timezone)
 }
 
 /**
  * Reset all daily goals for a user.
  * Updates streak based on completion status before resetting.
  */
-export async function resetDailyGoals(userId: string, timezone: string | null = null): Promise<number> {
+export async function resetDailyGoals(userId: string, timezone: string): Promise<number> {
   return resetGoalsForPeriods(userId, ["daily"], timezone)
 }
 
-/**
- * Reset all weekly goals whose week is over. Weeks are Monday-based: a count
- * runs to Sunday 23:59 and the next one starts at Monday 00:00.
- * Idempotent — a goal already on this week's Monday is left alone.
+/*
+ * `resetWeeklyGoals`, `resetMonthlyGoals` and `resetYearlyGoals` lived here and
+ * were removed: no route, component or service called any of them. `rollGoalPeriods`
+ * rolls every cadence in one pass and is what every read path uses.
+ * `resetDailyGoals` stays — TodayGoalsWidget posts to /api/goals/reset-daily.
  */
-export async function resetWeeklyGoals(userId: string, timezone: string | null = null): Promise<number> {
-  return resetGoalsForPeriods(userId, ["weekly"], timezone)
-}
-
-/**
- * Reset all monthly goals whose period started before the 1st of this month.
- * Idempotent: skips goals whose period_start_date is already in this month.
- */
-export async function resetMonthlyGoals(userId: string, timezone: string | null = null): Promise<number> {
-  return resetGoalsForPeriods(userId, ["monthly"], timezone)
-}
-
-/**
- * Reset all yearly goals whose period started before January 1st of this year.
- * Idempotent: skips goals whose period_start_date is already in this year.
- */
-export async function resetYearlyGoals(userId: string, timezone: string | null = null): Promise<number> {
-  return resetGoalsForPeriods(userId, ["yearly"], timezone)
-}
 
 // ============================================
 // Linked Metrics Sync
@@ -783,7 +843,7 @@ export { getMetricValue } from "./metricsRepo"
  * Sync all goals with linked metrics to current tracking data
  * Call this after fetching tracking stats to keep goals in sync
  */
-export async function syncLinkedGoals(userId: string, timezone: string | null = null): Promise<number> {
+export async function syncLinkedGoals(userId: string, timezone: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
 
   const { data: goals, error: fetchError } = await supabase
@@ -834,9 +894,19 @@ export async function syncLinkedGoals(userId: string, timezone: string | null = 
 // ============================================
 
 /**
- * Snapshot goals before a period reset — captures pre-reset state for
- * heatmap calendar, weekly review, and trend analysis.
- * Uses admin client because daily_goal_snapshots is system-only (no INSERT RLS for users).
+ * Archive a period before it is zeroed.
+ *
+ * THE BUG THIS FIXES: this function said in its own comment that it used the
+ * admin client, and used `createServerSupabaseClient` instead.
+ * `daily_goal_snapshots` has RLS on with exactly one policy — SELECT — so every
+ * insert was rejected, the error was logged, and the caller swallowed it. The
+ * table held 0 rows against 398 goals: every period that ever rolled was
+ * destroyed rather than archived, and the heatmap and the weekly review have
+ * been drawing an empty array since the day they were written.
+ *
+ * The admin client is correct here and needs no new policy: the service role
+ * bypasses RLS, and a snapshot is computed from user actions rather than typed
+ * in, so the table stays system-only.
  */
 export async function snapshotGoals(
   userId: string,
@@ -845,7 +915,7 @@ export async function snapshotGoals(
 ): Promise<number> {
   if (goals.length === 0) return 0
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = createAdminSupabaseClient()
   const rows = goals.map((g) => ({
     user_id: userId,
     goal_id: g.id,
@@ -864,8 +934,15 @@ export async function snapshotGoals(
     .upsert(rows, { onConflict: "goal_id,snapshot_date" })
 
   if (error) {
-    // Non-fatal: snapshot failure should not block reset
-    console.error(`Snapshot failed: ${error.message}`)
+    // Non-fatal in production: losing the archive is bad, blocking the reset is
+    // worse — the counter would stay on a period that is over. Loud in test, so
+    // a dead archive can never pass silently again.
+    console.error(
+      `[goalRepo] snapshot failed for ${rows.length} goal(s) (${rows.map((r) => r.goal_id).join(", ")}): ${error.message}`
+    )
+    if (process.env.NODE_ENV === "test") {
+      throw new Error(`Snapshot failed: ${error.message}`)
+    }
     return 0
   }
   return rows.length
@@ -1135,7 +1212,7 @@ function buildTree(goals: GoalWithProgress[]): GoalTreeNode[] {
  * Get full goal tree for a user (all active goals as hierarchy).
  * Pass includeArchived=true to also return archived goals (for customize mode).
  */
-export async function getGoalTree(userId: string, includeArchived = false, timezone: string | null = null): Promise<GoalTreeNode[]> {
+export async function getGoalTree(userId: string, includeArchived = false, timezone: string): Promise<GoalTreeNode[]> {
   const goals = await getUserGoals(userId, includeArchived, timezone)
   return buildTree(goals)
 }
@@ -1146,7 +1223,7 @@ export async function getGoalTree(userId: string, includeArchived = false, timez
 export async function getChildGoals(
   userId: string,
   parentGoalId: string,
-  timezone: string | null = null
+  timezone: string
 ): Promise<GoalWithProgress[]> {
   const supabase = await createServerSupabaseClient()
 
@@ -1171,7 +1248,7 @@ export async function getChildGoals(
 export async function getGoalAncestors(
   userId: string,
   goalId: string,
-  timezone: string | null = null
+  timezone: string
 ): Promise<GoalWithProgress[]> {
   // Fetch all goals for user and walk up the tree
   const allGoals = await getUserGoals(userId, false, timezone)
@@ -1322,7 +1399,7 @@ export async function getFrameworkPlanGoals(userId: string): Promise<UserGoalRow
 export async function saveFrameworkPlan(
   userId: string,
   inserts: (UserGoalInsert & { _tempId: string; _tempParentId: string | null })[],
-  timezone: string | null = null,
+  timezone: string,
 ): Promise<GoalWithProgress[]> {
   const supabase = await createServerSupabaseClient()
   const { data: prior, error } = await supabase

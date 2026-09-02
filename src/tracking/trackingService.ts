@@ -52,20 +52,16 @@ import {
   getUserReviews as repoGetUserReviews,
   getReviewTemplates as repoGetReviewTemplates,
   getLatestCommitment as repoGetLatestCommitment,
-  countMonthlyReviews as repoCountMonthlyReviews,
   // Custom Review Templates
   createCustomReviewTemplate as repoCreateCustomReviewTemplate,
   deleteCustomReviewTemplate as repoDeleteCustomReviewTemplate,
   // Stats
   getUserTrackingStats as repoGetUserTrackingStats,
   getOrCreateUserTrackingStats as repoGetOrCreateUserTrackingStats,
-  updateUserTrackingStats as repoUpdateUserTrackingStats,
   getDailyStats as repoGetDailyStats,
   getApproachesPerHour as repoGetApproachesPerHour,
   // Milestones
   getUserMilestones as repoGetUserMilestones,
-  checkAndAwardMilestone as repoCheckAndAwardMilestone,
-  checkAndAwardMilestones as repoCheckAndAwardMilestones,
   // Sticking Points
   createStickingPoint as repoCreateStickingPoint,
   updateStickingPoint as repoUpdateStickingPoint,
@@ -81,7 +77,6 @@ import type {
   ApproachRow,
   ApproachInsert,
   ApproachUpdate,
-  ApproachOutcome,
   FieldReportRow,
   FieldReportInsert,
   FieldReportUpdate,
@@ -95,9 +90,7 @@ import type {
   ReviewTemplateRow,
   ReviewTemplateInsert,
   UserTrackingStatsRow,
-  UserTrackingStatsUpdate,
   MilestoneRow,
-  MilestoneType,
   StickingPointRow,
   StickingPointInsert,
   StickingPointUpdate,
@@ -106,6 +99,10 @@ import type {
 import type { ConversationFieldValue, DailyWeekSummary } from "./types"
 import { ALL_MILESTONES } from "@/src/tracking/data/milestones"
 import { syncLinkedGoals } from "@/src/db/goalRepo"
+import { getUserTimezone } from "@/src/db/settingsRepo"
+import { rollTrackingCounters } from "@/src/db/trackingRepo"
+import { gateStreaks } from "@/src/db/metricsRepo"
+import { reconcileUserProgress } from "./achievementsSyncService"
 
 // ============================================
 // Sessions
@@ -128,11 +125,21 @@ export async function getActiveSession(userId: string): Promise<SessionRow | nul
   return repoGetActiveSession(userId)
 }
 
+/**
+ * Editing a finished session changes what it earned.
+ *
+ * `primary_location` feeds Globetrotter and `unique_locations`; `goal_met`
+ * feeds Goal Crusher; `duration_minutes` feeds Marathon. Correcting a mistyped
+ * location used to leave the old name in the counters until some unrelated
+ * write happened to trigger a recount.
+ */
 export async function updateSession(
   sessionId: string,
   updates: SessionUpdate
 ): Promise<SessionRow> {
-  return repoUpdateSession(sessionId, updates)
+  const row = await repoUpdateSession(sessionId, updates)
+  await reconcileUserProgress(row.user_id)
+  return row
 }
 
 export async function endSession(sessionId: string): Promise<SessionRow> {
@@ -157,16 +164,14 @@ export async function endSession(sessionId: string): Promise<SessionRow> {
     end_reason: 'completed',
   })
 
-  await updateSessionStats(session.user_id, sessionId, {
-    approachCount: totalApproaches,
-    goalMet,
-    durationMinutes,
-    startHour: startedAt.getHours(),
-    location: session.primary_location,
-  })
+  await reconcileUserProgress(session.user_id)
 
   // Sync linked goals with updated tracking stats
-  await syncLinkedGoals(session.user_id).catch((e) => console.error("syncLinkedGoals failed:", e))
+  // The timezone is not optional here. Without it the goal sync rolls the week
+  // by the SERVER clock, which for a Copenhagen user just past midnight on
+  // Monday is still last week — and the roll then wipes the counters this
+  // reconcile has only just written.
+  await syncGoals(session.user_id)
 
   return updatedSession
 }
@@ -179,12 +184,26 @@ export async function abandonSession(sessionId: string): Promise<SessionRow> {
   return repoAbandonSession(sessionId)
 }
 
+/**
+ * Reopening a finished session makes it a live one again, so it stops counting
+ * as completed until it is ended. The counters have to be told, or they keep
+ * reporting a session that is currently running as finished.
+ */
 export async function reactivateSession(sessionId: string): Promise<SessionWithApproaches> {
-  return repoReactivateSession(sessionId)
+  const session = await repoReactivateSession(sessionId)
+  await reconcileUserProgress(session.user_id)
+  return session
 }
 
+/**
+ * Deleting a session takes its approaches with it (the foreign key cascades), so
+ * the counters have to be worked out again. They go DOWN; the badges do not —
+ * `reconcileUserProgress` only ever inserts, so nothing already earned is taken
+ * away from a user who tidies up their history.
+ */
 export async function deleteSession(sessionId: string, userId: string): Promise<void> {
-  return repoDeleteSession(sessionId, userId)
+  await repoDeleteSession(sessionId, userId)
+  await reconcileUserProgress(userId)
 }
 
 export async function getSessionWithApproaches(
@@ -224,15 +243,25 @@ export async function getSessionIntentionSuggestions(
 
 export async function createApproach(approach: ApproachInsert): Promise<ApproachRow> {
   const row = await repoCreateApproach(approach)
-  await incrementApproachStats(approach.user_id, approach.outcome ?? undefined, approach.session_id ?? undefined)
+  await reconcileUserProgress(approach.user_id)
   return row
 }
 
+/**
+ * THE OUTCOME ARRIVES HERE, NOT ON CREATE.
+ *
+ * The tracker saves the approach the moment it is logged and sets "she gave me
+ * her number" a tap later, through this function. It used to update nothing but
+ * the row, which is why an account with 23 real numbers had a phone-number total
+ * of 0 and could not win a single Numbers badge. Reconciling here is the fix.
+ */
 export async function updateApproach(
   approachId: string,
   updates: ApproachUpdate
 ): Promise<ApproachRow> {
-  return repoUpdateApproach(approachId, updates)
+  const row = await repoUpdateApproach(approachId, updates)
+  await reconcileUserProgress(row.user_id)
+  return row
 }
 
 export async function getUserApproaches(
@@ -249,47 +278,23 @@ export async function getUserApproaches(
 
 export async function createFieldReport(report: FieldReportInsert): Promise<FieldReportRow> {
   const row = await repoCreateFieldReport(report)
-
-  // Update field report count and check milestones (only for non-drafts)
-  if (!report.is_draft) {
-    const stats = await repoGetOrCreateUserTrackingStats(report.user_id)
-    const currentWeek = getISOWeekString(new Date())
-    const weekChanged = stats.current_week !== currentWeek
-    const newCount = (stats.total_field_reports || 0) + 1
-    const weeklyReports = weekChanged ? 1 : (stats.current_week_field_reports ?? 0) + 1
-    const fieldReportUpdates: UserTrackingStatsUpdate = {
-      total_field_reports: newCount,
-      current_week: currentWeek,
-      current_week_field_reports: weeklyReports,
-    }
-    // Reset ALL other weekly counters when week rolls over
-    if (weekChanged) {
-      fieldReportUpdates.current_week_sessions = 0
-      fieldReportUpdates.current_week_approaches = 0
-      fieldReportUpdates.current_week_numbers = 0
-      fieldReportUpdates.current_week_instadates = 0
-    }
-    await repoUpdateUserTrackingStats(report.user_id, fieldReportUpdates)
-
-    const potentialMilestones: Array<{ type: MilestoneType; value?: number }> = []
-    if (newCount === 1) potentialMilestones.push({ type: "first_field_report" })
-    if (newCount === 10) potentialMilestones.push({ type: "10_field_reports" })
-    if (newCount === 25) potentialMilestones.push({ type: "25_field_reports" })
-    if (newCount === 50) potentialMilestones.push({ type: "50_field_reports" })
-    await repoCheckAndAwardMilestones(report.user_id, potentialMilestones, report.session_id)
-
-    // Sync linked goals with updated tracking stats
-    await syncLinkedGoals(report.user_id).catch((e) => console.error("syncLinkedGoals failed:", e))
-  }
-
+  await reconcileUserProgress(report.user_id)
+  await syncGoals(report.user_id)
   return row
 }
 
+/**
+ * A draft becoming a real report is an edit, not a create — so this path has to
+ * recount too. It never did, which meant a report written as a draft and
+ * submitted later counted for nothing.
+ */
 export async function updateFieldReport(
   reportId: string,
   updates: FieldReportUpdate
 ): Promise<FieldReportRow> {
-  return repoUpdateFieldReport(reportId, updates)
+  const row = await repoUpdateFieldReport(reportId, updates)
+  await reconcileUserProgress(row.user_id)
+  return row
 }
 
 export async function getFieldReport(reportId: string): Promise<FieldReportRow | null> {
@@ -297,7 +302,8 @@ export async function getFieldReport(reportId: string): Promise<FieldReportRow |
 }
 
 export async function deleteFieldReport(reportId: string, userId: string): Promise<void> {
-  return repoDeleteFieldReport(reportId, userId)
+  await repoDeleteFieldReport(reportId, userId)
+  await reconcileUserProgress(userId)
 }
 
 export async function getUserFieldReports(
@@ -493,24 +499,18 @@ export async function deleteCustomReportTemplate(
 
 export async function createReview(review: ReviewInsert): Promise<ReviewRow> {
   const row = await repoCreateReview(review)
-
-  if (!review.is_draft) {
-    if (review.review_type === "weekly") {
-      await incrementWeeklyReviewCount(review.user_id)
-      await repoCheckAndAwardMilestone(review.user_id, "first_weekly_review")
-    } else if (review.review_type === "monthly") {
-      await incrementMonthlyReviewCount(review.user_id)
-    }
-  }
-
+  await reconcileUserProgress(review.user_id)
   return row
 }
 
+/** A review submitted out of a draft has to count, same as one written in one go. */
 export async function updateReview(
   reviewId: string,
   updates: ReviewUpdate
 ): Promise<ReviewRow> {
-  return repoUpdateReview(reviewId, updates)
+  const row = await repoUpdateReview(reviewId, updates)
+  await reconcileUserProgress(row.user_id)
+  return row
 }
 
 export async function getUserReviews(
@@ -681,6 +681,29 @@ export async function getOrCreateUserTrackingStats(
   return repoGetOrCreateUserTrackingStats(userId)
 }
 
+/**
+ * The stats row ready to be shown to the user.
+ *
+ * Two corrections, both of which have to happen or the numbers lie:
+ *
+ * 1. ROLL. `current_week_*` are the counts for the week named by
+ *    `week_start_date`. They are only rewritten when the user logs something,
+ *    so a user who did nothing since Sunday would otherwise open the app on
+ *    Monday and see last week's numbers presented as this week's.
+ * 2. GATE. A streak is a number plus the period it was last earned in; read
+ *    raw, a streak that ended in June still reads as live in August.
+ *
+ * The dashboard's metric path already did both (`metricsRepo.loadStats`). This
+ * is the same pair for the raw-row endpoint, which did neither.
+ */
+export async function getTrackingStatsForDisplay(
+  userId: string
+): Promise<UserTrackingStatsRow> {
+  const timezone = await getUserTimezone(userId)
+  await rollTrackingCounters(userId, timezone)
+  return gateStreaks(await repoGetOrCreateUserTrackingStats(userId), timezone)
+}
+
 export async function getDailyStats(userId: string, days?: number): Promise<DailyStats[]> {
   return repoGetDailyStats(userId, days)
 }
@@ -710,303 +733,26 @@ export async function getUserMilestones(userId: string, limit?: number): Promise
 // ============================================
 
 /**
- * Get the ISO week string for a date (e.g., "2026-W07").
- */
-export function getISOWeekString(date: Date): string {
-  const d = new Date(date)
-  d.setHours(0, 0, 0, 0)
-  // Set to nearest Thursday: current date + 4 - current day number
-  d.setDate(d.getDate() + 4 - (d.getDay() || 7))
-  const yearStart = new Date(d.getFullYear(), 0, 1)
-  const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
-  return `${d.getFullYear()}-W${weekNo.toString().padStart(2, '0')}`
-}
-
-/**
- * Check if two ISO week strings are consecutive (e.g., "2026-W06" and "2026-W07").
- */
-export function areWeeksConsecutive(week1: string, week2: string): boolean {
-  if (!week1 || !week2) return false
-  const [year1, w1] = week1.split('-W').map(Number)
-  const [year2, w2] = week2.split('-W').map(Number)
-
-  // Same year, consecutive weeks
-  if (year1 === year2 && w2 === w1 + 1) return true
-  // Year boundary: last week of year1 to first week of year2
-  if (year2 === year1 + 1 && w1 >= 52 && w2 === 1) return true
-
-  return false
-}
-
-/**
  * A week is "active" if 2+ sessions OR 5+ approaches were logged.
+ *
+ * Re-exported from `counterRules`, where it lives with the rest of the counter
+ * rules and can be imported by `trackingRepo` without closing an import cycle.
  */
-export function isWeekActive(sessions: number, approaches: number): boolean {
-  return sessions >= 2 || approaches >= 5
-}
-
-// ============================================
-// Business Logic (extracted from trackingRepo)
-// ============================================
+export { isWeekActive } from "@/src/tracking/counterRules"
 
 /**
- * Update session-related stats and check milestones after a session ends.
+ * Push the freshly derived counters into any goal that tracks them.
+ *
+ * Always with the user's timezone: every week boundary downstream is read
+ * against it, and passing null means the server's own clock decides, which is
+ * how a Copenhagen user could end a session at 00:30 on Monday and watch this
+ * week's counters get zeroed a moment later.
  */
-async function updateSessionStats(
-  userId: string,
-  sessionId: string,
-  sessionInfo: {
-    approachCount: number
-    goalMet: boolean
-    durationMinutes: number
-    startHour: number
-    location: string | null
-  }
-): Promise<void> {
-  const stats = await repoGetOrCreateUserTrackingStats(userId)
-  const currentWeek = getISOWeekString(new Date())
-
-  // Track weekly sessions
-  const weekChanged = stats.current_week !== currentWeek
-  let weeklySessions = weekChanged ? 1 : (stats.current_week_sessions || 0) + 1
-
-  // Update unique locations
-  let uniqueLocations = stats.unique_locations || []
-  if (sessionInfo.location && !uniqueLocations.includes(sessionInfo.location)) {
-    uniqueLocations = [...uniqueLocations, sessionInfo.location]
-  }
-
-  const newSessionCount = stats.total_sessions + 1
-
-  const updates: UserTrackingStatsUpdate = {
-    total_sessions: newSessionCount,
-    current_week: currentWeek,
-    current_week_sessions: weeklySessions,
-    unique_locations: uniqueLocations,
-  }
-
-  // Reset ALL other weekly counters when week rolls over
-  if (weekChanged) {
-    updates.current_week_approaches = 0
-    updates.current_week_numbers = 0
-    updates.current_week_instadates = 0
-    updates.current_week_field_reports = 0
-  }
-
-  await repoUpdateUserTrackingStats(userId, updates)
-
-  await checkAndUpdateWeeklyStreak(userId, currentWeek)
-
-  // Collect all potential milestones and check in batch
-  const potentialMilestones: Array<{ type: MilestoneType; value?: number }> = []
-
-  if (newSessionCount === 1) potentialMilestones.push({ type: "first_session" })
-  if (newSessionCount === 3) potentialMilestones.push({ type: "3_sessions" })
-  if (newSessionCount === 5) potentialMilestones.push({ type: "5_sessions" })
-  if (newSessionCount === 10) potentialMilestones.push({ type: "10_sessions" })
-  if (newSessionCount === 25) potentialMilestones.push({ type: "25_sessions" })
-  if (newSessionCount === 50) potentialMilestones.push({ type: "50_sessions" })
-  if (newSessionCount === 100) potentialMilestones.push({ type: "100_sessions" })
-
-  if (sessionInfo.approachCount >= 5) potentialMilestones.push({ type: "first_5_approach_session" })
-  if (sessionInfo.approachCount >= 10) potentialMilestones.push({ type: "first_10_approach_session" })
-  if (sessionInfo.goalMet) potentialMilestones.push({ type: "first_goal_hit" })
-  if (sessionInfo.durationMinutes >= 120) potentialMilestones.push({ type: "marathon" })
-
-  const dayOfWeek = new Date().getDay()
-  if (dayOfWeek === 0 || dayOfWeek === 6) potentialMilestones.push({ type: "weekend_warrior" })
-
-  if (uniqueLocations.length >= 5) potentialMilestones.push({ type: "globetrotter" })
-
-  await repoCheckAndAwardMilestones(userId, potentialMilestones, sessionId)
-}
-
-/**
- * Check if the current week qualifies as "active" and update the weekly streak.
- */
-async function checkAndUpdateWeeklyStreak(
-  userId: string,
-  currentWeek: string
-): Promise<void> {
-  const stats = await repoGetUserTrackingStats(userId)
-  if (!stats) return
-
-  const weeklySessions = stats.current_week_sessions || 0
-  const weeklyApproaches = stats.current_week_approaches || 0
-  const lastActiveWeek = stats.last_active_week
-
-  if (!isWeekActive(weeklySessions, weeklyApproaches)) {
-    return
-  }
-
-  if (lastActiveWeek === currentWeek) {
-    return
-  }
-
-  let newWeekStreak: number
-  if (lastActiveWeek && areWeeksConsecutive(lastActiveWeek, currentWeek)) {
-    newWeekStreak = (stats.current_week_streak || 0) + 1
-  } else {
-    newWeekStreak = 1
-  }
-
-  await repoUpdateUserTrackingStats(userId, {
-    current_week_streak: newWeekStreak,
-    longest_week_streak: Math.max(stats.longest_week_streak || 0, newWeekStreak),
-    last_active_week: currentWeek,
-  })
-
-  const potentialMilestones: Array<{ type: MilestoneType; value?: number }> = []
-  if (newWeekStreak === 2) potentialMilestones.push({ type: "2_week_streak" })
-  if (newWeekStreak === 4) potentialMilestones.push({ type: "4_week_streak" })
-  if (newWeekStreak === 8) potentialMilestones.push({ type: "8_week_streak" })
-  if (newWeekStreak === 12) potentialMilestones.push({ type: "12_week_streak" })
-  if (newWeekStreak === 26) potentialMilestones.push({ type: "26_week_streak" })
-  if (newWeekStreak === 52) potentialMilestones.push({ type: "52_week_streak" })
-  await repoCheckAndAwardMilestones(userId, potentialMilestones)
-}
-
-/**
- * Update approach-related stats, daily streak, and check milestones.
- */
-async function incrementApproachStats(
-  userId: string,
-  outcome?: ApproachOutcome,
-  sessionId?: string
-): Promise<void> {
-  const stats = await repoGetOrCreateUserTrackingStats(userId)
-
-  const today = new Date().toISOString().split("T")[0]
-  const currentWeek = getISOWeekString(new Date())
-  const lastDate = stats.last_approach_date
-
-  // Calculate daily streak (legacy, but still track it)
-  let newStreak = stats.current_streak
-  if (lastDate !== today) {
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const yesterdayStr = yesterday.toISOString().split("T")[0]
-
-    if (lastDate === yesterdayStr) {
-      newStreak = stats.current_streak + 1
-    } else if (lastDate !== today) {
-      newStreak = 1
-    }
-  }
-
-  // Track weekly approaches
-  const weekChanged = stats.current_week !== currentWeek
-  const weeklyApproaches = weekChanged ? 1 : (stats.current_week_approaches || 0) + 1
-
-  const updates: UserTrackingStatsUpdate = {
-    total_approaches: stats.total_approaches + 1,
-    last_approach_date: today,
-    current_streak: newStreak,
-    longest_streak: Math.max(stats.longest_streak, newStreak),
-    current_week: currentWeek,
-    current_week_approaches: weeklyApproaches,
-  }
-
-  // Reset ALL other weekly counters when week rolls over
-  if (weekChanged) {
-    updates.current_week_sessions = 0
-    updates.current_week_numbers = 0
-    updates.current_week_instadates = 0
-    updates.current_week_field_reports = 0
-  }
-
-  let newNumbers = stats.total_numbers
-  let newInstadates = stats.total_instadates
-
-  if (outcome === "number") {
-    newNumbers = stats.total_numbers + 1
-    updates.total_numbers = newNumbers
-    const weeklyNumbers = weekChanged ? 0 : (stats.current_week_numbers ?? 0)
-    updates.current_week_numbers = weeklyNumbers + 1
-  } else if (outcome === "instadate") {
-    newInstadates = stats.total_instadates + 1
-    updates.total_instadates = newInstadates
-    const weeklyInstadates = weekChanged ? 0 : (stats.current_week_instadates ?? 0)
-    updates.current_week_instadates = weeklyInstadates + 1
-  }
-
-  await repoUpdateUserTrackingStats(userId, updates)
-
-  await checkAndUpdateWeeklyStreak(userId, currentWeek)
-
-  // Collect all potential milestones and check in batch
-  const potentialMilestones: Array<{ type: MilestoneType; value?: number }> = []
-  const newTotal = stats.total_approaches + 1
-
-  if (newTotal === 1) potentialMilestones.push({ type: "first_approach" })
-  if (newTotal === 5) potentialMilestones.push({ type: "5_approaches" })
-  if (newTotal === 10) potentialMilestones.push({ type: "10_approaches" })
-  if (newTotal === 25) potentialMilestones.push({ type: "25_approaches" })
-  if (newTotal === 50) potentialMilestones.push({ type: "50_approaches" })
-  if (newTotal === 100) potentialMilestones.push({ type: "100_approaches" })
-  if (newTotal === 250) potentialMilestones.push({ type: "250_approaches" })
-  if (newTotal === 500) potentialMilestones.push({ type: "500_approaches" })
-  if (newTotal === 1000) potentialMilestones.push({ type: "1000_approaches" })
-
-  if (outcome === "number") {
-    if (newNumbers === 1) potentialMilestones.push({ type: "first_number" })
-    if (newNumbers === 2) potentialMilestones.push({ type: "2_numbers" })
-    if (newNumbers === 5) potentialMilestones.push({ type: "5_numbers" })
-    if (newNumbers === 10) potentialMilestones.push({ type: "10_numbers" })
-    if (newNumbers === 25) potentialMilestones.push({ type: "25_numbers" })
-    if (newNumbers === 50) potentialMilestones.push({ type: "50_numbers" })
-    if (newNumbers === 100) potentialMilestones.push({ type: "100_numbers" })
-  }
-
-  if (outcome === "instadate") {
-    if (newInstadates === 1) potentialMilestones.push({ type: "first_instadate" })
-    if (newInstadates === 2) potentialMilestones.push({ type: "2_instadates" })
-    if (newInstadates === 5) potentialMilestones.push({ type: "5_instadates" })
-    if (newInstadates === 10) potentialMilestones.push({ type: "10_instadates" })
-    if (newInstadates === 25) potentialMilestones.push({ type: "25_instadates" })
-  }
-
-  if (newStreak === 7) potentialMilestones.push({ type: "7_day_streak" })
-  if (newStreak === 30) potentialMilestones.push({ type: "30_day_streak" })
-  if (newStreak === 100) potentialMilestones.push({ type: "100_day_streak" })
-
-  await repoCheckAndAwardMilestones(userId, potentialMilestones, sessionId)
-}
-
-/**
- * Increment weekly review count and check unlock for monthly reviews.
- */
-async function incrementWeeklyReviewCount(userId: string): Promise<void> {
-  const stats = await repoGetOrCreateUserTrackingStats(userId)
-
-  const newCount = stats.weekly_reviews_completed + 1
-
-  const updates: UserTrackingStatsUpdate = {
-    weekly_reviews_completed: newCount,
-    current_weekly_streak: stats.current_weekly_streak + 1,
-  }
-
-  if (newCount >= 4 && !stats.monthly_review_unlocked) {
-    updates.monthly_review_unlocked = true
-    await repoCheckAndAwardMilestone(userId, "monthly_unlocked")
-  }
-
-  await repoUpdateUserTrackingStats(userId, updates)
-}
-
-/**
- * Check if quarterly reviews should be unlocked after monthly review submission.
- */
-async function incrementMonthlyReviewCount(userId: string): Promise<void> {
-  const stats = await repoGetOrCreateUserTrackingStats(userId)
-
-  if (!stats.quarterly_review_unlocked) {
-    const count = await repoCountMonthlyReviews(userId)
-    if (count >= 3) {
-      await repoUpdateUserTrackingStats(userId, { quarterly_review_unlocked: true })
-      await repoCheckAndAwardMilestone(userId, "quarterly_unlocked")
-    }
-  }
+async function syncGoals(userId: string): Promise<void> {
+  const timezone = await getUserTimezone(userId)
+  await syncLinkedGoals(userId, timezone).catch((e) =>
+    console.error("syncLinkedGoals failed:", e)
+  )
 }
 
 // ============================================

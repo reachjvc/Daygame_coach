@@ -16,5 +16,9 @@
 import { GoalSetupWizard } from "@/src/goals/components/setup/GoalSetupWizard"
 
 export default function ArchivedGoalSetupPage() {
-  return <GoalSetupWizard />
+  // Where it returns to is the archive's business, not the component's: the
+  // wizard has no idea it has been archived, and the hub it used to return to is
+  // now next door. Passing it here keeps the only mention of the archive inside
+  // the archive, so deleting this folder deletes every reference to it.
+  return <GoalSetupWizard returnPath="/test/archive/goals-hub" />
 }

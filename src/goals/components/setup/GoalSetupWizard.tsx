@@ -18,7 +18,7 @@ import { GoalCatalogPicker } from "../GoalCatalogPicker"
 import { getDaygamePathL1, GOAL_TEMPLATE_MAP } from "@/src/goals/data/goalGraph"
 import type { DaygamePath, HabitRampStep, MilestoneLadderConfig, SetupCustomGoal, SetupCustomCategory } from "@/src/goals/types"
 
-export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPath?: string } = {}) {
+export function GoalSetupWizard({ returnPath = "/dashboard/goals/plan" }: { returnPath?: string } = {}) {
   const router = useRouter()
   const catalog = useSetupCatalog()
 

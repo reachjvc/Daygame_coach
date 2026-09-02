@@ -5,7 +5,8 @@
  * Styled with the project's theme tokens (card / border / primary / muted).
  */
 
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react"
+import { createPortal } from "react-dom"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -25,14 +26,29 @@ export const touchRow = "min-h-11 sm:min-h-0 sm:py-1.5"
 // Popover / dropdown
 // ---------------------------------------------------------------------------
 
-export function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
+/**
+ * `extra` is for a panel that lives outside the wrapper in the DOM — a
+ * portalled popover. Without it, clicking inside your own panel counts as a
+ * click outside and closes it.
+ */
+export function useClickOutside<T extends HTMLElement>(
+  onOutside: () => void,
+  extra?: RefObject<HTMLElement | null>,
+) {
   const ref = useRef<T | null>(null)
+  // kept in a ref so an inline callback does not re-register the listener
+  const latest = useRef(onOutside)
+  latest.current = onOutside
   useEffect(() => {
     const handler = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) onOutside()
+      const target = event.target as Node
+      if (!ref.current) return
+      if (ref.current.contains(target)) return
+      if (extra?.current?.contains(target)) return
+      latest.current()
     }
     const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onOutside()
+      if (event.key === "Escape") latest.current()
     }
     document.addEventListener("mousedown", handler)
     document.addEventListener("keydown", escape)
@@ -40,8 +56,155 @@ export function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
       document.removeEventListener("mousedown", handler)
       document.removeEventListener("keydown", escape)
     }
-  }, [onOutside])
+  }, [extra])
   return ref
+}
+
+/**
+ * Popover panels are rendered into <body> and positioned with `fixed`, because
+ * almost every card that holds a trigger clips its own overflow: the day card
+ * in the entry list, the calendar grid, the report tables, the modal body, the
+ * horizontal scrollers. An `absolute` panel inside one of those is cut off at
+ * the card edge — which is what hid the tag list whenever the picker was opened
+ * on a row near the bottom of its day.
+ */
+const PANEL_GAP = 4
+const PANEL_MARGIN = 12
+/** Less room than this below the trigger and the panel opens upwards instead */
+const PANEL_MIN_SPACE = 160
+
+export type PanelPosition = {
+  left: number
+  top?: number
+  bottom?: number
+  maxHeight: number
+  /** so a panel asked to match its trigger can be sized without measuring twice */
+  anchorWidth: number
+}
+
+function samePosition(a: PanelPosition | null, b: PanelPosition) {
+  return (
+    !!a &&
+    a.left === b.left &&
+    a.top === b.top &&
+    a.bottom === b.bottom &&
+    a.maxHeight === b.maxHeight &&
+    a.anchorWidth === b.anchorWidth
+  )
+}
+
+/**
+ * Viewport coordinates for a panel anchored under `anchorRef`, recomputed while
+ * it is open so scrolling any ancestor keeps it attached to its trigger.
+ * `null` until the panel has been measured once — pass `open` as false until
+ * the panel is actually in the DOM, or there is nothing to measure against.
+ */
+export function usePanelPosition(
+  anchorRef: RefObject<HTMLElement | null>,
+  panelRef: RefObject<HTMLElement | null>,
+  open: boolean,
+  {
+    align = "left",
+    matchAnchorWidth = false,
+    onDetached,
+  }: {
+    align?: "left" | "right"
+    /** the panel is as wide as its trigger (a select), not its own content */
+    matchAnchorWidth?: boolean
+    /** the trigger has scrolled out of sight, so the panel is pointing at nothing */
+    onDetached?: () => void
+  } = {},
+): PanelPosition | null {
+  const [position, setPosition] = useState<PanelPosition | null>(null)
+  const detachedRef = useRef(onDetached)
+  detachedRef.current = onDetached
+
+  const place = useCallback(() => {
+    const anchor = anchorRef.current
+    const panel = panelRef.current
+    if (!anchor || !panel) return
+    const rect = anchor.getBoundingClientRect()
+    // clientWidth/Height, not innerWidth/Height: those include the scrollbar,
+    // and a right-aligned panel would sit partly underneath it
+    const viewportWidth = document.documentElement.clientWidth
+    const viewportHeight = document.documentElement.clientHeight
+
+    const width = matchAnchorWidth ? rect.width : panel.getBoundingClientRect().width
+    const wanted = align === "right" ? rect.right - width : rect.left
+    const furthestLeft = Math.max(PANEL_MARGIN, viewportWidth - PANEL_MARGIN - width)
+    const left = Math.min(Math.max(PANEL_MARGIN, wanted), furthestLeft)
+
+    const below = viewportHeight - rect.bottom - PANEL_GAP - PANEL_MARGIN
+    const above = rect.top - PANEL_GAP - PANEL_MARGIN
+    const base = { left, anchorWidth: rect.width }
+
+    // Prefer below; flip up when below is too cramped. When neither side has
+    // room — a short window, a trigger in the middle of it — the panel covers
+    // the trigger rather than running off the screen, where nothing could
+    // scroll it back: a `fixed` panel is outside every scroll container.
+    const next: PanelPosition =
+      below >= PANEL_MIN_SPACE
+        ? { ...base, top: rect.bottom + PANEL_GAP, maxHeight: below }
+        : above >= PANEL_MIN_SPACE
+          ? { ...base, bottom: viewportHeight - rect.top + PANEL_GAP, maxHeight: above }
+          : { ...base, top: PANEL_MARGIN, maxHeight: Math.max(0, viewportHeight - PANEL_MARGIN * 2) }
+    setPosition((previous) => (samePosition(previous, next) ? previous : next))
+  }, [align, anchorRef, matchAnchorWidth, panelRef])
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setPosition(null)
+      return
+    }
+    place()
+    const reposition = () => place()
+    window.addEventListener("resize", reposition)
+    // capture: a scroll inside any ancestor moves the trigger too
+    window.addEventListener("scroll", reposition, true)
+
+    // A panel that has left its trigger behind points at nothing. Scrolled out
+    // of the window, out of the modal body, out of a table's scroller — an
+    // observer covers all three, because it clips against every ancestor;
+    // hand-checking the viewport would only have caught the first.
+    const anchor = anchorRef.current
+    const watcher =
+      typeof IntersectionObserver === "undefined" || !anchor
+        ? null
+        : new IntersectionObserver(
+            (entries) => {
+              if (entries.some((entry) => !entry.isIntersecting)) detachedRef.current?.()
+            },
+            { threshold: 0 },
+          )
+    if (anchor) watcher?.observe(anchor)
+
+    return () => {
+      window.removeEventListener("resize", reposition)
+      window.removeEventListener("scroll", reposition, true)
+      watcher?.disconnect()
+    }
+  }, [anchorRef, open, place])
+
+  return position
+}
+
+/**
+ * Inline styles for a panel placed by usePanelPosition. Until it has been
+ * measured it is transparent rather than `visibility: hidden` — a hidden
+ * element refuses focus, and the browser applies a panel's `autoFocus` in the
+ * same commit, so hiding it left every picker's search box unfocused. The
+ * measurement runs in a layout effect, so this frame is never painted.
+ */
+export function panelStyle(position: PanelPosition | null, matchAnchorWidth = false) {
+  return {
+    left: position?.left ?? 0,
+    top: position?.top,
+    bottom: position?.bottom,
+    maxHeight: position?.maxHeight,
+    width: matchAnchorWidth ? position?.anchorWidth : undefined,
+    opacity: position ? undefined : 0,
+    pointerEvents: position ? undefined : ("none" as const),
+  }
 }
 
 interface DropdownProps {
@@ -53,6 +216,8 @@ interface DropdownProps {
   panelClassName?: string
   openOnMount?: boolean
   onOpenChange?: (open: boolean) => void
+  /** Panel is exactly as wide as its trigger — for a select, where `width` cannot say so */
+  matchAnchorWidth?: boolean
   /** Required when the trigger is icon-only, so it has an accessible name */
   ariaLabel?: string
 }
@@ -66,15 +231,55 @@ export function Dropdown({
   panelClassName,
   openOnMount = false,
   onOpenChange,
+  matchAnchorWidth = false,
   ariaLabel,
 }: DropdownProps) {
   const [open, setOpen] = useState(openOnMount)
-  const ref = useClickOutside<HTMLDivElement>(() => {
-    if (open) {
-      setOpen(false)
-      onOpenChange?.(false)
-    }
+  const panelRef = useRef<HTMLDivElement | null>(null)
+  const triggerRef = useRef<HTMLButtonElement | null>(null)
+  // `onOpenChange` must not run inside a setOpen updater: React invokes updaters
+  // more than once, so the picker's reset would fire repeatedly and mid-render
+  const openRef = useRef(open)
+  openRef.current = open
+  const close = useCallback(() => {
+    if (!openRef.current) return
+    setOpen(false)
+    onOpenChange?.(false)
+  }, [onOpenChange])
+  const ref = useClickOutside<HTMLDivElement>(close, panelRef)
+  // createPortal needs document, which does not exist during server rendering
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  // `mounted`, not just `open`: with openOnMount the panel is not in the DOM on
+  // the first render, and a measure that finds no panel would never be retried
+  const position = usePanelPosition(ref, panelRef, open && mounted, {
+    align,
+    matchAnchorWidth,
+    onDetached: close,
   })
+  // the panel is no longer a descendant of the trigger, so the link a screen
+  // reader would otherwise infer from nesting has to be stated
+  const panelId = useId()
+
+  // Tab order follows the DOM, and the panel now lives at the end of <body>,
+  // so a keyboard user tabbing on from the trigger would sail straight past it.
+  // Move focus in when it opens (unless an autoFocus field already took it) and
+  // hand it back to the trigger when it closes.
+  useEffect(() => {
+    if (!open || !mounted) return
+    const panel = panelRef.current
+    if (panel && !panel.contains(document.activeElement)) {
+      panel
+        .querySelector<HTMLElement>(
+          'input:not([disabled]), button:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+        )
+        ?.focus()
+    }
+    return () => {
+      // the panel left with the focus still inside it
+      if (document.activeElement === document.body) triggerRef.current?.focus()
+    }
+  }, [open, mounted])
 
   const toggle = () => {
     const next = !open
@@ -82,35 +287,40 @@ export function Dropdown({
     onOpenChange?.(next)
   }
 
+  const panel = () => (
+    <div
+      ref={panelRef}
+      id={panelId}
+      data-dropdown-panel=""
+      style={panelStyle(position, matchAnchorWidth)}
+      className={cn(
+        // Clamp to the viewport so a fixed panel width cannot cause
+        // horizontal scrolling on a phone
+        "fixed z-[9650] max-w-[calc(100vw-1.5rem)] overflow-y-auto overflow-x-hidden overscroll-contain rounded-md border border-border bg-card shadow-xl",
+        // `w-full` would mean the whole viewport once the panel is portalled
+        matchAnchorWidth ? undefined : width,
+        panelClassName,
+      )}
+    >
+      {children(close)}
+    </div>
+  )
+
   return (
     <div ref={ref} className={cn("relative", className)}>
       <button
+        ref={triggerRef}
         type="button"
         onClick={toggle}
         aria-label={ariaLabel}
         aria-expanded={open}
         aria-haspopup="menu"
+        aria-controls={open ? panelId : undefined}
         className="w-full text-left"
       >
         {trigger(open)}
       </button>
-      {open && (
-        <div
-          className={cn(
-            // Clamp to the viewport so a fixed panel width cannot cause
-            // horizontal scrolling on a phone
-            "absolute z-50 mt-1 max-w-[calc(100vw-1.5rem)] overflow-x-hidden rounded-md border border-border bg-card shadow-xl",
-            align === "right" ? "right-0" : "left-0",
-            width,
-            panelClassName,
-          )}
-        >
-          {children(() => {
-            setOpen(false)
-            onOpenChange?.(false)
-          })}
-        </div>
-      )}
+      {open && mounted && createPortal(panel(), document.body)}
     </div>
   )
 }
@@ -653,7 +863,7 @@ export function SelectMenu<T extends string | number>({
   return (
     <Dropdown
       className={className}
-      width="w-full min-w-[10rem]"
+      matchAnchorWidth
       trigger={() => (
         <span className="flex h-9 items-center justify-between gap-2 rounded-md border border-border bg-transparent px-3 text-sm">
           <span className={cn("truncate", !current && "text-muted-foreground")}>{current?.label ?? placeholder}</span>

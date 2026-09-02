@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -11,9 +11,10 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Loader2, Trash2, Archive } from "lucide-react"
-import { LIFE_AREAS, getLifeAreaConfig } from "../data/lifeAreas"
+import { LIFE_AREAS } from "../data/lifeAreas"
 import { GoalFormVariant6 } from "./GoalFormVariant6"
 import { deriveChildLevel } from "../goalsService"
+import { metricFitsPeriod } from "@/src/tracking/metricsService"
 import type {
   GoalWithProgress,
   GoalPeriod,
@@ -36,32 +37,9 @@ interface GoalFormModalProps {
   defaultParentGoalId?: string | null
 }
 
-const PERIOD_OPTIONS: { value: GoalPeriod; label: string }[] = [
-  { value: "daily", label: "Daily" },
-  { value: "weekly", label: "Weekly" },
-  { value: "monthly", label: "Monthly" },
-  { value: "quarterly", label: "Quarterly" },
-  { value: "yearly", label: "Yearly" },
-]
-
-const TRACKING_TYPE_OPTIONS: { value: GoalTrackingType; label: string; description: string }[] = [
-  { value: "counter", label: "Counter", description: "Track towards a target number" },
-  { value: "boolean", label: "Yes/No", description: "Simple done or not done" },
-]
-
-const LINKED_METRIC_OPTIONS: { value: LinkedMetric; label: string; group: string }[] = [
-  { value: null, label: "None (manual tracking)", group: "none" },
-  // Weekly (resets each week)
-  { value: "approaches_weekly", label: "Approaches (weekly)", group: "weekly" },
-  { value: "sessions_weekly", label: "Sessions (weekly)", group: "weekly" },
-  { value: "numbers_weekly", label: "Phone numbers (weekly)", group: "weekly" },
-  { value: "instadates_weekly", label: "Instadates (weekly)", group: "weekly" },
-  // Cumulative (lifetime total)
-  { value: "approaches_cumulative", label: "Approaches (cumulative)", group: "cumulative" },
-  { value: "sessions_cumulative", label: "Sessions (cumulative)", group: "cumulative" },
-  { value: "numbers_cumulative", label: "Phone numbers (cumulative)", group: "cumulative" },
-  { value: "instadates_cumulative", label: "Instadates (cumulative)", group: "cumulative" },
-]
+/* PERIOD_OPTIONS and TRACKING_TYPE_OPTIONS lived here and were dead: this
+   component delegates its whole form to GoalFormVariant6, which owns its own
+   lists. LINKED_METRIC_OPTIONS went the same way — nothing rendered it. */
 
 export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSuccess, defaultLifeArea, defaultParentGoalId }: GoalFormModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -89,6 +67,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
 
   // Track whether user has manually picked a life area (for override warning)
   const [userPickedLifeArea, setUserPickedLifeArea] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- see NOTE below
   const [lifeAreaOverrideNote, setLifeAreaOverrideNote] = useState<string | null>(null)
 
   // Milestone curve editor state
@@ -98,6 +77,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
     steps: 10,
     curveTension: 2,
   })
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- see NOTE below
   const [showCurveEditor, setShowCurveEditor] = useState(false)
 
   // Habit ramp editor state
@@ -112,13 +92,6 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
   const [startingStreak, setStartingStreak] = useState(0)
 
   const isEditing = !!goal
-
-  // Button style helpers for unselected state (dark-theme friendly)
-  const unselCls = (_accentHex: string) =>
-    "border-[#4b5563] bg-transparent text-[#e0e0e0] hover:bg-white/5"
-  const unselStyle = (_accentHex: string): React.CSSProperties | undefined =>
-    undefined
-  const unselSub = "text-[#9ca3af]"
 
   // Initialize form when editing
   useEffect(() => {
@@ -193,17 +166,6 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
   }, [defaultParentGoalId, goal])
 
   const effectiveLifeArea = lifeArea === "custom" ? customLifeArea : lifeArea
-  const areaConfig = getLifeAreaConfig(effectiveLifeArea || "custom")
-  const suggestions = areaConfig.suggestions
-
-  // Filter parent goals by life area for dropdown, excluding self to prevent cycles
-  const filteredParentGoals = useMemo(() => {
-    if (!parentGoals.length) return []
-    const eligible = goal ? parentGoals.filter((g) => g.id !== goal.id) : parentGoals
-    if (!effectiveLifeArea) return eligible
-    return eligible.filter((g) => g.life_area === effectiveLifeArea || !effectiveLifeArea)
-  }, [parentGoals, effectiveLifeArea, goal])
-
   // Auto-suggest life area when parent is selected
   useEffect(() => {
     if (parentGoalId && parentGoals.length) {
@@ -222,6 +184,17 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parentGoalId, parentGoals])
 
+  /**
+   * NOTE — a half-migrated path, deliberately not deleted.
+   *
+   * This component now delegates its whole form to `GoalFormVariant6`, and three
+   * things did not come across: this handler, `lifeAreaOverrideNote` and
+   * `showCurveEditor`. Their other halves are still wired — `selectedSuggestion`
+   * is passed to the variant, and both setters are still called — so removing
+   * them would change what the variant receives, not just delete dead weight.
+   * Whoever finishes the migration should remove all of it together.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSuggestionClick = (suggestion: GoalSuggestion) => {
     if (selectedSuggestion === suggestion.title) {
       setSelectedSuggestion(null)
@@ -307,10 +280,16 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
       if (motivationNote.trim()) {
         payload.motivation_note = motivationNote.trim()
       }
-      if (effectiveLifeArea === "daygame" && (
-        goalType === "milestone" ||
-        ((goalType === "recurring" || goalType === "habit_ramp") && period === "weekly")
-      )) {
+      // A linked metric only travels if it measures the same span the goal
+      // counts over — a milestone runs on `custom`, everything else on its
+      // period. `metricFitsPeriod` is the same rule the API enforces, so the
+      // form cannot send something the server will reject.
+      const effectivePeriod = goalType === "milestone" ? "custom" : period
+      if (
+        effectiveLifeArea === "daygame" &&
+        linkedMetric &&
+        metricFitsPeriod(linkedMetric, effectivePeriod)
+      ) {
         payload.linked_metric = linkedMetric
       }
       // Graph fields: nature, display_category, goal_level

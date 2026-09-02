@@ -31,10 +31,18 @@ const files = sourceFiles(SLICE).map((file) => ({
   text: fs.readFileSync(file, "utf-8"),
 }))
 
-/** Body of every `setState((x) => { … })` updater in a file */
+/**
+ * Body of every `setSomething((x) => { … })` state updater in a file — any React
+ * setter, not just `setState`. A popover reaching for the same shape (telling
+ * its parent it had closed from inside a `setOpen` updater) is the reason this
+ * is not spelled `setState`. Timers and DOM setters take a callback too, so
+ * they are named out rather than matched and explained away.
+ */
+const NOT_A_STATE_SETTER = "Timeout|Interval|Immediate|Item|Attribute|Property|Custom|Pointer|Date|FullYear|Month|Hours|Minutes|Seconds|Milliseconds|Time|UTC"
+
 function updaterBodies(text: string): string[] {
   const bodies: string[] = []
-  const opener = /setState\(\s*\(\w+\)\s*=>\s*\{/g
+  const opener = new RegExp(String.raw`\bset(?!${NOT_A_STATE_SETTER})[A-Z]\w*\(\s*\(\w+\)\s*=>\s*\{`, "g")
   while (opener.exec(text) !== null) {
     let depth = 1
     let index = opener.lastIndex
@@ -49,15 +57,21 @@ function updaterBodies(text: string): string[] {
 }
 
 describe("state updates in the time-tracking slice", () => {
-  test("no side effects inside a setState updater", () => {
+  test("no side effects inside a state updater", () => {
     // StrictMode runs updaters twice, so anything user-visible in there happens twice
-    const forbidden = /\b(pushToast|notify|window\.alert|navigator\.clipboard|downloadFile)\s*\(/
+    const forbidden = [
+      /\b(pushToast|notify|window\.alert|navigator\.clipboard|downloadFile)\s*\(/,
+      // telling a parent what just happened belongs after the update, not in it
+      /\b(on[A-Z]\w*)\s*\??\.?\s*\(/,
+    ]
     const violations: string[] = []
 
     for (const file of files) {
       for (const body of updaterBodies(file.text)) {
-        const hit = forbidden.exec(body)
-        if (hit) violations.push(`${file.path}: ${hit[1]}() runs inside a setState updater`)
+        for (const pattern of forbidden) {
+          const hit = pattern.exec(body)
+          if (hit) violations.push(`${file.path}: ${hit[1]}() runs inside a state updater`)
+        }
       }
     }
 

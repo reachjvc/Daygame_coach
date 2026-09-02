@@ -50,36 +50,30 @@ export async function checkSchema(): Promise<SchemaCheckResult> {
   const missing: SchemaExpectation[] = []
 
   for (const expectation of EXPECTED_SCHEMA) {
-    try {
-      // Query information_schema to check if column exists
-      const { data, error } = await supabase
-        .from("information_schema.columns" as never)
-        .select("column_name")
-        .eq("table_schema", "public")
-        .eq("table_name", expectation.table)
-        .eq("column_name", expectation.column)
-        .maybeSingle()
+    // ASK THE TABLE, NOT THE CATALOGUE.
+    //
+    // This used to query `information_schema.columns` through PostgREST, which
+    // does not expose that schema — so the query ALWAYS errored, the error was
+    // read as "column missing", and every page load printed a CRITICAL warning
+    // about a column that has existed for months. A check that cannot pass is
+    // worse than no check: it trains everyone to ignore the one time it is right.
+    //
+    // Selecting the column with `limit(0)` asks the only question that matters —
+    // can the app read this column — and costs nothing.
+    const { error } = await supabase
+      .from(expectation.table)
+      .select(expectation.column)
+      .limit(0)
 
-      if (error || !data) {
-        missing.push(expectation)
-      }
-    } catch {
-      // If we can't query information_schema, try a direct approach
-      try {
-        const { error } = await supabase
-          .from(expectation.table)
-          .select(expectation.column)
-          .limit(0)
-
-        if (error?.message?.includes("does not exist") ||
-            error?.message?.includes("unknown column") ||
-            error?.code === "42703") {
-          missing.push(expectation)
-        }
-      } catch {
-        // Can't verify - assume missing to be safe
-        missing.push(expectation)
-      }
+    // 42703 is Postgres "undefined column"; PGRST204 is PostgREST's own version
+    // of the same answer. Anything else (a network blip, RLS) is not evidence
+    // the column is missing, and must not be reported as one.
+    if (error && (error.code === "42703" || error.code === "PGRST204")) {
+      missing.push(expectation)
+    } else if (error) {
+      console.warn(
+        `[schemaCheck] could not verify ${expectation.table}.${expectation.column}: ${error.message}`
+      )
     }
   }
 

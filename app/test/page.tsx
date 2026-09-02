@@ -201,7 +201,13 @@ const testPages = [
   {
     name: "Goal setup wizard (the old onboarding)",
     href: "/test/archive/goal-setup",
-    description: "What every new account used to land in, before Life Mastery took the job at /dashboard/goals/plan: three paths (fast track / build your own / browse), the catalogue, the driven tour, the summary. Still live — it writes real goals to your account and returns to the real hub",
+    description: "What every new account used to land in, before Life Mastery took the job at /dashboard/goals/plan: three paths (fast track / build your own / browse), the catalogue, the driven tour, the summary. Still live — it writes real goals to your account and returns to the archived hub",
+    icon: Aperture,
+  },
+  {
+    name: "Goals hub (the old goals tab)",
+    href: "/test/archive/goals-hub",
+    description: "The whole hub as it was on /dashboard/goals until the plan flow replaced it: every goal by life area, the tree and kanban views, progress, streaks, the catalogue picker, the goal form. Still live — it reads and writes your real goals. Kept to inspect and cherry-pick from, then delete",
     icon: Aperture,
   },
   {
@@ -236,8 +242,9 @@ const ARCHIVED_HREFS = new Set<string>([
   "/test/goal-scorecard",
   "/test/goalsv11",
   "/test/old-variants",
-  // The onboarding Life Mastery replaced in the product
+  // The onboarding and the hub Life Mastery replaced in the product
   "/test/archive/goal-setup",
+  "/test/archive/goals-hub",
   // Pieces of those flows, explored on their own
   "/test/values-curation",
   "/test/curve-customization",

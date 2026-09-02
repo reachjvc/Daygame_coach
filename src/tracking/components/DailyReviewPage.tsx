@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { toDateISO } from "@/src/shared/dateUtils"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -159,8 +160,11 @@ export function DailyReviewPage({ userId }: DailyReviewPageProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fields: formValues,
-          period_start: today.toISOString(),
-          period_end: todayEnd.toISOString(),
+          // Calendar dates, not instants: these are DATE columns, and an ISO
+          // instant is stored as its UTC date — which for anyone east of
+          // Greenwich files a review under the previous day.
+          period_start: toDateISO(today),
+          period_end: toDateISO(todayEnd),
         }),
       })
 

@@ -3,13 +3,16 @@ import { requireAuth } from "@/src/db/auth"
 import { createSleepLog, getSleepLogs, deleteSleepLog } from "@/src/db/healthRepo"
 import type { SleepLogInsert } from "@/src/health/types"
 import { z } from "zod"
+import { entryWhenFields, hasDateIfTime, NEEDS_DATE_FOR_TIME } from "@/src/health/schemas"
+import { getUserTimezone } from "@/src/db/settingsRepo"
+import { loggedAtForEntry } from "@/src/health/healthService"
 
 const CreateSchema = z.object({
   bedtime: z.string(),
   wake_time: z.string(),
   quality: z.number().int().min(1).max(5).optional(),
-  logged_at: z.string().optional(),
-})
+  ...entryWhenFields,
+}).refine(hasDateIfTime, NEEDS_DATE_FOR_TIME)
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -28,7 +31,14 @@ export async function POST(request: Request) {
   try {
     const parsed = CreateSchema.safeParse(await request.json())
     if (!parsed.success) return NextResponse.json({ error: "Validation failed", details: parsed.error.flatten().fieldErrors }, { status: 400 })
-    return NextResponse.json(await createSleepLog(auth.userId, parsed.data as SleepLogInsert), { status: 201 })
+    const { entry_date, entry_time, ...log } = parsed.data
+    const loggedAt = entry_date
+      ? loggedAtForEntry(entry_date, await getUserTimezone(auth.userId), entry_time)
+      : undefined
+    if (loggedAt === null) return err("That is in the future", 400)
+
+    const insert = { ...log, ...(loggedAt ? { logged_at: loggedAt } : {}) } as SleepLogInsert
+    return NextResponse.json(await createSleepLog(auth.userId, insert), { status: 201 })
   } catch (e) { console.error("Error creating sleep log:", e); return err("Failed to create sleep log") }
 }
 

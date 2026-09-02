@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { getUserGoals, getGoalsByCategory, getGoalsByLifeArea, createGoal, deleteAllGoals, rollGoalPeriods, DuplicateGoalError } from "@/src/db/goalRepo"
+import { getUserGoals, getGoalsByCategory, getGoalsByLifeArea, createGoal, deleteAllGoals, rollGoalPeriods, DuplicateGoalError, GoalMetricPeriodError } from "@/src/db/goalRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { CreateGoalSchema } from "@/src/db/goalSchemas"
 
@@ -45,6 +45,8 @@ export async function POST(request: Request) {
     const tz = await getUserTimezone(auth.userId)
     return NextResponse.json(await createGoal(auth.userId, body, tz), { status: 201 })
   } catch (e) {
+    if (e instanceof GoalMetricPeriodError)
+      return NextResponse.json({ error: e.message, reason: "metric_period_mismatch" }, { status: 400 })
     if (e instanceof DuplicateGoalError)
       return NextResponse.json({ error: "Goal already exists", reason: e.reason, existingGoalId: e.existingGoalId }, { status: 409 })
     console.error("Error creating goal:", e); return err("Failed to create goal")

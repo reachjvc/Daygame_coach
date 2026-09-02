@@ -7,7 +7,7 @@ const AUTH_TIMEOUT = 15000
 
 const BETA_PAGES = [
   { name: 'Dashboard', path: '/dashboard' },
-  // Goals redirects to /dashboard/goals/plan on an empty account — both are
+  // The goals hub is archived; the plan flow is the live goal surface. Both are
   // tested, plus the archived wizard that used to be what it redirected to.
   { name: 'Goals (plan)', path: '/dashboard/goals/plan' },
   { name: 'Goals Setup (archived)', path: '/test/archive/goal-setup' },

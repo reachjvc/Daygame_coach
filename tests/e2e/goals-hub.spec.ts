@@ -20,9 +20,11 @@ test.describe('Goals Hub', () => {
   test('empty state redirects to setup wizard', async ({ page }) => {
     // Arrange: no goals (ensureNoGoals in beforeEach)
 
-    // Act: navigating to /dashboard/goals with 0 goals triggers server redirect to setup
+    // Act: the archived hub shows the hub itself on an empty account. The live
+    // page redirected to the plan flow, but that was it being the front door, and
+    // it is not one any more.
     // Use AUTH_TIMEOUT since the redirect can be slow under load
-    await page.goto('/dashboard/goals', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     // Assert: redirected to setup wizard

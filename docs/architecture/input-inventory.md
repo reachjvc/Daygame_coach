@@ -34,7 +34,9 @@ server and to every other device you own.
 
 ## A. The Life Mastery plan
 
-Written in the Life Mastery flow (`/dashboard/goals/plan`).
+Written in the Life Mastery flow (`/dashboard/goals/plan`, the 14-step North Star
+flow — the one goal surface the product keeps. The goals hub that used to live at
+`/dashboard/goals` is archived at `/test/archive/goals-hub`).
 Stored in this browser under `north-star-v1`. **None of it reaches the server.**
 
 ```
@@ -193,9 +195,14 @@ current_streak    number, derived       goals hub; streak widget         yes
 ```
 
 `rolls*` — `current_value` is the count for the period named by
-`period_start_date`. When the period turns over it goes back to zero, and the
-finished period is supposed to be kept in `daily_goal_snapshots` — a table that
-currently holds nothing for anyone.
+`period_start_date`. When the period turns over it goes back to zero and the
+finished period is archived in `daily_goal_snapshots`, stamped with the
+`period_start_date` of the period that ended rather than the day the roll ran.
+
+That table held 0 rows against 398 goals until 2026-08-27: `snapshotGoals` used
+the user-scoped Supabase client against a table whose only RLS policy is SELECT,
+so every insert was rejected and the error swallowed. It now uses the admin
+client and throws in test. See `docs/plans/counters.md`.
 
 ## G. Preferences and profile
 

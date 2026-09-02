@@ -83,8 +83,8 @@ export default async function GoalPlanPage({
 
   return (
     <NorthStarFlow
-      backHref="/dashboard/goals"
-      backLabel="Goals"
+      backHref="/dashboard"
+      backLabel="Dashboard"
       initialTab={initialTab}
       goalsPromise={goalsPromise}
     />

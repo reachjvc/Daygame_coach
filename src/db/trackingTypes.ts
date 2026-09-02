@@ -13,6 +13,7 @@ export type {
   FieldType,
   StickingPointStatus,
   SessionEndReason,
+  MilestoneType,
 } from "./trackingEnums"
 
 import type {
@@ -22,6 +23,7 @@ import type {
   FieldType,
   StickingPointStatus,
   SessionEndReason,
+  MilestoneType,
 } from "./trackingEnums"
 
 // ============================================
@@ -86,7 +88,7 @@ export interface SessionUpdate {
   custom_intention?: string
   pre_session_mood?: number
   // End reason
-  end_reason?: SessionEndReason
+  end_reason?: SessionEndReason | null
 }
 
 export interface LocationPoint {
@@ -343,7 +345,6 @@ export interface UserTrackingStatsRow {
   longest_streak: number
   last_approach_date: string | null
   // Weekly activity tracking (for streak calculation)
-  current_week: string | null           // ISO week string e.g. "2026-W04"
   current_week_sessions: number         // Sessions in current week
   current_week_approaches: number       // Approaches in current week
   current_week_numbers: number          // Phone numbers in current week
@@ -352,7 +353,12 @@ export interface UserTrackingStatsRow {
   // Weekly session streaks (2+ sessions OR 5+ approaches = active week)
   current_week_streak: number
   longest_week_streak: number
-  last_active_week: string | null       // Last week that qualified as "active"
+  // THE PERIOD EACH COUNTER BELONGS TO. Monday dates in the USER's timezone —
+  // the same representation user_goals.period_start_date uses. A counter read
+  // without its period is how the Week Streak tile showed February in August.
+  week_start_date: string | null        // Monday the current_week_* counters are for
+  last_active_week_start: string | null // Monday of the last week that qualified as active
+  last_review_week_start: string | null // Monday the last weekly review was filed for
   // Variety tracking
   unique_locations: string[]
   // Reviews
@@ -373,8 +379,7 @@ export interface UserTrackingStatsUpdate {
   total_field_reports?: number
   current_streak?: number
   longest_streak?: number
-  last_approach_date?: string
-  current_week?: string
+  last_approach_date?: string | null
   current_week_sessions?: number
   current_week_approaches?: number
   current_week_numbers?: number
@@ -382,7 +387,9 @@ export interface UserTrackingStatsUpdate {
   current_week_field_reports?: number
   current_week_streak?: number
   longest_week_streak?: number
-  last_active_week?: string
+  week_start_date?: string
+  last_active_week_start?: string | null
+  last_review_week_start?: string | null
   unique_locations?: string[]
   weekly_reviews_completed?: number
   current_weekly_streak?: number
@@ -395,126 +402,6 @@ export interface UserTrackingStatsUpdate {
 // Milestones
 // ============================================
 
-export type MilestoneType =
-  // Volume - Approaches
-  | 'first_approach'
-  | '5_approaches'
-  | '10_approaches'
-  | '25_approaches'
-  | '50_approaches'
-  | '100_approaches'
-  | '250_approaches'
-  | '500_approaches'
-  | '1000_approaches'
-  | '2000_approaches'
-  | '5000_approaches'
-  // Volume - Numbers
-  | 'first_number'
-  | '2_numbers'
-  | '5_numbers'
-  | '10_numbers'
-  | '25_numbers'
-  | '50_numbers'
-  | '100_numbers'
-  | '200_numbers'
-  // Volume - Instadates
-  | 'first_instadate'
-  | '2_instadates'
-  | '5_instadates'
-  | '10_instadates'
-  | '25_instadates'
-  | '50_instadates'
-  // Sessions
-  | 'first_session'
-  | '3_sessions'
-  | '5_sessions'
-  | '10_sessions'
-  | '25_sessions'
-  | '50_sessions'
-  | '100_sessions'
-  | 'first_5_approach_session'
-  | 'first_10_approach_session'
-  | 'first_goal_hit'
-  // Weekly Streaks (2+ sessions OR 5+ approaches per week)
-  | '2_week_streak'
-  | '4_week_streak'
-  | '8_week_streak'
-  | '12_week_streak'
-  | '26_week_streak'
-  | '52_week_streak'
-  // Reports & Reviews
-  | 'first_field_report'
-  | '5_field_reports'
-  | '10_field_reports'
-  | '25_field_reports'
-  | '50_field_reports'
-  | 'first_weekly_review'
-  | 'monthly_unlocked'
-  | 'quarterly_unlocked'
-  // Fun/Variety
-  | 'globetrotter'
-  | 'consistent'
-  | 'marathon'
-  | 'weekend_warrior'
-  // Comeback & Resilience
-  | 'comeback_kid'
-  | 'rejection_proof'
-  | 'never_give_up'
-  // Time-based
-  | 'lunch_break_legend'
-  | 'rush_hour_hero'
-  | 'sunday_funday'
-  | 'new_years_resolution'
-  | 'valentines_warrior'
-  // Efficiency
-  | 'sniper'
-  | 'hot_streak'
-  | 'perfect_session'
-  | 'instant_connection'
-  | 'double_date'
-  // Location variety
-  | 'coffee_connoisseur'
-  | 'bookworm'
-  | 'street_smart'
-  | 'mall_rat'
-  | 'park_ranger'
-  // Mindset & Growth
-  | 'first_rejection'
-  | '10_rejections'
-  | '50_rejections'
-  | '100_rejections'
-  | 'first_blowout'
-  | 'approach_anxiety_conquered'
-  | 'zone_state'
-  | 'flow_state'
-  // Social (tracked via session with_wingman field)
-  | 'wing_commander'        // First wingman session
-  | '10_wingman_sessions'   // 10 wingman sessions
-  | '25_wingman_sessions'   // 25 wingman sessions
-  | 'first_double_set'      // First double set (2v2)
-  | '10_double_sets'        // 10 double sets
-  // Unique Set Types (tracked via approach set_type field)
-  | 'first_two_set'         // First 2-set
-  | 'first_group'           // First 3+ group
-  | 'first_mixed_group'     // First mixed group
-  | 'first_mom_daughter'    // First mom-daughter set
-  | 'first_sisters'         // First sisters set
-  | 'first_tourist'         // First tourist approach
-  | 'first_moving_set'      // First moving set
-  | 'first_seated'          // First seated set
-  | '10_seated'             // 10 seated sets
-  | 'first_foreign'         // First foreign language
-  | 'polyglot'              // 5 different foreign language
-  | 'seated_master'         // 25 seated sets
-  | 'tourist_guide'         // 10 tourists
-  | 'world_traveler'        // 25 tourists
-  // Legacy (keep for backward compatibility)
-  | 'first_date'
-  | '7_day_streak'
-  | '30_day_streak'
-  | '100_day_streak'
-  | 'mentor'
-
 export interface MilestoneRow {
   id: string
   user_id: string
@@ -525,12 +412,6 @@ export interface MilestoneRow {
   created_at: string
 }
 
-export interface MilestoneInsert {
-  user_id: string
-  milestone_type: MilestoneType
-  value?: number
-  session_id?: string
-}
 
 // ============================================
 // Sticking Points
@@ -620,10 +501,4 @@ export interface WeeklyStats {
   review_completed: boolean
 }
 
-export interface ProgressSnapshot {
-  stats: UserTrackingStatsRow
-  recentSessions: SessionSummary[]
-  recentMilestones: MilestoneRow[]
-  weeklyStats: WeeklyStats[]
-  dailyStats: DailyStats[]
-}
+

@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useHistoryBarrier } from "@/src/shared/HistoryBarrierContext"
+import { toDateISO } from "@/src/shared/dateUtils"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -312,8 +313,13 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
           review_type: "weekly",
           template_id: isSystemTemplate ? null : selectedTemplate?.id,
           fields: fieldsWithTemplate,
-          period_start: startOfWeek.toISOString(),
-          period_end: endOfWeek.toISOString(),
+          // Calendar dates, not instants. `period_start` and `period_end` are
+          // DATE columns; sending an ISO instant makes Postgres keep its UTC
+          // date, so a Copenhagen Monday 00:00 was stored as the SUNDAY before
+          // and every weekly review was filed one week early — which zeroed the
+          // review streak of a user who had never missed a week.
+          period_start: toDateISO(startOfWeek),
+          period_end: toDateISO(endOfWeek),
           previous_commitment: previousCommitment,
           commitment_fulfilled: commitmentFulfilled,
           new_commitment: newCommitment || undefined,

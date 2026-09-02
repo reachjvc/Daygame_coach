@@ -2,13 +2,16 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { createWeightLog, getWeightLogs, deleteWeightLog } from "@/src/db/healthRepo"
 import { z } from "zod"
+import { entryWhenFields, hasDateIfTime, NEEDS_DATE_FOR_TIME } from "@/src/health/schemas"
+import { getUserTimezone } from "@/src/db/settingsRepo"
+import { loggedAtForEntry } from "@/src/health/healthService"
 
 const CreateSchema = z.object({
   weight_kg: z.number().positive().max(500),
   time_of_day: z.enum(["morning", "post_workout", "evening"]),
   photo_url: z.string().url().nullable().optional(),
-  logged_at: z.string().optional(),
-})
+  ...entryWhenFields,
+}).refine(hasDateIfTime, NEEDS_DATE_FOR_TIME)
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -27,7 +30,16 @@ export async function POST(request: Request) {
   try {
     const parsed = CreateSchema.safeParse(await request.json())
     if (!parsed.success) return NextResponse.json({ error: "Validation failed", details: parsed.error.flatten().fieldErrors }, { status: 400 })
-    return NextResponse.json(await createWeightLog(auth.userId, parsed.data), { status: 201 })
+    const { entry_date, entry_time, ...log } = parsed.data
+    const loggedAt = entry_date
+      ? loggedAtForEntry(entry_date, await getUserTimezone(auth.userId), entry_time)
+      : undefined
+    if (loggedAt === null) return err("That is in the future", 400)
+
+    return NextResponse.json(
+      await createWeightLog(auth.userId, { ...log, ...(loggedAt ? { logged_at: loggedAt } : {}) }),
+      { status: 201 }
+    )
   } catch (e) { console.error("Error creating weight log:", e); return err("Failed to create weight log") }
 }
 

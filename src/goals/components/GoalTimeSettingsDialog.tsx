@@ -12,24 +12,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Search, Check, LocateFixed, Loader2 } from "lucide-react"
 
-const WEEK_DAYS = [
-  { value: "0", label: "Sunday" },
-  { value: "1", label: "Monday" },
-  { value: "2", label: "Tuesday" },
-  { value: "3", label: "Wednesday" },
-  { value: "4", label: "Thursday" },
-  { value: "5", label: "Friday" },
-  { value: "6", label: "Saturday" },
-]
 
 function getTimezoneList(): string[] {
   try {
@@ -66,7 +50,6 @@ interface GoalTimeSettingsDialogProps {
 
 export function GoalTimeSettingsDialog({ open, onOpenChange, initialPrefs, onSaved }: GoalTimeSettingsDialogProps) {
   const [timezone, setTimezone] = useState<string | null>(null)
-  const [weekStartDay, setWeekStartDay] = useState(0)
   const [timezoneSearch, setTimezoneSearch] = useState("")
   const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -85,7 +68,6 @@ export function GoalTimeSettingsDialog({ open, onOpenChange, initialPrefs, onSav
   useEffect(() => {
     if (open && initialPrefs) {
       setTimezone(initialPrefs.timezone)
-      setWeekStartDay(initialPrefs.week_start_day)
       setTimezoneSearch("")
       setShowTimezoneDropdown(false)
       setError(null)
@@ -122,7 +104,7 @@ export function GoalTimeSettingsDialog({ open, onOpenChange, initialPrefs, onSav
     setIsSaving(true)
     setError(null)
     try {
-      const body: Record<string, unknown> = { week_start_day: weekStartDay }
+      const body: Record<string, unknown> = {}
       if (timezone) body.timezone = timezone
       const res = await fetch("/api/settings/time-preferences", {
         method: "PUT",
@@ -133,7 +115,7 @@ export function GoalTimeSettingsDialog({ open, onOpenChange, initialPrefs, onSav
         const data = await res.json()
         throw new Error(data.error || "Failed to save")
       }
-      onSaved({ timezone, week_start_day: weekStartDay })
+      onSaved({ timezone, week_start_day: initialPrefs?.week_start_day ?? 1 })
       onOpenChange(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save")
@@ -223,23 +205,18 @@ export function GoalTimeSettingsDialog({ open, onOpenChange, initialPrefs, onSav
               </div>
             </div>
 
-            {/* Weekly Reset Day */}
-            <div className="space-y-3">
-              <Label>Weekly reset day</Label>
-              <Select value={String(weekStartDay)} onValueChange={(v) => setWeekStartDay(Number(v))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {WEEK_DAYS.map((day) => (
-                    <SelectItem key={day.value} value={day.value}>
-                      {day.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* When the week turns over. Not a setting.
+                This used to be a picker offering all seven days, above copy that
+                read "Weekly goals reset to zero at midnight on Sunday". Both were
+                false: every reset in the app is Monday-based and always has been,
+                so whatever was chosen here changed nothing. The picker is gone
+                rather than relabelled — an inert control is worse than none. */}
+            <div className="space-y-2">
+              <Label>When your week turns over</Label>
+              <p className="text-sm">Monday, 00:00 in your timezone.</p>
               <p className="text-xs text-muted-foreground">
-                Weekly goals reset to zero at midnight on {WEEK_DAYS[weekStartDay]?.label || "Sunday"}, starting a new week.
+                Weekly goals and weekly counts run Monday to Sunday. Sunday night
+                still belongs to the week that is ending.
               </p>
             </div>
 

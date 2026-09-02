@@ -6,10 +6,12 @@ import type {
   SetType,
   UserTrackingStatsRow,
   SessionSummary,
+  FieldReportRow,
+  ReviewRow,
 } from "@/src/db/trackingTypes"
 
 // Re-export database types that UI needs
-export type { SessionRow, ApproachRow, ApproachOutcome, SetType, UserTrackingStatsRow, SessionSummary }
+export type { SessionRow, ApproachRow, ApproachOutcome, SetType, UserTrackingStatsRow, SessionSummary, FieldReportRow, ReviewRow }
 
 // Re-export const arrays and type guards from canonical enum source
 export {
@@ -380,3 +382,88 @@ export interface DashboardLayoutResponse {
   widgets: DashboardWidget[]
   values: MetricValue[]
 }
+
+// ============================================
+// Achievements — facts and rules
+// ============================================
+
+/**
+ * A week the user was "active" in, and the moment it became active.
+ *
+ * `qualifiedAt` is the timestamp of the event that tipped the week over the line
+ * (the 2nd completed session or the 5th approach, whichever came first), so a
+ * streak badge can be dated to when it was really earned.
+ */
+export interface ActiveWeek {
+  week: string
+  qualifiedAt: string
+}
+
+/**
+ * The rows every achievement rule is derived from. Whole rows, filtered only by
+ * user — all further filtering happens in buildFacts so it stays unit-testable.
+ */
+export interface MilestoneSourceRows {
+  approaches: ApproachRow[]
+  sessions: SessionRow[]
+  fieldReports: FieldReportRow[]
+  reviews: ReviewRow[]
+}
+
+/**
+ * Everything the rules need, computed from source rows.
+ *
+ * Every list is ascending ISO-8601 timestamps and is complete — no limits, no
+ * sampling — so `list[n - 1]` is exactly when the nth event happened. That is why
+ * threshold rules are a single `nth()` call.
+ *
+ * Every `firstX` field is the ISO timestamp at which that condition first became
+ * true, or null if it never has.
+ */
+export interface MilestoneFacts {
+  approaches: string[]
+  numbers: string[]
+  instadates: string[]
+  rejections: string[]
+  blowouts: string[]
+  sessions: string[]
+  wingmanSessions: string[]
+  fieldReports: string[]
+  weeklyReviews: string[]
+  monthlyReviews: string[]
+  setTypes: Record<SetType, string[]>
+  tags: Record<string, string[]>
+  numbersByTag: Record<string, string[]>
+  approachDays: string[]
+  activeWeeks: ActiveWeek[]
+  uniqueLocations: Array<{ location: string; firstSeenAt: string }>
+
+  firstSession5Approaches: string | null
+  firstSession10Approaches: string | null
+  firstSessionGoalMet: string | null
+  firstSession120Min: string | null
+  firstSession3Numbers: string | null
+  firstSession5Numbers: string | null
+  firstSession2Instadates: string | null
+  firstSession10NoNumbers: string | null
+  firstSessionWeekend: string | null
+  firstSessionSunday: string | null
+  firstSessionFirstWeekJan: string | null
+  firstSessionValentines: string | null
+  firstSessionAfter5ConsecutiveRejections: string | null
+  firstSessionStartedAfter9pm: string | null
+  firstSessionStartedBefore10am: string | null
+
+  first3ApproachesIn10Min: string | null
+  first5ApproachesIn15Min: string | null
+  first10ApproachesIn30Min: string | null
+  first3ApproachesInLunchHour: string | null
+  first5ApproachesInRushHour: string | null
+  firstNumberOnFirstApproachOfDay: string | null
+  firstInstadateOnFirstApproachOfSession: string | null
+  firstComeback: string | null
+  fifthUniqueLocation: string | null
+}
+
+/** Returns when this badge was earned (ISO timestamp), or null if it has not been. */
+export type MilestoneRule = (facts: MilestoneFacts) => string | null

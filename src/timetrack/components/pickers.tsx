@@ -5,7 +5,8 @@
  * `@project` and `#tag` autocomplete.
  */
 
-import { useMemo, useRef, useState, type KeyboardEvent } from "react"
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
+import { createPortal } from "react-dom"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,7 +14,16 @@ import { cn } from "@/lib/utils"
 import { IconAdd, IconClose, IconDown, IconMoney, IconTag } from "../icons"
 import { activeToken, removeToken } from "../timetrackService"
 import type { Id, TimetrackState } from "../types"
-import { CheckOption, ColorDot, Dropdown, touchRow, touchTarget, useClickOutside } from "./primitives"
+import {
+  CheckOption,
+  ColorDot,
+  Dropdown,
+  panelStyle,
+  touchRow,
+  touchTarget,
+  useClickOutside,
+  usePanelPosition,
+} from "./primitives"
 
 // ---------------------------------------------------------------------------
 // Project + task picker
@@ -351,10 +361,13 @@ export function DescriptionField({
   autoFocus?: boolean
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const panelRef = useRef<HTMLDivElement | null>(null)
   const [token, setToken] = useState<ReturnType<typeof activeToken>>(null)
   const [highlight, setHighlight] = useState(0)
-  const wrapperRef = useClickOutside<HTMLDivElement>(() => setToken(null))
-
+  const wrapperRef = useClickOutside<HTMLDivElement>(() => setToken(null), panelRef)
+  // createPortal needs document, which does not exist during server rendering
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   const suggestions = useMemo(() => {
     if (!token) return []
     const query = token.query.toLowerCase()
@@ -369,6 +382,20 @@ export function DescriptionField({
       .slice(0, 6)
       .map((t) => ({ id: t.id, label: t.name, color: null }))
   }, [token, state.projects, state.tags])
+
+  // gated on exactly what renders the panel: measuring while it is absent
+  // would leave it hidden for good, since nothing would re-measure
+  const suggestionsOpen = token !== null && suggestions.length > 0 && mounted
+  const suggestionPosition = usePanelPosition(wrapperRef, panelRef, suggestionsOpen, {
+    onDetached: () => setToken(null),
+  })
+
+  // the panel is capped to the space below the field, so arrowing down the list
+  // can walk the highlight past the bottom of the box
+  useEffect(() => {
+    if (!suggestionsOpen) return
+    panelRef.current?.querySelectorAll("button")[highlight]?.scrollIntoView({ block: "nearest" })
+  }, [highlight, suggestionsOpen])
 
   const syncToken = (text: string, caret: number) => {
     const found = activeToken(text, caret)
@@ -429,8 +456,13 @@ export function DescriptionField({
         onKeyDown={handleKeyDown}
         className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground sm:h-10"
       />
-      {token && suggestions.length > 0 && (
-        <div className="absolute left-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-md border border-border bg-card shadow-xl">
+      {suggestionsOpen && createPortal(
+        <div
+          ref={panelRef}
+          data-dropdown-panel=""
+          style={panelStyle(suggestionPosition)}
+          className="fixed z-[9650] w-72 max-w-[calc(100vw-1.5rem)] overflow-y-auto overflow-x-hidden rounded-md border border-border bg-card shadow-xl"
+        >
           <p className="border-b border-border px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
             {token.kind === "project" ? "Projects" : "Tags"} · {token.kind === "project" ? "@" : "#"}
             {token.query}
@@ -450,7 +482,8 @@ export function DescriptionField({
               <span className="truncate">{suggestion.label}</span>
             </button>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )

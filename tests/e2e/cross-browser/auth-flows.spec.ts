@@ -15,7 +15,7 @@ test.describe('Cross-browser auth flows', () => {
   })
 
   test('goals page loads authenticated (hub or setup)', async ({ page }) => {
-    await page.goto('/dashboard/goals', { timeout: NAV_TIMEOUT })
+    await page.goto('/test/archive/goals-hub', { timeout: NAV_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     // Should land on goals hub or setup wizard (depending on goal count)

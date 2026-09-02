@@ -6,7 +6,9 @@ import {
   type SystemTemplateSlug,
   getSystemReviewTemplatesAsRows,
 } from "@/src/tracking/data/templates"
-import { getMilestoneInfo, type MilestoneTier } from "@/src/tracking/data/milestones"
+import { getMilestoneInfo } from "@/src/tracking/data/milestones"
+import { zeroedWeeklyCounters } from "@/src/tracking/counterRules"
+import { getNowInTimezone, periodStartFor } from "@/src/shared/dateUtils"
 
 import type {
   SessionRow,
@@ -33,13 +35,13 @@ import type {
   UserTrackingStatsRow,
   UserTrackingStatsUpdate,
   MilestoneRow,
-  MilestoneInsert,
   MilestoneType,
   StickingPointRow,
   StickingPointInsert,
   StickingPointUpdate,
   DailyStats,
 } from "./trackingTypes"
+import type { MilestoneSourceRows } from "@/src/tracking/types"
 
 // ============================================
 // Approach Ownership
@@ -174,10 +176,17 @@ export async function reactivateSession(sessionId: string): Promise<SessionWithA
     throw new Error("Session is already active")
   }
 
-  // Reactivate the session
+  // Reactivate the session.
+  //
+  // `end_reason` has to be cleared with `ended_at`. A row saying "completed"
+  // with no end time is the state the achievements indexer treats as corrupt
+  // data — it drops the session from the totals and logs an error — so leaving
+  // it behind made reopening a session look like a database fault and quietly
+  // shrank the user's session count until they ended it again.
   await updateSession(sessionId, {
     is_active: true,
     ended_at: null,
+    end_reason: null,
     // Keep the stats as they were - user can continue from where they left off
   })
 
@@ -1100,6 +1109,78 @@ export async function getOrCreateUserTrackingStats(
   return stats
 }
 
+/**
+ * ROLL THE WEEK BEFORE YOU READ IT OR WRITE IT.
+ *
+ * `current_week_*` are the counts for the week named by `week_start_date`, and
+ * for no other week. Nothing on the row forces those two facts to be read
+ * together, so until this runs, a stats row read on Monday still holds last
+ * week's counters — and a `+1` lands on top of them.
+ *
+ * This replaces three ad-hoc `weekChanged` blocks — in the session, approach
+ * and field-report write paths — each of which zeroed a different subset of the
+ * counters. One of them left `current_week_approaches` carrying the previous
+ * week's 15, which is how a week with a single session counted as active and a
+ * streak reached 4 without being earned.
+ *
+ * IT DOES NOT TOUCH THE STREAK. A streak is earned when a week qualifies
+ * (`streakOnQualify`, on the write path) and stops being shown when it goes
+ * stale (`gateStreaks`, on the read path). Rolling is only about counters, so
+ * this function cannot lose a streak by running twice.
+ *
+ * Returns whether this call is the one that rolled. `false` means either
+ * nothing had expired or another request got there first — both are fine.
+ */
+export async function rollTrackingCounters(
+  userId: string,
+  timezone: string
+): Promise<boolean> {
+  const stats = await getOrCreateUserTrackingStats(userId)
+  const thisWeek = periodStartFor("weekly", getNowInTimezone(timezone))
+  const stored = stats.week_start_date
+
+  if (stored === thisWeek) return false
+
+  // NEVER ROLL BACKWARDS. A caller that forgot to pass the timezone computes
+  // "this week" off the server clock, which just past midnight on a Monday in
+  // Copenhagen is still LAST week — and rolling to it wipes counters that
+  // belong to the week now under way. A stored week in the future is a caller
+  // bug, not an expired period, so leave the row alone and say so.
+  if (stored !== null && stored > thisWeek) {
+    console.error(
+      `[trackingRepo] refusing to roll ${userId} backwards from ${stored} to ${thisWeek} — ` +
+        `the caller's clock is behind the stored week (missing timezone?)`
+    )
+    return false
+  }
+
+  const patch: UserTrackingStatsUpdate = {
+    ...zeroedWeeklyCounters(),
+    week_start_date: thisWeek,
+  }
+
+  // user_tracking_stats is system-only: the same admin client every other write
+  // to this table uses.
+  const supabase = createAdminSupabaseClient()
+
+  // THE GUARD: only a row still holding the old period may be rolled, so a
+  // concurrent increment cannot be zeroed by a second roll that raced it.
+  const query = supabase.from("user_tracking_stats").update(patch).eq("user_id", userId)
+  const guarded = stored === null
+    ? query.is("week_start_date", null)
+    : query.eq("week_start_date", stored)
+
+  const { data, error } = await guarded.select("user_id")
+
+  if (error) {
+    // Never swallowed. A roll that fails silently is the original bug: the page
+    // then shows a count for a week that is over.
+    throw new Error(`Failed to roll tracking counters: ${error.message}`)
+  }
+
+  return (data?.length ?? 0) > 0
+}
+
 export async function updateUserTrackingStats(
   userId: string,
   updates: UserTrackingStatsUpdate
@@ -1190,100 +1271,6 @@ export async function getHighQualityApproachCount(userId: string): Promise<numbe
 // Milestones
 // ============================================
 
-export async function checkAndAwardMilestone(
-  userId: string,
-  milestoneType: MilestoneType,
-  value?: number
-): Promise<MilestoneRow | null> {
-  // Use admin client - milestones is system-only (no user INSERT policy)
-  const supabase = createAdminSupabaseClient()
-
-  // Check if already achieved
-  const { data: existing } = await supabase
-    .from("milestones")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("milestone_type", milestoneType)
-    .single()
-
-  if (existing) return null
-
-  // Award milestone
-  const insert: MilestoneInsert = {
-    user_id: userId,
-    milestone_type: milestoneType,
-    value,
-  }
-
-  const { data, error } = await supabase
-    .from("milestones")
-    .insert(insert)
-    .select()
-    .single()
-
-  if (error) {
-    // Unique constraint violation is fine (race condition)
-    if (error.code === "23505") return null
-    throw new Error(`Failed to award milestone: ${error.message}`)
-  }
-
-  return data as MilestoneRow
-}
-
-/**
- * Batch check and award multiple milestones in 2 queries instead of 2*N queries.
- * 1. Single SELECT to get all existing milestones for user
- * 2. Single bulk INSERT for any new milestones
- */
-export async function checkAndAwardMilestones(
-  userId: string,
-  milestones: Array<{ type: MilestoneType; value?: number }>,
-  sessionId?: string
-): Promise<MilestoneRow[]> {
-  if (milestones.length === 0) return []
-
-  const supabase = createAdminSupabaseClient()
-
-  // Single query to get all existing milestone types for this user
-  const { data: existing, error: selectError } = await supabase
-    .from("milestones")
-    .select("milestone_type")
-    .eq("user_id", userId)
-    .in("milestone_type", milestones.map(m => m.type))
-
-  if (selectError) {
-    throw new Error(`Failed to check milestones: ${selectError.message}`)
-  }
-
-  const existingTypes = new Set((existing || []).map(m => m.milestone_type))
-
-  // Filter out already-achieved milestones
-  const toAward = milestones.filter(m => !existingTypes.has(m.type))
-
-  if (toAward.length === 0) return []
-
-  // Single bulk insert for new milestones
-  const inserts: MilestoneInsert[] = toAward.map(m => ({
-    user_id: userId,
-    milestone_type: m.type,
-    value: m.value,
-    session_id: sessionId,
-  }))
-
-  const { data, error: insertError } = await supabase
-    .from("milestones")
-    .insert(inserts)
-    .select()
-
-  if (insertError) {
-    // Unique constraint violations are fine (race condition)
-    if (insertError.code === "23505") return []
-    throw new Error(`Failed to award milestones: ${insertError.message}`)
-  }
-
-  return (data || []) as MilestoneRow[]
-}
-
 export async function getUserMilestones(userId: string, limit?: number): Promise<MilestoneRow[]> {
   const supabase = await createServerSupabaseClient()
 
@@ -1304,6 +1291,141 @@ export async function getUserMilestones(userId: string, limit?: number): Promise
   }
 
   return data as MilestoneRow[]
+}
+
+// ============================================
+// Achievements — source rows in, badges and counters out
+// ============================================
+
+/** PostgREST caps one response at 1000 rows. Read in pages or lose the tail silently. */
+const PAGE_SIZE = 1000
+
+/**
+ * Every row a user's badges and counters are derived from.
+ *
+ * Whole rows, filtered only by user — all the deciding happens in
+ * `achievementsService`, where it is testable without a database.
+ *
+ * PAGINATED ON PURPOSE. One live account already has 1899 sessions; a single
+ * unpaginated select would return 1000 of them and quietly report a smaller,
+ * confident, wrong number. That is the exact failure this whole area is being
+ * rebuilt to remove.
+ */
+export async function getMilestoneSourceRows(userId: string): Promise<MilestoneSourceRows> {
+  const supabase = createAdminSupabaseClient()
+
+  async function readAll<T>(table: string, columns: string): Promise<T[]> {
+    const all: T[] = []
+    for (let from = 0; ; from += PAGE_SIZE) {
+      const { data, error } = await supabase
+        .from(table)
+        .select(columns)
+        .eq("user_id", userId)
+        .order("id", { ascending: true })
+        .range(from, from + PAGE_SIZE - 1)
+
+      if (error) throw new Error(`Failed to read ${table}: ${error.message}`)
+
+      const page = (data ?? []) as T[]
+      all.push(...page)
+      if (page.length < PAGE_SIZE) return all
+    }
+  }
+
+  // ONLY THE COLUMNS THE RULES READ. This runs on every logged approach, and
+  // `select("*")` dragged the whole JSONB body of every field report and every
+  // review across the wire with it — megabytes, on a tap.
+  const [approaches, sessions, fieldReports, reviews] = await Promise.all([
+    readAll<ApproachRow>(
+      "approaches",
+      "id, user_id, session_id, timestamp, outcome, set_type, tags"
+    ),
+    readAll<SessionRow>(
+      "sessions",
+      "id, user_id, started_at, ended_at, end_reason, is_active, goal_met, duration_minutes, primary_location, with_wingman"
+    ),
+    readAll<FieldReportRow>("field_reports", "id, user_id, is_draft, reported_at"),
+    readAll<ReviewRow>("reviews", "id, user_id, review_type, is_draft, created_at, period_start"),
+  ])
+
+  return { approaches, sessions, fieldReports, reviews }
+}
+
+/** How many approaches the user has, without fetching any of them. */
+export async function countApproaches(userId: string): Promise<number> {
+  const supabase = createAdminSupabaseClient()
+
+  const { count, error } = await supabase
+    .from("approaches")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+
+  if (error) throw new Error(`Failed to count approaches: ${error.message}`)
+
+  return count ?? 0
+}
+
+/**
+ * Award badges the user does not already have, and say which ones were new.
+ *
+ * One upsert against `(user_id, milestone_type)`. `ignoreDuplicates` means a
+ * badge already held is left exactly as it is — its original `achieved_at` is
+ * never rewritten — and the rows that come back are only the newly inserted
+ * ones, which is what the caller needs in order to celebrate them.
+ *
+ * Badges are insert-only. Nothing in this file deletes one: counters follow the
+ * data down when a session is deleted, but a badge that was earned stays earned.
+ */
+export async function insertMilestones(
+  userId: string,
+  milestones: Array<{ milestone_type: MilestoneType; achieved_at: string; session_id: string | null }>
+): Promise<MilestoneRow[]> {
+  if (milestones.length === 0) return []
+
+  // milestones is system-only: awarded by the server, never written by a user.
+  const supabase = createAdminSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("milestones")
+    .upsert(
+      milestones.map((m) => ({ user_id: userId, ...m })),
+      { onConflict: "user_id,milestone_type", ignoreDuplicates: true }
+    )
+    .select()
+
+  if (error) {
+    throw new Error(`Failed to award milestones: ${error.message}`)
+  }
+
+  return (data ?? []) as MilestoneRow[]
+}
+
+/**
+ * Overwrite a user's counters with a freshly derived set.
+ *
+ * An upsert, not an update: one live profile has no stats row at all, and a
+ * user whose counters have never been written still has to get them.
+ *
+ * The caller passes a complete projection. Columns absent from it — chiefly
+ * `favorite_template_ids`, which the user chose — are left alone.
+ */
+export async function replaceUserTrackingStats(
+  userId: string,
+  stats: UserTrackingStatsUpdate
+): Promise<void> {
+  // user_tracking_stats is system-only, same as every other write to this table.
+  const supabase = createAdminSupabaseClient()
+
+  const { error } = await supabase
+    .from("user_tracking_stats")
+    .upsert(
+      { user_id: userId, ...stats, updated_at: new Date().toISOString() },
+      { onConflict: "user_id" }
+    )
+
+  if (error) {
+    throw new Error(`Failed to write tracking stats: ${error.message}`)
+  }
 }
 
 // ============================================

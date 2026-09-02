@@ -195,6 +195,25 @@ export function formatDayHeader(key: IsoDate, todayKey: IsoDate): string {
   return sameYear ? base : `${base} ${d.getFullYear()}`
 }
 
+/**
+ * Compact range for narrow controls: "24–30 Aug", "28 Aug – 3 Sep",
+ * "28 Dec 2026 – 3 Jan 2027". The full, format-respecting dates stay on the
+ * wider layouts; at 390px two of them truncate to "2026-08-24 – 202…".
+ */
+export function formatRangeShort(start: IsoDate, end: IsoDate): string {
+  const a = dateKeyToDate(start)
+  const b = dateKeyToDate(end)
+  const sameYear = a.getFullYear() === b.getFullYear()
+  const day = (d: Date) => `${d.getDate()} ${MONTHS[d.getMonth()]}`
+
+  if (sameYear && a.getMonth() === b.getMonth()) {
+    if (a.getDate() === b.getDate()) return `${day(a)}`
+    return `${a.getDate()}–${b.getDate()} ${MONTHS[b.getMonth()]}`
+  }
+  if (sameYear) return `${day(a)} – ${day(b)}`
+  return `${day(a)} ${a.getFullYear()} – ${day(b)} ${b.getFullYear()}`
+}
+
 export function formatDayShort(key: IsoDate): string {
   const d = dateKeyToDate(key)
   return `${WEEKDAYS[d.getDay()]} ${d.getDate()}`
@@ -250,6 +269,30 @@ export function parseDurationInput(raw: string): number | null {
   if (/^\d+$/.test(text)) return Number(text) * 60
 
   return null
+}
+
+/**
+ * `YYYY-MM-DDTHH:mm` in the *viewer's* timezone, which is what an
+ * `<input type="datetime-local">` shows and returns.
+ *
+ * Slicing the stored ISO string instead hands the input a UTC wall clock that
+ * it then reads as local time: an entry at 12:00 in Copenhagen displayed as
+ * 10:00, and saving moved it two hours earlier every time.
+ */
+export function toLocalInputValue(iso: IsoDateTime): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ""
+  return `${dateKey(d)}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+}
+
+/** The reverse: a datetime-local value is local wall-clock time, never UTC. */
+export function fromLocalInputValue(value: string): IsoDateTime | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(value.trim())
+  if (!match) return null
+  const [, year, month, day, hour, minute] = match.map(Number) as unknown as number[]
+  const d = new Date(year, month - 1, day, hour, minute, 0, 0)
+  if (Number.isNaN(d.getTime())) return null
+  return d.toISOString()
 }
 
 /**

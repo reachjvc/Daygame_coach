@@ -260,6 +260,309 @@ describe('Architecture Compliance', () => {
     })
   })
 
+  describe('Dates and periods', () => {
+    /**
+     * A DATE IS A DATE IN SOMEBODY'S CALENDAR.
+     *
+     * Two spellings caused every timezone bug this codebase has had, and both
+     * are still findable by their shape:
+     *
+     *   - hand-rolled week arithmetic (`getDay()` then `setDate()`), which was
+     *     copied six times and drifted. Two of the copies disagreed about the
+     *     same week and `getConsecutiveTrainingWeeks` could only ever return 0.
+     *   - `toISOString().split("T")[0]`, which converts to UTC before taking the
+     *     date, so a Monday 00:30 in Copenhagen comes back as Sunday.
+     *
+     * `periodStartFor` and `toDateISO` exist for these. The allowlists below are
+     * the sites that have not been converted yet; they may SHRINK and never
+     * grow, so the debt is a number rather than a vague intention.
+     */
+
+    /** Sites still deriving a date via UTC. See docs/plans/date_database.md. */
+    const UTC_DATE_SHIFT_ALLOWED = new Set([
+      // Date-range loops and cursors — not period boundaries, but still UTC.
+      'src/db/goalRepo.ts',
+      'src/db/trackingRepo.ts',
+      // Client components computing "this week" from the browser clock. These
+      // need the timezone provider in date_database.md Phase 3.
+      'src/goals/components/DailyActionView.tsx',
+      'src/goals/components/WeeklyReviewDialog.tsx',
+      'src/goals/hooks/usePeriodStats.ts',
+      'src/health/components/CorrelationPanel.tsx',
+      // Projections and "today" defaults.
+      'src/health/healthService.ts',
+      'src/exercising/exercisingService.ts',
+    ])
+
+    /** Files still building a Monday by hand. */
+    const HAND_ROLLED_WEEK_ALLOWED = new Set([
+      'src/goals/components/DailyActionView.tsx',
+      'src/goals/components/HeatmapCalendar.tsx',
+      'src/goals/components/WeeklyReviewDialog.tsx',
+      'src/tracking/components/WeeklyReviewPage.tsx',
+      'src/timetrack/calendarService.ts',
+    ])
+
+    function sourceFiles(): string[] {
+      return getAllFiles(path.join(projectRoot, 'src'), /\.tsx?$/)
+        .filter((f) => !f.endsWith('.d.ts'))
+    }
+
+    test('no NEW date derived by converting to UTC first', () => {
+      const offenders: string[] = []
+      for (const file of sourceFiles()) {
+        const relativePath = path.relative(projectRoot, file)
+        if (relativePath === 'src/shared/dateUtils.ts') continue // documents the pattern
+        const content = fs.readFileSync(file, 'utf-8')
+        if (!content.includes('toISOString().split("T")[0]')) continue
+        if (!UTC_DATE_SHIFT_ALLOWED.has(relativePath)) offenders.push(relativePath)
+      }
+
+      expect(
+        offenders,
+        `toISOString().split("T")[0] converts to UTC before taking the date. Use toDateISO(zonedDate).\n${offenders.join('\n')}`
+      ).toHaveLength(0)
+    })
+
+    test('the UTC-date allowlist only shrinks', () => {
+      const stillOffending = new Set(
+        sourceFiles()
+          .map((f) => path.relative(projectRoot, f))
+          .filter((rel) => {
+            if (rel === 'src/shared/dateUtils.ts') return false
+            return fs
+              .readFileSync(path.join(projectRoot, rel), 'utf-8')
+              .includes('toISOString().split("T")[0]')
+          })
+      )
+      const cleaned = [...UTC_DATE_SHIFT_ALLOWED].filter((f) => !stillOffending.has(f))
+      expect(
+        cleaned,
+        `These are fixed — remove them from UTC_DATE_SHIFT_ALLOWED:\n${cleaned.join('\n')}`
+      ).toHaveLength(0)
+    })
+
+    test('no NEW hand-rolled week boundary', () => {
+      const offenders: string[] = []
+      for (const file of sourceFiles()) {
+        const relativePath = path.relative(projectRoot, file)
+        if (relativePath === 'src/shared/dateUtils.ts') continue
+        const lines = fs.readFileSync(file, 'utf-8').split('\n')
+
+        // The fingerprint is `getDay()` and `setDate(` within four lines of each
+        // other: reading a day-of-week is fine, stepping backwards by it to find
+        // a Monday is the copy.
+        let lastGetDay = -10
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].includes('getDay()')) lastGetDay = i
+          if (lines[i].includes('setDate(') && i - lastGetDay <= 4) {
+            if (!HAND_ROLLED_WEEK_ALLOWED.has(relativePath)) {
+              offenders.push(`${relativePath}:${i + 1}`)
+            }
+            break
+          }
+        }
+      }
+
+      expect(
+        offenders,
+        `Hand-rolled week boundary. Use periodStartFor("weekly", zonedDate).\n${offenders.join('\n')}`
+      ).toHaveLength(0)
+    })
+  })
+
+  describe('Routes', () => {
+    /**
+     * THE GOALS HUB IS ARCHIVED, AND PRODUCTION MUST NOT LINK AT IT.
+     *
+     * `/dashboard/goals` and `/dashboard/goals/setup` were deleted on
+     * 2026-09-02; the hub lives at `/test/archive/goals-hub` to be inspected and
+     * eventually deleted outright, and `/dashboard/goals/plan` is the goal
+     * surface the product keeps.
+     *
+     * Two things this catches. A link left pointing at a route that now 404s —
+     * there were six, in the header, the tab bar, Mission Control, the inner-game
+     * tab, the Track step and settings. And a NEW link from production into the
+     * archive, which would only have to be removed again when the archive goes.
+     */
+    test('nothing links to the deleted goals-hub routes', () => {
+      const offenders: string[] = []
+      const roots = ['src', 'app', 'components']
+
+      for (const root of roots) {
+        for (const file of getAllFiles(path.join(projectRoot, root), /\.tsx?$/)) {
+          const relativePath = path.relative(projectRoot, file)
+          const content = fs.readFileSync(file, 'utf-8')
+
+          // `/dashboard/goals` NOT followed by `/plan` is the dead route.
+          for (const match of content.matchAll(/["'`](\/dashboard\/goals(?!\/plan)[^"'`]*)["'`]/g)) {
+            offenders.push(`${relativePath}: links to ${match[1]}`)
+          }
+
+          // Production linking into the archive. Archive pages may link to each
+          // other, so only non-archive files are checked.
+          if (relativePath.startsWith('app/test/')) continue
+          for (const match of content.matchAll(/["'`](\/test\/archive\/[^"'`]*)["'`]/g)) {
+            offenders.push(`${relativePath}: production links into the archive (${match[1]})`)
+          }
+        }
+      }
+
+      expect(
+        offenders,
+        `Dead or archive-bound links:\n${offenders.join('\n')}`
+      ).toHaveLength(0)
+    })
+  })
+
+  describe('Counters', () => {
+    /**
+     * EVERY PERIOD-SCOPED COUNTER DECLARES THE PERIOD IT BELONGS TO.
+     *
+     * A count with no period attached is not data. `user_tracking_stats` held
+     * five weekly counters and three streaks whose only key was an ISO-week
+     * label derived from the server clock, and the Week Streak tile showed a
+     * February number in August as a result.
+     *
+     * This is a floor, not a proof: it catches a NEW `current_week_*` or
+     * `last_*` column added to trackingTypes.ts without a key beside it. A
+     * counter living in another slice is not covered.
+     */
+    test('period-scoped columns on user_tracking_stats have a period key', () => {
+      const source = fs.readFileSync(
+        path.join(projectRoot, 'src/db/trackingTypes.ts'),
+        'utf-8'
+      )
+      const row = source.slice(
+        source.indexOf('export interface UserTrackingStatsRow'),
+        source.indexOf('export interface UserTrackingStatsUpdate')
+      )
+
+      const columns = [...row.matchAll(/^\s{2}(\w+)\??:/gm)].map((m) => m[1])
+
+      // The key each family of counters is read against. A counter whose family
+      // is not here has no period, which is the bug.
+      const PERIOD_KEYS: Record<string, string> = {
+        current_week: 'week_start_date',
+        current_streak: 'last_approach_date',
+        current_weekly: 'last_review_week_start',
+        current_week_streak: 'last_active_week_start',
+      }
+
+      // Not a vacuous pass: if the regex stops matching, this fires first.
+      expect(columns).toContain('current_week_sessions')
+      expect(columns).toContain('week_start_date')
+      expect(columns.length).toBeGreaterThan(20)
+
+      const violations: string[] = []
+      for (const column of columns) {
+        if (!column.startsWith('current_')) continue
+        const family = Object.keys(PERIOD_KEYS)
+          .sort((a, b) => b.length - a.length)
+          .find((prefix) => column.startsWith(prefix))
+        if (!family) {
+          violations.push(`${column}: no period key declared in PERIOD_KEYS`)
+          continue
+        }
+        if (!columns.includes(PERIOD_KEYS[family])) {
+          violations.push(`${column}: key ${PERIOD_KEYS[family]} is not on the row`)
+        }
+      }
+
+      expect(
+        violations,
+        `Counters without a period:\n${violations.join('\n')}`
+      ).toHaveLength(0)
+    })
+  })
+
+  describe('Achievements - derived, never counted', () => {
+    /**
+     * THE BUG THIS FORBIDS.
+     *
+     * Badges used to be awarded at the instant a `+1` counter passed a
+     * threshold, from five different functions. Miss the instant and the badge
+     * was gone forever: one live account has "First Steps" and "Double Digits"
+     * but went seven months without "Getting Started", and 51 of the 101 badges
+     * on screen had no awarding code at all.
+     *
+     * Everything now derives from the user's own rows in one place. These two
+     * tests fail the build if either half of that is undone.
+     */
+    test('only the achievements service writes badges or counters', () => {
+      const ALLOWED = new Set([
+        // The one writer.
+        'src/tracking/achievementsSyncService.ts',
+        // The repo functions it calls, plus the weekly roll on the read path.
+        'src/db/trackingRepo.ts',
+        // Rolls the weekly counters to the current week before a read. It no
+        // longer recounts them: the projection does that on every write, and
+        // two writers with different definitions is what made a tile show a
+        // different number on every page load.
+        'src/db/metricsRepo.ts',
+      ])
+
+      const files = [
+        ...getAllFiles(path.join(projectRoot, 'src'), /\.tsx?$/),
+        ...getAllFiles(path.join(projectRoot, 'app'), /\.tsx?$/),
+      ]
+
+      const violations: string[] = []
+      for (const file of files) {
+        const relativePath = path.relative(projectRoot, file)
+        if (ALLOWED.has(relativePath)) continue
+
+        const content = fs.readFileSync(file, 'utf-8')
+
+        // Awarding a badge anywhere else is the thing being forbidden.
+        if (/from\s*\(\s*['"]milestones['"]\s*\)\s*\n?\s*\.(insert|upsert)/.test(content)) {
+          violations.push(`${relativePath}: writes to the milestones table directly`)
+        }
+        // So is incrementing a counter instead of deriving it.
+        if (/total_(approaches|sessions|numbers|instadates|field_reports)\s*[:+]\s*\w+\s*\+\s*1/.test(content)) {
+          violations.push(`${relativePath}: increments a total instead of deriving it`)
+        }
+      }
+
+      expect(
+        violations,
+        `Counters are derived from rows — see docs/plans/achievement_counters.md\n${violations.join('\n')}`
+      ).toHaveLength(0)
+    })
+
+    test('every badge in the catalogue has a rule behind it', () => {
+      // The types already say so, but `next.config.mjs` sets
+      // `ignoreBuildErrors: true`, so nothing runs the type checker on a deploy.
+      // This is that guarantee in a form that actually runs.
+      const types = fs.readFileSync(path.join(projectRoot, 'src/db/trackingEnums.ts'), 'utf-8')
+      const rules = fs.readFileSync(path.join(projectRoot, 'src/tracking/data/milestoneRules.ts'), 'utf-8')
+      const catalog = fs.readFileSync(path.join(projectRoot, 'src/tracking/data/milestones.ts'), 'utf-8')
+
+      const declared = [...types.slice(
+        types.indexOf('export const MILESTONE_TYPES'),
+        types.indexOf('] as const', types.indexOf('export const MILESTONE_TYPES'))
+      ).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1])
+
+      const ruleBlock = rules.slice(rules.indexOf('export const MILESTONE_RULES'))
+      const catalogBlock = catalog.slice(
+        catalog.indexOf('export const ALL_MILESTONES'),
+        catalog.indexOf('} as const satisfies')
+      )
+
+      expect(declared.length).toBeGreaterThan(100)
+
+      const missingRule = declared.filter(
+        (t) => !new RegExp(`(^|\\s)"?${t}"?:`, 'm').test(ruleBlock)
+      )
+      const missingInfo = declared.filter(
+        (t) => !new RegExp(`(^|\\s)"?${t}"?:`, 'm').test(catalogBlock)
+      )
+
+      expect(missingRule, `Badges with no rule: ${missingRule.join(', ')}`).toHaveLength(0)
+      expect(missingInfo, `Badges with no label: ${missingInfo.join(', ')}`).toHaveLength(0)
+    })
+  })
+
   describe('Icon Usage - Registry Compliance', () => {
     test('Icons used in multiple files must be registered in iconRoles.ts', () => {
       // Scan src/, components/, app/ for lucide-react imports

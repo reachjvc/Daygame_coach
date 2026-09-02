@@ -7,7 +7,10 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
-    exclude: ['tests/integration/**/*', 'node_modules/**/*'],
+    // tests/manual/** talks to the REAL project database and creates and deletes
+    // its own accounts. It is never part of `npm test` — run it deliberately with
+    // `npx vitest run --config vitest.manual.config.ts`.
+    exclude: ['tests/integration/**/*', 'tests/manual/**/*', 'node_modules/**/*'],
     globals: true,
     setupFiles: ['./tests/setup.ts'],
   },

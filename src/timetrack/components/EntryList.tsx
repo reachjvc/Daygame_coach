@@ -27,8 +27,10 @@ import {
   formatClock,
   formatDayHeader,
   formatDuration,
+  fromLocalInputValue,
   parseDurationInput,
   parseTimeInput,
+  toLocalInputValue,
 } from "../timetrackFormatService"
 import {
   bulkEditEntries,
@@ -277,6 +279,30 @@ function EntryRowView({
   )
 }
 
+/**
+ * One shared column template, so the project, tag, time and duration columns
+ * line up down the whole list whether or not a row carries a group badge or a
+ * long description — a flex row let each row's content decide its own columns.
+ *
+ * The description keeps a hard minimum: a bare `1fr` loses to the fixed tracks
+ * and collapses to nothing on a narrow window. The tiers below give the space
+ * back in the order the fields matter: 640–768px drops the start/end times
+ * (still in the detail sheet), 768–1024px keeps the project and tag columns
+ * modest, and above that they take their full width and the description grows.
+ */
+const ROW_GRID = {
+  plain: cn(
+    "sm:grid-cols-[24px_minmax(150px,1fr)_minmax(0,200px)_minmax(0,140px)_32px_0px_78px_auto]",
+    "md:grid-cols-[24px_minmax(150px,1fr)_minmax(0,150px)_minmax(0,110px)_32px_120px_78px_auto]",
+    "lg:grid-cols-[24px_minmax(150px,1fr)_200px_140px_32px_120px_78px_auto]",
+  ),
+  selecting: cn(
+    "sm:grid-cols-[16px_24px_minmax(150px,1fr)_minmax(0,200px)_minmax(0,140px)_32px_0px_78px_auto]",
+    "md:grid-cols-[16px_24px_minmax(150px,1fr)_minmax(0,150px)_minmax(0,110px)_32px_120px_78px_auto]",
+    "lg:grid-cols-[16px_24px_minmax(150px,1fr)_200px_140px_32px_120px_78px_auto]",
+  ),
+}
+
 function EntryFields({
   entry,
   row,
@@ -409,6 +435,27 @@ function EntryFields({
             <input type="checkbox" checked={checked} onChange={onCheck} aria-label="Select time entry" className="size-5" />
           </label>
         )}
+
+        {/* its own control, not part of the tappable row: tapping the row opens
+            the lead entry's sheet, which left the other entries in a group
+            unreachable on a phone. The 28px column is what `pl-7` indents the
+            expanded children by, so both line up. */}
+        {row?.grouped ? (
+          <button
+            type="button"
+            onClick={onToggleExpand}
+            aria-label={expanded ? "Collapse group" : "Expand group"}
+            aria-expanded={expanded}
+            className="flex h-11 w-7 shrink-0 items-center justify-center"
+          >
+            <span className="flex size-6 items-center justify-center rounded bg-primary/15 text-[11px] font-semibold text-primary">
+              {row.entries.length}
+            </span>
+          </button>
+        ) : (
+          !nested && state.user.groupSimilarEntries && <span className="w-7 shrink-0" />
+        )}
+
         <div
           role="button"
           tabIndex={0}
@@ -419,11 +466,6 @@ function EntryFields({
           className="min-w-0 flex-1 py-1 text-left"
         >
           <div className="flex items-baseline gap-2">
-            {row?.grouped && (
-              <span className="shrink-0 rounded bg-primary/15 px-1 text-[11px] font-semibold text-primary">
-                {row.entries.length}
-              </span>
-            )}
             <span className={cn("min-w-0 flex-1 truncate text-sm", !entry.description && "text-muted-foreground")}>
               {entry.description || "(no description)"}
             </span>
@@ -448,20 +490,11 @@ function EntryFields({
         {menu}
       </div>
 
-      {/* --- pointer devices: the full inline-editable row ---
-          A grid, not a flex row: every row shares one column template, so the
-          project, tag, time and duration columns line up across the whole list
-          whether or not a row carries a group badge or a long description. */}
+      {/* --- pointer devices: the full inline-editable row --- */}
       <div
         className={cn(
           "hidden items-center gap-2 px-3 py-2 sm:grid",
-          // The description keeps a hard minimum — a bare `1fr` loses to the
-          // fixed tracks and collapses to nothing on a narrow window. Between
-          // 640 and 768px the start/end times drop out (they are still in the
-          // detail sheet) so the project and tag columns keep usable width.
-          selectionMode
-            ? "sm:grid-cols-[16px_24px_minmax(150px,1fr)_minmax(0,200px)_minmax(0,140px)_32px_0px_78px_auto] md:grid-cols-[16px_24px_minmax(150px,1fr)_minmax(0,200px)_minmax(0,140px)_32px_120px_78px_auto]"
-            : "sm:grid-cols-[24px_minmax(150px,1fr)_minmax(0,200px)_minmax(0,140px)_32px_0px_78px_auto] md:grid-cols-[24px_minmax(150px,1fr)_minmax(0,200px)_minmax(0,140px)_32px_120px_78px_auto]",
+          selectionMode ? ROW_GRID.selecting : ROW_GRID.plain,
           running && "bg-primary/5",
         )}
       >
@@ -798,13 +831,21 @@ export function EntryDetailModalBody({
   pushToast: (text: string, tone?: "info" | "error") => void
 }) {
   const [description, setDescription] = useState(entry.description)
-  const [start, setStart] = useState(entry.start.slice(0, 16))
-  const [stop, setStop] = useState(entry.stop ? entry.stop.slice(0, 16) : "")
+  const [start, setStart] = useState(toLocalInputValue(entry.start))
+  const [stop, setStop] = useState(entry.stop ? toLocalInputValue(entry.stop) : "")
   const nowIso = () => new Date().toISOString()
 
   const save = () => {
-    const startIso = new Date(start).toISOString()
-    const stopIso = stop ? new Date(stop).toISOString() : null
+    const startIso = fromLocalInputValue(start)
+    if (!startIso) {
+      pushToast("Enter a start date and time", "error")
+      return
+    }
+    const stopIso = stop ? fromLocalInputValue(stop) : null
+    if (stop && !stopIso) {
+      pushToast("Enter a valid end date and time", "error")
+      return
+    }
     if (stopIso && new Date(stopIso) <= new Date(startIso)) {
       pushToast("End must be after start", "error")
       return
@@ -839,7 +880,7 @@ export function EntryDetailModalBody({
           onChange={(billable) => setState((current) => updateEntry(current, entry.id, { billable }, nowIso()).state)}
         />
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <label className="space-y-1 text-xs text-muted-foreground">
           Start
           <Input type="datetime-local" value={start} onChange={(event) => setStart(event.target.value)} />
@@ -857,7 +898,7 @@ export function EntryDetailModalBody({
         />
         Duration only (hide start and end times)
       </label>
-      <div className="space-y-1">
+      <div className={cn("space-y-1", state.members.filter((m) => !m.isSelf).length === 0 && "hidden")}>
         <p className="text-xs uppercase tracking-wide text-muted-foreground">Shared with</p>
         <div className="flex flex-wrap gap-1">
           {state.members

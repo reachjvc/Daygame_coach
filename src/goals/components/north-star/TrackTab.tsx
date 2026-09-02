@@ -298,8 +298,8 @@ export function TrackTab({
         </Suspense>
         <p className="px-5 pb-4 text-[11px] text-zinc-600">
           {TRACK_COPY.hubScoped}{" "}
-          <Link href="/dashboard/goals" className="underline underline-offset-2 hover:text-zinc-400 transition-colors">
-            your goals page
+          <Link href="/dashboard/goals/plan?step=today" className="underline underline-offset-2 hover:text-zinc-400 transition-colors">
+            today's list
           </Link>
           .
         </p>

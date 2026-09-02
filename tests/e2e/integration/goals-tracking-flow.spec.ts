@@ -22,7 +22,7 @@ test.describe('Cross-Feature Integration: Goals + Tracking', () => {
     await page.request.post(`/api/tracking/session/${sessionId}/end`, { data: {} })
 
     // Navigate to goals page — goal should still be there
-    await page.goto('/dashboard/goals', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 
     await expect(page.getByTestId(SELECTORS.goals.goalCard(goalId))).toBeVisible({ timeout: AUTH_TIMEOUT })

@@ -11,10 +11,13 @@ import {
   formatDayHeader,
   formatDuration,
   formatIdleSpan,
+  formatRangeShort,
   formatTimeOfDay,
+  fromLocalInputValue,
   parseDurationInput,
   parseTimeInput,
   roundSeconds,
+  toLocalInputValue,
   weekStartOf,
 } from "@/src/timetrack/timetrackFormatService"
 
@@ -167,5 +170,44 @@ describe("idle spans read as plain language", () => {
 
   test("never negative", () => {
     expect(formatIdleSpan(-10)).toBe("0 seconds")
+  })
+})
+
+describe("datetime-local values use the viewer's clock, not UTC", () => {
+  test("an instant renders as the local wall clock", () => {
+    const noon = new Date(2026, 7, 27, 12, 0)
+    expect(toLocalInputValue(noon.toISOString())).toBe("2026-08-27T12:00")
+  })
+
+  test("round trip keeps the same instant", () => {
+    const instant = new Date(2026, 0, 15, 23, 45).toISOString()
+    expect(fromLocalInputValue(toLocalInputValue(instant))).toBe(instant)
+  })
+
+  test("the input value is read as local time, so saving does not shift the entry", () => {
+    const iso = fromLocalInputValue("2026-08-27T12:00")!
+    expect(new Date(iso).getHours()).toBe(12)
+    expect(new Date(iso).getDate()).toBe(27)
+  })
+
+  test("garbage in, null out — never a silent Invalid Date", () => {
+    expect(fromLocalInputValue("")).toBeNull()
+    expect(fromLocalInputValue("not a date")).toBeNull()
+    expect(toLocalInputValue("not a date")).toBe("")
+  })
+})
+
+describe("compact date ranges", () => {
+  test("one month collapses to a single month name", () => {
+    expect(formatRangeShort("2026-08-24", "2026-08-30")).toBe("24–30 Aug")
+  })
+
+  test("across months, and across years", () => {
+    expect(formatRangeShort("2026-08-28", "2026-09-03")).toBe("28 Aug – 3 Sep")
+    expect(formatRangeShort("2026-12-28", "2027-01-03")).toBe("28 Dec 2026 – 3 Jan 2027")
+  })
+
+  test("a single day is not written twice", () => {
+    expect(formatRangeShort("2026-08-24", "2026-08-24")).toBe("24 Aug")
   })
 })

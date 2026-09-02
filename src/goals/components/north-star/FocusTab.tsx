@@ -28,11 +28,11 @@ import { useState } from "react"
 import { Plus, X } from "lucide-react"
 import type { NorthStarTabId, NsPlan } from "@/src/goals/types"
 import { FOCUS_COPY, NS_FLOOR } from "@/src/goals/data/northStar"
-import { ONE_THING_KEY } from "@/src/goals/data/northStarStart"
 import { SEASON_AREA_LIMIT } from "@/src/goals/data/northStarGuide"
-import { answerOf, areaReview, wheelRatings } from "@/src/goals/northStarService"
+import { areaReview, wheelRatings } from "@/src/goals/northStarService"
 import { AreaWheel } from "./AreaWheel"
 import { GoalOverview } from "./GoalOverview"
+import { OneThingEcho } from "./OneThingEcho"
 
 export interface FocusHandlers {
   onToggleArea: (areaId: string) => void
@@ -65,7 +65,6 @@ export function FocusTab({
   const ratings = wheelRatings(plan, today)
   const picked = plan.seasonAreaIds
   const goalCounts = Object.fromEntries(plan.areas.map((a) => [a.id, plan.goals.filter((g) => g.areaId === a.id).length]))
-  const oneThing = answerOf(plan, ONE_THING_KEY)
 
   return (
     <div className="space-y-5">
@@ -174,18 +173,11 @@ export function FocusTab({
           them. What is left here is the season: which areas, and in what
           order. The sentence is shown so this page still reads as being about
           something, and it is read-only: one place to write it. */}
-      {oneThing.trim() && (
-        <section className="rounded-2xl border border-violet-400/25 bg-violet-500/[0.05] px-5 py-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-200/70">{FOCUS_COPY.oneEcho}</p>
-          <p className="text-[13px] text-zinc-100 mt-1 leading-relaxed">{oneThing}</p>
-          <button
-            onClick={() => handlers.onGoToTab("one")}
-            className="mt-2 text-[11px] text-zinc-500 hover:text-zinc-200 transition-colors"
-          >
-            {FOCUS_COPY.oneEchoEdit}
-          </button>
-        </section>
-      )}
+      <OneThingEcho
+        label={FOCUS_COPY.oneEcho}
+        editLabel={FOCUS_COPY.oneEchoEdit}
+        onEdit={() => handlers.onGoToTab("one")}
+      />
 
       {/* ------------------------------------------------------- the order */}
       <section className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">

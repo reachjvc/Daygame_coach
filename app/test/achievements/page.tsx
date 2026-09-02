@@ -15,7 +15,18 @@ import {
   Filter
 } from "lucide-react"
 
-// Mock milestone data
+// A design sandbox for the achievements screen. The catalogue, the tier colours
+// and the tier list all come from the real modules — this page used to keep a
+// hand-copied ALL_MILESTONES that had drifted (it stopped at 100 approaches),
+// which is two sources of truth for the same thing.
+import {
+  ALL_MILESTONES,
+  getTierColor,
+  getTierBg,
+  type MilestoneInfo,
+} from "@/src/tracking/data/milestones"
+
+/** A plausible set of badges to render the designs against. */
 const MOCK_EARNED = [
   "first_approach",
   "5_approaches",
@@ -26,75 +37,6 @@ const MOCK_EARNED = [
   "weekend_warrior",
   "first_field_report",
 ]
-
-interface MilestoneInfo {
-  label: string
-  emoji: string
-  tier: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond'
-  description: string
-  category: string
-}
-
-const ALL_MILESTONES: Record<string, MilestoneInfo> = {
-  // Approaches
-  first_approach: { label: "First Steps", emoji: "👣", tier: "bronze", category: "Approaches", description: "Complete your first approach" },
-  "5_approaches": { label: "Getting Started", emoji: "🌱", tier: "bronze", category: "Approaches", description: "Complete 5 approaches" },
-  "10_approaches": { label: "Double Digits", emoji: "🔟", tier: "bronze", category: "Approaches", description: "Complete 10 approaches" },
-  "25_approaches": { label: "Quarter Century", emoji: "⭐", tier: "silver", category: "Approaches", description: "Complete 25 approaches" },
-  "50_approaches": { label: "Half Century", emoji: "🌟", tier: "silver", category: "Approaches", description: "Complete 50 approaches" },
-  "100_approaches": { label: "Centurion", emoji: "💯", tier: "gold", category: "Approaches", description: "Complete 100 approaches" },
-  // Numbers
-  first_number: { label: "First Digits", emoji: "📱", tier: "bronze", category: "Numbers", description: "Get your first number" },
-  "5_numbers": { label: "High Five", emoji: "🖐️", tier: "silver", category: "Numbers", description: "Get 5 numbers" },
-  "10_numbers": { label: "Perfect 10", emoji: "🔥", tier: "silver", category: "Numbers", description: "Get 10 numbers" },
-  // Sessions
-  first_session: { label: "First Session", emoji: "🚀", tier: "bronze", category: "Sessions", description: "Complete your first session" },
-  "3_sessions": { label: "Hat Trick", emoji: "🎩", tier: "bronze", category: "Sessions", description: "Complete 3 sessions" },
-  "5_sessions": { label: "Regular", emoji: "📅", tier: "silver", category: "Sessions", description: "Complete 5 sessions" },
-  "10_sessions": { label: "Dedicated", emoji: "💪", tier: "silver", category: "Sessions", description: "Complete 10 sessions" },
-  // Special
-  weekend_warrior: { label: "Weekend Warrior", emoji: "⚔️", tier: "bronze", category: "Special", description: "Complete a session on the weekend" },
-  marathon: { label: "Marathon Man", emoji: "🏃", tier: "gold", category: "Special", description: "Complete a 2+ hour session" },
-  hot_streak: { label: "Hot Streak", emoji: "🔥", tier: "platinum", category: "Special", description: "Get 3 numbers in a single session" },
-  // Reports
-  first_field_report: { label: "Field Scholar", emoji: "📝", tier: "bronze", category: "Reports", description: "Write your first field report" },
-  "5_field_reports": { label: "Reporter", emoji: "📰", tier: "silver", category: "Reports", description: "Write 5 field reports" },
-  // Unique Sets (NEW!)
-  mom_daughter: { label: "Family Affair", emoji: "👩‍👧", tier: "gold", category: "Unique Sets", description: "Approach a mother-daughter pair" },
-  sister_set: { label: "Double Trouble", emoji: "👯‍♀️", tier: "gold", category: "Unique Sets", description: "Approach a set of sisters" },
-  tourist_set: { label: "Tour Guide", emoji: "🗺️", tier: "silver", category: "Unique Sets", description: "Approach a tourist" },
-  moving_set: { label: "Catch Me If You Can", emoji: "🏃‍♀️", tier: "silver", category: "Unique Sets", description: "Stop and approach someone walking" },
-  seated_master: { label: "Seated Master", emoji: "🪑", tier: "silver", category: "Unique Sets", description: "Successfully approach 5 seated sets" },
-  mixed_group: { label: "Social Infiltrator", emoji: "👥", tier: "gold", category: "Unique Sets", description: "Approach a mixed group (guys + girls)" },
-  celebrity_vibes: { label: "Star Struck", emoji: "⭐", tier: "platinum", category: "Unique Sets", description: "Approach someone who looks like a model/celebrity" },
-  // Social
-  wingman_session: { label: "Wing Commander", emoji: "🦅", tier: "silver", category: "Social", description: "Complete a session with a wingman" },
-  "10_wingman_sessions": { label: "Dynamic Duo", emoji: "🤝", tier: "gold", category: "Social", description: "Complete 10 wingman sessions" },
-  double_set: { label: "Double Team", emoji: "👯", tier: "gold", category: "Social", description: "Successfully run a double set with your wing" },
-  mentor_first: { label: "Mentor", emoji: "🎓", tier: "gold", category: "Social", description: "Help a friend complete their first approach" },
-  "5_mentored": { label: "Coach", emoji: "📋", tier: "platinum", category: "Social", description: "Mentor 5 different people" },
-  "20_mentored": { label: "Sensei", emoji: "🥋", tier: "diamond", category: "Social", description: "Mentor 20 different people" },
-}
-
-function getTierColor(tier: MilestoneInfo['tier']): string {
-  switch (tier) {
-    case 'bronze': return 'from-amber-600 to-amber-800'
-    case 'silver': return 'from-slate-300 to-slate-500'
-    case 'gold': return 'from-yellow-400 to-yellow-600'
-    case 'platinum': return 'from-cyan-300 to-cyan-500'
-    case 'diamond': return 'from-violet-400 to-fuchsia-500'
-  }
-}
-
-function getTierBg(tier: MilestoneInfo['tier']): string {
-  switch (tier) {
-    case 'bronze': return 'bg-amber-500/10'
-    case 'silver': return 'bg-slate-400/10'
-    case 'gold': return 'bg-yellow-500/10'
-    case 'platinum': return 'bg-cyan-400/10'
-    case 'diamond': return 'bg-violet-500/10'
-  }
-}
 
 // Design 1: Collapsible categories (accordion style)
 function DesignCollapsible() {

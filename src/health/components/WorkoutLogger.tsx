@@ -74,6 +74,20 @@ export function WorkoutLogger() {
   const [duration, setDuration] = useState("")
   const [intensity, setIntensity] = useState<WorkoutIntensity>(3)
   const [distanceKm, setDistanceKm] = useState("")
+  /**
+   * The day you trained. Empty means "now" — the log is stamped with the moment
+   * it is saved, which is what logging as you go means. Set it and that day is
+   * what counts, so a Saturday session written up on Monday lands in Saturday's
+   * week rather than Monday's.
+   */
+  const [workoutDate, setWorkoutDate] = useState("")
+  /**
+   * The time of day, on that date. Optional — without it the workout is filed at
+   * midday. It matters when there are two in a day: a lift in the morning and a
+   * run in the evening otherwise land on the same instant and nothing can put
+   * them in order.
+   */
+  const [workoutTime, setWorkoutTime] = useState("")
   const [exercises, setExercises] = useState<ExerciseInput[]>([emptyExercise()])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -196,6 +210,11 @@ export function WorkoutLogger() {
           intensity,
           distance_km: distanceKm ? parseFloat(distanceKm) : null,
           sets: validSets.length > 0 ? validSets : undefined,
+          // Sent only when the user picked a day. The server turns it into an
+          // instant in their timezone; the browser does not, because the browser
+          // does not know which timezone the account is set to.
+          entry_date: workoutDate || undefined,
+          entry_time: workoutDate && workoutTime ? workoutTime : undefined,
         }),
       })
       if (!res.ok) throw new Error(await readApiError(res))
@@ -206,6 +225,8 @@ export function WorkoutLogger() {
       setDuration("")
       setIntensity(3)
       setDistanceKm("")
+      setWorkoutDate("")
+      setWorkoutTime("")
       setExercises([emptyExercise()])
       setTemplateName("")
       setIsAdding(false)
@@ -463,6 +484,35 @@ export function WorkoutLogger() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="workout-date">When</Label>
+              <div className="grid grid-cols-[1fr_auto] gap-2">
+                <Input
+                  id="workout-date"
+                  type="date"
+                  max={todayKey}
+                  value={workoutDate}
+                  onChange={(e) => setWorkoutDate(e.target.value)}
+                />
+                <Input
+                  id="workout-time"
+                  type="time"
+                  aria-label="Time of day"
+                  className="w-32"
+                  disabled={!workoutDate}
+                  value={workoutTime}
+                  onChange={(e) => setWorkoutTime(e.target.value)}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {workoutDate
+                  ? workoutTime
+                    ? "Counts towards the week that day falls in."
+                    : "Counts towards the week that day falls in. Add a time if you trained twice that day."
+                  : "Leave empty for right now. Set a date to log a workout you did earlier."}
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">

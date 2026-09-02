@@ -9,7 +9,6 @@ import { TABS, MORE_ITEMS } from "@/components/navTabs"
 
 /** Routes where the tab bar should be hidden (they have their own bottom bars). */
 const HIDDEN_ROUTE_PREFIXES = [
-  "/dashboard/goals/setup",
   "/dashboard/goals/plan",
   "/dashboard/tracking/review",
 ]

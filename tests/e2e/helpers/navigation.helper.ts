@@ -55,7 +55,7 @@ export async function goToOnboarding(page: Page): Promise<void> {
  * Navigates to the goals page
  */
 export async function goToGoals(page: Page): Promise<void> {
-  await page.goto('/dashboard/goals', { timeout: NAV_TIMEOUT })
+  await page.goto('/test/archive/goals-hub', { timeout: NAV_TIMEOUT })
 }
 
 /**

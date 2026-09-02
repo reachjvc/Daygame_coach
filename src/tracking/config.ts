@@ -16,7 +16,11 @@ export const APPROACH_TAGS = {
   time: ["day", "night"],
   social: ["solo", "with-wing"],
   movement: ["walking", "stationary"],
-  location: ["street", "cafe", "store", "park", "transit"],
+  // `mall` and `bookstore` exist so that Mall Rat and Bookworm can be won —
+  // both badges describe a place, and until these tags existed there was no
+  // way for anyone to record having been there. The tag pickers render
+  // Object.values(APPROACH_TAGS), so adding one here is all it takes.
+  location: ["street", "cafe", "store", "park", "transit", "mall", "bookstore"],
 } as const
 
 export type ApproachTagCategory = keyof typeof APPROACH_TAGS
@@ -142,24 +146,6 @@ export const SESSION_CONFIG = {
    * accumulating if a user forgets to end their session.
    */
   STALE_SESSION_THRESHOLD_HOURS: 12,
-} as const
-
-// ============================================
-// Stats & Milestones
-// ============================================
-
-export const MILESTONE_THRESHOLDS = {
-  /** Total approach milestones */
-  APPROACHES: [10, 25, 50, 100, 250, 500, 1000] as const,
-
-  /** Session count milestones */
-  SESSIONS: [5, 10, 25, 50, 100] as const,
-
-  /** Streak milestones (consecutive days) */
-  STREAKS: [3, 7, 14, 30, 60, 90] as const,
-
-  /** Number close milestones */
-  NUMBERS: [5, 10, 25, 50, 100] as const,
 } as const
 
 // ============================================
@@ -573,9 +559,14 @@ export const FIELD_LIBRARY: FieldDefinition[] = [
     usedIn: ["Gibbs' Cycle", "Phoenix Protocol"],
   },
   {
-    id: "one_focus",
+    // RENAMED from `one_focus`. It was one of four things in this app calling
+    // itself "the one thing"; the real one is a person's answer in the Life
+    // Mastery flow, stored in `life_answers`. This is a note about the next
+    // session and nothing more. Safe to rename: no saved report or review has
+    // ever contained the old id (checked against the live database, 2026-08-27).
+    id: "report_next_session_focus",
     type: "text",
-    label: "ONE thing to work on next",
+    label: "Focus for next session",
     placeholder: "Next session I will focus on...",
     category: "action",
     description: "Single priority focus",
@@ -629,9 +620,11 @@ export const FIELD_LIBRARY: FieldDefinition[] = [
     usedIn: ["The Skill Focus"],
   },
   {
-    id: "one_moment",
+    // RENAMED from `one_moment`, for the same reason as
+    // `report_next_session_focus` above.
+    id: "report_pivotal_moment",
     type: "text",
-    label: "The ONE moment that mattered",
+    label: "The moment that mattered most",
     placeholder: "The key moment was when...",
     category: "skill",
     description: "Hyper-focused analysis",

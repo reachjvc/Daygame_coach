@@ -141,9 +141,16 @@ export async function updateVoiceLanguage(userId: string, language: string): Pro
 }
 
 /**
- * Get timezone for a user. Returns null if not set.
+ * A user's timezone. Never null.
+ *
+ * `profiles.timezone` is NOT NULL DEFAULT 'UTC' as of
+ * 20260828100000_timezone_not_null, so a profile always has one and onboarding
+ * overwrites it with the detected zone. The only way to reach the fallback is a
+ * user with no profile row at all, and that is loud rather than silent: every
+ * period boundary in the app is computed from this value, and a wrong one moves
+ * somebody's week by hours.
  */
-export async function getUserTimezone(userId: string): Promise<string | null> {
+export async function getUserTimezone(userId: string): Promise<string> {
   const supabase = await createServerSupabaseClient()
 
   const { data, error } = await supabase
@@ -154,12 +161,18 @@ export async function getUserTimezone(userId: string): Promise<string | null> {
 
   if (error) {
     if (error.code === "PGRST116") {
-      return null
+      console.error(`[settingsRepo] no profile row for ${userId} — periods will be computed in UTC`)
+      return "UTC"
     }
     throw new Error(`Failed to get timezone: ${error.message}`)
   }
 
-  return data?.timezone ?? null
+  if (!data?.timezone) {
+    console.error(`[settingsRepo] profile ${userId} has no timezone despite NOT NULL — periods in UTC`)
+    return "UTC"
+  }
+
+  return data.timezone
 }
 
 /**
@@ -178,44 +191,15 @@ export async function updateTimezone(userId: string, timezone: string): Promise<
   }
 }
 
-/**
- * Get week start day for a user. Returns 0 (Sunday) if not set.
- * 0=Sunday, 1=Monday, ..., 6=Saturday
+/*
+ * `getWeekStartDay` and `updateWeekStartDay` lived here and were removed.
+ *
+ * Nothing ever read the value to compute a boundary — every period in the app is
+ * Monday-based via `periodStartFor` — so the setting wrote a number that changed
+ * nothing while the settings dialog told users it had changed their reset day.
+ * The column stays (it holds what people chose) and `getTimePreferences` still
+ * reports it; the write path is gone until something honours it.
  */
-export async function getWeekStartDay(userId: string): Promise<number> {
-  const supabase = await createServerSupabaseClient()
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("week_start_day")
-    .eq("id", userId)
-    .single()
-
-  if (error) {
-    if (error.code === "PGRST116") {
-      return 0
-    }
-    throw new Error(`Failed to get week start day: ${error.message}`)
-  }
-
-  return data?.week_start_day ?? 0
-}
-
-/**
- * Update week start day for a user.
- */
-export async function updateWeekStartDay(userId: string, day: number): Promise<void> {
-  const supabase = await createServerSupabaseClient()
-
-  const { error } = await supabase
-    .from("profiles")
-    .update({ week_start_day: day })
-    .eq("id", userId)
-
-  if (error) {
-    throw new Error(`Failed to update week start day: ${error.message}`)
-  }
-}
 
 /**
  * Get time preferences (timezone + week start day) in a single query.

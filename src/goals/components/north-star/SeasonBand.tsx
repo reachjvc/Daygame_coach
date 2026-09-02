@@ -35,7 +35,7 @@ import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import type { NsPlan } from "@/src/goals/types"
 import { NORTH_STAR_STORAGE_KEY, SEASON_BAND_COPY } from "@/src/goals/data/northStar"
-import { loadNsPlan, planIsUntouched, seasonFocus, todayISO } from "@/src/goals/northStarService"
+import { loadNsPlan, planIsUntouched, todayISO } from "@/src/goals/northStarService"
 import { todayItems, todayProgress } from "@/src/goals/northStarTrackService"
 import { withReturn } from "@/src/shared/returnTo"
 
@@ -49,22 +49,59 @@ const PLAN_PATH = "/dashboard/goals/plan"
  */
 const HERE = "/dashboard/tracking"
 
+/** What the account says the one thing is. Shaped by `/api/life-answers`. */
+interface OneThingView {
+  body: string
+  dueOn: string
+  daysLeft: number
+  lapsed: boolean
+}
+
 export function SeasonBand() {
   const [plan, setPlan] = useState<NsPlan | null>(null)
   const [loaded, setLoaded] = useState(false)
+  /**
+   * THE ONE THING COMES FROM THE DATABASE, NOT FROM THE PLAN.
+   *
+   * This line used to read `plan.seasonFocusId` — the goal you star on the
+   * Focus step — while the One Thing step wrote a sentence somewhere else
+   * entirely. So writing your one thing changed nothing here, which is the bug
+   * that started all of this. It now reads the newest row on your account and
+   * holds no copy of it.
+   */
+  const [oneThing, setOneThing] = useState<OneThingView | null>(null)
+
+  /**
+   * BOTH BEFORE DECIDING WHAT TO DRAW.
+   *
+   * The plan is read from this browser and the one thing from the account, and
+   * they arrive at different times. Deciding on the plan alone drew the "build
+   * your plan" invitation for a moment — or permanently, on a browser with no
+   * local plan at all, which is exactly the person this change was made for:
+   * a saved one thing, a new phone, and a header that showed neither.
+   */
+  const [fetched, setFetched] = useState(false)
 
   useEffect(() => {
     setPlan(loadNsPlan(window.localStorage.getItem(NORTH_STAR_STORAGE_KEY)))
     setLoaded(true)
+    fetch("/api/life-answers?key=one_thing")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setOneThing(d?.current ?? null))
+      .catch(() => setOneThing(null))
+      .finally(() => setFetched(true))
   }, [])
 
-  if (!loaded) return null
+  if (!loaded || !fetched) return null
 
   /* An UNTOUCHED plan counts as no plan. Merely opening the flow writes one to
      localStorage, so "is there a key" would put "Nothing named yet / No areas
      picked yet" at the top of the dashboard of somebody who has never filled
-     anything in — two blanks where the invitation should be. */
-  if (!plan || planIsUntouched(plan)) {
+     anything in — two blanks where the invitation should be.
+
+     A saved one thing overrides that: it is on the account, so it belongs on
+     this page whether or not this particular browser has ever opened the flow. */
+  if (!oneThing && (!plan || planIsUntouched(plan))) {
     return (
       <section className="mb-6 rounded-xl border border-border bg-card p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -84,15 +121,14 @@ export function SeasonBand() {
     )
   }
 
-  const focus = seasonFocus(plan)
-  const areas = plan.seasonAreaIds
-    .map((id) => plan.areas.find((a) => a.id === id))
+  const areas = (plan?.seasonAreaIds ?? [])
+    .map((id) => plan?.areas.find((a) => a.id === id))
     .filter((a): a is NonNullable<typeof a> => !!a)
   const today = todayISO()
   /* Routine steps only, and that is why no goals are fetched: their ticks are
      on the plan. A driver's count lives in `user_goals` and belongs to the row
      that can increment it, not to a summary band. */
-  const progress = todayProgress(todayItems(plan, today, [], ""))
+  const progress = plan ? todayProgress(todayItems(plan, today, [], "")) : { done: 0, total: 0 }
 
   return (
     <section className="mb-6 rounded-xl border border-border bg-card p-4 sm:p-5" data-testid="season-band">
@@ -100,9 +136,32 @@ export function SeasonBand() {
         <div className="min-w-0 space-y-3">
           <div className="min-w-0">
             <span className="text-xs uppercase tracking-wide text-muted-foreground">{SEASON_BAND_COPY.oneThingLabel}</span>
-            <p className="font-semibold text-lg leading-snug">
-              {focus ? focus.label : <span className="text-muted-foreground font-normal text-base">{SEASON_BAND_COPY.noFocus}</span>}
-            </p>
+            {/* Clicking it opens the step that owns it, where the ones before
+                it are listed. */}
+            <Link
+              href={withReturn(`${PLAN_PATH}?step=one`, HERE)}
+              className="block font-semibold text-lg leading-snug hover:underline underline-offset-2"
+              data-testid="season-band-one-thing"
+            >
+              {oneThing ? (
+                oneThing.body
+              ) : (
+                <span className="text-muted-foreground font-normal text-base">{SEASON_BAND_COPY.noFocus}</span>
+              )}
+            </Link>
+            {oneThing && (
+              <span
+                className={`inline-block mt-1 rounded-full border px-2 py-0.5 text-[11px] ${
+                  oneThing.lapsed
+                    ? "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-300"
+                    : "border-border text-muted-foreground"
+                }`}
+              >
+                {oneThing.lapsed
+                  ? "This one has run its course — name the next"
+                  : `${oneThing.daysLeft} ${oneThing.daysLeft === 1 ? "day" : "days"} left`}
+              </span>
+            )}
           </div>
           <div className="min-w-0">
             <span className="text-xs uppercase tracking-wide text-muted-foreground">{SEASON_BAND_COPY.seasonLabel}</span>

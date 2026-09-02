@@ -51,6 +51,7 @@ import {
   dateKey,
   formatCompact,
   formatDate,
+  formatRangeShort,
   formatDayShort,
   formatDuration,
   formatMoney,
@@ -244,7 +245,7 @@ function FilterBar({
           onClick={() => setSheetOpen(true)}
           className="min-h-11 min-w-0 flex-1 truncate rounded-md border border-border px-3 py-2 text-sm"
         >
-          {formatDate(filters.range.start, state.user.dateFormat)} – {formatDate(filters.range.end, state.user.dateFormat)}
+          {formatRangeShort(filters.range.start, filters.range.end)}
         </button>
         <Button variant="ghost" size="icon-sm" onClick={() => shiftRange(1)} aria-label="Next period">
           <IconNext className="size-4" />
@@ -673,7 +674,9 @@ function SummaryTab({
       <SectionCard
         title="Tracked over time"
         actions={
-          <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+            {/* two per row on a phone: three across clip their own labels
+                ("No stacking" rendered as "No stackir") at 390px */}
             <MiniSelect
               className="w-full sm:w-[120px]"
               value={config.chartMetric}
@@ -691,7 +694,7 @@ function SummaryTab({
               ]}
             />
             <MiniSelect
-              className="w-full sm:w-[140px]"
+              className="col-span-2 w-full sm:col-span-1 sm:w-[140px]"
               value={config.chartStackBy ?? "none"}
               onChange={(value) => onUpdate({ chartStackBy: value === "none" ? null : (value as GroupingDimension) })}
               options={[{ id: "none", label: "No stacking" }, ...GROUPING_DIMENSIONS.map((d) => ({ id: d.id, label: `Stack by ${d.label.toLowerCase()}` }))]}

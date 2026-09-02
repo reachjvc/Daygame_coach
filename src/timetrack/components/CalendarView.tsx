@@ -86,6 +86,15 @@ export function CalendarView({
     if (!rangeTouched) setRange(isMobile ? "day" : "week")
   }, [isMobile, rangeTouched])
   const [zoom, setZoom] = useState<ZoomId>("normal")
+  const [zoomTouched, setZoomTouched] = useState(false)
+  /**
+   * Phones open one zoom step taller. At 56px/hour a 20-minute block is 19px —
+   * under the height where its title fits, so it renders as a nameless bar, and
+   * a phone has no hover tooltip to fall back on.
+   */
+  useEffect(() => {
+    if (!zoomTouched) setZoom(isMobile ? "comfortable" : "normal")
+  }, [isMobile, zoomTouched])
   const [anchor, setAnchor] = useState(todayKey)
   const [drag, setDrag] = useState<DragState | null>(null)
   const gridRef = useRef<HTMLDivElement | null>(null)
@@ -215,7 +224,10 @@ export function CalendarView({
             <Segmented
               size="sm"
               value={zoom}
-              onChange={setZoom}
+              onChange={(next) => {
+                setZoomTouched(true)
+                setZoom(next)
+              }}
               options={CALENDAR_ZOOMS.map((z) => ({ id: z.id, label: z.label }))}
             />
           </span>

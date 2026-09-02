@@ -14,103 +14,24 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { isPeriodStale } from "@/src/goals/goalsService"
+import { createFakeSupabase, type Row } from "../../helpers/fakeSupabase"
 
-// ------------------------------------------------------------------
-// A stand-in for the Supabase query builder: enough of it to run the
-// repo's real select / update / upsert chains against an in-memory table.
-// ------------------------------------------------------------------
+// The fake Supabase lives in tests/helpers — this file and the tracking-counter
+// roll both run their repo's real query chains against it.
 
-type Row = Record<string, unknown>
 const tables: Record<string, Row[]> = { user_goals: [], daily_goal_snapshots: [] }
 
-class FakeQuery {
-  private filters: ((r: Row) => boolean)[] = []
-  private mode: "select" | "update" | "upsert" = "select"
-  private payload: Row | Row[] = {}
-  private one = false
-
-  constructor(private table: string) {}
-
-  select() {
-    if (this.mode === "select") this.mode = "select"
-    return this
-  }
-  update(values: Row) {
-    this.mode = "update"
-    this.payload = values
-    return this
-  }
-  upsert(rows: Row[]) {
-    this.mode = "upsert"
-    this.payload = rows
-    return this
-  }
-  eq(col: string, val: unknown) {
-    this.filters.push((r) => r[col] === val)
-    return this
-  }
-  neq(col: string, val: unknown) {
-    this.filters.push((r) => r[col] !== val)
-    return this
-  }
-  lt(col: string, val: string) {
-    this.filters.push((r) => String(r[col]) < val)
-    return this
-  }
-  in(col: string, vals: unknown[]) {
-    this.filters.push((r) => vals.includes(r[col]))
-    return this
-  }
-  order() {
-    return this
-  }
-  limit() {
-    return this
-  }
-  single() {
-    this.one = true
-    return this
-  }
-  maybeSingle() {
-    this.one = true
-    return this
-  }
-
-  private matched() {
-    return (tables[this.table] ?? []).filter((r) => this.filters.every((f) => f(r)))
-  }
-
-  then(resolve: (v: { data: unknown; error: unknown }) => void) {
-    if (this.mode === "upsert") {
-      const rows = this.payload as Row[]
-      for (const row of rows) {
-        const table = tables[this.table]
-        const at = table.findIndex(
-          (r) => r.goal_id === row.goal_id && r.snapshot_date === row.snapshot_date
-        )
-        if (at >= 0) table[at] = { ...row }
-        else table.push({ ...row })
-      }
-      return resolve({ data: null, error: null })
-    }
-
-    const hits = this.matched()
-    if (this.mode === "update") {
-      for (const row of hits) Object.assign(row, this.payload)
-    }
-    const data = this.one ? (hits[0] ? { ...hits[0] } : null) : hits.map((r) => ({ ...r }))
-    const error = this.one && !hits[0] ? { message: "no rows" } : null
-    return resolve({ data, error })
-  }
-}
-
 vi.mock("@/src/db/supabase", () => ({
-  createServerSupabaseClient: vi.fn(async () => ({
-    from: (table: string) => new FakeQuery(table),
-  })),
+  createServerSupabaseClient: vi.fn(async () => fake),
+  createAdminSupabaseClient: vi.fn(() => fake),
 }))
 
-const { rollGoalPeriods, incrementGoalProgress, resetWeeklyGoals } = await import("@/src/db/goalRepo")
+// Snapshots conflict on (goal_id, snapshot_date), not on id.
+const fake = createFakeSupabase(tables, {
+  upsertKey: (r) => `${r.goal_id}|${r.snapshot_date}`,
+})
+
+const { rollGoalPeriods, incrementGoalProgress } = await import("@/src/db/goalRepo")
 
 const USER = "user-1"
 
@@ -232,7 +153,36 @@ describe("rollGoalPeriods", () => {
       goal_id: "goal-weekly",
       current_value: 13,
       was_complete: false,
+      // STAMPED WITH THE WEEK THAT ENDED, NOT THE DAY THE ROLL RAN. The goal's
+      // period started 2026-08-17 and the roll happens on the 25th; stamping the
+      // 25th would file last week's total under this week, and the weekly
+      // rollup (`snapshot_date >= this Monday`) would count it twice.
+      snapshot_date: "2026-08-17",
     })
+  })
+
+  it("writes one snapshot per period, however many times the roll runs", async () => {
+    tables.user_goals.push(weeklyGoal({ current_value: 13 }))
+    at("2026-08-25T09:00:00Z")
+
+    await rollGoalPeriods(USER, "UTC")
+    await rollGoalPeriods(USER, "UTC")
+
+    // The second roll finds nothing stale. Even if it did, the unique index on
+    // (goal_id, snapshot_date) makes the upsert idempotent.
+    expect(tables.daily_goal_snapshots).toHaveLength(1)
+  })
+
+  it("archives through the admin client, because the table has no INSERT policy", async () => {
+    // daily_goal_snapshots has RLS on with a single SELECT policy. This used to
+    // use the user-scoped client, so every insert was rejected and swallowed:
+    // 0 rows against 398 goals. If the client regresses, the fake still accepts
+    // the write, so what is asserted is that a row arrives at all.
+    tables.user_goals.push(weeklyGoal({ current_value: 4 }))
+    at("2026-08-25T09:00:00Z")
+
+    await rollGoalPeriods(USER, "UTC")
+    expect(tables.daily_goal_snapshots).toHaveLength(1)
   })
 
   it("breaks the streak on a week that was missed, keeps it on one that was hit", async () => {
@@ -286,16 +236,6 @@ describe("rollGoalPeriods", () => {
     expect(tables.user_goals.find((g) => g.id === "g-theirs")!.current_value).toBe(13)
   })
 
-  it("still works through the per-cadence entry point", async () => {
-    tables.user_goals.push(weeklyGoal())
-    at("2026-08-25T09:00:00Z")
-
-    expect(await resetWeeklyGoals(USER, "UTC")).toBe(1)
-    expect(goalRow().current_value).toBe(0)
-  })
-})
-
-describe("incrementGoalProgress", () => {
   it("counts the first tick of a new week as 1, not last week's total plus one", async () => {
     tables.user_goals.push(weeklyGoal({ current_value: 13 })) // last week's 13
     at("2026-08-25T09:00:00Z") // Tuesday of the next week

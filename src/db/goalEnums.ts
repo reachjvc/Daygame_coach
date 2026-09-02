@@ -70,6 +70,17 @@ export const GOAL_NATURES = ["input", "outcome"] as const
 
 export const GOAL_PERIODS = ["daily", "weekly", "monthly", "quarterly", "yearly", "custom"] as const
 
+/**
+ * The periods whose counter EXPIRES.
+ *
+ * `custom` is the one that does not: a custom-period goal is a milestone that
+ * runs to its `custom_end_date`, and zeroing it every Monday would delete the
+ * user's progress towards "do 3 muscle ups". Every roll takes this list, never
+ * `GOAL_PERIODS`, and `shared/dateUtils.GoalPeriod` is typed to exactly these
+ * five so a non-rolling period cannot be passed to period arithmetic.
+ */
+export const ROLLING_PERIODS = ["daily", "weekly", "monthly", "quarterly", "yearly"] as const
+
 export const GOAL_TRACKING_TYPES = ["counter", "percentage", "streak", "boolean"] as const
 
 export const GOAL_PHASES = ["acquisition", "consolidation", "graduated"] as const
@@ -83,6 +94,7 @@ export type GoalDisplayCategory = (typeof GOAL_DISPLAY_CATEGORIES)[number]
 export type LinkedMetric = (typeof LINKED_METRICS)[number] | null
 export type GoalNature = (typeof GOAL_NATURES)[number]
 export type GoalPeriod = (typeof GOAL_PERIODS)[number]
+export type RollingPeriod = (typeof ROLLING_PERIODS)[number]
 export type GoalTrackingType = (typeof GOAL_TRACKING_TYPES)[number]
 export type GoalPhase = (typeof GOAL_PHASES)[number]
 

@@ -29,7 +29,7 @@ test.describe('Cross-browser goals', () => {
       data: { title: 'Firefox/Safari Goal', category: 'custom', target_value: 5, life_area: 'custom' },
     })
 
-    await page.goto('/dashboard/goals', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     // Should see the goals page (not redirect to setup)
@@ -42,7 +42,7 @@ test.describe('Cross-browser goals', () => {
       data: { title: 'Initial Goal', category: 'custom', target_value: 5, life_area: 'custom' },
     })
 
-    await page.goto('/dashboard/goals', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     // Open form
@@ -66,7 +66,7 @@ test.describe('Cross-browser goals', () => {
       data: { title: 'View Test', category: 'custom', target_value: 5, life_area: 'custom' },
     })
 
-    await page.goto('/dashboard/goals', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     const switcher = page.getByTestId(SELECTORS.goals.viewSwitcher)
@@ -87,7 +87,7 @@ test.describe('Cross-browser goals', () => {
     })
     const created = await createResp.json()
 
-    await page.goto('/dashboard/goals', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     const goalCard = page.getByTestId(SELECTORS.goals.goalCard(created.id))
@@ -114,7 +114,7 @@ test.describe('Cross-browser goals', () => {
       data: { title: 'Customize Test', category: 'custom', target_value: 5, life_area: 'custom' },
     })
 
-    await page.goto('/dashboard/goals', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     await page.getByTestId(SELECTORS.goals.customizeButton).click({ timeout: ACTION_TIMEOUT })
@@ -130,7 +130,7 @@ test.describe('Cross-browser goals', () => {
       data: { title: 'Delete Me', category: 'custom', target_value: 5, life_area: 'custom' },
     })
 
-    await page.goto('/dashboard/goals', { timeout: AUTH_TIMEOUT })
+    await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     await page.getByTestId(SELECTORS.goals.customizeButton).click({ timeout: ACTION_TIMEOUT })

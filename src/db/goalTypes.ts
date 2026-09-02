@@ -177,7 +177,7 @@ export interface DailyGoalSnapshotInsert {
 /**
  * Compute progress fields from a goal row
  */
-export function computeGoalProgress(goal: UserGoalRow, timezone: string | null = null): GoalWithProgress {
+export function computeGoalProgress(goal: UserGoalRow, timezone: string): GoalWithProgress {
   const progress_percentage =
     goal.target_value > 0
       ? Math.min(100, Math.round((goal.current_value / goal.target_value) * 100))

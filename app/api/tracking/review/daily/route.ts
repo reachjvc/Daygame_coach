@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/src/db/server"
 import { createReview, getUserReviews } from "@/src/tracking/trackingService"
+import { CreateDailyReviewSchema } from "@/src/tracking/schemas"
 import type { ReviewInsert } from "@/src/db/trackingTypes"
 
 export async function GET() {
@@ -22,14 +23,22 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const { fields, period_start, period_end } = await request.json()
+  // This route used to take the body unvalidated, which is how it kept
+  // accepting the ISO instants that filed every review under the wrong day.
+  const parsed = CreateDailyReviewSchema.safeParse(await request.json())
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid request body", details: parsed.error.flatten() },
+      { status: 400 }
+    )
+  }
 
   const review: ReviewInsert = {
     user_id: user.id,
     review_type: "daily",
-    fields: fields || {},
-    period_start,
-    period_end,
+    fields: parsed.data.fields,
+    period_start: parsed.data.period_start,
+    period_end: parsed.data.period_end,
     is_draft: false,
   }
 

@@ -299,3 +299,49 @@ export function metricSubLabel(def: MetricDef, value: MetricValue): string | nul
 function round1(n: number): string | number {
   return Number.isInteger(n) ? n : Math.round(n * 10) / 10
 }
+
+/**
+ * MAY THIS METRIC BACK A GOAL ON THIS PERIOD?
+ *
+ * A goal's `current_value` is the count for one period. A linked metric supplies
+ * that count. If the two describe different spans of time, the goal is wrong in
+ * a way nothing on screen explains: the roll zeroes `current_value` on Monday
+ * and `syncLinkedGoals` writes the metric's number straight back, so a weekly
+ * goal with target 2 fed by `approaches_cumulative` reads 416 and is
+ * permanently complete. Eleven of eighteen linked goals in production were in
+ * that state.
+ *
+ * The rule is that the metric's window IS its cadence:
+ *
+ *   weekly      -> only a weekly goal
+ *   cumulative  -> only a `custom` goal, i.e. a milestone that never rolls.
+ *                  Not yearly: a yearly goal rolls every January and would be
+ *                  refilled with the lifetime total the same second.
+ *   current     -> only a `custom` goal. A 1RM or a body weight is a level, not
+ *                  a count; zeroing it every Monday means nothing.
+ *   streak      -> never. These are display-only and are not in LINKED_METRICS.
+ *   daily,
+ *   monthly     -> no metric has these windows yet. Left explicit so adding one
+ *                  is a decision somebody makes rather than a default.
+ *
+ * A metric with `linkedMetric: null` cannot back a goal at all — nothing syncs
+ * it into `current_value`.
+ */
+export function metricFitsPeriod(metricId: string, period: string): boolean {
+  const def = METRIC_BY_ID[metricId]
+  if (!def) return false
+  if (def.linkedMetric === null) return false
+
+  switch (def.window) {
+    case "weekly":
+      return period === "weekly"
+    case "cumulative":
+    case "current":
+      return period === "custom"
+    case "streak":
+      return false
+    case "daily":
+    case "monthly":
+      return false
+  }
+}

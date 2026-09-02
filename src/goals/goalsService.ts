@@ -414,30 +414,12 @@ export function computeProjectedDate(goal: GoalWithProgress): ProjectedDateInfo 
 }
 
 /**
- * A counter that belongs to a period that is over.
- *
- * THE BUG THIS IS: a weekly goal's `current_value` is the count for the week
- * named by its `period_start_date` and for no other week. Nothing about the row
- * says so, so a screen that reads the row on Tuesday and finds last Monday's
- * date shows last week's number as if it were this week's, and a `+1` adds to
- * it. Today did exactly that: it read `/api/goals`, which never rolled a
- * period, and reported a week the user had not started yet.
- *
- * `currentStart` is `periodStartFor(period, now)` — Monday for a week, so a
- * count stops at Sunday 23:59 and starts again at Monday 00:00.
- *
- * Daily is `!==` rather than `<` so a row somehow dated in the future still
- * gets pulled back onto today, which is what the daily reset has always done.
+ * Re-exported so existing importers keep working. The implementation lives in
+ * `shared/dateUtils`, next to `periodStartFor` — it is period arithmetic, and
+ * two copies of period arithmetic is how a counter and its period disagree.
  */
-export function isPeriodStale(
-  period: string,
-  periodStartDate: string | null,
-  currentStart: string
-): boolean {
-  if (!periodStartDate) return true
-  if (period === "daily") return periodStartDate !== currentStart
-  return periodStartDate < currentStart
-}
+export { isPeriodStale } from "@/src/shared/dateUtils"
+import { periodStartFor } from "@/src/shared/dateUtils"
 
 /**
  * Determine if a goal should auto-consume a streak freeze during reset.
@@ -576,16 +558,14 @@ export function computeMultiPeriodStats(
   const ref = now ?? new Date()
   const goalSnapshots = snapshots.filter((s) => s.goal_id === goal.id)
 
-  // Compute period boundaries
-  const dayOfWeek = ref.getDay() || 7
-  const monday = new Date(ref)
-  monday.setDate(ref.getDate() - dayOfWeek + 1)
-  const mondayStr = monday.toISOString().split("T")[0]
-
-  const firstOfMonth = new Date(ref.getFullYear(), ref.getMonth(), 1)
-  const firstOfMonthStr = firstOfMonth.toISOString().split("T")[0]
-
-  const jan1Str = `${ref.getFullYear()}-01-01`
+  // Period boundaries, from the one implementation of them. These used to be
+  // hand-rolled and then run through `toISOString()`, which converts to UTC
+  // first — so for anyone east of London the "Monday" a snapshot was compared
+  // against was the previous Sunday, and a week's rollup picked up a day that
+  // belonged to the week before.
+  const mondayStr = periodStartFor("weekly", ref)
+  const firstOfMonthStr = periodStartFor("monthly", ref)
+  const jan1Str = periodStartFor("yearly", ref)
 
   // Filter snapshots by period
   const weekSnaps = goalSnapshots.filter((s) => s.snapshot_date >= mondayStr)
@@ -748,12 +728,11 @@ export function groupSnapshotsIntoWeeks(snapshots: DailyGoalSnapshotRow[]): Dail
   const weekMap = new Map<string, DailyGoalSnapshotRow[]>()
 
   for (const snap of snapshots) {
+    // `snapshot_date` is a calendar date with no time in it, so it is parsed as
+    // one — `new Date("2026-08-24")` alone would be midnight UTC, i.e. the 23rd
+    // for anyone west of Greenwich.
     const date = new Date(snap.snapshot_date + "T00:00:00")
-    const day = date.getDay()
-    const diff = day === 0 ? 6 : day - 1
-    const monday = new Date(date)
-    monday.setDate(date.getDate() - diff)
-    const key = monday.toISOString().split("T")[0]
+    const key = periodStartFor("weekly", date)
     const arr = weekMap.get(key) ?? []
     arr.push(snap)
     weekMap.set(key, arr)
@@ -1721,7 +1700,18 @@ export function buildFrameworkPlanInserts(state: NewGoalsFlowState): BatchGoalIn
  * tree/track views render the plan exactly as a real save would, while nothing
  * touches user_goals. Used by test surfaces that must stay disconnected.
  */
-export function buildLocalPlanGoals(state: NewGoalsFlowState): GoalWithProgress[] {
+export function buildLocalPlanGoals(
+  state: NewGoalsFlowState,
+  /**
+   * The viewer's own zone. This runs in a sandbox with no signed-in user, so
+   * the browser's zone is passed EXPLICITLY rather than defaulting to the
+   * server's — a date computed from nobody's calendar is the fault this
+   * required argument exists to prevent.
+   */
+  timezone: string = typeof Intl !== "undefined"
+    ? Intl.DateTimeFormat().resolvedOptions().timeZone
+    : "UTC"
+): GoalWithProgress[] {
   const now = new Date().toISOString()
   return buildFrameworkPlanInserts(state).map((ins, i) =>
     computeGoalProgress({
@@ -1760,7 +1750,7 @@ export function buildLocalPlanGoals(state: NewGoalsFlowState): GoalWithProgress[
       last_freeze_date: null,
       goal_phase: ins.goal_phase ?? null,
       aligned_values: ins.aligned_values ?? [],
-    }),
+    }, timezone),
   )
 }
 

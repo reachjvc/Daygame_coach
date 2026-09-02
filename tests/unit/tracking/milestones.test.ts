@@ -1,3 +1,19 @@
+/**
+ * THE BADGE CATALOGUE — what it must be true of, not what it happens to say.
+ *
+ * This file used to hold 28 tests, most of which asserted copy ("First Steps",
+ * "👣", "Legend") or restated a type ("every milestone has a label", "there are
+ * five tiers"). They were green the whole time 51 of the 101 badges on screen
+ * had no awarding code behind them, because none of them asked the only
+ * question that mattered: can this badge be won?
+ *
+ * What is left is behaviour: the lookup falls back safely, tiers are visually
+ * distinct and correctly ordered, and every badge is both describable and
+ * earnable. Earnability is enforced twice more — by the type system
+ * (`Record<MilestoneType, MilestoneRule>`) and by tests/unit/architecture.test.ts,
+ * which runs even though the build skips type checking.
+ */
+
 import { describe, test, expect } from "vitest"
 import {
   getMilestoneInfo,
@@ -9,295 +25,164 @@ import {
   TIER_INFO,
   type MilestoneTier,
 } from "@/src/tracking/data/milestones"
-
-// ============================================================================
-// getMilestoneInfo
-// ============================================================================
+import { MILESTONE_RULES } from "@/src/tracking/data/milestoneRules"
 
 describe("getMilestoneInfo", () => {
-  test("should return correct info for known milestone", () => {
-    // Arrange
-    const milestoneType = "first_approach"
+  test("returns the catalogue entry for a badge that exists", () => {
+    // Arrange & Act
+    const result = getMilestoneInfo("first_approach")
 
-    // Act
-    const result = getMilestoneInfo(milestoneType)
-
-    // Assert
-    expect(result.label).toBe("First Steps")
-    expect(result.emoji).toBe("👣")
-    expect(result.tier).toBe("bronze")
-    expect(result.category).toBe("Approaches")
-    expect(result.description).toBe("Complete your first approach")
+    // Assert: the entry itself, not a copy of its wording.
+    expect(result).toEqual(ALL_MILESTONES.first_approach)
+    expect(result.category).not.toBe("Other")
   })
 
-  test("should return correct info for high-tier milestone", () => {
-    // Arrange
-    const milestoneType = "1000_approaches"
+  test.each(["not_a_badge", "", "  ", "5_approaches;drop table"])(
+    "falls back to something obviously generic for %j",
+    (unknown) => {
+      // Arrange & Act
+      const result = getMilestoneInfo(unknown)
 
-    // Act
-    const result = getMilestoneInfo(milestoneType)
+      // Assert: a rendered row still has every field, and is distinguishable
+      // from a real badge rather than silently impersonating one.
+      expect(result.category).toBe("Other")
+      expect(result.label).toBe(unknown)
+      expect(result.tier).toBe("bronze")
+      expect(Object.values(ALL_MILESTONES).map((m) => m.emoji)).not.toContain(result.emoji)
+    }
+  )
+})
 
-    // Assert
-    expect(result.tier).toBe("diamond")
-    expect(result.label).toBe("Legend")
+describe("tier styling", () => {
+  const tiers = TIER_INFO.map((t) => t.name)
+
+  test("every tier gets its own gradient", () => {
+    // Arrange & Act
+    const colors = tiers.map(getTierColor)
+
+    // Assert: two tiers sharing a colour is the defect this stands in front of —
+    // a diamond badge that looks exactly like a bronze one.
+    expect(new Set(colors).size).toBe(tiers.length)
   })
 
-  test("should return fallback for unknown milestone type", () => {
-    // Arrange
-    const unknownType = "unknown_milestone_xyz"
-
-    // Act
-    const result = getMilestoneInfo(unknownType)
+  test("every tier gets its own background", () => {
+    // Arrange & Act
+    const backgrounds = tiers.map(getTierBg)
 
     // Assert
-    expect(result.label).toBe(unknownType) // Falls back to the type itself
-    expect(result.emoji).toBe("🏅")
-    expect(result.tier).toBe("bronze")
-    expect(result.category).toBe("Other")
-    expect(result.description).toBe("Achievement unlocked")
+    expect(new Set(backgrounds).size).toBe(tiers.length)
   })
 
-  test("should return fallback for empty string", () => {
-    // Arrange
-    const emptyType = ""
-
-    // Act
-    const result = getMilestoneInfo(emptyType)
+  test("tiers run bronze to diamond, which is the order badges sort in", () => {
+    // Arrange & Act
+    const order = TIER_INFO.map((t) => t.name)
 
     // Assert
-    expect(result.label).toBe("")
-    expect(result.tier).toBe("bronze")
-    expect(result.category).toBe("Other")
+    expect(order).toEqual(["bronze", "silver", "gold", "platinum", "diamond"])
   })
 
-  test("should handle special character milestone types gracefully", () => {
-    // Arrange
-    const specialType = "test-with-dashes_and_underscores"
-
-    // Act
-    const result = getMilestoneInfo(specialType)
+  test("the tier set and the tier list agree", () => {
+    // Arrange & Act
+    const fromSet = [...getAllTiers()].sort()
+    const fromList = TIER_INFO.map((t) => t.name).sort()
 
     // Assert
-    expect(result.label).toBe(specialType)
-    expect(result.tier).toBe("bronze")
+    expect(fromSet).toEqual(fromList)
   })
 })
 
-// ============================================================================
-// getTierColor
-// ============================================================================
-
-describe("getTierColor", () => {
-  test("should return valid gradient format for all tiers", () => {
+describe("categories", () => {
+  test("every category holds at least one badge", () => {
     // Arrange
-    const tiers: MilestoneTier[] = ["bronze", "silver", "gold", "platinum", "diamond"]
+    const categories = getMilestoneCategories()
 
-    // Act & Assert
-    for (const tier of tiers) {
-      const result = getTierColor(tier)
-      expect(result).toContain("from-")
-      expect(result).toContain("to-")
-    }
+    // Act
+    const empty = categories.filter(
+      (c) => !Object.values(ALL_MILESTONES).some((m) => m.category === c)
+    )
+
+    // Assert
+    expect(categories.length).toBeGreaterThan(0)
+    expect(empty).toEqual([])
+  })
+
+  test("every badge is filed under a category that is offered as a filter", () => {
+    // Arrange
+    const categories = new Set(getMilestoneCategories())
+
+    // Act
+    const orphans = Object.entries(ALL_MILESTONES)
+      .filter(([, info]) => !categories.has(info.category))
+      .map(([key]) => key)
+
+    // Assert: a badge in a category the filter bar does not list is unreachable
+    // in the UI even though it exists.
+    expect(orphans).toEqual([])
   })
 })
 
-// ============================================================================
-// getTierBg
-// ============================================================================
+describe("every badge in the catalogue is winnable and describable", () => {
+  const entries = Object.entries(ALL_MILESTONES)
 
-describe("getTierBg", () => {
-  test("should return valid background format for all tiers", () => {
+  test("there is a catalogue to check", () => {
+    // Guards every test below from passing vacuously.
+    expect(entries.length).toBeGreaterThan(100)
+  })
+
+  test("every badge has a rule that can award it", () => {
+    // Arrange & Act
+    const unearnable = entries.filter(([key]) => !(key in MILESTONE_RULES))
+
+    // Assert: this is the failure the whole area was rebuilt for — 51 badges on
+    // screen that no code could ever award.
+    expect(unearnable.map(([k]) => k)).toEqual([])
+  })
+
+  test("a badge whose name carries a number says that number in its description", () => {
     // Arrange
-    const tiers: MilestoneTier[] = ["bronze", "silver", "gold", "platinum", "diamond"]
+    const numbered = entries.flatMap(([key, info]) => {
+      const match = /^(\d+)_/.exec(key)
+      return match ? [{ key, n: Number(match[1]), description: info.description }] : []
+    })
 
-    // Act & Assert
-    for (const tier of tiers) {
-      const result = getTierBg(tier)
-      expect(result).toMatch(/^bg-/)
-      expect(result).toContain("/10")
-    }
+    // Act: "1,000" is written with a separator in the copy, so compare digits.
+    const mismatched = numbered.filter(
+      ({ n, description }) => !description.replace(/[,.\s]/g, "").includes(String(n))
+    )
+
+    // Assert: "Complete 50 approaches" filed under `100_approaches` is a lie the
+    // user reads directly off the screen.
+    expect(numbered.length).toBeGreaterThan(25)
+    expect(mismatched).toEqual([])
   })
-})
 
-// ============================================================================
-// getMilestoneCategories
-// ============================================================================
+  test("no two badges share a label", () => {
+    // Arrange & Act
+    const labels = entries.map(([, info]) => info.label)
+    const duplicated = labels.filter((l, i) => labels.indexOf(l) !== i)
 
-describe("getMilestoneCategories", () => {
-  test("should return an array of strings", () => {
-    // Act
-    const result = getMilestoneCategories()
+    // Assert: two rows reading "Hat Trick" is indistinguishable from a bug.
+    expect([...new Set(duplicated)]).toEqual([])
+  })
+
+  test("every badge says what it is and how to get it", () => {
+    // Arrange & Act
+    const thin = entries.filter(
+      ([, info]) => info.label.trim().length < 3 || info.description.trim().length < 10
+    )
 
     // Assert
-    expect(Array.isArray(result)).toBe(true)
-    expect(result.every((cat) => typeof cat === "string")).toBe(true)
+    expect(thin.map(([k]) => k)).toEqual([])
   })
 
-  test("should contain known categories", () => {
+  test("every badge has a tier the styling knows how to render", () => {
     // Arrange
-    const expectedCategories = [
-      "Approaches",
-      "Numbers",
-      "Instadates",
-      "Sessions",
-      "Streaks",
-      "Reports",
-      "Special",
-      "Mindset",
-      "Social",
-      "Unique Sets",
-    ]
+    const known = new Set<MilestoneTier>(TIER_INFO.map((t) => t.name))
 
     // Act
-    const result = getMilestoneCategories()
+    const unstyled = entries.filter(([, info]) => !known.has(info.tier))
 
     // Assert
-    for (const category of expectedCategories) {
-      expect(result).toContain(category)
-    }
-  })
-
-  test("should not contain duplicates", () => {
-    // Act
-    const result = getMilestoneCategories()
-    const uniqueCategories = [...new Set(result)]
-
-    // Assert
-    expect(result.length).toBe(uniqueCategories.length)
-  })
-
-  test("should have length matching unique categories in ALL_MILESTONES", () => {
-    // Arrange
-    const categoriesFromData = new Set(Object.values(ALL_MILESTONES).map((m) => m.category))
-
-    // Act
-    const result = getMilestoneCategories()
-
-    // Assert
-    expect(result.length).toBe(categoriesFromData.size)
-  })
-})
-
-// ============================================================================
-// getAllTiers
-// ============================================================================
-
-describe("getAllTiers", () => {
-  test("should return a Set", () => {
-    // Act
-    const result = getAllTiers()
-
-    // Assert
-    expect(result).toBeInstanceOf(Set)
-  })
-
-  test("should contain exactly 5 tiers", () => {
-    // Act
-    const result = getAllTiers()
-
-    // Assert
-    expect(result.size).toBe(5)
-  })
-
-  test("should contain all expected tier values", () => {
-    // Arrange
-    const expectedTiers: MilestoneTier[] = ["bronze", "silver", "gold", "platinum", "diamond"]
-
-    // Act
-    const result = getAllTiers()
-
-    // Assert
-    for (const tier of expectedTiers) {
-      expect(result.has(tier)).toBe(true)
-    }
-  })
-
-  test("should match TIER_INFO names", () => {
-    // Arrange
-    const tierInfoNames = TIER_INFO.map((t) => t.name)
-
-    // Act
-    const result = getAllTiers()
-
-    // Assert
-    expect(result.size).toBe(tierInfoNames.length)
-    for (const name of tierInfoNames) {
-      expect(result.has(name)).toBe(true)
-    }
-  })
-})
-
-// ============================================================================
-// Data Integrity Tests
-// ============================================================================
-
-describe("ALL_MILESTONES data integrity", () => {
-  test("should have all required fields for every milestone", () => {
-    // Act & Assert
-    for (const [key, milestone] of Object.entries(ALL_MILESTONES)) {
-      expect(milestone.label, `${key} missing label`).toBeDefined()
-      expect(milestone.emoji, `${key} missing emoji`).toBeDefined()
-      expect(milestone.tier, `${key} missing tier`).toBeDefined()
-      expect(milestone.category, `${key} missing category`).toBeDefined()
-      expect(milestone.description, `${key} missing description`).toBeDefined()
-    }
-  })
-
-  test("should have valid tier values for all milestones", () => {
-    // Arrange
-    const validTiers = getAllTiers()
-
-    // Act & Assert
-    for (const [key, milestone] of Object.entries(ALL_MILESTONES)) {
-      expect(validTiers.has(milestone.tier), `${key} has invalid tier: ${milestone.tier}`).toBe(
-        true
-      )
-    }
-  })
-
-  test("should have non-empty strings for labels and descriptions", () => {
-    // Act & Assert
-    for (const [key, milestone] of Object.entries(ALL_MILESTONES)) {
-      expect(milestone.label.length, `${key} has empty label`).toBeGreaterThan(0)
-      expect(milestone.description.length, `${key} has empty description`).toBeGreaterThan(0)
-    }
-  })
-
-  test("should have emoji that is not empty", () => {
-    // Act & Assert
-    for (const [key, milestone] of Object.entries(ALL_MILESTONES)) {
-      expect(milestone.emoji.length, `${key} has empty emoji`).toBeGreaterThan(0)
-    }
-  })
-})
-
-// ============================================================================
-// TIER_INFO data integrity
-// ============================================================================
-
-describe("TIER_INFO data integrity", () => {
-  test("should have 5 tiers defined", () => {
-    // Assert
-    expect(TIER_INFO.length).toBe(5)
-  })
-
-  test("should have required fields for each tier", () => {
-    // Act & Assert
-    for (const tier of TIER_INFO) {
-      expect(tier.name).toBeDefined()
-      expect(tier.label).toBeDefined()
-      expect(tier.icon).toBeDefined()
-    }
-  })
-
-  test("should have tiers in correct order (bronze to diamond)", () => {
-    // Arrange
-    const expectedOrder: MilestoneTier[] = ["bronze", "silver", "gold", "platinum", "diamond"]
-
-    // Act
-    const actualOrder = TIER_INFO.map((t) => t.name)
-
-    // Assert
-    expect(actualOrder).toEqual(expectedOrder)
+    expect(unstyled.map(([k]) => k)).toEqual([])
   })
 })

@@ -10,6 +10,7 @@
 import { getProfile } from "@/src/db/profilesRepo"
 import { createScenarioAttempt } from "@/src/db/scenarioRepo"
 import { syncLinkedGoals } from "@/src/db/goalRepo"
+import { getUserTimezone } from "@/src/db/settingsRepo"
 
 import type {
   DifficultyLevel,
@@ -420,8 +421,15 @@ export async function persistScenarioAttempt(
       evaluation: normalizedEval,
     })
 
-    // Sync scenario-linked goals so badge progress updates
-    await syncLinkedGoals(userId).catch((e) =>
+    // Sync scenario-linked goals so badge progress updates.
+    //
+    // With the user's timezone, always: every week boundary downstream is read
+    // against it, and passing null hands the decision to the server clock —
+    // which for a Copenhagen user just after midnight on Monday is still last
+    // week, and for anyone west of Greenwich rolls the week early and zeroes
+    // counters they are still filling.
+    const timezone = await getUserTimezone(userId)
+    await syncLinkedGoals(userId, timezone).catch((e) =>
       console.error("[scenarioRepo] syncLinkedGoals failed:", e)
     )
   } catch (err) {

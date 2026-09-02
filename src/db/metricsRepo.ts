@@ -22,16 +22,14 @@
  * logged here yet".
  */
 
-import { createServerSupabaseClient } from "./supabase"
 import {
   getOrCreateUserTrackingStats,
   getWeeklyApproachQualityAvg,
   getHighQualityApproachCount,
-  updateUserTrackingStats,
+  rollTrackingCounters,
 } from "./trackingRepo"
 import { getScenarioStats } from "./scenarioRepo"
-import { getISOWeekString } from "../tracking/trackingService"
-import { getNowInTimezone } from "../shared/dateUtils"
+import { getNowInTimezone, periodStartFor, toDateISO, isStreakCurrent, startOfDayInstant } from "../shared/dateUtils"
 import type { LinkedMetric } from "./goalTypes"
 import type { UserTrackingStatsRow } from "./trackingTypes"
 
@@ -76,19 +74,70 @@ const HEALTH_METRICS = [
   "longest_run_km", "consecutive_cardio_weeks",
 ]
 
-/** Monday 00:00 of the week containing `now`, in the user's timezone. */
-function weekStartISO(timezone: string | null): string {
-  const now = getNowInTimezone(timezone)
-  const dayOfWeek = now.getDay() || 7 // 1=Mon..7=Sun
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - dayOfWeek + 1)
-  monday.setHours(0, 0, 0, 0)
-  return monday.toISOString()
+/**
+ * Monday 00:00 of the week containing now, in the user's timezone, as the
+ * absolute instant it happened — the columns it is compared against are
+ * `timestamptz`, so the conversion is not optional.
+ *
+ * The boundary comes from `periodStartFor` and the conversion from
+ * `startOfDayInstant`; neither is implemented here. This used to build the
+ * instant from the SERVER's midnight, which for a Copenhagen user pulled two
+ * hours of last week into this week's counts.
+ */
+function weekStartInstant(timezone: string): string {
+  return startOfDayInstant(periodStartFor("weekly", getNowInTimezone(timezone)), timezone)
+}
+
+/**
+ * A STREAK IS A NUMBER PLUS THE PERIOD IT WAS LAST EARNED IN.
+ *
+ * Returned raw, a streak earned in February reads as a streak in August — which
+ * is exactly what the Week Streak tile did for six months, because nothing on
+ * the row forces the two facts to be read together. This is the one place that
+ * forces it, and every read path goes through it.
+ *
+ * `isStreakCurrent` allows the current period and the one immediately before it
+ * (the current period is not over, so nothing has been missed yet) and nothing
+ * older. It only ever hides a number; it never lowers a stored one, so a
+ * recovered user still sees the streak they had.
+ *
+ * `longest_*` are records, not streaks, and pass through untouched.
+ */
+export function gateStreaks(
+  stats: UserTrackingStatsRow,
+  timezone: string,
+  /**
+   * Overridable so the gate can be asked about a boundary rather than about
+   * "now". A function that reads the clock inside itself cannot be tested at the
+   * hour a week turns over, and that hour is where these bugs live.
+   */
+  at: Date = new Date()
+): UserTrackingStatsRow {
+  const now = getNowInTimezone(timezone, at)
+  return {
+    ...stats,
+    current_week_streak: isStreakCurrent("weekly", stats.last_active_week_start, periodStartFor("weekly", now))
+      ? stats.current_week_streak
+      : 0,
+    current_streak: isStreakCurrent("daily", stats.last_approach_date, toDateISO(now))
+      ? stats.current_streak
+      : 0,
+    // The review streak now has a key of its own: `last_review_week_start` is the
+    // Monday of the week the last review was FILED FOR, written by the counter
+    // projection. A weekly review is written during the week after the one it
+    // covers, so "still going" means that week is this week or last week —
+    // exactly the same window as the other two streaks. Without this a streak
+    // that stopped in June still read as live in August, which is the bug this
+    // whole function exists to kill.
+    current_weekly_streak: isStreakCurrent("weekly", stats.last_review_week_start, periodStartFor("weekly", now))
+      ? stats.current_weekly_streak
+      : 0,
+  }
 }
 
 /**
  * Get the metric value from tracking stats based on linked_metric type.
- * Weekly metrics validate that current_week matches the actual current week —
+ * Weekly metrics validate that `week_start_date` is this week's Monday —
  * if the week rolled over but no new session was logged, weekly values return 0.
  *
  * Synchronous and pure: only metrics living on the stats row are answerable
@@ -97,12 +146,15 @@ function weekStartISO(timezone: string | null): string {
 export function getMetricValue(
   stats: UserTrackingStatsRow,
   metric: LinkedMetric | (typeof STATS_ONLY_METRICS)[number],
-  timezone: string | null = null
+  timezone: string
 ): number {
   if (metric === null) return 0
 
-  const currentWeek = getISOWeekString(getNowInTimezone(timezone))
-  const isCurrentWeek = stats.current_week === currentWeek
+  // A weekly counter is only readable inside the week it belongs to. The row is
+  // rolled before every read, so this is a second line of defence rather than
+  // the only one — and it is what makes a forgotten roll show 0 instead of a
+  // number from a week that is over.
+  const isCurrentWeek = stats.week_start_date === periodStartFor("weekly", getNowInTimezone(timezone))
 
   switch (metric) {
     case "approaches_weekly":
@@ -126,12 +178,13 @@ export function getMetricValue(
     case "field_reports_cumulative":
       return stats.total_field_reports
     // Display-only metrics (STATS_ONLY_METRICS) — no goal syncs to these.
+    // Streaks come from `gateStreaks`; `longest_*` are records and do not decay.
     case "week_streak":
-      return stats.current_week_streak
+      return gateStreaks(stats, timezone).current_week_streak
     case "best_week_streak":
       return stats.longest_week_streak
     case "day_streak":
-      return stats.current_streak
+      return gateStreaks(stats, timezone).current_streak
     case "best_day_streak":
       return stats.longest_streak
     case "unique_locations":
@@ -139,7 +192,7 @@ export function getMetricValue(
     case "weekly_reviews_cumulative":
       return stats.weekly_reviews_completed
     case "weekly_review_streak":
-      return stats.current_weekly_streak
+      return gateStreaks(stats, timezone).current_weekly_streak
     case "approach_quality_avg_weekly":
       console.warn(`[getMetricValue] approach_quality_avg_weekly should be handled by resolveMetricValues (requires async DB query). Returning 0.`)
       return 0
@@ -158,51 +211,6 @@ export function getMetricValue(
 }
 
 /**
- * Recompute this week's counters from the underlying rows.
- *
- * Pre-computed counters drift: session, approach and field-report writes each
- * advance `current_week` without resetting the others' counters, so a week that
- * turned over between two writes leaves stale numbers behind. Called on every
- * resolve because a wrong number on screen is worse than one extra count query.
- */
-async function repairWeeklyCounters(
-  userId: string,
-  stats: UserTrackingStatsRow,
-  timezone: string | null
-): Promise<UserTrackingStatsRow> {
-  if (stats.current_week !== getISOWeekString(getNowInTimezone(timezone))) return stats
-
-  const supabase = await createServerSupabaseClient()
-  const mondayISO = weekStartISO(timezone)
-
-  const { count: sessionCount } = await supabase
-    .from("sessions")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .gte("started_at", mondayISO)
-
-  const { count: approachCount } = await supabase
-    .from("approaches")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .gte("created_at", mondayISO)
-
-  const realSessions = sessionCount ?? 0
-  const realApproaches = approachCount ?? 0
-
-  if (realSessions === stats.current_week_sessions && realApproaches === stats.current_week_approaches) {
-    return stats
-  }
-
-  console.warn(`[metricsRepo] repairing weekly counters: sessions ${stats.current_week_sessions} → ${realSessions}, approaches ${stats.current_week_approaches} → ${realApproaches}`)
-  await updateUserTrackingStats(userId, {
-    current_week_sessions: realSessions,
-    current_week_approaches: realApproaches,
-  })
-  return { ...stats, current_week_sessions: realSessions, current_week_approaches: realApproaches }
-}
-
-/**
  * Resolve a set of metric ids to numbers in as few queries as possible.
  *
  * Only the sources a requested metric actually needs are queried. A source that
@@ -215,7 +223,7 @@ async function repairWeeklyCounters(
 export async function resolveMetricValues(
   userId: string,
   metricIds: string[],
-  timezone: string | null = null
+  timezone: string
 ): Promise<Record<string, number | null>> {
   const wanted = new Set(metricIds)
   const out: Record<string, number | null> = {}
@@ -230,13 +238,13 @@ export async function resolveMetricValues(
   // rather than one after another. Sequentially this endpoint cost ~1s; the
   // slowest single source now sets the floor instead of their sum.
   const [stats] = await Promise.all([
-    statsIds.length > 0 ? loadStats(userId, statsIds, timezone) : Promise.resolve(null),
+    statsIds.length > 0 ? loadStats(userId, timezone) : Promise.resolve(null),
 
     needsAny(APPROACH_METRICS)
       ? (async () => {
           await Promise.all([
             needs("approach_quality_avg_weekly")
-              ? getWeeklyApproachQualityAvg(userId, weekStartISO(timezone)).then((avg) => {
+              ? getWeeklyApproachQualityAvg(userId, weekStartInstant(timezone)).then((avg) => {
                   // Returns 0 for "nothing rated"; 0 is not on the 1-10 scale, so
                   // that is an absence, not a reading.
                   out.approach_quality_avg_weekly = avg > 0 ? avg : null
@@ -260,7 +268,7 @@ export async function resolveMetricValues(
       : null,
 
     needsAny(HEALTH_METRICS)
-      ? resolveHealthMetrics(userId, needs).then((health) => {
+      ? resolveHealthMetrics(userId, needs, timezone).then((health) => {
           Object.assign(out, health)
         })
       : null,
@@ -283,14 +291,28 @@ export async function resolveMetricValues(
  * weekly ones, so a dashboard showing only lifetime totals and streaks — which
  * the default layout is — has nothing to gain from paying for it.
  */
+/**
+ * The stats row, rolled to the current week before anything reads it.
+ *
+ * It used to recount this week's five counters from the source tables on every
+ * read ("repairWeeklyCounters"), because under the old `+1` scheme a failed
+ * write left the cache wrong forever. Counters are now recomputed from the rows
+ * on every write (`achievementsService.projectTrackingStats`), so there is
+ * nothing left to repair — and the repair had become actively harmful: it
+ * counted DIFFERENT rows (all sessions by `started_at`, approaches by
+ * `created_at`) than the projection (completed sessions by `ended_at`,
+ * approaches by `timestamp`), so the two overwrote each other and a tile could
+ * show a different number on every page load.
+ */
 async function loadStats(
   userId: string,
-  statsIds: string[],
-  timezone: string | null
+  timezone: string
 ): Promise<UserTrackingStatsRow> {
-  const stats = await getOrCreateUserTrackingStats(userId)
-  const needsWeekly = statsIds.some((id) => id.endsWith("_weekly"))
-  return needsWeekly ? repairWeeklyCounters(userId, stats, timezone) : stats
+  // ROLL BEFORE YOU READ. A weekly counter belongs to the week named by
+  // `week_start_date`; if that week is over, the number on the row is last
+  // week's and the page would draw it as this week's.
+  await rollTrackingCounters(userId, timezone)
+  return getOrCreateUserTrackingStats(userId)
 }
 
 /** Ids `getMetricValue` can answer from the stats row alone. */
@@ -307,37 +329,38 @@ const STATS_METRIC_IDS = new Set<string>([
  */
 async function resolveHealthMetrics(
   userId: string,
-  needs: (m: string) => boolean
+  needs: (m: string) => boolean,
+  timezone: string
 ): Promise<Record<string, number | null>> {
   const hr = await import("./healthRepo")
 
   const jobs: [string, Promise<unknown> | null][] = [
     ["body_weight_current", needs("body_weight_current") ? hr.getLatestWeight(userId) : null],
-    ["sleep_hours_avg_weekly", needs("sleep_hours_avg_weekly") ? hr.getSleepWeeklyAvgHours(userId) : null],
-    ["gym_sessions_weekly", needs("gym_sessions_weekly") ? hr.getWorkoutWeeklyCount(userId) : null],
+    ["sleep_hours_avg_weekly", needs("sleep_hours_avg_weekly") ? hr.getSleepWeeklyAvgHours(userId, timezone) : null],
+    ["gym_sessions_weekly", needs("gym_sessions_weekly") ? hr.getWorkoutWeeklyCount(userId, timezone) : null],
     ["gym_sessions_cumulative", needs("gym_sessions_cumulative") ? hr.getWorkoutCumulativeCount(userId) : null],
-    ["nutrition_quality_avg_weekly", needs("nutrition_quality_avg_weekly") ? hr.getNutritionWeeklyAvg(userId) : null],
-    ["cardio_sessions_weekly", needs("cardio_sessions_weekly") ? hr.getCardioWeeklyCount(userId) : null],
+    ["nutrition_quality_avg_weekly", needs("nutrition_quality_avg_weekly") ? hr.getNutritionWeeklyAvg(userId, timezone) : null],
+    ["cardio_sessions_weekly", needs("cardio_sessions_weekly") ? hr.getCardioWeeklyCount(userId, timezone) : null],
     ["training_hours_cumulative", needs("training_hours_cumulative") ? hr.getTrainingHoursCumulative(userId) : null],
-    ["consecutive_training_weeks", needs("consecutive_training_weeks") ? hr.getConsecutiveTrainingWeeks(userId) : null],
+    ["consecutive_training_weeks", needs("consecutive_training_weeks") ? hr.getConsecutiveTrainingWeeks(userId, timezone) : null],
     ["bench_press_1rm", needs("bench_press_1rm") ? hr.getExerciseMax(userId, "bench press") : null],
     ["squat_1rm", needs("squat_1rm") ? hr.getExerciseMax(userId, "squat") : null],
     ["deadlift_1rm", needs("deadlift_1rm") ? hr.getExerciseMax(userId, "deadlift") : null],
     ["overhead_press_1rm", needs("overhead_press_1rm") ? hr.getExerciseMax(userId, "overhead press") : null],
     ["pullups_max_reps", needs("pullups_max_reps") ? hr.getPullUpsMax(userId) : null],
     ["progress_photos_cumulative", needs("progress_photos_cumulative") ? hr.getProgressPhotoCount(userId) : null],
-    ["protein_days_hit_weekly", needs("protein_days_hit_weekly") ? hr.getProteinDaysHitWeekly(userId) : null],
-    ["calorie_days_hit_weekly", needs("calorie_days_hit_weekly") ? hr.getCalorieDaysHitWeekly(userId) : null],
+    ["protein_days_hit_weekly", needs("protein_days_hit_weekly") ? hr.getProteinDaysHitWeekly(userId, timezone) : null],
+    ["calorie_days_hit_weekly", needs("calorie_days_hit_weekly") ? hr.getCalorieDaysHitWeekly(userId, timezone) : null],
     ["weight_lost_from_peak", needs("weight_lost_from_peak") ? hr.getWeightLostFromPeak(userId) : null],
     ["weight_gained_from_lowest", needs("weight_gained_from_lowest") ? hr.getWeightGainedFromLowest(userId) : null],
     ["body_measurements_count", needs("body_measurements_count") ? hr.getBodyMeasurementCount(userId) : null],
-    ["mobility_sessions_weekly", needs("mobility_sessions_weekly") ? hr.getMobilitySessionsWeekly(userId) : null],
-    ["yoga_sessions_weekly", needs("yoga_sessions_weekly") ? hr.getYogaSessionsWeekly(userId) : null],
+    ["mobility_sessions_weekly", needs("mobility_sessions_weekly") ? hr.getMobilitySessionsWeekly(userId, timezone) : null],
+    ["yoga_sessions_weekly", needs("yoga_sessions_weekly") ? hr.getYogaSessionsWeekly(userId, timezone) : null],
     ["flexibility_hours_cumulative", needs("flexibility_hours_cumulative") ? hr.getFlexibilityHoursCumulative(userId) : null],
-    ["running_sessions_weekly", needs("running_sessions_weekly") ? hr.getRunningSessionsWeekly(userId) : null],
+    ["running_sessions_weekly", needs("running_sessions_weekly") ? hr.getRunningSessionsWeekly(userId, timezone) : null],
     ["running_distance_cumulative", needs("running_distance_cumulative") ? hr.getRunningDistanceCumulative(userId) : null],
     ["longest_run_km", needs("longest_run_km") ? hr.getLongestRunKm(userId) : null],
-    ["consecutive_cardio_weeks", needs("consecutive_cardio_weeks") ? hr.getConsecutiveCardioWeeks(userId) : null],
+    ["consecutive_cardio_weeks", needs("consecutive_cardio_weeks") ? hr.getConsecutiveCardioWeeks(userId, timezone) : null],
   ]
 
   const settled = await Promise.allSettled(jobs.map(([, p]) => p ?? Promise.resolve(null)))

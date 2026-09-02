@@ -46,7 +46,17 @@ export const CreateApproachSchema = z.object({
   note: z.string().max(2000).optional(),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
-  timestamp: z.string().datetime().optional(),
+  // Not in the future. One row dated 2099 makes today's approach not "the most
+  // recent", which collapses the daily and weekly streaks to zero on every
+  // recount — permanently, because the recount is deterministic. A minute of
+  // slack absorbs a phone clock that is slightly ahead.
+  timestamp: z
+    .string()
+    .datetime()
+    .refine((value) => new Date(value).getTime() <= Date.now() + 60_000, {
+      message: "timestamp cannot be in the future",
+    })
+    .optional(),
   voice_note_url: z.string().url().optional(),
 })
 
@@ -117,12 +127,35 @@ const TemplateIdSchema = z.string().refine(
   { message: "Must be a valid UUID or system template ID" }
 )
 
+/**
+ * A review's period is a pair of CALENDAR DATES, not instants.
+ *
+ * `reviews.period_start` and `period_end` are DATE columns, and an ISO instant
+ * is stored as its UTC date — so a Copenhagen Monday 00:00 sent as
+ * "2026-08-23T22:00:00.000Z" landed on the Sunday, and every weekly review was
+ * filed one week early. Accepting only YYYY-MM-DD makes that unrepresentable
+ * rather than merely discouraged.
+ */
+const PeriodDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "must be a calendar date, YYYY-MM-DD")
+  .refine((value) => !Number.isNaN(Date.parse(`${value}T00:00:00Z`)), {
+    message: "must be a real date",
+  })
+
+/** The daily review body. Same date rule as the weekly one. */
+export const CreateDailyReviewSchema = z.object({
+  fields: z.record(z.string(), z.unknown()).default({}),
+  period_start: PeriodDateSchema,
+  period_end: PeriodDateSchema,
+})
+
 export const CreateReviewSchema = z.object({
   review_type: ReviewTypeSchema,
   template_id: TemplateIdSchema.optional().nullable(),
   fields: z.record(z.string(), z.unknown()),
-  period_start: z.string().datetime(),
-  period_end: z.string().datetime(),
+  period_start: PeriodDateSchema,
+  period_end: PeriodDateSchema,
   previous_commitment: z.string().max(1000).optional().nullable(),
   commitment_fulfilled: z.boolean().optional().nullable(),
   new_commitment: z.string().max(1000).optional().nullable(),

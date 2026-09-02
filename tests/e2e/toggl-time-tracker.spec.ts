@@ -246,7 +246,7 @@ test.describe('Toggl-style time tracker', () => {
     const before = await totalTile.innerText()
     await page.getByText(/^Rounding:/).click()
     await page.getByText('Round time entries').click()
-    const selects = page.locator('div.absolute.z-50 select')
+    const selects = page.locator('[data-dropdown-panel] select')
     await selects.nth(0).selectOption('up')
     await selects.nth(1).selectOption('60')
     await page.waitForTimeout(600)
@@ -283,6 +283,77 @@ test.describe('Toggl-style time tracker', () => {
 
     await expect(row).toContainText('focus')
     await expect(row).toContainText('Book')
+  })
+
+  /**
+   * The day card sets `overflow-hidden` for its rounded corners, so a picker
+   * panel drawn inside it was sliced off at the card's bottom edge: on the last
+   * row of a day you saw the search box and none of your tags. Panels now
+   * render into <body>, so this checks the option is really painted where its
+   * box says it is — a bounding box alone survives being clipped.
+   */
+  test('a tag picker on the last row of a day shows the tag list, not just the search box', async ({ page }) => {
+    await openFreshSandbox(page)
+    await trackEntry(page, 'business')
+    await trackEntry(page, 'book writing')
+
+    const rows = page.locator('ul.divide-y > li')
+    await expect(rows).toHaveCount(2)
+
+    // two tags, so the list is taller than the card has room for.
+    // Creating one closes the panel, and the trigger is then named after it.
+    for (const [trigger, name] of [['Tags', 'focus'], ['focus', 'deep work']]) {
+      await rows.first().getByRole('button', { name: trigger }).click()
+      await page.getByPlaceholder('Search or add a tag…').fill(name)
+      await page.getByRole('button', { name: `Create “${name}”` }).click()
+      await page.waitForTimeout(400)
+    }
+
+    // the bottom row: its panel falls entirely outside the day card
+    await rows.last().getByRole('button', { name: 'Tags' }).click()
+    const option = page.locator('[data-dropdown-panel]').getByText('deep work')
+    await expect(option).toBeVisible()
+
+    const painted = await option.evaluate((element) => {
+      const box = element.getBoundingClientRect()
+      const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+      return !!hit && (element.contains(hit) || hit.contains(element))
+    })
+    expect(painted).toBe(true)
+
+    await option.click()
+    await page.waitForTimeout(400)
+    const state = await readState(page)
+    const business = state.entries.find((e: { description: string }) => e.description === 'business')
+    expect(business.tagIds).toHaveLength(1)
+  })
+
+  /**
+   * The panel is drawn into <body>, so nothing about focus follows from the
+   * markup any more: an unmeasured panel that is `visibility: hidden` refuses
+   * the search box's autoFocus, and tab order would run straight past a menu
+   * sitting at the end of the document. Both only fail in a real browser.
+   */
+  test('opening a picker puts the keyboard inside it, and closing gives it back', async ({ page }) => {
+    await openFreshSandbox(page)
+    await trackEntry(page, 'business')
+    const row = page.locator('ul.divide-y > li').first()
+
+    await row.getByRole('button', { name: 'Tags' }).click()
+    await page.waitForTimeout(300)
+    await page.keyboard.type('focus')
+    await expect(page.getByPlaceholder('Search or add a tag…')).toHaveValue('focus')
+
+    await page.keyboard.press('Escape')
+    await page.waitForTimeout(200)
+    expect(await page.evaluate(() => document.activeElement?.textContent?.trim())).toBe('Tags')
+
+    // a menu has no autoFocus field of its own, so the panel has to place it
+    await row.getByRole('button', { name: 'More actions for this time entry' }).click()
+    await page.waitForTimeout(300)
+    expect(await page.evaluate(() => document.activeElement?.textContent?.trim())).toBe('Duplicate')
+    await page.keyboard.press('Tab')
+    expect(await page.evaluate(() => document.activeElement?.textContent?.trim())).toBe('Add to favorites')
   })
 
   test('idle detection is off by default and never fires while you work elsewhere', async ({ page }) => {
@@ -337,6 +408,58 @@ test.describe('Toggl-style time tracker', () => {
     })
     await page.locator('main').getByRole('button', { name: /Stop timer|Start timer/ }).first().click()
     await expect(page.getByText(/Could not save to this browser/)).toBeVisible()
+  })
+
+  test('every entry row shares one column layout, group badge or not', async ({ page }) => {
+    await openFreshSandbox(page)
+    await trackEntry(page, 'grouped work')
+    await trackEntry(page, 'grouped work')
+    await createProject(page, 'Column Check')
+    await trackEntry(page, 'solo work')
+
+    // both layouts render a badge; only the pointer one is in the a11y tree here
+    const badge = page.getByRole('button', { name: 'Expand group' })
+    await expect(badge).toBeVisible()
+
+    /** every pointer-layout row, as "offset:width" per column */
+    const geometry = () =>
+      page.evaluate(() => {
+        const rows = [...document.querySelectorAll('ul.divide-y > li')]
+          .map((li) => li.querySelector(':scope > div.hidden'))
+          .filter((row): row is HTMLElement => row !== null)
+        return rows.map((row) => {
+          const origin = row.getBoundingClientRect().x
+          const cells = [...row.children]
+            .map((cell) => {
+              const box = cell.getBoundingClientRect()
+              return `${Math.round(box.x - origin)}:${Math.round(box.width)}`
+            })
+            .join(' ')
+          const description = row.querySelector('input[placeholder="(no description)"]')!
+          return { cells, description: Math.round(description.getBoundingClientRect().width) }
+        })
+      })
+
+    // a group badge, a row without one, a row with a project and a row without
+    for (const width of [1280, 900, 700]) {
+      await page.setViewportSize({ width, height: 800 })
+      await page.waitForTimeout(300)
+
+      const rows = await geometry()
+      expect(rows.length, `no pointer rows at ${width}px`).toBeGreaterThanOrEqual(2)
+      const templates = [...new Set(rows.map((r) => r.cells))]
+      expect(templates, `columns drift between rows at ${width}px`).toHaveLength(1)
+      // the description must not be squeezed out by the fixed columns
+      expect(Math.min(...rows.map((r) => r.description)), `description collapsed at ${width}px`).toBeGreaterThanOrEqual(120)
+    }
+
+    // expanding the group keeps the children on the same columns
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await badge.click()
+    await page.waitForTimeout(300)
+    const expanded = await geometry()
+    expect(expanded.length).toBeGreaterThan(2)
+    expect([...new Set(expanded.map((r) => r.cells))], 'expanded group children drift').toHaveLength(1)
   })
 
   test('survives a reload and stays usable on a narrow viewport', async ({ page }) => {

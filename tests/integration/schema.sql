@@ -2,8 +2,17 @@
 -- This schema mirrors the Supabase production schema.
 -- IMPORTANT: Keep this in sync with Supabase migrations!
 --
--- Last synced: 03-02-2026
+-- Last synced: 28-08-2026
 -- Changelog:
+-- - 28-08-2026: sessions.end_reason added; user_tracking_stats gained
+--   week_start_date / last_active_week_start / last_review_week_start /
+--   current_week_field_reports and lost the ISO-week label columns, matching
+--   what production now has.
+-- - 28-08-2026: approaches.session_id is ON DELETE CASCADE, as production has
+--   always had it — this file said SET NULL.
+-- - 28-08-2026: display_category CHECK gained 'scenarios' — the code enum and the
+--   real database both had it, only this file did not, and enumConstraintSync
+--   had been failing on that drift.
 -- - 03-02-2026: Added title column to field_reports table
 
 -- Enable UUID extension
@@ -167,6 +176,9 @@ CREATE TABLE sessions (
   if_then_plan TEXT,
   custom_intention TEXT,
   pre_session_mood INTEGER,
+  -- How the session finished. Only 'completed' sessions count towards totals
+  -- and badges; 'abandoned' ones are the ones replaced by starting a new one.
+  end_reason TEXT CHECK (end_reason IN ('completed', 'abandoned')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -184,7 +196,10 @@ CREATE TYPE approach_outcome AS ENUM ('blowout', 'short', 'good', 'number', 'ins
 CREATE TABLE approaches (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  session_id UUID REFERENCES sessions(id) ON DELETE SET NULL,
+  -- CASCADE, matching production: deleting a session really does delete the
+  -- approaches inside it. This file said SET NULL, so no test could exercise
+  -- what the live app actually does when a session is deleted.
+  session_id UUID REFERENCES sessions(id) ON DELETE CASCADE,
   timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   outcome approach_outcome,
   set_type TEXT,
@@ -315,16 +330,20 @@ CREATE TABLE user_tracking_stats (
   current_streak INTEGER NOT NULL DEFAULT 0,
   longest_streak INTEGER NOT NULL DEFAULT 0,
   last_approach_date DATE,
-  -- Weekly activity tracking
-  current_week TEXT,
+  -- THE PERIOD EACH COUNTER BELONGS TO. Monday dates in the user's timezone.
+  -- The ISO-week label columns these replaced (current_week, last_active_week,
+  -- last_session_week) were dropped from production on 28-08-2026.
+  week_start_date DATE,
   current_week_sessions INTEGER NOT NULL DEFAULT 0,
   current_week_approaches INTEGER NOT NULL DEFAULT 0,
   current_week_numbers INTEGER NOT NULL DEFAULT 0,
   current_week_instadates INTEGER NOT NULL DEFAULT 0,
+  current_week_field_reports INTEGER NOT NULL DEFAULT 0,
   -- Weekly session streaks
   current_week_streak INTEGER NOT NULL DEFAULT 0,
   longest_week_streak INTEGER NOT NULL DEFAULT 0,
-  last_active_week TEXT,
+  last_active_week_start DATE,
+  last_review_week_start DATE,
   -- Variety tracking
   unique_locations TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
   -- Reviews
@@ -422,7 +441,7 @@ CREATE TABLE user_goals (
   description TEXT,
   goal_type TEXT NOT NULL DEFAULT 'recurring' CHECK (goal_type IN ('recurring', 'milestone', 'habit_ramp')),
   goal_nature TEXT CHECK (goal_nature IS NULL OR goal_nature IN ('input', 'outcome')),
-  display_category TEXT CHECK (display_category IS NULL OR display_category IN ('field_work', 'results', 'dirty_dog', 'texting', 'dates', 'relationship', 'mindfulness', 'resilience', 'learning', 'reflection', 'discipline', 'strength', 'training', 'nutrition', 'body_comp', 'flexibility', 'endurance', 'income', 'saving', 'investing', 'career_growth', 'entrepreneurship', 'porn_freedom', 'digital_discipline', 'substance_control', 'self_control')),
+  display_category TEXT CHECK (display_category IS NULL OR display_category IN ('field_work', 'results', 'dirty_dog', 'texting', 'dates', 'relationship', 'scenarios', 'mindfulness', 'resilience', 'learning', 'reflection', 'discipline', 'strength', 'training', 'nutrition', 'body_comp', 'flexibility', 'endurance', 'income', 'saving', 'investing', 'career_growth', 'entrepreneurship', 'porn_freedom', 'digital_discipline', 'substance_control', 'self_control')),
   goal_level INTEGER,
   template_id TEXT,
   milestone_config JSONB,
@@ -576,3 +595,31 @@ GRANT SELECT ON beta_testers TO authenticated;
 REVOKE EXECUTE ON FUNCTION claim_beta_slot(TEXT) FROM public;
 GRANT EXECUTE ON FUNCTION claim_beta_slot(TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated;
+
+-- ============================================
+-- Life answers (the one thing, and the dated written answers to follow it)
+-- Added 2026-08-27. Append-only: no UPDATE policy, and a trigger that binds
+-- the service role too.
+-- ============================================
+
+CREATE TABLE life_answers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  answer_key TEXT NOT NULL CHECK (answer_key IN ('one_thing')),
+  body TEXT NOT NULL CHECK (length(btrim(body)) BETWEEN 1 AND 2000),
+  answered_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  due_on DATE NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX life_answers_current_idx ON life_answers (user_id, answer_key, answered_at DESC);
+
+CREATE OR REPLACE FUNCTION life_answers_reject_update() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  RAISE EXCEPTION 'life_answers is append-only: delete the row and write a new one (attempted update on %)', old.id
+    USING ERRCODE = 'restrict_violation';
+END;
+$$;
+
+CREATE TRIGGER life_answers_no_update BEFORE UPDATE ON life_answers
+  FOR EACH ROW EXECUTE FUNCTION life_answers_reject_update();

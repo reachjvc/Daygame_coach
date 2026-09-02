@@ -11,7 +11,8 @@ import { StrictMode, useCallback, useState } from "react"
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vitest"
 
-import { EntryList } from "@/src/timetrack/components/EntryList"
+import { EntryDetailModalBody, EntryList } from "@/src/timetrack/components/EntryList"
+import { TagPicker } from "@/src/timetrack/components/pickers"
 import { TimerBar } from "@/src/timetrack/components/TimerBar"
 import { epochSeconds } from "@/src/timetrack/timetrackFormatService"
 import { emptyDraft, runningEntry } from "@/src/timetrack/timetrackService"
@@ -199,6 +200,47 @@ describe("side effects stay out of state updaters", () => {
 })
 
 describe("the picker itself", () => {
+  /**
+   * The day card clips its own overflow (rounded corners), so a panel rendered
+   * inside it was cut off at the card edge — the tag list simply did not appear
+   * on the last row of a day. Panels belong to <body>, not to the card.
+   */
+  test("its panel is not rendered inside the day card, which clips overflow", async () => {
+    const latest = { current: freshState() }
+    render(
+      <StrictMode>
+        <EntryListHarness initial={latest.current} latest={latest} pushToast={() => {}} />
+      </StrictMode>,
+    )
+
+    fireEvent.click(firstButton("Tags"))
+    const search = await screen.findByPlaceholderText(/Search or add a tag/)
+    const panel = search.closest("[data-dropdown-panel]")
+    expect(panel).toBeTruthy()
+    expect(panel!.closest("section")).toBeNull()
+    expect(panel!.parentElement).toBe(document.body)
+  })
+
+  /**
+   * A panel is hidden until it has been measured against its trigger. Opening
+   * on mount happens before the portal exists, so the measurement has to wait
+   * for it — measuring once, finding nothing and never retrying left the panel
+   * in the DOM but permanently invisible.
+   */
+  test("one opened on mount is measured and shown, not left hidden", async () => {
+    const state = baseState({ tags: [], projects: [], tasks: [], clients: [], entries: [] })
+    render(
+      <StrictMode>
+        <TagPicker state={state} tagIds={[]} onChange={() => {}} autoOpen />
+      </StrictMode>,
+    )
+
+    const search = await screen.findByPlaceholderText(/Search or add a tag/)
+    const panel = search.closest("[data-dropdown-panel]") as HTMLElement
+    expect(panel).toBeTruthy()
+    expect(panel.style.opacity).not.toBe("0")
+  })
+
   test("says how to add the first one instead of only offering search", async () => {
     const latest = { current: freshState() }
     render(
@@ -210,5 +252,62 @@ describe("the picker itself", () => {
     fireEvent.click(firstButton("Tags"))
     const panel = await screen.findByPlaceholderText(/Search or add a tag/)
     expect(within(panel.closest("div")!.parentElement!).getByText(/No tags yet/)).toBeTruthy()
+  })
+})
+
+/**
+ * The detail sheet showed `entry.start.slice(0, 16)` — the *UTC* wall clock —
+ * in a datetime-local input, which reads its value as local time. East of
+ * Greenwich a 12:00 entry appeared as 10:00, and "Save times" moved it there.
+ */
+describe("entry detail sheet times", () => {
+  function DetailHarness({ initial, latest }: { initial: TimetrackState; latest: { current: TimetrackState } }) {
+    const [state, setState] = useState(initial)
+    latest.current = state
+    const update = useCallback((updater: (current: TimetrackState) => TimetrackState) => {
+      setState((current) => updater(current))
+    }, [])
+    return (
+      <EntryDetailModalBody entry={state.entries[0]} state={state} setState={update} pushToast={() => {}} />
+    )
+  }
+
+  test("shows the entry at the time the list shows, and saving leaves it there", async () => {
+    const initial = freshState({ entries: [entry(1, "2026-08-10", "12:00", "13:30", { projectId: null, tagIds: [] })] })
+    const latest = { current: initial }
+    render(
+      <StrictMode>
+        <DetailHarness initial={initial} latest={latest} />
+      </StrictMode>,
+    )
+
+    const startInput = document.querySelectorAll<HTMLInputElement>('input[type="datetime-local"]')[0]
+    expect(startInput.value).toBe("2026-08-10T12:00")
+
+    const before = latest.current.entries[0].start
+    fireEvent.click(screen.getByRole("button", { name: /Save times/i }))
+    await waitFor(() => {
+      expect(latest.current.entries[0].start).toBe(before)
+    })
+  })
+
+  test("an edited time is stored as that local time", async () => {
+    const initial = freshState({ entries: [entry(1, "2026-08-10", "12:00", "13:30", { projectId: null, tagIds: [] })] })
+    const latest = { current: initial }
+    render(
+      <StrictMode>
+        <DetailHarness initial={initial} latest={latest} />
+      </StrictMode>,
+    )
+
+    const startInput = document.querySelectorAll<HTMLInputElement>('input[type="datetime-local"]')[0]
+    fireEvent.change(startInput, { target: { value: "2026-08-10T09:15" } })
+    fireEvent.click(screen.getByRole("button", { name: /Save times/i }))
+
+    await waitFor(() => {
+      const saved = new Date(latest.current.entries[0].start)
+      expect(saved.getHours()).toBe(9)
+      expect(saved.getMinutes()).toBe(15)
+    })
   })
 })

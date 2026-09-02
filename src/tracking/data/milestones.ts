@@ -1,7 +1,15 @@
 /**
- * Milestone data for achievements display.
- * Extracted from ProgressDashboard for cleaner component structure.
+ * Milestone (achievement) presentation data: label, emoji, tier, description.
+ *
+ * Badge identity lives in MILESTONE_TYPES (src/db/trackingEnums.ts) and how each
+ * badge is earned lives in MILESTONE_RULES (./milestoneRules.ts). All three are
+ * typed against the same union, so a badge missing from any of them fails the build.
+ * See docs/plans/achievement_counters.md.
  */
+
+import type { MilestoneType } from "@/src/db/trackingEnums"
+
+export type { MilestoneType }
 
 // ============================================
 // Types
@@ -86,6 +94,8 @@ export const ALL_MILESTONES = {
   monthly_unlocked: { label: "Monthly Unlocked", emoji: "🔓", tier: "silver", category: "Reports", description: "Complete 4 weekly reviews" },
   quarterly_unlocked: { label: "Quarterly Unlocked", emoji: "🗝️", tier: "gold", category: "Reports", description: "Complete 3 monthly reviews" },
   // Fun/Variety
+  night_owl: { label: "Night Owl", emoji: "🦉", tier: "bronze", category: "Special", description: "Start a session after 9pm" },
+  early_bird: { label: "Early Bird", emoji: "🐦", tier: "bronze", category: "Special", description: "Start a session before 10am" },
   globetrotter: { label: "Globetrotter", emoji: "🌍", tier: "gold", category: "Special", description: "Approach in 5 different locations" },
   consistent: { label: "Consistent", emoji: "📈", tier: "silver", category: "Special", description: "Approach every day for a week" },
   marathon: { label: "Marathon Man", emoji: "🏃", tier: "gold", category: "Special", description: "Complete a 2+ hour session" },
@@ -141,7 +151,7 @@ export const ALL_MILESTONES = {
   "10_seated": { label: "Table Service", emoji: "☕", tier: "silver", category: "Unique Sets", description: "Approach 10 seated sets" },
   seated_master: { label: "Seated Master", emoji: "🛋️", tier: "gold", category: "Unique Sets", description: "Approach 25 seated sets" },
   first_foreign: { label: "Lost in Translation", emoji: "🗣️", tier: "silver", category: "Unique Sets", description: "Approach someone speaking a different language" },
-  polyglot: { label: "Polyglot", emoji: "🌐", tier: "gold", category: "Unique Sets", description: "Approach girls speaking 5 different languages" },
+  polyglot: { label: "Polyglot", emoji: "🌐", tier: "gold", category: "Unique Sets", description: "Approach 5 foreign-language sets" },
   // Big milestones
   "2000_approaches": { label: "Approach God", emoji: "⚡", tier: "diamond", category: "Approaches", description: "Complete 2,000 approaches" },
   "5000_approaches": { label: "Living Legend", emoji: "🌟", tier: "diamond", category: "Approaches", description: "Complete 5,000 approaches" },
@@ -151,13 +161,8 @@ export const ALL_MILESTONES = {
   "7_day_streak": { label: "Week Warrior", emoji: "📆", tier: "bronze", category: "Streaks", description: "7 consecutive days approaching" },
   "30_day_streak": { label: "Month Master", emoji: "🗓️", tier: "silver", category: "Streaks", description: "30 consecutive days approaching" },
   "100_day_streak": { label: "Century Streak", emoji: "💯", tier: "gold", category: "Streaks", description: "100 consecutive days approaching" },
-} as const satisfies Record<string, MilestoneInfo>
+} as const satisfies Record<MilestoneType, MilestoneInfo>
 
-/**
- * MilestoneType is derived from ALL_MILESTONES keys.
- * This is the single source of truth - add/remove milestones from ALL_MILESTONES only.
- */
-export type MilestoneType = keyof typeof ALL_MILESTONES
 
 // ============================================
 // Helper Functions

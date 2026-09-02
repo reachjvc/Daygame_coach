@@ -11,7 +11,10 @@ import { LayoutDashboard, Aperture, BarChart3, Swords, Castle, HelpCircle, BookO
  */
 export const TABS = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", exact: true },
-  { label: "Goals", icon: Aperture, href: "/dashboard/goals", exact: false },
+  // The goals HUB is archived at /test/archive/goals-hub. This tab points at
+  // the flow that replaced it — without an entrance here, a live paid surface
+  // would be reachable only by typing the URL.
+  { label: "Plan", icon: Aperture, href: "/dashboard/goals/plan", exact: false },
   { label: "Tracking", icon: BarChart3, href: "/dashboard/tracking", exact: false },
   { label: "Scenarios", icon: Swords, href: "/dashboard/scenarios", exact: false },
 ] as const

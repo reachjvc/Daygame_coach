@@ -105,6 +105,29 @@ test.describe('time tracker on a phone', () => {
     expect(sheet.width).toBeGreaterThanOrEqual(sheet.viewport - 2)
   })
 
+  test('a grouped entry can be expanded on a phone, not just on a desktop', async ({ page }) => {
+    await openFreshSandbox(page)
+    await trackEntry(page, 'grouped work')
+    await trackEntry(page, 'grouped work')
+
+    // the badge is its own control: tapping the row opens the lead entry's
+    // sheet, which used to leave the rest of the group unreachable here
+    const badge = page.getByRole('button', { name: 'Expand group' })
+    await expect(badge).toBeVisible()
+    const box = await badge.boundingBox()
+    expect(box!.height, 'the group toggle is too short to tap').toBeGreaterThanOrEqual(44)
+
+    const collapsed = await page.locator('ul.divide-y li').count()
+    await badge.click()
+    await page.waitForTimeout(300)
+    await expect(page.getByRole('button', { name: 'Collapse group' })).toBeVisible()
+    expect(await page.locator('ul.divide-y li').count()).toBeGreaterThan(collapsed)
+
+    await page.getByRole('button', { name: 'Collapse group' }).click()
+    await page.waitForTimeout(300)
+    expect(await page.locator('ul.divide-y li').count()).toBe(collapsed)
+  })
+
   test('bulk selection is opt-in, so checkboxes do not clutter the list', async ({ page }) => {
     await openFreshSandbox(page)
     await trackEntry(page, 'phone entry')

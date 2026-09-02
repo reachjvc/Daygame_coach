@@ -42,6 +42,7 @@ import { addDaysISO, goalsByPriority, isMilestone, isSystem } from "@/src/goals/
 import { CADENCE_COPY, TODAY_COPY, JOURNAL_ALL_ID, JOURNAL_COPY, JOURNAL_PREFIX, JOURNAL_SETS, READ_COPY, RECAP_DRIVING_ANCHOR, REVIEW_PROMPTS, SCHEDULE_COPY, STAR_ANCHOR, STAR_PROMPTS, STAR_WHY_ID } from "@/src/goals/data/northStar"
 import { WEEK_DAYS } from "@/src/goals/data/northStarStart"
 import { NON_REGISTRY_TEMPLATE_PREFIXES } from "@/src/goals/data/templateNamespaces"
+import { periodStartFor } from "@/src/shared/dateUtils"
 
 /**
  * Every row this module has ever been responsible for starts with this.
@@ -435,11 +436,16 @@ export interface TrackWeek {
   sessions: number
 }
 
-/** The Monday on or before an ISO date. */
+/**
+ * The Monday on or before an ISO date.
+ *
+ * Delegates to `periodStartFor`, which is the one implementation of a week
+ * boundary in this codebase. There used to be three, and three answers to
+ * "which week is this" is how a counter and its period end up disagreeing.
+ */
 export function weekStartISO(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number)
-  const weekday = (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7 // 0 = Monday
-  return addDaysISO(iso, -weekday)
+  return periodStartFor("weekly", new Date(y, m - 1, d))
 }
 
 /**

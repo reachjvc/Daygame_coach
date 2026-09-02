@@ -11,10 +11,14 @@ describe("getTodayInTimezone", () => {
     expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 
-  it("falls back to UTC for null timezone", () => {
-    const utcResult = getTodayInTimezone("UTC")
-    const nullResult = getTodayInTimezone(null)
-    expect(nullResult).toBe(utcResult)
+  it("cannot be asked what day it is without saying whose day", () => {
+    // `getTodayInTimezone(null)` used to mean "fall back to UTC". It is now a
+    // compile error, which is the point: a caller with no timezone was a caller
+    // guessing, and the compiler lists them all. Asserted with @ts-expect-error
+    // so the day someone re-adds the null overload, this test fails.
+    // @ts-expect-error - null is not a timezone
+    expect(() => getTodayInTimezone(null)).toBeDefined()
+    expect(getTodayInTimezone("UTC")).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 
   it("falls back to UTC for invalid timezone", () => {
@@ -71,9 +75,10 @@ describe("getNowInTimezone", () => {
     expect(aucklandNow.getDay()).toBe(1) // Monday
   })
 
-  it("falls back gracefully for null timezone", () => {
-    const result = getNowInTimezone(null)
-    expect(result).toBeInstanceOf(Date)
+  it("cannot be asked for the time without saying whose clock", () => {
+    // @ts-expect-error - null is not a timezone
+    expect(() => getNowInTimezone(null)).toBeDefined()
+    expect(getNowInTimezone("UTC")).toBeInstanceOf(Date)
   })
 
   it("falls back gracefully for invalid timezone", () => {

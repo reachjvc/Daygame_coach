@@ -24,154 +24,21 @@ import {
   createTestUserStats,
 } from "../setup"
 
-// Import pure helper functions (now in service layer)
-import {
-  getISOWeekString,
-  areWeeksConsecutive,
-  isWeekActive,
-} from "../../../src/tracking/trackingService"
+// The pure helpers this file used to exercise here — getISOWeekString,
+// areWeeksConsecutive, isWeekActive — moved or were deleted. isWeekActive and
+// the streak rules now live in src/tracking/counterRules.ts and are covered by
+// tests/unit/tracking/counterRules.test.ts against the real functions. The two
+// streak blocks that used to live here re-implemented the streak arithmetic in
+// raw SQL and then asserted their own arithmetic, so they could not fail when
+// the production rule was wrong — which it was.
 
 describe("trackingRepo Integration Tests", () => {
   beforeEach(async () => {
     await truncateAllTables()
   })
 
-  // ============================================
-  // Pure Function Tests (no database needed)
-  // ============================================
 
-  describe("getISOWeekString", () => {
-    test("should return correct ISO week format", () => {
-      // Arrange
-      const date = new Date("2026-01-15")
 
-      // Act
-      const weekString = getISOWeekString(date)
-
-      // Assert
-      expect(weekString).toMatch(/^\d{4}-W\d{2}$/)
-      expect(weekString).toBe("2026-W03")
-    })
-
-    test("should handle year boundary (late December)", () => {
-      // Arrange: Dec 31, 2025 - should be week 1 of 2026
-      const date = new Date("2025-12-31")
-
-      // Act
-      const weekString = getISOWeekString(date)
-
-      // Assert: Dec 31 2025 is in week 1 of 2026 according to ISO week rules
-      expect(weekString).toBe("2026-W01")
-    })
-
-    test("should handle year boundary (early January)", () => {
-      // Arrange: Jan 1, 2026 is a Thursday, start of week 1
-      const date = new Date("2026-01-01")
-
-      // Act
-      const weekString = getISOWeekString(date)
-
-      // Assert
-      expect(weekString).toBe("2026-W01")
-    })
-  })
-
-  describe("areWeeksConsecutive", () => {
-    test("should return true for consecutive weeks in same year", () => {
-      // Arrange
-      const week1 = "2026-W03"
-      const week2 = "2026-W04"
-
-      // Act
-      const result = areWeeksConsecutive(week1, week2)
-
-      // Assert
-      expect(result).toBe(true)
-    })
-
-    test("should return false for non-consecutive weeks", () => {
-      // Arrange
-      const week1 = "2026-W03"
-      const week2 = "2026-W05"
-
-      // Act
-      const result = areWeeksConsecutive(week1, week2)
-
-      // Assert
-      expect(result).toBe(false)
-    })
-
-    test("should return true for week 52 to week 1 (year boundary)", () => {
-      // Arrange: Week 52 of 2025 to Week 1 of 2026
-      const week1 = "2025-W52"
-      const week2 = "2026-W01"
-
-      // Act
-      const result = areWeeksConsecutive(week1, week2)
-
-      // Assert
-      expect(result).toBe(true)
-    })
-
-    test("should return true for week 53 to week 1 (year with 53 weeks)", () => {
-      // Arrange: Some years have 53 weeks
-      const week1 = "2020-W53"
-      const week2 = "2021-W01"
-
-      // Act
-      const result = areWeeksConsecutive(week1, week2)
-
-      // Assert
-      expect(result).toBe(true)
-    })
-
-    test("should return false for empty strings", () => {
-      // Arrange & Act & Assert
-      expect(areWeeksConsecutive("", "2026-W01")).toBe(false)
-      expect(areWeeksConsecutive("2026-W01", "")).toBe(false)
-      expect(areWeeksConsecutive("", "")).toBe(false)
-    })
-
-    test("should return false for same week", () => {
-      // Arrange
-      const week1 = "2026-W03"
-      const week2 = "2026-W03"
-
-      // Act
-      const result = areWeeksConsecutive(week1, week2)
-
-      // Assert
-      expect(result).toBe(false)
-    })
-  })
-
-  describe("isWeekActive", () => {
-    test("should return true for 2+ sessions", () => {
-      // Arrange & Act & Assert
-      expect(isWeekActive(2, 0)).toBe(true)
-      expect(isWeekActive(3, 0)).toBe(true)
-      expect(isWeekActive(10, 0)).toBe(true)
-    })
-
-    test("should return true for 5+ approaches", () => {
-      // Arrange & Act & Assert
-      expect(isWeekActive(0, 5)).toBe(true)
-      expect(isWeekActive(0, 10)).toBe(true)
-      expect(isWeekActive(1, 5)).toBe(true)
-    })
-
-    test("should return false for insufficient activity", () => {
-      // Arrange & Act & Assert
-      expect(isWeekActive(0, 0)).toBe(false)
-      expect(isWeekActive(1, 0)).toBe(false)
-      expect(isWeekActive(0, 4)).toBe(false)
-      expect(isWeekActive(1, 4)).toBe(false)
-    })
-  })
-
-  // ============================================
-  // Database Tests
-  // ============================================
 
   describe("Session with approaches - join duplicate check", () => {
     test("should return exactly 5 approaches for session with 5 approaches", async () => {
@@ -480,107 +347,6 @@ describe("trackingRepo Integration Tests", () => {
     })
   })
 
-  describe("Weekly streak - year boundary", () => {
-    test("should continue streak from week 52 to week 1", async () => {
-      // Arrange
-      const userId = await createTestUser()
-      await createTestUserStats(userId)
-      const client = await getClient()
-
-      try {
-        // Set user as active in week 52 of 2025 with 1 week streak
-        await client.query(
-          `UPDATE user_tracking_stats
-           SET last_active_week = '2025-W52',
-               current_week_streak = 1,
-               longest_week_streak = 1
-           WHERE user_id = $1`,
-          [userId]
-        )
-
-        // Act: Check if weeks are consecutive (simulating week 1 of 2026)
-        const currentWeek = "2026-W01"
-        const statsResult = await client.query(
-          `SELECT last_active_week, current_week_streak FROM user_tracking_stats
-           WHERE user_id = $1`,
-          [userId]
-        )
-        const lastActiveWeek = statsResult.rows[0].last_active_week
-        const currentStreak = statsResult.rows[0].current_week_streak
-
-        // Use the helper function to check consecutive
-        const isConsecutive = areWeeksConsecutive(lastActiveWeek, currentWeek)
-
-        // Assert: Should be consecutive
-        expect(isConsecutive).toBe(true)
-
-        // Calculate new streak
-        const newStreak = isConsecutive ? currentStreak + 1 : 1
-        expect(newStreak).toBe(2)
-
-        // Update streak
-        await client.query(
-          `UPDATE user_tracking_stats
-           SET current_week_streak = $2,
-               longest_week_streak = GREATEST(longest_week_streak, $2),
-               last_active_week = $3
-           WHERE user_id = $1`,
-          [userId, newStreak, currentWeek]
-        )
-
-        // Verify
-        const verifyResult = await client.query(
-          `SELECT current_week_streak, longest_week_streak, last_active_week
-           FROM user_tracking_stats WHERE user_id = $1`,
-          [userId]
-        )
-        expect(verifyResult.rows[0].current_week_streak).toBe(2)
-        expect(verifyResult.rows[0].longest_week_streak).toBe(2)
-        expect(verifyResult.rows[0].last_active_week).toBe("2026-W01")
-      } finally {
-        await client.end()
-      }
-    })
-
-    test("should reset streak when weeks are not consecutive", async () => {
-      // Arrange
-      const userId = await createTestUser()
-      await createTestUserStats(userId)
-      const client = await getClient()
-
-      try {
-        // Set user as active in week 50 of 2025 with 5 week streak
-        await client.query(
-          `UPDATE user_tracking_stats
-           SET last_active_week = '2025-W50',
-               current_week_streak = 5,
-               longest_week_streak = 5
-           WHERE user_id = $1`,
-          [userId]
-        )
-
-        // Act: Check if weeks are consecutive (skipped week 51, now in week 52)
-        const currentWeek = "2025-W52"
-        const statsResult = await client.query(
-          `SELECT last_active_week, current_week_streak FROM user_tracking_stats
-           WHERE user_id = $1`,
-          [userId]
-        )
-        const lastActiveWeek = statsResult.rows[0].last_active_week
-
-        const isConsecutive = areWeeksConsecutive(lastActiveWeek, currentWeek)
-
-        // Assert: Should NOT be consecutive (skipped week 51)
-        expect(isConsecutive).toBe(false)
-
-        // New streak resets to 1
-        const newStreak = isConsecutive ? statsResult.rows[0].current_week_streak + 1 : 1
-        expect(newStreak).toBe(1)
-      } finally {
-        await client.end()
-      }
-    })
-  })
 
   describe("Concurrent session ends - race condition check", () => {
     test("should handle concurrent stat updates correctly", async () => {
@@ -876,59 +642,6 @@ describe("trackingRepo Integration Tests", () => {
     })
   })
 
-  describe("Weekly streak preservation", () => {
-    test("should preserve longest_week_streak when current streak breaks", async () => {
-      // Arrange
-      const userId = await createTestUser()
-      await createTestUserStats(userId)
-      const client = await getClient()
-
-      try {
-        // Set up: User had a 10-week streak, currently at 3 weeks
-        await client.query(
-          `UPDATE user_tracking_stats
-           SET longest_week_streak = 10,
-               current_week_streak = 3,
-               last_active_week = '2025-W48'
-           WHERE user_id = $1`,
-          [userId]
-        )
-
-        // Act: Simulate streak break (skip to week 51, missing weeks 49 & 50)
-        const currentWeek = "2025-W51"
-        const statsResult = await client.query(
-          `SELECT last_active_week FROM user_tracking_stats WHERE user_id = $1`,
-          [userId]
-        )
-        const lastActiveWeek = statsResult.rows[0].last_active_week
-
-        // Check if consecutive
-        const isConsecutive = areWeeksConsecutive(lastActiveWeek, currentWeek)
-        expect(isConsecutive).toBe(false) // W48 to W51 is not consecutive
-
-        // Reset current streak to 1, but preserve longest
-        await client.query(
-          `UPDATE user_tracking_stats
-           SET current_week_streak = 1,
-               last_active_week = $2
-           WHERE user_id = $1`,
-          [userId, currentWeek]
-        )
-        // Note: NOT updating longest_week_streak
-
-        // Assert: longest_week_streak should still be 10
-        const verifyResult = await client.query(
-          `SELECT current_week_streak, longest_week_streak
-           FROM user_tracking_stats WHERE user_id = $1`,
-          [userId]
-        )
-        expect(verifyResult.rows[0].current_week_streak).toBe(1)
-        expect(verifyResult.rows[0].longest_week_streak).toBe(10) // Preserved!
-      } finally {
-        await client.end()
-      }
-    })
-  })
 
   // ============================================
   // Field Report Tests (added 02-02-2026)

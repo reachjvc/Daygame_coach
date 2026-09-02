@@ -967,8 +967,8 @@ describe("CreateReviewSchema", () => {
   const validInput = {
     review_type: "weekly" as const,
     fields: {},
-    period_start: "2024-01-08T00:00:00Z",
-    period_end: "2024-01-14T23:59:59Z",
+    period_start: "2024-01-08",
+    period_end: "2024-01-14",
   }
 
   describe("valid inputs", () => {
@@ -1105,15 +1105,28 @@ describe("CreateReviewSchema", () => {
       expect(result.success).toBe(false)
     })
 
-    test("should reject invalid period_start format", () => {
-      // Arrange
-      const input = { ...validInput, period_start: "2024-01-08" }
+    test("should reject an instant where a calendar date belongs", () => {
+      // Arrange: this is the payload that filed every weekly review one week
+      // early — an ISO instant lands in a DATE column as its UTC date, which for
+      // a Copenhagen Monday midnight is the Sunday before.
+      const input = { ...validInput, period_start: "2024-01-08T00:00:00Z" }
 
       // Act
       const result = CreateReviewSchema.safeParse(input)
 
       // Assert
       expect(result.success).toBe(false)
+    })
+
+    test("accepts the calendar date the review pages send", () => {
+      // Arrange
+      const input = { ...validInput, period_start: "2026-08-24", period_end: "2026-08-30" }
+
+      // Act
+      const result = CreateReviewSchema.safeParse(input)
+
+      // Assert
+      expect(result.success).toBe(true)
     })
 
     test("should reject invalid period_end format", () => {

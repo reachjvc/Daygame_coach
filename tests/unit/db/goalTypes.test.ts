@@ -2,6 +2,9 @@ import { describe, test, expect, vi, beforeEach, afterEach } from "vitest"
 import { computeGoalProgress } from "@/src/db/goalTypes"
 import type { UserGoalRow, DailyGoalSnapshotInsert } from "@/src/db/goalTypes"
 
+/** Every date in a goal is a date in someone's calendar, so the tests name one. */
+const TZ = "Europe/Copenhagen"
+
 // ============================================================================
 // Test Fixtures
 // ============================================================================
@@ -57,7 +60,7 @@ describe("computeGoalProgress", () => {
       const goal = createGoalRow({ current_value: 0, target_value: 10 })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert
       expect(result.progress_percentage).toBe(0)
@@ -68,7 +71,7 @@ describe("computeGoalProgress", () => {
       const goal = createGoalRow({ current_value: 5, target_value: 10 })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert
       expect(result.progress_percentage).toBe(50)
@@ -79,7 +82,7 @@ describe("computeGoalProgress", () => {
       const goal = createGoalRow({ current_value: 10, target_value: 10 })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert
       expect(result.progress_percentage).toBe(100)
@@ -90,7 +93,7 @@ describe("computeGoalProgress", () => {
       const goal = createGoalRow({ current_value: 15, target_value: 10 })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert
       expect(result.progress_percentage).toBe(100)
@@ -101,7 +104,7 @@ describe("computeGoalProgress", () => {
       const goal = createGoalRow({ current_value: 5, target_value: 0 })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert
       expect(result.progress_percentage).toBe(0)
@@ -112,7 +115,7 @@ describe("computeGoalProgress", () => {
       const goal = createGoalRow({ current_value: 1, target_value: 3 })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert
       expect(result.progress_percentage).toBe(33) // 33.33... rounds to 33
@@ -129,7 +132,7 @@ describe("computeGoalProgress", () => {
       const goal = createGoalRow({ current_value: 5, target_value: 10 })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert
       expect(result.is_complete).toBe(false)
@@ -140,7 +143,7 @@ describe("computeGoalProgress", () => {
       const goal = createGoalRow({ current_value: 10, target_value: 10 })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert
       expect(result.is_complete).toBe(true)
@@ -151,7 +154,7 @@ describe("computeGoalProgress", () => {
       const goal = createGoalRow({ current_value: 15, target_value: 10 })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert
       expect(result.is_complete).toBe(true)
@@ -178,7 +181,7 @@ describe("computeGoalProgress", () => {
       const goal = createGoalRow({ custom_end_date: null, target_date: null })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert
       expect(result.days_remaining).toBeNull()
@@ -192,7 +195,7 @@ describe("computeGoalProgress", () => {
       })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert - should use target_date (7 days), not custom_end_date (14 days)
       expect(result.days_remaining).toBe(7)
@@ -206,7 +209,7 @@ describe("computeGoalProgress", () => {
       })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert
       expect(result.days_remaining).toBe(7)
@@ -217,7 +220,7 @@ describe("computeGoalProgress", () => {
       const goal = createGoalRow({ custom_end_date: "2026-02-14" })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert
       expect(result.days_remaining).toBe(7)
@@ -228,7 +231,7 @@ describe("computeGoalProgress", () => {
       const goal = createGoalRow({ custom_end_date: "2026-02-07" })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert
       expect(result.days_remaining).toBe(0)
@@ -239,7 +242,7 @@ describe("computeGoalProgress", () => {
       const goal = createGoalRow({ custom_end_date: "2026-02-01" })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert
       expect(result.days_remaining).toBe(-6)
@@ -261,7 +264,7 @@ describe("computeGoalProgress", () => {
       })
 
       // Act
-      const result = computeGoalProgress(goal)
+      const result = computeGoalProgress(goal, TZ)
 
       // Assert
       expect(result.id).toBe("custom-id")

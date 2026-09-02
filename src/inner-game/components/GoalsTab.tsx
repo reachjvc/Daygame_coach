@@ -37,8 +37,8 @@ export function GoalsTab({ isPreviewMode = false }: GoalsTabProps) {
           and auto-sync with your daygame sessions.
         </p>
         <Button asChild size="lg" className="gap-2">
-          <Link href="/dashboard/goals">
-            Go to Goals Hub
+          <Link href="/dashboard/goals/plan">
+            Go to your plan
             <ArrowRight className="h-4 w-4" />
           </Link>
         </Button>

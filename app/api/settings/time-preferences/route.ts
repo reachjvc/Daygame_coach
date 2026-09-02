@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { getTimePreferences } from "@/src/db/settingsRepo"
-import { handleUpdateTimezone, handleUpdateWeekStartDay } from "@/src/settings/settingsService"
+import { handleUpdateTimezone } from "@/src/settings/settingsService"
 
 export async function GET() {
   const auth = await requireAuth()
@@ -22,14 +22,14 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json()
-    const { timezone, week_start_day } = body
+    const { timezone } = body
 
     if (timezone !== undefined) {
       await handleUpdateTimezone(auth.userId, timezone)
     }
-    if (week_start_day !== undefined) {
-      await handleUpdateWeekStartDay(auth.userId, week_start_day)
-    }
+    // `week_start_day` is deliberately not accepted. Nothing honours it — every
+    // period in the app is Monday-based — and a setting that silently does
+    // nothing is worse than one that is absent.
 
     const updated = await getTimePreferences(auth.userId)
     return NextResponse.json(updated)

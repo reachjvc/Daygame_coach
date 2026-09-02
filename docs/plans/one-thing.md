@@ -1,7 +1,37 @@
 # The one thing — on the account, dated, with a history
 
-**Status: design, not built.** Written under `.claude/rules/finished-work.md`:
-the failure list was written before the design and is the first section.
+**Status: BUILT and verified, 2026-08-27.** Written under
+`.claude/rules/finished-work.md`: the failure list was written before the design
+and is the first section, and it is left intact above the record of what shipped.
+
+## What shipped
+
+| | |
+|---|---|
+| `supabase/migrations/20260827_create_life_answers.sql` | applied to the live project; table, index, RLS on, three policies, **no UPDATE policy** |
+| `src/db/lifeAnswerRepo.ts` | read / insert / delete. No update function exists |
+| `src/goals/oneThingService.ts` | current, history, countdown, "would this change anything" |
+| `app/api/life-answers/route.ts` | GET / POST / DELETE |
+| `src/goals/components/north-star/OneThingBox.tsx` | the step: box, deadline, save, history, delete |
+| `SeasonBand.tsx` | the tracking header now reads the account, not `plan.seasonFocusId` |
+| `src/tracking/config.ts` | `one_focus` → `report_next_session_focus`, `one_moment` → `report_pivotal_moment` |
+| `tests/unit/goals/oneThing.test.ts` | 12 tests (AT1–AT3) |
+| `tests/unit/goals/answerNamespaces.test.ts` | 4 tests (AT4) |
+
+**Decisions taken from your answers:** the database is the source of truth and
+the plan blob holds no copy (OQ3); any of your own rows can be deleted, not just
+a recent one (OQ1); the deadline is a date you enter, defaulting to 90 days
+(OQ2); no import of the browser text (OQ4); both impostors renamed (question 5).
+
+**Verified in the browser, signed in:** wrote a one thing on the step → it
+saved → the tracking header showed it with "90 days left" → replaced it →
+the header showed the new one and the old one moved to the history → saving the
+same words twice returned `unchanged` and wrote no row → deleting the newest
+made the previous one current again.
+
+**Still to do:** `AT5` (the constraint tests against the live table) and `AT6`
+(the e2e walk) are named but not written. The Focus step still echoes the local
+draft rather than the saved answer — one more read to move.
 
 ---
 
@@ -194,7 +224,7 @@ create policy "write own answers" on public.life_answers
 
 -- No update policy at all: the table is append-only, and the absence of the
 -- policy is what enforces it rather than a convention nobody re-reads.
--- Delete: see Q1 — nothing is granted until that is answered.
+-- Delete: see OQ1 — nothing is granted until that is answered.
 ```
 
 **Not to be applied without explicit approval** — `CLAUDE.md` requires it for
@@ -204,21 +234,21 @@ any INSERT/UPDATE/DELETE policy.
 
 # 5. Open questions, each with a recommendation
 
-**Q1. Can a mistaken entry be taken back?** Append-only means a typo saved by
+**OQ1. Can a mistaken entry be taken back?** Append-only means a typo saved by
 accident is in your history forever.
 **Recommendation:** allow deleting your own row within fifteen minutes of
 writing it — `for delete using (auth.uid() = user_id and answered_at > now() -
 interval '15 minutes')`. "You can take back what you just wrote" is
 understandable, expressible as a policy, and cannot be used to erase a history.
 
-**Q2. Who decides how long a one thing runs?** Your own example — "Quit weed for
+**OQ2. Who decides how long a one thing runs?** Your own example — "Quit weed for
 100 days" — carries its own horizon; sentence 5 asked for an automatic
 countdown.
 **Recommendation:** both. `horizon_days` defaults to 90 so nobody has to think
 about it, and the One Thing step offers a field for people who have a number in
 mind.
 
-**Q3. Does the Life Mastery plan blob still hold a copy?** This is the one I
+**OQ3. Does the Life Mastery plan blob still hold a copy?** This is the one I
 left dangling last time. If the plan goes to the server as one jsonb row *and*
 this table exists, the one thing has two homes and two writers — the exact
 disease.
@@ -227,12 +257,12 @@ thing at all. The One Thing step reads and writes the table directly. If the
 plan blob ships later, it carries everything except the keys in
 `LIFE_ANSWER_KEYS`.
 
-**Q4. What happens to what is in your browser now?** See F8 — no import.
+**OQ4. What happens to what is in your browser now?** See F8 — no import.
 **Recommendation:** on first visit after this ships, the step shows the local
 text in the box, unsaved, with "save this to your account". You press it, and it
 becomes row one, dated today, honestly.
 
-**Q5. Two rows written in the same microsecond.** Ordering is then undefined.
+**OQ5. Two rows written in the same microsecond.** Ordering is then undefined.
 **Recommendation:** order by `answered_at desc, id desc`. One line, removes the
 ambiguity permanently.
 
@@ -242,14 +272,14 @@ ambiguity permanently.
 
 | # | test | asserts |
 |---|---|---|
-| T1 | `tests/unit/goals/oneThing.test.ts` → current | newest row wins; empty list is "never set"; ties broken by id |
-| T2 | same → due | a 90-day horizon written 2026-01-01 is due on 2026-04-01 **in the user's timezone**, checked for UTC, Auckland and New York, and across a DST boundary |
-| T3 | same → write policy | saving identical text returns "no change" and produces no insert; saving different text produces exactly one |
-| T4 | `tests/unit/goals/answerNamespaces.test.ts` | no key in `LIFE_ANSWER_KEYS` also appears as a `FIELD_LIBRARY` id — the collision that started this |
-| T5 | `tests/integration/db/lifeAnswers.integration.test.ts` | the constraints reject: blank body, 2001-character body, unknown `answer_key`, `horizon_days` of 0 |
-| T6 | e2e | write a one thing → it appears in the tracking header; change it → the header changes and the previous one is reachable by clicking it |
+| AT1 | `tests/unit/goals/oneThing.test.ts` → current | newest row wins; empty list is "never set"; ties broken by id |
+| AT2 | same → due | a 90-day horizon written 2026-01-01 is due on 2026-04-01 **in the user's timezone**, checked for UTC, Auckland and New York, and across a DST boundary |
+| AT3 | same → write policy | saving identical text returns "no change" and produces no insert; saving different text produces exactly one |
+| AT4 | `tests/unit/goals/answerNamespaces.test.ts` | no key in `LIFE_ANSWER_KEYS` also appears as a `FIELD_LIBRARY` id — the collision that started this |
+| AT5 | `tests/integration/db/lifeAnswers.integration.test.ts` | the constraints reject: blank body, 2001-character body, unknown `answer_key`, `horizon_days` of 0 |
+| AT6 | e2e | write a one thing → it appears in the tracking header; change it → the header changes and the previous one is reachable by clicking it |
 
-T2 is the one that would have caught F1. T4 is the one that would have caught
+AT2 is the one that would have caught F1. AT4 is the one that would have caught
 the original bug you reported.
 
 ---

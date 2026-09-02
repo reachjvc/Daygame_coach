@@ -5,6 +5,8 @@
  * cross-domain correlations, and PR detection.
  */
 
+import { periodStartFor, previousPeriodStart, isStreakCurrent, middayInstant, localTimeInstant, getTodayInTimezone } from "@/src/shared/dateUtils"
+import { weeklyStreakRun } from "@/src/shared/streakRuns"
 import type {
   WeightLogRow,
   WeightTrend,
@@ -247,12 +249,16 @@ function localDateKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }
 
+/**
+ * The Monday of the week containing `d`, as a Date at local midnight.
+ *
+ * The boundary itself comes from `periodStartFor` — the one implementation of a
+ * week in this codebase. This wrapper only turns the answer back into a Date,
+ * because the heatmap grid steps forward in days from it.
+ */
 function mondayOf(d: Date): Date {
-  const m = new Date(d)
-  const dayOfWeek = m.getDay() || 7
-  m.setDate(m.getDate() - dayOfWeek + 1)
-  m.setHours(0, 0, 0, 0)
-  return m
+  const [y, m, day] = periodStartFor("weekly", d).split("-").map(Number)
+  return new Date(y, m - 1, day)
 }
 
 /**
@@ -289,23 +295,24 @@ export function buildWorkoutHeatmapWeeks(
 }
 
 /**
- * Consecutive weeks with ≥1 workout, counting back from the current week.
- * An empty current week doesn't break the streak (it isn't over yet) —
- * counting starts from last week instead.
+ * Consecutive weeks with at least one workout, as of `today`.
+ *
+ * An empty current week does not break the run — it is not over yet. That was
+ * already right here and wrong in `healthRepo.getConsecutiveTrainingWeeks`,
+ * which is exactly why both now go through `streakRun`: one rule written twice
+ * is one rule that will eventually disagree with itself.
+ *
+ * `today` is the viewer's own Date, so this uses the viewer's calendar. The
+ * server-side twin takes an explicit timezone instead.
  */
 export function computeWeekStreak(logs: WorkoutLogRow[], today: Date): number {
-  const weeksWithWorkouts = new Set<string>()
-  for (const log of logs) weeksWithWorkouts.add(localDateKey(mondayOf(new Date(log.logged_at))))
+  const mondays = logs.map((log) => periodStartFor("weekly", new Date(log.logged_at)))
+  const thisWeek = periodStartFor("weekly", today)
 
-  const cursor = mondayOf(today)
-  if (!weeksWithWorkouts.has(localDateKey(cursor))) cursor.setDate(cursor.getDate() - 7)
-
-  let streak = 0
-  while (weeksWithWorkouts.has(localDateKey(cursor))) {
-    streak++
-    cursor.setDate(cursor.getDate() - 7)
-  }
-  return streak
+  const { run, last } = weeklyStreakRun(mondays, (monday) =>
+    previousPeriodStart("weekly", monday)
+  )
+  return isStreakCurrent("weekly", last, thisWeek) ? run : 0
 }
 
 /**
@@ -468,4 +475,61 @@ function avgApproachesForDates(
   const matching = sessions.filter((s) => dates.includes(s.date))
   if (matching.length === 0) return 0
   return matching.reduce((sum, s) => sum + s.approachCount, 0) / matching.length
+}
+
+/**
+ * The instant to stamp a health entry with — a workout, a meal, a night's sleep,
+ * a weigh-in — from the day, and optionally the time, the user says it happened.
+ *
+ * One function for all four, because they had four different answers to the same
+ * question: three of them accepted `logged_at` as an arbitrary string that went
+ * straight into a weekly counter, and the fourth had no date field at all.
+ *
+ * WHY A TIME AT ALL. Two workouts on the same day are ordinary: a lift in the
+ * morning and a run in the evening. Without a time both land on the same instant
+ * and nothing can put them in order — "last time you benched" picks one of them
+ * at random, and so does anything else that sorts by when it happened.
+ *
+ * NOON WHEN NO TIME IS GIVEN, for one reason: the date has to survive the round
+ * trip. Midnight in Copenhagen is 22:00 UTC the day before, so a date stored
+ * that way reads back as the previous day from anywhere further west. Noon
+ * leaves twelve hours of slack either side.
+ *
+ * A REAL TIME IS BETTER THAN NOON, and not just more precise: it removes the
+ * guess. "07:00 on the 20th" is a fact with an exact instant behind it, and the
+ * twelve-hour caveat above stops applying to it — the instant IS the answer,
+ * rather than an encoding of a date that has to be decoded again.
+ *
+ * THREE CASES, and the middle one is easy to get wrong:
+ *
+ *   - a past day, no time  -> midday on that day
+ *   - TODAY, no time       -> now. "I trained today" means the moment you wrote
+ *                             it down; noon is still ahead of you at breakfast,
+ *                             and stamping it would put the log in the future.
+ *   - any day with a time  -> exactly that moment
+ *
+ * Returns `null` for anything still to come — a future date, or a time today
+ * that has not arrived. The second check needs the instant, not just the date.
+ */
+export function loggedAtForEntry(
+  entryDate: string,
+  timezone: string,
+  entryTime?: string,
+  now: Date = new Date()
+): string | null {
+  const today = getTodayInTimezone(timezone, now)
+  if (entryDate > today) return null
+
+  // No time given, and the day is today: stamp it NOW. "I trained today" means
+  // the moment you wrote it down, not noon — and noon is still ahead of you at
+  // breakfast, which would be a timestamp in the future.
+  if (!entryTime) {
+    return entryDate === today ? now.toISOString() : middayInstant(entryDate, timezone)
+  }
+
+  // A time was given, so it is a claim about a moment and can be checked as one.
+  // 23:00 tonight has not happened at breakfast, and checking only the date
+  // would have let it through.
+  const instant = localTimeInstant(entryDate, entryTime, timezone)
+  return new Date(instant).getTime() > now.getTime() ? null : instant
 }

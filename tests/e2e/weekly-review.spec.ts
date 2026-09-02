@@ -53,8 +53,11 @@ test.describe('Weekly Review', () => {
     const reviewPage = page.getByTestId(SELECTORS.weeklyReview.page)
     await expect(reviewPage).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    // Assert: Back link should be visible
-    const backLink = page.getByRole('link', { name: /back to tracking/i })
+    // Assert: Back link should be visible.
+    // Located by test id, not by its words: the label is now the destination's
+    // name ("Tracking") and it changes to wherever you came from, because the
+    // control reads the return address on the link that sent you here.
+    const backLink = page.getByTestId('back-link')
     await expect(backLink).toBeVisible({ timeout: AUTH_TIMEOUT })
 
     // Act: Click back link

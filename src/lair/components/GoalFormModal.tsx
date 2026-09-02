@@ -15,10 +15,10 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Plus, Minus, Lightbulb } from "lucide-react"
 import { getRandomPrincipleForGoal } from "@/src/tracking/helpers/goalPrinciples"
+import { metricFitsPeriod } from "@/src/tracking/metricsService"
 import {
   GOAL_CATEGORIES,
   getCategoryConfig,
-  type GoalCategoryConfig,
   type GoalSuggestion,
 } from "../data/goalCategories"
 import type { GoalWithProgress, GoalPeriod, GoalTrackingType, LinkedMetric } from "@/src/db/goalTypes"
@@ -73,6 +73,12 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null)
 
   const isEditing = !!goal
+
+  // An option that cannot back a goal on this period is not offered, rather
+  // than offered and then rejected. "None" always survives the filter.
+  const fittingMetricOptions = LINKED_METRIC_OPTIONS.filter(
+    (opt) => opt.value === null || metricFitsPeriod(opt.value, period)
+  )
 
   // Initialize form when editing
   useEffect(() => {
@@ -162,7 +168,12 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
         tracking_type: trackingType,
         period,
         target_value: trackingType === "boolean" ? 1 : targetValue,
-        linked_metric: effectiveCategory === "daygame" && period === "weekly" ? linkedMetric : null,
+        // The metric must measure the same span the goal counts over; the API
+        // enforces the same rule, so this cannot send a mismatch.
+        linked_metric:
+          effectiveCategory === "daygame" && linkedMetric && metricFitsPeriod(linkedMetric, period)
+            ? linkedMetric
+            : null,
       }
 
       const url = isEditing ? `/api/goals/${goal.id}` : "/api/goals"
@@ -435,8 +446,8 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
             </div>
           )}
 
-          {/* Linked Metric (only for daygame + weekly goals) */}
-          {effectiveCategory === "daygame" && period === "weekly" && (
+          {/* Linked Metric — only the metrics that measure this goal's period */}
+          {effectiveCategory === "daygame" && fittingMetricOptions.length > 1 && (
             <div className="space-y-2">
               <Label>Auto-Sync with Tracking</Label>
               <Select
@@ -447,7 +458,7 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
                   <SelectValue placeholder="Select metric to sync" />
                 </SelectTrigger>
                 <SelectContent>
-                  {LINKED_METRIC_OPTIONS.map((opt) => (
+                  {fittingMetricOptions.map((opt) => (
                     <SelectItem key={opt.value ?? "none"} value={opt.value ?? "none"}>
                       {opt.label}
                     </SelectItem>

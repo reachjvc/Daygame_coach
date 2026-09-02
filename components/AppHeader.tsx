@@ -73,8 +73,10 @@ export function AppHeader({
     if (showGoals) {
       navItems.push({
         type: "link",
-        href: "/dashboard/goals",
-        label: "Goals",
+        href: "/dashboard/goals/plan",
+        // "Goals" was the hub, which is archived. This opens the flow that
+        // replaced it, and the label says so.
+        label: "Plan",
         icon: <Aperture className="size-4 mr-2" />,
         variant: "ghost",
         className: "text-foreground hover:text-primary",

@@ -18,7 +18,7 @@ test.describe('MilestoneCurveEditor Visual Check', () => {
     await page.getByTestId('login-password-input').fill('TestUserB_SecurePass123!')
     await page.getByTestId('login-submit-button').click()
     await page.waitForURL(/\/(dashboard|redirect|preferences)/, { timeout: 15000 })
-    await page.goto('/dashboard/goals', { timeout: 15000 })
+    await page.goto('/test/archive/goals-hub', { timeout: 15000 })
     await page.waitForLoadState('networkidle')
   })
 

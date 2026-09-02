@@ -615,7 +615,7 @@ export function MissionControlWidget({ collapsed }: WidgetProps) {
           </button>
         </div>
         <Link
-          href="/dashboard/goals"
+          href="/dashboard/goals/plan"
           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
         >
           View All Goals
