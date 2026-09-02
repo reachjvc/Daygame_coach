@@ -54,3 +54,42 @@ export function createAdminSupabaseClient() {
 
   return createClient(url, serviceKey)
 }
+
+/**
+ * Create a Supabase client for a Route Handler that returns its own Response.
+ *
+ * The difference from createServerSupabaseClient() matters and is easy to miss:
+ * that one writes refreshed auth cookies through next/headers, which only lands
+ * on the response Next.js generates for you. A handler that builds its own
+ * `NextResponse.redirect(...)` and returns it discards those writes -- the user
+ * ends up authenticated on the server and logged out in the browser.
+ *
+ * Pass the response you intend to return, and session cookies are set on it.
+ */
+export function createRouteHandlerSupabaseClient(
+  request: Request,
+  response: { cookies: { set: (name: string, value: string, options?: Record<string, unknown>) => void } }
+) {
+  const header = request.headers.get("cookie") ?? ""
+
+  return createSupabaseServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          if (!header) return []
+          return header.split(";").map((part) => {
+            const [name, ...rest] = part.trim().split("=")
+            return { name, value: decodeURIComponent(rest.join("=")) }
+          })
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+}
