@@ -54,3 +54,52 @@ export function createAdminSupabaseClient() {
 
   return createClient(url, serviceKey)
 }
+
+/**
+ * Create a Supabase client for an email-link callback route, plus a promise
+ * that resolves once the session cookies have actually been written.
+ *
+ * WHY THE PROMISE. The server client does not write cookies during
+ * exchangeCodeForSession(). It buffers them and writes them from an
+ * onAuthStateChange listener that runs on a later tick -- verified from a
+ * server log, where the route's 307 was emitted BEFORE setAll was called. A
+ * route that redirects as soon as the exchange resolves therefore sends the
+ * user away with no session and no error to explain it.
+ *
+ * Await `cookiesWritten` before returning the response.
+ */
+export function createCallbackSupabaseClient(
+  request: Request,
+  response: { cookies: { set: (name: string, value: string, options?: Record<string, unknown>) => void } }
+) {
+  let markWritten: () => void = () => {}
+  const cookiesWritten = new Promise<void>((resolve) => {
+    markWritten = resolve
+  })
+
+  const cookieHeader = request.headers.get("cookie") ?? ""
+
+  const supabase = createSupabaseServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          if (!cookieHeader) return []
+          return cookieHeader.split(";").map((part) => {
+            const [name, ...rest] = part.trim().split("=")
+            return { name, value: decodeURIComponent(rest.join("=")) }
+          })
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+          markWritten()
+        },
+      },
+    }
+  )
+
+  return { supabase, cookiesWritten }
+}
