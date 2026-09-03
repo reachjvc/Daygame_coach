@@ -22,12 +22,15 @@ const NOTICES: Record<string, string> = {
 }
 
 export default function LoginPageClient() {
-  const [email, setEmail] = useState("")
+  const searchParamsInit = useSearchParams()
+  // Prefilled when the signup page bounced someone here for already having an
+  // account. Saves retyping the address they just entered.
+  const [email, setEmail] = useState(searchParamsInit.get("email") ?? "")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const searchParams = useSearchParams()
+  const searchParams = searchParamsInit
 
   const notice = NOTICES[searchParams.get("error") ?? ""]
   const justReset = searchParams.get("reset") === "1"

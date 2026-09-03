@@ -115,15 +115,33 @@ test.describe('Error Handling: Authentication Errors', () => {
     // Wait for form to load
     await page.waitForSelector(`[data-testid="${SELECTORS.signup.form}"]`, { timeout: AUTH_TIMEOUT })
 
-    // Act: Enter email that likely already exists
+    // Stub the duplicate-email response instead of really signing up.
+    //
+    // This used to submit for real, on the assumption the address "likely
+    // already exists". It did not, the first time: the run created a live
+    // account on the production project, left it there, and bounced a
+    // confirmation email at example.com. Every later run then passed because
+    // of the mess the first one made -- a test that manufactures its own
+    // precondition proves nothing. Found one such account sitting in the user
+    // list on 2026-09-03.
+    await page.route('**/auth/v1/signup**', (route) =>
+      route.fulfill({
+        status: 422,
+        contentType: 'application/json',
+        body: JSON.stringify({ code: 'user_already_exists', message: 'User already registered' }),
+      })
+    )
+
+    // Act: Enter an email the server will report as taken
     await page.getByTestId(SELECTORS.signup.fullNameInput).fill('Test User')
     await page.getByTestId(SELECTORS.signup.emailInput).fill('test@example.com')
     await page.getByTestId(SELECTORS.signup.passwordInput).fill('TestPassword123!')
     await page.getByTestId(SELECTORS.signup.repeatPasswordInput).fill('TestPassword123!')
     await page.getByTestId(SELECTORS.signup.submitButton).click()
 
-    // Assert: Error message should appear (either duplicate email or other validation)
+    // Assert: the page surfaces the server's reason rather than hanging
     await expect(page.getByTestId(SELECTORS.signup.errorMessage)).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.signup.errorMessage)).toContainText(/already registered/i, { timeout: AUTH_TIMEOUT })
   })
 
   test('signup with mismatched passwords shows error', async ({ page }) => {

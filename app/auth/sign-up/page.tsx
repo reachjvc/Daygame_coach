@@ -18,6 +18,7 @@ export default function SignUpPage() {
   const [fullName, setFullName] = useState("")
   const [repeatPassword, setRepeatPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [existingAccount, setExistingAccount] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
@@ -49,7 +50,17 @@ export default function SignUpPage() {
       if (error) throw error
       router.push("/auth/sign-up-success")
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      // Supabase says "User already registered", which reads like a failure
+      // rather than a next step. It is the single most likely thing to happen
+      // to someone who signed up months ago and forgot -- so say what to do
+      // about it, and let the buttons below do it.
+      const message = error instanceof Error ? error.message : "An error occurred"
+      if (/already\s*registered|already\s*exists/i.test(message)) {
+        setExistingAccount(true)
+        setError(null)
+      } else {
+        setError(message)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -91,7 +102,10 @@ export default function SignUpPage() {
                       placeholder="m@example.com"
                       required
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value)
+                        setExistingAccount(false)
+                      }}
                       data-testid="signup-email-input"
                     />
                   </div>
@@ -117,6 +131,32 @@ export default function SignUpPage() {
                       data-testid="signup-repeat-password-input"
                     />
                   </div>
+                  {existingAccount && (
+                    <div
+                      className="rounded-md bg-muted p-3 text-sm"
+                      data-testid="signup-existing-account"
+                    >
+                      <p className="mb-3 leading-relaxed">
+                        You already have an account with that email.
+                      </p>
+                      <div className="flex flex-wrap gap-3">
+                        <Link
+                          href={`/auth/login?email=${encodeURIComponent(email)}`}
+                          className="underline underline-offset-4 font-medium"
+                          data-testid="signup-existing-login-link"
+                        >
+                          Log in instead
+                        </Link>
+                        <Link
+                          href="/auth/forgot-password"
+                          className="underline underline-offset-4 text-muted-foreground"
+                          data-testid="signup-existing-reset-link"
+                        >
+                          Forgot your password?
+                        </Link>
+                      </div>
+                    </div>
+                  )}
                   {error && <p className="text-sm text-red-500" data-testid="signup-error-message">{error}</p>}
                   <Button type="submit" className="w-full" disabled={isLoading} data-testid="signup-submit-button">
                     {isLoading ? "Creating account..." : "Sign up"}

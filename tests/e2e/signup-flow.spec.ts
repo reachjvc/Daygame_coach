@@ -104,4 +104,36 @@ test.describe('Signup Flow', () => {
     expect(redirectTo).toContain('/auth/confirm')
     expect(redirectTo).not.toMatch(/\/dashboard(\?|$)/)
   })
+
+  test('offers a way forward when the email already has an account', async ({ page }) => {
+    // Supabase answers "User already registered", which reads as a dead end.
+    // The most likely person to see it is someone who signed up months ago and
+    // forgot -- so the page must point at logging in or resetting, not just
+    // report a failure. This happened to the owner on 2026-09-03.
+    await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.signup.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    await page.route('**/auth/v1/signup**', (route) =>
+      route.fulfill({
+        status: 422,
+        contentType: 'application/json',
+        body: JSON.stringify({ code: 'user_already_exists', message: 'User already registered' }),
+      })
+    )
+
+    await page.getByTestId(SELECTORS.signup.fullNameInput).fill('Returning User', { timeout: ACTION_TIMEOUT })
+    await page.getByTestId(SELECTORS.signup.emailInput).fill('returning@example.com', { timeout: ACTION_TIMEOUT })
+    await page.getByTestId(SELECTORS.signup.passwordInput).fill('CorrectHorse9!', { timeout: ACTION_TIMEOUT })
+    await page.getByTestId(SELECTORS.signup.repeatPasswordInput).fill('CorrectHorse9!', { timeout: ACTION_TIMEOUT })
+    await page.getByTestId(SELECTORS.signup.submitButton).click({ timeout: ACTION_TIMEOUT })
+
+    await expect(page.getByTestId('signup-existing-account')).toBeVisible({ timeout: AUTH_TIMEOUT })
+    // The raw error must NOT be what the user is left with.
+    await expect(page.getByTestId(SELECTORS.signup.errorMessage)).not.toBeVisible({ timeout: ACTION_TIMEOUT })
+
+    // And the way out must carry the address over, so it need not be retyped.
+    await page.getByTestId('signup-existing-login-link').click({ timeout: ACTION_TIMEOUT })
+    await page.waitForURL(/\/auth\/login/, { timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId('login-email-input')).toHaveValue('returning@example.com', { timeout: AUTH_TIMEOUT })
+  })
 })
