@@ -14,6 +14,7 @@ import { Crosshair } from "lucide-react"
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [sent, setSent] = useState(false)
+  const [rateLimited, setRateLimited] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -29,13 +30,27 @@ export default function ForgotPasswordPage() {
       redirectTo: `${window.location.origin}/auth/confirm?next=/auth/reset-password`,
     })
 
-    // Deliberately NOT surfaced to the user: reporting "no such account" would
-    // turn this form into a way to test which email addresses are registered.
-    // Both outcomes show the same message.
+    // Two kinds of failure, and only one of them is safe to show.
+    //
+    // "No such account" must never be surfaced: it would turn this form into a
+    // way to test which email addresses are registered. Success and
+    // not-registered therefore look identical.
+    //
+    // Being rate limited is different. It says nothing about whether the
+    // account exists -- Supabase applies the cooldown either way -- and hiding
+    // it actively misleads: the user is told an email is on its way when none
+    // was sent. Verified against the live project: a second request inside the
+    // cooldown returns 429 and no mail is sent.
     if (error) {
       console.error("[forgot-password]", error.message)
+      if (error.status === 429) {
+        setRateLimited(true)
+        setIsLoading(false)
+        return
+      }
     }
 
+    setRateLimited(false)
     setSent(true)
     setIsLoading(false)
   }
@@ -84,6 +99,15 @@ export default function ForgotPasswordPage() {
                         data-testid="forgot-email-input"
                       />
                     </div>
+                    {rateLimited && (
+                      <p
+                        className="text-sm text-amber-600 dark:text-amber-500"
+                        data-testid="forgot-rate-limited-message"
+                      >
+                        You already asked for a link a moment ago. Check your
+                        inbox and your spam folder, or wait a minute and try again.
+                      </p>
+                    )}
                     {error && (
                       <p className="text-sm text-red-500" data-testid="forgot-error-message">
                         {error}

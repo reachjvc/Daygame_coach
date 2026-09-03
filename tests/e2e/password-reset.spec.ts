@@ -48,6 +48,30 @@ test.describe('Password reset', () => {
     expect(messages[0]).not.toContain('not found')
   })
 
+  test('says so when rate limited, instead of claiming an email was sent', async ({ page }) => {
+    // Supabase applies a cooldown per address and answers 429. Showing the
+    // usual "we've sent it" there is a lie: no mail went out, and the user
+    // sits waiting for it. Safe to surface, because a 429 says nothing about
+    // whether the account exists -- unlike "no such account", which must stay
+    // hidden (see the enumeration test above).
+    await page.goto('/auth/forgot-password', { timeout: AUTH_TIMEOUT })
+
+    await page.route('**/auth/v1/recover**', (route) =>
+      route.fulfill({
+        status: 429,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'For security purposes, you can only request this after 51 seconds.' }),
+      })
+    )
+
+    await page.getByTestId('forgot-email-input').fill('someone@example.com', { timeout: ACTION_TIMEOUT })
+    await page.getByTestId('forgot-submit-button').click({ timeout: ACTION_TIMEOUT })
+
+    await expect(page.getByTestId('forgot-rate-limited-message')).toBeVisible({ timeout: AUTH_TIMEOUT })
+    // The success message must NOT appear: that is the bug being guarded.
+    await expect(page.getByTestId('forgot-success-message')).not.toBeVisible({ timeout: ACTION_TIMEOUT })
+  })
+
   test('tells the user plainly when a reset link has expired', async ({ page }) => {
     // Landing here without going through /auth/confirm means no recovery
     // session, which is what a stale or reused link looks like.
