@@ -1859,6 +1859,27 @@ export interface NsAreaReview {
   identity: string
 }
 
+/**
+ * WHAT THE ACCOUNT KNOWS THAT THE PLAN DOES NOT.
+ *
+ * The one thing lives in the database, and the plan deliberately holds no copy
+ * of it. But the step rail has to score the step that owns it, and the rail is
+ * drawn from pure functions over the plan. So the answer is passed in beside the
+ * plan rather than cached inside it — a cached copy is a second fact, and the
+ * two-copies bug this replaces is exactly what a cached copy caused: a saved one
+ * thing showed in the tracking header while its own step sat marked as never
+ * started, because the rail was reading the browser's stale draft.
+ *
+ * Defaulting to `hasOneThing: false` is truthful: a caller with no account
+ * information has not been told there is one.
+ */
+export interface NsAccount {
+  hasOneThing: boolean
+}
+
+/** What a caller knows when it has not asked the account anything. */
+export const NO_ACCOUNT: NsAccount = { hasOneThing: false }
+
 export interface NsPlan {
   /**
    * Which rules this plan was written under. See `NS_PLAN_VERSION` — a loaded

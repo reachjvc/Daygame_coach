@@ -83,7 +83,16 @@ function templateToInsert(tmpl: GoalTemplate, tempParentId: string | null): Batc
     target_value: 1,
     tracking_type: "counter",
     goal_type: "milestone",
-    period: "weekly",
+    // A MILESTONE DOES NOT RESET. "1000 lifetime approaches" is a target you walk
+    // towards, not something that goes back to zero every Monday.
+    //
+    // Every template used to be stamped `weekly`, milestones included, and that
+    // is how the catalogue manufactured the fault repaired in
+    // docs/plans/counters.md: a weekly goal fed a lifetime total was zeroed each
+    // Monday and refilled with the same lifetime number seconds later, so it read
+    // as permanently complete and its streak meant nothing. Eleven live goals
+    // were in that state. `custom` is the period that never rolls.
+    period: "custom",
   }
 
   if (tmpl.templateType === "milestone_ladder" && tmpl.defaultMilestoneConfig) {
@@ -93,6 +102,8 @@ function templateToInsert(tmpl: GoalTemplate, tempParentId: string | null): Batc
   } else if (tmpl.templateType === "habit_ramp" && tmpl.defaultRampSteps) {
     base.target_value = tmpl.defaultRampSteps[0].frequencyPerWeek
     base.goal_type = "habit_ramp"
+    // A ramp IS weekly — "15 approaches a week" — so this one resets, and its
+    // metric has to be a weekly one for the same reason.
     base.period = "weekly"
     base.ramp_steps = tmpl.defaultRampSteps as unknown as Record<string, unknown>[]
   }

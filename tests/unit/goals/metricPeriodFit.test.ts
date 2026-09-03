@@ -41,10 +41,23 @@ describe("metricFitsPeriod", () => {
     expect(metricFitsPeriod("approaches_cumulative", "yearly")).toBe(false)
   })
 
-  it("never lets a streak metric back a goal", () => {
+  it("never lets a display-only streak back a goal", () => {
+    // These carry no `linkedMetric` in the catalogue, so nothing can sync them
+    // into a goal whatever its period.
     for (const period of GOAL_PERIODS) {
       expect(metricFitsPeriod("week_streak", period)).toBe(false)
       expect(metricFitsPeriod("day_streak", period)).toBe(false)
+    }
+  })
+
+  it("lets a linkable streak back a milestone, and nothing else", () => {
+    // "Reach 12 consecutive training weeks" is a target you walk towards, and
+    // the streak is the progress. On a weekly goal it would be zeroed every
+    // Monday, which means nothing.
+    expect(metricFitsPeriod("consecutive_training_weeks", "custom")).toBe(true)
+    expect(metricFitsPeriod("consecutive_cardio_weeks", "custom")).toBe(true)
+    for (const period of GOAL_PERIODS.filter((p) => p !== "custom")) {
+      expect(metricFitsPeriod("consecutive_training_weeks", period), period).toBe(false)
     }
   })
 

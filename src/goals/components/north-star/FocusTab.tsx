@@ -54,12 +54,15 @@ export function FocusTab({
   handlers,
   onOpenGoal,
   onNext,
+  oneThing,
 }: {
   plan: NsPlan
   today: string
   handlers: FocusHandlers
   onOpenGoal: (areaId: string, goalId: string) => void
   onNext: () => void
+  /** The saved sentence, or null. Read once by the flow and passed down. */
+  oneThing: string | null
 }) {
   const [adding, setAdding] = useState("")
   const ratings = wheelRatings(plan, today)
@@ -174,6 +177,7 @@ export function FocusTab({
           order. The sentence is shown so this page still reads as being about
           something, and it is read-only: one place to write it. */}
       <OneThingEcho
+        body={oneThing}
         label={FOCUS_COPY.oneEcho}
         editLabel={FOCUS_COPY.oneEchoEdit}
         onEdit={() => handlers.onGoToTab("one")}

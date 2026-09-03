@@ -65,7 +65,6 @@ function fullPlan(): NsPlan {
   plan = setAnswer(plan, "conduct", STANDARD, NOW)
   plan = setAnswer(plan, "affirmations", AFFIRMATION, NOW)
   plan = setAnswer(plan, "become", BECOME, NOW)
-  plan = setAnswer(plan, ONE_ANSWERS.oneThing, ONE_THING, NOW)
   plan = setAnswer(plan, COMMIT_KEY, "I am doing this until June", NOW)
   plan = setAreaReview(plan, "lm_health", { ten: TEN, purpose: PURPOSE, fortnight: 4, values: ["Vitality"] }, NOW)
   plan = setCurrentValues(plan, ["Comfort", "Freedom"], NOW)
@@ -91,7 +90,16 @@ function handlers(over: Partial<RecapHandlers> = {}): RecapHandlers {
   }
 }
 
-function show(plan: NsPlan, over: Partial<RecapHandlers> = {}) {
+/**
+ * `oneThing` is a PROP, not something read off the plan.
+ *
+ * The sentence lives on the account. The recap used to read a copy of it out of
+ * `plan.answers` and offer a textarea that wrote back to that copy — so editing
+ * your one thing here changed something nothing else reads, and the tracking
+ * page went on showing the old words. The flow reads the account once and hands
+ * it down; these tests hand it down the same way.
+ */
+function show(plan: NsPlan, over: Partial<RecapHandlers> = {}, oneThing: string | null = null) {
   const h = handlers(over)
   render(
     <RecapTab
@@ -102,6 +110,7 @@ function show(plan: NsPlan, over: Partial<RecapHandlers> = {}) {
       onOpenArea={vi.fn()}
       onOpenRoutine={vi.fn()}
       onGoToTab={vi.fn()}
+      oneThing={oneThing}
     />
   )
   return h
@@ -114,7 +123,7 @@ function open(title: string) {
 
 describe("the recap reads the whole plan back", () => {
   it("shows the star, the reason, the identity and the affirmations on arrival", () => {
-    show(fullPlan())
+    show(fullPlan(), {}, ONE_THING)
     // No clicking: these are what somebody came here to be reminded of, so
     // they are open when the page opens.
     expect(screen.getByText(STAR)).toBeTruthy()
@@ -214,18 +223,30 @@ describe("the two rules the recap must not break", () => {
  */
 describe("the one thing", () => {
   function planWithBoth(): NsPlan {
-    let plan = setAnswer(emptyNsPlan(), ONE_ANSWERS.oneThing, "100 days of no weed", NOW)
-    plan = addGoal(plan, "lm_fitness", "Flat bench 100 kg", "milestone_ladder", NOW)
+    const plan = addGoal(emptyNsPlan(), "lm_fitness", "Flat bench 100 kg", "milestone_ladder", NOW)
     return setSeasonFocus(plan, plan.goals[plan.goals.length - 1].id, NOW)
   }
 
   it("shows what somebody wrote, not the goal they ticked", () => {
-    show(planWithBoth())
+    show(planWithBoth(), {}, "100 days of no weed")
     expect(screen.getByText("100 days of no weed")).toBeTruthy()
   })
 
+  /**
+   * AND IT IS THE ACCOUNT'S SENTENCE, not anything left in the plan.
+   *
+   * A plan carrying an old copy of the sentence must not be able to put it on
+   * the screen — that copy is what made the two disagree in the first place.
+   */
+  it("ignores a stale sentence left behind in the plan", () => {
+    const stale = setAnswer(planWithBoth(), ONE_ANSWERS.oneThing, "an old sentence nobody saved", NOW)
+    show(stale, {}, "100 days of no weed")
+    expect(screen.getByText("100 days of no weed")).toBeTruthy()
+    expect(screen.queryByText("an old sentence nobody saved")).toBeNull()
+  })
+
   it("still shows the ticked goal, named for what it is", () => {
-    show(planWithBoth())
+    show(planWithBoth(), {}, "100 days of no weed")
     // Not dropped — it is real, it is just a different question. Naming it is
     // what stops the two reading as one contradictory answer.
     expect(screen.getByText(SEASON_FOCUS_COPY.banner("Flat bench 100 kg"))).toBeTruthy()

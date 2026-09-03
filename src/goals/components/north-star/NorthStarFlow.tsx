@@ -71,6 +71,8 @@ import { MilestonesTab, SystemLinks, type SystemHandlers } from "./MilestonesTab
 import { GoalOverview } from "./GoalOverview"
 import { BuildBoard } from "./BuildBoard"
 import { OneThingTab, type OneThingTabHandlers } from "./OneThingTab"
+import { useOneThing } from "./useOneThing"
+import type { NsAccount } from "@/src/goals/types"
 import { PathPicker } from "./PathPicker"
 import { TrackTab } from "./TrackTab"
 import { TodayTab, type TodayHubGoal } from "./TodayTab"
@@ -275,8 +277,22 @@ export function NorthStarFlow({
     return () => window.clearTimeout(timer)
   }, [plan, loaded, today])
 
-  const progress = ns.nsProgress(plan)
-  const states = ns.stepStates(plan)
+  /**
+   * THE ONE THING, READ ONCE FOR THE WHOLE FLOW.
+   *
+   * It is on the account and the plan keeps no copy of it, so every screen that
+   * shows it — the step, the echo on Focus, the recap, the build step's banner
+   * — is handed this rather than fetching its own or reading a stale draft.
+   * The rail is scored off it too: `hasOneThing` is what makes the step ring
+   * fill, which is why somebody signing in on a new phone sees their finished
+   * step as finished.
+   */
+  const oneThing = useOneThing()
+  const account = useMemo<NsAccount>(() => ({ hasOneThing: !!oneThing.current }), [oneThing.current])
+  const oneThingBody = oneThing.current?.body ?? null
+
+  const progress = ns.nsProgress(plan, account)
+  const states = ns.stepStates(plan, account)
   const tabIndex = TAB_ORDER.indexOf(tab)
   const readBack = loaded && today ? ns.planAsText(plan, today) : ""
   const todos = loaded && today ? ns.planTodos(plan, today) : []
@@ -771,7 +787,7 @@ export function NorthStarFlow({
           /* One sentence, and everything that holds it up. It comes before the
              goals page because what somebody lists in twelve areas depends on
              whether they have decided what the year is for. */
-          <OneThingTab plan={plan} handlers={oneThingHandlers} />
+          <OneThingTab plan={plan} handlers={oneThingHandlers} account={oneThing} />
         ) : tab === "pick" ? (
           /* The fork. Two doors are the milestones step with a different half
              open; the third opens one routine on it, expanded, with the area
@@ -808,6 +824,7 @@ export function NorthStarFlow({
             handlers={focusHandlers}
             onOpenGoal={(areaId, goalId) => { setPlanAreaId(areaId); setNowGoalId(goalId); setTab("milestones") }}
             onNext={() => setTab("milestones")}
+            oneThing={oneThingBody}
           />
         ) : tab === "milestones" || tab === "systems" ? (
           /* TWO STEPS, ONE BODY. The same wheel, the same routines and the
@@ -829,6 +846,7 @@ export function NorthStarFlow({
             setOpenRoutineId={setOpenRoutineId}
             onAddRequirement={(title: string) => setPlan((p) => ns.addOneThingRequirement(p, title))}
             onGoToTab={(t: NorthStarTabId) => setTab(t)}
+            oneThing={oneThingBody}
           />
         ) : tab === "values" ? (
           /* The values exercise, moved off the north star and into its own late
@@ -997,6 +1015,7 @@ export function NorthStarFlow({
             onOpenArea={(areaId) => setNowAreaId(areaId)}
             onOpenRoutine={(routineId) => { setPlanAreaId(null); setOpenRoutineId(routineId); setTab("systems") }}
             onGoToTab={(t) => setTab(t)}
+            oneThing={oneThingBody}
             goals={
               <>
                 <QuickAdd plan={plan} onAdd={(areaId, text) => setPlan((p) => ns.addGoalsFromDump(p, areaId, text))} />

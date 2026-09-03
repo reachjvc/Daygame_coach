@@ -36,6 +36,7 @@ import {
   oneThingRequirements,
 } from "@/src/goals/northStarService"
 import { OneThingCard, type OneThingHandlers } from "./OneThing"
+import type { OneThingAccount } from "./useOneThing"
 import { SentenceBox } from "./SentenceBox"
 
 export interface OneThingTabHandlers extends OneThingHandlers {
@@ -49,11 +50,17 @@ export interface OneThingTabHandlers extends OneThingHandlers {
 export function OneThingTab({
   plan,
   handlers,
+  account,
 }: {
   plan: NsPlan
   handlers: OneThingTabHandlers
+  account: OneThingAccount
 }) {
-  const oneThing = answerOf(plan, ONE_ANSWERS.oneThing)
+  /* THE SAVED SENTENCE, not a draft of one. Everything on this step hangs off
+     the one thing, and it used to hang off whatever was in the box — so the
+     questions underneath opened for text nobody had committed to, and closed
+     again if the browser was cleared while the account still held the answer. */
+  const oneThing = account.current?.body ?? ""
   const requirements = oneThingRequirements(plan)
   const related = oneThing.trim() ? goalsLikeOneThing(plan, oneThing) : []
   const values = collectValues(plan)
@@ -62,7 +69,19 @@ export function OneThingTab({
   // Everything under the sentence is about the sentence, so none of it opens
   // until there is one. Asking why something matters before it exists is how
   // you get a page of empty boxes.
-  const written = oneThing.trim().length > 0
+  /**
+   * THE GATE ONLY CLOSES ON SOMETHING WE ACTUALLY KNOW.
+   *
+   * "Nothing is written yet" is an assertion about the account, so it is only
+   * safe to make it when the account has answered. While the read is in flight,
+   * when it failed, and when nobody is signed in — the anonymous
+   * `/test/life-mastery` surface — this page must not hide the why, the cost,
+   * the identity and the values that are sitting in the plan already. Hiding
+   * them there would have been permanent: signed out, the sentence cannot be
+   * saved at all, so the gate could never open.
+   */
+  const accountAnswered = account.loaded && !account.signedOut && !account.error
+  const written = oneThing.trim().length > 0 || !accountAnswered
 
   return (
     <div className="space-y-5">
@@ -70,7 +89,7 @@ export function OneThingTab({
 
       {/* ------------------------------------------------------ the sentence */}
       <section className="rounded-2xl border border-violet-400/25 bg-violet-500/[0.05] px-5 py-4">
-        <OneThingCard plan={plan} handlers={handlers} title={ONE_COPY.title} help={ONE_COPY.help} />
+        <OneThingCard account={account} title={ONE_COPY.title} help={ONE_COPY.help} />
       </section>
 
       {!written ? (

@@ -197,6 +197,20 @@ describe("a counter uses the account holder's calendar", () => {
     expect(values.approaches_weekly).toBe(1)
   })
 
+  it("resolves the new weekly high-quality metric without falling over", async () => {
+    // Added so the "High-Quality Approaches" goal — which ramps 2 -> 4 -> 6 a
+    // WEEK — could stop being fed the lifetime count. Seeded approaches carry no
+    // quality rating, so the honest answer is 0; what is being checked is that
+    // the metric resolves at all rather than throwing or coming back undefined.
+    const values = await resolveMetricValues(
+      userId,
+      ["high_quality_approaches_weekly", "high_quality_approaches_cumulative"],
+      "Europe/Copenhagen"
+    )
+    expect(values.high_quality_approaches_weekly).toBe(0)
+    expect(values.high_quality_approaches_cumulative).toBe(0)
+  })
+
   it("leaves the lifetime totals alone — they have no period to fall outside of", async () => {
     const auckland = await weeklyCountsFor("Pacific/Auckland")
     const copenhagen = await weeklyCountsFor("Europe/Copenhagen")

@@ -1251,14 +1251,27 @@ export async function getWeeklyApproachQualityAvg(
 /**
  * Count all approaches with quality rating >= 7 (cumulative, all-time).
  */
-export async function getHighQualityApproachCount(userId: string): Promise<number> {
+/**
+ * Approaches rated 7 or better — lifetime, or since an instant.
+ *
+ * `since` is Monday 00:00 in the USER'S zone, converted to the instant it
+ * happened, because `timestamp` is a `timestamptz`. Pass nothing for the
+ * lifetime count.
+ */
+export async function getHighQualityApproachCount(
+  userId: string,
+  since?: string
+): Promise<number> {
   const supabase = await createServerSupabaseClient()
 
-  const { count, error } = await supabase
+  let query = supabase
     .from("approaches")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
     .gte("quality", 7)
+  if (since) query = query.gte("timestamp", since)
+
+  const { count, error } = await query
 
   if (error) {
     throw new Error(`Failed to get high quality approach count: ${error.message}`)

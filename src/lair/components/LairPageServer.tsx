@@ -34,7 +34,9 @@ export async function LairPageServer() {
 
   return (
     <div className="min-h-dvh bg-background pb-tab-bar">
-      <AppHeader currentPage="lair" isLoggedIn={true} hasPurchased={true} />
+      {/* "other": the Lair is archived at /test/archive/lair and the header no
+          longer has a Lair entry to mark as current. */}
+      <AppHeader currentPage="other" isLoggedIn={true} hasPurchased={true} />
       <LairContent initialLayout={layout} />
       <MobileTabBar />
     </div>

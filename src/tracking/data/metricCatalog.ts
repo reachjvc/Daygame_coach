@@ -242,6 +242,20 @@ export const METRIC_CATALOG: MetricDef[] = [
     icon: TrendingUp,
     accent: "text-green-500",
   },
+  {
+    id: "high_quality_approaches_weekly",
+    label: "High-quality approaches this week",
+    tileLabel: "Quality Approaches",
+    area: "daygame",
+    group: "Field work",
+    window: "weekly",
+    format: "count",
+    description: "Approaches you rated 7 or better since Monday.",
+    source: "approaches",
+    linkedMetric: "high_quality_approaches_weekly",
+    icon: TrendingUp,
+    accent: "text-green-500",
+  },
 
   // ==========================================================================
   // Dating & Daygame — consistency

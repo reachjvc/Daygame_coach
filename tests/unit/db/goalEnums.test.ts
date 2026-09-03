@@ -25,8 +25,18 @@ describe("const arrays", () => {
     expect(GOAL_DISPLAY_CATEGORIES.length).toBe(27)
   })
 
-  test("LINKED_METRICS has 41 values", () => {
-    expect(LINKED_METRICS.length).toBe(41)
+  test("LINKED_METRICS is a set of well-formed ids, not a fixed count", () => {
+    // This asserted `length === 41`. A count tells you the list changed size; it
+    // does not tell you the list is right, and it fails on every legitimate
+    // addition while catching no wrong one. What matters is that every id is
+    // unique and shaped like the database enum values it mirrors — and that the
+    // TWO lists agree, which enumConstraintSync.integration.test.ts checks
+    // against the real Postgres type.
+    expect(new Set(LINKED_METRICS).size, "duplicate metric id").toBe(LINKED_METRICS.length)
+    for (const metric of LINKED_METRICS) {
+      expect(metric, `${metric} is not snake_case`).toMatch(/^[a-z][a-z0-9_]*$/)
+    }
+    expect(LINKED_METRICS.length).toBeGreaterThan(30)
   })
 
   test("GOAL_PERIODS has 6 values", () => {

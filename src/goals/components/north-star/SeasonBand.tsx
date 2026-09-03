@@ -36,6 +36,7 @@ import { ArrowRight } from "lucide-react"
 import type { NsPlan } from "@/src/goals/types"
 import { NORTH_STAR_STORAGE_KEY, SEASON_BAND_COPY } from "@/src/goals/data/northStar"
 import { loadNsPlan, planIsUntouched, todayISO } from "@/src/goals/northStarService"
+import { oneThingCountdown, oneThingPrompt, oneThingStage, type OneThing } from "@/src/goals/oneThingService"
 import { todayItems, todayProgress } from "@/src/goals/northStarTrackService"
 import { withReturn } from "@/src/shared/returnTo"
 
@@ -49,13 +50,10 @@ const PLAN_PATH = "/dashboard/goals/plan"
  */
 const HERE = "/dashboard/tracking"
 
-/** What the account says the one thing is. Shaped by `/api/life-answers`. */
-interface OneThingView {
-  body: string
-  dueOn: string
-  daysLeft: number
-  lapsed: boolean
-}
+/* The shape of the reply is `OneThing` from `oneThingService` — the same type
+   the route builds it from. This file used to redeclare a four-field version of
+   it by hand, as did the step, so the contract lived in three places and none of
+   them was the one the server used. */
 
 export function SeasonBand() {
   const [plan, setPlan] = useState<NsPlan | null>(null)
@@ -69,7 +67,7 @@ export function SeasonBand() {
    * that started all of this. It now reads the newest row on your account and
    * holds no copy of it.
    */
-  const [oneThing, setOneThing] = useState<OneThingView | null>(null)
+  const [oneThing, setOneThing] = useState<OneThing | null>(null)
 
   /**
    * BOTH BEFORE DECIDING WHAT TO DRAW.
@@ -125,6 +123,8 @@ export function SeasonBand() {
     .map((id) => plan?.areas.find((a) => a.id === id))
     .filter((a): a is NonNullable<typeof a> => !!a)
   const today = todayISO()
+  const stage = oneThingStage(oneThing)
+  const prompt = oneThingPrompt(oneThing)
   /* Routine steps only, and that is why no goals are fetched: their ticks are
      on the plan. A driver's count lives in `user_goals` and belongs to the row
      that can increment it, not to a summary band. */
@@ -149,18 +149,37 @@ export function SeasonBand() {
                 <span className="text-muted-foreground font-normal text-base">{SEASON_BAND_COPY.noFocus}</span>
               )}
             </Link>
+            {/* THE DEADLINE ITSELF, not only the number of sleeps.
+                "120 days left" is not a thing anybody can put in a calendar,
+                and the day it names was typed on the form by the person reading
+                this — so it comes back to them here. The wording is
+                `oneThingCountdown`, shared with the step, so the two screens
+                cannot word the same fact differently. */}
             {oneThing && (
               <span
+                data-testid="season-band-countdown"
                 className={`inline-block mt-1 rounded-full border px-2 py-0.5 text-[11px] ${
-                  oneThing.lapsed
-                    ? "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-300"
-                    : "border-border text-muted-foreground"
+                  stage === "running"
+                    ? "border-border text-muted-foreground"
+                    : "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-300"
                 }`}
               >
-                {oneThing.lapsed
-                  ? "This one has run its course — name the next"
-                  : `${oneThing.daysLeft} ${oneThing.daysLeft === 1 ? "day" : "days"} left`}
+                {oneThingCountdown(oneThing)}
               </span>
+            )}
+            {/* AND THE ASK, once the deadline is close enough to act on. Same
+                rule as the step: a fortnight out, then every day after it runs
+                out. Silent before that, so it still means something when it
+                appears. */}
+            {prompt && (
+              <Link
+                href={withReturn(`${PLAN_PATH}?step=one`, HERE)}
+                data-testid="season-band-prompt"
+                className="mt-1.5 flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-300 hover:underline underline-offset-2"
+              >
+                {prompt}
+                <ArrowRight className="size-3" />
+              </Link>
             )}
           </div>
           <div className="min-w-0">

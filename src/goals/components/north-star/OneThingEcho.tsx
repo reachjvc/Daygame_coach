@@ -8,35 +8,26 @@
  * layer down: a second screen reading a second value. Type a change on step 3
  * without saving and the two screens disagreed about what your one thing was.
  *
- * So this reads the account, like every other display of it. Renders nothing at
+ * So this shows the account, like every other display of it. Renders nothing at
  * all when there is nothing saved — an empty violet box saying "your one thing"
  * over a blank is worse than no box.
+ *
+ * IT NO LONGER FETCHES. It used to make its own request for the same sentence
+ * the step and the rail were already asking for — three requests, three
+ * hand-written shapes for the reply. The flow reads it once and passes it down.
  */
 
-import { useEffect, useState } from "react"
-
 export function OneThingEcho({
+  body,
   label,
   editLabel,
   onEdit,
 }: {
+  body: string | null
   label: string
   editLabel: string
   onEdit: () => void
 }) {
-  const [body, setBody] = useState<string | null>(null)
-
-  useEffect(() => {
-    let live = true
-    fetch("/api/life-answers?key=one_thing")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => live && setBody(d?.current?.body ?? null))
-      .catch(() => live && setBody(null))
-    return () => {
-      live = false
-    }
-  }, [])
-
   if (!body) return null
 
   return (

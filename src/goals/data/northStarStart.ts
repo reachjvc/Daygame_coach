@@ -354,7 +354,11 @@ export const ONE_COPY = {
   title: "What is the one thing?",
   help:
     "The one change that, if it happened, would make the next few months or years far more likely to work. Not your most important goal — the one that makes several of the others easier, or unnecessary.",
-  waiting: "Write it above and the rest of this step opens. There is no point asking why something matters before it exists.",
+  /* "and save it": the sentence lives on your account now, not in this browser,
+     so the rest of the step opens on the saved one rather than on whatever is
+     in the box. Saying only "write it above" left somebody staring at a filled
+     box and a page that had not moved. */
+  waiting: "Write it above and save it, and the rest of this step opens. There is no point asking why something matters before it exists.",
 
   whyTitle: "Why does it matter?",
   whyHelp: "In your own words, not the respectable version. This is the sentence you will need in February, and the true reason is the only one that works then.",

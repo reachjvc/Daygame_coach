@@ -10,24 +10,22 @@
  * picks is not the sentence they would have written.
  */
 
-import type { NsPlan } from "@/src/goals/types"
 import { FOCUS_COPY } from "@/src/goals/data/northStar"
-import { ONE_THING_KEY } from "@/src/goals/data/northStarStart"
-import { answerOf } from "@/src/goals/northStarService"
 import { OneThingBox } from "./OneThingBox"
+import type { OneThingAccount } from "./useOneThing"
 
+/** The other answers on this step — the why, the cost, the identity — are still
+ *  written into the plan. Only the sentence itself has moved to the account. */
 export interface OneThingHandlers {
   onAnswer: (key: string, text: string) => void
 }
 
 export function OneThingCard({
-  plan,
-  handlers,
+  account,
   title,
   help,
 }: {
-  plan: NsPlan
-  handlers: OneThingHandlers
+  account: OneThingAccount
   title?: string
   help?: string
 }) {
@@ -35,12 +33,10 @@ export function OneThingCard({
     <>
       <h2 className="text-sm font-semibold text-zinc-200">{title ?? FOCUS_COPY.oneTitle}</h2>
       <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{help ?? FOCUS_COPY.oneHelp}</p>
-      {/* The box is a draft in this browser; saving puts it on the account,
-          and from then on the account is what every screen reads. */}
-      <OneThingBox
-        draft={answerOf(plan, ONE_THING_KEY)}
-        onDraft={(text) => handlers.onAnswer(ONE_THING_KEY, text)}
-      />
+      {/* The box reads and writes the account. There is no draft in the plan
+          any more: one sentence, one place, so no screen can show a stale copy
+          of it and no step can be scored against one. */}
+      <OneThingBox account={account} />
     </>
   )
 }

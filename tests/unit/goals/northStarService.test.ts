@@ -3304,7 +3304,6 @@ describe("clearing the goals without clearing the thinking", () => {
     plan = toggleSeasonArea(plan, "lm_fitness", NOW)
     plan = addGoalsFromDump(plan, "lm_fitness", "Bænk 28 kg", NOW)
     plan = setSeasonFocus(plan, plan.goals[0].id, NOW)
-    plan = setAnswer(plan, ONE_THING_KEY, "Get my back right", NOW)
     plan = addExperiences(plan, "Learn to surf", null, NOW)
     plan = promoteExperience(plan, plan.experiences[0].id, "lm_fun", NOW)
     plan = applyRoutinePreset(plan, plan.routines[0].id, "15", NOW)
@@ -3316,7 +3315,6 @@ describe("clearing the goals without clearing the thinking", () => {
     expect(after.priorityIds).toEqual([])
     expect(after.seasonAreaIds).toEqual([])
     expect(after.seasonFocusId).toBeNull()
-    expect(answerOf(after, ONE_THING_KEY)).toBe("")
 
     // Kept: everything that took an hour to write.
     expect(after.northStar).toBe("I wake up near the water")
@@ -3731,17 +3729,58 @@ describe("what needs to happen for the one thing to work", () => {
 })
 
 describe("the step is not done on a sentence alone", () => {
+  /* The sentence is on the account, not in the plan, so it arrives beside the
+     plan rather than inside it. */
+  const SAVED = { hasOneThing: true }
+
   it("wants the sentence, its supports, and something that has to happen", () => {
-    let plan = setAnswer(emptyNsPlan(), ONE_THING_KEY, "Quit weed", NOW)
-    expect(stepState(plan, "one")).toBe("started")
+    let plan = emptyNsPlan()
+    expect(stepState(plan, "one", SAVED)).toBe("started")
     plan = addOneThingRequirement(plan, "Delete the dealer's number", "lm_health", NOW)
     // Still not done: a sentence with no why is the one that dies in February.
-    expect(stepState(plan, "one")).toBe("started")
+    expect(stepState(plan, "one", SAVED)).toBe("started")
     for (const key of [ONE_ANSWERS.why, ONE_ANSWERS.cost, ONE_ANSWERS.identity, ONE_ANSWERS.values]) {
       plan = setAnswer(plan, key, "written", NOW)
     }
-    expect(stepState(plan, "one")).toBe("done")
-    expect(nsProgress(plan).done.one).toBe(true)
+    expect(stepState(plan, "one", SAVED)).toBe("done")
+    expect(nsProgress(plan, SAVED).done.one).toBe(true)
+  })
+
+  /**
+   * THE STEP IS SCORED AGAINST THE ACCOUNT, AND ONLY THE ACCOUNT.
+   *
+   * This is the two-copies bug, written down: the same plan, once for somebody
+   * whose account holds a one thing and once for somebody whose does not. The
+   * rail used to read a draft in the browser instead, so a person signing in on
+   * a new phone saw their one thing in the tracking header and the step that
+   * owns it marked as never started.
+   */
+  it("is empty for the same plan when the account has no one thing", () => {
+    let plan = addOneThingRequirement(emptyNsPlan(), "Delete the dealer's number", "lm_health", NOW)
+    for (const key of [ONE_ANSWERS.why, ONE_ANSWERS.cost, ONE_ANSWERS.identity, ONE_ANSWERS.values]) {
+      plan = setAnswer(plan, key, "written", NOW)
+    }
+    expect(stepState(plan, "one", { hasOneThing: true })).toBe("done")
+    expect(stepState(plan, "one", { hasOneThing: false })).toBe("started")
+  })
+
+  /**
+   * CLEARING THE SEASON DOES NOT CLEAR THE ONE THING, and nothing in the plan
+   * can. It said it did, and deleted a copy in the browser while the row on the
+   * account survived — so "clear the goals and the season" left the tracking
+   * page still showing the one thing it had just told you it cleared.
+   *
+   * A one thing is replaced by writing the next one, and the app asks for the
+   * next one as the deadline comes up. There is no other way to end one, and
+   * `resetGoalsAndFocus` must not pretend to be one.
+   */
+  it("does not touch the one thing when the goals and the season are cleared", () => {
+    const plan = toggleSeasonArea(emptyNsPlan(), "lm_health", NOW)
+    const after = resetGoalsAndFocus(plan, NOW)
+    expect(after.seasonAreaIds).toEqual([])
+    // Nothing on the plan holds it, so nothing on the plan can drop it: the
+    // step still scores "done" for an account that has one.
+    expect(JSON.stringify(after)).not.toContain("one-thing")
   })
 })
 

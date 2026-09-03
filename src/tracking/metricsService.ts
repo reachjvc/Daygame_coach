@@ -319,7 +319,11 @@ function round1(n: number): string | number {
  *                  refilled with the lifetime total the same second.
  *   current     -> only a `custom` goal. A 1RM or a body weight is a level, not
  *                  a count; zeroing it every Monday means nothing.
- *   streak      -> never. These are display-only and are not in LINKED_METRICS.
+ *   streak      -> only a `custom` goal. "Reach 12 consecutive training weeks"
+ *                  is a target you walk towards and the streak IS the progress;
+ *                  zeroing a streak every Monday would be meaningless. The
+ *                  daygame streaks stay unlinkable because their catalogue
+ *                  entries carry no `linkedMetric` at all.
  *   daily,
  *   monthly     -> no metric has these windows yet. Left explicit so adding one
  *                  is a decision somebody makes rather than a default.
@@ -339,7 +343,7 @@ export function metricFitsPeriod(metricId: string, period: string): boolean {
     case "current":
       return period === "custom"
     case "streak":
-      return false
+      return period === "custom"
     case "daily":
     case "monthly":
       return false

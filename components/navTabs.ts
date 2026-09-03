@@ -1,4 +1,4 @@
-import { LayoutDashboard, Aperture, BarChart3, Swords, Castle, HelpCircle, BookOpen, Settings } from "lucide-react"
+import { LayoutDashboard, BarChart3, Swords, HelpCircle, BookOpen, Settings } from "lucide-react"
 
 /**
  * WHERE THE TAB BAR CAN GO, as data rather than as markup.
@@ -11,16 +11,16 @@ import { LayoutDashboard, Aperture, BarChart3, Swords, Castle, HelpCircle, BookO
  */
 export const TABS = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", exact: true },
-  // The goals HUB is archived at /test/archive/goals-hub. This tab points at
-  // the flow that replaced it — without an entrance here, a live paid surface
-  // would be reachable only by typing the URL.
-  { label: "Plan", icon: Aperture, href: "/dashboard/goals/plan", exact: false },
+  // NO GOALS TAB. The hub is archived at /test/archive/goals-hub and the
+  // navigation is being rebuilt around one consolidated surface. Until that
+  // exists, /dashboard/goals/plan is reachable by URL and at /test/life-mastery,
+  // and nothing in the bar points at goals at all.
   { label: "Tracking", icon: BarChart3, href: "/dashboard/tracking", exact: false },
   { label: "Scenarios", icon: Swords, href: "/dashboard/scenarios", exact: false },
 ] as const
 
+/** The Lair moved to /test/archive/lair — it was a second goals surface. */
 export const MORE_ITEMS = [
-  { label: "The Lair", icon: Castle, href: "/lair" },
   { label: "Ask Coach", icon: HelpCircle, href: "/dashboard/qa" },
   { label: "Articles", icon: BookOpen, href: "/dashboard/articles" },
   { label: "Settings", icon: Settings, href: "/dashboard/settings" },

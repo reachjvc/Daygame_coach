@@ -157,7 +157,9 @@ const L3_FIELD_WORK: GoalTemplate[] = [
       { frequencyPerWeek: 4, durationWeeks: 12 },
       { frequencyPerWeek: 6, durationWeeks: 24 },
     ],
-    linkedMetric: "high_quality_approaches_cumulative",
+    // The ramp is per week, so the metric must be too. It was wired to the
+    // LIFETIME count, which made the goal complete on the day it was created.
+    linkedMetric: "high_quality_approaches_weekly",
   }),
   template("l3_open_in_3_seconds", "Open in <3 Seconds", 3, "input", {
     displayCategory: "field_work",

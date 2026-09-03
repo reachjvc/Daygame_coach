@@ -54,7 +54,6 @@ import {
   DAY_WINDOWS,
   NEUTRAL_GOAL_EXAMPLE,
   ONE_ANSWERS,
-  ONE_THING_KEY,
   START_ANSWER_PREFIX,
   type AreaGoalExample,
 } from "@/src/goals/data/northStarStart"
@@ -107,9 +106,10 @@ import type {
   RoutineBlueprintStep,
   VisionGoalType,
   VisionHabit,
+  NsAccount,
 } from "@/src/goals/types"
 /** A value, not a type: the loader checks a saved kind against it. */
-import { NS_FIELD_KINDS } from "@/src/goals/types"
+import { NS_FIELD_KINDS, NO_ACCOUNT } from "@/src/goals/types"
 
 // ------------------------------------------------------------------ helpers
 
@@ -3169,7 +3169,7 @@ export function collectValues(plan: NsPlan): string[] {
 
 // ------------------------------------------------------------------ progress
 
-export function nsProgress(plan: NsPlan): NsProgress {
+export function nsProgress(plan: NsPlan, account: NsAccount = NO_ACCOUNT): NsProgress {
   const starWritten = plan.northStar.trim().length > 0
   const goals = plan.goals.length
   const goalsWithWhy = plan.goals.filter(goalHasWhy).length
@@ -3199,7 +3199,7 @@ export function nsProgress(plan: NsPlan): NsProgress {
      * typed one thing, pressed next, and collected a green tick for a step
      * that was a tenth full.
      */
-    done: Object.fromEntries(TAB_ORDER.map((tab: NorthStarTabId) => [tab, stepState(plan, tab) === "done"])) as Record<NorthStarTabId, boolean>,
+    done: Object.fromEntries(TAB_ORDER.map((tab: NorthStarTabId) => [tab, stepState(plan, tab, account) === "done"])) as Record<NorthStarTabId, boolean>,
   }
 }
 
@@ -3221,7 +3221,7 @@ export type NsStepState = "empty" | "started" | "done"
  * No `today` parameter: every rule below reads what somebody has written, not
  * what the calendar says. A step does not empty itself because a week passed.
  */
-export function stepState(plan: NsPlan, tab: NorthStarTabId): NsStepState {
+export function stepState(plan: NsPlan, tab: NorthStarTabId, account: NsAccount = NO_ACCOUNT): NsStepState {
   const filled = (key: string) => answerOf(plan, key).trim().length > 0
 
   if (tab === "star") {
@@ -3243,7 +3243,11 @@ export function stepState(plan: NsPlan, tab: NorthStarTabId): NsStepState {
   }
 
   if (tab === "one") {
-    const sentence = filled(ONE_ANSWERS.oneThing)
+    /* THE SENTENCE IS ON THE ACCOUNT, so the ring is scored against the account.
+       It used to be scored against `answers[one-thing]` — a copy in the browser
+       — which meant a person with a saved one thing on a new phone saw the step
+       marked as never started. The copy is gone; this is the only reading. */
+    const sentence = account.hasOneThing
     const requirements = plan.goals.some((g) => g.servesOneThing)
     if (!sentence && !requirements) return "empty"
     const supports = filled(ONE_ANSWERS.why) && filled(ONE_ANSWERS.cost) && filled(ONE_ANSWERS.identity) && filled(ONE_ANSWERS.values)
@@ -3334,16 +3338,16 @@ export function stepState(plan: NsPlan, tab: NorthStarTabId): NsStepState {
 }
 
 /** Every step's state at once, for the rail. */
-export function stepStates(plan: NsPlan): Record<NorthStarTabId, NsStepState> {
-  return Object.fromEntries(TAB_ORDER.map((tab: NorthStarTabId) => [tab, stepState(plan, tab)])) as Record<NorthStarTabId, NsStepState>
+export function stepStates(plan: NsPlan, account: NsAccount = NO_ACCOUNT): Record<NorthStarTabId, NsStepState> {
+  return Object.fromEntries(TAB_ORDER.map((tab: NorthStarTabId) => [tab, stepState(plan, tab, account)])) as Record<NorthStarTabId, NsStepState>
 }
 
 /** Whether a tab has anything on it worth reading back. */
-export function tabHasContent(plan: NsPlan, tab: NorthStarTabId): boolean {
-  const p = nsProgress(plan)
+export function tabHasContent(plan: NsPlan, tab: NorthStarTabId, account: NsAccount = NO_ACCOUNT): boolean {
+  const p = nsProgress(plan, account)
   if (tab === "star") return p.starWritten || starWorkWritten(plan)
   if (tab === "now") return p.areasRated > 0 || p.areasWithTen > 0 || areasTouched(plan)
-  if (tab === "focus") return plan.seasonAreaIds.length > 0 || plan.seasonFocusId != null || answerOf(plan, ONE_THING_KEY).trim().length > 0
+  if (tab === "focus") return plan.seasonAreaIds.length > 0 || plan.seasonFocusId != null || account.hasOneThing
   if (tab === "values") return plan.values.length > 0 || plan.currentValues.length > 0
   if (tab === "commit") return answerOf(plan, COMMIT_KEY).trim().length > 0 || plan.areas.some((a) => areaReview(plan, a.id).goalsAim != null)
   if (tab === "milestones") return milestoneGoals(plan).length > 0 || plan.experiences.length > 0
@@ -3352,7 +3356,7 @@ export function tabHasContent(plan: NsPlan, tab: NorthStarTabId): boolean {
   // neither does a catalogue — what you took from it is in the other steps.
   // Track is the same: it is the goals, somewhere else, not more of them.
   if (tab === "pick" || tab === "templates" || tab === "track" || tab === "today" || tab === "recap") return false
-  if (tab === "one") return answerOf(plan, ONE_THING_KEY).trim().length > 0 || plan.goals.some((g) => g.servesOneThing)
+  if (tab === "one") return account.hasOneThing || plan.goals.some((g) => g.servesOneThing)
   return plan.areas.some((a) => areaReview(plan, a.id).goalsAim != null) || REVIEW_PROMPTS.some((q) => answerOf(plan, q.id).trim())
 }
 
@@ -5924,20 +5928,27 @@ export function goalsLikeOneThing(plan: NsPlan, oneThing: string): NsGoal[] {
  * the ratings and the north star are all still true and took an hour to write.
  *
  * So this deletes what is downstream of a decision — the goals, their order,
- * the season's areas, the one thing — and touches nothing upstream of it. The
- * routines survive too: they are what runs whether or not there is a goal
- * pointing at them.
+ * the season's areas — and touches nothing upstream of it. The routines survive
+ * too: they are what runs whether or not there is a goal pointing at them.
+ *
+ * **IT DOES NOT TOUCH THE ONE THING, and used to say that it did.** It deleted
+ * `answers[one-thing]`, which by then was a stale copy in the browser and not
+ * the answer: the row on the account survived, so clearing your season left the
+ * tracking header still showing the one thing you had just cleared. The copy is
+ * gone and this line went with it.
+ *
+ * A one thing is not cleared by a button anywhere. It is replaced by writing the
+ * next one, and the app asks for the next one as the deadline comes up — see
+ * `oneThingPrompt`. That is the whole lifecycle, and it is the same whether or
+ * not anybody ever presses "start over".
  */
 export function resetGoalsAndFocus(plan: NsPlan, now = nowIso()): NsPlan {
-  const answers = { ...plan.answers }
-  delete answers[ONE_THING_KEY]
   return touch({
     ...plan,
     goals: [],
     priorityIds: [],
     seasonAreaIds: [],
     seasonFocusId: null,
-    answers,
     // An experience that was promoted points at a goal that no longer exists.
     experiences: plan.experiences.map((e) => (e.goalId ? { ...e, goalId: null } : e)),
   }, now)

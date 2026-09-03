@@ -1,10 +1,12 @@
 import Link from "next/link"
-import { Aperture, Beaker, BookOpen, Castle, HelpCircle, LayoutDashboard, LogOut, Settings } from "lucide-react"
+import { Beaker, BookOpen, HelpCircle, LayoutDashboard, LogOut, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/app/actions/auth"
 import { MobileNav, type MobileNavItem } from "@/components/MobileNav"
 
-type CurrentPage = "home" | "dashboard" | "settings" | "qa" | "inner-game" | "scenarios" | "articles" | "lair" | "goals" | "other"
+// "goals" was a page type here until the goals hub was archived; nothing
+// identifies as it any more.
+type CurrentPage = "home" | "dashboard" | "settings" | "qa" | "inner-game" | "scenarios" | "articles" | "other"
 
 interface AppHeaderProps {
   /** Current page identifier - used to hide redundant navigation links */
@@ -38,8 +40,6 @@ export function AppHeader({
   isPreviewMode = false,
 }: AppHeaderProps) {
   const showDashboard = currentPage !== "dashboard"
-  const showLair = currentPage !== "lair"
-  const showGoals = currentPage !== "goals" && hasPurchased
   const showAskCoach = currentPage !== "qa" && hasPurchased
   const showArticles = currentPage !== "articles"
   const showSettings = currentPage !== "settings" && isLoggedIn
@@ -59,30 +59,11 @@ export function AppHeader({
         testId: "header-dashboard-link",
       })
     }
-    if (showLair) {
-      navItems.push({
-        type: "link",
-        href: "/lair",
-        label: "The Lair",
-        icon: <Castle className="size-4 mr-2" />,
-        variant: "ghost",
-        className: "text-foreground hover:text-primary",
-        testId: "header-lair-link",
-      })
-    }
-    if (showGoals) {
-      navItems.push({
-        type: "link",
-        href: "/dashboard/goals/plan",
-        // "Goals" was the hub, which is archived. This opens the flow that
-        // replaced it, and the label says so.
-        label: "Plan",
-        icon: <Aperture className="size-4 mr-2" />,
-        variant: "ghost",
-        className: "text-foreground hover:text-primary",
-        testId: "header-goals-link",
-      })
-    }
+    // NO LAIR LINK. The Lair is archived at /test/archive/lair — it was a
+    // second goals surface, and the app is being consolidated onto one.
+    // NO GOALS LINK. The hub is archived at /test/archive/goals-hub, and the
+    // navigation is being rebuilt around one consolidated surface rather than a
+    // goals entry sitting beside a tracking entry.
     if (showAskCoach) {
       navItems.push({
         type: "link",

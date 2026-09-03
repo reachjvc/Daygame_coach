@@ -338,6 +338,7 @@ export function RecapTab({
   onOpenArea,
   onOpenRoutine,
   onGoToTab,
+  oneThing,
   goals,
 }: {
   plan: NsPlan
@@ -348,6 +349,11 @@ export function RecapTab({
   onOpenArea: (areaId: string) => void
   onOpenRoutine: (routineId: string) => void
   onGoToTab: (tab: "star" | "one" | "now" | "milestones" | "systems" | "values" | "commit") => void
+  /**
+   * The saved one thing, read from the account by the flow. Null when nothing
+   * has been written. Not editable here — see the block below.
+   */
+  oneThing: string | null
   /**
    * The goals, read back — `GoalOverview` with the flow's handlers, and the
    * quick-add above it. Passed in rather than built here for the same reason
@@ -461,15 +467,25 @@ export function RecapTab({
       >
         {editing === "one" ? (
           <div className="space-y-4">
+            {/* NOT A SECOND BOX TO WRITE IT IN.
+                This was a textarea that wrote the sentence into the plan while
+                the account held the real one, so editing your one thing on the
+                recap changed a copy nothing reads and left the tracking header
+                showing the old words. The sentence has one editing surface, on
+                the step that owns it, because it carries a deadline and a
+                history that no textarea here could write. */}
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">{ONE_COPY.title}</p>
-              <textarea
-                value={answerOf(plan, ONE_ANSWERS.oneThing)}
-                onChange={(e) => handlers.onAnswer(ONE_ANSWERS.oneThing, e.target.value)}
-                rows={3}
-                aria-label={ONE_COPY.title}
-                className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
-              />
+              <p className="text-[13px] text-zinc-100 mt-1.5 leading-relaxed">
+                {oneThing?.trim() || <span className="text-zinc-600">{RECAP_COPY.oneEmpty}</span>}
+              </p>
+              <button
+                type="button"
+                onClick={() => onGoToTab("one")}
+                className="mt-1.5 text-[11px] text-zinc-500 hover:text-zinc-200 transition-colors"
+              >
+                {oneThing?.trim() ? "Change it on the step that owns it" : "Write it on the step that owns it"}
+              </button>
             </div>
             {[
               { key: ONE_ANSWERS.why, label: ONE_COPY.whyTitle },
@@ -502,9 +518,7 @@ export function RecapTab({
                 weeks earlier. The marked goal is shown under it, named for
                 what it is. */}
             <p className="text-[15px] text-zinc-100 leading-relaxed">
-              {answerOf(plan, ONE_ANSWERS.oneThing).trim() || (
-                <span className="text-zinc-600 text-[13px]">{RECAP_COPY.oneEmpty}</span>
-              )}
+              {oneThing?.trim() || <span className="text-zinc-600 text-[13px]">{RECAP_COPY.oneEmpty}</span>}
             </p>
             {focus && (
               <p className="text-[11.5px] text-zinc-500 mt-1.5">{SEASON_FOCUS_COPY.banner(focus.label)}</p>

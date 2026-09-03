@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard, Waves, Archive, Aperture } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard, Waves, Archive, Aperture, Castle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -205,6 +205,12 @@ const testPages = [
     icon: Aperture,
   },
   {
+    name: "The Lair (the widget board)",
+    href: "/test/archive/lair",
+    description: "The configurable widget board that was at /lair, with Mission Control — its own goals surface — inside it. Still live: the board saves, and Mission Control reads and writes real goals. Kept to look at before it goes",
+    icon: Castle,
+  },
+  {
     name: "Goals hub (the old goals tab)",
     href: "/test/archive/goals-hub",
     description: "The whole hub as it was on /dashboard/goals until the plan flow replaced it: every goal by life area, the tree and kanban views, progress, streaks, the catalogue picker, the goal form. Still live — it reads and writes your real goals. Kept to inspect and cherry-pick from, then delete",
@@ -245,6 +251,7 @@ const ARCHIVED_HREFS = new Set<string>([
   // The onboarding and the hub Life Mastery replaced in the product
   "/test/archive/goal-setup",
   "/test/archive/goals-hub",
+  "/test/archive/lair",
   // Pieces of those flows, explored on their own
   "/test/values-curation",
   "/test/curve-customization",

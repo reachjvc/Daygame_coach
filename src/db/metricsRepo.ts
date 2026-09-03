@@ -48,7 +48,11 @@ export const STATS_ONLY_METRICS = [
 ] as const
 
 /** Metrics that need a query beyond the stats row. */
-const APPROACH_METRICS = ["approach_quality_avg_weekly", "high_quality_approaches_cumulative"]
+const APPROACH_METRICS = [
+  "approach_quality_avg_weekly",
+  "high_quality_approaches_cumulative",
+  "high_quality_approaches_weekly",
+]
 
 const SCENARIO_METRICS = [
   "scenario_sessions_cumulative",
@@ -197,7 +201,8 @@ export function getMetricValue(
       console.warn(`[getMetricValue] approach_quality_avg_weekly should be handled by resolveMetricValues (requires async DB query). Returning 0.`)
       return 0
     case "high_quality_approaches_cumulative":
-      console.warn(`[getMetricValue] high_quality_approaches_cumulative should be handled by resolveMetricValues (requires async DB query). Returning 0.`)
+    case "high_quality_approaches_weekly":
+      console.warn(`[getMetricValue] ${metric} should be handled by resolveMetricValues (requires async DB query). Returning 0.`)
       return 0
     case "scenario_sessions_cumulative":
     case "scenario_types_cumulative":
@@ -253,6 +258,15 @@ export async function resolveMetricValues(
             needs("high_quality_approaches_cumulative")
               ? getHighQualityApproachCount(userId).then((n) => {
                   out.high_quality_approaches_cumulative = n
+                })
+              : null,
+            // The same count, this week only. The "High-Quality Approaches"
+            // catalogue goal ramps 2 -> 4 -> 6 A WEEK, and had the lifetime
+            // count wired to it — so it read as complete on day one and the ramp
+            // meant nothing.
+            needs("high_quality_approaches_weekly")
+              ? getHighQualityApproachCount(userId, weekStartInstant(timezone)).then((n) => {
+                  out.high_quality_approaches_weekly = n
                 })
               : null,
           ])

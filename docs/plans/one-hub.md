@@ -335,17 +335,33 @@ to the plan flow. That redirect belonged to it being the front door; the archive
 is not one, so an empty account now sees the empty hub — which is the thing being
 inspected.
 
-**Where the Goals tab went.** The user asked for it to stop existing. Taken
-literally that would have orphaned `/dashboard/goals/plan`, a live paid surface,
-reachable only by typing the URL. So the *hub* tab is gone and the entry now
-reads **Plan** and opens the flow that replaced it. Say the word and it comes out
-entirely.
+**The Goals tab is gone entirely.** It briefly became "Plan"; the user asked for
+it to go, and it has. There is now no goals entrance anywhere in the navigation —
+verified in a signed-in browser: the word "Goals" appears nowhere on
+`/dashboard/tracking`, desktop or mobile.
 
-**Production never links into the archive.** Three buttons pointed at the hub —
-Mission Control's "View All Goals", the inner-game Goals tab, and the Track
-step's "your goals page". All three now point at the plan flow. Linking a live
-feature at something scheduled for deletion would only create the same work
-again later.
+`/dashboard/goals/plan` is not orphaned by that, which was the worry. The
+tracking page carries its own **"Open your plan"** link, and the flow is also at
+`/test/life-mastery`. Nothing needed adding.
+
+**The Lair went too, whole.** `/lair` is now `/test/archive/lair` — a second
+goals surface, built for the same job, and not one to keep. Moving the page
+rather than retiring Mission Control on its own avoided a real trap: the widget
+is in the DEFAULT Lair layout, and `validateLayout` rejects an entire layout
+containing a widget id it does not recognise. Deleting the widget from the
+registry would have left anyone whose saved board still listed it unable to save
+any change to their Lair again — rendering tolerates an unknown id, saving does
+not. Moving the page leaves every saved board valid and the registry untouched.
+
+Mission Control's "View All Goals" points at `/test/archive/goals-hub`. That is
+archive-to-archive now, not production-to-archive. The other two links — the
+inner-game Goals tab and the Track step's "your goals page" — point at the plan
+flow. Inner game is deliberately untouched: the user is still deciding what it
+becomes.
+
+**Nothing in the navigation points at goals or the Lair.** Verified signed in:
+neither word appears anywhere on `/dashboard/tracking`, and `/lair`,
+`/dashboard/goals` and `/dashboard/goals/setup` all return 404.
 
 **A naming collision that resolved itself.** Two different flows were called Life
 Mastery: the 14-step North Star flow (live) and a 3-step flow at

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { getLifeAnswers, addLifeAnswer, deleteLifeAnswer, LIFE_ANSWER_KEYS, type LifeAnswerKey } from "@/src/db/lifeAnswerRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
-import { currentOneThing, pastOneThings, isSameAsCurrent, defaultDueOn } from "@/src/goals/oneThingService"
+import { currentOneThing, pastOneThings, planOneThingWrite } from "@/src/goals/oneThingService"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 const key = (raw: string | null): LifeAnswerKey | null =>
@@ -25,18 +25,17 @@ export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}))
     const k = key(body.key)
-    const text = typeof body.body === "string" ? body.body.trim() : ""
     if (!k) return err("Unknown answer key", 400)
-    if (!text || text.length > 2000) return err("Write something, and keep it under 2000 characters", 400)
 
-    const tz = await getUserTimezone(auth.userId)
-    const rows = await getLifeAnswers(auth.userId, k)
-    // Saving the same words again is not a new answer; a page that saves on
-    // blur would otherwise turn one afternoon into forty entries of history.
-    if (isSameAsCurrent(rows, text)) return NextResponse.json({ unchanged: true })
+    const [rows, tz] = await Promise.all([getLifeAnswers(auth.userId, k), getUserTimezone(auth.userId)])
+    // Refuse it, do nothing, or append: one rule, in the service, because the
+    // three answers depend on each other. See `planOneThingWrite`.
+    const write = planOneThingWrite(rows, body.body, body.dueOn, tz)
+    if (write.kind === "reject") return err(write.reason, 400)
+    if (write.kind === "unchanged") return NextResponse.json({ unchanged: true })
 
-    const dueOn = typeof body.dueOn === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.dueOn) ? body.dueOn : defaultDueOn(tz)
-    return NextResponse.json(await addLifeAnswer(auth.userId, k, text, dueOn), { status: 201 })
+    const saved = await addLifeAnswer(auth.userId, k, String(body.body).trim(), write.dueOn)
+    return NextResponse.json(saved, { status: 201 })
   } catch (e) { console.error("Error writing life answer:", e); return err("That did not save") }
 }
 

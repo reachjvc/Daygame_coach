@@ -40,9 +40,7 @@ import { useState } from "react"
 import { Check, Pencil, Plus, X } from "lucide-react"
 import type { NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlan } from "@/src/goals/types"
 import { HALVES_COPY, MILESTONES_COPY, PLAN_INTRO, ROUTINES_INTRO, ROUTINE_BLUEPRINTS, SYSTEMS_COPY } from "@/src/goals/data/northStar"
-import { ONE_ANSWERS } from "@/src/goals/data/northStarStart"
 import {
-  answerOf,
   areaSystemMilestones,
   milestoneGoals,
   milestonesWithoutSystems,
@@ -98,6 +96,7 @@ export function MilestonesTab({
   onAddRequirement,
   onGoToTab,
   step,
+  oneThing,
 }: {
   plan: NsPlan
   today: string
@@ -116,8 +115,9 @@ export function MilestonesTab({
   onGoToTab: (tab: NorthStarTabId) => void
   /** Which step this is. The rail is the switch between them. */
   step: BuildStep
+  /** The saved one thing, read from the account by the flow. */
+  oneThing: string | null
 }) {
-  const oneThing = answerOf(plan, ONE_ANSWERS.oneThing)
   const requirements = oneThingRequirements(plan)
   const ratings = wheelRatings(plan, today)
   /**
@@ -178,7 +178,7 @@ export function MilestonesTab({
           want, so it belongs on the step that is about wanting; repeating it
           over the systems step is the same panel twice for anybody walking
           from one to the other. */}
-      {step === "milestones" && oneThing.trim() && (
+      {step === "milestones" && oneThing?.trim() && (
         <section className="rounded-2xl border border-violet-400/25 bg-violet-500/[0.05] px-5 py-4">
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-200/70">{PLAN_INTRO.oneEcho}</p>
           <button

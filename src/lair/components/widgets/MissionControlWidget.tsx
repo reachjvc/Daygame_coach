@@ -614,8 +614,13 @@ export function MissionControlWidget({ collapsed }: WidgetProps) {
             Daygame
           </button>
         </div>
+        {/* Into the archive on purpose. The goals hub this opened is at
+            /test/archive/goals-hub now, and until the consolidated surface
+            exists that IS where all of somebody's goals are shown. It is the one
+            production link into the archive, allowlisted in
+            tests/unit/architecture.test.ts, so it comes out with the archive. */}
         <Link
-          href="/dashboard/goals/plan"
+          href="/test/archive/goals-hub"
           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
         >
           View All Goals

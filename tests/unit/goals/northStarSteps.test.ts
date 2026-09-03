@@ -18,7 +18,7 @@ import { describe, expect, it } from "vitest"
 import { SCORED_TABS, TAB_ORDER } from "@/src/goals/data/northStar"
 import { COMMIT_DATE_KEY, COMMIT_KEY, ONE_ANSWERS } from "@/src/goals/data/northStarStart"
 import { VISION_RUNGS } from "@/src/goals/data/lifeMasteryWhy"
-import type { NorthStarTabId, NsPlan } from "@/src/goals/types"
+import type { NorthStarTabId, NsAccount, NsPlan } from "@/src/goals/types"
 import {
   addCustomStep,
   addGoal,
@@ -42,13 +42,25 @@ import {
 const NOW = "2026-08-17T09:00:00.000Z"
 const TODAY = "2026-08-17"
 
+/**
+ * THE ONE THING IS NOT ON THE PLAN, so a plan alone cannot fill its ring.
+ *
+ * It lives on the account — one sentence, one place — and the rail is told
+ * about it rather than reading a copy of it. A "complete plan" is therefore a
+ * complete plan AND a saved one thing, and that is what these tests now say.
+ * `SAVED` is the account of somebody who has written one; the default,
+ * `NO_ACCOUNT`, is somebody who has not.
+ */
+const SAVED: NsAccount = { hasOneThing: true }
+
 /** A plan with every box on every step filled in. */
 function completePlan(): NsPlan {
   let plan = setNorthStar(emptyNsPlan(), "I wake up near the water and my work pays for itself.", NOW)
   for (const rung of VISION_RUNGS) plan = setRung(plan, rung.id, "written", NOW)
   for (const area of plan.areas) plan = setAreaReview(plan, area.id, { ten: "A ten looks like this", fortnight: 6 }, NOW)
 
-  plan = setAnswer(plan, ONE_ANSWERS.oneThing, "Get my training consistent", NOW)
+  /* The sentence itself is not written here: it is not part of a plan any more.
+     Every call below pairs this plan with `SAVED`. */
   for (const key of [ONE_ANSWERS.why, ONE_ANSWERS.cost, ONE_ANSWERS.identity, ONE_ANSWERS.values]) {
     plan = setAnswer(plan, key, "written", NOW)
   }
@@ -77,7 +89,7 @@ describe("the circles on the rail", () => {
   })
 
   it("fills every one of them when every box is filled", () => {
-    const states = stepStates(completePlan())
+    const states = stepStates(completePlan(), SAVED)
     // SCORED_TABS, not TAB_ORDER: the fork after the one thing draws no ring,
     // because it holds nothing — its doors write into the steps they open.
     const unfinished = SCORED_TABS.filter((tab) => states[tab] !== "done")
@@ -97,11 +109,12 @@ describe("the circles on the rail", () => {
     // testing one box, and one box is what the green tick used to mean.
     const complete = completePlan()
     for (const tab of SCORED_TABS) {
-      expect(stepState(complete, tab), tab).toBe("done")
+      expect(stepState(complete, tab, SAVED), tab).toBe("done")
     }
-    const partial = setAnswer(setNorthStar(emptyNsPlan(), "Something", NOW), ONE_ANSWERS.oneThing, "Something else", NOW)
+    const partial = setNorthStar(emptyNsPlan(), "Something", NOW)
     expect(stepState(partial, "star")).toBe("started")
-    expect(stepState(partial, "one")).toBe("started")
+    // A saved sentence and nothing under it: started, never done.
+    expect(stepState(partial, "one", SAVED)).toBe("started")
   })
 
   it("does not go backwards as somebody writes more", () => {
@@ -139,9 +152,9 @@ describe("the circles on the rail", () => {
   it("keeps the rail and the progress map saying the same thing", () => {
     // Two definitions of "done" is how a page ends up with a tick in the rail
     // and a "still to fill in" list underneath naming the same step.
-    for (const plan of [emptyNsPlan(), completePlan()]) {
-      const states = stepStates(plan)
-      const done = nsProgress(plan).done
+    for (const [plan, account] of [[emptyNsPlan(), undefined], [completePlan(), SAVED]] as const) {
+      const states = stepStates(plan, account)
+      const done = nsProgress(plan, account).done
       for (const tab of TAB_ORDER) expect(done[tab], tab).toBe(states[tab] === "done")
     }
   })
@@ -199,7 +212,7 @@ describe("what each step counts as full", () => {
     for (const tab of judged) {
       // A tab with no rule of its own would fall through to the commit branch
       // and report on somebody else's work.
-      expect(stepState(completePlan(), tab), tab).toBe("done")
+      expect(stepState(completePlan(), tab, SAVED), tab).toBe("done")
       expect(stepState(emptyNsPlan(), tab), tab).toBe("empty")
     }
   })
