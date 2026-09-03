@@ -90,12 +90,16 @@ test.describe('Signup Flow', () => {
       })
     })
 
+    await page.getByTestId(SELECTORS.signup.fullNameInput).fill('Redirect Check', { timeout: ACTION_TIMEOUT })
     await page.getByTestId(SELECTORS.signup.emailInput).fill('e2e-redirect-check@example.com', { timeout: ACTION_TIMEOUT })
     await page.getByTestId(SELECTORS.signup.passwordInput).fill('CorrectHorse9!', { timeout: ACTION_TIMEOUT })
     await page.getByTestId(SELECTORS.signup.repeatPasswordInput).fill('CorrectHorse9!', { timeout: ACTION_TIMEOUT })
     await page.getByTestId(SELECTORS.signup.submitButton).click({ timeout: ACTION_TIMEOUT })
 
-    await page.waitForURL(/\/auth\/sign-up-success/, { timeout: AUTH_TIMEOUT })
+    // Assert on what the client ASKED for, not on where the page went next:
+    // the stubbed response is deliberately not a full GoTrue payload, so the
+    // client may not navigate. The request is the thing under test.
+    await expect.poll(() => redirectTo, { timeout: AUTH_TIMEOUT }).not.toBe('')
 
     expect(redirectTo).toContain('/auth/confirm')
     expect(redirectTo).not.toMatch(/\/dashboard(\?|$)/)

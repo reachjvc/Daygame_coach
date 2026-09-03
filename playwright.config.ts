@@ -38,6 +38,7 @@ export default defineConfig({
       testIgnore: [
         /smoke\.spec\.ts/,
         /signup-flow\.spec\.ts/,
+        /password-reset\.spec\.ts/,
         /security-auth\.spec\.ts/,
         /auth\.spec\.ts/,
         /protected-routes\.spec\.ts/,
@@ -87,9 +88,41 @@ export default defineConfig({
       testMatch: [
         /smoke\.spec\.ts/,
         /signup-flow\.spec\.ts/,
+        // Password reset is an unauthenticated flow: half of it asserts what a
+        // logged-OUT visitor sees, so it must not inherit the signed-in state.
+        /password-reset\.spec\.ts/,
         /security-auth\.spec\.ts/,
       ],
       use: { ...devices['Desktop Chrome'] },
+    },
+
+    // === Time tracker on every engine ===
+    // The tracker is the one feature people will open on a phone, a laptop and
+    // whatever browser is on the machine in front of them. Chromium alone does
+    // not prove that. These three run the full suite, not a smoke test.
+    {
+      name: 'toggl-webkit',
+      testMatch: /toggl-time-tracker\.spec\.ts/,
+      dependencies: ['setup'],
+      use: { ...devices['Desktop Safari'], storageState: 'tests/e2e/.auth/user.json' },
+    },
+    {
+      name: 'toggl-firefox',
+      testMatch: /toggl-time-tracker\.spec\.ts/,
+      dependencies: ['setup'],
+      use: { ...devices['Desktop Firefox'], storageState: 'tests/e2e/.auth/user.json' },
+    },
+    {
+      name: 'toggl-iphone-safari',
+      testMatch: /mobile\/mobile-toggl\.spec\.ts/,
+      dependencies: ['setup'],
+      use: { ...devices['iPhone 14'], storageState: 'tests/e2e/.auth/user.json' },
+    },
+    {
+      name: 'toggl-android',
+      testMatch: /mobile\/mobile-toggl\.spec\.ts/,
+      dependencies: ['setup'],
+      use: { ...devices['Pixel 7'], storageState: 'tests/e2e/.auth/user.json' },
     },
 
     // === Cross-browser smoke (unauthenticated only) ===

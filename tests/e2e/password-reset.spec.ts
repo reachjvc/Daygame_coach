@@ -8,11 +8,6 @@ const AUTH_TIMEOUT = 15000
 // tests/unit/e2e-isolation.test.ts.
 test.describe.configure({ mode: 'serial' })
 
-// Serial: a test here intercepts a network route, and a parallel worker hitting
-// the same page mid-interception sees the stub. Required by
-// tests/unit/e2e-isolation.test.ts.
-test.describe.configure({ mode: 'serial' })
-
 test.describe('Password reset', () => {
   test('is reachable from the login page', async ({ page }) => {
     await page.goto('/auth/login', { timeout: AUTH_TIMEOUT })
