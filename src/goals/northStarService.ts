@@ -99,6 +99,7 @@ import type {
   NsProgress,
   NsRoutine,
   NsRoutineStep,
+  NsRoutineProgram,
   NsSplitDay,
   NsValueEvidence,
   NsValueMention,
@@ -1271,7 +1272,8 @@ export function applyProgramDays(
   plan: NsPlan,
   routineId: string,
   dayNames: string[],
-  now = nowIso()
+  now = nowIso(),
+  program: NsRoutineProgram | null = null
 ): NsPlan {
   if (dayNames.length === 0) return plan
   let next = plan
@@ -1284,9 +1286,35 @@ export function applyProgramDays(
   return withRoutine(
     next,
     routineId,
-    (r) => ({ ...r, splitDays: days, daysPerWeek: clamp(days.length, 1, 7) }),
+    (r) => ({ ...r, splitDays: days, daysPerWeek: clamp(days.length, 1, 7), program }),
     now
   )
+}
+
+/**
+ * Forget the enrollment a training week was tracked by, keeping the week.
+ *
+ * For when the program is ended somewhere else. The days you wrote down are
+ * still your days — they are simply no longer tracked by anything, and the plan
+ * has to stop claiming that they are. Deleting the week instead would throw
+ * away a decision the user made because a DIFFERENT decision was reversed.
+ */
+export function detachProgramFromRoutines(
+  plan: NsPlan,
+  enrollmentId: string,
+  now = nowIso()
+): NsPlan {
+  const affected = plan.routines.filter((r) => r.program?.enrollmentId === enrollmentId)
+  if (affected.length === 0) return plan
+  return affected.reduce(
+    (acc, r) => withRoutine(acc, r.id, (cur) => ({ ...cur, program: null }), now),
+    plan
+  )
+}
+
+/** The enrollments this plan believes it is training, newest first. */
+export function trackedEnrollmentIds(plan: NsPlan): string[] {
+  return plan.routines.map((r) => r.program?.enrollmentId).filter((id): id is string => Boolean(id))
 }
 
 /**
@@ -1300,14 +1328,15 @@ export function applyProgramDays(
 export function applyProgramToWorkoutRoutine(
   plan: NsPlan,
   dayNames: string[],
-  now = nowIso()
+  now = nowIso(),
+  program: NsRoutineProgram | null = null
 ): NsPlan {
   if (dayNames.length === 0) return plan
   const existing = plan.routines.find((r) => r.blueprintId === "workout")
   const next = existing ? plan : addRoutine(plan, "workout", now)
   const routine = next.routines.find((r) => r.blueprintId === "workout")
   if (!routine) return plan
-  return applyProgramDays(next, routine.id, dayNames, now)
+  return applyProgramDays(next, routine.id, dayNames, now, program)
 }
 
 export function addSplitDay(plan: NsPlan, routineId: string, now = nowIso()): NsPlan {

@@ -623,3 +623,56 @@ $$;
 
 CREATE TRIGGER life_answers_no_update BEFORE UPDATE ON life_answers
   FOR EACH ROW EXECUTE FUNCTION life_answers_reject_update();
+
+-- ============================================
+-- Workout programs
+-- Mirrors supabase/migrations/20260618_create_program_tables.sql and the
+-- custom_schedule column from 20260818_program_custom_schedule.sql.
+--
+-- THE CONSTRAINTS ARE THE POINT, so they are copied verbatim rather than
+-- approximated. Two of them carry the whole safety story of this feature:
+--   * ON DELETE CASCADE on program_session_logs.enrollment_id — the reason
+--     deleting an enrollment destroys a year of training, and the reason
+--     ending one must archive instead.
+--   * uq_program_enrollments_active, a PARTIAL unique index — the reason any
+--     number of finished enrollments of the same program may sit beside one
+--     live one, which is what makes archiving possible at all.
+-- A test schema that softened either would pass while production lost data.
+--
+-- auth.users does not exist in the container, so user_id references profiles,
+-- the same substitution every other table in this file makes.
+-- ============================================
+
+CREATE TABLE program_enrollments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  program_id TEXT NOT NULL,
+  level TEXT NOT NULL CHECK (level IN ('beginner', 'intermediate', 'advanced')),
+  unit_system TEXT NOT NULL CHECK (unit_system IN ('kg', 'lb')),
+  exercise_state JSONB NOT NULL DEFAULT '{}'::jsonb,
+  cursor JSONB NOT NULL,
+  custom_schedule JSONB,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_program_enrollments_user_active
+  ON program_enrollments(user_id, is_active);
+
+CREATE UNIQUE INDEX uq_program_enrollments_active
+  ON program_enrollments(user_id, program_id) WHERE is_active;
+
+CREATE TABLE program_session_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  enrollment_id UUID NOT NULL REFERENCES program_enrollments(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  day_id TEXT NOT NULL,
+  cycle INTEGER NOT NULL,
+  week INTEGER NOT NULL,
+  entries JSONB NOT NULL,
+  rpe SMALLINT CHECK (rpe IS NULL OR (rpe >= 1 AND rpe <= 10)),
+  notes TEXT,
+  logged_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

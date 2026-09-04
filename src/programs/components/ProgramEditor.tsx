@@ -32,7 +32,7 @@
  */
 
 import { useMemo, useState } from "react"
-import { ArrowLeftRight, Check, ChevronDown, ChevronUp, Plus, X } from "lucide-react"
+import { ArrowLeftRight, ChevronDown, ChevronUp, Plus, X } from "lucide-react"
 import { Action, IconButton, Panel, TYPE } from "./ui"
 import {
   addDay,
@@ -608,15 +608,5 @@ function AddExercise({ onAdd }: { onAdd: (entry: LibraryExercise) => void }) {
         )}
       </div>
     </div>
-  )
-}
-
-/** Shown after a program is running, so the tab can confirm without re-rendering the editor. */
-export function ProgramEditedBadge({ modified }: { modified: boolean }) {
-  if (!modified) return null
-  return (
-    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-300/80">
-      <Check className="size-3" /> your version
-    </span>
   )
 }

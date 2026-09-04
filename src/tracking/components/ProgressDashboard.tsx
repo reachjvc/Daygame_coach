@@ -25,6 +25,21 @@ const AchievementsModal = lazy(() =>
   import("./dashboard/AchievementsModal").then(m => ({ default: m.AchievementsModal }))
 )
 
+/**
+ * TODAY'S PRESCRIBED SESSION, ON THE PAGE OPENED DAILY.
+ *
+ * A training program that only tells you what to do once you have navigated to
+ * it is a program you follow on the days you remember to go looking. The panel
+ * RENDERS NOTHING without an active enrollment, so it costs a person with no
+ * program a single request and no screen space.
+ *
+ * The same component the goals page embeds — not a second copy — so the session
+ * shown here and the session shown there cannot drift apart.
+ */
+const ActiveProgramsPanel = lazy(() =>
+  import("@/src/programs/components/ActiveProgramsPanel").then(m => ({ default: m.ActiveProgramsPanel }))
+)
+
 export function ProgressDashboard({ initialDashboard }: { initialDashboard?: DashboardLayoutResponse }) {
   const { state, deleteSession, deleteFieldReport, refresh } = useTrackingStats()
   const [achievementsOpen, setAchievementsOpen] = useState(false)
@@ -110,6 +125,17 @@ export function ProgressDashboard({ initialDashboard }: { initialDashboard?: Das
         {/* Daily Reflection */}
         <div className="md:col-span-2">
           <DailyReviewCard />
+        </div>
+
+        {/* TODAY'S TRAINING SESSION, low on the page on purpose.
+            It was above Quick Actions, where a five-lift day pushed everything
+            else below the fold — a card you open the page for once a day should
+            not outrank the things you open it for every time. Renders nothing
+            without an active program. */}
+        <div className="md:col-span-2">
+          <Suspense fallback={null}>
+            <ActiveProgramsPanel />
+          </Suspense>
         </div>
 
         {/* Weekly Reviews */}

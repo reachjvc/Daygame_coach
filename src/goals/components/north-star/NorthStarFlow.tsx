@@ -57,7 +57,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { ArrowLeft, Check, ChevronDown } from "lucide-react"
-import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlace, NsPlan, VisionGoalType } from "@/src/goals/types"
+import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlace, NsPlan, NsRoutineProgram, VisionGoalType } from "@/src/goals/types"
 import { COMMIT_EDIT_COPY, ERRAND_COPY, NORTH_STAR_STORAGE_KEY, NS_TRACK_RUN_KEY, SCORED_TABS, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, WORKSHOP_TABS } from "@/src/goals/data/northStar"
 import type { RoutineNeed } from "@/src/goals/data/northStarBuild"
 import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
@@ -525,7 +525,12 @@ export function NorthStarFlow({
     // A program that is now running in the database, reflected in the plan the
     // page is showing. The enrollment is the source of truth for what gets
     // trained; this keeps the week on screen from disagreeing with it.
-    onProgramStarted: (dayNames: string[]) => setPlan((p) => ns.applyProgramToWorkoutRoutine(p, dayNames)),
+    onProgramStarted: (dayNames: string[], program: NsRoutineProgram | null) =>
+      // `now` keeps its default; the reference is what this call is for.
+      setPlan((p) => ns.applyProgramToWorkoutRoutine(p, dayNames, undefined, program)),
+    /* The week stays; only the claim that something tracks it goes. */
+    onProgramEnded: (enrollmentId: string) =>
+      setPlan((p) => ns.detachProgramFromRoutines(p, enrollmentId)),
   }), [])
 
   /**

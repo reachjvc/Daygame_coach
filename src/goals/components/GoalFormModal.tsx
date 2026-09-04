@@ -262,6 +262,8 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
         goal_type: goalType,
       }
 
+      /* NOT `shapeOfRow`, deliberately: this reads the form's own state before
+         any row exists, so there is no `tracking_type` to read alongside it. */
       if (goalType === "recurring" || goalType === "habit_ramp") {
         payload.period = period
       }

@@ -1,7 +1,7 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Play, Clock, PlusCircle, Calendar, Sun, ArrowRight } from "lucide-react"
+import { Play, Clock, PlusCircle, Calendar, Sun, ArrowRight, Dumbbell } from "lucide-react"
 import Link from "next/link"
 
 interface QuickActionsCardProps {
@@ -49,6 +49,19 @@ export function QuickActionsCard({ onQuickAddClick }: QuickActionsCardProps) {
             <div className="flex items-center gap-3">
               <Calendar className="size-5 text-primary" />
               <span>Weekly Review</span>
+            </div>
+            <ArrowRight className="size-4 text-muted-foreground" />
+          </div>
+        </Link>
+        {/* TRAINING, FROM THE PAGE PEOPLE ACTUALLY OPEN.
+            /programs prescribes and logs the session, and a logged session
+            feeds the gym-sessions tile on this very dashboard — but nothing in
+            the app linked to it, so the only way in was typing the URL. */}
+        <Link href="/programs" className="block" data-testid="training-link">
+          <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
+            <div className="flex items-center gap-3">
+              <Dumbbell className="size-5 text-primary" />
+              <span>Log a Workout</span>
             </div>
             <ArrowRight className="size-4 text-muted-foreground" />
           </div>

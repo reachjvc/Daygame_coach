@@ -25,7 +25,7 @@ import {
 } from "@/src/programs/customize"
 import { dayForWeekday, isWeekdayAnchored } from "@/src/programs/builder"
 import { isoWeekday } from "@/src/programs/config"
-import { DISCIPLINES, BRIDGE_SESSION_TYPE, BRIDGE_DEFAULT_DURATION_MIN, BRIDGE_DEFAULT_INTENSITY } from "@/src/programs/config"
+import { BRIDGE_SESSION_TYPE, BRIDGE_DEFAULT_DURATION_MIN, BRIDGE_DEFAULT_INTENSITY } from "@/src/programs/config"
 import type {
   ApplyLogResult,
   LevelId,
@@ -86,7 +86,78 @@ export async function listActiveEnrollments(userId: string): Promise<ProgramEnro
     .eq("is_active", true)
     .order("started_at", { ascending: false })
   if (error) throw new Error(`Failed to list enrollments: ${error.message}`)
-  return (data ?? []).map((r) => toDomain(r as ProgramEnrollmentRow))
+  const enrollments = (data ?? []).map((r) => toDomain(r as ProgramEnrollmentRow))
+  if (enrollments.length === 0) return enrollments
+
+  /**
+   * WHEN EACH WAS LAST TRAINED — the difference between a program and a ghost.
+   *
+   * One query for all of them rather than one per enrollment: this list is read
+   * on the tracking dashboard, on /programs and on the Life Mastery templates
+   * tab, and N+1 on a page somebody opens daily is a cost paid forever.
+   *
+   * Not stored on the enrollment. It is a fact about `program_session_logs`,
+   * and a second copy of it would be one more pair of things that can disagree
+   * — which is the exact bug this area is being dug out of.
+   */
+  const { data: logs, error: logErr } = await supabase
+    .from("program_session_logs")
+    .select("enrollment_id, logged_at")
+    .eq("user_id", userId)
+    .in("enrollment_id", enrollments.map((e) => e.id))
+    .order("logged_at", { ascending: false })
+  if (logErr) throw new Error(`Failed to read session history: ${logErr.message}`)
+
+  const lastByEnrollment = new Map<string, string>()
+  for (const row of (logs ?? []) as { enrollment_id: string; logged_at: string }[]) {
+    // Ordered newest-first, so the first one seen for an enrollment is its last.
+    if (!lastByEnrollment.has(row.enrollment_id)) lastByEnrollment.set(row.enrollment_id, row.logged_at)
+  }
+  return enrollments.map((e) => ({ ...e, lastLoggedAt: lastByEnrollment.get(e.id) ?? null }))
+}
+
+/**
+ * Programs that have been ended, newest first.
+ *
+ * Ending a program archives it rather than deleting it — but nothing read the
+ * archive, so a year of StrongLifts became invisible the moment somebody moved
+ * on to 5/3/1. Keeping a record nobody can see is only marginally better than
+ * not keeping it.
+ *
+ * Same one-query `lastLoggedAt` derivation as the active list; a past program
+ * with no sessions is somebody who started it and never went.
+ */
+export async function listPastEnrollments(userId: string): Promise<ProgramEnrollment[]> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("program_enrollments")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("is_active", false)
+    .order("started_at", { ascending: false })
+  if (error) throw new Error(`Failed to list past programs: ${error.message}`)
+  const enrollments = (data ?? []).map((r) => toDomain(r as ProgramEnrollmentRow))
+  if (enrollments.length === 0) return enrollments
+
+  const { data: logs, error: logErr } = await supabase
+    .from("program_session_logs")
+    .select("enrollment_id, logged_at")
+    .eq("user_id", userId)
+    .in("enrollment_id", enrollments.map((e) => e.id))
+    .order("logged_at", { ascending: false })
+  if (logErr) throw new Error(`Failed to read session history: ${logErr.message}`)
+
+  const counts = new Map<string, { last: string; n: number }>()
+  for (const row of (logs ?? []) as { enrollment_id: string; logged_at: string }[]) {
+    const cur = counts.get(row.enrollment_id)
+    if (!cur) counts.set(row.enrollment_id, { last: row.logged_at, n: 1 })
+    else cur.n++
+  }
+  return enrollments.map((e) => ({
+    ...e,
+    lastLoggedAt: counts.get(e.id)?.last ?? null,
+    sessionsLogged: counts.get(e.id)?.n ?? 0,
+  }))
 }
 
 export async function getEnrollmentById(userId: string, id: string): Promise<ProgramEnrollment | null> {
@@ -191,10 +262,69 @@ export async function listActiveSelections(
   }))
 }
 
+/**
+ * Stop a program. ARCHIVES IT — never deletes it.
+ *
+ * THIS USED TO DESTROY A YEAR OF TRAINING IN ONE CLICK. It was a hard
+ * `DELETE`, and `program_session_logs.enrollment_id` is declared
+ * `ON DELETE CASCADE`, so every session ever logged against the program went
+ * with the row. Somebody who ran StrongLifts for a year and then switched to
+ * 5/3/1 lost all hundred-and-fifty of them, and the only warning was a browser
+ * confirm() saying "your logged sessions will be removed" — which described the
+ * bug accurately and was treated as a feature.
+ *
+ * An enrollment is not scratch state. It is the record of what somebody
+ * actually did, which is the single thing a training app exists to keep. So
+ * stopping a program is a change of STATUS, exactly as `enrollInProgram`
+ * already does when it makes way for a program in the same discipline.
+ *
+ * The partial unique index (`uq_program_enrollments_active … WHERE is_active`)
+ * is already written for this: any number of finished enrollments of the same
+ * program may sit side by side, and only one may be live. Coming back to a
+ * program you did last year does not collide with the record of last year.
+ */
 export async function unenroll(userId: string, id: string): Promise<void> {
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from("program_enrollments").delete().eq("id", id).eq("user_id", userId)
-  if (error) throw new Error(`Failed to unenroll: ${error.message}`)
+  const { error } = await supabase
+    .from("program_enrollments")
+    .update({ is_active: false })
+    .eq("id", id)
+    .eq("user_id", userId)
+  if (error) throw new Error(`Failed to end program: ${error.message}`)
+}
+
+/**
+ * Erase a finished program and everything logged on it. PERMANENT.
+ *
+ * The counterpart to `unenroll`, and the reason that one is safe to press.
+ * Ending a program archives it, which was the fix for a button that used to
+ * destroy a year of sessions — but "archived forever, no way out" is its own
+ * fault: somebody who starts a program by accident, or who simply wants their
+ * data gone, is owed a way to remove it.
+ *
+ * So the two live apart on purpose. The everyday action is reversible and is
+ * offered where you train; this one is offered only in the list of programs you
+ * have already finished, and the cascade on `program_session_logs` — the exact
+ * behaviour that made the old delete a disaster — is what makes this one
+ * complete.
+ *
+ * Refuses to touch a RUNNING program: erasing what you are in the middle of is
+ * never what somebody means, and `is_active` is the difference between "I am
+ * done with this" and "I am doing this".
+ */
+export async function deleteEnrollmentPermanently(userId: string, id: string): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("program_enrollments")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", userId)
+    .eq("is_active", false)
+    .select("id")
+  if (error) throw new Error(`Failed to delete program: ${error.message}`)
+  if (!data || data.length === 0) {
+    throw new Error("Only a program you have already ended can be deleted permanently")
+  }
 }
 
 /** Reset cursor to the start of the program; keeps current working weights / TMs. */

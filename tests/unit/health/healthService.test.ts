@@ -4,6 +4,9 @@ import {
   computeWeekStreak,
   summarizeWorkoutSets,
   findLastExerciseSets,
+  workoutsOnDate,
+  liftHistory,
+  liftsWithHistory,
 } from "@/src/health/healthService"
 import type { WorkoutLogRow, WorkoutLogWithSets, WorkoutSetRow } from "@/src/health/types"
 
@@ -138,5 +141,132 @@ describe("findLastExerciseSets", () => {
   it("returns null for unknown or blank exercise names", () => {
     expect(findLastExerciseSets(logs, "Deadlift")).toBeNull()
     expect(findLastExerciseSets(logs, "  ")).toBeNull()
+  })
+})
+
+/**
+ * The double-log guard. A program session logged on /programs bridges into
+ * workout_logs, and the free-form logger writes to the same table — so one gym
+ * session written up both ways counts twice, on the week total, the streak, the
+ * heatmap and any goal reading the metric. These assert on the thing that
+ * actually matters: that a workout is matched to the day the person TRAINED, in
+ * their own timezone, not the day UTC happened to be on.
+ */
+describe("workoutsOnDate", () => {
+  it("finds the workout already logged on that day", () => {
+    const logs = [
+      log("a", new Date(2026, 6, 15, 7, 30).toISOString()),
+      log("b", new Date(2026, 6, 14, 18, 0).toISOString()),
+    ]
+    expect(workoutsOnDate(logs, "2026-07-15").map((l) => l.id)).toEqual(["a"])
+  })
+
+  it("returns nothing on a day that was not trained", () => {
+    const logs = [log("a", new Date(2026, 6, 15, 7, 30).toISOString())]
+    expect(workoutsOnDate(logs, "2026-07-16")).toEqual([])
+  })
+
+  it("counts a late-evening workout on the day it was done, not the next UTC day", () => {
+    // 23:30 local. In any timezone east of UTC this instant is already tomorrow
+    // in UTC, and a naive toISOString().split("T")[0] would file it a day late —
+    // the same clock bug this codebase has now hit three times.
+    const lateNight = new Date(2026, 6, 15, 23, 30)
+    expect(workoutsOnDate([log("a", lateNight.toISOString())], "2026-07-15")).toHaveLength(1)
+  })
+
+  it("reports every workout on the day, so a second one can be named", () => {
+    const logs = [
+      log("morning", new Date(2026, 6, 15, 7, 0).toISOString()),
+      log("evening", new Date(2026, 6, 15, 19, 0).toISOString()),
+    ]
+    expect(workoutsOnDate(logs, "2026-07-15")).toHaveLength(2)
+  })
+})
+
+/**
+ * ONE LIFT, ACROSS EVERY PROGRAM.
+ *
+ * `summariseProgression` reads one enrollment, so "my bench" resets every time
+ * you change program — backwards, because the lift persists and the program is
+ * what changes. `workout_sets` already spans both program sessions and loose
+ * workouts, keyed by exercise name.
+ */
+describe("liftHistory", () => {
+  const s = (exercise: string, weight: number, loggedAt: string, overrides: Partial<WorkoutSetRow> = {}) => ({
+    ...set(exercise, weight, 5, overrides),
+    logged_at: new Date(loggedAt).toISOString(),
+  })
+
+  it("joins the same lift across two different programs into one line", () => {
+    const sets = [
+      s("Bench Press", 60, "2026-01-10T10:00:00"),
+      s("Bench Press", 80, "2026-06-10T10:00:00"),
+    ]
+    expect(liftHistory(sets, "Bench Press").map((p) => p.weight)).toEqual([60, 80])
+  })
+
+  it("matches on the same key personal records use, so spelling does not split a lift", () => {
+    const sets = [s("bench press", 60, "2026-01-10T10:00:00"), s("Bench Press ", 70, "2026-02-10T10:00:00")]
+    expect(liftHistory(sets, "BENCH PRESS")).toHaveLength(2)
+  })
+
+  it("excludes warm-ups — a warm-up counted as working weight reads as a collapse", () => {
+    const sets = [
+      s("Squat", 100, "2026-01-10T10:00:00"),
+      s("Squat", 20, "2026-01-17T10:00:00", { is_warmup: true }),
+    ]
+    expect(liftHistory(sets, "Squat").map((p) => p.weight)).toEqual([100])
+  })
+
+  it("takes the heaviest set of a day, so five sets are one point and a drop set is not a fall", () => {
+    const sets = [
+      s("Squat", 100, "2026-01-10T10:00:00"),
+      s("Squat", 100, "2026-01-10T10:05:00"),
+      s("Squat", 60, "2026-01-10T10:10:00"),
+    ]
+    const out = liftHistory(sets, "Squat")
+    expect(out).toHaveLength(1)
+    expect(out[0].weight).toBe(100)
+  })
+
+  it("returns oldest first, whatever order the rows arrive in", () => {
+    const sets = [s("Row", 80, "2026-06-01T10:00:00"), s("Row", 40, "2026-01-01T10:00:00")]
+    expect(liftHistory(sets, "Row").map((p) => p.weight)).toEqual([40, 80])
+  })
+
+  it("a lift never done is empty, not an error", () => {
+    expect(liftHistory([], "Deadlift")).toEqual([])
+  })
+})
+
+describe("liftsWithHistory", () => {
+  const s = (exercise: string, weight: number, loggedAt: string, overrides: Partial<WorkoutSetRow> = {}) => ({
+    ...set(exercise, weight, 5, overrides),
+    logged_at: new Date(loggedAt).toISOString(),
+  })
+
+  it("drops a lift done only once — two points is the least a line can be drawn from", () => {
+    const sets = [
+      s("Squat", 100, "2026-01-01T10:00:00"),
+      s("Squat", 110, "2026-01-08T10:00:00"),
+      s("Curl", 20, "2026-01-01T10:00:00"),
+    ]
+    expect(liftsWithHistory(sets).map((l) => l.exercise)).toEqual(["Squat"])
+  })
+
+  it("lists the most-trained lift first", () => {
+    const sets = [
+      s("Squat", 100, "2026-01-01T10:00:00"), s("Squat", 105, "2026-01-08T10:00:00"), s("Squat", 110, "2026-01-15T10:00:00"),
+      s("Row", 60, "2026-01-01T10:00:00"), s("Row", 62, "2026-01-08T10:00:00"),
+    ]
+    expect(liftsWithHistory(sets).map((l) => l.exercise)).toEqual(["Squat", "Row"])
+  })
+
+  it("keeps one spelling per lift rather than listing it twice", () => {
+    const sets = [
+      s("Bench Press", 60, "2026-01-01T10:00:00"),
+      s("bench press", 65, "2026-01-08T10:00:00"),
+    ]
+    expect(liftsWithHistory(sets)).toHaveLength(1)
   })
 })

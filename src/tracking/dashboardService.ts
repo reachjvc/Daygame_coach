@@ -13,6 +13,7 @@ import { METRIC_BY_ID, DEFAULT_TILE_METRIC_IDS } from "./data/metricCatalog"
 import {
   MAX_TILES,
   MIN_TILES,
+  buildGoalMetricId,
   parseGoalMetricId,
   readGoalMetric,
 } from "./metricsService"
@@ -172,4 +173,53 @@ export async function saveDashboardLayout(
     timezone
   )
   return { widgets: saved, values }
+}
+
+/**
+ * SHOW THIS GOAL'S RUNNING TOTAL ON THE TRACKING PAGE, OR STOP SHOWING IT.
+ *
+ * The number itself has always worked: `getGoalAccumulatedTotal` sums every
+ * period that has rolled over plus the one in progress, and a tile with the
+ * metric id `goal:<id>:total` renders it. Nothing computed it wrong — it was
+ * only ever reachable by opening the dashboard's own tile editor and knowing
+ * that a goal could be a metric, which nobody does. So this is the offering,
+ * not the arithmetic: the difference between "127 days without weed" existing
+ * and being seen.
+ *
+ * IDEMPOTENT IN BOTH DIRECTIONS. On twice leaves one tile and writes nothing
+ * the second time; off when it was never on is a no-op. A caller that has to
+ * remember which way the switch was pointing will get it wrong on a
+ * double-click.
+ *
+ * IT DOES NOT TOUCH THE GOAL. A tile is a view; removing one must never look
+ * like deleting progress, and there is no path from here to `user_goals`.
+ */
+export async function setGoalTotalTile(
+  userId: string,
+  goalId: string,
+  on: boolean,
+): Promise<DashboardWidget[]> {
+  const metricId = buildGoalMetricId(goalId, "total")
+  const current = await getWidgets(userId, "tracking")
+  const has = current.some((w) => w.metric_id === metricId)
+  if (has === on) return current
+
+  /* Position is the array index — see `DashboardWidgetInput` — so removing a
+     tile renumbers the rest for free and there is no hole to patch up. */
+  const kept: DashboardWidgetInput[] = current
+    .filter((w) => on || w.metric_id !== metricId)
+    .map((w) => ({ widget_type: w.widget_type, metric_id: w.metric_id, config: w.config }))
+
+  const next: DashboardWidgetInput[] = on
+    ? [...kept, { widget_type: "metric_tile", metric_id: metricId, config: {} }]
+    : kept
+
+  /* The tile cap is the dashboard's, not this function's. Refusing loudly beats
+     silently dropping somebody's oldest tile to make room, which is what an
+     unchecked append would do the moment `validateWidgets` trimmed the list. */
+  if (on && next.length > MAX_TILES) {
+    throw new Error(`Your tracking page is full at ${MAX_TILES} tiles. Remove one and try again.`)
+  }
+
+  return replaceWidgets(userId, "tracking", next)
 }

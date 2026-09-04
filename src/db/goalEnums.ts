@@ -82,7 +82,16 @@ export const GOAL_PERIODS = ["daily", "weekly", "monthly", "quarterly", "yearly"
  */
 export const ROLLING_PERIODS = ["daily", "weekly", "monthly", "quarterly", "yearly"] as const
 
-export const GOAL_TRACKING_TYPES = ["counter", "percentage", "streak", "boolean"] as const
+/**
+ * How a goal's number is kept. Two, because two is all anything ever wrote.
+ *
+ * `percentage` and `streak` were here and in the database CHECK for months, and
+ * no production file ever assigned either — every assignment across `src/` and
+ * `app/` is `counter` (25 sites) or `boolean` (2). A value a constraint allows
+ * and nothing produces reads as a supported feature, and the next person to plan
+ * around it wastes the afternoon this comment saves.
+ */
+export const GOAL_TRACKING_TYPES = ["counter", "boolean"] as const
 
 export const GOAL_PHASES = ["acquisition", "consolidation", "graduated"] as const
 

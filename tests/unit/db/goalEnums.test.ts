@@ -14,15 +14,23 @@ import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/src/goals/config"
 // ============================================================================
 
 describe("const arrays", () => {
-  test("GOAL_TYPES has expected values", () => {
-    expect(GOAL_TYPES).toContain("recurring")
-    expect(GOAL_TYPES).toContain("milestone")
-    expect(GOAL_TYPES).toContain("habit_ramp")
-    expect(GOAL_TYPES.length).toBe(3)
+  /**
+   * NAMES, NOT COUNTS. Six of these asserted a length. A count tells you the
+   * list changed size; it does not tell you the list is right, and it fails on
+   * every legitimate addition while catching no wrong one — swapping `daily`
+   * for `hourly` keeps the count at six and breaks every rollover in the app.
+   * That the lists match the database's own CHECK constraints is checked
+   * separately, against real Postgres, in enumConstraintSync.integration.test.ts.
+   */
+  test("GOAL_TYPES is the three kinds a goal row can be", () => {
+    expect([...GOAL_TYPES].sort()).toEqual(["habit_ramp", "milestone", "recurring"])
   })
 
-  test("GOAL_DISPLAY_CATEGORIES has 27 values", () => {
-    expect(GOAL_DISPLAY_CATEGORIES.length).toBe(27)
+  test("GOAL_DISPLAY_CATEGORIES ids are unique and well formed", () => {
+    // A display grouping — it grows whenever a life area gains a heading, and a
+    // count assertion made that a build failure.
+    expect(new Set(GOAL_DISPLAY_CATEGORIES).size, "duplicate").toBe(GOAL_DISPLAY_CATEGORIES.length)
+    for (const c of GOAL_DISPLAY_CATEGORIES) expect(c, c).toMatch(/^[a-z][a-z0-9_]*$/)
   })
 
   test("LINKED_METRICS is a set of well-formed ids, not a fixed count", () => {
@@ -39,20 +47,21 @@ describe("const arrays", () => {
     expect(LINKED_METRICS.length).toBeGreaterThan(30)
   })
 
-  test("GOAL_PERIODS has 6 values", () => {
-    expect(GOAL_PERIODS.length).toBe(6)
+  test("GOAL_PERIODS is every cadence a counter can run on", () => {
+    expect([...GOAL_PERIODS].sort()).toEqual(["custom", "daily", "monthly", "quarterly", "weekly", "yearly"])
   })
 
-  test("GOAL_TRACKING_TYPES has 4 values", () => {
-    expect(GOAL_TRACKING_TYPES.length).toBe(4)
+  test("GOAL_TRACKING_TYPES is the two that are actually written", () => {
+    // `percentage` and `streak` sat here for months and nothing ever wrote them.
+    expect([...GOAL_TRACKING_TYPES].sort()).toEqual(["boolean", "counter"])
   })
 
-  test("GOAL_PHASES has 3 values", () => {
-    expect(GOAL_PHASES.length).toBe(3)
+  test("GOAL_PHASES is the arc the weekly review moves a goal along", () => {
+    expect([...GOAL_PHASES].sort()).toEqual(["acquisition", "consolidation", "graduated"])
   })
 
-  test("GOAL_NATURES has 2 values", () => {
-    expect(GOAL_NATURES.length).toBe(2)
+  test("GOAL_NATURES separates what you do from what you get", () => {
+    expect([...GOAL_NATURES].sort()).toEqual(["input", "outcome"])
   })
 })
 

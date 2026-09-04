@@ -290,7 +290,6 @@ describe('Architecture Compliance', () => {
       'src/goals/hooks/usePeriodStats.ts',
       'src/health/components/CorrelationPanel.tsx',
       // Projections and "today" defaults.
-      'src/health/healthService.ts',
       'src/exercising/exercisingService.ts',
     ])
 

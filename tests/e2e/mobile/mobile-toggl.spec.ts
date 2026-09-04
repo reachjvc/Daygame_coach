@@ -51,6 +51,20 @@ const pageOverflow = (page: Page) =>
     innerWidth: window.innerWidth,
   }))
 
+/**
+ * These run signed OUT on purpose.
+ *
+ * They are about the tracker itself — grouping, pickers, rounding, the layout —
+ * and none of them is about your account. Once syncing existed, running them
+ * signed in meant "clear this browser" no longer produced an empty workspace:
+ * the account's own projects and tags came back down, and tests asserting on an
+ * empty one failed for a reason that had nothing to do with what they check.
+ *
+ * The signed-in paths have their own suites: timetrack-sync and
+ * timetrack-edge-cases.
+ */
+test.use({ storageState: { cookies: [], origins: [] } })
+
 test.describe('time tracker on a phone', () => {
   test.describe.configure({ mode: 'serial' })
 

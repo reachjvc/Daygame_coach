@@ -21,6 +21,22 @@ import type {
   GoalPeriod as GoalPeriodName,
 } from "@/src/db/goalTypes"
 
+/**
+ * The same four names again, IMPORTED rather than re-exported.
+ *
+ * `export type { X } from "…"` forwards X to this module's consumers without
+ * ever binding it here, so the four names below — each used in an interface
+ * further down this file — resolved to nothing and `tsc` reported four errors
+ * on a file that looked obviously correct. The re-export block below stays: it
+ * is what everything else in the app imports from.
+ */
+import type {
+  GoalDisplayCategory,
+  GoalPhase,
+  GoalTreeNode,
+  GoalWithProgress,
+} from "@/src/db/goalTypes"
+
 export type {
   GoalType,
   GoalPeriod,
@@ -1671,6 +1687,42 @@ export interface NsRoutine {
   daysPerWeek: number
   /** Training days in order, when this routine is a workout week. */
   splitDays: NsSplitDay[]
+  /**
+   * The enrollment these training days came from, when they came from one.
+   *
+   * WITHOUT THIS THE PLAN AND THE DATABASE WERE TWO ANSWERS TO ONE QUESTION.
+   * Starting a program copied its day NAMES in here — "Upper", "Lower" — and
+   * nothing else. So a plan could say Upper/Lower forever while the account was
+   * enrolled in something else entirely, or in nothing at all, and neither side
+   * could tell. Somebody opened their dashboard, found a program there they had
+   * never picked, and there was no fact anywhere that could settle which of the
+   * two was right.
+   *
+   * The enrollment is the truth about what you train; this is a REFERENCE to
+   * it, never a copy. Null when the days were typed by hand, which stays a
+   * first-class case — a hand-written week is not wrong, it is just not tracked
+   * by anything.
+   */
+  program?: NsRoutineProgram | null
+}
+
+/**
+ * A plan's training week, pointed at the enrollment that owns it.
+ *
+ * `label` is the one piece of duplication here and it is deliberate: the plan
+ * has to render signed out, with no database to ask, and "the program you
+ * started" reading as a blank is worse than reading as a possibly-renamed name.
+ * Everything that DECIDES anything — what is prescribed, what progresses — is
+ * looked up live from `enrollmentId`.
+ */
+export interface NsRoutineProgram {
+  /** Catalog id, e.g. "stronglifts-5x5", or "custom" for one you built. */
+  programId: string
+  /** The row in `program_enrollments` this week is tracked by. */
+  enrollmentId: string
+  /** Program name as it read when started — for the signed-out render only. */
+  label: string
+  startedAt: string
 }
 
 /** What could stop you, and what you will do when it does. */

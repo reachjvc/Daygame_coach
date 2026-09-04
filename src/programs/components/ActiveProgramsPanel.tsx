@@ -38,7 +38,7 @@ function EnrollmentToday({ enrollment, onLogged }: { enrollment: ProgramEnrollme
           {programName} · {LEVEL_LABELS[enrollment.level]}
         </span>
         <Link
-          href="/test/programs"
+          href="/programs"
           className="text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           Manage

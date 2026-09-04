@@ -16,21 +16,28 @@ test.describe('Goals Hub', () => {
     await ensureNoGoals(page)
   })
 
-  // 4.1a: Empty state redirects to setup wizard
-  test('empty state redirects to setup wizard', async ({ page }) => {
+  // 4.1a: An empty account shows the hub's own empty state.
+  test('an empty account shows the hub, not a redirect', async ({ page }) => {
     // Arrange: no goals (ensureNoGoals in beforeEach)
 
-    // Act: the archived hub shows the hub itself on an empty account. The live
-    // page redirected to the plan flow, but that was it being the front door, and
-    // it is not one any more.
-    // Use AUTH_TIMEOUT since the redirect can be slow under load
+    /**
+     * THE ASSERTION AND THE COMMENT ABOVE IT USED TO DISAGREE.
+     *
+     * The comment said "the archived hub shows the hub itself on an empty
+     * account — the live page redirected to the plan flow, but that was it
+     * being the front door, and it is not one any more." The assertion below it
+     * still waited for that redirect, so this failed on every run and, because
+     * it is the first test in the goals chain, stopped `goals-1 → goals-2 →
+     * goals-3` from running at all. The Life Mastery track tests have therefore
+     * not run under `npm run test:e2e` for as long as this has been red.
+     *
+     * It now asserts what the page does, which is what the comment already said.
+     */
     await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
-    // Assert: redirected to setup wizard
-    await expect(page).toHaveURL(/\/dashboard\/goals\/setup/, { timeout: AUTH_TIMEOUT })
-    // Setup wizard shows the direction picker with "Shape Your Path" heading
-    await expect(page.getByRole('heading', { name: /shape your path/i })).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await expect(page).toHaveURL(/\/test\/archive\/goals-hub/, { timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId('goals-empty-state')).toBeVisible({ timeout: AUTH_TIMEOUT })
   })
 
   // 4.1b: Create goal via form modal

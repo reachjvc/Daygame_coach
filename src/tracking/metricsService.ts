@@ -21,6 +21,7 @@
  * user can write.
  */
 
+import { isPracticeRow } from "@/src/goals/data/goalShapes"
 import type {
   GoalMetricView,
   MetricDef,
@@ -138,7 +139,7 @@ export function isTrackableGoal(goal: UserGoalRow): boolean {
  */
 export function goalMetricViews(goal: UserGoalRow): GoalMetricView[] {
   const hasTarget = goal.target_value > 0
-  const recurs = goal.goal_type === "recurring" || goal.goal_type === "habit_ramp"
+  const recurs = isPracticeRow(goal)
 
   if (!recurs) return hasTarget ? ["period", "percent"] : ["period"]
 
@@ -154,7 +155,7 @@ export function goalMetricViews(goal: UserGoalRow): GoalMetricView[] {
 export function goalMetricDef(goal: UserGoalRow, view: GoalMetricView): MetricDef {
   const copy = GOAL_VIEW_COPY[view]
   const catalogEntry = goal.linked_metric ? METRIC_BY_LINKED_METRIC[goal.linked_metric] : undefined
-  const recurs = goal.goal_type === "recurring" || goal.goal_type === "habit_ramp"
+  const recurs = isPracticeRow(goal)
   // A milestone has no "this period" — it has how far along it is.
   const describe = view === "period" && !recurs
     ? "How far you have got toward this milestone."

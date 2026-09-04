@@ -27,6 +27,8 @@
  */
 
 import { useMemo, useState } from "react"
+import Link from "next/link"
+import type { NsRoutineProgram } from "@/src/goals/types"
 import { Check, ChevronDown, ChevronUp, Loader2, Plus, Settings2, X } from "lucide-react"
 import { Action, Field, GroupLabel, IconButton, Panel, Segmented, Stepper, TYPE } from "./ui"
 import {
@@ -111,7 +113,7 @@ interface Props {
   onRememberLift: (entry: LibraryExercise) => void
   onForget: (id: string) => void
   /** Day names go into the plan's workout routine once it is started. */
-  onStarted: (dayNames: string[]) => void
+  onStarted: (dayNames: string[], program: NsRoutineProgram | null) => void
 }
 
 export function CustomProgramBuilder({
@@ -218,7 +220,21 @@ export function CustomProgramBuilder({
         setState("idle")
         return
       }
-      onStarted(days.map((d) => d.label))
+      // Same as the catalogue path: hand the plan the row, not just the names.
+      const created = (await res.json().catch(() => null)) as
+        | { enrollment?: { id: string; program_id: string; started_at: string } }
+        | null
+      onStarted(
+        days.map((d) => d.label),
+        created?.enrollment
+          ? {
+              programId: created.enrollment.program_id,
+              enrollmentId: created.enrollment.id,
+              label: "Your program",
+              startedAt: created.enrollment.started_at,
+            }
+          : null
+      )
       setState("done")
     } catch {
       setError("Could not reach the server. Nothing was started.")
@@ -370,10 +386,20 @@ export function CustomProgramBuilder({
       {days.length > 0 && (
         <div className="border-t border-white/10 pt-3 space-y-2">
           {state === "done" ? (
-            <p className="flex items-center gap-1.5 text-[12.5px] text-sky-300/90">
-              <Check className="size-3.5" /> Your program is running. Your first session is waiting, and
-              your training week now says what you actually do.
-            </p>
+            /* Same dead end as the catalogue path, same fix: name the page the
+               session actually lives on, and link it. */
+            <div className="space-y-1.5">
+              <p className="flex items-center gap-1.5 text-[12.5px] text-sky-300/90">
+                <Check className="size-3.5" /> Your program is running, and your training week now says
+                what you actually do.
+              </p>
+              <Link
+                href="/programs"
+                className="inline-flex items-center gap-1.5 rounded-md border border-sky-400/40 bg-sky-500/10 px-3 py-1.5 text-[12.5px] text-sky-200 transition-colors hover:bg-sky-500/20"
+              >
+                Go to today&apos;s session
+              </Link>
+            </div>
           ) : (
             <div className="flex flex-wrap items-center gap-2.5">
               <Action onClick={start} disabled={!canStart} variant="primary">

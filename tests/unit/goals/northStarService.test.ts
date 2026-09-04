@@ -44,6 +44,8 @@ import {
   defaultsForType,
   emptyNsPlan,
   applyProgramToWorkoutRoutine,
+  detachProgramFromRoutines,
+  trackedEnrollmentIds,
   goalGaps,
   goalHorizon,
   goalIsQualified,
@@ -4080,6 +4082,61 @@ describe("written rungs carry dates too", () => {
 // the page saying "Push / Pull / Legs" beside a StrongLifts enrollment that
 // runs Workout A / Workout B. Whatever was actually started wins.
 // ============================================================================
+
+/**
+ * THE PLAN AND THE DATABASE, TIED TOGETHER.
+ *
+ * The plan used to copy a program's day NAMES and nothing else, so it could say
+ * "Upper / Lower" forever while the account was enrolled in something else — or
+ * in nothing. Somebody opened their dashboard, found a program they had never
+ * picked, and no fact existed anywhere that could settle which side was right.
+ * These cover the reference that settles it.
+ */
+describe("a training week knows which enrollment tracks it", () => {
+  const REF = {
+    programId: "stronglifts-5x5",
+    enrollmentId: "enr-1",
+    label: "StrongLifts 5×5",
+    startedAt: "2026-09-03T10:00:00.000Z",
+  }
+
+  it("records the enrollment, not just the day names", () => {
+    const plan = applyProgramToWorkoutRoutine(emptyNsPlan(), ["Workout A", "Workout B"], NOW, REF)
+    const routine = plan.routines.find((r) => r.blueprintId === "workout")!
+    expect(routine.program?.enrollmentId).toBe("enr-1")
+    expect(routine.program?.programId).toBe("stronglifts-5x5")
+    expect(trackedEnrollmentIds(plan)).toEqual(["enr-1"])
+  })
+
+  it("a hand-written week is tracked by nothing, and that is not an error", () => {
+    const plan = applyProgramToWorkoutRoutine(emptyNsPlan(), ["Push", "Pull", "Legs"], NOW)
+    const routine = plan.routines.find((r) => r.blueprintId === "workout")!
+    expect(routine.program ?? null).toBeNull()
+    expect(trackedEnrollmentIds(plan)).toEqual([])
+    // The week itself is untouched — not tracked is not the same as not real.
+    expect(routine.splitDays.map((d) => d.name)).toEqual(["Push", "Pull", "Legs"])
+  })
+
+  it("starting a second program replaces the reference, never keeps both", () => {
+    let plan = applyProgramToWorkoutRoutine(emptyNsPlan(), ["Workout A", "Workout B"], NOW, REF)
+    plan = applyProgramToWorkoutRoutine(plan, ["Upper", "Lower"], NOW, { ...REF, enrollmentId: "enr-2" })
+    expect(trackedEnrollmentIds(plan)).toEqual(["enr-2"])
+  })
+
+  it("ending a program keeps the week and drops only the claim it is tracked", () => {
+    const plan = applyProgramToWorkoutRoutine(emptyNsPlan(), ["Workout A", "Workout B"], NOW, REF)
+    const after = detachProgramFromRoutines(plan, "enr-1", NOW)
+    const routine = after.routines.find((r) => r.blueprintId === "workout")!
+    expect(routine.program).toBeNull()
+    expect(routine.splitDays.map((d) => d.name)).toEqual(["Workout A", "Workout B"])
+    expect(routine.daysPerWeek).toBe(2)
+  })
+
+  it("ending someone else's enrollment leaves this plan exactly as it was", () => {
+    const plan = applyProgramToWorkoutRoutine(emptyNsPlan(), ["Workout A"], NOW, REF)
+    expect(detachProgramFromRoutines(plan, "enr-999", NOW)).toBe(plan)
+  })
+})
 
 describe("applyProgramToWorkoutRoutine", () => {
   it("writes the program's days into an existing workout routine", () => {

@@ -859,8 +859,25 @@ export function standingItems(plan: NsPlan): StandingItem[] {
   const areaOf = (areaId: string | null) => plan.areas.find((a) => a.id === areaId)
   const far = "9999-99-99"
 
+  /**
+   * A DREAM YOU DECIDED TO CHASE IS ONE THING, NOT TWO.
+   *
+   * `promoteExperience` turns a bucket-list line into a finish-line goal and
+   * deliberately leaves the line in the list — a bucket list that empties out as
+   * things get serious is one that empties out exactly as it starts working. But
+   * both halves of this list then drew it, so the same dream appeared twice,
+   * once tickable and once not.
+   *
+   * THE EXPERIENCE IS THE ONE THAT STAYS, and that is not arbitrary: `NsGoal`
+   * has no `done` field, so a plan-side goal cannot be ticked at all. Hiding the
+   * experience and showing the goal would have removed the only tick there is.
+   */
+  const promoted = new Set(
+    plan.experiences.map((e) => e.goalId).filter((id): id is string => id != null),
+  )
+
   const milestones: StandingItem[] = plan.goals
-    .filter((goal) => !isSystem(goal))
+    .filter((goal) => !isSystem(goal) && !promoted.has(goal.id))
     .map((goal) => {
       const area = areaOf(goal.areaId)
       const unit = goal.unit.trim() ? ` ${goal.unit.trim()}` : ""

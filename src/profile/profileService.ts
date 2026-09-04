@@ -178,23 +178,6 @@ export async function completeOnboardingForUser(
 }
 
 /**
- * Update secondary region for a user.
- * Ensures secondary region differs from primary region.
- */
-export async function updateSecondaryRegionForUser(
-  userId: string,
-  secondaryRegion: string | null
-): Promise<void> {
-  const profile = await getProfileForService(userId)
-
-  const primaryRegion = profile.preferred_region || null
-  const nextSecondary =
-    secondaryRegion && secondaryRegion !== primaryRegion ? secondaryRegion : null
-
-  await updateProfileDb(userId, { secondary_region: nextSecondary })
-}
-
-/**
  * Update a single preference field.
  * Validates the preference key and value.
  */

@@ -81,6 +81,20 @@ const blur = (page: Page) =>
 const readState = (page: Page) =>
   page.evaluate((key) => JSON.parse(window.localStorage.getItem(key) ?? 'null'), STORAGE_KEY)
 
+/**
+ * These run signed OUT on purpose.
+ *
+ * They are about the tracker itself — grouping, pickers, rounding, the layout —
+ * and none of them is about your account. Once syncing existed, running them
+ * signed in meant "clear this browser" no longer produced an empty workspace:
+ * the account's own projects and tags came back down, and tests asserting on an
+ * empty one failed for a reason that had nothing to do with what they check.
+ *
+ * The signed-in paths have their own suites: timetrack-sync and
+ * timetrack-edge-cases.
+ */
+test.use({ storageState: { cookies: [], origins: [] } })
+
 test.describe('Toggl-style time tracker', () => {
   // One test stubs the calendar route, so run serially and drop interceptions
   // afterwards — required by tests/unit/e2e-isolation.test.ts

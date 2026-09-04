@@ -205,8 +205,6 @@ export interface HoldDay {
   exercises: HoldExercise[]
 }
 
-export type ExerciseUnit = LoadExercise | SkillExercise | HoldExercise
-
 // ============================================================================
 // Program structure
 // ============================================================================
@@ -285,6 +283,21 @@ export interface ExerciseState {
   currentHoldSec?: number
 }
 
+/**
+ * One dated weight in a series — the shape every progress line is drawn from.
+ *
+ * Declared once because two things produce it: `summariseProgression` (one
+ * program's session logs) and `liftHistory` (one lift across every program).
+ * Two shapes would mean two adapters inside `Sparkline`, which is how a second
+ * chart component gets written by accident.
+ */
+export interface LoadPoint {
+  /** ISO instant of the session. */
+  at: string
+  /** The working weight — the heaviest set of that session. */
+  weight: number
+}
+
 export interface EnrollmentCursor {
   cycle: number // 1-based count of completed cycles
   week: number // 1-based (linear programs: always 1)
@@ -313,6 +326,22 @@ export interface ProgramEnrollment {
    * the failure mode this codebase does not allow.
    */
   customSchedule: ProgramSchedule | null
+  /**
+   * When a session was last logged against this enrollment, or null for never.
+   *
+   * THE FIELD THAT TELLS A PROGRAM FROM A GHOST. Enrollments only ever
+   * deactivate within a discipline, and three separate flows create them, so a
+   * pick from months ago keeps prescribing sessions forever. "Started in April"
+   * does not distinguish a program somebody trains every week from one they
+   * abandoned on the day they started it. "Never logged" does.
+   *
+   * Read-only, derived from `program_session_logs` — not a column, and never
+   * written. A cached copy of a fact that lives elsewhere is the bug this whole
+   * area already had once.
+   */
+  lastLoggedAt?: string | null
+  /** How many sessions were logged on it. Read-only, derived, never stored. */
+  sessionsLogged?: number
 }
 
 // ============================================================================
@@ -347,6 +376,34 @@ export interface SessionPrescription {
   dayLabel: string
   cycle: number
   week: number
+  /**
+   * How many sessions have been completed on this enrollment.
+   *
+   * The header read "Cycle 76 · Week 1" after a year on StrongLifts, which is
+   * engine bookkeeping leaking onto the screen: a linear program has no cycles
+   * and its week never moves, so one number climbed to 76 while meaning nothing
+   * beside another that never moved. This is the count a person recognises.
+   */
+  sessionCount: number
+  /**
+   * Whether this program is actually organised into cycles and weeks.
+   *
+   * A 5/3/1 wave and a couch-to-5k schedule are; StrongLifts is not — it is two
+   * days alternating forever. The decision has to come from the SHAPE of the
+   * program, not from whether the counter happens to have passed one.
+   */
+  periodised: boolean
+  /**
+   * The program is finished — every session in it has been logged.
+   *
+   * Distinct from `isFinalSession`, which means "this is the last one" and stays
+   * true forever afterwards, because `advanceCursor` holds the cursor at the end
+   * rather than running off it. So the app congratulated you on reaching the
+   * last session and then offered you that same session for the rest of time,
+   * with no way to say you were done. This is the flag that can tell the
+   * difference between about-to-finish and finished.
+   */
+  isComplete?: boolean
   exercises: PrescribedExercise[] // load / strength / bodybuilding
   enduranceSets?: EnduranceSet[] // cardio: interval/steady blocks
   summary?: string // one-line human summary (e.g. "8×(jog 60s / walk 90s)")

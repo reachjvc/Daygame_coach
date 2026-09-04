@@ -130,6 +130,8 @@ export async function truncateAllTables(): Promise<void> {
     // user_values must come before profiles and values due to FKs
     await client.query(`
       TRUNCATE TABLE
+        program_session_logs,
+        program_enrollments,
         user_goals,
         milestones,
         sticking_points,

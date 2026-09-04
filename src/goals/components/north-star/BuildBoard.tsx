@@ -33,7 +33,7 @@
 
 import { useState, type ReactNode } from "react"
 import { Check, ChevronDown, Plus } from "lucide-react"
-import type { NsArea, NsPlan } from "@/src/goals/types"
+import type { NsArea, NsPlan, NsRoutineProgram } from "@/src/goals/types"
 import { NS_FLOOR, ROUTINE_BLUEPRINT_MAP, SEASON_FOCUS_COPY, TEMPLATE_ADDED_COPY } from "@/src/goals/data/northStar"
 import { BOARD_COPY, LOAD_CEILING, type RoutineNeed } from "@/src/goals/data/northStarBuild"
 import type { Template } from "@/src/goals/data/newGoalFramework"
@@ -75,7 +75,8 @@ export interface BoardHandlers {
    * A training program was started. The day names come back so the plan's
    * workout routine can be set to the week that is now actually being tracked.
    */
-  onProgramStarted: (dayNames: string[]) => void
+  onProgramStarted: (dayNames: string[], program: NsRoutineProgram | null) => void
+  onProgramEnded: (enrollmentId: string) => void
 }
 
 /**
@@ -168,7 +169,15 @@ export function BuildBoard({ plan, today, handlers }: {
       </div>
 
       <div className="px-5 py-4 border-b border-white/10">
-        <WorkoutPrograms onProgramStarted={handlers.onProgramStarted} />
+        <WorkoutPrograms
+          onProgramStarted={handlers.onProgramStarted}
+          onProgramEnded={handlers.onProgramEnded}
+          /* The week this plan has written down, so the Templates tab can say
+             when it and the database disagree instead of both asserting. */
+          planDays={
+            plan.routines.find((r) => r.blueprintId === "workout")?.splitDays.map((d) => d.name) ?? []
+          }
+        />
       </div>
 
       {shown.length === 0 ? (

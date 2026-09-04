@@ -10,6 +10,8 @@
 - **Scheduling = Hybrid.** Load/calisthenics/flexibility advance **log-driven** (next = next-in-sequence, advances on log). Endurance/periodized advance by **calendar-anchored week index** (enrollment `start_date` + program schedule → date-mapped sessions; taper must land on race week). Engine dispatches scheduling on metric type, same as progression.
 - **Fitness-only scope.** `src/programs/` engine is scoped to the 4 fitness metric types now. Not generalized to non-fitness life areas yet (revisit later); keep the metric-type union clean enough to extend, but don't build a generic registry.
 
+**Data model:** `docs/architecture/training-data-model.md` — entity diagram plus what the two foreign-key-less joins cost.
+
 ---
 
 ## STATUS
@@ -148,7 +150,71 @@ Rules, deliberately few: blank line starts a day · the first line of a block is
 - **`Field` puts the label above the box and the unit inside it.** The row used to read "sets 3 reps 8 start at 60 kg" — a broken sentence rather than a form, saying the unit again after every number.
 - Watch for the flex trap: `Segmented`/`Field` sit inside `flex flex-col` groups and stretched full-width until given `w-fit self-start`.
 
-**6. Real route** — `app/programs/page.tsx`. **Not in the main nav**; where it belongs in the app's IA is a product decision. Enrollment already bridges to `workout_logs`, so sessions reach dashboard metrics regardless.
+**6. Real route** — `app/programs/page.tsx`, **now reachable (2026-09-03)**. It shipped linked from nowhere: thirteen cited programs, a working engine, session logging that fed the tracking dashboard's own numbers, and the only way to open it was to type the URL. Everything about it passed — the route existed, the component rendered, the API worked. Existing is not the same as being reachable.
+
+Three ways in now, all verified in the browser against the live database:
+- **Tracking dashboard → Quick Actions → "Log a Workout"** (`QuickActionsCard`, `data-testid="training-link"`). Chosen over a fifth tab: a logged session already feeds this dashboard's numbers, and the mobile bar is full at four.
+- **Life Mastery, after starting a program** — both the catalogue path (`WorkoutPrograms`) and build-your-own (`CustomProgramBuilder`) ended on "your first session is waiting" and named no destination. Both now show **Go to today's session** → `/programs`.
+- **`ActiveProgramsPanel`'s "Manage" link**, which pointed at the `/test/programs` prototype from inside product code.
+
+**Both ways to record a workout now live on this one page.** `ProgramsApp` for the prescribed session; `WorkoutLogger` (lazy-loaded, below a `Log any workout` divider) for anything done off-program. The free-form logger was previously mounted only inside `HealthTrackingPanel` on the archived goals hub, so a workout outside a program had nowhere to go. Both write `workout_logs`/`workout_sets`, so either route counts the same.
+
+**Today's session also renders inline on the tracking dashboard** — the same `ActiveProgramsPanel`, lazy-loaded in `ProgressDashboard`, which renders NOTHING without an active enrollment. Verified live: enrolled, the panel appeared, logged the session from the dashboard itself. **The `gym_sessions_weekly` tile was confirmed too** — added to the tile row, it read **1** after that session, which is the bridge working end to end rather than inferred from the code.
+
+**The free-form logger now warns before a second log on the same day** — `workoutsOnDate` in `healthService.ts` + a notice in `WorkoutLogger`'s add form. Two facts stored apart: a program session bridges into `workout_logs` and the free-form logger writes there too, with nothing linking them, so one gym session written up both ways counts twice on the week total, the streak, the heatmap and any linked goal. Not forbidden — people do train twice a day — so it is said out loud rather than blocked, and the warning names what is already there. Four tests in `healthService.test.ts`, including the 23:30-local case that a naive `toISOString().split("T")[0]` files a day late.
+
+**THE SESSION WAS UNREADABLE, and the fix was mostly deletion (2026-09-03, user: "this implementation is shit").** Every set rendered as its own row of two number boxes, so an upper/lower day was twenty-four rows of `40 kg × 6 / 6–8 reps` — a sentence that is neither the prescription nor what you did, repeated until it filled the screen. Now each lift is **one line**: `describeSets()` in `programsService.ts` (pure, tested) writes `4 × 6–8 reps @ 40 kg`, and you open only the lift that went differently. Zero inputs on screen at rest; the edited lift is marked `changed`; the button reads **"Log session as prescribed"** until something actually differs.
+
+Three things it refuses to do:
+- **A wave never collapses.** 5/3/1 prints `35 kg × 5, 42.5 kg × 5, 47.5 kg × 5+` — saying "3 × 5" would be a lie about the program.
+- **An AMRAP lift opens itself** and cannot be closed (`needsInput()`), because "as prescribed" would log the bottom of the range as your top set and progress you off a number you never lifted. The button drops "as prescribed" too.
+- **No synthetic note.** The rep-range branch defaulted `note` to `"6–8 reps"`, which the new line rendered as `… @ 40 kg · 6–8 reps`. Removed, and asserted across the WHOLE catalogue in `engine.test.ts` — the default lived in the engine, so one program's test would not have caught it.
+
+**Moved below Quick Actions, above Weekly Reviews** on the tracking dashboard. A five-lift day pushed everything else off the screen; a card you open the page for once a day should not outrank the ones you open it for every time.
+
+**TWO ANSWERS TO "WHAT AM I TRAINING", AND NO WAY TO HEAR THEM DISAGREE (same session, user: "this isnt the workout program i picked in the project life mastery flow").** Two independent facts claimed it:
+- the Life Mastery plan, which copied a program's **day names** into localStorage on start and stored **no program id at all** — so it could say Upper/Lower forever while the account was on something else, or on nothing;
+- `program_enrollments`, which is what actually gets prescribed — and which only ever deactivates **within a discipline**, so a bodybuilding program from months ago keeps running after you start a strength one, through any of the **three** enrollment entry points (LM Templates, build-your-own, and the goals planner's `ensureEnrollment`).
+
+`src/programs/components/RunningPrograms.tsx` is the fix: it reads the enrollments and states them — name, level, **started date**, and an End button — on the LM Templates tab and on `/programs`. It adds no third opinion; it shows the database's answer, which is the only one that decides what gets prescribed, and **names the disagreement** when the plan's written week matches none of them rather than silently overwriting either. `ProgramsApp` also now names the running program in the session header (it said `Today — Upper · Cycle 1 · Week 1` and never once which program that was) and opens straight to the session when there is only one, instead of a menu of one.
+
+**AND THE STRUCTURAL FIX LANDED (same day).** `NsRoutine.program` — a `NsRoutineProgram` holding `programId`, `enrollmentId`, `label`, `startedAt` — so the plan REFERENCES the enrollment instead of copying its day names. Threaded through `applyProgramDays` → `applyProgramToWorkoutRoutine` → `NorthStarFlow` → `BuildBoard` → `WorkoutPrograms`/`BuildYourOwn`/`CustomProgramBuilder`; both start paths read the enrollment out of the POST response, which had been carrying it all along with nobody reading it.
+
+`detachProgramFromRoutines()` closes the other end: ending a program from the band **keeps the written week and nulls only the claim that something tracks it**. Deleting the week instead would throw away one decision because a different one was reversed. Proven in the browser, start and end in one session:
+
+```
+AFTER START  { days: ["Workout A","Workout B"], program: { enrollmentId: "303d1965-…", … } }
+AFTER END    { days: ["Workout A","Workout B"], program: null }
+```
+
+`label` is the one deliberate duplication: the plan renders signed out with no database to ask, and a blank there is worse than a possibly-stale name. Nothing that *decides* anything reads it.
+
+**Ghost enrollments are now identifiable.** `listActiveEnrollments` derives `lastLoggedAt` from `program_session_logs` in ONE extra query (not N+1 — this list is read on three surfaces, one of them opened daily), and the band prints either `last logged <date>` or **"never logged — you may have started this and forgotten it"**. Not stored on the enrollment: a cached copy of a fact that lives elsewhere is the exact bug this area was being dug out of. `started in April` reads identically for a program trained weekly and one abandoned on day one; this is the line that tells them apart.
+
+**WHAT A YEAR OF THIS LOOKED LIKE (2026-09-04, user: "not functional at all… imagine being a user using this for a year").** Seeded 150 real sessions against StrongLifts and opened the page. Four defects, one of them destructive:
+
+1. **"End program" permanently deleted every session you had ever logged.** `unenroll()` was a hard `DELETE` on `program_enrollments`, and `program_session_logs.enrollment_id` is `ON DELETE CASCADE`. A year of training — 150 sessions — gone on one click, and the confirm() said "your logged sessions will be removed", which described the bug and was treated as a feature. **An enrollment is not scratch state; it is the record of what somebody did.** Now sets `is_active = false`, exactly as `enrollInProgram` already did when making way for a program in the same discipline. The partial unique index (`… WHERE is_active`) was already written for this. Proven live: after ending, 0 active enrollments and **150 sessions still on record**. The band's End button, which I had shipped with NO confirmation at all, now has one.
+2. **The log could not be read.** History showed `logs.slice(0, 12)` as `ohp-day · C1 W1` — twelve rows of internal identifiers, no way to the other 138, and no answer to the only question a training log exists for. `summariseProgression()` (pure, 7 tests) now reports **first → latest, best, and session count per lift**, sorted by what moved most: `Deadlift 41.5 → 239.5 kg +198`. First/latest/best are three numbers on purpose — latest below best is a deload, latest equal to first after thirty sessions is a stall, and one "progress" figure hides both. Day ids are resolved to labels; all sessions are reachable.
+3. **`Cycle 76 · Week 1`.** Engine bookkeeping on screen: a linear program has no cycles and its week never advances, so one number climbed meaninglessly beside one that never moved. `SessionPrescription.periodised` now comes from the schedule kind — 5/3/1 and couch-to-5k show cycle and week because they have them; StrongLifts shows **"Session 151"**.
+4. **`20.4375 kg`.** Progression arithmetic divides; the panel printed the result raw. `formatLoad()` rounds to the finest increment a barbell actually has. Named `formatLoad`, not `formatWeight`, because `healthService.formatWeight(kg, unit)` already exists.
+
+**Also fixed: cardio programs never reached the plan at all.** The Life Mastery start handler wrote to the plan only `if (schedule && isCustomizable(program))`, and `isCustomizable` is false for every endurance plan — so starting Couch to 5K enrolled you for real and told the plan nothing. That is literally "it isn't linked to what I chose". The reference is now always sent; day names are sent when the program has an editable day list.
+
+**And `src/health/healthService.ts` is off the UTC-date allowlist.** `detectPersonalRecords` stamped PRs with `new Date().toISOString().split("T")[0]`, filing a 23:30 personal record on tomorrow — the class this codebase has now hit four times. Two more sites went with it, including `addDays`, which parsed a date string as UTC and then shifted it with local getters, so every correlation window came out a day short west of UTC.
+
+**THE REST OF THE YEAR (2026-09-04, "do everything").** Simulated three more shapes of year — a clean 35-session run, a messy one with stalls and misses, and an abandoned program — and built what each exposed:
+
+- **The shape between start and current.** `summariseProgression` now returns `points`, downsampled to 40 while always keeping the true first and last so the ends match the numbers printed beside them. `Sparkline.tsx` draws it: **one series, so no legend, no axes, and `currentColor` rather than a palette hue** — a single series has no identity to encode, and inheriting the row's ink is correct in both themes without a second set of values to keep in step. Hover is a native `<title>`, which a screen reader also reads. A flat run sits on the mid-line, not the floor: a stall is a real thing to see, and drawing it at zero would read as a collapse.
+- **The 395 kg squat, asked about rather than capped.** A ceiling would be editing somebody else's cited program with a number we invented. `unbrokenRun()` counts back to the last missed rep; past `UNBROKEN_RUN_QUESTION_AT` (30) the panel says so and explains the mechanism — *missing reps is what tells the program to back the weight off*. **My first recommendation for this was wrong** and I said so: comparing prescribed weight to logged history catches nothing, because linear progression makes prescribed always track logged. The signal is the unbroken run itself, since these programs are *premised* on stalling.
+- **Coming back after time off.** `daysSinceLastSession()` + `LAYOFF_DAYS` (21). No cited program has a rule for detraining, so the notice states the fact and leaves the decision. Whole days from wall-clock dates, so last night reads as "yesterday".
+- **Programs you have finished.** Archiving kept the data but nothing read it, so a year of StrongLifts vanished the moment you switched. `listPastEnrollments` + `PastPrograms.tsx` — name, level, started, session count, last trained.
+- **And the gap archiving itself created.** "Archived forever, no way out" is its own fault. `deleteEnrollmentPermanently` erases a finished program and its sessions, offered ONLY in the finished list, behind a confirmation that says the session count out loud, and **the repo refuses it on a running program** — verified live: `400 Only a program you have already ended can be deleted permanently`, and the program was still active afterwards. Two buttons far apart: the everyday one is reversible, the destructive one has to be asked for by name.
+
+**Guarded by `tests/unit/navigation/routeReachability.test.ts`** — the sibling of `backNavigation.test.ts`, from the other end: that one asks whether you can get out of a screen, this one whether you can get in. Reachability is computed over each page's **component tree**, so a link in a component nothing renders counts for nothing, and it is **transitive** — a breadth-first walk from the doors into the app, so a link from a page that is itself an orphan counts for nothing either. Doors are all derived: home, tab destinations, exact redirect targets, redirect shims, `/auth/*`, dynamic routes, and a page that gates itself behind `ADMIN_SECRET_KEY` (a property of the page, not of the `/admin` path, so a future admin page without that gate is not excused). It deliberately does not count `ROUTE_LABELS` in `navTabs.ts`, which named `/programs` the entire time it was unreachable. **Verified by breaking it:** muting the `/programs` hrefs in all four linking components makes the walk report `/programs reached: false`.
+
+A gate exempts EXACTLY its own route, never its children. The first draft matched by prefix, and since something redirects to `/dashboard`, every page under it was excused and the test checked almost nothing.
+
+⚠️ **This test is currently RED, on purpose.** It found a second orphan on its first run: `/preferences/secondary-region` is a working page nothing links to and nothing redirects into, while the same setting is already changed inline on the Settings screen (`updateSecondaryRegionDirect` in `UserPreferences.tsx`, which links to `/preferences/archetypes` but never to this page). Kept rather than deleted or linked, on the user's explicit instruction (2026-09-03); recorded in `.test-known-failures.json` with the reason. Removing the page, or giving it a real way in, makes it green.
 
 ⚠️ **MIGRATION REQUIRED: `supabase/migrations/20260818_program_custom_schedule.sql`** (one `ADD COLUMN IF NOT EXISTS custom_schedule JSONB`). The enroll INSERT now writes this column, so **enrollment breaks entirely until it is applied** — not just customized enrollment. No new RLS policy: `program_enrollments` already carries own-row CRUD, and this is the user's own training plan sitting beside `exercise_state`.
 
@@ -156,7 +222,7 @@ Wire validation: `src/programs/schemas.ts` — a custom schedule is the only fre
 
 ---
 
-What M1 deliberately does NOT do yet: manual-deload UX (engine auto-deloads); assistance-lift prescriptions for 5/3/1 (main lifts only, cited); the main-nav entry for `/programs`. Catalog expansion (Starting Strength, GZCLP, PPL…) = add data files + list in `catalog.ts`.
+What M1 deliberately does NOT do yet: manual-deload UX (engine auto-deloads); assistance-lift prescriptions for 5/3/1 (main lifts only, cited); today's prescribed session shown *inline* on the tracking dashboard rather than one click away. Catalog expansion (Starting Strength, GZCLP, PPL…) = add data files + list in `catalog.ts`.
 
 ---
 

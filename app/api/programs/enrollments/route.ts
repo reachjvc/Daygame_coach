@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { listActiveEnrollments, enrollInProgram } from "@/src/db/programRepo"
+import { listActiveEnrollments, listPastEnrollments, enrollInProgram } from "@/src/db/programRepo"
 import { CustomScheduleSchema } from "@/src/programs/schemas"
 import { z } from "zod"
 
@@ -15,11 +15,15 @@ const EnrollSchema = z.object({
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireAuth()
   if (!auth.success) return auth.response
   try {
-    return NextResponse.json(await listActiveEnrollments(auth.userId))
+    // `?past=1` returns the archive. The default shape stays a plain array of
+    // ACTIVE enrollments, because three callers already read it that way.
+    const past = new URL(request.url).searchParams.get("past") === "1"
+    const list = past ? listPastEnrollments : listActiveEnrollments
+    return NextResponse.json(await list(auth.userId))
   } catch (e) { console.error("list enrollments:", e); return err("Failed to list enrollments") }
 }
 

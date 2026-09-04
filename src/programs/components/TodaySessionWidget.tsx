@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { CheckCircle2 } from "lucide-react"
+import { CheckCircle2, ChevronDown, ChevronUp, Pencil } from "lucide-react"
+import { describeSets, needsInput, daysSinceLastSession, staleLifts, LAYOFF_DAYS } from "../programsService"
 import { UNIT_CONFIG, WEEKDAY_SHORT } from "../config"
-import type { EnduranceSet, ProgressionChange, SessionPrescription, UnitSystem } from "../types"
+import type { EnduranceSet, LoggedExercise, ProgressionChange, SessionPrescription, UnitSystem } from "../types"
 
 // Total prescribed minutes of an endurance session (for the workout-log bridge).
 function enduranceMinutes(sets: EnduranceSet[]): number {
@@ -16,6 +17,13 @@ function enduranceMinutes(sets: EnduranceSet[]): number {
 
 interface Props {
   enrollmentId: string
+  /**
+   * Sessions logged on this enrollment — for the layoff notice and for which
+   * individual lifts have gone stale. Needs `entries`, not just dates.
+   */
+  logs?: { logged_at: string; entries: LoggedExercise[] }[]
+  /** What to do with a program whose last session has been logged. */
+  onFinish?: (choice: "archive" | "restart") => void
   prescription: SessionPrescription
   unit: UnitSystem
   onLogged: () => void
@@ -32,6 +40,8 @@ interface Props {
 
 export function TodaySessionWidget({
   enrollmentId,
+  logs = [],
+  onFinish,
   prescription,
   unit,
   onLogged,
@@ -44,6 +54,16 @@ export function TodaySessionWidget({
   const [weights, setWeights] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [changes, setChanges] = useState<ProgressionChange[] | null>(null)
+  /**
+   * The lifts whose set-by-set boxes are showing.
+   *
+   * CLOSED IS THE DEFAULT because doing what it says is the normal outcome.
+   * Every set used to render as its own pair of number boxes, so an upper/lower
+   * day was twenty rows of "40 kg × 6 / 6–8 reps" — a sentence that is neither
+   * the prescription nor what you did, repeated down the whole screen. Now each
+   * lift is one line you can read, and you open the one that went differently.
+   */
+  const [open, setOpen] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const seedReps: Record<string, string> = {}
@@ -57,6 +77,10 @@ export function TodaySessionWidget({
     setReps(seedReps)
     setWeights(seedWeights)
     setChanges(null)
+    // An AMRAP lift has no prescribed answer, so it cannot be logged closed —
+    // "as prescribed" would record the bottom of the range as your top set and
+    // progress you off a number you never lifted.
+    setOpen(new Set(prescription.exercises.filter(needsInput).map((e) => e.exerciseId)))
   }, [prescription])
 
   const isEndurance = Boolean(prescription.enduranceSets)
@@ -102,14 +126,55 @@ export function TodaySessionWidget({
   }
 
   const ul = UNIT_CONFIG[unit].label
+  const layoffDays = useMemo(() => daysSinceLastSession(logs), [logs])
+  /**
+   * Which individual lifts went stale. After an injury or a busy month it is
+   * usually some lifts and not the program, and one line for the whole program
+   * cannot say which weights below are the wrong ones.
+   */
+  const stale = useMemo(
+    () => staleLifts(logs, (id) => prescription.exercises.find((e) => e.exerciseId === id)?.name ?? id),
+    [logs, prescription]
+  )
+
+  /**
+   * Which lifts you have actually altered, compared against the prescription.
+   *
+   * Derived rather than tracked with a flag: a flag would stay set after you
+   * typed a number and then typed the prescribed one back, and would claim a
+   * change that is not there. Comparing the numbers cannot be wrong.
+   */
+  const changedLifts = useMemo(() => {
+    const out = new Set<string>()
+    for (const ex of prescription.exercises) {
+      for (const s of ex.sets) {
+        const key = `${ex.exerciseId}:${s.setNumber}`
+        const r = reps[key]
+        const w = weights[key]
+        if ((r !== undefined && Number(r) !== s.reps) || (w !== undefined && Number(w) !== s.weight)) {
+          out.add(ex.exerciseId)
+          break
+        }
+      }
+    }
+    return out
+  }, [prescription, reps, weights])
+  const anythingChanged = changedLifts.size > 0
 
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">
           {prescription.restDay ? "Rest day" : "Today"} — {prescription.dayLabel}
+          {/* NUMBERS A PERSON RECOGNISES. This read "Cycle 76 · Week 1" after a
+              year on StrongLifts — a linear program has no cycles and its week
+              never advances, so one number climbed meaninglessly beside another
+              that never moved. Cycle and week are shown only where the program
+              actually has them: a 5/3/1 wave, a couch-to-5k schedule. */}
           <span className="ml-2 text-xs font-normal text-muted-foreground">
-            Cycle {prescription.cycle} · Week {prescription.week}
+            {prescription.periodised
+              ? `Cycle ${prescription.cycle} · Week ${prescription.week}`
+              : `Session ${prescription.sessionCount + 1}`}
           </span>
         </CardTitle>
         {prescription.restDay && (
@@ -170,19 +235,124 @@ export function TodaySessionWidget({
                 </div>
               ))}
             </div>
-            {prescription.isFinalSession && (
+            {prescription.isFinalSession && !prescription.isComplete && (
               <p className="text-xs text-emerald-600">Final session — you&apos;ll have graduated the program! 🎉</p>
             )}
           </div>
         )}
 
-        {prescription.exercises.map((ex) => (
-          <div key={ex.exerciseId}>
-            <div className="flex items-baseline justify-between">
-              <span className="font-medium">{ex.name}</span>
-              {ex.note && <span className="text-xs text-muted-foreground">{ex.note}</span>}
+        {/* COMING BACK. The engine advances on what you log, so a program left
+            in March prescribes, in September, exactly the weight you walked away
+            from. No cited program has a rule for time off, so this states the
+            fact and leaves the decision — the controls to act on it are already
+            on this page. */}
+        {layoffDays !== null && layoffDays >= LAYOFF_DAYS && (
+          <p
+            data-testid="layoff-notice"
+            className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-xs text-amber-600 dark:text-amber-400"
+          >
+            You last trained this {layoffDays} days ago. The weights below are where you left
+            them — take some off before your first session back if they look heavy now.
+            {/* Which ones, when it is not all of them. */}
+            {stale.length > 0 && stale.length < prescription.exercises.length && (
+              <span className="mt-1 block" data-testid="stale-lifts">
+                Longest untrained: {stale.slice(0, 3).map((l) => `${l.name} (${l.days}d)`).join(", ")}.
+              </span>
+            )}
+          </p>
+        )}
+
+        {/* THE LANDING. `advanceCursor` holds the cursor at the last session once
+            it is reached, so a finished plan quietly re-offered its final
+            session for ever — congratulating the person and then giving them
+            nowhere to go. Two ways out and no third: finishing a plan and
+            choosing to run it again is a normal thing to want. */}
+        {prescription.isComplete && (
+          <div
+            data-testid="program-complete"
+            className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-2 text-xs text-emerald-700 dark:text-emerald-400"
+          >
+            <p className="font-medium">You have finished this program. 🎉</p>
+            <p className="mt-0.5">
+              Everything you logged is kept either way — ending it moves it to the programs you have
+              finished, and starting it again begins from week one.
+            </p>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              {onFinish && (
+                <button
+                  type="button"
+                  onClick={() => onFinish("archive")}
+                  className="rounded-md border border-emerald-500/40 px-2 py-1 transition-colors hover:bg-emerald-500/15"
+                >
+                  End it — I am done
+                </button>
+              )}
+              {onFinish && (
+                <button
+                  type="button"
+                  onClick={() => onFinish("restart")}
+                  className="rounded-md border border-border px-2 py-1 text-muted-foreground transition-colors hover:bg-accent"
+                >
+                  Run it again
+                </button>
+              )}
             </div>
-            <div className="mt-1 space-y-1">
+          </div>
+        )}
+
+        {prescription.exercises.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            Tap a lift only if you did something other than what it says.
+          </p>
+        )}
+
+        {prescription.exercises.map((ex) => {
+          const isOpen = open.has(ex.exerciseId)
+          const mustOpen = needsInput(ex)
+          const edited = changedLifts.has(ex.exerciseId)
+          return (
+          <div key={ex.exerciseId} className="rounded-md border border-border/60">
+            {/* ONE LINE PER LIFT. What it asks for, on the left; whether you
+                have touched it, on the right. */}
+            <button
+              type="button"
+              onClick={() => !mustOpen && setOpen((o) => {
+                const next = new Set(o)
+                if (next.has(ex.exerciseId)) next.delete(ex.exerciseId)
+                else next.add(ex.exerciseId)
+                return next
+              })}
+              aria-expanded={isOpen}
+              disabled={mustOpen}
+              data-testid={`lift-row-${ex.exerciseId}`}
+              className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left disabled:cursor-default"
+            >
+              <span className="min-w-0">
+                <span className="block truncate font-medium">{ex.name}</span>
+                <span className="block truncate text-xs text-muted-foreground">
+                  {describeSets(ex, ul)}
+                  {ex.dropSets ? ` · +${ex.dropSets} drop${ex.dropSets > 1 ? "s" : ""}` : ""}
+                  {ex.note ? ` · ${ex.note}` : ""}
+                </span>
+              </span>
+              <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+                {edited && !isOpen && (
+                  <span className="inline-flex items-center gap-1 text-sky-400">
+                    <Pencil className="size-3" /> changed
+                  </span>
+                )}
+                {mustOpen ? (
+                  <span className="text-amber-500">needs your number</span>
+                ) : isOpen ? (
+                  <ChevronUp className="size-4" />
+                ) : (
+                  <ChevronDown className="size-4" />
+                )}
+              </span>
+            </button>
+
+            {isOpen && (
+            <div className="space-y-1 border-t border-border/60 px-3 py-2">
               {ex.sets.map((s) => {
                 const unitLabel = ex.repUnit === "sec" ? "sec" : "reps"
                 return (
@@ -219,11 +389,19 @@ export function TodaySessionWidget({
                 )
               })}
             </div>
+            )}
           </div>
-        ))}
+        )})}
 
         <Button onClick={submit} disabled={saving} className="w-full">
-          {saving ? "Logging…" : "Log session"}
+          {/* "As prescribed" is a promise the session has to be able to keep.
+              An AMRAP set has no prescribed answer, so offering it there would
+              be offering to log a number nobody chose. */}
+          {saving
+            ? "Logging…"
+            : anythingChanged || prescription.exercises.some(needsInput)
+              ? "Log session"
+              : "Log session as prescribed"}
         </Button>
 
         {changes && (

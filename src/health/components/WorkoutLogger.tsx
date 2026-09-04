@@ -12,6 +12,7 @@ import {
   summarizeWorkoutSets,
   findLastExerciseSets,
   detectPersonalRecords,
+  workoutsOnDate,
 } from "../healthService"
 import type {
   WorkoutLogWithSets,
@@ -356,6 +357,12 @@ export function WorkoutLogger() {
   const heatmapWeeks = buildWorkoutHeatmapWeeks(logs, now)
   const weekStreak = computeWeekStreak(logs, now)
   const thisWeekCount = heatmapWeeks[heatmapWeeks.length - 1].reduce((sum, d) => sum + d.count, 0)
+  /**
+   * What is already on the day this entry will land on — see `workoutsOnDate`.
+   * A session logged from a training program arrives in this same table, so
+   * without this the same workout gets written up twice and counts twice.
+   */
+  const alreadyOnDay = workoutsOnDate(logs, workoutDate || todayKey)
 
   if (isLoading) {
     return (
@@ -467,6 +474,17 @@ export function WorkoutLogger() {
         {/* Input form */}
         {isAdding && (
           <div className="space-y-3 border rounded-lg p-3">
+            {alreadyOnDay.length > 0 && (
+              <p
+                role="status"
+                data-testid="duplicate-day-warning"
+                className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-xs text-amber-600 dark:text-amber-400"
+              >
+                {alreadyOnDay.length === 1 ? "A workout is" : `${alreadyOnDay.length} workouts are`}{" "}
+                already logged {workoutDate ? `on ${workoutDate}` : "today"}. Saving this adds
+                another one — a session you logged from a training program is already counted here.
+              </p>
+            )}
             <div>
               <Label>Session type</Label>
               <div className="flex gap-2 mt-1">

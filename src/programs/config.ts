@@ -31,7 +31,6 @@ export const LEVEL_LABELS: Record<LevelId, string> = {
   advanced: "Advanced",
 }
 
-export const LEVEL_ORDER: LevelId[] = ["beginner", "intermediate", "advanced"]
 
 // ============================================================================
 // Days of the week

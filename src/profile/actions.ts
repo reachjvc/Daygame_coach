@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import {
   completeOnboardingForUser,
-  updateSecondaryRegionForUser,
   updatePreferenceForUser,
   updatePreferredRegionForUser,
   updateSecondaryRegionDirectForUser,
@@ -49,16 +48,6 @@ export async function completeOnboarding(formData: FormData) {
   await completeOnboardingForUser(userId, data)
 
   redirect("/dashboard")
-}
-
-export async function updateSecondaryRegion(formData: FormData) {
-  const userId = await requireAuth()
-
-  const secondaryRegion = (formData.get("secondaryRegion") as string) || null
-
-  await updateSecondaryRegionForUser(userId, secondaryRegion)
-
-  revalidatePath("/dashboard")
 }
 
 export async function updateProfilePreference(formData: FormData) {

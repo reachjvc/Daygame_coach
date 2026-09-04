@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react"
+import { isPracticeRow } from "@/src/goals/data/goalShapes"
 import type { V11ViewProps } from "./V11ViewProps"
 import type {
   GoalWithProgress,
@@ -117,8 +118,8 @@ function sortGoalsForCheckIn(goals: GoalWithProgress[]): GoalWithProgress[] {
     // Completed goals always last
     if (a.is_complete !== b.is_complete) return a.is_complete ? 1 : -1
     // Recurring before milestones
-    const aRecurring = a.goal_type === "recurring" || a.goal_type === "habit_ramp"
-    const bRecurring = b.goal_type === "recurring" || b.goal_type === "habit_ramp"
+    const aRecurring = isPracticeRow(a)
+    const bRecurring = isPracticeRow(b)
     if (aRecurring !== bRecurring) return aRecurring ? -1 : 1
     // By days remaining (lowest first = most urgent)
     const aDays = a.days_remaining ?? 999

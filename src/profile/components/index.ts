@@ -8,6 +8,5 @@ export { InteractiveWorldMap } from "./InteractiveWorldMap"
 export { LevelProgressBar } from "./LevelProgressBar"
 export { UserPreferences } from "./UserPreferences"
 export { ArchetypeSelector } from "./ArchetypeSelector"
-export { SecondaryRegionSelector } from "./SecondaryRegionSelector"
 export { OnboardingFlow } from "./OnboardingFlow"
 

@@ -14,6 +14,16 @@ import { GoalsConfigStep } from "./GoalsConfigStep"
 import { SummaryStep } from "./SummaryStep"
 import { clarifierPrompt, clarifierOption, AUTHORED_CLARIFIERS } from "./clarifiers"
 import { ArrowLeft, ArrowRight, Check, Compass, Dumbbell, Heart, Landmark, type LucideIcon } from "lucide-react"
+import { applyProgramReference } from "@/src/goals/northStarStorage"
+import { getProgram } from "@/src/programs/data/catalog"
+
+/** What POST /api/goals/plan reports back about the programs it enrolled. */
+interface EnrolledRef {
+  programId: string
+  enrollmentId: string
+  startedAt: string
+}
+
 
 // Journey: Plan (type your goal → match → templates/areas/priority appear inline, no extra
 // step) → Roadmap (staggered dated cascade → save → track).
@@ -152,6 +162,25 @@ export function NewGoalsFlow({
         }),
       })
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Save failed")
+      /**
+       * Tell the Life Mastery plan which enrollments this save created.
+       *
+       * Without it, a program started here was the one of three entry points
+       * that left the plan claiming whatever it claimed before — the plan and
+       * the database asserting different things about what you train, with
+       * nothing to settle it. Day names are not sent: this screen does not edit
+       * the training week, and `applyProgramToWorkoutRoutine` leaves an existing
+       * week alone when given none.
+       */
+      const body = (await res.json().catch(() => null)) as { enrolled?: EnrolledRef[] } | null
+      for (const ref of body?.enrolled ?? []) {
+        applyProgramReference({
+          programId: ref.programId,
+          enrollmentId: ref.enrollmentId,
+          label: getProgram(ref.programId)?.name ?? ref.programId,
+          startedAt: ref.startedAt,
+        })
+      }
       setSaveStatus("saved")
       // Hand off to the Track view after a beat so the "✓ Saved" confirmation shows.
       if (onSaved) setTimeout(onSaved, 900)

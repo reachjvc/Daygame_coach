@@ -2,6 +2,7 @@
  * Goals business logic — tree building, filtering, progress aggregation
  */
 
+import { isPracticeRow } from "@/src/goals/data/goalShapes"
 import type { GoalWithProgress, GoalTreeNode, GoalFilterState, InputMode, CelebrationTier, MilestoneLadderConfig, HabitRampStep, PreviewGoalState, TimeOfDayBracket, WeeklyRhythm, PacingInfo, MilestoneCelebrationData, BadgeStatus, TierUpgradeEvent, WeeklyReviewData, WeeklyGoalMomentum, GoalSetupSelections, WillGateResult, BottleneckResult, GoalTemplate, PhaseTransitionEvent, GoalPeriodStats } from "./types"
 import type { DailyGoalSnapshotRow, GoalPhase, LinkedMetric, UserGoalRow } from "@/src/db/goalTypes"
 import { computeGoalProgress } from "@/src/db/goalTypes"
@@ -234,7 +235,7 @@ export function deriveTimeHorizon(goal: GoalWithProgress): string {
 export function isDailyActionable(goal: GoalWithProgress): boolean {
   if (goal.goal_level !== null && goal.goal_level !== 3) return false
   if (goal.goal_phase === "graduated") return false
-  return goal.goal_type === "habit_ramp" || goal.goal_type === "recurring"
+  return isPracticeRow(goal)
 }
 
 /**

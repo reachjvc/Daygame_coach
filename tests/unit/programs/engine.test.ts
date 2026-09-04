@@ -9,6 +9,15 @@ import {
   trainingMaxFromOneRepMax,
   toKg,
   fromKg,
+  describeSets,
+  needsInput,
+  summariseProgression,
+  formatLoad,
+  unbrokenRun,
+  UNBROKEN_RUN_QUESTION_AT,
+  daysSinceLastSession,
+  LAYOFF_DAYS,
+  staleLifts,
 } from "@/src/programs/programsService"
 import { strongLifts5x5 } from "@/src/programs/data/strength/stronglifts5x5"
 import { wendler531 } from "@/src/programs/data/strength/wendler531"
@@ -23,6 +32,8 @@ import { sprintTriathlon, halfIronman } from "@/src/programs/data/endurance/tria
 import { ALL_PROGRAMS } from "@/src/programs/data/catalog"
 import { resolveProgramForLevel } from "@/src/programs/data/catalog"
 import type {
+  PrescribedExercise,
+  PrescribedSet,
   ProgramDefinition,
   ProgramEnrollment,
   ProgramSessionLogInput,
@@ -401,6 +412,15 @@ describe("expanded catalog", () => {
       const { exerciseState, cursor } = seedEnrollment(program, level, "kg", oneRms)
       const e: ProgramEnrollment = { id: "x", user_id: "u", program_id: program.id, level, unitSystem: "kg", exerciseState, cursor, is_active: true, started_at: "2026-01-01", customSchedule: null }
       expect(() => computePrescription(program, e)).not.toThrow()
+
+      // AND IT DOES NOT SAY THE SAME THING TWICE. The rep-range branch used to
+      // default `note` to "6–8 reps", which the session line then rendered as
+      // "4 × 6–8 reps @ 40 kg · 6–8 reps". Checked across the whole catalogue
+      // rather than one program, because the default was in the engine.
+      for (const ex of computePrescription(program, e).exercises) {
+        if (!ex.note) continue
+        expect(describeSets(ex, "kg"), `${program.id}/${ex.name} repeats its note`).not.toContain(ex.note)
+      }
     }
   })
 })
@@ -448,5 +468,335 @@ describe("level routing", () => {
 
   test("intermediate 5/3/1 stays on 5/3/1", () => {
     expect(resolveProgramForLevel("wendler-531", "intermediate").program.id).toBe("wendler-531")
+  })
+})
+
+/**
+ * READING A SESSION AT A GLANCE.
+ *
+ * The widget rendered every set as its own row of two number boxes, so an
+ * upper/lower day was twenty near-identical rows. These cover the line that
+ * replaces them — and the two cases where collapsing would be a LIE.
+ */
+describe("describeSets", () => {
+  const set = (n: number, reps: number, weight: number, extra: Partial<PrescribedSet> = {}): PrescribedSet =>
+    ({ setNumber: n, reps, amrap: false, weight, weightKg: weight, ...extra })
+  const ex = (sets: PrescribedSet[], extra: Partial<PrescribedExercise> = {}): PrescribedExercise =>
+    ({ exerciseId: "x", name: "Lift", sets, ...extra })
+
+  test("collapses identical sets into one line", () => {
+    expect(describeSets(ex([set(1, 5, 40), set(2, 5, 40), set(3, 5, 40)]), "kg")).toBe("3 × 5 reps @ 40 kg")
+  })
+
+  test("keeps a rep range as a range", () => {
+    const sets = [1, 2, 3, 4].map((n) => set(n, 6, 40, { repRangeMax: 8 }))
+    expect(describeSets(ex(sets), "kg")).toBe("4 × 6–8 reps @ 40 kg")
+  })
+
+  test("refuses to collapse a wave — three weights are not '3 × 5'", () => {
+    // 5/3/1: the whole program IS that the weight changes across the sets.
+    const out = describeSets(ex([set(1, 5, 40), set(2, 5, 45), set(3, 5, 50, { amrap: true })]), "kg")
+    expect(out).toBe("40 kg × 5, 45 kg × 5, 50 kg × 5+")
+  })
+
+  test("marks AMRAP, because that number is the one the app cannot guess", () => {
+    expect(describeSets(ex([set(1, 5, 60, { amrap: true })]), "kg")).toContain("5+")
+  })
+
+  test("leaves the weight off a bodyweight lift", () => {
+    const out = describeSets(ex([set(1, 10, 0), set(2, 10, 0)], { bodyweight: true }), "kg")
+    expect(out).toBe("2 × 10 reps")
+    // No "@ 0 kg": a pull-up loaded at zero would read as an unloaded barbell.
+    expect(out).not.toContain("kg")
+    expect(out).not.toContain("@")
+  })
+
+  test("uses the lift's own unit when it is timed, not reps", () => {
+    expect(describeSets(ex([set(1, 30, 0)], { bodyweight: true, repUnit: "sec" }), "kg")).toBe("1 × 30 sec")
+  })
+
+  test("says something rather than crashing on a lift with no sets", () => {
+    expect(describeSets(ex([]), "kg")).toBe("—")
+  })
+})
+
+describe("needsInput", () => {
+  const set = (n: number, amrap = false): PrescribedSet =>
+    ({ setNumber: n, reps: 5, amrap, weight: 40, weightKg: 40 })
+
+  test("an AMRAP lift must be opened — logging the floor would record a lift you never did", () => {
+    expect(needsInput({ exerciseId: "x", name: "Squat", sets: [set(1), set(2, true)] })).toBe(true)
+  })
+
+  test("a fully prescribed lift does not", () => {
+    expect(needsInput({ exerciseId: "x", name: "Squat", sets: [set(1), set(2)] })).toBe(false)
+  })
+})
+
+/**
+ * A YEAR OF TRAINING, READ BACK.
+ *
+ * The history panel showed twelve rows of `ohp-day · C1 W1` and a date, so the
+ * one question a training log exists to answer — did my bench go up? — could
+ * not be asked, even though every set was already stored.
+ */
+describe("summariseProgression", () => {
+  const name = (id: string) => ({ bench: "Bench Press", squat: "Squat" })[id] ?? id
+  const session = (at: string, id: string, weights: number[]) => ({
+    logged_at: at,
+    entries: [{ exerciseId: id, sets: weights.map((w, i) => ({ setNumber: i + 1, reps: 5, weight: w })) }],
+  })
+
+  test("reports where a lift started, where it is now, and how many sessions", () => {
+    const [bench] = summariseProgression(
+      [session("2026-01-01", "bench", [40, 40]), session("2026-06-01", "bench", [60, 60])],
+      name
+    )
+    expect(bench.name).toBe("Bench Press")
+    expect(bench.first).toBe(40)
+    expect(bench.latest).toBe(60)
+    expect(bench.sessions).toBe(2)
+  })
+
+  test("a deload shows as latest below best, not as a lost record", () => {
+    // Latest and best coming apart IS the information. One "progress" number
+    // would hide the deload entirely.
+    const [bench] = summariseProgression(
+      [session("2026-01-01", "bench", [40]), session("2026-02-01", "bench", [80]), session("2026-03-01", "bench", [70])],
+      name
+    )
+    expect(bench.best).toBe(80)
+    expect(bench.latest).toBe(70)
+    expect(bench.latest).toBeLessThan(bench.best)
+  })
+
+  test("a stall is visible — thirty sessions and the number never moved", () => {
+    const logs = Array.from({ length: 30 }, (_, i) => session(`2026-01-${String(i + 1).padStart(2, "0")}`, "bench", [60]))
+    const [bench] = summariseProgression(logs, name)
+    expect(bench.sessions).toBe(30)
+    expect(bench.first).toBe(bench.latest)
+  })
+
+  test("the working weight is the heaviest set, so a drop set is not a collapse", () => {
+    // 3×5 at 100 then two drops to 60. Reading the LAST set would report 60.
+    const [bench] = summariseProgression([session("2026-01-01", "bench", [100, 100, 100, 60, 60])], name)
+    expect(bench.latest).toBe(100)
+  })
+
+  test("newest-first input does not swap first and latest", () => {
+    const [bench] = summariseProgression(
+      [session("2026-06-01", "bench", [60]), session("2026-01-01", "bench", [40])],
+      name
+    )
+    expect(bench.first).toBe(40)
+    expect(bench.latest).toBe(60)
+  })
+
+  test("lists the lift that moved most first", () => {
+    const out = summariseProgression(
+      [
+        session("2026-01-01", "bench", [40]), session("2026-06-01", "bench", [45]),
+        session("2026-01-01", "squat", [60]), session("2026-06-01", "squat", [110]),
+      ],
+      name
+    )
+    expect(out.map((l) => l.exerciseId)).toEqual(["squat", "bench"])
+  })
+
+  test("no sessions is an empty list, not a crash", () => {
+    expect(summariseProgression([], name)).toEqual([])
+  })
+})
+
+describe("formatLoad", () => {
+  test("never prints a weight nobody could load", () => {
+    // Progression arithmetic produced 20.4375 and the panel printed it raw.
+    expect(formatLoad(20.4375)).toBe("20.4")
+    expect(formatLoad(186.25)).toBe("186.3")
+  })
+
+  test("keeps the half plate, drops the fake precision", () => {
+    expect(formatLoad(82.5)).toBe("82.5")
+    expect(formatLoad(80)).toBe("80")
+    expect(formatLoad(80.0)).toBe("80")
+  })
+})
+
+/**
+ * THE 395 KG SQUAT.
+ *
+ * Linear progression adds weight after a session you completed and deloads only
+ * after you fail — faithful to the program. But "log as prescribed" is one
+ * button, so a year of tapping it ratchets a beginner's squat past any weight a
+ * human has lifted. A cap would be inventing a number for somebody else's cited
+ * program; what can be said honestly is what the log shows.
+ */
+describe("unbrokenRun", () => {
+  const target = () => 5
+  const s = (at: string, reps: number[]) => ({
+    logged_at: at,
+    entries: [{ exerciseId: "squat", sets: reps.map((r, i) => ({ setNumber: i + 1, reps: r, weight: 100 })) }],
+  })
+
+  test("counts sessions back to the last missed rep, not from the beginning", () => {
+    const logs = [s("2026-01-01", [5, 5]), s("2026-01-02", [5, 3]), s("2026-01-03", [5, 5]), s("2026-01-04", [5, 5])]
+    expect(unbrokenRun(logs, target)).toBe(2)
+  })
+
+  test("a year of never missing is exactly what it flags", () => {
+    const logs = Array.from({ length: 150 }, (_, i) => s(`2026-01-${String((i % 28) + 1).padStart(2, "0")}T0${i % 9}`, [5, 5]))
+    expect(unbrokenRun(logs, target)).toBeGreaterThanOrEqual(UNBROKEN_RUN_QUESTION_AT)
+  })
+
+  test("a miss in the most recent session means no run at all", () => {
+    expect(unbrokenRun([s("2026-01-01", [5, 5]), s("2026-01-02", [5, 4])], target)).toBe(0)
+  })
+
+  test("unordered input still counts back from the newest", () => {
+    const logs = [s("2026-01-04", [5, 5]), s("2026-01-02", [5, 3]), s("2026-01-03", [5, 5]), s("2026-01-01", [5, 5])]
+    expect(unbrokenRun(logs, target)).toBe(2)
+  })
+
+  test("a lift with no fixed target neither breaks a run nor extends one", () => {
+    // An AMRAP top set or a timed hold cannot be "missed".
+    const logs = [s("2026-01-01", [5, 5]), s("2026-01-02", [1, 1])]
+    expect(unbrokenRun(logs, () => null)).toBe(2)
+  })
+
+  test("no sessions is a run of zero, not a crash", () => {
+    expect(unbrokenRun([], target)).toBe(0)
+  })
+})
+
+describe("summariseProgression points", () => {
+  const session = (at: string, w: number) => ({
+    logged_at: at,
+    entries: [{ exerciseId: "squat", sets: [{ setNumber: 1, reps: 5, weight: w }] }],
+  })
+
+  test("carries the shape between first and latest, in order", () => {
+    const [squat] = summariseProgression(
+      [session("2026-01-01", 40), session("2026-02-01", 60), session("2026-03-01", 50)],
+      (id) => id
+    )
+    expect(squat.points.map((p) => p.weight)).toEqual([40, 60, 50])
+  })
+
+  test("each point carries the day it was trained, not just its position", () => {
+    // Without the date the line spaces a three-month gap like three days.
+    const [squat] = summariseProgression([session("2026-01-01", 40), session("2026-06-01", 60)], (id) => id)
+    expect(squat.points[0].at).toBe("2026-01-01")
+    expect(squat.points[1].at).toBe("2026-06-01")
+  })
+
+  test("a long run is downsampled but still starts and ends where the numbers say", () => {
+    // Three years of logs must not render three years of SVG, and the endpoints
+    // have to match the first/latest printed next to them.
+    const logs = Array.from({ length: 400 }, (_, i) => session(`2026-01-01T${String(i).padStart(4, "0")}`, 20 + i))
+    const [squat] = summariseProgression(logs, (id) => id)
+    expect(squat.points.length).toBeLessThanOrEqual(40)
+    expect(squat.points[0].weight).toBe(squat.first)
+    expect(squat.points[squat.points.length - 1].weight).toBe(squat.latest)
+    // And the ends keep their dates, which is what the x-axis is drawn from.
+    expect(squat.points[0].at).toBe(squat.firstAt)
+    expect(squat.points[squat.points.length - 1].at).toBe(squat.latestAt)
+  })
+})
+
+describe("daysSinceLastSession", () => {
+  const log = (at: string) => ({ logged_at: new Date(at).toISOString() })
+
+  test("counts whole days, so last night is yesterday and not 0.4 of a day", () => {
+    const logs = [log("2026-03-01T23:00:00")]
+    expect(daysSinceLastSession(logs, new Date(2026, 2, 2, 7, 0))).toBe(1)
+  })
+
+  test("finds the most recent session whatever order they arrive in", () => {
+    const logs = [log("2026-01-01T10:00:00"), log("2026-03-01T10:00:00"), log("2026-02-01T10:00:00")]
+    expect(daysSinceLastSession(logs, new Date(2026, 2, 11, 10, 0))).toBe(10)
+  })
+
+  test("a six-month layoff is well past the point of asking", () => {
+    const logs = [log("2026-03-01T10:00:00")]
+    expect(daysSinceLastSession(logs, new Date(2026, 8, 1, 10, 0))).toBeGreaterThan(LAYOFF_DAYS)
+  })
+
+  test("never trained is null, which is not the same as trained today", () => {
+    expect(daysSinceLastSession([])).toBeNull()
+    expect(daysSinceLastSession([log("2026-03-01T10:00:00")], new Date(2026, 2, 1, 20, 0))).toBe(0)
+  })
+})
+
+/**
+ * A FINISHED PROGRAM HAS TO BE ABLE TO SAY SO.
+ *
+ * `advanceCursor` holds the cursor at the last session once it is reached, so
+ * `isFinalSession` stays true for ever and looks identical before and after the
+ * session is actually done. The plan quietly re-offered its final session with
+ * no way out.
+ */
+describe("finishing an endurance program", () => {
+  const enrollAt = (sessionCount: number, week: number, dayIndex: number): ProgramEnrollment => ({
+    id: "x", user_id: "u", program_id: couchTo5k.id, level: "beginner", unitSystem: "kg",
+    exerciseState: {}, cursor: { cycle: 1, week, dayIndex, sessionCount },
+    is_active: true, started_at: "2026-01-01", customSchedule: null,
+  })
+  const total = couchTo5k.schedule.kind === "endurance_weeks"
+    ? couchTo5k.schedule.weeks.reduce((n, w) => n + w.sessions.length, 0)
+    : 0
+  const lastWeek = couchTo5k.schedule.kind === "endurance_weeks" ? couchTo5k.schedule.weeks.length : 0
+  const lastDay = couchTo5k.schedule.kind === "endurance_weeks"
+    ? couchTo5k.schedule.weeks[lastWeek - 1].sessions.length - 1
+    : 0
+
+  test("the program has sessions to count", () => {
+    expect(total).toBeGreaterThan(10)
+  })
+
+  test("standing on the last session is not the same as having done it", () => {
+    const p = computePrescription(couchTo5k, enrollAt(total - 1, lastWeek, lastDay))
+    expect(p.isFinalSession).toBe(true)
+    expect(p.isComplete).toBe(false)
+  })
+
+  test("once every session is logged, the program reports itself finished", () => {
+    const p = computePrescription(couchTo5k, enrollAt(total, lastWeek, lastDay))
+    expect(p.isComplete).toBe(true)
+  })
+
+  test("week one is neither final nor finished", () => {
+    const p = computePrescription(couchTo5k, enrollAt(0, 1, 0))
+    expect(p.isFinalSession).toBe(false)
+    expect(p.isComplete).toBe(false)
+  })
+})
+
+describe("staleLifts", () => {
+  const name = (id: string) => ({ squat: "Squat", bench: "Bench Press" })[id] ?? id
+  const s = (at: string, ids: string[]) => ({
+    logged_at: new Date(at).toISOString(),
+    entries: ids.map((id) => ({ exerciseId: id, sets: [{ setNumber: 1, reps: 5, weight: 100 }] })),
+  })
+
+  test("names only the lifts that went stale, not the whole program", () => {
+    // Kept squatting, stopped pressing — the program-level notice cannot say this.
+    const logs = [s("2026-01-01", ["squat", "bench"]), s("2026-06-01", ["squat"])]
+    const out = staleLifts(logs, name, new Date(2026, 5, 5))
+    expect(out.map((l) => l.name)).toEqual(["Bench Press"])
+  })
+
+  test("says nothing when everything was trained recently", () => {
+    const logs = [s("2026-06-01", ["squat", "bench"])]
+    expect(staleLifts(logs, name, new Date(2026, 5, 3))).toEqual([])
+  })
+
+  test("worst first, so the most neglected lift is read first", () => {
+    const logs = [s("2026-01-01", ["bench"]), s("2026-03-01", ["squat"])]
+    const out = staleLifts(logs, name, new Date(2026, 5, 1))
+    expect(out.map((l) => l.name)).toEqual(["Bench Press", "Squat"])
+  })
+
+  test("a lift never logged is absent rather than infinitely stale", () => {
+    expect(staleLifts([], name, new Date(2026, 5, 1))).toEqual([])
   })
 })

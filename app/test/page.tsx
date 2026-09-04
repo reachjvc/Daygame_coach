@@ -145,6 +145,12 @@ const testPages = [
     icon: Signpost,
   },
   {
+    name: "Goal review — what is unclear",
+    href: "/test/goal-review",
+    description: "Every goal that contradicts itself, and one decision each: a counter that can only reach one, a goal filed under no part of your life, a rate that completes itself. Proposes and never changes — there is deliberately no accept-all",
+    icon: Telescope,
+  },
+  {
     name: "Life Mastery (North Star) — CANON",
     href: "/test/life-mastery",
     description: "The canonical life-planning flow, and the only one not in Archives. Thirteen steps, all reachable at any time: north star and values → your 10 and rating in each of the twelve areas → the one thing → the fork (want / will do / one routine) → templates, custom weeks, systems, experiences → focus, values, commit → track (pushes into real goals) → today",

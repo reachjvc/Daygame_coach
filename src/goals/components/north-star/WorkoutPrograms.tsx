@@ -29,6 +29,7 @@
  */
 
 import { useState } from "react"
+import Link from "next/link"
 import { Check, Loader2 } from "lucide-react"
 import { DISCIPLINES, LEVEL_LABELS } from "@/src/programs/config"
 import { programsByDiscipline, requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
@@ -43,9 +44,11 @@ import {
 import { fromKg, roundToLoadable } from "@/src/programs/programsService"
 import { hasWeight, numericWeights } from "@/src/programs/builder"
 import { ProgramEditor } from "@/src/programs/components/ProgramEditor"
+import { RunningPrograms } from "@/src/programs/components/RunningPrograms"
 import { Segmented } from "@/src/programs/components/ui"
 import { BuildYourOwn } from "./BuildYourOwn"
 import type { Discipline, LevelId, ProgramSchedule, UnitSystem } from "@/src/programs/types"
+import type { NsRoutineProgram } from "@/src/goals/types"
 
 /** The disciplines offered under Fitness, in the order people ask for them. */
 const OFFERED: Discipline[] = ["strength", "bodybuilding", "calisthenics", "cardio", "flexibility", "triathlon"]
@@ -58,15 +61,25 @@ export const PROGRAM_COPY = {
 }
 
 interface Props {
+  /** The training week this plan has written down, for the disagreement notice. */
+  planDays?: string[]
   /**
    * Write the started program's day names into the plan's workout routine, so
    * the training week on this page matches the one being tracked. Null when the
    * plan has no workout routine yet, in which case starting still enrolls.
    */
-  onProgramStarted: (dayNames: string[]) => void
+  onProgramStarted: (dayNames: string[], program: NsRoutineProgram | null) => void
+  /**
+   * A program was ended here, so the plan must stop saying it tracks it.
+   * Without this the plan keeps a reference to a dead row — the same
+   * two-answers bug, just pointing at nothing instead of at the wrong thing.
+   */
+  onProgramEnded?: (enrollmentId: string) => void
 }
 
-export function WorkoutPrograms({ onProgramStarted }: Props) {
+export function WorkoutPrograms({ onProgramStarted, onProgramEnded, planDays = [] }: Props) {
+  /** Bumped after starting or ending one, to re-read what is running. */
+  const [runningKey, setRunningKey] = useState(0)
   /** Take one that exists, or build your own. Two answers to the same question. */
   const [mode, setMode] = useState<"ready" | "own">("ready")
   const [discipline, setDiscipline] = useState<Discipline>("strength")
@@ -173,10 +186,46 @@ export function WorkoutPrograms({ onProgramStarted }: Props) {
         return
       }
 
-      if (schedule && isCustomizable(program)) {
-        onProgramStarted(scheduleDays(schedule).map((d) => d.label))
-      }
+      /**
+       * THE ROW THAT WAS JUST CREATED, handed to the plan.
+       *
+       * The plan used to receive day names and nothing else, so it could never
+       * answer "which program is this week?" — only "what are the days called?"
+       * Now it holds the enrollment id, which is the fact everything else is
+       * decided from. The response has carried it all along; nobody was reading
+       * it.
+       */
+      const created = (await res.json().catch(() => null)) as
+        | { enrollment?: { id: string; program_id: string; started_at: string } }
+        | null
+      const ref: NsRoutineProgram | null = created?.enrollment
+        ? {
+            programId: created.enrollment.program_id,
+            enrollmentId: created.enrollment.id,
+            label: program.name,
+            startedAt: created.enrollment.started_at,
+          }
+        : null
+
+      /**
+       * TELL THE PLAN, WHATEVER KIND OF PROGRAM IT IS.
+       *
+       * This used to be gated on `isCustomizable`, which is false for every
+       * endurance plan. So starting Couch to 5K from this page enrolled you for
+       * real and told the plan NOTHING — no days, and no reference to the
+       * enrollment. The plan then went on describing whatever week it had
+       * before, which is exactly "it is not linked to what I chose".
+       *
+       * An endurance week has no editable day list, so there are no day names
+       * to write; the REFERENCE still matters and is always sent. `applyProgram`
+       * ignores an empty day list, so the written week is left alone rather
+       * than blanked.
+       */
+      const dayNames =
+        schedule && isCustomizable(program) ? scheduleDays(schedule).map((d) => d.label) : []
+      onProgramStarted(dayNames, ref)
       setState("done")
+      setRunningKey((k) => k + 1)
     } catch {
       setError("Could not reach the server. Nothing was started.")
       setState("idle")
@@ -191,7 +240,8 @@ export function WorkoutPrograms({ onProgramStarted }: Props) {
             the rail, which asked somebody to choose between "a program" and "my
             program" before they had seen either, and put two answers to one
             question in two different places. */}
-        <div className="mt-3">
+        <div className="mt-3 space-y-3">
+          <RunningPrograms key={runningKey} planDays={planDays} onEnded={(id) => { onProgramEnded?.(id); setRunningKey((k) => k + 1) }} />
           <BuildYourOwn onProgramStarted={onProgramStarted} />
         </div>
       </div>
@@ -201,6 +251,13 @@ export function WorkoutPrograms({ onProgramStarted }: Props) {
   return (
     <div>
       <ModeSwitch mode={mode} onMode={setMode} />
+      {/* WHAT IS ACTUALLY RUNNING, before what you could start. The page used to
+          open with a catalogue and never once mention the program the account
+          was already on — which is how somebody ends up looking at a program on
+          their dashboard that they have no memory of picking. */}
+      <div className="mt-3">
+        <RunningPrograms key={runningKey} planDays={planDays} onEnded={(id) => { onProgramEnded?.(id); setRunningKey((k) => k + 1) }} />
+      </div>
       <h2 className="mt-3 text-sm font-semibold text-zinc-200">{PROGRAM_COPY.title}</h2>
       <p className="text-[12.5px] text-zinc-400 mt-1 leading-relaxed">{PROGRAM_COPY.help}</p>
 
@@ -376,11 +433,23 @@ export function WorkoutPrograms({ onProgramStarted }: Props) {
           )}
 
           {state === "done" ? (
-            <p className="text-[12.5px] text-emerald-300/90 flex items-center gap-1.5">
-              <Check className="size-3.5" /> {program.name} is running
-              {modified ? " — your version" : ""}. Your first session is waiting, and your training
-              week here now matches it.
-            </p>
+            /* WHERE IT NOW LIVES, said out loud and linked.
+               Starting a program used to end here, with "your first session is
+               waiting" and no way to reach it — the page that prescribes and
+               logs the session is /programs, and nothing on this screen said
+               so. A confirmation that names no destination is a dead end. */
+            <div className="space-y-1.5">
+              <p className="text-[12.5px] text-emerald-300/90 flex items-center gap-1.5">
+                <Check className="size-3.5" /> {program.name} is running
+                {modified ? " — your version" : ""}. Your training week here now matches it.
+              </p>
+              <Link
+                href="/programs"
+                className="inline-flex items-center gap-1.5 text-[12.5px] px-3 py-1.5 rounded-md border border-emerald-400/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 transition-colors"
+              >
+                Go to today&apos;s session
+              </Link>
+            </div>
           ) : (
             <div className="flex flex-wrap items-center gap-2">
               <button

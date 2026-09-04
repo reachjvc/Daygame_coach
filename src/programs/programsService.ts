@@ -20,10 +20,13 @@ import type {
   EnrollmentCursor,
   ExerciseState,
   LoadExercise,
+  LoadPoint,
+  LoggedExercise,
   ProgramDefinition,
   ProgramEnrollment,
   ProgramSessionLogInput,
   PrescribedExercise,
+  PrescribedSet,
   ProgressionChange,
   SessionPrescription,
   UnitSystem,
@@ -192,7 +195,12 @@ export function computePrescription(
         weight,
         weightKg: round2(toKg(weight, unit)),
       }))
-      return { exerciseId: ex.id, name: ex.name, sets, ...carried(ex), note: ex.note ?? `${repMin}–${repMax} reps` }
+      // NO SYNTHETIC NOTE. This used to default to "6–8 reps", from back when
+      // every set was its own row and the range was worth repeating up top.
+      // `describeSets` now says "4 × 6–8 reps @ 40 kg" on the line itself, so
+      // the default turned into "· 6–8 reps" appended to a line that had just
+      // said exactly that. The note is the author's or it is nothing.
+      return { exerciseId: ex.id, name: ex.name, sets, ...carried(ex), ...(ex.note ? { note: ex.note } : {}) }
     }
 
     // percentage_tm
@@ -218,6 +226,8 @@ export function computePrescription(
     dayLabel: day.label,
     cycle: enrollment.cursor.cycle,
     week,
+    sessionCount: enrollment.cursor.sessionCount,
+    periodised: program.schedule.kind !== "linear_rotation",
     exercises,
   }
 }
@@ -493,7 +503,7 @@ function computeSkillPrescription(program: ProgramDefinition, enrollment: Progra
       repUnit: "reps" as const,
     }
   })
-  return { programId: program.id, dayId: day.id, dayLabel: day.label, cycle: enrollment.cursor.cycle, week: enrollment.cursor.week, exercises }
+  return { programId: program.id, dayId: day.id, dayLabel: day.label, cycle: enrollment.cursor.cycle, week: enrollment.cursor.week, sessionCount: enrollment.cursor.sessionCount, periodised: false, exercises }
 }
 
 function applySkillLog(program: ProgramDefinition, enrollment: ProgramEnrollment, log: ProgramSessionLogInput): ApplyLogResult {
@@ -537,7 +547,7 @@ function computeHoldPrescription(program: ProgramDefinition, enrollment: Program
       repUnit: "sec" as const,
     }
   })
-  return { programId: program.id, dayId: day.id, dayLabel: day.label, cycle: enrollment.cursor.cycle, week: enrollment.cursor.week, exercises }
+  return { programId: program.id, dayId: day.id, dayLabel: day.label, cycle: enrollment.cursor.cycle, week: enrollment.cursor.week, sessionCount: enrollment.cursor.sessionCount, periodised: false, exercises }
 }
 
 function applyHoldLog(program: ProgramDefinition, enrollment: ProgramEnrollment, log: ProgramSessionLogInput): ApplyLogResult {
@@ -605,6 +615,16 @@ function computeEndurancePrescription(
 
   const isFinalSession =
     week >= program.schedule.weeks.length && dayIndex >= weekPlan.sessions.length - 1
+  /**
+   * Every session in the plan has been logged.
+   *
+   * `isFinalSession` cannot answer this: the cursor HOLDS at the last session
+   * once it gets there, so "this is the last one" stays true forever and looks
+   * identical before and after you do it. Counting what has been logged against
+   * what the program contains is the only thing that can tell them apart.
+   */
+  const totalSessions = program.schedule.weeks.reduce((n, w) => n + w.sessions.length, 0)
+  const isComplete = enrollment.cursor.sessionCount >= totalSessions
 
   return {
     programId: program.id,
@@ -612,10 +632,13 @@ function computeEndurancePrescription(
     dayLabel: weekPlan.label ? `${weekPlan.label} · ${session.label}` : session.label,
     cycle: enrollment.cursor.cycle,
     week,
+    sessionCount: enrollment.cursor.sessionCount,
+    periodised: true,
     exercises: [],
     enduranceSets: session.sets,
     summary: summarizeEndurance(session.sets),
     isFinalSession,
+    isComplete,
   }
 }
 
@@ -636,3 +659,281 @@ function summarizeEndurance(sets: EnduranceSet[]): string {
 function round2(n: number): number {
   return Math.round(n * 100) / 100
 }
+
+// ---------------------------------------------------------------------------
+// Reading a session at a glance
+// ---------------------------------------------------------------------------
+
+/**
+ * One line describing what a lift asks for today — "4 × 6–8 @ 40 kg".
+ *
+ * THE SESSION WAS UNREADABLE. Every set rendered as its own row of two number
+ * boxes, so an upper/lower day with five lifts was twenty rows of identical
+ * inputs saying "40 kg × 6 / 6–8 reps" — a sentence that parses as neither the
+ * prescription nor what you did, repeated until it filled the screen. The thing
+ * a person actually wants to know on a Tuesday is one line long.
+ *
+ * Sets that are all the same collapse into `sets × reps @ weight`. Sets that
+ * differ do NOT collapse — a 5/3/1 wave is three different weights and saying
+ * "3 × 5" would be a lie — so each is listed. AMRAP is marked with `+`, because
+ * "as many as possible" is the one number the app cannot guess for you.
+ */
+export function describeSets(exercise: PrescribedExercise, unitLabel: string): string {
+  const { sets, bodyweight, repUnit } = exercise
+  if (sets.length === 0) return "—"
+  const unit = repUnit === "sec" ? "sec" : "reps"
+
+  const repsOf = (s: PrescribedSet) =>
+    `${s.repRangeMax ? `${s.reps}–${s.repRangeMax}` : s.reps}${s.amrap ? "+" : ""}`
+  const weightOf = (s: PrescribedSet) => `${s.weight} ${unitLabel}`
+
+  const uniform =
+    sets.every((s) => s.weight === sets[0].weight) &&
+    sets.every((s) => repsOf(s) === repsOf(sets[0]))
+
+  if (uniform) {
+    const head = `${sets.length} × ${repsOf(sets[0])} ${unit}`
+    return bodyweight ? head : `${head} @ ${weightOf(sets[0])}`
+  }
+  return sets
+    .map((s) => (bodyweight ? repsOf(s) : `${weightOf(s)} × ${repsOf(s)}`))
+    .join(", ")
+}
+
+/**
+ * Whether a lift has to be opened before it can be logged honestly.
+ *
+ * An AMRAP set has no prescribed answer — the whole point is how many you got —
+ * so "log it as prescribed" would quietly record the floor of the range as your
+ * result and progress you off a number you never lifted.
+ */
+export function needsInput(exercise: PrescribedExercise): boolean {
+  return exercise.sets.some((s) => s.amrap)
+}
+
+// ---------------------------------------------------------------------------
+// A year of it, read back
+// ---------------------------------------------------------------------------
+
+/**
+ * A load as somebody would write it on a whiteboard — the NUMBER only.
+ *
+ * Named `formatLoad`, not `formatWeight`: `healthService.formatWeight(kg, unit)`
+ * already exists and returns "82.5 kg". Two functions with one name in two
+ * slices is how the wrong one gets imported.
+ *
+ * Progression arithmetic produces numbers like `20.4375` — 2.5 kg increments,
+ * percentage-of-training-max waves and pound conversions all divide, and the
+ * result was being printed raw. Nobody has ever loaded 20.4375 kg. One decimal
+ * is the finest a barbell is actually adjustable to, and whole numbers lose the
+ * ".5" that half the plates in a gym are.
+ */
+export function formatLoad(weight: number): string {
+  const rounded = Math.round(weight * 10) / 10
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
+}
+
+/** What one lift did over every session logged on a program. */
+export interface LiftProgress {
+  exerciseId: string
+  name: string
+  /** Heaviest working weight the first time it was logged. */
+  first: number
+  /** Heaviest working weight the last time it was logged. */
+  latest: number
+  /** Heaviest ever, which is not always the latest — a deload moves it down. */
+  best: number
+  sessions: number
+  firstAt: string
+  latestAt: string
+  /**
+   * The working weight at each session, oldest first — the SHAPE of the year.
+   *
+   * First and latest say where it started and where it is; they cannot say
+   * whether it climbed steadily, stalled for four months, or came back from a
+   * deload. That is the part somebody actually recognises as their training.
+   *
+   * Downsampled to at most `SPARK_POINTS`, evenly across the run and always
+   * keeping the true first and last, so a three-year log renders the same size
+   * as a three-week one and the endpoints still match the numbers beside it.
+   */
+  points: LoadPoint[]
+}
+
+/** Enough to show a shape, few enough to stay a glyph rather than a chart. */
+const SPARK_POINTS = 40
+
+export function downsample(values: LoadPoint[], max = SPARK_POINTS): LoadPoint[] {
+  if (values.length <= max) return values
+  const step = (values.length - 1) / (max - 1)
+  const out: LoadPoint[] = []
+  for (let i = 0; i < max; i++) out.push(values[Math.round(i * step)])
+  return out
+}
+
+/**
+ * WHAT THE NUMBERS DID, which is the only reason anybody logs them.
+ *
+ * The history panel showed the last twelve sessions as `ohp-day · C1 W1` and a
+ * date. After a year that is a scrolling list of internal identifiers, and the
+ * one question a training log exists to answer — *did my bench go up?* — could
+ * not be asked at all, even though every set of every session was sitting in
+ * `program_session_logs.entries` the whole time.
+ *
+ * Deliberately reports FIRST, LATEST and BEST as three separate numbers rather
+ * than one "progress" figure. They come apart in normal training and the
+ * difference is the information: latest below best means a deload, latest equal
+ * to first after thirty sessions means a stall, and a single "+45 kg" would
+ * hide both.
+ *
+ * `logs` may arrive in any order; this sorts, so a caller that fetched newest
+ * first does not silently get its first and latest swapped.
+ */
+export function summariseProgression(
+  logs: { entries: LoggedExercise[]; logged_at: string }[],
+  nameFor: (exerciseId: string) => string
+): LiftProgress[] {
+  const byLift = new Map<string, { at: string; top: number }[]>()
+
+  for (const log of logs) {
+    for (const entry of log.entries ?? []) {
+      // The working weight of a session is its heaviest set. Taking the last
+      // set instead would read a drop set as a collapse in strength.
+      const top = entry.sets.reduce((m, s) => Math.max(m, s.weight), 0)
+      if (!byLift.has(entry.exerciseId)) byLift.set(entry.exerciseId, [])
+      byLift.get(entry.exerciseId)!.push({ at: log.logged_at, top })
+    }
+  }
+
+  const out: LiftProgress[] = []
+  for (const [exerciseId, points] of byLift) {
+    points.sort((a, b) => a.at.localeCompare(b.at))
+    out.push({
+      exerciseId,
+      name: nameFor(exerciseId),
+      first: points[0].top,
+      latest: points[points.length - 1].top,
+      best: points.reduce((m, p) => Math.max(m, p.top), 0),
+      sessions: points.length,
+      firstAt: points[0].at,
+      latestAt: points[points.length - 1].at,
+      points: downsample(points.map((pt) => ({ at: pt.at, weight: pt.top }))),
+    })
+  }
+  // Biggest gain first — the lifts that moved are the ones worth reading.
+  return out.sort((a, b) => b.latest - b.first - (a.latest - a.first))
+}
+
+/**
+ * How many sessions in a row were logged with nothing missed.
+ *
+ * THE 395 KG SQUAT. Linear progression adds weight after a session you
+ * completed, and deloads only after you FAIL — which is correct, and is what
+ * StrongLifts says. But "log session as prescribed" is now one button, so it is
+ * very easy to tell the app you hit every rep on a day you did not, and a year
+ * of that ratchets a beginner's squat to a number no human has lifted.
+ *
+ * A CEILING WOULD BE THE WRONG FIX. The programs here are cited; inventing a cap
+ * would be editing somebody else's program with a number we made up. What can be
+ * said honestly is what the log itself shows: an unbroken run. Real linear
+ * progression stalls — that is the entire premise of the program — so a run this
+ * long means the log and the gym have come apart, and the person is the only one
+ * who can say which is right.
+ *
+ * Counts back from the most recent session and stops at the first missed rep.
+ */
+export function unbrokenRun(
+  logs: { entries: LoggedExercise[]; logged_at: string }[],
+  targetRepsFor: (exerciseId: string) => number | null
+): number {
+  const ordered = [...logs].sort((a, b) => b.logged_at.localeCompare(a.logged_at))
+  let run = 0
+  for (const log of ordered) {
+    const everyRepHit = (log.entries ?? []).every((entry) => {
+      const target = targetRepsFor(entry.exerciseId)
+      // A lift with no fixed rep target — an AMRAP top set, a timed hold — can
+      // not be "missed", so it neither breaks a run nor extends one.
+      if (target === null) return true
+      return entry.sets.every((s) => s.reps >= target)
+    })
+    if (!everyRepHit) break
+    run++
+  }
+  return run
+}
+
+/**
+ * The point at which an unbroken run is worth asking about.
+ *
+ * Beginner linear programs are expected to stall inside a few months — roughly
+ * forty sessions at three a week. Thirty is comfortably inside "still plausible"
+ * while being far enough in that a real stall should have happened.
+ */
+export const UNBROKEN_RUN_QUESTION_AT = 30
+
+/**
+ * Days since the last session on this enrollment, or null if never trained.
+ *
+ * COMING BACK. The engine advances on what you log, so a program you left in
+ * March prescribes, in September, exactly the weight you walked away from — and
+ * that weight is now wrong, because six months off costs strength that no rule
+ * in the program accounts for. The program cannot know; only the calendar can.
+ *
+ * Not a deload rule. These programs are cited and inventing "drop 20% after
+ * eight weeks" would be putting our number in somebody else's program. This is
+ * the fact; what to do with it is the lifter's call, and the controls to do it
+ * already exist.
+ */
+export function daysSinceLastSession(
+  logs: { logged_at: string }[],
+  now: Date = new Date()
+): number | null {
+  if (logs.length === 0) return null
+  const latest = logs.reduce((m, l) => (l.logged_at > m ? l.logged_at : m), logs[0].logged_at)
+  const then = new Date(latest)
+  // Whole days between two wall-clock dates, so a session logged last night at
+  // 23:00 reads as "yesterday" rather than as a fraction of a day.
+  const dayMs = 24 * 60 * 60 * 1000
+  const a = Date.UTC(then.getFullYear(), then.getMonth(), then.getDate())
+  const b = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+  return Math.max(0, Math.round((b - a) / dayMs))
+}
+
+/**
+ * Days since each individual lift was last trained.
+ *
+ * The program-level layoff notice says "you last trained this 94 days ago" and
+ * stops there. After three months off that is true of the whole program, but
+ * after an injury or a busy month it is usually true of SOME lifts — you kept
+ * squatting and stopped pressing — and one line for the program cannot say which
+ * weights are the stale ones.
+ *
+ * Still states the fact and stops. No cited program has a detraining rule, so
+ * computing "drop 15%" here would be putting our number into somebody else's
+ * program under their name.
+ */
+export function staleLifts(
+  logs: { entries: LoggedExercise[]; logged_at: string }[],
+  nameFor: (exerciseId: string) => string,
+  now: Date = new Date(),
+  thresholdDays: number = LAYOFF_DAYS
+): { exerciseId: string; name: string; days: number }[] {
+  const lastByLift = new Map<string, string>()
+  for (const log of logs) {
+    for (const entry of log.entries ?? []) {
+      const seen = lastByLift.get(entry.exerciseId)
+      if (!seen || log.logged_at > seen) lastByLift.set(entry.exerciseId, log.logged_at)
+    }
+  }
+
+  const out: { exerciseId: string; name: string; days: number }[] = []
+  for (const [exerciseId, at] of lastByLift) {
+    // Reuse the one day-difference rule rather than writing a second one.
+    const days = daysSinceLastSession([{ logged_at: at }], now)
+    if (days !== null && days >= thresholdDays) out.push({ exerciseId, name: nameFor(exerciseId), days })
+  }
+  return out.sort((a, b) => b.days - a.days)
+}
+
+/** Long enough away that the weights waiting for you are probably wrong. */
+export const LAYOFF_DAYS = 21

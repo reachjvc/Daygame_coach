@@ -5,8 +5,9 @@
  * cross-domain correlations, and PR detection.
  */
 
-import { periodStartFor, previousPeriodStart, isStreakCurrent, middayInstant, localTimeInstant, getTodayInTimezone } from "@/src/shared/dateUtils"
+import { periodStartFor, previousPeriodStart, isStreakCurrent, middayInstant, localTimeInstant, getTodayInTimezone, toDateISO } from "@/src/shared/dateUtils"
 import { weeklyStreakRun } from "@/src/shared/streakRuns"
+import type { LoadPoint } from "@/src/programs/types"
 import type {
   WeightLogRow,
   WeightTrend,
@@ -118,7 +119,7 @@ export function computeWeightTrend(
     if (weeksToTarget > 0 && weeksToTarget < 200) {
       const target = new Date()
       target.setDate(target.getDate() + Math.round(weeksToTarget * 7))
-      projectedTargetDate = target.toISOString().split("T")[0]
+      projectedTargetDate = toDateISO(target)
     }
   }
 
@@ -227,21 +228,16 @@ export function detectPersonalRecords(
         exercise: s.exercise,
         weight_kg: s.weight_kg,
         reps: s.reps,
-        date: new Date().toISOString().split("T")[0],
+        // The day the lifter set it, in their own calendar. Converting to UTC
+        // first files a 23:30 personal record on tomorrow — the same class of
+        // bug this codebase has now hit four times.
+        date: toDateISO(new Date()),
         isNew: true,
       })
     }
   }
 
   return records
-}
-
-/**
- * Compute volume load: sets × reps × weight for a workout's sets.
- * Warm-up sets are excluded — volume load tracks working volume only.
- */
-export function computeVolumeLoad(sets: WorkoutSetRow[]): number {
-  return sets.reduce((total, s) => (s.is_warmup ? total : total + s.weight_kg * s.reps), 0)
 }
 
 /** Local-date key (YYYY-MM-DD) so a 23:30 workout counts on the day the user trained. */
@@ -259,6 +255,88 @@ function localDateKey(d: Date): string {
 function mondayOf(d: Date): Date {
   const [y, m, day] = periodStartFor("weekly", d).split("-").map(Number)
   return new Date(y, m - 1, day)
+}
+
+/**
+ * One lift's whole history, across every program and every loose workout.
+ *
+ * `summariseProgression` reads ONE enrollment's session logs, so "my bench"
+ * resets the day you change program — which is exactly backwards, because the
+ * lift is the thing that persists and the program is the thing that changes.
+ *
+ * `workout_sets` is the table that already spans everything: a program session
+ * mirrors into it and the free-form logger writes to it directly. It is keyed by
+ * exercise NAME rather than by a program-specific id, which is usually a
+ * weakness and here is the whole point — the same name across two programs is
+ * the same lift.
+ *
+ * Matched on `exercise.toLowerCase().trim()`, the key `detectPersonalRecords`
+ * already uses. A second normalisation would mean a PR and a history that
+ * disagree about what counts as the same lift.
+ *
+ * One point per DAY, taking the heaviest working set, so a session logged as
+ * five sets is one point and a drop set does not read as a collapse. Warm-ups
+ * are excluded for the same reason they are excluded from PRs.
+ */
+export function liftHistory(
+  sets: (WorkoutSetRow & { logged_at: string })[],
+  exercise: string
+): LoadPoint[] {
+  const key = exercise.toLowerCase().trim()
+  const topByDay = new Map<string, { at: string; weight: number }>()
+
+  for (const s of sets) {
+    if (s.is_warmup) continue
+    if (s.exercise.toLowerCase().trim() !== key) continue
+    const day = localDateKey(new Date(s.logged_at))
+    const cur = topByDay.get(day)
+    if (!cur || s.weight_kg > cur.weight) topByDay.set(day, { at: s.logged_at, weight: s.weight_kg })
+  }
+
+  return [...topByDay.values()].sort((a, b) => a.at.localeCompare(b.at))
+}
+
+/**
+ * The lifts with enough history to be worth drawing, most-trained first.
+ *
+ * A list of every exercise name somebody has ever typed is not a feature; two
+ * points is the minimum a line can be drawn from, which makes it the natural
+ * floor here too.
+ */
+export function liftsWithHistory(
+  sets: (WorkoutSetRow & { logged_at: string })[],
+  minDays = 2
+): { exercise: string; points: LoadPoint[] }[] {
+  const names = new Map<string, string>()
+  for (const s of sets) {
+    if (s.is_warmup) continue
+    const key = s.exercise.toLowerCase().trim()
+    // Keep the first spelling seen, so the list does not flip between
+    // "Bench press" and "Bench Press" depending on load order.
+    if (!names.has(key)) names.set(key, s.exercise)
+  }
+  return [...names.values()]
+    .map((exercise) => ({ exercise, points: liftHistory(sets, exercise) }))
+    .filter((l) => l.points.length >= minDays)
+    .sort((a, b) => b.points.length - a.points.length)
+}
+
+/**
+ * The workouts already logged on a given local date.
+ *
+ * TWO FACTS THAT MUST AGREE, STORED APART. A program session bridges into
+ * `workout_logs` when it is logged on the Training page, and the free-form
+ * logger writes to the same table. Nothing links the two, so one gym session
+ * written up both ways is two rows — and two sessions on the week count, the
+ * streak, the heatmap and any goal reading the metric.
+ *
+ * Not forbidden: people genuinely train twice a day, and refusing the second
+ * one would be wrong. It just has to be SAID, before the save rather than
+ * after, which is why this returns the rows instead of a boolean — the warning
+ * names what is already there.
+ */
+export function workoutsOnDate(logs: WorkoutLogRow[], dateKey: string): WorkoutLogRow[] {
+  return logs.filter((log) => localDateKey(new Date(log.logged_at)) === dateKey)
 }
 
 /**
@@ -463,9 +541,12 @@ function daysDiff(a: string, b: string): number {
 }
 
 function addDays(dateStr: string, days: number): string {
-  const d = new Date(dateStr)
-  d.setDate(d.getDate() + days)
-  return d.toISOString().split("T")[0]
+  // Built from the parts, not parsed. `new Date("2026-01-01")` is UTC midnight,
+  // while `getDate`/`setDate` are local — so west of UTC the shift read the
+  // previous day and every correlation window came out one day short.
+  const [y, m, d] = dateStr.split("-").map(Number)
+  const shifted = new Date(y, m - 1, d + days)
+  return toDateISO(shifted)
 }
 
 function avgApproachesForDates(

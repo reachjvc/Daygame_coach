@@ -9,6 +9,8 @@ import { ProgramDetail } from "./ProgramDetail"
 import { TodaySessionWidget } from "./TodaySessionWidget"
 import { ProgressionView } from "./ProgressionView"
 import { EditActiveProgram } from "./EditActiveProgram"
+import { RunningPrograms } from "./RunningPrograms"
+import { PastPrograms } from "./PastPrograms"
 import { useActiveEnrollments, useEnrollment } from "../hooks/useEnrollment"
 import { getProgram, requireProgram } from "../data/catalog"
 import { effectiveProgram } from "../customize"
@@ -24,6 +26,17 @@ type View =
 export function ProgramsApp() {
   const [view, setView] = useState<View>({ mode: "home" })
   const { enrollments, loading, refresh } = useActiveEnrollments()
+
+  /**
+   * ONE PROGRAM MEANS NO CHOICE TO MAKE, so do not ask for one.
+   *
+   * The page opened on a list headed "My Programs" containing a single card you
+   * had to click to reach today's session — a menu of one, in front of the only
+   * thing you came for. With two or more the list is the point and it stays.
+   */
+  if (view.mode === "home" && !loading && enrollments.length === 1) {
+    return <ActiveProgram enrollmentId={enrollments[0].id} onExit={() => { refresh(); setView({ mode: "browse" }) }} />
+  }
 
   if (view.mode === "browse") {
     return (
@@ -56,6 +69,12 @@ export function ProgramsApp() {
   // home
   return (
     <div className="space-y-4">
+      {/* Every program the account is on, with when it started and a way to end
+          it. Enrollments only deactivate within a discipline, so one from
+          months ago keeps prescribing sessions until somebody stops it — and
+          until now nothing on any screen said it was there. */}
+      <RunningPrograms tone="app" onEnded={refresh} />
+
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">My Programs</h2>
         <Button size="sm" onClick={() => setView({ mode: "browse" })}>
@@ -127,11 +146,41 @@ function ActiveProgram({ enrollmentId, onExit }: { enrollmentId: string; onExit:
 
   return (
     <div className="space-y-4">
-      <Button variant="ghost" size="sm" onClick={onExit}>← My programs</Button>
+      {/* NAME THE PROGRAM. The header said "Today — Upper · Cycle 1 · Week 1"
+          and never once said which program that was, which is how somebody
+          ends up staring at a session they do not recognise with no way to
+          find out where it came from. */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Button variant="ghost" size="sm" onClick={onExit}>← My programs</Button>
+        <span className="text-xs text-muted-foreground" data-testid="active-program-name">
+          {getProgram(detail.enrollment.program_id)?.name ?? detail.enrollment.program_id}
+          {" · "}
+          {LEVEL_LABELS[detail.enrollment.level]}
+          {" · started "}
+          {new Date(detail.enrollment.started_at).toLocaleDateString()}
+        </span>
+      </div>
       <TodaySessionWidget
         enrollmentId={enrollmentId}
         prescription={prescription}
         unit={detail.enrollment.unitSystem}
+        logs={detail.logs}
+        /* Both paths reuse controls that already exist — `unenroll` archives and
+           keeps the sessions, `reset` rewinds the cursor and keeps the weights.
+           Neither is a new concept invented for finishing. */
+        onFinish={async (choice) => {
+          if (choice === "archive") {
+            await fetch(`/api/programs/enrollments/${enrollmentId}`, { method: "DELETE" })
+            onExit()
+            return
+          }
+          await fetch(`/api/programs/enrollments/${enrollmentId}/action`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "reset" }),
+          })
+          refresh()
+        }}
         days={days}
         onPickDay={setPickedDayId}
         onLogged={() => {
@@ -145,9 +194,11 @@ function ActiveProgram({ enrollmentId, onExit }: { enrollmentId: string; onExit:
       <ProgressionView
         enrollmentId={enrollmentId}
         logs={detail.logs}
+        enrollment={detail.enrollment}
         onChanged={refresh}
         onUnenrolled={onExit}
       />
+      <PastPrograms />
     </div>
   )
 }

@@ -80,30 +80,6 @@ export interface NextSessionExercise {
 }
 
 // ============================================================================
-// Sheet Data (read from Google Sheets)
-// ============================================================================
-
-export interface SheetProgramme {
-  exercises: ExerciseEntry[]
-}
-
-export interface SheetLog {
-  entries: SetLog[]
-}
-
-export interface SheetNextSession {
-  day: DayLabel
-  exercises: NextSessionExercise[]
-}
-
-export interface SheetData {
-  programme: SheetProgramme
-  nextSession: SheetNextSession
-  log: SheetLog
-  weekNumber: number
-}
-
-// ============================================================================
 // Progression Result (output of service logic)
 // ============================================================================
 

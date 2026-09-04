@@ -28,6 +28,9 @@ function getDaysRemainingStyle(days: number): string {
   return "bg-blue-500/10 text-blue-400 border-blue-500/20"
 }
 
+import { GoalBadges } from "./GoalBadges"
+import { isPracticeRow } from "@/src/goals/data/goalShapes"
+
 interface GoalCardProps {
   goal: GoalWithProgress
   allGoals?: GoalWithProgress[]
@@ -322,6 +325,11 @@ export function GoalCard({
           {goal.milestone_config && (
             <ProjectionTimeline goal={goal} />
           )}
+
+          {/* What this goal has earned, and its all-time total. Only in the
+              expanded card: it costs a snapshot query, and paying that for
+              forty collapsed cards would be the wrong trade. */}
+          <GoalBadges goalId={goal.id} canPinTotal={isPracticeRow(goal)} />
 
           {/* Actions */}
           <div className="space-y-2">

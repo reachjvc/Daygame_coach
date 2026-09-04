@@ -139,14 +139,6 @@ export interface PersonalRecord {
   isNew: boolean
 }
 
-export interface WorkoutStats {
-  weeklySessionCount: number
-  cumulativeSessionCount: number
-  volumeLoad4wAvg: number | null
-  personalRecords: PersonalRecord[]
-  heatmap: { date: string; count: number }[]
-}
-
 // Templates: user-saved presets that prefill the workout logger form.
 // Sets are stored as a JSONB payload (no set_number — order is array order).
 export interface WorkoutTemplateSet {
@@ -222,13 +214,6 @@ export interface CorrelationInsight {
   strength: "strong" | "moderate" | "weak"
 }
 
-export interface HealthDaygameCorrelation {
-  dateRange: { start: string; end: string }
-  insights: CorrelationInsight[]
-  sleepVsApproaches: { avgSleepHours: number; avgApproaches: number; sessions: number } | null
-  weightVsFrequency: { weightTrend: "down" | "up" | "flat"; sessionFrequencyTrend: "up" | "down" | "flat" } | null
-}
-
 // ============================================================================
 // Shared
 // ============================================================================
@@ -254,8 +239,3 @@ export interface BodyMeasurementInsert {
   logged_at?: string
 }
 
-// ============================================================================
-// Shared
-// ============================================================================
-
-export type HealthWidget = "weight" | "sleep" | "workout" | "nutrition"

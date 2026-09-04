@@ -30,7 +30,19 @@ export async function POST(request: Request) {
     const tz = await getUserTimezone(auth.userId)
     const created = await saveFrameworkPlan(auth.userId, inserts, tz)
     // Idempotently enroll in attached programs (no-op if already enrolled → preserves progress).
-    for (const sel of parsed.data.programSelections ?? []) await ensureEnrollment(auth.userId, sel)
-    return NextResponse.json({ saved: created.length }, { status: 201 })
+    // THE ENROLLMENTS COME BACK. This used to discard them, so a program started
+    // here was the one of three entry points that left the Life Mastery plan
+    // claiming whatever it claimed before — the plan and the database asserting
+    // different things with no way to disagree out loud.
+    const enrolled = []
+    for (const sel of parsed.data.programSelections ?? []) {
+      const { enrollment } = await ensureEnrollment(auth.userId, sel)
+      enrolled.push({
+        programId: enrollment.program_id,
+        enrollmentId: enrollment.id,
+        startedAt: enrollment.started_at,
+      })
+    }
+    return NextResponse.json({ saved: created.length, enrolled }, { status: 201 })
   } catch (e) { console.error("Error saving goal plan:", e); return err(e instanceof Error ? e.message : "Failed to save plan") }
 }

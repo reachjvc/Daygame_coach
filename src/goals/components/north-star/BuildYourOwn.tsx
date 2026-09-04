@@ -22,6 +22,7 @@ import {
   CustomProgramBuilder,
   emptyCustomSchedule,
 } from "@/src/programs/components/CustomProgramBuilder"
+import type { NsRoutineProgram } from "@/src/goals/types"
 import { scheduleDays } from "@/src/programs/customize"
 import {
   CUSTOM_LIFTS_STORAGE_KEY,
@@ -67,7 +68,11 @@ function load(raw: string | null): SavedDesign | null {
   }
 }
 
-export function BuildYourOwn({ onProgramStarted }: { onProgramStarted: (dayNames: string[]) => void }) {
+export function BuildYourOwn({
+  onProgramStarted,
+}: {
+  onProgramStarted: (dayNames: string[], program: NsRoutineProgram | null) => void
+}) {
   const [schedule, setSchedule] = useState<ProgramSchedule>(emptyCustomSchedule)
   const [unit, setUnit] = useState<UnitSystem>("kg")
   const [weights, setWeights] = useState<Record<string, string>>({})
