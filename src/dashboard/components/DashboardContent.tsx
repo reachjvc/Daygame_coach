@@ -7,12 +7,30 @@ import { MessageCircle, Brain, HelpCircle, ArrowRight, Lock, BarChart3, BookOpen
 import { UserPreferences, LevelProgressBar } from "@/src/profile/components";
 import type { DashboardProfileData } from "../types";
 
+/**
+ * Who is looking at this dashboard. Three states, one value -- they cannot
+ * contradict each other the way two booleans can.
+ *
+ * `visitor` and `unsubscribed` used to share a single isPreviewMode flag, so
+ * someone who had just signed up and finished onboarding was told to
+ * "Sign up to start practicing", and shown Level 1 when their profile said
+ * level 7. Found by walking the flow with a real account, 2026-09-04.
+ */
+export type DashboardViewer = "visitor" | "unsubscribed" | "subscribed";
+
 interface DashboardContentProps {
   profileData: DashboardProfileData | null;
-  isPreviewMode?: boolean;
+  viewer: DashboardViewer;
 }
 
-export function DashboardContent({ profileData, isPreviewMode = false }: DashboardContentProps) {
+export function DashboardContent({ profileData, viewer }: DashboardContentProps) {
+  // Both non-subscribed states show the locked module cards.
+  const isPreviewMode = viewer !== "subscribed";
+
+  // Where a locked card sends someone depends on whether they HAVE an account.
+  // Sending a signed-up user to /auth/sign-up is how they get told to sign up
+  // for the account they already finished setting up.
+  const unlockHref = viewer === "visitor" ? "/auth/sign-up" : "/#pricing";
   const [experienceLevel, setExperienceLevel] = useState<string | null>(
     profileData?.experience_level ?? null
   );
@@ -32,18 +50,26 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
     <main className="mx-auto max-w-6xl px-4 sm:px-8 py-12 sm:py-24" data-testid="dashboard-content">
       <div className="text-center mb-8 sm:mb-16">
         <h1 className="text-balance text-3xl sm:text-4xl font-bold tracking-tight lg:text-5xl mb-4 text-foreground">
-          {isPreviewMode ? "Explore the Dashboard" : "Welcome Back!"}
+          {viewer === "visitor"
+            ? "Explore the Dashboard"
+            : viewer === "unsubscribed"
+              ? "You're all set up"
+              : "Welcome Back!"}
         </h1>
         <p className="text-pretty text-base sm:text-lg text-muted-foreground leading-relaxed">
-          {isPreviewMode
+          {viewer === "visitor"
             ? "See what training modules are available. Sign up to start practicing!"
-            : "Choose a training module to continue improving your daygame skills"
+            : viewer === "unsubscribed"
+              ? "Your answers are saved. Subscribe to unlock the training modules below."
+              : "Choose a training module to continue improving your daygame skills"
           }
         </p>
       </div>
 
-      {/* Level Progress Bar - Show sample in preview mode */}
-      {isPreviewMode ? (
+      {/* A signed-up user has real answers from onboarding, so show their own
+          level rather than the placeholder -- it is their data, and telling
+          them they are Level 1 when the profile says otherwise is a lie. */}
+      {viewer === "visitor" ? (
         <div className="mb-12 relative">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/80 to-transparent z-10 flex items-center justify-center">
             <div className="bg-card border border-border rounded-lg px-4 py-2 shadow-lg">
@@ -59,7 +85,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
             />
           </div>
         </div>
-      ) : profileData && (
+      ) : profileData ? (
         <div className="mb-12">
           <LevelProgressBar
             level={profileData.level || 1}
@@ -68,7 +94,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
             experienceLevel={experienceLevel ?? profileData.experience_level}
           />
         </div>
-      )}
+      ) : null}
 
       <div className="grid md:grid-cols-3 gap-4 md:gap-8">
         {/* Scenarios */}
@@ -131,7 +157,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
       </div>
 
       {/* Ask Your Coach - QA Section */}
-      <Link href={isPreviewMode ? "/auth/sign-up" : "/dashboard/qa"} className="group block mt-8" data-testid="dashboard-qa-link">
+      <Link href={isPreviewMode ? unlockHref : "/dashboard/qa"} className="group block mt-8" data-testid="dashboard-qa-link">
         <Card className="p-4 sm:p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-5">
@@ -157,7 +183,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
       </Link>
 
       {/* Progress Tracking Section */}
-      <Link href={isPreviewMode ? "/auth/sign-up" : "/dashboard/tracking"} className="group block mt-4" data-testid="dashboard-tracking-link">
+      <Link href={isPreviewMode ? unlockHref : "/dashboard/tracking"} className="group block mt-4" data-testid="dashboard-tracking-link">
         <Card className="p-4 sm:p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-5">
@@ -210,11 +236,13 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
         <div className="mt-12 text-center p-4 sm:p-8 bg-primary/5 border border-primary/20 rounded-lg">
           <h3 className="text-xl font-bold text-foreground mb-2">Ready to Start Training?</h3>
           <p className="text-muted-foreground mb-6">
-            Sign up now to unlock all features and start improving your social skills today.
+            {viewer === "visitor"
+              ? "Sign up now to unlock all features and start improving your social skills today."
+              : "Your account is ready. Subscribe to unlock every module."}
           </p>
-          <Link href="/auth/sign-up">
+          <Link href={unlockHref}>
             <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 rounded-md font-medium">
-              Get Started Free
+              {viewer === "visitor" ? "Get Started Free" : "See plans"}
             </button>
           </Link>
         </div>
