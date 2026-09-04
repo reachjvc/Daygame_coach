@@ -286,7 +286,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
 
               <div className="mt-4 rounded-lg border border-border/60 bg-muted/40 p-3">
                 <p className="text-sm text-muted-foreground">
-                  <strong className="text-foreground">Tip:</strong> Click a region on the map above. You can add a secondary region later from your dashboard.
+                  <strong className="text-foreground">Tip:</strong> Tap a region on the map, or pick one from the list. You can add a secondary region later from your dashboard.
                 </p>
               </div>
             </Card>

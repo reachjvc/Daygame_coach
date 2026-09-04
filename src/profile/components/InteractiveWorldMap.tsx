@@ -448,6 +448,61 @@ export function InteractiveWorldMap({
         style={{ paddingBottom: "65.3%" }}
       />
 
+      {/*
+        The map is not usable on a phone, so it cannot be the only way to answer.
+
+        Measured on a 390px viewport (iPhone 14) on 2026-09-04: the map renders
+        361px wide, and 233 of its 236 country shapes fall below Apple's 44px
+        minimum touch target -- 184 are under 10px. Poland, the largest shape in
+        Eastern Europe, is 8.9 x 8.4px. Aiming at it and missing by 5px, which is
+        far finer than any thumb, silently selects Belarus (Slavic Europe) or
+        Germany (Western Europe) instead. There are no zoom controls, and Next
+        stays disabled until something is chosen -- so a phone user was simply
+        stuck.
+
+        This list is the answer for everyone, not a mobile-only branch: it is
+        also how the step works with a keyboard or a screen reader. It is driven
+        by the same REGIONS data and the same onRegionSelect handler as the map,
+        so the two cannot disagree about what a region is.
+      */}
+      <div className="mt-4">
+        <p className="mb-2 text-sm font-medium text-foreground">
+          Or choose from the list
+        </p>
+        <div
+          className="grid grid-cols-1 gap-2 sm:grid-cols-2"
+          role="group"
+          aria-label="Choose a region"
+          data-testid="region-list"
+        >
+          {REGIONS.map((region) => {
+            const isSelected = selectedLabelRegion === region.id;
+            return (
+              <button
+                key={region.id}
+                type="button"
+                disabled={!isInteractive}
+                aria-pressed={isSelected}
+                onClick={() => onRegionSelect(region.id)}
+                data-testid={`region-option-${region.id}`}
+                className={`min-h-[52px] rounded-md border px-3 py-2 text-left transition-colors disabled:opacity-50 ${
+                  isSelected
+                    ? "border-primary bg-primary/10"
+                    : "border-border bg-card hover:border-primary/60"
+                }`}
+              >
+                <span className="block text-sm font-semibold text-foreground">
+                  {region.name}
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  {region.description}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Always show region info box - fixed height to prevent layout shift */}
       {showInfoBox && (
         <Card className="mt-4 min-h-[70px] items-center justify-center border-border/60 bg-muted/40 p-3">
