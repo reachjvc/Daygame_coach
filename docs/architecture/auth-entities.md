@@ -146,13 +146,38 @@ a policy — before that, any signed-in user could give themselves premium.
 | Tables in `public` | **63** |
 | Tables with security off | **0** — `npm run audit:rls` |
 
+## Onboarding — walked end to end, 2026-09-04
+
+All five steps completed on the live site with a real account, and every answer
+checked against the database afterwards:
+
+| Step | Answered | Stored as |
+|---|---|---|
+| 1 — About you | local, dating locals, ages 22–25 | `user_is_foreign` false, `dating_foreigners` false, `age_range_start/end` |
+| 2 — Region (world map) | France | `preferred_region` = `western-europe` |
+| 3 — Archetype | Disciplined Athlete | `archetype` |
+| 4 — Experience | Intermediate | `experience_level`, and `level` derived → **7** |
+| 5 — Primary goal | Build Confidence | `primary_goal` = `build-confidence` |
+
+`onboarding_completed` flipped to true and the user landed on `/dashboard`.
+
+**It found a real defect.** That dashboard greeted the brand-new user with
+*"See what training modules are available. Sign up to start practicing!"*,
+linked three cards and the main button at `/auth/sign-up`, and showed
+*"Level 1, Rookie, 0 XP"* while their profile said level 7 — because a single
+`isPreviewMode` flag covered both a logged-out visitor and a signed-up
+non-subscriber. Fixed: one three-state `DashboardViewer` value, so the two
+cannot share a branch again. Verified live — the same account now reads
+*"You're all set up"* at **Level 7**, with a **See plans** button.
+
 ## What is NOT proven
 
 - **No password manager has been observed saving a password.** The attributes
   are present and tested; whether iOS Keychain or 1Password acts on them needs a
   human with a phone.
-- **Auth on phones is tested as pages, not as a round trip.** The four new
+- **Auth on phones is tested as pages, not as a round trip.** The four
   Playwright projects cover WebKit, Firefox, iPhone and Android — but the
   emailed link is followed only on Chromium, because that needs a live inbox.
-- **Nobody has completed onboarding.** Every automated run stops at
-  `/preferences`. The five steps after signup remain unwalked.
+- **Onboarding has been walked once, by automation, on a desktop viewport.**
+  Whether the five steps *make sense* to a person, and whether the world map is
+  usable with a thumb, are still open.
