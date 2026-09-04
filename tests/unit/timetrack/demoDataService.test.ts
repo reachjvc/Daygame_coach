@@ -30,48 +30,48 @@ describe("removeDemoData", () => {
   })
 
   test("removes a project only the demo used", () => {
-    const state = baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00", { ...demo, projectId: 30 })] })
+    const state = baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00", { ...demo, projectId: "30" })] })
     const result = removeDemoData(state)
-    expect(result.state.projects.some((p) => p.id === 30)).toBe(false)
+    expect(result.state.projects.some((p) => p.id === "30")).toBe(false)
   })
 
   test("keeps a sample project you tracked your own time against", () => {
     const state = baseState({
       entries: [
-        entry(1, "2026-08-10", "09:00", "10:00", { ...demo, projectId: 30 }),
-        entry(2, "2026-08-10", "11:00", "12:00", { ...mine, projectId: 30 }),
+        entry(1, "2026-08-10", "09:00", "10:00", { ...demo, projectId: "30" }),
+        entry(2, "2026-08-10", "11:00", "12:00", { ...mine, projectId: "30" }),
       ],
     })
     const result = removeDemoData(state)
-    expect(result.state.projects.some((p) => p.id === 30)).toBe(true)
+    expect(result.state.projects.some((p) => p.id === "30")).toBe(true)
     expect(result.state.entries).toHaveLength(1)
   })
 
   test("keeps tags you used and drops tags only the demo used", () => {
     const state = baseState({
       entries: [
-        entry(1, "2026-08-10", "09:00", "10:00", { ...demo, tagIds: [50] }),
-        entry(2, "2026-08-10", "11:00", "12:00", { ...mine, tagIds: [51] }),
+        entry(1, "2026-08-10", "09:00", "10:00", { ...demo, tagIds: ["50"] }),
+        entry(2, "2026-08-10", "11:00", "12:00", { ...mine, tagIds: ["51"] }),
       ],
     })
     const result = removeDemoData(state)
-    expect(result.state.tags.map((t) => t.id)).toEqual([51])
+    expect(result.state.tags.map((t) => t.id)).toEqual(["51"])
   })
 
   test("never removes you from the member list", () => {
-    const state = baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00", { ...demo, userId: 11 })] })
+    const state = baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00", { ...demo, userId: "11" })] })
     const result = removeDemoData(state)
     expect(result.state.members.some((m) => m.isSelf)).toBe(true)
   })
 
   test("drops favorites and alerts pointing at removed projects", () => {
     const state = baseState({
-      entries: [entry(1, "2026-08-10", "09:00", "10:00", { ...demo, projectId: 30 })],
+      entries: [entry(1, "2026-08-10", "09:00", "10:00", { ...demo, projectId: "30" })],
       favorites: [
-        { id: 900, draft: { description: "x", projectId: 30, taskId: null, tagIds: [], billable: false }, at: NOW_ISO },
+        { id: "900", draft: { description: "x", projectId: "30", taskId: null, tagIds: [], billable: false }, at: NOW_ISO },
       ],
       alerts: [
-        { id: 901, projectId: 30, basis: "estimate", threshold: 50, at: NOW_ISO, periodStart: "2026-08-01", read: false },
+        { id: "901", projectId: "30", basis: "estimate", threshold: 50, at: NOW_ISO, periodStart: "2026-08-01", read: false },
       ],
     })
     const result = removeDemoData(state)

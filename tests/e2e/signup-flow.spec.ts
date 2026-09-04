@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { waitForHydration } from './helpers/hydration'
 import { SELECTORS } from './helpers/selectors'
 
 const ACTION_TIMEOUT = 2000
@@ -13,6 +14,7 @@ test.describe('Signup Flow', () => {
   test('should show signup form', async ({ page }) => {
     // Arrange: Navigate to signup page
     await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
+    await waitForHydration(page)
 
     // Assert: Form elements should be visible
     await expect(page.getByTestId(SELECTORS.signup.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
@@ -26,6 +28,7 @@ test.describe('Signup Flow', () => {
   test('should show error for password mismatch', async ({ page }) => {
     // Arrange: Navigate to signup page
     await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
+    await waitForHydration(page)
     await expect(page.getByTestId(SELECTORS.signup.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
     // Act: Fill in form with mismatched passwords
@@ -43,6 +46,7 @@ test.describe('Signup Flow', () => {
   test('should have link to login page', async ({ page }) => {
     // Arrange: Navigate to signup page
     await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
+    await waitForHydration(page)
 
     // Assert: Login link should be visible and work
     const loginLink = page.getByRole('link', { name: /login/i })
@@ -58,6 +62,7 @@ test.describe('Signup Flow', () => {
   test('should require all fields', async ({ page }) => {
     // Arrange: Navigate to signup page
     await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
+    await waitForHydration(page)
     await expect(page.getByTestId(SELECTORS.signup.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
     // Assert: All input fields should have required attribute. The name is
@@ -75,6 +80,7 @@ test.describe('Signup Flow', () => {
     // session. Pointing it at /dashboard meant the code was never redeemed and
     // the confirmed user was bounced back to the login page.
     await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
+    await waitForHydration(page)
     await expect(page.getByTestId(SELECTORS.signup.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
     // Intercept before it reaches Supabase: this test must not create a live
@@ -111,6 +117,7 @@ test.describe('Signup Flow', () => {
     // forgot -- so the page must point at logging in or resetting, not just
     // report a failure. This happened to the owner on 2026-09-03.
     await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
+    await waitForHydration(page)
     await expect(page.getByTestId(SELECTORS.signup.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
     await page.route('**/auth/v1/signup**', (route) =>

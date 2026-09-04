@@ -13,7 +13,7 @@ export function baseState(overrides: Partial<TimetrackState> = {}): TimetrackSta
   const state: TimetrackState = {
     version: STATE_VERSION,
     workspace: {
-      id: 1,
+      id: "1",
       name: "Test WS",
       defaultCurrency: "EUR",
       defaultHourlyRate: 50,
@@ -38,16 +38,16 @@ export function baseState(overrides: Partial<TimetrackState> = {}): TimetrackSta
       showTimelineRecorder: false,
     },
     members: [
-      { id: 10, workspaceId: 1, name: "You", email: "you@example.com", role: "admin", hourlyRate: 80, labourCost: 30, groupIds: [], active: true, isSelf: true, at: NOW_ISO },
-      { id: 11, workspaceId: 1, name: "Sam", email: "sam@example.com", role: "basic", hourlyRate: 60, labourCost: 25, groupIds: [], active: true, isSelf: false, at: NOW_ISO },
+      { id: "10", workspaceId: "1", name: "You", email: "you@example.com", role: "admin", hourlyRate: 80, labourCost: 30, groupIds: [], active: true, isSelf: true, at: NOW_ISO },
+      { id: "11", workspaceId: "1", name: "Sam", email: "sam@example.com", role: "basic", hourlyRate: 60, labourCost: 25, groupIds: [], active: true, isSelf: false, at: NOW_ISO },
     ],
     groups: [],
-    clients: [{ id: 20, workspaceId: 1, name: "Acme", archived: false, at: NOW_ISO }],
+    clients: [{ id: "20", workspaceId: "1", name: "Acme", archived: false, at: NOW_ISO }],
     projects: [
       {
-        id: 30,
-        workspaceId: 1,
-        clientId: 20,
+        id: "30",
+        workspaceId: "1",
+        clientId: "20",
         name: "Alpha",
         color: "#0b83d9",
         active: true,
@@ -70,14 +70,14 @@ export function baseState(overrides: Partial<TimetrackState> = {}): TimetrackSta
         startDate: "2026-08-01",
         endDate: "2026-08-31",
         template: false,
-        alerts: [{ id: 300, basis: "estimate", threshold: 50, enabled: true }],
-        memberIds: [10],
+        alerts: [{ id: "300", basis: "estimate", threshold: 50, enabled: true }],
+        memberIds: ["10"],
         at: NOW_ISO,
         createdAt: "2026-08-01T09:00:00.000Z",
       },
       {
-        id: 31,
-        workspaceId: 1,
+        id: "31",
+        workspaceId: "1",
         clientId: null,
         name: "Beta",
         color: "#2da608",
@@ -99,18 +99,18 @@ export function baseState(overrides: Partial<TimetrackState> = {}): TimetrackSta
         endDate: null,
         template: false,
         alerts: [],
-        memberIds: [10],
+        memberIds: ["10"],
         at: NOW_ISO,
         createdAt: "2026-08-01T09:00:00.000Z",
       },
     ],
     tasks: [
-      { id: 40, workspaceId: 1, projectId: 30, name: "Build", estimatedSeconds: 4 * 3600, assigneeId: 10, rate: 150, active: true, at: NOW_ISO },
-      { id: 41, workspaceId: 1, projectId: 30, name: "Review", estimatedSeconds: 2 * 3600, assigneeId: 10, rate: null, active: true, at: NOW_ISO },
+      { id: "40", workspaceId: "1", projectId: "30", name: "Build", estimatedSeconds: 4 * 3600, assigneeId: "10", rate: 150, active: true, at: NOW_ISO },
+      { id: "41", workspaceId: "1", projectId: "30", name: "Review", estimatedSeconds: 2 * 3600, assigneeId: "10", rate: null, active: true, at: NOW_ISO },
     ],
     tags: [
-      { id: 50, workspaceId: 1, name: "deep", at: NOW_ISO },
-      { id: 51, workspaceId: 1, name: "meeting", at: NOW_ISO },
+      { id: "50", workspaceId: "1", name: "deep", at: NOW_ISO },
+      { id: "51", workspaceId: "1", name: "meeting", at: NOW_ISO },
     ],
     entries: [],
     favorites: [],
@@ -126,14 +126,13 @@ export function baseState(overrides: Partial<TimetrackState> = {}): TimetrackSta
     pomodoro: { enabled: false, workMinutes: 25, breakMinutes: 5, autoContinue: true, notify: false },
     idle: { enabled: false, minutes: 5 },
     reminders: { enabled: false, days: [1], fromHour: 9, toHour: 17, everyMinutes: 30 },
-    nextId: 1000,
   }
   return { ...state, ...overrides }
 }
 
 /** Build a stopped entry from local wall-clock times on a given day */
 export function entry(
-  id: number,
+  id: number | string,
   day: string,
   startHm: string,
   stopHm: string,
@@ -147,11 +146,11 @@ export function entry(
   const start = toIso(startHm)
   const stop = toIso(stopHm)
   return {
-    id,
-    workspaceId: 1,
-    userId: 10,
+    id: String(id),
+    workspaceId: "1",
+    userId: "10",
     description: "work",
-    projectId: 30,
+    projectId: "30",
     taskId: null,
     tagIds: [],
     billable: true,

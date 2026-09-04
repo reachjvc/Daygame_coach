@@ -44,7 +44,7 @@ import {
   startTimer,
   updateEntry,
 } from "../timetrackService"
-import type { CalendarEvent, EntryDraft, TimeEntry, TimetrackState } from "../types"
+import type { CalendarEvent, EntryDraft, Id, TimeEntry, TimetrackState } from "../types"
 import { ColorDot, Dropdown, Segmented } from "./primitives"
 
 type Range = "day" | "week"
@@ -55,7 +55,7 @@ interface DragState {
   startMinutes: number
   currentMinutes: number
   mode: "create" | "move" | "resize"
-  entryId?: number
+  entryId?: Id
   /** Offset from the block top when moving */
   grabOffset?: number
   durationMinutes?: number

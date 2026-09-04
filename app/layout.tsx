@@ -19,6 +19,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Deliberately no maximum-scale / user-scalable: false. That is the usual way
+  // to stop iOS zooming when a field is tapped, and it also stops anyone who
+  // needs to magnify the screen. The fields are 16px on phones instead.
+  themeColor: "#0b1120",
 }
 
 export const metadata: Metadata = {
@@ -41,6 +45,13 @@ export const metadata: Metadata = {
       },
     ],
     apple: "/apple-icon.png",
+  },
+  // Installed on an iPhone this opens without browser chrome; the status bar is
+  // drawn over the page, which is why the layout uses safe-area insets.
+  appleWebApp: {
+    capable: true,
+    title: "Time",
+    statusBarStyle: "black-translucent",
   },
 }
 

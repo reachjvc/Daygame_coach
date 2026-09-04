@@ -94,6 +94,7 @@ export default function ForgotPasswordPage() {
                         type="email"
                         placeholder="m@example.com"
                         required
+                        autoComplete="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         data-testid="forgot-email-input"

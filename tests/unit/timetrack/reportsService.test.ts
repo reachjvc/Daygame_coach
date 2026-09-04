@@ -33,13 +33,13 @@ function config(overrides: Partial<ReportConfig> = {}): ReportConfig {
 const state = baseState({
   entries: [
     // 2h billable on Alpha (rate 100), task Build (rate 150) → 150/h
-    entry(1, "2026-08-10", "09:00", "11:00", { taskId: 40, tagIds: [50] }),
+    entry(1, "2026-08-10", "09:00", "11:00", { taskId: "40", tagIds: ["50"] }),
     // 1h billable on Alpha, no task → project rate 100
-    entry(2, "2026-08-10", "11:00", "12:00", { description: "review", tagIds: [51] }),
+    entry(2, "2026-08-10", "11:00", "12:00", { description: "review", tagIds: ["51"] }),
     // 30m non-billable on Beta
-    entry(3, "2026-08-04", "09:00", "09:30", { projectId: 31, billable: false, description: "beta work" }),
+    entry(3, "2026-08-04", "09:00", "09:30", { projectId: "31", billable: false, description: "beta work" }),
     // another member
-    entry(4, "2026-08-05", "09:00", "10:00", { userId: 11, description: "sam work" }),
+    entry(4, "2026-08-05", "09:00", "10:00", { userId: "11", description: "sam work" }),
   ],
 })
 
@@ -69,22 +69,22 @@ describe("date presets", () => {
 describe("filters", () => {
   test("date range excludes entries outside it", () => {
     const rows = applyFilters(state, emptyFilters({ start: "2026-08-10", end: "2026-08-10" }))
-    expect(rows.map((r) => r.id).sort()).toEqual([1, 2])
+    expect(rows.map((r) => r.id).sort()).toEqual(["1", "2"])
   })
 
   test("project, tag, member, billable and text filters", () => {
     const range = { start: "2026-08-01", end: "2026-08-31" }
-    expect(applyFilters(state, { ...emptyFilters(range), projectIds: [31] }).map((r) => r.id)).toEqual([3])
-    expect(applyFilters(state, { ...emptyFilters(range), tagIds: [51] }).map((r) => r.id)).toEqual([2])
-    expect(applyFilters(state, { ...emptyFilters(range), memberIds: [11] }).map((r) => r.id)).toEqual([4])
-    expect(applyFilters(state, { ...emptyFilters(range), billable: "no" }).map((r) => r.id)).toEqual([3])
-    expect(applyFilters(state, { ...emptyFilters(range), description: "beta" }).map((r) => r.id)).toEqual([3])
+    expect(applyFilters(state, { ...emptyFilters(range), projectIds: ["31"] }).map((r) => r.id)).toEqual(["3"])
+    expect(applyFilters(state, { ...emptyFilters(range), tagIds: ["51"] }).map((r) => r.id)).toEqual(["2"])
+    expect(applyFilters(state, { ...emptyFilters(range), memberIds: ["11"] }).map((r) => r.id)).toEqual(["4"])
+    expect(applyFilters(state, { ...emptyFilters(range), billable: "no" }).map((r) => r.id)).toEqual(["3"])
+    expect(applyFilters(state, { ...emptyFilters(range), description: "beta" }).map((r) => r.id)).toEqual(["3"])
   })
 
   test("client filter follows the entry's project", () => {
     const range = { start: "2026-08-01", end: "2026-08-31" }
-    const rows = applyFilters(state, { ...emptyFilters(range), clientIds: [20] })
-    expect(rows.map((r) => r.id).sort()).toEqual([1, 2, 4])
+    const rows = applyFilters(state, { ...emptyFilters(range), clientIds: ["20"] })
+    expect(rows.map((r) => r.id).sort()).toEqual(["1", "2", "4"])
   })
 })
 
@@ -138,7 +138,7 @@ describe("summary report", () => {
   })
 
   test("an entry with several tags counts in each tag bucket", () => {
-    const multi = baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00", { tagIds: [50, 51] })] })
+    const multi = baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00", { tagIds: ["50", "51"] })] })
     const report = buildSummary(multi, config({ grouping: "tag" }), NOW_SEC)
     expect(report.rows.map((r) => r.label).sort()).toEqual(["deep", "meeting"])
     expect(report.rows[0].seconds).toBe(3600)

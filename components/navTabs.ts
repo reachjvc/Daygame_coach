@@ -1,4 +1,4 @@
-import { LayoutDashboard, BarChart3, Swords, HelpCircle, BookOpen, Settings } from "lucide-react"
+import { LayoutDashboard, BarChart3, Swords, HelpCircle, BookOpen, Settings, Timer } from "lucide-react"
 
 /**
  * WHERE THE TAB BAR CAN GO, as data rather than as markup.
@@ -17,6 +17,7 @@ export const TABS = [
   // and nothing in the bar points at goals at all.
   { label: "Tracking", icon: BarChart3, href: "/dashboard/tracking", exact: false },
   { label: "Scenarios", icon: Swords, href: "/dashboard/scenarios", exact: false },
+  { label: "Time", icon: Timer, href: "/dashboard/time", exact: false },
 ] as const
 
 /** The Lair moved to /test/archive/lair — it was a second goals surface. */
@@ -34,5 +35,5 @@ export const ROUTE_LABELS: Record<string, string> = {
   ...Object.fromEntries([...TABS, ...MORE_ITEMS].map((t) => [t.href, t.label])),
   "/dashboard/tracking/history": "History",
   "/dashboard/goals/plan": "Your plan",
-  "/programs": "Programs",
+  "/programs": "Training",
 }

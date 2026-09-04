@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { waitForHydration } from './helpers/hydration'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
@@ -11,6 +12,7 @@ test.describe.configure({ mode: 'serial' })
 test.describe('Password reset', () => {
   test('is reachable from the login page', async ({ page }) => {
     await page.goto('/auth/login', { timeout: AUTH_TIMEOUT })
+    await waitForHydration(page)
     await page.getByTestId('login-forgot-link').click({ timeout: ACTION_TIMEOUT })
     await page.waitForURL(/\/auth\/forgot-password/, { timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId('forgot-form')).toBeVisible({ timeout: AUTH_TIMEOUT })
@@ -24,6 +26,7 @@ test.describe('Password reset', () => {
 
     for (const address of ['definitely-not-registered-9f2a@example.com', 'reachjvc@gmail.com']) {
       await page.goto('/auth/forgot-password', { timeout: AUTH_TIMEOUT })
+    await waitForHydration(page)
 
       // Stub the network call: asserting on our own UI, and a real call would
       // send mail to a real inbox.
@@ -50,6 +53,7 @@ test.describe('Password reset', () => {
     // whether the account exists -- unlike "no such account", which must stay
     // hidden (see the enumeration test above).
     await page.goto('/auth/forgot-password', { timeout: AUTH_TIMEOUT })
+    await waitForHydration(page)
 
     await page.route('**/auth/v1/recover**', (route) =>
       route.fulfill({
@@ -71,6 +75,7 @@ test.describe('Password reset', () => {
     // Landing here without going through /auth/confirm means no recovery
     // session, which is what a stale or reused link looks like.
     await page.goto('/auth/reset-password', { timeout: AUTH_TIMEOUT })
+    await waitForHydration(page)
     await expect(page.getByTestId('reset-expired-message')).toBeVisible({ timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId('reset-form')).not.toBeVisible({ timeout: ACTION_TIMEOUT })
   })
@@ -79,6 +84,7 @@ test.describe('Password reset', () => {
 test.describe('Email confirmation callback', () => {
   test('sends a link with no code back to login with a readable reason', async ({ page }) => {
     await page.goto('/auth/confirm', { timeout: AUTH_TIMEOUT })
+    await waitForHydration(page)
     await page.waitForURL(/\/auth\/login\?error=missing_code/, { timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId('login-notice-message')).toBeVisible({ timeout: AUTH_TIMEOUT })
   })
@@ -87,7 +93,69 @@ test.describe('Email confirmation callback', () => {
     // Open-redirect guard: "//evil.com" starts with "/" but a browser reads it
     // as https://evil.com. Must fall back to an internal path.
     await page.goto('/auth/confirm?next=%2F%2Fevil.com', { timeout: AUTH_TIMEOUT })
+    await waitForHydration(page)
     await expect(page).toHaveURL(/localhost|127\.0\.0\.1/, { timeout: AUTH_TIMEOUT })
     expect(page.url()).not.toContain('evil.com')
+  })
+})
+
+test.describe('Confirmation email resend', () => {
+  test('offers a resend, and says so when rate limited instead of claiming it sent', async ({ page }) => {
+    // Without this button the page is a dead end: the only other route is to
+    // sign up again, which correctly answers "you already have an account".
+    await page.goto('/auth/sign-up-success?email=someone%40example.com', { timeout: AUTH_TIMEOUT })
+    await waitForHydration(page)
+    await expect(page.getByTestId('resend-form')).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    await page.route('**/auth/v1/resend**', (route) =>
+      route.fulfill({
+        status: 429,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'For security purposes, you can only request this after 51 seconds.' }),
+      })
+    )
+
+    await page.getByTestId('resend-submit-button').click({ timeout: ACTION_TIMEOUT })
+
+    await expect(page.getByTestId('resend-rate-limited-message')).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId('resend-sent-message')).not.toBeVisible({ timeout: ACTION_TIMEOUT })
+  })
+
+  test('asks for the address when it was not carried over', async ({ page }) => {
+    // Someone who bookmarked the page or came back later has no ?email=.
+    // Asking beats calling resend with an empty string.
+    await page.goto('/auth/sign-up-success', { timeout: AUTH_TIMEOUT })
+    await waitForHydration(page)
+    await expect(page.getByTestId('resend-email-input')).toBeVisible({ timeout: AUTH_TIMEOUT })
+  })
+})
+
+test.describe('Unconfirmed login', () => {
+  test('explains an unconfirmed account and links to the resend', async ({ page }) => {
+    // Supabase answers "Email not confirmed" -- true, and useless on its own.
+    // Verified against the live project 2026-09-04.
+    await page.goto('/auth/login', { timeout: AUTH_TIMEOUT })
+    await waitForHydration(page)
+
+    await page.route('**/auth/v1/token**', (route) =>
+      route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({ code: 400, error_code: 'email_not_confirmed', msg: 'Email not confirmed' }),
+      })
+    )
+
+    await page.getByTestId('login-email-input').fill('waiting@example.com', { timeout: ACTION_TIMEOUT })
+    await page.getByTestId('login-password-input').fill('CorrectHorse9!', { timeout: ACTION_TIMEOUT })
+    await page.getByTestId('login-submit-button').click({ timeout: ACTION_TIMEOUT })
+
+    await expect(page.getByTestId('login-unconfirmed')).toBeVisible({ timeout: AUTH_TIMEOUT })
+    // The raw wording must not be what the user is left with.
+    await expect(page.getByTestId('login-error-message')).not.toBeVisible({ timeout: ACTION_TIMEOUT })
+
+    await page.getByTestId('login-unconfirmed-resend-link').click({ timeout: ACTION_TIMEOUT })
+    await page.waitForURL(/\/auth\/sign-up-success/, { timeout: AUTH_TIMEOUT })
+    // The address carries over so the resend button works without retyping.
+    expect(page.url()).toContain('waiting%40example.com')
   })
 })

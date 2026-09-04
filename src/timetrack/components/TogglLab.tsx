@@ -25,6 +25,8 @@ import {
   IconTimer,
   IconUndo,
 } from "../icons"
+import { useTimetrackSync, type SyncStatus } from "../hooks/useTimetrackSync"
+import { ImportOfferBanner } from "./ImportOfferBanner"
 import { useTimetrack } from "../hooks/useTimetrack"
 import { defaultReportConfig, decodeReportConfig } from "../reportsService"
 import { dateKey, formatClock, formatIdleSpan, formatTimeOfDay } from "../timetrackFormatService"
@@ -85,10 +87,17 @@ function IdleChoice({
   )
 }
 
-export function TogglLab() {
+export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref?: string; backLabel?: string } = {}) {
   const controller = useTimetrack()
   const { state, setState, nowSec, running, runningSeconds, toasts, pushToast, dismissToast, idlePrompt, resolveIdle, pomodoro, actions, requestNotificationPermission } =
     controller
+
+  const sync = useTimetrackSync({
+    state,
+    setState,
+    replaceState: actions.replaceState,
+    pushToast,
+  })
 
   const [screen, setScreen] = useState<Screen>("timer")
   const [manageTab, setManageTab] = useState<ManageTab>("clients")
@@ -204,8 +213,8 @@ export function TogglLab() {
       {/* header */}
       <header className="sticky top-0 z-[9500] border-b border-border bg-card/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
-          <Link href="/test" className="-ml-1 flex h-9 shrink-0 items-center px-1 text-xs text-muted-foreground hover:text-foreground">
-            ← <span className="hidden sm:inline">/test</span>
+          <Link href={backHref} className="-ml-1 flex h-9 shrink-0 items-center px-1 text-xs text-muted-foreground hover:text-foreground">
+            ← <span className="hidden sm:inline">{backLabel}</span>
           </Link>
           <h1 className="truncate text-sm font-semibold">{state.workspace.name}</h1>
           <span className="hidden rounded bg-secondary px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground sm:inline">
@@ -213,6 +222,7 @@ export function TogglLab() {
           </span>
 
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            <SyncBadge status={sync.status} pending={sync.pendingCount} onRetry={sync.syncNow} />
             {pomodoro.phase !== "idle" && (
               <span className="hidden items-center gap-1 rounded-full border border-border px-2 py-1 text-xs sm:flex">
                 {pomodoro.phase === "break" ? <IconBreak className="size-3.5" /> : <IconTimer className="size-3.5" />}
@@ -303,6 +313,35 @@ export function TogglLab() {
         </nav>
       </header>
 
+      {sync.status === "signed-out" && (
+        <div className="mx-auto max-w-6xl px-3 pt-3 sm:px-4">
+          <div className="flex flex-col gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm sm:flex-row sm:items-center">
+            <p className="flex-1">
+              <strong>You have been signed out.</strong> Nothing is lost — everything you have done is saved in
+              this browser
+              {sync.pendingCount > 0 && <>, including {sync.pendingCount} change{sync.pendingCount === 1 ? "" : "s"} waiting to be saved to your account</>}
+              . Sign in again to carry on where you left off.
+            </p>
+            <Button size="sm" asChild>
+              <Link href={`/auth/login?next=${encodeURIComponent(typeof window === "undefined" ? "/dashboard/time" : window.location.pathname)}`}>
+                Sign in again
+              </Link>
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {sync.importOffer && (
+        <div className="mx-auto max-w-6xl px-3 pt-3 sm:px-4">
+          <ImportOfferBanner
+            offer={sync.importOffer}
+            todayKey={dateKey(new Date(nowSec * 1000))}
+            onUpload={sync.acceptImport}
+            onDismiss={sync.declineImport}
+          />
+        </div>
+      )}
+
       <main className="mx-auto max-w-6xl space-y-4 px-3 pb-24 pt-3 sm:px-4 sm:py-4">
         {screen === "timer" && (
           <>
@@ -389,6 +428,8 @@ export function TogglLab() {
             requestNotificationPermission={requestNotificationPermission}
             tab={settingsTab}
             setTab={setSettingsTab}
+            syncStatus={sync.status}
+            onUploadEverything={sync.uploadEverything}
           />
         )}
       </main>
@@ -522,5 +563,63 @@ export function TogglLab() {
         ))}
       </div>
     </div>
+  )
+}
+
+/**
+ * Where your work is being kept, said plainly.
+ *
+ * This exists because the difference between "saved to your account" and "saved
+ * in this browser only" is somebody's history, and a spinner that lies about it
+ * is worse than no spinner at all.
+ */
+function SyncBadge({
+  status,
+  pending,
+  onRetry,
+}: {
+  status: SyncStatus
+  pending: number
+  onRetry: () => void
+}) {
+  if (status === "starting") return null
+
+  const label: Record<SyncStatus, string> = {
+    starting: "",
+    "local-only": "This device only",
+    "signed-out": "Signed out",
+    synced: "Saved",
+    saving: pending > 0 ? `Saving ${pending}…` : "Saving…",
+    offline: pending > 0 ? `Offline · ${pending} waiting` : "Offline",
+    error: "Not saved",
+  }
+  const title: Record<SyncStatus, string> = {
+    starting: "",
+    "local-only": "Sign in to keep your time on every device. Nothing is lost — it is saved in this browser.",
+    "signed-out": "Your session ended. Everything is still saved in this browser; sign in again to save it to your account.",
+    synced: "Saved to your account",
+    saving: "Sending your latest changes",
+    offline: "No connection. Your work is saved here and will be sent when you are back.",
+    error: "Could not reach your account. Your work is saved in this browser. Tap to try again.",
+  }
+  const tone =
+    status === "synced"
+      ? "border-border text-muted-foreground"
+      : status === "error" || status === "signed-out"
+        ? "border-destructive/50 text-destructive"
+        : "border-border text-foreground"
+
+  return (
+    <button
+      type="button"
+      onClick={status === "error" || status === "offline" ? onRetry : undefined}
+      title={title[status]}
+      // both halves: the short state a screen reader announces, and the
+      // sentence explaining what it means for the person's work
+      aria-label={`${label[status]}. ${title[status]}`}
+      className={cn("hidden shrink-0 rounded-full border px-2 py-1 text-[11px] sm:block", tone)}
+    >
+      {label[status]}
+    </button>
   )
 }

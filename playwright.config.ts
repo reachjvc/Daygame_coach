@@ -36,6 +36,9 @@ export default defineConfig({
       name: 'chromium',
       testMatch: /\.spec\.ts$/,
       testIgnore: [
+        // runs in its own project: it writes to the live database
+        /timetrack-sync\.spec\.ts/,
+        /timetrack-edge-cases\.spec\.ts/,
         /smoke\.spec\.ts/,
         /signup-flow\.spec\.ts/,
         /password-reset\.spec\.ts/,
@@ -96,6 +99,16 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
 
+    // === Time tracker: does it really reach the account? ===
+    // This one talks to the live database, so it runs alone rather than beside
+    // the others: two workers uploading to the same account would fight.
+    {
+      name: 'timetrack-sync',
+      testMatch: [/timetrack-sync\.spec\.ts/, /timetrack-edge-cases\.spec\.ts/],
+      dependencies: ['setup'],
+      use: { ...devices['Desktop Chrome'], storageState: 'tests/e2e/.auth/user.json' },
+    },
+
     // === Time tracker on every engine ===
     // The tracker is the one feature people will open on a phone, a laptop and
     // whatever browser is on the machine in front of them. Chromium alone does
@@ -123,6 +136,33 @@ export default defineConfig({
       testMatch: /mobile\/mobile-toggl\.spec\.ts/,
       dependencies: ['setup'],
       use: { ...devices['Pixel 7'], storageState: 'tests/e2e/.auth/user.json' },
+    },
+
+    // === Auth on phones and other engines ===
+    // The signed-out flows -- signup, confirmation, password reset -- are the
+    // first thing every new user meets, and until 2026-09-04 they were tested
+    // on Chromium alone. The risk is not layout (measured fine at 390px) but
+    // Safari's stricter cookie handling, which is exactly the machinery the
+    // confirmation link depends on. No storageState: these are logged-out.
+    {
+      name: 'auth-webkit',
+      testMatch: [/signup-flow\.spec\.ts/, /password-reset\.spec\.ts/],
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'auth-firefox',
+      testMatch: [/signup-flow\.spec\.ts/, /password-reset\.spec\.ts/],
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'auth-iphone',
+      testMatch: [/signup-flow\.spec\.ts/, /password-reset\.spec\.ts/],
+      use: { ...devices['iPhone 14'] },
+    },
+    {
+      name: 'auth-android',
+      testMatch: [/signup-flow\.spec\.ts/, /password-reset\.spec\.ts/],
+      use: { ...devices['Pixel 7'] },
     },
 
     // === Cross-browser smoke (unauthenticated only) ===

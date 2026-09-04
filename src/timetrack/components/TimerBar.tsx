@@ -15,8 +15,6 @@ import { IconAuto, IconFavorite, IconStart, IconStop, IconTimer, IconEdit } from
 import {
   dateKey,
   formatClock,
-  formatDuration,
-  formatTimeOfDay,
   parseDurationInput,
   parseTimeInput,
 } from "../timetrackFormatService"
@@ -334,34 +332,4 @@ export function RunningPill({
   )
 }
 
-export function DayTotalLabel({
-  seconds,
-  format,
-  label,
-}: {
-  seconds: number
-  format: TimetrackState["user"]["durationFormat"]
-  label: string
-}) {
-  return (
-    <span className="text-xs text-muted-foreground">
-      {label} <span className="font-semibold tabular-nums text-foreground">{formatDuration(seconds, format)}</span>
-    </span>
-  )
-}
 
-export function TimeRangeLabel({
-  start,
-  stop,
-  timeFormat,
-}: {
-  start: string
-  stop: string | null
-  timeFormat: TimetrackState["user"]["timeFormat"]
-}) {
-  return (
-    <span className="tabular-nums text-muted-foreground">
-      {formatTimeOfDay(start, timeFormat)} – {stop ? formatTimeOfDay(stop, timeFormat) : "now"}
-    </span>
-  )
-}

@@ -200,10 +200,10 @@ describe("recurrence expansion", () => {
 
 describe("icsToEvents applies Toggl's import rules", () => {
   test("skips all-day events and keeps timed ones", () => {
-    const result = icsToEvents(ICS, 7, "2026-08-10")
+    const result = icsToEvents(ICS, "7", "2026-08-10")
     expect(result.skippedAllDay).toBe(1)
     expect(result.events).toHaveLength(2)
-    expect(result.events.every((e) => e.calendarId === 7)).toBe(true)
+    expect(result.events.every((e) => e.calendarId === "7")).toBe(true)
   })
 
   test("drops events outside the 60-back / 30-forward window", () => {
@@ -215,14 +215,14 @@ DTEND:20250101T100000Z
 SUMMARY:Ancient meeting
 END:VEVENT
 END:VCALENDAR`
-    const result = icsToEvents(far, 1, "2026-08-10")
+    const result = icsToEvents(far, "1", "2026-08-10")
     expect(result.events).toHaveLength(0)
     expect(result.skippedOutOfWindow).toBe(1)
   })
 
   test("event ids are stable per instance", () => {
-    const first = icsToEvents(ICS, 7, "2026-08-10").events.map((e) => e.id)
-    const second = icsToEvents(ICS, 7, "2026-08-10").events.map((e) => e.id)
+    const first = icsToEvents(ICS, "7", "2026-08-10").events.map((e) => e.id)
+    const second = icsToEvents(ICS, "7", "2026-08-10").events.map((e) => e.id)
     expect(first).toEqual(second)
     expect(new Set(first).size).toBe(first.length)
   })
@@ -241,7 +241,7 @@ describe("Google Calendar API mapping", () => {
         },
         { id: "g2", summary: "Holiday", start: { date: "2026-08-11" }, end: { date: "2026-08-12" } },
       ],
-      3,
+      "3",
     )
     expect(skippedAllDay).toBe(1)
     expect(events).toHaveLength(1)
@@ -252,7 +252,7 @@ describe("Google Calendar API mapping", () => {
 
 describe("event → time entry", () => {
   test("only the title is copied, exactly like Toggl", () => {
-    const event = icsToEvents(ICS, 1, "2026-08-10").events[0]
+    const event = icsToEvents(ICS, "1", "2026-08-10").events[0]
     expect(eventToDraft(event)).toEqual({
       description: "Standup with the team",
       projectId: null,
@@ -312,7 +312,7 @@ describe("calendar grid geometry", () => {
   test("event intervals use local minutes", () => {
     const event = {
       id: "x",
-      calendarId: 1,
+      calendarId: "1",
       uid: "x",
       title: "t",
       description: "",

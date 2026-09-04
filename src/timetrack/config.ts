@@ -5,7 +5,17 @@
 
 export const STORAGE_KEY = "toggl-clone:v1"
 /** Bumped whenever stored state is no longer readable; a mismatch starts a fresh workspace */
-export const STATE_VERSION = 2
+/**
+ * 3: ids are text made on the device, not numbers from a counter, so two
+ *    offline devices cannot mint the same id. v2 workspaces are converted by
+ *    `stateMigrationService`, never discarded.
+ */
+export const STATE_VERSION = 3
+
+/** Changes written locally but not yet accepted by the server */
+export const PENDING_KEY = "toggl-clone:pending"
+/** How far through the server's history this device has read */
+export const SYNC_CURSOR_KEY = "toggl-clone:cursor"
 /** Toggl requires a `created_with` on every entry (toggl) */
 export const CREATED_WITH = "daygame-coach /test/toggl"
 /**

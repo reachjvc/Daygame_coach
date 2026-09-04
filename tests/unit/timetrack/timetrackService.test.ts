@@ -35,7 +35,7 @@ import type { EntryDraft } from "@/src/timetrack/types"
 
 import { NOW_ISO, baseState, entry } from "./helpers"
 
-const draft: EntryDraft = { description: "write tests", projectId: 30, taskId: null, tagIds: [50], billable: true }
+const draft: EntryDraft = { description: "write tests", projectId: "30", taskId: null, tagIds: ["50"], billable: true }
 
 describe("running entries use Toggl's negative-duration encoding", () => {
   test("startTimer stores -startEpoch and no stop", () => {
@@ -81,19 +81,19 @@ describe("running entries use Toggl's negative-duration encoding", () => {
 
 describe("continue / duplicate", () => {
   test("continue starts a new entry with the same draft", () => {
-    const state = baseState({ entries: [entry(1, "2026-08-09", "09:00", "10:00", { description: "old", tagIds: [50] })] })
-    const { state: next } = continueEntry(state, 1, NOW_ISO)
+    const state = baseState({ entries: [entry(1, "2026-08-09", "09:00", "10:00", { description: "old", tagIds: ["50"] })] })
+    const { state: next } = continueEntry(state, "1", NOW_ISO)
     const running = runningEntry(next)!
-    expect(running.id).not.toBe(1)
+    expect(running.id).not.toBe("1")
     expect(running.description).toBe("old")
-    expect(running.tagIds).toEqual([50])
+    expect(running.tagIds).toEqual(["50"])
   })
 
   test("duplicate copies the original times", () => {
     const original = entry(1, "2026-08-09", "09:00", "10:30")
-    const next = duplicateEntry(baseState({ entries: [original] }), 1, NOW_ISO)
+    const next = duplicateEntry(baseState({ entries: [original] }), "1", NOW_ISO)
     expect(next.entries).toHaveLength(2)
-    const copy = next.entries.find((e) => e.id !== 1)!
+    const copy = next.entries.find((e) => e.id !== "1")!
     expect(copy.start).toBe(original.start)
     expect(copy.duration).toBe(original.duration)
   })
@@ -103,14 +103,14 @@ describe("split (Toggl allows it above 10 minutes only)", () => {
   test("rejects entries at or below 10 minutes", () => {
     const short = entry(1, "2026-08-09", "09:00", "09:10")
     expect(short.duration).toBe(MIN_SPLIT_SECONDS)
-    const result = splitEntry(baseState({ entries: [short] }), 1, null, NOW_ISO)
+    const result = splitEntry(baseState({ entries: [short] }), "1", null, NOW_ISO)
     expect(result.error).toMatch(/longer than 10 minutes/)
     expect(result.state.entries).toHaveLength(1)
   })
 
   test("splits at the midpoint and preserves total duration", () => {
     const long = entry(1, "2026-08-09", "09:00", "11:00")
-    const result = splitEntry(baseState({ entries: [long] }), 1, null, NOW_ISO)
+    const result = splitEntry(baseState({ entries: [long] }), "1", null, NOW_ISO)
     expect(result.error).toBeNull()
     expect(result.state.entries).toHaveLength(2)
     const total = result.state.entries.reduce((sum, e) => sum + e.duration, 0)
@@ -122,7 +122,7 @@ describe("split (Toggl allows it above 10 minutes only)", () => {
   test("rejects a split point outside the entry", () => {
     const long = entry(1, "2026-08-09", "09:00", "11:00")
     const outside = new Date(new Date(long.stop!).getTime() + 60_000).toISOString()
-    const result = splitEntry(baseState({ entries: [long] }), 1, outside, NOW_ISO)
+    const result = splitEntry(baseState({ entries: [long] }), "1", outside, NOW_ISO)
     expect(result.error).toMatch(/inside the entry/)
   })
 })
@@ -131,15 +131,15 @@ describe("bulk edit", () => {
   test("adds and removes tags and clears the task when the project changes", () => {
     const state = baseState({
       entries: [
-        entry(1, "2026-08-09", "09:00", "10:00", { tagIds: [50], taskId: 40 }),
-        entry(2, "2026-08-09", "10:00", "11:00", { tagIds: [51], taskId: 41 }),
+        entry(1, "2026-08-09", "09:00", "10:00", { tagIds: ["50"], taskId: "40" }),
+        entry(2, "2026-08-09", "10:00", "11:00", { tagIds: ["51"], taskId: "41" }),
       ],
     })
-    const next = bulkEditEntries(state, [1, 2], { projectId: 31, addTagIds: [51], removeTagIds: [50], billable: false }, NOW_ISO)
+    const next = bulkEditEntries(state, ["1", "2"], { projectId: "31", addTagIds: ["51"], removeTagIds: ["50"], billable: false }, NOW_ISO)
     for (const e of next.entries) {
-      expect(e.projectId).toBe(31)
+      expect(e.projectId).toBe("31")
       expect(e.taskId).toBeNull()
-      expect(e.tagIds).toEqual([51])
+      expect(e.tagIds).toEqual(["51"])
       expect(e.billable).toBe(false)
     }
   })
@@ -147,12 +147,12 @@ describe("bulk edit", () => {
   test("tagIds replaces the tag list outright (used when editing a collapsed group)", () => {
     const state = baseState({
       entries: [
-        entry(1, "2026-08-09", "09:00", "10:00", { tagIds: [50] }),
-        entry(2, "2026-08-09", "10:00", "11:00", { tagIds: [51] }),
+        entry(1, "2026-08-09", "09:00", "10:00", { tagIds: ["50"] }),
+        entry(2, "2026-08-09", "10:00", "11:00", { tagIds: ["51"] }),
       ],
     })
-    const next = bulkEditEntries(state, [1, 2], { tagIds: [50, 51] }, NOW_ISO)
-    for (const e of next.entries) expect(e.tagIds).toEqual([50, 51])
+    const next = bulkEditEntries(state, ["1", "2"], { tagIds: ["50", "51"] }, NOW_ISO)
+    for (const e of next.entries) expect(e.tagIds).toEqual(["50", "51"])
   })
 
   test("only the listed entries change", () => {
@@ -162,19 +162,19 @@ describe("bulk edit", () => {
         entry(2, "2026-08-09", "10:00", "11:00", { description: "bystander" }),
       ],
     })
-    const next = bulkEditEntries(state, [1], { description: "edited" }, NOW_ISO)
-    expect(next.entries.find((e) => e.id === 1)!.description).toBe("edited")
-    expect(next.entries.find((e) => e.id === 2)!.description).toBe("bystander")
+    const next = bulkEditEntries(state, ["1"], { description: "edited" }, NOW_ISO)
+    expect(next.entries.find((e) => e.id === "1")!.description).toBe("edited")
+    expect(next.entries.find((e) => e.id === "2")!.description).toBe("bystander")
   })
 })
 
 describe("delete + undo", () => {
   test("restoreEntries puts deleted entries back", () => {
     const state = baseState({ entries: [entry(1, "2026-08-09", "09:00", "10:00"), entry(2, "2026-08-09", "10:00", "11:00")] })
-    const { state: afterDelete, removed } = deleteEntries(state, [1], NOW_ISO)
+    const { state: afterDelete, removed } = deleteEntries(state, ["1"], NOW_ISO)
     expect(afterDelete.entries).toHaveLength(1)
     const restored = restoreEntries(afterDelete, removed)
-    expect(restored.entries.map((e) => e.id).sort()).toEqual([1, 2])
+    expect(restored.entries.map((e) => e.id).sort()).toEqual(["1", "2"])
   })
 })
 
@@ -202,7 +202,7 @@ describe("timer list grouping", () => {
   test("ungrouped mode keeps one row per entry, newest first", () => {
     const groups = buildDayGroups(state.entries, { groupSimilar: false, nowSec })
     expect(groups[0].rows).toHaveLength(3)
-    expect(groups[0].rows[0].entries[0].id).toBe(3)
+    expect(groups[0].rows[0].entries[0].id).toBe("3")
   })
 
   test("days are ordered newest first", () => {
@@ -231,7 +231,7 @@ describe("validation: required fields, locked entries, approvals", () => {
   test("entries on or before the lock date are rejected", () => {
     const state = baseState()
     state.workspace.lockEntriesBefore = "2026-08-10"
-    const violations = validateEntry(state, { description: "x", projectId: 30, taskId: null, tagIds: [], start: NOW_ISO })
+    const violations = validateEntry(state, { description: "x", projectId: "30", taskId: null, tagIds: [], start: NOW_ISO })
     expect(violations[0].field).toBe("date")
   })
 
@@ -239,9 +239,9 @@ describe("validation: required fields, locked entries, approvals", () => {
     const state = baseState()
     state.workspace.timesheetApprovalsEnabled = true
     state.approvals = [
-      { id: 1, memberId: 10, weekStart: "2026-08-10", status: "submitted", submittedAt: NOW_ISO, decidedAt: null, note: "" },
+      { id: "1", memberId: "10", weekStart: "2026-08-10", status: "submitted", submittedAt: NOW_ISO, decidedAt: null, note: "" },
     ]
-    const violations = validateEntry(state, { description: "x", projectId: 30, taskId: null, tagIds: [], start: NOW_ISO })
+    const violations = validateEntry(state, { description: "x", projectId: "30", taskId: null, tagIds: [], start: NOW_ISO })
     expect(violations[0].field).toBe("approval")
   })
 
@@ -258,7 +258,7 @@ describe("billable rate hierarchy: task → project(historical) → member → w
   const state = baseState()
 
   test("task rate wins", () => {
-    const e = entry(1, "2026-08-05", "09:00", "10:00", { taskId: 40 })
+    const e = entry(1, "2026-08-05", "09:00", "10:00", { taskId: "40" })
     expect(resolveBillableRate(state, e)).toBe(150)
   })
 
@@ -271,19 +271,19 @@ describe("billable rate hierarchy: task → project(historical) → member → w
   })
 
   test("member rate applies when the project has none", () => {
-    const e = entry(1, "2026-08-05", "09:00", "10:00", { projectId: 31 })
+    const e = entry(1, "2026-08-05", "09:00", "10:00", { projectId: "31" })
     expect(resolveBillableRate(state, e)).toBe(80)
   })
 
   test("workspace default applies when nothing else does", () => {
     const stripped = baseState()
     stripped.members = stripped.members.map((m) => ({ ...m, hourlyRate: null }))
-    const e = entry(1, "2026-08-05", "09:00", "10:00", { projectId: 31 })
+    const e = entry(1, "2026-08-05", "09:00", "10:00", { projectId: "31" })
     expect(resolveBillableRate(stripped, e)).toBe(50)
   })
 
   test("non-billable entries have no rate", () => {
-    const e = entry(1, "2026-08-05", "09:00", "10:00", { billable: false, taskId: 40 })
+    const e = entry(1, "2026-08-05", "09:00", "10:00", { billable: false, taskId: "40" })
     expect(resolveBillableRate(state, e)).toBe(0)
   })
 })
@@ -307,7 +307,7 @@ describe("favorites", () => {
   test("toggle adds then removes an identical draft", () => {
     const added = toggleFavorite(baseState(), draft, NOW_ISO)
     expect(added.favorites).toHaveLength(1)
-    const removed = toggleFavorite(added, { ...draft, tagIds: [50] }, NOW_ISO)
+    const removed = toggleFavorite(added, { ...draft, tagIds: ["50"] }, NOW_ISO)
     expect(removed.favorites).toHaveLength(0)
   })
 })
@@ -315,13 +315,13 @@ describe("favorites", () => {
 describe("autotracker", () => {
   test("keyword match applies the rule's project and tags", () => {
     const state = baseState({
-      autotrackers: [{ id: 1, keyword: "invoice", projectId: 31, taskId: null, tagIds: [51], enabled: true }],
+      autotrackers: [{ id: "1", keyword: "invoice", projectId: "31", taskId: null, tagIds: ["51"], enabled: true }],
     })
     const rule = matchAutotracker(state, "send Invoice to Acme")!
-    expect(rule.projectId).toBe(31)
-    const applied = applyAutotracker({ description: "x", projectId: null, taskId: null, tagIds: [50], billable: false }, rule)
-    expect(applied.projectId).toBe(31)
-    expect(applied.tagIds.sort()).toEqual([50, 51])
+    expect(rule.projectId).toBe("31")
+    const applied = applyAutotracker({ description: "x", projectId: null, taskId: null, tagIds: ["50"], billable: false }, rule)
+    expect(applied.projectId).toBe("31")
+    expect(applied.tagIds.sort()).toEqual(["50", "51"])
     expect(matchAutotracker(state, "unrelated work")).toBeNull()
   })
 })
@@ -351,7 +351,7 @@ describe("alerts", () => {
     })
     const fired = evaluateAlerts(state, "2026-08-10", NOW_ISO)
     expect(fired.alerts).toHaveLength(1)
-    expect(fired.alerts[0]).toMatchObject({ projectId: 30, threshold: 50, periodStart: "2026-08-01" })
+    expect(fired.alerts[0]).toMatchObject({ projectId: "30", threshold: 50, periodStart: "2026-08-01" })
 
     const again = evaluateAlerts(fired, "2026-08-10", NOW_ISO)
     expect(again.alerts).toHaveLength(1)
@@ -373,7 +373,7 @@ describe("manual entries and start links", () => {
   })
 
   test("start link round-trips the draft", () => {
-    const e = entry(1, "2026-08-09", "09:00", "10:00", { description: "ship it", tagIds: [50, 51], taskId: 40 })
+    const e = entry(1, "2026-08-09", "09:00", "10:00", { description: "ship it", tagIds: ["50", "51"], taskId: "40" })
     const link = startLinkFor(e, "https://app.test")
     const params = new URLSearchParams(link.split("?")[1])
     expect(params.get("description")).toBe("ship it")

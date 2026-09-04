@@ -13,13 +13,36 @@ import "server-only"
  * Failures throw with an explicit reason; nothing falls back silently.
  */
 
+import { lookup } from "node:dns/promises"
+
 import { google } from "googleapis"
+import { Agent } from "undici"
+
+import { isBlockedAddress, parseIpBytes } from "./networkGuardService"
 
 const FETCH_TIMEOUT_MS = 15_000
 const MAX_ICS_BYTES = 5_000_000
+const MAX_REDIRECTS = 3
+/** One message for every refusal: a specific one tells an attacker what is there */
+const REFUSED = "Refusing to fetch that address"
 
-/** Reject loopback / link-local / private hosts so the route can't be used to probe the network */
-function assertPublicUrl(raw: string): URL {
+const dnsLookup = lookup
+
+/**
+ * Turn the user's text into a URL we are willing to fetch.
+ *
+ * Two separate checks, because either one alone can be walked around:
+ *
+ *  1. Here: resolve the name to real IP numbers and refuse if ANY of them is
+ *     off the public internet. Checking the spelling of the hostname is not
+ *     enough — `[::ffff:127.0.0.1]` is loopback and looks nothing like it.
+ *  2. At connect time, in `guardedDispatcher` below: the same check runs again
+ *     on the address the socket actually connects to. Between step 1 and the
+ *     connection, DNS can change its mind (deliberately — it is an attack with
+ *     a name, DNS rebinding), and a redirect can send us somewhere new. The
+ *     connection-time check is the one that cannot be raced.
+ */
+async function assertPublicUrl(raw: string): Promise<URL> {
   let url: URL
   try {
     url = new URL(raw.replace(/^webcal:\/\//i, "https://"))
@@ -29,78 +52,98 @@ function assertPublicUrl(raw: string): URL {
   if (url.protocol !== "https:" && url.protocol !== "http:") {
     throw new Error("Only http(s) and webcal URLs are supported")
   }
-  const host = url.hostname.toLowerCase()
-  const blocked =
-    host === "localhost" ||
-    host === "0.0.0.0" ||
-    host === "[::1]" ||
-    host.endsWith(".local") ||
-    host.endsWith(".internal") ||
-    /^127\./.test(host) ||
-    /^10\./.test(host) ||
-    /^192\.168\./.test(host) ||
-    /^169\.254\./.test(host) ||
-    /^172\.(1[6-9]|2\d|3[01])\./.test(host)
-  if (blocked) throw new Error("Refusing to fetch a private or loopback address")
+
+  const host = url.hostname.replace(/^\[/, "").replace(/\]$/, "")
+  const literal = parseIpBytes(host)
+  if (literal) {
+    if (isBlockedAddress(host)) throw new Error(REFUSED)
+    return url
+  }
+
+  let resolved: { address: string }[]
+  try {
+    resolved = await dnsLookup(host, { all: true, verbatim: true })
+  } catch {
+    throw new Error("That address does not resolve")
+  }
+  if (resolved.length === 0) throw new Error("That address does not resolve")
+  if (resolved.some((entry) => isBlockedAddress(entry.address))) throw new Error(REFUSED)
   return url
 }
 
-const MAX_REDIRECTS = 3
-
 /**
- * Fetch, following redirects by hand so every hop is re-checked.
- *
- * `redirect: "follow"` would validate only the address the user typed: a public
- * URL that answers 302 -> http://169.254.169.254/ (the cloud metadata service)
- * would be followed without a second look. Each hop goes back through
- * assertPublicUrl.
- *
- * Known residual risk: this cannot stop DNS rebinding, where a hostname passes
- * the check and then resolves to a private address microseconds later at connect
- * time. Closing that needs resolve-then-connect-by-IP, which Node's fetch does
- * not expose. Accepted, not solved.
+ * Every socket this dispatcher opens is checked at the moment it is opened, so
+ * a name that resolved publicly a millisecond ago cannot resolve privately now.
  */
-async function fetchFollowingSafeRedirects(
-  startUrl: URL,
-  init: RequestInit
-): Promise<Response> {
-  let url = startUrl
-
-  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-    const response = await fetch(url, { ...init, redirect: "manual" })
-
-    if (response.status < 300 || response.status > 399) return response
-
-    const location = response.headers.get("location")
-    if (!location) return response
-
-    // Re-run the full check on the new address, relative hops included.
-    url = assertPublicUrl(new URL(location, url).toString())
-  }
-
-  throw new Error(`Calendar address redirected more than ${MAX_REDIRECTS} times`)
-}
+const guardedDispatcher = new Agent({
+  connect: {
+    lookup: (hostname, options, callback) => {
+      const literal = parseIpBytes(hostname)
+      if (literal) {
+        if (isBlockedAddress(hostname)) {
+          callback(new Error(REFUSED), "", 4)
+          return
+        }
+        callback(null, hostname, literal.family)
+        return
+      }
+      dnsLookup(hostname, { all: true, verbatim: true })
+        .then((addresses) => {
+          if (addresses.length === 0 || addresses.some((entry) => isBlockedAddress(entry.address))) {
+            callback(new Error(REFUSED), "", 4)
+            return
+          }
+          callback(
+            null,
+            addresses.map((entry) => ({ address: entry.address, family: entry.family })) as never,
+            0 as never,
+          )
+        })
+        .catch((error: Error) => callback(error, "", 4))
+    },
+  },
+})
 
 export async function fetchIcsFromUrl(raw: string): Promise<string> {
-  const url = assertPublicUrl(raw)
+  let url = await assertPublicUrl(raw.trim())
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
 
   try {
-    const response = await fetchFollowingSafeRedirects(url, {
-      signal: controller.signal,
-      headers: { Accept: "text/calendar, text/plain;q=0.8" },
-      cache: "no-store",
-    })
-    if (!response.ok) {
-      throw new Error(`Calendar responded with ${response.status} ${response.statusText}`)
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: { Accept: "text/calendar, text/plain;q=0.8" },
+        // Never "follow": a redirect is a second address, and it gets the same
+        // checks as the first. Following silently is how a public URL becomes
+        // a fetch of 169.254.169.254.
+        redirect: "manual",
+        cache: "no-store",
+        dispatcher: guardedDispatcher,
+      } as RequestInit)
+
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get("location")
+        if (!location) throw new Error("The calendar address redirected to nowhere")
+        if (hop === MAX_REDIRECTS) throw new Error("The calendar address redirected too many times")
+        url = await assertPublicUrl(new URL(location, url).toString())
+        continue
+      }
+
+      if (!response.ok) {
+        // Deliberately not the status text: on an internal address, "Connection
+        // refused" versus "401 Unauthorized" is a port scanner's answer.
+        throw new Error("The calendar address did not return a calendar")
+      }
+
+      const text = await response.text()
+      if (text.length > MAX_ICS_BYTES) throw new Error("Calendar file is larger than 5 MB")
+      if (!text.includes("BEGIN:VCALENDAR")) {
+        throw new Error("That URL did not return an iCalendar file — copy the secret address in iCal format")
+      }
+      return text
     }
-    const text = await response.text()
-    if (text.length > MAX_ICS_BYTES) throw new Error("Calendar file is larger than 5 MB")
-    if (!text.includes("BEGIN:VCALENDAR")) {
-      throw new Error("That URL did not return an iCalendar file — copy the secret address in iCal format")
-    }
-    return text
+    throw new Error("The calendar address redirected too many times")
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       throw new Error("Calendar request timed out after 15 s")

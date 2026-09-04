@@ -11,7 +11,7 @@ import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { IconAdd, IconClose, IconDown, IconMoney, IconTag } from "../icons"
+import { IconAdd, IconDown, IconMoney, IconTag } from "../icons"
 import { activeToken, removeToken } from "../timetrackService"
 import type { Id, TimetrackState } from "../types"
 import {
@@ -454,7 +454,9 @@ export function DescriptionField({
         }}
         onKeyUp={(event) => syncToken(value, event.currentTarget.selectionStart ?? value.length)}
         onKeyDown={handleKeyDown}
-        className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground sm:h-10"
+        // text-base on a phone, not text-sm: iOS Safari zooms the whole page when
+        // you tap a field under 16px, and this is the most-tapped field in the app
+        className="h-11 w-full bg-transparent text-base outline-none placeholder:text-muted-foreground sm:h-10 sm:text-sm"
       />
       {suggestionsOpen && createPortal(
         <div
@@ -489,35 +491,6 @@ export function DescriptionField({
   )
 }
 
-export function TagChips({
-  state,
-  tagIds,
-  onRemove,
-}: {
-  state: TimetrackState
-  tagIds: Id[]
-  onRemove?: (tagId: Id) => void
-}) {
-  if (tagIds.length === 0) return null
-  return (
-    <div className="flex flex-wrap gap-1">
-      {tagIds.map((id) => {
-        const tag = state.tags.find((t) => t.id === id)
-        if (!tag) return null
-        return (
-          <span key={id} className="inline-flex items-center gap-1 rounded bg-secondary px-1.5 py-0.5 text-[11px]">
-            {tag.name}
-            {onRemove && (
-              <button type="button" onClick={() => onRemove(id)} className="text-muted-foreground hover:text-foreground">
-                <IconClose className="size-2.5" />
-              </button>
-            )}
-          </span>
-        )
-      })}
-    </div>
-  )
-}
 
 export function MiniSelect({
   value,
@@ -535,7 +508,7 @@ export function MiniSelect({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-10 w-full appearance-none rounded-md border border-border bg-transparent pl-2 pr-7 text-sm outline-none sm:h-8"
+        className="h-10 w-full appearance-none rounded-md border border-border bg-transparent pl-2 pr-7 text-base outline-none sm:h-8 sm:text-sm"
       >
         {options.map((option) => (
           <option key={option.id} value={option.id} className="bg-card">

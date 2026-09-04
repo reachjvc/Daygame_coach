@@ -56,6 +56,21 @@ export function createAdminSupabaseClient() {
 }
 
 /**
+ * True for the cookies that carry an existing Supabase session, and false for
+ * the PKCE code-verifier, which shares the same prefix but is not a session.
+ *
+ * Supabase names them:
+ *   sb-<ref>-auth-token                  <- session (dropped)
+ *   sb-<ref>-auth-token.0 / .1 / ...     <- session, chunked (dropped)
+ *   sb-<ref>-auth-token-code-verifier    <- PKCE verifier (kept)
+ */
+export function isStaleSessionCookie(name: string): boolean {
+  if (!name.startsWith("sb-")) return false
+  if (name.endsWith("-code-verifier")) return false
+  return /-auth-token(\.\d+)?$/.test(name)
+}
+
+/**
  * Create a Supabase client for an email-link callback route, plus a promise
  * that resolves once the session cookies have actually been written.
  *
@@ -86,10 +101,25 @@ export function createCallbackSupabaseClient(
       cookies: {
         getAll() {
           if (!cookieHeader) return []
-          return cookieHeader.split(";").map((part) => {
-            const [name, ...rest] = part.trim().split("=")
-            return { name, value: decodeURIComponent(rest.join("=")) }
-          })
+          return cookieHeader
+            .split(";")
+            .map((part) => {
+              const [name, ...rest] = part.trim().split("=")
+              return { name, value: decodeURIComponent(rest.join("=")) }
+            })
+            // Ignore any session this browser is already carrying.
+            //
+            // Someone arriving from an email link is establishing a NEW session;
+            // whatever they had is irrelevant. Worse, it can be actively harmful:
+            // a browser holding a dead session token (expired oddly, or belonging
+            // to a deleted account) made the code exchange fail with
+            // `confirm_failed` -- reproduced 2026-09-03, and clearing cookies by
+            // hand was what fixed it.
+            //
+            // The code-verifier cookie is NOT a session and must survive: the
+            // PKCE exchange cannot complete without it. Hence the exact-name
+            // check rather than a prefix match.
+            .filter(({ name }) => !isStaleSessionCookie(name))
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) =>

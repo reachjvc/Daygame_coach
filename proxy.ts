@@ -50,6 +50,14 @@ export async function proxy(request: NextRequest) {
   // 3. RLS still protects data in API routes
   const { data: { session } } = await supabase.auth.getSession()
 
+  // API routes answer with 401, never a redirect to a login page: a fetch()
+  // that receives an HTML login page reports a confusing parse error instead of
+  // "you are signed out". Defence in depth — every route below also calls
+  // requireAuth() itself.
+  if (pathname.startsWith("/api/timetrack/") && !session) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+  }
+
   const isProtectedRoute =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/preferences") ||
@@ -76,5 +84,6 @@ export const config = {
     "/lair/:path*",
     "/qa/:path*",
     "/api/test/:path*",
+    "/api/timetrack/:path*",
   ],
 }

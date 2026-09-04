@@ -457,9 +457,6 @@ export function eventsForDay(events: CalendarEvent[], day: IsoDate): CalendarEve
     .sort((a, b) => epochSeconds(a.start) - epochSeconds(b.start))
 }
 
-export function eventSeconds(event: CalendarEvent): number {
-  return Math.max(0, epochSeconds(event.end) - epochSeconds(event.start))
-}
 
 // ---------------------------------------------------------------------------
 // Calendar-view geometry

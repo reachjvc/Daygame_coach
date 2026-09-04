@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+
+import { checkPassword, isWeakPasswordError } from "@/src/shared/passwordRules"
 import { Crosshair } from "lucide-react"
 
 /**
@@ -44,6 +46,13 @@ export default function ResetPasswordPage() {
       return
     }
 
+    const weak = checkPassword(password)
+    if (weak) {
+      setError(weak)
+      setIsLoading(false)
+      return
+    }
+
     try {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
@@ -52,7 +61,13 @@ export default function ResetPasswordPage() {
       await supabase.auth.signOut()
       router.push("/auth/login?reset=1")
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      const message = error instanceof Error ? error.message : "An error occurred"
+      if (isWeakPasswordError(message)) {
+        // Never show Supabase's version of this: it prints the alphabet.
+        setError(checkPassword(password) ?? "Choose a longer password with a capital letter and a number.")
+      } else {
+        setError(message)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -104,10 +119,19 @@ export default function ResetPasswordPage() {
                         id="password"
                         type="password"
                         required
+                        autoComplete="new-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         data-testid="reset-password-input"
                       />
+                      {password.length > 0 && checkPassword(password) && (
+                        <p
+                          className="text-sm text-muted-foreground"
+                          data-testid="reset-password-hint"
+                        >
+                          {checkPassword(password)}
+                        </p>
+                      )}
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="repeat-password">Repeat new password</Label>
@@ -115,6 +139,7 @@ export default function ResetPasswordPage() {
                         id="repeat-password"
                         type="password"
                         required
+                        autoComplete="new-password"
                         value={repeatPassword}
                         onChange={(e) => setRepeatPassword(e.target.value)}
                         data-testid="reset-repeat-input"

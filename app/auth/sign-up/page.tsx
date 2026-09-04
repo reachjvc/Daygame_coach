@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+
+import { checkPassword, isWeakPasswordError } from "@/src/shared/passwordRules"
 import { Crosshair } from "lucide-react"
 
 export default function SignUpPage() {
@@ -34,6 +36,15 @@ export default function SignUpPage() {
       return
     }
 
+    // Same rules the server enforces, checked here so the user is not told
+    // after a round-trip. src/shared/passwordRules.ts owns the wording.
+    const weak = checkPassword(password)
+    if (weak) {
+      setError(weak)
+      setIsLoading(false)
+      return
+    }
+
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -48,13 +59,19 @@ export default function SignUpPage() {
         },
       })
       if (error) throw error
-      router.push("/auth/sign-up-success")
+      router.push(`/auth/sign-up-success?email=${encodeURIComponent(email)}`)
     } catch (error: unknown) {
       // Supabase says "User already registered", which reads like a failure
       // rather than a next step. It is the single most likely thing to happen
       // to someone who signed up months ago and forgot -- so say what to do
       // about it, and let the buttons below do it.
       const message = error instanceof Error ? error.message : "An error occurred"
+      if (isWeakPasswordError(message)) {
+        // Never show Supabase's version of this: it prints the alphabet.
+        setError(checkPassword(password) ?? "Choose a longer password with a capital letter and a number.")
+        setIsLoading(false)
+        return
+      }
       if (/already\s*registered|already\s*exists/i.test(message)) {
         setExistingAccount(true)
         setError(null)
@@ -89,6 +106,7 @@ export default function SignUpPage() {
                       type="text"
                       placeholder="John Doe"
                       required
+                      autoComplete="name"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       data-testid="signup-fullname-input"
@@ -101,6 +119,7 @@ export default function SignUpPage() {
                       type="email"
                       placeholder="m@example.com"
                       required
+                      autoComplete="email"
                       value={email}
                       onChange={(e) => {
                         setEmail(e.target.value)
@@ -115,10 +134,19 @@ export default function SignUpPage() {
                       id="password"
                       type="password"
                       required
+                      autoComplete="new-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       data-testid="signup-password-input"
                     />
+                    {password.length > 0 && checkPassword(password) && (
+                      <p
+                        className="text-sm text-muted-foreground"
+                        data-testid="signup-password-hint"
+                      >
+                        {checkPassword(password)}
+                      </p>
+                    )}
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="repeat-password">Repeat Password</Label>
@@ -126,6 +154,7 @@ export default function SignUpPage() {
                       id="repeat-password"
                       type="password"
                       required
+                      autoComplete="new-password"
                       value={repeatPassword}
                       onChange={(e) => setRepeatPassword(e.target.value)}
                       data-testid="signup-repeat-password-input"

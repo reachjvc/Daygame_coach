@@ -7,7 +7,14 @@
  * entry = nowEpochSeconds + duration. See docs/research/toggl/01-data-model-and-parity.md
  */
 
-export type Id = number
+/**
+ * Ids are made by whichever device creates the thing, not by a counter.
+ *
+ * A counter works right up until two devices are offline at once: both hand out
+ * 101, and on reconnect one of the two entries has to lose. A uuid made on the
+ * device cannot collide, so an offline edit is always safe to keep.
+ */
+export type Id = string
 /** ISO 8601 date-time, e.g. 2026-08-10T09:30:00.000Z */
 export type IsoDateTime = string
 /** Calendar date, YYYY-MM-DD */
@@ -574,7 +581,6 @@ export interface TimetrackState {
   pomodoro: PomodoroSettings
   idle: IdleSettings
   reminders: ReminderSettings
-  nextId: number
 }
 
 /** Validation failure raised by required-fields / locked-entries / approval rules */

@@ -62,7 +62,7 @@ describe("time-entry CSV import", () => {
     const reuse = "Description,Project,Start date,Start time,Duration\nWork,Alpha,2026-08-10,09:00,1:00"
     const result = importEntriesCsv(baseState(), reuse, NOW_ISO)
     expect(result.state.projects).toHaveLength(2)
-    expect(result.state.entries[0].projectId).toBe(30)
+    expect(result.state.entries[0].projectId).toBe("30")
   })
 
   test("ISO start/stop columns are accepted", () => {
@@ -126,7 +126,7 @@ describe("project dashboard", () => {
   })
 
   test("tracked totals and cumulative burn-up", () => {
-    const dash = buildProjectDashboard(state, 30, "2026-08-10", NOW_SEC)!
+    const dash = buildProjectDashboard(state, "30", "2026-08-10", NOW_SEC)!
     expect(dash.trackedSeconds).toBe(6 * 3600)
     expect(dash.periodStart).toBe("2026-08-01")
     expect(dash.periodEnd).toBe("2026-08-31")
@@ -137,41 +137,41 @@ describe("project dashboard", () => {
   })
 
   test("completion percentage against the estimate", () => {
-    const dash = buildProjectDashboard(state, 30, "2026-08-10", NOW_SEC)!
+    const dash = buildProjectDashboard(state, "30", "2026-08-10", NOW_SEC)!
     expect(dash.completionPct).toBeCloseTo(60, 5)
   })
 
   test("forecast extends the pace to the period end", () => {
-    const dash = buildProjectDashboard(state, 30, "2026-08-10", NOW_SEC)!
+    const dash = buildProjectDashboard(state, "30", "2026-08-10", NOW_SEC)!
     expect(dash.forecast).toHaveLength(21)
     expect(dash.forecast.at(-1)!.seconds).toBeGreaterThan(dash.trackedSeconds)
   })
 
   test("projected end date comes from the observed pace", () => {
-    const dash = buildProjectDashboard(state, 30, "2026-08-10", NOW_SEC)!
+    const dash = buildProjectDashboard(state, "30", "2026-08-10", NOW_SEC)!
     // 6h over 10 days = 0.6h/day; 4h remaining ≈ 7 more days
     expect(dash.projectedEndDate).toBe("2026-08-17")
   })
 
   test("crossed alert thresholds are reported", () => {
-    const dash = buildProjectDashboard(state, 30, "2026-08-10", NOW_SEC)!
+    const dash = buildProjectDashboard(state, "30", "2026-08-10", NOW_SEC)!
     expect(dash.triggeredThresholds).toEqual([50])
   })
 
   test("task and member breakdowns are sorted by time", () => {
     const withTasks = baseState({
       entries: [
-        entry(1, "2026-08-03", "09:00", "12:00", { taskId: 40 }),
-        entry(2, "2026-08-05", "09:00", "10:00", { taskId: 41, userId: 11 }),
+        entry(1, "2026-08-03", "09:00", "12:00", { taskId: "40" }),
+        entry(2, "2026-08-05", "09:00", "10:00", { taskId: "41", userId: "11" }),
       ],
     })
-    const dash = buildProjectDashboard(withTasks, 30, "2026-08-10", NOW_SEC)!
+    const dash = buildProjectDashboard(withTasks, "30", "2026-08-10", NOW_SEC)!
     expect(dash.taskBreakdown[0].label).toBe("Build")
     expect(dash.memberBreakdown.map((m) => m.label)).toEqual(["You", "Sam"])
   })
 
   test("pace verdict compares consumption to elapsed time", () => {
-    const dash = buildProjectDashboard(state, 30, "2026-08-10", NOW_SEC)!
+    const dash = buildProjectDashboard(state, "30", "2026-08-10", NOW_SEC)!
     // 60% of the estimate used, ~32% of the period elapsed
     expect(paceVerdict(dash, "2026-08-10").tone).toBe("warn")
   })
@@ -188,11 +188,11 @@ describe("project dashboard", () => {
     })
     const nowSec = epochSeconds(new Date(2026, 7, 10, 10, 0).toISOString())
     expect(entrySeconds(running.entries[0], nowSec)).toBe(3600)
-    const dash = buildProjectDashboard(running, 30, "2026-08-10", nowSec)!
+    const dash = buildProjectDashboard(running, "30", "2026-08-10", nowSec)!
     expect(dash.trackedSeconds).toBe(3600)
   })
 
   test("unknown project returns null", () => {
-    expect(buildProjectDashboard(state, 999, "2026-08-10", NOW_SEC)).toBeNull()
+    expect(buildProjectDashboard(state, "999", "2026-08-10", NOW_SEC)).toBeNull()
   })
 })

@@ -12,15 +12,17 @@ import {
   DEFAULT_REMINDERS,
   STATE_VERSION,
 } from "../config"
+import { newId } from "../idService"
 import type { TimetrackState } from "../types"
 
 export function createEmptyWorkspace(nowIso: string): TimetrackState {
-  const selfId = 1
+  const selfId = newId()
+  const workspaceId = newId()
 
   return {
     version: STATE_VERSION,
     workspace: {
-      id: 1,
+      id: workspaceId,
       name: "My Workspace",
       defaultCurrency: "EUR",
       defaultHourlyRate: null,
@@ -47,7 +49,7 @@ export function createEmptyWorkspace(nowIso: string): TimetrackState {
     members: [
       {
         id: selfId,
-        workspaceId: 1,
+        workspaceId,
         name: "You",
         email: "",
         role: "admin",
@@ -78,6 +80,5 @@ export function createEmptyWorkspace(nowIso: string): TimetrackState {
     pomodoro: { ...DEFAULT_POMODORO },
     idle: { ...DEFAULT_IDLE },
     reminders: { ...DEFAULT_REMINDERS, days: [...DEFAULT_REMINDERS.days] },
-    nextId: 100,
   }
 }

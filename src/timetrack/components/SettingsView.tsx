@@ -12,6 +12,7 @@ import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { newId } from "../idService"
 import {
   CALENDAR_COLORS,
   CALENDAR_WINDOW_DAYS_BACK,
@@ -62,11 +63,15 @@ export function SettingsView({
   requestNotificationPermission,
   tab,
   setTab,
+  syncStatus,
+  onUploadEverything,
 }: {
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
   nowSec: number
   pushToast: (text: string, tone?: "info" | "error") => void
+  syncStatus: string
+  onUploadEverything: () => void
   resetWorkspace: () => void
   replaceState: (next: TimetrackState) => void
   requestNotificationPermission: () => Promise<boolean>
@@ -100,7 +105,15 @@ export function SettingsView({
       )}
       {tab === "integrations" && <IntegrationsPanel state={state} setState={setState} nowSec={nowSec} pushToast={pushToast} />}
       {tab === "data" && (
-        <DataPanel state={state} setState={setState} pushToast={pushToast} resetWorkspace={resetWorkspace} replaceState={replaceState} />
+        <DataPanel
+          state={state}
+          setState={setState}
+          pushToast={pushToast}
+          resetWorkspace={resetWorkspace}
+          replaceState={replaceState}
+          syncStatus={syncStatus}
+          onUploadEverything={onUploadEverything}
+        />
       )}
     </div>
   )
@@ -455,7 +468,7 @@ function AutomationPanel({
             <MiniSelect
               className="w-[160px]"
               value={rule.projectId === null ? "none" : String(rule.projectId)}
-              onChange={(value) => setRule({ ...rule, projectId: value === "none" ? null : Number(value) })}
+              onChange={(value) => setRule({ ...rule, projectId: value === "none" ? null : value })}
               options={[{ id: "none", label: "No project" }, ...state.projects.map((p) => ({ id: String(p.id), label: p.name }))]}
             />
             <Button
@@ -625,12 +638,11 @@ export function IntegrationsPanel({
     )
     if (existing) return existing.id
 
-    const id = state.nextId
+    const id = newId()
     // A secret iCal address is a credential: only keep it when explicitly asked to
     const storedRef = calendarSource === "ics_url" && !rememberUrl ? "" : calendarRef
     setState((current) => ({
       ...current,
-      nextId: Math.max(current.nextId, id + 1),
       calendars: [
         ...current.calendars,
         {
@@ -995,19 +1007,49 @@ function DataPanel({
   pushToast,
   resetWorkspace,
   replaceState,
+  syncStatus,
+  onUploadEverything,
 }: {
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
   pushToast: (text: string, tone?: "info" | "error") => void
   resetWorkspace: () => void
   replaceState: (next: TimetrackState) => void
+  syncStatus: string
+  onUploadEverything: () => void
 }) {
   const jsonInput = useRef<HTMLInputElement | null>(null)
   const csvInput = useRef<HTMLInputElement | null>(null)
 
   return (
     <div className="space-y-4">
-      <SectionCard title="Backup" description="This workspace is saved in this browser only. Export a copy to keep it or move it to another browser.">
+      <SectionCard
+        title="Where this workspace is kept"
+        description={
+          syncStatus === "local-only"
+            ? "In this browser only. Sign in and it is kept in your account, on every device."
+            : syncStatus === "signed-out"
+              ? "In this browser. You have been signed out, so nothing is reaching your account right now."
+              : "In your account, and in this browser. Both stay in step."
+        }
+      >
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onUploadEverything}
+            disabled={syncStatus === "local-only" || syncStatus === "signed-out"}
+          >
+            Upload this browser&apos;s copy to my account
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            {/* the way back from "Not now", which was otherwise a one-way door */}
+            Use this if you chose &quot;Not now&quot; earlier, or after working somewhere without a connection.
+          </span>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Backup" description="Export a copy to keep outside this app, or to move it to another browser.">
         <div className="flex flex-wrap gap-2">
           <Button
             size="sm"

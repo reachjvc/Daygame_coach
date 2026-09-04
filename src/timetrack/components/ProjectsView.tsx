@@ -11,6 +11,7 @@ import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { newId } from "../idService"
 import { ALERT_THRESHOLDS, CURRENCIES, PROJECT_COLORS, RECURRING_PERIODS } from "../config"
 import { IconAdd, IconAlert, IconArchive, IconDelete, IconEdit, IconTrend } from "../icons"
 import { buildProjectDashboard, paceVerdict, periodDaysRemaining } from "../projectDashboardService"
@@ -365,7 +366,7 @@ function ProjectDialog({
       ...draft,
       alerts: existing
         ? draft.alerts.filter((a) => a !== existing)
-        : [...draft.alerts, { id: Date.now() + threshold, basis, threshold, enabled: true }],
+        : [...draft.alerts, { id: newId(), basis, threshold, enabled: true }],
     })
   }
 
@@ -392,7 +393,7 @@ function ProjectDialog({
         <Field label="Client">
           <MiniSelect
             value={draft.clientId === null ? "none" : String(draft.clientId)}
-            onChange={(value) => setDraft({ ...draft, clientId: value === "none" ? null : Number(value) })}
+            onChange={(value) => setDraft({ ...draft, clientId: value === "none" ? null : value })}
             options={[{ id: "none", label: "No client" }, ...state.clients.map((c) => ({ id: String(c.id), label: c.name }))]}
           />
         </Field>
@@ -627,7 +628,7 @@ function ProjectDialog({
                   className="w-[140px]"
                   value={task.assigneeId === null ? "none" : String(task.assigneeId)}
                   onChange={(value) =>
-                    setState((current) => updateTask(current, task.id, { assigneeId: value === "none" ? null : Number(value) }))
+                    setState((current) => updateTask(current, task.id, { assigneeId: value === "none" ? null : value }))
                   }
                   options={[{ id: "none", label: "Unassigned" }, ...state.members.map((m) => ({ id: String(m.id), label: m.name }))]}
                 />

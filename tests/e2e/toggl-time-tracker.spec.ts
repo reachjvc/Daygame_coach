@@ -462,6 +462,28 @@ test.describe('Toggl-style time tracker', () => {
     expect([...new Set(expanded.map((r) => r.cells))], 'expanded group children drift').toHaveLength(1)
   })
 
+  test('two tabs of the same browser stay in step instead of overwriting each other', async ({ page, context }) => {
+    await openFreshSandbox(page)
+    await trackEntry(page, 'from tab A')
+
+    // A second tab used to load its own copy of the workspace and then save it
+    // back on the next change, silently throwing away whatever the first tab
+    // had done in the meantime.
+    const second = await context.newPage()
+    await second.goto(PAGE, { waitUntil: 'domcontentloaded' })
+    await second.getByRole('heading', { name: 'My Workspace' }).waitFor({ timeout: 20000 })
+    await second.waitForTimeout(800)
+    await expect(second.locator('main input[value="from tab A"]').first()).toBeVisible()
+
+    // now track in the second tab and watch the first one follow
+    await trackEntry(second, 'from tab B')
+    await expect(page.locator('main input[value="from tab B"]').first()).toBeVisible({ timeout: 10000 })
+
+    // and the first tab's entry is still there — nothing was overwritten
+    await expect(page.locator('main input[value="from tab A"]').first()).toBeVisible()
+    await second.close()
+  })
+
   test('survives a reload and stays usable on a narrow viewport', async ({ page }) => {
     await openFreshSandbox(page)
     await page.getByPlaceholder('What are you working on?').fill('Persisted entry')

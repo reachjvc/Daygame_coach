@@ -11,7 +11,7 @@ import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { NO_PROJECT_COLOR } from "../config"
-import { IconCheck, IconClose, IconDown } from "../icons"
+import { IconCheck, IconClose } from "../icons"
 
 /**
  * Icon-only controls need a 44px target on phones; 32px is fine with a mouse.
@@ -846,52 +846,3 @@ export function ConfirmButton({
   )
 }
 
-export function SelectMenu<T extends string | number>({
-  value,
-  options,
-  onChange,
-  className,
-  placeholder = "Select…",
-}: {
-  value: T | null
-  options: { id: T; label: string }[]
-  onChange: (value: T) => void
-  className?: string
-  placeholder?: string
-}) {
-  const current = options.find((o) => o.id === value)
-  return (
-    <Dropdown
-      className={className}
-      matchAnchorWidth
-      trigger={() => (
-        <span className="flex h-9 items-center justify-between gap-2 rounded-md border border-border bg-transparent px-3 text-sm">
-          <span className={cn("truncate", !current && "text-muted-foreground")}>{current?.label ?? placeholder}</span>
-          <IconDown className="size-3 shrink-0 text-muted-foreground" />
-        </span>
-      )}
-    >
-      {(close) => (
-        <div className="max-h-64 overflow-y-auto py-1">
-          {options.map((option) => (
-            <button
-              key={String(option.id)}
-              type="button"
-              onClick={() => {
-                onChange(option.id)
-                close()
-              }}
-              className={cn(
-                "flex w-full items-center justify-between px-3 py-1.5 text-left text-sm hover:bg-secondary/60",
-                option.id === value && "text-primary",
-              )}
-            >
-              <span className="truncate">{option.label}</span>
-              {option.id === value && <IconCheck className="size-3" />}
-            </button>
-          ))}
-        </div>
-      )}
-    </Dropdown>
-  )
-}

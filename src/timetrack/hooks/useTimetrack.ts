@@ -12,6 +12,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { DEFAULT_IDLE, LEGACY_IDLE_DEFAULT, STATE_VERSION, STORAGE_KEY } from "../config"
+import { newId } from "../idService"
+import { migrateStateToV3 } from "../stateMigrationService"
 import { createEmptyWorkspace } from "../data/emptyWorkspace"
 import { removeDemoData } from "../demoDataService"
 import { dateKey, epochSeconds, formatIdleSpan } from "../timetrackFormatService"
@@ -26,7 +28,7 @@ import {
   stopTimer,
   updateEntry,
 } from "../timetrackService"
-import type { EntryDraft, TimeEntry, TimetrackState } from "../types"
+import type { EntryDraft, Id, TimeEntry, TimetrackState } from "../types"
 
 export interface ToastMessage {
   id: number
@@ -36,7 +38,7 @@ export interface ToastMessage {
 }
 
 export interface IdlePrompt {
-  entryId: number
+  entryId: Id
   /** What the timer was tracking, so the prompt can name it */
   description: string
   /** When interaction stopped */
@@ -91,6 +93,11 @@ function loadState(nowIso: string): LoadResult {
       cleanedDemoEntries: 0,
     }
   }
+  // A workspace from the numeric-id era is converted, not thrown away
+  if (parsed.version === 2) {
+    parsed = migrateStateToV3(parsed as unknown as Record<string, unknown>) as unknown as TimetrackState
+  }
+
   if (parsed.version !== STATE_VERSION) {
     return {
       state: createEmptyWorkspace(nowIso),
@@ -133,7 +140,7 @@ export function useTimetrack() {
   const lastInteraction = useRef(Date.now())
   const lastReminder = useRef(0)
   const timelineStart = useRef<number | null>(null)
-  const pomodoroLastEntry = useRef<number | null>(null)
+  const pomodoroLastEntry = useRef<Id | null>(null)
   const pendingLoadNotice = useRef<{ text: string; tone: "info" | "error" } | null>(null)
   const forgottenWarned = useRef(false)
   const saveFailed = useRef(false)
@@ -177,11 +184,64 @@ export function useTimetrack() {
     setToasts((current) => current.filter((t) => t.id !== id))
   }, [])
 
+  // --- other tabs and windows of the same browser --------------------------
+  const channelRef = useRef<BroadcastChannel | null>(null)
+  /** what this tab last wrote, so it ignores the echo of its own message */
+  const lastWriteRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return
+    const channel = new BroadcastChannel(STORAGE_KEY)
+    channelRef.current = channel
+
+    channel.onmessage = (event: MessageEvent<{ kind: string; serialised: string }>) => {
+      if (event.data?.kind !== "state") return
+      if (event.data.serialised === lastWriteRef.current) return
+      try {
+        lastWriteRef.current = event.data.serialised
+        const incoming = JSON.parse(event.data.serialised) as TimetrackState
+        setState(() => incoming)
+      } catch {
+        // A message we cannot read is a bug worth seeing, not something to swallow
+        pushToast("Another tab sent an update this one could not read — reload to resync", "error")
+      }
+    }
+
+    // Safari private mode and older browsers have no BroadcastChannel; the
+    // storage event is the fallback and fires in other tabs on every write.
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY || !event.newValue) return
+      if (event.newValue === lastWriteRef.current) return
+      try {
+        lastWriteRef.current = event.newValue
+        const incoming = JSON.parse(event.newValue) as TimetrackState
+        setState(() => incoming)
+      } catch {
+        pushToast("Another tab saved something this one could not read — reload to resync", "error")
+      }
+    }
+    window.addEventListener("storage", onStorage)
+
+    return () => {
+      channel.close()
+      channelRef.current = null
+      window.removeEventListener("storage", onStorage)
+    }
+  }, [pushToast])
+
   // --- persist on every change --------------------------------------------
   useEffect(() => {
     if (!state) return
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+      const serialised = JSON.stringify(state)
+      window.localStorage.setItem(STORAGE_KEY, serialised)
+      // Tell the other tabs. `localStorage` already fires a `storage` event in
+      // other tabs, but not in this one and not reliably before this write is
+      // read back, so the channel carries the state we just wrote. Without it,
+      // two open tabs each hold their own copy and the last one to save wins,
+      // silently throwing away whatever the other one did.
+      lastWriteRef.current = serialised
+      channelRef.current?.postMessage({ kind: "state", serialised })
       saveFailed.current = false
     } catch {
       // Losing writes silently would look like the page is saving when it is not.
@@ -403,7 +463,7 @@ export function useTimetrack() {
         ...current,
         timeline: [
           {
-            id: current.nextId,
+            id: newId(),
             start: new Date(startedAt).toISOString(),
             end: new Date().toISOString(),
             label: document.title.split(" · ").pop() ?? "Time tracker",
@@ -411,7 +471,6 @@ export function useTimetrack() {
           },
           ...current.timeline,
         ].slice(0, 100),
-        nextId: current.nextId + 1,
       }))
     }
 
@@ -502,7 +561,6 @@ export function useTimetrack() {
   }
 }
 
-export type TimetrackController = ReturnType<typeof useTimetrack>
 
 /** Latest stopped entries, newest first — used by "continue" affordances */
 export function recentEntries(entries: TimeEntry[], limit = 10): TimeEntry[] {

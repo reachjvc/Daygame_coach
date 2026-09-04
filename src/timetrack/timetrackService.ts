@@ -52,12 +52,17 @@ import type {
   WebhookEventName,
 } from "./types"
 
+import { newId } from "./idService"
+
 // ---------------------------------------------------------------------------
 // Generic helpers
 // ---------------------------------------------------------------------------
 
+/** Not a real row: only ever used to answer "would this field be filled in?" */
+const PLACEHOLDER_ID: Id = "placeholder"
+
 function takeId(state: TimetrackState): { state: TimetrackState; id: Id } {
-  return { state: { ...state, nextId: state.nextId + 1 }, id: state.nextId }
+  return { state, id: newId() }
 }
 
 function touch(iso?: IsoDateTime): IsoDateTime {
@@ -203,9 +208,10 @@ export function canEditEntry(state: TimetrackState, entry: TimeEntry): boolean {
   return (
     validateEntry(state, {
       description: entry.description || "x",
-      projectId: entry.projectId ?? (state.workspace.requiredFields.project ? null : 1),
-      taskId: entry.taskId ?? (state.workspace.requiredFields.task ? null : 1),
-      tagIds: entry.tagIds.length ? entry.tagIds : state.workspace.requiredFields.tag ? [] : [1],
+      // a stand-in id, only ever compared against "is something set here"
+      projectId: entry.projectId ?? (state.workspace.requiredFields.project ? null : PLACEHOLDER_ID),
+      taskId: entry.taskId ?? (state.workspace.requiredFields.task ? null : PLACEHOLDER_ID),
+      tagIds: entry.tagIds.length ? entry.tagIds : state.workspace.requiredFields.tag ? [] : [PLACEHOLDER_ID],
       start: entry.start,
     }).filter((v) => v.field === "date" || v.field === "approval").length === 0
   )
@@ -497,7 +503,7 @@ function rowKey(entry: TimeEntry): string {
     entry.description.trim().toLowerCase(),
     entry.projectId ?? "-",
     entry.taskId ?? "-",
-    [...entry.tagIds].sort((a, b) => a - b).join("."),
+    [...entry.tagIds].sort((a, b) => a.localeCompare(b)).join("."),
     entry.billable ? "b" : "n",
   ].join("|")
 }
@@ -1011,7 +1017,7 @@ export function createProjectFromTemplate(
   nowIso: IsoDateTime,
 ): { state: TimetrackState; id: Id } {
   const template = state.projects.find((p) => p.id === templateId)
-  if (!template) return { state, id: -1 }
+  if (!template) return { state, id: "" }
   const created = createProject(state, { ...template, name, template: false }, nowIso)
   let next = created.state
   for (const task of state.tasks.filter((t) => t.projectId === templateId)) {
@@ -1186,8 +1192,8 @@ export function startLinkFor(entry: TimeEntry, origin: string): string {
 }
 
 export function draftFromStartLink(state: TimetrackState, params: URLSearchParams): EntryDraft {
-  const projectId = params.get("project") ? Number(params.get("project")) : null
-  const taskId = params.get("task") ? Number(params.get("task")) : null
+  const projectId = params.get("project") || null
+  const taskId = params.get("task") || null
   return {
     description: params.get("description") ?? "",
     projectId: projectById(state, projectId) ? projectId : null,
@@ -1195,7 +1201,6 @@ export function draftFromStartLink(state: TimetrackState, params: URLSearchParam
     tagIds: (params.get("tags") ?? "")
       .split(",")
       .filter(Boolean)
-      .map(Number)
       .filter((id) => state.tags.some((t) => t.id === id)),
     billable: params.get("billable") === "1",
   }

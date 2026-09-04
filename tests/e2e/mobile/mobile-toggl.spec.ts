@@ -158,6 +158,36 @@ test.describe('time tracker on a phone', () => {
     expect(scrollWidth).toBeLessThanOrEqual(innerWidth + 1)
   })
 
+  test('no field is small enough to make iOS zoom the page when tapped', async ({ page }) => {
+    await openFreshSandbox(page)
+
+    // Safari zooms the whole page when you tap an input under 16px, and the
+    // page never zooms back. The main timer field was 14px, as were ten
+    // dropdowns across Reports and Settings.
+    const tooSmall = async () =>
+      page.evaluate(() => {
+        const found: { label: string; px: number }[] = []
+        for (const el of document.querySelectorAll('input, select, textarea')) {
+          const style = getComputedStyle(el)
+          const box = el.getBoundingClientRect()
+          if (!box.width || !box.height || style.display === 'none' || style.visibility === 'hidden') continue
+          const type = el.getAttribute('type') ?? el.tagName.toLowerCase()
+          if (type === 'checkbox' || type === 'radio') continue
+          const px = parseFloat(style.fontSize)
+          if (px < 16) {
+            found.push({ label: el.getAttribute('placeholder') ?? el.getAttribute('aria-label') ?? type, px })
+          }
+        }
+        return found
+      })
+
+    for (const screen of ['Timer', 'Calendar', 'Reports', 'Projects', 'Manage', 'Settings']) {
+      if (screen !== 'Timer') await goTo(page, screen)
+      const found = await tooSmall()
+      expect(found, `${screen} has fields under 16px: ${JSON.stringify(found)}`).toEqual([])
+    }
+  })
+
   test('primary controls are large enough to tap', async ({ page }) => {
     await openFreshSandbox(page)
 

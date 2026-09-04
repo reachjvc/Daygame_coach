@@ -28,6 +28,7 @@ export default function LoginPageClient() {
   const [email, setEmail] = useState(searchParamsInit.get("email") ?? "")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [unconfirmed, setUnconfirmed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const searchParams = searchParamsInit
@@ -51,7 +52,17 @@ export default function LoginPageClient() {
         : "/redirect"
       router.push(redirectUrl)
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      // Supabase answers an unconfirmed account with the bare words "Email not
+      // confirmed" (verified 2026-09-04, error_code email_not_confirmed). True,
+      // and useless: it does not mention the inbox, the spam folder, or that
+      // the email can be sent again. Send them where the resend button is.
+      const message = error instanceof Error ? error.message : "An error occurred"
+      if (/email\s*not\s*confirmed/i.test(message)) {
+        setUnconfirmed(true)
+        setError(null)
+      } else {
+        setError(message)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -96,6 +107,7 @@ export default function LoginPageClient() {
                       type="email"
                       placeholder="m@example.com"
                       required
+                      autoComplete="username"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       data-testid="login-email-input"
@@ -116,11 +128,30 @@ export default function LoginPageClient() {
                       id="password"
                       type="password"
                       required
+                      autoComplete="current-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       data-testid="login-password-input"
                     />
                   </div>
+                  {unconfirmed && (
+                    <div
+                      className="rounded-md bg-muted p-3 text-sm"
+                      data-testid="login-unconfirmed"
+                    >
+                      <p className="mb-3 leading-relaxed">
+                        This email hasn&apos;t been confirmed yet. Check your inbox
+                        — and your spam folder — for the link we sent.
+                      </p>
+                      <Link
+                        href={`/auth/sign-up-success?email=${encodeURIComponent(email)}`}
+                        className="underline underline-offset-4 font-medium"
+                        data-testid="login-unconfirmed-resend-link"
+                      >
+                        Send the email again
+                      </Link>
+                    </div>
+                  )}
                   {error && (
                     <p className="text-sm text-red-500" data-testid="login-error-message">
                       {error}

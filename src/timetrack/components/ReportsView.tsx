@@ -11,6 +11,7 @@ import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { newId } from "../idService"
 import {
   CHART_METRICS,
   DATE_PRESETS,
@@ -154,10 +155,9 @@ export function ReportsView({
             setState((current) => ({
               ...current,
               savedReports: [
-                { id: current.nextId, name, config, at: new Date().toISOString() },
+                { id: newId(), name, config, at: new Date().toISOString() },
                 ...current.savedReports,
               ],
-              nextId: current.nextId + 1,
             }))
             pushToast(`Saved report “${name}”`)
           }}
