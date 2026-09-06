@@ -170,6 +170,48 @@ non-subscriber. Fixed: one three-state `DashboardViewer` value, so the two
 cannot share a branch again. Verified live — the same account now reads
 *"You're all set up"* at **Level 7**, with a **See plans** button.
 
+
+## Bot protection — four options, all rejected, 2026-09-06
+
+Four advocates and four independent skeptics assessed this against the repo. Every
+option came back negative:
+
+| Option | Verdict |
+|---|---|
+| Cloudflare Turnstile captcha | **wrong for this situation** |
+| hCaptcha captcha | **wrong for this situation** |
+| Close signup, invite the 20 directly | viable *later* |
+| No protection at all | **wrong for this situation** |
+
+**Why the captcha is the wrong tool here.** The catastrophic outcome is not "a bot
+signed up". It is that a *personal* Gmail sits in the mail path, and that address is
+the recovery address for Vercel, GitHub and Supabase. A captcha lowers the
+probability of that path being hit and does nothing to the consequence.
+
+It is also expensive here in a way that is easy to miss:
+
+- Six e2e files log in for real, not two, and roughly 25 Playwright projects depend
+  on the `setup` project and cascade.
+- `.github/workflows/e2e.yml` runs those projects against the **live** Supabase
+  project on every push and PR to `main` and `beta`. Turning on a project-wide
+  captcha turns CI red until every one is rewritten.
+- There is no `supabase/config.toml` and no local stack — localhost, Vercel previews,
+  production and CI all point at one hosted project, and the captcha switch is
+  project-wide. **The first real test of the widget would be production, with the
+  20 testers on it.**
+
+**Why invite-only is only viable later.** Supabase invite links use the implicit
+flow (`#access_token`), but `createBrowserClient` from `@supabase/ssr` is hardcoded
+to PKCE, so an invite landing page hits `AuthPKCEGrantCodeExchangeError` — the exact
+class of bug that defeated three attempts at `/auth/confirm`. It would also break
+ten e2e tests and close signup on the owner's own laptop, since dev shares the
+hosted project.
+
+**What actually removes the risk:** get the personal Gmail out of the mail path.
+Resend needs a verified domain to send to arbitrary addresses, so this is blocked on
+buying one — which also fixes the delivery delay and the last spam point. The domain
+is the highest-value purchase available, and this is the strongest reason for it.
+
 ## What is NOT proven
 
 - **No password manager has been observed saving a password.** The attributes
