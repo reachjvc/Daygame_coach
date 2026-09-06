@@ -108,41 +108,15 @@ test.describe('Error Handling: Authentication Errors', () => {
     expect(page.url()).toContain('/auth/login')
   })
 
-  test('signup with existing email shows error', async ({ page }) => {
-    // Arrange: Navigate to signup page
-    await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
-
-    // Wait for form to load
-    await page.waitForSelector(`[data-testid="${SELECTORS.signup.form}"]`, { timeout: AUTH_TIMEOUT })
-
-    // Stub the duplicate-email response instead of really signing up.
-    //
-    // This used to submit for real, on the assumption the address "likely
-    // already exists". It did not, the first time: the run created a live
-    // account on the production project, left it there, and bounced a
-    // confirmation email at example.com. Every later run then passed because
-    // of the mess the first one made -- a test that manufactures its own
-    // precondition proves nothing. Found one such account sitting in the user
-    // list on 2026-09-03.
-    await page.route('**/auth/v1/signup**', (route) =>
-      route.fulfill({
-        status: 422,
-        contentType: 'application/json',
-        body: JSON.stringify({ code: 'user_already_exists', message: 'User already registered' }),
-      })
-    )
-
-    // Act: Enter an email the server will report as taken
-    await page.getByTestId(SELECTORS.signup.fullNameInput).fill('Test User')
-    await page.getByTestId(SELECTORS.signup.emailInput).fill('test@example.com')
-    await page.getByTestId(SELECTORS.signup.passwordInput).fill('TestPassword123!')
-    await page.getByTestId(SELECTORS.signup.repeatPasswordInput).fill('TestPassword123!')
-    await page.getByTestId(SELECTORS.signup.submitButton).click()
-
-    // Assert: the page surfaces the server's reason rather than hanging
-    await expect(page.getByTestId(SELECTORS.signup.errorMessage)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.signup.errorMessage)).toContainText(/already registered/i, { timeout: AUTH_TIMEOUT })
-  })
+  // 'signup with existing email shows error' lived here and was deleted on
+  // 2026-09-05. It asserted the raw "already registered" text in
+  // signup-error-message, which is no longer what the page does: since
+  // e6480379 that case renders the signup-existing-account block with links to
+  // log in or reset, and deliberately clears the error. The behaviour is
+  // covered in full by
+  // tests/e2e/signup-flow.spec.ts > 'offers a way forward when the email
+  // already has an account', which also checks the address carries over to the
+  // login page. Keeping a second, weaker copy here is how the two drift.
 
   test('signup with mismatched passwords shows error', async ({ page }) => {
     // Arrange: Navigate to signup page
