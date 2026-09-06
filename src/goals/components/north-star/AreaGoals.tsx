@@ -14,9 +14,9 @@
  */
 
 import { useState, type ClipboardEvent } from "react"
+import { GOAL_SHAPES } from "@/src/goals/data/goalShapes"
 import { Plus } from "lucide-react"
 import type { NsArea, NsPlan, VisionGoalType } from "@/src/goals/types"
-import { NS_GOAL_TYPES } from "@/src/goals/data/northStar"
 import { areaGoalsByPriority, goalRank, subGoalsOf } from "@/src/goals/northStarService"
 import { GoalCard, type GoalHandlers } from "./GoalCard"
 
@@ -91,7 +91,7 @@ export function AreaGoals({ area, plan, today, openId, onOpen, handlers, onAddGo
 
       <div className="flex items-center gap-2 rounded-xl border border-dashed border-white/10 px-3 py-2">
         <span className="flex rounded-md border border-white/10 overflow-hidden shrink-0 text-[11px]">
-          {NS_GOAL_TYPES.map((m) => (
+          {GOAL_SHAPES.map((m) => (
             <button
               key={m.type}
               onClick={() => setType(m.type)}

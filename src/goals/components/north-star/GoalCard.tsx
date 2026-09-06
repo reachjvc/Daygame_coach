@@ -15,6 +15,7 @@
  */
 
 import { useState } from "react"
+import { GOAL_SHAPES } from "@/src/goals/data/goalShapes"
 import { Check, ChevronDown, Minus, Plus, RotateCcw, X } from "lucide-react"
 import type { HabitRampStep, MilestoneLadderConfig, NsArea, NsGoal, NsPlan, VisionGoalType } from "@/src/goals/types"
 import {
@@ -23,7 +24,6 @@ import {
   GOAL_IN_ROUTINE,
   GOAL_METRIC_COPY,
   MILESTONE_COPY,
-  NS_GOAL_TYPES,
   NS_PAIN_WHY_QUESTION,
   NS_QUALIFY_THRESHOLD,
   NS_VALUE_SUGGESTIONS,
@@ -376,7 +376,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
             >
               {isFocus ? SEASON_FOCUS_COPY.picked : SEASON_FOCUS_COPY.pick}
             </button>
-            <span className="text-[10.5px] text-zinc-600 basis-full">{NS_GOAL_TYPES.find((t) => t.type === goal.type)?.hint}</span>
+            <span className="text-[10.5px] text-zinc-600 basis-full">{GOAL_SHAPES.find((t) => t.type === goal.type)?.hint}</span>
           </div>
 
           {/* The date, as the four dates people actually pick. The calendar in
@@ -678,7 +678,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
 function TypeToggle({ type, onSetType }: { type: VisionGoalType; onSetType: (t: VisionGoalType) => void }) {
   return (
     <span className="flex rounded-md border border-white/10 overflow-hidden shrink-0 text-[11px]">
-      {NS_GOAL_TYPES.map((m) => (
+      {GOAL_SHAPES.map((m) => (
         <button
           key={m.type}
           onClick={() => onSetType(m.type)}

@@ -15,6 +15,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect, useRef, type ReactNode } from "react"
+import { GOAL_SHAPES } from "@/src/goals/data/goalShapes"
 import {
   buildTaxonomyItems,
   taxonomyVersion,
@@ -1390,11 +1391,10 @@ function VisionRoomWheel({ rooms, ratings, beats, scopes, focusIds, activeId, on
 
 /** v17. The three shapes a goal can take, in one place so the row, the card
  * and the suggestion tray all speak the same language. */
-const GOAL_TYPE_META: Array<{ type: VisionGoalType; icon: string; label: string; hint: string }> = [
-  { type: "milestone_ladder", icon: "🎯", label: "Target", hint: "A number you climb to by a date. 100 kg, 10k a month" },
-  { type: "habit_ramp", icon: "🔁", label: "Practice", hint: "An ongoing weekly practice. You never 'finish' it" },
-  { type: "achievement", icon: "🏁", label: "Finish line", hint: "You either did it or you didn't. A first muscle-up, a licence" },
-]
+/* The third copy of the three shapes lived here, with the same labels and icons
+   and slightly different hints — "10k a month" against "ten thousand a month" —
+   which is how one vocabulary becomes two dialects. It reads `GOAL_SHAPES` now,
+   so the wording is decided once. */
 
 /** v17. The one-tap flip between all three shapes. Lives in BOTH the compact
  * row and the full card: a goal typed wrong at birth was previously frozen
@@ -1406,7 +1406,7 @@ function GoalTypeToggle({ type, onSetType, size = "sm" }: {
 }) {
   return (
     <span className={`flex rounded-md border border-white/10 overflow-hidden shrink-0 ${size === "md" ? "text-xs" : "text-[10px]"}`}>
-      {GOAL_TYPE_META.map((m) => (
+      {GOAL_SHAPES.map((m) => (
         <button
           key={m.type}
           onClick={() => onSetType(m.type)}

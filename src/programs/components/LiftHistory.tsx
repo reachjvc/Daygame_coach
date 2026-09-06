@@ -16,7 +16,8 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { liftsWithHistory } from "@/src/health/healthService"
+import { liftsWithHistory, workoutsToCsv } from "@/src/health/healthService"
+import type { WorkoutLogWithSets } from "@/src/health/types"
 import { formatLoad } from "../programsService"
 import { Sparkline } from "./Sparkline"
 import type { LoadPoint } from "../types"
@@ -33,6 +34,8 @@ const SHOWN = 8
 
 export function LiftHistory() {
   const [lifts, setLifts] = useState<{ exercise: string; points: LoadPoint[] }[] | null>(null)
+  /** Kept so the export writes exactly what is on screen, with no second fetch. */
+  const [logs, setLogs] = useState<WorkoutLogWithSets[]>([])
 
   useEffect(() => {
     let alive = true
@@ -45,6 +48,7 @@ export function LiftHistory() {
         const flat = logs.flatMap((log) =>
           ((log.sets ?? []) as Record<string, unknown>[]).map((s) => ({ ...s, logged_at: log.logged_at }))
         )
+        setLogs(logs as WorkoutLogWithSets[])
         setLifts(liftsWithHistory(flat as never))
       })
       .catch(() => alive && setLifts([]))
@@ -58,7 +62,28 @@ export function LiftHistory() {
 
   return (
     <div className="space-y-2" data-testid="lift-history">
-      <h2 className="text-sm font-semibold">Your lifts over time</h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold">Your lifts over time</h2>
+        {/* THE FILE YOU HOLD. "I lost years of data" is one of the loudest
+            complaints about training apps, and a backup promise is not the
+            answer people want. Built from what is already loaded. */}
+        <button
+          type="button"
+          data-testid="export-csv"
+          onClick={() => {
+            const blob = new Blob([workoutsToCsv(logs)], { type: "text/csv;charset=utf-8" })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = `training-${new Date().toISOString().slice(0, 10)}.csv`
+            a.click()
+            URL.revokeObjectURL(url)
+          }}
+          className="shrink-0 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent"
+        >
+          Export CSV
+        </button>
+      </div>
       <p className="text-xs text-muted-foreground">
         Every program and every loose workout together — this does not reset when you change program.
       </p>

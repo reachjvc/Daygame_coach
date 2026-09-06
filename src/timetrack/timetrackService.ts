@@ -95,6 +95,44 @@ export function runningEntry(state: TimetrackState): TimeEntry | null {
   return state.entries.find((e) => isRunning(e) && !e.serverDeletedAt) ?? null
 }
 
+/**
+ * At most one timer may be running. Put that right if two ever arrive.
+ *
+ * You cannot work on two things at once, and the app only ever shows one:
+ * `runningEntry` returns the first it finds. So a second running entry is not a
+ * feature, it is an invisible one — still counting, on a clock nobody can see,
+ * for as long as it takes somebody to notice their week has too many hours in it.
+ *
+ * It happens for a real reason. Two devices with no signal each start a timer;
+ * when they meet, both are running. The reconciliation is the one that would
+ * have happened had they been online: starting a timer stops the one before it,
+ * so the newer start wins and the older is stopped at that moment.
+ *
+ * Returns what it did, so the app can say so rather than fixing it behind the
+ * user's back.
+ */
+export function reconcileRunningEntries(
+  state: TimetrackState,
+): { state: TimetrackState; stopped: TimeEntry[] } {
+  const running = state.entries.filter((e) => isRunning(e) && !e.serverDeletedAt)
+  if (running.length < 2) return { state, stopped: [] }
+
+  const newest = running.reduce((latest, entry) => (entry.start > latest.start ? entry : latest))
+  const stopped: TimeEntry[] = []
+
+  const entries = state.entries.map((entry) => {
+    if (entry.id === newest.id || !isRunning(entry) || entry.serverDeletedAt) return entry
+    // stopped where the newer one began: the moment attention moved
+    const stop = newest.start
+    const seconds = Math.max(0, Math.round((new Date(stop).getTime() - new Date(entry.start).getTime()) / 1000))
+    const closed = { ...entry, stop, duration: seconds }
+    stopped.push(closed)
+    return closed
+  })
+
+  return { state: { ...state, entries }, stopped }
+}
+
 export function liveEntries(state: TimetrackState): TimeEntry[] {
   return state.entries.filter((e) => !e.serverDeletedAt)
 }

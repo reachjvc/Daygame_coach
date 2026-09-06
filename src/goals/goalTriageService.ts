@@ -19,6 +19,7 @@
 
 import type { UserGoalRow } from "@/src/db/goalTypes"
 import { shapeOfRow } from "@/src/goals/data/goalShapes"
+import { isTrackableGoal } from "@/src/tracking/metricsService"
 import type { VisionGoalType } from "@/src/goals/types"
 
 export const TRIAGE_PROBLEMS = ["counter_of_one", "no_area", "practice_without_rate"] as const
@@ -91,8 +92,23 @@ const PROBLEMS: Record<
 export function triage(goals: UserGoalRow[]): TriageRow[] {
   const out: TriageRow[] = []
   for (const goal of goals) {
-    // Archived goals are not on anybody's screen and not worth a decision.
-    if (goal.is_archived) continue
+    /**
+     * ONLY GOALS YOU LOG AGAINST. Containers are not miscategorised.
+     *
+     * FOUND ON REAL DATA, AND IT WAS 100% WRONG BEFORE THIS LINE. Run against
+     * the test account's 82 goals, `counter_of_one` flagged 21 — and every
+     * single one was a CONTAINER: "Get a girlfriend", "Approach Legend", the
+     * L1/L2 roll-ups whose progress comes from the goals underneath them.
+     * `target_value: 1` is correct for those, and accepting the suggested fix
+     * would have turned a roll-up into a tick-box and broken it.
+     *
+     * `isTrackableGoal` is the line the rest of the app already draws for
+     * exactly this — a tile built on a container reads 0 forever — so it is
+     * imported rather than restated. It also covers archived and inactive
+     * goals, which is why the explicit `is_archived` check that used to be
+     * here is gone.
+     */
+    if (!isTrackableGoal(goal)) continue
     for (const problem of TRIAGE_PROBLEMS) {
       const rule = PROBLEMS[problem]
       if (!rule.detect(goal)) continue

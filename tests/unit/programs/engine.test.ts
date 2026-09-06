@@ -18,6 +18,11 @@ import {
   daysSinceLastSession,
   LAYOFF_DAYS,
   staleLifts,
+  lastTimePerLift,
+  unknownExerciseIds,
+  platesFor,
+  replayEnrollment,
+  describePlates,
 } from "@/src/programs/programsService"
 import { strongLifts5x5 } from "@/src/programs/data/strength/stronglifts5x5"
 import { wendler531 } from "@/src/programs/data/strength/wendler531"
@@ -27,11 +32,14 @@ import { recommendedRoutine } from "@/src/programs/data/calisthenics/recommended
 import { splitsMobility } from "@/src/programs/data/flexibility/splitsMobility"
 import { startingStrength } from "@/src/programs/data/strength/startingStrength"
 import { phul } from "@/src/programs/data/bodybuilding/phul"
+import { upperLower } from "@/src/programs/data/bodybuilding/upperLower"
 import { fiveKToTenK } from "@/src/programs/data/cardio/fiveKToTenK"
 import { sprintTriathlon, halfIronman } from "@/src/programs/data/endurance/triathlon"
 import { ALL_PROGRAMS } from "@/src/programs/data/catalog"
 import { resolveProgramForLevel } from "@/src/programs/data/catalog"
+import { scheduleDays } from "@/src/programs/customize"
 import type {
+  LevelId,
   PrescribedExercise,
   PrescribedSet,
   ProgramDefinition,
@@ -798,5 +806,275 @@ describe("staleLifts", () => {
 
   test("a lift never logged is absent rather than infinitely stale", () => {
     expect(staleLifts([], name, new Date(2026, 5, 1))).toEqual([])
+  })
+})
+
+/**
+ * CHANGING THE LEVEL MUST NOT THROW AWAY THE WEEK YOU BUILT.
+ *
+ * The Templates tab reset the whole schedule on every level change, replacing
+ * whatever you had edited with a fresh clone of the stock program. Somebody
+ * would swap a lift, drop a day, then nudge the level control sitting directly
+ * above it — and start a program they had not designed, with no warning.
+ *
+ * The reset is only ever justified when the level routes to a STRUCTURALLY
+ * DIFFERENT program, because edits made against one schedule mean nothing
+ * against another. This pins how rare that is: exactly one level of one program
+ * in the whole catalogue. Everywhere else the reset was pure destruction.
+ */
+describe("a level change only invalidates edits when the program itself changes", () => {
+  const LEVELS: LevelId[] = ["beginner", "intermediate", "advanced"]
+
+  test("only 5/3/1 at beginner routes somewhere else", () => {
+    const reroutes: string[] = []
+    for (const program of ALL_PROGRAMS) {
+      for (const level of LEVELS) {
+        if (!program.levels.some((l) => l.id === level)) continue
+        if (resolveProgramForLevel(program.id, level).program.id !== program.id) {
+          reroutes.push(`${program.id}@${level}`)
+        }
+      }
+    }
+    expect(reroutes).toEqual(["wendler-531@beginner"])
+  })
+
+  test("every other program keeps one identity across all its levels, so an edit stays valid", () => {
+    for (const program of ALL_PROGRAMS) {
+      if (program.id === "wendler-531") continue
+      const ids = program.levels.map((l) => resolveProgramForLevel(program.id, l.id).program.id)
+      expect(new Set(ids).size, `${program.id} changes program between levels`).toBe(1)
+    }
+  })
+})
+
+/**
+ * WHAT ACTUALLY HAPPENED, not what was asked for.
+ *
+ * The session screen rendered exactly the prescribed number of set rows and
+ * offered no way to change it, so stopping at three of five — or pushing a
+ * sixth — could not be written down. The app recorded five as prescribed and
+ * progressed off a set nobody lifted.
+ */
+describe("lastTimePerLift", () => {
+  const s = (at: string, id: string, sets: [number, number][]) => ({
+    logged_at: new Date(at).toISOString(),
+    entries: [{ exerciseId: id, sets: sets.map(([reps, weight], i) => ({ setNumber: i + 1, reps, weight })) }],
+  })
+
+  test("collapses a uniform session the way somebody would say it", () => {
+    const out = lastTimePerLift([s("2026-03-01", "squat", [[5, 60], [5, 60], [5, 60]])], "kg")
+    expect(out.squat).toContain("3 × 5 @ 60 kg")
+  })
+
+  test("does not flatten sets that differ — that would be a lie", () => {
+    const out = lastTimePerLift([s("2026-03-01", "squat", [[5, 60], [3, 70]])], "kg")
+    expect(out.squat).toContain("60×5, 70×3")
+  })
+
+  test("means the last time you did THAT LIFT, not the last session", () => {
+    // Alternating programs: the most recent session was the other day.
+    const logs = [
+      s("2026-03-01", "bench", [[5, 50], [5, 50]]),
+      s("2026-03-03", "squat", [[5, 80], [5, 80]]),
+    ]
+    const out = lastTimePerLift(logs, "kg")
+    expect(out.bench).toContain("50 kg")
+    expect(out.squat).toContain("80 kg")
+  })
+
+  test("takes the newest, whatever order the logs arrive in", () => {
+    const logs = [s("2026-01-01", "squat", [[5, 40]]), s("2026-06-01", "squat", [[5, 90]])]
+    expect(lastTimePerLift(logs, "kg").squat).toContain("90 kg")
+  })
+
+  test("a lift never done has no last time rather than a made-up one", () => {
+    expect(lastTimePerLift([], "kg")).toEqual({})
+  })
+})
+
+/**
+ * A SESSION MAY ONLY NAME LIFTS THE PROGRAM HAS.
+ *
+ * A log referencing `bench` against a program whose lift is `ul_bench` was
+ * accepted, stored and returned 200. Nothing downstream can recover: the engine
+ * has no state to progress for an id it has never seen, and every screen that
+ * turns an id back into a name prints the raw id for ever.
+ */
+describe("unknownExerciseIds", () => {
+  test("rejects an id the program does not have, and names it", () => {
+    expect(unknownExerciseIds(upperLower, [{ exerciseId: "bench" }])).toEqual(["bench"])
+  })
+
+  test("accepts the program's real ids", () => {
+    expect(unknownExerciseIds(upperLower, [{ exerciseId: "ul_bench" }, { exerciseId: "ul_row" }])).toEqual([])
+  })
+
+  test("reports every bad id once, not the first and not duplicates", () => {
+    const out = unknownExerciseIds(upperLower, [
+      { exerciseId: "bench" }, { exerciseId: "row" }, { exerciseId: "bench" }, { exerciseId: "ul_squat" },
+    ])
+    expect(out.sort()).toEqual(["bench", "row"])
+  })
+
+  test("an endurance session has no entries at all, which is valid", () => {
+    // Couch to 5K logs a session with an empty entry list by design.
+    expect(unknownExerciseIds(couchTo5k, [])).toEqual([])
+  })
+
+  test("every days-and-lifts program accepts its own lifts", () => {
+    // The check must never reject a legitimate session for any program.
+    for (const program of ALL_PROGRAMS) {
+      if (program.schedule.kind === "endurance_weeks") continue // weeks, not days
+      const ids = scheduleDays(program.schedule).flatMap((d) => d.exercises.map((e) => ({ exerciseId: e.id })))
+      expect(unknownExerciseIds(program, ids), program.id).toEqual([])
+    }
+  })
+
+  test("an endurance plan has no lifts, so an entry sent against one is unknown", () => {
+    // Answering rather than crashing: `scheduleDays` throws on these by design.
+    expect(unknownExerciseIds(couchTo5k, [{ exerciseId: "squat" }])).toEqual(["squat"])
+  })
+})
+
+/**
+ * WHAT DO I PUT ON THE BAR.
+ *
+ * Arithmetic somebody does in their head between sets, gets wrong, and then
+ * lifts the wrong weight. Its absence is a standing complaint about every app
+ * that lacks it.
+ */
+describe("platesFor", () => {
+  test("an exact load, heaviest plate first", () => {
+    // 100 kg = 20 bar + 40 a side = 25 + 15
+    const load = platesFor(100, "kg")
+    expect(load.perSide).toEqual([25, 15])
+    expect(load.approximate).toBe(false)
+    expect(load.achievable).toBe(100)
+  })
+
+  test("says so when the plates cannot make the number", () => {
+    // A silently rounded answer has somebody lift a weight their screen does not
+    // show. 101 kg is not loadable with 1.25 as the smallest plate.
+    const load = platesFor(101, "kg")
+    expect(load.approximate).toBe(true)
+    expect(load.achievable).toBeLessThan(101)
+    expect(describePlates(load, "kg")).toContain("makes")
+  })
+
+  test("the bar alone is an answer, not an empty list", () => {
+    expect(platesFor(20, "kg").barOnly).toBe(true)
+    expect(describePlates(platesFor(20, "kg"), "kg")).toBe("just the bar")
+  })
+
+  test("a target under the bar is the bar, and is flagged as not exact", () => {
+    const load = platesFor(15, "kg")
+    expect(load.barOnly).toBe(true)
+    expect(load.achievable).toBe(20)
+    expect(load.approximate).toBe(true)
+  })
+
+  test("pounds use the pound bar and pound plates", () => {
+    // 135 lb = 45 bar + 45 a side
+    expect(platesFor(135, "lb").perSide).toEqual([45])
+  })
+
+  test("the smallest plate is not lost to floating point", () => {
+    // (62.5 - 20) / 2 = 21.25, which is not exact in binary. A strict >=
+    // comparison drops the final 1.25 and silently under-loads the bar.
+    const load = platesFor(62.5, "kg")
+    expect(load.approximate).toBe(false)
+    expect(load.perSide.reduce((t, p) => t + p, 0)).toBeCloseTo(21.25, 6)
+  })
+
+  test("repeated plates are counted rather than listed one by one", () => {
+    // 20 + 4×20 a side reads as "4×20", not "20 + 20 + 20 + 20".
+    expect(describePlates(platesFor(180, "kg"), "kg")).toMatch(/\d×\d/)
+  })
+
+  test("every weight the engine can prescribe is loadable or says it is not", () => {
+    // The engine rounds to a loadable value, so nothing it prescribes should
+    // come back approximate. This is the two functions agreeing.
+    for (let w = 20; w <= 300; w += 2.5) {
+      expect(platesFor(w, "kg").approximate, `${w} kg`).toBe(false)
+    }
+  })
+})
+
+/**
+ * FIXING A MISTAKE HAS TO FIX WHAT COMES NEXT.
+ *
+ * A session's log advanced `exercise_state`, and the state it advanced FROM is
+ * not stored — so a single log cannot be reversed; there is nothing to subtract.
+ * Replaying every session over a fresh seed is the way out, and it works only
+ * because the engine is pure.
+ */
+describe("replayEnrollment", () => {
+  const seed = () => {
+    const { exerciseState, cursor } = seedEnrollment(strongLifts5x5, "beginner", "kg")
+    const e: ProgramEnrollment = {
+      id: "x", user_id: "u", program_id: strongLifts5x5.id, level: "beginner", unitSystem: "kg",
+      exerciseState, cursor, is_active: true, started_at: "2026-01-01", customSchedule: null,
+    }
+    return e
+  }
+  const session = (at: string, dayId: string, reps: number) => ({
+    logged_at: at, dayId, cycle: 1, week: 1,
+    entries: scheduleDays(strongLifts5x5.schedule)
+      .find((d) => d.id === dayId)!
+      .exercises.map((ex) => ({
+        exerciseId: ex.id,
+        sets: [1, 2, 3, 4, 5].map((n) => ({ setNumber: n, reps, weight: 20 })),
+      })),
+  })
+
+  test("replaying the same sessions reproduces the state they produced", () => {
+    // The baseline: replay must be a no-op when nothing was edited.
+    const start = seed()
+    const logs = [session("2026-01-01", "A", 5), session("2026-01-03", "B", 5), session("2026-01-05", "A", 5)]
+    let live = start
+    for (const l of logs) {
+      live = applyLog(strongLifts5x5, live, { enrollment_id: "x", ...l }).enrollment
+    }
+    const replayed = replayEnrollment(strongLifts5x5, start, logs)
+    expect(replayed.exerciseState).toEqual(live.exerciseState)
+    expect(replayed.cursor).toEqual(live.cursor)
+  })
+
+  test("correcting an old session gives the state that session would have produced", () => {
+    // THIS EQUALITY IS THE WHOLE FEATURE. Editing session one to a failure must
+    // leave the weights exactly where they would have been had it been logged
+    // as a failure in the first place.
+    const start = seed()
+    const asLogged = [session("2026-01-01", "A", 5), session("2026-01-03", "B", 5)]
+    const corrected = [session("2026-01-01", "A", 2), session("2026-01-03", "B", 5)]
+
+    const afterEdit = replayEnrollment(strongLifts5x5, start, corrected)
+    const asIfOriginal = replayEnrollment(strongLifts5x5, start, corrected)
+    expect(afterEdit.exerciseState).toEqual(asIfOriginal.exerciseState)
+    // And it genuinely differs from the uncorrected history, or the edit did nothing.
+    expect(afterEdit.exerciseState).not.toEqual(replayEnrollment(strongLifts5x5, start, asLogged).exerciseState)
+  })
+
+  test("deleting a session rewinds the count", () => {
+    const start = seed()
+    const three = [session("2026-01-01", "A", 5), session("2026-01-03", "B", 5), session("2026-01-05", "A", 5)]
+    const two = three.slice(0, 2)
+    expect(replayEnrollment(strongLifts5x5, start, three).cursor.sessionCount).toBe(3)
+    expect(replayEnrollment(strongLifts5x5, start, two).cursor.sessionCount).toBe(2)
+  })
+
+  test("logs out of order replay in the order they happened", () => {
+    const start = seed()
+    const inOrder = [session("2026-01-01", "A", 5), session("2026-01-03", "B", 5)]
+    const shuffled = [inOrder[1], inOrder[0]]
+    expect(replayEnrollment(strongLifts5x5, start, shuffled).exerciseState)
+      .toEqual(replayEnrollment(strongLifts5x5, start, inOrder).exerciseState)
+  })
+
+  test("no sessions replays back to the seed", () => {
+    const start = seed()
+    const replayed = replayEnrollment(strongLifts5x5, start, [])
+    expect(replayed.exerciseState).toEqual(start.exerciseState)
+    expect(replayed.cursor.sessionCount).toBe(0)
   })
 })

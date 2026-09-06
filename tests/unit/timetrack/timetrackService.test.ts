@@ -30,6 +30,7 @@ import {
   toggleFavorite,
   validateEntry,
   weekTotalSeconds,
+  reconcileRunningEntries,
 } from "@/src/timetrack/timetrackService"
 import type { EntryDraft } from "@/src/timetrack/types"
 
@@ -404,5 +405,64 @@ describe("forgotten timer", () => {
 
   test("stays quiet when nothing is running", () => {
     expect(forgottenTimer(baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00")] }), nowSec)).toBeNull()
+  })
+})
+
+describe("only one timer may be running", () => {
+  /**
+   * Two devices with no signal each start a timer. When they meet, both are
+   * running — and the app only ever shows one, so the other keeps counting on a
+   * clock nobody can see. The reconciliation is the one that would have happened
+   * online: starting a timer stops the one before it.
+   */
+  const runningFrom = (id: string, startHm: string) => ({
+    ...entry(id, "2026-09-05", startHm, "23:59"),
+    stop: null,
+    duration: -Math.floor(new Date(`2026-09-05T${startHm}:00`).getTime() / 1000),
+    start: new Date(2026, 8, 5, Number(startHm.slice(0, 2)), Number(startHm.slice(3))).toISOString(),
+  })
+
+  test("one running timer is left alone", () => {
+    const state = baseState({ entries: [runningFrom("a", "09:00")] })
+    const result = reconcileRunningEntries(state)
+    expect(result.stopped).toEqual([])
+    expect(result.state).toBe(state)
+  })
+
+  test("the newer start wins, and the older is stopped where it began", () => {
+    const state = baseState({ entries: [runningFrom("laptop", "09:00"), runningFrom("phone", "11:00")] })
+    const { state: fixed, stopped } = reconcileRunningEntries(state)
+
+    expect(stopped.map((e) => e.id)).toEqual(["laptop"])
+    const laptop = fixed.entries.find((e) => e.id === "laptop")!
+    const phone = fixed.entries.find((e) => e.id === "phone")!
+    expect(phone.stop).toBeNull()
+    expect(laptop.stop).toBe(phone.start)
+    // 09:00 to 11:00 is two hours, not a negative number and not the whole day
+    expect(laptop.duration).toBe(2 * 3600)
+  })
+
+  test("three at once still leaves exactly one running", () => {
+    const state = baseState({
+      entries: [runningFrom("a", "08:00"), runningFrom("b", "09:00"), runningFrom("c", "10:00")],
+    })
+    const { state: fixed, stopped } = reconcileRunningEntries(state)
+    expect(stopped).toHaveLength(2)
+    expect(fixed.entries.filter((e) => e.stop === null)).toHaveLength(1)
+  })
+
+  test("no hour is counted twice", () => {
+    const state = baseState({ entries: [runningFrom("laptop", "09:00"), runningFrom("phone", "11:00")] })
+    const { state: fixed } = reconcileRunningEntries(state)
+    const laptop = fixed.entries.find((e) => e.id === "laptop")!
+    const phone = fixed.entries.find((e) => e.id === "phone")!
+    expect(new Date(laptop.stop!).getTime()).toBeLessThanOrEqual(new Date(phone.start).getTime())
+  })
+
+  test("a deleted running entry is not counted as a second timer", () => {
+    const state = baseState({
+      entries: [runningFrom("a", "09:00"), { ...runningFrom("ghost", "11:00"), serverDeletedAt: "2026-09-05T12:00:00.000Z" }],
+    })
+    expect(reconcileRunningEntries(state).stopped).toEqual([])
   })
 })

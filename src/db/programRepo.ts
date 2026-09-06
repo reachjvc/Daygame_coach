@@ -15,6 +15,8 @@ import {
   computePrescription,
   seedEnrollment,
   toKg,
+  unknownExerciseIds,
+  replayEnrollment,
 } from "@/src/programs/programsService"
 import { requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
 import {
@@ -28,6 +30,7 @@ import { isoWeekday } from "@/src/programs/config"
 import { BRIDGE_SESSION_TYPE, BRIDGE_DEFAULT_DURATION_MIN, BRIDGE_DEFAULT_INTENSITY } from "@/src/programs/config"
 import type {
   ApplyLogResult,
+  LoggedExercise,
   LevelId,
   ProgramDefinition,
   ProgramEnrollment,
@@ -190,7 +193,12 @@ export async function enrollInProgram(
     workingWeights?: Record<string, number>
     customSchedule?: ProgramSchedule | null
   }
-): Promise<{ enrollment: ProgramEnrollment; prescription: SessionPrescription }> {
+): Promise<{
+  enrollment: ProgramEnrollment
+  prescription: SessionPrescription
+  /** Programs paused to make room for this one. Reported, never silent. */
+  displaced: ProgramEnrollment[]
+}> {
   const { program: catalogProgram, level } = resolveProgramForLevel(input.programId, input.level)
   // Seed against the schedule the user is actually enrolling in, so a lift they
   // added is seeded and one they removed is not.
@@ -198,11 +206,20 @@ export async function enrollInProgram(
   const { exerciseState, cursor } = seedEnrollment(program, level, input.unitSystem, input.oneRepMaxes, input.workingWeights)
 
   const supabase = await createServerSupabaseClient()
-  // One active per discipline: deactivate other active programs in this discipline.
-  const sameDiscipline = await listActiveEnrollments(userId)
-  for (const e of sameDiscipline) {
+  /**
+   * One active per discipline — but SAY what that costs.
+   *
+   * This quietly archived whatever else was running in the discipline, and the
+   * program it most often took was the one somebody had written themselves: a
+   * self-built program is filed under "strength", so starting StrongLifts
+   * removed it without a word and nothing on any screen mentioned it again.
+   * The rule stays; the silence does not.
+   */
+  const displaced: ProgramEnrollment[] = []
+  for (const e of await listActiveEnrollments(userId)) {
     if (requireProgram(e.program_id).discipline === program.discipline) {
       await supabase.from("program_enrollments").update({ is_active: false }).eq("id", e.id).eq("user_id", userId)
+      displaced.push(e)
     }
   }
 
@@ -223,7 +240,7 @@ export async function enrollInProgram(
   if (error) throw new Error(`Failed to enroll: ${error.message}`)
 
   const enrollment = toDomain(data as ProgramEnrollmentRow)
-  return { enrollment, prescription: computePrescription(program, enrollment) }
+  return { enrollment, prescription: computePrescription(program, enrollment), displaced }
 }
 
 /**
@@ -325,6 +342,58 @@ export async function deleteEnrollmentPermanently(userId: string, id: string): P
   if (!data || data.length === 0) {
     throw new Error("Only a program you have already ended can be deleted permanently")
   }
+}
+
+/**
+ * Pick a finished program back up, exactly where it was left.
+ *
+ * THE PROGRAM SOMEBODY WROTE THEMSELVES WAS THE ONE THIS LOST. A self-built
+ * program has `discipline: "strength"`, and `enrollInProgram` deactivates any
+ * active enrollment in the SAME discipline — so building your own week and later
+ * starting StrongLifts silently archived it. Nothing said so, nothing listed it
+ * unless a different program happened to be open, and nothing could bring it
+ * back. "It still doesn't load the one I custom made a long time ago."
+ *
+ * Restarting keeps `exercise_state` and `cursor` untouched: the weights you had
+ * reached are yours, and the whole point of resuming rather than re-enrolling is
+ * that a year of progression is not thrown away. Re-enrolling from the catalogue
+ * would re-seed from the level's starting weights instead.
+ *
+ * Enforces the same one-active-per-discipline rule as enrolling, because the
+ * rule is about what gets prescribed and not about how the row came to be
+ * active — but it REPORTS what it displaced rather than doing it silently.
+ */
+export async function resumeEnrollment(
+  userId: string,
+  id: string
+): Promise<{ enrollment: ProgramEnrollment; displaced: ProgramEnrollment[] }> {
+  const supabase = await createServerSupabaseClient()
+  const target = await getEnrollmentById(userId, id)
+  if (!target) throw new Error("That program is not on your account")
+  if (target.is_active) throw new Error("That program is already running")
+
+  const discipline = requireProgram(target.program_id).discipline
+  const displaced: ProgramEnrollment[] = []
+  for (const e of await listActiveEnrollments(userId)) {
+    if (requireProgram(e.program_id).discipline !== discipline) continue
+    const { error } = await supabase
+      .from("program_enrollments")
+      .update({ is_active: false })
+      .eq("id", e.id)
+      .eq("user_id", userId)
+    if (error) throw new Error(`Failed to pause ${e.program_id}: ${error.message}`)
+    displaced.push(e)
+  }
+
+  const { data, error } = await supabase
+    .from("program_enrollments")
+    .update({ is_active: true })
+    .eq("id", id)
+    .eq("user_id", userId)
+    .select()
+    .single()
+  if (error) throw new Error(`Failed to restart the program: ${error.message}`)
+  return { enrollment: toDomain(data as ProgramEnrollmentRow), displaced }
 }
 
 /** Reset cursor to the start of the program; keeps current working weights / TMs. */
@@ -469,6 +538,17 @@ export async function logProgramSession(
   const enr = await getEnrollmentById(userId, enrollmentId)
   if (!enr) throw new Error("Enrollment not found")
   const program = programFor(enr)
+
+  // A session naming lifts the program does not have is unrecoverable once
+  // stored: the engine has no state to progress and every screen prints the raw
+  // id for ever. Refuse it at the door, and say which one was wrong.
+  const unknown = unknownExerciseIds(program, logInput.entries ?? [])
+  if (unknown.length > 0) {
+    throw new Error(
+      `${program.name} has no exercise called ${unknown.join(", ")}. Nothing was logged.`
+    )
+  }
+
   const result = applyLog(program, enr, { ...logInput, enrollment_id: enr.id })
 
   // Persist new engine state, the session log, and the workout_logs bridge.
@@ -477,6 +557,75 @@ export async function logProgramSession(
   await bridgeToWorkoutLogs(userId, program, enr.unitSystem, logInput)
 
   return { ...result, next: computePrescription(program, result.enrollment) }
+}
+
+/**
+ * Change or remove a logged session, and recompute everything after it.
+ *
+ * An edit that does not change what comes next is a note, not a correction. The
+ * state a log advanced FROM is not stored, so a single log cannot be reversed —
+ * the only honest way to apply a change is to replay every session over a fresh
+ * seed. `replayEnrollment` can do that because the engine is pure.
+ *
+ * `entries === null` deletes the session. Both paths go through the same replay,
+ * so there is one rule for "what do the weights say now" rather than two.
+ */
+export async function reviseSessionLog(
+  userId: string,
+  enrollmentId: string,
+  logId: string,
+  entries: LoggedExercise[] | null
+): Promise<ProgramEnrollment> {
+  const supabase = await createServerSupabaseClient()
+  const enr = await getEnrollmentById(userId, enrollmentId)
+  if (!enr) throw new Error("Enrollment not found")
+  const program = programFor(enr)
+
+  if (entries !== null) {
+    const unknown = unknownExerciseIds(program, entries)
+    if (unknown.length > 0) {
+      throw new Error(`${program.name} has no exercise called ${unknown.join(", ")}. Nothing was changed.`)
+    }
+    const { error } = await supabase
+      .from("program_session_logs")
+      .update({ entries })
+      .eq("id", logId)
+      .eq("enrollment_id", enrollmentId)
+      .eq("user_id", userId)
+    if (error) throw new Error(`Failed to update the session: ${error.message}`)
+  } else {
+    const { error } = await supabase
+      .from("program_session_logs")
+      .delete()
+      .eq("id", logId)
+      .eq("enrollment_id", enrollmentId)
+      .eq("user_id", userId)
+    if (error) throw new Error(`Failed to delete the session: ${error.message}`)
+  }
+
+  // Re-seed exactly as the enrollment was created, then fold the surviving
+  // sessions over it. Seeding from the CURRENT catalogue on purpose: the
+  // enrollment's own level is what it started from.
+  const { program: catalogProgram, level } = resolveProgramForLevel(enr.program_id, enr.level)
+  const { exerciseState, cursor } = seedEnrollment(
+    effectiveProgram(catalogProgram, enr.customSchedule),
+    level,
+    enr.unitSystem
+  )
+  const logs = await getSessionLogs(userId, enrollmentId)
+  const replayed = replayEnrollment(
+    program,
+    { ...enr, exerciseState, cursor },
+    logs.map((l) => ({
+      entries: l.entries,
+      logged_at: l.logged_at,
+      dayId: l.day_id,
+      cycle: l.cycle,
+      week: l.week,
+    }))
+  )
+  await persistState(userId, replayed)
+  return replayed
 }
 
 async function persistState(userId: string, enrollment: ProgramEnrollment): Promise<void> {

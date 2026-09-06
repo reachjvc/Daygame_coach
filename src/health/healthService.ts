@@ -322,6 +322,47 @@ export function liftsWithHistory(
 }
 
 /**
+ * Every set ever logged, as a spreadsheet.
+ *
+ * "I lost years of data" is one of the loudest complaints about training apps,
+ * and the answer people actually want is not a backup promise — it is a file
+ * they hold. `workout_sets` already spans both program sessions and loose
+ * workouts, so one table is the whole export.
+ *
+ * QUOTING IS THE ONLY HARD PART and it is the part that silently corrupts a
+ * file: an exercise called "Bench Press, close grip" splits into two columns in
+ * every spreadsheet on earth unless it is quoted, and a quote inside a name has
+ * to be doubled. Warm-ups are marked rather than dropped — they are part of what
+ * happened, they are simply not working sets.
+ */
+export function workoutsToCsv(logs: WorkoutLogWithSets[]): string {
+  const header = ["date", "session_type", "duration_min", "exercise", "set", "reps", "weight_kg", "warm_up"]
+  const cell = (v: string | number | boolean): string => {
+    const str = String(v)
+    return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str
+  }
+  const rows: string[] = [header.join(",")]
+
+  for (const log of logs) {
+    const date = localDateKey(new Date(log.logged_at))
+    // A cardio session has no sets and still belongs in the file — leaving it
+    // out would make the export disagree with the session count on screen.
+    if (!log.sets || log.sets.length === 0) {
+      rows.push([date, log.session_type, log.duration_min, "", "", "", "", ""].map(cell).join(","))
+      continue
+    }
+    for (const s of log.sets) {
+      rows.push(
+        [date, log.session_type, log.duration_min, s.exercise, s.set_number, s.reps, s.weight_kg, s.is_warmup]
+          .map(cell)
+          .join(",")
+      )
+    }
+  }
+  return rows.join("\n")
+}
+
+/**
  * The workouts already logged on a given local date.
  *
  * TWO FACTS THAT MUST AGREE, STORED APART. A program session bridges into

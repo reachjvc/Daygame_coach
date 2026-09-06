@@ -11,7 +11,7 @@
  * explicit error — no silent fallback (CLAUDE.md §3 / §15).
  */
 
-import { KG_PER_LB, UNIT_CONFIG } from "./config"
+import { KG_PER_LB, PLATES, UNIT_CONFIG } from "./config"
 import type {
   ApplyLogResult,
   DayTemplate,
@@ -31,6 +31,7 @@ import type {
   SessionPrescription,
   UnitSystem,
 } from "./types"
+import { scheduleDays } from "./customize"
 
 // ============================================================================
 // Units, rounding, 1RM
@@ -937,3 +938,182 @@ export function staleLifts(
 
 /** Long enough away that the weights waiting for you are probably wrong. */
 export const LAYOFF_DAYS = 21
+
+/**
+ * What you did last time, per lift, in the words you would say it in.
+ *
+ * "What did I get last week" is the question somebody is actually answering
+ * when they decide today's numbers, and every other lifting app puts the answer
+ * beside the input. This screen had it nowhere — the data was sitting in the
+ * session logs the whole time.
+ *
+ * Reads the most recent session that CONTAINED the lift, not the most recent
+ * session: on an alternating program the last session was the other day, and
+ * "last time" means the last time you did this lift.
+ */
+export function lastTimePerLift(
+  logs: { entries: LoggedExercise[]; logged_at: string }[],
+  unitLabel: string
+): Record<string, string> {
+  const newestFirst = [...logs].sort((a, b) => b.logged_at.localeCompare(a.logged_at))
+  const out: Record<string, string> = {}
+
+  for (const log of newestFirst) {
+    for (const entry of log.entries ?? []) {
+      if (out[entry.exerciseId] || entry.sets.length === 0) continue
+      const reps = entry.sets.map((s) => s.reps)
+      const weights = entry.sets.map((s) => s.weight)
+      const sameReps = reps.every((r) => r === reps[0])
+      const sameWeight = weights.every((w) => w === weights[0])
+      // Uniform sets collapse; anything else is listed, for the same reason
+      // `describeSets` refuses to flatten a wave — "5 × 5" would be a lie.
+      const body = sameReps && sameWeight
+        ? `${entry.sets.length} × ${reps[0]} @ ${formatLoad(weights[0])} ${unitLabel}`
+        : entry.sets.map((s) => `${formatLoad(s.weight)}×${s.reps}`).join(", ")
+      out[entry.exerciseId] = `${body} · ${new Date(log.logged_at).toLocaleDateString()}`
+    }
+  }
+  return out
+}
+
+/**
+ * Exercise ids in a logged session that the program does not contain.
+ *
+ * A session was accepted, stored and returned 200 while naming lifts that do
+ * not exist in the enrollment's program — `bench` against a program whose lift
+ * is `ul_bench`. Nothing downstream could recover: the engine has no state to
+ * progress for an id it has never seen, and every screen that turns an id back
+ * into a name falls through to printing the raw id for ever.
+ *
+ * Returns the offending ids rather than a boolean, because "unknown exercise"
+ * with no name is a support ticket rather than an error message.
+ *
+ * An ENDURANCE session legitimately has no entries at all, so an empty list is
+ * always valid — this only ever rejects an id that was actually sent.
+ */
+export function unknownExerciseIds(
+  program: ProgramDefinition,
+  entries: { exerciseId: string }[]
+): string[] {
+  if (entries.length === 0) return []
+  const known = new Set<string>()
+  // `scheduleDays` throws on an endurance plan, which genuinely has weeks and
+  // not days. Such a plan has no exercises at all, so ANY entry sent against it
+  // is unknown — that is the answer, not a crash.
+  if (program.schedule.kind !== "endurance_weeks") {
+    for (const day of scheduleDays(program.schedule)) {
+      for (const ex of day.exercises) known.add(ex.id)
+    }
+  }
+  return [...new Set(entries.map((e) => e.exerciseId))].filter((id) => !known.has(id))
+}
+
+/** What to hang on each side of the bar, heaviest first. */
+export interface PlateLoad {
+  /** Plates for ONE side, heaviest first. */
+  perSide: number[]
+  /** The weight this actually makes — equal to the target when exact. */
+  achievable: number
+  /** True when the plates cannot make the target exactly. */
+  approximate: boolean
+  /** True when the target is at or below the empty bar. */
+  barOnly: boolean
+}
+
+/**
+ * Which plates to load for a target weight.
+ *
+ * "What do I put on the bar" is arithmetic somebody does in their head between
+ * sets, gets wrong, and then lifts the wrong weight — which is why every serious
+ * lifting app has this and why its absence is a standing complaint. It is pure
+ * arithmetic, so it lives here rather than in a component.
+ *
+ * THREE ANSWERS IT HAS TO BE ABLE TO GIVE, and the reason this is not two lines:
+ *   - the exact plates, when the number is loadable;
+ *   - the closest it can get, SAID to be approximate, when it is not — a
+ *     silently-rounded answer would have somebody lift a different weight than
+ *     the one on their screen;
+ *   - "just the bar", when the target is at or below the bar, rather than an
+ *     empty list that reads as "no answer".
+ *
+ * Greedy from the heaviest plate down, which is both what a person does and
+ * optimal for any real plate set (each plate divides the next one up).
+ */
+export function platesFor(target: number, unit: UnitSystem): PlateLoad {
+  const { barWeight } = UNIT_CONFIG[unit]
+  if (target <= barWeight) {
+    return { perSide: [], achievable: barWeight, approximate: target < barWeight, barOnly: true }
+  }
+
+  let remainingPerSide = (target - barWeight) / 2
+  const perSide: number[] = []
+  for (const plate of PLATES[unit]) {
+    // A hair of tolerance: (target - bar) / 2 on a .5 kg increment is exact in
+    // decimal but not in binary, and a strict >= would drop the last 1.25.
+    while (remainingPerSide >= plate - 1e-9) {
+      perSide.push(plate)
+      remainingPerSide -= plate
+    }
+  }
+  const achievable = barWeight + perSide.reduce((t, p) => t + p, 0) * 2
+  return {
+    perSide,
+    achievable: Math.round(achievable * 100) / 100,
+    approximate: Math.abs(achievable - target) > 1e-9,
+    barOnly: perSide.length === 0,
+  }
+}
+
+/** "20 + 10 + 2.5 per side" — the plate load as somebody would say it. */
+export function describePlates(load: PlateLoad, unitLabel: string): string {
+  if (load.barOnly) return "just the bar"
+  const counted = load.perSide.reduce<{ plate: number; n: number }[]>((acc, p) => {
+    const last = acc[acc.length - 1]
+    if (last && last.plate === p) last.n++
+    else acc.push({ plate: p, n: 1 })
+    return acc
+  }, [])
+  const body = counted.map((c) => (c.n > 1 ? `${c.n}×${c.plate}` : `${c.plate}`)).join(" + ")
+  return `${body} per side${load.approximate ? ` (makes ${load.achievable} ${unitLabel})` : ""}`
+}
+
+/**
+ * Rebuild an enrollment's state by replaying every session from the start.
+ *
+ * EDITING A PAST SESSION HAS TO CHANGE WHAT COMES NEXT, or it is not a
+ * correction — it is a note. But the state a log advanced FROM is not stored:
+ * `exercise_state` only ever holds where you are now, so a single log cannot be
+ * reversed. There is nothing to subtract.
+ *
+ * Replay is the way out, and it is available only because the engine is pure.
+ * Seed the enrollment exactly as it was created, then fold every session over it
+ * in order. The result is what the state would have been had the corrected
+ * session been logged that way originally — which is the whole feature, and the
+ * thing its test asserts.
+ *
+ * Deliberately takes the seed rather than deriving it: the level's starting
+ * weights are the enrollment's own history and re-resolving them from today's
+ * catalogue would silently rewrite somebody's past if a program were ever
+ * corrected upstream.
+ */
+export function replayEnrollment(
+  program: ProgramDefinition,
+  seed: ProgramEnrollment,
+  logs: { entries: LoggedExercise[]; logged_at: string; dayId: string; cycle: number; week: number }[]
+): ProgramEnrollment {
+  const ordered = [...logs].sort((a, b) => a.logged_at.localeCompare(b.logged_at))
+  let state: ProgramEnrollment = {
+    ...seed,
+    cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 },
+  }
+  for (const log of ordered) {
+    state = applyLog(program, state, {
+      enrollment_id: seed.id,
+      dayId: log.dayId,
+      cycle: log.cycle,
+      week: log.week,
+      entries: log.entries,
+    }).enrollment
+  }
+  return state
+}

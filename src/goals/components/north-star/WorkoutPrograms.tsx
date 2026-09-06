@@ -32,7 +32,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Check, Loader2 } from "lucide-react"
 import { DISCIPLINES, LEVEL_LABELS } from "@/src/programs/config"
-import { programsByDiscipline, requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
+import { getProgram, programsByDiscipline, requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
 import {
   isCustomizable,
   isModified,
@@ -90,6 +90,8 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded, planDays = [
   const [weights, setWeights] = useState<Record<string, string>>({})
   const [oneRms, setOneRms] = useState<Record<string, string>>({})
   const [state, setState] = useState<"idle" | "saving" | "done">("idle")
+  /** Programs this start paused, named on the confirmation. */
+  const [displacedNames, setDisplacedNames] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
 
   const programs = programsByDiscipline(discipline)
@@ -122,10 +124,27 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded, planDays = [
     setState("idle")
     setError(null)
     if (!programId) return
-    // A different level can resolve to a different program, whose schedule this
-    // one's edits would not mean anything against — so the edit resets with it,
-    // rather than being silently carried onto a program it did not come from.
+
+    /**
+     * YOUR EDITS SURVIVE A CHANGE OF LEVEL. They did not, and that is the bug
+     * behind "it doesn't use the workout I customized".
+     *
+     * A level CAN route to a structurally different program — beginner on 5/3/1
+     * runs StrongLifts — and edits made against one schedule mean nothing
+     * against another, so resetting there is right. But this reset ran
+     * unconditionally, and for every other program in the catalogue all three
+     * levels resolve to the SAME program. So somebody would rebuild their week
+     * — swap a lift, drop a day — then nudge the level control sitting directly
+     * above it, and the whole thing was silently thrown away. No warning, no
+     * undo, and the app then started a program they had not designed.
+     *
+     * Now the question asked is the one that actually matters: did the PROGRAM
+     * change? If it did not, the edits still describe it and are kept.
+     */
+    const current = resolveProgramForLevel(programId, level).program
     const target = resolveProgramForLevel(programId, next).program
+    if (target.id === current.id) return
+
     setSchedule(isCustomizable(target) ? materializeSchedule(target) : null)
     setWeights({})
     setOneRms({})
@@ -196,8 +215,20 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded, planDays = [
        * it.
        */
       const created = (await res.json().catch(() => null)) as
-        | { enrollment?: { id: string; program_id: string; started_at: string } }
+        | {
+            enrollment?: { id: string; program_id: string; started_at: string }
+            displaced?: { program_id: string }[]
+          }
         | null
+
+      /**
+       * SAY WHAT THIS REPLACED. One active program per discipline is the rule,
+       * and it used to be applied in silence — which is how somebody's own
+       * self-built week disappeared the day they tried a cited program, with
+       * nothing on any screen to say where it went.
+       */
+      const displaced = created?.displaced ?? []
+      setDisplacedNames(displaced.map((d) => getProgram(d.program_id)?.name ?? d.program_id))
       const ref: NsRoutineProgram | null = created?.enrollment
         ? {
             programId: created.enrollment.program_id,
@@ -251,12 +282,19 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded, planDays = [
   return (
     <div>
       <ModeSwitch mode={mode} onMode={setMode} />
-      {/* WHAT IS ACTUALLY RUNNING, before what you could start. The page used to
-          open with a catalogue and never once mention the program the account
-          was already on — which is how somebody ends up looking at a program on
-          their dashboard that they have no memory of picking. */}
-      <div className="mt-3">
+      {/* WHAT IS ACTUALLY RUNNING, before what you could start, with the way
+          onward attached. The page used to open with a catalogue and never once
+          mention the program the account was already on — and even once it did,
+          a person still had to work out which of three screens was the one they
+          trained on. */}
+      <div className="mt-3 space-y-2">
         <RunningPrograms key={runningKey} planDays={planDays} onEnded={(id) => { onProgramEnded?.(id); setRunningKey((k) => k + 1) }} />
+        <Link
+          href="/programs"
+          className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400/40 bg-emerald-500/10 px-3 py-1.5 text-[12.5px] text-emerald-200 transition-colors hover:bg-emerald-500/20"
+        >
+          Go to today&apos;s session
+        </Link>
       </div>
       <h2 className="mt-3 text-sm font-semibold text-zinc-200">{PROGRAM_COPY.title}</h2>
       <p className="text-[12.5px] text-zinc-400 mt-1 leading-relaxed">{PROGRAM_COPY.help}</p>
@@ -443,6 +481,12 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded, planDays = [
                 <Check className="size-3.5" /> {program.name} is running
                 {modified ? " — your version" : ""}. Your training week here now matches it.
               </p>
+              {displacedNames.length > 0 && (
+                <p className="text-[11px] text-amber-300/80">
+                  {displacedNames.join(", ")} moved to your finished programs — everything it logged
+                  is kept, and you can start it again from the Training page.
+                </p>
+              )}
               <Link
                 href="/programs"
                 className="inline-flex items-center gap-1.5 text-[12.5px] px-3 py-1.5 rounded-md border border-emerald-400/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 transition-colors"

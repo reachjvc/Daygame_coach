@@ -23,6 +23,7 @@ import { emptyRows, type TimetrackRows } from "@/src/db/timetrackTypes"
 
 import { PENDING_KEY, SYNC_CURSOR_KEY } from "../config"
 import { stateToRows, rowsToState } from "../timetrackMapperService"
+import { reconcileRunningEntries } from "../timetrackService"
 import {
   countRows,
   reattachToWorkspace,
@@ -301,7 +302,14 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
           : body.rows
 
         serverRows.current = body.rows
-        const adoptedState = rowsToState(base, new Date().toISOString())
+        const arrived = rowsToState(base, new Date().toISOString())
+        const settled = reconcileRunningEntries(arrived)
+        if (settled.stopped.length > 0) {
+          pushToast(
+            `Another device had a timer running too. The older one was stopped where this one started, so the same hour is not counted twice.`,
+          )
+        }
+        const adoptedState = settled.state
         awaitingState.current = adoptedState
         replaceState(adoptedState)
         adopted.current = true
@@ -372,7 +380,11 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       const dirty = keysIn(pending.current)
       const merged = mergeIncoming(serverRows.current ?? emptyRows(), body.rows, dirty)
       serverRows.current = merged
-      replaceState(rowsToState(merged, new Date().toISOString()))
+      const settled = reconcileRunningEntries(rowsToState(merged, new Date().toISOString()))
+      if (settled.stopped.length > 0) {
+        pushToast("Another device had a timer running too. The older one was stopped where this one started.")
+      }
+      replaceState(settled.state)
     } catch {
       // a failed pull is not worth interrupting anyone: the next one will run
     }

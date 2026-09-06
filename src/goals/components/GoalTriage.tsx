@@ -24,16 +24,34 @@ const HEADINGS: Record<TriageProblem, string> = {
 export function GoalTriage() {
   const [goals, setGoals] = useState<UserGoalRow[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  /** 401 is not a failure. See `load`. */
+  const [signedOut, setSignedOut] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
 
   const load = useCallback(async () => {
     try {
       const res = await fetch("/api/goals")
+      /**
+       * NOT SIGNED IN IS NOT A FAILURE, and must not wear a failure's face.
+       *
+       * Found in the browser: signed out, this drew "Could not read your
+       * goals" in red, which says something went wrong with the app. Nothing
+       * had. It is the same distinction the One Thing box makes between a read
+       * that failed and an answer that is not there — a 401 is an invitation to
+       * sign in, and only everything else is an error.
+       */
+      if (res.status === 401) {
+        setSignedOut(true)
+        setGoals([])
+        setError(null)
+        return
+      }
       if (!res.ok) throw new Error("Could not read your goals")
       const data = await res.json()
       // The route returns a plain array; a defensive read costs nothing.
       setGoals(Array.isArray(data) ? data : data.goals ?? [])
+      setSignedOut(false)
       setError(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not read your goals")
@@ -81,11 +99,18 @@ export function GoalTriage() {
         </p>
       </div>
 
+      {signedOut && (
+        <p className="text-sm text-muted-foreground" data-testid="goal-triage-signed-out">
+          Sign in and this reads your goals. There is nothing to show without an account —
+          your goals live on it, not in this browser.
+        </p>
+      )}
+
       {error && (
         <p className="text-sm text-rose-400" data-testid="goal-triage-error">{error}</p>
       )}
 
-      {groups.length === 0 ? (
+      {signedOut ? null : groups.length === 0 ? (
         <p className="text-muted-foreground" data-testid="goal-triage-clear">
           Nothing to sort out — every goal says what kind of thing it is.
         </p>

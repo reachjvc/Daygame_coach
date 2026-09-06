@@ -5,7 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CheckCircle2, ChevronDown, ChevronUp, Pencil } from "lucide-react"
-import { describeSets, needsInput, daysSinceLastSession, staleLifts, LAYOFF_DAYS } from "../programsService"
+import {
+  describeSets,
+  needsInput,
+  daysSinceLastSession,
+  staleLifts,
+  lastTimePerLift,
+  platesFor,
+  describePlates,
+  LAYOFF_DAYS,
+} from "../programsService"
+import { RestTimer, REST_SECONDS } from "./RestTimer"
 import { UNIT_CONFIG, WEEKDAY_SHORT } from "../config"
 import type { EnduranceSet, LoggedExercise, ProgressionChange, SessionPrescription, UnitSystem } from "../types"
 
@@ -64,6 +74,23 @@ export function TodaySessionWidget({
    * lift is one line you can read, and you open the one that went differently.
    */
   const [open, setOpen] = useState<Set<string>>(new Set())
+  /**
+   * HOW MANY SETS YOU ACTUALLY DID, which is not always how many it asked for.
+   *
+   * The widget rendered exactly the prescribed number of rows and gave you no
+   * way to change it — so a session where you stopped at three of five, or
+   * pushed a sixth because it felt good, could not be written down at all. The
+   * app would record five as prescribed and progress you off a set you never
+   * lifted. The API has always accepted any number of sets; only this screen
+   * insisted.
+   */
+  const [setCounts, setSetCounts] = useState<Record<string, number>>({})
+  /**
+   * When the last set was marked done — an INSTANT, not a counter, so the timer
+   * is right after the phone has been locked. See `RestTimer`.
+   */
+  const [restFrom, setRestFrom] = useState<number | null>(null)
+  const [restTarget, setRestTarget] = useState<number>(REST_SECONDS.accessory)
 
   useEffect(() => {
     const seedReps: Record<string, string> = {}
@@ -81,6 +108,7 @@ export function TodaySessionWidget({
     // "as prescribed" would record the bottom of the range as your top set and
     // progress you off a number you never lifted.
     setOpen(new Set(prescription.exercises.filter(needsInput).map((e) => e.exerciseId)))
+    setSetCounts(Object.fromEntries(prescription.exercises.map((e) => [e.exerciseId, e.sets.length])))
   }, [prescription])
 
   const isEndurance = Boolean(prescription.enduranceSets)
@@ -90,7 +118,13 @@ export function TodaySessionWidget({
     try {
       const entries = prescription.exercises.map((ex) => ({
         exerciseId: ex.exerciseId,
-        sets: ex.sets.map((s) => {
+        // Built from what you SAID you did, not from what was asked. A set
+        // beyond the prescription falls back to the last prescribed one for its
+        // numbers, which is the only sensible default for "one more of those".
+        sets: Array.from({ length: setCounts[ex.exerciseId] ?? ex.sets.length }, (_, i) => {
+          const s = ex.sets[i] ?? ex.sets[ex.sets.length - 1] ?? { setNumber: i + 1, reps: 0, weight: 0 }
+          return { ...s, setNumber: i + 1 }
+        }).map((s) => {
           const key = `${ex.exerciseId}:${s.setNumber}`
           // The weight you ACTUALLY lifted, not the one that was prescribed.
           // A blank box falls back to the prescription rather than to zero,
@@ -127,6 +161,7 @@ export function TodaySessionWidget({
 
   const ul = UNIT_CONFIG[unit].label
   const layoffDays = useMemo(() => daysSinceLastSession(logs), [logs])
+  const lastTime = useMemo(() => lastTimePerLift(logs, ul), [logs, ul])
   /**
    * Which individual lifts went stale. After an injury or a busy month it is
    * usually some lifts and not the program, and one line for the whole program
@@ -300,9 +335,11 @@ export function TodaySessionWidget({
           </div>
         )}
 
+        <RestTimer startedAt={restFrom} targetSeconds={restTarget} onDismiss={() => setRestFrom(null)} />
+
         {prescription.exercises.length > 0 && (
           <p className="text-xs text-muted-foreground">
-            Tap a lift only if you did something other than what it says.
+            Did it exactly as shown? Just save. Tap a lift to change what you actually did.
           </p>
         )}
 
@@ -342,7 +379,7 @@ export function TodaySessionWidget({
                   </span>
                 )}
                 {mustOpen ? (
-                  <span className="text-amber-500">needs your number</span>
+                  <span className="text-amber-500">how many did you get?</span>
                 ) : isOpen ? (
                   <ChevronUp className="size-4" />
                 ) : (
@@ -353,7 +390,19 @@ export function TodaySessionWidget({
 
             {isOpen && (
             <div className="space-y-1 border-t border-border/60 px-3 py-2">
-              {ex.sets.map((s) => {
+              {/* WHAT YOU DID LAST TIME, next to the boxes you are filling in.
+                  Every other lifting app puts it here, because "what did I get
+                  last week" is the question you are actually answering when you
+                  decide today's numbers. */}
+              {lastTime[ex.exerciseId] && (
+                <p className="pb-1 text-xs text-muted-foreground">
+                  Last time: {lastTime[ex.exerciseId]}
+                </p>
+              )}
+              {Array.from(
+                { length: setCounts[ex.exerciseId] ?? ex.sets.length },
+                (_, i) => ex.sets[i] ?? { ...(ex.sets[ex.sets.length - 1] ?? { reps: 0, weight: 0, amrap: false, weightKg: 0 }), setNumber: i + 1 }
+              ).map((s) => {
                 const unitLabel = ex.repUnit === "sec" ? "sec" : "reps"
                 return (
                   <div key={s.setNumber} className="flex items-center gap-2 text-sm">
@@ -385,23 +434,83 @@ export function TodaySessionWidget({
                     <span className="text-muted-foreground">
                       {s.amrap ? `${unitLabel} (AMRAP)` : s.repRangeMax ? `/ ${s.reps}–${s.repRangeMax} ${unitLabel}` : `/ ${s.reps} ${unitLabel}`}
                     </span>
+                    {/* Marking a set done starts the rest clock. One tap, in the
+                        place your thumb already is. */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRestFrom(Date.now())
+                        setRestTarget(ex.sets.length >= 4 ? REST_SECONDS.compound : REST_SECONDS.accessory)
+                      }}
+                      aria-label={`Start the rest timer after set ${s.setNumber} of ${ex.name}`}
+                      className="ml-auto shrink-0 rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-accent"
+                    >
+                      rest
+                    </button>
                   </div>
                 )
               })}
+              {/* WHAT TO PUT ON THE BAR. Arithmetic people do in their head
+                  between sets and get wrong. Hidden for bodyweight lifts, which
+                  have no bar to load. */}
+              {!ex.bodyweight && ex.sets[0] && (
+                <p className="pt-1 text-xs text-muted-foreground" data-testid={`plates-${ex.exerciseId}`}>
+                  Bar: {describePlates(platesFor(Number(weights[`${ex.exerciseId}:1`] ?? ex.sets[0].weight), unit), ul)}
+                </p>
+              )}
+              {/* Did fewer, or did one more. Both are normal and neither could
+                  be written down before. */}
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSetCounts((c) => ({
+                      ...c,
+                      [ex.exerciseId]: Math.max(1, (c[ex.exerciseId] ?? ex.sets.length) - 1),
+                    }))
+                  }
+                  disabled={(setCounts[ex.exerciseId] ?? ex.sets.length) <= 1}
+                  className="rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-accent disabled:opacity-30"
+                >
+                  − one set
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSetCounts((c) => ({
+                      ...c,
+                      [ex.exerciseId]: Math.min(20, (c[ex.exerciseId] ?? ex.sets.length) + 1),
+                    }))
+                  }
+                  className="rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-accent"
+                >
+                  + one set
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  {setCounts[ex.exerciseId] ?? ex.sets.length} sets
+                  {(setCounts[ex.exerciseId] ?? ex.sets.length) !== ex.sets.length &&
+                    ` · asked for ${ex.sets.length}`}
+                </span>
+              </div>
             </div>
             )}
           </div>
         )})}
 
         <Button onClick={submit} disabled={saving} className="w-full">
-          {/* "As prescribed" is a promise the session has to be able to keep.
-              An AMRAP set has no prescribed answer, so offering it there would
-              be offering to log a number nobody chose. */}
+          {/* PLAIN WORDS. This said "Log session as prescribed", which is a
+              doctor's word for a thing that is just "what it says above". The
+              button has to be readable by somebody who has never seen a
+              training app, and it has to stay honest: it may only claim you did
+              exactly this when the app knows what "exactly this" is, which an
+              AMRAP set — as many reps as you can — by definition is not. */}
           {saving
-            ? "Logging…"
-            : anythingChanged || prescription.exercises.some(needsInput)
-              ? "Log session"
-              : "Log session as prescribed"}
+            ? "Saving…"
+            : anythingChanged
+              ? "Save what I did"
+              : prescription.exercises.some(needsInput)
+                ? "Save this session"
+                : "I did all of this — save it"}
         </Button>
 
         {changes && (

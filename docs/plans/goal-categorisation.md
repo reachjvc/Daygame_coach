@@ -1,8 +1,10 @@
 # One coherent goal system — systems, dreams, totals and automatic achievements
 
-**Status: Phases 1, 3 and 4 (service) BUILT and tested 2026-09-03. Phase 4's
-toggle, Phase 6, and Phases 2 and 5 are not started — 2 and 5 are blocked on a
-migration that cannot be applied from this session (blocker B1).**
+**Status, 2026-09-05: Phases 1, 3, 4, 5 and 6 BUILT, tested, and verified in a
+browser against 82 real goals. Every migration is applied — the One Thing page
+reads again. Phase 2 (the goal→chapter link) is the only one not built.**
+**One regression to know about: the One Thing step's shape picker was reverted
+on 2026-09-03 and has not been restored, so that step still guesses.**
 Written 2026-09-03, reviewed and tightened the same day. Every recommendation from the first draft has been taken and is now a
 decision in the text; what remains open is listed in Part 5 and is genuinely
 open.
@@ -703,3 +705,48 @@ than deleted, because it guards a real defect.
 **Full suite: 4,186 passing, 1 skipped, 0 failing.**
 
 An entity diagram for this whole area is in `docs/plans/goal-entities.md`.
+
+
+---
+
+# Part 7 — What the 2026-09-05 pass found
+
+Everything from 2026-09-03 survived and is committed (`4bfc843e`). Every
+migration is applied, including `life_chapters`, so the One Thing page reads
+again — confirmed in a browser, the "this page failed to read it" message is
+gone. Four things were wrong anyway.
+
+**1. The three shapes were defined in THREE places, not one.** Phase 1 claimed
+"one vocabulary, one place" and shipped with `NS_GOAL_TYPES` in `northStar.ts`
+byte-identical to `GOAL_SHAPES`, plus a third copy — `GOAL_TYPE_META` in
+`VisionPlanLab.tsx` — with the same labels and icons and slightly different
+hints ("10k a month" against "ten thousand a month"). One vocabulary had already
+become two dialects. All three are now one.
+
+**2. The test written to prevent exactly that did not catch it.** It guarded the
+inline two-column *reading* of a goal's shape and said nothing about a duplicate
+*definition* of the list. It now asserts both, anchored on the labels rather
+than on a variable name, because renaming the copy would have slipped past a
+name check.
+
+**3. The review screen showed a red error to anybody signed out.** `/api/goals`
+returns 401, and the component drew "Could not read your goals" — which says the
+app is broken when nothing is. It is the same distinction the One Thing box
+already makes between a read that failed and an answer that is not there. Signed
+out now gets an invitation to sign in.
+
+**4. The triage rule was 100% wrong on real data, and blocker B3 was why.** Run
+against the test account's 82 goals it flagged 21, and every one was a CONTAINER
+— "Get a girlfriend", "Approach Legend", the roll-ups whose progress comes from
+the goals underneath them. A target of 1 is correct for those, and accepting the
+suggested fix would have turned a roll-up into a tick-box. It now skips anything
+`isTrackableGoal` excludes — the line the rest of the app already draws — and
+reports 2 real findings instead of 21 wrong ones.
+
+**Verified in a browser, signed in and signed out:** the review screen at
+`/test/goal-review`, the achievements API on a real goal, and the One Thing step.
+4,309 unit tests pass.
+
+**Still missing:** the One Thing step's shape picker, reverted on 2026-09-03 and
+never restored. `addOneThingRequirement` still reads the shape out of the words,
+which is the behaviour you asked to remove.

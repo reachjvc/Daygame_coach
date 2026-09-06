@@ -14,6 +14,12 @@ const PAGE = '/test/toggl'
 const STORAGE_KEY = 'toggl-clone:v1'
 const PENDING_KEY = 'toggl-clone:pending'
 
+/** The description is an editable field on a wide screen and plain text on a phone. */
+const entryInList = (page: Page, description: string) =>
+  page.locator(
+    `ul.divide-y li:has(input[value="${description}"]), ul.divide-y li:has-text("${description}")`,
+  )
+
 async function openFresh(page: Page) {
   await page.goto(PAGE, { waitUntil: 'domcontentloaded' })
   await page.evaluate(
@@ -44,7 +50,7 @@ async function trackEntry(page: Page, description: string) {
   await stop.waitFor({ timeout: 15000 })
   await page.waitForTimeout(600)
   await stop.click()
-  await expect(page.locator(`main input[value="${description}"]`).first()).toBeVisible({ timeout: 15000 })
+  await expect(entryInList(page, description).first()).toBeVisible({ timeout: 15000 })
 }
 
 /** Throw away the session cookies without touching anything else */
@@ -71,7 +77,7 @@ test.describe('edge cases', () => {
     expect(href, 'signing in must return you to where you were').toContain('next=')
 
     // the work itself is untouched
-    await expect(page.locator('main input[value="typed after the session ended"]').first()).toBeVisible()
+    await expect(entryInList(page, 'typed after the session ended').first()).toBeVisible()
   })
 
   test('nothing queued is thrown away while signed out', async ({ page, context }) => {
@@ -93,7 +99,7 @@ test.describe('edge cases', () => {
 
     // it says where the work is, rather than pretending to sync
     await expect(page.getByText('This device only')).toBeVisible({ timeout: 15000 })
-    await expect(page.locator('main input[value="signed out entirely"]').first()).toBeVisible()
+    await expect(entryInList(page, 'signed out entirely').first()).toBeVisible()
     await anon.close()
   })
 

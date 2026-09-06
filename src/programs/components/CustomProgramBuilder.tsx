@@ -188,9 +188,24 @@ export function CustomProgramBuilder({
     }
   }
 
+  /**
+   * Add a training day, named or not.
+   *
+   * THE BUTTON USED TO BE DEAD. It was `disabled={!newDay.trim()}`, sitting
+   * under an empty state that says "Add your first training day" — so the one
+   * instruction on the screen pointed at a control that did nothing until you
+   * noticed the text box beside it and typed something. Somebody trying to
+   * build their first program pressed it, got no response at all, and had no
+   * way to tell whether the app was broken or they were.
+   *
+   * A day does not need a name to exist. Unnamed ones get "Day A", "Day B" —
+   * the same convention `addSplitDay` already uses — and the name is editable
+   * in place afterwards like every other part of the design.
+   */
   function add() {
-    if (!newDay.trim()) return
-    apply(() => addDay(schedule, newDay))
+    const typed = newDay.trim()
+    const fallback = `Day ${String.fromCharCode(65 + scheduleDays(schedule).length)}`
+    apply(() => addDay(schedule, typed || fallback))
     setNewDay("")
   }
 
@@ -378,7 +393,7 @@ export function CustomProgramBuilder({
           aria-label="Name of a new training day"
           className="min-w-0 flex-1 rounded-md border border-white/12 bg-black/25 px-2.5 py-1.5 text-[12.5px] text-zinc-100 placeholder:text-zinc-600 transition-colors focus:border-sky-400/50 focus:outline-none"
         />
-        <Action onClick={add} disabled={!newDay.trim()}>
+        <Action onClick={add}>
           Add day
         </Action>
       </div>

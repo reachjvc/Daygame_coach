@@ -13,6 +13,19 @@ const STORAGE_KEY = 'toggl-clone:v1'
 const PENDING_KEY = 'toggl-clone:pending'
 
 /** A fresh browser for the same account: nothing local, everything from the server */
+/**
+ * Find an entry in the list, whichever layout is on screen.
+ *
+ * On a wide screen the description is an editable field, so it lives in the
+ * input's `value`. On a phone it is plain text. A test that only knows about
+ * one of them reports a working sync as broken on the other — which is exactly
+ * what happened the first time these ran on a phone.
+ */
+const entryInList = (page: Page, description: string) =>
+  page.locator(
+    `ul.divide-y li:has(input[value="${description}"]), ul.divide-y li:has-text("${description}")`,
+  )
+
 async function openEmptyBrowser(page: Page) {
   await page.goto(PAGE, { waitUntil: 'domcontentloaded' })
   await page.evaluate(
@@ -36,7 +49,7 @@ async function trackEntry(page: Page, description: string) {
   await stop.waitFor({ timeout: 15000 })
   await page.waitForTimeout(600)
   await stop.click()
-  await expect(page.locator(`main input[value="${description}"]`).first()).toBeVisible({ timeout: 15000 })
+  await expect(entryInList(page, description).first()).toBeVisible({ timeout: 15000 })
 }
 
 /** Empty this account's server-side workspace so each test starts from nothing */
@@ -130,7 +143,7 @@ test.describe('time is kept on the server, not just in one browser', () => {
     const second = await browser.newContext({ storageState: 'tests/e2e/.auth/user.json' })
     const other = await second.newPage()
     await openEmptyBrowser(other)
-    await expect(other.locator('main input[value="work that must survive"]').first()).toBeVisible({ timeout: 25000 })
+    await expect(entryInList(other, 'work that must survive').first()).toBeVisible({ timeout: 25000 })
     await second.close()
   })
 
@@ -142,7 +155,7 @@ test.describe('time is kept on the server, not just in one browser', () => {
     await openEmptyBrowser(page)
     const gone = await page.evaluate((key) => window.localStorage.getItem(key) === null, STORAGE_KEY)
     expect(gone).toBe(false) // it saves again immediately, from the server copy
-    await expect(page.locator('main input[value="work that must survive"]').first()).toBeVisible({ timeout: 20000 })
+    await expect(entryInList(page, 'work that must survive').first()).toBeVisible({ timeout: 20000 })
   })
 
   test('an edit made offline is sent when the connection comes back', async ({ page, context }) => {
@@ -152,7 +165,7 @@ test.describe('time is kept on the server, not just in one browser', () => {
     await trackEntry(page, 'tracked on a train')
 
     // it is visible here immediately, and the badge says it is waiting
-    await expect(page.locator('main input[value="tracked on a train"]').first()).toBeVisible()
+    await expect(entryInList(page, 'tracked on a train').first()).toBeVisible()
 
     await context.setOffline(false)
     // the queue retries on its own timer with a widening gap, so this does not
@@ -173,9 +186,16 @@ test.describe('time is kept on the server, not just in one browser', () => {
     await trackEntry(page, 'to be deleted')
     await page.waitForTimeout(2500)
 
-    await page.locator('ul.divide-y > li').first().hover()
     await page.getByRole('button', { name: 'More actions for this time entry' }).first().click()
-    await page.getByRole('button', { name: 'Delete' }).first().click()
+
+    // Scoped to the menu that is open, not to any button labelled "Delete" on
+    // the page. On a phone the menu scrolls, and an unscoped match picked a
+    // different one — the test then reported a working deletion as broken.
+    const menu = page.locator('[data-dropdown-panel]')
+    await expect(menu).toBeVisible()
+    const remove = menu.getByRole('button', { name: 'Delete' })
+    await remove.scrollIntoViewIfNeeded()
+    await remove.click()
     await page.waitForTimeout(3000)
 
     // The entry must travel as a tombstone, not simply stop being sent. A
@@ -195,6 +215,6 @@ test.describe('time is kept on the server, not just in one browser', () => {
     // bar keeps the description after you stop, so a page-wide search for the
     // text finds it there and reports a deletion that did happen as one that
     // did not.
-    await expect(page.locator('ul.divide-y input[value="to be deleted"]')).toHaveCount(0)
+    await expect(entryInList(page, 'to be deleted')).toHaveCount(0)
   })
 })

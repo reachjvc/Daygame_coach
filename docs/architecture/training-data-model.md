@@ -180,6 +180,21 @@ and loose workouts alike, joined on `exercise.toLowerCase().trim()` — the same
 counts as the same lift. Both produce the one `LoadPoint` type, so both draw
 through the one `Sparkline`.
 
+**The page arrives with its data.** `app/programs/page.tsx` is a server component
+that resolves the active list, the past list and — when exactly one program is running
+— that program's session and history, handing them to `TrainingScreen` as `initial*`.
+It made five API calls after hydration, three of them for the same endpoint; it now
+makes **none** on first load. `useActiveEnrollments` is backed by a small module-level
+store so the remaining callers share one request instead of each firing their own.
+
+**A finished program is recoverable.** `resumeEnrollment` sets `is_active` back to true
+and keeps `exercise_state` and `cursor` untouched, so the weights you had reached come
+back with it — re-enrolling from the catalogue would re-seed from the level's starting
+weights instead. Both `enrollInProgram` and `resumeEnrollment` return what they
+`displaced`, because the one-active-per-discipline rule used to be applied in silence:
+a self-built program has `discipline: "strength"`, so starting any cited strength
+program archived it with nothing on any screen to say where it went.
+
 **Whose clock.** `workout_logs.logged_at` is a real instant, but it is written from the
 date *you* picked in *your* timezone (`loggedAtForEntry`), and everything reads it back
 in local time (`localDateKey`). A 23:30 workout belongs to the day you trained, not to

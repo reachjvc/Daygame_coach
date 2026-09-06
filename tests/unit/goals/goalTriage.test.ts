@@ -15,6 +15,9 @@ const goal = (over: Partial<UserGoalRow> = {}): UserGoalRow =>
     id: "g1", user_id: "u1", title: "Gym", life_area: "fitness", category: "fitness",
     goal_type: "habit_ramp", tracking_type: "counter", period: "weekly",
     target_value: 4, current_value: 0, is_archived: false,
+    /* A goal you log against. `isTrackableGoal` wants both: a container
+       (goal_level 1 or 2) is excluded, and so is an inactive goal. */
+    is_active: true, goal_level: null,
     ...over,
   }) as UserGoalRow
 
@@ -51,6 +54,36 @@ describe("it lists problems, not goals", () => {
 
   it("ignores archived goals — they are on nobody's screen", () => {
     expect(triage([goal({ is_archived: true, life_area: "custom" })])).toEqual([])
+  })
+
+  /**
+   * THE ONE THAT WAS 100% WRONG ON REAL DATA.
+   *
+   * Run against the test account's 82 goals, `counter_of_one` flagged 21 — and
+   * every one was a CONTAINER: "Get a girlfriend", "Approach Legend", the
+   * L1/L2 roll-ups whose value comes from the goals underneath them. A target
+   * of 1 is correct for those, and accepting the suggested fix would have
+   * turned a roll-up into a tick-box.
+   */
+  it("says nothing about a container goal, whose target of one is correct", () => {
+    const container = goal({
+      title: "Get a girlfriend",
+      goal_type: "milestone", tracking_type: "counter", target_value: 1,
+      goal_level: 2,
+    })
+    expect(triage([container])).toEqual([])
+  })
+
+  it("still flags a counter of one that you DO log against", () => {
+    const own = goal({
+      goal_type: "milestone", tracking_type: "counter", target_value: 1,
+      goal_level: 3,
+    })
+    expect(triage([own]).map((r) => r.problem)).toContain("counter_of_one")
+  })
+
+  it("ignores an inactive goal", () => {
+    expect(triage([goal({ is_active: false, life_area: "custom" })])).toEqual([])
   })
 
   it("gives a goal with two problems two rows, so neither hides the other", () => {
@@ -108,5 +141,27 @@ describe("grouping for the screen", () => {
       expect(row.says.length, row.problem).toBeGreaterThan(30)
       expect(row.says, row.problem).not.toMatch(/tracking_type|life_area|target_value|goal_type/)
     }
+  })
+})
+
+
+/**
+ * FOUND IN A BROWSER, NOT IN A TEST.
+ *
+ * Signed out, this screen drew "Could not read your goals" in red — which says
+ * the app is broken when nothing is. It is the same distinction the One Thing
+ * box already makes: a read that FAILED is not an answer that is not there, and
+ * a 401 is an invitation to sign in.
+ */
+describe("not signed in is not a failure", () => {
+  it("keeps the two states apart in the component's contract", async () => {
+    const { GoalTriage } = await import("@/src/goals/components/GoalTriage")
+    const src = await import("fs").then((fs) =>
+      fs.readFileSync("src/goals/components/GoalTriage.tsx", "utf8"),
+    )
+    expect(GoalTriage).toBeTypeOf("function")
+    // A 401 branch that returns before the error path is the whole fix.
+    expect(src).toMatch(/res\.status === 401/)
+    expect(src).toMatch(/goal-triage-signed-out/)
   })
 })

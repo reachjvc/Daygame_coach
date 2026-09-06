@@ -26,6 +26,7 @@
 import { emptyRows, type TimetrackRows } from "@/src/db/timetrackTypes"
 
 import { createEmptyWorkspace } from "./data/emptyWorkspace"
+import { newId } from "./idService"
 import type {
   AlertEvent,
   AutotrackerRule,
@@ -71,6 +72,18 @@ interface Prefs {
 }
 
 const nowIso = (at?: string) => at ?? new Date().toISOString()
+
+/** A stable name for this browser, so a running timer says where it came from */
+function deviceId(): string {
+  if (typeof window === "undefined") return "server"
+  const key = "toggl-clone:device"
+  let id = window.localStorage.getItem(key)
+  if (!id) {
+    id = newId()
+    window.localStorage.setItem(key, id)
+  }
+  return id
+}
 
 // ---------------------------------------------------------------------------
 // state -> rows
@@ -201,7 +214,9 @@ export function stateToRows(state: TimetrackState, userId: string): TimetrackRow
       duration_only: e.duronly,
       created_with: e.createdWith,
       source_event_id: e.sourceEventId,
-      running_device_id: null,
+      // which device is holding this timer. Recorded so two running entries can
+      // be told apart when devices meet after being offline.
+      running_device_id: running ? deviceId() : null,
       shared_with: e.sharedWith,
     })
     for (const tagId of e.tagIds) {

@@ -73,6 +73,24 @@ const PANEL_MARGIN = 12
 /** Less room than this below the trigger and the panel opens upwards instead */
 const PANEL_MIN_SPACE = 160
 
+/**
+ * How much of the bottom of the screen is already spoken for.
+ *
+ * A phone shows a fixed navigation bar across the bottom. A panel measured only
+ * against the window ran underneath it, and the last items — Delete, on the
+ * entry menu — were drawn under the bar, so tapping one tapped the bar instead.
+ * Nothing looked broken; the tap just went somewhere else.
+ *
+ * The shell publishes the height it occupies as a CSS variable, and every panel
+ * measures against that instead of the raw window.
+ */
+function bottomInset(): number {
+  if (typeof document === "undefined") return 0
+  const raw = getComputedStyle(document.documentElement).getPropertyValue("--panel-bottom-inset")
+  const value = Number.parseFloat(raw)
+  return Number.isFinite(value) ? value : 0
+}
+
 export type PanelPosition = {
   left: number
   top?: number
@@ -127,7 +145,8 @@ export function usePanelPosition(
     // clientWidth/Height, not innerWidth/Height: those include the scrollbar,
     // and a right-aligned panel would sit partly underneath it
     const viewportWidth = document.documentElement.clientWidth
-    const viewportHeight = document.documentElement.clientHeight
+    // the usable bottom, not the window's: fixed chrome sits below it
+    const viewportHeight = document.documentElement.clientHeight - bottomInset()
 
     const width = matchAnchorWidth ? rect.width : panel.getBoundingClientRect().width
     const wanted = align === "right" ? rect.right - width : rect.left
@@ -146,7 +165,11 @@ export function usePanelPosition(
       below >= PANEL_MIN_SPACE
         ? { ...base, top: rect.bottom + PANEL_GAP, maxHeight: below }
         : above >= PANEL_MIN_SPACE
-          ? { ...base, bottom: viewportHeight - rect.top + PANEL_GAP, maxHeight: above }
+          ? {
+              ...base,
+              bottom: document.documentElement.clientHeight - rect.top + PANEL_GAP,
+              maxHeight: above,
+            }
           : { ...base, top: PANEL_MARGIN, maxHeight: Math.max(0, viewportHeight - PANEL_MARGIN * 2) }
     setPosition((previous) => (samePosition(previous, next) ? previous : next))
   }, [align, anchorRef, matchAnchorWidth, panelRef])

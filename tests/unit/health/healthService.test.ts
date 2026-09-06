@@ -7,6 +7,7 @@ import {
   workoutsOnDate,
   liftHistory,
   liftsWithHistory,
+  workoutsToCsv,
 } from "@/src/health/healthService"
 import type { WorkoutLogRow, WorkoutLogWithSets, WorkoutSetRow } from "@/src/health/types"
 
@@ -268,5 +269,44 @@ describe("liftsWithHistory", () => {
       s("bench press", 65, "2026-01-08T10:00:00"),
     ]
     expect(liftsWithHistory(sets)).toHaveLength(1)
+  })
+})
+
+describe("workoutsToCsv", () => {
+  const log = (loggedAt: string, sets: WorkoutSetRow[]): WorkoutLogWithSets => ({
+    id: "l1", user_id: "u", session_type: "weights", duration_min: 60, intensity: 3,
+    distance_km: null, logged_at: new Date(loggedAt).toISOString(), created_at: new Date(loggedAt).toISOString(), sets,
+  })
+
+  it("quotes an exercise name containing a comma, or the file splits a column", () => {
+    const csv = workoutsToCsv([log("2026-03-01T10:00:00", [set("Bench Press, close grip", 60, 5)])])
+    expect(csv).toContain('"Bench Press, close grip"')
+  })
+
+  it("doubles a quote inside a name", () => {
+    const csv = workoutsToCsv([log("2026-03-01T10:00:00", [set('The "good" one', 60, 5)])])
+    expect(csv).toContain('"The ""good"" one"')
+  })
+
+  it("marks warm-ups rather than dropping them", () => {
+    const csv = workoutsToCsv([log("2026-03-01T10:00:00", [set("Squat", 20, 10, { is_warmup: true })])])
+    expect(csv).toContain("true")
+    expect(csv.split("\n")).toHaveLength(2)
+  })
+
+  it("keeps a session with no sets, so the file agrees with the session count", () => {
+    const csv = workoutsToCsv([log("2026-03-01T10:00:00", [])])
+    expect(csv.split("\n")).toHaveLength(2)
+    expect(csv).toContain("2026-03-01")
+  })
+
+  it("dates each row by the day you trained, in your own calendar", () => {
+    // 23:30 local must not be filed on tomorrow.
+    const csv = workoutsToCsv([log("2026-03-01T23:30:00", [set("Squat", 100, 5)])])
+    expect(csv).toContain("2026-03-01")
+  })
+
+  it("has a header even with nothing to export", () => {
+    expect(workoutsToCsv([]).split("\n")).toEqual(["date,session_type,duration_min,exercise,set,reps,weight_kg,warm_up"])
   })
 })

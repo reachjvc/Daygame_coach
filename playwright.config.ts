@@ -109,6 +109,17 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], storageState: 'tests/e2e/.auth/user.json' },
     },
 
+    // Syncing, on a phone. It was only ever run on a desktop, and the first
+    // phone run found three faults a desktop cannot see: the sync status badge
+    // was hidden below 640px, and the entry menu opened underneath the bottom
+    // navigation bar, so "Delete" could not be tapped at all.
+    {
+      name: 'timetrack-sync-phone',
+      testMatch: [/timetrack-sync\.spec\.ts/, /timetrack-edge-cases\.spec\.ts/],
+      dependencies: ['setup'],
+      use: { ...devices['iPhone 14'], storageState: 'tests/e2e/.auth/user.json' },
+    },
+
     // === Time tracker on every engine ===
     // The tracker is the one feature people will open on a phone, a laptop and
     // whatever browser is on the machine in front of them. Chromium alone does
@@ -136,6 +147,30 @@ export default defineConfig({
       testMatch: /mobile\/mobile-toggl\.spec\.ts/,
       dependencies: ['setup'],
       use: { ...devices['Pixel 7'], storageState: 'tests/e2e/.auth/user.json' },
+    },
+
+    // === Training on phones and other engines ===
+    // Training is opened in a gym, on a phone, in whatever browser is on it. The
+    // page was 2264px tall on a 390px screen with three competing things called
+    // logging on it, and Chromium at desktop size showed none of that. These run
+    // the real flow — log a session with a set removed — not a load check.
+    {
+      name: 'training-iphone-safari',
+      testMatch: /mobile\/mobile-training\.spec\.ts/,
+      dependencies: ['setup'],
+      use: { ...devices['iPhone 14'], storageState: 'tests/e2e/.auth/user.json' },
+    },
+    {
+      name: 'training-android',
+      testMatch: /mobile\/mobile-training\.spec\.ts/,
+      dependencies: ['setup'],
+      use: { ...devices['Pixel 7'], storageState: 'tests/e2e/.auth/user.json' },
+    },
+    {
+      name: 'training-firefox',
+      testMatch: /mobile\/mobile-training\.spec\.ts/,
+      dependencies: ['setup'],
+      use: { ...devices['Desktop Firefox'], viewport: { width: 390, height: 844 }, storageState: 'tests/e2e/.auth/user.json' },
     },
 
     // === Auth on phones and other engines ===
@@ -296,6 +331,7 @@ export default defineConfig({
         /mobile\/mobile-tracking\.spec\.ts/,
         /mobile\/mobile-scenarios\.spec\.ts/,
         /mobile\/mobile-toggl\.spec\.ts/,
+        /mobile\/mobile-training\.spec\.ts/,
       ],
       dependencies: ['setup'],
       use: {

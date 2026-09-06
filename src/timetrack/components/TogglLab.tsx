@@ -6,7 +6,7 @@
  * the alert center, the idle prompt and the entry-detail modal.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
@@ -27,6 +27,7 @@ import {
 } from "../icons"
 import { useTimetrackSync, type SyncStatus } from "../hooks/useTimetrackSync"
 import { ImportOfferBanner } from "./ImportOfferBanner"
+import { OfflineShell } from "./OfflineShell"
 import { useTimetrack } from "../hooks/useTimetrack"
 import { defaultReportConfig, decodeReportConfig } from "../reportsService"
 import { dateKey, formatClock, formatIdleSpan, formatTimeOfDay } from "../timetrackFormatService"
@@ -97,6 +98,32 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
     setState,
     replaceState: actions.replaceState,
     pushToast,
+  })
+
+  /**
+   * Tell every dropdown how much of the bottom of the screen this bar occupies.
+   *
+   * Without it a menu opened near the bottom of a phone was drawn underneath
+   * the bar: the items were on screen but the taps landed on the navigation
+   * instead, so "Delete" on an entry silently did nothing. Measured rather than
+   * hard-coded, because the bar grows by the phone's safe area.
+   */
+  const bottomBarRef = useRef<HTMLElement | null>(null)
+  useEffect(() => {
+    const bar = bottomBarRef.current
+    const root = document.documentElement
+    if (!bar) {
+      root.style.setProperty("--panel-bottom-inset", "0px")
+      return
+    }
+    const publish = () => root.style.setProperty("--panel-bottom-inset", `${bar.offsetHeight}px`)
+    publish()
+    const observer = new ResizeObserver(publish)
+    observer.observe(bar)
+    return () => {
+      observer.disconnect()
+      root.style.setProperty("--panel-bottom-inset", "0px")
+    }
   })
 
   const [screen, setScreen] = useState<Screen>("timer")
@@ -211,6 +238,8 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
     // fields invisible on cards; give every field in the sandbox real contrast
     <div className="min-h-screen bg-background [&_input[data-slot=input]]:border-border [&_input[data-slot=input]]:bg-background/60 [&_select]:bg-background/60">
       {/* header */}
+      <OfflineShell />
+
       <header className="sticky top-0 z-[9500] border-b border-border bg-card/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
           <Link href={backHref} className="-ml-1 flex h-9 shrink-0 items-center px-1 text-xs text-muted-foreground hover:text-foreground">
@@ -436,6 +465,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
 
       {/* bottom navigation (phones) */}
       <nav
+        ref={bottomBarRef}
         className="fixed inset-x-0 bottom-0 z-[9500] flex border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
         aria-label="Sections"
       >
@@ -609,6 +639,16 @@ function SyncBadge({
         ? "border-destructive/50 text-destructive"
         : "border-border text-foreground"
 
+  /**
+   * Quiet when everything is fine, loud when it is not.
+   *
+   * "Saved" is the state you are in almost always, and a phone header has no
+   * room to keep saying so — it shows as a dot. Anything that needs you to know
+   * something (still sending, no connection, signed out, not saved) keeps its
+   * words at every width, because that is the moment the words matter.
+   */
+  const settled = status === "synced"
+
   return (
     <button
       type="button"
@@ -617,9 +657,25 @@ function SyncBadge({
       // both halves: the short state a screen reader announces, and the
       // sentence explaining what it means for the person's work
       aria-label={`${label[status]}. ${title[status]}`}
-      className={cn("hidden shrink-0 rounded-full border px-2 py-1 text-[11px] sm:block", tone)}
+      className={cn(
+        "flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 text-[11px]",
+        tone,
+        settled && "border-transparent sm:border-border",
+      )}
     >
-      {label[status]}
+      <span
+        aria-hidden="true"
+        className={cn(
+          "size-1.5 shrink-0 rounded-full",
+          status === "synced" && "bg-[#2da608]",
+          status === "saving" && "bg-primary",
+          (status === "offline" || status === "local-only") && "bg-muted-foreground",
+          (status === "error" || status === "signed-out") && "bg-destructive",
+        )}
+      />
+      {/* the word is always there for a screen reader; on a phone only the
+          states that need attention spend space on it */}
+      <span className={cn(settled && "sr-only sm:not-sr-only")}>{label[status]}</span>
     </button>
   )
 }

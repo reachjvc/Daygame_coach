@@ -99,6 +99,30 @@ describe("the hand-written reading cannot come back", () => {
     return out
   }
 
+  /**
+   * AND NEITHER CAN A SECOND COPY OF THE LIST.
+   *
+   * This is the one the first version missed. `NS_GOAL_TYPES` in
+   * `data/northStar.ts` held the same three entries with the same labels, the
+   * same hints and the same emoji, and sat beside `GOAL_SHAPES` for two days
+   * with every test green — because the assertion below guards the inline
+   * two-column READING and says nothing about a duplicate DEFINITION.
+   *
+   * Anchored on the labels rather than on a variable name: renaming the copy
+   * would have slipped straight past a name check.
+   */
+  it("is the only place the three shapes are named", () => {
+    const definers = walk("src")
+      .filter((f) => !f.endsWith(join("data", "goalShapes.ts")))
+      .filter((f) => {
+        const src = readFileSync(f, "utf8")
+        return src.includes('label: "Target"') &&
+               src.includes('label: "Practice"') &&
+               src.includes('label: "Finish line"')
+      })
+    expect(definers, `a second definition of the shapes:\n${definers.join("\n")}`).toEqual([])
+  })
+
   it("appears in goalShapes.ts and nowhere else", () => {
     const offenders = walk("src")
       .filter((f) => !f.endsWith(join("data", "goalShapes.ts")))

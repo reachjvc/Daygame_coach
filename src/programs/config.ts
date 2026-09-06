@@ -79,6 +79,19 @@ export const UNIT_CONFIG: Record<
   lb: { barWeight: 45, loadGranularity: 5, label: "lb" },
 }
 
+/**
+ * The plates a normal gym actually has, heaviest first.
+ *
+ * Loading maths needs to know what exists, and "every gym has these" is the only
+ * honest default — somebody with bumper-only or a short bar can be given a
+ * setting later, but guessing a bespoke set for everybody would be worse than
+ * guessing the common one.
+ */
+export const PLATES: Record<UnitSystem, number[]> = {
+  kg: [25, 20, 15, 10, 5, 2.5, 1.25],
+  lb: [45, 35, 25, 10, 5, 2.5],
+}
+
 export const KG_PER_LB = 0.45359237
 
 // ============================================================================

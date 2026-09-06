@@ -45,3 +45,17 @@ which no migration creates — so `supabase db reset` fails. To check a timetrac
 Then set `request.jwt.claim.sub` to one user id, `set role authenticated`, and confirm another user's rows are
 invisible and unwritable. That is how this schema was checked: 18 tables, 72 policies, and a second user could
 neither read, insert into, nor update the first user's rows.
+
+## Checking that it opens with no connection
+
+The service worker is registered only in a production build, so the dev server cannot show this. It is one
+command and two minutes, and it is the difference between an app and a bookmark on a train:
+
+    npm run build && npx next start -p 3200
+
+Then, in a browser: open `http://localhost:3200/dashboard/time`, wait for it to settle, switch the network off
+(DevTools → Network → Offline), and open the same address in a new tab. The tracker should appear, with the
+timer field ready. Verified this way on 2026-09-05 on an emulated Pixel 7.
+
+What is deliberately NOT cached: anything under `/api/`. Time entries come from the sync layer, which knows
+what is queued and what is stale; a cached API answer would be a second, dumber copy of the truth.

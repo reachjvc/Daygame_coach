@@ -1505,11 +1505,11 @@ export const NS_SPLITS: Array<{ id: string; label: string; days: string[]; perWe
 // ---------------------------------------------------------------- tab 3
 
 /** The three shapes a goal can take, in one place so every screen agrees. */
-export const NS_GOAL_TYPES: Array<{ type: "milestone_ladder" | "habit_ramp" | "achievement"; icon: string; label: string; hint: string }> = [
-  { type: "milestone_ladder", icon: "🎯", label: "Target", hint: "A number you climb to by a date. 100 kg, ten thousand a month, twelve percent body fat." },
-  { type: "habit_ramp", icon: "🔁", label: "Practice", hint: "An ongoing weekly practice. You never finish it, you just keep it." },
-  { type: "achievement", icon: "🏁", label: "Finish line", hint: "You either did it or you did not. A first muscle-up, a licence, a book out." },
-]
+/* The three shapes live in `data/goalShapes.ts`, which also owns the reading of
+   a goal ROW's shape. This file held a byte-identical second copy — same three
+   entries, same labels, same hints — for two days after the first was written,
+   and every test passed the whole time, because the test guarded the inline
+   two-column reading and not a second copy of the list. It does both now. */
 
 export const GOALS_INTRO = {
   title: "What you are actually doing about it",

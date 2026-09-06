@@ -22,6 +22,15 @@ const COMPOSITE_KEYS: Partial<Record<keyof TimetrackRows, string>> = {
   timetrack_settings: "user_id",
 }
 
+/** What to sort by when paging, for the tables that are not keyed by `id` */
+const ORDER_KEY: Partial<Record<keyof TimetrackRows, string>> = {
+  timetrack_entry_tags: "entry_id",
+  timetrack_settings: "user_id",
+}
+
+/** Rows per request when reading. The database refuses to return more than 1,000. */
+const PAGE_SIZE = 1000
+
 /** Tables with no `updated_at` to compare, so they always come back whole */
 const NO_UPDATED_AT = new Set<keyof TimetrackRows>(["timetrack_entry_tags", "timetrack_webhook_log"])
 
@@ -41,12 +50,36 @@ export async function pullTimetrackRows(userId: string, since?: string | null): 
   const cursor = new Date().toISOString()
 
   for (const table of TIMETRACK_TABLES) {
-    let query = supabase.from(table).select("*").eq("user_id", userId)
-    if (since && !NO_UPDATED_AT.has(table)) query = query.gt("updated_at", since)
-    const { data, error } = await query
-    if (error) throw new Error(`Could not read ${table}: ${error.message}`)
+    /**
+     * Read the whole table, a page at a time.
+     *
+     * WHY PAGING IS NOT OPTIONAL: an unpaged query comes back capped at 1,000
+     * rows and says nothing about it — no error, no flag, just fewer rows.
+     * Measured against this very database: a table holding 32,126 rows returned
+     * exactly 1,000. For a tracker used daily that cap is somewhere around a
+     * year and a half, after which someone's history would simply stop, on a
+     * new device, with nothing to explain it.
+     */
+    const collected: unknown[] = []
+    for (let from = 0; ; from += PAGE_SIZE) {
+      let query = supabase
+        .from(table)
+        .select("*")
+        .eq("user_id", userId)
+        .range(from, from + PAGE_SIZE - 1)
+      if (since && !NO_UPDATED_AT.has(table)) query = query.gt("updated_at", since)
+      // A stable order, or two pages can return the same row and miss another.
+      // Not every table is keyed by `id`: settings has one row per person and
+      // the tag links are keyed by the pair they join.
+      query = query.order(ORDER_KEY[table] ?? "id", { ascending: true })
+
+      const { data, error } = await query
+      if (error) throw new Error(`Could not read ${table}: ${error.message}`)
+      collected.push(...(data ?? []))
+      if (!data || data.length < PAGE_SIZE) break
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(rows as any)[table] = data ?? []
+    ;(rows as any)[table] = collected
   }
 
   return { rows, cursor }

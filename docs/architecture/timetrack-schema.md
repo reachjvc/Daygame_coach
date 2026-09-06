@@ -48,7 +48,7 @@ erDiagram
         int duration_seconds "null while running"
         bool duration_only
         text source_event_id "from a calendar, once only"
-        text running_device_id "whose timer this is"
+        text running_device_id "which device holds this timer"
         timestamptz deleted_at "a tombstone, not a removal"
     }
 
@@ -106,6 +106,14 @@ helpfully uploads it again.
 rules, date formats, pomodoro lengths. They are read and written whole and never filtered or added up.
 Everything you might ask a question about — entries, projects, rates — is real columns, because a report has
 to be able to ask.
+
+## Only one timer runs at a time
+
+The app shows one running timer and only ever looks for the first one, so a second is not a feature — it is an
+invisible timer, still counting, until somebody notices their week has too many hours in it. Two devices with
+no signal can each start one. When they meet, the newer start wins and the older is stopped at the moment the
+newer began, which is what would have happened had they been online. The app says so when it happens rather
+than quietly correcting the numbers.
 
 ## What is not stored, deliberately
 

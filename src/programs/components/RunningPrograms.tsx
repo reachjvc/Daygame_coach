@@ -23,7 +23,8 @@
  * wrote down. The difference is that now you can see when the two disagree.
  */
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import { useActiveEnrollments } from "../hooks/useEnrollment"
 import { Loader2 } from "lucide-react"
 import { getProgram } from "../data/catalog"
 import { LEVEL_LABELS } from "../config"
@@ -45,27 +46,16 @@ interface Props {
 }
 
 export function RunningPrograms({ planDays = [], onEnded, tone = "dark" }: Props) {
-  const [enrollments, setEnrollments] = useState<ProgramEnrollment[] | null>(null)
-  const [signedOut, setSignedOut] = useState(false)
+  /**
+   * The SHARED list, not a third copy of it.
+   *
+   * This used to run its own fetch of `/api/programs/enrollments`, which was
+   * the third request for the same answer on one page load — and worse, it kept
+   * its own copy, so ending a program here left the rest of the page showing a
+   * program that no longer existed until something else happened to refetch.
+   */
+  const { enrollments, loading, refresh } = useActiveEnrollments()
   const [ending, setEnding] = useState<string | null>(null)
-
-  async function load() {
-    try {
-      const res = await fetch("/api/programs/enrollments")
-      if (res.status === 401) {
-        setSignedOut(true)
-        setEnrollments([])
-        return
-      }
-      setEnrollments(res.ok ? await res.json() : [])
-    } catch {
-      setEnrollments([])
-    }
-  }
-
-  useEffect(() => {
-    void load()
-  }, [])
 
   async function end(id: string, name: string) {
     // ONE CLICK IS NOT ENOUGH FOR THIS. It stops a program somebody is running;
@@ -75,21 +65,23 @@ export function RunningPrograms({ planDays = [], onEnded, tone = "dark" }: Props
     setEnding(id)
     try {
       await fetch(`/api/programs/enrollments/${id}`, { method: "DELETE" })
-      await load()
+      await refresh()
       onEnded?.(id)
     } finally {
       setEnding(null)
     }
   }
 
-  if (enrollments === null) {
+  if (loading) {
     return (
       <p className={`flex items-center gap-1.5 text-[12px] ${tone === "dark" ? "text-zinc-500" : "text-muted-foreground"}`}>
         <Loader2 className="size-3 animate-spin" /> Checking what you are enrolled in…
       </p>
     )
   }
-  if (signedOut || enrollments.length === 0) return null
+  // A signed-out visitor gets an empty list from the endpoint, which renders
+  // nothing — the same outcome as having no programs, which is correct for both.
+  if (enrollments.length === 0) return null
 
   const dark = tone === "dark"
   /**
@@ -100,7 +92,20 @@ export function RunningPrograms({ planDays = [], onEnded, tone = "dark" }: Props
    * and a program is not wrong just because your plan says something else.
    */
   const names = enrollments.map((e) => getProgram(e.program_id)?.name ?? e.program_id)
-  const staleness = (e: ProgramEnrollment) => (e.lastLoggedAt ? "trained" : "never")
+  /**
+   * A program is only "forgotten" once it has had time to be forgotten.
+   *
+   * This said "you may have started this and forgotten it" about a program
+   * started seconds earlier, which is both wrong and faintly rude. Never trained
+   * AND started a fortnight ago is a ghost; never trained and started today is
+   * simply a program you have not been to the gym for yet.
+   */
+  const FORGOTTEN_AFTER_DAYS = 14
+  const staleness = (e: ProgramEnrollment): "trained" | "forgotten" | "new" => {
+    if (e.lastLoggedAt) return "trained"
+    const days = (Date.now() - new Date(e.started_at).getTime()) / 86_400_000
+    return days >= FORGOTTEN_AFTER_DAYS ? "forgotten" : "new"
+  }
   const planDiffers =
     planDays.length > 0 &&
     enrollments.length > 0 &&
@@ -138,14 +143,16 @@ export function RunningPrograms({ planDays = [], onEnded, tone = "dark" }: Props
                   dashboard nobody remembers choosing. */}
               <span
                 className={`block text-[11px] ${
-                  staleness(e) === "never"
+                  staleness(e) === "forgotten"
                     ? dark ? "text-amber-300/80" : "text-amber-600"
                     : dark ? "text-zinc-500" : "text-muted-foreground"
                 }`}
               >
                 {e.lastLoggedAt
                   ? `last logged ${new Date(e.lastLoggedAt).toLocaleDateString()}`
-                  : "never logged — you may have started this and forgotten it"}
+                  : staleness(e) === "forgotten"
+                    ? "never trained — you may have started this and forgotten it"
+                    : "not trained yet"}
               </span>
             </span>
             <button
