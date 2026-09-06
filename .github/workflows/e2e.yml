@@ -61,8 +61,14 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium webkit firefox
 
+      # The auth-* projects belong here, not in the chromium job: signup, login
+      # and password reset are the first thing every new user meets, and they
+      # were only ever run on Chromium until 2026-09-04. The first WebKit and
+      # iPhone run found four failures Chromium had never shown -- the click
+      # landing before React hydrated. auth-webkit and auth-firefox need the
+      # engines this job already installs.
       - name: Run cross-browser E2E tests
-        run: npx playwright test --project=smoke-firefox --project=smoke-webkit --project=smoke-iphone --project=smoke-android --project=mobile-iphone --project=mobile-pixel --project=mobile-nav --project=cross-firefox --project=cross-webkit
+        run: npx playwright test --project=smoke-firefox --project=smoke-webkit --project=smoke-iphone --project=smoke-android --project=mobile-iphone --project=mobile-pixel --project=mobile-nav --project=cross-firefox --project=cross-webkit --project=auth-webkit --project=auth-firefox --project=auth-iphone --project=auth-android
         env:
           CI: true
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
