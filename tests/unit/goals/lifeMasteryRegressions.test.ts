@@ -698,7 +698,12 @@ describe("class 4 — the big components are at least parseable", () => {
       }
     }
     expect(broken, broken.join("\n")).toEqual([])
-  })
+    /* 30s, not the default 5s: this loads the whole TypeScript compiler through
+       `await import("typescript")`. Alone it takes ~0.8s; in a full parallel run
+       it has been seen at 5.8s and failed on the timeout rather than on
+       anything being wrong. A test that fails only when the machine is busy
+       teaches people to re-run rather than to look. */
+  }, 30_000)
 
   it("no template literal in the lab has an unterminated backtick", () => {
     const src = readFileSync(join(process.cwd(), "src/goals/components/vision-plan/VisionPlanLab.tsx"), "utf8")

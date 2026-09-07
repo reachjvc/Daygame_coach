@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { refreshEnrollments } from "../hooks/useEnrollment"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ArrowLeft } from "lucide-react"
@@ -77,6 +78,7 @@ export function ProgramDetail({ programId, onBack, onEnrolled }: Props) {
       })
       if (!res.ok) throw new Error((await res.json()).error ?? "Enroll failed")
       const { enrollment } = await res.json()
+      await refreshEnrollments()
       onEnrolled(enrollment.id)
     } catch (e) {
       setError((e as Error).message)

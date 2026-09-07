@@ -127,10 +127,14 @@ export async function truncateAllTables(): Promise<void> {
 
   try {
     // Truncate in correct order to handle foreign key constraints
-    // user_values must come before profiles and values due to FKs
+    // user_values must come before profiles and values due to FKs.
+    // `program_session_logs` is gone — a program session IS a workout now
+    // (20260907100000), so `workout_logs` is what has to be cleared, and its
+    // sets before it.
     await client.query(`
       TRUNCATE TABLE
-        program_session_logs,
+        workout_sets,
+        workout_logs,
         program_enrollments,
         user_goals,
         milestones,

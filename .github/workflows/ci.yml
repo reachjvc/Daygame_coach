@@ -24,5 +24,11 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # Type errors may only go down: fails on any file whose count rose above
+      # tsc-baseline.json. The build itself ignores type errors (next.config.mjs),
+      # so without this nothing anywhere would type-check.
+      - name: Type-check ratchet
+        run: node scripts/typecheck-ratchet.mjs
+
       - name: Unit tests
         run: npm test

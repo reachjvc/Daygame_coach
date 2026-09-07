@@ -15,7 +15,9 @@ import {
   describePlates,
   LAYOFF_DAYS,
 } from "../programsService"
-import { RestTimer, REST_SECONDS } from "./RestTimer"
+import { RestTimer } from "./RestTimer"
+import { REST_SECONDS } from "../config"
+import { hasWeight } from "../builder"
 import { UNIT_CONFIG, WEEKDAY_SHORT } from "../config"
 import type { EnduranceSet, LoggedExercise, ProgressionChange, SessionPrescription, UnitSystem } from "../types"
 
@@ -64,6 +66,14 @@ export function TodaySessionWidget({
   const [weights, setWeights] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [changes, setChanges] = useState<ProgressionChange[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  /** How long it actually took. Asked for, never invented. */
+  const [duration, setDuration] = useState("45")
+  const [intensity, setIntensity] = useState(3)
+  /** The day you trained. Empty means today, in your own timezone. */
+  const [when, setWhen] = useState("")
+  /** Lifts you were there for and deliberately did not do. */
+  const [skipped, setSkipped] = useState<Set<string>>(new Set())
   /**
    * The lifts whose set-by-set boxes are showing.
    *
@@ -118,6 +128,7 @@ export function TodaySessionWidget({
     try {
       const entries = prescription.exercises.map((ex) => ({
         exerciseId: ex.exerciseId,
+        ...(skipped.has(ex.exerciseId) ? { skipped: true } : {}),
         // Built from what you SAID you did, not from what was asked. A set
         // beyond the prescription falls back to the last prescribed one for its
         // numbers, which is the only sensible default for "one more of those".
@@ -126,14 +137,21 @@ export function TodaySessionWidget({
           return { ...s, setNumber: i + 1 }
         }).map((s) => {
           const key = `${ex.exerciseId}:${s.setNumber}`
-          // The weight you ACTUALLY lifted, not the one that was prescribed.
-          // A blank box falls back to the prescription rather than to zero,
-          // which would log a bodyweight set for a barbell lift.
-          const typed = Number(weights[key])
+          /**
+           * A BLANK BOX IS BLANK, NOT ZERO.
+           *
+           * The comment here used to promise that an empty weight fell back to
+           * the prescription. It did not: `Number("")` is 0, 0 passes ">= 0",
+           * and so a cleared box logged a barbell lift as bodyweight — and a
+           * cleared REP box logged zero reps, which the workout history refuses,
+           * so the save failed halfway after the weights had already moved and
+           * the screen said nothing at all. `hasWeight` was written for exactly
+           * this trap and was not being used.
+           */
           return {
             setNumber: s.setNumber,
-            reps: Number(reps[key] ?? s.reps),
-            weight: Number.isFinite(typed) && typed >= 0 ? typed : s.weight,
+            reps: hasWeight(reps, key) ? Number(reps[key]) : s.reps,
+            weight: hasWeight(weights, key) ? Number(weights[key]) : s.weight,
           }
         }),
       }))
@@ -142,18 +160,34 @@ export function TodaySessionWidget({
         cycle: prescription.cycle,
         week: prescription.week,
         entries,
-        ...(isEndurance ? { durationMin: enduranceMinutes(prescription.enduranceSets!) } : {}),
+        // THE REAL LENGTH, ASKED FOR. Every session used to be written down as
+        // exactly 45 minutes at effort 3, whatever had happened, which is where
+        // the dashboard's "training hours" number came from.
+        durationMin: isEndurance
+          ? Number(duration) || enduranceMinutes(prescription.enduranceSets!)
+          : Number(duration),
+        intensity,
+        ...(when ? { entryDate: when } : {}),
       }
       const res = await fetch(`/api/programs/enrollments/${enrollmentId}/log`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
-      if (res.ok) {
-        const data = await res.json()
-        setChanges(data.changes ?? [])
-        onLogged()
+      if (!res.ok) {
+        // A FAILED SAVE USED TO SHOW NOTHING. The screen stayed exactly as it
+        // was, so the next thing anybody did was press the button again — and
+        // the weights had already moved, so the session went in twice.
+        const problem = (await res.json().catch(() => null)) as { error?: string } | null
+        setError(problem?.error ?? `Could not save that session (${res.status}). Nothing was recorded.`)
+        return
       }
+      const data = await res.json()
+      setChanges(data.changes ?? [])
+      setError(null)
+      onLogged()
+    } catch {
+      setError("Could not reach the server. Nothing was recorded.")
     } finally {
       setSaving(false)
     }
@@ -345,10 +379,12 @@ export function TodaySessionWidget({
 
         {prescription.exercises.map((ex) => {
           const isOpen = open.has(ex.exerciseId)
-          const mustOpen = needsInput(ex)
+          const isSkipped = skipped.has(ex.exerciseId)
+          // A skipped lift has nothing to type in, so it cannot be made to.
+          const mustOpen = needsInput(ex) && !isSkipped
           const edited = changedLifts.has(ex.exerciseId)
           return (
-          <div key={ex.exerciseId} className="rounded-md border border-border/60">
+          <div key={ex.exerciseId} className={`rounded-md border border-border/60 ${isSkipped ? "opacity-60" : ""}`}>
             {/* ONE LINE PER LIFT. What it asks for, on the left; whether you
                 have touched it, on the right. */}
             <button
@@ -373,6 +409,7 @@ export function TodaySessionWidget({
                 </span>
               </span>
               <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+                {isSkipped && <span className="text-amber-500">skipped</span>}
                 {edited && !isOpen && (
                   <span className="inline-flex items-center gap-1 text-sky-400">
                     <Pencil className="size-3" /> changed
@@ -388,7 +425,7 @@ export function TodaySessionWidget({
               </span>
             </button>
 
-            {isOpen && (
+            {(isOpen || isSkipped) && (
             <div className="space-y-1 border-t border-border/60 px-3 py-2">
               {/* WHAT YOU DID LAST TIME, next to the boxes you are filling in.
                   Every other lifting app puts it here, because "what did I get
@@ -458,6 +495,23 @@ export function TodaySessionWidget({
                   Bar: {describePlates(platesFor(Number(weights[`${ex.exerciseId}:1`] ?? ex.sets[0].weight), unit), ul)}
                 </p>
               )}
+              {/* THE RACK WAS TAKEN. Leaving a lift out used to be scored as
+                  failing it — three of those deloaded it ten per cent off a
+                  weight nobody had attempted. */}
+              <button
+                type="button"
+                onClick={() =>
+                  setSkipped((prev) => {
+                    const next = new Set(prev)
+                    if (next.has(ex.exerciseId)) next.delete(ex.exerciseId)
+                    else next.add(ex.exerciseId)
+                    return next
+                  })
+                }
+                className="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent"
+              >
+                {isSkipped ? "I did do this one" : "I skipped this one"}
+              </button>
               {/* Did fewer, or did one more. Both are normal and neither could
                   be written down before. */}
               <div className="flex items-center gap-2 pt-1">
@@ -497,7 +551,57 @@ export function TodaySessionWidget({
           </div>
         )})}
 
-        <Button onClick={submit} disabled={saving} className="w-full">
+        {/* WHAT ACTUALLY HAPPENED. All three were invented before: every session
+            was recorded as exactly 45 minutes at effort 3, stamped with the
+            moment you pressed save. */}
+        <div className="flex flex-wrap items-end gap-3 border-t border-border/60 pt-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">How long (min)</span>
+            <Input
+              type="number"
+              inputMode="numeric"
+              className="h-11 w-24 sm:h-9"
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              aria-label="How long the session took, in minutes"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">How hard (1–5)</span>
+            <select
+              value={intensity}
+              onChange={(e) => setIntensity(Number(e.target.value))}
+              aria-label="How hard the session was, 1 to 5"
+              className="h-11 w-20 rounded-md border border-input bg-background px-2 text-sm sm:h-9"
+            >
+              {[1, 2, 3, 4, 5].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Day (blank = today)</span>
+            <Input
+              type="date"
+              className="h-11 w-40 sm:h-9"
+              value={when}
+              onChange={(e) => setWhen(e.target.value)}
+              aria-label="The day you trained"
+            />
+          </label>
+        </div>
+
+        {error && (
+          <p
+            data-testid="log-error"
+            role="alert"
+            className="rounded-md border border-destructive/40 bg-destructive/10 px-2.5 py-2 text-xs text-destructive"
+          >
+            {error}
+          </p>
+        )}
+
+        <Button onClick={submit} disabled={saving || !(Number(duration) > 0)} className="w-full">
           {/* PLAIN WORDS. This said "Log session as prescribed", which is a
               doctor's word for a thing that is just "what it says above". The
               button has to be readable by somebody who has never seen a

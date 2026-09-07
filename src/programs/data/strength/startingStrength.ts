@@ -11,11 +11,18 @@
 import type { LoadExercise, ProgramDefinition } from "../../types"
 
 const LINEAR = { kind: "linear_load" as const, incrementKg: 2.5, incrementLb: 5, deloadAfterFails: 3, deloadPct: 0.1 }
+/**
+ * Press and bench halve their jump once they stall — Rippetoe's own rule, and
+ * the reason a novice keeps progressing on the two lifts that stall first.
+ * It needs microplates (1.25 kg / 2.5 lb a side); if the smallest plate you
+ * have set cannot make the step, the session says so rather than pretending.
+ */
+const UPPER = { ...LINEAR, stallIncrementKg: 1.25, stallIncrementLb: 2.5 }
 const DL = { kind: "linear_load" as const, incrementKg: 5, incrementLb: 10, deloadAfterFails: 3, deloadPct: 0.1 }
 
 const squat: LoadExercise = { id: "ss_squat", name: "Squat", metricType: "load", scheme: { kind: "linear", sets: 3, reps: 5 }, progression: LINEAR }
-const press: LoadExercise = { id: "ss_press", name: "Overhead Press", metricType: "load", scheme: { kind: "linear", sets: 3, reps: 5 }, progression: LINEAR }
-const bench: LoadExercise = { id: "ss_bench", name: "Bench Press", metricType: "load", scheme: { kind: "linear", sets: 3, reps: 5 }, progression: LINEAR }
+const press: LoadExercise = { id: "ss_press", name: "Overhead Press", metricType: "load", scheme: { kind: "linear", sets: 3, reps: 5 }, progression: UPPER }
+const bench: LoadExercise = { id: "ss_bench", name: "Bench Press", metricType: "load", scheme: { kind: "linear", sets: 3, reps: 5 }, progression: UPPER }
 const deadlift: LoadExercise = { id: "ss_deadlift", name: "Deadlift", metricType: "load", scheme: { kind: "linear", sets: 1, reps: 5 }, progression: DL }
 
 export const startingStrength: ProgramDefinition = {

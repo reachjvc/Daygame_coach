@@ -288,6 +288,16 @@ export function NorthStarFlow({
    * step as finished.
    */
   const oneThing = useOneThing()
+  /**
+   * UNSAVED TEXT IN THE ONE THING BOX, held here so it survives leaving the
+   * step and coming back — the rail unmounts whichever tab is not showing.
+   *
+   * Not a draft: nothing writes it to the plan or to this browser, nothing else
+   * reads it as your one thing, and it is gone on reload. It is here so that the
+   * rest of the step can open on a sentence as it is being typed rather than
+   * making somebody press save to find out the page still works.
+   */
+  const [oneThingTyped, setOneThingTyped] = useState<string | null>(null)
   const account = useMemo<NsAccount>(() => ({ hasOneThing: !!oneThing.current }), [oneThing.current])
   const oneThingBody = oneThing.current?.body ?? null
 
@@ -493,7 +503,8 @@ export function NorthStarFlow({
   const oneThingHandlers = useMemo<OneThingTabHandlers>(() => ({
     onAnswer: (key: string, text: string) => setPlan((p) => ns.setAnswer(p, key, text)),
     onSeasonFocus: (id: string) => setPlan((p) => ns.setSeasonFocus(p, id)),
-    onAddRequirement: (title: string, areaId?: string) => setPlan((p) => ns.addOneThingRequirement(p, title, areaId)),
+    onAddRequirement: (title: string, areaId: string | undefined, type: VisionGoalType) =>
+      setPlan((p) => ns.addOneThingRequirement(p, title, areaId, type)),
     onMarkServes: (goalId: string, on: boolean) => setPlan((p) => ns.markServesOneThing(p, goalId, on)),
     onRemoveGoal: (goalId: string) => setPlan((p) => ns.removeGoal(p, goalId)),
     onGoToTab: (t: NorthStarTabId) => setTab(t),
@@ -792,7 +803,15 @@ export function NorthStarFlow({
           /* One sentence, and everything that holds it up. It comes before the
              goals page because what somebody lists in twelve areas depends on
              whether they have decided what the year is for. */
-          <OneThingTab plan={plan} handlers={oneThingHandlers} account={oneThing} />
+          <OneThingTab
+            plan={plan}
+            handlers={oneThingHandlers}
+            account={oneThing}
+            typed={oneThingTyped}
+            onTyped={setOneThingTyped}
+            today={today}
+            goalHandlers={goalHandlers}
+          />
         ) : tab === "pick" ? (
           /* The fork. Two doors are the milestones step with a different half
              open; the third opens one routine on it, expanded, with the area
@@ -849,7 +868,8 @@ export function NorthStarFlow({
             onAddRoutine={areaHandlers.onAddRoutine}
             openRoutineId={openRoutineId}
             setOpenRoutineId={setOpenRoutineId}
-            onAddRequirement={(title: string) => setPlan((p) => ns.addOneThingRequirement(p, title))}
+            onAddRequirement={(title: string, type: VisionGoalType) =>
+              setPlan((p) => ns.addOneThingRequirement(p, title, undefined, type))}
             onGoToTab={(t: NorthStarTabId) => setTab(t)}
             oneThing={oneThingBody}
           />

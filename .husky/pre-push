@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Type errors may only go down. See scripts/typecheck-ratchet.mjs.
+#
+# This checks the WORKING TREE, not the commits being pushed — uncommitted work
+# counts, committed work you have since changed does not. Stashing to fix that is
+# forbidden here (a second agent shares this checkout), so this is a fast local
+# warning and CI is the gate: .github/workflows/ci.yml runs the same script on
+# the pushed commit.
+echo "🔎 Type-check ratchet (working tree)..."
+node scripts/typecheck-ratchet.mjs || exit 1

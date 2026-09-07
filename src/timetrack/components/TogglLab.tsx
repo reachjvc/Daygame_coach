@@ -28,6 +28,7 @@ import {
 import { useTimetrackSync, type SyncStatus } from "../hooks/useTimetrackSync"
 import { ImportOfferBanner } from "./ImportOfferBanner"
 import { OfflineShell } from "./OfflineShell"
+import { ErrorBoundary } from "@/src/shared/components/ErrorBoundary"
 import { useTimetrack } from "../hooks/useTimetrack"
 import { defaultReportConfig, decodeReportConfig } from "../reportsService"
 import { dateKey, formatClock, formatIdleSpan, formatTimeOfDay } from "../timetrackFormatService"
@@ -371,6 +372,9 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
         </div>
       )}
 
+      {/* one screen failing must not take the rest of the tracker with it —
+          the timer keeps running even if Reports cannot render */}
+      <ErrorBoundary label="this screen">
       <main className="mx-auto max-w-6xl space-y-4 px-3 pb-24 pt-3 sm:px-4 sm:py-4">
         {screen === "timer" && (
           <>
@@ -462,6 +466,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
           />
         )}
       </main>
+      </ErrorBoundary>
 
       {/* bottom navigation (phones) */}
       <nav

@@ -1644,6 +1644,8 @@ export const PLAN_INTRO = {
   oneNothingYet: "What has to happen for it? Each line becomes a real goal, filed where it belongs.",
   oneNeedsPlaceholder: "Something that has to be true",
   oneNeedsAdd: "Add",
+  /* Asked, not inferred. Same words as the One Thing step. */
+  oneNeedsShape: "What kind of thing is it?",
   oneEdit: "Change it at step 3",
 
   /** One per step: there are no routines on the milestones step to click. */

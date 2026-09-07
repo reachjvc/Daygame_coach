@@ -10,6 +10,7 @@ import { describe, it, expect, afterEach, vi } from "vitest"
 import {
   currentOneThing,
   pastOneThings,
+  wordingsOf,
   isSameAsCurrent,
   oneThingState,
   daysBetween,
@@ -23,25 +24,46 @@ import {
   oneThingStage,
   nextDueOn,
   planOneThingWrite,
+  applyOneThingWrite,
+  runningSince,
   MAX_BODY_LENGTH,
   MAX_HORIZON_YEARS,
   ENDING_SOON_DAYS,
+  type OneThing,
 } from "@/src/goals/oneThingService"
 import type { LifeAnswerRow } from "@/src/db/lifeAnswerRepo"
+import type { LifeChapterRow } from "@/src/db/lifeChapterRepo"
 
+let seq = 0
+
+/** A wording. Belongs to a chapter; carries no dates of its own — that is the point. */
 const row = (over: Partial<LifeAnswerRow> = {}): LifeAnswerRow => ({
-  id: "row-1",
+  id: `row-${++seq}`,
   user_id: "user-1",
+  chapter_id: "ch-1",
   answer_key: "one_thing",
   body: "Quit weed for 100 days",
   answered_at: "2026-08-01T09:00:00Z",
-  due_on: "2026-11-09",
   created_at: "2026-08-01T09:00:00Z",
   ...over,
 })
 
-/** Newest first, the order the repo returns. */
+/** A chapter. Owns the dates every countdown is measured against. */
+const chapter = (over: Partial<LifeChapterRow> = {}): LifeChapterRow => ({
+  id: "ch-1",
+  user_id: "user-1",
+  statement_key: "one_thing",
+  started_on: "2026-08-01",
+  due_on: "2026-11-09",
+  continues_id: null,
+  opened_at: "2026-08-01T09:00:00Z",
+  created_at: "2026-08-01T09:00:00Z",
+  ...over,
+})
+
+/** Newest first, the order both repos return. */
 const rows = (...r: LifeAnswerRow[]) => r
+const chapters = (...c: LifeChapterRow[]) => c
 
 afterEach(() => {
   vi.useRealTimers()
@@ -52,96 +74,122 @@ const at = (iso: string) => {
   vi.setSystemTime(new Date(iso))
 }
 
+/** A OneThing as the reader would build it, for the pure-rule tests. */
+const one = (over: Partial<OneThing> = {}): OneThing => ({
+  id: "r", chapterId: "ch-1", body: "Quit weed",
+  answeredAt: "2026-08-01T09:00:00Z", startedOn: "2026-08-01", dueOn: "2026-12-08",
+  daysLeft: 97, lapsed: false, wordings: 1, extended: false,
+  supports: { one_why: "", one_cost: "", one_identity: "", one_values: "" },
+  ...over,
+})
+
 // ── AT1 ────────────────────────────────────────────────────────────────────
 describe("AT1 — what my one thing is", () => {
   it("is nothing when nothing has been written", () => {
-    at("2026-08-27T10:00:00Z")
-    expect(currentOneThing([], "Europe/Copenhagen")).toBeNull()
+    expect(currentOneThing([], [], "Europe/Copenhagen")).toBeNull()
+    expect(pastOneThings([], [], "Europe/Copenhagen")).toEqual([])
     expect(oneThingState(null)).toBe("none")
   })
 
-  it("is the newest row, not the first one written", () => {
-    at("2026-08-27T10:00:00Z")
-    const current = currentOneThing(
-      rows(
-        row({ id: "new", body: "Bench 100 kg", answered_at: "2026-08-20T09:00:00Z" }),
-        row({ id: "old", body: "Quit weed for 100 days", answered_at: "2026-03-01T09:00:00Z" })
-      ),
-      "Europe/Copenhagen"
+  it("is the newest chapter, not the first one started", () => {
+    const cs = chapters(
+      chapter({ id: "ch-2", opened_at: "2026-09-01T09:00:00Z", started_on: "2026-09-01", due_on: "2026-12-01" }),
+      chapter({ id: "ch-1" }),
     )
-    expect(current?.body).toBe("Bench 100 kg")
+    const rs = rows(
+      row({ chapter_id: "ch-2", body: "Bench 100 kg", answered_at: "2026-09-01T09:00:00Z" }),
+      row({ chapter_id: "ch-1", body: "Quit weed" }),
+    )
+    expect(currentOneThing(cs, rs, "Europe/Copenhagen")?.body).toBe("Bench 100 kg")
   })
 
   it("keeps the ones before it, newest first, without repeating the current one", () => {
-    at("2026-08-27T10:00:00Z")
-    const all = rows(
-      row({ id: "c", body: "third", answered_at: "2026-08-20T09:00:00Z" }),
-      row({ id: "b", body: "second", answered_at: "2026-06-01T09:00:00Z" }),
-      row({ id: "a", body: "first", answered_at: "2026-03-01T09:00:00Z" })
-    )
-    expect(pastOneThings(all, "Europe/Copenhagen").map((o) => o.body)).toEqual(["second", "first"])
+    const cs = chapters(chapter({ id: "ch-2", opened_at: "2026-09-01T09:00:00Z" }), chapter({ id: "ch-1" }))
+    const rs = rows(row({ chapter_id: "ch-2", body: "Newer" }), row({ chapter_id: "ch-1", body: "Older" }))
+    const past = pastOneThings(cs, rs, "Europe/Copenhagen")
+    expect(past.map((p) => p.body)).toEqual(["Older"])
   })
 
-  it("makes the previous one current again when the newest is deleted", () => {
-    at("2026-08-27T10:00:00Z")
-    const all = rows(
-      row({ id: "b", body: "second", answered_at: "2026-06-01T09:00:00Z" }),
-      row({ id: "a", body: "first", answered_at: "2026-03-01T09:00:00Z" })
+  it("makes the previous one current again when the newest chapter is deleted", () => {
+    const cs = chapters(chapter({ id: "ch-1" }))
+    const rs = rows(row({ chapter_id: "ch-1", body: "Quit weed" }))
+    expect(currentOneThing(cs, rs, "Europe/Copenhagen")?.body).toBe("Quit weed")
+  })
+
+  /**
+   * THE SECOND LEVEL OF HISTORY, folded away.
+   *
+   * Chapters are the list a person browses — four or five a year. The wordings
+   * inside one are reachable but not in the way, because "all of these I
+   * wouldn't care to have different versions of" was the whole reason for
+   * separating the two levels in the first place.
+   */
+  it("can list every wording of one chapter without mixing in another's", () => {
+    const rs = rows(
+      row({ chapter_id: "ch-1", body: "Quit weed, properly", answered_at: "2026-08-05T09:00:00Z" }),
+      row({ chapter_id: "ch-1", body: "Quit weed" }),
+      row({ chapter_id: "ch-2", body: "Something else" }),
+      row({ chapter_id: "ch-1", answer_key: "one_why", body: "Because" }),
     )
-    // The repo returns what is left after a delete; nothing else has to happen.
-    expect(currentOneThing(all, "Europe/Copenhagen")?.body).toBe("second")
+    expect(wordingsOf("ch-1", rs).map((r) => r.body)).toEqual(["Quit weed, properly", "Quit weed"])
+    expect(wordingsOf("ch-2", rs).map((r) => r.body)).toEqual(["Something else"])
+  })
+
+  /**
+   * A CHAPTER WITH NO SENTENCE IS SKIPPED, NOT DRAWN BLANK.
+   *
+   * A delete can leave a chapter standing with nothing in it. Drawing an empty
+   * headline over somebody's real one thing would hide the answer behind a bug.
+   */
+  it("looks past a chapter that has no wording in it", () => {
+    const cs = chapters(chapter({ id: "ch-empty", opened_at: "2026-09-01T09:00:00Z" }), chapter({ id: "ch-1" }))
+    const rs = rows(row({ chapter_id: "ch-1", body: "Quit weed" }))
+    expect(currentOneThing(cs, rs, "Europe/Copenhagen")?.body).toBe("Quit weed")
   })
 })
 
 // ── AT2 ────────────────────────────────────────────────────────────────────
+/**
+ * The countdown is the fault the first design would have shipped: a date
+ * computed on the database's clock instead of the person's. It now reads the
+ * CHAPTER's deadline rather than the row's, which is the whole change, so these
+ * run the same instant through three timezones and a daylight-saving boundary.
+ */
 describe("AT2 — the countdown runs on the user's calendar", () => {
+  const readOn = (todayISO: string, dueOn: string, tz = "Europe/Copenhagen") => {
+    at(todayISO)
+    return currentOneThing(chapters(chapter({ due_on: dueOn })), rows(row()), tz)
+  }
+
   it("counts whole calendar days to the deadline", () => {
-    at("2026-08-27T10:00:00Z")
-    const current = currentOneThing(rows(row({ due_on: "2026-09-01" })), "Europe/Copenhagen")
-    expect(current?.daysLeft).toBe(5)
-    expect(current?.lapsed).toBe(false)
+    expect(readOn("2026-08-01T09:00:00Z", "2026-11-09")!.daysLeft).toBe(100)
   })
 
   it("is lapsed the day after the deadline, not on it", () => {
-    at("2026-09-01T10:00:00Z")
-    expect(currentOneThing(rows(row({ due_on: "2026-09-01" })), "UTC")?.lapsed).toBe(false)
-    at("2026-09-02T10:00:00Z")
-    const gone = currentOneThing(rows(row({ due_on: "2026-09-01" })), "UTC")
-    expect(gone?.lapsed).toBe(true)
-    expect(gone?.daysLeft).toBe(-1)
-    expect(oneThingState(gone!)).toBe("lapsed")
+    expect(readOn("2026-11-09T12:00:00Z", "2026-11-09")!.lapsed).toBe(false)
+    expect(readOn("2026-11-09T12:00:00Z", "2026-11-09")!.daysLeft).toBe(0)
+    expect(readOn("2026-11-10T12:00:00Z", "2026-11-09")!.lapsed).toBe(true)
   })
 
   it("gives two people on the same instant the answer their own calendar gives", () => {
-    // 2026-09-01 21:00 UTC is already 2026-09-02 in Auckland and still
-    // 2026-09-01 in New York. A deadline of 2026-09-01 has lapsed for one and
-    // not the other, and the database's own clock is nobody's answer.
-    at("2026-09-01T21:00:00Z")
-    const auckland = currentOneThing(rows(row({ due_on: "2026-09-01" })), "Pacific/Auckland")
-    const newYork = currentOneThing(rows(row({ due_on: "2026-09-01" })), "America/New_York")
-
-    expect(auckland?.lapsed).toBe(true)
-    expect(auckland?.daysLeft).toBe(-1)
-    expect(newYork?.lapsed).toBe(false)
-    expect(newYork?.daysLeft).toBe(0)
+    // 23:30 UTC: already tomorrow in Copenhagen, still today in Los Angeles.
+    const iso = "2026-11-08T23:30:00Z"
+    expect(readOn(iso, "2026-11-09", "Europe/Copenhagen")!.daysLeft).toBe(0)
+    expect(readOn(iso, "2026-11-09", "America/Los_Angeles")!.daysLeft).toBe(1)
   })
 
   it("counts calendar days across a daylight-saving change, not 24-hour blocks", () => {
-    // Copenhagen springs forward on 2026-03-29. That day is 23 hours long, so
-    // adding 90 x 86400 seconds lands an hour short and shifts the date.
-    expect(addDays("2026-03-20", 90)).toBe("2026-06-18")
-    expect(daysBetween("2026-03-20", "2026-06-18")).toBe(90)
-    // And through the autumn change, where a day is 25 hours long.
-    expect(addDays("2026-10-20", 30)).toBe("2026-11-19")
-    expect(daysBetween("2026-10-20", "2026-11-19")).toBe(30)
+    // Europe puts the clocks back on 2026-10-25. Ninety 24-hour blocks from
+    // 1 Aug land an hour short and quietly move the date; calendar days do not.
+    expect(daysBetween("2026-08-01", "2026-10-30")).toBe(90)
+    expect(addDays("2026-08-01", 90)).toBe("2026-10-30")
   })
 
   it("defaults the deadline to 90 days out in the user's timezone", () => {
-    // 22:30 UTC on the 27th is already the 28th in Copenhagen, so the default
-    // deadline counts from the 28th for them and the 27th for a UTC user.
-    at("2026-08-27T22:30:00Z")
-    expect(defaultDueOn("Europe/Copenhagen")).toBe(addDays("2026-08-28", DEFAULT_HORIZON_DAYS))
-    expect(defaultDueOn("UTC")).toBe(addDays("2026-08-27", DEFAULT_HORIZON_DAYS))
+    at("2026-08-01T23:30:00Z")
+    expect(DEFAULT_HORIZON_DAYS).toBe(90)
+    expect(defaultDueOn("Europe/Copenhagen")).toBe("2026-10-31")
+    expect(defaultDueOn("America/Los_Angeles")).toBe("2026-10-30")
   })
 })
 
@@ -165,35 +213,69 @@ describe("AT3 — writing the same words again changes nothing", () => {
 
 // ── AT7 ────────────────────────────────────────────────────────────────────
 /**
- * THE DEADLINE IS HALF THE ANSWER.
+ * AMENDING IS NOT REPLACING, AND MOVING A DEADLINE IS NEITHER.
  *
- * The bug this is written against: "quit weed for 100 days" with 120 days on
- * the clock, and no way to make it 100. The save button compared the words
- * alone and stayed grey; had it fired, the server compared the words alone and
- * would have written nothing. The deadline looked editable, was not, and said
- * nothing about it — a silent no, which is the one kind this codebase forbids.
+ * The bug this began as: "quit weed for 100 days" with 120 days on the clock,
+ * and no way to make it 100. The fix for that turned every reworded sentence
+ * into a new commitment, which was the opposite mistake — fixing a typo
+ * restarted the clock. Three acts now, and these hold them apart.
  */
-describe("AT7 — moving the deadline is a change", () => {
-  it("counts a new deadline on the same sentence as a change", () => {
-    const saved = rows(row({ body: "Quit weed", due_on: "2026-11-09" }))
-    expect(isSameAsCurrent(saved, "Quit weed", "2026-11-09")).toBe(true)
-    expect(isSameAsCurrent(saved, "Quit weed", "2026-12-01")).toBe(false)
+describe("AT7 — amend, extend, and start are three different things", () => {
+  const TZ = "Europe/Copenhagen"
+  const mine = () => rows(row({ chapter_id: "ch-1", body: "Quit weed" }))
+
+  it("amending adds a wording to the chapter it is already in", () => {
+    at("2026-09-02T09:00:00Z")
+    const out = planOneThingWrite(one(), mine(), "amend", "Quit weed, properly", null, TZ)
+    expect(out).toEqual({ kind: "amend", chapterId: "ch-1", key: "one_thing", body: "Quit weed, properly" })
   })
 
-  it("still counts new words on the same deadline as a change", () => {
-    const saved = rows(row({ body: "Quit weed", due_on: "2026-11-09" }))
-    expect(isSameAsCurrent(saved, "Quit vaping", "2026-11-09")).toBe(false)
+  it("amending the same words does nothing at all", () => {
+    at("2026-09-02T09:00:00Z")
+    expect(planOneThingWrite(one(), mine(), "amend", "  Quit weed  ", null, TZ)).toEqual({ kind: "unchanged" })
   })
 
-  it("ignores surrounding space in the sentence, as it always did", () => {
-    const saved = rows(row({ body: "Quit weed", due_on: "2026-11-09" }))
-    expect(isSameAsCurrent(saved, "  Quit weed  ", "2026-11-09")).toBe(true)
+  /**
+   * THE LINE THE WHOLE DESIGN EXISTS FOR. An extension opens a new chapter and
+   * carries the ORIGINAL start date across, so the deadline moves and "running
+   * since" does not.
+   */
+  it("extending keeps the day it started, and only moves the deadline", () => {
+    at("2026-09-02T09:00:00Z")
+    const out = planOneThingWrite(one({ startedOn: "2026-08-01" }), mine(), "extend", "Quit weed", "2027-01-01", TZ)
+    expect(out).toEqual({
+      kind: "open", startedOn: "2026-08-01", dueOn: "2027-01-01",
+      continuesId: "ch-1", body: "Quit weed",
+    })
   })
 
-  it("asks only about the words when no deadline is offered", () => {
-    // The old two-argument meaning, kept rather than silently comparing a
-    // deadline against undefined.
-    expect(isSameAsCurrent(rows(row({ body: "Quit weed" })), "Quit weed")).toBe(true)
+  it("starting a new one begins today, and continues nothing", () => {
+    at("2026-09-02T09:00:00Z")
+    const out = planOneThingWrite(one({ startedOn: "2026-08-01" }), mine(), "start", "Bench 100 kg", "2027-01-01", TZ)
+    expect(out).toEqual({
+      kind: "open", startedOn: "2026-09-02", dueOn: "2027-01-01",
+      continuesId: null, body: "Bench 100 kg",
+    })
+  })
+
+  it("extending to the same deadline with the same words does nothing", () => {
+    at("2026-09-02T09:00:00Z")
+    const out = planOneThingWrite(one({ dueOn: "2026-12-08" }), mine(), "extend", "Quit weed", "2026-12-08", TZ)
+    expect(out).toEqual({ kind: "unchanged" })
+  })
+
+  it("opens the first chapter whatever act was asked for, since there is nothing to amend", () => {
+    at("2026-09-02T09:00:00Z")
+    const out = planOneThingWrite(null, [], "amend", "Quit weed", "2026-12-08", TZ)
+    expect(out).toEqual({
+      kind: "open", startedOn: "2026-09-02", dueOn: "2026-12-08", continuesId: null, body: "Quit weed",
+    })
+  })
+
+  it("compares only the words, because the row no longer holds a deadline", () => {
+    expect(isSameAsCurrent(mine(), "Quit weed")).toBe(true)
+    expect(isSameAsCurrent(mine(), "Quit vaping")).toBe(false)
+    expect(isSameAsCurrent([], "Quit weed")).toBe(false)
   })
 })
 
@@ -248,25 +330,24 @@ describe("AT8 — the deadline has to be a day that exists, and one still ahead"
  * Silent while there is road left: a prompt that is always on is not a prompt.
  */
 describe("AT9 — the countdown, and when it starts asking", () => {
-  const one = (daysLeft: number) => ({
-    id: "r", body: "Quit weed", answeredAt: "2026-08-01T09:00:00Z",
-    dueOn: addDays("2026-09-02", daysLeft), daysLeft, lapsed: daysLeft < 0,
-  })
+  /** Shorthand over the shared factory: a one thing with N days left. */
+  const inDays = (daysLeft: number) =>
+    one({ dueOn: addDays("2026-09-02", daysLeft), daysLeft, lapsed: daysLeft < 0 })
 
   it("says nothing while there is road left", () => {
-    expect(oneThingStage(one(60))).toBe("running")
-    expect(oneThingPrompt(one(60))).toBeNull()
+    expect(oneThingStage(inDays(60))).toBe("running")
+    expect(oneThingPrompt(inDays(60))).toBeNull()
   })
 
   it("starts asking a fortnight out", () => {
-    expect(oneThingStage(one(ENDING_SOON_DAYS + 1))).toBe("running")
-    expect(oneThingStage(one(ENDING_SOON_DAYS))).toBe("ending")
-    expect(oneThingPrompt(one(ENDING_SOON_DAYS))).toMatch(/what comes after/)
+    expect(oneThingStage(inDays(ENDING_SOON_DAYS + 1))).toBe("running")
+    expect(oneThingStage(inDays(ENDING_SOON_DAYS))).toBe("ending")
+    expect(oneThingPrompt(inDays(ENDING_SOON_DAYS))).toMatch(/what comes after/)
   })
 
   it("asks outright once it has run out", () => {
-    expect(oneThingStage(one(-1))).toBe("lapsed")
-    expect(oneThingPrompt(one(-1))).toMatch(/Write the one thing for the next one/)
+    expect(oneThingStage(inDays(-1))).toBe("lapsed")
+    expect(oneThingPrompt(inDays(-1))).toMatch(/Write the one thing for the next one/)
   })
 
   it("says nothing at all when nothing has been written", () => {
@@ -284,10 +365,10 @@ describe("AT9 — the countdown, and when it starts asking", () => {
     // Matched loosely on the month only: Node abbreviates September as "Sept"
     // or "Sep" depending on which ICU data it was built with, and a test that
     // pins that is a test that fails on somebody else's machine for no reason.
-    expect(oneThingCountdown(one(120))).toBe("120 days left, until 31 Dec 2026")
-    expect(oneThingCountdown(one(1))).toMatch(/^1 day left, until 3 Sept? 2026$/)
-    expect(oneThingCountdown(one(0))).toMatch(/^Last day — it runs out today, 2 Sept? 2026$/)
-    expect(oneThingCountdown(one(-3))).toBe("Ran out 30 Aug 2026, 3 days ago — name the next one")
+    expect(oneThingCountdown(inDays(120))).toBe("120 days left, until 31 Dec 2026")
+    expect(oneThingCountdown(inDays(1))).toMatch(/^1 day left, until 3 Sept? 2026$/)
+    expect(oneThingCountdown(inDays(0))).toMatch(/^Last day — it runs out today, 2 Sept? 2026$/)
+    expect(oneThingCountdown(inDays(-3))).toBe("Ran out 30 Aug 2026, 3 days ago — name the next one")
   })
 })
 
@@ -302,10 +383,6 @@ describe("AT9 — the countdown, and when it starts asking", () => {
  * unless they spot the date box themselves.
  */
 describe("AT10 — a run-out deadline is not the default for the next one", () => {
-  const one = (over = {}) => ({
-    id: "r", body: "Quit weed", answeredAt: "2026-08-01T09:00:00Z",
-    dueOn: "2026-12-08", daysLeft: 97, lapsed: false, ...over,
-  })
 
   it("keeps the saved deadline while there is road left", () => {
     expect(nextDueOn(one(), "2027-06-01")).toBe("2026-12-08")
@@ -326,67 +403,212 @@ describe("AT10 — a run-out deadline is not the default for the next one", () =
 
 // ── AT11 ───────────────────────────────────────────────────────────────────
 /**
- * REFUSE IT, DO NOTHING, OR APPEND — the whole decision, in one place.
- *
- * The rule that broke twice is the third case: the deadline is part of the
- * answer only when the caller NAMED one. Compared against the server's rolling
- * ninety-day default instead, the identical request sent on two different days
- * looks like two different answers and appends a duplicate row — which is the
- * duplication this check exists to prevent.
+ * REFUSE IT, DO NOTHING, OR WRITE IT — the whole decision, in one place.
  */
 describe("AT11 — what writing a one thing should do", () => {
   const TZ = "Europe/Copenhagen"
-  const saved = (over: Partial<LifeAnswerRow> = {}) => rows(row({ body: "Quit weed", due_on: "2026-12-08", ...over }))
-
-  it("appends when the words are new", () => {
-    at("2026-09-02T09:00:00Z")
-    expect(planOneThingWrite(saved(), "Quit vaping", "2026-12-08", TZ)).toEqual({ kind: "append", dueOn: "2026-12-08" })
-  })
-
-  it("appends when only the deadline moves", () => {
-    at("2026-09-02T09:00:00Z")
-    expect(planOneThingWrite(saved(), "Quit weed", "2027-01-01", TZ)).toEqual({ kind: "append", dueOn: "2027-01-01" })
-  })
-
-  it("does nothing for the same words on the same deadline", () => {
-    at("2026-09-02T09:00:00Z")
-    expect(planOneThingWrite(saved(), "  Quit weed  ", "2026-12-08", TZ)).toEqual({ kind: "unchanged" })
-  })
-
-  /**
-   * THE DUPLICATE-ROW BUG, WRITTEN DOWN. Same request, no deadline named, two
-   * different days. The server's default differs between them; the answer must
-   * not.
-   */
-  it("does nothing for the same words on two different days when no deadline was named", () => {
-    at("2026-09-02T09:00:00Z")
-    expect(planOneThingWrite(saved(), "Quit weed", undefined, TZ)).toEqual({ kind: "unchanged" })
-    at("2026-09-20T09:00:00Z")
-    expect(planOneThingWrite(saved(), "Quit weed", undefined, TZ)).toEqual({ kind: "unchanged" })
-  })
-
-  it("fills in the ninety-day default when no deadline was named and the words are new", () => {
-    at("2026-09-02T09:00:00Z")
-    const out = planOneThingWrite(saved(), "Something else", undefined, TZ)
-    expect(out).toEqual({ kind: "append", dueOn: defaultDueOn(TZ) })
-  })
+  const mine = () => rows(row({ chapter_id: "ch-1", body: "Quit weed" }))
 
   it("refuses a blank answer and one longer than the column allows", () => {
     at("2026-09-02T09:00:00Z")
-    expect(planOneThingWrite(saved(), "   ", undefined, TZ).kind).toBe("reject")
-    expect(planOneThingWrite(saved(), "x".repeat(MAX_BODY_LENGTH + 1), undefined, TZ).kind).toBe("reject")
-    expect(planOneThingWrite(saved(), "x".repeat(MAX_BODY_LENGTH), undefined, TZ).kind).toBe("append")
+    expect(planOneThingWrite(one(), mine(), "amend", "   ", null, TZ).kind).toBe("reject")
+    expect(planOneThingWrite(one(), mine(), "amend", "x".repeat(MAX_BODY_LENGTH + 1), null, TZ).kind).toBe("reject")
+    expect(planOneThingWrite(one(), mine(), "amend", "x".repeat(MAX_BODY_LENGTH), null, TZ).kind).toBe("amend")
   })
 
   it("refuses a deadline that has already been, before it can reach the database", () => {
     at("2026-09-02T09:00:00Z")
-    const out = planOneThingWrite(saved(), "Quit weed", "2026-08-01", TZ)
+    const out = planOneThingWrite(one(), mine(), "extend", "Quit weed", "2026-08-01", TZ)
     expect(out).toEqual({ kind: "reject", reason: expect.stringMatching(/already been/) })
   })
 
   it("refuses a day that is not on the calendar with the reason, not a database error", () => {
     at("2026-09-02T09:00:00Z")
-    const out = planOneThingWrite(saved(), "Quit weed", "2026-13-45", TZ)
+    const out = planOneThingWrite(one(), mine(), "start", "Something", "2026-13-45", TZ)
     expect(out).toEqual({ kind: "reject", reason: expect.stringMatching(/not a date on the calendar/) })
+  })
+
+  /**
+   * A SUPPORT CANNOT BE THE FIRST THING WRITTEN.
+   *
+   * Found in review before it shipped. The "open" branch writes whatever body it
+   * is given as the SENTENCE, so a stray "one_why" arriving before anything else
+   * existed would have stored somebody's reason as their one thing — on the
+   * step, on the tracking header, everywhere.
+   */
+  it("refuses a support when there is no one thing for it to be about", () => {
+    at("2026-09-02T09:00:00Z")
+    const out = planOneThingWrite(null, [], "amend", "Because I want my head back", null, TZ, "one_why")
+    expect(out).toEqual({ kind: "reject", reason: expect.stringMatching(/Write your one thing first/) })
+  })
+
+  it("still opens the first chapter for the sentence itself", () => {
+    at("2026-09-02T09:00:00Z")
+    expect(planOneThingWrite(null, [], "amend", "Quit weed", null, TZ, "one_thing").kind).toBe("open")
+  })
+
+  /**
+   * AMENDING NEVER CHECKS A DEADLINE, because it cannot move one. A page that
+   * refused a reworded sentence over a stale date in a hidden field would be
+   * refusing the one act that is supposed to be free.
+   */
+  it("does not judge the deadline when all that changed is the words", () => {
+    at("2026-09-02T09:00:00Z")
+    const out = planOneThingWrite(one(), mine(), "amend", "Quit weed properly", "1999-01-01", TZ)
+    expect(out.kind).toBe("amend")
+  })
+
+  /**
+   * THE HORIZON THE DATABASE MEASURES, MEASURED HERE TOO.
+   *
+   * `dueOnProblem` counts five years from TODAY. `life_chapters_dates_sane`
+   * counts `due_on <= started_on + 1830` from the day the chapter began — and an
+   * extension carries that start across. So a deadline four years out, on a
+   * chapter that started two years ago, passed here and was refused by the
+   * database. The person got "That did not save" and no reason: the right
+   * refusal for the wrong reason, which is the thing the migration comment
+   * claims was eliminated. Two records of one rule, and they disagreed.
+   */
+  it("refuses an extension the database would refuse, and says why", () => {
+    at("2026-09-02T09:00:00Z")
+    // Started two years ago; four years past today is over five from the start.
+    const old = one({ startedOn: "2024-09-02", dueOn: "2026-12-08" })
+    const out = planOneThingWrite(old, mine(), "extend", "Quit weed", "2030-09-02", TZ)
+    expect(out).toEqual({
+      kind: "reject",
+      reason: expect.stringMatching(/from the day this one began/i),
+    })
+  })
+
+  it("still allows an extension that sits inside the horizon from the chapter's start", () => {
+    at("2026-09-02T09:00:00Z")
+    const old = one({ startedOn: "2024-09-02", dueOn: "2026-12-08" })
+    expect(planOneThingWrite(old, mine(), "extend", "Quit weed", "2028-09-02", TZ).kind).toBe("open")
+  })
+})
+
+// ── AT12 ───────────────────────────────────────────────────────────────────
+/**
+ * CARRYING OUT THE DECISION, including the part that is easy to forget.
+ */
+describe("AT12 — what actually gets written", () => {
+  const writers = () => {
+    const calls: Array<{ what: string; args: unknown[] }> = []
+    return {
+      calls,
+      addAnswer: async (key: string, body: string, chapterId: string) => {
+        calls.push({ what: "answer", args: [key, body, chapterId] })
+        return { id: `row-${calls.length}` }
+      },
+      openChapter: async (startedOn: string, dueOn: string, continuesId: string | null) => {
+        calls.push({ what: "chapter", args: [startedOn, dueOn, continuesId] })
+        return { id: "ch-new" }
+      },
+      dropChapter: async (chapterId: string) => {
+        calls.push({ what: "drop", args: [chapterId] })
+      },
+    }
+  }
+
+  it("writes one wording and opens nothing when amending", async () => {
+    const w = writers()
+    await applyOneThingWrite({ kind: "amend", chapterId: "ch-1", key: "one_thing", body: "New words" }, one(), w)
+    expect(w.calls).toEqual([{ what: "answer", args: ["one_thing", "New words", "ch-1"] }])
+  })
+
+  /**
+   * THE ONE THAT WOULD HAVE SHIPPED BROKEN. Moving a deadline opens a new
+   * chapter; without carrying the supports across, somebody who added a
+   * fortnight to a date would find the why, the cost, the identity and the
+   * values all blank underneath an unchanged sentence, and reasonably conclude
+   * the app had thrown three weeks of writing away.
+   */
+  it("carries the supports across when a deadline is extended", async () => {
+    const w = writers()
+    const current = one({
+      supports: { one_why: "Because I want my head back", one_cost: "Another year gone", one_identity: "", one_values: "Clarity" },
+    })
+    await applyOneThingWrite(
+      { kind: "open", startedOn: "2026-08-01", dueOn: "2027-01-01", continuesId: "ch-1", body: "Quit weed" },
+      current, w,
+    )
+    expect(w.calls[0]).toEqual({ what: "chapter", args: ["2026-08-01", "2027-01-01", "ch-1"] })
+    expect(w.calls.map((c) => c.args[0])).toEqual(["2026-08-01", "one_thing", "one_why", "one_cost", "one_values"])
+    // The blank one is not carried: an empty answer is not an answer.
+    expect(w.calls.map((c) => c.args[0])).not.toContain("one_identity")
+  })
+
+  /**
+   * AND A FRESH START DOES NOT CARRY THEM. That is the difference between the
+   * two acts: a new commitment deserves its own reasons, and inheriting the old
+   * ones would put last season's why under this season's sentence.
+   */
+  it("leaves the supports behind when a genuinely new one is started", async () => {
+    const w = writers()
+    const current = one({ supports: { one_why: "Old reason", one_cost: "", one_identity: "", one_values: "" } })
+    await applyOneThingWrite(
+      { kind: "open", startedOn: "2026-09-02", dueOn: "2027-01-01", continuesId: null, body: "Bench 100 kg" },
+      current, w,
+    )
+    expect(w.calls.map((c) => c.args[0])).toEqual(["2026-09-02", "one_thing"])
+  })
+
+  /**
+   * A CHAPTER WITH NO SENTENCE IN IT IS INVISIBLE AND UNDELETABLE.
+   *
+   * Opening one is two writes. When the second failed, the first had already
+   * landed: `toOneThing` skips a chapter that holds no wording, so it never
+   * appeared in the history and there was no row anybody could point at to
+   * delete — while being the newest chapter, which is what "current" means, so
+   * the page went blank. Found in review, and the half-written state was
+   * acknowledged in a comment rather than undone.
+   */
+  it("takes the empty chapter back when the sentence fails to write", async () => {
+    const w = writers()
+    const boom = new Error("connection lost")
+    const failing = { ...w, addAnswer: async () => { throw boom } }
+
+    await expect(
+      applyOneThingWrite(
+        { kind: "open", startedOn: "2026-09-02", dueOn: "2027-01-01", continuesId: null, body: "Bench 100 kg" },
+        null, failing,
+      ),
+    ).rejects.toThrow("connection lost")
+
+    // The chapter was opened and then removed; the caller still hears why.
+    expect(w.calls.map((c) => c.what)).toEqual(["chapter", "drop"])
+    expect(w.calls[1].args).toEqual(["ch-new"])
+  })
+
+  it("writes nothing for a rejection or a no-op", async () => {
+    const w = writers()
+    expect(await applyOneThingWrite({ kind: "unchanged" }, one(), w)).toBeNull()
+    expect(await applyOneThingWrite({ kind: "reject", reason: "no" }, one(), w)).toBeNull()
+    expect(w.calls).toEqual([])
+  })
+})
+
+// ── AT13 ───────────────────────────────────────────────────────────────────
+/**
+ * "RUNNING SINCE" — the line that proves the clock was not restarted.
+ *
+ * Silent on a one thing nobody has touched, because there is nothing to
+ * reassure anybody about yet.
+ */
+describe("AT13 — how long you have been on this", () => {
+  it("says nothing on a one thing written once and never changed", () => {
+    expect(runningSince(one({ wordings: 1, extended: false }))).toBeNull()
+  })
+
+  it("says it once the wording has been changed", () => {
+    expect(runningSince(one({ wordings: 2, startedOn: "2026-08-01" }))).toMatch(/Running since 1 Aug 2026/)
+  })
+
+  it("says it once the deadline has been moved", () => {
+    expect(runningSince(one({ wordings: 1, extended: true, startedOn: "2026-08-01" }))).toMatch(/Running since 1 Aug 2026/)
+  })
+
+  it("says nothing when there is nothing", () => {
+    expect(runningSince(null)).toBeNull()
   })
 })

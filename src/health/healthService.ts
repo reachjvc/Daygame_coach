@@ -201,6 +201,20 @@ function timeToMinutesSinceMidnight(time: string): number {
  * Detect personal records from a set history.
  * Returns new PRs relative to previous entries for the same exercise.
  */
+/**
+ * Is this a set the numbers should be built from?
+ *
+ * `is_warmup` became `set_kind`, because a boolean could say "warm-up" and
+ * nothing else — an all-out top set and a back-off set, the two things a
+ * progression rule most needs to tell apart, were indistinguishable from
+ * ordinary work. Warm-ups and drop sets stay out of every total, chart and
+ * personal record, which is what the boolean was for; the rest count.
+ */
+export function isWorkingSet(set: { set_kind?: string | null }): boolean {
+  const kind = set.set_kind ?? "working"
+  return kind !== "warmup" && kind !== "drop"
+}
+
 export function detectPersonalRecords(
   allSets: (WorkoutSetRow & { logged_at: string })[],
   newSets: WorkoutSetRow[]
@@ -210,7 +224,7 @@ export function detectPersonalRecords(
 
   // Build map of previous maxes (by exercise); warm-up sets never count toward PRs
   for (const s of allSets) {
-    if (s.is_warmup) continue
+    if (!isWorkingSet(s)) continue
     const key = s.exercise.toLowerCase()
     const prev = exerciseMaxes.get(key)
     if (!prev || s.weight_kg > prev.weight_kg || (s.weight_kg === prev.weight_kg && s.reps > prev.reps)) {
@@ -220,7 +234,7 @@ export function detectPersonalRecords(
 
   // Check new sets for PRs
   for (const s of newSets) {
-    if (s.is_warmup) continue
+    if (!isWorkingSet(s)) continue
     const key = s.exercise.toLowerCase()
     const prev = exerciseMaxes.get(key)
     if (!prev || s.weight_kg > prev.weight_kg || (s.weight_kg === prev.weight_kg && s.reps > prev.reps)) {
@@ -286,7 +300,7 @@ export function liftHistory(
   const topByDay = new Map<string, { at: string; weight: number }>()
 
   for (const s of sets) {
-    if (s.is_warmup) continue
+    if (!isWorkingSet(s)) continue
     if (s.exercise.toLowerCase().trim() !== key) continue
     const day = localDateKey(new Date(s.logged_at))
     const cur = topByDay.get(day)
@@ -309,7 +323,7 @@ export function liftsWithHistory(
 ): { exercise: string; points: LoadPoint[] }[] {
   const names = new Map<string, string>()
   for (const s of sets) {
-    if (s.is_warmup) continue
+    if (!isWorkingSet(s)) continue
     const key = s.exercise.toLowerCase().trim()
     // Keep the first spelling seen, so the list does not flip between
     // "Bench press" and "Bench Press" depending on load order.
@@ -336,8 +350,11 @@ export function liftsWithHistory(
  * happened, they are simply not working sets.
  */
 export function workoutsToCsv(logs: WorkoutLogWithSets[]): string {
-  const header = ["date", "session_type", "duration_min", "exercise", "set", "reps", "weight_kg", "warm_up"]
-  const cell = (v: string | number | boolean): string => {
+  // `set_kind` rather than a warm-up flag: the file can now say whether a set
+  // was an all-out top set or a back-off, which "warm_up: false" could not.
+  const header = ["date", "session_type", "duration_min", "exercise", "set", "reps", "weight_kg", "set_kind"]
+  const cell = (v: string | number | boolean | null): string => {
+    if (v === null) return ""
     const str = String(v)
     return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str
   }
@@ -353,7 +370,7 @@ export function workoutsToCsv(logs: WorkoutLogWithSets[]): string {
     }
     for (const s of log.sets) {
       rows.push(
-        [date, log.session_type, log.duration_min, s.exercise, s.set_number, s.reps, s.weight_kg, s.is_warmup]
+        [date, log.session_type, log.duration_min, s.exercise, s.set_number, s.reps, s.weight_kg, s.set_kind]
           .map(cell)
           .join(",")
       )
@@ -449,14 +466,14 @@ export function summarizeWorkoutSets(sets: WorkoutSetRow[]): ExerciseSummary[] {
   }
 
   return Array.from(groups.values()).map((group) => {
-    const working = group.filter((s) => !s.is_warmup)
+    const working = group.filter(isWorkingSet)
     const uniform =
       working.length > 1 &&
       working.every((s) => s.weight_kg === working[0].weight_kg && s.reps === working[0].reps) &&
       working.length === group.length
     const detail = uniform
       ? `${working[0].weight_kg}kg × ${working[0].reps} × ${working.length} sets`
-      : group.map((s) => `${s.weight_kg}×${s.reps}${s.is_warmup ? "w" : ""}`).join(", ")
+      : group.map((s) => `${s.weight_kg}×${s.reps}${isWorkingSet(s) ? "" : "w"}`).join(", ")
     return { exercise: group[0].exercise, detail, setCount: group.length }
   })
 }

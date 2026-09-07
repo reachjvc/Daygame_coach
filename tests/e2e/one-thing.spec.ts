@@ -58,7 +58,7 @@ test.describe("the one thing", () => {
     // depend on the one above it having run.
     await page.goto(TRACKING)
     await page.request.post("/api/life-answers", {
-      data: { key: "one_thing", body: `Something to aim at ${Date.now() % 1000}` },
+      data: { key: "one_thing", act: "start", body: `Something to aim at ${Date.now() % 1000}` },
     })
     await page.goto(TRACKING)
     const header = page.getByTestId("season-band-one-thing")
@@ -70,12 +70,12 @@ test.describe("the one thing", () => {
     await expect(page.getByTestId("back-link")).toHaveText(/Tracking/)
   })
 
-  test("replacing it moves the old one into the history", async ({ page }) => {
+  test("starting a new one moves the old one into the history", async ({ page }) => {
     const replacement = `Bench ${Date.now() % 500} kg`
 
     await page.goto(TRACKING)
     await page.request.post("/api/life-answers", {
-      data: { key: "one_thing", body: `The one before ${Date.now() % 999}` },
+      data: { key: "one_thing", act: "start", body: `The one before ${Date.now() % 999}` },
     })
     await page.goto(PLAN)
     const box = page.locator("textarea").first()
@@ -84,16 +84,61 @@ test.describe("the one thing", () => {
 
     await box.fill(replacement)
     await box.blur()
-    await expect(page.getByTestId("one-thing-save")).toBeEnabled()
+    // Replacing is now a deliberate act with its own control, and it asks first,
+    // because it is the one that restarts the clock.
+    await page.getByTestId("one-thing-new").click()
     const replaced = page.waitForResponse(
       (r) => r.url().includes("/api/life-answers") && r.request().method() === "POST" && r.status() === 201
     )
-    await page.getByTestId("one-thing-save").click()
+    await page.getByTestId("one-thing-start-new").click()
     await replaced
 
     // The one before it is kept, and reachable.
     await page.getByRole("button", { name: /before this/ }).click()
     if (previous.trim()) await expect(page.getByText(previous, { exact: false })).toBeVisible()
+  })
+
+  /**
+   * AT14 — THE WHOLE POINT, WALKED.
+   *
+   * "When I change something, I would still want it to be the tracking from the
+   * initial first date." So: write one, reword it, and check the countdown did
+   * not budge. Before chapters this was impossible — every save carried its own
+   * deadline, so fixing a typo silently restarted the clock.
+   */
+  test("rewording it does not restart the clock", async ({ page }) => {
+    // Relative to today, never a fixed date: a hardcoded deadline is a test
+    // that starts failing on a particular morning for no reason anybody
+    // remembers, because the server correctly refuses a day that has been.
+    const soon = new Date(Date.now() + 60 * 86_400_000).toISOString().slice(0, 10)
+    await page.goto(TRACKING)
+    await page.request.post("/api/life-answers", {
+      data: { key: "one_thing", act: "start", body: `Quit weed ${Date.now() % 1000}`, dueOn: soon },
+    })
+
+    await page.goto(PLAN)
+    const countdown = page.getByTestId("one-thing-countdown")
+    await countdown.waitFor({ state: "visible" })
+    const before = await countdown.textContent()
+
+    const box = page.locator("textarea").first()
+    await box.fill(`Quit weed, properly ${Date.now() % 1000}`)
+    await box.blur()
+    const save = page.getByTestId("one-thing-save")
+    await expect(save).toHaveText(/Save this wording/)
+    const saved = page.waitForResponse(
+      (r) => r.url().includes("/api/life-answers") && r.request().method() === "POST" && r.status() === 201
+    )
+    await save.click()
+    await saved
+
+    // Same deadline, same number of days. And the page now says so out loud.
+    await expect(countdown).toHaveText(before!)
+    await expect(page.getByTestId("one-thing-since")).toContainText(/Running since/)
+    // Still one chapter: a reword is not a new commitment.
+    const after = await (await page.request.get("/api/life-answers")).json()
+    expect(after.current.wordings).toBeGreaterThan(1)
+    expect(after.current.dueOn).toBe(soon)
   })
 
   /**
@@ -111,7 +156,7 @@ test.describe("the one thing", () => {
   test("changing only the deadline saves, and reaches the tracking page", async ({ page }) => {
     const body = `Quit weed for ${Date.now() % 1000} days`
     await page.goto(TRACKING)
-    await page.request.post("/api/life-answers", { data: { key: "one_thing", body } })
+    await page.request.post("/api/life-answers", { data: { key: "one_thing", act: "start", body } })
 
     await page.goto(PLAN)
     const due = page.getByTestId("one-thing-due")
@@ -129,6 +174,7 @@ test.describe("the one thing", () => {
     const save = page.getByTestId("one-thing-save")
     await expect(save).toBeEnabled()
     await expect(save).toHaveText(/Move the deadline/)
+    const startedBefore = (await (await page.request.get("/api/life-answers")).json()).current.startedOn
 
     const saved = page.waitForResponse(
       (r) => r.url().includes("/api/life-answers") && r.request().method() === "POST" && r.status() === 201
@@ -140,6 +186,12 @@ test.describe("the one thing", () => {
     const day = new Date(after + "T00:00:00Z").toLocaleDateString("en-GB", {
       day: "numeric", month: "short", year: "numeric", timeZone: "UTC",
     })
+    // Extending moves the deadline and keeps the day it began — that is the
+    // difference between extending and starting over.
+    const now = (await (await page.request.get("/api/life-answers")).json()).current
+    expect(now.dueOn).toBe(after)
+    expect(now.startedOn).toBe(startedBefore)
+
     await page.goto(TRACKING)
     await expect(page.getByTestId("season-band-countdown")).toContainText(day)
     // And the sentence did not change underneath them.
@@ -155,13 +207,13 @@ test.describe("the one thing", () => {
   test("refuses a deadline that has already been, in words", async ({ page }) => {
     await page.goto(TRACKING)
     const res = await page.request.post("/api/life-answers", {
-      data: { key: "one_thing", body: "A deadline behind me", dueOn: "2020-01-01" },
+      data: { key: "one_thing", act: "start", body: "A deadline behind me", dueOn: "2020-01-01" },
     })
     expect(res.status()).toBe(400)
     expect((await res.json()).error).toMatch(/already been/)
 
     const nonsense = await page.request.post("/api/life-answers", {
-      data: { key: "one_thing", body: "A day that does not exist", dueOn: "2026-13-45" },
+      data: { key: "one_thing", act: "start", body: "A day that does not exist", dueOn: "2026-13-45" },
     })
     expect(nonsense.status()).toBe(400)
     expect((await nonsense.json()).error).toMatch(/not a date on the calendar/)

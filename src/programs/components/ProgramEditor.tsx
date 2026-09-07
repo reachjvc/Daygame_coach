@@ -345,7 +345,7 @@ function ExerciseRow({
             value={scheme.kind === "linear" ? scheme.sets : scheme.sets}
             onCommit={(n) => onScheme({ sets: n })}
           />
-          {scheme.kind === "linear" ? (
+          {scheme.kind !== "rep_range" ? (
             <NumberBox label="reps" value={scheme.reps} onCommit={(n) => onScheme({ reps: n })} />
           ) : (
             <>

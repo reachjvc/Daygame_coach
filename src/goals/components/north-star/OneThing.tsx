@@ -22,10 +22,15 @@ export interface OneThingHandlers {
 
 export function OneThingCard({
   account,
+  typed,
+  onTyped,
   title,
   help,
 }: {
   account: OneThingAccount
+  /** Unsaved text, held by the page. See `OneThingBox` — it is not a draft. */
+  typed: string | null
+  onTyped: (text: string | null) => void
   title?: string
   help?: string
 }) {
@@ -36,7 +41,7 @@ export function OneThingCard({
       {/* The box reads and writes the account. There is no draft in the plan
           any more: one sentence, one place, so no screen can show a stale copy
           of it and no step can be scored against one. */}
-      <OneThingBox account={account} />
+      <OneThingBox account={account} typed={typed} onTyped={onTyped} />
     </>
   )
 }

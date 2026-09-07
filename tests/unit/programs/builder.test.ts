@@ -34,7 +34,8 @@ import { applyLog, computePrescription, roundToLoadable, seedEnrollment } from "
 import { getProgram, requireProgram } from "@/src/programs/data/catalog"
 import { ALL_PROGRAMS } from "@/src/programs/data/catalog"
 import { CUSTOM_PROGRAM_ID, customProgram, isCustomProgram } from "@/src/programs/data/customProgram"
-import { libraryExercise } from "@/src/programs/data/exerciseLibrary"
+import { libraryByName, libraryExercise } from "@/src/programs/data/exerciseLibrary"
+import { loadStyleOf } from "@/src/programs/programsService"
 import { effectiveProgram } from "@/src/programs/customize"
 import { CustomScheduleSchema } from "@/src/programs/schemas"
 import type { LoadExercise, ProgramEnrollment, ProgramSchedule } from "@/src/programs/types"
@@ -429,9 +430,23 @@ describe("a lift is rounded to a weight it can actually be loaded at", () => {
    * and a bodyweight push-up at 20 kg of nothing. It hardly showed while the
    * app only held barbell programs; a self-designed week is mostly accessories.
    */
-  test("a dumbbell lift keeps its light weight", () => {
-    expect(roundToLoadable(6, "kg", "free")).toBe(5)
-    expect(roundToLoadable(12, "kg", "free")).toBe(12.5)
+  test("a dumbbell lift keeps the weight it was given", () => {
+    // IT USED TO MOVE THEM. A free-weight lift was snapped to the BARBELL's
+    // 2.5 kg step, so a 6 kg dumbbell became 5 and a 12 kg one became 12.5 —
+    // two weights no rack has. We do not know what any given gym's dumbbells
+    // or cable stack go up in, so the number is kept and only tidied.
+    expect(roundToLoadable(6, "kg", "free")).toBe(6)
+    expect(roundToLoadable(12, "kg", "free")).toBe(12)
+    expect(roundToLoadable(25, "kg", "free")).toBe(25)
+    // Still never an absurd number.
+    expect(roundToLoadable(7.3, "kg", "free")).toBe(7.5)
+  })
+
+  test("a small increment on an accessory actually moves it", () => {
+    // The reason the old snapping mattered: +1 kg on a 12 kg lateral raise
+    // rounded straight back to 12.5 and then stayed there for ever, while the
+    // session summary said "+1 kg" every time.
+    expect(roundToLoadable(12 + 1, "kg", "free")).toBe(13)
   })
 
   test("bodyweight stays at nothing rather than becoming a bar", () => {
@@ -444,21 +459,44 @@ describe("a lift is rounded to a weight it can actually be loaded at", () => {
     expect(roundToLoadable(6, "lb", "barbell")).toBe(45)
   })
 
-  test("the default is barbell, so every catalog program rounds as it always did", () => {
+  test("no catalog lift is loaded like a barbell unless it is one", () => {
+    /**
+     * THIS USED TO ASSERT THE OPPOSITE — that every catalog lift left
+     * `loadStyle` absent, so every one of them rounded as a barbell. That is
+     * how a 12 kg lateral raise and a 15 kg face pull were floored at the 20 kg
+     * bar and told the lifter "just the bar": the prescription was a weight
+     * they could not use and, once at the floor, could never move off.
+     *
+     * The rule that matters is about MEANING, not defaults: if the library
+     * knows a lift has no bar under it, the program must not price it like one.
+     * `loadStyleOf` is the one place that decides, deriving from the library so
+     * a new program cannot get it wrong by omission.
+     */
+    const offenders: string[] = []
     for (const program of ALL_PROGRAMS) {
       const sch = program.schedule
       if (sch.kind !== "linear_rotation" && sch.kind !== "weekly_waved") continue
-      for (const d of sch.days) for (const e of d.exercises) expect(e.loadStyle).toBeUndefined()
+      for (const d of sch.days) {
+        for (const e of d.exercises) {
+          const lib = libraryByName(e.name)
+          if (!lib || lib.barbell) continue
+          if (loadStyleOf(e) === "barbell") {
+            offenders.push(`${program.id} · ${d.label} · ${e.name}`)
+          }
+        }
+      }
     }
+    expect(offenders, "these are not barbell lifts but are rounded like one").toEqual([])
   })
 
   test("a light accessory added to a design is seeded and progressed light", () => {
     const { schedule, dayId, ids } = twoLiftDay()
     const enr = enrollCustom(schedule, { [ids[0]]: 60, [ids[1]]: 6 })
-    // 6 kg snaps to 5, not up to the 20 kg bar.
-    expect(enr.exerciseState[ids[1]].workingWeight).toBe(5)
+    // 6 kg stays 6 — not rounded to 5 by the barbell's step, and not raised to
+    // the 20 kg bar. Both of those used to happen to accessories.
+    expect(enr.exerciseState[ids[1]].workingWeight).toBe(6)
     const rx = computePrescription(effectiveProgram(customProgram, schedule), enr)
-    expect(rx.exercises[1].sets[0].weight).toBe(5)
+    expect(rx.exercises[1].sets[0].weight).toBe(6)
   })
 
   test("the library says which lifts are on a bar", () => {

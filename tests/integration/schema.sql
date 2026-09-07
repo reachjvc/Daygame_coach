@@ -28,6 +28,12 @@ CREATE TABLE profiles (
   full_name TEXT,
   avatar_url TEXT,
   has_purchased BOOLEAN NOT NULL DEFAULT false,
+  -- From 20260907100000. The engine reads these to prescribe a weight the
+  -- person's gym can actually load.
+  weight_unit TEXT NOT NULL DEFAULT 'kg' CHECK (weight_unit IN ('kg', 'lb')),
+  bar_weight_kg NUMERIC(5,2) NOT NULL DEFAULT 20 CHECK (bar_weight_kg >= 0 AND bar_weight_kg <= 50),
+  smallest_plate_kg NUMERIC(5,2) NOT NULL DEFAULT 1.25
+    CHECK (smallest_plate_kg >= 0.25 AND smallest_plate_kg <= 25),
   onboarding_completed BOOLEAN NOT NULL DEFAULT false,
   primary_archetype TEXT,
   secondary_archetypes TEXT[],
@@ -421,7 +427,7 @@ CREATE TABLE user_goals (
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   category TEXT NOT NULL,
-  tracking_type TEXT NOT NULL DEFAULT 'counter' CHECK (tracking_type IN ('counter', 'percentage', 'streak', 'boolean')),
+  tracking_type TEXT NOT NULL DEFAULT 'counter' CHECK (tracking_type IN ('counter', 'boolean')),
   period TEXT NOT NULL DEFAULT 'weekly' CHECK (period IN ('daily', 'weekly', 'monthly', 'quarterly', 'yearly', 'custom')),
   target_value INTEGER NOT NULL DEFAULT 1,
   current_value INTEGER NOT NULL DEFAULT 0,
@@ -433,7 +439,7 @@ CREATE TABLE user_goals (
   is_archived BOOLEAN NOT NULL DEFAULT false,
   -- Mirrors the production `linked_metric` enum (src/db/goalEnums.ts LINKED_METRICS,
   -- migration 20260306_expand_goal_enum_constraints). Keep in sync when adding metrics.
-  linked_metric TEXT CHECK (linked_metric IS NULL OR linked_metric IN ('approaches_weekly', 'sessions_weekly', 'numbers_weekly', 'instadates_weekly', 'field_reports_weekly', 'approaches_cumulative', 'sessions_cumulative', 'numbers_cumulative', 'instadates_cumulative', 'field_reports_cumulative', 'approach_quality_avg_weekly', 'high_quality_approaches_cumulative', 'scenario_sessions_cumulative', 'scenario_types_cumulative', 'scenario_high_scores_cumulative', 'body_weight_current', 'sleep_hours_avg_weekly', 'gym_sessions_weekly', 'gym_sessions_cumulative', 'nutrition_quality_avg_weekly', 'cardio_sessions_weekly', 'training_hours_cumulative', 'consecutive_training_weeks', 'bench_press_1rm', 'squat_1rm', 'deadlift_1rm', 'overhead_press_1rm', 'pullups_max_reps', 'progress_photos_cumulative', 'protein_days_hit_weekly', 'calorie_days_hit_weekly', 'weight_lost_from_peak', 'weight_gained_from_lowest', 'body_measurements_count', 'mobility_sessions_weekly', 'yoga_sessions_weekly', 'flexibility_hours_cumulative', 'running_sessions_weekly', 'running_distance_cumulative', 'longest_run_km', 'consecutive_cardio_weeks')),
+  linked_metric TEXT CHECK (linked_metric IS NULL OR linked_metric IN ('approaches_weekly', 'sessions_weekly', 'numbers_weekly', 'instadates_weekly', 'field_reports_weekly', 'approaches_cumulative', 'sessions_cumulative', 'numbers_cumulative', 'instadates_cumulative', 'field_reports_cumulative', 'approach_quality_avg_weekly', 'high_quality_approaches_weekly', 'high_quality_approaches_cumulative', 'scenario_sessions_cumulative', 'scenario_types_cumulative', 'scenario_high_scores_cumulative', 'body_weight_current', 'sleep_hours_avg_weekly', 'gym_sessions_weekly', 'gym_sessions_cumulative', 'nutrition_quality_avg_weekly', 'cardio_sessions_weekly', 'training_hours_cumulative', 'consecutive_training_weeks', 'bench_press_1rm', 'squat_1rm', 'deadlift_1rm', 'overhead_press_1rm', 'pullups_max_reps', 'progress_photos_cumulative', 'protein_days_hit_weekly', 'calorie_days_hit_weekly', 'weight_lost_from_peak', 'weight_gained_from_lowest', 'body_measurements_count', 'mobility_sessions_weekly', 'yoga_sessions_weekly', 'flexibility_hours_cumulative', 'running_sessions_weekly', 'running_distance_cumulative', 'longest_run_km', 'consecutive_cardio_weeks')),
   position INTEGER NOT NULL DEFAULT 0,
   life_area TEXT NOT NULL DEFAULT 'custom',
   parent_goal_id UUID REFERENCES user_goals(id) ON DELETE CASCADE,
@@ -652,6 +658,15 @@ CREATE TABLE program_enrollments (
   exercise_state JSONB NOT NULL DEFAULT '{}'::jsonb,
   cursor JSONB NOT NULL,
   custom_schedule JSONB,
+  -- Verbatim from 20260907090000_replay_from_seed.sql. The seed is what the
+  -- person typed at enrolment; replay folds history over it rather than
+  -- re-deriving it from the catalogue. The events are the things that changed
+  -- the state and were not workouts (a skip, a reset, a manual weight change).
+  initial_exercise_state JSONB,
+  replay_events JSONB NOT NULL DEFAULT '[]'::jsonb,
+  bar_weight_kg NUMERIC(5,2)
+    CONSTRAINT program_enrollments_bar_weight_sane
+    CHECK (bar_weight_kg IS NULL OR (bar_weight_kg >= 0 AND bar_weight_kg <= 50)),
   is_active BOOLEAN NOT NULL DEFAULT true,
   started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -663,16 +678,96 @@ CREATE INDEX idx_program_enrollments_user_active
 CREATE UNIQUE INDEX uq_program_enrollments_active
   ON program_enrollments(user_id, program_id) WHERE is_active;
 
-CREATE TABLE program_session_logs (
+ALTER TABLE program_enrollments ADD COLUMN label TEXT
+  CHECK (label IS NULL OR char_length(label) BETWEEN 1 AND 60);
+
+-- ---------------------------------------------------------------------------
+-- Workouts. Verbatim from 20260305 + 20260716 + 20260907100000, because these
+-- are what the training feature now reads and writes: `program_session_logs`
+-- was a SECOND copy of every program session and is gone.
+--
+-- The constraints are the point of having them here. Three of them replace a
+-- whole class of bug (a workout that is both running and finished; two workouts
+-- running at once; a retry logging the same session twice) and can only be
+-- proven against a real Postgres.
+-- ---------------------------------------------------------------------------
+CREATE TABLE workout_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  enrollment_id UUID NOT NULL REFERENCES program_enrollments(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  day_id TEXT NOT NULL,
-  cycle INTEGER NOT NULL,
-  week INTEGER NOT NULL,
-  entries JSONB NOT NULL,
-  rpe SMALLINT CHECK (rpe IS NULL OR (rpe >= 1 AND rpe <= 10)),
-  notes TEXT,
+  session_type TEXT NOT NULL CHECK (session_type IN ('weights', 'cardio', 'mobility', 'yoga', 'running')),
+  duration_min INTEGER CHECK (duration_min > 0 AND duration_min < 600),
+  intensity SMALLINT CHECK (intensity >= 1 AND intensity <= 5),
+  distance_km NUMERIC(6,2),
   logged_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  started_at TIMESTAMPTZ,
+  ended_at TIMESTAMPTZ,
+  enrollment_id UUID REFERENCES program_enrollments(id) ON DELETE SET NULL,
+  program_day_id TEXT,
+  program_cycle INTEGER CHECK (program_cycle IS NULL OR (program_cycle >= 1 AND program_cycle <= 1000)),
+  program_week INTEGER CHECK (program_week IS NULL OR (program_week >= 1 AND program_week <= 52)),
+  adjustments JSONB NOT NULL DEFAULT '{}'::jsonb,
+  rpe SMALLINT CHECK (rpe IS NULL OR (rpe >= 1 AND rpe <= 10)),
+  notes TEXT CHECK (notes IS NULL OR char_length(notes) <= 1000),
+  client_key TEXT,
+  CONSTRAINT workout_logs_lifecycle CHECK (
+       (started_at IS NULL     AND ended_at IS NULL AND duration_min IS NOT NULL AND intensity IS NOT NULL)
+    OR (started_at IS NOT NULL AND ended_at IS NULL AND duration_min IS NULL     AND intensity IS NULL)
+    OR (started_at IS NOT NULL AND ended_at IS NOT NULL AND duration_min IS NOT NULL AND intensity IS NOT NULL)
+  ),
+  CONSTRAINT workout_logs_ended_after_start
+    CHECK (ended_at IS NULL OR started_at IS NULL OR ended_at >= started_at),
+  CONSTRAINT workout_logs_logged_is_start
+    CHECK (started_at IS NULL OR logged_at = started_at),
+  CONSTRAINT workout_logs_program_context CHECK (
+    enrollment_id IS NULL
+    OR (program_day_id IS NOT NULL AND program_cycle IS NOT NULL AND program_week IS NOT NULL)
+  )
 );
+
+CREATE UNIQUE INDEX uq_workout_logs_live
+  ON workout_logs(user_id) WHERE ended_at IS NULL AND started_at IS NOT NULL;
+CREATE UNIQUE INDEX uq_workout_logs_client_key
+  ON workout_logs(user_id, client_key) WHERE client_key IS NOT NULL;
+CREATE INDEX idx_workout_logs_enrollment
+  ON workout_logs(enrollment_id, logged_at DESC) WHERE enrollment_id IS NOT NULL;
+
+CREATE FUNCTION workout_logs_enrollment_is_own()
+RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path = public AS $fn$
+BEGIN
+  IF NEW.enrollment_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM program_enrollments e
+    WHERE e.id = NEW.enrollment_id AND e.user_id = NEW.user_id
+  ) THEN
+    RAISE EXCEPTION 'A workout can only be attached to your own program';
+  END IF;
+  RETURN NEW;
+END $fn$;
+
+CREATE TRIGGER workout_logs_enrollment_is_own_trg
+  BEFORE INSERT OR UPDATE OF enrollment_id, user_id ON workout_logs
+  FOR EACH ROW EXECUTE FUNCTION workout_logs_enrollment_is_own();
+
+CREATE TABLE workout_sets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  log_id UUID NOT NULL REFERENCES workout_logs(id) ON DELETE CASCADE,
+  exercise TEXT NOT NULL,
+  weight_kg NUMERIC(5,2) NOT NULL CHECK (weight_kg >= 0),
+  reps INTEGER NOT NULL,
+  set_number INTEGER NOT NULL CHECK (set_number > 0),
+  notes TEXT CHECK (notes IS NULL OR char_length(notes) <= 500),
+  exercise_notes TEXT CHECK (exercise_notes IS NULL OR char_length(exercise_notes) <= 500),
+  exercise_id TEXT,
+  library_id TEXT,
+  set_kind TEXT NOT NULL DEFAULT 'working'
+    CHECK (set_kind IN ('warmup', 'working', 'amrap', 'backoff', 'drop')),
+  prescribed_index SMALLINT,
+  completed_at TIMESTAMPTZ,
+  rpe SMALLINT CHECK (rpe IS NULL OR (rpe >= 1 AND rpe <= 10)),
+  side TEXT CHECK (side IS NULL OR side IN ('left', 'right')),
+  CONSTRAINT workout_sets_reps_check CHECK (reps >= 0 AND reps <= 1000),
+  CONSTRAINT workout_sets_weight_max CHECK (weight_kg <= 1000)
+);
+
+CREATE UNIQUE INDEX uq_workout_sets_slot
+  ON workout_sets(log_id, COALESCE(exercise_id, exercise), set_kind, set_number, COALESCE(side, ''));

@@ -5822,22 +5822,81 @@ export function readsAsActionable(text: string): boolean {
  * The area is guessed and then shown, never guessed silently: "stop buying it"
  * is a Health goal to this function and a Money goal to plenty of people, and
  * the picker is right there.
+ *
+ * THE SHAPE IS CHOSEN, NEVER GUESSED. `type` is required and has no default.
+ *
+ * It used to be read out of the words by `shapeFromTitle`, and the guesses were
+ * wrong in ways nobody could correct from this step. Three real examples, from
+ * somebody's own list:
+ *
+ *   "No weed"                          → a rate of 7 a week      (near enough)
+ *   "finalize weed decision by date"   → filed under Relationship (a romantic
+ *                                        date; it meant a deadline)
+ *   "Spend 100 kr pr day i didnt smoke" → a one-off climb to 100  (it is 100 a
+ *                                        DAY, adding up — the opposite)
+ *
+ * A guess you cannot see and cannot change is worse than a question. So the
+ * step now asks, and this takes the answer.
+ *
+ * WHAT THE WORDS ARE STILL ALLOWED TO DO: fill in the numbers of the shape you
+ * picked, and only when they agree with it. "Save 20000" chosen as a Target
+ * opens at 20000 rather than at a made-up default. "Ring my mother once a week"
+ * chosen as a Target has no number in it that a target could mean, so the
+ * ladder is left EMPTY and the card asks — inventing 100 there is the same
+ * class of fault this change exists to remove.
  */
-export function addOneThingRequirement(plan: NsPlan, title: string, areaId?: string, now = nowIso()): NsPlan {
+export function addOneThingRequirement(
+  plan: NsPlan,
+  title: string,
+  areaId: string | undefined,
+  type: VisionGoalType,
+  now = nowIso()
+): NsPlan {
   const text = title.trim()
   if (!text) return plan
   const target = areaId ?? guessAreaId(areaKeywordIndex(plan.areas), text) ?? plan.areas[0]?.id
   if (!target) return plan
-  // Same shaping as anything typed into an area: a number in the sentence
-  // makes it a climb, a rate makes it a driver, everything else is a finish.
-  const next = addGoalsFromDump(plan, target, text, now)
+
+  const next = addGoal(plan, target, text, type, now)
   const made = next.goals[next.goals.length - 1]
   if (!made || made.title.trim().toLowerCase() !== text.toLowerCase()) {
-    // `addGoalsFromDump` refused it (a blank line, or a duplicate). Nothing to
-    // flag, and nothing to say — the caller sees the unchanged plan.
+    // `addGoal` refused it — a blank line, or an area that is not on the plan.
     return next
   }
-  return updateGoal(next, made.id, { servesOneThing: true }, now)
+
+  // The numbers, but only the ones this shape can hold. `shapeFromTitle` reads
+  // both the rates and the targets out of a line; its opinion about which KIND
+  // of goal the line is has no vote here any more.
+  const read = shapeFromTitle(text)
+  const patch: Partial<Omit<NsGoal, "id">> = { servesOneThing: true }
+
+  if (type === "milestone_ladder") {
+    if (read.type === "milestone_ladder" && read.target != null) {
+      patch.unit = read.unit
+      patch.ladder = {
+        start: read.start ?? 0,
+        target: read.target,
+        steps: 4,
+        curveTension: 0,
+        controlPoints: [],
+        pins: [],
+      }
+    } else {
+      // No number the words could have meant. `defaultsForType` opens a ladder
+      // at 0 → 100 for the shape's sake; leaving that in place would put a
+      // target of 100 on "Ring my mother", which nobody typed and nobody would
+      // notice until it was on their tracking page.
+      patch.ladder = null
+    }
+  }
+
+  if (type === "habit_ramp" && read.type === "habit_ramp") {
+    patch.daysPerWeek = read.daysPerWeek
+    patch.perWeek = read.perWeek
+    patch.rampSteps = read.rampSteps
+  }
+
+  return updateGoal(next, made.id, patch, now)
 }
 
 /**

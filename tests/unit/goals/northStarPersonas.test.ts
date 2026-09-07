@@ -154,8 +154,8 @@ describe("the vague one — feelings, no verbs", () => {
     expect(plan.goals.filter((g) => g.servesOneThing)).toEqual([])
   })
 
-  it("still gets a shaped goal out of whatever they do write", () => {
-    const next = addOneThingRequirement(plan, "Ring my mother once a week", undefined, NOW)
+  it("gets the shape they asked for, filed where the words point", () => {
+    const next = addOneThingRequirement(plan, "Ring my mother once a week", undefined, "habit_ramp", NOW)
     expect(next.goals[next.goals.length - 1]).toMatchObject({ areaId: "lm_family", type: "habit_ramp", daysPerWeek: 1 })
   })
 })

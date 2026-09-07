@@ -197,8 +197,12 @@ describe("5/3/1 — percentage_tm progression", () => {
     const tm = enr.exerciseState.squat.trainingMax! // 125
     expect(squat.sets.map((s) => s.reps)).toEqual([5, 5, 5])
     expect(squat.sets[2].amrap).toBe(true)
-    expect(squat.sets[0].weight).toBe(roundToLoadable(tm * 0.65, "kg"))
-    expect(squat.sets[2].weight).toBe(roundToLoadable(tm * 0.85, "kg"))
+    // ROUNDED DOWN, which is what Wendler says to do with a percentage and what
+    // every prescription now does: asking for more than the program intended is
+    // how a 2.5 kg increment quietly becomes a 5 kg one.
+    expect(squat.sets[0].weight).toBe(roundToLoadable(tm * 0.65, "kg", "barbell", undefined, "down"))
+    expect(squat.sets[2].weight).toBe(roundToLoadable(tm * 0.85, "kg", "barbell", undefined, "down"))
+    expect(squat.sets[0].weight).toBeLessThanOrEqual(tm * 0.65)
   })
 
   test("no TM change on weeks 1 and 2", () => {
@@ -208,24 +212,75 @@ describe("5/3/1 — percentage_tm progression", () => {
     expect(res.enrollment.exerciseState.ohp.trainingMax).toBe(enr.exerciseState.ohp.trainingMax)
   })
 
-  test("completing the last working week bumps TM (lower +5kg, upper +2.5kg)", () => {
+  test("finishing the CYCLE bumps TM (lower +5kg, upper +2.5kg), not week three", () => {
+    // THE DELOAD WEEK IS COMPUTED OFF THE OLD MAX. The bump used to land at the
+    // end of week 3, so week 4 — whose entire job is to be light — was
+    // prescribed from the already-raised number. Wendler deloads off the max
+    // you finished the cycle with, then raises it.
     const enr = enroll(wendler531, "intermediate", "kg", ONE_RMS)
-    enr.cursor = { ...enr.cursor, week: 3, dayIndex: 3 } // squat-day, last working week
+    enr.cursor = { ...enr.cursor, week: 3, dayIndex: 3 } // squat day, last working week
     const squatTM = enr.exerciseState.squat.trainingMax!
-    const res = applyLog(wendler531, enr, logFor(wendler531, enr))
+
+    const afterWeek3 = applyLog(wendler531, enr, logFor(wendler531, enr))
+    expect(afterWeek3.changes.find((c) => c.exerciseId === "squat")).toBeUndefined()
+    expect(afterWeek3.enrollment.exerciseState.squat.trainingMax).toBe(squatTM)
+
+    const deloadWeek = { ...enr, cursor: { ...enr.cursor, week: 4, dayIndex: 3 } }
+    const res = applyLog(wendler531, deloadWeek, logFor(wendler531, deloadWeek))
     const change = res.changes.find((c) => c.exerciseId === "squat")!
     expect(change.kind).toBe("tm_increase")
     expect(res.enrollment.exerciseState.squat.trainingMax).toBe(squatTM + 5) // lower body
   })
 
-  test("missing the top AMRAP set on the last working week resets TM down 10%", () => {
+  test("a top set missed in ANY week of the wave cuts the TM at the end of it", () => {
+    // Wendler checks the "+" set every working week. The engine only ever
+    // looked in week 3, so a blown week-1 top set raised the max as if the
+    // cycle had gone perfectly.
     const enr = enroll(wendler531, "intermediate", "kg", ONE_RMS)
-    enr.cursor = { ...enr.cursor, week: 3, dayIndex: 3 }
     const squatTM = enr.exerciseState.squat.trainingMax!
-    const res = applyLog(wendler531, enr, logFor(wendler531, enr, { squat: 0 })) // failed the single
+
+    const week1 = { ...enr, cursor: { ...enr.cursor, week: 1, dayIndex: 3 } }
+    const missed = applyLog(wendler531, week1, logFor(wendler531, week1, { squat: 0 }))
+    // Nothing moves yet, but the miss is remembered.
+    expect(missed.enrollment.exerciseState.squat.trainingMax).toBe(squatTM)
+    expect(missed.enrollment.exerciseState.squat.missedTopSet).toBe(true)
+
+    const deloadWeek = {
+      ...missed.enrollment,
+      cursor: { ...enr.cursor, week: 4, dayIndex: 3 },
+    }
+    const res = applyLog(wendler531, deloadWeek, logFor(wendler531, deloadWeek))
     const change = res.changes.find((c) => c.exerciseId === "squat")!
     expect(change.kind).toBe("tm_reset")
     expect(res.enrollment.exerciseState.squat.trainingMax).toBe(roundToLoadable(squatTM * 0.9, "kg"))
+    expect(res.enrollment.exerciseState.squat.missedTopSet).toBe(false)
+  })
+
+  test("the AMRAP set is judged by its flag, not by being logged last", () => {
+    // Add a back-off single after the 1+ and the last logged set is no longer
+    // the top set. Judging "the last one" read that back-off as a missed AMRAP
+    // and took ten per cent off the training max.
+    const enr = enroll(wendler531, "intermediate", "kg", ONE_RMS)
+    const week3 = { ...enr, cursor: { ...enr.cursor, week: 3, dayIndex: 3 } }
+    const base = logFor(wendler531, week3)
+    const squatEntry = base.entries.find((e) => e.exerciseId === "squat")!
+    const withBackOff = {
+      ...base,
+      entries: base.entries.map((e) =>
+        e.exerciseId !== "squat"
+          ? e
+          : {
+              ...e,
+              sets: [
+                ...e.sets,
+                // A light, deliberately short back-off set on the end.
+                { setNumber: e.sets.length + 1, reps: 1, weight: squatEntry.sets[0].weight },
+              ],
+            }
+      ),
+    }
+    const afterWave = applyLog(wendler531, week3, withBackOff)
+    expect(afterWave.enrollment.exerciseState.squat.missedTopSet).not.toBe(true)
   })
 })
 
@@ -233,30 +288,68 @@ describe("5/3/1 — percentage_tm progression", () => {
 // Push/Pull/Legs — double progression (bodybuilding, load engine)
 // ============================================================================
 
-describe("PPL — double progression", () => {
-  test("prescribes a rep range (min reps + repRangeMax) at the working weight", () => {
+describe("PPL — the six-day template it cites", () => {
+  test("six DIFFERENT days, opening on a deadlift-led pull day", () => {
+    // IT USED TO BE THREE GENERIC DAYS with no deadlift anywhere, while the
+    // enrol screen printed "r/Fitness PPL template" underneath. The cited
+    // routine has A and B versions of each day, and the deadlift is the whole
+    // opening session of Pull A.
+    const sch = pushPullLegs.schedule
+    if (sch.kind !== "linear_rotation") throw new Error("PPL should be a rotation")
+    expect(sch.days.map((d) => d.id)).toEqual([
+      "pull_a", "push_a", "legs_a", "pull_b", "push_b", "legs_b",
+    ])
     const enr = enroll(pushPullLegs, "intermediate")
     const p = computePrescription(pushPullLegs, enr)
-    expect(p.dayId).toBe("push")
-    const bench = p.exercises.find((e) => e.exerciseId === "bb_bench")!
-    expect(bench.sets).toHaveLength(4)
-    expect(bench.sets[0].reps).toBe(6)
-    expect(bench.sets[0].repRangeMax).toBe(8)
-    expect(bench.sets[0].weight).toBe(70)
+    expect(p.dayId).toBe("pull_a")
+    const dl = p.exercises.find((e) => e.exerciseId === "bb_deadlift")!
+    expect(dl.sets).toHaveLength(1)
+    expect(dl.sets[0].amrap).toBe(true)
   })
 
-  test("hitting the top of the range on all sets adds weight", () => {
+  test("a main lift is straight sets with an all-out last one", () => {
     const enr = enroll(pushPullLegs, "intermediate")
-    const res = applyLog(pushPullLegs, enr, logFor(pushPullLegs, enr, { bb_bench: 8, bb_ohp: 10, bb_incline_db: 12, bb_triceps: 15, bb_lateral: 20 }))
+    const push = computePrescription(pushPullLegs, { ...enr, cursor: { ...enr.cursor, dayIndex: 1 } })
+    const bench = push.exercises.find((e) => e.exerciseId === "bb_bench")!
+    expect(bench.sets).toHaveLength(5) // 4×5 plus the 5+
+    expect(bench.sets.slice(0, 4).every((set) => set.reps === 5 && !set.amrap)).toBe(true)
+    expect(bench.sets[4].amrap).toBe(true)
+    expect(bench.sets[0].weight).toBe(70)
+    // And it cannot be logged closed: "5+" has no prescribed answer.
+    expect(needsInput(bench)).toBe(true)
+  })
+
+  test("hitting the target on the last set adds weight; upper 2.5, lower 5", () => {
+    const enr = enroll(pushPullLegs, "intermediate")
+    const push = { ...enr, cursor: { ...enr.cursor, dayIndex: 1 } }
+    const res = applyLog(pushPullLegs, push, logFor(pushPullLegs, push, {}))
     expect(res.enrollment.exerciseState.bb_bench.workingWeight).toBe(72.5)
     expect(res.changes.find((c) => c.exerciseId === "bb_bench")!.kind).toBe("advance")
+
+    const legs = { ...enr, cursor: { ...enr.cursor, dayIndex: 2 } }
+    const legRes = applyLog(pushPullLegs, legs, logFor(pushPullLegs, legs, {}))
+    expect(legRes.enrollment.exerciseState.bb_squat.workingWeight).toBe(95)
   })
 
-  test("staying inside the range holds the weight (chase more reps)", () => {
+  test("an accessory still adds reps before weight", () => {
     const enr = enroll(pushPullLegs, "intermediate")
-    const res = applyLog(pushPullLegs, enr, logFor(pushPullLegs, enr, { bb_bench: 7 }))
-    expect(res.enrollment.exerciseState.bb_bench.workingWeight).toBe(70)
-    expect(res.changes.find((c) => c.exerciseId === "bb_bench")!.kind).toBe("hold")
+    const push = { ...enr, cursor: { ...enr.cursor, dayIndex: 1 } }
+    // Inside the range but not at the top: hold and chase.
+    const held = applyLog(pushPullLegs, push, logFor(pushPullLegs, push, { bb_incline_db: 9 }))
+    expect(held.enrollment.exerciseState.bb_incline_db.workingWeight).toBe(30)
+    expect(held.changes.find((c) => c.exerciseId === "bb_incline_db")!.kind).toBe("hold")
+    // Top of the range on every set: add weight.
+    const up = applyLog(pushPullLegs, push, logFor(pushPullLegs, push, { bb_incline_db: 12 }))
+    expect(up.enrollment.exerciseState.bb_incline_db.workingWeight).toBe(32.5)
+  })
+
+  test("the triceps and lateral work is written as a superset", () => {
+    const enr = enroll(pushPullLegs, "intermediate")
+    const push = computePrescription(pushPullLegs, { ...enr, cursor: { ...enr.cursor, dayIndex: 1 } })
+    const tri = push.exercises.find((e) => e.exerciseId === "bb_triceps")!
+    const lat = push.exercises.find((e) => e.exerciseId === "bb_lateral")!
+    expect(tri.supersetGroup).toBeTruthy()
+    expect(lat.supersetGroup).toBe(tri.supersetGroup)
   })
 })
 
@@ -309,23 +402,55 @@ function log(enr: ProgramEnrollment) {
 // ============================================================================
 
 describe("Bodyweight Foundations — skill tiers", () => {
-  test("starts at tier 0 and prescribes bodyweight reps", () => {
+  test("asks for the work reps, not the number that unlocks the next variation", () => {
     const enr = enroll(recommendedRoutine, "beginner")
     expect(enr.exerciseState.cal_push.tierIndex).toBe(0)
     const p = computePrescription(recommendedRoutine, enr)
     const push = p.exercises.find((e) => e.exerciseId === "cal_push")!
     expect(push.bodyweight).toBe(true)
     expect(push.repUnit).toBe("reps")
-    expect(push.sets[0].reps).toBe(12) // incline push-up unlock reps
+    // Three sets of five to eight, which is what the routine says. It used to
+    // prescribe the UNLOCK number, so the two were the same number.
+    expect(push.sets[0].reps).toBe(5)
+    expect(push.sets[0].repRangeMax).toBe(8)
+    expect(push.sets).toHaveLength(3)
   })
 
-  test("hitting the unlock reps on all sets advances to the next variation", () => {
+  test("doing exactly what it asked does NOT promote you to a harder variation", () => {
+    // THE BUG THIS PINS. The session was seeded with the unlock threshold, so
+    // pressing "I did all of this" cleared the bar by definition — every
+    // session, whatever you actually managed, moved you onto a harder movement.
     const enr = enroll(recommendedRoutine, "beginner")
     const p = computePrescription(recommendedRoutine, enr)
-    const reps = Object.fromEntries(p.exercises.map((e) => [e.exerciseId, e.sets[0].reps]))
-    const res = applyLog(recommendedRoutine, enr, logFor(recommendedRoutine, enr, reps))
+    const asked = Object.fromEntries(p.exercises.map((e) => [e.exerciseId, e.sets[0].reps]))
+    const res = applyLog(recommendedRoutine, enr, logFor(recommendedRoutine, enr, asked))
+    expect(res.enrollment.exerciseState.cal_push.tierIndex).toBe(0)
+    expect(res.changes.find((c) => c.exerciseId === "cal_push")!.kind).toBe("hold")
+  })
+
+  test("making the top of the range on every set unlocks the next variation", () => {
+    const enr = enroll(recommendedRoutine, "beginner")
+    const p = computePrescription(recommendedRoutine, enr)
+    const top = Object.fromEntries(p.exercises.map((e) => [e.exerciseId, e.sets[0].repRangeMax!]))
+    const res = applyLog(recommendedRoutine, enr, logFor(recommendedRoutine, enr, top))
     expect(res.enrollment.exerciseState.cal_push.tierIndex).toBe(1)
     expect(res.changes.find((c) => c.exerciseId === "cal_push")!.kind).toBe("tier_up")
+  })
+
+  test("the strength work is written as pairs, and the core triplet is last", () => {
+    const sch = recommendedRoutine.schedule
+    if (sch.kind !== "skill_routine") throw new Error("should be a skill routine")
+    const ex = sch.days[0].exercises
+    // Six strength ladders in three pairs, then three core ladders. It used to
+    // be four unpaired lines with no dip, no hinge and no row at all.
+    expect(ex.map((e) => e.id)).toEqual([
+      "cal_pull", "cal_squat", "cal_dip", "cal_hinge", "cal_row", "cal_push",
+      "cal_core_ext", "cal_core_rot", "cal_core_back",
+    ])
+    expect(ex[0].supersetGroup).toBe(ex[1].supersetGroup)
+    expect(ex[2].supersetGroup).toBe(ex[3].supersetGroup)
+    expect(ex[4].supersetGroup).toBe(ex[5].supersetGroup)
+    expect(ex[0].supersetGroup).not.toBe(ex[2].supersetGroup)
   })
 
   test("missing the unlock reps holds the current tier", () => {

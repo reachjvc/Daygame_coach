@@ -12,7 +12,7 @@
  */
 
 import { getLifeAnswers, addLifeAnswer, type LifeAnswerKey } from "@/src/db/lifeAnswerRepo"
-import { getChapters, openChapter } from "@/src/db/lifeChapterRepo"
+import { getChapters, openChapter, deleteChapter } from "@/src/db/lifeChapterRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import {
   applyOneThingWrite,
@@ -68,6 +68,7 @@ export async function writeOneThing(
   const saved = await applyOneThingWrite(write, current, {
     addAnswer: (k, text, chapterId) => addLifeAnswer(userId, k as LifeAnswerKey, text, chapterId),
     openChapter: (from, to, continues) => openChapter(userId, "one_thing", from, to, continues),
+    dropChapter: (chapterId) => deleteChapter(userId, chapterId),
   })
   return saved ? { ok: true, unchanged: false, ...saved } : { ok: true, unchanged: true }
 }

@@ -173,7 +173,7 @@ export function setSchemeKind(
     }
     if (ex.scheme.kind === kind) return ex
     if (kind === "rep_range") {
-      const reps = ex.scheme.kind === "linear" ? ex.scheme.reps : ex.scheme.repMin
+      const reps = ex.scheme.kind === "rep_range" ? ex.scheme.repMin : ex.scheme.reps
       return {
         ...ex,
         scheme: { kind: "rep_range", sets: ex.scheme.sets, repMin: reps, repMax: reps + 3 },
@@ -428,23 +428,13 @@ export function setWeekday(
 }
 
 /**
- * Whether this schedule runs on a calendar or in sequence.
+ * Re-exported from the engine, which owns the rule.
  *
- * Deliberately all-or-nothing. A week where three days have weekdays and two do
- * not has no coherent answer to "what is today's session" on the days nobody
- * assigned, and every way of resolving it is a guess. `designProblems` reports
- * the half-assigned state so it is fixed rather than interpreted.
+ * These decide what gets PRESCRIBED, so they live with the progression maths
+ * where a unit test can reach them; they are surfaced here because the weekday
+ * editor in this file is what most callers already import.
  */
-export function isWeekdayAnchored(schedule: ProgramSchedule): boolean {
-  if (schedule.kind !== "linear_rotation" && schedule.kind !== "weekly_waved") return false
-  return schedule.days.length > 0 && schedule.days.every((d) => d.weekday != null)
-}
-
-/** The day to do on a given ISO weekday, if this schedule is anchored. */
-export function dayForWeekday(schedule: ProgramSchedule, weekday: number) {
-  if (schedule.kind !== "linear_rotation" && schedule.kind !== "weekly_waved") return undefined
-  return schedule.days.find((d) => d.weekday === weekday)
-}
+export { isWeekdayAnchored, dayForWeekday } from "./programsService"
 
 /**
  * What is stopping this design from being started, in words.

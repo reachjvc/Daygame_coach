@@ -38,7 +38,7 @@
 
 import { useState } from "react"
 import { Check, Pencil, Plus, X } from "lucide-react"
-import type { NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlan } from "@/src/goals/types"
+import type { NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlan, VisionGoalType } from "@/src/goals/types"
 import { HALVES_COPY, MILESTONES_COPY, PLAN_INTRO, ROUTINES_INTRO, ROUTINE_BLUEPRINTS, SYSTEMS_COPY } from "@/src/goals/data/northStar"
 import {
   areaSystemMilestones,
@@ -56,6 +56,7 @@ import {
   goalRateLabel,
   wheelRatings,
 } from "@/src/goals/northStarService"
+import { GOAL_SHAPES } from "@/src/goals/data/goalShapes"
 import { AreaBuilder, AreaWants } from "./AreaBuilder"
 import { RoutineCard, type RoutineHandlers } from "./RoutineCard"
 
@@ -110,8 +111,9 @@ export function MilestonesTab({
   onAddRoutine: (blueprintId: string) => void
   openRoutineId: string | null
   setOpenRoutineId: (id: string | null) => void
-  /** Writing what the one thing needs, from here. */
-  onAddRequirement: (title: string) => void
+  /** Writing what the one thing needs, from here. The shape is chosen, never
+   *  read out of the words — see `addOneThingRequirement`. */
+  onAddRequirement: (title: string, type: VisionGoalType) => void
   onGoToTab: (tab: NorthStarTabId) => void
   /** Which step this is. The rail is the switch between them. */
   step: BuildStep
@@ -869,12 +871,16 @@ function MilestoneLinks({ plan, goal, handlers }: { plan: NsPlan; goal: NsGoal; 
 
 
 /** One line, filed where the words say it belongs. Same adder as step 3. */
-function AddRequirement({ onAdd }: { onAdd: (title: string) => void }) {
+function AddRequirement({ onAdd }: { onAdd: (title: string, type: VisionGoalType) => void }) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState("")
+  /* Same three shapes, same starting position, same vocabulary as the One Thing
+     step — `GOAL_SHAPES` is the one place they are defined. Two boxes that
+     both write a requirement must not offer two different sets of shapes. */
+  const [type, setType] = useState<VisionGoalType>("habit_ramp")
   const add = () => {
     if (!draft.trim()) return
-    onAdd(draft)
+    onAdd(draft, type)
     setDraft("")
   }
   /**
@@ -894,6 +900,24 @@ function AddRequirement({ onAdd }: { onAdd: (title: string) => void }) {
   }
   return (
     <div className="mt-2.5">
+      <div className="flex flex-wrap gap-1.5 mb-1.5" role="group" aria-label={PLAN_INTRO.oneNeedsShape}>
+        <span className="text-[10px] uppercase tracking-[0.14em] text-zinc-600 self-center">{PLAN_INTRO.oneNeedsShape}</span>
+        {GOAL_SHAPES.map((m) => (
+          <button
+            key={m.type}
+            type="button"
+            onClick={() => setType(m.type)}
+            aria-pressed={type === m.type}
+            title={m.hint}
+            className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border transition-colors ${
+              type === m.type ? "border-violet-400/50 bg-violet-500/15 text-violet-50" : "border-white/10 text-zinc-500 hover:text-zinc-200"
+            }`}
+          >
+            <span aria-hidden>{m.icon}</span>
+            {m.label}
+          </button>
+        ))}
+      </div>
       <div className="flex items-center gap-1.5">
         <Plus className="size-3.5 text-zinc-600 shrink-0" />
         <input

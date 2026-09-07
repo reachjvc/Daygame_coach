@@ -20,6 +20,16 @@ interface InteractiveWorldMapProps {
   showInfoBox?: boolean;
   isInteractive?: boolean;
   showCountryFocus?: boolean;
+  /**
+   * Whether the 13-button region list renders under the map. REQUIRED, with no
+   * default, on purpose: this component has two homes — the onboarding step,
+   * where the list is the only way a phone or a keyboard can answer, and the
+   * dashboard's compact "Your Preferences" card, which has its own mode buttons.
+   * The list was first added for onboarding alone and appeared, greyed out and
+   * ~800px tall on a phone, inside the dashboard card nobody had looked at. A
+   * required prop means every caller, present and future, has to say which it is.
+   */
+  regionList: "list" | "map-only";
 }
 
 export function InteractiveWorldMap({
@@ -29,6 +39,7 @@ export function InteractiveWorldMap({
   onRegionSelect,
   showInfoBox = true,
   isInteractive = true,
+  regionList,
   showCountryFocus = true,
 }: InteractiveWorldMapProps) {
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
@@ -141,11 +152,14 @@ export function InteractiveWorldMap({
       }
     });
 
-    const regionList: Record<string, string[]> = {};
+    // Named for what it holds, and no longer `regionList`: that is now a prop
+    // on this component, and one name meaning two things in one file is how the
+    // next edit lands in the wrong place.
+    const countriesByRegion: Record<string, string[]> = {};
     Object.entries(regionMap).forEach(([region, countries]) => {
-      regionList[region] = Array.from(countries).sort((a, b) => a.localeCompare(b));
+      countriesByRegion[region] = Array.from(countries).sort((a, b) => a.localeCompare(b));
     });
-    setRegionCountries(regionList);
+    setRegionCountries(countriesByRegion);
 
     const handleClick = (event: Event) => {
       if (!isInteractiveRef.current) return;
@@ -465,6 +479,7 @@ export function InteractiveWorldMap({
         by the same REGIONS data and the same onRegionSelect handler as the map,
         so the two cannot disagree about what a region is.
       */}
+      {regionList === "list" && (
       <div className="mt-4">
         <p className="mb-2 text-sm font-medium text-foreground">
           Or choose from the list
@@ -502,6 +517,7 @@ export function InteractiveWorldMap({
           })}
         </div>
       </div>
+      )}
 
       {/* Always show region info box - fixed height to prevent layout shift */}
       {showInfoBox && (

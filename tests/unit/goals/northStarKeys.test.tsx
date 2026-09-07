@@ -49,6 +49,39 @@ describe("Enter, in a box that holds one sentence", () => {
     expect(screen.getByText(SENTENCE_KEPT)).toBeTruthy()
   })
 
+  /**
+   * THE HINT'S LINE IS RESERVED WHETHER OR NOT THE HINT IS IN IT.
+   *
+   * The hint was added to and removed from the layout on focus, which moved
+   * every control below the box up by 19px at the exact moment somebody was
+   * reaching for one. A browser fires `click` on the nearest common ancestor of
+   * where the press began and where it ended, so the button got the mousedown
+   * and a container got the click, and nothing happened.
+   *
+   * Found by driving the real page: typing the one thing and then clicking a
+   * shape did nothing on the first try, every time. The measured shift is now
+   * 0px. Every box in the flow comes through this component, so this is the one
+   * place the rule can live.
+   */
+  it("keeps the hint's line in the layout when the hint is not showing", () => {
+    render(<SentenceBox value="Quit weed" onChange={vi.fn()} label="The one thing" />)
+    const box = screen.getByLabelText("The one thing")
+
+    // Nothing said, and the line is still there.
+    expect(screen.getByTestId("sentence-hint-line")).toBeTruthy()
+    expect(screen.queryByText(SENTENCE_HINT)).toBeNull()
+
+    // Focused: same line, now with something in it.
+    fireEvent.focus(box)
+    expect(screen.getAllByTestId("sentence-hint-line")).toHaveLength(1)
+    expect(screen.getByText(SENTENCE_HINT)).toBeTruthy()
+
+    // And blurring takes the words away without taking the line away.
+    fireEvent.blur(box)
+    expect(screen.getByTestId("sentence-hint-line")).toBeTruthy()
+    expect(screen.queryByText(SENTENCE_HINT)).toBeNull()
+  })
+
   it("leaves Shift+Enter alone, for the answer that wants two lines", () => {
     const onCommit = vi.fn()
     render(<SentenceBox value="Quit weed" onChange={vi.fn()} onCommit={onCommit} label="The one thing" />)

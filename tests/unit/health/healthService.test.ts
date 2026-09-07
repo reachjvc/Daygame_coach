@@ -21,6 +21,18 @@ function log(id: string, loggedAt: string): WorkoutLogRow {
     distance_km: null,
     logged_at: loggedAt,
     created_at: loggedAt,
+    // Written up after the fact: no start, no end. A live workout has a start
+    // and is excluded from every one of these reads until it is finished.
+    started_at: null,
+    ended_at: null,
+    enrollment_id: null,
+    program_day_id: null,
+    program_cycle: null,
+    program_week: null,
+    adjustments: {},
+    rpe: null,
+    notes: null,
+    client_key: null,
   }
 }
 
@@ -32,9 +44,17 @@ function set(exercise: string, weight: number, reps: number, overrides: Partial<
     weight_kg: weight,
     reps,
     set_number: 1,
-    is_warmup: false,
     notes: null,
     exercise_notes: null,
+    exercise_id: null,
+    library_id: null,
+    // `is_warmup` became `set_kind`: a boolean could not tell an all-out top
+    // set from a back-off, which is exactly what a progression rule reads.
+    set_kind: "working",
+    prescribed_index: null,
+    completed_at: null,
+    rpe: null,
+    side: null,
     ...overrides,
   }
 }
@@ -105,7 +125,7 @@ describe("summarizeWorkoutSets", () => {
 
   it("lists mixed sets and marks warm-ups", () => {
     const sets = [
-      set("Squat", 60, 5, { set_number: 1, is_warmup: true }),
+      set("Squat", 60, 5, { set_number: 1, set_kind: "warmup" }),
       set("Squat", 100, 5, { set_number: 2 }),
       set("Squat", 105, 3, { set_number: 3 }),
     ]
@@ -214,7 +234,7 @@ describe("liftHistory", () => {
   it("excludes warm-ups — a warm-up counted as working weight reads as a collapse", () => {
     const sets = [
       s("Squat", 100, "2026-01-10T10:00:00"),
-      s("Squat", 20, "2026-01-17T10:00:00", { is_warmup: true }),
+      s("Squat", 20, "2026-01-17T10:00:00", { set_kind: "warmup" }),
     ]
     expect(liftHistory(sets, "Squat").map((p) => p.weight)).toEqual([100])
   })
@@ -273,40 +293,44 @@ describe("liftsWithHistory", () => {
 })
 
 describe("workoutsToCsv", () => {
-  const log = (loggedAt: string, sets: WorkoutSetRow[]): WorkoutLogWithSets => ({
-    id: "l1", user_id: "u", session_type: "weights", duration_min: 60, intensity: 3,
-    distance_km: null, logged_at: new Date(loggedAt).toISOString(), created_at: new Date(loggedAt).toISOString(), sets,
+  // Named apart from the module-level `log` helper it builds on, which it used
+  // to shadow.
+  const workout = (loggedAt: string, sets: WorkoutSetRow[]): WorkoutLogWithSets => ({
+    ...log("l1", new Date(loggedAt).toISOString()),
+    sets,
   })
 
   it("quotes an exercise name containing a comma, or the file splits a column", () => {
-    const csv = workoutsToCsv([log("2026-03-01T10:00:00", [set("Bench Press, close grip", 60, 5)])])
+    const csv = workoutsToCsv([workout("2026-03-01T10:00:00", [set("Bench Press, close grip", 60, 5)])])
     expect(csv).toContain('"Bench Press, close grip"')
   })
 
   it("doubles a quote inside a name", () => {
-    const csv = workoutsToCsv([log("2026-03-01T10:00:00", [set('The "good" one', 60, 5)])])
+    const csv = workoutsToCsv([workout("2026-03-01T10:00:00", [set('The "good" one', 60, 5)])])
     expect(csv).toContain('"The ""good"" one"')
   })
 
   it("marks warm-ups rather than dropping them", () => {
-    const csv = workoutsToCsv([log("2026-03-01T10:00:00", [set("Squat", 20, 10, { is_warmup: true })])])
-    expect(csv).toContain("true")
+    const csv = workoutsToCsv([workout("2026-03-01T10:00:00", [set("Squat", 20, 10, { set_kind: "warmup" })])])
+    // The column says WHAT the set was, not merely whether it was a warm-up:
+    // a top set and a back-off are different facts and used to be the same one.
+    expect(csv).toContain("warmup")
     expect(csv.split("\n")).toHaveLength(2)
   })
 
   it("keeps a session with no sets, so the file agrees with the session count", () => {
-    const csv = workoutsToCsv([log("2026-03-01T10:00:00", [])])
+    const csv = workoutsToCsv([workout("2026-03-01T10:00:00", [])])
     expect(csv.split("\n")).toHaveLength(2)
     expect(csv).toContain("2026-03-01")
   })
 
   it("dates each row by the day you trained, in your own calendar", () => {
     // 23:30 local must not be filed on tomorrow.
-    const csv = workoutsToCsv([log("2026-03-01T23:30:00", [set("Squat", 100, 5)])])
+    const csv = workoutsToCsv([workout("2026-03-01T23:30:00", [set("Squat", 100, 5)])])
     expect(csv).toContain("2026-03-01")
   })
 
   it("has a header even with nothing to export", () => {
-    expect(workoutsToCsv([]).split("\n")).toEqual(["date,session_type,duration_min,exercise,set,reps,weight_kg,warm_up"])
+    expect(workoutsToCsv([]).split("\n")).toEqual(["date,session_type,duration_min,exercise,set,reps,weight_kg,set_kind"])
   })
 })

@@ -81,8 +81,29 @@
 }
 
 @theme inline {
-  --font-sans: "Geist", "Geist Mono Fallback", sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback", monospace;
+  /*
+    THE FAMILY NAMES COME FROM next/font, AND THE GENERIC IS STILL SPELLED OUT.
+    Two separate lessons, both learned the hard way.
+
+    1. These used to be typed by hand, and the SANS stack named
+       "Geist Mono Fallback" — the MONOSPACE metric-matched stand-in. Both
+       stand-ins are the same physical font, `local(Arial)`, at two different
+       scales: 104.76% for sans and 134.59% for mono. So whenever the Geist
+       webfont had not arrived, every word on the site was drawn 28% too large.
+       Eight months, from the first commit. next/font owns those names; keeping
+       a second hand-written copy of them here is what let the two disagree.
+
+    2. `var(--font-geist-sans)` expands to `"Geist", "Geist Fallback"` and
+       NOTHING ELSE — no generic at the end. Both of those are @font-face rules,
+       and in development Turbopack injects the file that defines them with
+       JavaScript, after the document has already been painted. In that window
+       neither face exists, and a stack with no generic resolves to nothing at
+       all: the browser falls back to its own default, which is usually a serif.
+       The hand-written version had `sans-serif` on the end and this lost it, so
+       it is spelled out again.
+  */
+  --font-sans: var(--font-geist-sans), sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

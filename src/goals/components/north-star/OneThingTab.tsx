@@ -23,24 +23,30 @@
  */
 
 import { useState } from "react"
-import { ArrowRight, Check, Plus, X } from "lucide-react"
-import type { NsPlan, NorthStarTabId } from "@/src/goals/types"
+import { ArrowRight, Check, Plus } from "lucide-react"
+import { GOAL_SHAPES } from "@/src/goals/data/goalShapes"
+import type { NsPlan, NorthStarTabId, VisionGoalType } from "@/src/goals/types"
 import { ONE_ANSWERS, ONE_COPY } from "@/src/goals/data/northStarStart"
 import {
   answerOf,
   areaKeywordIndex,
   collectValues,
+  goalRank,
   goalsLikeOneThing,
   guessAreaId,
   oneThingAreas,
   oneThingRequirements,
+  subGoalsOf,
 } from "@/src/goals/northStarService"
 import { OneThingCard, type OneThingHandlers } from "./OneThing"
+import { GoalCard, type GoalHandlers } from "./GoalCard"
 import type { OneThingAccount } from "./useOneThing"
 import { SentenceBox } from "./SentenceBox"
 
 export interface OneThingTabHandlers extends OneThingHandlers {
-  onAddRequirement: (title: string, areaId?: string) => void
+  /** The shape is the caller's third argument because it is a CHOICE now. See
+   *  `addOneThingRequirement` — nothing infers it from the words any more. */
+  onAddRequirement: (title: string, areaId: string | undefined, type: VisionGoalType) => void
   onMarkServes: (goalId: string, on: boolean) => void
   onRemoveGoal: (goalId: string) => void
   onGoToTab: (tab: NorthStarTabId) => void
@@ -51,15 +57,32 @@ export function OneThingTab({
   plan,
   handlers,
   account,
+  typed,
+  onTyped,
+  today,
+  goalHandlers,
 }: {
   plan: NsPlan
   handlers: OneThingTabHandlers
   account: OneThingAccount
+  /** Unsaved text, held by the page. See `OneThingBox` — it is not a draft. */
+  typed: string | null
+  onTyped: (text: string | null) => void
+  today: string
+  /**
+   * The flow's own goal editor, passed straight through.
+   *
+   * The requirements are edited with `GoalCard` — the same card the areas use —
+   * rather than with a second editor written for this step. That card already
+   * owns the shape toggle, the ease-in ramp, the rungs of a climb and the
+   * checkpoint list, and a copy of it here would be a second place for each of
+   * those rules to be slightly different.
+   */
+  goalHandlers: GoalHandlers
 }) {
-  /* THE SAVED SENTENCE, not a draft of one. Everything on this step hangs off
-     the one thing, and it used to hang off whatever was in the box — so the
-     questions underneath opened for text nobody had committed to, and closed
-     again if the browser was cleared while the account still held the answer. */
+  /* THE SAVED SENTENCE. Everything that reads back your one thing reads this —
+     the related goals, the banner, the recap — because those must never show a
+     sentence you have not committed to. */
   const oneThing = account.current?.body ?? ""
   const requirements = oneThingRequirements(plan)
   const related = oneThing.trim() ? goalsLikeOneThing(plan, oneThing) : []
@@ -81,7 +104,22 @@ export function OneThingTab({
    * saved at all, so the gate could never open.
    */
   const accountAnswered = account.loaded && !account.signedOut && !account.error
-  const written = oneThing.trim().length > 0 || !accountAnswered
+  /**
+   * THE REST OF THE STEP OPENS ON A SENTENCE BEING WRITTEN, not on it being
+   * saved.
+   *
+   * It briefly required a save press, which was the wrong trade: somebody types
+   * the most important sentence in the flow, the page does not move, and the
+   * reason is invisible. Typing is enough — the gate exists to stop the page
+   * asking why something matters before it exists, and once it is on the screen
+   * it exists.
+   *
+   * `typed` is unsaved text in React state, not a stored copy: nothing else
+   * reads it as your one thing, which is why `oneThing` above still comes from
+   * the account alone.
+   */
+  const being = (typed ?? oneThing).trim()
+  const written = being.length > 0 || !accountAnswered
 
   return (
     <div className="space-y-5">
@@ -89,13 +127,37 @@ export function OneThingTab({
 
       {/* ------------------------------------------------------ the sentence */}
       <section className="rounded-2xl border border-violet-400/25 bg-violet-500/[0.05] px-5 py-4">
-        <OneThingCard account={account} title={ONE_COPY.title} help={ONE_COPY.help} />
+        <OneThingCard
+          account={account}
+          typed={typed}
+          onTyped={onTyped}
+          title={ONE_COPY.title}
+          help={ONE_COPY.help}
+        />
       </section>
 
       {!written ? (
         <p className="text-[11.5px] text-zinc-500 leading-relaxed px-1">{ONE_COPY.waiting}</p>
       ) : (
         <>
+          {/* ------------------------------------ what needs to happen for it
+              DIRECTLY UNDER THE SENTENCE, and first of everything.
+
+              It used to be last, under the why, the cost, the identity, the
+              values and the areas — six boxes of reflection before the page
+              asked for one thing you would actually DO. Somebody writes "quit
+              weed for 100 days", and the next thing the step wants is an essay.
+              The list that turns the sentence into a system now comes first,
+              and the reflection follows it. */}
+          <Requirements
+            plan={plan}
+            requirements={requirements}
+            related={related}
+            handlers={handlers}
+            today={today}
+            goalHandlers={goalHandlers}
+          />
+
           {/* --------------------------------------------- why, and the cost */}
           <section className="rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-4 space-y-4">
             <div>
@@ -197,9 +259,6 @@ export function OneThingTab({
               })}
             </ul>
           </section>
-
-          {/* ------------------------------------ what needs to happen for it */}
-          <Requirements plan={plan} requirements={requirements} related={related} handlers={handlers} />
         </>
       )}
     </div>
@@ -207,31 +266,63 @@ export function OneThingTab({
 }
 
 /**
- * The list that becomes the plan.
+ * The list that becomes the plan — and the system you build under the sentence.
  *
- * Each line is a goal, in an area, and the area is guessed from the words and
- * then shown as a chip you can change — guessing silently is how "stop buying
- * it" ends up filed under Health when the person meant Money.
+ * TWO THINGS ARE ASKED BEFORE A LINE IS ADDED, and neither is inferred:
+ *
+ *   THE SHAPE. "No weed" and "Save 20000" and "Get the licence" are three
+ *   different machines — one you hold every week, one you climb, one you either
+ *   did or did not. This used to be read out of the words, and it read them
+ *   wrong: "Spend 100 kr pr day i didnt smoke" became a one-off climb to 100
+ *   instead of money adding up daily, and there was no control anywhere on this
+ *   step to correct it. Now it is three labelled buttons with what each one
+ *   means written under them.
+ *
+ *   THE AREA. Guessed from the words and shown as a chip, because guessing
+ *   silently is how "stop buying it" ends up under Health when the person meant
+ *   Money. The chips are always visible now, not only once something is typed —
+ *   a control that appears when you start typing is one nobody finds.
+ *
+ * AND EACH ONE IS THEN EDITED WITH THE REAL GOAL CARD, not a summary row. That
+ * card carries the ease-in ramp, the rungs of a climb, and the checkpoint list
+ * that is how a requirement becomes a set of to-dos. It was already written,
+ * already tested, and used by every area in the flow; this step showing a
+ * read-only line instead is what made the goals here feel like notes.
  */
 function Requirements({
   plan,
   requirements,
   related,
   handlers,
+  today,
+  goalHandlers,
 }: {
   plan: NsPlan
   requirements: ReturnType<typeof oneThingRequirements>
   related: ReturnType<typeof goalsLikeOneThing>
   handlers: OneThingTabHandlers
+  today: string
+  goalHandlers: GoalHandlers
 }) {
   const [draft, setDraft] = useState("")
   const [areaId, setAreaId] = useState<string | null>(null)
+  /**
+   * PRACTICE IS WHERE THE PICKER OPENS, and it is a starting position rather
+   * than a guess: it is on the screen, labelled, with its meaning under it, and
+   * one click moves it. Most of what holds up a one thing is something you do
+   * repeatedly — that is what a season is — so opening on "you climb to a
+   * number" would be the wrong end of the common case.
+   */
+  const [type, setType] = useState<VisionGoalType>("habit_ramp")
+  /** Which requirement is expanded. One at a time, like the areas. */
+  const [openId, setOpenId] = useState<string | null>(null)
   const guess = draft.trim() ? guessAreaId(areaKeywordIndex(plan.areas), draft) : null
   const filed = areaId ?? guess ?? plan.areas[0]?.id ?? null
+  const chosenShape = GOAL_SHAPES.find((m) => m.type === type)
 
   const add = () => {
     if (!draft.trim()) return
-    handlers.onAddRequirement(draft, filed ?? undefined)
+    handlers.onAddRequirement(draft, filed ?? undefined, type)
     setDraft("")
     setAreaId(null)
   }
@@ -242,24 +333,64 @@ function Requirements({
       <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{ONE_COPY.needsHelp}</p>
 
       {requirements.length > 0 && (
-        <ul className="mt-3 space-y-1.5">
-          {requirements.map((goal) => {
-            const area = plan.areas.find((a) => a.id === goal.areaId)
-            return (
-              <li key={goal.id} className="flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.02] px-2.5 py-1.5">
-                <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: area?.color ?? "#a1a1aa" }} />
-                <span className="min-w-0 flex-1 text-[12.5px] text-zinc-100 truncate">{goal.title}</span>
-                <span className="text-[10px] text-zinc-500 shrink-0">{area?.label}</span>
-                <button
-                  onClick={() => handlers.onRemoveGoal(goal.id)}
-                  aria-label={`Remove ${goal.title}`}
-                  className="shrink-0 text-zinc-600 hover:text-rose-300 transition-colors"
-                ><X className="size-3.5" /></button>
-              </li>
-            )
-          })}
-        </ul>
+        <div className="mt-3 space-y-2">
+          {requirements.map((goal) => (
+            <GoalCard
+              key={goal.id}
+              goal={goal}
+              area={plan.areas.find((a) => a.id === goal.areaId)}
+              areas={plan.areas}
+              allGoals={plan.goals}
+              subGoals={subGoalsOf(plan, goal.id)}
+              rank={goalRank(plan, goal.id)}
+              totalGoals={plan.goals.length}
+              today={today}
+              plan={plan}
+              isFocus={plan.seasonFocusId === goal.id}
+              open={openId === goal.id}
+              onToggleOpen={() => setOpenId((id) => (id === goal.id ? null : goal.id))}
+              handlers={goalHandlers}
+            />
+          ))}
+        </div>
       )}
+
+      {/* ------------------------------------------------- what shape it takes */}
+      <div className="mt-4" data-testid="requirement-shape">
+        <p className="text-[10px] uppercase tracking-[0.14em] text-zinc-600">{ONE_COPY.needsShape}</p>
+        <div className="flex flex-wrap gap-1.5 mt-1.5" role="group" aria-label={ONE_COPY.needsShape}>
+          {GOAL_SHAPES.map((m) => (
+            <button
+              key={m.type}
+              type="button"
+              onClick={() => setType(m.type)}
+              aria-pressed={type === m.type}
+              /* NAMED FOR THE ROW IT BELONGS TO, not just for the shape.
+                 Every requirement above this is a `GoalCard` carrying its own
+                 shape toggle, whose buttons are labelled "Target", "Practice"
+                 and "Finish line" — the same three words. Two sets of controls
+                 with identical names in one section is ambiguous to a screen
+                 reader and to anything selecting by name; a browser check
+                 written against this section flipped an existing goal's shape
+                 while believing it was choosing the shape of the next one. */
+              aria-label={ONE_COPY.needsShapeAria(m.label)}
+              className={`inline-flex items-center gap-1.5 text-[11.5px] px-2.5 py-1 rounded-full border transition-colors ${
+                type === m.type
+                  ? "border-violet-400/50 bg-violet-500/15 text-violet-50"
+                  : "border-white/10 text-zinc-400 hover:text-zinc-100 hover:border-white/30"
+              }`}
+            >
+              <span aria-hidden>{m.icon}</span>
+              {m.label}
+            </button>
+          ))}
+        </div>
+        {/* What the chosen one MEANS, spelled out. It was a `title` attribute,
+            which is invisible on a phone and to anybody who does not hover. */}
+        {chosenShape && (
+          <p className="text-[11px] text-zinc-500 mt-1.5 leading-relaxed">{chosenShape.hint}</p>
+        )}
+      </div>
 
       <div className="flex items-center gap-1.5 mt-3">
         <Plus className="size-3.5 text-zinc-600 shrink-0" />
@@ -278,25 +409,27 @@ function Requirements({
         >{ONE_COPY.needsAdd}</button>
       </div>
 
-      {/* Where it lands, before it lands. */}
-      {draft.trim() && (
-        <div className="flex flex-wrap items-center gap-1.5 mt-2">
-          <span className="text-[10px] uppercase tracking-[0.14em] text-zinc-600">{ONE_COPY.needsArea}</span>
-          {plan.areas.map((area) => (
-            <button
-              key={area.id}
-              onClick={() => setAreaId(area.id)}
-              aria-pressed={filed === area.id}
-              className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border transition-colors ${
-                filed === area.id ? "border-white/35 bg-white/10 text-zinc-100" : "border-white/10 text-zinc-500 hover:text-zinc-200"
-              }`}
-            >
-              <span className="size-1.5 rounded-full" style={{ backgroundColor: area.color }} />
-              {area.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Where it lands, before it lands. ALWAYS SHOWN: it used to appear only
+          once something had been typed, so the one control that corrects a bad
+          area guess was invisible at the moment somebody was deciding what to
+          type, and gone again the instant they pressed Add. */}
+      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+        <span className="text-[10px] uppercase tracking-[0.14em] text-zinc-600">{ONE_COPY.needsArea}</span>
+        {plan.areas.map((area) => (
+          <button
+            key={area.id}
+            type="button"
+            onClick={() => setAreaId(area.id)}
+            aria-pressed={filed === area.id}
+            className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border transition-colors ${
+              filed === area.id ? "border-white/35 bg-white/10 text-zinc-100" : "border-white/10 text-zinc-500 hover:text-zinc-200"
+            }`}
+          >
+            <span className="size-1.5 rounded-full" style={{ backgroundColor: area.color }} />
+            {area.label}
+          </button>
+        ))}
+      </div>
 
       {/* Already written, and about this. Offered rather than linked: a word in
           common is a reason to ask, not an answer. */}

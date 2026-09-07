@@ -33,6 +33,7 @@ import type {
   LevelId,
   LibraryExercise,
   LoadExercise,
+  PlateSetup,
   ProgramDefinition,
   ProgramSchedule,
   SkillDay,
@@ -232,6 +233,53 @@ function mapDay(schedule: ProgramSchedule, dayId: string, fn: (day: AnyDay) => A
  */
 export function loadExerciseFromLibrary(entry: LibraryExercise, exerciseId: string): LoadExercise {
   const loadStyle = entry.barbell ? ("barbell" as const) : ("free" as const)
+
+  /**
+   * A HOLD IS NOT A REP. A plank arrived as "3 × 1 rep" on double progression,
+   * so making "one rep" on all three sets added 2.5 kg to it every session for
+   * ever. Timed work progresses by holding longer, which is the person's call,
+   * so the engine holds the load and the number they log is seconds.
+   */
+  if (entry.timed) {
+    // A LOADED carry progresses by adding weight for the same time; an
+    // unloaded hold progresses by holding longer, which is the person's call
+    // and not a number the engine should invent.
+    const loaded = entry.suggestedKg.intermediate > 0
+    return {
+      id: exerciseId,
+      name: entry.name,
+      metricType: "load",
+      loadStyle,
+      repUnit: "sec",
+      scheme: { kind: "linear", sets: entry.defaultSets, reps: 30 },
+      progression: loaded
+        ? { kind: "linear_load", incrementKg: 2.5, incrementLb: 5, deloadAfterFails: 3, deloadPct: 0.1 }
+        : { kind: "none" },
+    }
+  }
+
+  /**
+   * ASSISTANCE RUNS THE OTHER WAY. Less help is progress, so the engine takes
+   * weight off rather than adding it, and the floor is nothing at all.
+   */
+  if (entry.assisted) {
+    return {
+      id: exerciseId,
+      name: entry.name,
+      metricType: "load",
+      loadStyle,
+      scheme: { kind: "linear", sets: entry.defaultSets, reps: entry.defaultRepMin },
+      progression: {
+        kind: "linear_load",
+        direction: "down",
+        incrementKg: 2.5,
+        incrementLb: 5,
+        deloadAfterFails: 3,
+        deloadPct: 0.1,
+      },
+    }
+  }
+
   return entry.compound
     ? {
         id: exerciseId,
@@ -367,12 +415,16 @@ export function updateExerciseScheme(
       if (e.scheme.kind === "percentage_tm") {
         throw new Error(`${e.name} follows a percentage wave; its sets are part of the program`)
       }
-      if (e.scheme.kind === "linear") {
+      // Straight sets edit exactly like linear ones and KEEP their kind, so a
+      // "4×5 then 1×5+" lift does not quietly lose its AMRAP last set when
+      // somebody changes the rep count.
+      if (e.scheme.kind === "linear" || e.scheme.kind === "straight_amrap") {
+        const kind = e.scheme.kind
         const sets = patch.sets ?? e.scheme.sets
         const reps = patch.reps ?? e.scheme.reps
         assertPositive(sets, "Sets")
         assertPositive(reps, "Reps")
-        return { ...e, scheme: { kind: "linear", sets, reps } }
+        return { ...e, scheme: { kind, sets, reps } }
       }
       const sets = patch.sets ?? e.scheme.sets
       const repMin = patch.repMin ?? e.scheme.repMin
@@ -454,6 +506,52 @@ function suggestedStartKg(ex: LoadExercise, level: LevelId, unit: UnitSystem): n
  * working weights, training maxes and fail counts carry over untouched. Only
  * the new ones get state, and only from a weight the user supplied.
  */
+/**
+ * Set the working weight of a lift that ALREADY has one, because the person
+ * said so.
+ *
+ * THERE WAS NO WAY DOWN. `seedForAddedExercises` fills only state that is
+ * missing, and every other control refused too: the editor asked for a weight
+ * on added lifts alone, and removing a lift and putting it back deliberately
+ * restores what it had. So a beginner who attached StrongLifts without typing
+ * anything met a 60 kg squat and a 30 kg press at session one and could not
+ * lower either — short of ending the program and starting again.
+ *
+ * The fail counter resets: the person has decided this number is right, and
+ * carrying two misses into a weight they chose would deload it underneath them.
+ * Returns the changes it made so the caller can record them, because a weight
+ * somebody set by hand has to survive a later correction (see `ReplayEvent`).
+ */
+export function applyWeightOverrides(
+  existing: Record<string, ExerciseState>,
+  overrides: Record<string, number>,
+  unit: UnitSystem,
+  schedule: ProgramSchedule,
+  plates?: PlateSetup
+): { state: Record<string, ExerciseState>; changed: Array<{ exerciseId: string; to: number }> } {
+  const next: Record<string, ExerciseState> = { ...existing }
+  const changed: Array<{ exerciseId: string; to: number }> = []
+  if (schedule.kind === "endurance_weeks") return { state: next, changed }
+
+  const byId = new Map(
+    scheduleDays(schedule).flatMap((d) => d.exercises.map((ex) => [ex.id, ex] as const))
+  )
+  for (const [exerciseId, raw] of Object.entries(overrides)) {
+    const prev = next[exerciseId]
+    const ex = byId.get(exerciseId)
+    // Only lifts that are in this program and already have a weight; adding one
+    // is `seedForAddedExercises`, and this must not invent state for a lift the
+    // program does not contain.
+    if (!prev || !ex || prev.workingWeight == null) continue
+    if (!Number.isFinite(raw) || raw < 0) continue
+    const to = roundToLoadable(raw, unit, "loadStyle" in ex ? ex.loadStyle : undefined, plates)
+    if (to === prev.workingWeight) continue
+    next[exerciseId] = { ...prev, workingWeight: to, consecutiveFails: 0 }
+    changed.push({ exerciseId, to })
+  }
+  return { state: next, changed }
+}
+
 export function seedForAddedExercises(
   schedule: ProgramSchedule,
   existing: Record<string, ExerciseState>,

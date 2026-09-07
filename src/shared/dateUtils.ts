@@ -88,6 +88,23 @@ export function getNowInTimezone(timezone: string, at: Date = new Date()): Date 
 }
 
 /**
+ * The ISO weekday (1 = Monday … 7 = Sunday) where the PERSON is.
+ *
+ * WHOSE TODAY. A training week pinned to weekdays has to be read against the
+ * lifter's calendar, and the one place that decided it read the server's clock
+ * — which is UTC. Anyone east of London was shown yesterday's session from
+ * local midnight; anyone west was shown tomorrow's from late afternoon.
+ *
+ * Derived from `toZonedDate`, never from UTC parts, for the same reason
+ * `toDateISO` exists: converting first and reading the day after is how three
+ * separate bugs in this codebase have been made.
+ */
+export function isoWeekdayInTimezone(timezone: string, at: Date = new Date()): number {
+  const js = toZonedDate(at, timezone).getDay()
+  return js === 0 ? 7 : js
+}
+
+/**
  * The cadences a counter can run on — the ones that ROLL.
  *
  * `custom` is deliberately absent. A custom-period goal is a milestone that runs

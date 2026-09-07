@@ -66,6 +66,7 @@ import {
   searchLibrary,
 } from "../data/exerciseLibrary"
 import { searchCustomLifts } from "../customLifts"
+import { refreshEnrollments } from "../hooks/useEnrollment"
 import { CUSTOM_PROGRAM_ID } from "../data/customProgram"
 import { WEEKDAYS } from "../config"
 import {
@@ -239,6 +240,9 @@ export function CustomProgramBuilder({
       const created = (await res.json().catch(() => null)) as
         | { enrollment?: { id: string; program_id: string; started_at: string } }
         | null
+      // Same reason as the catalogue path: the shared list must be re-read or
+      // every other surface keeps showing what was running a moment ago.
+      await refreshEnrollments()
       onStarted(
         days.map((d) => d.label),
         created?.enrollment
@@ -699,7 +703,7 @@ function LiftRow({
               ariaLabel={`sets for ${exercise.name}`}
               onChange={(n) => apply(() => updateExerciseScheme(schedule, dayId, exercise.id, { sets: n }))}
             />
-            {scheme.kind === "linear" ? (
+            {scheme.kind !== "rep_range" ? (
               <>
                 <Stepper
                   label="Reps"
@@ -812,7 +816,10 @@ function LiftRow({
               <GroupLabel>Prescribed as</GroupLabel>
               <Segmented
                 label={`How ${exercise.name} is prescribed`}
-                value={scheme.kind}
+                /* A "4×5 then 1×5+" lift is a straight-sets lift as far as this
+                   switch is concerned; the AMRAP last set is the program's, not
+                   a third choice to offer here. */
+                value={scheme.kind === "rep_range" ? "rep_range" : "linear"}
                 size="sm"
                 onChange={(kind) => apply(() => setSchemeKind(schedule, dayId, exercise.id, kind))}
                 options={[

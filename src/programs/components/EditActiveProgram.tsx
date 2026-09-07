@@ -24,6 +24,7 @@ import { useState } from "react"
 import { Check, Loader2 } from "lucide-react"
 import { ProgramEditor } from "./ProgramEditor"
 import {
+  scheduleDays,
   editableSchedule,
   isCustomizable,
   isModified,
@@ -63,6 +64,33 @@ export function EditActiveProgram({
   // Only the lifts that are NEW to this enrollment need a number; anything the
   // enrollment already has state for keeps the weight it has ratcheted to.
   const needing = missing.filter((m) => !enrollment.exerciseState[m.exerciseId])
+
+  /**
+   * EVERY LIFT'S CURRENT WEIGHT, EDITABLE.
+   *
+   * There was no way to lower one. This screen asked for a weight on lifts
+   * being ADDED and on nothing else, the schedule save skipped any lift that
+   * already had state, and removing a lift and putting it back deliberately
+   * restores what it had. So somebody who attached a program without typing
+   * their numbers — which the goals planner lets you do, the boxes are optional
+   * — met a 60 kg squat at session one and could not move it.
+   */
+  type CurrentWeight = { exerciseId: string; name: string; weight: number; isMax: boolean }
+  const current: CurrentWeight[] = schedule
+    ? scheduleDays(schedule).flatMap((d) =>
+        (d.exercises as { id: string; name: string }[]).flatMap((ex): CurrentWeight[] => {
+          const state = enrollment.exerciseState[ex.id]
+          if (!state) return []
+          if (state.workingWeight != null)
+            return [{ exerciseId: ex.id, name: ex.name, weight: state.workingWeight, isMax: false }]
+          if (state.trainingMax != null)
+            return [{ exerciseId: ex.id, name: ex.name, weight: state.trainingMax, isMax: true }]
+          return []
+        })
+      )
+    : []
+  // One row per lift even when it appears on two days.
+  const currentUnique = [...new Map(current.map((c) => [c.exerciseId, c])).values()]
   const problems = schedule ? scheduleProblems(schedule) : []
   const ready = problems.length === 0 && needing.every((m) => hasWeight(weights, m.exerciseId))
 
@@ -130,9 +158,38 @@ export function EditActiveProgram({
         />
       )}
 
+      {currentUnique.length > 0 && (
+        <div>
+          <p className="text-[12.5px] text-zinc-300">Your weights</p>
+          <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">
+            Change any that are wrong. Leave the rest alone and they carry on exactly where they
+            have got to.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-1.5 mt-1.5">
+            {currentUnique.map((lift) => (
+              <label key={lift.exerciseId} className="flex items-center gap-2">
+                <span className="flex-1 min-w-0 text-[12.5px] text-zinc-400 truncate">
+                  {lift.name}
+                  {lift.isMax && <span className="text-zinc-600"> (training max)</span>}
+                </span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={weights[lift.exerciseId] ?? ""}
+                  placeholder={String(lift.weight)}
+                  onChange={(e) => setWeights((w) => ({ ...w, [lift.exerciseId]: e.target.value }))}
+                  aria-label={`${lift.isMax ? "Training max" : "Working weight"} for ${lift.name} in ${enrollment.unitSystem}`}
+                  className="w-20 min-h-11 sm:min-h-0 bg-white/5 border border-white/15 rounded px-1.5 py-0.5 text-[12.5px] text-white focus:outline-none focus:border-white/30"
+                />
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
       <p className="text-[11px] text-zinc-500 leading-relaxed">
-        Your weights carry over. Anything you keep stays exactly where it has got to — only lifts you
-        add need a starting number.
+        Changing a weight here sets it from your next session on, and clears any misses against that
+        lift. Lifts you add need a starting number.
       </p>
 
       {error && (

@@ -55,12 +55,21 @@ const SERVER_SNAPSHOT: { enrollments: ProgramEnrollment[]; loading: boolean } = 
 
 async function load(force: boolean): Promise<void> {
   // Join the request already in flight rather than starting a second one. This
-  // is the whole point: three components mounting together make one call.
+  // is the whole point: three components mounting together make one call, and
+  // React's development double-invoke of effects joins rather than duplicates.
   if (store.inFlight && !force) return store.inFlight
-  // Already answered — by an earlier caller or by the server seed. A second
-  // component mounting is not a reason to ask again, and neither is React's
-  // development double-invoke of effects.
-  if (!force && !store.loading) return
+  /**
+   * IT USED TO RETURN HERE ONCE ANYTHING HAD EVER LOADED.
+   *
+   * "Asks again on the next mount" is what the comment said and not what the
+   * code did: after the first answer, every later mount was a no-op. So the
+   * exact path this feature exists for — design a week in Life Mastery, press
+   * "Start tracking this", tap "Go to today's session" — arrived at a Training
+   * page holding the list from BEFORE the program was started, and said "No
+   * active program", or offered the one that had just been replaced.
+   *
+   * A mount is a page the person is looking at now. It asks.
+   */
   store.loading = true
   emit()
   store.inFlight = (async () => {
@@ -88,16 +97,23 @@ function subscribe(listener: Listener) {
 
 /** Active enrollments for the current user. Shared across every caller. */
 export function useActiveEnrollments(initial?: ProgramEnrollment[]) {
-  // Seeded by the server component when there is one, so the first paint has
-  // the list already and no request is made at all.
-  if (initial && store.loading && store.data.length === 0) {
+  /**
+   * THE SERVER'S LIST ALWAYS WINS.
+   *
+   * This only seeded the store when it was still empty, so a page that arrived
+   * with fresh server data was ignored in favour of whatever a previous screen
+   * had cached — which is the other half of the "No active program" bug. The
+   * server resolved this list for this request; nothing held here is fresher.
+   */
+  if (initial && !sameEnrollments(store.data, initial)) {
     store.data = initial
     store.loading = false
+    snapshot = { enrollments: store.data, loading: store.loading }
   }
   const { enrollments, loading } = useSyncExternalStore(subscribe, getSnapshot, () => SERVER_SNAPSHOT)
 
   useEffect(() => {
-    // Nothing to fetch when the server already answered.
+    // Nothing to fetch when the server already answered for THIS page.
     if (initial) return
     void load(false)
   }, [initial])
@@ -106,6 +122,25 @@ export function useActiveEnrollments(initial?: ProgramEnrollment[]) {
   const refresh = useCallback(() => load(true), [])
 
   return { enrollments, loading, refresh }
+}
+
+/**
+ * Re-read the list from the server, from anywhere.
+ *
+ * Starting, ending and resuming a program all happen on screens that do not own
+ * this hook — the Life Mastery templates tab, the builder, the catalogue. They
+ * used to change what was running and leave every other reader showing the old
+ * answer until something happened to refetch. One exported function so no
+ * caller has to reach into the store.
+ */
+export function refreshEnrollments(): Promise<void> {
+  return load(true)
+}
+
+/** Same rows in the same order? Compared, not referenced. */
+function sameEnrollments(a: ProgramEnrollment[], b: ProgramEnrollment[]): boolean {
+  if (a.length !== b.length) return false
+  return a.every((e, i) => e.id === b[i].id && e.is_active === b[i].is_active)
 }
 
 /** One enrollment + today's prescription + log history. */

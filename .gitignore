@@ -92,3 +92,7 @@ tests/e2e/.auth/
 # Playwright MCP screenshots
 .playwright-mcp/
 *.png
+# The PWA icons must ship: app/manifest.ts and public/sw.js reference them, and
+# a clean checkout without them means no "Add to Home Screen" on Chrome/Android.
+!public/icon-*.png
+!public/apple-icon.png

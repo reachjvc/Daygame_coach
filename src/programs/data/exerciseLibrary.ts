@@ -157,7 +157,32 @@ const make = (barbell: boolean) => (
   defaultRepMin: repMin,
   defaultRepMax: repMax,
   suggestedKg: { beginner, intermediate, advanced },
+  ...(TIMED_IDS.has(`lib_${id}`) ? { timed: true } : {}),
+  ...(ASSISTED_IDS.has(`lib_${id}`) ? { assisted: true } : {}),
 })
+
+/**
+ * Lifts measured in SECONDS HELD rather than reps done.
+ *
+ * Derived from a list here rather than typed onto each row, the same way
+ * `group` is: a flag repeated across a hundred rows is a hundred chances to
+ * forget it. These arrived as "3 × 1 rep" on double progression, so making
+ * "one rep" on all three sets added 2.5 kg to a plank every session for ever.
+ */
+const TIMED_IDS = new Set([
+  "lib_plank",
+  "lib_side_plank",
+  "lib_farmer_carry",
+  "lib_hollow_hold",
+  "lib_dead_hang",
+  "lib_wall_sit",
+])
+
+/**
+ * Lifts where the number is ASSISTANCE — a machine or a band taking weight off
+ * you — so less of it is progress and the seeds fall as you get stronger.
+ */
+const ASSISTED_IDS = new Set(["lib_assisted_pull_up", "lib_band_assisted_pull_up", "lib_assisted_dip"])
 
 /** Loaded on a barbell — cannot go below the bar. */
 const bar = make(true)
@@ -274,7 +299,9 @@ export const EXERCISE_LIBRARY: LibraryExercise[] = [
   free("pull_up", "Pull-up", "vertical_pull", true, 3, 5, 10, 0, 5, 20),
   free("chin_up", "Chin-up", "vertical_pull", true, 3, 5, 10, 0, 5, 20),
   free("lat_pulldown", "Lat Pulldown", "vertical_pull", false, 3, 8, 12, 35, 55, 80),
-  free("assisted_pull_up", "Assisted Pull-up", "vertical_pull", false, 3, 6, 10, 25, 40, 55),
+  // Seeds FALL with level: the weight is assistance, so an advanced lifter
+  // needs less of it. They used to rise, which said the opposite.
+  free("assisted_pull_up", "Assisted Pull-up", "vertical_pull", false, 3, 6, 10, 40, 25, 10),
   free("weighted_pull_up", "Weighted Pull-up", "vertical_pull", true, 3, 5, 8, 0, 10, 30),
   free("neutral_grip_pull_up", "Neutral-Grip Pull-up", "vertical_pull", true, 3, 5, 10, 0, 5, 20),
   free("wide_grip_pull_up", "Wide-Grip Pull-up", "vertical_pull", true, 3, 5, 10, 0, 5, 20),
@@ -509,4 +536,21 @@ export function patternForName(name: string): MovementPattern | null {
   const hit = EXERCISE_LIBRARY.find((e) => e.name.toLowerCase() === norm)
   if (hit) return hit.pattern
   return NAME_ALIASES[norm] ?? null
+}
+
+/**
+ * The whole library entry behind a catalog lift's name, or null.
+ *
+ * Same matching as `patternForName` (canonical name, then aliases) and the same
+ * reason: program ids are program-private, names are shared. This exists
+ * because two things outside the editor need more than the pattern — how long
+ * to rest (a barbell compound is not a cable pushdown) and which muscle group a
+ * logged set belongs to.
+ */
+export function libraryByName(name: string): LibraryExercise | undefined {
+  const norm = name.trim().toLowerCase()
+  const hit = EXERCISE_LIBRARY.find((e) => e.name.toLowerCase() === norm)
+  if (hit) return hit
+  const aliased = NAME_ALIASES[norm]
+  return aliased ? EXERCISE_LIBRARY.find((e) => e.pattern === aliased && e.compound) : undefined
 }

@@ -22,7 +22,7 @@ import {
   patternForName,
   searchLibrary,
 } from "@/src/programs/data/exerciseLibrary"
-import { addDay, addExercise, scheduleDays } from "@/src/programs/customize"
+import { addDay, addExercise, loadExerciseFromLibrary, scheduleDays } from "@/src/programs/customize"
 import { emptyCustomSchedule } from "@/src/programs/components/CustomProgramBuilder"
 import { setDropSets } from "@/src/programs/builder"
 import { formatProgramText, parseProgramText } from "@/src/programs/programText"
@@ -103,11 +103,36 @@ describe("the pool itself", () => {
 
   test("suggested weights climb with level, and bodyweight movements stay at zero", () => {
     for (const e of EXERCISE_LIBRARY) {
+      if (e.assisted) continue // handled by its own test below
       const { beginner, intermediate, advanced } = e.suggestedKg
       expect(intermediate).toBeGreaterThanOrEqual(beginner)
       expect(advanced).toBeGreaterThanOrEqual(intermediate)
     }
     expect(libraryExercise("lib_push_up")!.suggestedKg.advanced).toBe(0)
+  })
+
+  test("an assisted lift's numbers FALL with level — the weight is help", () => {
+    // The assisted pull-up was seeded 25 → 40 → 55, which says an advanced
+    // lifter needs more help than a beginner, and then the engine ratcheted the
+    // assistance upward every session. Both were backwards.
+    for (const e of EXERCISE_LIBRARY.filter((x) => x.assisted)) {
+      const { beginner, intermediate, advanced } = e.suggestedKg
+      expect(intermediate, `${e.name} intermediate`).toBeLessThanOrEqual(beginner)
+      expect(advanced, `${e.name} advanced`).toBeLessThanOrEqual(intermediate)
+    }
+  })
+
+  test("a hold is measured in seconds and does not gain weight for existing", () => {
+    // A plank arrived as "3 × 1 rep" on double progression, so making "one rep"
+    // on all three sets added 2.5 kg to it every session, for ever.
+    const plank = loadExerciseFromLibrary(libraryExercise("lib_plank")!, "x_plank")
+    expect(plank.repUnit).toBe("sec")
+    expect(plank.progression.kind).toBe("none")
+    // A loaded carry is also timed, but it DOES progress — by adding weight for
+    // the same time, which is how a carry gets harder.
+    const carry = loadExerciseFromLibrary(libraryExercise("lib_farmer_carry")!, "x_carry")
+    expect(carry.repUnit).toBe("sec")
+    expect(carry.progression.kind).toBe("linear_load")
   })
 })
 

@@ -158,6 +158,14 @@ export async function completeOnboardingForUser(
     tertiaryArchetype: data.tertiaryArchetype,
   })
 
+  /* THE SAME CHECK THE OTHER TWO WRITE PATHS MAKE.
+     `updatePreferredRegionForUser` and `updateSecondaryRegionDirectForUser`
+     both call this; onboarding — the path that writes a region for the FIRST
+     time — did not, so any string reaching it was stored. It then renders as
+     itself wherever a region is named, because the label table is keyed by the
+     ids in `REGIONS`. One rule, checked everywhere it is written. */
+  validateRegion(data.region)
+
   const initialLevel = getInitialLevelFromExperience(data.experienceLevel)
 
   await updateProfileDb(userId, {

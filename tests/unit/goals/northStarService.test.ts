@@ -3654,7 +3654,7 @@ describe("a progression in your own words", () => {
  */
 describe("what needs to happen for the one thing to work", () => {
   it("writes a requirement as a real goal, filed where it belongs", () => {
-    const plan = addOneThingRequirement(emptyNsPlan(), "Train four times a week", undefined, NOW)
+    const plan = addOneThingRequirement(emptyNsPlan(), "Train four times a week", undefined, "habit_ramp", NOW)
     expect(plan.goals).toHaveLength(1)
     const [goal] = plan.goals
     expect(goal.title).toBe("Train four times a week")
@@ -3666,33 +3666,73 @@ describe("what needs to happen for the one thing to work", () => {
   it("guesses the area from the words people actually use", () => {
     // "Ring my mother once a week" landed in Health: the keyword list had
     // "mom" and "mor" and not "mother".
-    const plan = addOneThingRequirement(emptyNsPlan(), "Ring my mother once a week", undefined, NOW)
+    const plan = addOneThingRequirement(emptyNsPlan(), "Ring my mother once a week", undefined, "habit_ramp", NOW)
     expect(plan.goals[0].areaId).toBe("lm_family")
-    // And it is a driver at one a week, not a finish line with a made-up rate.
+    // The AREA is still guessed and still shown. The SHAPE is not guessed at
+    // all any more — it is the one that was asked for — but the rate inside it
+    // is still read off the line, so "once a week" means one and not the
+    // default three.
     expect(plan.goals[0].type).toBe("habit_ramp")
     expect(plan.goals[0].daysPerWeek).toBe(1)
   })
 
   it("files it where the person says, over the guess", () => {
-    const plan = addOneThingRequirement(emptyNsPlan(), "Stop buying it", "lm_money", NOW)
+    const plan = addOneThingRequirement(emptyNsPlan(), "Stop buying it", "lm_money", "achievement", NOW)
     expect(plan.goals[0].areaId).toBe("lm_money")
   })
 
-  it("shapes it like anything else typed into an area", () => {
-    // A number makes a climb. The requirement list is not a second, weaker
-    // kind of goal — it is the same machinery, entered somewhere else.
-    const plan = addOneThingRequirement(emptyNsPlan(), "Flat bench 100 kg", "lm_fitness", NOW)
+  it("fills the numbers of the shape that was asked for", () => {
+    // Picking "a number you climb to" and writing one means the climb opens on
+    // it, rather than on a default nobody typed.
+    const plan = addOneThingRequirement(emptyNsPlan(), "Flat bench 100 kg", "lm_fitness", "milestone_ladder", NOW)
     expect(plan.goals[0].type).toBe("milestone_ladder")
     expect(plan.goals[0].ladder?.target).toBe(100)
   })
 
+  /**
+   * THE SHAPE IS THE ONE THAT WAS ASKED FOR — always, whatever the words say.
+   *
+   * This is the whole change. `shapeFromTitle` used to decide, and it decided
+   * "Spend 100 kr pr day i didnt smoke to celebrate" was a one-off climb to
+   * 100, when it is 100 a day adding up. Nobody could correct it from the step,
+   * because the step drew a read-only line.
+   */
+  it("uses the shape it was given, not the one the words look like", () => {
+    const words = "Flat bench 100 kg"
+    for (const type of ["habit_ramp", "achievement", "milestone_ladder"] as const) {
+      const plan = addOneThingRequirement(emptyNsPlan(), words, "lm_fitness", type, NOW)
+      expect(plan.goals[0].type).toBe(type)
+      expect(plan.goals[0].servesOneThing).toBe(true)
+    }
+  })
+
+  /**
+   * AND IT NEVER INVENTS THE NUMBER.
+   *
+   * `defaultsForType` opens a climb at 0 → 100 so the shape is well-formed.
+   * Left in place on a line with no number in it, that puts a target of 100 on
+   * "Ring my mother" — a figure nobody typed, which then travels to the goals
+   * page and the tracking page looking like a decision somebody made.
+   */
+  it("leaves the climb empty when the words carry no number to climb to", () => {
+    const plan = addOneThingRequirement(emptyNsPlan(), "Ring my mother", "lm_family", "milestone_ladder", NOW)
+    expect(plan.goals[0].type).toBe("milestone_ladder")
+    expect(plan.goals[0].ladder).toBeNull()
+  })
+
+  /** A rate written as a rate survives into the practice that was asked for. */
+  it("reads the rate out of the line for a practice", () => {
+    const plan = addOneThingRequirement(emptyNsPlan(), "Gym 4x a week", "lm_fitness", "habit_ramp", NOW)
+    expect(plan.goals[0].daysPerWeek).toBe(4)
+  })
+
   it("shows up on the goals page like any other goal", () => {
-    const plan = addOneThingRequirement(emptyNsPlan(), "Sleep by eleven", "lm_health", NOW)
+    const plan = addOneThingRequirement(emptyNsPlan(), "Sleep by eleven", "lm_health", "habit_ramp", NOW)
     expect(goalsInArea(plan, "lm_health").map((g) => g.title)).toEqual(["Sleep by eleven"])
   })
 
   it("keeps them in one list, whichever way they were linked", () => {
-    let plan = addOneThingRequirement(emptyNsPlan(), "Sleep by eleven", "lm_health", NOW)
+    let plan = addOneThingRequirement(emptyNsPlan(), "Sleep by eleven", "lm_health", "habit_ramp", NOW)
     plan = addGoal(plan, "lm_fitness", "Train four times a week", "habit_ramp", NOW)
     const existing = plan.goals[1]
     expect(oneThingRequirements(plan)).toHaveLength(1)
@@ -3713,20 +3753,20 @@ describe("what needs to happen for the one thing to work", () => {
   })
 
   it("does not offer what is already linked", () => {
-    const plan = addOneThingRequirement(emptyNsPlan(), "Train four times a week", "lm_fitness", NOW)
+    const plan = addOneThingRequirement(emptyNsPlan(), "Train four times a week", "lm_fitness", "habit_ramp", NOW)
     expect(goalsLikeOneThing(plan, "training")).toEqual([])
   })
 
   it("survives being written down and read back", () => {
     // The flag is what the whole step hangs on, so a reload that dropped it
     // would leave somebody's requirements as loose goals with no origin.
-    const plan = addOneThingRequirement(emptyNsPlan(), "Sleep by eleven", "lm_health", NOW)
+    const plan = addOneThingRequirement(emptyNsPlan(), "Sleep by eleven", "lm_health", "habit_ramp", NOW)
     const reloaded = loadNsPlan(JSON.stringify(plan))!
     expect(oneThingRequirements(reloaded).map((g) => g.title)).toEqual(["Sleep by eleven"])
   })
 
   it("refuses an empty line rather than filing a blank goal", () => {
-    expect(addOneThingRequirement(emptyNsPlan(), "   ", "lm_health", NOW).goals).toEqual([])
+    expect(addOneThingRequirement(emptyNsPlan(), "   ", "lm_health", "habit_ramp", NOW).goals).toEqual([])
   })
 })
 
@@ -3738,7 +3778,7 @@ describe("the step is not done on a sentence alone", () => {
   it("wants the sentence, its supports, and something that has to happen", () => {
     let plan = emptyNsPlan()
     expect(stepState(plan, "one", SAVED)).toBe("started")
-    plan = addOneThingRequirement(plan, "Delete the dealer's number", "lm_health", NOW)
+    plan = addOneThingRequirement(plan, "Delete the dealer's number", "lm_health", "achievement", NOW)
     // Still not done: a sentence with no why is the one that dies in February.
     expect(stepState(plan, "one", SAVED)).toBe("started")
     for (const key of [ONE_ANSWERS.why, ONE_ANSWERS.cost, ONE_ANSWERS.identity, ONE_ANSWERS.values]) {
@@ -3758,7 +3798,7 @@ describe("the step is not done on a sentence alone", () => {
    * owns it marked as never started.
    */
   it("is empty for the same plan when the account has no one thing", () => {
-    let plan = addOneThingRequirement(emptyNsPlan(), "Delete the dealer's number", "lm_health", NOW)
+    let plan = addOneThingRequirement(emptyNsPlan(), "Delete the dealer's number", "lm_health", "achievement", NOW)
     for (const key of [ONE_ANSWERS.why, ONE_ANSWERS.cost, ONE_ANSWERS.identity, ONE_ANSWERS.values]) {
       plan = setAnswer(plan, key, "written", NOW)
     }

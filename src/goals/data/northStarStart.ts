@@ -354,11 +354,7 @@ export const ONE_COPY = {
   title: "What is the one thing?",
   help:
     "The one change that, if it happened, would make the next few months or years far more likely to work. Not your most important goal — the one that makes several of the others easier, or unnecessary.",
-  /* "and save it": the sentence lives on your account now, not in this browser,
-     so the rest of the step opens on the saved one rather than on whatever is
-     in the box. Saying only "write it above" left somebody staring at a filled
-     box and a page that had not moved. */
-  waiting: "Write it above and save it, and the rest of this step opens. There is no point asking why something matters before it exists.",
+  waiting: "Write it above and the rest of this step opens. There is no point asking why something matters before it exists.",
 
   whyTitle: "Why does it matter?",
   whyHelp: "In your own words, not the respectable version. This is the sentence you will need in February, and the true reason is the only one that works then.",
@@ -381,14 +377,28 @@ export const ONE_COPY = {
     "Usually more than one — that is most of what makes it the one thing. Pick every area it reaches; the Experiences step opens on these.",
 
   needsTitle: "What needs to happen for it to work?",
+  /* "waiting for you on the goals page" was here, and it was not true. A line
+     written here becomes a goal in THIS PLAN, in this browser. It reaches the
+     goals page and the tracking page when the Track step pushes it, and not
+     one moment before — which is why somebody wrote three of these, opened
+     tracking, and found nothing. Copy that promises a write nobody has made is
+     worse than no copy: it makes a working feature look broken. */
   needsHelp:
-    "One line each. These are not notes — each becomes a real goal, filed in the area it belongs to, and they are waiting for you on the goals page. This is where the list of everything you want stops being everything you want.",
+    "One line each. These are not notes — each becomes a real goal, filed in the area it belongs to. They stay in your plan until the Track step at the end, which is what puts them on your goals and tracking pages.",
   needsPlaceholder: "Something that has to be true",
   needsAdd: "Add",
+  /* Named before the line is typed, not guessed from it. See `Requirements`. */
+  needsShape: "What kind of thing is it?",
+  /* Distinct from the shape toggle on each goal card, which is labelled with
+     the bare shape name. Two controls called "Practice" in one section is
+     ambiguous to anything that selects by name, including a person. */
+  needsShapeAria: (label: string) => `Add the next one as a ${label}`,
   needsArea: "Files under",
   needsAlready: "You have already written these, and they read like they are about it:",
   needsLink: "this serves it",
-  needsGo: (n: number) => `${n} ${n === 1 ? "goal" : "goals"} written — go to the goals page`,
+  /* Named for where it actually goes — the Experiences step — not for the
+     goals page, which this button has never opened. */
+  needsGo: (n: number) => `${n} ${n === 1 ? "goal" : "goals"} written — on to everything else you want`,
 } as const
 
 export const ONE_THING_KEY = `${START_ANSWER_PREFIX}one-thing`

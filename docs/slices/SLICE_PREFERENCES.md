@@ -1,6 +1,6 @@
 # Vertical Slice: Preferences (Profile Settings)
 **Status:** Reference
-**Updated:** 29-01-2026 07:46 (Danish time)
+**Updated:** 07-09-2026 — removed the `/preferences/secondary-region` page and `SecondaryRegionSelector` from this doc: both were deleted on 05-09-2026 (commit 4bfc843e) because nothing linked to the page and the same setting is changed inline on the dashboard's "Your Preferences" card (`updateSecondaryRegionDirect`).
 
 ## Slice Purpose
 
@@ -25,7 +25,6 @@ This slice also includes the **onboarding flow** which collects these preference
 |-------|--------------|-------------------|
 | `/preferences` | Full onboarding flow (5 steps) | `src/profile/components/OnboardingFlow.tsx` |
 | `/preferences/archetypes` | Archetype selection page | `src/profile/components/ArchetypeSelector.tsx` |
-| `/preferences/secondary-region` | Secondary region selection | `src/profile/components/SecondaryRegionSelector.tsx` |
 
 ### Dashboard Integration
 
@@ -50,7 +49,6 @@ All preference updates use Next.js Server Actions (not API routes).
 | `completeOnboarding(formData)` | Complete 5-step onboarding, set `onboarding_completed = true` |
 | `updateAgeRange(start, end)` | Update `age_range_start` and `age_range_end` |
 | `updatePreferredRegion(regionId)` | Update `preferred_region`, clear secondary if conflict |
-| `updateSecondaryRegion(formData)` | Update `secondary_region` |
 | `updateSecondaryRegionDirect(regionId)` | Update secondary region (direct call, not form) |
 | `updateArchetypes(formData)` | Update archetype, secondary_archetype, tertiary_archetype |
 | `updateProfilePreference(formData)` | Generic preference update (experience_level, primary_goal, booleans) |
@@ -137,7 +135,6 @@ These are **pure data files** with no business logic:
 | `OnboardingFlow` | `src/profile/components/OnboardingFlow.tsx` | 5-step onboarding wizard |
 | `UserPreferences` | `src/profile/components/UserPreferences.tsx` | Dashboard preferences card |
 | `ArchetypeSelector` | `src/profile/components/ArchetypeSelector.tsx` | Full-page archetype picker |
-| `SecondaryRegionSelector` | `src/profile/components/SecondaryRegionSelector.tsx` | Full-page secondary region picker |
 | `InteractiveWorldMap` | `src/profile/components/InteractiveWorldMap.tsx` | Interactive SVG world map |
 | `LevelProgressBar` | `src/profile/components/LevelProgressBar.tsx` | XP/Level progress display |
 
@@ -169,7 +166,6 @@ src/profile/
     ├── OnboardingFlow.tsx          # 5-step onboarding
     ├── UserPreferences.tsx         # Dashboard preferences card
     ├── ArchetypeSelector.tsx       # Archetype picker page
-    ├── SecondaryRegionSelector.tsx # Secondary region picker page
     ├── InteractiveWorldMap.tsx     # SVG world map
     └── LevelProgressBar.tsx        # XP/level progress bar
 
@@ -177,8 +173,6 @@ app/preferences/
 ├── page.tsx                        # Thin wrapper -> OnboardingFlow
 ├── archetypes/
 │   └── page.tsx                    # Thin wrapper -> ArchetypeSelector
-└── secondary-region/
-    └── page.tsx                    # Thin wrapper -> SecondaryRegionSelector
 
 public/
 ├── world-map.svg                   # World map SVG file
@@ -234,7 +228,6 @@ public/
 - [ ] Copy `LevelProgressBar.tsx` to `src/profile/components/`
 - [ ] Copy `UserPreferences.tsx` to `src/profile/components/`
 - [ ] Copy `ArchetypeSelector.tsx` to `src/profile/components/`
-- [ ] Copy `SecondaryRegionSelector.tsx` to `src/profile/components/`
 - [ ] Copy `OnboardingFlowV2.tsx` to `src/profile/components/OnboardingFlow.tsx`
 - [ ] Update all imports to use new paths
 
@@ -244,7 +237,6 @@ public/
 ### Phase 7: App Routes
 - [ ] Create `app/preferences/page.tsx`
 - [ ] Create `app/preferences/archetypes/page.tsx`
-- [ ] Create `app/preferences/secondary-region/page.tsx`
 
 ### Phase 8: Static Assets
 - [ ] Copy `public/world-map.svg`

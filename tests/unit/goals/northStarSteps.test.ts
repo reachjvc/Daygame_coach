@@ -64,7 +64,7 @@ function completePlan(): NsPlan {
   for (const key of [ONE_ANSWERS.why, ONE_ANSWERS.cost, ONE_ANSWERS.identity, ONE_ANSWERS.values]) {
     plan = setAnswer(plan, key, "written", NOW)
   }
-  plan = addOneThingRequirement(plan, "Train four times a week", "lm_fitness", NOW)
+  plan = addOneThingRequirement(plan, "Train four times a week", "lm_fitness", "habit_ramp", NOW)
 
   plan = addGoal(plan, "lm_fitness", "Flat bench 100 kg", "milestone_ladder", NOW)
   const milestone = milestoneGoals(plan)[0]
@@ -128,7 +128,7 @@ describe("the circles on the rail", () => {
       (p) => p.areas.reduce((acc, a) => setAreaReview(acc, a.id, { ten: "ten", fortnight: 5 }, NOW), p),
       (p) => setAnswer(p, ONE_ANSWERS.oneThing, "Quit weed", NOW),
       (p) => [ONE_ANSWERS.why, ONE_ANSWERS.cost, ONE_ANSWERS.identity, ONE_ANSWERS.values].reduce((acc, k) => setAnswer(acc, k, "x", NOW), p),
-      (p) => addOneThingRequirement(p, "Delete the number", "lm_health", NOW),
+      (p) => addOneThingRequirement(p, "Delete the number", "lm_health", "achievement", NOW),
       (p) => addGoal(p, "lm_health", "Sleep 8 hours", "achievement", NOW),
       (p) => updateGoal(p, p.goals[p.goals.length - 1].id, { why: "because", targetDate: "2027-01-01" }, NOW),
       (p) => addCustomStep(p, "r1", "Lights out at eleven", 1, 7, NOW),

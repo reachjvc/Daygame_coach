@@ -1,0 +1,189 @@
+{
+  "_comment": "Type errors that already existed, by file and message. May only shrink. Regenerate with: node scripts/typecheck-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
+  "_format": "signatures-v2",
+  "total": 105,
+  "files": {
+    "app/test/goalsv11/page.tsx": {
+      "TS2345: Argument of type '\"a\" | \"b\" | \"c\" | \"d\" | \"e\"' is not assignable to parameter of type 'SetStateAction<\"a\">'.": 1
+    },
+    "app/test/goalsv2/variant-h/MomentumThemeProvider.tsx": {
+      "TS2741: Property 'orrery' is missing in type '{ zen: MomentumTheme; cyberpunk: MomentumTheme; }' but required in type 'Record<CurveThemeId, MomentumTheme>'.": 1
+    },
+    "app/test/goalsv2/variant-j/WarRoomTheme.tsx": {
+      "TS2741: Property 'orrery' is missing in type '{ zen: WarRoomThemeConfig; cyberpunk: WarRoomThemeConfig; }' but required in type 'Record<CurveThemeId, WarRoomThemeConfig>'.": 1
+    },
+    "app/test/goalsv5/useGoalData.ts": {
+      "TS2322: Type '{ id: string; user_id: string; title: string; category: string; life_area: string; goal_type: \"milestone\"; tracking_type: \"counter\"; goal_nature: \"outcome\"; period: \"weekly\"; target_value: number; ... 21 more ...; days_remaining: null; }[]' is not assignable to type 'GoalWithProgress[]'.": 1
+    },
+    "app/test/goalsv6/useGoalData.ts": {
+      "TS2322: Type '{ id: string; user_id: string; title: string; category: string; life_area: string; goal_type: \"milestone\"; tracking_type: \"counter\"; goal_nature: \"outcome\"; period: \"weekly\"; target_value: number; ... 21 more ...; days_remaining: null; }[]' is not assignable to type 'GoalWithProgress[]'.": 1
+    },
+    "app/test/goalsv7/useGoalData.ts": {
+      "TS2322: Type '{ id: string; user_id: string; title: string; category: string; life_area: string; goal_type: \"milestone\"; tracking_type: \"counter\"; goal_nature: \"outcome\"; period: \"weekly\"; target_value: number; ... 21 more ...; days_remaining: null; }[]' is not assignable to type 'GoalWithProgress[]'.": 1
+    },
+    "app/test/tour-variants/VariantA.tsx": {
+      "TS2741: Property 'areaCatalogs' is missing in type '{ ref: RefObject<GoalsStepTourHandle | null>; daygameByCategory: { category: string; goals: GoalTemplate[]; }[]; daygameL3Goals: GoalTemplate[]; ... 23 more ...; onUpdateGoalDate: () => void; }' but required in type 'GoalsStepProps'.": 1
+    },
+    "app/test/tour-variants/VariantB.tsx": {
+      "TS2741: Property 'areaCatalogs' is missing in type '{ ref: RefObject<GoalsStepTourHandle | null>; daygameByCategory: { category: string; goals: GoalTemplate[]; }[]; daygameL3Goals: GoalTemplate[]; ... 23 more ...; onUpdateGoalDate: () => void; }' but required in type 'GoalsStepProps'.": 1
+    },
+    "app/test/tour-variants/VariantC.tsx": {
+      "TS2741: Property 'areaCatalogs' is missing in type '{ ref: RefObject<GoalsStepTourHandle | null>; daygameByCategory: { category: string; goals: GoalTemplate[]; }[]; daygameL3Goals: GoalTemplate[]; ... 23 more ...; onUpdateGoalDate: () => void; }' but required in type 'GoalsStepProps'.": 1
+    },
+    "app/test/tour-variants/VariantD.tsx": {
+      "TS2741: Property 'areaCatalogs' is missing in type '{ ref: RefObject<GoalsStepTourHandle | null>; daygameByCategory: { category: string; goals: GoalTemplate[]; }[]; daygameL3Goals: GoalTemplate[]; ... 23 more ...; onUpdateGoalDate: () => void; }' but required in type 'GoalsStepProps'.": 1
+    },
+    "scripts/run-diagnostic.ts": {
+      "TS2322: Type 'number' is not assignable to type '0'.": 2,
+      "TS2322: Type 'number' is not assignable to type '4'.": 2
+    },
+    "scripts/test-llm-grounding.ts": {
+      "TS2345: Argument of type '{ situation: { id: string; location: { en: string; da: string; }; setup: { en: string; da: string; }; yourOpener: { en: string; da: string; }; herFirstResponse: { en: string; da: string; }; }; language: \"en\"; interestLevel: number; ... 12 more ...; xpEarned: number; }' is not assignable to parameter of type 'KeepItGoingContext'.": 1
+    },
+    "scripts/training-data/09.EXT.chunk-embed.ts": {
+      "TS2322: Type '({ content: string; type: SegmentType; chunkIndex: number; totalChunks: number; techniques: string[]; topics: string[]; startSec: number | undefined; endSec: number | undefined; ... 6 more ...; contains_repaired_text: true | undefined; } | null)[]' is not assignable to type 'InternalChunk[]'.": 1,
+      "TS2339: Property 'repaired' does not exist on type '{ type?: string | undefined; segment_index?: number | undefined; artifact_type?: string | undefined; description?: string | undefined; damage_severity?: string | undefined; }'.": 1,
+      "TS2531: Object is possibly 'null'.": 2,
+      "TS2677: A type predicate's type must be assignable to its parameter's type.": 1
+    },
+    "scripts/training-data/10.EXT.ingest.ts": {
+      "TS18046: 'cid' is of type 'unknown'.": 2,
+      "TS18046: 'reqMeta.max_segments' is of type 'unknown'.": 1,
+      "TS2322: Type '{ video_id: string; source: string | null; ingest_eligible: boolean; readiness: { damage_profile?: ReadinessDamageProfile | undefined; status: string; reason: string; source: string | null; report: string | null; }; }[]' is not assignable to type 'ManifestReadinessReviewVideo[]'.": 1,
+      "TS2322: Type 'unknown' is not assignable to type 'number'.": 1,
+      "TS2339: Property 'description' does not exist on type 'ChunkMetadata'.": 3,
+      "TS2339: Property 'isSummary' does not exist on type 'ChunkMetadata'.": 1,
+      "TS2339: Property 'section_index' does not exist on type 'ChunkMetadata'.": 2,
+      "TS2345: Argument of type 'unknown' is not assignable to parameter of type 'number'.": 4,
+      "TS2365: Operator '<' cannot be applied to types '{}' and 'number'.": 2,
+      "TS2365: Operator '>' cannot be applied to types '{}' and 'number'.": 2,
+      "TS2677: A type predicate's type must be assignable to its parameter's type.": 1
+    },
+    "src/db/goalRepo.ts": {
+      "TS2322: Type 'string | null' is not assignable to type 'string'.": 1,
+      "TS2339: Property 'catch' does not exist on type 'PromiseLike<void>'.": 1
+    },
+    "src/goals/components/MilestoneCompleteDialog.tsx": {
+      "TS2503: Cannot find namespace 'JSX'.": 1,
+      "TS2739: Type '{ none: string; bronze: string; silver: string; gold: string; diamond: string; }' is missing the following properties from type 'Record<BadgeTier, string>': iron, mythic": 2
+    },
+    "src/goals/components/WeeklyReviewDialog.tsx": {
+      "TS2739: Type '{ none: string; bronze: string; silver: string; gold: string; diamond: string; }' is missing the following properties from type 'Record<BadgeTier, string>': iron, mythic": 2
+    },
+    "src/goals/components/new-goals/GoalIntake.tsx": {
+      "TS2322: Type '(e: { progress?: number; }) => void' is not assignable to type 'ProgressCallback'.": 1
+    },
+    "src/goals/components/new-goals/IdentityStep.tsx": {
+      "TS2305: Module '\"./GoalIntake\"' has no exported member 'IntakePathSelection'.": 1,
+      "TS2322: Type '{ onApply: (selections: IntakePathSelection[]) => void; }' is not assignable to type 'IntrinsicAttributes & { onMatched: (matches: IntakeMatches, resolution: IntakeResolution) => void; date: string; onChangeDate: (d: string) => void; matched?: boolean | undefined; }'.": 1
+    },
+    "src/goals/components/setup/AuroraOrreryStep.tsx": {
+      "TS2322: Type '{ badgeId: string; title: string; progress: number; tier: \"none\"; unlocked: false; }[]' is not assignable to type 'BadgeStatus[]'.": 1
+    },
+    "src/goals/components/setup/GoalsStepTour.tsx": {
+      "TS2322: Type 'boolean' is not assignable to type 'AllowedButtons[]'.": 1,
+      "TS2345: Argument of type '{ config: DriveStep; state: never; }' is not assignable to parameter of type '{ config: Config; state: State; driver: Driver; }'.": 4
+    },
+    "src/goals/components/setup/SummaryStep.tsx": {
+      "TS2322: Type '{ badgeId: string; title: string; progress: number; tier: \"none\"; unlocked: false; }[]' is not assignable to type 'BadgeStatus[]'.": 1
+    },
+    "src/goals/components/views/OrreryView.tsx": {
+      "TS2739: Type '{ none: string; bronze: string; silver: string; gold: string; diamond: string; }' is missing the following properties from type 'Record<BadgeTier, string>': iron, mythic": 1
+    },
+    "src/goals/components/views/V11ViewC.tsx": {
+      "TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<\"custom\" | \"daily\" | \"monthly\" | \"quarterly\" | \"weekly\" | \"yearly\">'.": 1
+    },
+    "src/goals/components/views/V11ViewD.tsx": {
+      "TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<\"custom\" | \"daily\" | \"monthly\" | \"quarterly\" | \"weekly\" | \"yearly\">'.": 1
+    },
+    "src/goals/components/views/V11ViewE.tsx": {
+      "TS2304: Cannot find name 'isAddingHere'.": 1,
+      "TS2304: Cannot find name 'lifeAreas'.": 1,
+      "TS2304: Cannot find name 'onCloseCreator'.": 1,
+      "TS2304: Cannot find name 'onCreate'.": 1,
+      "TS2322: Type 'HabitRampStep[] | null' is not assignable to type 'Record<string, unknown>[] | null | undefined'.": 1,
+      "TS2322: Type 'MilestoneLadderConfig | null' is not assignable to type 'Record<string, unknown> | null | undefined'.": 1
+    },
+    "src/goals/components/vision-plan/VisionPlanLab.tsx": {
+      "TS18047: 'prev' is possibly 'null'.": 1,
+      "TS18047: 'result' is possibly 'null'.": 1,
+      "TS2345: Argument of type '(prev: VisionDrivingForce | null) => { identity: string[]; purpose?: string | undefined; reasons?: string[] | undefined; mission?: string | undefined; conduct?: string[] | undefined; primaryQuestion?: string | undefined; primaryQuestionOld?: string | undefined; missionParts?: { ...; } | undefined; }' is not assignable to parameter of type 'SetStateAction<VisionDrivingForce | null>'.": 1
+    },
+    "src/goals/goalsService.ts": {
+      "TS2322: Type 'string | null' is not assignable to type 'string'.": 1
+    },
+    "src/goals/visionPlanService.ts": {
+      "TS2741: Property '0' is missing in type 'string[] & { index: number; }' but required in type 'RegExpMatchArray'.": 1
+    },
+    "src/inner-game/components/InnerGamePage.tsx": {
+      "TS2345: Argument of type '{ currentStep: InnerGameStep.WELCOME; currentSubstep: number; welcomeDismissed: false; valuesCompleted: false; shadowCompleted: false; peakExperienceCompleted: false; hurdlesCompleted: false; ... 8 more ...; aspirationalValues: null; }' is not assignable to parameter of type 'SetStateAction<InnerGameProgress | null>'.": 1
+    },
+    "src/tracking/components/DailyReviewPage.tsx": {
+      "TS2322: Type '{ onTranscription: (text: any) => void; onError: (err: string) => void; }' is not assignable to type 'IntrinsicAttributes & VoiceRecorderButtonProps'.": 1,
+      "TS7006: Parameter 'text' implicitly has an 'any' type.": 1
+    },
+    "tests/manual/timezoneCounters.test.ts": {
+      "TS1378: Top-level 'await' expressions are only allowed when the 'module' option is set to 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', 'nodenext', or 'preserve', and the 'target' option is set to 'es2017' or higher.": 4
+    },
+    "tests/unit/db/goalTypes.test.ts": {
+      "TS2322: Type '{ id: string; user_id: string; title: string; category: string; tracking_type: GoalTrackingType; period: GoalPeriod; target_value: number; ... 27 more ...; aligned_values: string[]; }' is not assignable to type 'UserGoalRow'.": 1
+    },
+    "tests/unit/e2e-isolation.test.ts": {
+      "TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.": 1
+    },
+    "tests/unit/goals/goalHierarchyService.test.ts": {
+      "TS2322: Type '{ progress_percentage: number; is_complete: boolean; days_remaining: number | null; id: string; user_id: string; title: string; category: string; tracking_type: GoalTrackingType; ... 29 more ...; aligned_values: string[]; }' is not assignable to type 'GoalWithProgress'.": 1
+    },
+    "tests/unit/goals/goalPeriodRoll.test.ts": {
+      "TS1378: Top-level 'await' expressions are only allowed when the 'module' option is set to 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', 'nodenext', or 'preserve', and the 'target' option is set to 'es2017' or higher.": 1
+    },
+    "tests/unit/goals/goalsReadRolls.test.ts": {
+      "TS1378: Top-level 'await' expressions are only allowed when the 'module' option is set to 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', 'nodenext', or 'preserve', and the 'target' option is set to 'es2017' or higher.": 3
+    },
+    "tests/unit/goals/goalsService.test.ts": {
+      "TS2322: Type '{ progress_percentage: number; is_complete: boolean; days_remaining: number | null; id: string; user_id: string; title: string; category: string; tracking_type: GoalTrackingType; ... 29 more ...; aligned_values: string[]; }' is not assignable to type 'GoalWithProgress'.": 1,
+      "TS2741: Property 'tierName' is missing in type '{ badgeId: string; title: string; progress: number; tier: \"bronze\"; unlocked: true; }' but required in type 'BadgeStatus'.": 2,
+      "TS2741: Property 'tierName' is missing in type '{ badgeId: string; title: string; progress: number; tier: \"none\"; unlocked: false; }' but required in type 'BadgeStatus'.": 1
+    },
+    "tests/unit/goals/graduation.test.ts": {
+      "TS2322: Type '\"approaches\"' is not assignable to type 'LinkedMetric'.": 1
+    },
+    "tests/unit/goals/lifeMasteryRegressions.test.ts": {
+      "TS2698: Spread types may only be created from object types.": 1
+    },
+    "tests/unit/goals/northStarTrack.test.ts": {
+      "TS2353: Object literal may only specify known properties, and 'curve' does not exist in type 'MilestoneLadderConfig'.": 1
+    },
+    "tests/unit/goals/weeklyReview.test.ts": {
+      "TS2322: Type '{ progress_percentage: number; is_complete: boolean; days_remaining: number | null; id: string; user_id: string; title: string; category: string; tracking_type: GoalTrackingType; ... 29 more ...; aligned_values: string[]; }' is not assignable to type 'GoalWithProgress'.": 1
+    },
+    "tests/unit/inner-game/progressUtils.test.ts": {
+      "TS2322: Type '{ currentStep: InnerGameStep; currentSubstep: number; welcomeDismissed: boolean; valuesCompleted: boolean; shadowCompleted: boolean; peakExperienceCompleted: boolean; hurdlesCompleted: boolean; ... 14 more ...; deathbedInferredValues?: InferredValue[] | null | undefined; }' is not assignable to type 'InnerGameProgress'.": 1
+    },
+    "tests/unit/qa/qaServiceHelpers.test.ts": {
+      "TS2345: Argument of type '\"claude\"' is not assignable to parameter of type '\"ollama\"'.": 2
+    },
+    "tests/unit/shared/periodEquivalence.test.ts": {
+      "TS2345: Argument of type 'null' is not assignable to parameter of type 'string'.": 1
+    },
+    "tests/unit/tracking/customReportConfig.test.ts": {
+      "TS2352: Conversion of type 'CategoryInfo' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.": 1
+    },
+    "tests/unit/tracking/goalTotalTile.test.ts": {
+      "TS1378: Top-level 'await' expressions are only allowed when the 'module' option is set to 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', 'nodenext', or 'preserve', and the 'target' option is set to 'es2017' or higher.": 2
+    },
+    "tests/unit/tracking/reconcileUserProgress.test.ts": {
+      "TS1378: Top-level 'await' expressions are only allowed when the 'module' option is set to 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', 'nodenext', or 'preserve', and the 'target' option is set to 'es2017' or higher.": 1
+    },
+    "tests/unit/tracking/rollTrackingCounters.test.ts": {
+      "TS1378: Top-level 'await' expressions are only allowed when the 'module' option is set to 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', 'nodenext', or 'preserve', and the 'target' option is set to 'es2017' or higher.": 1
+    },
+    "tests/unit/tracking/schemas.test.ts": {
+      "TS2741: Property 'approachNotes' is missing in type '{ approachCount: number; duration: null; location: null; outcomes: { blowout: number; short: number; good: number; number: number; instadate: number; }; averageMood: null; tags: never[]; startedAt: string; ... 6 more ...; approachMoods: never[]; }' but required in type 'SessionSummaryData'.": 1,
+      "TS2741: Property 'approachNotes' is missing in type '{ approachCount: number; duration: number; location: string; outcomes: { blowout: number; short: number; good: number; number: number; instadate: number; }; averageMood: number; tags: string[]; startedAt: string; ... 6 more ...; approachMoods: { ...; }[]; }' but required in type 'SessionSummaryData'.": 1
+    },
+    "tests/unit/tracking/streakDecay.test.ts": {
+      "TS2353: Object literal may only specify known properties, and 'current_week' does not exist in type 'UserTrackingStatsRow'.": 1
+    }
+  }
+}

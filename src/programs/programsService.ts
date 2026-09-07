@@ -11,7 +11,16 @@
  * explicit error — no silent fallback (CLAUDE.md §3 / §15).
  */
 
-import { KG_PER_LB, PLATES, UNIT_CONFIG } from "./config"
+import {
+  DEFAULT_PLATES,
+  FREE_PRECISION,
+  KG_PER_LB,
+  LOAD_TOLERANCE,
+  PLATES,
+  REST_SECONDS,
+  UNIT_CONFIG,
+} from "./config"
+import { libraryByName } from "./data/exerciseLibrary"
 import type {
   ApplyLogResult,
   DayTemplate,
@@ -20,8 +29,13 @@ import type {
   EnrollmentCursor,
   ExerciseState,
   LoadExercise,
+  LoadJudgement,
   LoadPoint,
   LoggedExercise,
+  LoggedSet,
+  PlateSetup,
+  ProgramSchedule,
+  ReplayEvent,
   ProgramDefinition,
   ProgramEnrollment,
   ProgramSessionLogInput,
@@ -60,17 +74,218 @@ export function fromKg(weightKg: number, unit: UnitSystem): number {
 export function roundToLoadable(
   weight: number,
   unit: UnitSystem,
-  style: "barbell" | "free" = "barbell"
+  style: "barbell" | "free" | "bodyweight" = "barbell",
+  setup?: PlateSetup,
+  /**
+   * "down" never asks for more than intended — which is what a PRESCRIPTION
+   * needs, and what Wendler says to do with a percentage. "nearest" is for a
+   * number somebody typed, where the intent is the number itself.
+   */
+  mode: "nearest" | "down" = "nearest"
 ): number {
-  const cfg = UNIT_CONFIG[unit]
-  if (style === "free") {
-    // Still snapped to a sensible step so the prescription is not 7.3 kg, but
-    // allowed all the way down to nothing for bodyweight work.
-    return Math.max(0, Math.round(weight / cfg.loadGranularity) * cfg.loadGranularity)
+  if (style === "free" || style === "bodyweight") {
+    // Rounded to a number a person would write down, and allowed all the way
+    // to nothing. It used to be snapped to the BARBELL's 2.5 kg step, which
+    // turned a 6 kg dumbbell into 5 and a 12 kg one into 12.5, and made a 1 kg
+    // increment move nothing while the app said "+1 kg". We do not know what a
+    // given gym's dumbbells or cable stack go up in, so the increment decides
+    // the step and this only keeps the number sane.
+    const precision = FREE_PRECISION[unit]
+    const steps = mode === "down" ? Math.floor(weight / precision) : Math.round(weight / precision)
+    return Math.max(0, round2(steps * precision))
   }
-  if (weight <= cfg.barWeight) return cfg.barWeight
-  const rounded = Math.round(weight / cfg.loadGranularity) * cfg.loadGranularity
-  return Math.max(cfg.barWeight, rounded)
+  const plates = setup ?? DEFAULT_PLATES[unit]
+  const step = plates.smallestPlate * 2
+  if (weight <= plates.barWeight) return plates.barWeight
+  // Measured from the BAR, not from zero: with a 15 kg bar and 1.25 kg plates
+  // the loadable weights are 15, 17.5, 20 — not the multiples of 2.5 that
+  // rounding the absolute number would give.
+  const steps = (weight - plates.barWeight) / step
+  const rounded = plates.barWeight + (mode === "down" ? Math.floor(steps + 1e-9) : Math.round(steps)) * step
+  return Math.max(plates.barWeight, round2(rounded))
+}
+
+/**
+ * How a lift is loaded — declared by the author, or DERIVED from the library.
+ *
+ * IT USED TO DEFAULT TO BARBELL FOR EVERYTHING. Fourteen lifts across the
+ * catalogue — every lat pulldown, leg press, cable fly, lateral raise — were
+ * therefore floored at the 20 kg bar and told the lifter "just the bar", which
+ * is both a weight they cannot use and, once at the floor, one they can never
+ * move off. Hand-writing `loadStyle` on every row would be a hundred chances to
+ * file a lift wrongly; the library already knows which lifts have a bar under
+ * them, so it is asked. An explicit value still wins, for the lifts the library
+ * has never heard of.
+ */
+export function loadStyleOf(
+  ex: Pick<LoadExercise, "name" | "loadStyle">
+): "barbell" | "free" | "bodyweight" {
+  if (ex.loadStyle) return ex.loadStyle
+  const lib = libraryByName(ex.name)
+  if (!lib) return "barbell"
+  return lib.barbell ? "barbell" : "free"
+}
+
+/**
+ * The loadable weights either side of a target, for "can my gym make this?".
+ *
+ * `roundToLoadable` answers with one number; the engine also needs to know
+ * whether that number IS the target, because a program whose increment is
+ * smaller than the plates you own can never move if every session silently
+ * rounds back to where it started.
+ */
+export function isLoadable(
+  weight: number,
+  unit: UnitSystem,
+  style: "barbell" | "free" | "bodyweight" = "barbell",
+  setup?: PlateSetup
+): boolean {
+  return Math.abs(roundToLoadable(weight, unit, style, setup) - weight) < 1e-9
+}
+
+/**
+ * Whether this schedule runs on a calendar or in sequence.
+ *
+ * Deliberately all-or-nothing. A week where three days have weekdays and two do
+ * not has no coherent answer to "what is today's session" on the days nobody
+ * assigned, and every way of resolving it is a guess. `designProblems` reports
+ * the half-assigned state so it is fixed rather than interpreted.
+ *
+ * Lives here, with the engine, because it decides what gets prescribed. It was
+ * in `builder.ts` next to the editor that sets the weekdays, which is where you
+ * look to change one, not where you look to find out what today is.
+ */
+export function isWeekdayAnchored(schedule: ProgramSchedule): boolean {
+  if (schedule.kind !== "linear_rotation" && schedule.kind !== "weekly_waved") return false
+  return schedule.days.length > 0 && schedule.days.every((d) => d.weekday != null)
+}
+
+/** The day to do on a given ISO weekday, if this schedule is anchored. */
+export function dayForWeekday(schedule: ProgramSchedule, weekday: number) {
+  if (schedule.kind !== "linear_rotation" && schedule.kind !== "weekly_waved") return undefined
+  return schedule.days.find((d) => d.weekday === weekday)
+}
+
+/**
+ * Which day of an anchored week is today's, and whether today is a rest day.
+ *
+ * PURE, AND HERE, because it decides what a person is shown. It used to live in
+ * `programRepo` — inside the database layer, reachable by no unit test and by
+ * no integration test either (that harness runs raw SQL and never calls a repo
+ * function), so the single rule that answers "am I training today" was the one
+ * rule nobody could check. It also read the SERVER's clock; the weekday is now
+ * an argument, so the caller has to say whose today it means.
+ *
+ * Returns null when the program is not on a calendar at all — StrongLifts is
+ * A/B/A three times a week and its author never said which days — and the
+ * caller then walks the cursor, which is the behaviour those programs have
+ * always had.
+ */
+export function pickTodaysDay(
+  schedule: ProgramSchedule,
+  todayWeekday: number
+): { dayIndex: number; restDay: boolean; scheduledWeekday?: number } | null {
+  if (!isWeekdayAnchored(schedule)) return null
+  if (schedule.kind !== "linear_rotation" && schedule.kind !== "weekly_waved") return null
+  const days = schedule.days
+
+  const today = dayForWeekday(schedule, todayWeekday)
+  // A REST DAY IS A REAL ANSWER. The next session is still resolved so the
+  // screen can say what is coming, but it is flagged rather than served as
+  // today's work — otherwise a three-day week silently becomes a seven-day one.
+  const target =
+    today ??
+    [...days]
+      .filter((d) => d.weekday != null)
+      .sort(
+        (a, b) => ((a.weekday! - todayWeekday + 7) % 7) - ((b.weekday! - todayWeekday + 7) % 7)
+      )[0]
+  if (!target) return null
+
+  const dayIndex = days.findIndex((d) => d.id === target.id)
+  if (dayIndex < 0) return null
+  return {
+    dayIndex,
+    restDay: !today,
+    ...(target.weekday != null ? { scheduledWeekday: target.weekday } : {}),
+  }
+}
+
+/**
+ * What a logged lift did, measured against what it asked for.
+ *
+ * THE WEIGHT USED TO BE IGNORED IN BOTH DIRECTIONS. Only reps were compared, so
+ * five sets of five at 60 kg when 80 was prescribed counted as a clean session
+ * and earned +2.5 kg on a weight that had not been touched; and five sets at 85
+ * when 80 was asked for ratcheted to 82.5, less than had just been demonstrated.
+ *
+ * Three outcomes, because "did you do it" has three honest answers and the old
+ * boolean had two. Missing reps at the prescribed weight is the only one that
+ * counts as a failure — training lighter on purpose is a decision, not a miss,
+ * and deloading somebody for it (three sessions at 60 of 80 used to take 10%
+ * off the 80) punishes the one person who was being sensible.
+ *
+ * ASSISTANCE LIFTS RUN THE OTHER WAY. On an assisted pull-up the machine takes
+ * weight off you, so less of it is progress and "at least the prescribed
+ * weight" is exactly backwards.
+ */
+export function judgeLoadEntry(
+  prescribed: { sets: number; reps: number; weight: number },
+  entry: LoggedExercise | undefined,
+  opts: { direction?: "up" | "down"; tolerance?: number } = {}
+): LoadJudgement {
+  const tol = opts.tolerance ?? LOAD_TOLERANCE
+  const down = opts.direction === "down"
+  const done = entry?.sets ?? []
+
+  const atWeight = (set: LoggedSet) =>
+    down ? set.weight <= prescribed.weight + tol : set.weight >= prescribed.weight - tol
+  const madeReps = done.filter((set) => set.reps >= prescribed.reps)
+  const counted = madeReps.filter(atWeight)
+
+  /**
+   * The heaviest weight at which ALL the prescribed sets were made.
+   *
+   * Not the heaviest single set: four sets at 80 and a last one at 85 is a
+   * session at 80 with one heavy single on the end. Sorting and taking the
+   * n-th is the whole rule.
+   */
+  const achievedFrom = (sets: LoggedSet[]): number => {
+    const weights = sets.map((set) => set.weight).sort((a, b) => (down ? a - b : b - a))
+    return weights[prescribed.sets - 1] ?? prescribed.weight
+  }
+
+  if (counted.length >= prescribed.sets) return { verdict: "advance", achieved: achievedFrom(counted) }
+  if (madeReps.length >= prescribed.sets)
+    return { verdict: "hold_lighter", achieved: achievedFrom(madeReps) }
+  return { verdict: "fail", achieved: prescribed.weight }
+}
+
+/**
+ * How long to rest after a set, and whether the number is ours or the author's.
+ *
+ * IT USED TO BE PICKED BY SET COUNT — four or more sets meant "compound" — so a
+ * 3×5 squat got ninety seconds and 4×12 curls got three minutes, which is
+ * exactly wrong in both directions. What decides rest is the LIFT.
+ *
+ * `ours` is returned rather than assumed because most of this catalogue's
+ * authors never specified rest, and presenting our guess as their instruction
+ * would be putting our numbers into somebody else's cited program. Where a
+ * source does specify it (StrongLifts), the exercise carries `restSec` and this
+ * says so.
+ */
+export function restSecondsFor(
+  exercise: Pick<LoadExercise, "name" | "restSec" | "loadStyle">,
+  opts: { setRestSec?: number; warmup?: boolean } = {}
+): { seconds: number; ours: boolean } {
+  if (opts.warmup) return { seconds: REST_SECONDS.warmup, ours: true }
+  if (opts.setRestSec != null) return { seconds: opts.setRestSec, ours: false }
+  if (exercise.restSec != null) return { seconds: exercise.restSec, ours: false }
+  // A dip and a pull-up have no bar under them and still need three minutes, so
+  // the question is whether the lift is COMPOUND, not whether it is barbell.
+  const lib = libraryByName(exercise.name)
+  const compound = lib ? lib.compound : (exercise.loadStyle ?? "barbell") === "barbell"
+  return { seconds: compound ? REST_SECONDS.compound : REST_SECONDS.accessory, ours: true }
 }
 
 /** Epley 1RM estimate: w · (1 + reps/30). reps=1 → w. (Epley 1985.) */
@@ -80,8 +295,12 @@ export function estimateOneRepMax(weight: number, reps: number): number {
 }
 
 /** 5/3/1 training max = 90% of 1RM, rounded loadable. (Wendler, 5/3/1.) */
-export function trainingMaxFromOneRepMax(oneRepMax: number, unit: UnitSystem): number {
-  return roundToLoadable(oneRepMax * 0.9, unit)
+export function trainingMaxFromOneRepMax(
+  oneRepMax: number,
+  unit: UnitSystem,
+  plates?: PlateSetup
+): number {
+  return roundToLoadable(oneRepMax * 0.9, unit, "barbell", plates)
 }
 
 // ============================================================================
@@ -99,7 +318,8 @@ export function seedEnrollment(
   level: ProgramDefinition["levels"][number]["id"],
   unitSystem: UnitSystem,
   oneRepMaxesByExerciseId?: Record<string, number>,
-  workingWeightOverrides?: Record<string, number> // in unitSystem; overrides linear seeds
+  workingWeightOverrides?: Record<string, number>, // in unitSystem; overrides linear seeds
+  plates?: PlateSetup
 ): { exerciseState: Record<string, ExerciseState>; cursor: EnrollmentCursor } {
   const levelSeed = program.levels.find((l) => l.id === level)
   if (!levelSeed) throw new Error(`Program ${program.id} has no level ${level}`)
@@ -133,7 +353,7 @@ export function seedEnrollment(
       if (oneRm == null) {
         throw new Error(`Program ${program.id} requires a 1RM for ${ex.id} to compute training max`)
       }
-      exerciseState[ex.id] = { trainingMax: trainingMaxFromOneRepMax(oneRm, unitSystem) }
+      exerciseState[ex.id] = { trainingMax: trainingMaxFromOneRepMax(oneRm, unitSystem, plates) }
     } else {
       // linear_load and double_progression both ratchet an absolute working weight.
       const override = workingWeightOverrides?.[ex.id]
@@ -145,8 +365,8 @@ export function seedEnrollment(
       }
       const workingWeight =
         override != null
-          ? roundToLoadable(override, unitSystem, ex.loadStyle)
-          : roundToLoadable(fromKg(seedKg!, unitSystem), unitSystem, ex.loadStyle)
+          ? roundToLoadable(override, unitSystem, loadStyleOf(ex), plates)
+          : roundToLoadable(fromKg(seedKg!, unitSystem), unitSystem, loadStyleOf(ex), plates)
       exerciseState[ex.id] = { workingWeight, consecutiveFails: 0 }
     }
   }
@@ -169,12 +389,41 @@ export function computePrescription(
   const week = enrollment.cursor.week
   const unit = enrollment.unitSystem
 
+  const levelSeed = program.levels.find((l) => l.id === enrollment.level)
+
   const exercises: PrescribedExercise[] = day.exercises.map((ex) => {
-    const state = enrollment.exerciseState[ex.id]
-    if (!state) throw new Error(`Enrollment ${enrollment.id} missing state for ${ex.id}`)
+    /**
+     * A PROGRAM THAT GAINS A LIFT MUST NOT BRICK THE PEOPLE ON IT.
+     *
+     * `exerciseState` is written at enrolment, so a lift added to a cited
+     * program afterwards has no entry and every session on that program threw —
+     * the whole screen, not just the new lift. Correcting a catalogue program is
+     * supposed to reach everybody on the next deploy; that only works if adding
+     * to one degrades gracefully. The level's own starting weight is the honest
+     * answer when there is one, and when there is not, the error names the lift
+     * and what to do rather than an enrollment id.
+     */
+    let state = enrollment.exerciseState[ex.id]
+    if (!state) {
+      const seedKg = levelSeed?.seedWorkingWeightKg?.[ex.id]
+      if (seedKg == null) {
+        throw new Error(
+          `${ex.name} was added to ${program.name} after you started it, and it has no starting weight. Open "Change this program" and give it one.`
+        )
+      }
+      state = {
+        workingWeight: roundToLoadable(
+          fromKg(seedKg, unit),
+          unit,
+          loadStyleOf(ex),
+          enrollment.plates
+        ),
+        consecutiveFails: 0,
+      }
+    }
 
     if (ex.scheme.kind === "linear") {
-      const weight = state.workingWeight!
+      const weight = prescribedWeight(state.workingWeight!, ex, unit, enrollment.plates)
       const sets = Array.from({ length: ex.scheme.sets }, (_, i) => ({
         setNumber: i + 1,
         reps: (ex.scheme as { reps: number }).reps,
@@ -186,7 +435,7 @@ export function computePrescription(
     }
 
     if (ex.scheme.kind === "rep_range") {
-      const weight = state.workingWeight!
+      const weight = prescribedWeight(state.workingWeight!, ex, unit, enrollment.plates)
       const { sets: nSets, repMin, repMax } = ex.scheme
       const sets = Array.from({ length: nSets }, (_, i) => ({
         setNumber: i + 1,
@@ -204,12 +453,35 @@ export function computePrescription(
       return { exerciseId: ex.id, name: ex.name, sets, ...carried(ex), ...(ex.note ? { note: ex.note } : {}) }
     }
 
+    /**
+     * STRAIGHT SETS WITH AN AMRAP LAST SET — "4×5, then 1×5+".
+     *
+     * The shape the r/Fitness PPL and StrongLifts-style "5+" work actually
+     * have, and one the engine could not say before: `linear` has no AMRAP set
+     * and `percentage_tm` is a weekly table rather than one lift's setting. The
+     * last set carries the floor as its rep target and `amrap`, which is what
+     * makes the session refuse to be logged closed (`needsInput`) — logging a
+     * "5+" as five would record a number nobody chose.
+     */
+    if (ex.scheme.kind === "straight_amrap") {
+      const weight = prescribedWeight(state.workingWeight!, ex, unit, enrollment.plates)
+      const { sets: nSets, reps } = ex.scheme
+      const sets = Array.from({ length: nSets }, (_, i) => ({
+        setNumber: i + 1,
+        reps,
+        amrap: i === nSets - 1,
+        weight,
+        weightKg: round2(toKg(weight, unit)),
+      }))
+      return { exerciseId: ex.id, name: ex.name, sets, ...carried(ex) }
+    }
+
     // percentage_tm
     const tm = state.trainingMax!
     const weekSpec = ex.scheme.setsByWeek[week]
     if (!weekSpec) throw new Error(`${ex.id} has no sets for week ${week}`)
     const sets = weekSpec.map((s, i) => {
-      const weight = roundToLoadable(tm * s.pctTM, unit, ex.loadStyle)
+      const weight = roundToLoadable(tm * s.pctTM, unit, loadStyleOf(ex), enrollment.plates, "down")
       return {
         setNumber: i + 1,
         reps: s.reps,
@@ -234,6 +506,30 @@ export function computePrescription(
 }
 
 /**
+ * The weight to actually put on the bar for a stored working weight.
+ *
+ * THE WORKING WEIGHT IS EXACT; THE PRESCRIPTION IS LOADABLE. Keeping them the
+ * same number broke any program whose increment is finer than the plates in
+ * your gym: with only 2.5 kg plates, a 2.5 kg increment on a 20 kg bench
+ * rounded to the nearest loadable weight and landed on 25, so the bench climbed
+ * FIVE kilos a session — twice the program's rate — and with rounding the other
+ * way it would have sat on 20 for ever.
+ *
+ * Holding the intent exactly and flooring only what is asked for fixes both:
+ * 20 → 22.5 stored, 20 asked; 22.5 → 25 stored, 25 asked. The lifter adds a
+ * full step every second session, which is what a person with those plates
+ * actually does, and nothing stalls or doubles.
+ */
+function prescribedWeight(
+  workingWeight: number,
+  ex: LoadExercise,
+  unit: UnitSystem,
+  plates?: PlateSetup
+): number {
+  return roundToLoadable(workingWeight, unit, loadStyleOf(ex), plates, "down")
+}
+
+/**
  * The parts of a lift that are the author's, not the engine's.
  *
  * A superset tag, a drop-set count and a hand-written note mean nothing to the
@@ -242,13 +538,23 @@ export function computePrescription(
  * person actually intended to do on Tuesday, so the prescription has to carry
  * them through to the session widget rather than compute them away.
  */
-function carried(ex: LoadExercise): { supersetGroup?: string; dropSets?: number; note?: string } {
+function carried(ex: LoadExercise): {
+  supersetGroup?: string
+  dropSets?: number
+  note?: string
+  perSide?: boolean
+  repUnit?: "reps" | "sec"
+} {
   return {
     ...(ex.supersetGroup ? { supersetGroup: ex.supersetGroup } : {}),
     // Drops are the author's too. The maths ignores them; the person doing it
     // on Tuesday must not have to.
     ...(ex.dropSets ? { dropSets: ex.dropSets } : {}),
     ...(ex.note ? { note: ex.note } : {}),
+    // "3×8 lunges" is eight each leg or four each, and only the author knows.
+    ...(ex.perSide ? { perSide: true } : {}),
+    // A plank logged as "3 reps" is not a plank.
+    ...(ex.repUnit ? { repUnit: ex.repUnit } : {}),
   }
 }
 
@@ -289,6 +595,30 @@ export function applyLog(
     const prev = enrollment.exerciseState[ex.id]
     if (!prev) throw new Error(`Enrollment ${enrollment.id} missing state for ${ex.id}`)
 
+    /**
+     * A LIFT YOU DID NOT DO IS NOT A LIFT YOU FAILED.
+     *
+     * The machine was broken, the rack was taken, the gym shut. The engine used
+     * to read "no entry" as "missed every rep", so three skipped leg presses
+     * deloaded the leg press by ten per cent off a weight nobody had attempted
+     * — and a skipped session (which sends no entries at all) did it to every
+     * lift in the program at once. Skipping holds, and does not touch the fail
+     * counter, so coming back finds the weight exactly where it was left.
+     */
+    if (!entry || entry.skipped) {
+      nextState[ex.id] = prev
+      changes.push({
+        exerciseId: ex.id,
+        name: ex.name,
+        kind: "hold",
+        ...(prev.workingWeight != null
+          ? { fromWeight: prev.workingWeight, toWeight: prev.workingWeight }
+          : {}),
+        reason: "Skipped — nothing changed, it is waiting where you left it.",
+      })
+      continue
+    }
+
     if (ex.progression.kind === "none") {
       // Held on purpose. Carried into nextState unchanged so the weight
       // survives, and reported as no change rather than omitted, so a custom
@@ -303,11 +633,20 @@ export function applyLog(
         reason: "You set this one to hold — change the weight yourself when you are ready.",
       })
     } else if (ex.progression.kind === "linear_load") {
-      changes.push(progressLinear(ex, prev, entry, unit, nextState))
+      changes.push(progressLinear(ex, prev, entry, unit, nextState, enrollment.plates))
     } else if (ex.progression.kind === "double_progression") {
-      changes.push(progressDouble(ex, prev, entry, unit, nextState))
+      changes.push(progressDouble(ex, prev, entry, unit, nextState, enrollment.plates))
     } else {
-      const change = progressPercentage(program, ex, prev, entry, enrollment.cursor.week, unit, nextState)
+      const change = progressPercentage(
+        program,
+        ex,
+        prev,
+        entry,
+        enrollment.cursor.week,
+        unit,
+        nextState,
+        enrollment.plates
+      )
       if (change) changes.push(change)
     }
   }
@@ -324,10 +663,17 @@ export function applyLog(
   }
 }
 
-/** Index of a day by id, or -1. */
+/**
+ * Index of a day by id, or -1.
+ *
+ * Covers skill and hold routines too. It used to narrow to load programs only,
+ * which is why the calisthenics and mobility engines had no choice but to
+ * progress whatever day the CURSOR pointed at — the same bug that was fixed for
+ * lifting in August and left in place for the other two.
+ */
 function dayIndexOf(program: ProgramDefinition, dayId: string): number {
   const s = program.schedule
-  if (s.kind !== "linear_rotation" && s.kind !== "weekly_waved") return -1
+  if (s.kind === "endurance_weeks") return -1
   return s.days.findIndex((d) => d.id === dayId)
 }
 
@@ -336,31 +682,119 @@ function progressLinear(
   prev: ExerciseState,
   entry: ProgramSessionLogInput["entries"][number] | undefined,
   unit: UnitSystem,
-  nextState: Record<string, ExerciseState>
+  nextState: Record<string, ExerciseState>,
+  setup?: PlateSetup
 ): ProgressionChange {
-  if (ex.scheme.kind !== "linear" || ex.progression.kind !== "linear_load") {
+  if (
+    (ex.scheme.kind !== "linear" && ex.scheme.kind !== "straight_amrap") ||
+    ex.progression.kind !== "linear_load"
+  ) {
     throw new Error(`progressLinear called on non-linear ${ex.id}`)
   }
   const rule = ex.progression
   const fromWeight = prev.workingWeight!
-  const increment = unit === "kg" ? rule.incrementKg : rule.incrementLb
-  const hit = didHitLinear(ex.scheme.sets, ex.scheme.reps, entry)
+  const down = rule.direction === "down"
+  const unitLabel = unit
 
-  if (hit) {
-    const toWeight = roundToLoadable(fromWeight + increment, unit, ex.loadStyle)
-    nextState[ex.id] = { workingWeight: toWeight, consecutiveFails: 0 }
-    return { exerciseId: ex.id, name: ex.name, kind: "advance", fromWeight, toWeight, reason: `Hit all reps → +${increment}${unit}` }
+  /**
+   * The smaller jump, once this lift has stalled once.
+   *
+   * StrongLifts runs the deadlift at 5 kg a workout "until 5 kg stops working",
+   * then 2.5; Starting Strength halves the press and bench jump at the first
+   * stall. Every other lift here has one increment for ever, which is what an
+   * absent `stallIncrement` means.
+   */
+  const stalled = prev.stalled === true
+  const baseIncrement = unit === "kg" ? rule.incrementKg : rule.incrementLb
+  const stallIncrement = unit === "kg" ? rule.stallIncrementKg : rule.stallIncrementLb
+  const increment = stalled && stallIncrement != null ? stallIncrement : baseIncrement
+
+  // JUDGED AGAINST WHAT WAS ASKED FOR, which is the working weight floored to
+  // something the gym can load — not the exact number held behind it.
+  const asked = prescribedWeight(fromWeight, ex, unit, setup)
+  const judged = judgeLoadEntry(
+    { sets: ex.scheme.sets, reps: ex.scheme.reps, weight: asked },
+    entry,
+    { direction: rule.direction }
+  )
+
+  if (judged.verdict === "advance") {
+    // Ratchet from what was actually DONE when that is ahead of what was
+    // stored: somebody who put 85 on the bar when 80 was asked for should not
+    // be prescribed 82.5 next time. `achieved` is the heaviest weight all the
+    // prescribed sets were made at, never a single heavy set on the end.
+    const base = down
+      ? Math.min(fromWeight, judged.achieved)
+      : Math.max(fromWeight, judged.achieved)
+    const toWeight = round2(down ? Math.max(0, base - increment) : base + increment)
+    const nextAsked = prescribedWeight(toWeight, ex, unit, setup)
+    // When the increment is finer than your plates the bar does not move this
+    // time; the intent is kept and it moves next session. Saying "+2.5" while
+    // the number on screen is unchanged is the app claiming something it did
+    // not do.
+    const note =
+      nextAsked === asked
+        ? ` — your plates cannot make that step yet, so it is the same weight again and moves next session`
+        : ""
+    nextState[ex.id] = { ...prev, workingWeight: toWeight, consecutiveFails: 0 }
+    return {
+      exerciseId: ex.id,
+      name: ex.name,
+      kind: nextAsked === asked ? "hold" : "advance",
+      fromWeight: asked,
+      toWeight: nextAsked,
+      reason: down
+        ? `Hit all reps → ${increment}${unitLabel} less help${note}`
+        : `Hit all reps → +${increment}${unitLabel}${note}`,
+    }
+  }
+
+  if (judged.verdict === "hold_lighter") {
+    // Every rep, at a weight you chose. That is a decision, not a miss, so it
+    // holds and the fail counter is not touched — three of these in a row used
+    // to deload a weight that had never been attempted.
+    nextState[ex.id] = { ...prev, workingWeight: fromWeight, consecutiveFails: 0 }
+    return {
+      exerciseId: ex.id,
+      name: ex.name,
+      kind: "hold",
+      fromWeight,
+      toWeight: fromWeight,
+      reason: `You did every rep at ${formatLoad(judged.achieved)} ${unitLabel} rather than ${formatLoad(asked)} — kept at ${formatLoad(asked)}.`,
+    }
   }
 
   const fails = (prev.consecutiveFails ?? 0) + 1
   if (fails >= rule.deloadAfterFails) {
-    const toWeight = roundToLoadable(fromWeight * (1 - rule.deloadPct), unit, ex.loadStyle)
-    nextState[ex.id] = { workingWeight: toWeight, consecutiveFails: 0 }
-    return { exerciseId: ex.id, name: ex.name, kind: "deload", fromWeight, toWeight, reason: `${fails} fails → deload ${Math.round(rule.deloadPct * 100)}%` }
+    const dropped = down
+      ? fromWeight * (1 + rule.deloadPct)
+      : fromWeight * (1 - rule.deloadPct)
+    const toWeight = roundToLoadable(dropped, unit, loadStyleOf(ex), setup)
+    // At the bar with nowhere left to go. Saying "deloaded" when the number did
+    // not move is the app telling you it did something it did not do.
+    const atFloor = !down && toWeight >= fromWeight
+    nextState[ex.id] = { ...prev, workingWeight: toWeight, consecutiveFails: 0, stalled: true }
+    return {
+      exerciseId: ex.id,
+      name: ex.name,
+      kind: atFloor ? "hold" : "deload",
+      fromWeight,
+      toWeight,
+      reason: atFloor
+        ? `${fails} misses, but this is already the lightest your bar can be — use a lighter bar, or change the weight yourself.`
+        : `${fails} misses → back off ${Math.round(rule.deloadPct * 100)}%${stallIncrement != null ? `, then ${stallIncrement}${unitLabel} a session` : ""}`,
+    }
   }
 
-  nextState[ex.id] = { workingWeight: fromWeight, consecutiveFails: fails }
-  return { exerciseId: ex.id, name: ex.name, kind: "hold", fromWeight, toWeight: fromWeight, reason: `Missed reps (${fails}/${rule.deloadAfterFails}) → repeat weight` }
+  nextState[ex.id] = { ...prev, workingWeight: fromWeight, consecutiveFails: fails }
+  return {
+    exerciseId: ex.id,
+    name: ex.name,
+    kind: "hold",
+    fromWeight,
+    toWeight: fromWeight,
+    reason: `Missed reps (${fails}/${rule.deloadAfterFails}) → same weight next time`,
+  }
 }
 
 function progressDouble(
@@ -368,7 +802,8 @@ function progressDouble(
   prev: ExerciseState,
   entry: ProgramSessionLogInput["entries"][number] | undefined,
   unit: UnitSystem,
-  nextState: Record<string, ExerciseState>
+  nextState: Record<string, ExerciseState>,
+  setup?: PlateSetup
 ): ProgressionChange {
   if (ex.scheme.kind !== "rep_range" || ex.progression.kind !== "double_progression") {
     throw new Error(`progressDouble called on non-rep_range ${ex.id}`)
@@ -377,29 +812,83 @@ function progressDouble(
   const rule = ex.progression
   const fromWeight = prev.workingWeight!
   const increment = unit === "kg" ? rule.incrementKg : rule.incrementLb
-  const done = entry?.sets ?? []
-  const hitTop = done.filter((s) => s.reps >= repMax).length >= nSets
-  const allAtFloor = done.filter((s) => s.reps >= repMin).length >= nSets
 
-  if (hitTop) {
-    const toWeight = roundToLoadable(fromWeight + increment, unit, ex.loadStyle)
-    nextState[ex.id] = { workingWeight: toWeight, consecutiveFails: 0 }
-    return { exerciseId: ex.id, name: ex.name, kind: "advance", fromWeight, toWeight, reason: `Hit ${repMax} on all sets → +${increment}${unit}` }
+  // Top of the range on every set, AT THE WEIGHT ASKED FOR. The weight used to
+  // be ignored, so a whole session taken lighter still earned the increment on
+  // a number that had not been touched.
+  const asked = prescribedWeight(fromWeight, ex, unit, setup)
+  const top = judgeLoadEntry({ sets: nSets, reps: repMax, weight: asked }, entry)
+  const floor = judgeLoadEntry({ sets: nSets, reps: repMin, weight: asked }, entry)
+
+  if (top.verdict === "advance") {
+    const base = Math.max(fromWeight, top.achieved)
+    const toWeight = round2(base + increment)
+    const nextAsked = prescribedWeight(toWeight, ex, unit, setup)
+    const note =
+      nextAsked === asked
+        ? " — your plates cannot make that step yet, so it is the same weight again and moves next session"
+        : ""
+    nextState[ex.id] = { ...prev, workingWeight: toWeight, consecutiveFails: 0 }
+    return {
+      exerciseId: ex.id,
+      name: ex.name,
+      kind: nextAsked === asked ? "hold" : "advance",
+      fromWeight: asked,
+      toWeight: nextAsked,
+      reason: `Hit ${repMax} on all sets → +${increment}${unit}${note}`,
+    }
   }
 
-  if (allAtFloor || !rule.deloadAfterFails) {
-    nextState[ex.id] = { workingWeight: fromWeight, consecutiveFails: 0 }
-    return { exerciseId: ex.id, name: ex.name, kind: "hold", fromWeight, toWeight: fromWeight, reason: `In range → hold ${fromWeight}${unit}, chase ${repMax}` }
+  // Hit the top of the range, but lighter than asked. Nothing to add to.
+  if (top.verdict === "hold_lighter") {
+    nextState[ex.id] = { ...prev, workingWeight: fromWeight, consecutiveFails: 0 }
+    return {
+      exerciseId: ex.id,
+      name: ex.name,
+      kind: "hold",
+      fromWeight,
+      toWeight: fromWeight,
+      reason: `You did every rep at ${formatLoad(top.achieved)} ${unit} rather than ${formatLoad(asked)} — kept at ${formatLoad(asked)}.`,
+    }
+  }
+
+  if (floor.verdict !== "fail" || !rule.deloadAfterFails) {
+    nextState[ex.id] = { ...prev, workingWeight: fromWeight, consecutiveFails: 0 }
+    return {
+      exerciseId: ex.id,
+      name: ex.name,
+      kind: "hold",
+      fromWeight,
+      toWeight: fromWeight,
+      reason: `In range → hold ${formatLoad(fromWeight)}${unit}, chase ${repMax}`,
+    }
   }
 
   const fails = (prev.consecutiveFails ?? 0) + 1
   if (fails >= rule.deloadAfterFails) {
-    const toWeight = roundToLoadable(fromWeight * (1 - (rule.deloadPct ?? 0.1)), unit, ex.loadStyle)
-    nextState[ex.id] = { workingWeight: toWeight, consecutiveFails: 0 }
-    return { exerciseId: ex.id, name: ex.name, kind: "deload", fromWeight, toWeight, reason: `${fails} sessions under ${repMin} → deload` }
+    const toWeight = roundToLoadable(fromWeight * (1 - (rule.deloadPct ?? 0.1)), unit, loadStyleOf(ex), setup)
+    const atFloor = toWeight >= fromWeight
+    nextState[ex.id] = { ...prev, workingWeight: toWeight, consecutiveFails: 0, stalled: true }
+    return {
+      exerciseId: ex.id,
+      name: ex.name,
+      kind: atFloor ? "hold" : "deload",
+      fromWeight,
+      toWeight,
+      reason: atFloor
+        ? `${fails} sessions under ${repMin}, and this is already as light as your bar goes.`
+        : `${fails} sessions under ${repMin} → back off`,
+    }
   }
-  nextState[ex.id] = { workingWeight: fromWeight, consecutiveFails: fails }
-  return { exerciseId: ex.id, name: ex.name, kind: "hold", fromWeight, toWeight: fromWeight, reason: `Below ${repMin} (${fails}/${rule.deloadAfterFails})` }
+  nextState[ex.id] = { ...prev, workingWeight: fromWeight, consecutiveFails: fails }
+  return {
+    exerciseId: ex.id,
+    name: ex.name,
+    kind: "hold",
+    fromWeight,
+    toWeight: fromWeight,
+    reason: `Below ${repMin} (${fails}/${rule.deloadAfterFails})`,
+  }
 }
 
 function progressPercentage(
@@ -409,7 +898,8 @@ function progressPercentage(
   entry: ProgramSessionLogInput["entries"][number] | undefined,
   week: number,
   unit: UnitSystem,
-  nextState: Record<string, ExerciseState>
+  nextState: Record<string, ExerciseState>,
+  setup?: PlateSetup
 ): ProgressionChange | null {
   if (ex.scheme.kind !== "percentage_tm" || ex.progression.kind !== "percentage_tm") {
     throw new Error(`progressPercentage called on non-percentage ${ex.id}`)
@@ -417,28 +907,54 @@ function progressPercentage(
   if (program.schedule.kind !== "weekly_waved") {
     throw new Error(`percentage_tm requires weekly_waved schedule (${program.id})`)
   }
-  // TM bumps once per cycle, at the last WORKING week (final week is deload).
-  const lastWorkingWeek = program.schedule.weeks - 1
-  if (week !== lastWorkingWeek) return null
-
   const rule = ex.progression
   const fromTM = prev.trainingMax!
   const increment = unit === "kg" ? rule.tmIncrementKg : rule.tmIncrementLb
 
-  // Top-set AMRAP miss on the heaviest working week → reset TM down instead of up.
-  const topSpec = ex.scheme.setsByWeek[week]?.find((s) => s.amrap)
-  const topActual = entry?.sets[entry.sets.length - 1]?.reps ?? 0
-  const missed = topSpec ? topActual < topSpec.reps : false
+  /**
+   * THE TOP SET IS JUDGED EVERY WEEK, AND BY ITS FLAG.
+   *
+   * Wendler checks the "+" set in every working week. The engine only looked in
+   * week 3, so a blown week-1 or week-2 top set raised the training max as if
+   * it had gone fine. And it took "the top set" to mean the LAST logged set,
+   * which stops being true the moment somebody adds a back-off set or a set
+   * beyond the prescription — a 1+ judged against a 60% back-off single reads
+   * as a miss and cuts the max ten per cent. The prescription says which set is
+   * the AMRAP; that is the one that counts.
+   */
+  const weekSpec = ex.scheme.setsByWeek[week]
+  const amrapIndex = weekSpec?.findIndex((set) => set.amrap) ?? -1
+  const topSpec = amrapIndex >= 0 ? weekSpec![amrapIndex] : undefined
+  const logged = entry?.sets.find((set) => set.setNumber === amrapIndex + 1)
+  const missedThisWeek = topSpec && logged ? logged.reps < topSpec.reps : false
+  const missedTopSet = prev.missedTopSet === true || missedThisWeek
 
-  if (missed && rule.missTmReductionPct != null) {
-    const toTM = roundToLoadable(fromTM * (1 - rule.missTmReductionPct), unit)
-    nextState[ex.id] = { trainingMax: toTM }
-    return { exerciseId: ex.id, name: ex.name, kind: "tm_reset", fromWeight: fromTM, toWeight: toTM, reason: `Missed top set → TM −${Math.round(rule.missTmReductionPct * 100)}%` }
+  /**
+   * THE MAX MOVES WHEN THE CYCLE IS OVER, NOT BEFORE THE DELOAD.
+   *
+   * It used to bump at the end of week 3, so week 4 — the deload, whose whole
+   * job is to be light — was computed from the already-raised number. Wendler
+   * deloads off the max you just finished the cycle with. Holding the change
+   * until the final week is logged also means a miss anywhere in the wave is
+   * still in hand when the decision is made.
+   */
+  if (week !== program.schedule.weeks) {
+    // Nothing changes yet, but a miss has to be remembered until it does.
+    if (missedTopSet !== (prev.missedTopSet === true)) {
+      nextState[ex.id] = { ...prev, missedTopSet }
+    }
+    return null
   }
 
-  const toTM = roundToLoadable(fromTM + increment, unit)
-  nextState[ex.id] = { trainingMax: toTM }
-  return { exerciseId: ex.id, name: ex.name, kind: "tm_increase", fromWeight: fromTM, toWeight: toTM, reason: `Cycle complete → TM +${increment}${unit}` }
+  if (missedTopSet && rule.missTmReductionPct != null) {
+    const toTM = roundToLoadable(fromTM * (1 - rule.missTmReductionPct), unit, loadStyleOf(ex), setup)
+    nextState[ex.id] = { trainingMax: toTM, missedTopSet: false }
+    return { exerciseId: ex.id, name: ex.name, kind: "tm_reset", fromWeight: fromTM, toWeight: toTM, reason: `Missed a top set this cycle → training max −${Math.round(rule.missTmReductionPct * 100)}%` }
+  }
+
+  const toTM = roundToLoadable(fromTM + increment, unit, loadStyleOf(ex), setup)
+  nextState[ex.id] = { trainingMax: toTM, missedTopSet: false }
+  return { exerciseId: ex.id, name: ex.name, kind: "tm_increase", fromWeight: fromTM, toWeight: toTM, reason: `Cycle complete → training max +${increment}${unit}` }
 }
 
 // ============================================================================
@@ -494,12 +1010,29 @@ function computeSkillPrescription(program: ProgramDefinition, enrollment: Progra
     const idx = Math.min(enrollment.exerciseState[ex.id]?.tierIndex ?? 0, ex.tiers.length - 1)
     const tier = ex.tiers[idx]
     const top = idx >= ex.tiers.length - 1
-    const sets = Array.from({ length: tier.sets }, (_, i) => ({ setNumber: i + 1, reps: tier.unlockReps, amrap: false, weight: 0, weightKg: 0 }))
+    /**
+     * WHAT THE SESSION ASKS FOR IS NOT THE UNLOCK THRESHOLD.
+     *
+     * Every set used to be seeded with `unlockReps`, so pressing "I did this"
+     * cleared the bar by definition and promoted you to a harder variation on
+     * every single session, whatever you had actually managed. The routine this
+     * cites works in a range and moves on at the top of it: the ask is the
+     * bottom, the unlock is the top, and they are different numbers.
+     */
+    const reps = tier.workReps ?? tier.unlockReps
+    const sets = Array.from({ length: tier.sets }, (_, i) => ({
+      setNumber: i + 1,
+      reps,
+      repRangeMax: tier.workReps != null ? tier.unlockReps : undefined,
+      amrap: false,
+      weight: 0,
+      weightKg: 0,
+    }))
     return {
       exerciseId: ex.id,
       name: ex.name,
       sets,
-      note: top ? `${tier.name} — top tier` : `${tier.name} — ${tier.unlockReps}+ reps to advance`,
+      note: top ? `${tier.name} — top tier` : `${tier.name} — ${tier.unlockReps}+ on every set unlocks the next one`,
       bodyweight: true,
       repUnit: "reps" as const,
     }
@@ -509,7 +1042,10 @@ function computeSkillPrescription(program: ProgramDefinition, enrollment: Progra
 
 function applySkillLog(program: ProgramDefinition, enrollment: ProgramEnrollment, log: ProgramSessionLogInput): ApplyLogResult {
   if (program.schedule.kind !== "skill_routine") throw new Error(`${program.id} is not skill_routine`)
-  const day = program.schedule.days[enrollment.cursor.dayIndex] ?? program.schedule.days[0]
+  // The day that was actually done, not the one the cursor happened to be on.
+  const loggedIndex = dayIndexOf(program, log.dayId)
+  const dayIndex = loggedIndex >= 0 ? loggedIndex : enrollment.cursor.dayIndex
+  const day = program.schedule.days[dayIndex] ?? program.schedule.days[0]
   const nextState = { ...enrollment.exerciseState }
   const changes: ProgressionChange[] = []
   for (const ex of day.exercises) {
@@ -525,7 +1061,14 @@ function applySkillLog(program: ProgramDefinition, enrollment: ProgramEnrollment
       changes.push({ exerciseId: ex.id, name: ex.name, kind: "hold", reason: hit ? `Top tier — keep adding reps` : `Keep working ${tier.name}` })
     }
   }
-  return { enrollment: { ...enrollment, exerciseState: nextState, cursor: advanceCursor(program, enrollment.cursor) }, changes }
+  return {
+    enrollment: {
+      ...enrollment,
+      exerciseState: nextState,
+      cursor: advanceCursor(program, { ...enrollment.cursor, dayIndex }),
+    },
+    changes,
+  }
 }
 
 // ============================================================================
@@ -553,7 +1096,10 @@ function computeHoldPrescription(program: ProgramDefinition, enrollment: Program
 
 function applyHoldLog(program: ProgramDefinition, enrollment: ProgramEnrollment, log: ProgramSessionLogInput): ApplyLogResult {
   if (program.schedule.kind !== "hold_routine") throw new Error(`${program.id} is not hold_routine`)
-  const day = program.schedule.days[enrollment.cursor.dayIndex] ?? program.schedule.days[0]
+  // The day that was actually done, not the one the cursor happened to be on.
+  const loggedIndex = dayIndexOf(program, log.dayId)
+  const dayIndex = loggedIndex >= 0 ? loggedIndex : enrollment.cursor.dayIndex
+  const day = program.schedule.days[dayIndex] ?? program.schedule.days[0]
   const nextState = { ...enrollment.exerciseState }
   const changes: ProgressionChange[] = []
   for (const ex of day.exercises) {
@@ -569,7 +1115,14 @@ function applyHoldLog(program: ProgramDefinition, enrollment: ProgramEnrollment,
       changes.push({ exerciseId: ex.id, name: ex.name, kind: "hold", reason: held ? `At target ${current}s` : `Keep working ${current}s` })
     }
   }
-  return { enrollment: { ...enrollment, exerciseState: nextState, cursor: advanceCursor(program, enrollment.cursor) }, changes }
+  return {
+    enrollment: {
+      ...enrollment,
+      exerciseState: nextState,
+      cursor: advanceCursor(program, { ...enrollment.cursor, dayIndex }),
+    },
+    changes,
+  }
 }
 
 // ============================================================================
@@ -662,6 +1215,107 @@ function round2(n: number): number {
 }
 
 // ---------------------------------------------------------------------------
+// One record, read as a session
+// ---------------------------------------------------------------------------
+
+/** A stored set, as the one workouts table holds it. */
+export interface StoredSet {
+  exercise: string
+  exercise_id: string | null
+  weight_kg: number
+  reps: number
+  set_number: number
+  set_kind: string
+  side?: string | null
+}
+
+/** What changed during a workout that the sets alone cannot say. */
+export interface WorkoutAdjustments {
+  /** Lifts the person was there for and deliberately did not do. */
+  skipped?: string[]
+  /** Lifts cut short — counted like a skip, never as a failure. */
+  incomplete?: string[]
+  /** Lifts swapped for something else on the day. */
+  swapped?: Record<string, { name: string; libraryId?: string }>
+  /** Lifts added that the program does not contain. */
+  added?: Array<{ exerciseId: string; name: string; libraryId?: string }>
+  /** The order they were actually done in. */
+  order?: string[]
+}
+
+/**
+ * The engine's view of a workout, DERIVED from the rows that were stored.
+ *
+ * THERE USED TO BE TWO COPIES OF EVERY SESSION. `program_session_logs.entries`
+ * held what the engine replayed from, and `workout_sets` held what the
+ * dashboard, the calendar, the personal records and the export read — with
+ * nothing joining them. Deleting a session left its twin behind; editing one
+ * reached neither. Now there is one set of rows and this is how the engine
+ * reads them, so the two can no longer disagree: there is nothing to disagree
+ * with.
+ *
+ * Warm-ups and drop sets are excluded, because they are not what the
+ * progression rule is about — a warm-up counted as a working set reads as a
+ * collapse. Weights are converted out of the stored kilograms into whatever
+ * unit the enrollment is in.
+ */
+export function entriesFromSets(
+  sets: StoredSet[],
+  adjustments: WorkoutAdjustments | null | undefined,
+  unit: UnitSystem
+): LoggedExercise[] {
+  const byExercise = new Map<string, LoggedSet[]>()
+  for (const row of sets) {
+    // The progression rule is about work sets. `backoff` counts: it is work,
+    // just lighter, and the judge compares weights anyway.
+    if (row.set_kind !== "working" && row.set_kind !== "amrap" && row.set_kind !== "backoff") continue
+    const key = row.exercise_id ?? row.exercise
+    const list = byExercise.get(key) ?? []
+    list.push({
+      setNumber: row.set_number,
+      reps: row.reps,
+      weight: round2(fromKg(row.weight_kg, unit)),
+      ...(row.side ? { side: row.side as "left" | "right" } : {}),
+    })
+    byExercise.set(key, list)
+  }
+
+  const entries: LoggedExercise[] = []
+  for (const [exerciseId, list] of byExercise) {
+    /**
+     * A SET DONE ON BOTH SIDES IS ONE SET.
+     *
+     * A unilateral lift stores a row per side with the same set number. The
+     * engine asks "did you make the set", and you made it only if both sides
+     * did — so the harder of the two is the answer, and counting them as two
+     * sets would tell a three-set lift it had done six.
+     */
+    const merged = new Map<number, LoggedSet>()
+    for (const set of list) {
+      const seen = merged.get(set.setNumber)
+      if (!seen) merged.set(set.setNumber, { setNumber: set.setNumber, reps: set.reps, weight: set.weight })
+      else
+        merged.set(set.setNumber, {
+          setNumber: set.setNumber,
+          reps: Math.min(seen.reps, set.reps),
+          weight: Math.min(seen.weight, set.weight),
+        })
+    }
+    entries.push({
+      exerciseId,
+      sets: [...merged.values()].sort((a, b) => a.setNumber - b.setNumber),
+    })
+  }
+
+  // A lift with no rows is only "skipped" if the person said so; a lift the
+  // engine simply never saw is handled by `applyLog`, which holds either way.
+  for (const exerciseId of [...(adjustments?.skipped ?? []), ...(adjustments?.incomplete ?? [])]) {
+    if (!byExercise.has(exerciseId)) entries.push({ exerciseId, sets: [], skipped: true })
+  }
+  return entries
+}
+
+// ---------------------------------------------------------------------------
 // Reading a session at a glance
 // ---------------------------------------------------------------------------
 
@@ -692,13 +1346,14 @@ export function describeSets(exercise: PrescribedExercise, unitLabel: string): s
     sets.every((s) => s.weight === sets[0].weight) &&
     sets.every((s) => repsOf(s) === repsOf(sets[0]))
 
+  const side = exercise.perSide ? " each side" : ""
   if (uniform) {
-    const head = `${sets.length} × ${repsOf(sets[0])} ${unit}`
+    const head = `${sets.length} × ${repsOf(sets[0])} ${unit}${side}`
     return bodyweight ? head : `${head} @ ${weightOf(sets[0])}`
   }
-  return sets
-    .map((s) => (bodyweight ? repsOf(s) : `${weightOf(s)} × ${repsOf(s)}`))
-    .join(", ")
+  return (
+    sets.map((s) => (bodyweight ? repsOf(s) : `${weightOf(s)} × ${repsOf(s)}`)).join(", ") + side
+  )
 }
 
 /**
@@ -709,7 +1364,12 @@ export function describeSets(exercise: PrescribedExercise, unitLabel: string): s
  * result and progress you off a number you never lifted.
  */
 export function needsInput(exercise: PrescribedExercise): boolean {
-  return exercise.sets.some((s) => s.amrap)
+  // A REP RANGE HAS NO PRESCRIBED ANSWER EITHER. "6–8" was seeded as 6, so the
+  // one-tap save recorded the bottom of every range — and the rule for adding
+  // weight is hitting the TOP on every set. On the three programs built out of
+  // rep ranges the weight could therefore never move, however well the session
+  // had gone, unless you opened each lift and typed the top number by hand.
+  return exercise.sets.some((s) => s.amrap || s.repRangeMax != null)
 }
 
 // ---------------------------------------------------------------------------
@@ -1099,21 +1759,70 @@ export function describePlates(load: PlateLoad, unitLabel: string): string {
 export function replayEnrollment(
   program: ProgramDefinition,
   seed: ProgramEnrollment,
-  logs: { entries: LoggedExercise[]; logged_at: string; dayId: string; cycle: number; week: number }[]
+  logs: { entries: LoggedExercise[]; logged_at: string; dayId: string; cycle: number; week: number }[],
+  events: ReplayEvent[] = []
 ): ProgramEnrollment {
-  const ordered = [...logs].sort((a, b) => a.logged_at.localeCompare(b.logged_at))
+  /**
+   * EVERYTHING THAT CHANGED THE STATE, IN THE ORDER IT HAPPENED.
+   *
+   * Sessions used to be the whole history, and they are not: skipping a session
+   * advances the plan without logging anything, a reset rewinds the cursor on
+   * purpose, and a manual weight change is the lifter overruling the engine.
+   * None of the three were replayed, so deleting one session re-prescribed
+   * every session that had been skipped and quietly undid a reset.
+   */
+  const timeline: Array<
+    | { at: string; kind: "log"; log: (typeof logs)[number] }
+    | { at: string; kind: "event"; event: ReplayEvent }
+  > = [
+    ...logs.map((log) => ({ at: log.logged_at, kind: "log" as const, log })),
+    ...events.map((event) => ({ at: event.at, kind: "event" as const, event })),
+  ].sort((a, b) => a.at.localeCompare(b.at))
+
   let state: ProgramEnrollment = {
     ...seed,
     cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 },
   }
-  for (const log of ordered) {
-    state = applyLog(program, state, {
-      enrollment_id: seed.id,
-      dayId: log.dayId,
-      cycle: log.cycle,
-      week: log.week,
-      entries: log.entries,
-    }).enrollment
+
+  for (const step of timeline) {
+    if (step.kind === "log") {
+      state = applyLog(program, state, {
+        enrollment_id: seed.id,
+        dayId: step.log.dayId,
+        cycle: step.log.cycle,
+        week: step.log.week,
+        entries: step.log.entries,
+      }).enrollment
+      continue
+    }
+    const event = step.event
+    if (event.kind === "skip") {
+      // The same call the skip endpoint makes: no entries, so every lift holds
+      // and only the cursor moves.
+      state = applyLog(program, state, {
+        enrollment_id: seed.id,
+        dayId: "",
+        cycle: state.cursor.cycle,
+        week: state.cursor.week,
+        entries: [],
+      }).enrollment
+    } else if (event.kind === "reset") {
+      // Rewinds the plan and KEEPS the weights — exactly what the button does.
+      state = { ...state, cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 } }
+    } else {
+      // The lifter set the weight themselves. It survives a later correction,
+      // and it clears the fail counter: they have decided the number is right.
+      const prev = state.exerciseState[event.exerciseId]
+      if (prev) {
+        state = {
+          ...state,
+          exerciseState: {
+            ...state.exerciseState,
+            [event.exerciseId]: { ...prev, workingWeight: event.to, consecutiveFails: 0 },
+          },
+        }
+      }
+    }
   }
   return state
 }

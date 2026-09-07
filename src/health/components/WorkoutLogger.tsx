@@ -187,7 +187,7 @@ export function WorkoutLogger() {
           exercise: name,
           weight_kg: parseFloat(s.weight_kg),
           reps: parseInt(s.reps),
-          is_warmup: s.is_warmup,
+          set_kind: s.is_warmup ? ("warmup" as const) : ("working" as const),
           notes: s.notes.trim() || null,
           exercise_notes: exerciseNotes,
         }))
@@ -247,7 +247,7 @@ export function WorkoutLogger() {
       const row: SetRowInput = {
         weight_kg: String(s.weight_kg),
         reps: String(s.reps),
-        is_warmup: !!s.is_warmup,
+        is_warmup: "set_kind" in s ? s.set_kind === "warmup" : !!s.is_warmup,
         notes: s.notes ?? "",
         showNotes: !!s.notes,
       }
@@ -282,7 +282,9 @@ export function WorkoutLogger() {
     if (!last) return
     setSessionType(last.session_type)
     setDuration(String(last.duration_min))
-    setIntensity(last.intensity)
+    // A workout still running has no effort score yet; repeating it keeps the
+    // form's default rather than writing a null into a required box.
+    setIntensity(last.intensity ?? 3)
     setDistanceKm(last.distance_km != null ? String(last.distance_km) : "")
     setExercises(regroupSets(last.sets ?? []))
     setTemplateName("")

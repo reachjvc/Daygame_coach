@@ -15,6 +15,7 @@
  */
 
 import { z } from "zod"
+import { entryWhenFields, hasDateIfTime, NEEDS_DATE_FOR_TIME } from "@/src/health/schemas"
 
 const positiveInt = (max: number) => z.number().int().min(1).max(max)
 
@@ -26,6 +27,8 @@ const IncrementSchema = {
 
 const LoadSchemeSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("linear"), sets: positiveInt(20), reps: positiveInt(100) }),
+  // Straight sets with an all-out last set — "4×5, then 1×5+".
+  z.object({ kind: z.literal("straight_amrap"), sets: positiveInt(20), reps: positiveInt(100) }),
   z.object({
     kind: z.literal("rep_range"),
     sets: positiveInt(20),
@@ -42,6 +45,7 @@ const LoadSchemeSchema = z.discriminatedUnion("kind", [
             pctTM: z.number().positive().max(2),
             reps: positiveInt(100),
             amrap: z.boolean().optional(),
+            restSec: z.number().int().min(15).max(600).optional(),
           })
         )
         .min(1)
@@ -58,6 +62,11 @@ const LoadProgressionSchema = z.discriminatedUnion("kind", [
     ...IncrementSchema,
     deloadAfterFails: positiveInt(20),
     deloadPct: z.number().min(0).max(0.9),
+    // The smaller jump after the first stall, where the source prescribes one.
+    stallIncrementKg: z.number().positive().max(50).optional(),
+    stallIncrementLb: z.number().positive().max(100).optional(),
+    // "down" is assistance: less of it is progress.
+    direction: z.enum(["up", "down"]).optional(),
   }),
   z.object({
     kind: z.literal("percentage_tm"),
@@ -82,7 +91,10 @@ const LoadExerciseSchema = z
     progression: LoadProgressionSchema,
     // A superset tag is a short group key (A, B, C…), not free-form: it is
     // rendered as a label beside the lift and joined on for grouping.
-    loadStyle: z.enum(["barbell", "free"]).optional(),
+    loadStyle: z.enum(["barbell", "free", "bodyweight"]).optional(),
+    // 15 s is the shortest rest worth timing; 10 min the longest worth calling rest.
+    restSec: z.number().int().min(15).max(600).optional(),
+    perSide: z.boolean().optional(),
     supersetGroup: z.string().min(1).max(8).optional(),
     // Capped low on purpose: a drop set is two or three strips, and a program
     // asking for nine is a typo, not a plan.
@@ -94,6 +106,9 @@ const LoadExerciseSchema = z
   })
   .refine((e) => (e.scheme.kind === "percentage_tm") === (e.progression.kind === "percentage_tm"), {
     message: "A percentage-of-training-max scheme needs the matching progression rule",
+  })
+  .refine((e) => e.scheme.kind !== "straight_amrap" || e.progression.kind !== "double_progression", {
+    message: "An all-out last set is progressed by adding weight, not by chasing a rep range",
   })
 
 const SkillExerciseSchema = z.object({
@@ -107,6 +122,7 @@ const SkillExerciseSchema = z.object({
         name: z.string().min(1).max(120),
         sets: positiveInt(20),
         unlockReps: positiveInt(200),
+        workReps: positiveInt(200).optional(),
       })
     )
     .min(1)
@@ -175,3 +191,46 @@ export const UpdateScheduleSchema = z.object({
    */
   workingWeights: z.record(z.string(), z.number().min(0).max(1000)).optional(),
 })
+
+
+/**
+ * POST body for /api/programs/enrollments/[id]/log.
+ *
+ * Here rather than in the route because the route has a 50-line ceiling
+ * (`tests/unit/architecture.test.ts`) and because validation is slice logic:
+ * the same shape is what `logProgramSession` promises to accept.
+ */
+export const LogSessionSchema = z
+  .object({
+    dayId: z.string().min(1),
+    cycle: z.number().int().positive(),
+    week: z.number().int().positive(),
+    entries: z.array(
+      z.object({
+        exerciseId: z.string().min(1),
+        // A lift you were there for and deliberately did not do. It holds the
+        // weight; an absent lift used to be scored as a failed one.
+        skipped: z.boolean().optional(),
+        sets: z.array(
+          z.object({
+            setNumber: z.number().int().positive(),
+            // 0 = attempted and failed. A set not attempted has no row at all.
+            reps: z.number().int().min(0).max(1000),
+            weight: z.number().min(0).max(1000),
+          })
+        ),
+      })
+    ),
+    // HOW LONG IT ACTUALLY TOOK, and how hard. Every session used to be written
+    // down as exactly 45 minutes at effort 3 whatever had happened, which is
+    // where the dashboard's invented "training hours" number came from.
+    durationMin: z.number().min(1).max(600),
+    intensity: z.number().int().min(1).max(5),
+    distanceKm: z.number().min(0).max(1000).optional(),
+    rpe: z.number().int().min(1).max(10).optional(),
+    notes: z.string().max(1000).optional(),
+    // THE DAY YOU TRAINED. A session could only be stamped "now", so a Saturday
+    // workout written up on Monday landed in Monday's week.
+    ...entryWhenFields,
+  })
+  .refine(hasDateIfTime, NEEDS_DATE_FOR_TIME)

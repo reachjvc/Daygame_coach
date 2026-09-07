@@ -1,6 +1,17 @@
 # The one thing — on the account, dated, with a history
 
-**Status: BUILT; four defects found and fixed on 2026-09-02.** The header on
+**07-09-2026 — recovered.** The code half of the 03-09 chapters rework was never
+committed: it sat in `git stash@{0}` while the migration, `oneThingServer.ts` and
+`lifeChapterRepo.ts` went in without it, so the server called functions that did
+not exist and every "one thing" screen threw on load. Nothing caught it because
+nothing type-checked (see `scripts/typecheck-ratchet.mjs`). Restored file by
+file, with this document and the `20260902120000` migration edit, which had been
+left behind with it. **Not verified by me:** the note below saying that
+constraint is applied and validated on the live database is this file's own
+record from 03-09 — I could not query the database to confirm it.
+
+**Status: BUILT; four defects fixed 2026-09-02; the supporting-goals editor
+reworked 2026-09-03 (§0b) — the shape is now chosen, never guessed.** The header on
 this file used to say "BUILT and verified", and that word did real damage: asked
 later whether the feature was finished, the answer was read off this line rather
 than off the code, and it was wrong four times over. What "verified" had meant
@@ -41,6 +52,75 @@ table) and `AT6` (the e2e walk) are named but not written. The Focus step still
 echoes the local draft rather than the saved answer — one more read to move.
 
 *(AT6 and the Focus echo were done later. AT5 is still not written — see §4.)*
+
+---
+
+# 0b. The supporting goals, reworked 2026-09-03
+
+The sentence was on the account and correct. What sat under it was not.
+
+**What was reported.** Three lines written under "What needs to happen for it to
+work?" did not show up on the tracking page, and could not be set up as the kind
+of thing they actually were — no daily tick, no ease-in ramp, no list of steps,
+no money adding up per day.
+
+**What was actually wrong — four things.**
+
+1. **The help text lied.** It said the goals "are waiting for you on the goals
+   page". They were not. A line written here becomes a goal in the plan, in that
+   browser, and reaches the account only when the Track step pushes it. Copy
+   that promises a write nobody has made makes a working feature look broken,
+   and that is exactly what happened.
+
+2. **The step guessed what kind of goal each line was, and could not be
+   corrected.** `shapeFromTitle` read the words. On the reporter's own list:
+   "finalize weed decision by date" was filed under Relationship (it read
+   *date* as a romantic one), and "Spend 100 kr pr day i didnt smoke" became a
+   one-off climb to 100 rather than money adding up daily. There was no control
+   anywhere on the step to change either.
+
+3. **The list was drawn as read-only rows.** A title, an area dot, a delete
+   cross. Everything that makes a goal a system — the ease-in ramp, the rungs of
+   a climb, the checkpoints — existed in `GoalCard` and was not reachable from
+   here.
+
+4. **It was the last thing on the step.** The why, the cost, the identity, the
+   values and the areas all came first: six boxes of reflection before the page
+   asked for one thing you would actually do.
+
+**What changed.**
+
+| | |
+|---|---|
+| `northStarService.addOneThingRequirement` | takes the shape as a required argument. Nothing infers it. The words still fill in the NUMBERS of the shape you chose — "Save 20000" opens a climb at 20000 — and when they carry no number the climb is left empty rather than opened at an invented 0 → 100 |
+| `OneThingTab` | the list moved directly under the sentence; three labelled shape buttons with what each one means written under them; the area chips are always visible instead of appearing once you start typing; each requirement renders as the flow's real `GoalCard` |
+| `MilestonesTab.AddRequirement` | the same picker, from `NS_GOAL_TYPES`, so the two boxes that write a requirement cannot offer different shapes |
+| `GoalCard` | a climb with no number now asks for one. Refusing to invent 100 had otherwise made a dead end: every ladder control is gated on the ladder existing, so the card asked for a number and offered nowhere to type it |
+| `SentenceBox` | the hint line under every box is now always reserved in the layout — see below |
+| `ONE_COPY.needsHelp` | says where the goals actually are: in your plan, until the Track step |
+
+**The bug that made the picker look broken, and was not the picker.** The first
+mouse click on a shape did nothing, every time, if you had just typed your one
+thing. `SentenceBox` showed its "Enter to keep it" hint only while focused, so
+blurring it removed 19px of layout and moved every control below it up — in the
+gap between the mouse going down and coming up. A browser fires `click` on the
+nearest common ancestor of where a press began and where it ended, so the button
+got the press and a container got the click. The hint's line is now always
+reserved; the measured shift is 0px. This affected **every** control below
+**every** sentence box in the flow, and the e2e for the save button had already
+worked around it by blurring first, which read as test flake and was not.
+
+**Verified in a real browser, signed out, on `/test/life-mastery`:** typed the
+sentence, then straight to the picker with no artificial blur — Practice → "No
+weed" became a 7×/week practice; Target → "Save 20000 kr" became a climb to
+20000; Finish line → "Get the deposit back" became done-or-not-done with a
+CHECKPOINTS list; Target → "Ring my mother" carried no number, asked for one,
+and took 52. No page errors. 4097 unit tests pass.
+
+**Still not done, and it is the original request.** These goals still only reach
+the tracking page when the Track step pushes them, and the link between a goal
+and the one thing it serves still lives in the browser's plan as a plain
+yes/no — not on the account, and not pointing at *which* one thing. See §5.
 
 ---
 
@@ -458,12 +538,24 @@ must be done with all fields."* So, plainly, what to copy and what not to.
 
 ## Still open
 
-- **AT5 is still not written**: the check constraint has no test firing against
-  a live table. Unit tests cover `dueOnProblem`; nothing proves the database
-  itself refuses a bad row, and the service-role key bypasses RLS.
-- **The migration is not applied.** `20260902120000_life_answers_due_on_sanity.sql`
-  is written and not pushed. It is `not valid`, so it binds new rows only; a
-  query to find pre-existing bad rows is in the file's header comment.
+- ~~AT5~~ **done, 2026-09-03.** The constraint was applied to the live project
+  and then probed with a deliberately bad row (`due_on` five years before
+  `answered_at`, inserted with the service-role key, which bypasses RLS). The
+  database refused it — `23514 violates check constraint
+  life_answers_due_on_sane` — and nothing was written.
+- ~~The migration is not applied~~ **applied and validated, 2026-09-03.** It went
+  in through the Management API rather than `supabase db push`, because a push
+  would also have shipped three of another agent'''s unapplied migrations, two of
+  them RLS changes. The live table was queried first and held **zero** rows that
+  break the rule, so the constraint is `validate`d rather than `not valid` — the
+  migration file now adds it valid, and will fail loudly on any environment that
+  does hold a bad row.
+- **The step no longer waits for a save press** (2026-09-03). The rest of the
+  step opens on the sentence being typed. The unsaved text is held by the page,
+  not by the box, so it survives leaving the step and coming back — and it is
+  not a draft returning: nothing persists it and nothing else reads it as your
+  one thing. Tests: "opens as soon as a sentence is typed, before any save" and
+  "closes again if the sentence is cleared without saving".
 - **The five sibling answers are still in the plan blob**: the why, the cost,
   the identity, the values, and the areas the one thing touches
   (`ONE_ANSWERS.why` and friends). They are the same class of data as the

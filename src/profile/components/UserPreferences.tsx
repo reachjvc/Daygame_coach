@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { InteractiveWorldMap } from "./InteractiveWorldMap";
+import { REGIONS } from "@/src/profile/data/regions";
 import {
   updateAgeRange,
   updatePreferredRegion,
@@ -40,20 +41,11 @@ interface UserPreferencesProps {
   onPrimaryGoalChange?: (nextGoal: string) => void;
 }
 
-const REGION_NAMES: Record<string, string> = {
-  "western-europe": "Western Europe",
-  "eastern-europe": "Eastern Europe",
-  "scandinavia": "Scandinavia",
-  "southern-europe": "Southern Europe",
-  "latin-america": "Latin America",
-  "east-asia": "East Asia",
-  "southeast-asia": "Southeast Asia",
-  "south-asia": "South Asia",
-  "middle-east": "Middle East",
-  "north-america": "North America",
-  "africa": "Africa",
-  "australia": "Australia / Oceania",
-};
+// Derived from the one list of regions, never copied: a hand-written copy here
+// was missing "slavic-europe", so anyone who chose it saw the raw id on screen.
+const REGION_NAMES: Record<string, string> = Object.fromEntries(
+  REGIONS.map((region) => [region.id, region.name])
+);
 
 const EXPERIENCE_OPTIONS = [
   { id: "complete-beginner", label: "Complete Beginner" },
@@ -307,11 +299,22 @@ export function UserPreferences({
             <InteractiveWorldMap
               selectedRegion={preferredRegionState}
               secondaryRegion={secondaryRegionState}
-              selectionMode="primary"
+              selectionMode={mapMode ?? "primary"}
               onRegionSelect={handleMapSelect}
               showInfoBox={false}
               isInteractive={mapMode !== null}
               showCountryFocus={false}
+              /* THE LIST IS THE PICKER; THE MAP IS THE PICTURE.
+                 At rest the card stays compact — a 13-button list nobody asked
+                 for is what made this card unrecognisable in the first place.
+                 The moment a mode is armed the list appears, because the map
+                 alone cannot be used: 233 of its 236 country shapes are under
+                 Apple's 44px touch target, Poland is 8.9x8.4px, and the paths
+                 carry no tabindex and no key handler, so a thumb misses and a
+                 keyboard cannot reach them at all. Passing a flat "map-only"
+                 here took that away from the dashboard, which is the same
+                 defect d1841a1e fixed for onboarding. */
+              regionList={mapMode ? "list" : "map-only"}
             />
           </div>
 

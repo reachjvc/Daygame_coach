@@ -1,11 +1,16 @@
 /**
  * Database repository for Workout Programs (M1).
  *
- * Owns all DB access for program_enrollments + program_session_logs, and is the
- * orchestration boundary for stateful actions: it fetches state, runs the PURE
- * engine (src/programs/programsService.ts), then persists. On a load-session log
- * it also bridges to workout_logs/workout_sets so gym_sessions_weekly and linked
- * goal metrics update unchanged (via healthRepo.createWorkoutLog).
+ * Owns all DB access for `program_enrollments`, and is the orchestration
+ * boundary for stateful actions: it fetches state, runs the PURE engine
+ * (src/programs/programsService.ts), then persists.
+ *
+ * A SESSION IS A WORKOUT. There used to be a `program_session_logs` table
+ * holding a second copy of every session for the engine, beside the
+ * `workout_logs` / `workout_sets` rows the dashboard read, with nothing joining
+ * them — so deleting a session left a ghost in every count and chart, and
+ * editing one reached neither. There is one record now; the engine's `entries`
+ * are derived from the stored sets (`entriesFromSets`).
  */
 
 import { createServerSupabaseClient } from "./supabase"
@@ -17,17 +22,34 @@ import {
   toKg,
   unknownExerciseIds,
   replayEnrollment,
+  pickTodaysDay,
+  entriesFromSets,
+  loadStyleOf,
 } from "@/src/programs/programsService"
 import { requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
 import {
   clampCursorDay,
   effectiveProgram,
+  scheduleDays,
   isCustomizable,
   seedForAddedExercises,
+  applyWeightOverrides,
 } from "@/src/programs/customize"
-import { dayForWeekday, isWeekdayAnchored } from "@/src/programs/builder"
-import { isoWeekday } from "@/src/programs/config"
-import { BRIDGE_SESSION_TYPE, BRIDGE_DEFAULT_DURATION_MIN, BRIDGE_DEFAULT_INTENSITY } from "@/src/programs/config"
+import { getUserTimezone } from "./settingsRepo"
+import { loggedAtForEntry } from "@/src/health/healthService"
+import { isoWeekdayInTimezone } from "@/src/shared/dateUtils"
+import {
+  BRIDGE_SESSION_TYPE,
+  BRIDGE_DEFAULT_DURATION_MIN,
+  BRIDGE_DEFAULT_INTENSITY,
+  DEFAULT_PLATES,
+  KG_PER_LB,
+} from "@/src/programs/config"
+import { finishedWorkouts } from "./healthRepo"
+import type {
+  StoredSet,
+  WorkoutAdjustments,
+} from "@/src/programs/programsService"
 import type {
   ApplyLogResult,
   LoggedExercise,
@@ -38,6 +60,7 @@ import type {
   ProgramSessionLogInput,
   ProgramSchedule,
   ProgramSessionLogRow,
+  ReplayEvent,
   SessionPrescription,
   UnitSystem,
 } from "@/src/programs/types"
@@ -59,6 +82,31 @@ function toDomain(row: ProgramEnrollmentRow): ProgramEnrollment {
     is_active: row.is_active,
     started_at: row.started_at,
     customSchedule: row.custom_schedule ?? null,
+    // The state this enrollment STARTED from. Replay folds history over this,
+    // never over the catalogue's defaults — see the 20260907090000 migration.
+    initialExerciseState: row.initial_exercise_state ?? undefined,
+    replayEvents: row.replay_events ?? [],
+    barWeightKg: row.bar_weight_kg ?? null,
+    label: row.label ?? null,
+    plates: plateSetupFor(row.bar_weight_kg, row.unit_system),
+  }
+}
+
+/**
+ * What this person's gym can load, in the enrollment's display unit.
+ *
+ * RESOLVED ON THE WAY OUT of the database so the engine stays pure and every
+ * weight it prescribes is one that can actually be put on a bar. Nothing could
+ * be prescribed below the standard 20 kg bar before this existed: a lighter
+ * lifter's 15 kg press was rounded up at enrolment, and "deload 10%" from 20
+ * landed back on 20 for ever.
+ */
+function plateSetupFor(barWeightKg: number | null, unit: UnitSystem) {
+  const defaults = DEFAULT_PLATES[unit]
+  if (barWeightKg == null) return defaults
+  return {
+    barWeight: unit === "kg" ? barWeightKg : Math.round((barWeightKg / KG_PER_LB) * 100) / 100,
+    smallestPlate: defaults.smallestPlate,
   }
 }
 
@@ -99,16 +147,17 @@ export async function listActiveEnrollments(userId: string): Promise<ProgramEnro
    * on the tracking dashboard, on /programs and on the Life Mastery templates
    * tab, and N+1 on a page somebody opens daily is a cost paid forever.
    *
-   * Not stored on the enrollment. It is a fact about `program_session_logs`,
+   * Not stored on the enrollment. It is a fact about `workout_logs`,
    * and a second copy of it would be one more pair of things that can disagree
    * — which is the exact bug this area is being dug out of.
    */
-  const { data: logs, error: logErr } = await supabase
-    .from("program_session_logs")
-    .select("enrollment_id, logged_at")
-    .eq("user_id", userId)
-    .in("enrollment_id", enrollments.map((e) => e.id))
-    .order("logged_at", { ascending: false })
+  const { data: logs, error: logErr } = await finishedWorkouts(
+    supabase
+      .from("workout_logs")
+      .select("enrollment_id, logged_at")
+      .eq("user_id", userId)
+      .in("enrollment_id", enrollments.map((e) => e.id))
+  ).order("logged_at", { ascending: false })
   if (logErr) throw new Error(`Failed to read session history: ${logErr.message}`)
 
   const lastByEnrollment = new Map<string, string>()
@@ -142,12 +191,13 @@ export async function listPastEnrollments(userId: string): Promise<ProgramEnroll
   const enrollments = (data ?? []).map((r) => toDomain(r as ProgramEnrollmentRow))
   if (enrollments.length === 0) return enrollments
 
-  const { data: logs, error: logErr } = await supabase
-    .from("program_session_logs")
-    .select("enrollment_id, logged_at")
-    .eq("user_id", userId)
-    .in("enrollment_id", enrollments.map((e) => e.id))
-    .order("logged_at", { ascending: false })
+  const { data: logs, error: logErr } = await finishedWorkouts(
+    supabase
+      .from("workout_logs")
+      .select("enrollment_id, logged_at")
+      .eq("user_id", userId)
+      .in("enrollment_id", enrollments.map((e) => e.id))
+  ).order("logged_at", { ascending: false })
   if (logErr) throw new Error(`Failed to read session history: ${logErr.message}`)
 
   const counts = new Map<string, { last: string; n: number }>()
@@ -192,6 +242,10 @@ export async function enrollInProgram(
     oneRepMaxes?: Record<string, number>
     workingWeights?: Record<string, number>
     customSchedule?: ProgramSchedule | null
+    /** The bar this is trained on, when it is not the standard one. */
+    barWeightKg?: number | null
+    /** What the person calls it — a self-built week's own name. */
+    label?: string | null
   }
 ): Promise<{
   enrollment: ProgramEnrollment
@@ -203,7 +257,14 @@ export async function enrollInProgram(
   // Seed against the schedule the user is actually enrolling in, so a lift they
   // added is seeded and one they removed is not.
   const program = effectiveProgram(catalogProgram, input.customSchedule)
-  const { exerciseState, cursor } = seedEnrollment(program, level, input.unitSystem, input.oneRepMaxes, input.workingWeights)
+  const { exerciseState, cursor } = seedEnrollment(
+    program,
+    level,
+    input.unitSystem,
+    input.oneRepMaxes,
+    input.workingWeights,
+    plateSetupFor(input.barWeightKg ?? null, input.unitSystem)
+  )
 
   const supabase = await createServerSupabaseClient()
   /**
@@ -231,9 +292,16 @@ export async function enrollInProgram(
       level,
       unit_system: input.unitSystem,
       exercise_state: exerciseState,
+      // THE SEED, KEPT. Correcting a past session replays over this rather than
+      // re-deriving it from the catalogue's level defaults, which is how
+      // somebody who typed their real 100 kg squat had it silently replaced by
+      // a beginner's 60 the first time they deleted a session.
+      initial_exercise_state: exerciseState,
       cursor,
       is_active: true,
       custom_schedule: input.customSchedule ?? null,
+      ...(input.barWeightKg != null ? { bar_weight_kg: input.barWeightKg } : {}),
+      ...(input.label ? { label: input.label } : {}),
     })
     .select()
     .single()
@@ -399,9 +467,20 @@ export async function resumeEnrollment(
 /** Reset cursor to the start of the program; keeps current working weights / TMs. */
 export async function resetEnrollment(userId: string, id: string): Promise<ProgramEnrollment> {
   const supabase = await createServerSupabaseClient()
+  const enr = await getEnrollmentById(userId, id)
+  if (!enr) throw new Error("Enrollment not found")
   const { data, error } = await supabase
     .from("program_enrollments")
-    .update({ cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 } })
+    .update({
+      cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 },
+      // RECORDED, so a later correction does not undo it. Replay folds history
+      // over the seed, and a reset that leaves no trace is simply forgotten the
+      // next time somebody edits a session.
+      replay_events: [
+        ...(enr.replayEvents ?? []),
+        { at: new Date().toISOString(), kind: "reset", cursor: true, weights: false },
+      ],
+    })
     .eq("id", id)
     .eq("user_id", userId)
     .select()
@@ -436,15 +515,43 @@ export async function updateEnrollmentSchedule(
   }
 
   const program = effectiveProgram(catalogProgram, schedule)
-  const exerciseState = schedule
+  /**
+   * Two different intents, applied in order.
+   *
+   * A lift being ADDED needs a starting weight it does not have; a lift that is
+   * already running may be given a NEW one because the person said so. The
+   * second used to be impossible — there was no way to lower a working weight
+   * once a program had started, so a wrong number at session one was permanent
+   * short of ending the program.
+   */
+  const seeded = schedule
     ? seedForAddedExercises(schedule, enr.exerciseState, workingWeights, enr.unitSystem)
     : enr.exerciseState
+  const { state: exerciseState, changed } = applyWeightOverrides(
+    seeded,
+    workingWeights,
+    enr.unitSystem,
+    program.schedule,
+    enr.plates
+  )
   const cursor = { ...enr.cursor, dayIndex: clampCursorDay(program.schedule, enr.cursor.dayIndex) }
+  // A weight somebody set by hand has to survive a later correction, so it goes
+  // into the replay alongside the skips and resets.
+  const at = new Date().toISOString()
+  const replayEvents: ReplayEvent[] = [
+    ...(enr.replayEvents ?? []),
+    ...changed.map((c) => ({ at, kind: "weight" as const, exerciseId: c.exerciseId, to: c.to })),
+  ]
 
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from("program_enrollments")
-    .update({ custom_schedule: schedule, exercise_state: exerciseState, cursor })
+    .update({
+      custom_schedule: schedule,
+      exercise_state: exerciseState,
+      cursor,
+      ...(changed.length > 0 ? { replay_events: replayEvents } : {}),
+    })
     .eq("id", enrollmentId)
     .eq("user_id", userId)
     .select()
@@ -476,35 +583,32 @@ export async function getTodaySession(userId: string, enrollmentId: string): Pro
   const enr = await getEnrollmentById(userId, enrollmentId)
   if (!enr) throw new Error("Enrollment not found")
   const program = programFor(enr)
-  if (!isWeekdayAnchored(program.schedule)) return computePrescription(program, enr)
 
-  const days = (program.schedule as { days: Array<{ id: string; weekday?: number }> }).days
-  const todayIso = isoWeekday(new Date())
-  const today = dayForWeekday(program.schedule, todayIso)
+  /**
+   * WHOSE TODAY. This read the SERVER's clock, which runs on UTC — so a week
+   * pinned to weekdays showed anyone east of London yesterday's session after
+   * local midnight, and anyone west tomorrow's from late afternoon. Every other
+   * counter in the app already asks the account what day it is.
+   *
+   * The rule itself now lives in the engine (`pickTodaysDay`), where a unit test
+   * can reach it: here it was inside the database layer, unreachable by the unit
+   * suite and by the integration suite alike, so the one rule that answers "am I
+   * training today" was the one rule nobody could check.
+   */
+  const timezone = await getUserTimezone(userId)
+  const todayWeekday = isoWeekdayInTimezone(timezone)
+  const picked = pickTodaysDay(program.schedule, todayWeekday)
+  if (!picked) return { ...computePrescription(program, enr), todayWeekday }
 
-  // A REST DAY IS A REAL ANSWER. The next session is still computed so the
-  // screen can say what is coming, but it is flagged rather than served as
-  // today's work — otherwise a three-day week silently becomes a seven-day one.
-  const target =
-    today ??
-    // The soonest day at or after today, wrapping into next week.
-    [...days]
-      .filter((d) => d.weekday != null)
-      .sort(
-        (a, b) =>
-          ((a.weekday! - todayIso + 7) % 7) - ((b.weekday! - todayIso + 7) % 7)
-      )[0]
-  if (!target) return computePrescription(program, enr)
-
-  const dayIndex = days.findIndex((d) => d.id === target.id)
   const prescription = computePrescription(program, {
     ...enr,
-    cursor: { ...enr.cursor, dayIndex },
+    cursor: { ...enr.cursor, dayIndex: picked.dayIndex },
   })
   return {
     ...prescription,
-    ...(today ? {} : { restDay: true }),
-    ...(target.weekday != null ? { scheduledWeekday: target.weekday } : {}),
+    todayWeekday,
+    ...(picked.restDay ? { restDay: true } : {}),
+    ...(picked.scheduledWeekday != null ? { scheduledWeekday: picked.scheduledWeekday } : {}),
   }
 }
 
@@ -520,7 +624,13 @@ export async function skipSession(userId: string, enrollmentId: string): Promise
     week: enr.cursor.week,
     entries: [], // no entries → linear holds, percentage no-ops; cursor still advances
   })
-  await persistState(userId, enrollment)
+  // RECORDED, like a reset. A skip advances the plan without logging anything,
+  // so it left no trace at all — and replaying a corrected history therefore
+  // re-prescribed every session the person had deliberately skipped.
+  await persistState(userId, enrollment, [
+    ...(enr.replayEvents ?? []),
+    { at: new Date().toISOString(), kind: "skip" },
+  ])
   return computePrescription(program, enrollment)
 }
 
@@ -533,7 +643,9 @@ export async function logProgramSession(
   enrollmentId: string,
   logInput: Omit<ProgramSessionLogInput, "enrollment_id">,
   rpe?: number,
-  notes?: string
+  notes?: string,
+  /** The day the person says they trained. Absent means now. */
+  when?: { entry_date?: string; entry_time?: string }
 ): Promise<ApplyLogResult & { next: SessionPrescription }> {
   const enr = await getEnrollmentById(userId, enrollmentId)
   if (!enr) throw new Error("Enrollment not found")
@@ -551,10 +663,25 @@ export async function logProgramSession(
 
   const result = applyLog(program, enr, { ...logInput, enrollment_id: enr.id })
 
-  // Persist new engine state, the session log, and the workout_logs bridge.
+  /**
+   * THE DAY THEY TRAINED, IN THEIR OWN CALENDAR.
+   *
+   * A session could only ever be stamped "now", on both copies, so a Saturday
+   * workout written up on Monday landed in Monday's week and every calendar
+   * view was wrong about it. `loggedAtForEntry` is the health slice's rule for
+   * exactly this and already handles "today means this moment, not noon".
+   */
+  let loggedAt: string | undefined
+  if (when?.entry_date) {
+    const timezone = await getUserTimezone(userId)
+    const resolved = loggedAtForEntry(when.entry_date, timezone, when.entry_time)
+    if (!resolved) throw new Error("That is in the future — pick a day you have already trained.")
+    loggedAt = resolved
+  }
+
+  // ONE RECORD. The engine's state, then the workout — which IS the session.
   await persistState(userId, result.enrollment)
-  await insertSessionLog(userId, enr.id, logInput, rpe, notes)
-  await bridgeToWorkoutLogs(userId, program, enr.unitSystem, logInput)
+  await writeWorkout(userId, enr, program, logInput, { rpe, notes, loggedAt })
 
   return { ...result, next: computePrescription(program, result.enrollment) }
 }
@@ -586,132 +713,222 @@ export async function reviseSessionLog(
     if (unknown.length > 0) {
       throw new Error(`${program.name} has no exercise called ${unknown.join(", ")}. Nothing was changed.`)
     }
-    const { error } = await supabase
-      .from("program_session_logs")
-      .update({ entries })
+    /**
+     * EDITING NOW ACTUALLY EDITS.
+     *
+     * It wrote to `program_session_logs`, which had read, insert and delete
+     * row rules and NO update — so Postgres matched zero rows, returned no
+     * error, and the app replayed the untouched history and reported success.
+     * Proved against the live database on 2026-09-06: a correction to 9 reps
+     * came back 200 and the row still read 6.
+     *
+     * The sets are ordinary workout rows, which have always been updatable.
+     * The write is re-read rather than trusted, so a silent no-op can never
+     * come back: if nothing changed, the caller is told.
+     */
+    const nameById = new Map(
+      scheduleDays(program.schedule).flatMap((d) =>
+        d.exercises.map((ex) => [ex.id, ex.name] as const)
+      )
+    )
+    const rows = entries.flatMap((entry) =>
+      entry.sets.map((set) => ({
+        log_id: logId,
+        exercise: nameById.get(entry.exerciseId) ?? entry.exerciseId,
+        exercise_id: entry.exerciseId,
+        weight_kg: round2(toKg(set.weight, enr.unitSystem)),
+        reps: set.reps,
+        set_number: set.setNumber,
+        set_kind: "working" as const,
+        ...(set.side ? { side: set.side } : {}),
+      }))
+    )
+    // The corrected session replaces the old one wholesale: a set removed from
+    // the correction has to disappear, and a patch cannot express that.
+    const { error: clearError } = await supabase.from("workout_sets").delete().eq("log_id", logId)
+    if (clearError) throw new Error(`Failed to change the session: ${clearError.message}`)
+    if (rows.length > 0) {
+      const { data: written, error } = await supabase.from("workout_sets").insert(rows).select("id")
+      if (error) throw new Error(`Failed to change the session: ${error.message}`)
+      if ((written ?? []).length !== rows.length) {
+        throw new Error("The correction did not save. Nothing was changed.")
+      }
+    }
+    // Skips are on the workout, not on its sets.
+    const skipped = entries.filter((e) => e.skipped).map((e) => e.exerciseId)
+    const { error: adjError } = await supabase
+      .from("workout_logs")
+      .update({ adjustments: skipped.length > 0 ? { skipped } : {} })
       .eq("id", logId)
-      .eq("enrollment_id", enrollmentId)
       .eq("user_id", userId)
-    if (error) throw new Error(`Failed to update the session: ${error.message}`)
+    if (adjError) throw new Error(`Failed to change the session: ${adjError.message}`)
   } else {
-    const { error } = await supabase
-      .from("program_session_logs")
+    // Deleting the workout takes its sets with it (ON DELETE CASCADE) — and,
+    // because there is only one record now, it also takes it out of the
+    // dashboard count, the calendar, the personal records and the export.
+    // Deleting used to leave every one of those untouched.
+    const { data: gone, error } = await supabase
+      .from("workout_logs")
       .delete()
       .eq("id", logId)
       .eq("enrollment_id", enrollmentId)
       .eq("user_id", userId)
+      .select("id")
     if (error) throw new Error(`Failed to delete the session: ${error.message}`)
+    if ((gone ?? []).length === 0) throw new Error("That session was not found, so nothing was deleted.")
   }
 
-  // Re-seed exactly as the enrollment was created, then fold the surviving
-  // sessions over it. Seeding from the CURRENT catalogue on purpose: the
-  // enrollment's own level is what it started from.
-  const { program: catalogProgram, level } = resolveProgramForLevel(enr.program_id, enr.level)
-  const { exerciseState, cursor } = seedEnrollment(
-    effectiveProgram(catalogProgram, enr.customSchedule),
-    level,
-    enr.unitSystem
-  )
+  /**
+   * REPLAY FROM WHAT THE PERSON TYPED, not from the catalogue.
+   *
+   * This used to call `seedEnrollment` again, which re-derives the starting
+   * weights from the LEVEL's defaults — so anybody who entered their real
+   * numbers at enrolment had them replaced by the catalogue's the first time
+   * they corrected a session, silently, and anybody on a self-built program
+   * (which has no level seeds at all) got a delete that went through and then
+   * threw. The seed is stored at enrolment now and is the enrollment's own
+   * history; it is never recomputed.
+   */
+  const seedState = enr.initialExerciseState
+  if (!seedState) {
+    throw new Error(
+      "This program was started before starting weights were kept, so its history cannot be recalculated. Ending and restarting it will fix that."
+    )
+  }
   const logs = await getSessionLogs(userId, enrollmentId)
   const replayed = replayEnrollment(
     program,
-    { ...enr, exerciseState, cursor },
+    { ...enr, exerciseState: seedState, cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 } },
     logs.map((l) => ({
       entries: l.entries,
       logged_at: l.logged_at,
       dayId: l.day_id,
       cycle: l.cycle,
       week: l.week,
-    }))
+    })),
+    enr.replayEvents ?? []
   )
   await persistState(userId, replayed)
   return replayed
 }
 
-async function persistState(userId: string, enrollment: ProgramEnrollment): Promise<void> {
+async function persistState(
+  userId: string,
+  enrollment: ProgramEnrollment,
+  replayEvents?: ReplayEvent[]
+): Promise<void> {
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase
     .from("program_enrollments")
-    .update({ exercise_state: enrollment.exerciseState, cursor: enrollment.cursor })
+    .update({
+      exercise_state: enrollment.exerciseState,
+      cursor: enrollment.cursor,
+      ...(replayEvents ? { replay_events: replayEvents } : {}),
+    })
     .eq("id", enrollment.id)
     .eq("user_id", userId)
   if (error) throw new Error(`Failed to persist enrollment state: ${error.message}`)
 }
 
-async function insertSessionLog(
+/**
+ * Write the workout. There is only one row to write.
+ *
+ * IT USED TO BE TWO, and nothing joined them: a `program_session_logs` row for
+ * the engine and a `workout_logs` row for the dashboard, written one after the
+ * other. Deleting a session removed one and left the other in every count,
+ * chart and export; editing reached neither. The engine now reads the sets that
+ * are stored, so there is nothing left to disagree.
+ *
+ * `client_key` makes a retry a no-op rather than a second session: a save that
+ * failed halfway used to leave the weights advanced and say nothing, so the
+ * next thing anybody did was press the button again.
+ */
+async function writeWorkout(
   userId: string,
-  enrollmentId: string,
+  enr: ProgramEnrollment,
+  program: ProgramDefinition,
   logInput: Omit<ProgramSessionLogInput, "enrollment_id">,
-  rpe?: number,
-  notes?: string
+  meta: { rpe?: number; notes?: string; loggedAt?: string; clientKey?: string }
 ): Promise<void> {
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from("program_session_logs").insert({
-    enrollment_id: enrollmentId,
-    user_id: userId,
-    day_id: logInput.dayId,
-    cycle: logInput.cycle,
-    week: logInput.week,
-    entries: logInput.entries,
-    rpe: rpe ?? null,
-    notes: notes ?? null,
-  })
-  if (error) throw new Error(`Failed to insert session log: ${error.message}`)
+
+  const duration = Math.min(599, Math.max(1, Math.round(logInput.durationMin ?? BRIDGE_DEFAULT_DURATION_MIN)))
+  const intensity = Math.min(5, Math.max(1, Math.round(logInput.intensity ?? BRIDGE_DEFAULT_INTENSITY)))
+  const skipped = logInput.entries.filter((e) => e.skipped).map((e) => e.exerciseId)
+
+  const { data: workout, error } = await supabase
+    .from("workout_logs")
+    .insert({
+      user_id: userId,
+      session_type: sessionTypeFor(program),
+      duration_min: duration,
+      intensity,
+      distance_km: logInput.distanceKm ?? null,
+      enrollment_id: enr.id,
+      program_day_id: logInput.dayId,
+      program_cycle: logInput.cycle,
+      program_week: logInput.week,
+      adjustments: skipped.length > 0 ? { skipped } : {},
+      rpe: meta.rpe ?? null,
+      notes: meta.notes ?? null,
+      ...(meta.clientKey ? { client_key: meta.clientKey } : {}),
+      ...(meta.loggedAt ? { logged_at: meta.loggedAt } : {}),
+    })
+    .select("id")
+    .single()
+  if (error) throw new Error(`Failed to save the workout: ${error.message}`)
+
+  const sets = setRowsFor(program, enr.unitSystem, logInput, workout.id)
+  if (sets.length === 0) return
+  const { error: setsError } = await supabase.from("workout_sets").insert(sets)
+  if (setsError) throw new Error(`Failed to save the sets: ${setsError.message}`)
 }
 
 /**
- * Mirror a program session into workout_logs/workout_sets for metric/PR sync.
- * Load → a 'weights' log + per-set rows. Endurance → a 'running' log with
- * duration/distance (feeds running_distance_cumulative etc).
+ * What kind of session this counts as on the dashboard.
+ *
+ * Unchanged from the old bridge: a calisthenics session is weights (it counts
+ * towards gym sessions), a mobility routine is mobility, a running plan is
+ * running, and a multi-sport plan is generic cardio.
  */
-async function bridgeToWorkoutLogs(
-  userId: string,
+function sessionTypeFor(program: ProgramDefinition) {
+  if (program.metricType === "endurance") {
+    return program.discipline === "triathlon" || program.discipline === "ironman" ? "cardio" : "running"
+  }
+  if (program.metricType === "hold_range") return "mobility"
+  return BRIDGE_SESSION_TYPE
+}
+
+/** The sets, stamped with the program's own id for each lift. */
+function setRowsFor(
   program: ProgramDefinition,
   unit: UnitSystem,
-  logInput: Omit<ProgramSessionLogInput, "enrollment_id">
-): Promise<void> {
-
-  if (program.metricType === "endurance") {
-    const duration = Math.min(599, Math.max(1, Math.round(logInput.durationMin ?? BRIDGE_DEFAULT_DURATION_MIN)))
-    // Multi-sport (tri/ironman) → generic 'cardio'; pure running plans → 'running'.
-    const multiSport = program.discipline === "triathlon" || program.discipline === "ironman"
-    await createWorkoutLog(userId, {
-      session_type: multiSport ? "cardio" : "running",
-      duration_min: duration,
-      intensity: BRIDGE_DEFAULT_INTENSITY,
-      distance_km: logInput.distanceKm ?? null,
-    })
-    return
-  }
-
-  // Calisthenics → a 'weights' session (counts toward gym_sessions_weekly);
-  // flexibility → a 'mobility' session. No per-set rows for bodyweight work.
-  if (program.metricType === "skill_tier" || program.metricType === "hold_range") {
-    await createWorkoutLog(userId, {
-      session_type: program.metricType === "skill_tier" ? "weights" : "mobility",
-      duration_min: BRIDGE_DEFAULT_DURATION_MIN,
-      intensity: BRIDGE_DEFAULT_INTENSITY,
-    })
-    return
-  }
-
-  if (program.schedule.kind !== "linear_rotation" && program.schedule.kind !== "weekly_waved") return
-  const nameById = new Map(program.schedule.days.flatMap((d) => d.exercises.map((e) => [e.id, e.name] as const)))
-
-  const sets: WorkoutSetInsert[] = []
-  for (const ex of logInput.entries) {
-    const name = nameById.get(ex.exerciseId) ?? ex.exerciseId
-    for (const s of ex.sets) {
-      sets.push({ exercise: name, weight_kg: round2(toKg(s.weight, unit)), reps: s.reps, set_number: s.setNumber })
+  logInput: Omit<ProgramSessionLogInput, "enrollment_id">,
+  logId: string
+): WorkoutSetInsert[] {
+  const byId = new Map(
+    scheduleDays(program.schedule).flatMap((d) => d.exercises.map((ex) => [ex.id, ex] as const))
+  )
+  const rows: WorkoutSetInsert[] = []
+  for (const entry of logInput.entries) {
+    if (entry.skipped) continue
+    const ex = byId.get(entry.exerciseId)
+    for (const set of entry.sets) {
+      rows.push({
+        log_id: logId,
+        exercise: ex?.name ?? entry.exerciseId,
+        // THE PROGRAM'S OWN ID. Matching a logged set back to its lift by NAME
+        // is what made "my bench" split in two the moment a program renamed it.
+        exercise_id: entry.exerciseId,
+        weight_kg: round2(toKg(set.weight, unit)),
+        reps: set.reps,
+        set_number: set.setNumber,
+        set_kind: "working",
+        ...(set.side ? { side: set.side } : {}),
+      })
     }
   }
-  if (sets.length === 0) return
-
-  await createWorkoutLog(
-    userId,
-    { session_type: BRIDGE_SESSION_TYPE, duration_min: BRIDGE_DEFAULT_DURATION_MIN, intensity: BRIDGE_DEFAULT_INTENSITY },
-    sets
-  )
+  return rows
 }
 
 // ---------------------------------------------------------------------------
@@ -719,13 +936,62 @@ async function bridgeToWorkoutLogs(
 // ---------------------------------------------------------------------------
 
 export async function getSessionLogs(userId: string, enrollmentId: string): Promise<ProgramSessionLogRow[]> {
+  const enr = await getEnrollmentById(userId, enrollmentId)
+  if (!enr) return []
+  return sessionLogsFor(userId, enr)
+}
+
+/**
+ * This enrollment's sessions, read out of the one workouts table.
+ *
+ * THE SHAPE IS THE SAME AND THE SOURCE IS NOT. Callers still get a row per
+ * session with `entries` on it, because that is what the engine replays and
+ * what the history screen renders — but `entries` is now DERIVED from the sets
+ * that were actually stored rather than being a second, independent copy of
+ * them. That second copy is why deleting a session left a ghost in every count
+ * and why editing one reached neither table.
+ *
+ * Only FINISHED workouts: one still in progress has no result to replay.
+ */
+async function sessionLogsFor(
+  userId: string,
+  enr: ProgramEnrollment
+): Promise<ProgramSessionLogRow[]> {
   const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from("program_session_logs")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("enrollment_id", enrollmentId)
-    .order("logged_at", { ascending: false })
+  const { data, error } = await finishedWorkouts(
+    supabase
+      .from("workout_logs")
+      .select("*, workout_sets(*)")
+      .eq("user_id", userId)
+      .eq("enrollment_id", enr.id)
+  ).order("logged_at", { ascending: false })
   if (error) throw new Error(`Failed to get session logs: ${error.message}`)
-  return (data ?? []) as ProgramSessionLogRow[]
+
+  return (data ?? []).map((row: WorkoutRowWithSets) => ({
+    id: row.id,
+    enrollment_id: enr.id,
+    user_id: userId,
+    day_id: row.program_day_id ?? "",
+    cycle: row.program_cycle ?? 1,
+    week: row.program_week ?? 1,
+    entries: entriesFromSets(row.workout_sets ?? [], row.adjustments, enr.unitSystem),
+    rpe: row.rpe,
+    notes: row.notes,
+    logged_at: row.logged_at,
+    created_at: row.created_at,
+  }))
+}
+
+/** The row shape `workout_logs` comes back in with its sets attached. */
+interface WorkoutRowWithSets {
+  id: string
+  logged_at: string
+  created_at: string
+  program_day_id: string | null
+  program_cycle: number | null
+  program_week: number | null
+  adjustments: WorkoutAdjustments | null
+  rpe: number | null
+  notes: string | null
+  workout_sets: StoredSet[] | null
 }

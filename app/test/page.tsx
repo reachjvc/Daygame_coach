@@ -2,10 +2,16 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard, Waves, Archive, Aperture, Castle } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard, Waves, Archive, Aperture, Castle, Type } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
+  {
+    name: "Font check",
+    href: "/test/font-check",
+    description: "What this browser is doing to the text: zoom, which font actually loaded, leftover service workers",
+    icon: Type,
+  },
   {
     name: "Scenario Lab",
     href: "/test/scenario-lab",

@@ -45,6 +45,7 @@ import { fromKg, roundToLoadable } from "@/src/programs/programsService"
 import { hasWeight, numericWeights } from "@/src/programs/builder"
 import { ProgramEditor } from "@/src/programs/components/ProgramEditor"
 import { RunningPrograms } from "@/src/programs/components/RunningPrograms"
+import { refreshEnrollments } from "@/src/programs/hooks/useEnrollment"
 import { Segmented } from "@/src/programs/components/ui"
 import { BuildYourOwn } from "./BuildYourOwn"
 import type { Discipline, LevelId, ProgramSchedule, UnitSystem } from "@/src/programs/types"
@@ -256,6 +257,11 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded, planDays = [
         schedule && isCustomizable(program) ? scheduleDays(schedule).map((d) => d.label) : []
       onProgramStarted(dayNames, ref)
       setState("done")
+      // RE-READ WHAT IS RUNNING. Remounting the band was not enough: the list
+      // is shared and, once loaded, never asked again — so "Running now" kept
+      // showing the program this one just replaced, and tapping through to the
+      // Training page arrived at the same stale answer.
+      await refreshEnrollments()
       setRunningKey((k) => k + 1)
     } catch {
       setError("Could not reach the server. Nothing was started.")

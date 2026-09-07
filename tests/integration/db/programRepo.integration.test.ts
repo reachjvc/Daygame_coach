@@ -9,11 +9,18 @@
  * archives it (`is_active = false`) and only a program you have already ended
  * can be erased on purpose.
  *
- * That fix rests entirely on two schema facts, and this file pins both:
+ * THE DANGER HAS SINCE MOVED, and this file moved with it. Sessions no longer
+ * live in their own table: `program_session_logs` was a second copy of every
+ * workout and was folded into `workout_logs` (20260907100000), which hangs off
+ * the enrollment with `ON DELETE SET NULL`. So erasing a program now KEEPS the
+ * training and merely stops calling it that — the cascade that made a hard
+ * delete catastrophic is gone by construction rather than by discipline.
  *
- *   1. **The cascade is real.** If it ever stopped being real, someone would
- *      reasonably conclude a hard delete was safe again. The test that proves
- *      the danger is the test that keeps the fix necessary.
+ * Two schema facts still hold this up, and this file pins both:
+ *
+ *   1. **Erasing a program keeps its workouts, un-linked.** That you trained is
+ *      not the program's fact to erase. If this ever becomes a cascade again,
+ *      "End program" is one misread away from destroying a year.
  *   2. **The unique index is PARTIAL.** `… WHERE is_active` is what lets any
  *      number of finished enrollments of one program sit beside a single live
  *      one. Drop the `WHERE` and archiving breaks the moment somebody returns to
@@ -55,8 +62,9 @@ async function logSessions(enrollmentId: string, userId: string, n: number): Pro
   try {
     for (let i = 0; i < n; i++) {
       await client.query(
-        `INSERT INTO program_session_logs (enrollment_id, user_id, day_id, cycle, week, entries)
-         VALUES ($1, $2, 'A', 1, 1, '[]'::jsonb)`,
+        `INSERT INTO workout_logs
+           (user_id, session_type, duration_min, intensity, enrollment_id, program_day_id, program_cycle, program_week)
+         VALUES ($2, 'weights', 52, 3, $1, 'A', 1, 1)`,
         [enrollmentId, userId]
       )
     }
@@ -69,7 +77,7 @@ async function countSessions(enrollmentId: string): Promise<number> {
   const client = await getClient()
   try {
     const r = await client.query(
-      `SELECT count(*)::int AS n FROM program_session_logs WHERE enrollment_id = $1`,
+      `SELECT count(*)::int AS n FROM workout_logs WHERE enrollment_id = $1`,
       [enrollmentId]
     )
     return r.rows[0].n
@@ -100,11 +108,19 @@ describe("program schema", () => {
       expect(await countSessions(enrollmentId)).toBe(3)
     })
 
-    test("deleting the enrollment cascades and the sessions are gone", async () => {
-      // The danger, pinned. This is what "End program" used to do, and it is why
-      // it must not do it again. If this test ever fails because the cascade was
-      // removed, do not celebrate — the archive/delete split was designed around
-      // it and needs rethinking.
+    test("erasing the enrollment KEEPS the workouts, detached", async () => {
+      /**
+       * THIS TEST USED TO ASSERT THE OPPOSITE, and that was the danger.
+       * Sessions lived in their own table under `ON DELETE CASCADE`, so one
+       * click on "End program" erased a year of training. The fix at the time
+       * was discipline — archive, never delete — and this test existed to keep
+       * everyone frightened of the alternative.
+       *
+       * Workouts now hang off the enrollment with `ON DELETE SET NULL`, so the
+       * catastrophe is unrepresentable rather than merely discouraged: erasing
+       * the program leaves every workout, and the day, cycle and week it was
+       * done on, so the history still reads.
+       */
       const userId = await createTestUser("cascade@example.com")
       const enrollmentId = await enroll(userId)
       await logSessions(enrollmentId, userId, 3)
@@ -113,11 +129,16 @@ describe("program schema", () => {
       const client = await getClient()
       try {
         await client.query(`DELETE FROM program_enrollments WHERE id = $1`, [enrollmentId])
+        const kept = await client.query(
+          `SELECT enrollment_id, program_day_id FROM workout_logs WHERE user_id = $1`,
+          [userId]
+        )
+        expect(kept.rows).toHaveLength(3)
+        expect(kept.rows.every((r) => r.enrollment_id === null)).toBe(true)
+        expect(kept.rows.every((r) => r.program_day_id === "A")).toBe(true)
       } finally {
         await client.end()
       }
-
-      expect(await countSessions(enrollmentId)).toBe(0)
     })
 
     test("deleting a person takes their programs and sessions with them", async () => {
@@ -203,15 +224,15 @@ describe("program schema", () => {
       try {
         await expect(
           client.query(
-            `INSERT INTO program_session_logs (enrollment_id, user_id, day_id, cycle, week, entries, rpe)
-             VALUES ($1, $2, 'A', 1, 1, '[]'::jsonb, 11)`,
+            `INSERT INTO workout_logs (user_id, session_type, duration_min, intensity, enrollment_id, program_day_id, program_cycle, program_week, rpe)
+             VALUES ($2, 'weights', 52, 3, $1, 'A', 1, 1, 11)`,
             [enrollmentId, userId]
           )
         ).rejects.toThrow()
         await expect(
           client.query(
-            `INSERT INTO program_session_logs (enrollment_id, user_id, day_id, cycle, week, entries, rpe)
-             VALUES ($1, $2, 'A', 1, 1, '[]'::jsonb, NULL)`,
+            `INSERT INTO workout_logs (user_id, session_type, duration_min, intensity, enrollment_id, program_day_id, program_cycle, program_week, rpe)
+             VALUES ($2, 'weights', 52, 3, $1, 'A', 1, 1, NULL)`,
             [enrollmentId, userId]
           )
         ).resolves.toBeTruthy()
@@ -220,14 +241,24 @@ describe("program schema", () => {
       }
     })
 
-    test("a session cannot belong to no enrollment", async () => {
+    test("a workout may belong to no program, but not to one that does not exist", async () => {
+      // A loose workout — a class, an improvised session — is a first-class
+      // case and always was; it is the whole "Anything else" tab. Pointing at
+      // an enrollment that is not there is a different thing, and refused.
       const userId = await createTestUser("orphan@example.com")
       const client = await getClient()
       try {
         await expect(
           client.query(
-            `INSERT INTO program_session_logs (enrollment_id, user_id, day_id, cycle, week, entries)
-             VALUES (gen_random_uuid(), $1, 'A', 1, 1, '[]'::jsonb)`,
+            `INSERT INTO workout_logs (user_id, session_type, duration_min, intensity)
+             VALUES ($1, 'weights', 52, 3)`,
+            [userId]
+          )
+        ).resolves.toBeTruthy()
+        await expect(
+          client.query(
+            `INSERT INTO workout_logs (user_id, session_type, duration_min, intensity, enrollment_id, program_day_id, program_cycle, program_week)
+             VALUES ($1, 'weights', 52, 3, gen_random_uuid(), 'A', 1, 1)`,
             [userId]
           )
         ).rejects.toThrow()

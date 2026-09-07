@@ -205,6 +205,15 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
           </span>
         )}
 
+        {/* A CLIMB THAT HAS NO NUMBER YET STILL HAS TO BE ASKABLE.
+            Every ladder control on this card is gated on `goal.ladder`, so a
+            target without one drew no controls at all: the card said the goal
+            needed a number to climb to and offered nowhere to put it. The state
+            is reachable whenever a line carried no number the words could have
+            meant — which is the honest reading of "Ring my mother" as a target,
+            and much better than opening it at an invented 0 → 100. */}
+        {isTarget && !goal.ladder && <ClimbTo goal={goal} onLadder={handlers.onLadder} />}
+
         {isPractice && (
           <span className="flex items-center gap-1 shrink-0">
             <button
@@ -772,6 +781,43 @@ function RampEditor({ steps, fallbackFreq, color, onChange }: {
       </div>
       <p className="text-[10px] text-zinc-600 mt-1">The last phase is your steady state.</p>
     </div>
+  )
+}
+
+/**
+ * "What are you climbing to?" — for a target that has not been given a number.
+ *
+ * Held locally and committed on blur or Enter, deliberately: writing the ladder
+ * on every keystroke would create one at 2 while somebody was typing 20000, and
+ * the moment it exists this control unmounts in favour of the from → to pair
+ * above, taking the caret with it mid-number.
+ *
+ * A number at or below zero is not committed. There is no such climb, and a
+ * ladder of 0 would read as complete the day it was made.
+ */
+function ClimbTo({ goal, onLadder }: { goal: NsGoal; onLadder: GoalHandlers["onLadder"] }) {
+  const [draft, setDraft] = useState("")
+  const commit = () => {
+    const target = Number(draft)
+    if (!draft.trim() || !Number.isFinite(target) || target <= 0) return
+    onLadder(goal.id, { start: 0, target, steps: 4, curveTension: 0, controlPoints: [], pins: [] })
+    setDraft("")
+  }
+  return (
+    <span className="flex items-center gap-1.5 shrink-0">
+      <input
+        type="number"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commit() } }}
+        aria-label={`What number are you climbing to for ${goal.title}`}
+        placeholder="climb to"
+        className="w-20 bg-white/5 border border-dashed border-white/20 rounded-md px-1.5 py-1 text-[11px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/35 tabular-nums"
+      />
+      {/* The unit is not asked for here. It has its own box the moment a number
+          exists, and two places to type "kg" is one more than there should be. */}
+    </span>
   )
 }
 

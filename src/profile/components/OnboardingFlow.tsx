@@ -273,6 +273,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
               <InteractiveWorldMap
                 selectedRegion={selectedRegion}
                 onRegionSelect={handleRegionSelect}
+                regionList="list"
               />
 
               {selectedRegion && (

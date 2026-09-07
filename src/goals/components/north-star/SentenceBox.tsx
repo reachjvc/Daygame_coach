@@ -80,19 +80,39 @@ export function SentenceBox({
         className={className ?? "w-full rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-700 focus:outline-none focus:border-white/30 transition-colors leading-relaxed resize-y"}
       />
       {/* The hint appears while typing and the confirmation after, so the box
-          is never silent about what the key did. */}
-      {(focused || kept) && (
-        <p className="mt-1 text-[10px] text-zinc-600 flex items-center gap-1">
-          {kept && !focused ? (
-            <>
-              <Check className="size-3 text-emerald-400/80" />
-              <span className="text-emerald-300/80">{SENTENCE_KEPT}</span>
-            </>
-          ) : (
-            SENTENCE_HINT
-          )}
-        </p>
-      )}
+          is never silent about what the key did.
+
+          THE LINE IS ALWAYS RESERVED, EVEN WHEN IT SAYS NOTHING.
+
+          It used to be added and removed from the layout, which moved every
+          control below this box up by its height at the exact moment somebody
+          was reaching for one. A browser knows where a click began and where it
+          ended: if the target moves between the two, it fires `click` on the
+          nearest common ancestor instead — so the button gets the mousedown and
+          a container gets the click, and nothing happens.
+
+          Typing your one thing and then clicking a shape did nothing for
+          exactly this reason, and the e2e for the save button had already
+          worked around it by blurring first, which reads as test flake and was
+          not. Reserving the space fixes every box in the flow at once, because
+          they all come through here. */}
+      {/* The margin lives on the reserved box, not on the line inside it: left
+          on the inner paragraph it existed only while the hint did, which is a
+          4px version of the same shift. */}
+      <div className="mt-1 min-h-[15px]" data-testid="sentence-hint-line">
+        {(focused || kept) && (
+          <p className="text-[10px] text-zinc-600 flex items-center gap-1">
+            {kept && !focused ? (
+              <>
+                <Check className="size-3 text-emerald-400/80" />
+                <span className="text-emerald-300/80">{SENTENCE_KEPT}</span>
+              </>
+            ) : (
+              SENTENCE_HINT
+            )}
+          </p>
+        )}
+      </div>
     </>
   )
 }
