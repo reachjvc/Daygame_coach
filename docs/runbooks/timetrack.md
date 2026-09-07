@@ -59,3 +59,17 @@ timer field ready. Verified this way on 2026-09-05 on an emulated Pixel 7.
 
 What is deliberately NOT cached: anything under `/api/`. Time entries come from the sync layer, which knows
 what is queued and what is stale; a cached API answer would be a second, dumber copy of the truth.
+
+## When something breaks
+
+Crashes are recorded in `error_reports`. Two ways to read them:
+
+    npx tsx scripts/list-errors.ts --hours 24
+    curl -H "X-Admin-Key: $ADMIN_SECRET_KEY" https://<host>/api/admin/errors?hours=24
+
+What is in a report: the message, where it was thrown, the page path, the browser, the build, and how many
+times that same fault has happened. What is never in one: query strings, email addresses, long tokens, and
+anything a person typed — stripped on the way in by `errorScrubService`, with tests.
+
+Reports older than 30 days are deleted nightly at 03:20 UTC by `prune_error_reports()`, scheduled through
+pg_cron. To run it by hand: `select public.prune_error_reports();`

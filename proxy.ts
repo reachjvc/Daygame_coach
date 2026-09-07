@@ -54,6 +54,15 @@ export async function proxy(request: NextRequest) {
   // that receives an HTML login page reports a confusing parse error instead of
   // "you are signed out". Defence in depth — every route below also calls
   // requireAuth() itself.
+  // The admin pages are reachable by URL and were never behind the guard. The
+  // data they show is protected by an admin key, so nothing leaked — but the
+  // pages themselves loaded for anyone who guessed the address.
+  if (pathname.startsWith("/admin") && !session) {
+    const redirectUrl = new URL("/auth/login", request.url)
+    redirectUrl.searchParams.set("next", pathname)
+    return NextResponse.redirect(redirectUrl)
+  }
+
   if (pathname.startsWith("/api/timetrack/") && !session) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 })
   }
@@ -85,5 +94,6 @@ export const config = {
     "/qa/:path*",
     "/api/test/:path*",
     "/api/timetrack/:path*",
+    "/admin/:path*",
   ],
 }

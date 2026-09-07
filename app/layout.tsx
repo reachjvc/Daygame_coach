@@ -4,6 +4,8 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { ViewportHeightUpdater } from "@/components/ViewportHeightUpdater"
 import { HistoryBarrierProvider } from "@/src/shared/HistoryBarrierContext"
 import "./globals.css"
+import { ErrorReporting } from "@/src/shared/components/ErrorReporting"
+import { StaleWorkerCleanup } from "@/src/shared/components/StaleWorkerCleanup"
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -63,6 +65,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
+        <ErrorReporting />
+        {/* Development only: a worker left over from a production build on this
+            same address serves stale styles and fonts over the dev server. It
+            used to be cleared only on the two pages that mount the tracker. */}
+        <StaleWorkerCleanup />
         <ViewportHeightUpdater />
         <HistoryBarrierProvider>
           {children}

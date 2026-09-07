@@ -1,4 +1,6 @@
-# Click-by-click guide to the four blockers
+# Click-by-click guide to the remaining blockers
+
+**B3 is already done — see below. B1, B2 and B4 still need you.**
 
 Written for someone who is not a programmer. Every step says what to click and
 what you should see afterwards. If what you see does not match, stop and tell me
@@ -190,31 +192,32 @@ onboarding questions. **That is the first end-to-end proof that signup works.**
 
 ---
 
-# B3 — Apply the security migration
+# B3 — Apply the security migration — **DONE, nothing to do**
 
-**Time:** 2 minutes. **Reversible:** yes, but you would have to ask me for the
-undo statements.
+Applied on 2026-09-04, together with every other outstanding migration. Nothing
+here needs clicking.
 
-This locks the three tables that are currently readable and writable by anyone
-on the internet — including the 32,126 rows of coaching content.
+The three tables that were readable and writable by anyone on the internet —
+including the 32,126 rows of coaching content — are now closed. Two more
+migrations went with it: one that had been failing on a leftover row, and the
+time tracker's own tables.
 
-1. Open `supabase/migrations/20260902_rls_remaining_tables.sql` in your editor.
-2. Select all, copy.
-3. Supabase dashboard → **SQL Editor** → **New query** → paste → **Run**.
-4. **Expected:** "Success. No rows returned."
+The file this step used to point at was renamed on the way in. Three migrations
+had eight-digit names where the tool expects fourteen, so two of them resolved
+to the *same* version and the whole push aborted every time. They are now
+`20260828140000_add_profiles_missing_columns.sql`,
+`20260828140001_profiles_rls_hardening.sql` and
+`20260902140000_rls_remaining_tables.sql`.
 
-### How you know B3 worked
-
-In your terminal, in the project folder:
+### How to check for yourself, any time
 
 ```
 npm run audit:rls
 ```
 
-**Expected:** `OK: no table is left open to the internet.`
-
-It currently says `FAIL: 3 table(s) are open to the internet.` If it still says
-that after running the migration, the SQL did not apply — tell me.
+**Expected, and what it says today:** `OK: no table is left open to the internet.`
+It checks all 63 tables in the live database, so it is also the right command
+after anyone adds a new one.
 
 ---
 

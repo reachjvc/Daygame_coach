@@ -37,6 +37,8 @@ const INTENTIONAL: Record<string, string> = {
   values: "Reference data. Public read is intended; the app reads this table.",
   core_values:
     "RLS on, no policies: no code reads it. Near-duplicate of `values`. Server-only until consolidated.",
+  error_reports:
+    "RLS on, no policies: crash reports, written and read only by the service role through /api/errors and the admin page. The browser must never touch this table.",
   embeddings_test:
     "RLS on, no policies: read only via the service role in embeddingsTestRepo. Retrieval runs server-side.",
   user_xp: "RLS on, no policies: empty, unreferenced, duplicates profiles.xp. Pending a keep-or-drop decision.",

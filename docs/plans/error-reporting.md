@@ -1,6 +1,15 @@
 # Finding out when the app breaks
 
-**Status:** plan, not started. Written 2026-09-05 against the working tree and the live database.
+**Status:** BUILT AND LIVE, 2026-09-06. All seven phases done and verified end to end: a deliberate crash
+reaches the database, is readable from the admin route and the command line, and is deleted after 30 days by a
+scheduled job.
+
+**Proof, not assertion:** `npx tsx scripts/list-errors.ts --hours 1` printed the two crashes forced at
+`/test/crash`. 5 end-to-end tests, 15 scrubbing tests. `npm run audit:rls` still reports nothing open.
+
+**One thing found while building it:** the listeners for uncaught errors were first wired inside the time
+tracker, which meant a crash on any other page was still invisible. They now run once, app-wide, in the root
+layout — verified by forcing an unhandled promise and watching the row land.
 **Subject:** recording crashes in your own database, so a broken screen on somebody's phone reaches you
 instead of dying with them.
 

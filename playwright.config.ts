@@ -39,6 +39,7 @@ export default defineConfig({
         // runs in its own project: it writes to the live database
         /timetrack-sync\.spec\.ts/,
         /timetrack-edge-cases\.spec\.ts/,
+        /error-reporting\.spec\.ts/,
         /smoke\.spec\.ts/,
         /signup-flow\.spec\.ts/,
         /password-reset\.spec\.ts/,
@@ -97,6 +98,15 @@ export default defineConfig({
         /security-auth\.spec\.ts/,
       ],
       use: { ...devices['Desktop Chrome'] },
+    },
+
+    // Crash reporting: proves a real crash reaches the database, and that
+    // nothing private travels with it.
+    {
+      name: 'error-reporting',
+      testMatch: /error-reporting\.spec\.ts/,
+      dependencies: ['setup'],
+      use: { ...devices['Desktop Chrome'], storageState: 'tests/e2e/.auth/user.json' },
     },
 
     // === Time tracker: does it really reach the account? ===
