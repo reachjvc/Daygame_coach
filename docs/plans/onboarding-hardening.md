@@ -1,5 +1,15 @@
 # Onboarding — cross-device hardening
 
+> **For what is still outstanding, read
+> [`onboarding-remaining.md`](./onboarding-remaining.md).** That file is the
+> current state, measured 2026-09-08.
+>
+> This file is the working record of how each fault was found, measured and
+> fixed. Its Parts 1–5 describe a five-step signup wizard that no longer exists;
+> they are kept because the evidence and the reasoning are still worth having,
+> not because they describe the app.
+
+
 **Question asked:** is onboarding fully deployable across all devices and browsers,
 and has it been run through for UX, bugs, and anything critical to be correct?
 
@@ -11,6 +21,70 @@ one screen, and no test outside Desktop Chrome.
 
 Everything below was measured in a real browser today (2026-09-06) unless the
 line says otherwise. What I could not check is in **Blockers**.
+
+---
+
+# PART 0f — THE LEGACY COLUMN AND THE LOGIN ROUTE. 2026-09-08.
+
+## 1. `/api/auth/destination` was never broken
+
+It returned 404 because the dev server had not compiled a route file created
+minutes earlier. Verified against a real session once it had:
+
+| Request | Result |
+|---|---|
+| signed out | `401 Authentication required` |
+| signed in, no `next` | `{"destination":"/dashboard"}` |
+| `?next=/dashboard/settings` | honoured |
+| `?next=//evil.example` | refused, falls back to `/dashboard` |
+| `?next=https://evil.example` | refused, falls back to `/dashboard` |
+
+No questionnaire diversion on any of them.
+
+## 2. `profiles.onboarding_completed` is removed from the code
+
+The flag that used to gate five features now gates none, and nothing writes it.
+Every reference is gone from `src/`, `app/` and `tests/`: the column is out of
+`ProfileRow`, `ProfileUpdate`, `UserProfile`, `DashboardProfileData` and
+`OnboardingProfileColumns`, out of the dashboard mapping that copied it without
+ever reading it, and out of the integration schema and its seed inserts.
+
+Migration written: `supabase/migrations/20260908160000_drop_onboarding_completed.sql`.
+It is `drop column if exists`, so it is safe to run twice.
+
+### What was checked before writing it, against the live database
+
+Not against the migration files — the trigger that creates a profile row was
+never in them, so reading them would have proved nothing. `supabase db dump`
+gives the schema the database actually has:
+
+- **`handle_new_user` inserts `(id, email, full_name)` only.** If it had named
+  the column, dropping it would have broken every new signup. It does not.
+- **The column appears exactly twice in the whole live schema:** its own
+  definition, and `GRANT UPDATE(onboarding_completed) TO authenticated`, which
+  disappears with the column. No view, function, policy, constraint or index
+  depends on it.
+- **No information is lost.** All four real accounts have the flag `true` and
+  all four carry the answers, so it is exactly
+  `preferred_region IS NOT NULL AND archetype IS NOT NULL AND dating_foreigners IS NOT NULL`.
+
+### Verified in both states
+
+The code has to be correct whether or not the migration has run yet, because
+there is a window between deploying and applying it:
+
+- **Column present** (the live database today): dashboard, `/preferences` and
+  saving the gate all work in the browser; the save wrote the six expected
+  columns.
+- **Column absent**: the integration suite rebuilds Postgres from
+  `tests/integration/schema.sql`, which no longer has it. 251 tests pass.
+
+### Still to apply
+
+`supabase db push` is refused by this environment as an irreversible schema
+change on a live database, so the migration is written but **not applied**.
+`supabase migration list` confirms it is the only pending one — every other
+migration, including the two from the concurrent workout work, is already in.
 
 ---
 
@@ -204,7 +278,10 @@ recommendation.
 
 ---
 
-# PART 0d — FAILSAFES BUILT. 2026-09-08.
+# THE FAILSAFES — BUILT 2026-09-08.
+
+(Not lettered: this section is about the test suite, not about onboarding. It
+shared the name PART 0d with the section below it until 2026-09-08.)
 
 Four mechanisms, built after an audit found the suite was green because it only
 looked where someone had typed an address by hand, and when it got there only
@@ -440,7 +517,7 @@ dashboard shows 0". That was wrong — it has **0 XP**. I misread the widget's
 "0 / 100 XP to Level 8", which means "0 out of the 100 you need". The defect is
 real and now better evidenced, but that sentence was not.
 
-### NEW — `anon` and `authenticated` can TRUNCATE 64 tables. (Security)
+### NEW — `anon` and `authenticated` can TRUNCATE 63 tables. (Security)
 
 ```
 has_table_privilege('authenticated','public.profiles','TRUNCATE') = true
@@ -460,7 +537,7 @@ pgvector's built-in casts). So nothing in the current API surface can reach it.
 **It should still be closed.** It survives only because PostgREST happens not to
 offer the verb — that is luck, not a boundary. Any future RPC, any direct
 connection with the anon key, or a change in Supabase's surface exposes "anyone
-on the internet wipes all 64 tables". The fix is two lines:
+on the internet wipes all 63 tables". The fix is two lines:
 `revoke truncate on all tables in schema public from anon, authenticated;` and
 the same for `references`/`trigger`. These are Supabase's default blanket grants;
 the 2026-08-28 hardening migration revoked insert/update/delete and left these.

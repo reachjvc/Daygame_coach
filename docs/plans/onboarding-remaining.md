@@ -29,23 +29,45 @@ Checked in a browser today, not inferred from the code:
 
 ## Needs a decision from you
 
-### 1. Two migrations are written but NOT applied
+### 1. Three migrations are written but NOT applied
 
-Both are in `supabase/migrations/`. I did not apply either — one touches
-permissions, and this checkout is shared with another agent, so a push could
-ship their unfinished work too.
+**`20260101000000_create_profiles.sql`** — the `profiles` table has never had a
+migration; it was made by hand in the dashboard, so nothing in the repo can
+rebuild the app's core table. A staging environment or a new machine has no
+recipe for it.
 
-- **`20260101000000_create_profiles.sql`** — the `profiles` table has never had a
-  migration; it was made by hand in the dashboard. Until this is applied, a new
-  staging environment or a new machine cannot rebuild the app's core table. It
-  is written from the live database and every statement is guarded, so running
-  it against production changes nothing.
-- **`20260908120000_revoke_truncate_from_clients.sql`** — **security.** Signed-in
-  users, and anonymous visitors, can currently wipe **64 tables**. `TRUNCATE`
-  empties a whole table and is *not* filtered by the per-user rules that protect
-  everything else. **It is not reachable today** — I checked; the API offers no
-  such command — but it is safe by luck rather than by design. Left over from a
-  Supabase default.
+> **The first draft of this file was wrong in two ways, and both were caught by
+> checking it against the live database rather than re-reading it.** It could
+> not have run at all: it removed and recreated the signup trigger, and that
+> requires owning `auth.users`, which these migrations do not. And if it had
+> run, it would have silently removed the ability to save three gym settings —
+> it reset the per-column edit permissions to a list written before those
+> columns existed. Both are fixed: the trigger is now only created if absent,
+> and the file no longer touches permissions at all (an earlier migration owns
+> that rule).
+
+**`20260908120000_revoke_truncate_from_clients.sql`** — **security.** Signed-in
+users *and* anonymous visitors can currently empty **63 tables** outright, run
+maintenance that locks every reader out, and rewind a counter so it hands out
+ids that already exist. None of it is filtered by the per-user rule that
+protects everything else, because none of it operates on rows.
+
+**It is not reachable today** — I checked the interface and all 134 functions
+those roles can call. It is safe because of what the API happens not to offer,
+not because anything stops it.
+
+*Not covered by that file, and it cannot be:* three `storage` tables have the
+same hole. They are owned by a Supabase-internal account, so a fix from here
+would silently do nothing. That one needs the dashboard or Supabase support.
+
+**`20260908160000_drop_onboarding_completed.sql`** — not mine; written by the
+other agent. It permanently deletes a column. It is newer than everything
+applied, so **any `supabase db push` will include it by default.** Worth a look
+before you run one.
+
+**Ordering note:** `create_profiles` is deliberately dated before every applied
+migration, so `supabase db push` will refuse it as out-of-order unless you pass
+`--include-all`.
 
 ### 2. Email goes out through a personal Gmail account
 
