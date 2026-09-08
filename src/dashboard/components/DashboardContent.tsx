@@ -60,21 +60,12 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
         </p>
       </div>
 
-      {/* A signed-up user has real answers from onboarding, so show their own
-          level rather than the placeholder -- it is their data, and telling
-          them they are Level 1 when the profile says otherwise is a lie. */}
-      {viewer === "visitor" ? (
-        <div className="mb-12 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/80 to-transparent z-10 flex items-center justify-center">
-            <div className="bg-card border border-border rounded-lg px-4 py-2 shadow-lg">
-              <span className="text-sm text-muted-foreground">Your progress will appear here</span>
-            </div>
-          </div>
-          <div className="opacity-40 pointer-events-none">
-            <LevelProgressBar />
-          </div>
-        </div>
-      ) : profileData ? (
+      {/* One card for everyone. The visitor version used to be dimmed to 40% under
+          a "Your progress will appear here" lock, which is the idiom this page
+          uses for content that signing up unlocks. Signing up unlocks nothing
+          here -- the card carries no per-user value any more, so the lock was
+          promising a member something members do not get either. */}
+      {viewer === "visitor" || profileData ? (
         <div className="mb-12">
           <LevelProgressBar />
         </div>
