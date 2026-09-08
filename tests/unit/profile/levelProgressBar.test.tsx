@@ -57,10 +57,13 @@ describe("LevelProgressBar", () => {
     expect(container.querySelectorAll("svg").length).toBe(2)
   })
 
-  it("says plainly that the feature is not built rather than implying zero", () => {
+  it("carries the COMING SOON badge, which is the card's only explanation", () => {
     render(<LevelProgressBar />)
 
+    // The explanatory sentences under the title and the meter were cut on
+    // 2026-09-08 in favour of a minimal card, so the badge is load-bearing: it
+    // is the single thing telling a customer the empty meter is intentional.
+    // If it ever disappears, the card says nothing at all.
     expect(screen.getByText(/coming soon/i)).toBeInTheDocument()
-    expect(screen.getByText(/nothing tracks this yet/i)).toBeInTheDocument()
   })
 })

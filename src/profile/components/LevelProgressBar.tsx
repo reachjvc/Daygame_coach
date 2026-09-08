@@ -29,6 +29,19 @@ import { Crown, Gauge } from "lucide-react"
  * A count that cannot be computed is a third state, never 0 -- hence the em dash
  * beside the gauge.
  *
+ * THE CARD CARRIES NO EXPLANATORY COPY, AND THAT IS A DECISION
+ *
+ * Earlier drafts said "Sessions, approaches and practice will feed a level" under
+ * the title and "Nothing tracks this yet" under the meter. Both were cut on
+ * 2026-09-08: the first was written from the inside of the codebase and made no
+ * sense to a customer, and the user chose the minimal card over a rewritten one.
+ * The COMING SOON badge is the whole explanation.
+ *
+ * The known cost, accepted deliberately: nothing on the card tells a beta tester
+ * why the meter is empty or why the gauge reads "--", so an empty bar can be
+ * reported as a bug. If those reports start arriving, the fix is a line of copy
+ * here, not a number.
+ *
  * When progression is built, the places it has to land are this card, the Lair's
  * LevelProgressWidget, the Settings "Your Progress" card, the dashboard
  * preferences row, and onboarding step 4. Guarded by
@@ -52,9 +65,6 @@ export function LevelProgressBar() {
                 Coming soon
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Sessions, approaches and practice will feed a level that moves on its own
-            </p>
           </div>
         </div>
 
@@ -72,10 +82,6 @@ export function LevelProgressBar() {
       {/* Deliberately empty: no fill element, dashed rather than solid, so it
           cannot be misread as a real measurement sitting at zero. */}
       <div className="h-3 rounded-full border border-dashed border-border bg-background/60" />
-
-      <p className="text-xs text-muted-foreground text-center mt-2">
-        Nothing tracks this yet, so there is no number worth showing
-      </p>
     </Card>
   )
 }
