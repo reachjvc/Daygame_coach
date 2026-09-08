@@ -40,7 +40,7 @@ export default defineConfig({
         /timetrack-sync\.spec\.ts/,
         /timetrack-edge-cases\.spec\.ts/,
         /error-reporting\.spec\.ts/,
-        /smoke\.spec\.ts/,
+        /(?:^|\/)smoke\.spec\.ts$/,
         /signup-flow\.spec\.ts/,
         /password-reset\.spec\.ts/,
         /security-auth\.spec\.ts/,
@@ -66,6 +66,11 @@ export default defineConfig({
         /cross-browser\//,
         // Derived per-route sweeps run in their own desktop/phone/WebKit projects
         /sweep\//,
+        // Prototype smoke specs for /test/goalsv4. They are written to run
+        // SIGNED OUT and fail with a session, so they belong to `no-auth`,
+        // which lists them explicitly. Before the smoke pattern was anchored
+        // they were swept up by it into five browser projects at once.
+        /variant-[a-z0-9-]*smoke\.spec\.ts/,
       ],
       dependencies: ['setup'],
       use: {
@@ -92,7 +97,11 @@ export default defineConfig({
     {
       name: 'no-auth',
       testMatch: [
-        /smoke\.spec\.ts/,
+        /(?:^|\/)smoke\.spec\.ts$/,
+        // The /test/goalsv4 prototype smoke specs: signed-out, and this is the
+        // only project that runs them. Named rather than pattern-matched so
+        // they cannot silently spread across the browser projects again.
+        /variant-[a-z0-9-]*smoke\.spec\.ts/,
         /signup-flow\.spec\.ts/,
         // Password reset is an unauthenticated flow: half of it asserts what a
         // logged-OUT visitor sees, so it must not inherit the signed-in state.
@@ -213,24 +222,30 @@ export default defineConfig({
     },
 
     // === Cross-browser smoke (unauthenticated only) ===
+    // The pattern is anchored. Unanchored, /smoke\.spec\.ts/ also matched
+    // variant-a-v4-smoke, variant-b-smoke and variant-d-smoke -- three
+    // prototype specs for /test/goalsv4 -- so each of these four projects ran
+    // 27 tests of which only 5 were the real smoke test, and the same loose
+    // pattern in the chromium ignore list kept the prototypes out of the one
+    // project that should have run them. They now run once, on chromium.
     {
       name: 'smoke-firefox',
-      testMatch: /smoke\.spec\.ts/,
+      testMatch: /(?:^|\/)smoke\.spec\.ts$/,
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'smoke-webkit',
-      testMatch: /smoke\.spec\.ts/,
+      testMatch: /(?:^|\/)smoke\.spec\.ts$/,
       use: { ...devices['Desktop Safari'] },
     },
     {
       name: 'smoke-iphone',
-      testMatch: /smoke\.spec\.ts/,
+      testMatch: /(?:^|\/)smoke\.spec\.ts$/,
       use: { ...devices['iPhone 14'] },
     },
     {
       name: 'smoke-android',
-      testMatch: /smoke\.spec\.ts/,
+      testMatch: /(?:^|\/)smoke\.spec\.ts$/,
       use: { ...devices['Pixel 7'] },
     },
 
