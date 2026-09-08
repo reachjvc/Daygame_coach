@@ -8,6 +8,7 @@ import {
   liftHistory,
   liftsWithHistory,
   workoutsToCsv,
+  detectPersonalRecords,
 } from "@/src/health/healthService"
 import type { WorkoutLogRow, WorkoutLogWithSets, WorkoutSetRow } from "@/src/health/types"
 
@@ -332,5 +333,86 @@ describe("workoutsToCsv", () => {
 
   it("has a header even with nothing to export", () => {
     expect(workoutsToCsv([]).split("\n")).toEqual(["date,session_type,duration_min,exercise,set,reps,weight_kg,set_kind"])
+  })
+})
+
+/**
+ * PERSONAL RECORDS — one per lift, per workout.
+ *
+ * A workout is three to five sets of the same lift at the same weight, so the
+ * naive "is this better than the history" check fired on every one of them and
+ * the summary said "New best: Squat 100 kg × 5" three times in a row. It read
+ * as a bug to anybody who has ever trained, because it is one.
+ */
+describe("detectPersonalRecords", () => {
+  const history = [{ ...set("Squat", 95, 5), logged_at: "2026-09-01T10:00:00Z" }]
+
+  it("announces one record for three sets across the old best", () => {
+    const today = [
+      set("Squat", 100, 5, { set_number: 1 }),
+      set("Squat", 100, 5, { set_number: 2 }),
+      set("Squat", 100, 5, { set_number: 3 }),
+    ]
+    const prs = detectPersonalRecords(history, today)
+    expect(prs).toHaveLength(1)
+    expect(prs[0]).toMatchObject({ exercise: "Squat", weight_kg: 100, reps: 5 })
+  })
+
+  it("keeps the best of the session, not the first one over the line", () => {
+    // Worked up: 97.5 beats the history, then 100 beats that, then 102.5×3.
+    // The record is the heaviest, and it is the only line shown.
+    const prs = detectPersonalRecords(history, [
+      set("Squat", 97.5, 5, { set_number: 1 }),
+      set("Squat", 100, 5, { set_number: 2 }),
+      set("Squat", 102.5, 3, { set_number: 3 }),
+    ])
+    expect(prs).toHaveLength(1)
+    expect(prs[0]).toMatchObject({ weight_kg: 102.5, reps: 3 })
+  })
+
+  it("still reports each lift separately", () => {
+    const prs = detectPersonalRecords(history, [
+      set("Squat", 100, 5, { set_number: 1 }),
+      set("Squat", 100, 5, { set_number: 2 }),
+      set("Bench Press", 60, 5, { set_number: 1 }),
+    ])
+    expect(prs.map((p) => p.exercise).sort()).toEqual(["Bench Press", "Squat"])
+  })
+
+  it("does not call an extra rep at the same weight a second record", () => {
+    // 100×5 then 100×6: the second is genuinely better, but it replaces the
+    // first rather than adding a near-identical line beside it.
+    const prs = detectPersonalRecords(history, [
+      set("Squat", 100, 5, { set_number: 1 }),
+      set("Squat", 100, 6, { set_number: 2 }),
+    ])
+    expect(prs).toHaveLength(1)
+    expect(prs[0]!.reps).toBe(6)
+  })
+
+  it("ignores warm-ups and drop sets", () => {
+    const prs = detectPersonalRecords(history, [
+      set("Squat", 140, 1, { set_kind: "warmup" }),
+      set("Squat", 140, 1, { set_kind: "drop" }),
+    ])
+    expect(prs).toEqual([])
+  })
+
+  it("says nothing when the session did not beat the history", () => {
+    expect(detectPersonalRecords(history, [set("Squat", 90, 5)])).toEqual([])
+  })
+
+  /**
+   * THE DAY IS THE LIFTER'S, NOT THE SERVER'S.
+   *
+   * `detectPersonalRecords` runs in a route handler on a server whose process
+   * clock is UTC, and it stamped records with that clock's calendar day. A
+   * Berlin lifter finishing at 00:30 on Tuesday had the record filed on Monday;
+   * a Los Angeles lifter finishing Monday evening had it filed on Tuesday. The
+   * caller knows the timezone and the workout's own start, so it passes the day.
+   */
+  it("files a record on the day it is given, not on the server's day", () => {
+    const prs = detectPersonalRecords(history, [set("Squat", 100, 5)], "2026-03-01")
+    expect(prs[0]!.date).toBe("2026-03-01")
   })
 })

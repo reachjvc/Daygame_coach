@@ -225,25 +225,60 @@ export function getMetricValue(
  * Ids that aren't metrics (goal-derived, unknown) are simply absent from the
  * result; the caller decides what that means rather than getting a 0 back.
  */
+/**
+ * Every metric that was asked for, plus the ones that could not be read.
+ *
+ * THREE STATES, NOT TWO. A number; "nothing logged here yet" (null); and "we
+ * could not work this out" (`failed`). The last two used to be the same thing,
+ * so a broken source came out the far end as a tile reading "Nothing logged for
+ * this yet" — a sentence about the person's training that was not true.
+ */
+export interface MetricResolution {
+  values: Record<string, number | null>
+  /** Metric id → why it could not be read, in words a person can act on. */
+  failed: Record<string, string>
+}
+
 export async function resolveMetricValues(
   userId: string,
   metricIds: string[],
   timezone: string
-): Promise<Record<string, number | null>> {
+): Promise<MetricResolution> {
   const wanted = new Set(metricIds)
   const out: Record<string, number | null> = {}
-  if (wanted.size === 0) return out
+  const failed: Record<string, string> = {}
+  if (wanted.size === 0) return { values: out, failed }
 
   const needs = (m: string) => wanted.has(m)
   const needsAny = (list: readonly string[]) => list.some((m) => wanted.has(m))
 
   const statsIds = [...wanted].filter((id) => STATS_METRIC_IDS.has(id))
 
+  /**
+   * ONE BROKEN SOURCE MUST NOT TAKE THE REST DOWN WITH IT.
+   *
+   * These ran inside a bare `Promise.all`, so a single failing query rejected
+   * the whole call — and every caller of this either swallowed that or let it
+   * bubble, which meant one broken metric froze the progress of EVERY linked
+   * goal at once and said nothing. Each source now fails on its own, and says
+   * which readings it took down.
+   *
+   * A metric that already has a value is not marked failed: where a group only
+   * partly failed, the readings that did arrive are still good.
+   */
+  const markFailed = (ids: readonly string[], why: string) => (e: unknown) => {
+    console.error(`metric source failed (${why}):`, e)
+    for (const id of ids) if (wanted.has(id) && !(id in out)) failed[id] = why
+    return null
+  }
+
   // Each of these is a network round-trip to Postgres, so they run together
   // rather than one after another. Sequentially this endpoint cost ~1s; the
   // slowest single source now sets the floor instead of their sum.
   const [stats] = await Promise.all([
-    statsIds.length > 0 ? loadStats(userId, timezone) : Promise.resolve(null),
+    statsIds.length > 0
+      ? loadStats(userId, timezone).catch(markFailed(statsIds, "your tracking totals could not be read"))
+      : Promise.resolve(null),
 
     needsAny(APPROACH_METRICS)
       ? (async () => {
@@ -270,21 +305,26 @@ export async function resolveMetricValues(
                 })
               : null,
           ])
-        })()
+        })().catch(markFailed(APPROACH_METRICS, "your approach history could not be read"))
       : null,
 
     needsAny(SCENARIO_METRICS)
-      ? getScenarioStats(userId).then((s) => {
-          if (needs("scenario_sessions_cumulative")) out.scenario_sessions_cumulative = s.totalSessions
-          if (needs("scenario_types_cumulative")) out.scenario_types_cumulative = s.uniqueTypes
-          if (needs("scenario_high_scores_cumulative")) out.scenario_high_scores_cumulative = s.highScoreCount
-        })
+      ? getScenarioStats(userId)
+          .then((s) => {
+            if (needs("scenario_sessions_cumulative")) out.scenario_sessions_cumulative = s.totalSessions
+            if (needs("scenario_types_cumulative")) out.scenario_types_cumulative = s.uniqueTypes
+            if (needs("scenario_high_scores_cumulative")) out.scenario_high_scores_cumulative = s.highScoreCount
+          })
+          .catch(markFailed(SCENARIO_METRICS, "your practice history could not be read"))
       : null,
 
     needsAny(HEALTH_METRICS)
-      ? resolveHealthMetrics(userId, needs, timezone).then((health) => {
-          Object.assign(out, health)
-        })
+      ? resolveHealthMetrics(userId, needs, timezone)
+          .then((health) => {
+            Object.assign(out, health.values)
+            Object.assign(failed, health.failed)
+          })
+          .catch(markFailed(HEALTH_METRICS, "your training history could not be read"))
       : null,
   ])
 
@@ -295,7 +335,7 @@ export async function resolveMetricValues(
     }
   }
 
-  return out
+  return { values: out, failed }
 }
 
 /**
@@ -345,7 +385,7 @@ async function resolveHealthMetrics(
   userId: string,
   needs: (m: string) => boolean,
   timezone: string
-): Promise<Record<string, number | null>> {
+): Promise<{ values: Record<string, number | null>; failed: Record<string, string> }> {
   const hr = await import("./healthRepo")
 
   const jobs: [string, Promise<unknown> | null][] = [
@@ -379,11 +419,28 @@ async function resolveHealthMetrics(
 
   const settled = await Promise.allSettled(jobs.map(([, p]) => p ?? Promise.resolve(null)))
   const out: Record<string, number | null> = {}
+  const failed: Record<string, string> = {}
 
   settled.forEach((r, i) => {
     const [id, requested] = jobs[i]
     if (!requested) return
-    if (r.status !== "fulfilled" || r.value === null || r.value === undefined) {
+    /**
+     * A QUERY THAT THREW IS NOT AN EMPTY WEEK.
+     *
+     * `allSettled` was used so one bad source could not take the others down —
+     * right instinct, wrong conclusion: a rejection was then folded into the
+     * same `null` as "nothing logged", so the two became indistinguishable and
+     * the failure vanished. That is exactly how the estimated one-rep maxes
+     * broke on 2026-09-07: the migration dropped the column they read, both
+     * queries threw on every call, and every screen said "nothing logged yet"
+     * to people who had been training all week.
+     */
+    if (r.status === "rejected") {
+      console.error(`metric "${id}" could not be read:`, r.reason)
+      failed[id] = "your training history could not be read"
+      return
+    }
+    if (r.value === null || r.value === undefined) {
       out[id] = null
       return
     }
@@ -399,5 +456,5 @@ async function resolveHealthMetrics(
     out[id] = null
   })
 
-  return out
+  return { values: out, failed }
 }

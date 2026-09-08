@@ -4,8 +4,12 @@
 
 | Phase | State |
 |---|---|
-| **0 — the numbers stop lying** | **DONE 2026-09-07.** See the execution log at the end. |
-| 1–8 | not started |
+| **0 — the numbers stop lying** | **DONE 2026-09-07.** |
+| **1 — one record per workout** | **DONE 2026-09-07.** |
+| 2–8 | not started |
+
+See the execution log at the end for what each phase changed and how it was
+verified.
 
 
 **How it was made.** The whole training slice read in full; every training screen
@@ -1896,3 +1900,417 @@ the data changed:**
 3. The plan put the "holds and moves next session" message in as a patch. The
    real fix is the exact-weight/loadable-prescription split above, which
    removes the class rather than reporting it.
+
+
+## Phase 1 — DONE 2026-09-07
+
+**Suite:** 4,466 unit tests and 238 integration tests passing (integration is a
+separate config — `npm test` excludes it, despite what `CLAUDE.md` says; both
+were run). Type errors 105, none new.
+
+**Migration applied:** `20260907100000_one_workout_record.sql`, after the
+pending list was re-checked and held only this file.
+
+**It failed twice before it applied, and the failures were the point.** Both
+times the whole migration rolled back, so the database was never left half
+changed:
+
+1. The backfill matched a stored set to its program lift on the exercise NAME
+   — and the session JSON has no name in it, only an id. The condition read
+   `name = name`, so every set matched every entry and all eleven lifts in a
+   workout were stamped with whichever id came first. **The unique index caught
+   it**, which is the argument for putting the index in the same migration as
+   the backfill rather than a later one. Replaced with an explicit
+   name-to-id map, checked against the data first, plus a guard that raises if
+   any set on a program workout is left unmatched.
+2. Postgres will not let an UPDATE target be referenced from a JOIN condition.
+   Moved to the WHERE clause.
+
+**Every migrated row read back in full**, as blocker 3 promised:
+
+| | |
+|---|---|
+| Workouts | 2, both linked to their program with day, cycle and week |
+| Sets | 38, every one stamped with its program's lift id |
+| Sessions left unmatched | 0 |
+| Sessions that would have lost their sets | 0 |
+| `program_session_logs` | dropped |
+
+**Proved end to end against the real database** (throwaway spec, since deleted).
+Enrolled, logged a session with one lift skipped, then edited and deleted it:
+
+- **One record.** One session produced exactly one workout row, where it used
+  to produce two rows in two tables that nothing joined.
+- **The real duration.** 63 minutes at effort 4, as entered — not the invented
+  "45 minutes at intensity 3" that every session used to be recorded as.
+- **Skipping holds.** The skipped bench held; the other two lifts advanced.
+- **The engine reads the same rows.** Three entries derived from the stored
+  sets, the skip preserved.
+- **Editing actually edits.** The correction applied (5 reps → 8). The same
+  request returned 200 and changed nothing on 2026-09-06, because the table it
+  wrote to had no update permission.
+- **Deleting removes it everywhere.** Dashboard count and engine history both
+  went to zero. A delete used to leave a ghost in every count, chart and export.
+
+**What changed.** `program_session_logs` is gone. `workout_logs` carries the
+program context, the three lifecycle states (written up after the fact /
+running / finished), `adjustments` for what changed mid-workout, and a
+`client_key` so a retry cannot log the same session twice. `workout_sets`
+carries the program's lift id, a `library_id` for identity across programs,
+`set_kind` (which replaced `is_warmup` — a boolean could not tell an all-out
+top set from a back-off, and judging "the last set logged" as the AMRAP is what
+made a back-off single read as a missed top set), `prescribed_index`,
+`completed_at`, `rpe` and `side`. Zero reps is now a legal answer, which is
+what made a cleared box crash the save after the weights had already moved.
+
+**Constraints, not conventions.** Twenty new integration tests in
+`tests/integration/db/workoutSchema.integration.test.ts` prove the database
+itself refuses: a workout that is both running and finished; a running workout
+claiming a duration it cannot know; a second workout started while one is
+running; a retry with the same browser key; a workout ending before it started;
+a live workout dated to a different day from the one it started; a workout
+attached to somebody else's program (a trigger, because a row policy sees the
+row you wrote and never the row you point at); a set slot written twice. And
+**erasing a program now keeps the workouts**, detached, with their day and
+cycle intact — the sibling test that used to prove the opposite (a cascade that
+destroyed a year of training) now proves the new guarantee and says why it
+changed.
+
+**One helper, one rule:** `finishedWorkouts` wraps all sixteen reads of the
+workouts table, because a workout in progress is a row in that table and every
+existing counter, streak, heatmap, personal record and export would otherwise
+count it the moment somebody pressed Start.
+
+**Also fixed while here:** two shipped migrations had never reached the
+integration schema (`high_quality_approaches_weekly` added, `percentage` and
+`streak` tracking types removed), so the test database had silently drifted
+from production. Both corrected.
+
+**Correction to the plan:** it said the backfill map could be written as a
+`CASE` from the program ids. It could not be derived from the session JSON at
+all, because the JSON does not carry names — the map has to be explicit and
+verified against the data, which is what it now is.
+
+## Phase 2 — DONE 2026-09-07
+
+**Suite:** 4,474 unit tests, 238 integration tests and 14 browser tests passing.
+Type errors 105, none new.
+
+**What shipped.** The form is gone. A workout is now a screen you stand in front
+of for an hour: one row per set reading `20 kg × 5`, a ✓ that writes that set the
+moment you tap it, a rest clock that starts itself at the bottom of the screen
+where your thumb already is, and what you lifted last time sitting under the
+boxes so tapping it copies it in. The old orange "I did all of this — save it"
+button, the thing the request called out by name, no longer exists.
+
+**Five defects found by attacking it, not by writing it.** Each is fixed, and
+each has a test that fails without the fix.
+
+1. **The summary was destroyed by the thing that produced it.** Saving clears
+   the live workout, and the screen checked "no workout → say it is finished"
+   before it rendered the sheet. So the reward for an hour — the minutes, the
+   volume, the new best, what the program will ask for next time — was replaced
+   in the same frame it arrived. Nobody would ever have seen it.
+2. **A set could be lost by ending the workout normally.** Finishing was blocked
+   only while a write had already FAILED. A write still on the wire counted as
+   saved, so tapping the last ✓ and going straight to Finish let the finish
+   request overtake the set request. The summary said nothing was lifted, and
+   worse, the progression engine judged the lift as missed and held the weight
+   back for a set that had in fact been done. Tapping quickly is how everybody
+   ends a workout; this was not an edge case. In-flight writes are now counted,
+   the rule lives in the hook rather than in whichever screen calls it, and the
+   button says "Saving your last set…" while it waits.
+3. **A new best was announced once per set.** Three sets of five at a new weight
+   said "New best" three times, for the same lift, on the same numbers. The
+   running best was built from the history and then never raised as the session
+   was read. Now the best set of the session is the record, and it is one line.
+4. **"Missed reps (1/3)" was wrong twice in four words.** It was printed for a
+   session where somebody did one clean set of five and then had to leave — they
+   missed no reps at all, the sets ran out. And the "(1/3)", meant as "the first
+   of three misses before the weight drops", reads as one rep out of three. The
+   judge now returns WHAT fell short (sets, reps, or both) and the line says it
+   in words: "Only 1 of 5 sets → same weight next time. 2 more like this and the
+   weight comes down."
+5. **Two things a phone hid.** The set row read `20 kg 5` with nothing saying the
+   5 was reps; the × is back. And the rest bar's caption was squeezed into about
+   sixty pixels between the progress bar and the −30s/+30s buttons, so it
+   rendered as "resting — 3:00 is…" — the half cut off being the half that says
+   the number is ours and not the program author's. It now has the full width.
+
+**Also fixed:** the elapsed-time clock started its interval inside a `useMemo`,
+which returns a value rather than a cleanup, so it leaked an interval per mount
+and cleared none. And the per-set "not saved yet" indicator existed but was
+never passed a value, so a failed write named no set; it is now driven by the
+optimistic id the row still carries until the server confirms it.
+
+**Verified in a browser at 390 × 844**, not inferred from routes:
+
+| | |
+|---|---|
+| First set and its ✓ without scrolling | yes |
+| Sideways scroll anywhere on the screen | none |
+| A ticked set after a reload | still ticked |
+| Rest clock after 10 s in a background tab | correct to the second |
+| Summary after saving | shown, and stays |
+| Personal best in the summary | named once, `Squat 185 kg × 5` |
+
+**Coverage kept, not thrown away.** The two throwaway specs became
+`tests/e2e/programs-live-workout.spec.ts`, the first permanent browser test this
+slice has ever had: five tests covering the set-by-set flow, the summary, the
+backgrounded rest clock, and the API rules (a retried start returns the same
+workout, a second workout is refused, re-ticking corrects rather than duplicates,
+finishing twice is refused). The file runs serially because the suite is
+`fullyParallel` and these share one account — in parallel they delete each
+other's workout and fail for reasons that have nothing to do with the code.
+
+**Correction to the plan:** the acceptance criterion "the finish sheet names the
+PR when one was set" cannot be tested by logging the prescribed weight, because
+the shared test account keeps history between runs and 20 kg had been lifted
+before. The test now types a weight beyond any history, which also pins a second
+rule worth pinning: the number saved is the number typed, not one the app
+rounded to a plate on the way past.
+
+## Phase 2 — SECOND PASS, 2026-09-07: twelve more defects, all fixed
+
+The first pass was written; this one was an adversarial read of the same code by
+somebody told to break it. It found twelve real faults, three of them capable of
+losing or corrupting a lifter's data. This is why the failure list ships with the
+work rather than after it.
+
+**The three that lost or corrupted data.**
+
+1. **Everything a pounds user did was rewritten into kilograms.** The database
+   stores kilograms; the live screen was handed that raw number and printed it
+   beside a label reading "lb". A 135 lb bench came back on screen as "61.23 lb",
+   and tapping it again saved 61 lb. At the end the program compared 61 to 135,
+   decided the lifter had gone light, and stalled the weight. The summary was
+   worse: "kg lifted" and "185 kg × 5" hard-coded on a screen otherwise entirely
+   in pounds. The live workout now carries its own unit, every set carries the
+   number the lifter typed alongside the kilograms used for totals, and nothing
+   on screen guesses.
+2. **A set could be erased by the retry that was meant to save it.** The offline
+   queue was copied, sent over several seconds of bad signal, and then written
+   back over storage — so anything ticked during those seconds was wiped. The ✓
+   stayed green, the "not saved yet" count went to zero, Finish unlocked, and the
+   set never reached the server. Flaky gym wifi is exactly when a flush runs. The
+   flush now removes only what it actually sent.
+3. **"Don't count it" did nothing.** The button is offered precisely for a lift
+   that was started and cut short, and the skip was only applied to a lift with
+   no sets at all. Two of three squat sets, tapped "Don't count it": the warning
+   disappeared, the person believed it was handled, and the engine still scored a
+   miss and stepped towards a ten per cent deload off a weight that was never
+   failed. That is the exact bug the engine's own comment was written to kill,
+   reintroduced by the screen above it. The sets now stay on the record — they
+   were done, and they count towards volume and records — and only the judgement
+   is withheld.
+
+**The rest.**
+
+4. **The retry protection for Start had never once worked.** The browser key was
+   minted fresh inside each request, so no two attempts ever matched and the
+   column, its unique index and every comment about idempotency were inert. Lose
+   the reply on a first tap and the second was refused as "a workout is already
+   in progress" — for the workout just started, reachable only by a manual
+   reload. The key is now kept in the browser until a start succeeds.
+5. **Undo did nothing on a set that had not reached the server yet.** It sent the
+   placeholder id to a route expecting a real one, the database refused the cast,
+   and the failure was swallowed — so offline, the ✓ would not come off, tap
+   after tap, with no message, and the queued write later saved the very set
+   being undone. Undo is now local for a set the server has never seen.
+6. **A set the server permanently refused stayed on screen as done.** Now it is
+   removed and named.
+7. **A slow reply could un-tick a set.** Every response replaced the whole
+   workout, so a delayed one carrying an older snapshot erased a newer tick. The
+   finish sheet is computed from that copy, so it then reported a completed lift
+   as short. Responses older than one already applied are ignored.
+8. **Errors were rendered only inside the finish sheet.** "One set could not be
+   saved and has been dropped" — a permanently lost set — was announced to
+   nobody until an hour later, if at all. Errors now appear on the workout
+   screen, and the three calls that could reject offline no longer throw into
+   nothing.
+9. **The queue was only ever retried on page load or an `online` event.** A
+   captive-portal gym wifi never takes the browser offline, so a single failure
+   left Finish disabled for the rest of the session with a page reload the only
+   escape. It now also retries on a timer and when the tab comes back.
+10. **A workout left open could not be finished at all.** Started Tuesday,
+    closed Thursday, the duration came out at 2,220 minutes and the server
+    refused it with "Could not finish that workout" — and since only one workout
+    may be open, that left the person unable to start any workout, with nothing
+    saying the end time was the way out. The sheet now says so before saving.
+11. **Records were dated by the server's clock.** A Berlin lifter finishing at
+    00:30 Tuesday had the record filed on Monday. The lifter's timezone and the
+    workout's own start now decide the day. (Nothing renders this value yet, so
+    it was a wrong number nobody saw — it would have become visible the moment
+    anything showed it.)
+12. **The personal-best baseline read every workout ever, unordered.** Past the
+    hosted row cap that becomes an arbitrary slice of history, and the app would
+    announce a "New best" for a lift beaten years earlier. Bounded to the most
+    recent 400 workouts.
+
+**Also corrected:** the elapsed clock started its interval inside a `useMemo`,
+which returns a value and not a cleanup, so it leaked one per mount; the set row
+read `20 kg 5` with nothing saying the 5 was reps; and the rest bar's caption was
+squeezed into about sixty pixels, rendering as "resting — 3:00 is…" where the
+half cut off was the half saying the number is ours and not the program author's.
+
+**Nine regression tests** on the hook and the engine, each checked by reverting
+the fix and confirming it fails: four fail without the queue, sequence, undo and
+rollback fixes; four pin the skip behaviour; one pins the record date.
+
+**Authorization was checked and found sound.** Every workout route authenticates
+first and passes the session's own user id; a foreign workout id fails before any
+write; the finish is a locking function that refuses a second call. Reported for
+completeness rather than as a finding.
+
+## Phase 3 — IN PROGRESS 2026-09-07 (blocked on applying the migration)
+
+**Done and verified.**
+
+- **`20260908100000_program_drafts.sql` is written and was dry-run against the
+  real database inside a transaction that was rolled back.** Both live templates
+  converted correctly: the three "incline 12 kg × 8" rows became ONE lift asking
+  for three sets of eight with a working weight of 12 kg, and the empty template
+  became an empty day. The dry run also caught two real SQL faults before they
+  could touch anything — a `GROUP BY` that could not see the column it was
+  grouping, and lifts keyed by name rather than by slug, which would have failed
+  on a duplicate key for two spellings of one exercise.
+- **A draft is allowed to be unfinished.** `DraftScheduleSchema` permits a day
+  with nothing in it yet, because building a week over two sittings is the
+  ordinary case and refusing to save one is how the builder lost everything when
+  a tab was closed. `CustomScheduleSchema` still requires a lift per day, and
+  starting a draft validates against it and names the day that is still empty.
+- **Repo and API**: `src/db/programDraftRepo.ts` plus list/create/update/delete
+  and start. Starting carries the draft's own NAME onto the enrollment; the
+  hard-coded "Your program" is gone.
+- **The old template path is removed**: the route, the three repo functions, the
+  types, and the logger's template panel and "repeat last". The screen is now
+  "Log a past workout" and was checked in a browser: it renders, mentions no
+  templates, and throws nothing.
+- **Thirteen integration tests** against real Postgres, including the security
+  property under `SET ROLE`.
+
+**A trap worth recording.** The first version of those security tests passed
+while proving nothing: `getClient()` opens a NEW connection per call, so the
+`SET ROLE` ran on one connection and the query on another, and every denial test
+sailed through against a session that was still the table owner. Fixed by running
+each block on one connection — after which five of them failed until the policies
+were actually reached. Any future policy test in this repo must do the same.
+
+**A claim corrected.** The migration's comment said an explicit `WITH CHECK` was
+what stopped somebody handing their draft to another account. It is not:
+Postgres uses an UPDATE policy's `USING` clause as its `WITH CHECK` when none is
+given, verified here by removing the clause and re-running — the give-away was
+still refused. The clause is kept as documentation, and the comment now says
+what is actually true.
+
+**Migration APPLIED 2026-09-08**, after the pending list was re-checked and held
+only this file. Verified against the live database rather than assumed:
+
+| | |
+|---|---|
+| Templates before | 2 |
+| Drafts after, `source = 'saved_workout'` | 2 |
+| `workout_templates` | dropped |
+| Row security on `program_drafts` | on, 4 policies, 1 trigger |
+| `scripts/audit-rls.ts` | 63 tables checked, none left open |
+
+Both rows were read back **in full**, not counted. The three "incline 12 kg × 8"
+rows became ONE lift asking for three sets of eight with a working weight of
+12 kg; the empty template became an empty day; both kept their original dates.
+
+**And proved through the app's own routes, in a browser** — now a permanent
+spec, `tests/e2e/programs-drafts.spec.ts`:
+
+- **Another account's drafts are not listed.** The two migrated drafts belong to
+  the owner's account; the test account signs in as somebody else and sees none
+  of them. That is the row rule working through the real app, not only in a
+  harness.
+- **A half-built week saves as it is** — one day with a lift, one day with
+  nothing yet.
+- **And is refused a start, by name**: 422, *"Add at least one lift to Pull
+  before starting this."*
+- **A duplicate name is refused in words**, not as a database error.
+- **A rename does not empty the week.** Sending only `{name}` keeps the days and
+  the weights, which is the difference between a patch and a replace.
+- **Filled in, it starts under its own name** — the enrollment is labelled
+  "E2E Week Renamed", not "Your program".
+
+**Still to do in this phase:** the builder saving and loading drafts, the saved-
+weeks list on screen, starting an empty workout with lifts added on the day, the
+past-workout logger taking an optional program day, deleting
+`TodaySessionWidget`, and the seed-a-year script.
+
+## Phase 1 fallout — three live regressions from my own migration, 2026-09-08
+
+Found by mapping the code the rest of Phase 3 touches, not by anything failing.
+The 20260907100000 migration replaced the `is_warmup` boolean with `set_kind`
+and dropped the column; three places were still reading it, and against the real
+database all three were broken from the moment that migration was applied.
+
+1. **Every strength goal read an error instead of a number.** The estimated
+   one-rep max for the bench, squat, deadlift and overhead press, and the
+   maximum pull-ups, are all computed by two queries that filtered on the
+   dropped column. Both threw. They are also called behind a `.catch()` that
+   only writes to the console, which is exactly why nobody saw it.
+2. **The warm-up switch on the written-up workout form did nothing.** The form
+   sent `set_kind`, the validator still listed `is_warmup`, and a validator
+   deletes fields it was not told about. So every warm-up single was stored as
+   ordinary work: counted in the volume total, and eligible to be announced as a
+   personal best.
+3. **A refused set left an empty workout behind.** The workout row is written
+   first and the sets after, with no rollback — so a set the database refused
+   left a session that counts towards the streak, the heatmap and the totals
+   while recording nothing that happened. The person sees an error, tries again,
+   and now has two.
+
+**Also corrected while here:** the set schema allowed a weight of 1000 kg while
+the column is `NUMERIC(5,2)`, whose ceiling is 999.99 — so the app said yes and
+Postgres then failed with a numeric-overflow message nobody could act on.
+
+**Proved against the real database, now `tests/e2e/health-past-workout.spec.ts`:**
+a workout written up with a warm-up and a working set saves, and the warm-up
+comes back as a warm-up; a workout whose sets the database refuses is rejected
+and leaves nothing behind. Both were checked by reverting the fix and confirming
+the test fails — without the rollback the account gains an empty session.
+
+**Seven unit tests** on the schema, five of which fail without the fix.
+
+**One thing NOT verified end to end, and why.** The one-rep-max queries are only
+reachable through `syncLinkedGoals`, which runs when a tracking session ends and
+whose two call sites swallow the error. I fixed the queries, checked the filter
+against the live data in SQL, and used the `.in()` builder form that five other
+repo reads already use — but I did not drive a tracking session to completion to
+watch the number appear on a goal. That the errors are swallowed is worth a
+decision of its own: a metric can break and nothing will say so.
+
+## 2026-09-08 — "if something is broken it should be shown"
+
+The migration was applied and verified (above). Acting on the instruction that
+followed, five readers swept the app for one specific fault: a number shown to a
+person when the code that produced it had failed. Every finding was then handed
+to a second agent told to refute it.
+
+**59 findings, written up in `docs/plans/silent-failures.md`** with the file,
+what a person sees, and how to reproduce each. Nine were fixed the same day —
+the ones in this slice, the ones I had introduced, and the metric layer they all
+run through. The rest are described rather than fixed, and the doc says so.
+
+**The three worst, all in code from this plan:**
+
+- A failed history read made **every set of an ordinary session a personal
+  best**, because a discarded error came back as an empty history.
+- A failed profile read **silently switched a pounds lifter into kilograms**,
+  because the error was discarded and the default was "kg". There is no safe
+  guess for a unit, so it now refuses.
+- A failed programs fetch **said "No active program"** to somebody three weeks
+  into one, and offered them the catalogue.
+
+**And the guard that was supposed to catch this kind of thing was itself
+blind.** The write-coverage scanner took a function body to start at the first
+`{`, so any function returning `Promise<{ ... }>` had its return type read as its
+body — 23 write paths were invisible, 11 with no test asserting what they save.
+Fixing it uncovered a second fault in the same tool: it read a COMMENT containing
+the words "this function is expected to write" as a function named `is`, and
+because it propagates by name, every Supabase read filtering with `.is(...)`
+looked like a write. Comments and strings are blanked before scanning now.
+

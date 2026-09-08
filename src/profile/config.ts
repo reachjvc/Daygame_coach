@@ -1,4 +1,5 @@
 import { REGIONS } from "@/src/profile/data/regions"
+import type { OnboardingInitialValues } from "@/src/profile/types"
 
 // ============================================================================
 // Validation Constants
@@ -48,21 +49,75 @@ export const AGE_RANGE = {
 } as const
 
 // ============================================================================
-// Level Mapping
+// Onboarding Steps
+// ============================================================================
+
+// ============================================================================
+// Dating preferences (the scenario gate)
 // ============================================================================
 
 /**
- * Maps experience levels to initial user levels.
+ * Does this profile carry the answers the scenario generator needs?
+ *
+ * THE ONE RULE, DERIVED FROM THE DATA -- deliberately NOT a stored flag.
+ * `onboarding_completed` used to gate the dashboard, the Lair, Inner Game, the
+ * post-login redirect AND scenarios, so a dating questionnaire blocked three
+ * features that never read a single one of its answers. It is now legacy: only
+ * `scenariosService` consumes these columns, so only scenarios asks for them,
+ * and it asks by looking at the columns themselves. A separate boolean would be
+ * a second copy of this fact, free to drift out of step with it.
+ *
+ * `user_is_foreign` IS NOT PART OF THE CHECK. It defaults to `false` in the
+ * database, so on a row nobody has filled in it is indistinguishable from a real
+ * "No, I'm local" -- it can never prove the question was asked. The other three
+ * are null until answered.
+ *
+ * Verified against the live database 2026-09-08: all four real accounts carry
+ * all three, so this fires for nobody who has already answered.
  */
-export const EXPERIENCE_TO_LEVEL: Record<string, number> = {
-  "complete-beginner": 1,
-  "newbie": 3,
-  "intermediate": 7,
-  "advanced": 12,
-  "expert": 18,
+export function hasDatingPreferences(
+  profile:
+    | {
+        preferred_region?: string | null
+        archetype?: string | null
+        dating_foreigners?: boolean | null
+      }
+    | null
+    | undefined
+): boolean {
+  if (!profile) return false
+  return (
+    typeof profile.preferred_region === "string" &&
+    VALID_REGION_IDS.has(profile.preferred_region) &&
+    typeof profile.archetype === "string" &&
+    profile.archetype.length > 0 &&
+    typeof profile.dating_foreigners === "boolean"
+  )
 }
 
-export const DEFAULT_INITIAL_LEVEL = 1
+export const ONBOARDING_STEPS = [1, 2, 3, 4, 5] as const
+export const FIRST_ONBOARDING_STEP = ONBOARDING_STEPS[0]
+export const LAST_ONBOARDING_STEP = ONBOARDING_STEPS[ONBOARDING_STEPS.length - 1]
+
+/**
+ * Turn anything at all -- a `?step=` query value, a stale link, a hand-typed
+ * URL -- into a step that exists.
+ *
+ * ONE OWNER, BECAUSE THE OLD TWO DISAGREED. The page did
+ * `Math.min(Math.max(Number(raw), 1), 5)` and the component did the same again.
+ * Both are transparent to NaN: `Number("abc")` is NaN, every comparison with it
+ * is false, so NaN came out of both clamps unchanged and rendered "Step NaN of
+ * 5" -- a blank screen with a Back button that did nothing. Anything that is not
+ * a whole number in range is the first step, which is always safe.
+ */
+export function parseOnboardingStep(raw: unknown): number {
+  const value = typeof raw === "number" ? raw : Number(raw)
+  if (!Number.isInteger(value)) return FIRST_ONBOARDING_STEP
+  if (value < FIRST_ONBOARDING_STEP) return FIRST_ONBOARDING_STEP
+  if (value > LAST_ONBOARDING_STEP) return LAST_ONBOARDING_STEP
+  return value
+}
+
 
 // ============================================================================
 // Interactive World Map Configuration
@@ -98,3 +153,19 @@ export const MAP_MESSAGES = {
   locked: "Exotic - and very cold choice - not currently available as a dateable region.",
   lockedSmall: "Small or remote territory - not currently available as a dateable region.",
 } as const
+
+
+/**
+ * Nothing answered. What signup starts from, and what a half-built row falls
+ * back to. Here rather than in profileService.ts because the browser needs it:
+ * see the note at the top of types.ts.
+ */
+export const EMPTY_ONBOARDING_VALUES: OnboardingInitialValues = {
+  ageRangeStart: null,
+  ageRangeEnd: null,
+  userIsForeign: null,
+  datingForeigners: null,
+  region: null,
+  archetypes: [],
+  primaryGoal: null,
+}

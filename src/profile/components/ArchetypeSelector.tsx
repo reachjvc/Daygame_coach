@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import Link from "next/link"
+import { BackLink } from "@/components/BackLink"
 import { CircleDot } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -89,7 +89,7 @@ export function ArchetypeSelector({
             )}
           </div>
 
-          <div className="mt-6 grid md:grid-cols-2 gap-8 max-h-[700px] overflow-y-auto pr-2">
+          <div className="mt-6 grid md:grid-cols-2 gap-8 pr-2">
             {archetypes.map((archetype) => {
               const priorityIndex = selectedArchetypes.indexOf(archetype.name)
               const isSelected = priorityIndex !== -1
@@ -137,9 +137,7 @@ export function ArchetypeSelector({
           </div>
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-            <Button asChild variant="outline" size="sm" className="border-border bg-transparent">
-              <Link href="/dashboard">Back to dashboard</Link>
-            </Button>
+            <BackLink fallback="/dashboard" fallbackLabel="Dashboard" />
             <form action={updateArchetypes} className="flex items-center gap-2">
               <input type="hidden" name="archetype" value={selectedArchetypes[0] || ""} />
               <input type="hidden" name="secondaryArchetype" value={selectedArchetypes[1] || ""} />

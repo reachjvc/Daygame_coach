@@ -42,7 +42,8 @@ import { Badge } from "@/components/ui/badge"
 import type { SandboxSettings } from "@/src/scenarios/config"
 import { PRODUCTS } from "@/src/home"
 import type { SettingsPageProps } from "../types"
-import { DIFFICULTY_OPTIONS, LEVEL_TITLES } from "../types"
+import { DIFFICULTY_OPTIONS } from "../types"
+import { ComingSoon } from "@/src/shared/components/ComingSoon"
 import { VOICE_LANGUAGES, DEFAULT_VOICE_LANGUAGE, getVoiceLanguageLabel } from "@/src/tracking/config"
 
 interface SettingsPageClientProps extends SettingsPageProps {
@@ -71,7 +72,19 @@ export function SettingsPage({
   onOpenBillingPortal,
 }: SettingsPageClientProps) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  /* TWO TRANSITIONS, NOT ONE.
+     One shared `isPending` used to gate all 25 controls on this page, so saving
+     any single preference disabled every other one -- including the ones on
+     other tabs and the billing buttons -- for the whole round trip (measured:
+     1.9s on the dev server). A second click inside that window hit a disabled
+     control: no state change, no request, no error. The user's click vanished.
+
+     `isSavingPreference` now drives an indicator ONLY and never disables
+     anything: preferences are last-write-wins, so there is nothing to protect.
+     `isAccountPending` still disables its own buttons, because cancelling a
+     subscription or resetting every sandbox setting must not be double-fired. */
+  const [isSavingPreference, startPreferenceTransition] = useTransition()
+  const [isAccountPending, startAccountTransition] = useTransition()
   const [sandboxSettings, setSandboxSettings] = useState<SandboxSettings>(
     profile.sandbox_settings
   )
@@ -95,22 +108,27 @@ export function SettingsPage({
     key: string,
     value: boolean
   ) => {
-    const newSettings = {
-      ...sandboxSettings,
+    /* FUNCTIONAL UPDATE, NOT A SNAPSHOT.
+       Building the next object from the `sandboxSettings` captured in this
+       render meant two toggles flipped before the next render both started from
+       the SAME old value, so the second one erased the first on screen while the
+       server (which is sent only the delta below) had them both. Screen and
+       database disagreed until a reload. */
+    setSandboxSettings((prev) => ({
+      ...prev,
       [category]: {
-        ...sandboxSettings[category],
+        ...prev[category],
         [key]: value,
       },
-    }
-    setSandboxSettings(newSettings)
+    }))
 
-    startTransition(async () => {
+    startPreferenceTransition(async () => {
       await onUpdateSandboxSettings({ [category]: { [key]: value } })
     })
   }
 
   const handleResetSandbox = () => {
-    startTransition(async () => {
+    startAccountTransition(async () => {
       await onResetSandboxSettings()
       router.refresh()
     })
@@ -118,7 +136,7 @@ export function SettingsPage({
   }
 
   const handleCancelSubscription = () => {
-    startTransition(async () => {
+    startAccountTransition(async () => {
       await onCancelSubscription()
       router.refresh()
     })
@@ -126,14 +144,14 @@ export function SettingsPage({
   }
 
   const handleReactivateSubscription = () => {
-    startTransition(async () => {
+    startAccountTransition(async () => {
       await onReactivateSubscription()
       router.refresh()
     })
   }
 
   const handleBillingPortal = () => {
-    startTransition(async () => {
+    startAccountTransition(async () => {
       const result = await onOpenBillingPortal()
       if (result?.url) {
         window.open(result.url, "_blank")
@@ -143,14 +161,14 @@ export function SettingsPage({
 
   const handleDifficultyChange = (difficulty: string) => {
     setCurrentDifficulty(difficulty)
-    startTransition(async () => {
+    startPreferenceTransition(async () => {
       await onUpdateDifficulty(difficulty)
     })
   }
 
   const handleVoiceLanguageChange = (language: string) => {
     setCurrentVoiceLanguage(language)
-    startTransition(async () => {
+    startPreferenceTransition(async () => {
       await onUpdateVoiceLanguage(language)
     })
   }
@@ -159,7 +177,7 @@ export function SettingsPage({
     setCurrentTimezone(timezone)
     setShowTimezoneDropdown(false)
     setTimezoneSearch("")
-    startTransition(async () => {
+    startPreferenceTransition(async () => {
       await onUpdateTimezone(timezone)
     })
   }
@@ -197,9 +215,6 @@ export function SettingsPage({
     ? PRODUCTS.find((p) => p.id === subscription.productId)
     : null
 
-  const levelTitle = LEVEL_TITLES[Math.min(stats.level, 20)] || "Grandmaster"
-  const xpForNextLevel = stats.level * 100
-  const xpProgress = Math.min((stats.xp / xpForNextLevel) * 100, 100)
 
   return (
     <div className="min-h-dvh bg-background pb-tab-bar">
@@ -233,6 +248,15 @@ export function SettingsPage({
               <span className="hidden sm:inline">Billing</span>
             </TabsTrigger>
           </TabsList>
+
+          {/* Saving happens in the background now that nothing is disabled while
+              it runs, so this is the only thing telling the user a change was
+              taken. It reserves its own height so the tabs never jump. */}
+          <div className="h-5 -mt-2" aria-live="polite" data-testid="settings-save-status">
+            {isSavingPreference && (
+              <span className="text-xs font-semibold text-primary">Saving…</span>
+            )}
+          </div>
 
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-6">
@@ -272,24 +296,11 @@ export function SettingsPage({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Level Progress */}
-                <div>
-                  <div className="mb-2 flex items-center justify-between">
-                    <div>
-                      <span className="text-2xl font-bold">Level {stats.level}</span>
-                      <span className="ml-2 text-muted-foreground">{levelTitle}</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {stats.xp} / {xpForNextLevel} XP
-                    </span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-muted">
-                    <div
-                      className="h-2 rounded-full bg-primary transition-all"
-                      style={{ width: `${xpProgress}%` }}
-                    />
-                  </div>
-                </div>
+                {/* Level and XP are not tracked by anything yet. See ComingSoon. */}
+                <ComingSoon
+                  title="Levels &amp; XP"
+                  description="Your level will follow the sessions and practice you actually log. Nothing feeds it yet, so there is no number worth showing."
+                />
 
                 {/* Stats Grid */}
                 <div className="grid gap-4 sm:grid-cols-3">
@@ -354,12 +365,11 @@ export function SettingsPage({
                       )}
                     </div>
                   </div>
-                  <div>
-                    <Label className="text-muted-foreground">Experience Level</Label>
-                    <p className="mt-1 font-medium capitalize">
-                      {profile.experience_level?.replace(/-/g, " ") || "Not set"}
-                    </p>
-                  </div>
+                  <ComingSoon
+                    variant="row"
+                    title="Experience level"
+                    description="Replaced by levels that track what you do."
+                  />
                 </div>
                 <div className="pt-2">
                   <Link href="/preferences">
@@ -395,7 +405,6 @@ export function SettingsPage({
                     variant="outline"
                     size="sm"
                     onClick={handleDetectTimezone}
-                    disabled={isPending}
                     className="shrink-0"
                   >
                     <LocateFixed className="mr-2 h-4 w-4" />
@@ -456,7 +465,7 @@ export function SettingsPage({
                     variant="outline"
                     size="sm"
                     onClick={() => setShowResetDialog(true)}
-                    disabled={isPending}
+                    disabled={isAccountPending}
                     data-testid="sandbox-reset-button"
                   >
                     <RotateCcw className="mr-2 h-4 w-4" />
@@ -481,7 +490,6 @@ export function SettingsPage({
                       onCheckedChange={(checked) =>
                         handleSandboxToggle("weather", "enableBadWeather", checked)
                       }
-                      disabled={isPending}
                     />
                     <SettingToggle
                       id="enableHotWeather"
@@ -491,7 +499,6 @@ export function SettingsPage({
                       onCheckedChange={(checked) =>
                         handleSandboxToggle("weather", "enableHotWeather", checked)
                       }
-                      disabled={isPending}
                     />
                     <SettingToggle
                       id="showWeatherDescriptions"
@@ -501,7 +508,6 @@ export function SettingsPage({
                       onCheckedChange={(checked) =>
                         handleSandboxToggle("weather", "showWeatherDescriptions", checked)
                       }
-                      disabled={isPending}
                     />
                   </div>
                 </div>
@@ -518,7 +524,6 @@ export function SettingsPage({
                       onCheckedChange={(checked) =>
                         handleSandboxToggle("energy", "enableNegativeEnergies", checked)
                       }
-                      disabled={isPending}
                     />
                     <SettingToggle
                       id="enableNeutralEnergies"
@@ -528,7 +533,6 @@ export function SettingsPage({
                       onCheckedChange={(checked) =>
                         handleSandboxToggle("energy", "enableNeutralEnergies", checked)
                       }
-                      disabled={isPending}
                     />
                     <SettingToggle
                       id="enableShyEnergies"
@@ -538,7 +542,6 @@ export function SettingsPage({
                       onCheckedChange={(checked) =>
                         handleSandboxToggle("energy", "enableShyEnergies", checked)
                       }
-                      disabled={isPending}
                     />
                     <SettingToggle
                       id="showEnergyDescriptions"
@@ -548,7 +551,6 @@ export function SettingsPage({
                       onCheckedChange={(checked) =>
                         handleSandboxToggle("energy", "showEnergyDescriptions", checked)
                       }
-                      disabled={isPending}
                     />
                   </div>
                 </div>
@@ -565,7 +567,6 @@ export function SettingsPage({
                       onCheckedChange={(checked) =>
                         handleSandboxToggle("movement", "enableFastMovement", checked)
                       }
-                      disabled={isPending}
                     />
                     <SettingToggle
                       id="enableHeadphones"
@@ -575,7 +576,6 @@ export function SettingsPage({
                       onCheckedChange={(checked) =>
                         handleSandboxToggle("movement", "enableHeadphones", checked)
                       }
-                      disabled={isPending}
                     />
                   </div>
                 </div>
@@ -592,7 +592,6 @@ export function SettingsPage({
                       onCheckedChange={(checked) =>
                         handleSandboxToggle("display", "showOutfitDescriptions", checked)
                       }
-                      disabled={isPending}
                     />
                     <SettingToggle
                       id="showOpenerHooks"
@@ -602,7 +601,6 @@ export function SettingsPage({
                       onCheckedChange={(checked) =>
                         handleSandboxToggle("display", "showOpenerHooks", checked)
                       }
-                      disabled={isPending}
                     />
                     <SettingToggle
                       id="showCrowdDescriptions"
@@ -612,7 +610,6 @@ export function SettingsPage({
                       onCheckedChange={(checked) =>
                         handleSandboxToggle("display", "showCrowdDescriptions", checked)
                       }
-                      disabled={isPending}
                     />
                   </div>
                 </div>
@@ -629,7 +626,6 @@ export function SettingsPage({
                       onCheckedChange={(checked) =>
                         handleSandboxToggle("environments", "enableGymScenarios", checked)
                       }
-                      disabled={isPending}
                     />
                     <SettingToggle
                       id="enableTransitScenarios"
@@ -639,7 +635,6 @@ export function SettingsPage({
                       onCheckedChange={(checked) =>
                         handleSandboxToggle("environments", "enableTransitScenarios", checked)
                       }
-                      disabled={isPending}
                     />
                     <SettingToggle
                       id="enableCampusScenarios"
@@ -649,7 +644,6 @@ export function SettingsPage({
                       onCheckedChange={(checked) =>
                         handleSandboxToggle("environments", "enableCampusScenarios", checked)
                       }
-                      disabled={isPending}
                     />
                     <SettingToggle
                       id="enableHighCrowdScenarios"
@@ -663,7 +657,6 @@ export function SettingsPage({
                           checked
                         )
                       }
-                      disabled={isPending}
                     />
                   </div>
                 </div>
@@ -689,12 +682,11 @@ export function SettingsPage({
                     <button
                       key={option.id}
                       onClick={() => handleDifficultyChange(option.id)}
-                      disabled={isPending}
                       className={`rounded-lg border p-4 text-left transition-all ${
                         currentDifficulty === option.id
                           ? "border-primary bg-primary/5"
                           : "border-border hover:border-primary/50"
-                      } ${isPending ? "opacity-50" : ""}`}
+                      }`}
                     >
                       <p className="font-medium">{option.label}</p>
                       <p className="mt-1 text-sm text-muted-foreground">
@@ -723,12 +715,11 @@ export function SettingsPage({
                     <button
                       key={lang.code}
                       onClick={() => handleVoiceLanguageChange(lang.code)}
-                      disabled={isPending}
                       className={`rounded-lg border p-4 text-left transition-all ${
                         currentVoiceLanguage === lang.code
                           ? "border-primary bg-primary/5"
                           : "border-border hover:border-primary/50"
-                      } ${isPending ? "opacity-50" : ""}`}
+                      }`}
                     >
                       <p className="font-medium">{lang.label}</p>
                     </button>
@@ -816,7 +807,7 @@ export function SettingsPage({
                     <Button
                       variant="outline"
                       onClick={handleBillingPortal}
-                      disabled={isPending}
+                      disabled={isAccountPending}
                       className="w-full sm:w-auto"
                     >
                       <ExternalLink className="mr-2 h-4 w-4" />
@@ -826,7 +817,7 @@ export function SettingsPage({
                     {subscription.cancelAtPeriodEnd ? (
                       <Button
                         onClick={handleReactivateSubscription}
-                        disabled={isPending}
+                        disabled={isAccountPending}
                         className="w-full sm:w-auto"
                       >
                         <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -836,7 +827,7 @@ export function SettingsPage({
                       <Button
                         variant="destructive"
                         onClick={() => setShowCancelDialog(true)}
-                        disabled={isPending}
+                        disabled={isAccountPending}
                         className="w-full sm:w-auto"
                       >
                         Cancel Subscription
@@ -882,7 +873,7 @@ export function SettingsPage({
             <Button variant="outline" onClick={() => setShowResetDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleResetSandbox} disabled={isPending}>
+            <Button onClick={handleResetSandbox} disabled={isAccountPending}>
               Reset Settings
             </Button>
           </DialogFooter>
@@ -907,7 +898,7 @@ export function SettingsPage({
             <Button
               variant="destructive"
               onClick={handleCancelSubscription}
-              disabled={isPending}
+              disabled={isAccountPending}
             >
               Cancel Subscription
             </Button>

@@ -8,5 +8,5 @@ export { InteractiveWorldMap } from "./InteractiveWorldMap"
 export { LevelProgressBar } from "./LevelProgressBar"
 export { UserPreferences } from "./UserPreferences"
 export { ArchetypeSelector } from "./ArchetypeSelector"
-export { OnboardingFlow } from "./OnboardingFlow"
+export { DatingPreferencesGate } from "./DatingPreferencesGate"
 

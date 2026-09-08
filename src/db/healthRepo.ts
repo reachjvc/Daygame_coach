@@ -1,7 +1,7 @@
 /**
  * Database repository for Health & Appearance tracking
  *
- * All database access for weight_logs, sleep_logs, workout_logs, workout_sets, workout_templates, nutrition_logs.
+ * All database access for weight_logs, sleep_logs, workout_logs, workout_sets, nutrition_logs.
  */
 
 import { createServerSupabaseClient } from "./supabase"
@@ -17,8 +17,6 @@ import type {
   WorkoutLogInsert,
   WorkoutSetRow,
   WorkoutSetInsert,
-  WorkoutTemplateRow,
-  WorkoutTemplateInsert,
   NutritionLogRow,
   NutritionLogInsert,
   BodyMeasurementRow,
@@ -213,7 +211,18 @@ export async function createWorkoutLog(
       .from("workout_sets")
       .insert(setsWithLogId)
       .select()
-    if (setsError) throw new Error(`Failed to create workout sets: ${setsError.message}`)
+    if (setsError) {
+      /**
+       * ALL OF IT, OR NONE OF IT.
+       *
+       * The workout row goes in first and the sets after, so a failure on the
+       * sets used to leave an empty workout behind — it counts towards the
+       * streak, the heatmap and the session totals while recording nothing that
+       * happened. The person sees an error, tries again, and now has two.
+       */
+      await supabase.from("workout_logs").delete().eq("id", logData.id).eq("user_id", userId)
+      throw new Error(`Failed to create workout sets: ${setsError.message}`)
+    }
     insertedSets = (setsData ?? []) as WorkoutSetRow[]
   }
 
@@ -343,44 +352,6 @@ export async function deleteWorkoutLog(userId: string, logId: string): Promise<v
 // Workout Templates
 // ============================================
 
-export async function getWorkoutTemplates(userId: string): Promise<WorkoutTemplateRow[]> {
-  const supabase = await createServerSupabaseClient()
-  const { error, data } = await supabase
-    .from("workout_templates")
-    .select("*")
-    .eq("user_id", userId)
-    .order("name", { ascending: true })
-  if (error) throw new Error(`Failed to get workout templates: ${error.message}`)
-  return (data ?? []) as WorkoutTemplateRow[]
-}
-
-// Saving under an existing name replaces that template (unique on user_id+name)
-export async function upsertWorkoutTemplate(
-  userId: string,
-  template: WorkoutTemplateInsert
-): Promise<WorkoutTemplateRow> {
-  const supabase = await createServerSupabaseClient()
-  const { error, data } = await supabase
-    .from("workout_templates")
-    .upsert(
-      { user_id: userId, updated_at: new Date().toISOString(), ...template },
-      { onConflict: "user_id,name" }
-    )
-    .select()
-    .single()
-  if (error) throw new Error(`Failed to save workout template: ${error.message}`)
-  return data as WorkoutTemplateRow
-}
-
-export async function deleteWorkoutTemplate(userId: string, templateId: string): Promise<void> {
-  const supabase = await createServerSupabaseClient()
-  const { error } = await supabase
-    .from("workout_templates")
-    .delete()
-    .eq("id", templateId)
-    .eq("user_id", userId)
-  if (error) throw new Error(`Failed to delete workout template: ${error.message}`)
-}
 
 // ============================================
 // Nutrition Logs
@@ -505,7 +476,17 @@ export async function getExerciseMax(userId: string, exercise: string): Promise<
     .select("weight_kg, reps")
     .in("log_id", logIds)
     .ilike("exercise", exercise)
-    .eq("is_warmup", false)
+    /**
+     * `is_warmup` was dropped on 2026-09-07 and replaced by `set_kind`. This
+     * filter survived the migration and threw on every call, so the estimated
+     * one-rep max for every lift — and the strength goals built on it — came
+     * back as an error rather than a number.
+     *
+     * Written as "these kinds count" rather than "not those kinds": the column
+     * is NOT NULL with a default, so the list is exact, and it matches
+     * `isWorkingSet`, which is the one place that decides what counts.
+     */
+    .in("set_kind", ["working", "amrap", "backoff"])
   if (setsError) throw new Error(`Failed to query sets for ${exercise}: ${setsError.message}`)
   if (!sets || sets.length === 0) return 0
 
@@ -605,7 +586,8 @@ export async function getPullUpsMax(userId: string): Promise<number> {
     .select("reps")
     .in("log_id", logIds)
     .ilike("exercise", "%pull%up%")
-    .eq("is_warmup", false)
+    // Same dropped column as `getExerciseMax` above, same rule.
+    .in("set_kind", ["working", "amrap", "backoff"])
   if (setsError) throw new Error(`Failed to query pull-up sets: ${setsError.message}`)
   if (!sets || sets.length === 0) return 0
 

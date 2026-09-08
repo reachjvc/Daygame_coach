@@ -1,11 +1,12 @@
 "use client"
 
 import { useState, useCallback, useMemo } from "react"
-import { useHistoryBarrier } from "@/src/shared/HistoryBarrierContext"
+import { useHistoryBarrierStack } from "@/src/shared/HistoryBarrierContext"
 
 /**
  * Manages linear step progression with automatic browser-back handling.
- * Wraps useHistoryBarrier so every stepped flow gets back-button support for free.
+ * Wraps useHistoryBarrierStack so every stepped flow gets back-button support for
+ * free -- one history entry per step, so Back always goes back exactly one screen.
  */
 export function useSteppedFlow<S extends string | number>(
   steps: readonly S[],
@@ -33,8 +34,10 @@ export function useSteppedFlow<S extends string | number>(
     [steps],
   )
 
-  // Browser back → previous step automatically (inactive on first step)
-  useHistoryBarrier(stepIndex > 0, goBack)
+  // Browser back -> previous step, once per step. Not a boolean: a boolean gives
+  // the whole flow ONE history entry, so the second Back falls out of the flow
+  // (or, on the live site, jumped to an unrelated step). See useHistoryBarrierStack.
+  useHistoryBarrierStack(stepIndex, goBack)
 
   return useMemo(
     () => ({ step, stepIndex, isFirst, isLast, goNext, goBack, goTo, setStep: setStepRaw }),

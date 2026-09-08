@@ -14,6 +14,349 @@ line says otherwise. What I could not check is in **Blockers**.
 
 ---
 
+# PART 0e — THE GATEWAY. BUILT. 2026-09-08.
+
+Signup no longer asks the dating questions. They are asked once, on one screen,
+at the door of the only feature that reads them.
+
+## Why, in one table
+
+Measured by grep over `src/` and `app/` before touching anything:
+
+| Answer | Who reads it |
+|---|---|
+| region, secondary region | `scenariosService` only |
+| archetype | `scenariosService` only |
+| foreigner / dating foreigners | `scenariosService` only |
+| age range | only picks which photos the archetype cards show |
+| primary goal | **nothing** |
+| step 4 of the wizard | collected nothing |
+
+And `onboarding_completed` gated **five** places: the dashboard, the Lair, Inner
+Game, the post-login redirect and scenarios. So a dating questionnaire blocked
+three features that read none of its answers, and diverted every new account
+into it before they could see anything.
+
+## What changed
+
+- **Signing in goes where you were going.** The gates are gone from
+  `DashboardPage`, `LairPageServer` and `app/redirect`. Inner Game selected the
+  column without ever using it; that select is gone too.
+- **`ScenariosPage` asks instead**, inline, via `DatingPreferencesGate`.
+- **`/preferences` renders the same component** — so there is one copy of these
+  questions, not two that drift.
+- **`OnboardingFlow.tsx` is deleted** (470 lines), and with it steps 4 and 5.
+  The primary goal is no longer collected at all; the goals module is where a
+  goal now means something. The age range is no longer asked — it only ever
+  chose photos, and it stays editable on the dashboard card.
+
+## The gate rule is derived, not stored
+
+`hasDatingPreferences(profile)` in `src/profile/config.ts` — region valid, an
+archetype present, `dating_foreigners` non-null. Deliberately **not** a new
+boolean: a stored flag is a second copy of a fact the columns already carry, free
+to drift out of step with them.
+
+`user_is_foreign` is **excluded from the check**: it defaults to `false` in the
+database, so on an untouched row it is indistinguishable from a real "No, I'm
+local" and can never prove the question was asked. Including it would send
+everyone who genuinely answered No back through the gate forever.
+
+`onboarding_completed` now gates nothing and is written by nothing. It is legacy
+data. See Blockers for removing the column.
+
+## Verified in a browser, against the real database
+
+Fresh subscribed account with no answers, 2026-09-08:
+
+| Step | Result |
+|---|---|
+| Sign in | straight to `/dashboard`, no questionnaire |
+| Dashboard, Lair | render, no diversion |
+| Open scenarios | gate appears: "Still need a region, at least one archetype, the two questions below" |
+| Fill and submit | writes 6 columns, lands in scenarios |
+| Answer "No" to dating foreigners | gate does **not** reappear — `false` is a real answer |
+| `onboarding_completed` | still `false`, and nothing cares |
+
+Then, seeded with age 19–31, goal `find-dates`, timezone `Asia/Tokyo` and three
+archetypes, changing **only** the region from `/preferences`:
+
+    age_range 19-31        unchanged
+    primary_goal           unchanged
+    timezone Asia/Tokyo    unchanged
+    all three archetypes   unchanged
+    preferred_region       southern-europe -> east-asia
+
+That is the data-loss class removed structurally: those columns are not in the
+update statement, so no future edit can put the loss back.
+
+## Tests
+
+- `tests/unit/profile/saveDatingPreferences.test.ts` — 16 tests asserting the
+  **payload handed to the database**: exactly six columns, never age/goal/
+  timezone/level/xp, `false` stored as a real answer, invalid region refused
+  with nothing written.
+- `tests/unit/profile/onboardingPrefill.test.ts` — the gate rule, including the
+  `user_is_foreign` trap and the `dating_foreigners: false` boundary.
+- `tests/e2e/dating-preferences-gate.spec.ts` — replaces 19 deleted tests that
+  exercised steps and progress bars that no longer exist.
+- `tests/e2e/cross-browser/stepped-flow-back.spec.ts` — **repointed** at the
+  baseline session (`/test/life-direction`, 8 steps). It used to drive
+  `useSteppedFlow` through onboarding; the hook still has eight other callers,
+  and this was its only coverage, so it was moved rather than deleted.
+- `tests/e2e/auth.setup.ts` — fills the gate instead of walking five steps.
+
+---
+
+# PART 0d — BUILT. 2026-09-08.
+
+Four defects found by using the site as a user, all fixed and verified in a real
+browser against the real database with a throwaway account.
+
+## 1. Settings: a second click within ~2 seconds was silently thrown away
+
+Every one of the 25 controls on the settings page was disabled by one shared
+"saving" flag, so changing any single preference froze all of them — across all
+four tabs, including the billing buttons. Measured dead window: 1.9s on the dev
+server. A click inside it hit a disabled control and produced no state change,
+**no network request**, and no error. It simply vanished.
+
+| Action | Before | After |
+|---|---|---|
+| Toggle A, wait 800ms, toggle B | 1 request sent; B still on in the database | 2 requests; both off |
+| Five toggles flipped quickly | screen showed 1 flipped, database had 5 | screen and database both show 5 |
+| Difficulty, then voice language | difficulty saved, language dropped | both saved |
+
+Two changes in `src/settings/components/SettingsPage.tsx`: the shared flag became
+`isSavingPreference` (drives a "Saving…" indicator, disables nothing) and
+`isAccountPending` (still disables billing and the sandbox reset, which must not
+double-fire); and `handleSandboxToggle` now uses a functional state update, so two
+toggles flipped before a re-render no longer start from the same stale value.
+
+Regression tests: `tests/unit/settings/settingsToggles.test.tsx`. They click a
+second control **while the first save is still in flight**, which is the only way
+to see this. Verified to fail against the old code (8 of 9 fail when the shared
+flag is restored).
+
+## 2. "Edit Full Preferences" silently erased answers the user did not touch
+
+`/preferences` rendered the same blank five-step form to a returning user as to
+someone signing up, and submitting writes every field. Measured on a real account:
+walking it to change **only** the region reset a saved 20–25 age range to the
+hardcoded 22–25 and erased the second and third archetypes.
+
+`app/preferences/page.tsx` now loads the profile and passes the saved answers in;
+`toOnboardingInitialValues` (in `profileService.ts`) maps a row back to them.
+
+**It only prefills for a user who finished onboarding.** `user_is_foreign` defaults
+to `false` in the database, so on a never-filled row it is indistinguishable from a
+real "No, I'm local"; prefilling from that would pre-answer a question the user has
+never seen. `onboarding_completed` is the only field that says the answers are real.
+
+Verified: changed only the region, age stayed 21 and both extra archetypes survived.
+
+## 3. `?step=` with junk in it rendered a blank dead end
+
+`/preferences?step=abc` showed "Step NaN of 5": an empty page, a Back button that
+did nothing, a disabled Complete button. Both the page and the component clamped
+with `Math.min`/`Math.max`, and every comparison with NaN is false, so NaN passed
+through both untouched.
+
+One owner now: `parseOnboardingStep` in `src/profile/config.ts`, used by both.
+Anything that is not a whole number in range becomes step 1.
+
+## 4. Jumping to the last step crashed the page
+
+`/preferences?step=5` skips steps 1–3, so it offered a live "Complete Setup" on a
+profile with no region. Submitting threw inside the server action and the user got
+a full-page "This page could not load" (nothing was saved — the guard held).
+
+The submit button now checks **every** step, not just the one on screen, and names
+what is missing with a link to it: "Still need about you before you can finish.
+Go to step 1."
+
+## Not fixed, deliberately
+
+Findings 5–7 from the same pass are cosmetic and were left pending a decision on
+the gateway rewrite below: step 4 is an empty "Coming Soon" screen, step 3 loads
+1.1 MB of photos at once on a phone, and the progress bar reads 0% on step 1 and
+never reaches 100%.
+
+## What the answers are actually used for — the case for moving this
+
+Measured by grep over `src/` and `app/`, 2026-09-08:
+
+| Answer | Who reads it |
+|---|---|
+| region, secondary region | `scenariosService` only |
+| archetype | `scenariosService` only |
+| foreigner / dating foreigners | `scenariosService` only |
+| age range | only picks which photos the archetype picker shows |
+| primary goal | **nothing** — displayed back on the preferences card, read by no feature |
+| step 4 | collects nothing |
+
+Every field `scenariosService` reads already has a working default.
+
+Meanwhile `onboarding_completed` gates five places — dashboard, Lair, Inner Game,
+post-login redirect and scenarios — so the dating questionnaire currently blocks
+three features that never read a single one of its answers. See the gateway
+recommendation.
+
+---
+
+# PART 0d — FAILSAFES BUILT. 2026-09-08.
+
+Four mechanisms, built after an audit found the suite was green because it only
+looked where someone had typed an address by hand, and when it got there only
+asked "is it on the screen?".
+
+The principle behind all four: **a guard that needs someone to remember to add
+something to a list is not a guard.** Each derives its own scope, and each
+asserts a floor on what it examined — so a guard going quiet now looks different
+from a guard being satisfied.
+
+## 1. `tests/support/appRoutes.ts` — one derived route list
+
+Walks `app/` and returns every product page (28 today, 27 openable). The
+knowledge already existed in `routeReachability.test.ts`; this extracts it so the
+browser tests can share it. A new page is covered the day it exists.
+
+## 2. Anti-collapse ratchets on the existing guards
+
+- **`backNavigation.test.ts`** examined **2 of 28 pages** and passed, under the
+  title "EVERY SCREEN HAS A WAY BACK". One exemption said `startsWith` where it
+  meant `===`, so every page under `/dashboard` was excused. Its own sibling,
+  `routeReachability.test.ts:207`, already warns against exactly this. Fixed to
+  an exact match: **now examines 12**, with every skipped route attributed to a
+  named reason. A new ratchet test fails if the count falls below 10 — verified
+  by reintroducing the bug: the *rule* still passed green, the ratchet failed
+  with "examined only 2 of 28 routes, below its floor of 10".
+- **`e2e-isolation.test.ts`** read only the top level of `tests/e2e/`, so the
+  **13 specs under `mobile/`, `cross-browser/` and `integration/` were invisible**
+  to every rule in it. Now recursive: 62 spec files instead of ~49.
+
+## 3. `tests/e2e/sweep/` — two derived browser sweeps
+
+New projects `sweep-desktop`, `sweep-phone` (iPhone 14) and `sweep-webkit`.
+
+- **`junk-params.spec.ts`** — for every page that reads a URL parameter (derived
+  from source) and every parameter name (also derived), loads it with `abc`,
+  `-1`, `0`, `999999`, empty, `null`, `%20`. Asserts no page shows `NaN`,
+  `undefined` or `[object Object]`, and none renders empty. 28 combinations
+  today. No test in the repo had ever put a non-number in a URL.
+- **`route-sweep.spec.ts`** — every page, at two sizes and on two engines:
+  renders content, no internal value on screen, no sideways scrolling, **no
+  scrolling box taller than the screen**, tap targets, page weight under 3MB.
+  One test per route so a failure names the page.
+
+## 4. `tests/unit/writeCoverage.test.ts` — the write registry
+
+Enumerates every function that writes user data — directly, through a local
+helper, or through a repo, following the chain to any depth. Each must be
+classified in `tests/support/writeCoverage.baseline.json`; a new one fails the
+test until somebody decides. The "no test mentions this at all" count is a
+ratchet.
+
+**178 functions write user data. 125 are not mentioned by any test. 1 has a
+verified assertion on what it saves.**
+
+The enumerator needed three attempts, and the failures are recorded in its
+docblock because each was the same species of error this whole audit was about:
+a fixed-size window read past short functions and called `getProfile` a writer;
+propagating only through *exported* names missed `completeOnboardingForUser`,
+the very function whose zero tests started this, because it writes through a
+non-exported helper.
+
+---
+
+# PART 0c — BUILT. 2026-09-07.
+
+Two things are done, tested on WebKit and Firefox, and the unit suite is green
+(4467 passing). Everything else in this plan is still outstanding.
+
+## 1. The browser Back button goes back one step (defect 0.2)
+
+`useSteppedFlow` took a boolean barrier, which can hold only ONE history entry,
+so a five-step flow had one entry for all five steps. Replaced with
+`useHistoryBarrierStack(depth, onBack)` in `src/shared/HistoryBarrierContext.tsx`
+-- one entry per step advanced.
+
+| Back x3 from step 3 | Before (measured on production) | After |
+|---|---|---|
+| Safari | step 2 -> **jumped to step 5** -> step 4 | step 2 -> step 1 -> leaves the flow |
+| Firefox | step 2 -> nothing -> nothing | step 2 -> step 1 -> leaves the flow |
+
+Answers survive walking back (verified: the region answer is still there).
+
+**This was a shared-code fix, not an onboarding fix.** `useSteppedFlow` has nine
+callers -- six life-direction sessions, `NewGoalsFlow`, `GoalSetupWizard` and
+onboarding -- and all nine had it.
+
+A code review raised that shrinking the stack fired one synchronous
+`history.back()` per level, which a browser may coalesce, leaving the suppression
+counter above zero and swallowing the user's next real Back. Fixed with a
+`removeMany` that does a single `history.go(-n)`, and covered by its own test.
+
+**Regression test:** `tests/e2e/cross-browser/stepped-flow-back.spec.ts`, six
+cases, run on **both** engines -- the two failed differently, so a Chromium-only
+test would have caught neither.
+
+## 2. Experience, levels and XP now say "Coming soon" (defect 0.1)
+
+One shared component, `src/shared/components/ComingSoon.tsx`, replaces the
+progression UI in **five** places:
+
+| Where | Was |
+|---|---|
+| Onboarding step 4 | "What's your experience level?" + five cards |
+| Dashboard level card (`LevelProgressBar`) | "Level 7 / 0 / 100 XP" + a bar stuck at 0% |
+| Dashboard preferences row | "Experience level: Intermediate" + an Update dialog |
+| Settings "Your Progress" card | "Level N", XP bar |
+| Settings profile tab | "Experience Level: intermediate" |
+
+A sixth was missed on the first pass and caught by the code review:
+`src/lair/components/widgets/LevelProgressWidget.tsx`, registered in the Lair
+widget registry, carrying a **fourth** level formula of its own.
+
+**Onboarding no longer writes `level` or `experience_level`.**
+`getInitialLevelFromExperience`, `EXPERIENCE_TO_LEVEL` and `DEFAULT_INITIAL_LEVEL`
+are deleted rather than left unused -- their whole purpose was the bug, and
+leaving them invites a future caller to reintroduce it.
+
+**Critical detail:** `canProceed()` for step 4 now returns `true`. If it still
+gated on an answer, the placeholder step would collect nothing, Next would never
+enable, and **nobody could finish signing up**. Asserted in `auth.setup.ts` and
+`preferences-completion.spec.ts`, which both now check the Next button is enabled
+with no answer given.
+
+**Regression test:** `tests/unit/profile/onboardingDoesNotSetLevel.test.ts`. It
+asserts on the payload actually handed to the database, and I proved it fails
+when the bug is reintroduced (2 of 4 cases go red) rather than assuming it would.
+
+### What this leaves behind, stated rather than hidden
+
+- **Existing rows keep their stale values.** Nothing now reads `profiles.level`
+  or `profiles.experience_level`, but the three accounts with `level = 7` still
+  have it. Harmless while nothing displays it; it needs clearing when progression
+  is built, not before.
+- **Practice difficulty falls back to beginner for everyone.**
+  `scenariosService` reads `profile.level` to set how receptive a simulated
+  conversation is. With nothing writing `level`, new accounts are level 1, so
+  every practice conversation opens on the easiest setting. Accepted deliberately
+  -- scenarios are not finished either -- but it is a real behaviour change and
+  it is the thing to fix first when scenarios are picked back up.
+- **`ComingSoon`'s docblock is the migration list.** When progression is built,
+  those six places are where it has to land.
+
+## Still outstanding
+
+Everything else: the blank-profile hole (`?step=5`), the `NaN` page
+(`?step=abc`), no validation on the server, nothing saved until submit, the phone
+problems on steps 2 and 3, keyboard and screen-reader access, and the TRUNCATE
+grant.
+
+---
+
 # PART 0b — MEASURED ON THE LIVE SITE. 2026-09-07.
 
 Everything before this was measured on `localhost`. Production is a different

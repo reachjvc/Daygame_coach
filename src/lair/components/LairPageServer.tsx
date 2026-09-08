@@ -24,10 +24,8 @@ export async function LairPageServer() {
     redirect("/dashboard")
   }
 
-  // Require onboarding
-  if (!profile?.onboarding_completed) {
-    redirect("/preferences")
-  }
+  /* No onboarding gate: the Lair reads no dating answer. See
+     hasDatingPreferences in src/profile/config.ts. */
 
   // Get user's lair layout
   const layout = await getUserLairConfig(user.id)

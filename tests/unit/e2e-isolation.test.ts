@@ -54,18 +54,60 @@ const ROUTE_TESTS_WITH_CLEANUP = new Set<string>([
   // Will be populated as we fix the tests
 ])
 
+/**
+ * Every spec file, at any depth.
+ *
+ * This used to read only the top level of tests/e2e, so the 13 specs under
+ * mobile/, cross-browser/ and integration/ were invisible to every rule in this
+ * file. Nothing said so -- the guard passed, having looked at two thirds of the
+ * suite. Recursing is the whole fix; the ratchet at the bottom is what stops it
+ * silently narrowing again.
+ */
 function getAllE2EFiles(): string[] {
   const files: string[] = []
 
   if (!fs.existsSync(e2eDir)) return files
 
-  const entries = fs.readdirSync(e2eDir, { withFileTypes: true })
-  for (const entry of entries) {
-    if (entry.isFile() && entry.name.endsWith('.spec.ts')) {
-      files.push(path.join(e2eDir, entry.name))
+  const walk = (dir: string) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name)
+      if (entry.isDirectory()) {
+        // .auth holds saved login state, not tests.
+        if (entry.name === '.auth' || entry.name === 'node_modules') continue
+        walk(full)
+      } else if (entry.isFile() && entry.name.endsWith('.spec.ts')) {
+        files.push(full)
+      }
     }
   }
-  return files
+
+  walk(e2eDir)
+  return files.sort()
+}
+
+/**
+ * Does this spec actually click the start-session button?
+ *
+ * Handles both shapes in the suite: the direct chain, and the far more common
+ * `const startBtn = page.getByTestId(SELECTORS.session.startButton)` followed
+ * later by `startBtn.click(...)`. A file that only asserts the button is
+ * visible starts no session and needs no cleanup.
+ */
+function clicksTheStartButton(content: string): boolean {
+  const SELECTOR = /getByTestId\(\s*SELECTORS\.session\.startButton\s*\)/
+
+  // Direct: page.getByTestId(SELECTORS.session.startButton).click()
+  if (new RegExp(SELECTOR.source + /\s*\.click\(/.source).test(content)) return true
+
+  // Via a variable: capture every name bound to that locator, then look for a
+  // click on it. Covers `.or(...)` chains, which bind but never click.
+  const bindings = [
+    ...content.matchAll(
+      new RegExp(/(?:const|let|var)\s+(\w+)\s*=\s*[^\n]*?/.source + SELECTOR.source, "g"),
+    ),
+  ].map((m) => m[1])
+
+  return bindings.some((name) => new RegExp(`\\b${name}\\s*\\.click\\(`).test(content))
 }
 
 describe('E2E Test Isolation Compliance', () => {
@@ -145,9 +187,16 @@ describe('E2E Test Isolation Compliance', () => {
       const content = fs.readFileSync(file, 'utf-8')
       const relativePath = path.relative(projectRoot, file)
 
-      // Check if file creates sessions via API or UI
+      // Check if file creates sessions via API or UI.
+      //
+      // "Starts a session" means the start button is CLICKED. The rule used to
+      // be `mentions startButton` AND `contains .click(` anywhere in the file --
+      // two unrelated facts about a file, read as one behaviour. It flagged
+      // mobile-tracking.spec.ts and tracking-cross.spec.ts, which only assert
+      // the button is VISIBLE and whose clicks are on history filters. Checking
+      // that two strings co-occur is not checking that a session was started.
       const createsSessionViaAPI = /createTestSessionViaAPI\(/.test(content)
-      const startsSessionViaUI = /SELECTORS\.session\.startButton/.test(content) && /\.click\(/.test(content)
+      const startsSessionViaUI = clicksTheStartButton(content)
 
       if (!createsSessionViaAPI && !startsSessionViaUI) continue
 
@@ -165,5 +214,32 @@ describe('E2E Test Isolation Compliance', () => {
       violations,
       `Session-creating tests without cleanup:\n${violations.join('\n')}`
     ).toHaveLength(0)
+  })
+
+  /**
+   * THE RATCHET. Every rule above is worth only what `getAllE2EFiles()` returns.
+   * It used to read one directory level, so 13 specs under mobile/,
+   * cross-browser/ and integration/ were invisible and the guard passed having
+   * seen two thirds of the suite. Nothing said so.
+   *
+   * Floor set below today's real number. Raise it as the suite grows; never
+   * lower it to make a change pass.
+   */
+  test('sees the whole e2e suite, including subdirectories', () => {
+    const seen = getAllE2EFiles().map((f) => path.relative(projectRoot, f))
+
+    const inSubdirs = seen.filter((f) => f.split('/').length > 3)
+    expect(
+      inSubdirs.length,
+      `Only top-level specs are visible. Subdirectories (mobile/, cross-browser/, ` +
+        `integration/) hold real tests, and a guard that cannot see them passes ` +
+        `without checking them.`,
+    ).toBeGreaterThan(10)
+
+    expect(
+      seen.length,
+      `Found ${seen.length} spec files; expected at least 55. A guard that ` +
+        `narrows its own input goes quiet without going red.`,
+    ).toBeGreaterThanOrEqual(55)
   })
 })

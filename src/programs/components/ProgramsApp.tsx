@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Dumbbell, Plus, ChevronRight, ChevronLeft } from "lucide-react"
 import { ProgramCatalog } from "./ProgramCatalog"
 import { ProgramDetail } from "./ProgramDetail"
+import { TodayCard } from "./TodayCard"
+import { SessionNotices } from "./SessionNotices"
 import { TodaySessionWidget } from "./TodaySessionWidget"
 import { ProgressionView } from "./ProgressionView"
 import { EditActiveProgram } from "./EditActiveProgram"
@@ -16,7 +18,7 @@ import { getProgram, requireProgram } from "../data/catalog"
 import { effectiveProgram } from "../customize"
 import { computePrescription } from "../programsService"
 import { LEVEL_LABELS, isoWeekday } from "../config"
-import type { EnrollmentDetail, ProgramEnrollment } from "../types"
+import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment } from "../types"
 
 type View =
   | { mode: "home" }
@@ -29,11 +31,19 @@ interface ProgramsAppProps {
   initialActive?: ProgramEnrollment[]
   initialPast?: ProgramEnrollment[]
   initialDetail?: EnrollmentDetail | null
+  /**
+   * A workout already open, if there is one.
+   *
+   * Server-resolved so "Resume · 23 min" is on the first paint rather than
+   * appearing a moment later — and so the card can say which program it belongs
+   * to, since only one workout can be open at a time.
+   */
+  live?: LiveWorkout | null
 }
 
-export function ProgramsApp({ initialActive, initialPast, initialDetail }: ProgramsAppProps = {}) {
+export function ProgramsApp({ initialActive, initialPast, initialDetail, live = null }: ProgramsAppProps = {}) {
   const [view, setView] = useState<View>({ mode: "home" })
-  const { enrollments, loading, refresh } = useActiveEnrollments(initialActive)
+  const { enrollments, loading, error, refresh } = useActiveEnrollments(initialActive)
 
   /**
    * ONE PROGRAM MEANS NO CHOICE TO MAKE, so do not ask for one.
@@ -48,6 +58,7 @@ export function ProgramsApp({ initialActive, initialPast, initialDetail }: Progr
         enrollmentId={enrollments[0].id}
         initialDetail={initialDetail ?? null}
         initialPast={initialPast}
+        live={live}
         onExit={() => {
           refresh()
           setView({ mode: "browse" })
@@ -81,7 +92,7 @@ export function ProgramsApp({ initialActive, initialPast, initialDetail }: Progr
   }
 
   if (view.mode === "active") {
-    return <ActiveProgram enrollmentId={view.enrollmentId} onExit={() => { refresh(); setView({ mode: "home" }) }} />
+    return <ActiveProgram enrollmentId={view.enrollmentId} live={live} onExit={() => { refresh(); setView({ mode: "home" }) }} />
   }
 
   // home
@@ -104,9 +115,30 @@ export function ProgramsApp({ initialActive, initialPast, initialDetail }: Progr
         </Button>
       </div>
 
+      {/* A FAILED REQUEST IS NOT AN EMPTY LIST. Emptying the list on failure
+          told somebody three weeks into a program that they had none and should
+          go and pick one. The list now keeps whatever was last known and this
+          says the screen may be out of date, with a way to try again. */}
+      {error && (
+        <div
+          data-testid="programs-load-error"
+          role="alert"
+          className="flex items-center justify-between gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400"
+        >
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            className="shrink-0 rounded-md border border-amber-500/40 px-2 py-1 transition-colors hover:bg-amber-500/15"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
-      ) : enrollments.length === 0 ? (
+      ) : enrollments.length === 0 && !error ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
             <Dumbbell className="size-8 text-muted-foreground" />
@@ -152,11 +184,13 @@ function ActiveProgram({
   enrollmentId,
   initialDetail,
   initialPast,
+  live = null,
   onExit,
 }: {
   enrollmentId: string
   initialDetail?: EnrollmentDetail | null
   initialPast?: ProgramEnrollment[]
+  live?: LiveWorkout | null
   onExit: () => void
 }) {
   const { detail, loading, refresh } = useEnrollment(enrollmentId, initialDetail)
@@ -224,34 +258,60 @@ function ActiveProgram({
         onSaved={refresh}
       />
 
-      <TodaySessionWidget
+      {/* WHAT TODAY IS, AND THE BUTTON THAT STARTS IT.
+          Reading the session and doing it used to be one screen — a form with
+          every set pre-filled and one save at the end, which is not how anybody
+          trains. Doing it now lives at /programs/live, one set at a time. */}
+      <TodayCard
         enrollmentId={enrollmentId}
+        programName={getProgram(detail.enrollment.program_id)?.name ?? detail.enrollment.program_id}
         prescription={prescription}
         unit={detail.enrollment.unitSystem}
-        logs={detail.logs}
-        /* Both paths reuse controls that already exist — `unenroll` archives and
-           keeps the sessions, `reset` rewinds the cursor and keeps the weights.
-           Neither is a new concept invented for finishing. */
-        onFinish={async (choice) => {
-          if (choice === "archive") {
-            await fetch(`/api/programs/enrollments/${enrollmentId}`, { method: "DELETE" })
-            onExit()
-            return
-          }
-          await fetch(`/api/programs/enrollments/${enrollmentId}/action`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "reset" }),
-          })
-          refresh()
-        }}
+        live={live}
         days={days}
         onPickDay={setPickedDayId}
-        onLogged={() => {
-          setPickedDayId(null)
-          refresh()
-        }}
-      />
+      >
+        <SessionNotices
+          prescription={prescription}
+          logs={detail.logs}
+          unit={detail.enrollment.unitSystem}
+          onFinish={async (choice) => {
+            if (choice === "archive") {
+              await fetch(`/api/programs/enrollments/${enrollmentId}`, { method: "DELETE" })
+              onExit()
+              return
+            }
+            await fetch(`/api/programs/enrollments/${enrollmentId}/action`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "reset" }),
+            })
+            refresh()
+          }}
+        />
+      </TodayCard>
+
+      {/* LOG ONE YOU ALREADY DID. Same form as before, demoted to what it is
+          good at: writing up a session after the fact. */}
+      <details className="rounded-md border border-border">
+        <summary className="cursor-pointer px-3 py-2 text-sm text-muted-foreground">
+          Log a workout you already did
+        </summary>
+        <div className="p-2">
+          <TodaySessionWidget
+            enrollmentId={enrollmentId}
+            prescription={prescription}
+            unit={detail.enrollment.unitSystem}
+            logs={detail.logs}
+            days={days}
+            onPickDay={setPickedDayId}
+            onLogged={() => {
+              setPickedDayId(null)
+              refresh()
+            }}
+          />
+        </div>
+      </details>
       {/* The program is not fixed once it is running — the gym changes, the
           shoulder changes. Weights carry over across an edit. Opened from the
           history controls so every control for this program sits together. */}

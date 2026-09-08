@@ -17,7 +17,6 @@ import type { ProfileRow } from "@/src/db"
 function toDashboardProfile(profile: ProfileRow): DashboardProfileData {
   return {
     has_purchased: profile.has_purchased ?? false,
-    onboarding_completed: profile.onboarding_completed ?? false,
     level: profile.level ?? 1,
     xp: profile.xp ?? 0,
     scenarios_completed: profile.scenarios_completed ?? 0,
@@ -67,10 +66,9 @@ export async function DashboardPage() {
     )
   }
 
-  // Onboarding check
-  if (!profile?.onboarding_completed) {
-    redirect("/preferences")
-  }
+  /* NO ONBOARDING GATE. The dashboard does not read a single dating answer --
+     only `scenariosService` does -- so the questionnaire now stands at the
+     scenario door instead of in front of the whole app. See hasDatingPreferences. */
 
   const profileData = toDashboardProfile(profile)
 

@@ -840,10 +840,18 @@ export async function resetDailyGoals(userId: string, timezone: string): Promise
 export { getMetricValue } from "./metricsRepo"
 
 /**
- * Sync all goals with linked metrics to current tracking data
- * Call this after fetching tracking stats to keep goals in sync
+ * Sync all goals with linked metrics to current tracking data.
+ * Call this after fetching tracking stats to keep goals in sync.
+ *
+ * RETURNS WHAT BROKE, as well as what changed. Both callers used to do
+ * `.catch(console.error)` and throw the answer away, so a metric could stop
+ * working and every goal it backed would quietly stop moving — for as long as
+ * nobody happened to read a server log.
  */
-export async function syncLinkedGoals(userId: string, timezone: string): Promise<number> {
+export async function syncLinkedGoals(
+  userId: string,
+  timezone: string
+): Promise<{ updated: number; failed: Record<string, string> }> {
   const supabase = await createServerSupabaseClient()
 
   const { data: goals, error: fetchError } = await supabase
@@ -859,18 +867,39 @@ export async function syncLinkedGoals(userId: string, timezone: string): Promise
   }
 
   if (!goals || goals.length === 0) {
-    return 0
+    return { updated: 0, failed: {} }
   }
 
   const metrics = [...new Set(goals.map((g) => g.linked_metric).filter((m): m is string => !!m))]
-  const values = await resolveMetricValues(userId, metrics, timezone)
+  const { values, failed } = await resolveMetricValues(userId, metrics, timezone)
 
   let updatedCount = 0
 
   for (const goal of goals) {
-    // A goal counter is a number by definition, so an unresolvable metric lands
-    // as 0 here. Tiles keep the null and render "—" instead.
-    const newValue = values[goal.linked_metric ?? ""] ?? 0
+    const metric = goal.linked_metric ?? ""
+    /**
+     * A METRIC THAT COULD NOT BE READ IS NOT A ZERO.
+     *
+     * Everything here used to be coerced to 0, so a broken source rewrote every
+     * goal it backed to "no progress" — a person who had trained all week was
+     * told they had done nothing, and there was no way to tell that from the
+     * truth. A goal whose metric failed is now left alone and reported back
+     * instead.
+     *
+     * ONE PATH THIS DOES NOT SAVE, stated plainly rather than implied away:
+     * `resetGoalsForPeriods` zeroes every linked goal at a period boundary
+     * precisely because this function is expected to write the real number back
+     * immediately afterwards (see the comment above that loop). On that path
+     * "left alone" means "left at the zero the roll just wrote", so a failure
+     * during the first sync after a rollover still shows 0. Fixing it properly
+     * needs the roll to know that a value is UNKNOWN rather than zero, which is
+     * a stored state this table does not have yet.
+     */
+    if (metric in failed) continue
+
+    // A goal counter is a number by definition, so a source with nothing in it
+    // yet lands as 0 here. Tiles keep the null and render "—" instead.
+    const newValue = values[metric] ?? 0
 
     if (newValue !== goal.current_value) {
       const { error } = await supabase
@@ -885,7 +914,7 @@ export async function syncLinkedGoals(userId: string, timezone: string): Promise
     }
   }
 
-  return updatedCount
+  return { updated: updatedCount, failed }
 }
 
 

@@ -31,16 +31,10 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
   // Sending a signed-up user to /auth/sign-up is how they get told to sign up
   // for the account they already finished setting up.
   const unlockHref = viewer === "visitor" ? "/auth/sign-up" : "/#pricing";
-  const [experienceLevel, setExperienceLevel] = useState<string | null>(
-    profileData?.experience_level ?? null
-  );
   const [primaryGoal, setPrimaryGoal] = useState<string | null>(
     profileData?.primary_goal ?? null
   );
 
-  useEffect(() => {
-    setExperienceLevel(profileData?.experience_level ?? null);
-  }, [profileData?.experience_level]);
 
   useEffect(() => {
     setPrimaryGoal(profileData?.primary_goal ?? null);
@@ -77,22 +71,12 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
             </div>
           </div>
           <div className="opacity-40 pointer-events-none">
-            <LevelProgressBar
-              level={1}
-              xp={0}
-              scenariosCompleted={0}
-              experienceLevel="beginner"
-            />
+            <LevelProgressBar />
           </div>
         </div>
       ) : profileData ? (
         <div className="mb-12">
-          <LevelProgressBar
-            level={profileData.level || 1}
-            xp={profileData.xp || 0}
-            scenariosCompleted={profileData.scenarios_completed || 0}
-            experienceLevel={experienceLevel ?? profileData.experience_level}
-          />
+          <LevelProgressBar />
         </div>
       ) : null}
 
@@ -260,9 +244,7 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
             user_is_foreign={profileData.user_is_foreign}
             preferred_region={profileData.preferred_region}
             secondary_region={profileData.secondary_region}
-            experience_level={experienceLevel ?? profileData.experience_level}
             primary_goal={primaryGoal ?? profileData.primary_goal}
-            onExperienceLevelChange={setExperienceLevel}
             onPrimaryGoalChange={setPrimaryGoal}
           />
         </div>

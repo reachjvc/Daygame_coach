@@ -107,14 +107,45 @@ flowchart TD
     L["/auth/login"] -->|"email not confirmed"| M["'Not confirmed yet'<br/>-> link to the resend"]
     L -->|"forgot password"| N["/auth/forgot-password<br/>same message whether or not<br/>the account exists"]
     N -->|"emailed link"| G
+    L -->|"password accepted"| P["/api/auth/destination<br/>same decision as /redirect,<br/>without leaving the login page"]
+    P --> J
 
     style G fill:#2d5016,color:#fff
     style D fill:#1e3a5f,color:#fff
 ```
 
+`/redirect` and `/api/auth/destination` are the same question asked two ways,
+and they share one answer: `resolveLoginDestination()` in
+`src/profile/loginDestinationService.ts`. The emailed link arrives as a real
+browser navigation and has nowhere to be but `/redirect`; the login form asks
+the API instead, because `/redirect` renders nothing while it decides and the
+browser sat on a blank white screen for it — 1.2 seconds on a 400ms connection,
+measured 2026-09-08. If the API call fails the form falls back to `/redirect`,
+which reaches the same place the old way.
+
 The green box is where three separate bugs lived. It is one route, used by both
 the signup confirmation and the password-recovery link, so there is exactly one
 place that turns an emailed code into a session.
+
+## The cookie that keeps someone signed in
+
+One cookie, `sb-<project>-auth-token`, holds the session. Its flags are set in
+one place, `src/db/authCookies.ts`, and passed to every Supabase client that can
+write it — the browser one after a login, the server one when it refreshes an
+expiring session. `tests/unit/db/authCookies.test.ts` fails if a new client is
+added without them.
+
+| Flag | Value | Why |
+|---|---|---|
+| `secure` | true when the connection is https | The browser will only send it over an encrypted connection, so the token cannot be read off an unencrypted one. Decided by the connection, **not** by whether this is a production build: the end-to-end suite runs a production build over plain `http://localhost` (`playwright.config.ts`, CI branch), and Safari/WebKit refuses to store a Secure cookie there — login would look fine and the browser would keep nothing. A build-type flag would have been wrong in both directions. In a browser the page's own address decides; on a server the `x-forwarded-proto` header the proxy sets does. |
+| `httpOnly` | **false, deliberately** | Supabase's browser code reads this cookie with `document.cookie` to know who is signed in. Setting it true signs everyone out on the client side. The cost is real — any script that gets injected into a page can read a live session — so the defence is keeping injected scripts out, not this flag. |
+| `sameSite` | lax | A form posted from another site cannot ride the session. |
+| `path` | `/` | Every route needs it. |
+
+Verified 2026-09-08 against a production build behind a TLS proxy: over https
+the cookie arrives with `Secure` set and the session survives a reload; over
+plain http on the same build it does not, which is what keeps WebKit working in
+CI.
 
 ## Who may write what
 

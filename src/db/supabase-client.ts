@@ -1,5 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr"
 
+import { browserAuthCookieOptions } from "./authCookies"
+
 /**
  * Create a Supabase client for use in browser/client components.
  * Uses the anon key - respects Row Level Security (RLS).
@@ -7,6 +9,7 @@ import { createBrowserClient } from "@supabase/ssr"
 export function createBrowserSupabaseClient() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookieOptions: browserAuthCookieOptions() }
   )
 }

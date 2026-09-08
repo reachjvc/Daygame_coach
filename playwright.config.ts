@@ -64,6 +64,8 @@ export default defineConfig({
         /integration\//,
         // Cross-browser tests run in dedicated Firefox/WebKit projects
         /cross-browser\//,
+        // Derived per-route sweeps run in their own desktop/phone/WebKit projects
+        /sweep\//,
       ],
       dependencies: ['setup'],
       use: {
@@ -402,6 +404,46 @@ export default defineConfig({
         storageState: 'tests/e2e/.auth/user.json',
         trace: 'on',
       },
+    },
+
+    // === Derived sweeps: every page, no hand-written list ===
+    // These read the app's own route tree (tests/support/appRoutes.ts) rather
+    // than a list somebody maintains, so a new page is covered the day it
+    // exists. Run on a desktop, on a phone and on Safari's engine, because the
+    // faults they look for -- a garbled URL, a scroll box taller than the
+    // screen, a tap target under a thumb -- do not all show up on one of them.
+    {
+      name: 'sweep-desktop',
+      testMatch: /sweep\//,
+      dependencies: ['setup'],
+      // These navigate to every page in the app. Against `npm run dev` each
+      // route is compiled on first request, and three sweep projects at once
+      // queue behind that compiler -- so the default 60s is not enough locally.
+      // CI runs a production build, where this is never approached.
+      timeout: 180_000,
+      use: { ...devices['Desktop Chrome'], storageState: 'tests/e2e/.auth/user.json' },
+    },
+    {
+      name: 'sweep-phone',
+      testMatch: /sweep\//,
+      dependencies: ['setup'],
+      // These navigate to every page in the app. Against `npm run dev` each
+      // route is compiled on first request, and three sweep projects at once
+      // queue behind that compiler -- so the default 60s is not enough locally.
+      // CI runs a production build, where this is never approached.
+      timeout: 180_000,
+      use: { ...devices['iPhone 14'], storageState: 'tests/e2e/.auth/user.json' },
+    },
+    {
+      name: 'sweep-webkit',
+      testMatch: /sweep\//,
+      dependencies: ['setup'],
+      // These navigate to every page in the app. Against `npm run dev` each
+      // route is compiled on first request, and three sweep projects at once
+      // queue behind that compiler -- so the default 60s is not enough locally.
+      // CI runs a production build, where this is never approached.
+      timeout: 180_000,
+      use: { ...devices['Desktop Safari'], storageState: 'tests/e2e/.auth/user.json' },
     },
 
     // === Cross-feature integration tests (run after session chain) ===

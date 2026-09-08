@@ -379,6 +379,17 @@ export interface LoadJudgement {
    * 87.5. Reversed for assistance lifts, where less is more.
    */
   achieved: number
+  /**
+   * WHAT ACTUALLY FELL SHORT, so the app can say it rather than guess.
+   *
+   * The summary used to answer every shortfall with "Missed reps", including a
+   * session where somebody did one perfect set of five and then had to leave —
+   * they missed no reps at all, they did fewer sets. `undefined` when nothing
+   * fell short.
+   */
+  shortfall?: "sets" | "reps" | "both"
+  /** Sets actually logged, against `prescribed.sets`. */
+  setsDone: number
 }
 
 export interface ExerciseState {
@@ -660,6 +671,103 @@ export interface ProgressionChange {
 
 export interface ApplyLogResult {
   enrollment: ProgramEnrollment
+  changes: ProgressionChange[]
+}
+
+// ============================================================================
+// A workout that is happening right now
+// ============================================================================
+
+/**
+ * One set, as it stands during the workout.
+ *
+ * It exists in the database the moment it is ticked. Every set used to live in
+ * the open browser tab until one final save, so a dead phone lost the lot.
+ */
+export interface LiveWorkoutSet {
+  id: string
+  /** The program's own id for the lift; null for a workout off any program. */
+  exerciseId: string | null
+  exercise: string
+  /**
+   * THE NUMBER THE LIFTER SEES AND TYPES, in `LiveWorkout.unit`.
+   *
+   * The database stores kilograms and this used to be handed to the screen raw,
+   * beside a label reading "lb" — so a 135 lb bench came back as "61.23 lb", and
+   * re-ticking that set wrote 61 lb to the database. Everything the live screen
+   * renders or sends uses this; `weightKg` is for the engine and the totals.
+   */
+  weight: number
+  /** The same set in kilograms, which is what is stored and what totals use. */
+  weightKg: number
+  reps: number
+  setNumber: number
+  kind: "warmup" | "working" | "amrap" | "backoff" | "drop"
+  /** Which prescribed set this answers; null if it was added on the day. */
+  prescribedIndex: number | null
+  completedAt: string | null
+  rpe: number | null
+  side: "left" | "right" | null
+}
+
+export interface LiveWorkout {
+  id: string
+  startedAt: string
+  enrollmentId: string | null
+  dayId: string | null
+  cycle: number | null
+  week: number | null
+  adjustments: WorkoutAdjustments
+  notes: string | null
+  rpe: number | null
+  /** The unit this workout is entered and shown in. Never guessed by a screen. */
+  unit: UnitSystem
+  sets: LiveWorkoutSet[]
+}
+
+/** What changed during a workout that the sets alone cannot say. */
+export interface WorkoutAdjustments {
+  skipped?: string[]
+  incomplete?: string[]
+  swapped?: Record<string, { name: string; libraryId?: string }>
+  added?: Array<{ exerciseId: string; name: string; libraryId?: string }>
+  order?: string[]
+}
+
+/** A stored set, as the one workouts table holds it. */
+export interface StoredSet {
+  exercise: string
+  exercise_id: string | null
+  weight_kg: number
+  reps: number
+  set_number: number
+  set_kind: string
+  side?: string | null
+}
+
+/** What the finish screen says you just did. */
+export interface WorkoutSummary {
+  workoutId: string
+  durationMin: number
+  sets: number
+  volumeKg: number
+  /** The same total in the lifter's own unit, so the summary is not half in kg. */
+  volume: number
+  unit: UnitSystem
+  /**
+   * The history could not be read, so no claim is made either way. Without this
+   * a failed read looked exactly like "you beat nothing today".
+   */
+  recordsUnavailable?: boolean
+  personalRecords: Array<{
+    exercise: string
+    weight_kg: number
+    /** The record in the lifter's unit — what the summary actually prints. */
+    weight: number
+    reps: number
+    date: string
+    isNew: boolean
+  }>
   changes: ProgressionChange[]
 }
 

@@ -23,8 +23,9 @@ import {
   getTodaySession,
   getSessionLogs,
 } from "@/src/db/programRepo"
+import { getLiveWorkout } from "@/src/db/workoutRepo"
 import { TrainingScreen } from "@/src/programs/components/TrainingScreen"
-import type { EnrollmentDetail, ProgramEnrollment } from "@/src/programs/types"
+import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment } from "@/src/programs/types"
 
 export default async function ProgramsPage() {
   const auth = await requireAuth()
@@ -32,12 +33,17 @@ export default async function ProgramsPage() {
   let active: ProgramEnrollment[] = []
   let past: ProgramEnrollment[] = []
   let detail: EnrollmentDetail | null = null
+  let live: LiveWorkout | null = null
 
   if (auth.success) {
     try {
-      ;[active, past] = await Promise.all([
+      ;[active, past, live] = await Promise.all([
         listActiveEnrollments(auth.userId),
         listPastEnrollments(auth.userId),
+        // So "Resume · 23 min" is on the first paint. A workout left open is
+        // the one thing this page could never say before, because an
+        // unfinished workout was not a thing that existed.
+        getLiveWorkout(auth.userId),
       ])
       // With exactly one program the screen opens straight onto its session, so
       // that session is resolved here too rather than in a second round trip.
@@ -53,5 +59,5 @@ export default async function ProgramsPage() {
     }
   }
 
-  return <TrainingScreen initialActive={active} initialPast={past} initialDetail={detail} />
+  return <TrainingScreen initialActive={active} initialPast={past} initialDetail={detail} live={live} />
 }

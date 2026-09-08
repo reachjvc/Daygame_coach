@@ -1,12 +1,25 @@
 import { getProfile, updateProfile } from "@/src/db/server"
+// Re-exported, not redefined. The gate is a client component and cannot import
+// from this module -- it reaches next/headers through @/src/db/server -- so the
+// type lives in types.ts and the constant in config.ts, both server-free.
+import { EMPTY_ONBOARDING_VALUES } from "@/src/profile/config"
+import type {
+  OnboardingInitialValues,
+  OnboardingProfileColumns,
+} from "@/src/profile/types"
+
+export {
+  EMPTY_ONBOARDING_VALUES,
+  type OnboardingInitialValues,
+  type OnboardingProfileColumns,
+}
 import {
+  hasDatingPreferences,
   BOOLEAN_PREFERENCE_KEYS,
   EXPERIENCE_LEVELS,
   PRIMARY_GOALS,
   VALID_REGION_IDS,
   AGE_RANGE,
-  EXPERIENCE_TO_LEVEL,
-  DEFAULT_INITIAL_LEVEL,
 } from "@/src/profile/config"
 
 /**
@@ -18,20 +31,6 @@ import {
 // ============================================================================
 // Types
 // ============================================================================
-
-export interface OnboardingData {
-  ageRangeStart: number
-  ageRangeEnd: number
-  userIsForeign: boolean
-  datingForeigners: boolean
-  region: string
-  archetype: string
-  secondaryArchetype: string | null
-  tertiaryArchetype: string | null
-  experienceLevel: string
-  primaryGoal: string
-  timezone: string | null
-}
 
 export interface ArchetypeData {
   archetype: string
@@ -89,12 +88,6 @@ async function updateProfileDb(
 // Helper Functions
 // ============================================================================
 
-/**
- * Map experience level to initial user level.
- */
-export function getInitialLevelFromExperience(experienceLevel: string): number {
-  return EXPERIENCE_TO_LEVEL[experienceLevel] ?? DEFAULT_INITIAL_LEVEL
-}
 
 /**
  * Sanitize archetype selections to prevent duplicates.
@@ -145,43 +138,85 @@ export function validateRegion(regionId: string): void {
 // ============================================================================
 
 /**
- * Complete the onboarding process for a user.
- * Sets all initial profile fields and marks onboarding as completed.
+ * Read a saved profile back into the answers the dating-preferences gate holds.
+ *
+ * ONLY FOR A PROFILE THAT ACTUALLY CARRIES THEM, and that question has exactly
+ * one owner: `hasDatingPreferences`. It used to key off `onboarding_completed`,
+ * which is now legacy -- see the note on that function. The trap it guards is
+ * unchanged: `user_is_foreign` defaults to `false` in the database, so on a row
+ * nobody has filled in it is indistinguishable from a real "No, I'm local", and
+ * prefilling from it would pre-answer a question the user has never seen.
  */
-export async function completeOnboardingForUser(
-  userId: string,
-  data: OnboardingData
-): Promise<void> {
-  const sanitized = sanitizeArchetypes({
-    archetype: data.archetype,
-    secondaryArchetype: data.secondaryArchetype,
-    tertiaryArchetype: data.tertiaryArchetype,
-  })
+export function toOnboardingInitialValues(
+  profile: OnboardingProfileColumns | null | undefined
+): OnboardingInitialValues {
+  // The `!profile` half is what lets TypeScript narrow below; the predicate
+  // returns a plain boolean, so on its own it proves nothing to the compiler.
+  if (!profile || !hasDatingPreferences(profile)) {
+    return EMPTY_ONBOARDING_VALUES
+  }
 
-  /* THE SAME CHECK THE OTHER TWO WRITE PATHS MAKE.
-     `updatePreferredRegionForUser` and `updateSecondaryRegionDirectForUser`
-     both call this; onboarding — the path that writes a region for the FIRST
-     time — did not, so any string reaching it was stored. It then renders as
-     itself wherever a region is named, because the label table is keyed by the
-     ids in `REGIONS`. One rule, checked everywhere it is written. */
+  const text = (value: unknown) =>
+    typeof value === "string" && value.length > 0 ? value : null
+  const flag = (value: unknown) => (typeof value === "boolean" ? value : null)
+  const count = (value: unknown) => (typeof value === "number" ? value : null)
+
+  return {
+    ageRangeStart: count(profile.age_range_start),
+    ageRangeEnd: count(profile.age_range_end),
+    userIsForeign: flag(profile.user_is_foreign),
+    datingForeigners: flag(profile.dating_foreigners),
+    region: text(profile.preferred_region),
+    // Order is the priority the user chose; gaps are dropped, never padded.
+    archetypes: [
+      text(profile.archetype),
+      text(profile.secondary_archetype),
+      text(profile.tertiary_archetype),
+    ].filter((name): name is string => name !== null),
+    primaryGoal: text(profile.primary_goal),
+  }
+}
+
+export interface DatingPreferences {
+  region: string
+  archetypes: string[]
+  userIsForeign: boolean
+  datingForeigners: boolean
+}
+
+/**
+ * Save the four answers the scenario generator needs, and nothing else.
+ *
+ * WRITES ONLY WHAT IT WAS GIVEN. The five-step wizard this replaces wrote every
+ * field it held on submit, so editing one thing reset the rest to the form's
+ * hardcoded defaults -- a saved 20-25 age range became 22-25 and the second and
+ * third archetypes were erased, measured on a real account 2026-09-07. Age range,
+ * primary goal, level and timezone are not this function's business, so they are
+ * not in the update at all and cannot be clobbered by it.
+ */
+export async function saveDatingPreferencesForUser(
+  userId: string,
+  data: DatingPreferences
+): Promise<void> {
   validateRegion(data.region)
 
-  const initialLevel = getInitialLevelFromExperience(data.experienceLevel)
+  if (data.archetypes.length === 0) {
+    throw new ProfileServiceError("Archetype is required", "ARCHETYPE_REQUIRED")
+  }
+
+  const sanitized = sanitizeArchetypes({
+    archetype: data.archetypes[0],
+    secondaryArchetype: data.archetypes[1] ?? null,
+    tertiaryArchetype: data.archetypes[2] ?? null,
+  })
 
   await updateProfileDb(userId, {
-    age_range_start: data.ageRangeStart,
-    age_range_end: data.ageRangeEnd,
-    user_is_foreign: data.userIsForeign,
-    dating_foreigners: data.datingForeigners,
     preferred_region: data.region,
     archetype: sanitized.archetype,
     secondary_archetype: sanitized.secondaryArchetype,
     tertiary_archetype: sanitized.tertiaryArchetype,
-    experience_level: data.experienceLevel,
-    primary_goal: data.primaryGoal,
-    level: initialLevel,
-    onboarding_completed: true,
-    ...(data.timezone ? { timezone: data.timezone } : {}),
+    user_is_foreign: data.userIsForeign,
+    dating_foreigners: data.datingForeigners,
   })
 }
 

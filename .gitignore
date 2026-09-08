@@ -96,3 +96,6 @@ tests/e2e/.auth/
 # a clean checkout without them means no "Add to Home Screen" on Chrome/Android.
 !public/icon-*.png
 !public/apple-icon.png
+
+# Database backups — real data, never committed
+backups/

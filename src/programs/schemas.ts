@@ -142,41 +142,61 @@ const HoldExerciseSchema = z
   })
   .refine((e) => e.targetSec >= e.startSec, { message: "The target hold cannot be shorter than the start" })
 
-const day = <T extends z.ZodTypeAny>(exercise: T) =>
+const day = <T extends z.ZodTypeAny>(exercise: T, minExercises: 0 | 1 = 1) =>
   z.object({
     id: z.string().min(1).max(80),
     label: z.string().min(1).max(120),
     // min(1): a day with no exercises prescribes an empty session, which would
     // advance the cursor and log a workout that did not happen.
-    exercises: z.array(exercise).min(1).max(30),
+    //
+    // A DRAFT IS THE ONE EXCEPTION, and it passes 0. Building a week over two
+    // sittings is the ordinary case, and refusing to SAVE a half-built one is
+    // how the builder came to lose everything when you closed the tab. Saving
+    // is permissive; starting is not — `CustomScheduleSchema` is what a draft
+    // has to satisfy before it can become a program, and it still says 1.
+    exercises: z.array(exercise).min(minExercises).max(30),
     /** ISO weekday, 1 = Monday. Absent = trained in order rather than on a date. */
     weekday: z.number().int().min(1).max(7).optional(),
   })
+
+/** The four schedule shapes, with a floor on how full a day has to be. */
+const scheduleUnion = (minExercises: 0 | 1) =>
+  z.discriminatedUnion("kind", [
+    z.object({
+      kind: z.literal("linear_rotation"),
+      days: z.array(day(LoadExerciseSchema, minExercises)).min(1).max(14),
+    }),
+    z.object({
+      kind: z.literal("weekly_waved"),
+      weeks: positiveInt(52),
+      days: z.array(day(LoadExerciseSchema, minExercises)).min(1).max(14),
+    }),
+    z.object({
+      kind: z.literal("skill_routine"),
+      days: z.array(day(SkillExerciseSchema, minExercises)).min(1).max(14),
+    }),
+    z.object({
+      kind: z.literal("hold_routine"),
+      days: z.array(day(HoldExerciseSchema, minExercises)).min(1).max(14),
+    }),
+  ])
 
 /**
  * Endurance plans are absent on purpose: they are week-by-week prescriptions
  * that cannot be coherently edited, so `customize.ts` refuses them and this
  * schema gives the route a second, independent refusal.
  */
-export const CustomScheduleSchema = z.discriminatedUnion("kind", [
-  z.object({
-    kind: z.literal("linear_rotation"),
-    days: z.array(day(LoadExerciseSchema)).min(1).max(14),
-  }),
-  z.object({
-    kind: z.literal("weekly_waved"),
-    weeks: positiveInt(52),
-    days: z.array(day(LoadExerciseSchema)).min(1).max(14),
-  }),
-  z.object({
-    kind: z.literal("skill_routine"),
-    days: z.array(day(SkillExerciseSchema)).min(1).max(14),
-  }),
-  z.object({
-    kind: z.literal("hold_routine"),
-    days: z.array(day(HoldExerciseSchema)).min(1).max(14),
-  }),
-])
+export const CustomScheduleSchema = scheduleUnion(1)
+
+/**
+ * The same schedule, as it is allowed to look while you are still writing it.
+ *
+ * The ONLY difference is that a day may be empty. Everything else — the lift
+ * shapes, the rep ranges, the progression rules, the fourteen-day ceiling — is
+ * identical, so a draft cannot hold anything a program could not, and starting
+ * one re-validates with `CustomScheduleSchema` rather than trusting this.
+ */
+export const DraftScheduleSchema = scheduleUnion(0)
 
 /** PUT body for /api/programs/enrollments/[id]/schedule. */
 export const UpdateScheduleSchema = z.object({
@@ -234,3 +254,120 @@ export const LogSessionSchema = z
     ...entryWhenFields,
   })
   .refine(hasDateIfTime, NEEDS_DATE_FOR_TIME)
+
+
+// ===========================================================================
+// A workout that is happening right now
+//
+// In the slice rather than in the routes, because every route under
+// /api/workouts has a 50-line ceiling (`tests/unit/architecture.test.ts`) and
+// because the shape IS the contract `workoutRepo` promises to accept.
+// ===========================================================================
+
+export const StartWorkoutSchema = z.object({
+  enrollmentId: z.string().uuid().nullable().optional(),
+  dayId: z.string().min(1).max(80).nullable().optional(),
+  /**
+   * The browser's own id for this workout, minted before the request goes out.
+   * A retry after a dropped connection returns the SAME workout instead of
+   * opening a second one — which is what a gym with bad signal produces.
+   */
+  clientKey: z.string().min(8).max(64),
+})
+
+export const CompleteSetSchema = z.object({
+  exerciseId: z.string().min(1).max(80).nullable(),
+  exercise: z.string().min(1).max(120),
+  weight: z.number().min(0).max(1000),
+  // 0 = attempted and failed. A set not attempted has no row.
+  reps: z.number().int().min(0).max(1000),
+  setNumber: z.number().int().min(1).max(50),
+  kind: z.enum(["warmup", "working", "amrap", "backoff", "drop"]).optional(),
+  prescribedIndex: z.number().int().min(0).max(50).nullable().optional(),
+  side: z.enum(["left", "right"]).nullable().optional(),
+  rpe: z.number().int().min(1).max(10).nullable().optional(),
+})
+
+export const AdjustWorkoutSchema = z.object({
+  skipped: z.array(z.string().min(1).max(80)).max(40).optional(),
+  incomplete: z.array(z.string().min(1).max(80)).max(40).optional(),
+  swapped: z
+    .record(z.string(), z.object({ name: z.string().min(1).max(120), libraryId: z.string().max(80).optional() }))
+    .optional(),
+  added: z
+    .array(
+      z.object({
+        exerciseId: z.string().min(1).max(80),
+        name: z.string().min(1).max(120),
+        libraryId: z.string().max(80).optional(),
+      })
+    )
+    .max(40)
+    .optional(),
+  order: z.array(z.string().min(1).max(80)).max(60).optional(),
+  notes: z.string().max(1000).nullable().optional(),
+  rpe: z.number().int().min(1).max(10).nullable().optional(),
+})
+
+export const FinishWorkoutSchema = z.object({
+  /**
+   * When it really ended. Defaults to the last set you ticked, never to "now" —
+   * a workout you forgot to finish on Tuesday and close on Thursday is not a
+   * two-day workout, and the 600-minute ceiling would refuse it anyway.
+   */
+  endedAt: z.string().datetime().optional(),
+  durationMin: z
+    .number()
+    .int()
+    .min(1)
+    .max(599, "A workout cannot be longer than ten hours — check when it really ended.")
+    .optional(),
+  intensity: z.number().int().min(1).max(5),
+  rpe: z.number().int().min(1).max(10).nullable().optional(),
+  notes: z.string().max(1000).nullable().optional(),
+  sessionType: z.enum(["weights", "cardio", "mobility", "yoga", "running"]).optional(),
+})
+
+// ============================================================================
+// Saved training weeks
+// ============================================================================
+
+/** The parts of a draft a person can set. `source` is decided by the server. */
+const DraftBody = {
+  name: z.string().trim().min(1).max(60),
+  discipline: z
+    .enum(["strength", "bodybuilding", "calisthenics", "cardio", "flexibility", "triathlon", "ironman"])
+    .optional(),
+  unitSystem: z.enum(["kg", "lb"]).optional(),
+  schedule: DraftScheduleSchema,
+  /**
+   * Zero is allowed and is the point for bodyweight work — a push-up, a dip and
+   * an unweighted pull-up all start at nothing. `.positive()` on the enrollment
+   * route is what used to make them impossible to enrol.
+   */
+  workingWeights: z.record(z.string(), z.number().min(0).max(1000)).optional(),
+}
+
+export const CreateDraftSchema = z.object({
+  ...DraftBody,
+  source: z.enum(["built", "catalog", "saved_workout"]).optional(),
+  sourceProgramId: z.string().min(1).max(80).nullish(),
+})
+
+/** Every field optional: renaming a draft must not require resending the week. */
+export const UpdateDraftSchema = z.object({
+  name: DraftBody.name.optional(),
+  discipline: DraftBody.discipline,
+  unitSystem: DraftBody.unitSystem,
+  schedule: DraftScheduleSchema.optional(),
+  workingWeights: DraftBody.workingWeights,
+})
+
+/**
+ * Starting a draft. The level is fixed at the custom program's only one, so the
+ * body carries just the things a start can legitimately vary.
+ */
+export const StartDraftSchema = z.object({
+  /** The bar it is trained on, when it is not the standard one. */
+  barWeightKg: z.number().min(0).max(50).nullish(),
+})

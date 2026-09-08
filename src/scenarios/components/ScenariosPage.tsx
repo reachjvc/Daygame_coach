@@ -6,6 +6,9 @@ import { createServerSupabaseClient } from "@/src/db/server"
 import type { DifficultyLevel } from "../openers/data/energy"
 import { ScenariosHub } from "@/src/scenarios/components/ScenariosHub"
 import { updatePreferredLanguage } from "@/src/settings/actions"
+import { hasDatingPreferences } from "@/src/profile/config"
+import { toOnboardingInitialValues } from "@/src/profile/profileService"
+import { DatingPreferencesGate } from "@/src/profile/components"
 
 function getRecommendedDifficulty(userLevel: number | null | undefined): DifficultyLevel {
   const level = userLevel ?? 1
@@ -62,7 +65,9 @@ export async function ScenariosPage() {
   // Query profile - preferred_language is optional (might not exist yet)
   const { data: profile } = await supabase
     .from("profiles")
-    .select("has_purchased, onboarding_completed, level, scenarios_completed")
+    .select(
+      "has_purchased, level, scenarios_completed, preferred_region, archetype, secondary_archetype, tertiary_archetype, dating_foreigners, user_is_foreign, age_range_start, age_range_end"
+    )
     .eq("id", user.id)
     .single()
 
@@ -114,8 +119,14 @@ export async function ScenariosPage() {
     )
   }
 
-  // Onboarding check - only for subscribed users
-  if (!profile?.onboarding_completed) {
+  /* THE GATE, AT THE ONLY DOOR THAT NEEDS IT.
+     `scenariosService` is the sole consumer of the region, archetype and
+     foreigner answers, so this is where they are asked. It used to check
+     `onboarding_completed` -- a flag also guarding the dashboard, the Lair and
+     the post-login redirect, none of which read these columns -- and send the
+     user to a five-step wizard on another route. Now it asks by looking at the
+     columns themselves, and asks inline. */
+  if (!hasDatingPreferences(profile)) {
     return (
       <div className="min-h-dvh bg-background">
         <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
@@ -133,15 +144,13 @@ export async function ScenariosPage() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-6xl px-4 sm:px-8 py-8 sm:py-12">
-          <div className="text-center py-16">
-            <h2 className="text-2xl font-bold mb-4">Complete Your Profile First</h2>
-            <p className="text-muted-foreground mb-6">Set up your preferences to get personalized scenarios.</p>
-            <Button asChild>
-              <Link href="/preferences">Complete Setup</Link>
-            </Button>
-          </div>
-        </main>
+        <DatingPreferencesGate
+          initialValues={toOnboardingInitialValues(profile)}
+          next="/dashboard/scenarios"
+          heading="Before your first scenario"
+          intro="Scenarios put you in front of a specific person. These answers decide who she is. It is the only place in the app that uses them, and you can change them later."
+          submitLabel="Start practising"
+        />
       </div>
     )
   }

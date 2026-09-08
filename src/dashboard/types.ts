@@ -1,6 +1,5 @@
 export interface DashboardProfileData {
   has_purchased: boolean
-  onboarding_completed: boolean
   level: number
   xp: number
   scenarios_completed: number

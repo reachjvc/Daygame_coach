@@ -96,7 +96,7 @@ export async function resolveMetrics(
 
   const catalogIds = metricIds.filter((id) => METRIC_BY_ID[id])
 
-  const [catalogValues, goals] = await Promise.all([
+  const [catalog, goals] = await Promise.all([
     resolveMetricValues(userId, catalogIds, timezone),
     getGoalsByIds(userId, [...new Set(goalRefs.map((r) => r.parsed.goalId))]),
   ])
@@ -116,7 +116,18 @@ export async function resolveMetrics(
   return metricIds.map((id): MetricValue => {
     const def = METRIC_BY_ID[id]
     if (def) {
-      const value = catalogValues[id]
+      /**
+       * A TILE THAT COULD NOT BE WORKED OUT SAYS SO.
+       *
+       * Every absent value used to read "Nothing logged for this yet" — which
+       * is a statement about the person's week, and when the source was simply
+       * broken it was a false one. Somebody who trained four times was told
+       * they had logged nothing, and nothing on the screen distinguished that
+       * from the truth.
+       */
+      const why = catalog.failed[id]
+      if (why) return { id, value: null, reason: `Not shown — ${why}.`, unavailable: true, format: def.format }
+      const value = catalog.values[id]
       return value === undefined || value === null
         ? { id, value: null, reason: "Nothing logged for this yet", format: def.format }
         : { id, value, format: def.format }

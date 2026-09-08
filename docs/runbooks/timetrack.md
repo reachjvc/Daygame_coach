@@ -73,3 +73,46 @@ anything a person typed — stripped on the way in by `errorScrubService`, with 
 
 Reports older than 30 days are deleted nightly at 03:20 UTC by `prune_error_reports()`, scheduled through
 pg_cron. To run it by hand: `select public.prune_error_reports();`
+
+## Backups
+
+Take one:
+
+    npx tsx scripts/backup-timetrack.ts
+
+It writes a plain JSON file into `backups/` (git-ignored) holding every row of
+every timetrack table. **Keep a copy somewhere other than the database it came
+from** — a copy that dies with the original is not a copy.
+
+Put one back:
+
+    npx tsx scripts/restore-timetrack.ts backups/<file>.json            # says what it would do
+    npx tsx scripts/restore-timetrack.ts backups/<file>.json --confirm  # actually writes
+
+Without `--confirm` it writes nothing. It never deletes: rows are matched by
+their own ids, so anything created since the backup survives, anything the
+backup holds is written over the top, and running it twice changes nothing the
+second time.
+
+### The test restore, and how to repeat it
+
+A backup nobody has restored from is a belief. This was run on 2026-09-08
+against the live database:
+
+1. Created an entry `restore proof entry`.
+2. `npx tsx scripts/backup-timetrack.ts` — 111 rows.
+3. Deleted the entry outright and confirmed it was gone (0 rows matched).
+4. Ran the restore without `--confirm` — wrote nothing, as intended.
+5. Ran it with `--confirm` — 111 rows restored.
+6. The entry was back, with its duration intact. Cleaned up afterwards; the 78
+   real entry rows were untouched throughout.
+
+Repeat it after any schema change. It takes two minutes and it is the only
+thing that tells you the backup is real.
+
+### What is NOT covered
+
+This backs up the tracker's own tables. It does not back up goals, tracking,
+scenarios or anything else — those live in the same database and would need
+their own export, or Supabase's whole-database backups, which are a setting in
+the Supabase dashboard and are not switched on by anything here.

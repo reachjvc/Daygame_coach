@@ -35,10 +35,10 @@ setup('authenticate as test user', async ({ page }) => {
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   }
 
-  // If user lands on preferences (onboarding not completed), complete it
-  if (page.url().includes('/preferences')) {
-    await completeOnboarding(page)
-  }
+  // Signing in no longer diverts anyone into a questionnaire, so this is not
+  // about getting past a gate on the way in. It is about the scenario specs:
+  // scenarios ask for a region and an archetype, and several specs open them.
+  await ensureDatingPreferences(page)
 
   // Clean up any leftover active sessions from previous test runs
   await ensureNoActiveSessionViaAPI(page)
@@ -47,37 +47,39 @@ setup('authenticate as test user', async ({ page }) => {
 })
 
 /**
- * Walks through all 5 onboarding steps via UI to complete user setup.
- * This ensures the test user has onboarding_completed=true in the database.
+ * Make sure the test user carries the answers scenarios need.
+ *
+ * Replaces a walk through five onboarding steps. Those steps are gone: only
+ * `scenariosService` ever read the answers, so they are now asked once, on one
+ * screen, at the scenario door. Filling it here is idempotent -- if the user
+ * already has them the submit button is live and nothing is clicked.
  */
-async function completeOnboarding(page: import('@playwright/test').Page) {
-  // Step 1: Tell us about yourself - select foreigner status options
-  await expect(page.getByText('Step 1 of 5')).toBeVisible({ timeout: AUTH_TIMEOUT })
-  await page.getByText("No, I'm local").click({ timeout: ACTION_TIMEOUT })
-  await page.getByText('Mostly dating locals').click({ timeout: ACTION_TIMEOUT })
-  await page.getByTestId(SELECTORS.onboarding.nextButton).click({ timeout: ACTION_TIMEOUT })
+async function ensureDatingPreferences(page: import('@playwright/test').Page) {
+  await page.goto('/preferences', { timeout: AUTH_TIMEOUT })
+  await expect(page.getByTestId(SELECTORS.datingPreferences.form)).toBeVisible({
+    timeout: AUTH_TIMEOUT,
+  })
 
-  // Step 2: Select region on world map
-  await expect(page.getByText('Step 2 of 5')).toBeVisible({ timeout: AUTH_TIMEOUT })
-  await page.waitForSelector('svg path[data-region]', { timeout: AUTH_TIMEOUT })
-  await page.locator('path[data-region="western-europe"]').first().click({ timeout: ACTION_TIMEOUT })
-  await page.getByTestId(SELECTORS.onboarding.nextButton).click({ timeout: ACTION_TIMEOUT })
+  const submit = page.getByTestId(SELECTORS.datingPreferences.submit)
+  if (await submit.isEnabled()) {
+    return
+  }
 
-  // Step 3: Choose archetype (click first available archetype card)
-  await expect(page.getByText('Step 3 of 5')).toBeVisible({ timeout: AUTH_TIMEOUT })
-  await page.locator('[class*="cursor-pointer"][class*="hover:border-primary"]').first().click({ timeout: ACTION_TIMEOUT })
-  await page.getByTestId(SELECTORS.onboarding.nextButton).click({ timeout: ACTION_TIMEOUT })
+  // The list, not the map: a country shape is ~9px on a phone.
+  await page.getByTestId('region-option-western-europe').click({ timeout: ACTION_TIMEOUT })
+  await page
+    .getByTestId(SELECTORS.datingPreferences.archetype('Corporate Powerhouse'))
+    .click({ timeout: ACTION_TIMEOUT })
+  await page
+    .getByTestId(SELECTORS.datingPreferences.userIsForeign)
+    .getByRole('button', { name: 'No' })
+    .click({ timeout: ACTION_TIMEOUT })
+  await page
+    .getByTestId(SELECTORS.datingPreferences.datingForeigners)
+    .getByRole('button', { name: 'No' })
+    .click({ timeout: ACTION_TIMEOUT })
 
-  // Step 4: Experience level (click first option)
-  await expect(page.getByText('Step 4 of 5')).toBeVisible({ timeout: AUTH_TIMEOUT })
-  await page.getByText('Intermediate').click({ timeout: ACTION_TIMEOUT })
-  await page.getByTestId(SELECTORS.onboarding.nextButton).click({ timeout: ACTION_TIMEOUT })
-
-  // Step 5: Primary goal (click first option)
-  await expect(page.getByText('Step 5 of 5')).toBeVisible({ timeout: AUTH_TIMEOUT })
-  await page.getByText('Build Confidence').click({ timeout: ACTION_TIMEOUT })
-  await page.getByTestId(SELECTORS.onboarding.completeButton).click({ timeout: ACTION_TIMEOUT })
-
-  // Wait for redirect to dashboard after onboarding completion
+  await expect(submit).toBeEnabled({ timeout: ACTION_TIMEOUT })
+  await submit.click({ timeout: ACTION_TIMEOUT })
   await page.waitForURL(/\/dashboard/, { timeout: AUTH_TIMEOUT })
 }

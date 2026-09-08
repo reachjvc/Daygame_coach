@@ -215,9 +215,18 @@ export function isWorkingSet(set: { set_kind?: string | null }): boolean {
   return kind !== "warmup" && kind !== "drop"
 }
 
+/**
+ * @param onDate The lifter's own calendar day for these sets, YYYY-MM-DD.
+ *   Passed in, never taken from the clock here: this runs in a route handler on
+ *   a server whose process time is UTC, so `new Date()` filed a Berlin lifter's
+ *   00:30 Tuesday record on Monday and a Los Angeles lifter's 18:00 Monday one
+ *   on Tuesday. It is also the day of the WORKOUT rather than the day it was
+ *   written up, so a Tuesday session closed on Thursday still reads Tuesday.
+ */
 export function detectPersonalRecords(
   allSets: (WorkoutSetRow & { logged_at: string })[],
-  newSets: WorkoutSetRow[]
+  newSets: WorkoutSetRow[],
+  onDate?: string
 ): PersonalRecord[] {
   const records: PersonalRecord[] = []
   const exerciseMaxes = new Map<string, { weight_kg: number; reps: number }>()
@@ -232,20 +241,29 @@ export function detectPersonalRecords(
     }
   }
 
-  // Check new sets for PRs
+  /**
+   * Check the new sets, RAISING THE BAR AS IT GOES.
+   *
+   * The running best was built from the history and then never updated, so
+   * every qualifying set in the session was announced separately: three sets of
+   * five at a new weight reported "New best" three times, for the same lift, on
+   * the same numbers. Only the best set of the session is the record.
+   */
   for (const s of newSets) {
     if (!isWorkingSet(s)) continue
     const key = s.exercise.toLowerCase()
     const prev = exerciseMaxes.get(key)
     if (!prev || s.weight_kg > prev.weight_kg || (s.weight_kg === prev.weight_kg && s.reps > prev.reps)) {
+      exerciseMaxes.set(key, { weight_kg: s.weight_kg, reps: s.reps })
+      // Replace an earlier announcement for the same lift rather than adding to
+      // it: what stands at the end of the session is the record.
+      const already = records.findIndex((r) => r.exercise.toLowerCase() === key)
+      if (already >= 0) records.splice(already, 1)
       records.push({
         exercise: s.exercise,
         weight_kg: s.weight_kg,
         reps: s.reps,
-        // The day the lifter set it, in their own calendar. Converting to UTC
-        // first files a 23:30 personal record on tomorrow — the same class of
-        // bug this codebase has now hit four times.
-        date: toDateISO(new Date()),
+        date: onDate ?? toDateISO(new Date()),
         isNew: true,
       })
     }

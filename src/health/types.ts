@@ -191,36 +191,6 @@ export interface PersonalRecord {
 
 // Templates: user-saved presets that prefill the workout logger form.
 // Sets are stored as a JSONB payload (no set_number — order is array order).
-export interface WorkoutTemplateSet {
-  exercise: string
-  weight_kg: number
-  reps: number
-  is_warmup?: boolean
-  notes?: string | null
-  exercise_notes?: string | null
-}
-
-export interface WorkoutTemplateRow {
-  id: string
-  user_id: string
-  name: string
-  session_type: SessionType
-  duration_min: number | null
-  intensity: WorkoutIntensity
-  distance_km: number | null
-  sets: WorkoutTemplateSet[]
-  created_at: string
-  updated_at: string
-}
-
-export interface WorkoutTemplateInsert {
-  name: string
-  session_type: SessionType
-  duration_min?: number | null
-  intensity: WorkoutIntensity
-  distance_km?: number | null
-  sets?: WorkoutTemplateSet[]
-}
 
 // ============================================================================
 // Nutrition Tracking

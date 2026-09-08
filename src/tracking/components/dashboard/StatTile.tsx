@@ -1,7 +1,7 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { CircleDot } from "lucide-react"
+import { AlertTriangle, CircleDot } from "lucide-react"
 import { LEGACY_TILE_TESTIDS } from "../../data/metricCatalog"
 import { formatMetricValue, metricSubLabel } from "../../metricsService"
 import type { MetricDef, MetricValue } from "../../types"
@@ -19,6 +19,12 @@ interface StatTileProps {
  * A tile with no reading shows an em dash and says why. It never shows 0 —
  * "you have logged none of these" and "nothing here produces data yet" look
  * identical as a zero, and only one of them is the user's fault.
+ *
+ * AND A FAULT LOOKS LIKE A FAULT. There is a third state under that em dash: the
+ * number could not be worked out at all. That used to be rendered with the same
+ * grey sentence as an empty week — "Nothing logged for this yet" — which is a
+ * claim about what the person did, and a false one. It is now marked, so nobody
+ * reads a broken source as a week off.
  */
 export function StatTile({ def, value, metricId }: StatTileProps) {
   const Icon = def?.icon ?? CircleDot
@@ -41,7 +47,19 @@ export function StatTile({ def, value, metricId }: StatTileProps) {
             {formatMetricValue(value?.value ?? null, value?.format ?? def?.format)}
           </div>
           <div className="text-sm text-muted-foreground truncate" title={label}>{label}</div>
-          {sub && <div className="text-xs text-muted-foreground/70 truncate">{sub}</div>}
+          {sub &&
+            (value?.unavailable ? (
+              <div
+                data-testid="stat-tile-unavailable"
+                className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400"
+                title={sub}
+              >
+                <AlertTriangle className="size-3 shrink-0" />
+                <span className="truncate">{sub}</span>
+              </div>
+            ) : (
+              <div className="text-xs text-muted-foreground/70 truncate">{sub}</div>
+            ))}
         </div>
       </div>
     </Card>

@@ -1,10 +1,11 @@
 "use server"
 
 import { createServerSupabaseClient } from "@/src/db/server"
+import { safeNextPath } from "@/src/shared/safeRedirect"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import {
-  completeOnboardingForUser,
+  saveDatingPreferencesForUser,
   updatePreferenceForUser,
   updatePreferredRegionForUser,
   updateSecondaryRegionDirectForUser,
@@ -28,26 +29,36 @@ async function requireAuth(): Promise<string> {
   return user.id
 }
 
-export async function completeOnboarding(formData: FormData) {
+/**
+ * Save the dating-preferences gate. Called from the one screen that collects
+ * them, whether that screen is standing in front of scenarios or reached from
+ * `/preferences` to change an answer later.
+ */
+export async function saveDatingPreferences(formData: FormData) {
   const userId = await requireAuth()
 
-  const data = {
-    ageRangeStart: Number(formData.get("ageRangeStart")),
-    ageRangeEnd: Number(formData.get("ageRangeEnd")),
+  const archetypes = (formData.getAll("archetype") as string[]).filter(
+    (name) => typeof name === "string" && name.length > 0
+  )
+
+  await saveDatingPreferencesForUser(userId, {
+    region: formData.get("region") as string,
+    archetypes,
     userIsForeign: formData.get("userIsForeign") === "true",
     datingForeigners: formData.get("datingForeigners") === "true",
-    region: formData.get("region") as string,
-    archetype: formData.get("archetype") as string,
-    secondaryArchetype: (formData.get("secondaryArchetype") as string) || null,
-    tertiaryArchetype: (formData.get("tertiaryArchetype") as string) || null,
-    experienceLevel: formData.get("experienceLevel") as string,
-    primaryGoal: formData.get("primaryGoal") as string,
-    timezone: (formData.get("timezone") as string) || null,
-  }
+  })
 
-  await completeOnboardingForUser(userId, data)
+  // Both surfaces that render the gate read the profile on the server.
+  revalidatePath("/dashboard/scenarios")
+  revalidatePath("/preferences")
+  revalidatePath("/dashboard")
 
-  redirect("/dashboard")
+  /* `next` comes from the page, but it rides in a form field the browser owns,
+     so it is user input. `safeNextPath` is the existing owner of that rule --
+     it rejects "//evil.com" and "/\evil.com", which a bare startsWith("/") lets
+     straight through as an off-site redirect. */
+  const next = formData.get("next")
+  redirect(safeNextPath(typeof next === "string" ? next : null, "/dashboard"))
 }
 
 export async function updateProfilePreference(formData: FormData) {

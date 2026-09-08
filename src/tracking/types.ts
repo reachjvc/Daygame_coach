@@ -351,6 +351,12 @@ export interface MetricValue {
   value: number | null
   /** Why the value is null. Required whenever value is null. */
   reason?: string
+  /**
+   * The number could not be worked out, as opposed to there being nothing to
+   * count. A tile must not present the two the same way: one is a fact about
+   * the person, the other is a fault in the app.
+   */
+  unavailable?: boolean
   /** Goal target, for goal-derived metrics that have one. */
   target?: number | null
   /** Overrides the catalogue label — carries the goal's own title. */

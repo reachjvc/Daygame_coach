@@ -2,7 +2,7 @@
  * THE TWO SCREENS THAT RENDER THE MAP, RENDERED.
  *
  * The failure this prevents, in full: a 13-button region list was added to
- * `InteractiveWorldMap` so onboarding step 2 could be completed on a phone. The
+ * `InteractiveWorldMap` so the region step could be completed on a phone. The
  * same component is the map tile inside the dashboard's "Your Preferences"
  * card. Nobody looked at the dashboard, and it grew ~800px of greyed-out
  * buttons. The test that shipped with that change read the component FILE AS
@@ -24,13 +24,12 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
-import { HistoryBarrierProvider } from "@/src/shared/HistoryBarrierContext"
-import { OnboardingFlow } from "@/src/profile/components/OnboardingFlow"
+import { DatingPreferencesGate } from "@/src/profile/components/DatingPreferencesGate"
 import { UserPreferences } from "@/src/profile/components/UserPreferences"
 import { REGIONS } from "@/src/profile/data/regions"
 
 vi.mock("@/src/profile/actions", () => ({
-  completeOnboarding: vi.fn(),
+  saveDatingPreferences: vi.fn(),
   updateAgeRange: vi.fn(),
   updatePreferredRegion: vi.fn(),
   updateProfilePreference: vi.fn(),
@@ -107,12 +106,16 @@ describe("the dashboard's Your Preferences card", () => {
   })
 })
 
-describe("onboarding step 2", () => {
+describe("the dating-preferences gate", () => {
+  // Replaces "onboarding step 2": the five-step wizard is gone and this screen
+  // is the one place the region is asked for, so it is now the second caller.
   test("shows the list, usable, without anything having to be armed first", async () => {
     render(
-      <HistoryBarrierProvider>
-        <OnboardingFlow initialStep={2} />
-      </HistoryBarrierProvider>,
+      <DatingPreferencesGate
+        heading="Before your first scenario"
+        intro="intro"
+        submitLabel="Start practising"
+      />,
     )
 
     const shown = await screen.findByTestId("region-list")

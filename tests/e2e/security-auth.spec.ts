@@ -29,6 +29,10 @@ const PROTECTED_ENDPOINTS = [
   { method: 'POST', path: '/api/inner-game/infer-values' },
   // Q&A
   { method: 'POST', path: '/api/qa' },
+  // Auth
+  // Tells the login form where to send someone. Signed out it must say 401 and
+  // nothing else -- a destination leaks whether an account has finished setup.
+  { method: 'GET', path: '/api/auth/destination' },
   // Scenarios
   { method: 'POST', path: '/api/scenarios/openers/encounter' },
   { method: 'POST', path: '/api/scenarios/openers/evaluate' },

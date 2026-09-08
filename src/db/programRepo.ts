@@ -47,10 +47,6 @@ import {
 } from "@/src/programs/config"
 import { finishedWorkouts } from "./healthRepo"
 import type {
-  StoredSet,
-  WorkoutAdjustments,
-} from "@/src/programs/programsService"
-import type {
   ApplyLogResult,
   LoggedExercise,
   LevelId,
@@ -61,6 +57,8 @@ import type {
   ProgramSchedule,
   ProgramSessionLogRow,
   ReplayEvent,
+  StoredSet,
+  WorkoutAdjustments,
   SessionPrescription,
   UnitSystem,
 } from "@/src/programs/types"
@@ -101,7 +99,7 @@ function toDomain(row: ProgramEnrollmentRow): ProgramEnrollment {
  * lifter's 15 kg press was rounded up at enrolment, and "deload 10%" from 20
  * landed back on 20 for ever.
  */
-function plateSetupFor(barWeightKg: number | null, unit: UnitSystem) {
+export function plateSetupFor(barWeightKg: number | null, unit: UnitSystem) {
   const defaults = DEFAULT_PLATES[unit]
   if (barWeightKg == null) return defaults
   return {
@@ -118,7 +116,7 @@ function plateSetupFor(barWeightKg: number | null, unit: UnitSystem) {
  * way out of the database — means every prescription, progression and bridge
  * downstream operates on the user's version automatically.
  */
-function programFor(enrollment: ProgramEnrollment) {
+export function programFor(enrollment: ProgramEnrollment) {
   return effectiveProgram(requireProgram(enrollment.program_id), enrollment.customSchedule)
 }
 

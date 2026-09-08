@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { InteractiveWorldMap } from "./InteractiveWorldMap";
+import { ComingSoon } from "@/src/shared/components/ComingSoon"
 import { REGIONS } from "@/src/profile/data/regions";
 import {
   updateAgeRange,
@@ -35,9 +36,7 @@ interface UserPreferencesProps {
   user_is_foreign?: boolean;
   preferred_region?: string;
   secondary_region?: string;
-  experience_level?: string;
   primary_goal?: string;
-  onExperienceLevelChange?: (nextLevel: string) => void;
   onPrimaryGoalChange?: (nextGoal: string) => void;
 }
 
@@ -46,14 +45,6 @@ interface UserPreferencesProps {
 const REGION_NAMES: Record<string, string> = Object.fromEntries(
   REGIONS.map((region) => [region.id, region.name])
 );
-
-const EXPERIENCE_OPTIONS = [
-  { id: "complete-beginner", label: "Complete Beginner" },
-  { id: "newbie", label: "Newbie" },
-  { id: "intermediate", label: "Intermediate" },
-  { id: "advanced", label: "Advanced" },
-  { id: "expert", label: "Expert" },
-];
 
 const PRIMARY_GOAL_OPTIONS = [
   { id: "get-numbers", label: "Get Numbers" },
@@ -72,9 +63,7 @@ export function UserPreferences({
   user_is_foreign,
   preferred_region,
   secondary_region,
-  experience_level,
   primary_goal,
-  onExperienceLevelChange,
   onPrimaryGoalChange,
 }: UserPreferencesProps) {
   const ageRange = [age_range_start, age_range_end];
@@ -105,20 +94,12 @@ export function UserPreferences({
   const [isPrimaryPending, startPrimaryTransition] = useTransition();
   const [isSecondaryPending, startSecondaryTransition] = useTransition();
 
-  const [showExperienceDialog, setShowExperienceDialog] = useState(false);
   const [showGoalDialog, setShowGoalDialog] = useState(false);
-  const [experienceLevelState, setExperienceLevelState] = useState<string | null>(
-    experience_level ?? null
-  );
   const [primaryGoalState, setPrimaryGoalState] = useState<string | null>(
     primary_goal ?? null
   );
-  const [isExperiencePending, startExperienceTransition] = useTransition();
   const [isGoalPending, startGoalTransition] = useTransition();
 
-  useEffect(() => {
-    setExperienceLevelState(experience_level ?? null);
-  }, [experience_level]);
 
   useEffect(() => {
     setPrimaryGoalState(primary_goal ?? null);
@@ -130,10 +111,6 @@ export function UserPreferences({
   const secondaryRegionLabel = secondaryRegionState
     ? REGION_NAMES[secondaryRegionState] || secondaryRegionState
     : null;
-  const experienceLabel = experienceLevelState
-    ? EXPERIENCE_OPTIONS.find((option) => option.id === experienceLevelState)?.label ||
-      experienceLevelState
-    : "Not set";
   const primaryGoalLabel = primaryGoalState
     ? PRIMARY_GOAL_OPTIONS.find((option) => option.id === primaryGoalState)?.label ||
       primaryGoalState
@@ -182,17 +159,6 @@ export function UserPreferences({
     startAgeTransition(() => updateAgeRange(start, end));
   };
 
-  const handleExperienceSelect = (levelId: string) => {
-    setExperienceLevelState(levelId);
-    setShowExperienceDialog(false);
-    onExperienceLevelChange?.(levelId);
-    startExperienceTransition(async () => {
-      const formData = new FormData();
-      formData.append("preferenceKey", "experience_level");
-      formData.append("preferenceValue", levelId);
-      await updateProfilePreference(formData);
-    });
-  };
 
   const handleGoalSelect = (goalId: string) => {
     setPrimaryGoalState(goalId);
@@ -434,19 +400,12 @@ export function UserPreferences({
             </form>
           </div>
 
-          <div className="rounded-lg border border-border/60 bg-muted/30 p-4 flex items-center justify-between gap-3">
-            <p className="min-w-0 text-sm font-semibold text-foreground truncate">
-              Experience level: <span className="text-foreground">{experienceLabel}</span>
-            </p>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setShowExperienceDialog(true)}
-            >
-              Update
-            </Button>
-          </div>
+          <ComingSoon
+            variant="row"
+            className="rounded-lg border border-border/60 bg-muted/30 p-4"
+            title="Experience &amp; levels"
+            description="Your level will follow what you actually do, rather than an answer you gave once."
+          />
 
           <div className="rounded-lg border border-border/60 bg-muted/30 p-4 flex items-center justify-between gap-3">
             <p className="min-w-0 text-sm font-semibold text-foreground truncate">
@@ -467,39 +426,6 @@ export function UserPreferences({
           <Link href="/preferences">Edit Full Preferences</Link>
         </Button>
       </CardContent>
-
-      <Dialog open={showExperienceDialog} onOpenChange={setShowExperienceDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Update experience level</DialogTitle>
-            <DialogDescription>
-              Pick the level that best matches your current confidence.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {EXPERIENCE_OPTIONS.map((option) => (
-              <Button
-                key={option.id}
-                type="button"
-                size="sm"
-                variant={experienceLevelState === option.id ? "default" : "outline"}
-                className="w-full"
-                onClick={() => handleExperienceSelect(option.id)}
-                disabled={isExperiencePending}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="ghost">
-                Cancel
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={showGoalDialog} onOpenChange={setShowGoalDialog}>
         <DialogContent className="max-w-md">

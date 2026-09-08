@@ -34,7 +34,6 @@ CREATE TABLE profiles (
   bar_weight_kg NUMERIC(5,2) NOT NULL DEFAULT 20 CHECK (bar_weight_kg >= 0 AND bar_weight_kg <= 50),
   smallest_plate_kg NUMERIC(5,2) NOT NULL DEFAULT 1.25
     CHECK (smallest_plate_kg >= 0.25 AND smallest_plate_kg <= 25),
-  onboarding_completed BOOLEAN NOT NULL DEFAULT false,
   primary_archetype TEXT,
   secondary_archetypes TEXT[],
   region TEXT,
@@ -771,3 +770,67 @@ CREATE TABLE workout_sets (
 
 CREATE UNIQUE INDEX uq_workout_sets_slot
   ON workout_sets(log_id, COALESCE(exercise_id, exercise), set_kind, set_number, COALESCE(side, ''));
+
+-- ============================================
+-- Saved training weeks (program_drafts) — 20260908100000.
+--
+-- A week you build used to exist only while the page was open, and
+-- `workout_templates` held a flat list of sets that could not be started as a
+-- program. One table now, and every template became a row in it.
+--
+-- The RLS grants below matter to the tests: the table owner bypasses RLS, so a
+-- denial test has to run under the `authenticated` role via SET ROLE.
+-- ============================================
+CREATE TABLE program_drafts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  name TEXT NOT NULL CHECK (char_length(btrim(name)) BETWEEN 1 AND 60),
+  discipline TEXT NOT NULL DEFAULT 'strength'
+    CHECK (discipline IN ('strength','bodybuilding','calisthenics','cardio','flexibility','triathlon','ironman')),
+  unit_system TEXT NOT NULL DEFAULT 'kg' CHECK (unit_system IN ('kg','lb')),
+  schedule JSONB NOT NULL DEFAULT '{"kind":"linear_rotation","days":[]}'::jsonb,
+  working_weights JSONB NOT NULL DEFAULT '{}'::jsonb,
+  source TEXT NOT NULL DEFAULT 'built' CHECK (source IN ('built','catalog','saved_workout')),
+  source_program_id TEXT CHECK (source_program_id IS NULL OR char_length(source_program_id) BETWEEN 1 AND 80),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id, name),
+  CONSTRAINT program_drafts_schedule_shape CHECK (
+    jsonb_typeof(schedule) = 'object'
+    AND jsonb_typeof(schedule -> 'days') = 'array'
+    AND schedule ? 'kind'
+  ),
+  CONSTRAINT program_drafts_weights_shape CHECK (jsonb_typeof(working_weights) = 'object')
+);
+
+CREATE INDEX idx_program_drafts_user ON program_drafts(user_id, updated_at DESC);
+
+ALTER TABLE program_drafts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can read own program drafts" ON program_drafts
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own program drafts" ON program_drafts
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- WITH CHECK spelled out; Postgres would fall back to USING anyway, so the
+-- integration test that proves a draft cannot be handed to another account
+-- passes either way. It is here so a later edit to USING cannot widen it.
+CREATE POLICY "Users can update own program drafts" ON program_drafts
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can delete own program drafts" ON program_drafts
+  FOR DELETE USING (auth.uid() = user_id);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON program_drafts TO authenticated;
+
+CREATE OR REPLACE FUNCTION program_drafts_touch_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $fn$
+BEGIN
+  NEW.updated_at := now();
+  RETURN NEW;
+END;
+$fn$;
+
+CREATE TRIGGER trg_program_drafts_updated_at
+  BEFORE UPDATE ON program_drafts
+  FOR EACH ROW EXECUTE FUNCTION program_drafts_touch_updated_at();

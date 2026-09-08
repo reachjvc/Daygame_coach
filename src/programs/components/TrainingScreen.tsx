@@ -23,7 +23,7 @@ import Link from "next/link"
 import { ProgramsApp } from "./ProgramsApp"
 import { BackLink } from "@/components/BackLink"
 import { Segmented } from "./ui"
-import type { EnrollmentDetail, ProgramEnrollment } from "../types"
+import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment } from "../types"
 
 /**
  * 800-odd lines of set rows, templates, heatmap and personal-record detection,
@@ -43,9 +43,11 @@ interface Props {
   initialPast: ProgramEnrollment[]
   /** Today's session, when exactly one program is running. */
   initialDetail: EnrollmentDetail | null
+  /** A workout already open, so "Resume" is on the first paint. */
+  live: LiveWorkout | null
 }
 
-export function TrainingScreen({ initialActive, initialPast, initialDetail }: Props) {
+export function TrainingScreen({ initialActive, initialPast, initialDetail, live }: Props) {
   /**
    * The default is DECIDED, not flickered into.
    *
@@ -92,6 +94,7 @@ export function TrainingScreen({ initialActive, initialPast, initialDetail }: Pr
             initialActive={initialActive}
             initialPast={initialPast}
             initialDetail={initialDetail}
+            live={live}
           />
         ) : (
           <div className="space-y-8">

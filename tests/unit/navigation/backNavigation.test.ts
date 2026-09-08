@@ -20,6 +20,7 @@ import { describe, it, expect } from "vitest"
 import * as fs from "fs"
 import * as path from "path"
 import { TAB_ROUTES } from "@/components/navTabs"
+import { coverageProblems, type CoverageReport } from "@/tests/support/appRoutes"
 
 const root = path.resolve(__dirname, "../../..")
 
@@ -125,19 +126,30 @@ describe("every screen has a way back", () => {
     expect(routePages().length).toBeGreaterThan(15)
   })
 
-  it("every sub-page renders BackLink, or shows the tab bar", () => {
+  /**
+   * Walks the routes once and records WHY each was skipped, so the same pass
+   * feeds both the rule and the ratchet below. Recording the reason is the
+   * mechanism: a route skipped for an unstated reason fails `coverageProblems`.
+   */
+  function sweep() {
     const stuck: string[] = []
+    const checked: string[] = []
+    const skipped: Record<string, string> = {}
     const gates = gateRoutes()
 
     for (const { route, file } of routePages()) {
-      if (TAB_ROUTES.includes(route)) continue
-      // A gate, or a step inside one: /preferences is a gate, so
-      // /preferences/archetypes is part of that same forced flow.
-      if ([...gates].some((g) => route === g || route.startsWith(g + "/"))) continue
+      if (TAB_ROUTES.includes(route)) { skipped[route] = "renders the tab bar"; continue }
+      // EXACTLY the redirect target, never its children -- the rule its sibling
+      // routeReachability.test.ts already states at line 207. `/dashboard` is a
+      // redirect target, so the prefix match that used to be here excused every
+      // page beneath it. Measured 2026-09-07: this guard examined 2 of 28 pages
+      // and passed, while its own title promised "EVERY SCREEN HAS A WAY BACK".
+      if (gates.has(route)) { skipped[route] = "a gate the app redirects into"; continue }
       // Pre-login. There is no "back" into an app you are not in yet.
-      if (route.startsWith("/auth/")) continue
-      if (isRedirectShim(file)) continue
+      if (route.startsWith("/auth/")) { skipped[route] = "pre-login"; continue }
+      if (isRedirectShim(file)) { skipped[route] = "redirect shim, no UI"; continue }
 
+      checked.push(route)
       const tree = mentions(file)
       // `<BackLink`, not "BackLink": a leftover import satisfies the word and
       // renders nothing. Caught by deleting a usage and watching this pass.
@@ -146,7 +158,31 @@ describe("every screen has a way back", () => {
       if (!hasBack && !hasTabBar) stuck.push(route)
     }
 
+    return { stuck, checked, skipped }
+  }
+
+  it("every sub-page renders BackLink, or shows the tab bar", () => {
+    const { stuck } = sweep()
     expect(stuck, `no way back from: ${stuck.join(", ")}`).toEqual([])
+  })
+
+  /**
+   * THE RATCHET. Without this, the rule above is worth whatever the exemptions
+   * leave it -- and on 2026-09-07 that was 2 routes out of 28, passing green,
+   * because one exemption said `startsWith` where it meant `===`. A guard going
+   * quiet must look different from a guard being satisfied.
+   *
+   * The floor is set below today's real number (12) rather than at an
+   * aspirational share: 7 tab pages, 4 pre-login pages, 3 gates and 2 shims are
+   * legitimately exempt, so demanding a high percentage would only force a lie.
+   * Raise it when the number rises; never lower it to make a change pass.
+   */
+  it("still examines most of the app -- an exemption cannot empty it", () => {
+    const { checked, skipped } = sweep()
+    const all = routePages().map((r) => r.route)
+
+    const report: CoverageReport = { checked, skipped, minChecked: 10 }
+    expect(coverageProblems("backNavigation", report, all)).toEqual([])
   })
 })
 

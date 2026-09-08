@@ -13,6 +13,13 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useState } from "react"
 import { Crosshair } from "lucide-react"
 
+/**
+ * How long the login form waits to be told where to go before giving up and
+ * letting /redirect decide. Long enough for a slow phone, short enough that a
+ * dead route costs a few seconds rather than the whole login.
+ */
+const DESTINATION_TIMEOUT_MS = 6_000
+
 /** Messages for the ?error= codes set by /auth/confirm. */
 const NOTICES: Record<string, string> = {
   missing_code:
@@ -47,11 +54,45 @@ export default function LoginPageClient() {
       if (error) throw error
 
       const next = searchParams.get("next")
-      const redirectUrl = next
-        ? `/redirect?next=${encodeURIComponent(safeNextPath(next))}`
-        : "/redirect"
-      router.push(redirectUrl)
+      const query = next ? `?next=${encodeURIComponent(safeNextPath(next))}` : ""
+
+      // Ask where this person belongs BEFORE leaving the page.
+      //
+      // The old flow pushed to /redirect, a page that renders nothing while it
+      // looks the answer up, so the browser sat on a blank white screen --
+      // measured at 1.2s on a 400ms connection, which reads as a crash. Asking
+      // first costs the same wait, but the login screen stays on top of it with
+      // the button still saying "Logging in...".
+      //
+      // If the lookup fails (a blip, or the server not seeing the brand-new
+      // session cookie yet) we go to /redirect after all: it reaches the same
+      // decision server-side, so the cost is the old blank moment, not the login.
+      let destination = `/redirect${query}`
+      // The deadline matters as much as the request. Without it a hung call --
+      // the route talks to Supabase over the network -- leaves the button stuck
+      // on "Logging in..." with no navigation and no way out but a reload, which
+      // is worse than the blank screen this replaced.
+      const deadline = new AbortController()
+      const timer = setTimeout(() => deadline.abort(), DESTINATION_TIMEOUT_MS)
+      try {
+        const res = await fetch(`/api/auth/destination${query}`, { signal: deadline.signal })
+        if (res.ok) {
+          const body = (await res.json()) as { destination?: string }
+          if (body.destination) destination = body.destination
+        }
+      } catch {
+        // Keep /redirect. Nothing to tell the user: they are signed in either way.
+      } finally {
+        clearTimeout(timer)
+      }
+
+      // isLoading deliberately stays true. router.push() returns immediately,
+      // long before the browser has gone anywhere, so clearing it here flipped
+      // the button back to "Login" while the user was still sitting on this
+      // page -- it looked like the click had done nothing.
+      router.push(destination)
     } catch (error: unknown) {
+      setIsLoading(false)
       // Supabase answers an unconfirmed account with the bare words "Email not
       // confirmed" (verified 2026-09-04, error_code email_not_confirmed). True,
       // and useless: it does not mention the inbox, the spam folder, or that
@@ -63,8 +104,6 @@ export default function LoginPageClient() {
       } else {
         setError(message)
       }
-    } finally {
-      setIsLoading(false)
     }
   }
 

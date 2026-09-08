@@ -1,14 +1,13 @@
 import { redirect } from "next/navigation"
-import { createServerSupabaseClient } from "@/src/db/server"
-import { safeNextPath } from "@/src/shared/safeRedirect"
+import { resolveLoginDestination } from "@/src/profile/loginDestinationService"
 
 /**
  * Post-login redirect handler.
  *
- * This page:
- * 1. Checks if user is authenticated
- * 2. Checks if onboarding is completed (from profiles table)
- * 3. Redirects to appropriate destination
+ * Kept for the paths that arrive as a real browser navigation -- the email
+ * confirmation link, and the login form's retry if it cannot reach
+ * /api/auth/destination. The login form itself no longer comes through here,
+ * because a page that only redirects has nothing to show while it decides.
  */
 export default async function RedirectPage({
   searchParams,
@@ -17,31 +16,9 @@ export default async function RedirectPage({
     next?: string | string[]
   }>
 }) {
-  const supabase = await createServerSupabaseClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect("/auth/login")
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("onboarding_completed")
-    .eq("id", user.id)
-    .single()
-
   const params = await searchParams
   const requestedNext =
     typeof params?.next === "string" ? params.next : undefined
-  const safeNext = safeNextPath(requestedNext, "/dashboard")
 
-  if (profile?.onboarding_completed) {
-    redirect(safeNext)
-  } else {
-    // User hasn't completed onboarding, send them to preferences
-    redirect("/preferences")
-  }
+  redirect((await resolveLoginDestination(requestedNext)) ?? "/auth/login")
 }

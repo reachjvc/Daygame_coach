@@ -177,11 +177,18 @@ async function weeklyCountsFor(timezone: string) {
 
   await reconcileUserProgress(userId)
 
-  return resolveMetricValues(
+  const resolved = await resolveMetricValues(
     userId,
     ["sessions_weekly", "approaches_weekly", "numbers_weekly", "sessions_cumulative", "approaches_cumulative"],
     timezone
   )
+  /**
+   * NOTHING MAY HAVE QUIETLY FAILED. A source that cannot be read now reports
+   * itself instead of coming back as a plausible number, and a counter test
+   * that accepted a fabricated value would be worse than no test at all.
+   */
+  expect(resolved.failed).toEqual({})
+  return resolved.values
 }
 
 describe("a counter uses the account holder's calendar", () => {
@@ -202,13 +209,14 @@ describe("a counter uses the account holder's calendar", () => {
     // WEEK — could stop being fed the lifetime count. Seeded approaches carry no
     // quality rating, so the honest answer is 0; what is being checked is that
     // the metric resolves at all rather than throwing or coming back undefined.
-    const values = await resolveMetricValues(
+    const resolved = await resolveMetricValues(
       userId,
       ["high_quality_approaches_weekly", "high_quality_approaches_cumulative"],
       "Europe/Copenhagen"
     )
-    expect(values.high_quality_approaches_weekly).toBe(0)
-    expect(values.high_quality_approaches_cumulative).toBe(0)
+    expect(resolved.failed).toEqual({})
+    expect(resolved.values.high_quality_approaches_weekly).toBe(0)
+    expect(resolved.values.high_quality_approaches_cumulative).toBe(0)
   })
 
   it("leaves the lifetime totals alone — they have no period to fall outside of", async () => {

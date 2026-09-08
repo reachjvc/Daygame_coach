@@ -52,7 +52,6 @@ export interface ProfileRow {
   full_name?: string | null
   avatar_url?: string | null
   has_purchased: boolean
-  onboarding_completed: boolean
   primary_archetype?: string | null
   secondary_archetypes?: string[] | null
   region?: string | null
@@ -88,7 +87,6 @@ export interface ProfileUpdate {
   full_name?: string | null
   avatar_url?: string | null
   has_purchased?: boolean
-  onboarding_completed?: boolean
   primary_archetype?: string | null
   secondary_archetypes?: string[] | null
   region?: string | null

@@ -1,6 +1,8 @@
 import { createServerClient as createSupabaseServerClient } from "@supabase/ssr"
 import { createClient } from "@supabase/supabase-js"
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
+
+import { authCookieOptions, requestIsHttps } from "./authCookies"
 
 /**
  * Create a Supabase client for use in Server Components / Route Handlers.
@@ -8,11 +10,13 @@ import { cookies } from "next/headers"
  */
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies()
+  const headerStore = await headers()
 
   return createSupabaseServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: authCookieOptions(requestIsHttps(headerStore)),
       cookies: {
         getAll() {
           return cookieStore.getAll()
@@ -98,6 +102,11 @@ export function createCallbackSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // The callback route holds the real request, so it can see both what the
+      // proxy reported and the scheme it was actually called on.
+      cookieOptions: authCookieOptions(
+        requestIsHttps(request.headers) || new URL(request.url).protocol === "https:"
+      ),
       cookies: {
         getAll() {
           if (!cookieHeader) return []

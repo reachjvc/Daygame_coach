@@ -136,6 +136,7 @@ export async function truncateAllTables(): Promise<void> {
         workout_sets,
         workout_logs,
         program_enrollments,
+        program_drafts,
         user_goals,
         milestones,
         sticking_points,
@@ -168,8 +169,8 @@ export async function createTestUser(email = "test@example.com"): Promise<string
 
   try {
     const result = await client.query(`
-      INSERT INTO profiles (id, email, has_purchased, onboarding_completed)
-      VALUES (gen_random_uuid(), $1, false, false)
+      INSERT INTO profiles (id, email, has_purchased)
+      VALUES (gen_random_uuid(), $1, false)
       RETURNING id
     `, [email])
 

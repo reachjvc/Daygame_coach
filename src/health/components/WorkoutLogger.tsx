@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ChevronDown, ChevronRight, Dumbbell, FileText, Minus, Plus, RotateCcw, Save, Trash2, X } from "lucide-react"
+import { ChevronDown, ChevronRight, Dumbbell, Minus, Plus, Trash2, X } from "lucide-react"
 import {
   buildWorkoutHeatmapWeeks,
   computeWeekStreak,
@@ -16,12 +16,9 @@ import {
 } from "../healthService"
 import type {
   WorkoutLogWithSets,
-  WorkoutTemplateRow,
-  WorkoutTemplateSet,
   SessionType,
   WorkoutIntensity,
   WorkoutSetInsert,
-  WorkoutSetRow,
   PersonalRecord,
 } from "../types"
 
@@ -92,13 +89,7 @@ export function WorkoutLogger() {
   const [exercises, setExercises] = useState<ExerciseInput[]>([emptyExercise()])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [templates, setTemplates] = useState<WorkoutTemplateRow[]>([])
-  const [showTemplates, setShowTemplates] = useState(false)
-  const [templateName, setTemplateName] = useState("")
-  const [isSavingTemplate, setIsSavingTemplate] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const [templateError, setTemplateError] = useState<string | null>(null)
-  const [templateSaved, setTemplateSaved] = useState(false)
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set())
   const [showAllLogs, setShowAllLogs] = useState(false)
   const [newPRs, setNewPRs] = useState<PersonalRecord[]>([])
@@ -115,20 +106,7 @@ export function WorkoutLogger() {
     }
   }, [])
 
-  const fetchTemplates = useCallback(async () => {
-    try {
-      const res = await fetch("/api/health/workout/templates")
-      if (!res.ok) throw new Error("Failed to fetch")
-      const data: WorkoutTemplateRow[] = await res.json()
-      setTemplates(data)
-      // Saved templates should be discoverable without hunting for the toggle
-      if (data.length > 0) setShowTemplates(true)
-    } catch (e) {
-      console.error("Error fetching workout templates:", e)
-    }
-  }, [])
-
-  useEffect(() => { fetchLogs(); fetchTemplates() }, [fetchLogs, fetchTemplates])
+  useEffect(() => { fetchLogs() }, [fetchLogs])
 
   const addExercise = () => setExercises([...exercises, emptyExercise()])
   const removeExercise = (ei: number) => setExercises(exercises.filter((_, i) => i !== ei))
@@ -229,7 +207,6 @@ export function WorkoutLogger() {
       setWorkoutDate("")
       setWorkoutTime("")
       setExercises([emptyExercise()])
-      setTemplateName("")
       setIsAdding(false)
       await fetchLogs()
     } catch (e) {
@@ -237,90 +214,6 @@ export function WorkoutLogger() {
       setSaveError(e instanceof Error ? e.message : "Failed to save workout")
     } finally {
       setIsSaving(false)
-    }
-  }
-
-  // Regroup flat sets into per-exercise input blocks (consecutive same name)
-  const regroupSets = (sets: (WorkoutTemplateSet | WorkoutSetRow)[]): ExerciseInput[] => {
-    const groups: ExerciseInput[] = []
-    for (const s of sets) {
-      const row: SetRowInput = {
-        weight_kg: String(s.weight_kg),
-        reps: String(s.reps),
-        is_warmup: "set_kind" in s ? s.set_kind === "warmup" : !!s.is_warmup,
-        notes: s.notes ?? "",
-        showNotes: !!s.notes,
-      }
-      const last = groups[groups.length - 1]
-      if (last && last.exercise === s.exercise) last.sets.push(row)
-      else groups.push({
-        exercise: s.exercise,
-        notes: s.exercise_notes ?? "",
-        showNotes: !!s.exercise_notes,
-        sets: [row],
-      })
-    }
-    return groups.length > 0 ? groups : [emptyExercise()]
-  }
-
-  const applyTemplate = (t: WorkoutTemplateRow) => {
-    setSessionType(t.session_type)
-    setDuration(t.duration_min != null ? String(t.duration_min) : "")
-    setIntensity(t.intensity)
-    setDistanceKm(t.distance_km != null ? String(t.distance_km) : "")
-    setExercises(regroupSets(t.sets))
-    // Prefill the name so re-saving updates this template instead of creating a copy
-    setTemplateName(t.name)
-    setNewPRs([])
-    setIsAdding(true)
-    setShowTemplates(false)
-  }
-
-  // One-tap repeat: prefill the form from the most recent workout
-  const repeatLastWorkout = () => {
-    const last = logs[logs.length - 1]
-    if (!last) return
-    setSessionType(last.session_type)
-    setDuration(String(last.duration_min))
-    // A workout still running has no effort score yet; repeating it keeps the
-    // form's default rather than writing a null into a required box.
-    setIntensity(last.intensity ?? 3)
-    setDistanceKm(last.distance_km != null ? String(last.distance_km) : "")
-    setExercises(regroupSets(last.sets ?? []))
-    setTemplateName("")
-    setNewPRs([])
-    setIsAdding(true)
-  }
-
-  const saveTemplate = async () => {
-    const name = templateName.trim()
-    if (!name) return
-    setIsSavingTemplate(true)
-    setTemplateError(null)
-    setTemplateSaved(false)
-    try {
-      const res = await fetch("/api/health/workout/templates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          session_type: sessionType,
-          duration_min: duration ? parseInt(duration) : null,
-          intensity,
-          distance_km: distanceKm ? parseFloat(distanceKm) : null,
-          sets: flattenSets(),
-        }),
-      })
-      if (!res.ok) throw new Error(await readApiError(res))
-      await fetchTemplates()
-      // Open the panel so the saved template is visibly in the list
-      setShowTemplates(true)
-      setTemplateSaved(true)
-    } catch (e) {
-      console.error("Error saving workout template:", e)
-      setTemplateError(e instanceof Error ? e.message : "Failed to save template")
-    } finally {
-      setIsSavingTemplate(false)
     }
   }
 
@@ -342,17 +235,6 @@ export function WorkoutLogger() {
       else next.add(id)
       return next
     })
-
-  const deleteTemplate = async (t: WorkoutTemplateRow) => {
-    if (!window.confirm(`Delete template "${t.name}"?`)) return
-    try {
-      const res = await fetch(`/api/health/workout/templates?id=${t.id}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Failed to delete")
-      await fetchTemplates()
-    } catch (e) {
-      console.error("Error deleting workout template:", e)
-    }
-  }
 
   const now = new Date()
   const todayKey = now.toLocaleDateString("sv-SE") // YYYY-MM-DD in local time
@@ -379,20 +261,17 @@ export function WorkoutLogger() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center gap-2"><Dumbbell className="h-5 w-5" /> Workouts</span>
-          <span className="flex items-center">
-            {logs.length > 0 && !isAdding && (
-              <Button size="sm" variant="ghost" onClick={repeatLastWorkout} title="Repeat last workout">
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-            )}
-            <Button size="sm" variant="ghost" onClick={() => setShowTemplates(!showTemplates)} title="Workout templates">
-              <FileText className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => { setNewPRs([]); setIsAdding(!isAdding) }} title="Log a workout">
-              <Plus className="h-4 w-4" />
-            </Button>
+          <span className="flex items-center gap-2">
+            <Dumbbell className="h-5 w-5" /> Log a past workout
           </span>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => { setNewPRs([]); setIsAdding(!isAdding) }}
+            title="Write up a workout you have already done"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
         </CardTitle>
       </CardHeader>
 
@@ -429,38 +308,6 @@ export function WorkoutLogger() {
             <button onClick={() => setNewPRs([])} title="Dismiss" className="text-muted-foreground hover:text-foreground transition-colors">
               <X className="h-3.5 w-3.5" />
             </button>
-          </div>
-        )}
-
-        {/* Templates panel */}
-        {showTemplates && (
-          <div className="space-y-2 border rounded-lg p-3">
-            <div className="text-xs font-medium text-muted-foreground uppercase">Templates</div>
-            {templates.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No templates yet. Fill in a workout below and save it as a template.
-              </p>
-            ) : (
-              templates.map((t) => (
-                <div key={t.id} className="flex items-center gap-2">
-                  <button
-                    onClick={() => applyTemplate(t)}
-                    className="flex-1 flex items-center justify-between text-sm py-1.5 px-2 rounded border border-border hover:bg-accent transition-colors text-left"
-                    title={`Load "${t.name}" into the form`}
-                  >
-                    <span className="font-medium truncate">{t.name}</span>
-                    <span className="text-xs text-muted-foreground capitalize shrink-0 ml-2">
-                      {t.session_type}
-                      {t.sets.length > 0 && ` · ${t.sets.length} set${t.sets.length !== 1 ? "s" : ""}`}
-                      {t.duration_min != null && ` · ${t.duration_min}min`}
-                    </span>
-                  </button>
-                  <Button size="sm" variant="ghost" onClick={() => deleteTemplate(t)} title="Delete template">
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))
-            )}
           </div>
         )}
 
@@ -719,29 +566,6 @@ export function WorkoutLogger() {
             </div>
             {saveError && <p className="text-xs text-red-500">Workout not saved: {saveError}</p>}
 
-            {/* Save current form as a reusable template */}
-            <div className="space-y-1 border-t border-border/50 pt-3">
-              <div className="flex gap-2 items-center">
-                <Input
-                  placeholder="Template name"
-                  className="flex-1"
-                  value={templateName}
-                  onChange={(e) => { setTemplateName(e.target.value); setTemplateSaved(false) }}
-                />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={saveTemplate}
-                  disabled={isSavingTemplate || !templateName.trim()}
-                  title="Save these inputs as a template (same name overwrites)"
-                >
-                  <Save className="h-3 w-3 mr-1" />
-                  {isSavingTemplate ? "Saving..." : "Save as template"}
-                </Button>
-              </div>
-              {templateError && <p className="text-xs text-red-500">Template not saved: {templateError}</p>}
-              {templateSaved && <p className="text-xs text-green-500">Template saved ✓</p>}
-            </div>
           </div>
         )}
 

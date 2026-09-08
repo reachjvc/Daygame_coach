@@ -53,14 +53,15 @@ export const SELECTORS = {
     resetButton: 'sandbox-reset-button',
   },
 
-  onboarding: {
-    progress: 'onboarding-progress',
-    nextButton: 'onboarding-next-button',
-    backButton: 'onboarding-back-button',
-    completeButton: 'onboarding-complete-button',
-    ageSlider: 'onboarding-age-slider',
-    experienceOption: (id: string) => `onboarding-experience-${id}`,
-    goalOption: (id: string) => `onboarding-goal-${id}`,
+  // The five-step onboarding wizard was replaced on 2026-09-08 by a single
+  // screen asked at the scenario door. Its selectors went with it.
+  datingPreferences: {
+    form: 'dating-preferences-gate',
+    submit: 'gate-submit',
+    missing: 'gate-missing',
+    userIsForeign: 'gate-user-is-foreign',
+    datingForeigners: 'gate-dating-foreigners',
+    archetype: (name: string) => `gate-archetype-${name}`,
   },
   fieldReport: {
     templateSelection: 'field-report-template-selection',

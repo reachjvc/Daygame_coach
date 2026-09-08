@@ -28,29 +28,45 @@ type Listener = () => void
 const store: {
   data: ProgramEnrollment[]
   loading: boolean
+  /**
+   * The list could not be fetched. NOT the same as having no programs, which is
+   * what an empty array means — and what this used to become on every failure,
+   * so a dropped request told somebody halfway through StrongLifts that they had
+   * no training program and should go and pick one.
+   */
+  error: string | null
   inFlight: Promise<void> | null
   listeners: Set<Listener>
-} = { data: [], loading: true, inFlight: null, listeners: new Set() }
+} = { data: [], loading: true, error: null, inFlight: null, listeners: new Set() }
+
+/** The last server-rendered list this hook seeded from. */
+let lastSeeded: ProgramEnrollment[] | null = null
 
 function emit() {
   for (const l of store.listeners) l()
 }
 
 /** The value `useSyncExternalStore` compares — stable unless something changed. */
-let snapshot: { enrollments: ProgramEnrollment[]; loading: boolean } = {
+let snapshot: { enrollments: ProgramEnrollment[]; loading: boolean; error: string | null } = {
   enrollments: store.data,
   loading: store.loading,
+  error: store.error,
 }
 function getSnapshot() {
-  if (snapshot.enrollments !== store.data || snapshot.loading !== store.loading) {
-    snapshot = { enrollments: store.data, loading: store.loading }
+  if (
+    snapshot.enrollments !== store.data ||
+    snapshot.loading !== store.loading ||
+    snapshot.error !== store.error
+  ) {
+    snapshot = { enrollments: store.data, loading: store.loading, error: store.error }
   }
   return snapshot
 }
 /** The server renders nothing user-specific here; the fetch is a client effect. */
-const SERVER_SNAPSHOT: { enrollments: ProgramEnrollment[]; loading: boolean } = {
+const SERVER_SNAPSHOT: { enrollments: ProgramEnrollment[]; loading: boolean; error: string | null } = {
   enrollments: [],
   loading: true,
+  error: null,
 }
 
 async function load(force: boolean): Promise<void> {
@@ -75,10 +91,21 @@ async function load(force: boolean): Promise<void> {
   store.inFlight = (async () => {
     try {
       const res = await fetch("/api/programs/enrollments")
-      const data = res.ok ? await res.json().catch(() => []) : []
-      store.data = Array.isArray(data) ? data : []
+      if (!res.ok) throw new Error(String(res.status))
+      const data = await res.json().catch(() => null)
+      if (!Array.isArray(data)) throw new Error("unexpected shape")
+      store.data = data
+      store.error = null
     } catch {
-      store.data = []
+      /**
+       * THE LIST IS LEFT ALONE, and the failure is recorded.
+       *
+       * Emptying it turned "we could not ask" into "you have no programs" — the
+       * screens below then offer the catalogue to somebody who is three weeks
+       * into a program. Whatever was last known is better than a false answer,
+       * and the error says the screen may be out of date.
+       */
+      store.error = "Your programs could not be loaded, so this may be out of date."
     } finally {
       store.loading = false
       store.inFlight = null
@@ -105,12 +132,24 @@ export function useActiveEnrollments(initial?: ProgramEnrollment[]) {
    * had cached — which is the other half of the "No active program" bug. The
    * server resolved this list for this request; nothing held here is fresher.
    */
-  if (initial && !sameEnrollments(store.data, initial)) {
+  /**
+   * The server's list wins ONCE, not on every render.
+   *
+   * This compared the store against `initial` each time it ran, so any client
+   * refresh was undone on the very next render: end a program, the list
+   * refetches without it, React re-renders, and this puts the ended program
+   * straight back because the server's props still mention it. Seeding only
+   * when the SERVER's answer itself changes keeps the original intent — a fresh
+   * page beats a stale cache — without fighting the refresh it triggered.
+   */
+  if (initial && !sameEnrollments(lastSeeded, initial)) {
+    lastSeeded = initial
     store.data = initial
     store.loading = false
-    snapshot = { enrollments: store.data, loading: store.loading }
+    store.error = null
+    snapshot = { enrollments: store.data, loading: store.loading, error: store.error }
   }
-  const { enrollments, loading } = useSyncExternalStore(subscribe, getSnapshot, () => SERVER_SNAPSHOT)
+  const { enrollments, loading, error } = useSyncExternalStore(subscribe, getSnapshot, () => SERVER_SNAPSHOT)
 
   useEffect(() => {
     // Nothing to fetch when the server already answered for THIS page.
@@ -121,7 +160,7 @@ export function useActiveEnrollments(initial?: ProgramEnrollment[]) {
   // A refresh is always forced: the caller has just changed something.
   const refresh = useCallback(() => load(true), [])
 
-  return { enrollments, loading, refresh }
+  return { enrollments, loading, error, refresh }
 }
 
 /**
@@ -138,8 +177,8 @@ export function refreshEnrollments(): Promise<void> {
 }
 
 /** Same rows in the same order? Compared, not referenced. */
-function sameEnrollments(a: ProgramEnrollment[], b: ProgramEnrollment[]): boolean {
-  if (a.length !== b.length) return false
+function sameEnrollments(a: ProgramEnrollment[] | null, b: ProgramEnrollment[]): boolean {
+  if (!a || a.length !== b.length) return false
   return a.every((e, i) => e.id === b[i].id && e.is_active === b[i].is_active)
 }
 
@@ -147,6 +186,8 @@ function sameEnrollments(a: ProgramEnrollment[], b: ProgramEnrollment[]): boolea
 export function useEnrollment(id: string | null, initial?: EnrollmentDetail | null) {
   const [detail, setDetail] = useState<EnrollmentDetail | null>(initial ?? null)
   const [loading, setLoading] = useState(false)
+
+  const [error, setError] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
     if (!id) {
@@ -156,7 +197,16 @@ export function useEnrollment(id: string | null, initial?: EnrollmentDetail | nu
     setLoading(true)
     try {
       const res = await fetch(`/api/programs/enrollments/${id}`)
-      if (res.ok) setDetail(await res.json().catch(() => null))
+      if (!res.ok) throw new Error(String(res.status))
+      setDetail(await res.json().catch(() => null))
+      setError(null)
+    } catch {
+      /**
+       * A failed request used to leave `detail` null with loading back to
+       * false, which the screen renders as "Loading session…" for ever — a
+       * spinner that will never resolve and never explains itself.
+       */
+      setError("Today's session could not be loaded.")
     } finally {
       setLoading(false)
     }
@@ -174,5 +224,5 @@ export function useEnrollment(id: string | null, initial?: EnrollmentDetail | nu
     // effect re-runs when the id changes, which is the only time it should.
   }, [refresh, id, detail])
 
-  return { detail, loading, refresh }
+  return { detail, loading, error, refresh }
 }

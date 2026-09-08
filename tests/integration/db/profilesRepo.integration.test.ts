@@ -29,12 +29,12 @@ describe("profilesRepo Integration Tests", () => {
         // Act: Insert profile with all fields
         const result = await client.query(`
           INSERT INTO profiles (
-            id, email, full_name, avatar_url, has_purchased, onboarding_completed,
+            id, email, full_name, avatar_url, has_purchased,
             primary_archetype, secondary_archetypes, region, secondary_regions,
             experience_level, xp, level, difficulty, scenarios_completed
           ) VALUES (
             gen_random_uuid(), 'test@example.com', 'Test User', 'https://example.com/avatar.png',
-            true, true, 'confident', ARRAY['social', 'adventurous'], 'europe',
+            true, 'confident', ARRAY['social', 'adventurous'], 'europe',
             ARRAY['asia', 'americas'], 'intermediate', 150, 2, 'medium', 5
           )
           RETURNING *
@@ -46,7 +46,6 @@ describe("profilesRepo Integration Tests", () => {
         expect(profile.full_name).toBe("Test User")
         expect(profile.avatar_url).toBe("https://example.com/avatar.png")
         expect(profile.has_purchased).toBe(true)
-        expect(profile.onboarding_completed).toBe(true)
         expect(profile.primary_archetype).toBe("confident")
         expect(profile.secondary_archetypes).toEqual(["social", "adventurous"])
         expect(profile.region).toBe("europe")
@@ -109,7 +108,6 @@ describe("profilesRepo Integration Tests", () => {
         const profile = result.rows[0]
         expect(profile.email).toBe("minimal@example.com")
         expect(profile.has_purchased).toBe(false)
-        expect(profile.onboarding_completed).toBe(false)
         expect(profile.xp).toBe(0)
         expect(profile.level).toBe(1)
         expect(profile.scenarios_completed).toBe(0)

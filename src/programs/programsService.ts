@@ -36,6 +36,8 @@ import type {
   PlateSetup,
   ProgramSchedule,
   ReplayEvent,
+  StoredSet,
+  WorkoutAdjustments,
   ProgramDefinition,
   ProgramEnrollment,
   ProgramSessionLogInput,
@@ -255,10 +257,25 @@ export function judgeLoadEntry(
     return weights[prescribed.sets - 1] ?? prescribed.weight
   }
 
-  if (counted.length >= prescribed.sets) return { verdict: "advance", achieved: achievedFrom(counted) }
+  if (counted.length >= prescribed.sets)
+    return { verdict: "advance", achieved: achievedFrom(counted), setsDone: done.length }
   if (madeReps.length >= prescribed.sets)
-    return { verdict: "hold_lighter", achieved: achievedFrom(madeReps) }
-  return { verdict: "fail", achieved: prescribed.weight }
+    return { verdict: "hold_lighter", achieved: achievedFrom(madeReps), setsDone: done.length }
+
+  /**
+   * WHICH KIND OF SHORT, because they are not the same session and must not
+   * read as the same sentence. Stopping after one good set because the gym
+   * closed is not the same as grinding out five sets and missing reps on three
+   * of them, and only one of them is "missed reps".
+   */
+  const shortOnReps = madeReps.length < done.length
+  const shortOnSets = done.length < prescribed.sets
+  return {
+    verdict: "fail",
+    achieved: prescribed.weight,
+    setsDone: done.length,
+    shortfall: shortOnReps && shortOnSets ? "both" : shortOnReps ? "reps" : "sets",
+  }
 }
 
 /**
@@ -614,7 +631,10 @@ export function applyLog(
         ...(prev.workingWeight != null
           ? { fromWeight: prev.workingWeight, toWeight: prev.workingWeight }
           : {}),
-        reason: "Skipped — nothing changed, it is waiting where you left it.",
+        reason:
+          entry && entry.sets.length > 0
+            ? "You said not to count this one — the weight is waiting where you left it."
+            : "Skipped — nothing changed, it is waiting where you left it.",
       })
       continue
     }
@@ -787,13 +807,35 @@ function progressLinear(
   }
 
   nextState[ex.id] = { ...prev, workingWeight: fromWeight, consecutiveFails: fails }
+  /**
+   * SAY WHAT HAPPENED, IN WORDS.
+   *
+   * This line used to read "Missed reps (1/3)", which was wrong twice over. It
+   * said "missed reps" for a session where every rep was made and only the sets
+   * ran out, and the "(1/3)" — meant as "the first of three misses before the
+   * weight drops" — reads as one rep out of three.
+   */
+  const askedSets = ex.scheme.sets
+  const short =
+    judged.shortfall === "sets"
+      ? `Only ${judged.setsDone} of ${askedSets} ${askedSets === 1 ? "set" : "sets"}`
+      : judged.shortfall === "both"
+        ? `Only ${judged.setsDone} of ${askedSets} sets, and short on reps`
+        : `Short on reps`
+  const left = rule.deloadAfterFails - fails
+  const warning =
+    left <= 0
+      ? ""
+      : left === 1
+        ? " One more like this and the weight comes down."
+        : ` ${left} more like this and the weight comes down.`
   return {
     exerciseId: ex.id,
     name: ex.name,
     kind: "hold",
     fromWeight,
     toWeight: fromWeight,
-    reason: `Missed reps (${fails}/${rule.deloadAfterFails}) → same weight next time`,
+    reason: `${short} → same weight next time.${warning}`,
   }
 }
 
@@ -1218,31 +1260,6 @@ function round2(n: number): number {
 // One record, read as a session
 // ---------------------------------------------------------------------------
 
-/** A stored set, as the one workouts table holds it. */
-export interface StoredSet {
-  exercise: string
-  exercise_id: string | null
-  weight_kg: number
-  reps: number
-  set_number: number
-  set_kind: string
-  side?: string | null
-}
-
-/** What changed during a workout that the sets alone cannot say. */
-export interface WorkoutAdjustments {
-  /** Lifts the person was there for and deliberately did not do. */
-  skipped?: string[]
-  /** Lifts cut short — counted like a skip, never as a failure. */
-  incomplete?: string[]
-  /** Lifts swapped for something else on the day. */
-  swapped?: Record<string, { name: string; libraryId?: string }>
-  /** Lifts added that the program does not contain. */
-  added?: Array<{ exerciseId: string; name: string; libraryId?: string }>
-  /** The order they were actually done in. */
-  order?: string[]
-}
-
 /**
  * The engine's view of a workout, DERIVED from the rows that were stored.
  *
@@ -1307,9 +1324,25 @@ export function entriesFromSets(
     })
   }
 
-  // A lift with no rows is only "skipped" if the person said so; a lift the
-  // engine simply never saw is handled by `applyLog`, which holds either way.
-  for (const exerciseId of [...(adjustments?.skipped ?? []), ...(adjustments?.incomplete ?? [])]) {
+  /**
+   * "DON'T COUNT IT" HAS TO COUNT FOR SOMETHING.
+   *
+   * This only marked a lift skipped when it had NO rows at all, so the button on
+   * the finish sheet — offered precisely for a lift that was started and cut
+   * short — did nothing. Two of three squat sets, tapped "Don't count it": the
+   * warning row disappeared, the person believed it was handled, and the engine
+   * still scored a miss and moved a step towards a 10% deload off a weight that
+   * was never failed. That is the exact bug the comment above `applyLog` was
+   * written to kill, reintroduced by the screen above it.
+   *
+   * The sets stay on the entry: they were done, and they belong in the volume,
+   * the history and any record they set. Only the JUDGEMENT is withheld.
+   */
+  const held = new Set([...(adjustments?.skipped ?? []), ...(adjustments?.incomplete ?? [])])
+  for (const entry of entries) {
+    if (held.has(entry.exerciseId)) entry.skipped = true
+  }
+  for (const exerciseId of held) {
     if (!byExercise.has(exerciseId)) entries.push({ exerciseId, sets: [], skipped: true })
   }
   return entries
@@ -1354,6 +1387,30 @@ export function describeSets(exercise: PrescribedExercise, unitLabel: string): s
   return (
     sets.map((s) => (bodyweight ? repsOf(s) : `${weightOf(s)} × ${repsOf(s)}`)).join(", ") + side
   )
+}
+
+/**
+ * What each lift did the LAST time it came round, set by set.
+ *
+ * `lastTimePerLift` already existed and returns one summary line per lift —
+ * enough to read, not enough to pre-fill a row with. The live screen needs the
+ * individual sets, because "what did I get on set three last week" is the
+ * question being answered while the number is typed.
+ */
+export function lastSetsPerLift(
+  logs: { logged_at: string; entries: LoggedExercise[] }[]
+): Record<string, { weight: number; reps: number }[]> {
+  const out: Record<string, { weight: number; reps: number }[]> = {}
+  // Newest first, and the first one seen for a lift is its last session.
+  for (const log of [...logs].sort((a, b) => b.logged_at.localeCompare(a.logged_at))) {
+    for (const entry of log.entries) {
+      if (entry.skipped || entry.sets.length === 0 || out[entry.exerciseId]) continue
+      out[entry.exerciseId] = [...entry.sets]
+        .sort((a, b) => a.setNumber - b.setNumber)
+        .map((s) => ({ weight: s.weight, reps: s.reps }))
+    }
+  }
+  return out
 }
 
 /**
@@ -1699,15 +1756,18 @@ export interface PlateLoad {
  * Greedy from the heaviest plate down, which is both what a person does and
  * optimal for any real plate set (each plate divides the next one up).
  */
-export function platesFor(target: number, unit: UnitSystem): PlateLoad {
-  const { barWeight } = UNIT_CONFIG[unit]
+export function platesFor(target: number, unit: UnitSystem, setup?: PlateSetup): PlateLoad {
+  const barWeight = setup?.barWeight ?? DEFAULT_PLATES[unit].barWeight
   if (target <= barWeight) {
     return { perSide: [], achievable: barWeight, approximate: target < barWeight, barOnly: true }
   }
 
   let remainingPerSide = (target - barWeight) / 2
   const perSide: number[] = []
-  for (const plate of PLATES[unit]) {
+  // Only plates this gym has: a 1.25 kg plate in the list when the person owns
+  // nothing under 2.5 would show a load they cannot make.
+  const smallest = setup?.smallestPlate ?? DEFAULT_PLATES[unit].smallestPlate
+  for (const plate of PLATES[unit].filter((p) => p >= smallest - 1e-9)) {
     // A hair of tolerance: (target - bar) / 2 on a .5 kg increment is exact in
     // decimal but not in binary, and a strict >= would drop the last 1.25.
     while (remainingPerSide >= plate - 1e-9) {

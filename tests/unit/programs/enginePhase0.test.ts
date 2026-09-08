@@ -13,6 +13,7 @@ import {
   applyLog,
   computePrescription,
   judgeLoadEntry,
+  entriesFromSets,
   needsInput,
   pickTodaysDay,
   replayEnrollment,
@@ -119,12 +120,14 @@ describe("a lift you did not do", () => {
 // The weight you actually lifted
 // ============================================================================
 
+/** A logged exercise from `[weight, reps]` pairs. Shared by the judging tests. */
+const sets = (pairs: [number, number][]) => ({
+  exerciseId: "x",
+  sets: pairs.map(([weight, reps], i) => ({ setNumber: i + 1, reps, weight })),
+})
+
 describe("what the weight on the bar counts for", () => {
   const prescribed = { sets: 5, reps: 5, weight: 80 }
-  const sets = (pairs: [number, number][]) => ({
-    exerciseId: "x",
-    sets: pairs.map(([weight, reps], i) => ({ setNumber: i + 1, reps, weight })),
-  })
 
   test("all five at the weight asked for is an advance from that weight", () => {
     const j = judgeLoadEntry(prescribed, sets([[80, 5], [80, 5], [80, 5], [80, 5], [80, 5]]))
@@ -412,5 +415,84 @@ describe("rebuilding the weights", () => {
     )
     expect(replayed.exerciseState.squat.workingWeight).toBe(42.5)
     expect(replayed.exerciseState.squat.consecutiveFails).toBe(0)
+  })
+})
+
+/**
+ * WHAT FELL SHORT, NAMED.
+ *
+ * The summary answered every incomplete session with "Missed reps (1/3)". Two
+ * separate lies in one line: somebody who did one clean set of five and then
+ * had to leave missed no reps at all, and "(1/3)" — meant as the first of three
+ * misses before a deload — reads as one rep out of three.
+ */
+describe("what fell short", () => {
+  const prescribed = { sets: 5, reps: 5, weight: 80 }
+
+  test("calls a short session short on SETS when every set made its reps", () => {
+    const j = judgeLoadEntry(prescribed, sets([[80, 5]]))
+    expect(j.verdict).toBe("fail")
+    expect(j.shortfall).toBe("sets")
+    expect(j.setsDone).toBe(1)
+  })
+
+  test("calls it short on REPS when all five sets were done and some fell short", () => {
+    const j = judgeLoadEntry(prescribed, sets([[80, 5], [80, 5], [80, 5], [80, 3], [80, 2]]))
+    expect(j.verdict).toBe("fail")
+    expect(j.shortfall).toBe("reps")
+    expect(j.setsDone).toBe(5)
+  })
+
+  test("says both when the sets ran out AND the reps were missed", () => {
+    const j = judgeLoadEntry(prescribed, sets([[80, 5], [80, 2]]))
+    expect(j.verdict).toBe("fail")
+    expect(j.shortfall).toBe("both")
+  })
+
+  test("reports nothing short when the session was completed", () => {
+    const j = judgeLoadEntry(prescribed, sets([[80, 5], [80, 5], [80, 5], [80, 5], [80, 5]]))
+    expect(j.verdict).toBe("advance")
+    expect(j.shortfall).toBeUndefined()
+  })
+})
+
+/**
+ * "DON'T COUNT IT" ON A LIFT THAT WAS PARTLY DONE.
+ *
+ * The finish sheet offers this exactly when a lift was started and cut short,
+ * and it did nothing: the mark was only applied to a lift with NO sets at all.
+ * Two of three squat sets, tapped "Don't count it", and the engine still scored
+ * a miss and stepped towards a deload off a weight that was never failed.
+ */
+describe("a lift the person said not to count", () => {
+  const stored = (reps: number, setNumber: number) => ({
+    exercise: "Squat",
+    exercise_id: "squat",
+    weight_kg: 100,
+    reps,
+    set_number: setNumber,
+    set_kind: "working" as const,
+    side: null,
+  })
+
+  test("is marked skipped even though its sets were logged", () => {
+    const entries = entriesFromSets([stored(5, 1), stored(5, 2)], { skipped: ["squat"] }, "kg")
+    const squat = entries.find((e) => e.exerciseId === "squat")
+    expect(squat?.skipped).toBe(true)
+  })
+
+  test("keeps the sets, because they were done and they count everywhere else", () => {
+    const entries = entriesFromSets([stored(5, 1), stored(5, 2)], { skipped: ["squat"] }, "kg")
+    expect(entries.find((e) => e.exerciseId === "squat")?.sets).toHaveLength(2)
+  })
+
+  test("is not marked skipped when nothing said to skip it", () => {
+    const entries = entriesFromSets([stored(5, 1), stored(5, 2)], {}, "kg")
+    expect(entries.find((e) => e.exerciseId === "squat")?.skipped).toBeUndefined()
+  })
+
+  test("a lift stopped short counts the same way", () => {
+    const entries = entriesFromSets([stored(5, 1)], { incomplete: ["squat"] }, "kg")
+    expect(entries.find((e) => e.exerciseId === "squat")?.skipped).toBe(true)
   })
 })

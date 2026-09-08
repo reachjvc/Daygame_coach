@@ -24,7 +24,7 @@ export default async function DashboardInnerGamePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("has_purchased, onboarding_completed")
+    .select("has_purchased")
     .eq("id", user.id)
     .single()
 

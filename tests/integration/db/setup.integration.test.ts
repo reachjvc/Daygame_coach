@@ -76,8 +76,8 @@ describe("Testcontainers Setup", () => {
     try {
       // Act: Create user directly with client
       const result = await client.query(`
-        INSERT INTO profiles (id, email, has_purchased, onboarding_completed)
-        VALUES (gen_random_uuid(), 'test@example.com', false, false)
+        INSERT INTO profiles (id, email, has_purchased)
+        VALUES (gen_random_uuid(), 'test@example.com', false)
         RETURNING id, email
       `)
       const userId = result.rows[0].id
@@ -98,8 +98,8 @@ describe("Testcontainers Setup", () => {
     try {
       // Create user
       const userResult = await client.query(`
-        INSERT INTO profiles (id, email, has_purchased, onboarding_completed)
-        VALUES (gen_random_uuid(), 'test@example.com', false, false)
+        INSERT INTO profiles (id, email, has_purchased)
+        VALUES (gen_random_uuid(), 'test@example.com', false)
         RETURNING id
       `)
       const userId = userResult.rows[0].id
@@ -129,8 +129,8 @@ describe("Testcontainers Setup", () => {
     try {
       // Create some data
       const userResult = await client.query(`
-        INSERT INTO profiles (id, email, has_purchased, onboarding_completed)
-        VALUES (gen_random_uuid(), 'test@example.com', false, false)
+        INSERT INTO profiles (id, email, has_purchased)
+        VALUES (gen_random_uuid(), 'test@example.com', false)
         RETURNING id
       `)
       const userId = userResult.rows[0].id
