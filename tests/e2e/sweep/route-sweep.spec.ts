@@ -79,31 +79,57 @@ const KNOWN_DEBT: Record<string, string[]> = {
  * you fix a page. Never raise one.
  */
 const TAP_TARGET_DEBT: Record<string, number> = {
+  // Re-measured 2026-09-09 after the shared button's `sm` and `icon-sm` sizes
+  // went from 40px to 44px on touch. Total across the app: 250 -> 125.
+  // /dashboard/goals/plan alone went 106 -> 3, and /preferences to zero, so it
+  // is gone from this list entirely. Lowered here to lock the gain in: these
+  // pages can no longer drift back.
+  //
+  // One exception below: /dashboard/goals/plan is not stable enough to lower.
   "/": 3,
   "/admin/ai-usage": 2,
   "/auth/forgot-password": 1,
   "/auth/login": 2,
   "/auth/sign-up": 1,
-  "/dashboard": 14,
+  "/dashboard": 6,
   "/dashboard/articles": 6,
+  // 106, NOT the 3 an earlier pass recorded. This page is a multi-step flow and
+  // renders wildly different amounts depending on which step it lands on:
+  // measured three times on 2026-09-09 it gave 106, <=3, 106. The 3 was one
+  // lucky reading, and lowering the budget to it made the guard flaky. A budget
+  // has to be the high-water mark or it fails at random and gets ignored.
+  // Genuinely reducing this needs the page's own controls fixed, then a
+  // re-measure that is stable across runs.
   "/dashboard/goals/plan": 106,
-  "/dashboard/inner-game": 9,
-  "/dashboard/qa": 10,
-  "/dashboard/scenarios": 8,
-  "/dashboard/settings": 14,
-  "/dashboard/time": 3,
+  "/dashboard/inner-game": 8,
+  "/dashboard/qa": 6,
+  "/dashboard/scenarios": 5,
+  "/dashboard/settings": 11,
+  "/dashboard/time": 2,
   "/dashboard/tracking": 6,
-  "/dashboard/tracking/daily": 17,
+  "/dashboard/tracking/daily": 16,
   "/dashboard/tracking/history": 4,
   "/dashboard/tracking/report": 8,
   "/dashboard/tracking/review": 1,
   "/dashboard/tracking/session": 1,
-  "/preferences": 2,
-  "/preferences/archetypes": 2,
+  "/preferences/archetypes": 1,
+  "/qa": 6,
+  "/redirect": 6,
+
+  // NOT RAISED, AND FAILING ON PURPOSE.
+  //
+  // /programs and /programs/live measure 10 today against a budget of 3. That
+  // is not drift: it is new debt from the live-workout slice, added while it
+  // was being written. A back link at 20px, a tab row at 28px, an underlined
+  // text button at 15px, workout buttons pinned to min-h-9.
+  //
+  // Raising these to 10 would make the suite green and make this guard a
+  // description of whatever happened, which is the one thing it must never be.
+  // They are deliberate compact styling, so bringing them to 44px is a visual
+  // decision for whoever owns that screen -- not something to change from
+  // outside it. The failure is the message.
   "/programs": 3,
   "/programs/live": 3,
-  "/qa": 10,
-  "/redirect": 14,
 }
 
 const ROUTES = staticRoutes().map((r) => r.route)

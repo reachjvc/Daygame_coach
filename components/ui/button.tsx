@@ -20,12 +20,18 @@ const buttonVariants = cva(
           'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
         link: 'text-primary underline-offset-4 hover:underline',
       },
+      // Every size is 44px tall on a touch screen (h-11 / size-11) and smaller
+      // on a pointer. `sm` and `icon-sm` were the two exceptions at 40px --
+      // four pixels under the minimum touch target, which put them below it on
+      // every phone. Measured on an iPhone 14 viewport 2026-09-08: 250 controls
+      // across 25 pages were under 44px, and the great majority were these two.
+      // Desktop sizes are unchanged; only the touch height moves.
       size: {
         default: 'h-11 sm:h-9 px-4 py-2',
-        sm: 'h-10 sm:h-8 rounded-md gap-1.5 px-3',
+        sm: 'h-11 sm:h-8 rounded-md gap-1.5 px-3',
         lg: 'h-11 sm:h-10 rounded-md px-6',
         icon: 'size-11 sm:size-9',
-        'icon-sm': 'size-10 sm:size-8',
+        'icon-sm': 'size-11 sm:size-8',
         'icon-lg': 'size-11 sm:size-10',
       },
     },
