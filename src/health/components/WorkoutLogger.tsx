@@ -90,13 +90,36 @@ export function WorkoutLogger() {
   const [saveError, setSaveError] = useState<string | null>(null)
   const [newPRs, setNewPRs] = useState<PersonalRecord[]>([])
 
+  /**
+   * TWO LIES FROM ONE DROPPED REQUEST.
+   *
+   * This swallowed the failure and left `logs` at `[]`, which produced both of
+   * these at once:
+   *
+   *   1. Somebody with 200 logged workouts was shown "No workouts logged yet"
+   *      and the brand-new-account button.
+   *   2. Worse — the personal-record check compares the workout you just saved
+   *      against everything logged before it, and against an empty history
+   *      EVERY lift is a record. So the next save congratulated them on six
+   *      personal bests at weights they had been lifting for months.
+   *
+   * `historyFailed` separates "you have none" from "we could not find out", and
+   * the record check is suppressed while it is true — a record announced from a
+   * history the app could not read is not a record, it is a guess.
+   */
+  const [historyFailed, setHistoryFailed] = useState(false)
+
   const fetchLogs = useCallback(async () => {
     try {
       const res = await fetch("/api/health/workout?days=90&include=sets")
       if (!res.ok) throw new Error("Failed to fetch")
-      setLogs(await res.json())
+      const body = (await res.json()) as unknown
+      if (!Array.isArray(body)) throw new Error("unexpected shape")
+      setLogs(body as WorkoutLogWithSets[])
+      setHistoryFailed(false)
     } catch (e) {
       console.error("Error fetching workout logs:", e)
+      setHistoryFailed(true)
     } finally {
       setIsLoading(false)
     }
@@ -195,8 +218,11 @@ export function WorkoutLogger() {
       if (!res.ok) throw new Error(await readApiError(res))
       // PR check: compare the saved sets against everything logged before them
       const created: WorkoutLogWithSets = await res.json()
-      const priorSets = logs.flatMap((l) => (l.sets ?? []).map((s) => ({ ...s, logged_at: l.logged_at })))
-      setNewPRs(detectPersonalRecords(priorSets, created.sets ?? []))
+      // Never claim a record against a history that could not be read.
+      if (!historyFailed) {
+        const priorSets = logs.flatMap((l) => (l.sets ?? []).map((s) => ({ ...s, logged_at: l.logged_at })))
+        setNewPRs(detectPersonalRecords(priorSets, created.sets ?? []))
+      }
       setDuration("")
       setIntensity(3)
       setDistanceKm("")
@@ -275,7 +301,18 @@ export function WorkoutLogger() {
           </div>
         )}
 
-        {logs.length === 0 && !isAdding && (
+        {historyFailed && !isAdding && (
+          <div className="text-center py-4" data-testid="workout-history-failed">
+            <p className="mb-2 text-sm text-amber-600 dark:text-amber-400">
+              Your workout history could not be loaded, so this may be incomplete.
+            </p>
+            <Button size="sm" variant="outline" onClick={() => void fetchLogs()}>
+              Try again
+            </Button>
+          </div>
+        )}
+
+        {logs.length === 0 && !historyFailed && !isAdding && (
           <div className="text-center py-4">
             <p className="text-sm text-muted-foreground mb-2">No workouts logged yet</p>
             <Button size="sm" variant="outline" onClick={() => setIsAdding(true)}>

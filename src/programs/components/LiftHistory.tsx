@@ -18,7 +18,9 @@ import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { liftsWithHistory, workoutsToCsv } from "@/src/health/healthService"
 import type { WorkoutLogWithSets } from "@/src/health/types"
-import { formatLoad } from "../programsService"
+import { formatLoad, fromKg } from "../programsService"
+import { UNIT_CONFIG } from "../config"
+import type { UnitSystem } from "../types"
 import { Sparkline } from "./Sparkline"
 import type { LoadPoint } from "../types"
 
@@ -32,7 +34,19 @@ const HISTORY_DAYS = 1095
 /** Enough to be a list worth reading; the rest are one tap away in the logger. */
 const SHOWN = 8
 
-export function LiftHistory() {
+/**
+ * `unit` is REQUIRED, not optional with a kilogram default.
+ *
+ * This panel printed "kg" unconditionally, directly under "Your bests" which
+ * prints the lifter's own unit — so a pounds lifter read "Bench Press 225 lb × 5"
+ * and, an inch below, "Bench Press 61 → 102 kg" for the same lift on the same
+ * screen. Making it a required prop is what stops the next caller forgetting.
+ */
+export function LiftHistory({ unit }: { unit: UnitSystem }) {
+  const [failed, setFailed] = useState(false)
+  const label = UNIT_CONFIG[unit].label
+  /** Stored kilograms, shown in the lifter's unit, rounded the way this app rounds. */
+  const show = (kg: number) => formatLoad(fromKg(kg, unit))
   const [lifts, setLifts] = useState<{ exercise: string; points: LoadPoint[] }[] | null>(null)
   /** Kept so the export writes exactly what is on screen, with no second fetch. */
   const [logs, setLogs] = useState<WorkoutLogWithSets[]>([])
@@ -51,11 +65,25 @@ export function LiftHistory() {
         setLogs(logs as WorkoutLogWithSets[])
         setLifts(liftsWithHistory(flat as never))
       })
-      .catch(() => alive && setLifts([]))
+      /**
+       * NOT AN EMPTY LIST. `setLifts([])` renders nothing at all — the whole
+       * "Your lifts over time" section and the Export CSV button with it — so
+       * somebody with three years of lifts saw the rest of the tab render fine
+       * and this section simply absent, with nothing to say it had failed.
+       */
+      .catch(() => alive && setFailed(true))
     return () => {
       alive = false
     }
   }, [])
+
+  if (failed) {
+    return (
+      <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[11.5px] text-amber-600 dark:text-amber-400" data-testid="lift-history-failed">
+        Your lifts over time could not be loaded.
+      </div>
+    )
+  }
 
   // Nothing to say until a lift has been done twice.
   if (!lifts || lifts.length === 0) return null
@@ -98,14 +126,14 @@ export function LiftHistory() {
                 <span className="min-w-0 flex-1 truncate">{l.exercise}</span>
                 <Sparkline
                   points={l.points}
-                  label={`${l.exercise}: ${formatLoad(first.weight)} to ${formatLoad(last.weight)} kg across ${l.points.length} days, ${new Date(first.at).toLocaleDateString()} to ${new Date(last.at).toLocaleDateString()}`}
+                  label={`${l.exercise}: ${show(first.weight)} to ${show(last.weight)} ${label} across ${l.points.length} days, ${new Date(first.at).toLocaleDateString()} to ${new Date(last.at).toLocaleDateString()}`}
                 />
                 <span className="shrink-0 text-muted-foreground">
-                  {formatLoad(first.weight)} →{" "}
-                  <span className="font-medium text-foreground">{formatLoad(last.weight)} kg</span>
+                  {show(first.weight)} →{" "}
+                  <span className="font-medium text-foreground">{show(last.weight)} {label}</span>
                   <span className={`ml-1.5 text-xs ${moved > 0 ? "text-emerald-600" : moved < 0 ? "text-amber-600" : ""}`}>
                     {moved > 0 ? "+" : ""}
-                    {moved === 0 ? "held" : formatLoad(moved)}
+                    {moved === 0 ? "held" : show(moved)}
                   </span>
                 </span>
               </div>

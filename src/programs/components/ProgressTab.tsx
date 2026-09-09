@@ -195,7 +195,7 @@ export function ProgressTab({ plannedPerWeek, unit }: Props) {
       </Card>
 
       <Suspense fallback={null}>
-        <LiftHistory />
+        <LiftHistory unit={unit} />
       </Suspense>
     </div>
   )

@@ -67,15 +67,33 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
     }
   }, [logs, enrollment])
 
+  const [failed, setFailed] = useState<string | null>(null)
+
+  /**
+   * CHECK WHETHER IT WORKED.
+   *
+   * `await fetch(...)` with no look at the response, then `onChanged()`
+   * regardless — so a 500 was indistinguishable from success. Tap "Skip
+   * session", the screen refreshes showing the same session, tap again, and if
+   * the second one lands you have skipped twice. "End program" was worse: it
+   * navigated away from a program that was still running and still prescribing.
+   */
   async function action(action: "skip" | "reset") {
     setBusy(true)
+    setFailed(null)
     try {
-      await fetch(`/api/programs/enrollments/${enrollmentId}/action`, {
+      const res = await fetch(`/api/programs/enrollments/${enrollmentId}/action`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
       })
+      if (!res.ok) {
+        setFailed(action === "skip" ? "That session was not skipped." : "The program was not reset.")
+        return
+      }
       onChanged()
+    } catch {
+      setFailed("Could not reach the server, so nothing was changed.")
     } finally {
       setBusy(false)
     }
@@ -271,7 +289,19 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
           <Button variant="outline" size="sm" disabled={busy} onClick={() => action("skip")}>
             <SkipForward className="size-4 mr-1" /> Skip session
           </Button>
-          <Button variant="outline" size="sm" disabled={busy} onClick={() => action("reset")}>
+          {/* CONFIRMED, like the two buttons either side of it. This throws the
+              program back to cycle 1, week 1, day 1 and cannot be undone, and it
+              sat unconfirmed in a wrapping row between Skip and End — one mis-tap
+              on a phone from losing every weight you had worked up to. */}
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={busy}
+            onClick={() => {
+              if (!confirm("Start this program again from week 1? Your current weights go back to where you began. This cannot be undone.")) return
+              void action("reset")
+            }}
+          >
             <RotateCcw className="size-4 mr-1" /> Reset to start
           </Button>
           <span className="flex-1" />
@@ -279,6 +309,11 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
             <Trash2 className="size-4 mr-1" /> End program
           </Button>
         </div>
+        {failed && (
+          <p className="mt-2 text-xs text-red-500" data-testid="progression-action-failed">
+            {failed}
+          </p>
+        )}
       </CardContent>
       )}
     </Card>

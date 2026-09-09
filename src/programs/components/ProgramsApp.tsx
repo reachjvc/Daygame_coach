@@ -193,10 +193,33 @@ function ActiveProgram({
   live?: LiveWorkout | null
   onExit: () => void
 }) {
-  const { detail, loading, refresh } = useEnrollment(enrollmentId, initialDetail)
+  const { detail, loading, error, refresh } = useEnrollment(enrollmentId, initialDetail)
   /** A session the user picked instead of the one the app offered. */
   const [pickedDayId, setPickedDayId] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
+
+  /**
+   * A FAILED READ IS NOT A SLOW ONE.
+   *
+   * This was `if (loading || !detail)` and nothing else, so a failed request —
+   * which leaves `detail` null with `loading` back to false — showed "Loading
+   * session…" for ever. The hook has recorded the error the whole time and its
+   * own comment names this exact outcome; the screen simply never asked.
+   */
+  if (error && !detail) {
+    return (
+      <div className="space-y-2 py-4" data-testid="session-error">
+        <p className="text-sm text-amber-600 dark:text-amber-400">{error}</p>
+        <button
+          type="button"
+          onClick={() => void refresh()}
+          className="rounded-md border border-border px-2.5 py-1.5 text-xs transition-colors hover:bg-accent"
+        >
+          Try again
+        </button>
+      </div>
+    )
+  }
 
   if (loading || !detail) return <p className="text-sm text-muted-foreground">Loading session…</p>
 
