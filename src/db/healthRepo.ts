@@ -21,8 +21,6 @@ import type {
   WorkoutSetInsert,
   NutritionLogRow,
   NutritionLogInsert,
-  BodyMeasurementRow,
-  BodyMeasurementInsert,
 } from "@/src/health/types"
 
 /**

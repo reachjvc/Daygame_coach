@@ -14,11 +14,9 @@
 import {
   DEFAULT_PLATES,
   FREE_PRECISION,
-  KG_PER_LB,
   LOAD_TOLERANCE,
   PLATES,
   REST_SECONDS,
-  UNIT_CONFIG,
 } from "./config"
 import { libraryByName } from "./data/exerciseLibrary"
 import type {
@@ -1174,16 +1172,6 @@ function applyHoldLog(program: ProgramDefinition, enrollment: ProgramEnrollment,
 // ============================================================================
 // Helpers
 // ============================================================================
-
-function didHitLinear(
-  prescribedSets: number,
-  prescribedReps: number,
-  entry: ProgramSessionLogInput["entries"][number] | undefined
-): boolean {
-  if (!entry) return false
-  const completed = entry.sets.filter((s) => s.reps >= prescribedReps).length
-  return completed >= prescribedSets
-}
 
 function allExercises(program: ProgramDefinition): LoadExercise[] {
   const s = program.schedule

@@ -876,3 +876,58 @@ export function liftBests(logs: WorkoutLogWithSets[]): LiftBest[] {
 
   return [...best.values()].sort((a, b) => b.bestEstimatedMaxKg - a.bestEstimatedMaxKg)
 }
+
+/** A run of identical sets, shown as one line instead of N. */
+export interface CollapsedSet {
+  /** How many sets in the run — 4 means "4 × 100 kg × 5". */
+  count: number
+  weightKg: number
+  reps: number
+  kind: string
+  exercise: string
+  /** The set numbers this run covers, so a correction can still find them. */
+  setNumbers: number[]
+}
+
+/**
+ * IDENTICAL SETS, SAID ONCE.
+ *
+ * A 5×5 rendered as five rows reading "1  20 kg × 5", "2  20 kg × 5" … which is
+ * a spreadsheet, not a record of a session: five lines to say one thing, and the
+ * one line that DIFFERED — the set you missed — looked exactly like its
+ * neighbours. Collapsing the runs makes the exception visible, which is the only
+ * part worth reading.
+ *
+ * Only CONSECUTIVE identical sets collapse. Two sets of 100 either side of a
+ * missed set are not "2 × 100": they are what happened before and after the
+ * miss, and merging them would hide the order things happened in.
+ */
+export function collapseSets(
+  sets: Array<{ exercise: string; weight_kg: number; reps: number; set_kind?: string | null; set_number: number }>
+): CollapsedSet[] {
+  const out: CollapsedSet[] = []
+  for (const s of sets) {
+    const last = out[out.length - 1]
+    const kind = s.set_kind ?? "working"
+    if (
+      last &&
+      last.exercise === s.exercise &&
+      last.weightKg === s.weight_kg &&
+      last.reps === s.reps &&
+      last.kind === kind
+    ) {
+      last.count += 1
+      last.setNumbers.push(s.set_number)
+      continue
+    }
+    out.push({
+      count: 1,
+      weightKg: s.weight_kg,
+      reps: s.reps,
+      kind,
+      exercise: s.exercise,
+      setNumbers: [s.set_number],
+    })
+  }
+  return out
+}

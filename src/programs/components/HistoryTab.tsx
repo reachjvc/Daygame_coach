@@ -16,13 +16,16 @@
 import { useCallback, useEffect, useState } from "react"
 import { ChevronDown, ChevronRight, Loader2, Pencil, Trash2, X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { isWorkingSet } from "@/src/health/healthService"
+import { collapseSets, isWorkingSet } from "@/src/health/healthService"
 import { fromKg, toKg } from "../programsService"
 import { UNIT_CONFIG } from "../config"
 import type { UnitSystem } from "../types"
 import type { WorkoutLogWithSets, WorkoutSetRow } from "@/src/health/types"
 
 const DAY = { weekday: "short", day: "numeric", month: "short" } as const
+
+/** How many workouts are on screen before you ask for more. */
+const PAGE = 20
 
 /**
  * What to call one row of the editor out loud.
@@ -65,6 +68,17 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
   const [saving, setSaving] = useState(false)
   /** The workout whose sets are being read, so the button is not a dead tap. */
   const [opening, setOpening] = useState<string | null>(null)
+  /**
+   * HOW MUCH OF A YEAR IS ON THE SCREEN AT ONCE.
+   *
+   * Measured before this: 141 workouts rendered as 141 identical cards in a
+   * single 17,291-pixel page. Reaching June was twenty screens of thumb, with no
+   * months, no filter and nothing to aim at. Every tracker lifters use shows the
+   * newest and loads more as you reach the end.
+   */
+  const [shown, setShown] = useState(PAGE)
+  /** One lift, across the whole history — the filter these apps actually ship. */
+  const [lift, setLift] = useState<string>("")
 
   const load = useCallback(async () => {
     try {
@@ -220,11 +234,55 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
     )
   }
 
+  /** Every lift that appears anywhere in the history, for the filter. */
+  const lifts = [...new Set(logs.flatMap((l) => (l.sets ?? []).map((x) => x.exercise)))].sort()
+  const matching = lift ? logs.filter((l) => (l.sets ?? []).some((x) => x.exercise === lift)) : logs
+  const visible = matching.slice(0, shown)
+
+  /** Which month a row belongs to, and the month's own totals. */
+  const monthKey = (at: string) => new Date(at).toLocaleDateString(undefined, { month: "long", year: "numeric" })
+  const monthTotals = new Map<string, { sessions: number; volumeKg: number }>()
+  for (const l of matching) {
+    const k = monthKey(l.logged_at)
+    const t = monthTotals.get(k) ?? { sessions: 0, volumeKg: 0 }
+    t.sessions += 1
+    t.volumeKg += (l.sets ?? []).filter(isWorkingSet).reduce((sum, x) => sum + x.weight_kg * x.reps, 0)
+    monthTotals.set(k, t)
+  }
+
   return (
     <div className="space-y-2" data-testid="workout-history">
       {error && <p className="text-xs text-destructive">{error}</p>}
 
-      {logs.map((log) => {
+      {lifts.length > 1 && (
+        <div className="flex items-center gap-2">
+          <label htmlFor="history-lift" className="text-[11px] text-muted-foreground">
+            Lift
+          </label>
+          <select
+            id="history-lift"
+            data-testid="history-lift-filter"
+            value={lift}
+            onChange={(e) => {
+              setLift(e.target.value)
+              setShown(PAGE)
+            }}
+            className="min-h-11 flex-1 rounded-md border border-border bg-background px-2 text-[12px] sm:min-h-0 sm:py-1"
+          >
+            <option value="">All lifts</option>
+            {lifts.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {visible.map((log, i) => {
+        const month = monthKey(log.logged_at)
+        const newMonth = i === 0 || monthKey(visible[i - 1].logged_at) !== month
+        const totals = monthTotals.get(month)
         const isOpen = open.has(log.id)
         /**
          * The top working set of each lift, in the LIFTER'S unit.
@@ -255,7 +313,22 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
         const volume = working.reduce((t, s) => t + s.weight_kg * s.reps, 0)
 
         return (
-          <Card key={log.id}>
+          <div key={log.id} className="space-y-2">
+            {/* THE MONTH, once, with what it came to. A sticky header is what
+                makes a long scroll navigable instead of endless — you can see
+                where you are without counting cards. */}
+            {newMonth && (
+              <div className="sticky top-0 z-10 -mx-1 flex items-baseline justify-between gap-2 bg-background/95 px-1 py-1.5 backdrop-blur">
+                <h3 className="text-[12.5px] font-semibold">{month}</h3>
+                {totals && (
+                  <span className="text-[11px] tabular-nums text-muted-foreground">
+                    {totals.sessions} {totals.sessions === 1 ? "session" : "sessions"} ·{" "}
+                    {show(totals.volumeKg).toLocaleString()} {label}
+                  </span>
+                )}
+              </div>
+            )}
+          <Card>
             <CardContent className="p-3">
               <div className="flex items-start gap-2">
                 <button
@@ -298,15 +371,10 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
                     </span>
                   </span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => void remove(log)}
-                  aria-label={`Delete the workout from ${new Date(log.logged_at).toLocaleDateString(undefined, DAY)}`}
-                  data-testid={`history-delete-${log.id}`}
-                  className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"
-                >
-                  <Trash2 className="size-4" />
-                </button>
+                {/* NO BIN ON THE ROW. It sat one thumb-width from the control you
+                    tap to open a workout, on all 141 of them. Every tracker
+                    lifters use puts the destructive action inside the workout,
+                    where you can see what you are about to destroy. */}
               </div>
 
               {isOpen && editing === log.id ? (
@@ -402,25 +470,31 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
                     ).map(([exercise, sets]) => (
                       <div key={exercise}>
                         <p className="text-xs font-medium">{exercise}</p>
+                        {/* IDENTICAL SETS, SAID ONCE. Five rows reading
+                            "1  20 kg × 5" one under another is a spreadsheet:
+                            five lines to say one thing, and the set you MISSED
+                            looked exactly like its neighbours. Collapsed, the
+                            exception is the only thing that stands out. */}
                         <ul className="mt-0.5 space-y-0.5">
-                          {(sets ?? []).map((s) => (
+                          {collapseSets(sets ?? []).map((run, ri) => (
                             <li
-                              key={s.id}
+                              key={`${run.exercise}-${run.setNumbers[0]}-${ri}`}
                               className="flex items-baseline gap-2 text-xs text-muted-foreground"
                             >
-                              <span className="w-4 shrink-0 tabular-nums">{s.set_number}</span>
+                              <span className="w-8 shrink-0 tabular-nums">
+                                {run.count > 1 ? `${run.count} ×` : run.setNumbers[0]}
+                              </span>
                               <span className="tabular-nums">
-                                {show(s.weight_kg)} {label} × {s.reps}
+                                {show(run.weightKg)} {label} × {run.reps}
                               </span>
                               {/* A warm-up is not a working set, and a screen
                                   that hides the difference makes the volume
                                   totals look wrong to whoever did them. */}
-                              {!isWorkingSet(s) && (
+                              {run.kind !== "working" && (
                                 <span className="text-[11px] uppercase tracking-wide opacity-70">
-                                  {s.set_kind}
+                                  {run.kind}
                                 </span>
                               )}
-                              {s.notes && <span className="truncate opacity-80">{s.notes}</span>}
                             </li>
                           ))}
                         </ul>
@@ -444,12 +518,36 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
                       Correct this
                     </button>
                   )}
+                  {/* The destructive one, inside the workout you can see, rather
+                      than on the row you tap to open it. */}
+                  <button
+                    type="button"
+                    onClick={() => void remove(log)}
+                    aria-label={`Delete the workout from ${new Date(log.logged_at).toLocaleDateString(undefined, DAY)}`}
+                    data-testid={`history-delete-${log.id}`}
+                    className="ml-2 inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"
+                  >
+                    <Trash2 className="size-3" /> Delete
+                  </button>
                 </div>
               ) : null}
             </CardContent>
           </Card>
+          </div>
         )
       })}
+
+      {/* More as you reach the end, rather than all of it at once. */}
+      {matching.length > visible.length && (
+        <button
+          type="button"
+          data-testid="history-load-more"
+          onClick={() => setShown((n) => n + PAGE)}
+          className="min-h-11 w-full rounded-md border border-border text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        >
+          Show more — {matching.length - visible.length} older
+        </button>
+      )}
     </div>
   )
 }

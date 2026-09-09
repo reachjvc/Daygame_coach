@@ -330,6 +330,9 @@ test("deleting a program session moves the weights back down", async ({ page }) 
   // Delete it the way a person does: the History tab.
   await page.reload({ waitUntil: "networkidle" })
   await page.getByRole("button", { name: "History" }).first().click()
+  // Delete lives inside the workout now, not on the row — a destructive control
+  // does not belong beside the one you tap 141 times.
+  await page.getByTestId(`history-row-${seeded.workoutId}`).click()
   page.once("dialog", (d) => void d.accept())
   await page.getByTestId(`history-delete-${seeded.workoutId}`).click()
   await page.waitForTimeout(3000)
