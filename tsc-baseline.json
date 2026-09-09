@@ -1,7 +1,7 @@
 {
   "_comment": "Type errors that already existed, by file and message. May only shrink. Regenerate with: node scripts/typecheck-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
   "_format": "signatures-v2",
-  "total": 105,
+  "total": 102,
   "files": {
     "app/test/goalsv11/page.tsx": {
       "TS2345: Argument of type '\"a\" | \"b\" | \"c\" | \"d\" | \"e\"' is not assignable to parameter of type 'SetStateAction<\"a\">'.": 1
@@ -72,13 +72,6 @@
     },
     "src/goals/components/new-goals/GoalIntake.tsx": {
       "TS2322: Type '(e: { progress?: number; }) => void' is not assignable to type 'ProgressCallback'.": 1
-    },
-    "src/goals/components/new-goals/IdentityStep.tsx": {
-      "TS2305: Module '\"./GoalIntake\"' has no exported member 'IntakePathSelection'.": 1,
-      "TS2322: Type '{ onApply: (selections: IntakePathSelection[]) => void; }' is not assignable to type 'IntrinsicAttributes & { onMatched: (matches: IntakeMatches, resolution: IntakeResolution) => void; date: string; onChangeDate: (d: string) => void; matched?: boolean | undefined; }'.": 1
-    },
-    "src/goals/components/setup/AuroraOrreryStep.tsx": {
-      "TS2322: Type '{ badgeId: string; title: string; progress: number; tier: \"none\"; unlocked: false; }[]' is not assignable to type 'BadgeStatus[]'.": 1
     },
     "src/goals/components/setup/GoalsStepTour.tsx": {
       "TS2322: Type 'boolean' is not assignable to type 'AllowedButtons[]'.": 1,

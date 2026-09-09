@@ -88,6 +88,9 @@ playwright-report/
 test-results/
 tests/integration/.test-connection.json
 tests/e2e/.auth/
+# `npm test -- --coverage` regenerates this. 57 generated HTML files were
+# committed once and then went stale; the report is never read from git.
+coverage/
 
 # Playwright MCP screenshots
 .playwright-mcp/

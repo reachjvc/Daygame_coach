@@ -19,7 +19,6 @@
   "src/db/goalRepo.ts:deleteGoal": "unasserted",
   "src/db/goalRepo.ts:incrementGoalProgress": "mentioned",
   "src/db/goalRepo.ts:reorderGoals": "unasserted",
-  "src/db/goalRepo.ts:resetDailyGoals": "unasserted",
   "src/db/goalRepo.ts:resetGoalPeriod": "unasserted",
   "src/db/goalRepo.ts:rollGoalPeriods": "mentioned",
   "src/db/goalRepo.ts:saveFrameworkPlan": "unasserted",

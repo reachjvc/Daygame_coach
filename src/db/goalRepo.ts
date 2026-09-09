@@ -812,19 +812,16 @@ export async function rollGoalPeriods(userId: string, timezone: string): Promise
   return resetGoalsForPeriods(userId, [...ROLLING_PERIODS], timezone)
 }
 
-/**
- * Reset all daily goals for a user.
- * Updates streak based on completion status before resetting.
- */
-export async function resetDailyGoals(userId: string, timezone: string): Promise<number> {
-  return resetGoalsForPeriods(userId, ["daily"], timezone)
-}
-
 /*
- * `resetWeeklyGoals`, `resetMonthlyGoals` and `resetYearlyGoals` lived here and
- * were removed: no route, component or service called any of them. `rollGoalPeriods`
- * rolls every cadence in one pass and is what every read path uses.
- * `resetDailyGoals` stays — TodayGoalsWidget posts to /api/goals/reset-daily.
+ * `resetDailyGoals`, `resetWeeklyGoals`, `resetMonthlyGoals` and
+ * `resetYearlyGoals` all lived here and were removed: no route, component or
+ * service called any of them. `rollGoalPeriods` rolls every cadence in one pass
+ * and is what every read path uses.
+ *
+ * `resetDailyGoals` outlived the others because `TodayGoalsWidget` posted to
+ * `/api/goals/reset-daily`. That widget was folded into `MissionControlWidget`,
+ * which resets one goal at a time via `/api/goals/[id]/reset`, so the widget,
+ * the route and this function went together.
  */
 
 // ============================================
