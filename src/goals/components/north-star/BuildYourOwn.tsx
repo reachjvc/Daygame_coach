@@ -22,6 +22,7 @@ import {
   CustomProgramBuilder,
   emptyCustomSchedule,
 } from "@/src/programs/components/CustomProgramBuilder"
+import { SavedWeeks } from "@/src/programs/components/SavedWeeks"
 import type { NsRoutineProgram } from "@/src/goals/types"
 import { scheduleDays } from "@/src/programs/customize"
 import {
@@ -118,7 +119,22 @@ export function BuildYourOwn({
         <p className="text-[10.5px] text-zinc-600 mt-1.5 leading-relaxed">{BUILD_OWN_INTRO.vsTemplates}</p>
       </div>
 
-      <div className="px-5 py-4">
+      <div className="px-5 py-4 space-y-3">
+        {/* SAVED WEEKS SIT ABOVE THE BUILDER, because "load the one I made last
+            month" comes before "edit it". Until now a week you designed here
+            lived only in this browser and vanished with the tab. */}
+        {loaded && (
+          <SavedWeeks
+            schedule={schedule}
+            unit={unit}
+            weights={weights}
+            onLoad={(d) => {
+              setSchedule(d.schedule)
+              setUnit(d.unit)
+              setWeights(d.weights)
+            }}
+          />
+        )}
         {loaded && (
           <CustomProgramBuilder
             schedule={schedule}

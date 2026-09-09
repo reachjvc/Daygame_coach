@@ -299,6 +299,52 @@ test.describe("live workout", () => {
   expect(summary, "1125 lb of volume, in pounds").toMatch(/1125|1,125/)
   })
 
+  /**
+   * A WORKOUT THAT BELONGS TO NO PROGRAM. The set-by-set screen could only be
+   * opened by starting today's prescribed session, so anything improvised had
+   * to be written up afterwards from memory. And a screen that can only record
+   * what was prescribed punishes you for the gym being busy: the squat rack is
+   * taken, you do front squats, and there was nowhere to put them.
+   */
+  test("starts with no program, takes a lift added on the day, and keeps it", async ({ page }) => {
+  await page.goto("/programs")
+  await page.evaluate(async () => {
+    const live = await (await fetch("/api/workouts/live")).json()
+    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
+  })
+  await page.reload({ waitUntil: "networkidle" })
+  await page.getByRole("button", { name: "Anything else" }).first().click()
+  await page.waitForTimeout(1500)
+  await page.getByTestId("start-loose-workout").click()
+  await page.waitForURL("**/programs/live", { timeout: 20000 })
+
+  // An empty workout: nothing prescribed, but a way to fill it.
+  await expect(page.getByTestId("add-lift")).toBeVisible({ timeout: 20000 })
+  await page.getByTestId("add-lift").click()
+  await page.getByTestId("add-lift-search").fill("front squat")
+  await page.waitForTimeout(800)
+  await page.getByTestId("add-lift-results").getByRole("button").first().click()
+
+  await expect(page.getByText(/front squat/i).first()).toBeVisible({ timeout: 20000 })
+  const saved = page.waitForResponse((r) => r.url().includes("/sets") && r.request().method() === "POST")
+  await page.getByRole("spinbutton", { name: /weight for set 1/i }).first().fill("60")
+  await page.getByRole("spinbutton", { name: /reps for set 1/i }).first().fill("8")
+  await page.getByTestId("tick-1").first().click()
+  await saved
+
+  // It survives a reload, like every other set.
+  await page.reload({ waitUntil: "networkidle" })
+  await expect(page.getByText(/front squat/i).first()).toBeVisible({ timeout: 20000 })
+  const stillTicked = await page.getByTestId("tick-1").first().getAttribute("aria-pressed")
+  console.log("LOOSE", JSON.stringify({ stillTicked }))
+  expect(stillTicked).toBe("true")
+
+  await page.evaluate(async () => {
+    const live = await (await fetch("/api/workouts/live")).json()
+    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
+  })
+  })
+
   test("a bad connection cannot start two workouts or log a set twice", async ({ page }) => {
     await page.reload({ waitUntil: "networkidle" })
 

@@ -16,7 +16,6 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
 import type { ViceHandlers, ViceToolId } from "../types"
 import { VICE_FLOWS } from "../data/flows"
 import { PROVENANCE, TRIPWIRE } from "../data/copy"
@@ -32,6 +31,8 @@ import { HubGuided } from "./HubGuided"
 import { VersionSwitcher } from "./VersionSwitcher"
 import { useViceVersion } from "../hooks/useViceVersion"
 import { Panel, Stat } from "./Ui"
+import { LIFE_MASTERY, viceStep } from "@/src/shared/lifeMasteryRoutes"
+import { BackLink } from "@/components/BackLink"
 
 /**
  * The two that ask for no commitment go above, together, and apart from the
@@ -64,10 +65,11 @@ export function ViceHub() {
     // server-rendered before it is interactive.
     <div className="min-h-screen bg-zinc-950 text-white" data-hydrated={loaded ? "true" : undefined}>
       <div className="max-w-3xl mx-auto px-6 py-10 pb-20">
-        <Link href="/test" className="inline-flex items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors">
-          <ArrowLeft className="size-3.5" />
-          Test pages
-        </Link>
+        <BackLink
+          fallback={LIFE_MASTERY}
+          fallbackLabel="Life Mastery"
+          className="inline-flex items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors"
+        />
 
         {/* Three front doors over one state. Everything below the switcher is
             the same data whichever is picked — a version is a view, never a
@@ -109,7 +111,7 @@ export function ViceHub() {
 
         <section className="mb-7">
           <Link
-            href="/test/quit-vice/learn"
+            href={viceStep("learn")}
             className="block rounded-2xl border border-sky-400/25 bg-sky-500/[0.05] p-4 hover:border-sky-400/50 transition-colors"
           >
             <span className="block text-[15px] font-semibold text-sky-50">Nine things worth understanding</span>
@@ -203,7 +205,7 @@ export function ViceHub() {
             {OPEN_FLOWS.map((flow) => (
               <Link
                 key={flow.id}
-                href={`/test/quit-vice/${flow.id}`}
+                href={viceStep(flow.id)}
                 className="block rounded-2xl border border-sky-400/25 bg-sky-500/[0.05] p-4 hover:border-sky-400/50 hover:bg-sky-500/[0.08] transition-colors group"
               >
                 <div className="flex items-baseline gap-3">
@@ -219,7 +221,7 @@ export function ViceHub() {
 
         <section>
           <Link
-            href="/test/quit-vice/shortlist"
+            href={viceStep("shortlist")}
             className="mb-3 block rounded-2xl border border-emerald-400/25 bg-emerald-500/[0.05] p-4 hover:border-emerald-400/50 transition-colors"
           >
             <span className="block text-[15px] font-semibold text-emerald-50">The short version</span>
@@ -233,7 +235,7 @@ export function ViceHub() {
             {CHANGE_FLOWS.map((flow) => (
               <Link
                 key={flow.id}
-                href={`/test/quit-vice/${flow.id}`}
+                href={viceStep(flow.id)}
                 className="block rounded-2xl border border-white/10 bg-white/[0.03] p-4 hover:border-violet-400/40 hover:bg-violet-500/[0.05] transition-colors group"
               >
                 <div className="flex items-baseline gap-3">

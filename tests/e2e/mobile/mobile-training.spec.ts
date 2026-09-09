@@ -72,7 +72,9 @@ test.describe.serial("training on a phone", () => {
     })
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByRole("heading", { name: "Training" })).toBeVisible()
-    await expect(page.getByTestId(/^lift-row-/).first()).toBeVisible({ timeout: 15000 })
+    // The today card, not a lift row: the session is a card you start from now,
+    // and the row-per-lift form it replaced sits behind a collapsed section.
+    await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 15000 })
 
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth + 1
@@ -87,7 +89,9 @@ test.describe.serial("training on a phone", () => {
     // The free-form logger used to be ~1400px down the page and most people
     // never met it.
     await page.goto("/programs")
-    await expect(page.getByRole("button", { name: /Today's session/ })).toBeInViewport()
+    // The tabs are Today · History · Progress · Anything else since the history
+    // and progress views landed.
+    await expect(page.getByRole("button", { name: "Today", exact: true })).toBeInViewport()
     await expect(page.getByRole("button", { name: /Anything else/ })).toBeInViewport()
   })
 
@@ -105,6 +109,9 @@ test.describe.serial("training on a phone", () => {
     // the wait is on the data arriving rather than on a fixed pause.
     await page.reload({ waitUntil: "networkidle" })
 
+    // Writing up a session after the fact moved behind a disclosure when the
+    // set-by-set screen took over the "doing it now" case.
+    await page.getByText(/Log a workout you already did/i).first().click()
     const firstLift = page.getByTestId(/^lift-row-/).first()
     await expect(firstLift).toBeVisible({ timeout: 15000 })
     await firstLift.click()

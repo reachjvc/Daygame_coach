@@ -12,8 +12,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import Link from "next/link"
-import { ArrowLeft, Check, ChevronDown } from "lucide-react"
+import { Check, ChevronDown } from "lucide-react"
 import type { ViceFlowId, ViceHandlers, ViceToolId } from "../types"
 import { PROVENANCE } from "../data/copy"
 import { flowOf, flowProgress, stepIsDone, viceAsText, viceStateIsUntouched, votesCast } from "../viceService"
@@ -29,6 +28,8 @@ import { AgainTool } from "./Again"
 import { VoicesDialog } from "./Voices"
 import { TripwireTool } from "./Tripwire"
 import { QuietButton, Why } from "./Ui"
+import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { BackLink } from "@/components/BackLink"
 
 export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
   const flow = flowOf(flowId)
@@ -100,10 +101,11 @@ export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
     <div className="min-h-screen bg-zinc-950 text-white" data-hydrated={loaded ? "true" : undefined}>
       <div className="max-w-3xl mx-auto px-6 py-10 pb-32">
         <div className="flex items-center justify-between gap-3 mb-6">
-          <Link href="/test/quit-vice" className="inline-flex items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors">
-            <ArrowLeft className="size-3.5" />
-            Back
-          </Link>
+          <BackLink
+            fallback={QUIT_VICE}
+            fallbackLabel="Quit a vice"
+            className="inline-flex items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors"
+          />
           {confirmReset ? (
             <span className="flex items-center gap-2 text-[11px]">
               <span className="text-zinc-400">Delete everything, in every flow?</span>

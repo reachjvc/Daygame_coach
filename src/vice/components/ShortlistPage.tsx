@@ -10,8 +10,6 @@
  */
 
 import { useMemo, useState } from "react"
-import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
 import type { ViceHandlers, ViceToolId } from "../types"
 import { useViceState } from "../hooks/useViceState"
 import { Shortlist } from "./Shortlist"
@@ -21,6 +19,8 @@ import { VoicesDialog } from "./Voices"
 import { TripwireTool } from "./Tripwire"
 import { AgainTool } from "./Again"
 import { QuietButton } from "./Ui"
+import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { BackLink } from "@/components/BackLink"
 
 export function ShortlistPage() {
   const { state, loaded, handlers } = useViceState(null)
@@ -34,13 +34,11 @@ export function ShortlistPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white" data-hydrated={loaded ? "true" : undefined}>
       <div className="max-w-3xl mx-auto px-6 py-10 pb-24">
-        <Link
-          href="/test/quit-vice"
+        <BackLink
+          fallback={QUIT_VICE}
+          fallbackLabel="Quit a vice"
           className="inline-flex items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="size-3.5" />
-          Back
-        </Link>
+        />
 
         <div className="mt-6">
           {loaded ? <Shortlist state={state} on={on} /> : <p className="text-sm text-zinc-500">Opening…</p>}

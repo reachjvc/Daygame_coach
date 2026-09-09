@@ -19,13 +19,8 @@ import { RestTimer } from "./RestTimer"
 import { REST_SECONDS } from "../config"
 import { hasWeight } from "../builder"
 import { UNIT_CONFIG, WEEKDAY_SHORT } from "../config"
-import type { EnduranceSet, LoggedExercise, ProgressionChange, SessionPrescription, UnitSystem } from "../types"
-
-// Total prescribed minutes of an endurance session (for the workout-log bridge).
-function enduranceMinutes(sets: EnduranceSet[]): number {
-  const secs = sets.reduce((t, s) => t + s.repeat * s.blocks.reduce((b, blk) => b + (blk.durationSec ?? 0), 0), 0)
-  return Math.max(1, Math.round(secs / 60))
-}
+import { enduranceMinutes } from "../programsService"
+import type { LoggedExercise, ProgressionChange, SessionPrescription, UnitSystem } from "../types"
 
 interface Props {
   enrollmentId: string
@@ -167,7 +162,13 @@ export function TodaySessionWidget({
           ? Number(duration) || enduranceMinutes(prescription.enduranceSets!)
           : Number(duration),
         intensity,
-        ...(when ? { entryDate: when } : {}),
+        /**
+         * `entry_date`, NOT `entryDate`. It was sent under the wrong name and
+         * the validator drops fields it was not told about, so the date picker
+         * on this form has never once worked: every "I did this on Saturday"
+         * was silently filed under the day it was typed.
+         */
+        ...(when ? { entry_date: when } : {}),
       }
       const res = await fetch(`/api/programs/enrollments/${enrollmentId}/log`, {
         method: "POST",

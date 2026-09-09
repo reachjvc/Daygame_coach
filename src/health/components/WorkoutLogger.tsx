@@ -5,10 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ChevronDown, ChevronRight, Dumbbell, Minus, Plus, Trash2, X } from "lucide-react"
+import { Dumbbell, Minus, Plus, Trash2, X } from "lucide-react"
 import {
-  buildWorkoutHeatmapWeeks,
-  computeWeekStreak,
   summarizeWorkoutSets,
   findLastExerciseSets,
   detectPersonalRecords,
@@ -90,8 +88,6 @@ export function WorkoutLogger() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set())
-  const [showAllLogs, setShowAllLogs] = useState(false)
   const [newPRs, setNewPRs] = useState<PersonalRecord[]>([])
 
   const fetchLogs = useCallback(async () => {
@@ -217,30 +213,10 @@ export function WorkoutLogger() {
     }
   }
 
-  const deleteLog = async (log: WorkoutLogWithSets) => {
-    if (!window.confirm(`Delete this ${log.session_type} workout from ${new Date(log.logged_at).toLocaleDateString()}?`)) return
-    try {
-      const res = await fetch(`/api/health/workout?id=${log.id}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Failed to delete")
-      await fetchLogs()
-    } catch (e) {
-      console.error("Error deleting workout log:", e)
-    }
-  }
 
-  const toggleLogExpanded = (id: string) =>
-    setExpandedLogs((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
 
   const now = new Date()
   const todayKey = now.toLocaleDateString("sv-SE") // YYYY-MM-DD in local time
-  const heatmapWeeks = buildWorkoutHeatmapWeeks(logs, now)
-  const weekStreak = computeWeekStreak(logs, now)
-  const thisWeekCount = heatmapWeeks[heatmapWeeks.length - 1].reduce((sum, d) => sum + d.count, 0)
   /**
    * What is already on the day this entry will land on — see `workoutsOnDate`.
    * A session logged from a training program arrives in this same table, so
@@ -276,25 +252,13 @@ export function WorkoutLogger() {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <div>
-            <div className="text-2xl font-bold">{thisWeekCount}</div>
-            <div className="text-xs text-muted-foreground">This week</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold">
-              {weekStreak}
-              <span className="text-sm font-medium text-muted-foreground">w</span>
-            </div>
-            <div className="text-xs text-muted-foreground">Week streak</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold">{logs.length}</div>
-            <div className="text-xs text-muted-foreground">Last 90 days</div>
-          </div>
-        </div>
-
+        {/* THE STATS, THE GRID AND THE RECENT LIST ALL LEFT.
+            They now live on the Progress and History tabs, which is where
+            somebody goes to look at them. Keeping a second copy here meant two
+            screens computing the same figures from different windows of data —
+            this one only ever loaded 90 days, so its week streak could never
+            exceed 13 and its "personal best" was judged against a quarter of a
+            year. One place owns each number now. */}
         {/* New PR banner (after a save that beat previous bests) */}
         {newPRs.length > 0 && (
           <div className="flex items-start justify-between gap-2 rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2">
@@ -569,108 +533,6 @@ export function WorkoutLogger() {
           </div>
         )}
 
-        {/* 13-week activity grid (columns = weeks, rows = Mon–Sun) */}
-        {logs.length > 0 && (
-          <div className="space-y-2">
-            <div className="text-xs font-medium text-muted-foreground uppercase">Activity</div>
-            <div className="flex gap-1.5">
-              <div className="flex flex-col gap-0.5 text-[9px] leading-none text-muted-foreground justify-between py-px">
-                <span>Mon</span>
-                <span>Thu</span>
-                <span>Sun</span>
-              </div>
-              <div className="flex gap-0.5">
-                {heatmapWeeks.map((week, wi) => (
-                  <div key={wi} className="flex flex-col gap-0.5">
-                    {week.map((day) => (
-                      <div
-                        key={day.date}
-                        className={`w-2.5 h-2.5 rounded-sm ${
-                          day.future
-                            ? "bg-muted-foreground/5"
-                            : day.count === 0
-                              ? "bg-muted-foreground/15"
-                              : day.count === 1
-                                ? "bg-green-500/40"
-                                : "bg-green-500/80"
-                        } ${day.date === todayKey ? "ring-1 ring-green-400" : ""}`}
-                        title={`${day.date}: ${day.count} session${day.count !== 1 ? "s" : ""}`}
-                      />
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* History — expandable entries with per-exercise details */}
-        {logs.length > 0 && (
-          <div className="space-y-1">
-            <div className="text-xs font-medium text-muted-foreground uppercase">Recent</div>
-            {(showAllLogs ? [...logs] : logs.slice(-5)).reverse().map((log) => {
-              const expanded = expandedLogs.has(log.id)
-              const summaries = summarizeWorkoutSets(log.sets ?? [])
-              return (
-                <div key={log.id} className="rounded-md -mx-1">
-                  <button
-                    onClick={() => toggleLogExpanded(log.id)}
-                    className="w-full flex items-center gap-2 text-sm py-1 px-1 rounded-md hover:bg-muted transition-colors"
-                    title={expanded ? "Hide details" : "Show details"}
-                  >
-                    {expanded ? (
-                      <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
-                    ) : (
-                      <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
-                    )}
-                    <span className="text-muted-foreground">{new Date(log.logged_at).toLocaleDateString()}</span>
-                    <span className="font-medium capitalize flex-1 text-left">{log.session_type}</span>
-                    {summaries.length > 0 && (
-                      <span className="text-xs text-muted-foreground">
-                        {summaries.length} exercise{summaries.length !== 1 ? "s" : ""}
-                      </span>
-                    )}
-                    <span className="text-xs text-muted-foreground">{log.duration_min}min</span>
-                  </button>
-                  {expanded && (
-                    <div className="ml-6 mr-1 mb-2 space-y-1 border-l border-border/50 pl-3">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>
-                          Intensity {log.intensity}/5
-                          {log.distance_km != null && ` · ${log.distance_km} km`}
-                        </span>
-                        <button
-                          onClick={() => deleteLog(log)}
-                          title="Delete this workout"
-                          className="text-muted-foreground hover:text-red-500 transition-colors"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                      {summaries.map((s) => (
-                        <div key={s.exercise} className="flex items-baseline justify-between gap-2 text-xs">
-                          <span className="font-medium">{s.exercise}</span>
-                          <span className="text-muted-foreground">{s.detail}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-            {logs.length > 5 && (
-              <div className="flex justify-center pt-1">
-                <button
-                  onClick={() => setShowAllLogs(!showAllLogs)}
-                  className="flex items-center gap-1 px-3 py-1 rounded-full border border-border text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-                >
-                  {showAllLogs ? "Show less" : `${logs.length - 5} more`}
-                  {showAllLogs ? <ChevronDown className="h-3 w-3 rotate-180" /> : <ChevronDown className="h-3 w-3" />}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
       </CardContent>
     </Card>
   )

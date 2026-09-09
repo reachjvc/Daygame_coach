@@ -91,3 +91,25 @@ export function resolveProgramForLevel(
   }
   return { program, level }
 }
+
+/**
+ * What to call a program on screen.
+ *
+ * A WEEK YOU WROTE HAS YOUR NAME FOR IT. Every one of the nine places that
+ * named a program reached for the catalogue entry, and a self-built week's
+ * catalogue entry is the shared shell called "Your own program" — so three
+ * different weeks you had written all appeared under one meaningless title and
+ * nothing on any screen could tell them apart. The name has been carried on the
+ * enrollment since the drafts work; nothing was reading it.
+ *
+ * Falls back to the catalogue name, then to the raw id, so a program this build
+ * no longer has still renders as something rather than as nothing.
+ */
+export function enrollmentName(enrollment: {
+  program_id: string
+  label?: string | null
+}): string {
+  const own = enrollment.label?.trim()
+  if (own) return own
+  return getProgram(enrollment.program_id)?.name ?? enrollment.program_id
+}

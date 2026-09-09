@@ -1886,3 +1886,81 @@ export function replayEnrollment(
   }
   return state
 }
+
+/**
+ * How long an endurance session is meant to take, in minutes.
+ *
+ * Lived as a private helper inside one screen, which is why the live workout
+ * had nothing to say about a cardio session: the only code that understood a
+ * run was inside the form that logged one. A block with no duration (a distance
+ * target, "run 5 km") contributes nothing, and the floor is one minute so a
+ * session can never be recorded as having taken no time.
+ */
+export function enduranceMinutes(sets: EnduranceSet[]): number {
+  const seconds = sets.reduce(
+    (total, set) => total + set.repeat * set.blocks.reduce((b, blk) => b + (blk.durationSec ?? 0), 0),
+    0
+  )
+  return Math.max(1, Math.round(seconds / 60))
+}
+
+// ============================================================================
+// The training card on the dashboard
+// ============================================================================
+
+/**
+ * What the dashboard should say about training right now.
+ *
+ * FOUR STATES, AND THE ORDER MATTERS. A workout you are in the middle of beats
+ * everything: somebody standing in a gym does not need to be told what today's
+ * session is, they need the way back into it. A workout left open for hours is
+ * a different thing again — it is almost certainly forgotten rather than
+ * running, and offering "Resume · 431 min" is the app pretending not to notice.
+ *
+ * Pure, and formats nothing. Minutes and ids come out; how they are worded is
+ * the card's business, and a pure function that returns a sentence cannot be
+ * reused by anything that words it differently.
+ */
+export type TrainingCardState =
+  | { kind: "live"; workoutId: string; minutes: number }
+  | { kind: "stale"; workoutId: string; startedAt: string; minutes: number }
+  | { kind: "today"; enrollmentId: string; dayLabel: string; lifts: number }
+  | { kind: "rest"; enrollmentId: string; nextLabel: string; nextWeekday?: number }
+  | { kind: "none" }
+
+/** After this long, an open workout is forgotten rather than running. */
+export const STALE_WORKOUT_HOURS = 6
+
+export function trainingCardState(
+  live: { id: string; startedAt: string } | null,
+  prescription: SessionPrescription | null,
+  enrollmentId: string | null,
+  now: Date = new Date()
+): TrainingCardState {
+  if (live) {
+    const minutes = Math.max(0, Math.floor((now.getTime() - new Date(live.startedAt).getTime()) / 60000))
+    return minutes > STALE_WORKOUT_HOURS * 60
+      ? { kind: "stale", workoutId: live.id, startedAt: live.startedAt, minutes }
+      : { kind: "live", workoutId: live.id, minutes }
+  }
+
+  if (!prescription || !enrollmentId) return { kind: "none" }
+
+  if (prescription.restDay) {
+    return {
+      kind: "rest",
+      enrollmentId,
+      nextLabel: prescription.dayLabel,
+      ...(prescription.scheduledWeekday ? { nextWeekday: prescription.scheduledWeekday } : {}),
+    }
+  }
+
+  return {
+    kind: "today",
+    enrollmentId,
+    dayLabel: prescription.dayLabel,
+    // Endurance days prescribe blocks rather than lifts, so this is 0 for them
+    // and the card says the day's name without a count it does not have.
+    lifts: prescription.exercises.length,
+  }
+}

@@ -26,6 +26,7 @@ import type { NsArea, NsRoutine } from "@/src/goals/types"
 import { NS_SPLITS, ROUTINES_INTRO, ROUTINE_BLUEPRINT_MAP, SERVES_COPY } from "@/src/goals/data/northStar"
 import { presetCost, routineCoverage, routineIsUntouched, routineMinutes, routineSummary, splitPreview } from "@/src/goals/northStarService"
 import { Peek } from "./Peek"
+import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
 
 const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -205,7 +206,7 @@ export function RoutineCard({
               so the routine links to it rather than trying to be it. */}
           {routine.blueprintId === "vices" && (
             <Link
-              href="/test/quit-vice"
+              href={QUIT_VICE}
               className="block rounded-xl border border-violet-400/25 bg-violet-500/[0.06] px-3.5 py-2.5 hover:border-violet-400/50 hover:bg-violet-500/[0.1] transition-colors"
             >
               <span className="block text-[12px] text-violet-100">Working on one of these properly →</span>

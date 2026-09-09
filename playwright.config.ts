@@ -48,6 +48,15 @@ export default defineConfig({
         /protected-routes\.spec\.ts/,
         /security-rls\.spec\.ts/,
         /security-idor\.spec\.ts/,
+        // Training tests run in their own project: they share one account and
+        // each wipes it clean, so in parallel they delete each other's data.
+        /programs-live-workout\.spec\.ts/,
+        /programs-drafts\.spec\.ts/,
+        /programs-history-progress\.spec\.ts/,
+        /life-mastery-saved-weeks\.spec\.ts/,
+        /health-past-workout\.spec\.ts/,
+        /dashboard-training-card\.spec\.ts/,
+        /programs-offline\.spec\.ts/,
         // Session-creating tests run in isolated project to avoid parallel conflicts
         /session-tracking\.spec\.ts/,
         /approach-logging\.spec\.ts/,
@@ -120,6 +129,29 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], storageState: 'tests/e2e/.auth/user.json' },
     },
 
+    // === Training: one account, and each spec cleans it out ===
+    // These start workouts, save training weeks and delete workouts on the ONE
+    // test account. Run beside each other they remove each other's rows
+    // mid-assertion, so they get a project of their own with a single worker.
+    // Each file is already `describe.configure({ mode: "serial" })`; this is
+    // what stops the FILES running at the same time as each other.
+    {
+      name: 'training',
+      testMatch: [
+        /programs-live-workout\.spec\.ts/,
+        /programs-drafts\.spec\.ts/,
+        /programs-history-progress\.spec\.ts/,
+        /life-mastery-saved-weeks\.spec\.ts/,
+        /health-past-workout\.spec\.ts/,
+        /dashboard-training-card\.spec\.ts/,
+        /programs-offline\.spec\.ts/,
+      ],
+      fullyParallel: false,
+      workers: 1,
+      dependencies: ['setup'],
+      use: { ...devices['Desktop Chrome'], storageState: 'tests/e2e/.auth/user.json' },
+    },
+
     // === Time tracker: does it really reach the account? ===
     // This one talks to the live database, so it runs alone rather than beside
     // the others: two workers uploading to the same account would fight.
@@ -175,22 +207,55 @@ export default defineConfig({
     // page was 2264px tall on a 390px screen with three competing things called
     // logging on it, and Chromium at desktop size showed none of that. These run
     // the real flow — log a session with a set removed — not a load check.
+    //
+    // TWO THINGS FIXED HERE ON 2026-09-09.
+    //
+    // They ran in PARALLEL, all three driving the one test account, and each
+    // spec wipes it clean — so Firefox was deleting the workout Safari was
+    // halfway through asserting on. They are chained now, the same way the
+    // goals specs are, and after the Chromium `training` project.
+    //
+    // And they only ran the old mobile spec. The two flows where an engine
+    // difference actually bites are the live workout (a timer that must survive
+    // a backgrounded tab, number inputs, a fixed grid at 390px) and the offline
+    // queue (`setOffline`, local storage, the `online` event). Those run
+    // everywhere now. The rest are API round trips that Chromium proves
+    // adequately, and running them three times over would buy minutes of CI for
+    // nothing.
     {
       name: 'training-iphone-safari',
-      testMatch: /mobile\/mobile-training\.spec\.ts/,
-      dependencies: ['setup'],
+      testMatch: [
+        /mobile\/mobile-training\.spec\.ts/,
+        /programs-live-workout\.spec\.ts/,
+        /programs-offline\.spec\.ts/,
+      ],
+      fullyParallel: false,
+      workers: 1,
+      dependencies: ['training'],
       use: { ...devices['iPhone 14'], storageState: 'tests/e2e/.auth/user.json' },
     },
     {
       name: 'training-android',
-      testMatch: /mobile\/mobile-training\.spec\.ts/,
-      dependencies: ['setup'],
+      testMatch: [
+        /mobile\/mobile-training\.spec\.ts/,
+        /programs-live-workout\.spec\.ts/,
+        /programs-offline\.spec\.ts/,
+      ],
+      fullyParallel: false,
+      workers: 1,
+      dependencies: ['training-iphone-safari'],
       use: { ...devices['Pixel 7'], storageState: 'tests/e2e/.auth/user.json' },
     },
     {
       name: 'training-firefox',
-      testMatch: /mobile\/mobile-training\.spec\.ts/,
-      dependencies: ['setup'],
+      testMatch: [
+        /mobile\/mobile-training\.spec\.ts/,
+        /programs-live-workout\.spec\.ts/,
+        /programs-offline\.spec\.ts/,
+      ],
+      fullyParallel: false,
+      workers: 1,
+      dependencies: ['training-android'],
       use: { ...devices['Desktop Firefox'], viewport: { width: 390, height: 844 }, storageState: 'tests/e2e/.auth/user.json' },
     },
 

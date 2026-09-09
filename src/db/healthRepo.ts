@@ -5,6 +5,7 @@
  */
 
 import { createServerSupabaseClient } from "./supabase"
+import { chunkIds, readAllRows } from "./paging"
 import { getNowInTimezone, periodStartFor, startOfDayInstant } from "../shared/dateUtils"
 import { weeklyStreakRun } from "../shared/streakRuns"
 import { previousPeriodStart, toZonedDate, toDateISO, isStreakCurrent } from "../shared/dateUtils"
@@ -233,18 +234,40 @@ export async function getWorkoutLogs(userId: string, days: number = 90): Promise
   const supabase = await createServerSupabaseClient()
   const since = new Date()
   since.setDate(since.getDate() - days)
-  const { data, error } = await finishedWorkouts(
-    supabase
-    .from("workout_logs")
-    .select("*")
-    .eq("user_id", userId)
-    .gte("logged_at", since.toISOString())
-    .order("logged_at", { ascending: true })
-    .order("created_at", { ascending: true })
+  // History screens ask for `days=3650`. Somebody who trains four times a week
+  // passes a thousand workouts in five years, and the ones that fall off the
+  // end are the recent ones nobody would think to look for.
+  return await readAllRows<WorkoutLogRow>("workout logs", (from, to) =>
+    finishedWorkouts(
+      supabase
+        .from("workout_logs")
+        .select("*")
+        .eq("user_id", userId)
+        .gte("logged_at", since.toISOString())
+        .order("logged_at", { ascending: true })
+        .order("created_at", { ascending: true })
+        // Two workouts logged in the same second would otherwise be free to
+        // swap places between pages, so one is read twice and one is lost.
+        .order("id", { ascending: true })
+        .range(from, to)
+    )
   )
-  if (error) throw new Error(`Failed to get workout logs: ${error.message}`)
-  return (data ?? []) as WorkoutLogRow[]
 }
+
+/**
+ * The order the sets of one workout are read back in.
+ *
+ * Set numbers repeat inside a workout — a warm-up and the first working set are
+ * both "set 1" — so sorting on the number alone leaves those two free to swap
+ * places between one page load and the next. That is visible: the row you
+ * clicked to edit is not the row you get. Warm-ups first, then the order they
+ * were actually done in, and `id` last so the answer is never arbitrary.
+ */
+const inWorkoutOrder = (a: WorkoutSetRow, b: WorkoutSetRow): number =>
+  a.set_number - b.set_number ||
+  Number(a.set_kind !== "warmup") - Number(b.set_kind !== "warmup") ||
+  (a.completed_at ?? "").localeCompare(b.completed_at ?? "") ||
+  a.id.localeCompare(b.id)
 
 export async function getWorkoutLogsWithSets(
   userId: string,
@@ -253,30 +276,74 @@ export async function getWorkoutLogsWithSets(
   const supabase = await createServerSupabaseClient()
   const logs = await getWorkoutLogs(userId, days)
   if (logs.length === 0) return []
-  const { data, error } = await supabase
-    .from("workout_sets")
-    .select("*")
-    .in("log_id", logs.map((l) => l.id))
-    .order("set_number", { ascending: true })
-  if (error) throw new Error(`Failed to get workout sets: ${error.message}`)
+  /**
+   * THE ONE THAT ALREADY BIT. A year of training is around 2,400 sets, and this
+   * asked for all of them in a single request ordered by set number. It got the
+   * first 1,000 — which, in that order, is every warm-up and every first and
+   * second set, and none of the rest. So a five-set squat day appeared in
+   * History as two sets, and the correction screen, which saves back the list
+   * it was shown, would then delete the other three from the database.
+   */
+  const sets: WorkoutSetRow[] = []
+  for (const ids of chunkIds(logs.map((l) => l.id))) {
+    sets.push(
+      ...(await readAllRows<WorkoutSetRow>("workout sets", (from, to) =>
+        supabase
+          .from("workout_sets")
+          .select("*")
+          .in("log_id", ids)
+          // Set number is not unique across workouts, so it cannot be what the
+          // pages are cut on. Ordered by id here, into display order below.
+          .order("id", { ascending: true })
+          .range(from, to)
+      ))
+    )
+  }
   const byLog = new Map<string, WorkoutSetRow[]>()
-  for (const s of (data ?? []) as WorkoutSetRow[]) {
+  for (const s of sets) {
     const group = byLog.get(s.log_id)
     if (group) group.push(s)
     else byLog.set(s.log_id, [s])
   }
+  for (const group of byLog.values()) group.sort(inWorkoutOrder)
   return logs.map((l) => ({ ...l, sets: byLog.get(l.id) ?? [] }))
 }
 
-export async function getWorkoutSets(logId: string): Promise<WorkoutSetRow[]> {
+/**
+ * One workout's sets, whole.
+ *
+ * THE READ A CORRECTION MUST USE. Editing a workout saves back the list it was
+ * shown, so it can only ever be as right as the list it started from — and the
+ * list read (`getWorkoutLogsWithSets`) reads a year at a time, which is the one
+ * that outgrew a page and started arriving short. Asking for a single workout
+ * cannot outgrow anything, and if the request fails the screen is told so
+ * rather than being handed a shorter list that looks complete.
+ */
+export async function getWorkoutSets(userId: string, logId: string): Promise<WorkoutSetRow[]> {
   const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from("workout_sets")
-    .select("*")
-    .eq("log_id", logId)
-    .order("set_number", { ascending: true })
-  if (error) throw new Error(`Failed to get workout sets: ${error.message}`)
-  return (data ?? []) as WorkoutSetRow[]
+  /**
+   * Ownership checked here AS WELL AS by the database's own row policy. The
+   * policy is the thing that actually stops it, but one of the two being wrong
+   * should not be enough to hand somebody another person's training.
+   */
+  const { data: log, error: logError } = await supabase
+    .from("workout_logs")
+    .select("id")
+    .eq("id", logId)
+    .eq("user_id", userId)
+    .maybeSingle()
+  if (logError) throw new Error(`Failed to get workout: ${logError.message}`)
+  if (!log) throw new Error("That workout could not be found.")
+
+  const rows = await readAllRows<WorkoutSetRow>("workout sets", (from, to) =>
+    supabase
+      .from("workout_sets")
+      .select("*")
+      .eq("log_id", logId)
+      .order("id", { ascending: true })
+      .range(from, to)
+  )
+  return rows.sort(inWorkoutOrder)
 }
 
 export async function getLastWorkoutSets(userId: string, exercise: string): Promise<WorkoutSetRow[]> {
@@ -429,14 +496,19 @@ export async function getCardioWeeklyCount(userId: string, timezone: string): Pr
 
 export async function getTrainingHoursCumulative(userId: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  const { data, error } = await finishedWorkouts(
-    supabase
-    .from("workout_logs")
-    .select("duration_min")
-    .eq("user_id", userId)
+  // A lifetime total, so this is the read most likely to outgrow one page —
+  // and losing the tail makes the number go DOWN as somebody trains more.
+  const data = await readAllRows<{ duration_min: number | null }>("training hours", (from, to) =>
+    finishedWorkouts(
+      supabase
+        .from("workout_logs")
+        .select("duration_min")
+        .eq("user_id", userId)
+        .order("id", { ascending: true })
+        .range(from, to)
+    )
   )
-  if (error) throw new Error(`Failed to sum training hours: ${error.message}`)
-  if (!data || data.length === 0) return 0
+  if (data.length === 0) return 0
   // A workout still running has no duration yet. `finishedWorkouts` already
   // excludes those, so this is belt and braces — but summing a null once turns
   // the whole lifetime figure into NaN, and it shows on the dashboard.
@@ -446,35 +518,58 @@ export async function getTrainingHoursCumulative(userId: string): Promise<number
 
 export async function getConsecutiveTrainingWeeks(userId: string, timezone: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  const { data, error } = await finishedWorkouts(
-    supabase
-    .from("workout_logs")
-    .select("logged_at")
-    .eq("user_id", userId)
+  // The streak is counted from the WHOLE history; a page of it silently missing
+  // breaks the run and resets somebody's streak to zero for no reason.
+  const data = await readAllRows<{ logged_at: string }>("training weeks", (from, to) =>
+    finishedWorkouts(
+      supabase
+        .from("workout_logs")
+        .select("logged_at")
+        .eq("user_id", userId)
+        .order("id", { ascending: true })
+        .range(from, to)
+    )
   )
-  if (error) throw new Error(`Failed to get training weeks: ${error.message}`)
-  if (!data || data.length === 0) return 0
+  if (data.length === 0) return 0
 
-  return weeksTrainedInARow(data.map((row) => row.logged_at as string), timezone)
+  return weeksTrainedInARow(data.map((row) => row.logged_at), timezone)
+}
+
+/**
+ * Every finished workout's id, for the reads that then look inside them.
+ *
+ * Paged, because these feed a "max ever" number: read half the history and the
+ * app reports a personal best the user beat years ago, with no sign anything
+ * was missing. Extracted so the two callers cannot drift apart.
+ */
+async function finishedLogIds(userId: string): Promise<string[]> {
+  const supabase = await createServerSupabaseClient()
+  const rows = await readAllRows<{ id: string }>("workout logs", (from, to) =>
+    finishedWorkouts(
+      supabase
+        .from("workout_logs")
+        .select("id")
+        .eq("user_id", userId)
+        .order("id", { ascending: true })
+        .range(from, to)
+    )
+  )
+  return rows.map((r) => r.id)
 }
 
 export async function getExerciseMax(userId: string, exercise: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
   // Get all sets for this exercise, find the max weight (for 1RM estimation)
-  const { data: logs, error: logsError } = await finishedWorkouts(
-    supabase
-    .from("workout_logs")
-    .select("id")
-    .eq("user_id", userId)
-  )
-  if (logsError) throw new Error(`Failed to query workout logs: ${logsError.message}`)
-  if (!logs || logs.length === 0) return 0
+  const logIds = await finishedLogIds(userId)
+  if (logIds.length === 0) return 0
 
-  const logIds = logs.map((l) => l.id)
-  const { data: sets, error: setsError } = await supabase
+  const sets: { weight_kg: number; reps: number }[] = []
+  for (const ids of chunkIds(logIds)) {
+    sets.push(...(await readAllRows<{ weight_kg: number; reps: number }>(`sets for ${exercise}`, (from, to) =>
+    supabase
     .from("workout_sets")
     .select("weight_kg, reps")
-    .in("log_id", logIds)
+    .in("log_id", ids)
     .ilike("exercise", exercise)
     /**
      * `is_warmup` was dropped on 2026-09-07 and replaced by `set_kind`. This
@@ -487,8 +582,11 @@ export async function getExerciseMax(userId: string, exercise: string): Promise<
      * `isWorkingSet`, which is the one place that decides what counts.
      */
     .in("set_kind", ["working", "amrap", "backoff"])
-  if (setsError) throw new Error(`Failed to query sets for ${exercise}: ${setsError.message}`)
-  if (!sets || sets.length === 0) return 0
+    .order("id", { ascending: true })
+    .range(from, to)
+    )))
+  }
+  if (sets.length === 0) return 0
 
   // Epley formula for estimated 1RM: weight × (1 + reps/30)
   let maxEstimated = 0
@@ -571,25 +669,24 @@ async function countDaysMeetingTarget(
 export async function getPullUpsMax(userId: string): Promise<number> {
   // Pull-ups are tracked as bodyweight exercise — max reps is the metric (not estimated 1RM)
   const supabase = await createServerSupabaseClient()
-  const { data: logs, error: logsError } = await finishedWorkouts(
-    supabase
-    .from("workout_logs")
-    .select("id")
-    .eq("user_id", userId)
-  )
-  if (logsError) throw new Error(`Failed to query workout logs: ${logsError.message}`)
-  if (!logs || logs.length === 0) return 0
+  const logIds = await finishedLogIds(userId)
+  if (logIds.length === 0) return 0
 
-  const logIds = logs.map((l) => l.id)
-  const { data: sets, error: setsError } = await supabase
-    .from("workout_sets")
-    .select("reps")
-    .in("log_id", logIds)
-    .ilike("exercise", "%pull%up%")
-    // Same dropped column as `getExerciseMax` above, same rule.
-    .in("set_kind", ["working", "amrap", "backoff"])
-  if (setsError) throw new Error(`Failed to query pull-up sets: ${setsError.message}`)
-  if (!sets || sets.length === 0) return 0
+  const sets: { reps: number }[] = []
+  for (const ids of chunkIds(logIds)) {
+    sets.push(...(await readAllRows<{ reps: number }>("pull-up sets", (from, to) =>
+      supabase
+        .from("workout_sets")
+        .select("reps")
+        .in("log_id", ids)
+        .ilike("exercise", "%pull%up%")
+        // Same dropped column as `getExerciseMax` above, same rule.
+        .in("set_kind", ["working", "amrap", "backoff"])
+        .order("id", { ascending: true })
+        .range(from, to)
+    )))
+  }
+  if (sets.length === 0) return 0
 
   return Math.max(...sets.map((s) => s.reps))
 }
@@ -651,14 +748,20 @@ export async function deleteBodyMeasurement(userId: string, id: string): Promise
 
 export async function getWeightLostFromPeak(userId: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from("weight_logs")
-    .select("weight_kg")
-    .eq("user_id", userId)
-    .order("logged_at", { ascending: true })
-    .order("created_at", { ascending: true })
-  if (error) throw new Error(`Failed to get weight history: ${error.message}`)
-  if (!data || data.length < 2) return 0
+  // Oldest first, so an unpaged read would drop the RECENT weigh-ins and the
+  // number would stop moving — for somebody who weighs in daily, after about
+  // three years, silently.
+  const data = await readAllRows<{ weight_kg: number }>("weight history", (from, to) =>
+    supabase
+      .from("weight_logs")
+      .select("weight_kg")
+      .eq("user_id", userId)
+      .order("logged_at", { ascending: true })
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to)
+  )
+  if (data.length < 2) return 0
   const peak = Math.max(...data.map((d) => d.weight_kg))
   const latest = data[data.length - 1].weight_kg
   const lost = peak - latest
@@ -667,14 +770,20 @@ export async function getWeightLostFromPeak(userId: string): Promise<number> {
 
 export async function getWeightGainedFromLowest(userId: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from("weight_logs")
-    .select("weight_kg")
-    .eq("user_id", userId)
-    .order("logged_at", { ascending: true })
-    .order("created_at", { ascending: true })
-  if (error) throw new Error(`Failed to get weight history: ${error.message}`)
-  if (!data || data.length < 2) return 0
+  // Oldest first, so an unpaged read would drop the RECENT weigh-ins and the
+  // number would stop moving — for somebody who weighs in daily, after about
+  // three years, silently.
+  const data = await readAllRows<{ weight_kg: number }>("weight history", (from, to) =>
+    supabase
+      .from("weight_logs")
+      .select("weight_kg")
+      .eq("user_id", userId)
+      .order("logged_at", { ascending: true })
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to)
+  )
+  if (data.length < 2) return 0
   const lowest = Math.min(...data.map((d) => d.weight_kg))
   const latest = data[data.length - 1].weight_kg
   const gained = latest - lowest

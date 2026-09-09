@@ -1275,7 +1275,22 @@ export function applyProgramDays(
   now = nowIso(),
   program: NsRoutineProgram | null = null
 ): NsPlan {
-  if (dayNames.length === 0) return plan
+  /**
+   * A PROGRAM WITH NO NAMED DAYS IS STILL A PROGRAM YOU STARTED.
+   *
+   * This returned the plan untouched whenever `dayNames` was empty, which threw
+   * away the reference along with it. Two real cases hit that every time: an
+   * endurance program prescribes blocks rather than named days, and a save from
+   * the goals planner carries selections without day names. In both, somebody
+   * started a program and their plan went on saying nothing was running.
+   *
+   * The days are left exactly as they are — there are none to write — and only
+   * the reference is recorded.
+   */
+  if (dayNames.length === 0) {
+    if (!program) return plan
+    return withRoutine(plan, routineId, (r) => ({ ...r, program }), now)
+  }
   let next = plan
   const days: NsSplitDay[] = []
   for (const name of dayNames) {
@@ -1331,7 +1346,8 @@ export function applyProgramToWorkoutRoutine(
   now = nowIso(),
   program: NsRoutineProgram | null = null
 ): NsPlan {
-  if (dayNames.length === 0) return plan
+  // Same rule as `applyProgramDays`: no day names is not no program.
+  if (dayNames.length === 0 && !program) return plan
   const existing = plan.routines.find((r) => r.blueprintId === "workout")
   const next = existing ? plan : addRoutine(plan, "workout", now)
   const routine = next.routines.find((r) => r.blueprintId === "workout")
@@ -5998,11 +6014,11 @@ export function goalsLikeOneThing(plan: NsPlan, oneThing: string): NsGoal[] {
  * what accumulates is a lexicon that has to grow forever and still cannot tell
  * a noun from a negation, in two languages, in somebody's shorthand.
  *
- * Naming the thread across somebody's notes is a judgement, so it is asked of a
- * model, with the same rules as every other model call here: one button, said
- * out loud before it sends, findings quoted back to the sentences they came
- * from, and nothing enters the plan without a tick. See `findThread` in
- * `northStarGenerateService.ts`.
+ * Naming the thread across somebody's notes is a judgement, and it used to be
+ * asked of a model. THERE IS NO MODEL CALL IN THIS FLOW ANY MORE: the suggest
+ * button, the endpoint behind it and `northStarGenerateService.ts` were all
+ * removed on 2026-09-09, because the endpoint refused in production on purpose
+ * and the button could therefore never work for anybody.
  */
 
 

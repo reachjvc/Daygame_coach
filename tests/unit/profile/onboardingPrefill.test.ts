@@ -173,12 +173,14 @@ describe("hasDatingPreferences", () => {
        is indistinguishable from a real "No, I'm local" -- it can never prove the
        question was asked. Including it would make the gate unskippable for
        anyone who genuinely answered No. */
-    expect(
-      hasDatingPreferences({ ...completedProfile, user_is_foreign: false })
-    ).toBe(true)
-    expect(
-      hasDatingPreferences({ ...completedProfile, user_is_foreign: null })
-    ).toBe(true)
+    // Bound to a variable first on purpose: passing the object literal straight
+    // in would be an excess-property error, because the check's signature does
+    // not mention `user_is_foreign` at all. That is the point being asserted.
+    const answeredNo = { ...completedProfile, user_is_foreign: false }
+    const neverAsked = { ...completedProfile, user_is_foreign: null }
+
+    expect(hasDatingPreferences(answeredNo)).toBe(true)
+    expect(hasDatingPreferences(neverAsked)).toBe(true)
   })
 
   it("is false for no profile at all", () => {

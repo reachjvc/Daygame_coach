@@ -50,6 +50,7 @@ import { describe, it, expect } from "vitest"
 import * as fs from "fs"
 import * as path from "path"
 import { TAB_ROUTES } from "@/components/navTabs"
+import { LIFE_MASTERY, QUIT_VICE, viceStep } from "@/src/shared/lifeMasteryRoutes"
 
 const root = path.resolve(__dirname, "../../..")
 
@@ -150,6 +151,7 @@ function normalize(target: string): string {
  */
 function linksIn(files: Iterable<string>): Set<string> {
   const out = new Set<string>()
+  const sources: string[] = []
   const pattern = /(?:href=|\.push\(|\.replace\(|\bredirect\()\s*\{?\s*["'`](\/[^"'`${}]*)["'`]/g
   for (const file of files) {
     let src: string
@@ -159,8 +161,68 @@ function linksIn(files: Iterable<string>): Set<string> {
       continue
     }
     for (const m of src.matchAll(pattern)) out.add(normalize(m[1]))
+    for (const target of symbolicLinksIn(src)) out.add(normalize(target))
+    sources.push(src)
+  }
+
+  /**
+   * `viceStep(flow.id)` — a link whose destination is decided by data.
+   *
+   * The vice hub draws a row per flow out of `modules.ts` and `plain.ts`, so
+   * which of the nine steps it points at is a fact about the data, not about
+   * the code, and no amount of reading the call site will say. Resolving it to
+   * every flow id NAMED IN THE SAME COMPONENT TREE is the honest answer: those
+   * are exactly the destinations this screen can produce.
+   *
+   * Not "every folder that exists" — that would excuse a route nothing points
+   * at, which is the one thing this file is for.
+   */
+  if (sources.some((src) => DYNAMIC_VICE_STEP.test(src))) {
+    for (const id of viceFlowIds()) out.add(viceStep(id))
   }
   return out
+}
+
+/** `viceStep(` with anything that is not a plain string in it. */
+const DYNAMIC_VICE_STEP = /viceStep\(\s*(?!["'`])/
+
+/**
+ * The flow ids a dynamic `viceStep(...)` can produce, read from the type that
+ * defines them. Add a flow and this picks it up; delete one and it stops
+ * claiming a route that no longer exists. A hand-kept copy of the list here
+ * would be a second place to forget.
+ */
+function viceFlowIds(): string[] {
+  const src = fs.readFileSync(path.join(root, "src/vice/types.ts"), "utf-8")
+  const union = src.match(/export type ViceFlowId\s*=\s*([^\n]+)/)
+  if (!union) throw new Error("ViceFlowId is gone — this resolver needs updating")
+  return [...union[1].matchAll(/"([\w-]+)"/g)].map((m) => m[1])
+}
+
+/**
+ * A LINK WRITTEN AS A CONSTANT IS STILL A LINK.
+ *
+ * Life Mastery's address lives in one place on purpose, so that moving it again
+ * is a rename and an edit rather than a hunt (`src/shared/lifeMasteryRoutes.ts`).
+ * The cost is that this file's grep for a literal path stops seeing those links,
+ * and every route under it looks like an orphan — which is exactly what happened
+ * the moment the constants went in.
+ *
+ * So the constants are RESOLVED here, imported from the same file the product
+ * imports, which is why the two cannot drift. Still only navigation: the symbol
+ * has to sit where a path would, so an import line that merely names it does not
+ * count, the same rule the literal pattern follows.
+ */
+function symbolicLinksIn(src: string): string[] {
+  const found: string[] = []
+  const pattern =
+    /(?:href=|[A-Za-z]*[Hh]ref\s*:\s*|\.push\(|\.replace\(|\bredirect\()\s*\{?\s*(LIFE_MASTERY\b|QUIT_VICE\b|viceStep\(\s*["'`]([\w-]+)["'`]\s*\))/g
+  for (const m of src.matchAll(pattern)) {
+    if (m[2]) found.push(viceStep(m[2]))
+    else if (m[1] === "LIFE_MASTERY") found.push(LIFE_MASTERY)
+    else if (m[1] === "QUIT_VICE") found.push(QUIT_VICE)
+  }
+  return found
 }
 
 /** Routes the app pushes you into — a gate is entered, not linked. */
@@ -274,6 +336,121 @@ describe("every page has a way in", () => {
     const reached = reachedRoutes(graph)
     expect(reached.has("/fake-orphan")).toBe(false)
     expect(reached.has("/fake-child")).toBe(false)
+  })
+
+  /**
+   * NO LIVE PAGE SENDS ANYONE TO A BENCH PAGE.
+   *
+   * Everything under `/test` answers 404 in production on purpose
+   * (`app/test/layout.tsx`) — those are workbenches, not product. So a link to
+   * one from a page real users reach is a dead end on the deployed site, and it
+   * looks perfectly fine in development, which is the only place it is ever
+   * clicked during the work.
+   *
+   * It had already happened: the Training screen's own subtitle, "Part of your
+   * Life Mastery plan", pointed at `/test/life-mastery`. Every user who tapped
+   * it on the live site got a 404 — on the one link joining training to the
+   * plan it belongs to.
+   *
+   * The exceptions are the quit-a-vice module, which has no live route yet.
+   * They are listed one by one and the list may only shrink: giving it a real
+   * route means deleting its lines from here.
+   */
+  const TEST_LINKS_ALLOWED = new Set([
+    // Quit-a-vice used to be here, twice: it had no live route, so the plan's
+    // routine card and the door beside it both pointed into the bench. It moved
+    // to /life-mastery/quit-vice with the flow that links to it, and both lines
+    // came off this list the same day. That is what this list is for.
+    //
+    // The header's "Test Pages" entry, which is pushed only inside
+    // `if (process.env.NODE_ENV === "development")` — it does not exist in the
+    // build real users get. Listed rather than taught to the detector, because
+    // a detector that tries to evaluate build-time conditions would be guessing.
+    "components/AppHeader.tsx",
+  ])
+
+  /**
+   * A LINK BUILT OUT OF A CONSTANT IS STILL A LINK.
+   *
+   * `linksIn` above deliberately counts only `href=`, the router and
+   * `redirect()`, because its job is to refuse a path that is merely mentioned.
+   * That is right for reachability and wrong here: `viceHref: "/test/quit-vice"`
+   * sits in a data file, is handed to a `<Link>` by the component that imports
+   * it, and this test did not see it until the allowlist disagreed with the
+   * detector. So this also counts a `/test` path assigned to anything named like
+   * a destination.
+   */
+  const BENCH_DESTINATION = new RegExp(
+    [
+      // A JSX attribute: href="/test/x" or href={"/test/x"}. No space before the
+      // `=`, which is what separates it from the next case.
+      String.raw`href=\{?\s*["'\`]\/test`,
+      // A named destination in an object or a constant: `viceHref: "/test/x"`.
+      String.raw`[A-Za-z]*[Hh]ref\s*:\s*["'\`]\/test`,
+    ].join("|")
+  )
+
+  /**
+   * DELIBERATELY NOT `backHref = "/test"`.
+   *
+   * That shape is a DEFAULT for a prop, and three files have one: the flow and
+   * the time-tracking shell are both mounted by a bench page with no argument
+   * and by a live page that passes a real address, and the header's `/test`
+   * entry is inside a `NODE_ENV === "development"` check. Flagging those would
+   * be crying wolf, and a rule that cries wolf gets an allowlist entry rather
+   * than a fix. What is flagged is a link that renders as written.
+   */
+  function linksToBench(file: string): boolean {
+    if ([...linksIn([file])].some((l) => l === "/test" || l.startsWith("/test/"))) return true
+    try {
+      return BENCH_DESTINATION.test(fs.readFileSync(file, "utf-8"))
+    } catch {
+      return false
+    }
+  }
+
+  /** Every product file that a live page can reach and that points at a bench page. */
+  function benchLinkers(): Set<string> {
+    const found = new Set<string>()
+    for (const { route, file } of routePages()) {
+      if (route.startsWith("/test")) continue
+      for (const f of componentTree(file)) {
+        const rel = path.relative(root, f)
+        if (rel.startsWith("..")) continue
+        if (linksToBench(f)) found.add(rel)
+      }
+    }
+    return found
+  }
+
+  it("no page real users reach links to a /test page", () => {
+    const offenders = [...benchLinkers()].filter((rel) => !TEST_LINKS_ALLOWED.has(rel))
+    expect(
+      offenders,
+      "These link to a page that 404s in production. Point them at the live\n" +
+        "route instead, or if there is genuinely no live equivalent yet, add the\n" +
+        "file to TEST_LINKS_ALLOWED and say why:\n" +
+        offenders.join("\n")
+    ).toEqual([])
+  })
+
+  it("the /test-link detector actually sees the links it allows", () => {
+    // Otherwise the allowlist is decorative and the rule below is vacuous.
+    const found = benchLinkers()
+    const invisible = [...TEST_LINKS_ALLOWED].filter((f) => !found.has(f))
+    expect(
+      invisible,
+      `The detector cannot see these, so it would not catch a new one like them:\n${invisible.join("\n")}`
+    ).toEqual([])
+  })
+
+  it("the /test-link allowlist only shrinks", () => {
+    const found = benchLinkers()
+    const cleaned = [...TEST_LINKS_ALLOWED].filter((f) => !found.has(f))
+    expect(
+      cleaned,
+      `These no longer link to a bench page — remove them from TEST_LINKS_ALLOWED:\n${cleaned.join("\n")}`
+    ).toHaveLength(0)
   })
 
   it("counts only navigation, never a path that is merely named", () => {

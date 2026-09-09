@@ -6,10 +6,20 @@ import { useState } from "react"
 import { Menu, LogOut, X } from "lucide-react"
 import { signOut } from "@/app/actions/auth"
 import { TABS, MORE_ITEMS } from "@/components/navTabs"
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 /** Routes where the tab bar should be hidden (they have their own bottom bars). */
 const HIDDEN_ROUTE_PREFIXES = [
-  "/dashboard/goals/plan",
+  // Life Mastery and the vice module inside it: both draw their own bottom
+  // controls, and two bars stacked on a phone is one bar too many. A prefix, so
+  // every step of the flow and every vice route is covered by the one entry.
+  //
+  // BELT AND BRACES TODAY. This bar is mounted per page rather than in a root
+  // layout, and no page under /life-mastery mounts it — so nothing here is
+  // currently doing any work. It is the answer for the day somebody mounts the
+  // bar app-wide, which is the day this would otherwise sit on top of the
+  // flow's own controls.
+  LIFE_MASTERY,
   "/dashboard/tracking/review",
 ]
 

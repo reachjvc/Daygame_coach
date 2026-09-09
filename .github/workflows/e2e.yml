@@ -25,7 +25,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests (Chromium)
-        run: npx playwright test --project=setup --project=setup-user-b --project=chromium --project=no-auth --project=security-multi-user --project='goals-*' --project='session-*' --project=auth-destructive --project=integration
+        run: npx playwright test --project=setup --project=setup-user-b --project=chromium --project=no-auth --project=security-multi-user --project='goals-*' --project='session-*' --project=training --project=auth-destructive --project=integration
         env:
           CI: true
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}

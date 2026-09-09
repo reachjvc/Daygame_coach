@@ -787,6 +787,32 @@ export async function reviseSessionLog(
    * threw. The seed is stored at enrolment now and is the enrollment's own
    * history; it is never recomputed.
    */
+  return recalculateEnrollment(userId, enrollmentId)
+}
+
+/**
+ * Re-derive a program's weights from the sessions that are stored.
+ *
+ * REPLAY FROM WHAT THE PERSON TYPED, not from the catalogue. This used to call
+ * `seedEnrollment` again, which re-derives the starting weights from the
+ * LEVEL's defaults — so anybody who entered their real numbers at enrolment had
+ * them replaced by the catalogue's the first time they corrected a session,
+ * silently, and anybody on a self-built program (which has no level seeds at
+ * all) got a delete that went through and then threw. The seed is stored at
+ * enrolment now and is the enrollment's own history; it is never recomputed.
+ *
+ * Extracted so a correction can write its sets FAITHFULLY and then ask for the
+ * recalculation, rather than going through a writer that only understands
+ * working sets and throws warm-ups, notes and effort away on the way past.
+ */
+export async function recalculateEnrollment(
+  userId: string,
+  enrollmentId: string
+): Promise<ProgramEnrollment> {
+  const enr = await getEnrollmentById(userId, enrollmentId)
+  if (!enr) throw new Error("Enrollment not found")
+  const program = programFor(enr)
+
   const seedState = enr.initialExerciseState
   if (!seedState) {
     throw new Error(

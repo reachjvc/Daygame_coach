@@ -86,9 +86,32 @@ test.describe("browser Back inside a stepped flow", () => {
       seen.push(await currentStep(page))
     }
 
-    // Strictly descending, one at a time, until it leaves the flow.
-    const inFlow = seen.filter((s) => s !== "<left the flow>")
-    expect(inFlow).toEqual(["2", "1"].slice(0, inFlow.length))
+    // The rule, stated as the rule rather than as one expected sequence: the
+    // step never goes UP, and never skips one on the way down.
+    //
+    // The previous assertion compared against `["2","1"].slice(0, n)`, which can
+    // never match three readings -- so a correct run of ["2","1","1"] failed. On
+    // the first step there is no barrier left, and in a fresh browser context
+    // there is no earlier page either, so a further Back legitimately stays put.
+    // The bug being guarded against is the opposite shape: Safari went 2 -> 5.
+    const inFlow = seen.filter((s) => s !== "<left the flow>").map(Number)
+
+    for (let i = 1; i < inFlow.length; i++) {
+      expect(
+        inFlow[i],
+        `Back went from step ${inFlow[i - 1]} to step ${inFlow[i]} — ` +
+          `sequence was ${JSON.stringify(seen)}. Back must never move forward.`,
+      ).toBeLessThanOrEqual(inFlow[i - 1])
+
+      expect(
+        inFlow[i - 1] - inFlow[i],
+        `Back skipped from step ${inFlow[i - 1]} to step ${inFlow[i]} — ` +
+          `sequence was ${JSON.stringify(seen)}. Each press is one step.`,
+      ).toBeLessThanOrEqual(1)
+    }
+
+    // And it must actually have moved at least once, or the test proves nothing.
+    expect(inFlow[0], `first Back did not leave step 3: ${JSON.stringify(seen)}`).toBeLessThan(3)
   })
 
   test("the in-page Back button does not skip a step", async ({ page }) => {

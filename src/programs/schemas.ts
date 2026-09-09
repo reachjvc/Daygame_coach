@@ -253,6 +253,16 @@ export const LogSessionSchema = z
     // workout written up on Monday landed in Monday's week.
     ...entryWhenFields,
   })
+  /**
+   * STRICT, so a misspelled field is refused instead of ignored.
+   *
+   * The date on this form was sent as `entryDate` while this schema asks for
+   * `entry_date`. A validator silently deletes what it was not told about, so
+   * the feature never worked and nothing ever failed — the session simply went
+   * in under today's date. Refusing the unknown key turns a silent nothing into
+   * an error somebody can see.
+   */
+  .strict()
   .refine(hasDateIfTime, NEEDS_DATE_FOR_TIME)
 
 
@@ -371,3 +381,41 @@ export const StartDraftSchema = z.object({
   /** The bar it is trained on, when it is not the standard one. */
   barWeightKg: z.number().min(0).max(50).nullish(),
 })
+
+/**
+ * Correcting a finished workout: the whole set list, replaced.
+ *
+ * Whole rather than a patch, because a correction routinely REMOVES a set —
+ * "I only did four" — and a list of changes cannot say that without inventing a
+ * way to name a deletion.
+ */
+export const ReviseWorkoutSchema = z
+  .object({
+    sets: z
+      .array(
+        z.object({
+          exercise: z.string().min(1).max(100),
+          exerciseId: z.string().min(1).max(80).nullable(),
+          /**
+           * IN KILOGRAMS, converted by the caller from whatever unit it showed.
+           *
+           * It used to be "the number as typed", and the server converted it
+           * with a unit it worked out for itself — from the profile, or from
+           * the enrollment that owned the workout. Nothing made those agree
+           * with the screen, so a pounds lifter's sets were rewritten 2.2 times
+           * too light. The ceiling matches the column, which stops at 999.99.
+           */
+          weightKg: z.number().min(0).max(999.99),
+          // 0 = attempted and failed. A set not attempted has no row.
+          reps: z.number().int().min(0).max(1000),
+          setNumber: z.number().int().positive().max(50),
+          kind: z.enum(["warmup", "working", "amrap", "backoff", "drop"]),
+          // Carried through so a correction does not quietly delete them.
+          side: z.enum(["left", "right"]).nullish(),
+          notes: z.string().max(500).nullish(),
+          rpe: z.number().int().min(1).max(10).nullish(),
+        })
+      )
+      .max(200),
+  })
+  .strict()

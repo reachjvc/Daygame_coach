@@ -1,0 +1,41 @@
+-- Drop profiles.onboarding_completed.
+--
+-- WHAT THIS COLUMN MEANT, AND WHY IT IS GOING
+--
+-- It recorded that someone had finished a five-step signup questionnaire about
+-- who they want to meet: a region, an archetype, and two yes/no questions about
+-- foreigners. That wizard was deleted on 2026-09-08.
+--
+-- The reason it was deleted is the reason this column has to go with it. Only
+-- one feature ever read the answers -- the scenario generator -- but this flag
+-- gated FIVE places: the dashboard, the Lair, Inner Game, the post-login
+-- redirect and scenarios. Three of those read none of the answers, so a dating
+-- questionnaire was standing in front of features that had nothing to do with
+-- dating. The questions are now asked once, on one screen, at the scenario door.
+--
+-- Whether to ask them is decided by looking at the answers themselves --
+-- `hasDatingPreferences` in src/profile/config.ts -- rather than by a separate
+-- boolean. A stored flag is a second copy of a fact the columns already carry,
+-- and two copies of one fact eventually disagree. This one already had: nothing
+-- has written it since the wizard was deleted, so every account looked
+-- "unfinished" no matter how complete it was.
+--
+-- WHAT IS LOST
+--
+-- Nothing that cannot be recomputed. Measured on this database 2026-09-08, all
+-- four accounts had it `true` and all four carried the answers, so the column
+-- held no information the other columns do not. If it were ever wanted back it
+-- is `preferred_region IS NOT NULL AND archetype IS NOT NULL AND
+-- dating_foreigners IS NOT NULL`.
+--
+-- THIS IS NOT REVERSIBLE. Dropping a column destroys its data. The per-row
+-- values are recomputable as above, which is the only reason this is safe to do
+-- a day after the change that orphaned it.
+--
+-- No code reads or writes it: verified by grep over src/, app/, tests/ and
+-- scripts/ before writing this. The UPDATE grant on it disappears with the
+-- column, so the allow-list in 20260828140001_profiles_rls_hardening.sql needs
+-- no edit -- and that migration must not be edited anyway, since it has run.
+
+alter table public.profiles
+  drop column if exists onboarding_completed;

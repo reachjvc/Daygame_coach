@@ -1,9 +1,19 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { adjustWorkout, discardWorkout } from "@/src/db/workoutRepo"
+import { getWorkoutSets } from "@/src/db/healthRepo"
 import { AdjustWorkoutSchema } from "@/src/programs/schemas"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
+
+/** Every set of one workout — what the correction screen edits. */
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+  try {
+    return NextResponse.json(await getWorkoutSets(auth.userId, (await params).id))
+  } catch (e) { console.error("read workout sets:", e); return err((e as Error).message, 404) }
+}
 
 /** Skip, swap, reorder, or leave a note — what changed on the day. */
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {

@@ -15,8 +15,10 @@ const WorkoutLogger = lazy(() =>
 const NutritionTracker = lazy(() =>
   import("@/src/health/components/NutritionTracker").then((m) => ({ default: m.NutritionTracker }))
 )
-const ActiveProgramsPanel = lazy(() =>
-  import("@/src/programs/components/ActiveProgramsPanel").then((m) => ({ default: m.ActiveProgramsPanel }))
+/* A card, not the whole session form. The dashboard used to embed every lift
+   and every set of today's session inside a panel meant to be glanced at. */
+const TrainingCard = lazy(() =>
+  import("@/src/programs/components/TrainingCard").then((m) => ({ default: m.TrainingCard }))
 )
 
 const STORAGE_KEY = "health-tracking-collapsed"
@@ -67,7 +69,7 @@ export function HealthTrackingPanel() {
             <SleepTracker />
             <WorkoutLogger />
             <NutritionTracker />
-            <ActiveProgramsPanel />
+            <TrainingCard />
           </div>
         </Suspense>
       )}

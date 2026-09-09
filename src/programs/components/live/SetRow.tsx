@@ -55,11 +55,23 @@ export function SetRow({
    * programs built out of ranges could never progress. What you did last time
    * is the number you are actually deciding against.
    */
-  const defaultReps = previous?.reps ?? prescribed.reps
+  /**
+   * A lift added on the day has no prescription, so it suggests nothing. `0`
+   * means "nobody asked for a number here" — the box starts empty and says
+   * "reps", rather than pre-filling a zero that somebody has to delete.
+   */
+  const defaultReps = previous?.reps ?? (prescribed.reps || "")
   // `done.weight` and not `done.weightKg`: the box is labelled in the lifter's
   // own unit, and the kilogram number under a "lb" label is how a 135 lb bench
   // redisplayed as 61.23 and re-saved as 61.
-  const [weight, setWeight] = useState(String(done?.weight ?? prescribed.weight))
+  /**
+   * Empty, not zero, when nothing was prescribed. A lift added on the day
+   * showed "0" in every box, which somebody has to delete before they can type
+   * — and a zero that is not a fact is the same lie as any other.
+   */
+  const [weight, setWeight] = useState(
+    String(done?.weight ?? (prescribed.weight || ""))
+  )
   const [reps, setReps] = useState(String(done?.reps ?? (prescribed.amrap ? "" : defaultReps)))
 
   useEffect(() => {
@@ -90,6 +102,9 @@ export function SetRow({
             type="number"
             inputMode="decimal"
             aria-label={`Weight for set ${setNumber} in ${unitLabel}`}
+            // Not the unit: the unit is already printed beside the box, and
+            // "kg kg ×" is what that produced.
+            placeholder={prescribed.weight ? undefined : "weight"}
             className="h-11 w-full sm:h-9"
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
@@ -107,7 +122,7 @@ export function SetRow({
           type="number"
           inputMode="numeric"
           aria-label={`${repUnit === "sec" ? "Seconds" : "Reps"} for set ${setNumber}`}
-          placeholder={prescribed.amrap ? "max" : range ?? String(prescribed.reps)}
+          placeholder={prescribed.amrap ? "max" : (range ?? (prescribed.reps ? String(prescribed.reps) : "reps"))}
           className="h-11 w-full sm:h-9"
           value={reps}
           onChange={(e) => setReps(e.target.value)}

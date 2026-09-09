@@ -39,8 +39,9 @@ import { loadNsPlan, planIsUntouched, todayISO } from "@/src/goals/northStarServ
 import { oneThingCountdown, oneThingPrompt, oneThingStage, type OneThing } from "@/src/goals/oneThingService"
 import { todayItems, todayProgress } from "@/src/goals/northStarTrackService"
 import { withReturn } from "@/src/shared/returnTo"
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
-const PLAN_PATH = "/dashboard/goals/plan"
+const PLAN_PATH = LIFE_MASTERY
 /**
  * WHERE THESE LINKS CAME FROM, carried on the link.
  *

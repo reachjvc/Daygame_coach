@@ -13,6 +13,21 @@ export function safeNextPath(
   fallback = "/redirect"
 ): string {
   if (!value) return fallback
+  /**
+   * CONTROL CHARACTERS FIRST, because the browser deletes them and then reads
+   * what is left.
+   *
+   * "/\t/evil.com" starts with a single "/", so every check below waves it
+   * through -- and then the browser strips the tab and navigates to
+   * "//evil.com", which is another site. Tab, newline and carriage return are
+   * the three it removes; the rest have no business in a path either, so the
+   * whole control range goes. A legitimate destination never contains one.
+   *
+   * The value arrives already percent-decoded from `searchParams`, so "%09"
+   * reaches here as a real tab and is caught by the same line.
+   */
+  // eslint-disable-next-line no-control-regex
+  if (/[\u0000-\u001F\u007F]/.test(value)) return fallback
   if (!value.startsWith("/")) return fallback
   if (value.startsWith("//")) return fallback
   // "/\evil.com" -- some browsers normalise the backslash to a forward slash.

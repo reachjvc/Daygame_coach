@@ -16,6 +16,7 @@ import type { ViceHandlers, ViceState } from "../types"
 import { MODULES, MODULES_COPY } from "../data/modules"
 import { OneVoice } from "./Voices"
 import { Why } from "./Ui"
+import { QUIT_VICE, viceStep } from "@/src/shared/lifeMasteryRoutes"
 
 export function Modules({ state, on }: { state: ViceState; on: ViceHandlers }) {
   const [open, setOpen] = useState<string | null>(null)
@@ -79,7 +80,10 @@ export function Modules({ state, on }: { state: ViceState; on: ViceHandlers }) {
                     </button>
                   ) : (
                     <Link
-                      href={m.exercise.href ?? `/test/quit-vice/${m.exercise.flow}`}
+                      // A module with no tool, no address and no flow is a data mistake. It
+                      // used to build `/quit-vice/undefined` and 404; the hub lists every
+                      // flow, so it is the one destination that cannot be wrong.
+                      href={m.exercise.href ?? (m.exercise.flow ? viceStep(m.exercise.flow) : QUIT_VICE)}
                       className="block rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 hover:border-violet-400/40 transition-colors"
                     >
                       <span className="text-[13.5px] text-zinc-100">{m.exercise.label}</span>

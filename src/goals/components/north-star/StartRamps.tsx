@@ -28,10 +28,9 @@ import {
   type StartRampId,
 } from "@/src/goals/data/northStarStart"
 import { areaReview, parseGoalDump, tenCandidates, wheelRatings } from "@/src/goals/northStarService"
-import { GeneratePanel, type GenerateHandlers } from "./Generate"
 import { SentenceBox } from "./SentenceBox"
 
-export interface StartHandlers extends GenerateHandlers {
+export interface StartHandlers {
   /**
    * Everything a door produces lands as written lines in one area — the same
    * function the text box calls, so a goal that arrived through the questions
@@ -268,22 +267,6 @@ export function TenRamp({
         </div>
       )}
 
-      {/* Read the same paragraph the mechanical split just cut up. The split
-          finds the sentences; this finds the goal hiding inside a sentence that
-          was never phrased as one. */}
-      {review.ten.trim().length >= 30 && (
-        <GeneratePanel
-          plan={plan}
-          text={review.ten}
-          areaId={area.id}
-          areaLabel={area.label}
-          ten={review.ten}
-          mode="actions"
-          label={TEN_COPY.actionsButton}
-          handlers={handlers}
-        />
-      )}
-
       {/* The rating question. Only when there is a rating and it leaves room. */}
       {rating != null && rating < 10 && (
         <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-3">
@@ -399,18 +382,6 @@ export function QuestionsRamp({
       <AddPicked count={chosen.length} label={`${QUESTIONS_COPY.add} → ${area.label}`} none={QUESTIONS_COPY.none} onAdd={add} />
       <p className="text-[10.5px] text-zinc-600 mt-1.5">{QUESTIONS_COPY.saved}</p>
 
-      {/* Across all five answers at once. A goal is often the thing sitting
-          between two of them, which no per-question split can see. */}
-      <GeneratePanel
-        plan={plan}
-        text={STARTER_QUESTIONS.map((q) => {
-          const value = plan.answers[STARTER_KEY(q.id)] ?? ""
-          return value.trim() ? `${q.ask}\n${value.trim()}` : ""
-        }).filter(Boolean).join("\n\n")}
-        areaId={area.id}
-        areaLabel={area.label}
-        handlers={handlers}
-      />
     </div>
   )
 }

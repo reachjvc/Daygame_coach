@@ -16,6 +16,7 @@ import { ChevronDown } from "lucide-react"
 import type { ViceFlowId, ViceToolId } from "../types"
 import { GUIDED } from "../data/plain"
 import { VICE_FLOWS } from "../data/flows"
+import { viceStep } from "@/src/shared/lifeMasteryRoutes"
 
 
 
@@ -79,7 +80,7 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
                       return (
                         <Link
                           key={item.id}
-                          href={`/test/quit-vice/${item.flow as ViceFlowId}`}
+                          href={viceStep(item.flow as ViceFlowId)}
                           className="block rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5 text-[13.5px] text-zinc-200 hover:border-violet-400/40 transition-colors"
                         >
                           {item.label}
@@ -104,7 +105,7 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
                                 evidence ranking rather than from one school of
                                 thought — and the shortest by a distance. */}
                             <Link
-                              href="/test/quit-vice/shortlist"
+                              href={viceStep("shortlist")}
                               className="block rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 hover:text-white hover:bg-white/[0.03] transition-colors"
                             >
                               The short version
@@ -116,7 +117,7 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
                             {CHANGE_FLOWS.map((f) => (
                               <Link
                                 key={f.id}
-                                href={`/test/quit-vice/${f.id}`}
+                                href={viceStep(f.id)}
                                 className="block rounded-lg px-2.5 py-2 text-[13px] text-zinc-300 hover:text-white hover:bg-white/[0.03] transition-colors"
                               >
                                 {f.label}

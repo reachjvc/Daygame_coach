@@ -23,7 +23,17 @@ export default async function LiveWorkoutPage() {
   if (!live) redirect("/programs")
 
   let prescription: SessionPrescription | null = null
-  let unit: UnitSystem = "kg"
+  /**
+   * THE WORKOUT ALREADY KNOWS ITS OWN UNIT, so it is not guessed here.
+   *
+   * This defaulted to "kg" and was only overwritten inside the branch for a
+   * workout attached to a program. A workout started with no program — the
+   * whole point of "Start a workout now" — therefore always showed kilograms,
+   * while the server stored what was typed as the profile's unit. A pounds
+   * lifter typed 225, the boxes said "kg", and the set was stored as 102 kg:
+   * the screen and the database disagreed about what the number meant.
+   */
+  let unit: UnitSystem = live.unit
   let plates: PlateSetup | undefined
   let programName: string | null = null
   let lastTime: Record<string, { weight: number; reps: number }[]> = {}

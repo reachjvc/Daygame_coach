@@ -25,6 +25,7 @@
  * page too.
  */
 
+import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
 export type StartRampId = "write" | "ten" | "day" | "questions" | "week" | "experiences"
 
 export interface StartRamp {
@@ -176,7 +177,7 @@ export const PATHS_COPY = {
   note: "Nothing here is a commitment. You can do all three, in any order, and come back to this page from the rail at the top.",
   viceLabel: "Quit a vice",
   viceBlurb: "The one you would stop if you could. A plan for it, on its own page.",
-  viceHref: "/test/quit-vice",
+  viceHref: QUIT_VICE,
   /** On the routine doors, once the routine has something in it. */
   routineSteps: (n: number) => `${n} ${n === 1 ? "step" : "steps"} in it`,
   routineEmpty: "Nothing in it yet",
@@ -213,7 +214,6 @@ export const TEN_COPY = {
    * Tuesday, and pretending otherwise is how the page ended up offering scenery
    * as somebody's most important thing this season.
    */
-  actionsButton: "Turn this 10 into things I would actually do",
 }
 
 // ------------------------------------------------------------- the ideal day
@@ -789,19 +789,6 @@ export const WANT_EXAMPLES: Array<{ areaId: string; title: string }> = [
   { areaId: "lm_spirituality", title: "Feel part of something bigger than my week" },
 ]
 
-export const GENERATE_COPY = {
-  button: "Suggest goals and experiences from this",
-  running: "Reading what you wrote…",
-  sends: "Sends what you wrote in this box to Anthropic to read. Nothing is added to your plan until you tick it.",
-  needMore: "Write a few lines first — there is not enough here to work from yet.",
-  failed: "That did not come back. Try again, or carry on writing your own — nothing was lost.",
-  nothing: "Nothing came back that is not already on your list.",
-  picked: "Tick the ones that are yours",
-  add: "Add the ticked ones",
-  none: "Nothing ticked",
-  asGoal: "goal",
-  asExperience: "experience",
-}
 
 
 // ------------------------------------------------------------ the area builder

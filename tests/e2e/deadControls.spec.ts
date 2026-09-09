@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test"
+import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
 
 /**
  * Dead-control sweep.
@@ -15,7 +16,7 @@ import { test, expect, type Page } from "@playwright/test"
  * report anything that produces neither.
  */
 
-const HUB = "/test/quit-vice"
+const HUB = QUIT_VICE
 const FLOWS = ["where", "gives", "map", "experiment", "line", "week"] as const
 
 async function settled(page: Page) {

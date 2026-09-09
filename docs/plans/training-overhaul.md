@@ -2314,3 +2314,452 @@ the words "this function is expected to write" as a function named `is`, and
 because it propagates by name, every Supabase read filtering with `.is(...)`
 looked like a write. Comments and strings are blanked before scanning now.
 
+
+## Phase 3 — saved weeks now work end to end, 2026-09-08
+
+**Suite:** 4,588 unit, 251 integration, 12 browser tests passing. Types clean.
+
+**The complaint this answers**, in the words it was made in: templates made in
+the Life Mastery flow should follow through. They now do.
+
+A week you built there used to exist only while the page was open. It lived in
+that browser's local storage and nowhere else, so closing the tab lost it and it
+could never reach another device. Separately, "saved workouts" on the health
+screen were a different thing that could not be started as a program at all.
+
+**What is there now**, all of it checked in a browser rather than inferred:
+
+- **A "Your saved weeks" panel above the builder.** It lists what you have
+  saved, with what is actually in each one — "1 day · 1 lift" — and loading one
+  puts the week back in the builder with its day names and lifts.
+- **Saving keeps it on your account.** The test that matters closes the page
+  entirely and reopens it: what comes back is what the account holds, not what
+  the browser remembered.
+- **A half-built week can be saved.** A day you have not filled in yet is an
+  ordinary thing to come back to. It cannot be STARTED, and the refusal names
+  the day that is still empty.
+- **Saving under a name you already used updates that week** rather than
+  refusing you or quietly making a second one with the same name.
+- **A started week appears under its own name.** Nine places on screen named a
+  program by looking up its catalogue entry, and a self-built week's entry is a
+  shared shell called "Your own program" — so three different weeks you had
+  written all appeared under one title. One function now names an enrollment,
+  and every one of those nine calls it.
+- **The list says when it could not be loaded** instead of saying you have none.
+
+**Also fixed, and it had never worked at all:** dating a past program session.
+The form sent the day as `entryDate`, the server asks for `entry_date`, and a
+validator deletes fields it was not told about — so every "I did this on
+Saturday" was accepted, silently stripped, and filed under the day it was typed.
+The schema is strict now, so the same mistake fails loudly instead of quietly.
+Six tests pin it, including one that the misspelling is refused.
+
+**Still to do in this phase:** starting a workout with no program attached and
+adding lifts on the day, and the seed-a-year script. Before the old
+`TodaySessionWidget` can be deleted, three things it is the only home for have to
+move: logging a cardio or endurance session, adding or removing a set on the day,
+and dating a past program session.
+
+## Phase 3 finished and Phase 4 built, 2026-09-08
+
+**Suites:** 4,606 unit, 251 integration, 14 browser tests in a new `training`
+project. Types clean.
+
+### Phase 3, the rest
+
+- **A workout that belongs to no program.** "Start a workout now" on the
+  Anything-else tab opens an empty session. The server had always allowed one;
+  nothing had ever asked for it, so anything improvised had to be reconstructed
+  from memory afterwards.
+- **Adding a lift you did not plan.** Search the 165-lift library mid-session,
+  or type a name it has never heard of. The squat rack is busy, you do front
+  squats, and the app now has somewhere to put them. A lift the library does not
+  know is saved under the name typed and nothing else — the builder asks which
+  body part an invented lift belongs to, and answering that for somebody at a
+  rack would be the app inventing a fact about their training.
+- **More sets, or fewer.** "+ one more set" on every lift. The screen rendered
+  exactly the prescribed rows, so a sixth set had nowhere to go.
+- **A run is a workout too.** An endurance session prescribes blocks rather than
+  sets, so the live screen said "nothing prescribed" and offered a search box for
+  lifts. It now shows the blocks, the expected length, and says there is nothing
+  to tick. `enduranceMinutes` moved out of the old form into the tested service —
+  it being private to that one screen is exactly why the live screen had nothing
+  to say about a run.
+- **A lift added on the day no longer invents a prescription.** It read
+  "3 × 0 reps @ 0 kg" and pre-filled zeroes in every box. It says "added on the
+  day" and the boxes start empty.
+
+### Phase 4 — History and Progress
+
+`/programs` now has four tabs: **Today · History · Progress · Anything else.**
+
+- **History** lists every workout newest first with the top WORKING set of each
+  lift, because "Squat 120×5 · Bench 90×5" is what tells you which session it
+  was. A 60 kg warm-up is not what the session was. Open one and every set is
+  there, warm-ups marked, in the lifter's own unit — the existing summary helper
+  bakes kilograms into a string, which would have shown a pounds lifter their own
+  history in the wrong numbers.
+- **Progress** shows this week as seven days, weight moved per week over eight
+  weeks, and your best on each lift.
+
+**Three decisions in Progress worth stating, each pinned by tests:**
+
+1. **A day still to come is not a missed day.** Counting Thursday as a failure on
+   Tuesday is how a tracker teaches somebody to stop opening it. Future days are
+   outlined, not empty.
+2. **Two bests, because they are different achievements.** The heaviest single
+   set is what people mean by a personal best; the best estimated max rewards
+   grinding out eight at a weight you used to do five at, which the first number
+   cannot see. Capped at ten reps, above which the estimate inflates badly.
+3. **No weekly target is invented.** The first version counted day templates, so
+   StrongLifts — two templates, A and B, trained three times a week — read
+   "2 of 2" to somebody with two sessions still to do. No program in the
+   catalogue declares a weekly frequency. Only a schedule that PINS WEEKDAYS
+   states one, and that is the only case that now shows a target. Everything else
+   says "3 so far".
+
+**A test-harness fix that came with it.** The five training specs share one
+account and each wipes it clean, so run beside each other they deleted each
+other's rows mid-assertion. They now have their own Playwright project with a
+single worker, following the pattern the time-tracker specs already use.
+
+**Still to do:** editing a past workout from the History tab, the seed-a-year
+script, and Phases 5 to 8.
+
+## Phase 4 finished and Phase 6 built, 2026-09-09
+
+**Suites:** 4,614 unit, 251 integration, 18 browser tests. Types clean.
+
+### Correcting a workout (finished Phase 4)
+
+You could delete a session you did not recognise, and you could not look at it
+first — let alone fix it. Typing 100 where you meant 10 meant losing the session
+and writing it out again.
+
+History rows now open to an editable list: change a weight, change the reps,
+remove a set that never happened. **One door, two kinds of workout.** A session
+that answers a program cannot just have its rows swapped — the weights of every
+session after it were decided by what this one said — so it replays the history
+from the stored starting state, and the screen says so in amber before saving. A
+session belonging to no program has nothing downstream, so its rows are simply
+replaced.
+
+The whole set list is sent rather than a patch, because a correction routinely
+REMOVES a set and a list of changes cannot say that without inventing a way to
+name a deletion.
+
+### Phase 6 — the dashboard
+
+**`TrainingCard` replaces `ActiveProgramsPanel`** on both dashboards. The old
+panel embedded the entire session form — every lift, every set, two number boxes
+each — inside something meant to be glanced at. Somebody checking their day got
+an eight-lift data-entry form they had not asked for, and the one thing they
+might actually want was not on it: the way back into a workout they were already
+in the middle of.
+
+Four states, from a pure tested function, in this order and for this reason:
+
+1. **A running workout beats everything.** Somebody standing in a gym does not
+   need to be told what today's session is.
+2. **A workout left open for six hours is forgotten, not running.** "Resume ·
+   431 min" is the app pretending not to notice, so it names the day it started
+   and offers to finish or throw it away.
+3. **Today's session**, its name, how many lifts, and Start.
+4. **A rest day says what is next**, so the card is not just "no".
+
+With nothing running and nothing open the card renders nothing at all: an empty
+training card on a dashboard is clutter, not information.
+
+**Also:** the Quick Action read "Log a Workout" and led to the training screen,
+which is not a form. It now says "Training".
+
+**A correction to the plan, deliberately not followed.** The plan says to delete
+`TodaySessionWidget`. It is still the only place a PAST program session can be
+logged with a date — the feature that had never worked until the field-name fix
+earlier today — so deleting it would remove a working feature to satisfy a step
+written before we knew that. `ActiveProgramsPanel` was genuinely orphaned by the
+new card and has been deleted; the widget stays until its last capability has
+somewhere else to live.
+
+**Still to do:** Phase 5 (Life Mastery both ways), Phase 7 (one look, one
+voice), Phase 8 (proven), and the seed-a-year script.
+
+## Phase 5 — started 2026-09-09
+
+**A program with no named days is still a program you started.**
+`applyProgramDays` and `applyProgramToWorkoutRoutine` returned the plan
+untouched whenever the day names were empty, which threw away the program
+reference along with them. Two real cases hit it every time: an endurance
+program prescribes blocks rather than named days, and a save from the goals
+planner carries selections with no day names. In both, somebody started a
+program and their Life Mastery plan went on saying nothing was running — so the
+plan and the training screen disagreed with no way to tell which was right.
+
+The days are now left exactly as they are, and only the reference is recorded.
+Four tests, checked by reverting the fix.
+
+**Already done by the saved-weeks work:** step 5 of this phase, "build-your-own
+saves to the account". It saves under a name you choose rather than debouncing
+into an unnamed row, which is the better shape — a week you can find again needs
+a name.
+
+## Second pass on Phases 4–6, 2026-09-09: eleven more defects
+
+**Suites:** 4,622 unit, 251 integration, 19 browser tests. Types clean.
+
+An adversarial read of the day's work found eleven faults, four of which
+corrupted or destroyed a lifter's data. They are listed because the failure list
+ships with the work.
+
+**The three that changed or lost data.**
+
+1. **Correcting a workout rewrote every weight 2.2 times wrong.** The history
+   screen picked its unit from the running program; the server picked its own,
+   from the profile or from the enrollment that owned that old workout. Nothing
+   made the three agree. A pounds lifter with no program running saw "102.1 kg",
+   saved a rep correction, and had the set stored as 46.31 kg — every set
+   shrinking on every correction, compounding. **The wire now carries
+   kilograms.** The screen converts once, from the unit it actually displayed,
+   and the server never has to work out what the number meant.
+2. **A correction deleted things it never showed.** It supplied seven columns out
+   of fifteen and routed program sessions through a writer that only understands
+   working sets: correcting one rep deleted the warm-ups, turned an all-out set
+   into an ordinary one, dropped the notes and the effort scores, and wiped the
+   record of which lifts had been skipped or added on the day. The recalculation
+   is now a separate step, the sets are written faithfully, and a browser test
+   proves the warm-up survives.
+3. **A failed write left the workout with no sets at all.** The delete commits
+   before the insert is attempted and there is no transaction across two calls.
+   The old rows are now read first and put back if the write fails.
+4. **The live screen showed kilograms for a workout with no program.** It
+   defaulted to kg and only looked further inside the branch for a program
+   workout — which is exactly the wrong way round for the new "Start a workout
+   now". The workout carries its own unit and the page now reads it.
+
+**The rest.**
+
+5. **Ticking an extra set spawned another empty row**, and another for each set
+   after: two overlapping terms were added instead of taking the larger.
+6. **"Add a lift" offered a lift already on the screen and let you add it
+   twice.** Two cards shared one id, and ticking set 1 on the second overwrote
+   set 1 on the first — sets vanishing as they were entered.
+7. **Timed work was multiplied by its weight into the weekly total.** A 3 × 30 s
+   carry at 40 kg contributed 3,600 kg and outranked a 5 × 5 squat at 100 kg on
+   the chart the whole feature exists for. Worse, **the docstring already claimed
+   it was excluded** — a comment carrying an assertion nothing checked. The lift
+   library knows which movements are timed; they are out, and now tested.
+8. **"Your bests" printed "Pull-up 0 kg × 12 · est. max 0"**, which is not a fact
+   about anything. A lift with nothing loaded on it reports its reps.
+9. **The dashboard card hid Resume when it could not check.** It treated a failed
+   request as "no workout open" and offered a Start that the database would
+   refuse. It now says it could not find out.
+
+**And what the tests were really constraining.** The progress tests were entirely
+in kilograms with no conversion anywhere, which is why the unit fault was
+invisible to them. The correction test only ever exercised a loose workout on a
+kilogram profile with two plain working sets — the program branch, where all the
+data loss lived, was never run. Both gaps are now covered, including a test that
+logs a full program session, corrects it to a miss, and asserts the weight it
+prescribes goes back down.
+
+## Phases 7 and 8, 2026-09-09
+
+**Suites:** 4,626 unit, 251 integration, 20 browser tests in the `training`
+project, which now runs in CI. Types clean.
+
+### The guard that stops the whole class coming back
+
+Two rules added to `tests/unit/architecture.test.ts`, both in the shape this
+project already uses for dates: a list of existing offenders that may only
+shrink, and a failure for anything new.
+
+1. **No new screen fetches its own data.** There was no shared way to load it,
+   so 69 components each wrote their own and each decided separately what to
+   show when the request failed — and the cheap answer, "nothing yet", is a
+   claim about the person that is not true. Thirty-nine of the 59 findings in
+   `docs/plans/silent-failures.md` are that one idiom. The rule was checked by
+   adding a fetch to a new component and watching the build fail.
+2. **No new text too small or too faint to read.** A 10px font, or
+   `text-zinc-600` on a dark card, which is under the contrast floor. Between
+   them they carried real information: which day is done, whether a rest number
+   is ours or the program author's, what a failed save actually said. The four
+   training screens written this week are fixed; the other 45 files are listed.
+
+This is the part that makes the work stick. A regression test stops one bug
+returning. A rule that fails the build stops the next person writing the same
+kind, including somebody who never heard of the first one.
+
+### Proven
+
+**A gym is where signal dies, and now that is tested.** The connection is cut,
+two sets are ticked, the connection returns: exactly one workout with exactly two
+sets, each arriving once. The ✓ goes down while offline, because waiting for a
+round trip at a rack is not an option, and the screen says the sets are not saved
+yet rather than implying they are. Checked by dropping the held write and
+watching the test report zero sets.
+
+**What the training tests actually constrain**, rather than how many pass:
+
+- a set survives the page being reloaded, and the phone locking
+- the rest clock is right after ten seconds in a background tab
+- a pounds lifter's weights stay in pounds, on screen and in the database
+- the summary names a personal best once, not once per set
+- sets ticked with no connection arrive when it returns, exactly once
+- correcting a session moves the weights it prescribed, and keeps its warm-ups
+- a saved training week survives the page being closed and reopened
+- a half-built week can be saved and is refused a start, by name
+- another account's saved weeks are never listed
+- a second workout cannot be started while one is open
+- a dashboard card shows Resume over today's session, and nothing at all when
+  there is nothing to say
+
+## Three engines, and a year of real training, 2026-09-09
+
+The last two items are done.
+
+**The training specs now run on four engines.** `training` (Chromium at
+390 × 844) then `training-iphone-safari`, `training-android` and
+`training-firefox`, each chained to the one before with `dependencies` so they
+never overlap. They have to be chained rather than parallel because they share
+one test account and each spec wipes it clean at the start: run side by side they
+delete each other's rows mid-assertion. 56 tests, 10.7 minutes.
+
+**A year of training, seeded and read back.** `scripts/dev/seed-training-year.ts`
+signs in as the test account and writes through the app's own API rather than
+into the database, so anything it produces is something the app could have
+produced. 141 workouts, 2,438 sets, every set tagged so `--wipe` can take them
+all out again.
+
+That seeded year immediately found something no amount of clean-account testing
+could.
+
+### The database stops at a thousand rows and does not say so
+
+Ask for more than a thousand rows in one request and you get a thousand. No
+error, no warning, no flag — just fewer rows than exist, and everything computed
+from them is confidently wrong.
+
+Reading the History screen asked for a year of sets in one go, sorted by set
+number. Measured on the seeded account: 2,444 sets existed, 1,000 came back, and
+in that sort order the thousand were every warm-up and every first and second
+set. So:
+
+- **Every workout in History showed its first two sets and stopped.** A 5×5
+  squat day looked like a 5×2.
+- **Every strength number built on that read was too low.** The heaviest set of a
+  session is usually its last, so the bests on the Progress screen were the wrong
+  sets entirely. They were reported here on 2026-09-08 as Bench 128.3 kg, Squat
+  156.5 kg, Deadlift 216.3 kg. Read whole, they are Bench 141, Squat 172,
+  Deadlift 237 — and two lifts, Barbell Row and Overhead Press, were missing from
+  the screen altogether.
+- **Correcting a workout would have deleted the sets that never arrived.** The
+  correction screen saves back exactly the rows it was shown. Open a workout from
+  three months ago, fix one number, press Save, and the three sets the read
+  dropped are gone from the database for good. This is the one that mattered:
+  the others show a wrong number, this one destroys the record.
+
+**What was done about it.**
+
+1. `src/db/paging.ts` — one `readAllRows` that reads a page at a time until a
+   short page says that was the end, and one `chunkIds` for filter lists, which
+   have a different limit for a different reason (they travel in the URL).
+2. Every training read that could outgrow a page now uses it: the History list
+   and its sets, the lifetime hours, the training-weeks streak, the estimated
+   one-rep max, the pull-up max, the weight-history figures, and the rollback
+   copy `reviseWorkout` restores from — a short read there would have restored a
+   short workout and called it a rollback.
+3. **The correction screen no longer edits the list it was shown.** Opening it
+   re-reads that one workout on its own (`GET /api/workouts/[id]`, ownership
+   checked in the route as well as by the database's own row policy), and if that
+   request fails it refuses to open rather than offering a shorter list that
+   looks complete. This removes the class, not the instance: an editor can no
+   longer save back a list it only partly loaded.
+4. A warm-up and the first working set are both "set 1", so they had the same
+   accessible name — a screen reader read the same label twice and anything
+   looking a field up by name got whichever came first. The kind is in the name
+   now.
+
+**The guard.** A third rule in `tests/unit/architecture.test.ts`: no new read
+that asks for more rows than the database will return. It counts unpaged reads
+per file and the counts may only go down, so adding one to a file already on the
+list still fails the build — a plain per-file allowlist would have made every
+future read in `healthRepo.ts` invisible. Checked by adding one and watching it
+go red. There are 53 left across the other slices; each number is a debt, not a
+permission.
+
+**Regression tests.** `tests/unit/health/workoutPaging.test.ts` puts a fake
+database in front of the repository that enforces the same thousand-row cap and
+insists a year of training still comes back whole. Two of its six tests fail
+against the old code. The correction test in the browser now asserts the editor
+shows every set of the workout, counted, which is what was silently wrong.
+
+## Asked "is this done?", 2026-09-09 — and it was not
+
+### A dead link on the live site
+
+The Training page's own subtitle said "Part of your **Life Mastery plan**" and
+the link went to `/test/life-mastery`. Every page under `/test` answers 404 in
+production on purpose (`app/test/layout.tsx`), and the app is deployed. So on the
+real site, the one link joining training to the plan it belongs to was a dead
+end — and it looked perfectly fine in development, which is the only place it was
+ever clicked while the work was being done.
+
+It now points at `/dashboard/goals/plan`, which is the same flow with the account
+behind it and where the rest of the app already sends people. This was Phase 5
+step 8, and it is now done.
+
+**The guard.** `tests/unit/navigation/routeReachability.test.ts` gains a rule: no
+file a live page can reach may link to a `/test` page. Two subtleties, both found
+by the rule disagreeing with itself rather than by inspection:
+
+- **A link built out of a constant is still a link.** `viceHref:
+  "/test/quit-vice"` sits in a data file and is handed to a `<Link>` by the
+  component that imports it. The reachability walker deliberately ignores paths
+  that are merely mentioned, so it could not see this one. There is now a second
+  test asserting the detector can actually see every link the allowlist excuses —
+  without it the allowlist would be decorative and the rule vacuous.
+- **A default is not a link.** `backHref = "/test"` appears in three files; each
+  is mounted by a bench page with no argument and by a live page that passes a
+  real address, so flagging them would be crying wolf, and a rule that cries wolf
+  gets an allowlist entry instead of a fix. Only links that render as written are
+  flagged. The header's `/test` entry is inside a `NODE_ENV === "development"`
+  check and is listed with that reason.
+
+Checked by putting the bad link back and watching the build go red.
+
+### Phase 5 is the phase that is not finished
+
+Phases 0, 1, 2, 3, 4, 6, 7 and 8 are done and proven. **Phase 5 — "Life Mastery
+flows through, both ways, on every device" — is three of its ten steps.**
+
+Done: step 1 (a program with no named days keeps its reference), step 5
+(build-your-own saves to the account, via the saved-weeks work), step 8 (the
+right address, above).
+
+Not built, checked in the code just now rather than taken from this log:
+
+- **Step 2 — every start and end tells the plan, and the plan catches up on
+  load.** Only `detachProgramFromRoutines` is wired in `NorthStarFlow`. Starting a
+  program somewhere the plan does not watch still leaves the two disagreeing, and
+  there is no reconcile-on-load in either direction. The test that was meant to
+  hold this up, `tests/unit/navigation/planReferenceCallers.test.ts`, does not
+  exist.
+- **Step 2b — the goals planner tells the truth.** `ProgramPicker` still says
+  "Will enroll you on save" for a program that is already running.
+- **Step 3 — "Use the program's days"** on the disagreement notice: not present in
+  `RunningPrograms.tsx`.
+- **Step 4 — one designer.** `RoutineCard` does not show a read-only day list
+  with "Change it" when the routine carries a program.
+- **Step 6 — "Reset" cannot erase your program.** `EditActiveProgram` has no
+  "back to the saved template" for a draft-based program.
+- **Step 7 — the Templates tab with a program running**: no "Your templates" and
+  no collapsed "Start something else".
+- **Step 9 — the rail on a phone**: still a grid, not a scrolling row of chips.
+- **Step 10 — the program section uses the kit**: `Segmented` is in, but the 10px
+  `text-zinc-600` copy is still there in five places in `WorkoutPrograms.tsx` —
+  which is why that file is on the unreadable-text allowlist rather than off it.
+
+What that means in plain terms: **the training screens are finished; the wiring
+between training and the Life Mastery plan is roughly one phase of work short.**
+Today the two can still disagree about what you are running, and the plan side is
+where the disagreement shows.

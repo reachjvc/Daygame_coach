@@ -14,7 +14,7 @@ import { EditActiveProgram } from "./EditActiveProgram"
 import { WeekStrip } from "./WeekStrip"
 import { PastPrograms } from "./PastPrograms"
 import { useActiveEnrollments, useEnrollment } from "../hooks/useEnrollment"
-import { getProgram, requireProgram } from "../data/catalog"
+import { requireProgram, enrollmentName } from "../data/catalog"
 import { effectiveProgram } from "../customize"
 import { computePrescription } from "../programsService"
 import { LEVEL_LABELS, isoWeekday } from "../config"
@@ -152,7 +152,7 @@ export function ProgramsApp({ initialActive, initialPast, initialDetail, live = 
             <Card key={e.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setView({ mode: "active", enrollmentId: e.id })}>
               <CardContent className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
-                  <div className="truncate font-medium">{getProgram(e.program_id)?.name ?? e.program_id}</div>
+                  <div className="truncate font-medium">{enrollmentName(e)}</div>
                   <div className="text-xs text-muted-foreground">
                     {LEVEL_LABELS[e.level]} · started {new Date(e.started_at).toLocaleDateString()}
                   </div>
@@ -236,7 +236,7 @@ function ActiveProgram({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="truncate text-lg font-semibold" data-testid="active-program-name">
-            {getProgram(detail.enrollment.program_id)?.name ?? detail.enrollment.program_id}
+            {enrollmentName(detail.enrollment)}
           </h2>
           <p className="text-xs text-muted-foreground">
             {LEVEL_LABELS[detail.enrollment.level]} · started{" "}
@@ -264,7 +264,7 @@ function ActiveProgram({
           trains. Doing it now lives at /programs/live, one set at a time. */}
       <TodayCard
         enrollmentId={enrollmentId}
-        programName={getProgram(detail.enrollment.program_id)?.name ?? detail.enrollment.program_id}
+        programName={enrollmentName(detail.enrollment)}
         prescription={prescription}
         unit={detail.enrollment.unitSystem}
         live={live}

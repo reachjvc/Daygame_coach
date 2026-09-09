@@ -17,6 +17,7 @@
     "seed:values": "tsx scripts/seed_values.ts",
     "audit": "bash scripts/audit-session.sh",
     "audit:rls": "tsx scripts/audit-rls.ts",
+    "seed:training": "tsx scripts/dev/seed-training-year.ts",
     "prepare": "husky"
   },
   "dependencies": {

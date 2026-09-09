@@ -52,7 +52,6 @@ import {
   templateFootprint,
   templatesInArea,
 } from "@/src/goals/northStarService"
-import { GeneratePanel } from "./Generate"
 import { MilestoneBuilder } from "./GoalCard"
 import { MilestoneCurveEditor } from "../MilestoneCurveEditor"
 import type { GuideHandlers } from "./GuidedBuild"
@@ -925,21 +924,6 @@ function AreaOffers({ plan, area, handlers, half }: {
       {open && (
         <div className="mt-2.5 space-y-3">
           {note && <p className="text-[10.5px] text-zinc-600 leading-relaxed">{note}</p>}
-
-          {/* The model, on what this area's 10 says. Free — it runs through the
-              Claude CLI rather than a metered key. */}
-          {ten.length >= 30 && (
-            <GeneratePanel
-              plan={plan}
-              text={ten}
-              areaId={area.id}
-              areaLabel={area.label}
-              ten={ten}
-              mode="actions"
-              label={BUILDER_COPY.suggest}
-              handlers={handlers}
-            />
-          )}
 
           {/* Shown once each. "Gym Sessions" and "Protein Target" belong to
               three of Fitness's objectives, so the same chip appeared in three

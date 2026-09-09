@@ -7,6 +7,8 @@
 
 import { periodStartFor, previousPeriodStart, isStreakCurrent, middayInstant, localTimeInstant, getTodayInTimezone, toDateISO } from "@/src/shared/dateUtils"
 import { weeklyStreakRun } from "@/src/shared/streakRuns"
+import { estimateOneRepMax } from "@/src/programs/programsService"
+import { libraryByName } from "@/src/programs/data/exerciseLibrary"
 import type { LoadPoint } from "@/src/programs/types"
 import type {
   WeightLogRow,
@@ -689,4 +691,184 @@ export function loggedAtForEntry(
   // would have let it through.
   const instant = localTimeInstant(entryDate, entryTime, timezone)
   return new Date(instant).getTime() > now.getTime() ? null : instant
+}
+
+// ============================================================================
+// Progress: what this week looked like, and what your best has been
+// ============================================================================
+
+export interface WeekAdherence {
+  /** Training days the program asks for in a week. 0 when nothing is running. */
+  planned: number
+  /** Workouts actually done this week. */
+  done: number
+  /** Monday to Sunday. `future` days are not misses yet. */
+  days: Array<{ date: string; done: boolean; future: boolean }>
+}
+
+/**
+ * Planned against done, this week, as seven days.
+ *
+ * WHY SEVEN DAYS AND NOT A PERCENTAGE. "71% adherence" tells somebody nothing
+ * they can act on. Seven marks tells them they have done three of four and
+ * there are two days left, which is a decision.
+ *
+ * A day still to come is NOT a missed day. Counting Thursday as a failure on
+ * Tuesday is how a tracker teaches somebody to stop opening it.
+ *
+ * `today` is the viewer's own wall-clock Date, matching every other function in
+ * this file; the server passes one made in the account's timezone.
+ */
+export function adherenceThisWeek(
+  logs: WorkoutLogRow[],
+  plannedPerWeek: number,
+  today: Date
+): WeekAdherence {
+  const trained = new Set(logs.map((log) => localDateKey(new Date(log.logged_at))))
+  const todayKey = localDateKey(today)
+  const monday = mondayOf(today)
+
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const day = new Date(monday)
+    day.setDate(monday.getDate() + i)
+    const date = localDateKey(day)
+    return { date, done: trained.has(date), future: date > todayKey }
+  })
+
+  return {
+    planned: Math.max(0, Math.round(plannedPerWeek)),
+    done: days.filter((d) => d.done).length,
+    days,
+  }
+}
+
+/**
+ * Is this lift measured in seconds rather than reps?
+ *
+ * Asked of the library by name, because the stored set does not say: the number
+ * lives in `reps` whichever it is.
+ */
+function isTimedLift(exercise: string): boolean {
+  return libraryByName(exercise)?.timed === true
+}
+
+export interface WeekVolume {
+  /** Monday of the week, YYYY-MM-DD. */
+  weekStart: string
+  volumeKg: number
+  sets: number
+}
+
+/**
+ * Weight moved per week, newest week last.
+ *
+ * Warm-ups and drop sets are excluded, because they are not the work — the same
+ * rule `isWorkingSet` applies everywhere else.
+ *
+ * SO IS TIMED WORK, and this comment used to claim that while the code did no
+ * such thing. Seconds are stored in the same column as reps, so a 3 × 30 s
+ * farmer's carry at 40 kg contributed 3,600 kg and outranked a 5 × 5 squat at
+ * 100 kg on the very chart the feature exists for. The lift library knows which
+ * movements are timed, and they are left out.
+ */
+export function weeklyVolume(
+  logs: WorkoutLogWithSets[],
+  today: Date,
+  weeks: number = 8
+): WeekVolume[] {
+  const byWeek = new Map<string, { volumeKg: number; sets: number }>()
+  const start = mondayOf(today)
+  start.setDate(start.getDate() - (weeks - 1) * 7)
+  const startKey = localDateKey(start)
+
+  for (const log of logs) {
+    const week = localDateKey(mondayOf(new Date(log.logged_at)))
+    if (week < startKey) continue
+    const bucket = byWeek.get(week) ?? { volumeKg: 0, sets: 0 }
+    for (const set of log.sets ?? []) {
+      if (!isWorkingSet(set) || isTimedLift(set.exercise)) continue
+      bucket.volumeKg += set.weight_kg * set.reps
+      bucket.sets += 1
+    }
+    byWeek.set(week, bucket)
+  }
+
+  return Array.from({ length: weeks }, (_, i) => {
+    const day = new Date(start)
+    day.setDate(start.getDate() + i * 7)
+    const weekStart = localDateKey(day)
+    const bucket = byWeek.get(weekStart) ?? { volumeKg: 0, sets: 0 }
+    return { weekStart, volumeKg: Math.round(bucket.volumeKg), sets: bucket.sets }
+  })
+}
+
+export interface LiftBest {
+  exercise: string
+  /**
+   * Nothing was loaded on it — a pull-up, a push-up, a plank. The list used to
+   * print "Pull-up 0 kg × 12 · est. max 0", which is not a fact about anything.
+   */
+  bodyweight: boolean
+  /** The heaviest single working set. */
+  bestWeightKg: number
+  bestWeightReps: number
+  bestWeightDate: string
+  /** The highest Epley estimate, which rewards reps as well as weight. */
+  bestEstimatedMaxKg: number
+  bestEstimatedDate: string
+}
+
+/**
+ * The best you have done on each lift, all time.
+ *
+ * TWO BESTS, BECAUSE THEY ARE DIFFERENT ACHIEVEMENTS. The heaviest single set
+ * is what people mean by a personal best. The best estimated max rewards
+ * grinding out eight at a weight you used to do five at, which is progress the
+ * heaviest-single number cannot see.
+ *
+ * The estimate is capped at ten reps: above that Epley inflates badly, and a
+ * twenty-rep set would otherwise be announced as a max nobody has ever lifted.
+ */
+export function liftBests(logs: WorkoutLogWithSets[]): LiftBest[] {
+  const best = new Map<string, LiftBest>()
+
+  for (const log of logs) {
+    const date = localDateKey(new Date(log.logged_at))
+    for (const set of log.sets ?? []) {
+      if (!isWorkingSet(set) || set.reps <= 0) continue
+      const key = set.exercise.trim().toLowerCase()
+      // A timed hold has seconds in `reps`; estimating a one-rep max from
+      // "30" would announce a max nobody has ever lifted.
+      if (isTimedLift(set.exercise)) continue
+      const estimate = set.reps > 10 ? set.weight_kg : estimateOneRepMax(set.weight_kg, set.reps)
+      const cur = best.get(key)
+      if (!cur) {
+        best.set(key, {
+          exercise: set.exercise.trim(),
+          bodyweight: set.weight_kg === 0,
+          bestWeightKg: set.weight_kg,
+          bestWeightReps: set.reps,
+          bestWeightDate: date,
+          bestEstimatedMaxKg: estimate,
+          bestEstimatedDate: date,
+        })
+        continue
+      }
+      if (
+        set.weight_kg > cur.bestWeightKg ||
+        (set.weight_kg === cur.bestWeightKg && set.reps > cur.bestWeightReps)
+      ) {
+        cur.bestWeightKg = set.weight_kg
+        cur.bestWeightReps = set.reps
+        cur.bestWeightDate = date
+        cur.bodyweight = set.weight_kg === 0
+      }
+      if (estimate > cur.bestEstimatedMaxKg) {
+        cur.bestEstimatedMaxKg = estimate
+        cur.bestEstimatedDate = date
+      }
+    }
+  }
+
+  return [...best.values()].sort((a, b) => b.bestEstimatedMaxKg - a.bestEstimatedMaxKg)
 }

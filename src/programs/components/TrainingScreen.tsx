@@ -23,7 +23,11 @@ import Link from "next/link"
 import { ProgramsApp } from "./ProgramsApp"
 import { BackLink } from "@/components/BackLink"
 import { Segmented } from "./ui"
-import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment } from "../types"
+import { getProgram } from "../data/catalog"
+import { effectiveProgram, scheduleDays } from "../customize"
+import { isWeekdayAnchored } from "../programsService"
+import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment, UnitSystem } from "../types"
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 /**
  * 800-odd lines of set rows, templates, heatmap and personal-record detection,
@@ -32,11 +36,16 @@ import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment } from "../types"
 const WorkoutLogger = lazy(() =>
   import("@/src/health/components/WorkoutLogger").then((m) => ({ default: m.WorkoutLogger }))
 )
-const LiftHistory = lazy(() =>
-  import("./LiftHistory").then((m) => ({ default: m.LiftHistory }))
+// Small and always shown on this tab, so not worth splitting out.
+const StartLooseWorkout = lazy(() =>
+  import("./StartLooseWorkout").then((m) => ({ default: m.StartLooseWorkout }))
 )
+/* Two more tabs, each a year of workouts and a pile of charts. Nobody who stays
+   on today's session downloads either. */
+const HistoryTab = lazy(() => import("./HistoryTab").then((m) => ({ default: m.HistoryTab })))
+const ProgressTab = lazy(() => import("./ProgressTab").then((m) => ({ default: m.ProgressTab })))
 
-type Tab = "session" | "anything"
+type Tab = "session" | "history" | "progress" | "anything"
 
 interface Props {
   initialActive: ProgramEnrollment[]
@@ -48,6 +57,35 @@ interface Props {
 }
 
 export function TrainingScreen({ initialActive, initialPast, initialDetail, live }: Props) {
+  const running = initialActive[0]
+  const unit: UnitSystem = running?.unitSystem === "lb" ? "lb" : "kg"
+  /**
+   * Training days a week the running program asks for — ONLY when it says so.
+   *
+   * Counting the day templates is wrong and was the first thing I did: a
+   * rotation like StrongLifts has two of them (A and B) and is trained three
+   * times a week, so the screen read "2 of 2" to somebody who had two sessions
+   * still to do. No program in the catalogue declares a weekly frequency, so
+   * there is nothing to read.
+   *
+   * A schedule that PINS WEEKDAYS does state it — "Monday, Wednesday, Friday"
+   * is a target — and that is the only case with a real answer. Everything else
+   * gets no target, and the view says "3 so far" instead of inventing one.
+   */
+  const plannedPerWeek = (() => {
+    if (!running) return 0
+    const catalog = getProgram(running.program_id)
+    if (!catalog) return 0
+    try {
+      const schedule = effectiveProgram(catalog, running.customSchedule).schedule
+      if (!isWeekdayAnchored(schedule)) return 0
+      return scheduleDays(schedule).length
+    } catch {
+      // A schedule this build cannot read is not a reason to break the page.
+      return 0
+    }
+  })()
+
   /**
    * The default is DECIDED, not flickered into.
    *
@@ -69,9 +107,15 @@ export function TrainingScreen({ initialActive, initialPast, initialDetail, live
         <h1 className="mb-1 text-2xl font-bold">Training</h1>
         {/* Training and the plan that produced it were two places that never
             referred to each other. */}
+        {/* THE LIVE ADDRESS, not the bench one. This pointed at
+            `/test/life-mastery`, and every page under `/test` answers 404 in
+            production by design (`app/test/layout.tsx`) — so on the deployed
+            site the one link joining training to the plan it belongs to was a
+            dead end. `/dashboard/goals/plan` is the same flow with the account
+            behind it, and is where the rest of the app already sends people. */}
         <p className="mb-3 text-sm text-muted-foreground">
           Part of your{" "}
-          <Link href="/test/life-mastery" className="underline underline-offset-2 hover:text-foreground">
+          <Link href={LIFE_MASTERY} className="underline underline-offset-2 hover:text-foreground">
             Life Mastery plan
           </Link>
           .
@@ -83,13 +127,30 @@ export function TrainingScreen({ initialActive, initialPast, initialDetail, live
             value={tab}
             onChange={(t) => setPicked(t)}
             options={[
-              { value: "session" as Tab, label: "Today's session" },
+              { value: "session" as Tab, label: "Today" },
+              { value: "history" as Tab, label: "History" },
+              { value: "progress" as Tab, label: "Progress" },
               { value: "anything" as Tab, label: "Anything else" },
             ]}
           />
         </div>
 
-        {tab === "session" ? (
+        {/**
+          * WHAT THE UNIT AND THE WEEKLY TARGET COME FROM.
+          *
+          * The running program decides both: its own unit, and how many days it
+          * asks for in a week. With nothing running there is no target, and
+          * "0 of 0" is not a goal — the progress view says "3 so far" instead.
+          */}
+        {tab === "history" ? (
+          <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
+            <HistoryTab unit={unit} />
+          </Suspense>
+        ) : tab === "progress" ? (
+          <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
+            <ProgressTab plannedPerWeek={plannedPerWeek} unit={unit} />
+          </Suspense>
+        ) : tab === "session" ? (
           <ProgramsApp
             initialActive={initialActive}
             initialPast={initialPast}
@@ -98,19 +159,31 @@ export function TrainingScreen({ initialActive, initialPast, initialDetail, live
           />
         ) : (
           <div className="space-y-8">
-            <div>
-              <p className="mb-3 text-sm text-muted-foreground">
+            {/* DOING ONE NOW comes before writing one up. The set-by-set screen
+                could only be opened by starting today's prescribed session, so
+                anything improvised had to be reconstructed from memory
+                afterwards. */}
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
                 Anything you did that isn&apos;t today&apos;s session — a class, a run, a session you
                 improvised. It counts towards your tracked sessions just the same.
+              </p>
+              <Suspense fallback={null}>
+                <StartLooseWorkout live={live} />
+              </Suspense>
+            </div>
+
+            <div>
+              <p className="mb-3 text-sm text-muted-foreground">
+                Or write up something you have already done.
               </p>
               <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
                 <WorkoutLogger />
               </Suspense>
             </div>
-            {/* Something you read, not something you do. */}
-            <Suspense fallback={null}>
-              <LiftHistory />
-            </Suspense>
+            {/* "Your lifts over time" moved to the Progress tab, which is
+                where somebody goes to read rather than to log. Leaving a copy
+                here meant the same chart on two tabs. */}
           </div>
         )}
       </div>

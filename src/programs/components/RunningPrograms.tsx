@@ -26,7 +26,7 @@
 import { useState } from "react"
 import { useActiveEnrollments } from "../hooks/useEnrollment"
 import { Loader2 } from "lucide-react"
-import { getProgram } from "../data/catalog"
+import { getProgram, enrollmentName } from "../data/catalog"
 import { LEVEL_LABELS } from "../config"
 import type { ProgramEnrollment } from "../types"
 
@@ -91,7 +91,7 @@ export function RunningPrograms({ planDays = [], onEnded, tone = "dark" }: Props
    * week you wrote by hand is not wrong just because you are also on a program,
    * and a program is not wrong just because your plan says something else.
    */
-  const names = enrollments.map((e) => getProgram(e.program_id)?.name ?? e.program_id)
+  const names = enrollments.map(enrollmentName)
   /**
    * A program is only "forgotten" once it has had time to be forgotten.
    *

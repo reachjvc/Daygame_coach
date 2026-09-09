@@ -21,10 +21,9 @@ import { Check, Plus, Trash2 } from "lucide-react"
 import type { NsPlan } from "@/src/goals/types"
 import { EXPERIENCES_COPY, EXPERIENCE_PROMPTS } from "@/src/goals/data/northStarStart"
 import { experienceCount, parseGoalDump } from "@/src/goals/northStarService"
-import { GeneratePanel, type GenerateHandlers } from "./Generate"
 import { RampHeader } from "./StartRamps"
 
-export interface ExperienceHandlers extends GenerateHandlers {
+export interface ExperienceHandlers {
   onAddExperiences: (text: string, areaId: string | null) => void
   onToggleExperience: (id: string) => void
   onPromoteExperience: (id: string, areaId: string) => void
@@ -81,11 +80,6 @@ export function ExperiencesRamp({
           {EXPERIENCES_COPY.add(lines.length)}
         </button>
       </div>
-
-      {/* The door where a model earns its place most: "twenty things to have
-          done" is exactly the question a catalogue is useless for and a list of
-          somebody's own half-written wants is a good prompt for. */}
-      <GeneratePanel plan={plan} text={text} areaId={null} handlers={handlers} />
 
       <ExperienceList plan={plan} handlers={handlers} />
     </div>

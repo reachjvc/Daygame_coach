@@ -61,7 +61,7 @@ export function QuickActionsCard({ onQuickAddClick }: QuickActionsCardProps) {
           <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
             <div className="flex items-center gap-3">
               <Dumbbell className="size-5 text-primary" />
-              <span>Log a Workout</span>
+              <span>Training</span>
             </div>
             <ArrowRight className="size-4 text-muted-foreground" />
           </div>

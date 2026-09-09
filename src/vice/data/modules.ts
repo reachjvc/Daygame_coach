@@ -29,6 +29,7 @@
 
 import type { ViceToolId } from "../types"
 import type { TestimonialStage } from "./testimonials"
+import { viceStep } from "@/src/shared/lifeMasteryRoutes"
 
 export interface ViceModule {
   id: string
@@ -81,7 +82,7 @@ export const MODULES: ViceModule[] = [
     takeaway: "Change one route, one room or one shop before you change your mind about anything.",
     evidence:
       "Environment beats disposition across five studies. Robins' Vietnam cohort is the extreme case: the same men, the same drug, a changed setting — twenty percent withdrawal-symptomatic in country, under one percent re-addicted at home. Among untreated resolvers, changing contexts is the top theme at 69.2%.",
-    exercise: { label: "Work through the ten, top down", href: "/test/quit-vice/shortlist" },
+    exercise: { label: "Work through the ten, top down", href: viceStep("shortlist") },
     accounts: "early",
     minutes: 10,
   },
@@ -92,7 +93,7 @@ export const MODULES: ViceModule[] = [
     takeaway: "Give one person the key, and give them a script rather than an announcement.",
     evidence:
       "Gambling blockers are defeated by offshore sites, VPNs and app-offloading, and self-exclusion lists go unenforced — one man's jackpot was voided rather than his entry prevented. Porn blockers 'work only when someone else holds the key'. Money separation to a trusted person outranks every piece of software. Telling one person outperforms telling everybody: one man told his boss, HR and his parents in a single morning and relapsed at day thirty.",
-    exercise: { label: "Decide who holds what", href: "/test/quit-vice/shortlist" },
+    exercise: { label: "Decide who holds what", href: viceStep("shortlist") },
     accounts: "early",
     minutes: 10,
   },

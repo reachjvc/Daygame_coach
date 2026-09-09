@@ -100,7 +100,41 @@ const TAP_TARGET_DEBT: Record<string, number> = {
   // has to be the high-water mark or it fails at random and gets ignored.
   // Genuinely reducing this needs the page's own controls fixed, then a
   // re-measure that is stable across runs.
-  "/dashboard/goals/plan": 106,
+  // The flow moved to /life-mastery on 2026-09-09; /dashboard/goals/plan is
+  // now a redirect with no controls of its own, so the budget moved with the
+  // page that actually draws them. Left on the old key it guarded nothing and
+  // the real page was measured against zero.
+  "/life-mastery": 106,
+  /**
+   * THE VICE MODULE'S CONTROLS ARE HALF THE SIZE A FINGER NEEDS.
+   *
+   * Measured on a 390px phone, 2026-09-09: rows like "Change nothing" are 19px
+   * tall, "start over" is 48x16, the back link 80x18. The standard here is 44px.
+   *
+   * This is not new and it is not caused by the move — it was invisible because
+   * these nine pages lived under /test, which the sweep does not examine. They
+   * became product routes on 2026-09-09 and the sweep started looking. Recorded
+   * with real numbers rather than quietly excluded, so it can only go down.
+   *
+   * Fixing it is a design pass on a module whose choices are research verdicts,
+   * not a restyle to do in passing. The shape of the work: give the flow rows,
+   * the "start over" control and the step chips a 44px minimum height without
+   * making the pages a screen longer each.
+   */
+  "/life-mastery/quit-vice": 7,
+  "/life-mastery/quit-vice/experiment": 7,
+  "/life-mastery/quit-vice/gives": 7,
+  "/life-mastery/quit-vice/learn": 2,
+  // 7, not the 4 it reports when run on its own. This flow draws different
+  // numbers of controls depending on how far through it the saved state is, and
+  // a budget below the high-water mark fails at random and gets ignored — the
+  // same lesson recorded for the plan page above.
+  "/life-mastery/quit-vice/line": 7,
+  "/life-mastery/quit-vice/map": 7,
+  "/life-mastery/quit-vice/shortlist": 14,
+  "/life-mastery/quit-vice/week": 7,
+  "/life-mastery/quit-vice/where": 7,
+
   "/dashboard/inner-game": 8,
   "/dashboard/qa": 6,
   "/dashboard/scenarios": 5,

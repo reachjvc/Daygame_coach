@@ -16,7 +16,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { getProgram } from "../data/catalog"
+import { getProgram, enrollmentName } from "../data/catalog"
 import { LEVEL_LABELS } from "../config"
 import type { ProgramEnrollment } from "../types"
 
@@ -121,7 +121,7 @@ export function PastPrograms({
       <Card>
         <CardContent className="divide-y p-0">
           {(showAll ? past : past.slice(0, SHOWN)).map((e) => {
-            const name = getProgram(e.program_id)?.name ?? e.program_id
+            const name = enrollmentName(e)
             const n = e.sessionsLogged ?? 0
             // STACKED ON A PHONE. Side by side, the name was crushed to
             // "Upper / Lo…" by two buttons and the date wrapped onto three

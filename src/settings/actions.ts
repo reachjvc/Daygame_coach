@@ -17,6 +17,7 @@ import {
   createBillingPortalSession,
 } from "./settingsService"
 import { SETTINGS_CONFIG } from "./config"
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 /**
  * Helper to get authenticated user ID
@@ -102,7 +103,7 @@ export async function updatePreferredLanguage(language: string): Promise<void> {
 export async function updateCurveStyle(style: string): Promise<void> {
   const userId = await requireAuth()
   await handleUpdateCurveStyle(userId, style)
-  revalidatePath("/dashboard/goals/plan")
+  revalidatePath(LIFE_MASTERY)
 }
 
 /**

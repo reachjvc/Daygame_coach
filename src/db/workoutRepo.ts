@@ -20,6 +20,7 @@
  */
 
 import { createServerSupabaseClient } from "./supabase"
+import { readAllRows } from "./paging"
 import { getEnrollmentById, programFor, plateSetupFor } from "./programRepo"
 import { getUserTimezone } from "./settingsRepo"
 import { toDateISO, toZonedDate } from "@/src/shared/dateUtils"
@@ -623,4 +624,117 @@ export async function prescriptionForDay(userId: string, enrollmentId: string, d
     ),
     timezone: await getUserTimezone(userId),
   }
+}
+
+/**
+ * Correct the sets of a workout that is already finished.
+ *
+ * WHY THIS EXISTS. You could delete a workout you did not recognise and you
+ * could not look at it first, let alone fix it. Typing 100 where you meant 10
+ * meant losing the session and writing it again.
+ *
+ * KILOGRAMS ON THE WIRE, and this is not a detail. The first version took the
+ * number as typed and converted it with whatever unit the SERVER thought the
+ * person used. The screen picks its unit from the running program; the server
+ * picked it from the profile, or from the enrollment that owned that old
+ * workout. Nothing made those agree, so a pounds lifter with no program running
+ * saw "102.1 kg", saved, and had it stored as 46.31 kg — every set in the
+ * workout shrinking by 2.2 times, on every correction, compounding. The caller
+ * converts once, from the unit it actually displayed, and the ambiguity is
+ * gone.
+ *
+ * EVERY COLUMN SURVIVES. The first version supplied seven columns out of
+ * fifteen and routed program workouts through a writer that only understands
+ * working sets — so correcting one rep deleted the warm-ups, turned an all-out
+ * set into an ordinary one, dropped the notes and the effort scores, and wiped
+ * the record of which lifts had been skipped or added. A correction changes what
+ * it was asked to change.
+ *
+ * TWO KINDS OF WORKOUT, ONE DOOR. A session answering a program cannot just have
+ * its rows swapped: the weights of every session after it were decided by what
+ * this one said. Its sets are written the same way, and then the program is
+ * recalculated from the stored sessions.
+ */
+export async function reviseWorkout(
+  userId: string,
+  workoutId: string,
+  sets: Array<{
+    exercise: string
+    exerciseId: string | null
+    /** ALREADY in kilograms. The caller converts; the server never guesses. */
+    weightKg: number
+    reps: number
+    setNumber: number
+    kind: LiveWorkoutSet["kind"]
+    side?: "left" | "right" | null
+    notes?: string | null
+    rpe?: number | null
+  }>
+): Promise<{ recalculated: boolean }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: log, error } = await supabase
+    .from("workout_logs")
+    .select("id, enrollment_id, ended_at, started_at")
+    .eq("id", workoutId)
+    .eq("user_id", userId)
+    .maybeSingle()
+  if (error) throw new Error(`Could not read that workout: ${error.message}`)
+  if (!log) throw new Error("That workout no longer exists.")
+  if (log.started_at && !log.ended_at) {
+    throw new Error("That workout is still open — finish it before correcting it.")
+  }
+
+  /**
+   * The rows as they are, kept so a failed write can be put back.
+   *
+   * There is no transaction across two PostgREST calls, and the delete commits
+   * before the insert is attempted — so without this, a dropped connection
+   * between them left the workout with no sets at all and nothing to restore
+   * them from.
+   */
+  // Paged: this is what the workout is PUT BACK from if the write fails, so a
+  // short read here would restore a short workout and call it a rollback.
+  const previous = await readAllRows<WorkoutSetRow>("that workout's sets", (from, to) =>
+    supabase
+      .from("workout_sets")
+      .select("*")
+      .eq("log_id", workoutId)
+      .order("id", { ascending: true })
+      .range(from, to)
+  )
+
+  const rows = sets.map((set) => ({
+    log_id: workoutId,
+    exercise: set.exercise,
+    exercise_id: set.exerciseId,
+    weight_kg: round2(set.weightKg),
+    reps: set.reps,
+    set_number: set.setNumber,
+    set_kind: set.kind,
+    side: set.side ?? null,
+    notes: set.notes ?? null,
+    rpe: set.rpe ?? null,
+  }))
+
+  const { error: cleared } = await supabase.from("workout_sets").delete().eq("log_id", workoutId)
+  if (cleared) throw new Error(`Could not update that workout: ${cleared.message}`)
+
+  if (rows.length > 0) {
+    const { error: written } = await supabase.from("workout_sets").insert(rows)
+    if (written) {
+      // Put back exactly what was there. Better a correction that did not take
+      // than a workout emptied by a failed write.
+      if (previous.length > 0) {
+        await supabase.from("workout_sets").insert(previous.map(({ id, ...rest }) => ({ id, ...rest })))
+      }
+      throw new Error(`Those sets could not be saved, so the workout was left as it was: ${written.message}`)
+    }
+  }
+
+  if (log.enrollment_id) {
+    const { recalculateEnrollment } = await import("./programRepo")
+    await recalculateEnrollment(userId, log.enrollment_id)
+    return { recalculated: true }
+  }
+  return { recalculated: false }
 }

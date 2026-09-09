@@ -37,4 +37,23 @@ rewritten" was the claim; the probe above disproved it in one statement. If a
 rule must hold for *everyone*, it is a `CHECK`, a `NOT NULL`, a foreign key or a
 trigger. See `20260827_life_answers_no_update.sql` for the trigger form.
 
+**A read with no upper bound is a bug waiting for a heavy user.** The database
+returns at most 1,000 rows per request and says nothing about it — no error, no
+flag, just fewer rows than exist. It has bitten twice on real data here: a
+timetrack table holding 32,126 rows returned 1,000, and a training account
+holding 2,444 sets returned 1,000, so every workout in History lost its later
+sets and the correction screen would have deleted them for real on the next save.
+
+Use `readAllRows` from `src/db/paging.ts`, order by something unique (`id`, or
+your order with `id` after it — rows that tie can appear in two pages and push
+another off both), and chunk `in (...)` filters with `chunkIds` because those
+travel in the URL and a few thousand ids is a request the proxy rejects.
+`tests/unit/architecture.test.ts` counts the unpaged reads per file and the
+counts may only go down.
+
+**A screen that saves back what it loaded must load it itself.** The truncation
+above only destroyed data because the correction screen edited the year-long
+list it happened to be showing. Anything that replaces rows wholesale reads its
+own subject, and refuses to open when that read fails.
+
 **Verify saves at the database, not in the UI.** `supabase db query --linked` is the ground truth when the user reports "it won't save" — a swallowed `console.error` looks exactly like a success.

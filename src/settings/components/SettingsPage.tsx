@@ -298,7 +298,7 @@ export function SettingsPage({
               <CardContent className="space-y-6">
                 {/* Level and XP are not tracked by anything yet. See ComingSoon. */}
                 <ComingSoon
-                  title="Levels &amp; XP"
+                  title="Levels & XP"
                   description="Your level will follow the sessions and practice you actually log. Nothing feeds it yet, so there is no number worth showing."
                 />
 

@@ -37,6 +37,7 @@ import { buildTrackInserts, pushedRealIds, trackRows, trackTemplateId } from "@/
 import { TRACK_COPY } from "@/src/goals/data/northStar"
 import { GoalsHubContent } from "@/src/goals/components/GoalsHubContent"
 import { TrackSchedule } from "./TrackSchedule"
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 /** The batch route takes 50 at a time; the push loops until it is done. */
 const BATCH_LIMIT = 50
@@ -298,7 +299,7 @@ export function TrackTab({
         </Suspense>
         <p className="px-5 pb-4 text-[11px] text-zinc-600">
           {TRACK_COPY.hubScoped}{" "}
-          <Link href="/dashboard/goals/plan?step=today" className="underline underline-offset-2 hover:text-zinc-400 transition-colors">
+          <Link href={`${LIFE_MASTERY}?step=today`} className="underline underline-offset-2 hover:text-zinc-400 transition-colors">
             today's list
           </Link>
           .

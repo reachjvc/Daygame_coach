@@ -403,7 +403,7 @@ export function UserPreferences({
           <ComingSoon
             variant="row"
             className="rounded-lg border border-border/60 bg-muted/30 p-4"
-            title="Experience &amp; levels"
+            title="Experience & levels"
             description="Your level will follow what you actually do, rather than an answer you gave once."
           />
 

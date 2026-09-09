@@ -3,6 +3,13 @@
 Companion to `docs/plans/silent-failures.md`, which lists the 59 instances. This
 is how to stop the class rather than the instances.
 
+**Revised 2026-09-08 after an adversarial review.** The first draft was wrong in
+seven ways that would have cost real time, and one of its central proposals would
+have made a live security fault worse. Everything the review found is folded in
+below; the failure list is kept at the bottom rather than quietly dropped.
+
+---
+
 ## What changes for the person using the app
 
 Nothing new appears when everything works. The whole of this is about the moment
@@ -18,11 +25,47 @@ something does not.
   "Try again".
 - **"New best" is only claimed when the app has actually read your history.**
 - **An export that says "every set you have ever logged" contains every set.**
-- **When something fails, you are told which thing and offered a retry** — the
-  same amber strip everywhere, rather than each screen inventing its own silence.
+- **Signing in as a different person on the same device cannot show you the
+  previous person's numbers.** Latent today rather than live; see the note below.
 
 The one thing a person might dislike: screens that used to look calm and empty
 will sometimes carry a warning. That is the point. The calm was a lie.
+
+---
+
+## Read this first: a latent cross-account leak
+
+**Verified by reading the code:**
+
+- Two hooks hold their answers in module-level variables with **no user key**:
+  `useTrackingStats.ts:24` (`let statsCache`) and `useEnrollment.ts:28`
+  (`const store`).
+- **Nothing clears either when the signed-in person changes.** The only
+  invalidation is `invalidateTrackingStatsCache`, called after mutations.
+- The login page does not turn away somebody who is already signed in, so an
+  account switch is possible without leaving the app.
+
+**Verified, and it lowers the severity:** there is no sign-out control anywhere
+in the product. `app/actions/auth.ts` exports a `signOut` server action and
+nothing imports it; the only "Logout" button is on the separate admin page. So
+the obvious way to reach this — sign out, sign in as somebody else — does not
+exist yet.
+
+**NOT verified: that it reproduces end to end.** I tried and my harness was
+wrong: I navigated with a plain link, which is a full page load and clears module
+state by definition. Reaching it needs a soft navigation to the login page, which
+means clicking a Next `Link` while signed in. One exists, on the time-tracker
+page. I did not get as far as proving the leak through it.
+
+**So, stated honestly:** the unkeyed caches are real and the guard against this
+is missing, but the path to trigger it today is narrow. It becomes
+straightforward the moment a sign-out button is added — which is an obvious
+missing feature somebody will add.
+
+**Why it is Phase 0 regardless.** The plan's central proposal makes what it shows
+worse: "keep the last known value when a refresh fails" would render the first
+person's data to the second one *with an amber note saying it may be out of
+date*. A confident, well-designed lie is worse than a blank screen.
 
 ---
 
@@ -40,41 +83,39 @@ they live:
 | Hooks fetching their own data | 15 |
 | Repository reads and writes | 13 |
 | API routes | 2 |
-| Ordinary logic bugs, not this class | 5 |
+| Ordinary logic bugs, unrelated | 5 |
 
-**Thirty-nine of fifty-nine are one idiom repeated.** A component runs a fetch in
-an effect, and on failure assigns a neutral value:
+Thirty-nine of fifty-nine are the same idiom: a component fetches in an effect
+and, on failure, leaves a state variable at the empty value it was initialised
+with. There is no shared hook for loading data in this codebase, so forty-five
+components each wrote their own and most made the same choice.
 
-```ts
-} catch {
-  setSessions([])          // now the screen says "no sessions yet"
-}
-```
-
-There is no shared hook for loading data in this codebase — 45 components each
-wrote their own — so every one of them made this decision separately, and most
-made it the same wrong way. That is not forty-five bugs. It is one missing
-primitive.
+**But only about sixteen of the thirty-nine are a drop-in replacement.** The
+review read a sample, and the rest are not the same job at all: five parallel
+fetches behind one cache, a cursor-based sync with an offline queue, a state
+machine driven by a GET, a failure that gets *written into a saved review*. Those
+eleven come to well over six thousand lines and each needs its own decision.
 
 **What makes it recur is that the wrong thing is easier than the right thing.**
-Returning `[]` is one word. Distinguishing "nothing yet" from "could not ask",
-threading that to a component, and rendering it takes a design decision every
-time. So the fix is not vigilance; it is making the honest path the short one,
-and then adding a check that fails when somebody takes the short-cut anyway.
+Leaving a state variable at `[]` costs nothing to type. So the fix is not
+vigilance; it is making the honest path the short one, and then making the
+short-cut fail the build.
 
 **Roughly what it costs:**
 
 | | |
 |---|---|
-| The two primitives and their tests | half a day |
-| The ratchet that stops it recurring | half a day |
-| The eight open repository findings | half a day |
-| Migrating 39 client sites | two to four days |
+| The user-key fix, before anything else | half a day |
+| The two primitives, client and server | one to two days |
+| The guard that stops it recurring | half a day |
 | The goal "value unknown" state | one day, needs a decision |
-| The five ordinary logic bugs | half a day |
+| The eight open repository findings | one to two days |
+| The sixteen straightforward client sites | one day |
+| The eleven that each need a design | four to six days |
+| The six ordinary logic bugs | one day |
 
-The middle row is the long one and it is mechanical. Everything above it is what
-makes the fix permanent, and it is about a day.
+Nine to fourteen days in total. The part that makes it permanent is the first
+three rows, and that is about two days.
 
 ---
 
@@ -85,216 +126,218 @@ makes the fix permanent, and it is about a day.
 > is a claim about the person, and when the computation failed the app has no
 > grounds for it.
 
-"You have done 0 sessions this week" and "we could not find out how many
-sessions you did" are different sentences. Only one of them is ever true when a
-query throws, and it is not the one the app was saying.
+---
+
+## Phase 0 — stop the leak
+
+Before any of the rest, because the rest amplifies it.
+
+Both module-level stores take the user id as part of their key, and both are
+cleared when the signed-in person changes. A cache that cannot say who it belongs
+to must not survive a navigation.
+
+**Acceptance:** a browser test that signs in as one account, reads a number,
+signs out, signs in as the other, and asserts the first account's number is never
+on screen.
 
 ---
 
-## Phase 0 — one way to load data, one way to say it failed
+## Phase 1 — one way to load data, one way to say it failed
 
-Nothing else in the plan works until these exist, because every later phase is
-"use these".
+Two primitives, not one. The first draft had only the client half, and that was
+its biggest gap: two of the worst findings are in server components, which no
+client hook can reach.
 
-1. **`src/shared/useResource.ts`** — the missing primitive.
+1. **`src/shared/useResource.ts`** — for the client.
+   - Keeps the last known value on failure and marks it stale, rather than
+     blanking the screen.
+   - **Takes the user id in its key** (Phase 0).
+   - **Accepts server-rendered initial data and seeds from it once, not on every
+     render.** Eighteen components already take an `initial...` prop and five of
+     those also fetch. Seeding on every render is a bug now fixed twice in
+     `useEnrollment`.
+   - **Deduplicates by key.** Six Lair widgets each fetch `/api/goals` separately
+     today.
 
-   ```ts
-   const sessions = useResource<Session[]>("/api/sessions")
-   // sessions.data      last known value, or null
-   // sessions.state     "loading" | "ready" | "failed"
-   // sessions.stale     true when data is present but the last refresh failed
-   // sessions.retry()
-   ```
+2. **A server-side `Result<T>`** — for pages. A server component that cannot read
+   its data hands the failure down as part of `initial`, with a reason, instead of
+   catching and passing an empty array. Today `app/programs/page.tsx` catches,
+   logs, and passes `[]`, which the client hook then treats as authoritative — so
+   the page states as fact that you have no programs.
 
-   **It keeps the last known value on failure.** Blanking the screen is the
-   second-worst answer after lying about it; the person's programs and sessions
-   should stay on screen with a note that they may be out of date. This is the
-   behaviour already shipped for the training screen on 2026-09-08.
+3. **`src/shared/components/CouldNotLoad.tsx`** — the one way to say so, lifted
+   from the strip now in `ProgramsApp.tsx`. Amber, with a "Try again".
 
-2. **`src/shared/components/CouldNotLoad.tsx`** — the one way to say so. An
-   inline amber strip with the reason and a "Try again" button, lifted from the
-   one now in `ProgramsApp.tsx` so there is a single copy. Amber, not red: the
-   app is not broken, this panel is out of date.
+4. **`error.tsx` boundaries.** There are none in the app today. Every "throw
+   instead of guessing" change lands on Next's default error page until these
+   exist.
 
-3. **A skeleton is not a failure.** `state: "loading"` keeps whatever the screen
-   does today. Only `failed` is new.
-
-**Acceptance:** both have unit tests; the training screen is migrated to them as
-the first caller and its existing tests still pass.
-
----
-
-## Phase 1 — the ratchet, which is the part that makes it permanent
-
-A cleanup decays. This codebase already knows the answer to that and uses it
-three times: `tsc-baseline.json`, `writeCoverage.baseline.json`, and
-`MAX_UNASSERTED`. A number that may only fall.
-
-**`tests/unit/honestValues.test.ts` + `tests/support/honestValues.baseline.json`.**
-
-The scanner reuses `tests/support/writePaths.ts` — its `stripNonCode` and
-`functionBody` were both hardened on 2026-09-08 and are the only correct source
-walkers in the repo. It flags a function whose body:
-
-- catches, then assigns or returns `[]`, `0`, `null`, `{}` or `false`
-- destructures `const { data } = await supabase` without taking `error`
-- writes `res.ok ? x : <neutral>`
-- calls `.catch(() => <neutral>)`
-
-Each hit is keyed `file:functionName`, not by line, so it survives edits. The
-baseline marks each as:
-
-- **`honest`** — reviewed, and the neutral value really is the right answer
-  (a `catch` around `localStorage`, a parser returning `[]` for empty input)
-- **`silent`** — still lying, not fixed yet
-
-**One gap to close before the baseline is taken.** The existing scanner finds
-declarations with `/function\s+(\w+)/`, which cannot see a component written as
-`export const Thing = () => ...`. Counted across the goals, tracking and lair
-components: 247 are written as `function` and 18 as `const`. So it already
-reaches most of what matters — but those 18 would be invisible, and invisible is
-the exact failure this plan exists to stop. The declaration pattern has to cover
-both first, or the baseline is itself a silent failure.
-
-`MAX_SILENT` starts at whatever today's count is and may only fall. A new silent
-failure fails `npm test`, and the only way past it is to write the word `silent`
-into a file next to your name.
-
-**Acceptance:** the ratchet is green at today's count; deliberately adding a
-`catch { setX([]) }` to any component makes it fail.
+**Acceptance:** the first caller is `WeightTracker`, which is genuinely simple.
+The training screen comes later, because it needs the shared-store, seed-once and
+cross-screen-refresh behaviour that took two bug fixes to get right.
 
 ---
 
-## Phase 2 — the repository layer (8 open findings)
+## Phase 2 — the guard, which is what makes it permanent
 
-Small, and the highest severity per line changed. Each was re-read before being
-listed here; one of them turned out to be milder than the sweep implied, and is
-described as it actually is rather than as it was first reported.
+The first draft proposed a regex scanner over function bodies. The review showed
+it would have been close to useless: the dominant shape is a `catch` that assigns
+nothing at all, which no such rule can see, while the rules that were specified
+fire mostly on correct code — around eighty per cent false positives, most of
+them `localStorage` and JSON parsers. It also proposed reusing
+`tests/support/writePaths.ts`, which only walks `Service.ts` and `Repo.ts` files
+and cannot see a single `.tsx`.
+
+**Do it as an architecture rule instead**, where two rules of exactly this shape
+already live in `tests/unit/architecture.test.ts`: "no NEW date derived by
+converting to UTC first" and "no NEW hand-rolled week boundary", each with an
+allowlist that may only shrink.
+
+> **No new component fetches its own data.** A file under `src/**/components/`
+> may not call `fetch` unless it is on the allowlist, and the allowlist only
+> shrinks.
+
+This is stronger than the scanner and far simpler. It does not try to judge
+whether a given failure path lies; it removes the ability to write one by hand,
+which is what actually causes the class. Every migrated component comes off the
+list, so the work is visible and cannot slide back.
+
+**Acceptance:** green at today's count; adding a `fetch` to any component not on
+the list fails `npm test`.
+
+---
+
+## Phase 3 — a goal that does not know its own number
+
+**This must come before the repository work**, which the first draft had
+backwards.
+
+A period boundary zeroes every linked goal because the sync straight afterwards is
+expected to write the real number back. When that sync fails, the goal sits at the
+zero the rollover wrote. Convert the repository reads to throw first and this
+fires *more often*: today a broken scenario read is a wrong number that
+self-corrects on the next good sync; afterwards it is a goal stuck at zero for a
+week, with the streak already broken.
+
+So: `user_goals` gains a boolean for "this number is not known", the rollover
+stops zeroing a linked goal it cannot refill, the card shows the last known figure
+marked out of date, and **a streak is never broken by a number the app could not
+read.**
+
+`user_goals` grants UPDATE on all 41 of its columns, so a new column needs no new
+grant. Checked, not assumed.
+
+---
+
+## Phase 4 — the repository layer (8 open findings)
 
 1. **An error is never discarded.** `src/db/scenarioRepo.ts:58` does
-   `const { data: rows, count } = await supabase` and never looks at the error,
-   so a failed read returns zeros that are presented as measured facts — "you
-   have never practised" to somebody with 34 practice runs, and a 0 written over
-   their goal. It must throw or report instead.
-
-   `src/db/settingsRepo.ts:162` is a different and milder case, and the plan
-   originally described it wrongly: it DOES check the error and throws on a real
-   one. It falls back to UTC only when the profile row or its timezone is
-   missing, and says so — to the server log. The fault is that a person whose
-   weekly counters have quietly moved onto UTC weeks is never told, so a Sunday
-   evening session lands in the wrong week with no explanation. Lower severity,
-   and the fix is to surface it rather than to add error handling.
-2. **A refused write is not a success.** `src/db/goalRepo.ts:902` discards the
-   error from a goal update, and `:794` counts a failed rollover write as done,
-   leaving last period's number on screen as if it were this period's.
-3. **A capped read says it was capped.** `src/db/healthRepo.ts:256` caps the sets
-   query at 1000 rows, so a CSV export offering "every set you have ever logged"
-   silently loses most of a long training history. `src/db/scenarioRepo.ts:60`
-   computes counts from a capped page while the total uses the real count, so the
-   two disagree. `src/db/goalRepo.ts:966` drops a period's archive and zeroes the
-   counter anyway, under-counting the year.
-
-**Acceptance:** an integration test per finding, each checked by reverting the
-fix and confirming it fails.
+   `const { data: rows, count } = await supabase` and never looks at the error, so
+   a failed read returns zeros presented as measured facts. It must report
+   instead. Only after Phase 3.
+2. **`src/db/settingsRepo.ts:162` is a milder case and the first draft described
+   it wrongly.** It does check the error and throws on a real one; it falls back
+   to UTC only when the profile row or its timezone is missing, and says so to the
+   server log. **It must not be made to throw**: it is awaited by the dashboard's
+   server component, so throwing takes the whole page down over a wrong week
+   boundary. Surface it instead.
+3. **A refused write is not a success.** `src/db/goalRepo.ts:902` discards the
+   error from a goal update; `:794` counts a failed rollover write as done.
+4. **A capped read says it was capped.** `src/db/healthRepo.ts:250-262` has no
+   `.limit()` at all — the cap is PostgREST's server-side default, so a CSV export
+   offering "every set you have ever logged" silently loses most of a long
+   history. Proving it needs a fixture of more than a thousand set rows, and
+   paginating risks the URL length limit. **Half a day on its own.**
+   `scenarioRepo.ts:60` and `goalRepo.ts:966` are the same shape.
 
 ---
 
-## Phase 3 — the 39 client sites, in severity order
+## Phase 5 — the client sites
 
-Mechanical once Phase 0 exists: delete the hand-rolled effect, call
-`useResource`, render `CouldNotLoad` for the failed state.
+**The sixteen straightforward ones** are a drop-in: the weight, sleep and
+nutrition cards, the workout logger, the lift history, the daily review card, the
+season band, the script builder, the goals summary, and the six Lair widgets.
 
-Order by what it costs the person to be lied to:
-
-1. **wrong-number (18)** — they act on a false figure. The achievements screen
-   saying "0 of 43 unlocked" to somebody with 23 badges; a milestone's monthly
-   gain showing the lifetime total; the weekly review printing "0 completed".
-2. **missing (29)** — something silently absent, usually as "you have nothing
-   here yet". Your One Thing replaced by an invitation to write one; the whole
-   lift history and its export vanishing; the weight, sleep and nutrition cards
-   all saying "No data yet" together.
-3. **stale (12)** — out of date without saying so.
-
-Every migrated site is flipped from `silent` to `honest` in the baseline and
-`MAX_SILENT` comes down, so the work is visible and cannot slide back.
+**The eleven that are not** each need their own design and their own line item.
+The tracking stats hook has five parallel fetches behind a thirty-second cache
+with 487 dependents; the time-tracker sync is a cursor-based delta with an offline
+queue; the weekly review page writes its failure into a saved review, so no read
+primitive can fix it; the field report page loops POSTs after a save.
 
 ---
 
-## Phase 4 — a goal that does not know its own number
+## Phase 6 — the six that are not this class
 
-The one finding that needs a schema change, and the one still open from the
-2026-09-08 fixes.
+Found by the same sweep, unrelated to it:
 
-A period boundary zeroes every linked goal because the sync immediately after is
-expected to write the real number back. When that sync fails, the goal sits at
-the zero the rollover wrote, and "0/3 · auto-tracked" is indistinguishable from a
-week off. The guard added on 2026-09-08 cannot help: leaving the value "as it
-was" means leaving it at that zero.
-
-**What it takes.** `user_goals` needs to be able to hold "this number is not
-known" as distinct from zero — one boolean column. Then the rollover does not
-zero a linked goal it cannot refill, the card shows the last known figure marked
-as out of date, and **a streak is never broken by a number the app could not
-read**. That last part is the one that actually matters to a person: a
-three-week streak erased by a dropped connection.
-
-`user_goals` grants UPDATE on all 41 columns to signed-in users, so a new column
-is writable without a new grant — checked, not assumed. Nothing about permissions
-changes.
+- **The milestone monthly delta shows the lifetime total** when there is no
+  baseline row. A pure function fabricating a number, not a fetch bug, and the
+  first draft wrongly filed it under "mechanical".
+- **The week strip marks a weekday done if it was ever trained, in any week** —
+  `sessionLogsFor` applies no date filter. This was in no phase at all.
+- **"Protein target hit" counts meals, not days.**
+- **"Sleep debt this week" is the last 7 entries, not the last 7 days.**
+- **Badges the app does not recognise are dropped from the count.**
+- **"Week streak" cannot exceed 13** because only 90 days of workouts are loaded,
+  and **"New PR" is judged against those 90 days** rather than the history.
 
 ---
 
-## Phase 5 — the five that are not this class
+## Phase 7 — proving it
 
-Found by the same sweep, unrelated to it, and worth fixing while the files are
-open:
+**A browser test that breaks the server on purpose**, then asserts that no number,
+streak or empty-state sentence appears that would be a claim about the person.
 
-- **"Protein target hit" counts meals, not days**, so a day well over target can
-  score zero.
-- **"Sleep debt this week" is the last 7 entries, not the last 7 days** — miss
-  three nights and it silently reaches back a fortnight.
-- **Badges the app does not recognise are dropped from the count** with only a
-  console warning, so an older account's total quietly shrinks.
-- **"Week streak" can never exceed 13** because only 90 days of workouts are
-  loaded, and **"New PR" is judged against those 90 days** rather than the
-  history.
+**The catch the first draft missed:** Playwright's route interception only sees
+requests the browser makes. The tracking dashboard's tiles and the training
+screen's programs are resolved in server components and arrive inside the initial
+HTML, so intercepting the API never touches them — the acceptance test would have
+passed on the two screens that produced the worst findings while proving nothing.
+The server path needs fault injection behind a test-only flag.
 
----
-
-## Phase 6 — proving it, rather than believing it
-
-The acceptance test for the whole plan, and the only one that tests the rule
-rather than an instance:
-
-**A browser test that breaks the server on purpose.** Playwright intercepts a
-route, fails it, and walks the screen. The assertion is not "an error appears" —
-it is that **no number, streak or empty-state sentence appears that would be a
-claim about the person.** Run it once per major screen: dashboard, goals,
-training, health.
-
-That test is what "for good" means in practice. The ratchet stops new silent
-failures being written; this stops them being rendered.
+**And the test account must be seeded first.** "No empty-state sentence appears"
+is indistinguishable from a legitimately empty account otherwise, and the shared
+Playwright account is cleaned out by several specs.
 
 ---
 
 ## Open questions — each with a recommendation
 
-1. **What should a panel that cannot load look like?** *Recommendation:* the
-   inline amber strip with "Try again" already shipped on the training screen,
-   extracted and reused. It is unobtrusive, it names the problem, and it offers
-   the one useful action.
-2. **Keep the last known data on screen when a refresh fails, or blank it?**
-   *Recommendation:* keep it and mark it stale. Blanking loses information the
-   person had a second ago.
-3. **What does a goal card show when its metric is unknown?** *Recommendation:*
-   the last known number, greyed with a small note, and the streak untouched.
-4. **The CSV export capped at 1000 rows: paginate, or cap and say so?**
-   *Recommendation:* paginate. It is an export and completeness is its entire
-   purpose.
-5. **Should the ratchet fail `npm test`, or only warn?** *Recommendation:* fail,
-   like the three ratchets already in this repo. A warning is a thing people
-   stop reading.
-6. **All 50 remaining, or the 18 wrong-number ones first?** *Recommendation:*
-   wrong-number first, then reassess. They are the ones a person acts on.
-7. **Do the five unrelated logic bugs belong in this plan?** *Recommendation:*
-   yes, as their own phase. They were found here and they are cheap.
+1. **When a refresh fails, keep the last known data or blank it?**
+   *Recommendation:* keep it and mark it stale, **after** Phase 0, never before.
+2. **What does a goal card show when its metric is unknown?** *Recommendation:*
+   the last known number, marked, and the streak untouched.
+3. **The export capped at a thousand rows: paginate, or say so?**
+   *Recommendation:* paginate. It is an export; completeness is the point.
+4. **Should the guard fail the build?** *Recommendation:* yes, like the two
+   allowlist rules it sits beside.
+5. **All fifty remaining, or the eighteen wrong-number ones first?**
+   *Recommendation:* wrong-number first.
+6. **Do the eleven hard client sites belong in this plan at all?**
+   *Recommendation:* no. List them, cost them, and take them one at a time as
+   their own pieces of work. Folding six thousand lines of unrelated redesign into
+   a plan about honesty is how a plan stops being executable.
+
+---
+
+## What the review found wrong with the first draft
+
+Kept deliberately, because the plan is more trustworthy with it than without it.
+
+1. **The proposal amplified a live security fault.** "Keep the last known value"
+   on top of unkeyed module caches would have shown one person's data to another
+   with a confident note attached. Now Phase 0.
+2. **The guard would not have worked.** Its rules missed the dominant shape
+   entirely and fired mostly on correct code, and the scanner it proposed to reuse
+   cannot see `.tsx` files. Replaced with an architecture rule.
+3. **The phase order was backwards.** Making repository reads throw before the
+   goal "unknown" state exists converts a self-correcting wrong number into a goal
+   stuck at zero for a week.
+4. **The cost was roughly half of what it should be.** Sixteen of thirty-nine
+   client sites are drop-ins, not all thirty-nine.
+5. **Two shapes were missing:** server components, which no client hook reaches,
+   and the absence of any `error.tsx` boundary.
+6. **The acceptance test could not test the two worst screens**, because their
+   data never crosses the network the test intercepts.
+7. **Two findings were misfiled:** the milestone delta is a logic bug, not a fetch
+   bug, and the week strip was in no phase.

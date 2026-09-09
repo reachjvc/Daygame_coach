@@ -101,14 +101,15 @@ function newRunId(): string {
 /**
  * WHERE THE BACK LINK GOES, because this flow now has two homes.
  *
- * It was built as a test page and its way out said so. It is also the live
- * goal flow at /dashboard/goals/plan, and a link to /test on somebody's real
- * plan is a door out of the product. Defaults kept as they were, so the test
- * page needs no argument.
+ * It was built as a test page and its way out said so — the default sent people
+ * to /test, which does not exist in production. There is no test page any more:
+ * the flow lives at /life-mastery and that is its only home, so the default is
+ * now the Dashboard, which is where somebody who arrives here without a return
+ * address should be able to get back to.
  */
 export function NorthStarFlow({
-  backHref = "/test",
-  backLabel = "Test pages",
+  backHref = "/dashboard",
+  backLabel = "Dashboard",
   initialTab = "star",
   goalsPromise,
 }: {

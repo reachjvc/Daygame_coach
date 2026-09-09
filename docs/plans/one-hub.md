@@ -61,7 +61,7 @@ what is already there instead of making a copy.
 | Setup wizard | onboarding | **yes** | catalogue id |
 | New-goals framework | `/test/new-goals` | **yes** | `fw:` |
 | North Star → track step | North Star flow | **yes** | `ns:<run>:<goal>` |
-| **Life Mastery** | `/test/life-mastery` | **no — browser only** | — |
+| **Life Mastery** | `/life-mastery` (moved off `/test` 2026-09-09) | **no — browser only** | — |
 | Vision Plan, Life Direction, Change Your Life | `/test/*` | **no** | — |
 
 Four of them persist; four are prototypes that forget everything when you clear

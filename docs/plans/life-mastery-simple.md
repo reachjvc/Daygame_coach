@@ -1,6 +1,10 @@
 # Life Mastery, simple flow — `/test/life-mastery-v1`
 
-**Status:** superseded, kept reachable. Moved from `/test/life-mastery` when the
+**Status:** superseded, kept reachable at `/test/life-mastery-v1`. The flow that
+replaced it is no longer a bench page at all — it lives at `/life-mastery`, and
+its address is `LIFE_MASTERY` in `src/shared/lifeMasteryRoutes.ts`.
+
+Moved from `/test/life-mastery` when the
 North Star rebuild took that route — see `life-mastery-north-star.md`. Nothing
 here was deleted; the flow, its service (`lifeMasteryService.ts`) and its tests
 are untouched and it keeps its own localStorage key (`lm-simple-v1`), so the two
@@ -43,7 +47,7 @@ Checked against the transcripts, not the data files. He never prompts a five-yea
 
 | File | What |
 |---|---|
-| `app/test/life-mastery/page.tsx` | Route |
+| `app/life-mastery/page.tsx` | Route (was `app/test/life-mastery/`, moved 2026-09-09) |
 | `src/goals/components/life-mastery/LifeMasteryFlow.tsx` | Shell: rail, storage, reset |
 | `src/goals/components/life-mastery/WhyStep.tsx` | Step 1 |
 | `src/goals/components/life-mastery/AreasStep.tsx` | Step 2 |

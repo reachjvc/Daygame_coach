@@ -25,6 +25,7 @@
  * because they are possessions rather than moments.
  */
 
+import { viceStep } from "@/src/shared/lifeMasteryRoutes"
 export const PLAIN: {
   question: string
   answers: Array<{
@@ -78,7 +79,7 @@ export const GUIDED = {
       label: "Where I am with it",
       sub: "Nothing here asks you to decide anything today.",
       items: [
-        { id: "learn", label: "Nine things worth understanding", href: "/test/quit-vice/learn" as const },
+        { id: "learn", label: "Nine things worth understanding", href: viceStep("learn") },
         { id: "unsure", label: "Whether this is a problem", flow: "where" as const },
         { id: "gives", label: "What it gives me, honestly", flow: "gives" as const },
         { id: "good", label: "It is going well at the moment", tool: "tripwire" as const },

@@ -28,8 +28,15 @@ import { BackLink } from "@/components/BackLink"
 import { SetRow } from "./SetRow"
 import { RestBar } from "./RestBar"
 import { FinishSheet } from "./FinishSheet"
+import { AddLift } from "./AddLift"
 import { useLiveWorkout } from "../../hooks/useLiveWorkout"
-import { describeSets, restSecondsFor, describePlates, platesFor } from "../../programsService"
+import {
+  describeSets,
+  restSecondsFor,
+  describePlates,
+  platesFor,
+  enduranceMinutes,
+} from "../../programsService"
 import { REST_SECONDS, UNIT_CONFIG } from "../../config"
 import type {
   LiveWorkout,
@@ -70,11 +77,37 @@ export function LiveWorkoutScreen({
    */
   const [finished, setFinished] = useState<LiveWorkout | null>(null)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
+  /**
+   * Extra set rows revealed by "+ one more set", per lift.
+   *
+   * Not stored anywhere: once a row is ticked it IS a set, and the row count is
+   * derived from the sets on the workout. This only decides how many EMPTY rows
+   * are showing, which nobody needs to survive a reload.
+   */
+  const [extraRows, setExtraRows] = useState<Record<string, number>>({})
 
   const workout = live.workout
   const unitLabel = UNIT_CONFIG[unit].label
 
-  const exercises = prescription?.exercises ?? []
+  /**
+   * WHAT IS ON THE SCREEN: what the program asked for, plus anything added on
+   * the day. The squat rack is busy, you do front squats, and the app has to
+   * have somewhere to put them — otherwise the session is either logged wrong
+   * or not logged at all. Added lifts live on the workout in
+   * `adjustments.added`, so they come back on a reload like everything else.
+   */
+  const added = (live.workout ?? finished)?.adjustments.added ?? []
+  const addedIds = new Set(added.map((a) => a.exerciseId))
+  const exercises: PrescribedExercise[] = [
+    ...(prescription?.exercises ?? []),
+    ...added.map((a) => ({
+      exerciseId: a.exerciseId,
+      name: a.name,
+      // No prescription means no suggested numbers: the boxes start empty
+      // rather than pre-filled with something nobody asked for.
+      sets: [1, 2, 3].map((setNumber) => ({ setNumber, weight: 0, reps: 0 })),
+    })) as PrescribedExercise[],
+  ]
 
   /**
    * The workout the screen is describing. `live.workout` goes null the moment a
@@ -148,6 +181,31 @@ export function LiveWorkoutScreen({
     )
   }
 
+  /**
+   * The set rows to show for a lift.
+   *
+   * MORE THAN THE PLAN ASKED FOR IS STILL WHAT YOU DID. The screen rendered
+   * exactly the prescribed sets, so a sixth set had nowhere to go and a lift
+   * added on the day had no rows at all. The count is the prescription, widened
+   * to cover any set already ticked beyond it, plus whatever "+ one more set"
+   * has revealed.
+   */
+  const rowsFor = (ex: PrescribedExercise) => {
+    const done = doneByLift.get(ex.exerciseId) ?? []
+    const highestTicked = done.reduce((n, s) => Math.max(n, s.setNumber), 0)
+    /**
+     * The two terms overlap, and adding them was wrong: with three prescribed
+     * sets and one extra revealed, ticking that fourth set made `highestTicked`
+     * 4 and produced a FIFTH empty row — and another one for every set after.
+     * The count is whichever is larger, never the sum.
+     */
+    const count = Math.max(ex.sets.length + (extraRows[ex.exerciseId] ?? 0), highestTicked)
+    const last = ex.sets[ex.sets.length - 1]
+    return Array.from({ length: count }, (_, i) =>
+      ex.sets[i] ?? { ...(last ?? { weight: 0, reps: 0 }), setNumber: i + 1 }
+    )
+  }
+
   /** The last lift of a superset pair — the one the rest belongs after. */
   const isLastOfGroup = (ex: PrescribedExercise, i: number) => {
     if (!ex.supersetGroup) return true
@@ -168,7 +226,40 @@ export function LiveWorkoutScreen({
       />
 
       <div className="mx-auto max-w-2xl space-y-3 px-4 py-3">
-        {exercises.length === 0 && (
+        {/**
+          * A RUN IS A WORKOUT TOO. An endurance session prescribes blocks, not
+          * sets, so `exercises` is empty and this screen said "nothing
+          * prescribed" and offered a search box for lifts. The only place a
+          * cardio session could be logged was the old form. The blocks are the
+          * session; there is nothing to tick, and the length is asked for at
+          * the end like every other workout.
+          */}
+        {prescription?.enduranceSets && prescription.enduranceSets.length > 0 && (
+          <Card data-testid="endurance-plan">
+            <CardContent className="space-y-1.5 p-3">
+              <p className="font-medium">{prescription.dayLabel}</p>
+              <p className="text-xs text-muted-foreground">
+                About {enduranceMinutes(prescription.enduranceSets)} min
+                {prescription.summary ? ` · ${prescription.summary}` : ""}
+              </p>
+              <ol className="space-y-1 pt-1 text-sm">
+                {prescription.enduranceSets.map((set, i) => (
+                  <li key={i} className="flex items-baseline gap-2">
+                    <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                      {set.repeat > 1 ? `${set.repeat}×` : ""}
+                    </span>
+                    <span className="min-w-0">{set.blocks.map((b) => b.label).join(" → ")}</span>
+                  </li>
+                ))}
+              </ol>
+              <p className="pt-1 text-[11px] text-muted-foreground">
+                Nothing to tick off here. Press Finish when you are done and say how long it took.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {exercises.length === 0 && !prescription?.enduranceSets?.length && (
           <p className="text-sm text-muted-foreground">
             Nothing prescribed for this one — add what you did as you go.
           </p>
@@ -187,7 +278,7 @@ export function LiveWorkoutScreen({
                   <div className="min-w-0">
                     <p className="flex items-center gap-2 font-medium">
                       {ex.supersetGroup && (
-                        <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-primary">
+                        <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[11px] uppercase tracking-wide text-primary">
                           {ex.supersetGroup}
                           {i + 1}
                         </span>
@@ -195,7 +286,10 @@ export function LiveWorkoutScreen({
                       <span className="truncate">{ex.name}</span>
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {describeSets(ex, unitLabel)}
+                      {/* A lift nobody prescribed has no prescription to
+                          describe. It read "3 × 0 reps @ 0 kg", which is a plan
+                          the app invented and then printed back. */}
+                      {addedIds.has(ex.exerciseId) ? "added on the day" : describeSets(ex, unitLabel)}
                       {ex.note ? ` · ${ex.note}` : ""}
                       {isSkipped ? " · skipped" : ""}
                     </p>
@@ -232,7 +326,7 @@ export function LiveWorkoutScreen({
                 )}
 
                 {!isSkipped &&
-                  ex.sets.map((set, index) => {
+                  rowsFor(ex).map((set, index) => {
                     const ticked = done.find((s) => s.setNumber === set.setNumber && s.kind !== "warmup")
                     return (
                       <SetRow
@@ -279,11 +373,40 @@ export function LiveWorkoutScreen({
                     )
                   })}
 
-                {!isSkipped && !ex.bodyweight && ex.sets[0] && (
+                {!isSkipped && (
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <button
+                      type="button"
+                      data-testid={`add-set-${ex.exerciseId}`}
+                      onClick={() =>
+                        setExtraRows((r) => ({ ...r, [ex.exerciseId]: (r[ex.exerciseId] ?? 0) + 1 }))
+                      }
+                      className="min-h-9 rounded-md border border-dashed border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    >
+                      + one more set
+                    </button>
+                    {(extraRows[ex.exerciseId] ?? 0) > 0 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExtraRows((r) => ({
+                            ...r,
+                            [ex.exerciseId]: Math.max(0, (r[ex.exerciseId] ?? 0) - 1),
+                          }))
+                        }
+                        className="min-h-9 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent"
+                      >
+                        one fewer
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {!isSkipped && !ex.bodyweight && !addedIds.has(ex.exerciseId) && ex.sets[0]?.weight ? (
                   <p className="pt-1 text-[11px] text-muted-foreground">
                     Bar: {describePlates(platesFor(ex.sets[0].weight, unit, plates), unitLabel)}
                   </p>
-                )}
+                ) : null}
               </CardContent>
             </Card>
           )
@@ -302,6 +425,15 @@ export function LiveWorkoutScreen({
             {live.error}
           </p>
         )}
+
+        <AddLift
+          alreadyHere={exercises.map((e) => e.name)}
+          onAdd={(entry) =>
+            void live.adjust({
+              added: [...((live.workout ?? finished)?.adjustments.added ?? []), entry],
+            })
+          }
+        />
 
         <div className="flex items-center justify-between gap-2 pt-2">
           <Button variant="ghost" size="sm" className="text-destructive" onClick={() => {

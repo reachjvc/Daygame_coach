@@ -13,6 +13,7 @@
  */
 
 import { test, expect, type Page } from '@playwright/test'
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 const PLAN_KEY = 'north-star-v1'
 const RUN_KEY = 'north-star-track-run'
@@ -148,7 +149,7 @@ test.describe('Life Mastery — the track step', () => {
       },
       [PLAN_KEY, RUN_KEY, RUN, JSON.stringify(PLAN)]
     )
-    await page.goto('/test/life-mastery')
+    await page.goto(LIFE_MASTERY)
     await cleanUp(page)
     await page.reload()
   })

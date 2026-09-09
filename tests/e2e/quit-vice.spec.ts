@@ -1,5 +1,7 @@
 /**
- * End-to-end coverage for the quit-a-vice module at /test/quit-vice.
+ * End-to-end coverage for the quit-a-vice module at /life-mastery/quit-vice.
+ * It moved off /test on 2026-09-09 with the flow that links into it; these tests
+ * came with it, and they are now the coverage for a LIVE product route.
  *
  * Client-only, localStorage-backed, no API, no auth. Each test clears the key
  * and reloads so it starts from a known empty state.
@@ -12,8 +14,9 @@
  */
 
 import { test, expect, type Page } from "@playwright/test"
+import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
 
-const HUB = "/test/quit-vice"
+const HUB = QUIT_VICE
 const STORAGE_KEY = "quit-vice-v1"
 const FLOWS = ["where", "gives", "map", "experiment", "line", "week"] as const
 
@@ -394,7 +397,7 @@ test.describe("reachability", () => {
     // The stated point of the module: clickable from the Life Mastery page.
     // The routine there is a list of days you hold a line, which is the right
     // shape for a scoreboard and no help on the evening you do not hold it.
-    await page.goto("/test/life-mastery", { waitUntil: "domcontentloaded" })
+    await page.goto(LIFE_MASTERY, { waitUntil: "domcontentloaded" })
     await page.getByText("Opening your plan…").waitFor({ state: "hidden", timeout: 30_000 }).catch(() => {})
     // The routines live under this step, and only under this one: the wanting
     // half and the doing half are two steps again, and a routine is always a
@@ -407,7 +410,7 @@ test.describe("reachability", () => {
     await expect(link).toBeVisible()
     await link.click()
 
-    await expect(page).toHaveURL(/\/test\/quit-vice$/)
+    await expect(page).toHaveURL(new RegExp(`${QUIT_VICE}$`))
     await expect(page.getByRole("heading", { name: "Quitting something" })).toBeVisible()
   })
 
@@ -415,7 +418,9 @@ test.describe("reachability", () => {
     for (const flow of FLOWS) {
       await page.goto(`${HUB}/${flow}`, { waitUntil: "domcontentloaded" })
       await settled(page)
-      await page.getByRole("link", { name: "Back" }).click()
+      // The shared BackLink names where it goes ("Quit a vice") rather than
+      // saying "Back", so this asks for the control, not the wording.
+      await page.getByTestId("back-link").click()
       await expect(page.getByRole("heading", { name: "Quitting something" })).toBeVisible()
     }
   })

@@ -36,8 +36,10 @@ const AchievementsModal = lazy(() =>
  * The same component the goals page embeds — not a second copy — so the session
  * shown here and the session shown there cannot drift apart.
  */
-const ActiveProgramsPanel = lazy(() =>
-  import("@/src/programs/components/ActiveProgramsPanel").then(m => ({ default: m.ActiveProgramsPanel }))
+/* A card, not the whole session form. The dashboard used to embed every lift
+   and every set of today's session inside a panel meant to be glanced at. */
+const TrainingCard = lazy(() =>
+  import("@/src/programs/components/TrainingCard").then(m => ({ default: m.TrainingCard }))
 )
 
 export function ProgressDashboard({ initialDashboard }: { initialDashboard?: DashboardLayoutResponse }) {
@@ -134,7 +136,7 @@ export function ProgressDashboard({ initialDashboard }: { initialDashboard?: Das
             without an active program. */}
         <div className="md:col-span-2">
           <Suspense fallback={null}>
-            <ActiveProgramsPanel />
+            <TrainingCard />
           </Suspense>
         </div>
 
