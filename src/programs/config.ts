@@ -93,7 +93,10 @@ export const PLATES: Record<UnitSystem, number[]> = {
   lb: [45, 35, 25, 10, 5, 2.5, 1.25],
 }
 
-export const KG_PER_LB = 0.45359237
+/** Defined in `src/shared/weight.ts`; re-exported so this slice's imports of it
+ * keep working while there is only one definition. */
+import { KG_PER_LB } from "@/src/shared/weight"
+export { KG_PER_LB }
 
 /**
  * The default bar and smallest plate, per unit — what an ordinary gym has.

@@ -40,7 +40,7 @@ export function WeightTracker() {
     if (isNaN(numWeight) || numWeight <= 0) return
     setIsSaving(true)
     try {
-      const weightKg = unit === "lbs" ? convertWeight(numWeight, "lbs", "kg") : numWeight
+      const weightKg = unit === "lb" ? convertWeight(numWeight, "lb", "kg") : numWeight
       const res = await fetch("/api/health/weight", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -79,7 +79,7 @@ export function WeightTracker() {
           <span className="flex items-center gap-2"><Scale className="h-5 w-5" /> Body Weight</span>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setUnit(unit === "kg" ? "lbs" : "kg")}
+              onClick={() => setUnit(unit === "kg" ? "lb" : "kg")}
               className="text-xs px-2 py-1 rounded border border-border hover:bg-accent"
             >
               {unit}

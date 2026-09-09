@@ -53,12 +53,33 @@ import { scheduleDays } from "./customize"
 // Units, rounding, 1RM
 // ============================================================================
 
-export function toKg(weight: number, unit: UnitSystem): number {
-  return unit === "kg" ? weight : weight * KG_PER_LB
-}
+/**
+ * Re-exported, not reimplemented. `src/shared/weight.ts` is the one owner of the
+ * conversion — this slice and the health slice each had their own, with
+ * constants that disagreed in the sixth decimal. Kept exported from here so the
+ * nineteen existing call sites did not all have to move in one commit.
+ */
+import { toKg, fromKg, MAX_WEIGHT_KG } from "@/src/shared/weight"
+export { toKg, fromKg, MAX_WEIGHT_KG }
 
-export function fromKg(weightKg: number, unit: UnitSystem): number {
-  return unit === "kg" ? weightKg : weightKg / KG_PER_LB
+/**
+ * WHICH UNIT TO SHOW, decided once.
+ *
+ * Two places decided this and they disagreed. `TrainingScreen.tsx` read the
+ * running enrollment and fell back to kilograms — so a lifter who trains in
+ * pounds and has no program running read their whole history converted, with no
+ * warning and no way to say otherwise. `unitFor` in `workoutRepo.ts` read the
+ * account instead. Same question, two answers.
+ *
+ * `null` means NOT KNOWN YET, and callers must show that rather than picking
+ * one. That is the whole point: kilograms is a real answer for somebody who
+ * trains in kilograms, and a lie for everybody else.
+ */
+export function unitForDisplay(
+  enrollmentUnit: UnitSystem | null | undefined,
+  accountUnit: UnitSystem | null | undefined
+): UnitSystem | null {
+  return enrollmentUnit ?? accountUnit ?? null
 }
 
 /**

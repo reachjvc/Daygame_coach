@@ -16,6 +16,7 @@
 
 import { z } from "zod"
 import { entryWhenFields, hasDateIfTime, NEEDS_DATE_FOR_TIME } from "@/src/health/schemas"
+import { MAX_WEIGHT_KG } from "@/src/shared/weight"
 
 const positiveInt = (max: number) => z.number().int().min(1).max(max)
 
@@ -209,7 +210,7 @@ export const UpdateScheduleSchema = z.object({
    * dip and an unweighted pull-up all start at nothing. `.positive()` here used
    * to make them impossible to enrol.
    */
-  workingWeights: z.record(z.string(), z.number().min(0).max(1000)).optional(),
+  workingWeights: z.record(z.string(), z.number().min(0).max(MAX_WEIGHT_KG)).optional(),
 })
 
 
@@ -236,7 +237,7 @@ export const LogSessionSchema = z
             setNumber: z.number().int().positive(),
             // 0 = attempted and failed. A set not attempted has no row at all.
             reps: z.number().int().min(0).max(1000),
-            weight: z.number().min(0).max(1000),
+            weight: z.number().min(0).max(MAX_WEIGHT_KG),
           })
         ),
       })
@@ -246,7 +247,7 @@ export const LogSessionSchema = z
     // where the dashboard's invented "training hours" number came from.
     durationMin: z.number().min(1).max(600),
     intensity: z.number().int().min(1).max(5),
-    distanceKm: z.number().min(0).max(1000).optional(),
+    distanceKm: z.number().min(0).max(MAX_WEIGHT_KG).optional(),
     rpe: z.number().int().min(1).max(10).optional(),
     notes: z.string().max(1000).optional(),
     // THE DAY YOU TRAINED. A session could only be stamped "now", so a Saturday
@@ -288,7 +289,7 @@ export const StartWorkoutSchema = z.object({
 export const CompleteSetSchema = z.object({
   exerciseId: z.string().min(1).max(80).nullable(),
   exercise: z.string().min(1).max(120),
-  weight: z.number().min(0).max(1000),
+  weight: z.number().min(0).max(MAX_WEIGHT_KG),
   // 0 = attempted and failed. A set not attempted has no row.
   reps: z.number().int().min(0).max(1000),
   setNumber: z.number().int().min(1).max(50),
@@ -355,7 +356,7 @@ const DraftBody = {
    * an unweighted pull-up all start at nothing. `.positive()` on the enrollment
    * route is what used to make them impossible to enrol.
    */
-  workingWeights: z.record(z.string(), z.number().min(0).max(1000)).optional(),
+  workingWeights: z.record(z.string(), z.number().min(0).max(MAX_WEIGHT_KG)).optional(),
 }
 
 export const CreateDraftSchema = z.object({

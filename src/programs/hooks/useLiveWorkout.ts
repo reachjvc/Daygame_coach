@@ -30,6 +30,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { LiveWorkout, LiveWorkoutSet, WorkoutSummary } from "../types"
+import { toKg } from "@/src/shared/weight"
 
 const QUEUE_KEY = "live-workout-queue-v1"
 
@@ -240,7 +241,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
               // and re-sends, `weightKg` is what totals use. Optimistically they
               // are the same until the server answers in kilograms.
               weight: item.weight,
-              weightKg: prev.unit === "lb" ? item.weight * 0.45359237 : item.weight,
+              weightKg: toKg(item.weight, prev.unit),
               reps: item.reps,
               setNumber: item.setNumber,
               kind: item.kind,

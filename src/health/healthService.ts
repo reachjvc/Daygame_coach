@@ -10,6 +10,7 @@ import { weeklyStreakRun } from "@/src/shared/streakRuns"
 import { estimateOneRepMax } from "@/src/programs/programsService"
 import { libraryByName } from "@/src/programs/data/exerciseLibrary"
 import type { LoadPoint } from "@/src/programs/types"
+import { fromKg, toKg } from "@/src/shared/weight"
 import type {
   WeightLogRow,
   WeightTrend,
@@ -32,16 +33,19 @@ import type {
 // Unit Conversion
 // ============================================================================
 
-const KG_TO_LBS = 2.20462
-const LBS_TO_KG = 1 / KG_TO_LBS
-
+/**
+ * THE SECOND CONSTANT IS GONE. This slice held `KG_TO_LBS = 2.20462`, whose
+ * reciprocal is 0.45359290 — the programs slice used the exact 0.45359237, so
+ * the same weight could round differently depending on which screen read it.
+ * Both now come from `src/shared/weight.ts`.
+ */
 export function convertWeight(value: number, from: WeightUnit, to: WeightUnit): number {
   if (from === to) return value
-  return from === "kg" ? value * KG_TO_LBS : value * LBS_TO_KG
+  return from === "kg" ? fromKg(value, "lb") : toKg(value, "lb")
 }
 
 export function formatWeight(kg: number, unit: WeightUnit): string {
-  const val = unit === "kg" ? kg : kg * KG_TO_LBS
+  const val = unit === "kg" ? kg : fromKg(kg, "lb")
   return `${val.toFixed(1)} ${unit}`
 }
 

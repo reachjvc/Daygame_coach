@@ -6,7 +6,13 @@
 // Weight Tracking
 // ============================================================================
 
-export type WeightUnit = "kg" | "lbs"
+/**
+ * ONE SPELLING. This slice said "lbs" and the programs slice said "lb", so a
+ * unit could not be passed between them without a translation step somebody had
+ * to remember — and the two conversion constants behind them disagreed. Both
+ * now come from `src/shared/weight.ts`.
+ */
+export type { Unit as WeightUnit } from "@/src/shared/weight"
 export type TimeOfDay = "morning" | "post_workout" | "evening"
 
 export interface WeightLogRow {
