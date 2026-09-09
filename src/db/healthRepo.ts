@@ -377,6 +377,20 @@ export async function getLastWorkoutSets(userId: string, exercise: string): Prom
   return sets.filter((s) => s.log_id === firstLogId) as WorkoutSetRow[]
 }
 
+/**
+ * GYM SESSIONS ARE THE ONES WITH WEIGHT IN THEM.
+ *
+ * This counted every workout row whatever its `session_type`, so a week of
+ * three runs read as three gym sessions — and a goal linked to "3 gym sessions a
+ * week" was met by never touching a barbell. The same repository has
+ * type-specific reads a few lines away (`cardio`, `mobility`, `yoga`), so the
+ * column was always there to filter on; this read simply never did.
+ *
+ * `GYM_SESSION_TYPES` is the list, in one place, so the weekly and lifetime
+ * counts cannot drift apart.
+ */
+export const GYM_SESSION_TYPES = ["weights"] as const
+
 export async function getWorkoutWeeklyCount(userId: string, timezone: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
   const weekStart = weekStartInstant(timezone)
@@ -386,6 +400,7 @@ export async function getWorkoutWeeklyCount(userId: string, timezone: string): P
     .from("workout_logs")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
+    .in("session_type", GYM_SESSION_TYPES)
     .gte("logged_at", weekStart)
   )
   if (error) throw new Error(`Failed to count weekly workouts: ${error.message}`)
@@ -399,6 +414,8 @@ export async function getWorkoutCumulativeCount(userId: string): Promise<number>
     .from("workout_logs")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
+    // Same list as the weekly count above, for the same reason.
+    .in("session_type", GYM_SESSION_TYPES)
   )
   if (error) throw new Error(`Failed to count total workouts: ${error.message}`)
   return count ?? 0

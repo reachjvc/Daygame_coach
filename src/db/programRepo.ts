@@ -678,8 +678,22 @@ export async function logProgramSession(
   }
 
   // ONE RECORD. The engine's state, then the workout — which IS the session.
-  await persistState(userId, result.enrollment)
+  /**
+   * THE WORKOUT FIRST, THE WEIGHTS AFTER.
+   *
+   * These two were the other way round, with no rollback between them. Type
+   * 1000 into a weight box — a plausible slip for 100 — and the engine advanced
+   * every lift and stored it, and THEN the set insert was refused by the
+   * database's NUMERIC(5,2) column. The result was a program advanced by a
+   * session that was never recorded, and an error message about numeric
+   * overflow that no user can act on.
+   *
+   * Writing the workout first means a refused write leaves the program exactly
+   * as it was. The reverse order cannot be made safe by catching, because the
+   * state a log advanced FROM is not stored — there is nothing to put back.
+   */
   await writeWorkout(userId, enr, program, logInput, { rpe, notes, loggedAt })
+  await persistState(userId, result.enrollment)
 
   return { ...result, next: computePrescription(program, result.enrollment) }
 }

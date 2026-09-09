@@ -49,6 +49,8 @@ interface EditableSet {
   /** Carried untouched so a correction does not silently delete them. */
   side: "left" | "right" | null
   notes: string | null
+  /** The per-exercise note, carried so a correction does not delete it. */
+  exerciseNotes: string | null
   rpe: number | null
 }
 
@@ -145,6 +147,7 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
         kind: set.set_kind,
         side: set.side,
         notes: set.notes,
+        exerciseNotes: set.exercise_notes,
         rpe: set.rpe,
       }))
     )
@@ -169,6 +172,7 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
             kind: set.kind,
             side: set.side,
             notes: set.notes,
+            exerciseNotes: set.exerciseNotes,
             rpe: set.rpe,
           })),
         }),

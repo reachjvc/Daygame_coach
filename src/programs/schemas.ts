@@ -406,7 +406,7 @@ export const ReviseWorkoutSchema = z
            * with the screen, so a pounds lifter's sets were rewritten 2.2 times
            * too light. The ceiling matches the column, which stops at 999.99.
            */
-          weightKg: z.number().min(0).max(999.99),
+          weightKg: z.number().min(0).max(MAX_WEIGHT_KG),
           // 0 = attempted and failed. A set not attempted has no row.
           reps: z.number().int().min(0).max(1000),
           setNumber: z.number().int().positive().max(50),
@@ -414,6 +414,9 @@ export const ReviseWorkoutSchema = z
           // Carried through so a correction does not quietly delete them.
           side: z.enum(["left", "right"]).nullish(),
           notes: z.string().max(500).nullish(),
+          // The per-exercise note. It was NOT in this list, so it was the one
+          // thing a correction still deleted — silently, and permanently.
+          exerciseNotes: z.string().max(1000).nullish(),
           rpe: z.number().int().min(1).max(10).nullish(),
         })
       )

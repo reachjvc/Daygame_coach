@@ -668,6 +668,8 @@ export async function reviseWorkout(
     kind: LiveWorkoutSet["kind"]
     side?: "left" | "right" | null
     notes?: string | null
+    /** The per-exercise note, which a correction used to delete. */
+    exerciseNotes?: string | null
     rpe?: number | null
   }>
 ): Promise<{ recalculated: boolean }> {
@@ -713,6 +715,10 @@ export async function reviseWorkout(
     set_kind: set.kind,
     side: set.side ?? null,
     notes: set.notes ?? null,
+    // THE PER-EXERCISE NOTE. This line was missing, so correcting one rep count
+    // deleted "left shoulder felt off, cut it short" from every set of that
+    // lift — which the comment above this function says cannot happen.
+    exercise_notes: set.exerciseNotes ?? null,
     rpe: set.rpe ?? null,
   }))
 
