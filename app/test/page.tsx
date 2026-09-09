@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard, Waves, Archive, Aperture, Castle, Type } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard, Waves, Archive, Aperture, Type } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
 
 const testPages = [
   {
@@ -157,8 +158,11 @@ const testPages = [
     icon: Telescope,
   },
   {
-    name: "Life Mastery (North Star) — CANON",
-    href: "/test/life-mastery",
+    // MOVED OUT OF THE BENCH. It is the product now, not a test page, and it
+    // lives at /life-mastery. Kept on this list because this is where people
+    // look for it, and pointed at its real address.
+    name: "Life Mastery (North Star) — CANON, now live at /life-mastery",
+    href: LIFE_MASTERY,
     description: "The canonical life-planning flow, and the only one not in Archives. Thirteen steps, all reachable at any time: north star and values → your 10 and rating in each of the twelve areas → the one thing → the fork (want / will do / one routine) → templates, custom weeks, systems, experiences → focus, values, commit → track (pushes into real goals) → today",
     icon: Telescope,
   },
@@ -205,8 +209,9 @@ const testPages = [
     icon: Clapperboard,
   },
   {
-    name: "Quitting a vice",
-    href: "/test/quit-vice",
+    // Moved with Life Mastery, whose routine card links into it.
+    name: "Quitting a vice — now live at /life-mastery/quit-vice",
+    href: QUIT_VICE,
     description: "Four flows built on four positions the research disagrees about: watch it first (expected vs actual payoff), a negotiated bounded experiment with a daily task, one unconditional line, or pure environment design — plus an urge tool, a lapse debrief and a card that work with no setup. No streak counter anywhere, on purpose",
     icon: Waves,
   },
@@ -215,12 +220,6 @@ const testPages = [
     href: "/test/archive/goal-setup",
     description: "What every new account used to land in, before Life Mastery took the job at /dashboard/goals/plan: three paths (fast track / build your own / browse), the catalogue, the driven tour, the summary. Still live — it writes real goals to your account and returns to the archived hub",
     icon: Aperture,
-  },
-  {
-    name: "The Lair (the widget board)",
-    href: "/test/archive/lair",
-    description: "The configurable widget board that was at /lair, with Mission Control — its own goals surface — inside it. Still live: the board saves, and Mission Control reads and writes real goals. Kept to look at before it goes",
-    icon: Castle,
   },
   {
     name: "Goals hub (the old goals tab)",
@@ -245,7 +244,8 @@ const testPages = [
  * one is the record of a decision — but none of them is canon, and nothing
  * new should be built on them or copied out of them without saying so.
  *
- * /test/life-mastery is the canon and is deliberately NOT in this list.
+ * Life Mastery is the canon and is deliberately NOT in this list. It is not a
+ * bench page any more either — it lives at /life-mastery (LIFE_MASTERY).
  *
  * Moving a page between the two tabs is one line here. Nothing else reads it.
  */
@@ -263,7 +263,6 @@ const ARCHIVED_HREFS = new Set<string>([
   // The onboarding and the hub Life Mastery replaced in the product
   "/test/archive/goal-setup",
   "/test/archive/goals-hub",
-  "/test/archive/lair",
   // Pieces of those flows, explored on their own
   "/test/values-curation",
   "/test/curve-customization",
@@ -273,7 +272,7 @@ const ARCHIVED_HREFS = new Set<string>([
 ])
 
 const ARCHIVE_NOTE =
-  "Earlier attempts at the flow that now lives at /test/life-mastery. Kept for the record and for the decisions inside them. None of these is canon: don't build on one, and don't copy a life-area list, a goal shape or a curve out of one without checking it against the canon first."
+  "Earlier attempts at the flow that now lives at /life-mastery. Kept for the record and for the decisions inside them. None of these is canon: don't build on one, and don't copy a life-area list, a goal shape or a curve out of one without checking it against the canon first."
 
 
 export default function TestPagesIndex() {

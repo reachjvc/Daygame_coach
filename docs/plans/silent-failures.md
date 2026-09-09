@@ -3,9 +3,10 @@
 
 **09-09-2026.** Four of the Lair goal widgets named below were dead code and
 have been deleted, so nobody could ever have seen their false empty states.
-**The bug is not fixed** — it is live in `MissionControlWidget` (which those
-widget IDs actually render, on the default Goals tab) and in
-`GoalsSummarySection`. The two entries concerned say so.
+Later the same day the whole Lair slice went too — `MissionControlWidget`,
+`RecentSessionsWidget` and the rest — so every Lair entry below is now moot.
+**One live offender remains from that group: `GoalsSummarySection`**, on the
+weekly review page. That is the one still worth fixing.
 
 A sweep on 2026-09-08, after the instruction "if something is broken it should
 be shown". Five readers went through the app looking for one specific fault, and
@@ -414,9 +415,9 @@ Counts below are candidate findings, de-duplicated. Fixed ones are marked.
 ### Weekly Summary widget tells a user with goals to "Add goals"
 
 > **Resolved by deletion, 2026-09-09.** `WeeklySummaryWidget.tsx` was dead code:
-> its widget ID renders `MissionControlWidget`, and nothing imported the file.
-> Nobody could ever see this. Kept here because the *shape* of the bug below is
-> still live in `MissionControlWidget.tsx:420` — see the Lair goal widgets entry.
+> its widget ID rendered `MissionControlWidget`, and nothing imported the file.
+> Nobody could ever see this. The whole Lair slice was deleted later that day,
+> Mission Control included, so nothing here survives to be fixed.
 
 `src/lair/components/widgets/WeeklySummaryWidget.tsx:58` (deleted)
 
@@ -556,23 +557,22 @@ Counts below are candidate findings, de-duplicated. Fixed ones are marked.
 
 **How.** Always, for every user. app/api/tracking/sessions/route.ts line 19 is `return NextResponse.json(sessions)` where sessions is the array from getSessionSummaries — there is no `sessions` key to read. The same endpoint is read correctly as an array by useTrackingStats.ts:65, which is how the two surfaces disagree. The Lair page comment says explicitly "IT IS NOT A MOCK. Same page, same widgets, same real data."
 
-**Rendered by** RecentSessionsWidget lines 47-58 — "No sessions yet / Start your first session" — on the archived-but-live Lair board at /test/archive/lair (widgetRegistry.ts:110)
+**Rendered by** RecentSessionsWidget lines 47-58 — "No sessions yet / Start your first session" — on the Lair board. Moot since 2026-09-09: the slice, the board and `/test/archive/lair` were all deleted.
 
 
 ### Lair goal widgets tell you that you have no goals and no streaks when /api/goals fails
 
-> **Narrowed, 2026-09-09.** Four of the five widgets named below —
-> `TodayGoalsWidget`, `GoalStreaksWidget`, `GoalProgressWidget`,
-> `WeeklySummaryWidget` — were dead code and have been deleted. Their widget IDs
-> all render `MissionControlWidget`, so no user ever saw their empty states.
+> **Resolved by deletion, 2026-09-09.** All five widgets named below were
+> deleted — four were already dead code, and `MissionControlWidget`, the one
+> their IDs actually rendered, went with the rest of the Lair slice the same
+> day. The Lair had been archived at `/test/archive/lair`, which 404s in
+> production, so none of these empty states was reachable by a real user.
 >
-> **The bug itself is NOT fixed.** It is live in the two survivors:
-> `MissionControlWidget.tsx:420` (the widget those four IDs actually render, and
-> the one on the default Goals tab) and `GoalsSummarySection.tsx:47-61`. Fixing
-> those two fixes what a person can actually hit.
+> **`GoalsSummarySection.tsx:47-61` is the one survivor and is still broken.**
+> It is on the weekly review page, which people do reach. Same shape: only the
+> success branch sets state, and the initial `[]` is rendered as fact.
 
-`src/lair/components/widgets/MissionControlWidget.tsx:420` (live)
-`src/lair/components/widgets/TodayGoalsWidget.tsx:24` (deleted)
+`src/tracking/components/GoalsSummarySection.tsx:47-61` (live — fix this one)
 
 **What a person sees.** Four widgets on the Lair board make four confident statements about the person: "No daily goals set", "Complete goals consistently to build streaks", "No goals yet. Set your first goal!", and a weekly summary of zeros. All four are the new-user copy, all four are shown to somebody with a dozen active goals and a 40-day streak, and none of them mentions that anything went wrong. WeeklySummaryWidget is the worst of the four because it renders computed numbers — a completion rate and a total streak-day count derived from an empty list — rather than an empty state.
 

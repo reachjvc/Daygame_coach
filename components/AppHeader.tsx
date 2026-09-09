@@ -59,8 +59,9 @@ export function AppHeader({
         testId: "header-dashboard-link",
       })
     }
-    // NO LAIR LINK. The Lair is archived at /test/archive/lair — it was a
-    // second goals surface, and the app is being consolidated onto one.
+    // NO LAIR LINK. The Lair was a second goals surface, and the app is being
+    // consolidated onto one. Archived on 2026-09-02, deleted outright on
+    // 2026-09-09 — slice, repo, API route and Mission Control with it.
     // NO GOALS LINK. The hub is archived at /test/archive/goals-hub, and the
     // navigation is being rebuilt around one consolidated surface rather than a
     // goals entry sitting beside a tracking entry.

@@ -71,7 +71,6 @@ export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   Calendar: ["date display", "date pickers", "time-related stats"],
   CalendarCheck: ["habit consistency", "build-the-habit objective"],
   CalendarDays: ["per-goal target date pickers"],
-  Castle: ["the lair nav"],
   CheckCircle2: ["completed scenarios"],
   CircleHelp: ["critical questions", "key stats", "goals step tour trigger"],
   Clock: ["duration/time display", "projected timelines", "time settings"],

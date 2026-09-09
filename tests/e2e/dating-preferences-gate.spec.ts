@@ -24,8 +24,13 @@ test.describe('signing in does not ask dating questions', () => {
     await expect(page).toHaveURL(/\/dashboard/, { timeout: T })
   })
 
-  test('the Lair does not send you to a questionnaire it never reads', async ({ page }) => {
-    await page.goto('/dashboard/lair', { timeout: T })
+  // Was `/dashboard/lair`, which had already 404'd since the Lair was archived
+  // on 2026-09-02 — so the assertion passed on a missing page and proved
+  // nothing. The Lair was deleted outright on 2026-09-09. Inner Game is used
+  // instead because it is a live surface that `onboarding_completed` gated in
+  // the same way, so the test again asserts something that can actually fail.
+  test('inner game does not send you to a questionnaire it never reads', async ({ page }) => {
+    await page.goto('/dashboard/inner-game', { timeout: T })
     await expect(page).not.toHaveURL(/\/preferences/, { timeout: T })
   })
 })

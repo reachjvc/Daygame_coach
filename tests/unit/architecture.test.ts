@@ -307,6 +307,7 @@ describe('Architecture Compliance', () => {
         .filter((f) => !f.endsWith('.d.ts'))
     }
 
+
     test('no NEW date derived by converting to UTC first', () => {
       const offenders: string[] = []
       for (const file of sourceFiles()) {
@@ -375,9 +376,13 @@ describe('Architecture Compliance', () => {
      * THE GOALS HUB IS ARCHIVED, AND PRODUCTION MUST NOT LINK AT IT.
      *
      * `/dashboard/goals`, `/dashboard/goals/setup` and `/lair` were deleted on
-     * 2026-09-02. The hub is at `/test/archive/goals-hub` and the Lair at
-     * `/test/archive/lair`, both to be inspected and then deleted outright;
+     * 2026-09-02. The hub is at `/test/archive/goals-hub`;
      * `/dashboard/goals/plan` is the goal surface the product keeps.
+     *
+     * The Lair finished that journey on 2026-09-09: the whole slice, its repo,
+     * its API route and `/test/archive/lair` are gone, Mission Control with
+     * them. `/lair` is still checked below because a link to a deleted route is
+     * exactly as broken now as it was when the route was merely archived.
      *
      * Two things this catches. A link left pointing at a route that now 404s —
      * there were six, in the header, the tab bar, Mission Control, the inner-game
@@ -398,8 +403,8 @@ describe('Architecture Compliance', () => {
             offenders.push(`${relativePath}: links to ${match[1]}`)
           }
 
-          // `/lair` went the same way — the board is at /test/archive/lair. The
-          // API it saves through, `/api/lair`, is still live and is not this.
+          // `/lair` went the same way. `/api/lair` was deleted with the slice,
+          // so there is no longer a live API path this could collide with.
           for (const match of content.matchAll(/["'`](\/lair(?!\w)[^"'`]*)["'`]/g)) {
             offenders.push(`${relativePath}: links to ${match[1]}`)
           }
@@ -408,13 +413,6 @@ describe('Architecture Compliance', () => {
           // other, so only non-archive files are checked.
           if (relativePath.startsWith('app/test/')) continue
 
-          // Mission Control links to the archived hub. It is not production
-          // linking into the archive: the Lair it lives in is archived too, so
-          // this is one archived surface pointing at another. The file is still
-          // under src/, which is the only reason the path check does not already
-          // exempt it — and it is listed here so that deleting the archive
-          // leaves an obvious, failing breadcrumb.
-          if (relativePath === 'src/lair/components/widgets/MissionControlWidget.tsx') continue
           for (const match of content.matchAll(/["'`](\/test\/archive\/[^"'`]*)["'`]/g)) {
             offenders.push(`${relativePath}: production links into the archive (${match[1]})`)
           }
@@ -573,6 +571,380 @@ describe('Architecture Compliance', () => {
 
       expect(missingRule, `Badges with no rule: ${missingRule.join(', ')}`).toHaveLength(0)
       expect(missingInfo, `Badges with no label: ${missingInfo.join(', ')}`).toHaveLength(0)
+    })
+  })
+
+  /**
+   * Loading data is one job, and it should be done in one place.
+   */
+  describe('Screens and the data they show', () => {
+    function sourceFiles(): string[] {
+      return getAllFiles(path.join(projectRoot, 'src'), /\.tsx?$/).filter((f) => !f.endsWith('.d.ts'))
+    }
+    /**
+     * SCREENS DO NOT FETCH THEIR OWN DATA — the allowlist only shrinks.
+     *
+     * WHY THIS RULE EXISTS. There was no shared way to load data, so 69
+     * components each wrote their own, and each made the same decision
+     * separately about what to do when the request failed. Most made it the
+     * same wrong way:
+     *
+     *     } catch {
+     *       setSessions([])        // the screen now says "no sessions yet"
+     *     }
+     *
+     * A sweep on 2026-09-08 found 59 places where a failed computation is shown
+     * to a person as a plausible value — "0 of 3 sessions" to somebody who
+     * trained three times, "you have no programs" to somebody three weeks into
+     * one. Thirty-nine of the 59 were this one idiom. That is not 39 bugs, it is
+     * one missing primitive, and the reason it keeps happening is that leaving a
+     * state variable at `[]` costs nothing to type while telling the truth costs
+     * a design decision every time.
+     *
+     * So the fix is not vigilance. It is removing the ability to write one by
+     * hand: a new screen must go through the shared loader, which has a third
+     * state for "could not find out". Everything below is what existed when the
+     * rule was written. Migrating one means deleting its line.
+     *
+     * The full list of what each of these gets wrong is in
+     * `docs/plans/silent-failures.md`; the plan for finishing them is in
+     * `docs/plans/honest-values.md`.
+     */
+    const COMPONENTS_THAT_FETCH_THEIR_OWN_DATA = new Set([
+      'src/exercising/components/ExercisingPage.tsx',
+      'src/goals/components/GoalBadges.tsx',
+      'src/goals/components/GoalCatalogPicker.tsx',
+      'src/goals/components/GoalFormModal.tsx',
+      'src/goals/components/GoalTimeSettingsDialog.tsx',
+      'src/goals/components/GoalTriage.tsx',
+      'src/goals/components/GoalsHubContent.tsx',
+      'src/goals/components/HeatmapCalendar.tsx',
+      'src/goals/components/WeeklyReviewDialog.tsx',
+      'src/goals/components/new-goals/LabGoalEditor.tsx',
+      'src/goals/components/new-goals/NewGoalsFlow.tsx',
+      'src/goals/components/north-star/Generate.tsx',
+      'src/goals/components/north-star/OneThingBox.tsx',
+      'src/goals/components/north-star/SeasonBand.tsx',
+      'src/goals/components/north-star/TodayTab.tsx',
+      'src/goals/components/north-star/TrackTab.tsx',
+      'src/goals/components/north-star/WorkoutPrograms.tsx',
+      'src/goals/components/north-star/useOneThing.ts',
+      'src/goals/components/setup/GoalSetupWizard.tsx',
+      'src/goals/components/tree-of-life/TreeOfLifeView.tsx',
+      'src/goals/components/vision-plan/GoalListReview.tsx',
+      'src/goals/components/vision-plan/VisionPlanLab.tsx',
+      'src/health/components/CorrelationPanel.tsx',
+      'src/health/components/NutritionTracker.tsx',
+      'src/health/components/SleepTracker.tsx',
+      'src/health/components/WeightTracker.tsx',
+      'src/health/components/WorkoutLogger.tsx',
+      'src/inner-game/components/InnerGamePage.tsx',
+      'src/profile/components/InteractiveWorldMap.tsx',
+      'src/programs/components/CustomProgramBuilder.tsx',
+      'src/programs/components/EditActiveProgram.tsx',
+      'src/programs/components/HistoryTab.tsx',
+      'src/programs/components/LiftHistory.tsx',
+      'src/programs/components/PastPrograms.tsx',
+      'src/programs/components/ProgramDetail.tsx',
+      'src/programs/components/ProgramsApp.tsx',
+      'src/programs/components/ProgressTab.tsx',
+      'src/programs/components/ProgressionView.tsx',
+      'src/programs/components/RunningPrograms.tsx',
+      'src/programs/components/SavedWeeks.tsx',
+      'src/programs/components/StartLooseWorkout.tsx',
+      'src/programs/components/TodayCard.tsx',
+      'src/programs/components/TodaySessionWidget.tsx',
+      'src/programs/components/TrainingCard.tsx',
+      'src/programs/components/WeekStrip.tsx',
+      'src/qa/components/QAPage.tsx',
+      'src/scenarios/components/ChatWindow.tsx',
+      'src/scenarios/components/ScenarioLab.tsx',
+      'src/timetrack/components/SettingsView.tsx',
+      'src/tracking/components/CustomReportBuilder.tsx',
+      'src/tracking/components/DailyReviewPage.tsx',
+      'src/tracking/components/FieldReportPage.tsx',
+      'src/tracking/components/GoalsSummarySection.tsx',
+      'src/tracking/components/QuickAddModal.tsx',
+      'src/tracking/components/SessionDetailPage.tsx',
+      'src/tracking/components/SessionTrackerPage.tsx',
+      'src/tracking/components/WeeklyReviewPage.tsx',
+      'src/tracking/components/dashboard/DailyReviewCard.tsx',
+    ])
+
+
+    /**
+     * TEXT NOBODY CAN READ — the allowlist only shrinks.
+     *
+     * Two habits, both of which make a sentence technically present and
+     * practically invisible: a 10px or 10.5px font, and `text-zinc-600` on a
+     * dark card, which is under the contrast floor. Between them they carry
+     * real information — which day is done, whether a number is ours or the
+     * program author's, what a failed save actually said.
+     *
+     * 11px is the floor here and `text-zinc-500` the darkest grey, because
+     * those are what the training screens now use. Everything listed below
+     * predates the rule; fixing a file means deleting its line.
+     */
+    const UNREADABLE_TEXT_ALLOWED = new Set([
+      'src/goals/components/north-star/AreaBuilder.tsx',
+      'src/goals/components/north-star/AreaDialog.tsx',
+      'src/goals/components/north-star/AreaGoals.tsx',
+      'src/goals/components/north-star/AreaGoalsDialog.tsx',
+      'src/goals/components/north-star/BuildBoard.tsx',
+      'src/goals/components/north-star/BuildYourOwn.tsx',
+      'src/goals/components/north-star/Experiences.tsx',
+      'src/goals/components/north-star/FocusTab.tsx',
+      'src/goals/components/north-star/Generate.tsx',
+      'src/goals/components/north-star/GoalCard.tsx',
+      'src/goals/components/north-star/GoalLibrary.tsx',
+      'src/goals/components/north-star/GoalOverview.tsx',
+      'src/goals/components/north-star/GuidedBuild.tsx',
+      'src/goals/components/north-star/IdealDay.tsx',
+      'src/goals/components/north-star/JournalTab.tsx',
+      'src/goals/components/north-star/MilestonesTab.tsx',
+      'src/goals/components/north-star/NorthStarFlow.tsx',
+      'src/goals/components/north-star/NowTab.tsx',
+      'src/goals/components/north-star/OneThingBox.tsx',
+      'src/goals/components/north-star/OneThingEcho.tsx',
+      'src/goals/components/north-star/OneThingTab.tsx',
+      'src/goals/components/north-star/PathPicker.tsx',
+      'src/goals/components/north-star/RecapTab.tsx',
+      'src/goals/components/north-star/ReviewTab.tsx',
+      'src/goals/components/north-star/RoutineCard.tsx',
+      'src/goals/components/north-star/ScoreRow.tsx',
+      'src/goals/components/north-star/SentenceBox.tsx',
+      'src/goals/components/north-star/StarTab.tsx',
+      'src/goals/components/north-star/StartRamps.tsx',
+      'src/goals/components/north-star/TodayTab.tsx',
+      'src/goals/components/north-star/TrackSchedule.tsx',
+      'src/goals/components/north-star/TrackTab.tsx',
+      'src/goals/components/north-star/ValueBrowser.tsx',
+      'src/goals/components/north-star/ValuesSoFar.tsx',
+      'src/goals/components/north-star/ValuesWork.tsx',
+      'src/goals/components/north-star/WeekGrid.tsx',
+      'src/goals/components/north-star/WorkoutPrograms.tsx',
+      'src/programs/components/CustomProgramBuilder.tsx',
+      'src/programs/components/EditActiveProgram.tsx',
+      'src/programs/components/ProgramEditor.tsx',
+      'src/programs/components/RunningPrograms.tsx',
+      'src/programs/components/WeekStrip.tsx',
+      'src/programs/components/ui.tsx',
+    ])
+
+    function unreadableText(): string[] {
+      return getAllFiles(path.join(projectRoot, 'src'), /\.tsx?$/)
+        .map((f) => path.relative(projectRoot, f))
+        .filter((rel) => rel.startsWith('src/programs') || rel.startsWith('src/goals/components/north-star'))
+        .filter((rel) => /text-\[10(\.5)?px\]|text-zinc-600/.test(fs.readFileSync(path.join(projectRoot, rel), 'utf-8')))
+    }
+
+    test('no NEW text too small or too faint to read', () => {
+      const offenders = unreadableText().filter((rel) => !UNREADABLE_TEXT_ALLOWED.has(rel))
+      expect(
+        offenders,
+        'These use a 10px font or text-zinc-600, which on a dark card is below\n' +
+          'the contrast floor. Use 11px or larger and text-zinc-500 or lighter:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+    })
+
+    test('the unreadable-text allowlist only shrinks', () => {
+      const still = new Set(unreadableText())
+      const cleaned = [...UNREADABLE_TEXT_ALLOWED].filter((f) => !still.has(f))
+      expect(
+        cleaned,
+        `These are fixed — remove them from UNREADABLE_TEXT_ALLOWED:\n${cleaned.join('\n')}`,
+      ).toHaveLength(0)
+    })
+
+    test('no NEW screen fetches its own data', () => {
+      const offenders = sourceFiles()
+        .map((f) => path.relative(projectRoot, f))
+        .filter((rel) => rel.includes('/components/'))
+        .filter((rel) => fs.readFileSync(path.join(projectRoot, rel), 'utf-8').includes('fetch('))
+        .filter((rel) => !COMPONENTS_THAT_FETCH_THEIR_OWN_DATA.has(rel))
+
+      expect(
+        offenders,
+        'These screens load their own data, so each one decides for itself what to\n' +
+          'show when the request fails — and the cheap answer ("nothing yet") is a\n' +
+          'claim about the person that is not true. Use the shared loader.\n' +
+          'If it genuinely has to fetch, add it to\n' +
+          'COMPONENTS_THAT_FETCH_THEIR_OWN_DATA and say why:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+    })
+
+    test('the fetching-screens allowlist only shrinks', () => {
+      const stillFetching = new Set(
+        sourceFiles()
+          .map((f) => path.relative(projectRoot, f))
+          .filter((rel) => fs.readFileSync(path.join(projectRoot, rel), 'utf-8').includes('fetch('))
+      )
+      const cleaned = [...COMPONENTS_THAT_FETCH_THEIR_OWN_DATA].filter((f) => !stillFetching.has(f))
+      expect(
+        cleaned,
+        `These no longer fetch — remove them from COMPONENTS_THAT_FETCH_THEIR_OWN_DATA:\n${cleaned.join('\n')}`,
+      ).toHaveLength(0)
+    })
+  })
+
+  describe('Reads that outgrow one page', () => {
+    /**
+     * NO NEW UNPAGED READ — the numbers only go down.
+     *
+     * WHAT GOES WRONG. The database will not return more than 1,000 rows in one
+     * response, and it does not say so. No error, no flag, just fewer rows than
+     * exist — and every list, total and chart built on them is confidently
+     * wrong. It has now bitten twice on real data: a timetrack table holding
+     * 32,126 rows returned 1,000, and a training account holding 2,444 sets
+     * returned 1,000. The second one was worse than a wrong number: the missing
+     * rows were the later sets of every workout, and the correction screen saves
+     * back the list it was shown, so opening an old workout and pressing Save
+     * would have deleted them for real.
+     *
+     * WHAT COUNTS AS BOUNDED. `.range()` (which is what `readAllRows` in
+     * `src/db/paging.ts` uses), or a deliberate `.limit()`, or a read of one row
+     * — `.single()`, `.maybeSingle()` — or a count with `head: true`, which
+     * returns no rows at all.
+     *
+     * THE NUMBERS BELOW ARE A DEBT, NOT A PERMISSION. Each is how many unpaged
+     * reads that file had when the rule was written. A file may only ever go
+     * down, so adding one to a file already on the list still fails — which is
+     * the point, because a per-file allowlist would have made every future read
+     * in `healthRepo.ts` invisible. Fix one, lower the number by one.
+     */
+    const UNPAGED_READS_ALLOWED: Record<string, number> = {
+      'src/db/dashboardRepo.ts': 1,
+      'src/db/embeddingsRepo.ts': 1,
+      'src/db/goalRepo.ts': 14,
+      'src/db/healthRepo.ts': 11,
+      'src/db/lifeAnswerRepo.ts': 1,
+      'src/db/lifeChapterRepo.ts': 1,
+      'src/db/programDraftRepo.ts': 1,
+      'src/db/programRepo.ts': 5,
+      'src/db/scenarioRepo.ts': 1,
+      'src/db/trackingRepo.ts': 12,
+      'src/db/valueComparisonRepo.ts': 2,
+      'src/db/valuesRepo.ts': 3,
+    }
+
+    /** Comments and string bodies blanked, newlines kept so lines still line up. */
+    function stripNonCode(src: string): string {
+      let out = ''
+      let i = 0
+      const blank = (t: string) => t.replace(/[^\n]/g, ' ')
+      while (i < src.length) {
+        const c = src[i]
+        const n = src[i + 1]
+        if (c === '/' && n === '/') {
+          const j = src.indexOf('\n', i)
+          const end = j === -1 ? src.length : j
+          out += blank(src.slice(i, end))
+          i = end
+          continue
+        }
+        if (c === '/' && n === '*') {
+          const j = src.indexOf('*/', i + 2)
+          const end = j === -1 ? src.length : j + 2
+          out += blank(src.slice(i, end))
+          i = end
+          continue
+        }
+        if (c === '"' || c === "'" || c === '`') {
+          let j = i + 1
+          while (j < src.length && src[j] !== c) j += src[j] === '\\' ? 2 : 1
+          const end = Math.min(j + 1, src.length)
+          out += src.slice(i, end)
+          i = end
+          continue
+        }
+        out += c
+        i++
+      }
+      return out
+    }
+
+    /**
+     * The whole chained expression starting at a `.from(`.
+     *
+     * Bracket-aware, because `.select('*, workout_sets(*)')` and a `{ count }`
+     * argument both contain the characters a naive scan would stop at. It ends
+     * at a `;`, or at a newline whose next line does not continue the chain.
+     */
+    function chainAt(src: string, start: number): string {
+      let depth = 0
+      let i = start
+      for (; i < src.length; i++) {
+        const c = src[i]
+        if ('([{'.includes(c)) depth++
+        else if (')]}'.includes(c)) {
+          if (depth === 0) break
+          depth--
+        } else if (depth === 0 && c === ';') break
+        else if (depth === 0 && c === '\n') {
+          const next = src.slice(i + 1).match(/^\s*(\S)/)
+          if (!next || !['.', ')', ',', ']'].includes(next[1])) break
+        }
+      }
+      return src.slice(start, i)
+    }
+
+    const BOUNDED = [
+      /\.limit\(/,
+      /\.range\(/,
+      /\.single\(/,
+      /\.maybeSingle\(/,
+      /head:\s*true/,
+      /\.insert\(/,
+      /\.update\(/,
+      /\.upsert\(/,
+      /\.delete\(/,
+    ]
+
+    function unpagedReads(): Record<string, number> {
+      const counts: Record<string, number> = {}
+      for (const file of getAllFiles(path.join(projectRoot, 'src/db'), /\.ts$/)) {
+        const rel = path.relative(projectRoot, file)
+        const src = stripNonCode(fs.readFileSync(file, 'utf-8'))
+        let idx = -1
+        while ((idx = src.indexOf('.from(', idx + 1)) !== -1) {
+          const chain = chainAt(src, idx)
+          if (!/\.select\(/.test(chain)) continue
+          if (BOUNDED.some((r) => r.test(chain))) continue
+          counts[rel] = (counts[rel] ?? 0) + 1
+        }
+      }
+      return counts
+    }
+
+    test('no NEW read that asks for more rows than the database will return', () => {
+      const counts = unpagedReads()
+      const offenders = Object.entries(counts)
+        .filter(([rel, n]) => n > (UNPAGED_READS_ALLOWED[rel] ?? 0))
+        .map(([rel, n]) => `${rel}: ${n}, allowed ${UNPAGED_READS_ALLOWED[rel] ?? 0}`)
+
+      expect(
+        offenders,
+        'These read a table with no upper bound. Past 1,000 rows the database\n' +
+          'silently returns 1,000 and the answer is quietly wrong — a shortened\n' +
+          'history, a total that stops growing, a streak that resets.\n' +
+          'Use readAllRows from src/db/paging.ts, or say why one page is enough\n' +
+          'with an explicit .limit():\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+    })
+
+    test('the unpaged-read allowance only shrinks', () => {
+      const counts = unpagedReads()
+      const overstated = Object.entries(UNPAGED_READS_ALLOWED)
+        .filter(([rel, allowed]) => (counts[rel] ?? 0) < allowed)
+        .map(([rel, allowed]) => `${rel}: now ${counts[rel] ?? 0}, allowance still ${allowed}`)
+
+      expect(
+        overstated,
+        `Some of these are fixed. Lower the numbers in UNPAGED_READS_ALLOWED:\n${overstated.join('\n')}`,
+      ).toEqual([])
     })
   })
 

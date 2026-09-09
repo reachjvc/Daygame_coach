@@ -5,7 +5,7 @@ import {
   GOAL_CATEGORY_MAP,
   DEFAULT_CATEGORY_CONFIG,
   type GoalSuggestion,
-} from "@/src/lair/data/goalCategories"
+} from "@/src/goals/data/goalCategories"
 
 // ============================================================================
 // getCategoryConfig
