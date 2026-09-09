@@ -94,7 +94,11 @@ export function ProgressTab({ plannedPerWeek, unit }: Props) {
   const volume = weeklyVolume(logs, now, 8)
   const bests = liftBests(logs).slice(0, 8)
   const label = UNIT_CONFIG[unit].label
-  const show = (kg: number) => Math.round(fromKg(kg, unit))
+  /**
+   * Grouped, because these run to five figures. "25293 kg" is a number you have
+   * to count the digits of; "25,293 kg" is one you read.
+   */
+  const show = (kg: number) => Math.round(fromKg(kg, unit)).toLocaleString()
   const peak = Math.max(1, ...volume.map((v) => v.volumeKg))
 
   return (
@@ -125,36 +129,67 @@ export function ProgressTab({ plannedPerWeek, unit }: Props) {
             ))}
           </div>
           {/* A day that has not happened is not a day you missed. */}
-          <p className="text-[11px] text-muted-foreground">
-            Days still to come are outlined, not empty.
-          </p>
         </CardContent>
       </Card>
 
+      {/*
+        A CHART YOU CAN READ A NUMBER OFF.
+        The bars were always scaled correctly — the problem was that nothing said
+        what a bar was worth. No value axis, no unit, and labels that were
+        `weekStart.slice(8)`: a day-of-month with no month, which is where
+        "20 27 03 10 17 24 31 07" came from. A reader could see that one week was
+        taller than another and nothing else.
+      */}
       <Card>
         <CardContent className="space-y-2 p-4">
-          <h3 className="text-sm font-medium">Weight moved, per week</h3>
+          <div className="flex items-baseline justify-between gap-2">
+            <h3 className="text-sm font-medium">Weight moved, per week</h3>
+            <span className="text-[11px] text-muted-foreground">working sets only</span>
+          </div>
           {volume.every((v) => v.volumeKg === 0) ? (
             <p className="text-sm text-muted-foreground">Nothing logged in the last eight weeks.</p>
           ) : (
-            <div className="flex items-end gap-1.5" data-testid="volume-bars">
-              {volume.map((v) => (
-                <div key={v.weekStart} className="flex flex-1 flex-col items-center gap-1">
-                  <span
-                    title={`Week of ${v.weekStart}: ${show(v.volumeKg)} ${label} over ${v.sets} sets`}
-                    className="w-full rounded-t bg-primary/70"
-                    style={{ height: `${Math.max(2, (v.volumeKg / peak) * 72)}px` }}
-                  />
-                  <span className="text-[11px] tabular-nums text-muted-foreground">
-                    {v.weekStart.slice(8)}
-                  </span>
-                </div>
-              ))}
+            <div className="flex gap-2">
+              {/* The value axis: the peak and the halfway mark, with the unit on
+                  them. Two ticks is enough to read a bar off and does not crowd
+                  a 390px screen. */}
+              <div
+                className="flex w-14 shrink-0 flex-col justify-between py-0 text-right text-[11px] tabular-nums text-muted-foreground"
+                style={{ height: "72px" }}
+                aria-hidden
+              >
+                <span>{show(peak)} {label}</span>
+                <span>{show(peak / 2)}</span>
+                <span>0</span>
+              </div>
+              <div className="flex flex-1 items-end gap-1.5" data-testid="volume-bars">
+                {volume.map((v, i) => {
+                  const d = new Date(v.weekStart)
+                  // The month, printed once when it changes, so the row of
+                  // numbers is a date rather than eight loose integers.
+                  const prev = i > 0 ? new Date(volume[i - 1].weekStart) : null
+                  const newMonth = !prev || prev.getMonth() !== d.getMonth()
+                  return (
+                    <div key={v.weekStart} className="flex flex-1 flex-col items-center gap-1">
+                      <span
+                        title={`Week of ${v.weekStart}: ${show(v.volumeKg)} ${label} over ${v.sets} sets`}
+                        className="w-full rounded-t bg-primary/70"
+                        style={{ height: `${Math.max(2, (v.volumeKg / peak) * 72)}px` }}
+                      />
+                      <span className="text-[11px] tabular-nums leading-tight text-muted-foreground">
+                        {v.weekStart.slice(8)}
+                        {newMonth && (
+                          <span className="block text-[11px]">
+                            {d.toLocaleDateString(undefined, { month: "short" })}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
-          <p className="text-[11px] text-muted-foreground">
-            Working sets only. Warm-ups are not the work.
-          </p>
         </CardContent>
       </Card>
 
@@ -188,9 +223,6 @@ export function ProgressTab({ plannedPerWeek, unit }: Props) {
           )}
           {/* Two bests because they are different achievements: 100×8 is a
               harder set than 110×1, and the heaviest single cannot see it. */}
-          <p className="text-[11px] text-muted-foreground">
-            The heaviest set you have done, and the best your reps suggest you could.
-          </p>
         </CardContent>
       </Card>
 

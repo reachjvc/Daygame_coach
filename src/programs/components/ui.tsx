@@ -106,7 +106,14 @@ export function Segmented<T extends string>({
             onClick={() => onChange(option.value)}
             aria-pressed={active}
             title={option.hint}
-            className={`${size === "sm" ? "px-2 py-1" : "px-2.5 py-1.5"} text-[11px] transition-colors ${
+            /**
+             * 44px ON TOUCH, like `IconButton` above — whose own comment says an
+             * 18px control is "a coin-flip on a touchscreen". This was `py-1.5`
+             * with an 11px label and no minimum height: about 28px, and it is the
+             * only way between the four screens of the whole feature. A pointer
+             * does not need the height, so it keeps the compact size.
+             */
+            className={`${size === "sm" ? "px-2 py-1" : "px-3 py-1.5 min-h-11 sm:min-h-0 sm:px-2.5"} text-[11px] transition-colors ${
               active
                 ? "bg-sky-500/15 text-sky-200"
                 : "text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-200"

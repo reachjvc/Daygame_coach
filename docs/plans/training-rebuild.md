@@ -67,8 +67,11 @@ archive simply gone. Skip, Reset and End never check whether they worked.
 - The volume chart is decoration: eight bars of near-equal height, no axis, no
   numbers, labels "20 27 03 10 17 24 31 07" with no month and no unit.
 - The four tabs are 28px tall where the app's own rule is 44px.
-- The floating navigation button sits **on top of the rest timer** during a
-  workout, which is the one moment the screen has a job.
+- ~~The floating navigation button sits on top of the rest timer.~~
+  **Withdrawn 2026-09-09.** That circle is Next.js's own development-mode
+  indicator, not part of the app: there is no such element in the DOM, and the
+  production build does not draw it. It was in every screenshot because every
+  screenshot came from the dev server. No user has ever seen it.
 - Every Training screen ends in 64px of dead space, padding for a bottom bar
   that this route never draws.
 
@@ -957,9 +960,11 @@ and assert a prescription lands on a multiple of 2.5.
    `Segmented` uses `py-1.5` with `text-[11px]` and no minimum height, while
    `IconButton` in the same file is 44px on touch and its own comment says an
    18px control is "a coin-flip on a touchscreen". Add `min-h-11` on touch.
-2. **The navigation button covers the rest timer.** Verified in a screenshot
-   mid-workout. Either the live screen hides the global bar, or the rest bar
-   sits above it. Decide by measuring, not by guessing.
+2. ~~The navigation button covers the rest timer.~~ **Nothing to do.** It is
+   Next.js's development indicator, absent from the production build. Checked by
+   listing the DOM and by loading the production build on :3200. The lesson is
+   the one this plan keeps repeating: a screenshot from a dev server is not
+   evidence about what users see.
 3. **64px of dead space.** `src/programs/components/TrainingScreen.tsx:101`
    applies `pb-tab-bar` on a route that never mounts the bar. Remove it.
 4. **Width.** The same line is `max-w-4xl` where the dashboard it is reached

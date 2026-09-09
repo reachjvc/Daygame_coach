@@ -117,7 +117,11 @@ export function TrainingScreen({
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-4xl px-4 py-6 pb-tab-bar">
+      {/* `pb-tab-bar` reserved 64px for a bottom bar this route never mounts, so
+          every Training screen ended in a strip of dead space; and `max-w-4xl`
+          was wider than the dashboard people arrive from, so the page jumped
+          width on the way in. */}
+      <div className="mx-auto max-w-3xl px-4 py-6">
         <BackLink
           fallback="/dashboard"
           fallbackLabel="Dashboard"
@@ -139,6 +143,31 @@ export function TrainingScreen({
           </Link>
           .
         </p>
+
+        {/*
+          THE SERVER READ FAILED, AND THAT IS NOT "YOU HAVE NO PROGRAMS".
+          `app/programs/page.tsx` used to swallow the error and fall through with
+          an empty list, which this screen renders identically to a brand-new
+          account: a dumbbell, "No active program", and the catalogue — to
+          somebody three weeks into StrongLifts. It also opened on the wrong tab,
+          because that is what having no program looks like.
+        */}
+        {failed && (
+          <div
+            role="alert"
+            data-testid="training-load-failed"
+            className="mb-4 flex items-center justify-between gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400"
+          >
+            <span>Your training could not be loaded, so this page may be incomplete.</span>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="shrink-0 rounded-md border border-amber-500/40 px-2 py-1 text-xs transition-colors hover:bg-amber-500/15"
+            >
+              Try again
+            </button>
+          </div>
+        )}
 
         <div className="mb-4">
           <Segmented
