@@ -42,9 +42,10 @@ import { Crown, Gauge } from "lucide-react"
  * reported as a bug. If those reports start arriving, the fix is a line of copy
  * here, not a number.
  *
- * When progression is built, the places it has to land are this card, the Lair's
- * LevelProgressWidget, the Settings "Your Progress" card, the dashboard
- * preferences row, and onboarding step 4. Guarded by
+ * When progression is built, the places it has to land are this card, the
+ * Settings "Your Progress" card, the dashboard preferences row, and onboarding
+ * step 4. (The Lair's LevelProgressWidget was a fifth; the Lair was deleted on
+ * 2026-09-09.) Guarded by
  * tests/unit/profile/levelProgressBar.test.tsx, which fails if a digit returns.
  */
 export function LevelProgressBar() {

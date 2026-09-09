@@ -1,5 +1,10 @@
 # Onboarding & Account Creation → Deployment Ready
 
+
+**09-09-2026.** `/lair` removed from finding 10 and from the proxy-matcher
+recommendation: the route, the Lair slice and its `user_lair_config` table
+were all deleted. Nothing to guard there any more.
+
 > **⚠️ SUPERSEDED IN PART.** The first draft of this plan was written without
 > database access and got two things wrong. Both are corrected in
 > **PART 0 — GROUND TRUTH** below, which was read from the live database on
@@ -103,7 +108,7 @@ invisible to the current test suite (see Defect 9).
 | 7 | `postLoginNext` cookie is read but **never written** anywhere | Medium (dead code) | `grep postLoginNext` → 1 hit, the reader |
 | 8 | `requireAccess()`/`hasAccess()` are used by **zero** routes — the paid/beta gate is dead | Medium | `grep -rl requireAccess app/api` → 0 files |
 | 9 | Signup e2e tests never submit a signup — they only assert the form renders and that client-side password-mismatch works | High | `tests/e2e/signup-flow.spec.ts`, all 4 tests |
-| 10 | `proxy.ts` guards only `/dashboard`. `/preferences`, `/programs`, `/lair`, `/qa`, `/admin` have no edge guard | Medium | `proxy.ts` matcher |
+| 10 | `proxy.ts` guards only `/dashboard`. `/preferences`, `/programs`, `/qa`, `/admin` have no edge guard | Medium | `proxy.ts` matcher | (`/lair` was on this list; the route was deleted 2026-09-09) |
 | 11 | **Security:** `/api/timetrack/calendar` is unauthenticated and fetches an arbitrary caller-supplied URL server-side — a clean SSRF into your VPC/metadata endpoint | **High** | `app/api/timetrack/calendar/route.ts`, no auth import |
 | 12 | **Security:** 10 `/api/test/*` routes ship unauthenticated in a production build | High | route sweep, see AI section |
 | 13 | No rate limiting on signup or login | Medium | no limiter in repo |
@@ -314,8 +319,9 @@ bounce them to `/preferences` anyway since onboarding isn't done.
 The page already does its own `getUser()` + redirect, so it isn't *insecure*. But an
 unauthenticated hit renders a server component and a DB round-trip before redirecting.
 
-> **Recommendation: yes, add it** — plus `/programs`, `/lair`, `/qa`. Change the
-> matcher to `["/dashboard/:path*", "/preferences/:path*", "/programs/:path*", "/lair/:path*", "/qa/:path*"]`.
+> **Recommendation: yes, add it** — plus `/programs` and `/qa`. Change the
+> matcher to `["/dashboard/:path*", "/preferences/:path*", "/programs/:path*", "/qa/:path*"]`.
+> (`/lair` was in this list until the route was deleted on 2026-09-09.)
 > Cheap, and it makes "logged-out users see nothing but auth pages" a single
 > enforceable rule instead of 40 individually-correct pages.
 

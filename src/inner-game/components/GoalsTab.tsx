@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Aperture, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 interface GoalsTabProps {
   isPreviewMode?: boolean
@@ -18,7 +19,7 @@ export function GoalsTab({ isPreviewMode = false }: GoalsTabProps) {
           <h3 className="font-semibold text-lg mb-2">Strategic Goal Setting</h3>
           <p className="text-muted-foreground max-w-md mx-auto">
             Define what you want to achieve. Your goals here connect to your daily
-            tracking in the Lair for seamless progress monitoring.
+            tracking, so progress shows up as you log it.
           </p>
         </CardContent>
       </Card>
@@ -37,7 +38,7 @@ export function GoalsTab({ isPreviewMode = false }: GoalsTabProps) {
           and auto-sync with your daygame sessions.
         </p>
         <Button asChild size="lg" className="gap-2">
-          <Link href="/dashboard/goals/plan">
+          <Link href={LIFE_MASTERY}>
             Go to your plan
             <ArrowRight className="h-4 w-4" />
           </Link>

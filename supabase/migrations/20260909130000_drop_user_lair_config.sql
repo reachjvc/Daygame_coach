@@ -1,0 +1,49 @@
+-- Drop public.user_lair_config.
+--
+-- WHAT THIS TABLE HELD, AND WHY IT IS GOING
+--
+-- One row per person, holding the layout of their Lair: a JSONB blob of tabs,
+-- and inside each tab a list of widget ids with a position and a collapsed
+-- flag. It was the "which widgets did I put on my board, and where" record for
+-- a configurable dashboard.
+--
+-- The Lair was archived to /test/archive/lair on 2026-09-02 -- and every /test
+-- page returns 404 in production by design (app/test/layout.tsx), so from that
+-- day nobody could open the board this table describes. On 2026-09-09 the whole
+-- slice was deleted: src/lair entire, src/db/lairRepo.ts, src/db/lairTypes.ts,
+-- app/api/lair/route.ts, the archive page, and the Mission Control widget. The
+-- app is being consolidated onto one goals surface, and the Lair was a second
+-- one.
+--
+-- So this table now has no reader and no writer. Verified by grep over src/,
+-- app/, tests/ and scripts/ before writing this: the string "user_lair_config"
+-- appears nowhere in the codebase.
+--
+-- WHAT IS LOST
+--
+-- Measured on the live database on 2026-09-09, immediately before writing this:
+-- 2 rows, 2 distinct users. So two people had arranged a board, and those two
+-- arrangements are destroyed here.
+--
+-- That is an acceptable loss, and not really a loss at all, because the layouts
+-- are already unusable. A layout is a list of widget IDs -- "goal-progress",
+-- "streak-counter", "recent-sessions" -- and every component those IDs resolved
+-- to has been deleted. There is no code left that could render either saved
+-- board. Keeping the rows would preserve a description of a screen that cannot
+-- be drawn.
+--
+-- THIS IS NOT REVERSIBLE. Dropping a table destroys its rows, and unlike a
+-- recomputable column there is no way to derive somebody's chosen widget
+-- arrangement from anything else. If the Lair is ever rebuilt, those two people
+-- arrange their board again.
+--
+-- WHAT ELSE GOES WITH IT
+--
+-- The four RLS policies on the table -- user_lair_config_select_own,
+-- _insert_own, _update_own, _delete_own -- are dropped by the DROP TABLE
+-- itself and need no separate statement. They were correct own-row rules;
+-- nothing here is a security change, because the table they guarded ceases to
+-- exist. Checked for foreign keys pointing at this table before writing: there
+-- are none, so nothing else breaks.
+
+drop table if exists public.user_lair_config;

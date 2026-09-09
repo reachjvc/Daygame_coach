@@ -259,11 +259,11 @@ What the form asks, in order
 | **Linked metric** | 8 options + "None (manual tracking)" | None | offered **only** for `life_area === "daygame"` and `period === "weekly"` ([line 311](../../src/goals/components/GoalFormModal.tsx#L311)) |
 | Description / motivation | text | — | no |
 
-**A second form exists.** `src/lair/components/GoalFormModal.tsx` — reached from
-`MissionControlWidget` — asks a smaller set and applies the same
-daygame-and-weekly rule by hand at
-[line 165](../../src/lair/components/GoalFormModal.tsx#L165). Two hand-written
-copies of one rule is exactly what P4.3 replaces with `metricFitsPeriod`.
+**A second form used to exist.** `src/lair/components/GoalFormModal.tsx` —
+reached from `MissionControlWidget` — asked a smaller set and applied the same
+daygame-and-weekly rule by hand. Two hand-written copies of one rule was exactly
+what P4.3 replaces with `metricFitsPeriod`. Resolved by deletion on 2026-09-09:
+the whole Lair slice went, that form with it, so there is one form again.
 
 **Three more paths create goals without the form**, and none of them passes
 through the form's guard — P4.2's repo-level check is what covers them:

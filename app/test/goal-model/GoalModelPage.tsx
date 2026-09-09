@@ -860,7 +860,7 @@ const gamificationSystems: GamificationSystem[] = [
   {
     name: "Streaks",
     icon: Flame,
-    description: "Current streak, best streak, streak freezes. Displayed on GoalCard meta row and Lair streak widget.",
+    description: "Current streak, best streak, streak freezes. Displayed on the GoalCard meta row. (Also had a Lair streak widget, until the Lair was deleted on 2026-09-09.)",
     triggers: "Daily/weekly goal completion continuity",
     awards: "Streak count display, flame icon",
     status: "partial",
@@ -870,7 +870,7 @@ const gamificationSystems: GamificationSystem[] = [
   {
     name: "XP / Levels",
     icon: Crown,
-    description: "Rookie → Practitioner → Confident → Advanced → Expert → Master. XP = 100 × level. Progress bar in Lair.",
+    description: "Rookie → Practitioner → Confident → Advanced → Expert → Master. XP = 100 × level. The Lair carried the progress bar; it was deleted on 2026-09-09, and nothing feeds a level yet anyway.",
     triggers: "Scenario completion only",
     awards: "Level number, title, progress bar",
     status: "disconnected",
