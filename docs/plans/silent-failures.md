@@ -1,5 +1,12 @@
 # Numbers the app shows when it does not actually know
 
+
+**09-09-2026.** Four of the Lair goal widgets named below were dead code and
+have been deleted, so nobody could ever have seen their false empty states.
+**The bug is not fixed** — it is live in `MissionControlWidget` (which those
+widget IDs actually render, on the default Goals tab) and in
+`GoalsSummarySection`. The two entries concerned say so.
+
 A sweep on 2026-09-08, after the instruction "if something is broken it should
 be shown". Five readers went through the app looking for one specific fault, and
 every finding below was then handed to a second agent told to REFUTE it.
@@ -406,7 +413,12 @@ Counts below are candidate findings, de-duplicated. Fixed ones are marked.
 
 ### Weekly Summary widget tells a user with goals to "Add goals"
 
-`src/lair/components/widgets/WeeklySummaryWidget.tsx:58`
+> **Resolved by deletion, 2026-09-09.** `WeeklySummaryWidget.tsx` was dead code:
+> its widget ID renders `MissionControlWidget`, and nothing imported the file.
+> Nobody could ever see this. Kept here because the *shape* of the bug below is
+> still live in `MissionControlWidget.tsx:420` — see the Lair goal widgets entry.
+
+`src/lair/components/widgets/WeeklySummaryWidget.tsx:58` (deleted)
 
 **What a person sees.** "Add goals to see your weekly summary" — an onboarding prompt — where the completion rate %, total streak days, best streak and the per-life-area progress bars should be. Byte-for-byte the same as a brand-new account.
 
@@ -549,7 +561,18 @@ Counts below are candidate findings, de-duplicated. Fixed ones are marked.
 
 ### Lair goal widgets tell you that you have no goals and no streaks when /api/goals fails
 
-`src/lair/components/widgets/TodayGoalsWidget.tsx:24`
+> **Narrowed, 2026-09-09.** Four of the five widgets named below —
+> `TodayGoalsWidget`, `GoalStreaksWidget`, `GoalProgressWidget`,
+> `WeeklySummaryWidget` — were dead code and have been deleted. Their widget IDs
+> all render `MissionControlWidget`, so no user ever saw their empty states.
+>
+> **The bug itself is NOT fixed.** It is live in the two survivors:
+> `MissionControlWidget.tsx:420` (the widget those four IDs actually render, and
+> the one on the default Goals tab) and `GoalsSummarySection.tsx:47-61`. Fixing
+> those two fixes what a person can actually hit.
+
+`src/lair/components/widgets/MissionControlWidget.tsx:420` (live)
+`src/lair/components/widgets/TodayGoalsWidget.tsx:24` (deleted)
 
 **What a person sees.** Four widgets on the Lair board make four confident statements about the person: "No daily goals set", "Complete goals consistently to build streaks", "No goals yet. Set your first goal!", and a weekly summary of zeros. All four are the new-user copy, all four are shown to somebody with a dozen active goals and a 40-day streak, and none of them mentions that anything went wrong. WeeklySummaryWidget is the worst of the four because it renders computed numbers — a completion rate and a total streak-day count derived from an empty list — rather than an empty state.
 

@@ -1,5 +1,9 @@
 # Onboarding — cross-device hardening
 
+
+**09-09-2026.** `OnboardingChoice.tsx` (finding 20) deleted — it had zero
+callers and was hardcoded white-on-transparent.
+
 > **For what is still outstanding, read
 > [`onboarding-remaining.md`](./onboarding-remaining.md).** That file is the
 > current state, measured 2026-09-08.
@@ -895,7 +899,7 @@ And the only test that finishes the flow, `preferences-completion.spec.ts`:
 | 17 | **Pressing Complete Setup looks like nothing happened.** Measured on the live button: `disabled: false`, `aria-busy: null`, label stays "Complete Setup". No `useFormStatus`, no spinner. On a slow connection the user waits with no feedback and taps again, firing the save twice. | Medium | **Measured.** |
 | 18 | **The progress bar never reaches 100 %.** Measured walking the flow: step 4 reads "60 % Complete", step 5 reads **"80 % Complete"**, bar `width: 80%`. The arithmetic is `(step − 1) / 5`. | Low | **Measured.** The e2e test asserts the 0 %/20 % values so it is deliberate — but the last screen of a five-step flow saying you are 80 % done reads as broken. |
 | 19 | **`completeOnboarding` does not refresh the dashboard's cache** (`revalidatePath`) while all four other actions in the same file do. | Low | Read in code. |
-| 20 | **`OnboardingChoice.tsx` has zero callers.** Dead. It is also hardcoded white-on-transparent, which would be invisible on this light-themed app. Not deleted — flagged, per the house rule. | Cleanup | Grepped the whole tree. |
+| 20 | **`OnboardingChoice.tsx` had zero callers.** Dead, and hardcoded white-on-transparent, which would have been invisible on this light-themed app. Deleted 2026-09-09. | Cleanup | Grepped the whole tree. |
 | 21 | **`/preferences` is missing from the sideways-scrolling test's route list** in `no-overflow.spec.ts`. | Low | Read in code. |
 | 22 | **`completeOnboardingForUser` has no unit test.** It is the one function that writes the profile. 55 unit tests cover its four little helpers; zero cover it. | High | Read the test file. |
 | 23 | **The `profiles` table cannot be recreated from this repo.** 32 migration files; not one creates `profiles`. A new staging project, a new machine, or a rebuild cannot be brought up from the code. | High | Listed and grepped every migration. This is item 13 in [docs/plans/onboarding.md](docs/plans/onboarding.md), still open. |

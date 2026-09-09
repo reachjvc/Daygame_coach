@@ -1,5 +1,10 @@
 # Goal Framework Test Page — Handoff v2
 
+
+**09-09-2026.** `ObjectiveStep.tsx`, `TargetStep.tsx` and `IdentityStep.tsx`
+deleted — the dead files this doc had been listing as "can be deleted". The
+file table and the props-flow diagram below are updated to match.
+
 **What this is:** A test page at `/test/new-goals` exploring a grammar-based goal framework. Not production code — a design prototype for the goal-setting experience. Everything is self-contained in `src/goals/components/new-goals/` + `src/goals/data/newGoalFramework.ts`.
 
 ---
@@ -17,14 +22,14 @@ Focus (pick pillars) → Goals (templates + flat pool) → Summary
 |------|-------|------|
 | `newGoalFramework.ts` | 344 | All types, data, helpers. The grammar lives here. |
 | `NewGoalsFlow.tsx` | 209 | Flow container. Step state, navigation, template apply/unapply. |
-| `IdentityStep.tsx` | 155 | Step 1: pillar cards with values, click-to-advance, custom input. |
 | `GoalsConfigStep.tsx` | 1217 | Step 2: THE main component. Templates, type-bucketed pool, milestone/ramp editors. |
 | `SummaryStep.tsx` | 429 | Step 3: Stats, identity, values aggregation, shared foundations, tree view. |
-| `ObjectiveStep.tsx` | 504 | **DEAD CODE** — superseded by GoalsConfigStep. Can be deleted. |
-| `TargetStep.tsx` | 909 | **DEAD CODE** — superseded by GoalsConfigStep. Can be deleted. |
 
 ### Dead code to clean up
-`ObjectiveStep.tsx` and `TargetStep.tsx` are from earlier iterations (separate objectives + targets steps). They're no longer imported by `NewGoalsFlow.tsx`. Safe to delete.
+Done on 2026-09-09. `ObjectiveStep.tsx` (504 lines) and `TargetStep.tsx` (909
+lines) were earlier iterations with separate objectives and targets steps,
+superseded by `GoalsConfigStep`. `IdentityStep.tsx` (155 lines) was step 1 and
+had likewise stopped being imported by `NewGoalsFlow.tsx`. All three deleted.
 
 ---
 
@@ -100,7 +105,6 @@ Templates are presets that auto-select targets at a chosen difficulty level. Sto
 ### Props flow
 ```
 NewGoalsFlow (state owner)
-  → IdentityStep (selectedPillars, onTogglePillar, onNext)
   → GoalsConfigStep (selectedPillars, selectedObjectives, targetOverrides, 
                       onToggleObjective, onApplyTemplate, onUnapplyTemplate, onUpdateTarget)
   → SummaryStep (selectedPillars, selectedObjectives, targetOverrides, customPillars, customObjectives)
@@ -163,7 +167,8 @@ getTemplatesForPillar(pillarId) → Template[]
 5. **No phase detection** — beginner vs intermediate feedback loops not differentiated.
 6. **Stage/skill targets are read-only** — no way to mark stages as completed or skills as progressed.
 7. **Custom pillars** — addable in the Focus step but have no framework targets and aren't persisted. (Custom *goals* under a real pillar ARE supported + persisted — see §11.)
-8. **Dead files** — ObjectiveStep.tsx and TargetStep.tsx should be deleted.
+8. ~~**Dead files** — ObjectiveStep.tsx and TargetStep.tsx should be deleted.~~
+   Done 2026-09-09; IdentityStep.tsx went with them.
 9. **The "daily interface"** — the debate concluded the daily experience should be "what did you do, what did you notice" — this test page only covers the setup flow, not the daily tracking view.
 
 ---

@@ -1,5 +1,10 @@
 # Handoff — New-Goals Test Flow (`/test/new-goals`)
 
+
+**09-09-2026.** The `GoalsConfigStep` dead code listed here was removed: 216
+lines, 2228 -> 2012. `expandedBuckets` turned out to be write-only state, so
+the auto-expand behaviour had never done anything. Details in that section.
+
 > For the next AI/session. Scope of this body of work: the **new goal-creation
 > experience built entirely on the test page**. **Hard rule: do NOT touch
 > production** — `app/dashboard/goals/*`, `GoalsHubContent.tsx`, the real setup
@@ -86,12 +91,23 @@ matching renders the plan inline immediately (no separate "intake" step / "Build
   Plan is two columns — area sections on the **left** (`flex-1`), the **priority box pinned on the
   right** (`<aside>` sticky, `hidden md:block`).
 
-⚠️ **Dead code to clean up (next session):** the reshape left now-unused helpers in
-`GoalsConfigStep` — `TemplateSection`, `RelationsPathChooser`, `autoExpandBuckets` +
-`prevOverridesRef` effect, `pillarData`, `expandedBuckets`/`toggleBucket`, and unused
-destructured props (`selectedObjectives`, `onToggleObjective`) + a couple imports. Inert
-(tsc/SWC/vitest don't error) but should be removed. `IdentityStep` is also no longer used by
-the flow. (`SortablePriorityList` IS used again — it powers the Plan-step priority drag list.)
+✅ **Dead code cleaned up 2026-09-09.** The reshape had left now-unused helpers in
+`GoalsConfigStep`: `TemplateSection` (101 lines), `RelationsPathChooser` (40),
+`autoExpandBuckets` + the `prevOverridesRef` effect, `pillarData`, and
+`expandedBuckets`/`toggleBucket`. All removed — 216 lines, 2228 → 2012.
+
+Worth knowing why `expandedBuckets` was safe to delete outright: it was a
+**write-only** piece of state. Three places called `setExpandedBuckets`, and
+nothing ever read `expandedBuckets`. So the "auto-expand buckets that have
+selected items" behaviour had not been doing anything at all — it computed which
+sections to open and stored the answer where no one looked. If that behaviour is
+wanted, it has to be built again, not restored.
+
+`IdentityStep` was likewise no longer used by the flow and was deleted the same
+day. (`SortablePriorityList` IS used — it powers the Plan-step priority drag
+list.) Still outstanding: the unused destructured props `selectedObjectives` /
+`onToggleObjective` on `GoalsConfigStep`, left alone because changing the
+component's signature touches its caller.
 
 ### Older layout (pre-restructure, for reference)
 - **Create flow:** `NewGoalsFlow` (Focus → Goals → Summary), state lives here

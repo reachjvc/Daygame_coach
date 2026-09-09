@@ -1,5 +1,10 @@
 # Goals Page Overhaul — Implementation Plan
 
+
+**09-09-2026.** `AuroraOrreryStep.tsx` deleted. The extraction this plan asked
+for had already happened — the view lives in `views/OrreryView.tsx` — which is
+why the source had no importers left.
+
 ## Problem
 The production goals page hardcodes a single hierarchy view. Meanwhile, 6+ fully-built view components sit as dead code. The DailyActionView (the "open app, do stuff, close app" view) is never rendered. The orrery/planetary visualization from setup is one-time-only. The header is cluttered with admin tools while missing daily-use features.
 
@@ -57,7 +62,12 @@ The production goals page hardcodes a single hierarchy view. Meanwhile, 6+ fully
 - All user's selected life areas = active planets (areas with ≥1 goal)
 - L2 achievements from goal tree → badges grid below orrery (with real tier/progress)
 
-**Adapt from `AuroraOrreryStep`:**
+**Adapt from `AuroraOrreryStep`:** — *done. The extraction below happened: the
+view now lives in `src/goals/components/views/OrreryView.tsx` (713 lines, live
+via `GoalsHubContent`), and `AuroraOrreryStep.tsx` was deleted on 2026-09-09
+once it had no importers left. Read `OrreryView.tsx` rather than this list; it
+is in git history at `HEAD~1:src/goals/components/setup/AuroraOrreryStep.tsx` if
+you need the original.*
 - Remove: `onCreateGoals` button, `isCreating` state, "This will create N goals" text
 - Remove: `selectedGoals`/`selectedAreas`/`path` props — derive from goals array
 - Keep: All SVG animation (aurora ribbons, solar wind, planets orbiting, magnetic fields)

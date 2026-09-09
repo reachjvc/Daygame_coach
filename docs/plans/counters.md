@@ -1,5 +1,10 @@
 # Counters, and how they count down
 
+
+**09-09-2026.** `resetDailyGoals` deleted, with `/api/goals/reset-daily` and
+`TodayGoalsWidget`. See the deleted-functions list below — the note that said
+it had to stay had been false since Mission Control absorbed that widget.
+
 **Status: BUILT, 2026-08-27.** All eight phases executed against production.
 `npm test` green: 119 files, 3924 tests. What was measured rather than assumed,
 what deviated from the plan, and what is still open is in
@@ -1220,8 +1225,12 @@ that is guessing at intent, so it was not done.
 - `getWeekStartDay`, `updateWeekStartDay` (`settingsRepo`),
   `handleUpdateWeekStartDay` (`settingsService`) — wrote a value nothing read.
 - `resetWeeklyGoals`, `resetMonthlyGoals`, `resetYearlyGoals` (`goalRepo`) — no
-  route, component or service called any of them. `resetDailyGoals` stays;
-  `TodayGoalsWidget` posts to `/api/goals/reset-daily`.
+  route, component or service called any of them. `resetDailyGoals` outlived
+  them because `TodayGoalsWidget` posted to `/api/goals/reset-daily`; it was
+  deleted on 2026-09-09 once that widget turned out to be dead too. The widget
+  had been folded into `MissionControlWidget`, which resets one goal at a time
+  via `/api/goals/[id]/reset`, so the widget, the route and the repo function
+  all went together.
 - `LINKED_METRIC_OPTIONS`, `PERIOD_OPTIONS`, `TRACKING_TYPE_OPTIONS`,
   `unselCls`/`unselStyle`/`unselSub`, `suggestions`, `filteredParentGoals` in
   `src/goals/components/GoalFormModal.tsx` — the component delegates its form to

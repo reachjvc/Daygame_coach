@@ -301,49 +301,6 @@ const RELATIONS_PATHS = [
   { templateId: "tmpl_abundance", title: "Abundance", subtitle: "Freedom & experience", icon: Sparkles, color: NEON_ABUNDANCE },
 ] as const
 
-/** FTO vs Abundance path cards shown atop the Relations pillar — picking one
- * applies its template (auto-selects the core daygame funnel). */
-function RelationsPathChooser({
-  pillarTargets,
-  targetOverrides,
-  onApplyTemplate,
-}: {
-  pillarTargets: FrameworkTarget[]
-  targetOverrides: Record<string, TargetOverride>
-  onApplyTemplate: (template: Template, levelIndex: number) => void
-}) {
-  return (
-    <div className="mb-4">
-      <p className="text-xs text-zinc-500 mb-2">Choose your path — we&apos;ll set up your core funnel:</p>
-      <div className="grid grid-cols-2 gap-3">
-        {RELATIONS_PATHS.map((p) => {
-          const tmpl = TEMPLATES.find((t) => t.id === p.templateId)
-          if (!tmpl) return null
-          const active = isTemplateActive(tmpl, targetOverrides, pillarTargets)
-          const Icon = p.icon
-          return (
-            <button
-              key={p.templateId}
-              onClick={() => onApplyTemplate(tmpl, 0)}
-              title={tmpl.description}
-              className="relative rounded-xl p-4 text-left transition-all duration-200"
-              style={{
-                background: active ? `${p.color}35` : `${p.color}18`,
-                border: `${active ? 2 : 1}px solid ${p.color}`,
-                boxShadow: active ? `0 0 20px ${p.color}30, inset 0 0 20px ${p.color}10` : "none",
-              }}
-            >
-              <Icon className="size-5 mb-2" style={{ color: p.color, filter: `drop-shadow(0 0 6px ${p.color})` }} />
-              <h3 className="text-sm font-semibold text-white mb-0.5">{p.title}</h3>
-              <p className="text-xs text-white/40">{p.subtitle}</p>
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
 /** Collect all targets for a pillar, deduplicate shared drivers */
 function getDeduplicatedTargetsForPillar(pillarId: string): FrameworkTarget[] {
   const objectives = getObjectivesForPillar(pillarId)
@@ -1189,112 +1146,6 @@ function TargetRow({
 }
 
 // ---------------------------------------------------------------------------
-// TemplateSection — click-to-toggle template pills + inline level picker
-// ---------------------------------------------------------------------------
-
-function TemplateSection({
-  pillar,
-  pillarTargets,
-  targetOverrides,
-  onApplyTemplate,
-  onUnapplyTemplate,
-}: {
-  pillar: { id: string; label: string; color: string; glowColor: string; icon: string }
-  pillarTargets: FrameworkTarget[]
-  targetOverrides: GoalsConfigStepProps["targetOverrides"]
-  onApplyTemplate: (template: Template, levelIndex: number) => void
-  onUnapplyTemplate: (template: Template) => void
-}) {
-  const templates = getTemplatesForPillar(pillar.id)
-  if (templates.length === 0) return null
-
-  // Find the active template (if any) for this pillar
-  const activeTemplate = templates.find(tmpl =>
-    isTemplateActive(tmpl, targetOverrides, pillarTargets)
-  )
-  const activeLevelIndex = activeTemplate
-    ? detectActiveLevel(activeTemplate, targetOverrides)
-    : -1
-
-  const LEVEL_LABELS = ["Beginner", "Intermediate", "Advanced"]
-
-  return (
-    <div className="mb-2">
-      <div className="flex items-center gap-2 flex-wrap">
-        {templates.map((tmpl) => {
-          const Icon = ICON_MAP[tmpl.icon]
-          const active = activeTemplate?.id === tmpl.id
-
-          // Build pill label with level when active
-          const levelLabel = active && tmpl.levels[activeLevelIndex]
-            ? ` (${tmpl.levels[activeLevelIndex].label})`
-            : ""
-
-          return (
-            <button
-              key={tmpl.id}
-              onClick={() => {
-                if (active) {
-                  onUnapplyTemplate(tmpl)
-                } else {
-                  onApplyTemplate(tmpl, 0)
-                }
-              }}
-              title={tmpl.description}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs border transition-all duration-200 ${
-                active
-                  ? "text-white"
-                  : "bg-white/5 border-white/10 text-zinc-400 hover:border-white/20 hover:text-zinc-300"
-              }`}
-              style={
-                active
-                  ? {
-                      borderColor: pillar.color,
-                      backgroundColor: `${pillar.color}20`,
-                      boxShadow: `0 0 12px ${pillar.glowColor}`,
-                    }
-                  : undefined
-              }
-            >
-              {Icon && (
-                <Icon
-                  className="size-3.5"
-                  style={active ? { color: pillar.color } : undefined}
-                />
-              )}
-              {tmpl.label}{levelLabel}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Level picker — shown below pills when a template is active */}
-      {activeTemplate && activeTemplate.levels.length > 0 && (
-        <div className="flex items-center gap-2 mt-2 ml-1">
-          <span className="text-[10px] text-zinc-500 mr-1">Level:</span>
-          {activeTemplate.levels.map((level, i) => {
-            const isActive = i === activeLevelIndex
-            return (
-              <button
-                key={level.label}
-                onClick={() => onApplyTemplate(activeTemplate, i)}
-                className={`text-[11px] font-medium px-2.5 py-1 rounded-full border transition-all ${
-                  isActive
-                    ? "bg-white/10 border-white/30 text-white"
-                    : "bg-white/5 border-white/10 text-zinc-400 hover:border-white/20"
-                }`}
-              >
-                {level.label}
-              </button>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
 // BucketSection — collapsible section for one bucket type
 // ---------------------------------------------------------------------------
 
@@ -1497,28 +1348,9 @@ export function GoalsConfigStep({
   const toggleAreaCollapse = useCallback((id: string) => {
     setCollapsedAreas((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   }, [])
-  const [expandedBuckets, setExpandedBuckets] = useState<Set<string>>(() => {
-    const initial = new Set<string>()
-    const bucketKeys: BucketKey[] = ["do", "measure", "milestones", "skills"]
-    for (const p of activePillars) {
-      for (const bk of bucketKeys) {
-        initial.add(`${p.id}-${bk}`)
-      }
-    }
-    return initial
-  })
   const [expandedConfigs, setExpandedConfigs] = useState<Set<string>>(new Set())
   const [expandedRamps, setExpandedRamps] = useState<Set<string>>(new Set())
   const [editingValue, setEditingValue] = useState<string | null>(null)
-
-  const toggleBucket = useCallback((key: string) => {
-    setExpandedBuckets((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-  }, [])
 
   const toggleConfig = useCallback((targetId: string) => {
     setExpandedConfigs((prev) => {
@@ -1581,54 +1413,6 @@ export function GoalsConfigStep({
   const handleRampFlatten = useCallback((targetId: string, freq: number) => {
     onUpdateTarget(targetId, { rampSteps: [{ frequencyPerWeek: freq, durationWeeks: 52 }] })
   }, [onUpdateTarget])
-
-  // Auto-expand buckets that have selected items
-  const autoExpandBuckets = useCallback(() => {
-    setExpandedBuckets(prev => {
-      const next = new Set(prev)
-      for (const p of activePillars) {
-        const allTargets = getDeduplicatedTargetsForPillar(p.id)
-        const bucketKeys: BucketKey[] = ["do", "measure", "milestones", "skills"]
-        for (const bk of bucketKeys) {
-          const key = `${p.id}-${bk}`
-          const bucketTargets = allTargets.filter(t => bucketForTarget(t) === bk)
-          const hasSelected = bucketTargets.some(t => {
-            const override = targetOverrides[t.id]
-            return override ? override.enabled : t.defaultEnabled
-          })
-          if (hasSelected) next.add(key)
-        }
-      }
-      return next
-    })
-  }, [activePillars, targetOverrides])
-
-  // Run auto-expand when targetOverrides change (e.g., template applied)
-  const prevOverridesRef = useRef(targetOverrides)
-  if (prevOverridesRef.current !== targetOverrides) {
-    prevOverridesRef.current = targetOverrides
-    autoExpandBuckets()
-  }
-
-  // Build per-pillar deduplicated targets (framework + user-added custom) + buckets
-  const pillarData = useMemo(() => {
-    return activePillars.map((pillar) => {
-      const customs = customTargets
-        .filter((c) => c.pillarId === pillar.id)
-        .map((c) => makeCustomFrameworkTarget(c.id, c.pillarId, c.unit, labels[c.id] ?? "New goal"))
-      const allTargets = [...getDeduplicatedTargetsForPillar(pillar.id), ...customs]
-
-      const buckets: Record<BucketKey, FrameworkTarget[]> = {
-        do: [], measure: [], milestones: [], skills: [],
-      }
-      for (const t of allTargets) {
-        buckets[bucketForTarget(t)].push(t)
-      }
-
-      return { pillar, allTargets, buckets }
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPillars, customTargets, labels])
 
   // ----- Template-centric plan -----
   // Time-horizon presets per template, anchored to the plan start / intake "achieve by".
