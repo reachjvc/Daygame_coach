@@ -1,6 +1,6 @@
 # Fixing the "shows a number it does not have" class for good
 
-Companion to `docs/plans/silent-failures.md`, which lists the 59 instances. This
+Companion to the 59-instance sweep (`docs/plans/silent-failures.md`, deleted in the documentation cleanup of 2026-09-09 — the training entries are now covered by `docs/plans/training-rebuild.md` Phase 2). This
 is how to stop the class rather than the instances.
 
 **Revised 2026-09-08 after an adversarial review.** The first draft was wrong in

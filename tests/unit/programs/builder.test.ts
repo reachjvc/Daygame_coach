@@ -745,5 +745,23 @@ describe("logging the session you actually did", () => {
     // not fail or get silently rewritten to the prescription.
     expect(result.enrollment.exerciseState[bench].consecutiveFails).toBe(0)
     expect(result.changes.find((c) => c.exerciseId === bench)?.kind).toBe("advance")
+
+    /**
+     * THE ASSERTION THE TEST IS NAMED AFTER, which it did not have.
+     *
+     * Everything above passes whether the engine built on the 65 that was
+     * lifted or the 60 that was asked for — both "advance", both zero fails. The
+     * bug this test exists for asked for 62.5 next time: LESS than the lifter
+     * had just put on the bar. Only the number catches that. Checked by logging
+     * 60 instead of 65 and watching this line fail.
+     *
+     * The stored working weight, not the next prescription: this program
+     * alternates days, so the next session is the other one and bench is not in
+     * it.
+     */
+    expect(
+      result.enrollment.exerciseState[bench].workingWeight,
+      "next time must build on the 65 lifted, not the 60 asked for"
+    ).toBeGreaterThan(65)
   })
 })

@@ -423,7 +423,15 @@ export default defineConfig({
         /mobile\/mobile-tracking\.spec\.ts/,
         /mobile\/mobile-scenarios\.spec\.ts/,
         /mobile\/mobile-toggl\.spec\.ts/,
-        /mobile\/mobile-training\.spec\.ts/,
+        /*
+         * NOT mobile-training.spec.ts. It shares the one test account with the
+         * `training` project, which runs in the OTHER CI job — and the two jobs
+         * have no `needs:` between them, so they run at the same time and wipe
+         * each other's enrollments mid-assertion. That is the exact race the
+         * serial `training` project exists to prevent, reintroduced by listing
+         * the spec in two places. It runs in `training-iphone-safari`, which is
+         * chained behind `training`.
+         */
       ],
       dependencies: ['setup'],
       use: {

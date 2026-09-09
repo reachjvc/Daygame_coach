@@ -606,9 +606,10 @@ describe('Architecture Compliance', () => {
      * state for "could not find out". Everything below is what existed when the
      * rule was written. Migrating one means deleting its line.
      *
-     * The full list of what each of these gets wrong is in
-     * `docs/plans/silent-failures.md`; the plan for finishing them is in
-     * `docs/plans/honest-values.md`.
+     * `docs/plans/silent-failures.md` listed all 59 and was deleted in the
+     * documentation cleanup of 2026-09-09; `docs/plans/honest-values.md` carries
+     * the plan for the rest of the app, and `docs/plans/training-rebuild.md`
+     * Phase 2 covers the training screens, which are done.
      */
     const COMPONENTS_THAT_FETCH_THEIR_OWN_DATA = new Set([
       'src/exercising/components/ExercisingPage.tsx',
@@ -816,7 +817,7 @@ describe('Architecture Compliance', () => {
       'src/db/dashboardRepo.ts': 1,
       'src/db/embeddingsRepo.ts': 1,
       'src/db/goalRepo.ts': 14,
-      'src/db/healthRepo.ts': 11,
+      'src/db/healthRepo.ts': 9,
       'src/db/lifeAnswerRepo.ts': 1,
       'src/db/lifeChapterRepo.ts': 1,
       'src/db/programDraftRepo.ts': 1,

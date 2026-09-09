@@ -236,7 +236,7 @@ async function api(cookie: string, path: string, init: RequestInit = {}): Promis
  * behind and the check at the end would report a number that is simply wrong.
  *
  * Ninety days at a time keeps each request under the cap. This is the same
- * limit that makes the CSV export incomplete (see docs/plans/silent-failures.md);
+ * limit that makes the CSV export incomplete (see docs/plans/training-rebuild.md);
  * here it is worked around rather than fixed, because the fix belongs in the
  * export, not in a seeding script.
  */

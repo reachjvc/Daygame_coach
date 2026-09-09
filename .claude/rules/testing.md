@@ -17,7 +17,7 @@ Report every failure — check `.test-known-failures.json` before calling one pr
 
 Test production functions, not raw SQL. Arrange-Act-Assert, deterministic, no silent returns that pass by doing nothing.
 
-Mobile and cross-browser coverage (`tests/e2e/mobile/`) is still a skeleton — loads and touch targets only. Expanding it to real flows is substantial work, not a quick task.
+Mobile and cross-browser coverage (`tests/e2e/mobile/`) is loads and touch targets for most slices. **Training is the exception and the pattern to copy** — see below.
 
 **Training is the exception**, and it is the pattern to copy. The `training`
 project (`playwright.config.ts`) runs the real flows at 390 × 844 on one worker:

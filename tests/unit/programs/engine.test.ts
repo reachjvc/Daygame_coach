@@ -1173,9 +1173,25 @@ describe("replayEnrollment", () => {
     const asLogged = [session("2026-01-01", "A", 5), session("2026-01-03", "B", 5)]
     const corrected = [session("2026-01-01", "A", 2), session("2026-01-03", "B", 5)]
 
+    /**
+     * THESE TWO PATHS MUST BE DIFFERENT PATHS.
+     *
+     * Both sides used to be `replayEnrollment(strongLifts5x5, start, corrected)`
+     * — the same call, with the same arguments, compared to itself. It could not
+     * fail, under a comment announcing it was the whole feature.
+     *
+     * The real claim is that CORRECTING gets you to the same place as having
+     * logged it right the first time. So one side goes through the correction
+     * path (replay from the seed) and the other through the live path (each
+     * session applied as it happens), and they have to agree.
+     */
     const afterEdit = replayEnrollment(strongLifts5x5, start, corrected)
-    const asIfOriginal = replayEnrollment(strongLifts5x5, start, corrected)
+    let asIfOriginal = start
+    for (const l of corrected) {
+      asIfOriginal = applyLog(strongLifts5x5, asIfOriginal, { enrollment_id: "x", ...l }).enrollment
+    }
     expect(afterEdit.exerciseState).toEqual(asIfOriginal.exerciseState)
+    expect(afterEdit.cursor).toEqual(asIfOriginal.cursor)
     // And it genuinely differs from the uncorrected history, or the edit did nothing.
     expect(afterEdit.exerciseState).not.toEqual(replayEnrollment(strongLifts5x5, start, asLogged).exerciseState)
   })

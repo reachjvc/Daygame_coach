@@ -347,37 +347,6 @@ export async function getWorkoutSets(userId: string, logId: string): Promise<Wor
   return rows.sort(inWorkoutOrder)
 }
 
-export async function getLastWorkoutSets(userId: string, exercise: string): Promise<WorkoutSetRow[]> {
-  const supabase = await createServerSupabaseClient()
-  // Find the most recent workout log with sets for this exercise
-  const { data: logs, error: logsError } = await finishedWorkouts(
-    supabase
-    .from("workout_logs")
-    .select("id")
-    .eq("user_id", userId)
-    .order("logged_at", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(10)
-  )
-  if (logsError) throw new Error(`Failed to query workout logs: ${logsError.message}`)
-  if (!logs || logs.length === 0) return []
-
-  const logIds = logs.map((l) => l.id)
-  const { data: sets, error: setsError } = await supabase
-    .from("workout_sets")
-    .select("*")
-    .in("log_id", logIds)
-    .ilike("exercise", exercise)
-    .order("set_number", { ascending: true })
-  if (setsError) throw new Error(`Failed to query workout sets: ${setsError.message}`)
-
-  if (!sets || sets.length === 0) return []
-
-  // Return sets from the most recent log that had this exercise
-  const firstLogId = sets[0].log_id
-  return sets.filter((s) => s.log_id === firstLogId) as WorkoutSetRow[]
-}
-
 /**
  * GYM SESSIONS ARE THE ONES WITH WEIGHT IN THEM.
  *
@@ -779,32 +748,6 @@ export async function getPullUpsMax(userId: string): Promise<number> {
 // Body Measurements
 // ============================================
 
-export async function createBodyMeasurement(userId: string, m: BodyMeasurementInsert): Promise<BodyMeasurementRow> {
-  const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from("body_measurements")
-    .insert({ user_id: userId, ...m })
-    .select()
-    .single()
-  if (error) throw new Error(`Failed to create body measurement: ${error.message}`)
-  return data as BodyMeasurementRow
-}
-
-export async function getBodyMeasurements(userId: string, days: number = 90): Promise<BodyMeasurementRow[]> {
-  const supabase = await createServerSupabaseClient()
-  const since = new Date()
-  since.setDate(since.getDate() - days)
-  const { data, error } = await supabase
-    .from("body_measurements")
-    .select("*")
-    .eq("user_id", userId)
-    .gte("logged_at", since.toISOString())
-    .order("logged_at", { ascending: true })
-    .order("created_at", { ascending: true })
-  if (error) throw new Error(`Failed to get body measurements: ${error.message}`)
-  return (data ?? []) as BodyMeasurementRow[]
-}
-
 export async function getBodyMeasurementCount(userId: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
   const { count, error } = await supabase
@@ -814,21 +757,6 @@ export async function getBodyMeasurementCount(userId: string): Promise<number> {
   if (error) throw new Error(`Failed to count body measurements: ${error.message}`)
   return count ?? 0
 }
-
-export async function deleteBodyMeasurement(userId: string, id: string): Promise<void> {
-  const supabase = await createServerSupabaseClient()
-  const { error } = await supabase
-    .from("body_measurements")
-    .delete()
-    .eq("id", id)
-    .eq("user_id", userId)
-  if (error) throw new Error(`Failed to delete body measurement: ${error.message}`)
-}
-
-// ============================================
-// Additional Aggregation Helpers
-// ============================================
-
 
 export async function getWeightLostFromPeak(userId: string): Promise<number> {
   const supabase = await createServerSupabaseClient()

@@ -150,23 +150,6 @@ export function loadStyleOf(
 }
 
 /**
- * The loadable weights either side of a target, for "can my gym make this?".
- *
- * `roundToLoadable` answers with one number; the engine also needs to know
- * whether that number IS the target, because a program whose increment is
- * smaller than the plates you own can never move if every session silently
- * rounds back to where it started.
- */
-export function isLoadable(
-  weight: number,
-  unit: UnitSystem,
-  style: "barbell" | "free" | "bodyweight" = "barbell",
-  setup?: PlateSetup
-): boolean {
-  return Math.abs(roundToLoadable(weight, unit, style, setup) - weight) < 1e-9
-}
-
-/**
  * Whether this schedule runs on a calendar or in sequence.
  *
  * Deliberately all-or-nothing. A week where three days have weekdays and two do
@@ -1502,7 +1485,11 @@ export interface LiftProgress {
 /** Enough to show a shape, few enough to stay a glyph rather than a chart. */
 const SPARK_POINTS = 40
 
-export function downsample(values: LoadPoint[], max = SPARK_POINTS): LoadPoint[] {
+/**
+ * Not exported: the only caller is `liftsWithHistory` below. It was exported
+ * and nothing outside this file ever used it.
+ */
+function downsample(values: LoadPoint[], max = SPARK_POINTS): LoadPoint[] {
   if (values.length <= max) return values
   const step = (values.length - 1) / (max - 1)
   const out: LoadPoint[] = []
