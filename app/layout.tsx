@@ -52,7 +52,9 @@ export const metadata: Metadata = {
   // drawn over the page, which is why the layout uses safe-area insets.
   appleWebApp: {
     capable: true,
-    title: "Time",
+    // The name under the icon on an iPhone home screen. Was "Time", which
+    // made one feature look like the whole product. See app/manifest.ts.
+    title: "Daygame",
     statusBarStyle: "black-translucent",
   },
 }
