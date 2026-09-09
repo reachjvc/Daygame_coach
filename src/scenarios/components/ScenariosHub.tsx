@@ -36,6 +36,11 @@ interface ScenariosHubProps {
   userLevel: number;
   scenariosCompleted: number;
   isPreviewMode?: boolean;
+  /* Preview covers two different people and they need different words. A
+     visitor is not signed in and should be asked to sign up. Somebody signed in
+     without a subscription has already done that, and was being told to sign up
+     again -- seen on the live site with a real new account, 2026-09-09. */
+  previewReason?: "not-signed-in" | "not-subscribed";
   initialLanguage?: "da" | "en";
   onLanguageChange?: (language: string) => Promise<void>;
 }
@@ -72,6 +77,7 @@ export function ScenariosHub({
   userLevel,
   scenariosCompleted,
   isPreviewMode = false,
+  previewReason = "not-signed-in",
   initialLanguage = "da",
   onLanguageChange,
 }: ScenariosHubProps) {
@@ -190,12 +196,14 @@ export function ScenariosHub({
                 Unlock "{selectedScenarioName}"
               </h3>
               <p className="text-muted-foreground mb-6">
-                Sign up to start practicing this scenario and track your progress. Get personalized feedback and improve your social skills.
+                {previewReason === "not-subscribed"
+                  ? "Subscribe to practise this scenario and track your progress. You keep everything you have already answered."
+                  : "Sign up to start practising this scenario and track your progress. Get personalised feedback and improve your social skills."}
               </p>
               <div className="flex flex-col gap-3">
-                <Link href="/auth/sign-up" className="w-full">
+                <Link href={previewReason === "not-subscribed" ? "/#pricing" : "/auth/sign-up"} className="w-full">
                   <Button className="w-full">
-                    Get Started Free
+                    {previewReason === "not-subscribed" ? "See pricing" : "Get Started Free"}
                   </Button>
                 </Link>
                 <Link href="/auth/login" className="w-full">
@@ -264,7 +272,9 @@ export function ScenariosHub({
         </h1>
         <p className="text-pretty text-lg text-muted-foreground leading-relaxed">
           {isPreviewMode
-            ? "Browse available scenarios. Sign up to start practicing!"
+            ? previewReason === "not-subscribed"
+              ? "Browse what is here. Subscribe to start practising."
+              : "Browse available scenarios. Sign up to start practising!"
             : "Train each phase of the conversation, from opener to close."
           }
         </p>

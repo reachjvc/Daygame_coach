@@ -167,6 +167,7 @@ export function toOnboardingInitialValues(
     userIsForeign: flag(profile.user_is_foreign),
     datingForeigners: flag(profile.dating_foreigners),
     region: text(profile.preferred_region),
+    secondaryRegion: profile.secondary_region ?? null,
     // Order is the priority the user chose; gaps are dropped, never padded.
     archetypes: [
       text(profile.archetype),
@@ -182,6 +183,13 @@ export interface DatingPreferences {
   archetypes: string[]
   userIsForeign: boolean
   datingForeigners: boolean
+  /** Decides which archetype photographs are shown. The gate used to READ this
+   *  and never ask for it, so a new account was shown a default set. */
+  ageRangeStart: number
+  ageRangeEnd: number
+  /** Optional second region. `scenariosService` reads `secondary_region`
+   *  (line 141) and nothing in the app ever asked for it. */
+  secondaryRegion: string | null
 }
 
 /**
@@ -199,6 +207,8 @@ export async function saveDatingPreferencesForUser(
   data: DatingPreferences
 ): Promise<void> {
   validateRegion(data.region)
+  if (data.secondaryRegion) validateRegion(data.secondaryRegion)
+  const age = validateAgeRange(data.ageRangeStart, data.ageRangeEnd)
 
   if (data.archetypes.length === 0) {
     throw new ProfileServiceError("Archetype is required", "ARCHETYPE_REQUIRED")
@@ -217,6 +227,15 @@ export async function saveDatingPreferencesForUser(
     tertiary_archetype: sanitized.tertiaryArchetype,
     user_is_foreign: data.userIsForeign,
     dating_foreigners: data.datingForeigners,
+    age_range_start: age.start,
+    age_range_end: age.end,
+    /* Cleared when it matches the primary: the same region twice is not a
+       second preference, and updateSecondaryRegionDirectForUser already treats
+       that pair as "none". One rule, one behaviour. */
+    secondary_region:
+      data.secondaryRegion && data.secondaryRegion !== data.region
+        ? data.secondaryRegion
+        : null,
   })
 }
 

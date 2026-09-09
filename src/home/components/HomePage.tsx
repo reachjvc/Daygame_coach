@@ -196,16 +196,12 @@ export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageP
       {/* Footer */}
       <footer className="border-t border-border py-8 bg-card">
         <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-            <div className="flex gap-6 text-sm">
-              <Link href="/setup" className="text-muted-foreground hover:text-foreground transition-colors">
-                Stripe Setup Guide
-              </Link>
-              <Link href="/dev" className="text-muted-foreground hover:text-foreground transition-colors">
-                Developer Access
-              </Link>
-            </div>
-          </div>
+          {/* The footer used to link to /setup ("Stripe Setup Guide") and /dev
+              ("Developer Access"). Both are notes-to-self, both were on the
+              public home page, and both return 404 on the live site -- checked
+              2026-09-09. A visitor's first page offered them two broken links
+              to internal tooling. There are no such routes to fix, so the links
+              go. */}
           <div className="text-center text-sm text-muted-foreground">
             <p>&copy; 2025 DayGame Coach - JVC. All rights reserved.</p>
           </div>

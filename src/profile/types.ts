@@ -65,6 +65,8 @@ export interface OnboardingInitialValues {
   userIsForeign: boolean | null
   datingForeigners: boolean | null
   region: string | null
+  /** Optional second region. scenariosService reads it when building a scenario. */
+  secondaryRegion: string | null
   archetypes: string[]
   primaryGoal: string | null
 }
@@ -79,6 +81,7 @@ export interface OnboardingProfileColumns {
   user_is_foreign?: boolean | null
   dating_foreigners?: boolean | null
   preferred_region?: string | null
+  secondary_region?: string | null
   archetype?: string | null
   secondary_archetype?: string | null
   tertiary_archetype?: string | null

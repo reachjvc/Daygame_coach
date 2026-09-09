@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { MessageCircle, Brain, HelpCircle, ArrowRight, Lock, BarChart3, BookOpen, Swords } from "lucide-react";
 import { UserPreferences, LevelProgressBar } from "@/src/profile/components";
+import { hasDatingPreferences } from "@/src/profile/config";
 import type { DashboardProfileData } from "../types";
 
 /**
@@ -40,6 +41,15 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
     setPrimaryGoal(profileData?.primary_goal ?? null);
   }, [profileData?.primary_goal]);
 
+  /* WHETHER THEY HAVE ACTUALLY ANSWERED ANYTHING.
+     This banner used to read "You're all set up -- your answers are saved" to
+     anyone who had not paid, because `unsubscribed` was being read as "finished
+     onboarding, has not subscribed". That stopped being true when the questions
+     moved to the Scenarios door: walked with a brand-new account on the live
+     site 2026-09-09, a person who had answered nothing was congratulated for
+     finishing. Same one owner as everywhere else -- hasDatingPreferences. */
+  const answered = hasDatingPreferences(profileData)
+
   return (
     <main className="mx-auto max-w-6xl px-4 sm:px-8 py-12 sm:py-24" data-testid="dashboard-content">
       <div className="text-center mb-8 sm:mb-16">
@@ -47,14 +57,18 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
           {viewer === "visitor"
             ? "Explore the Dashboard"
             : viewer === "unsubscribed"
-              ? "You're all set up"
+              ? answered
+                ? "You're all set up"
+                : "Welcome"
               : "Welcome Back!"}
         </h1>
         <p className="text-pretty text-base sm:text-lg text-muted-foreground leading-relaxed">
           {viewer === "visitor"
             ? "See what training modules are available. Sign up to start practicing!"
             : viewer === "unsubscribed"
-              ? "Your answers are saved. Subscribe to unlock the training modules below."
+              ? answered
+                ? "Your answers are saved. Subscribe to unlock the training modules below."
+                : "Have a look around. Scenarios will ask you a few questions the first time you open it."
               : "Choose a training module to continue improving your daygame skills"
           }
         </p>

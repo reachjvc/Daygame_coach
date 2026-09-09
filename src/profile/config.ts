@@ -166,6 +166,7 @@ export const EMPTY_ONBOARDING_VALUES: OnboardingInitialValues = {
   userIsForeign: null,
   datingForeigners: null,
   region: null,
+  secondaryRegion: null,
   archetypes: [],
   primaryGoal: null,
 }

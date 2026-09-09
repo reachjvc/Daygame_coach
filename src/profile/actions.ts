@@ -46,6 +46,9 @@ export async function saveDatingPreferences(formData: FormData) {
     archetypes,
     userIsForeign: formData.get("userIsForeign") === "true",
     datingForeigners: formData.get("datingForeigners") === "true",
+    ageRangeStart: Number(formData.get("ageRangeStart")),
+    ageRangeEnd: Number(formData.get("ageRangeEnd")),
+    secondaryRegion: (formData.get("secondaryRegion") as string) || null,
   })
 
   // Both surfaces that render the gate read the profile on the server.

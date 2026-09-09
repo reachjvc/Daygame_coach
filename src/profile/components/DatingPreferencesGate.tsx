@@ -9,6 +9,8 @@ import { saveDatingPreferences } from "@/src/profile/actions"
 import { getArchetypes } from "@/src/profile/data/archetypes"
 import { InteractiveWorldMap } from "./InteractiveWorldMap"
 import { REGIONS } from "@/src/profile/data/regions"
+import { Slider } from "@/components/ui/slider"
+import { AGE_RANGE } from "@/src/profile/config"
 import { EMPTY_ONBOARDING_VALUES } from "@/src/profile/config"
 import type { OnboardingInitialValues } from "@/src/profile/types"
 
@@ -63,13 +65,20 @@ export function DatingPreferencesGate({
   const [selectedArchetypes, setSelectedArchetypes] = useState<string[]>(saved.archetypes)
   const [userIsForeign, setUserIsForeign] = useState<boolean | null>(saved.userIsForeign)
   const [datingForeigners, setDatingForeigners] = useState<boolean | null>(saved.datingForeigners)
+  const [secondaryRegion, setSecondaryRegion] = useState<string | null>(saved.secondaryRegion)
+  /* Defaulted rather than left blank. This one is never a blocker -- it only
+     chooses which photographs the archetype cards show -- and an unanswered
+     slider that stops you continuing would be a worse trade than a sensible
+     starting point you can move. */
+  const [ageRange, setAgeRange] = useState<number[]>([
+    saved.ageRangeStart ?? PHOTO_AGE_RANGE[0],
+    saved.ageRangeEnd ?? PHOTO_AGE_RANGE[1],
+  ])
 
-  const archetypes = getArchetypes(
-    saved.ageRangeStart !== null && saved.ageRangeEnd !== null
-      ? [saved.ageRangeStart, saved.ageRangeEnd]
-      : PHOTO_AGE_RANGE,
-    selectedRegion ?? undefined
-  )
+  /* Follows the slider and the region as you move them. It used to read a saved
+     age range that this screen never asked for, so a new account was always
+     shown the default photographs no matter what it chose. */
+  const archetypes = getArchetypes(ageRange, selectedRegion ?? undefined)
 
   const toggleArchetype = (name: string) => {
     setSelectedArchetypes((prev) => {
@@ -109,9 +118,14 @@ export function DatingPreferencesGate({
     testId: string
   }) => (
     <div className="flex items-center gap-2" data-testid={testId}>
+      {/* min-h/min-w 44px: `size="sm"` renders 40px tall, which is under the
+          minimum touch target and was caught on an iPhone viewport by
+          tests/e2e/sweep/route-sweep.spec.ts. These are the only two things on
+          this screen a thumb has to hit precisely. */}
       <Button
         type="button"
         size="sm"
+        className="min-h-11 min-w-11"
         variant={value === true ? "default" : "outline"}
         onClick={() => onChange(true)}
       >
@@ -120,6 +134,7 @@ export function DatingPreferencesGate({
       <Button
         type="button"
         size="sm"
+        className="min-h-11 min-w-11"
         variant={value === false ? "default" : "outline"}
         onClick={() => onChange(false)}
       >
@@ -139,6 +154,9 @@ export function DatingPreferencesGate({
         ))}
         <input type="hidden" name="userIsForeign" value={String(userIsForeign)} />
         <input type="hidden" name="datingForeigners" value={String(datingForeigners)} />
+        <input type="hidden" name="ageRangeStart" value={ageRange[0]} />
+        <input type="hidden" name="ageRangeEnd" value={ageRange[1]} />
+        <input type="hidden" name="secondaryRegion" value={secondaryRegion || ""} />
         {next && <input type="hidden" name="next" value={next} />}
 
         <h1 className="text-3xl font-bold text-foreground">{heading}</h1>
@@ -161,6 +179,63 @@ export function DatingPreferencesGate({
               </span>
             </p>
           )}
+
+          {/* Optional, and it does something: `scenariosService` reads
+              secondary_region when it builds a scenario. Nothing in the app had
+              ever asked for it. */}
+          {selectedRegion && (
+            <div className="mt-6 border-t border-border/60 pt-5">
+              <p className="text-sm font-medium text-foreground">
+                Anywhere else? <span className="text-muted-foreground">(optional)</span>
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2" data-testid="secondary-region-list">
+                {REGIONS.filter((r) => r.id !== selectedRegion).map((region) => {
+                  const chosen = secondaryRegion === region.id
+                  return (
+                    <button
+                      key={region.id}
+                      type="button"
+                      aria-pressed={chosen}
+                      data-testid={`secondary-region-${region.id}`}
+                      onClick={() => setSecondaryRegion(chosen ? null : region.id)}
+                      className={`min-h-11 rounded-full border px-4 text-sm transition-colors ${
+                        chosen
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-border bg-card text-muted-foreground hover:border-primary/60"
+                      }`}
+                    >
+                      {region.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </Card>
+
+        {/* Placed before the archetypes on purpose: it changes the photographs
+            on those cards, so you want to have set it before you look at them. */}
+        <Card className="mb-6 border-border bg-card p-5 sm:p-8">
+          <h2 className="text-xl font-bold text-foreground">Roughly what age?</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            This chooses the photographs below. You can move it any time.
+          </p>
+          <div className="mt-6 flex justify-between text-lg font-semibold text-foreground">
+            <span data-testid="age-from">{ageRange[0]} years</span>
+            <span data-testid="age-to">{ageRange[1]} years</span>
+          </div>
+          <Slider
+            min={AGE_RANGE.MIN}
+            max={AGE_RANGE.MAX}
+            step={1}
+            value={ageRange}
+            onValueChange={setAgeRange}
+            className="mt-4 w-full"
+          />
+          <div className="mt-2 flex justify-between text-sm text-muted-foreground">
+            <span>{AGE_RANGE.MIN}</span>
+            <span>{AGE_RANGE.MAX}</span>
+          </div>
         </Card>
 
         <Card className="mb-6 border-border bg-card p-5 sm:p-8">
