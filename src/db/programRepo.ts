@@ -14,7 +14,6 @@
  */
 
 import { createServerSupabaseClient } from "./supabase"
-import { createWorkoutLog } from "./healthRepo"
 import {
   applyLog,
   computePrescription,
@@ -24,7 +23,6 @@ import {
   replayEnrollment,
   pickTodaysDay,
   entriesFromSets,
-  loadStyleOf,
 } from "@/src/programs/programsService"
 import { requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
 import {
@@ -48,7 +46,6 @@ import {
 import { finishedWorkouts } from "./healthRepo"
 import type {
   ApplyLogResult,
-  LoggedExercise,
   LevelId,
   ProgramDefinition,
   ProgramEnrollment,
@@ -709,72 +706,31 @@ export async function logProgramSession(
  * `entries === null` deletes the session. Both paths go through the same replay,
  * so there is one rule for "what do the weights say now" rather than two.
  */
+/**
+ * Remove one logged session, and replay everything after it.
+ *
+ * ONE JOB NOW. This also carried a "correct the session" path, taking
+ * `{exerciseId, setNumber, reps, weight}` and rewriting the workout from it —
+ * which flattened warm-ups, all-out sets and back-offs into plain working sets
+ * and dropped every note, RPE and side on the way past. Nothing called it: the
+ * live correction path is `reviseWorkout` in `workoutRepo.ts`, which preserves
+ * all of that. It went with the PATCH route it served.
+ *
+ * The state a log advanced FROM is not stored, so a single log cannot be undone
+ * arithmetically. The only honest answer is to replay every remaining session
+ * over the stored seed, which `replayEnrollment` can do because the engine is
+ * pure.
+ */
 export async function reviseSessionLog(
   userId: string,
   enrollmentId: string,
-  logId: string,
-  entries: LoggedExercise[] | null
+  logId: string
 ): Promise<ProgramEnrollment> {
   const supabase = await createServerSupabaseClient()
   const enr = await getEnrollmentById(userId, enrollmentId)
   if (!enr) throw new Error("Enrollment not found")
-  const program = programFor(enr)
 
-  if (entries !== null) {
-    const unknown = unknownExerciseIds(program, entries)
-    if (unknown.length > 0) {
-      throw new Error(`${program.name} has no exercise called ${unknown.join(", ")}. Nothing was changed.`)
-    }
-    /**
-     * EDITING NOW ACTUALLY EDITS.
-     *
-     * It wrote to `program_session_logs`, which had read, insert and delete
-     * row rules and NO update — so Postgres matched zero rows, returned no
-     * error, and the app replayed the untouched history and reported success.
-     * Proved against the live database on 2026-09-06: a correction to 9 reps
-     * came back 200 and the row still read 6.
-     *
-     * The sets are ordinary workout rows, which have always been updatable.
-     * The write is re-read rather than trusted, so a silent no-op can never
-     * come back: if nothing changed, the caller is told.
-     */
-    const nameById = new Map(
-      scheduleDays(program.schedule).flatMap((d) =>
-        d.exercises.map((ex) => [ex.id, ex.name] as const)
-      )
-    )
-    const rows = entries.flatMap((entry) =>
-      entry.sets.map((set) => ({
-        log_id: logId,
-        exercise: nameById.get(entry.exerciseId) ?? entry.exerciseId,
-        exercise_id: entry.exerciseId,
-        weight_kg: round2(toKg(set.weight, enr.unitSystem)),
-        reps: set.reps,
-        set_number: set.setNumber,
-        set_kind: "working" as const,
-        ...(set.side ? { side: set.side } : {}),
-      }))
-    )
-    // The corrected session replaces the old one wholesale: a set removed from
-    // the correction has to disappear, and a patch cannot express that.
-    const { error: clearError } = await supabase.from("workout_sets").delete().eq("log_id", logId)
-    if (clearError) throw new Error(`Failed to change the session: ${clearError.message}`)
-    if (rows.length > 0) {
-      const { data: written, error } = await supabase.from("workout_sets").insert(rows).select("id")
-      if (error) throw new Error(`Failed to change the session: ${error.message}`)
-      if ((written ?? []).length !== rows.length) {
-        throw new Error("The correction did not save. Nothing was changed.")
-      }
-    }
-    // Skips are on the workout, not on its sets.
-    const skipped = entries.filter((e) => e.skipped).map((e) => e.exerciseId)
-    const { error: adjError } = await supabase
-      .from("workout_logs")
-      .update({ adjustments: skipped.length > 0 ? { skipped } : {} })
-      .eq("id", logId)
-      .eq("user_id", userId)
-    if (adjError) throw new Error(`Failed to change the session: ${adjError.message}`)
-  } else {
+  {
     // Deleting the workout takes its sets with it (ON DELETE CASCADE) — and,
     // because there is only one record now, it also takes it out of the
     // dashboard count, the calendar, the personal records and the export.

@@ -1,33 +1,22 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { reviseSessionLog } from "@/src/db/programRepo"
-import { z } from "zod"
 
-/** Same set shape the original log accepts — a correction is still a session. */
-const ReviseSchema = z.object({
-  entries: z.array(z.object({
-    exerciseId: z.string().min(1),
-    sets: z.array(z.object({
-      setNumber: z.number().int().positive(),
-      reps: z.number().int().min(0),
-      weight: z.number().min(0),
-    })),
-  })),
-})
-
+/**
+ * PATCH IS GONE, DELETE STAYS.
+ *
+ * The PATCH half took `{exerciseId, setNumber, reps, weight}` and nothing else,
+ * then deleted every set of the workout and re-inserted only that — so a
+ * correction through it flattened warm-ups, all-out sets and back-offs into
+ * plain working sets and dropped every per-set note, RPE and side. Nothing in
+ * the app called it; corrections go through `PATCH /api/workouts/[id]/revise`,
+ * which preserves all of that. It is removed rather than left as a loaded gun.
+ *
+ * DELETE is the live path behind the delete-a-session button and five test
+ * cleanups. It is the only route that removes one session and replays the
+ * enrollment so the weights land where they would have been without it.
+ */
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
-
-/** Correct a logged session. Every session after it is recomputed. */
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string; logId: string }> }) {
-  const auth = await requireAuth()
-  if (!auth.success) return auth.response
-  try {
-    const { id, logId } = await params
-    const parsed = ReviseSchema.safeParse(await request.json())
-    if (!parsed.success) return err("Validation failed", 400)
-    return NextResponse.json(await reviseSessionLog(auth.userId, id, logId, parsed.data.entries))
-  } catch (e) { console.error("revise session:", e); return err((e as Error).message, 400) }
-}
 
 /** Remove a logged session. Every session after it is recomputed. */
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string; logId: string }> }) {
@@ -35,6 +24,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   if (!auth.success) return auth.response
   try {
     const { id, logId } = await params
-    return NextResponse.json(await reviseSessionLog(auth.userId, id, logId, null))
+    return NextResponse.json(await reviseSessionLog(auth.userId, id, logId))
   } catch (e) { console.error("delete session:", e); return err((e as Error).message, 400) }
 }

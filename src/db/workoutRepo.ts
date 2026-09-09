@@ -44,6 +44,7 @@ import type {
   WorkoutSummary,
 } from "@/src/programs/types"
 import type { PersonalRecord, WorkoutSetRow } from "@/src/health/types"
+import { libraryByName } from "@/src/programs/data/exerciseLibrary"
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
@@ -232,6 +233,14 @@ export async function completeSet(
   const row = {
     exercise: set.exercise,
     exercise_id: set.exerciseId,
+    /**
+     * THE LIFT'S IDENTITY ACROSS PROGRAMS. The column was added for exactly this
+     * and then never written — every row said `null` — so anything asking "how
+     * much do you squat" had only the free-text name to go on, and a self-built
+     * week that says "Back Squat" never counted towards Squat. `exercise_id` is
+     * program-private; this one is shared.
+     */
+    library_id: libraryByName(set.exercise)?.id ?? null,
     weight_kg: round2(toKg(set.weight, unit)),
     reps: set.reps,
     set_number: set.setNumber,
@@ -709,6 +718,9 @@ export async function reviseWorkout(
     log_id: workoutId,
     exercise: set.exercise,
     exercise_id: set.exerciseId,
+    // Same identity as the live write above, so a corrected set is still the
+    // same lift as the one it replaced.
+    library_id: libraryByName(set.exercise)?.id ?? null,
     weight_kg: round2(set.weightKg),
     reps: set.reps,
     set_number: set.setNumber,

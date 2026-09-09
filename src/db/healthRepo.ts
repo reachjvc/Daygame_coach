@@ -6,6 +6,7 @@
 
 import { createServerSupabaseClient } from "./supabase"
 import { chunkIds, readAllRows } from "./paging"
+import { libraryByName } from "@/src/programs/data/exerciseLibrary"
 import { getNowInTimezone, periodStartFor, startOfDayInstant } from "../shared/dateUtils"
 import { weeklyStreakRun } from "../shared/streakRuns"
 import { previousPeriodStart, toZonedDate, toDateISO, isStreakCurrent } from "../shared/dateUtils"
@@ -612,11 +613,39 @@ async function finishedLogIds(userId: string): Promise<string[]> {
   return rows.map((r) => r.id)
 }
 
+/**
+ * THE HEAVIEST SET OF A LIFT, WHATEVER THE PROGRAM CALLED IT.
+ *
+ * WHAT WAS WRONG. This matched one exact name — `.ilike("exercise", exercise)`
+ * is case-insensitive EQUALITY, with no wildcard — and the caller asks for
+ * "squat" (`src/db/metricsRepo.ts:401`). The exercise library calls it "Back
+ * Squat", and a self-built week copies the library's name onto every set. So
+ * somebody who built their own week and squatted twice a week for three months
+ * had a Squat 1RM tile reading 0 kg forever, indistinguishable from never having
+ * squatted at all.
+ *
+ * It matches on `library_id` now — the lift's identity across programs — and
+ * falls back to the name for the rows written before that column was populated.
+ * Bench Press, Deadlift and Overhead Press were never affected because their
+ * library names happen to equal the literals passed in; Squat was the one that
+ * did not, which is exactly why a name is the wrong key.
+ */
 export async function getExerciseMax(userId: string, exercise: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  // Get all sets for this exercise, find the max weight (for 1RM estimation)
   const logIds = await finishedLogIds(userId)
   if (logIds.length === 0) return 0
+
+  // The library entry the caller means, if there is one. `libraryByName` already
+  // knows the aliases ("squat" -> the barbell back squat).
+  const libraryId = libraryByName(exercise)?.id ?? null
+  /**
+   * Either match is this lift. Written as one `or` rather than a branch so the
+   * query stays a single chain — `.range()` has to be on the same expression, and
+   * `tests/unit/architecture.test.ts` refuses a read that cannot be seen to page.
+   */
+  const isThisLift = libraryId
+    ? `library_id.eq.${libraryId},exercise.ilike.${exercise}`
+    : `exercise.ilike.${exercise}`
 
   const sets: { weight_kg: number; reps: number }[] = []
   for (const ids of chunkIds(logIds)) {
@@ -625,7 +654,7 @@ export async function getExerciseMax(userId: string, exercise: string): Promise<
     .from("workout_sets")
     .select("weight_kg, reps")
     .in("log_id", ids)
-    .ilike("exercise", exercise)
+    .or(isThisLift)
     /**
      * `is_warmup` was dropped on 2026-09-07 and replaced by `set_kind`. This
      * filter survived the migration and threw on every call, so the estimated
