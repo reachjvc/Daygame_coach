@@ -1,8 +1,0 @@
-# Sub-batch P018.1 (unseen-video generalization check)
-# Created: 2026-02-14
-# Videos: 3
-#
-# Format: source_name | video_folder_name
-natural_lifestyles_meetingGirlsIRL | Where To Meet “Wife Material” Women [1ok1oovp0K0]
-coach_kyle_how_to_approach_a_girl | This ONE Phrase Makes Any Conversation Flirty FAST [04njgij7V7w]
-NICK_KRAUSER_OUTLAWDAYGAME | Outlaw Daygame - Part 9 - Brain Fry [IZB-_mImb5o]

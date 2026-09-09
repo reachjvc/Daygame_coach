@@ -1,8 +1,0 @@
-# Sub-batch P018.2 (unseen-video low-segment smoke)
-# Created: 2026-02-14
-# Videos: 3
-#
-# Format: source_name | video_folder_name
-daily_evolution | 3 First Date Tips [0R_umfUObSQ]
-coach_kyle_how_to_approach_a_girl | How to Approach A Girl At The Bar 😈 (Without Getting Rejected) #shorts [6TencNrSXcs]
-austen_summers_client_results | 1-on-1 Bootcamp Testimonial [WgPkSUjFsCw]

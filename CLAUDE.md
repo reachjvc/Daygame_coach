@@ -58,4 +58,20 @@ Enforced by `tests/unit/architecture.test.ts` — run it rather than memorizing 
 - `.claude/rules/` — pipeline, database, UI, testing, plans, finished work. Load automatically when you touch matching files.
 - `docs/pipeline/learnings.md` — read before any pipeline work
 - `docs/testing_behavior.md` — read before writing tests
-- `docs/slices/SLICE_*.md` — slice specs
+
+**There are no slice specs, plans or architecture docs any more.** 176 markdown
+files were deleted on 2026-09-09: 73 plans, the architecture and slice specs,
+the brainstorms and audits, the pipeline's batch and audit logs. They had
+accumulated over months, most described screens that no longer exist, and
+telling which were current took longer than reading the code. They are all in
+git history if a specific one is ever wanted.
+
+35 code comments across 25 files still cite one by name — `See
+docs/plans/achievement_counters.md` and the like. Those names were left in place
+deliberately: the name is exactly what finds the file in git history
+(`git log --diff-filter=D -- <path>`). A cited path that is not on disk is
+expected, not a mistake.
+
+So: **read the code, not a doc about the code.** `tests/unit/architecture.test.ts`
+is the executable spec — run it rather than looking for a written one. New docs
+are being written from scratch; do not resurrect an old one to answer a question.

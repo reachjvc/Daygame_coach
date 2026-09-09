@@ -1,8 +1,0 @@
-# Sub-batch P018.3 (unseen-video infield stress set)
-# Created: 2026-02-14
-# Videos: 3
-#
-# Format: source_name | video_folder_name
-coach_kyle_how_to_approach_a_girl | How to Approach a Group of Girls (INFIELD) [tyI2OZCVhT8]
-coach_kyle_infield | Drake Goes Man-To-Woman On Jessie Reyez!! (Interaction + Breakdown) [5gfclo7crNI]
-austen_summers_meets_girls | Swedish Hockey Player Picks Up Girls [KURlBcRF6-M]
