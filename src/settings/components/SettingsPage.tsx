@@ -45,8 +45,13 @@ import type { SettingsPageProps } from "../types"
 import { DIFFICULTY_OPTIONS } from "../types"
 import { ComingSoon } from "@/src/shared/components/ComingSoon"
 import { VOICE_LANGUAGES, DEFAULT_VOICE_LANGUAGE, getVoiceLanguageLabel } from "@/src/tracking/config"
+import { TrainingSettingsCard } from "./TrainingSettingsCard"
+import type { TrainingSettings } from "@/src/programs/trainingSettings"
 
 interface SettingsPageClientProps extends SettingsPageProps {
+  /** What this account trains with — see TrainingSettingsCard. */
+  training: TrainingSettings
+  onUpdateTraining: (settings: TrainingSettings) => Promise<void>
   onUpdateSandboxSettings: (settings: Partial<SandboxSettings>) => Promise<void>
   onResetSandboxSettings: () => Promise<void>
   onUpdateDifficulty: (difficulty: string) => Promise<void>
@@ -67,6 +72,8 @@ export function SettingsPage({
   onUpdateDifficulty,
   onUpdateVoiceLanguage,
   onUpdateTimezone,
+  training,
+  onUpdateTraining,
   onCancelSubscription,
   onReactivateSubscription,
   onOpenBillingPortal,
@@ -286,6 +293,8 @@ export function SettingsPage({
                 </div>
               </CardContent>
             </Card>
+
+            <TrainingSettingsCard initial={training} onSave={onUpdateTraining} />
 
             {/* Stats */}
             <Card>

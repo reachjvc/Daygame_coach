@@ -18,6 +18,7 @@ import {
 } from "./settingsService"
 import { SETTINGS_CONFIG } from "./config"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { saveTrainingSettings } from "@/src/db/workoutRepo"
 
 /**
  * Helper to get authenticated user ID
@@ -136,4 +137,21 @@ export async function openBillingPortal(): Promise<{ url: string } | null> {
   } catch {
     return null
   }
+}
+
+/**
+ * Save what this account trains with: unit, bar weight, smallest plate.
+ *
+ * Revalidates the training routes as well as settings, because every
+ * prescription on them is rounded to the bar and plate this sets.
+ */
+export async function updateTrainingSettings(settings: {
+  unit: "kg" | "lb"
+  barWeightKg: number
+  smallestPlateKg: number
+}): Promise<void> {
+  const userId = await requireAuth()
+  await saveTrainingSettings(userId, settings)
+  revalidatePath(SETTINGS_CONFIG.paths.settings)
+  revalidatePath("/programs")
 }

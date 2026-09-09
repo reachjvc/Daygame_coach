@@ -81,6 +81,8 @@ function renderSettings(overrides: Partial<Parameters<typeof SettingsPage>[0]> =
     onUpdateDifficulty: vi.fn(async () => {}),
     onUpdateVoiceLanguage: vi.fn(async () => {}),
     onUpdateTimezone: vi.fn(async () => {}),
+    training: { unit: "kg" as const, barWeightKg: 20, smallestPlateKg: 1.25 },
+    onUpdateTraining: vi.fn(async () => {}),
     onCancelSubscription: vi.fn(async () => ({ success: true })),
     onReactivateSubscription: vi.fn(async () => ({ success: true })),
     onOpenBillingPortal: vi.fn(async () => null),

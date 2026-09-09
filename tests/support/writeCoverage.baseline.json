@@ -113,6 +113,7 @@
   "src/db/workoutRepo.ts:discardWorkout": "unasserted",
   "src/db/workoutRepo.ts:finishWorkout": "asserted",
   "src/db/workoutRepo.ts:reviseWorkout": "asserted",
+  "src/db/workoutRepo.ts:saveTrainingSettings": "asserted",
   "src/db/workoutRepo.ts:startWorkout": "asserted",
   "src/goals/lifeDirectionService.ts:setGoalField": "mentioned",
   "src/goals/lifeDirectionService.ts:updateGoal": "mentioned",

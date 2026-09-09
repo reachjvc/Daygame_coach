@@ -21,6 +21,7 @@
 
 import { createServerSupabaseClient } from "./supabase"
 import { readAllRows } from "./paging"
+import { DEFAULT_BAR_KG, DEFAULT_PLATE_KG, type TrainingSettings } from "@/src/programs/trainingSettings"
 import { getEnrollmentById, programFor, plateSetupFor } from "./programRepo"
 import { getUserTimezone } from "./settingsRepo"
 import { toDateISO, toZonedDate } from "@/src/shared/dateUtils"
@@ -618,6 +619,7 @@ export async function prescriptionForDay(userId: string, enrollmentId: string, d
   const enr = await getEnrollmentById(userId, enrollmentId)
   if (!enr) throw new Error("That program was not found")
   const program = programFor(enr)
+  const account = await getTrainingSettings(userId)
   const days = scheduleDays(program.schedule)
   const index = dayId ? days.findIndex((d) => d.id === dayId) : -1
   const prescription = computePrescription(
@@ -627,7 +629,13 @@ export async function prescriptionForDay(userId: string, enrollmentId: string, d
   return {
     prescription,
     unit: enr.unitSystem,
-    plates: plateSetupFor(enr.barWeightKg ?? null, enr.unitSystem),
+    // The enrollment's bar overrides the account's; the plate comes from the
+    // account, which is the only place it is set.
+    plates: plateSetupFor(
+      enr.barWeightKg ?? account.barWeightKg,
+      enr.unitSystem,
+      account.smallestPlateKg
+    ),
     loadStyles: Object.fromEntries(
       days.flatMap((d) => d.exercises.map((ex) => [ex.id, loadStyleOf(ex)] as const))
     ),
@@ -755,4 +763,58 @@ export async function reviseWorkout(
     return { recalculated: true }
   }
   return { recalculated: false }
+}
+
+/**
+ * WHAT THIS ACCOUNT TRAINS WITH — unit, bar, smallest plate.
+ *
+ * The three columns were added on 2026-09-07 with their CHECK constraints and a
+ * column GRANT, and then nothing ever wrote them. `weight_unit` was read in one
+ * place and always came back the column default, so a lifter who trains in
+ * pounds and is not currently on a pounds program had no way to say so.
+ * `bar_weight_kg` and `smallest_plate_kg` were read nowhere at all, which is why
+ * the engine still snapped every prescription to a 20 kg bar and 1.25 kg plates
+ * and then printed "use a lighter bar" — naming a fix the app did not offer.
+ */
+/**
+ * The shape and defaults live in `src/programs/trainingSettings.ts`, which has
+ * no server imports — a client component needs them, and importing this module
+ * to get them drags a server Supabase client into the browser bundle.
+ */
+export type { TrainingSettings } from "@/src/programs/trainingSettings"
+
+export async function getTrainingSettings(userId: string): Promise<TrainingSettings> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("weight_unit, bar_weight_kg, smallest_plate_kg")
+    .eq("id", userId)
+    .maybeSingle()
+  if (error) throw new Error("Could not read your training settings.")
+  return {
+    unit: data?.weight_unit === "lb" ? "lb" : "kg",
+    barWeightKg: data?.bar_weight_kg ?? DEFAULT_BAR_KG,
+    smallestPlateKg: data?.smallest_plate_kg ?? DEFAULT_PLATE_KG,
+  }
+}
+
+export async function saveTrainingSettings(userId: string, settings: TrainingSettings): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      weight_unit: settings.unit,
+      bar_weight_kg: settings.barWeightKg,
+      smallest_plate_kg: settings.smallestPlateKg,
+    })
+    .eq("id", userId)
+  /**
+   * The message a person can act on, not the database's. A CHECK violation here
+   * means a number outside what a bar or a plate can be.
+   */
+  if (error) {
+    throw new Error(
+      "Those settings could not be saved. A bar must be between 0 and 50 kg, and a plate between 0.25 and 25 kg."
+    )
+  }
 }

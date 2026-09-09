@@ -96,12 +96,25 @@ function toDomain(row: ProgramEnrollmentRow): ProgramEnrollment {
  * lifter's 15 kg press was rounded up at enrolment, and "deload 10%" from 20
  * landed back on 20 for ever.
  */
-export function plateSetupFor(barWeightKg: number | null, unit: UnitSystem) {
+export function plateSetupFor(
+  barWeightKg: number | null,
+  unit: UnitSystem,
+  /**
+   * THE PLATE, WHICH THIS IGNORED ENTIRELY.
+   *
+   * It always returned `DEFAULT_PLATES[unit].smallestPlate` — 1.25 kg — however
+   * the account was configured, so a home gym with nothing smaller than 2.5 kg
+   * got prescriptions it could not load, and the deload message "this is already
+   * the lightest your bar can be, use a lighter bar" named a fix the app had no
+   * way to accept. Both are settings now; both are read here.
+   */
+  smallestPlateKg: number | null = null
+) {
   const defaults = DEFAULT_PLATES[unit]
-  if (barWeightKg == null) return defaults
+  const toUnit = (kg: number) => (unit === "kg" ? kg : Math.round((kg / KG_PER_LB) * 100) / 100)
   return {
-    barWeight: unit === "kg" ? barWeightKg : Math.round((barWeightKg / KG_PER_LB) * 100) / 100,
-    smallestPlate: defaults.smallestPlate,
+    barWeight: barWeightKg == null ? defaults.barWeight : toUnit(barWeightKg),
+    smallestPlate: smallestPlateKg == null ? defaults.smallestPlate : toUnit(smallestPlateKg),
   }
 }
 

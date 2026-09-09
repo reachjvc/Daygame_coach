@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { createServerSupabaseClient } from "@/src/db/server"
 import { getSettingsPageData, SettingsPage } from "@/src/settings"
+import { getTrainingSettings } from "@/src/db/workoutRepo"
 import {
   updateSandboxSettings,
   resetSandboxSettings,
@@ -10,6 +11,7 @@ import {
   cancelSubscription,
   reactivateSubscription,
   openBillingPortal,
+  updateTrainingSettings,
 } from "@/src/settings/actions"
 
 export default async function SettingsPageWrapper() {
@@ -23,6 +25,7 @@ export default async function SettingsPageWrapper() {
     redirect(`/auth/login?next=${encodeURIComponent("/dashboard/settings")}`)
   }
 
+  const training = await getTrainingSettings(user.id)
   const { profile, subscription, stats } = await getSettingsPageData(
     user.id,
     user.email || "",
@@ -43,6 +46,8 @@ export default async function SettingsPageWrapper() {
       onUpdateDifficulty={updateDifficulty}
       onUpdateVoiceLanguage={updateVoiceLanguage}
       onUpdateTimezone={updateTimezone}
+      training={training}
+      onUpdateTraining={updateTrainingSettings}
       onCancelSubscription={cancelSubscription}
       onReactivateSubscription={reactivateSubscription}
       onOpenBillingPortal={openBillingPortal}
