@@ -404,8 +404,39 @@ export async function getWorkoutCumulativeCount(userId: string): Promise<number>
   return count ?? 0
 }
 
-export async function deleteWorkoutLog(userId: string, logId: string): Promise<void> {
+/**
+ * Delete a workout — AND UNDO WHAT IT DID TO THE PROGRAM.
+ *
+ * THE BUG THIS FIXES. This deleted the row and stopped. If the workout answered
+ * a program, the weights that workout advanced stayed advanced: you squatted
+ * 100 kg on Tuesday, the program moved you to 102.5, you deleted Tuesday as a
+ * mistake, and it kept asking for 102.5 forever, from a session that no longer
+ * exists. There was no way to get back — the state a log advanced FROM is not
+ * stored, so nothing could reverse it by hand.
+ *
+ * `recalculateEnrollment` replays every remaining session over the stored seed,
+ * which is the only honest answer to "what should the weights say now". It is
+ * the same call `reviseWorkout` already made for a correction; deleting simply
+ * never made it.
+ *
+ * The enrollment is read BEFORE the delete, because `workout_logs.enrollment_id`
+ * is `ON DELETE SET NULL` — after the row is gone there is nothing left to say
+ * which program it belonged to.
+ */
+export async function deleteWorkoutLog(
+  userId: string,
+  logId: string
+): Promise<{ recalculated: boolean }> {
   const supabase = await createServerSupabaseClient()
+
+  const { data: log, error: readError } = await supabase
+    .from("workout_logs")
+    .select("enrollment_id")
+    .eq("id", logId)
+    .eq("user_id", userId)
+    .maybeSingle()
+  if (readError) throw new Error(`Failed to read that workout: ${readError.message}`)
+
   // Sets cascade delete via FK
   const { error } = await supabase
     .from("workout_logs")
@@ -413,6 +444,13 @@ export async function deleteWorkoutLog(userId: string, logId: string): Promise<v
     .eq("id", logId)
     .eq("user_id", userId)
   if (error) throw new Error(`Failed to delete workout log: ${error.message}`)
+
+  if (log?.enrollment_id) {
+    const { recalculateEnrollment } = await import("./programRepo")
+    await recalculateEnrollment(userId, log.enrollment_id)
+    return { recalculated: true }
+  }
+  return { recalculated: false }
 }
 
 // ============================================

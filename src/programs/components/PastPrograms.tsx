@@ -37,13 +37,30 @@ export function PastPrograms({
   // Seeded by the server component so this is not a third round trip.
   const [past, setPast] = useState<ProgramEnrollment[] | null>(initial ?? null)
   const [busy, setBusy] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  /**
+   * A FAILED READ IS NOT AN EMPTY ARCHIVE.
+   *
+   * This set `past` to `[]` on any failure, and the component renders nothing
+   * when `past` is empty — so somebody who ran StrongLifts for a year and
+   * switched to 5/3/1 opened Training during a hiccup and their finished
+   * programs were simply not on the page. No heading, no message, and with them
+   * went the only "Start again" button, which is the whole reason this
+   * component exists. `failed` is a third state, distinct from "you have none".
+   */
+  const [failed, setFailed] = useState(false)
 
   const load = useCallback(async () => {
     try {
       const r = await fetch("/api/programs/enrollments?past=1")
-      setPast(r.ok ? await r.json() : [])
+      if (!r.ok) throw new Error(String(r.status))
+      const body = (await r.json()) as unknown
+      if (!Array.isArray(body)) throw new Error("unexpected shape")
+      setPast(body as ProgramEnrollment[])
+      setFailed(false)
     } catch {
-      setPast([])
+      // The list is left exactly as it was, and the screen says so.
+      setFailed(true)
     }
   }, [])
 
@@ -98,17 +115,67 @@ export function PastPrograms({
     }
   }
 
+  /**
+   * SAY WHAT ACTUALLY HAPPENS.
+   *
+   * This used to promise "Its 47 logged sessions will be erased. This cannot be
+   * undone." Not one of them was erased. `deleteEnrollmentPermanently` removes
+   * the program row only, and `workout_logs.enrollment_id` is `ON DELETE SET
+   * NULL` — so every session survives and is quietly detached from the program
+   * instead. The app claimed to destroy training history and then did not, which
+   * is the worst of both: nobody who wanted it gone got what they asked for, and
+   * anybody who mis-tapped was told their year was gone.
+   *
+   * The sessions are the thing lifters say they fear losing most, so the button
+   * keeps them and the words now match. What is actually lost is the link, and
+   * that is what the confirmation names.
+   */
   async function erase(e: ProgramEnrollment, name: string) {
     const n = e.sessionsLogged ?? 0
-    const what = n === 0 ? "It has no logged sessions." : `Its ${n} logged session${n === 1 ? "" : "s"} will be erased.`
-    if (!confirm(`Delete ${name} permanently? ${what} This cannot be undone.`)) return
+    const what =
+      n === 0
+        ? "It has no logged sessions."
+        : `Its ${n} logged session${n === 1 ? "" : "s"} stay${n === 1 ? "s" : ""} in your history, ` +
+          `and stop${n === 1 ? "s" : ""} counting towards this program.`
+    if (!confirm(`Remove ${name} from your finished programs? ${what}`)) return
     setBusy(e.id)
+    setError(null)
     try {
-      await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
+      const res = await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
+      if (!res.ok) {
+        setError("That program could not be removed.")
+        return
+      }
       await load()
+    } catch {
+      setError("Could not reach the server, so nothing was removed.")
     } finally {
       setBusy(null)
     }
+  }
+
+  // Could not find out. Say so rather than showing the same nothing as an
+  // account with no finished programs.
+  if (failed) {
+    return (
+      <div className="space-y-2" data-testid="past-programs-error">
+        <h2 className="text-sm font-semibold text-muted-foreground">Programs you have finished</h2>
+        <Card>
+          <CardContent className="flex items-center justify-between gap-2 p-4 text-sm">
+            <span className="text-amber-600 dark:text-amber-400">
+              These could not be loaded, so this list may be incomplete.
+            </span>
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="shrink-0 rounded-md border border-border px-2.5 py-1 text-xs transition-colors hover:bg-accent"
+            >
+              Try again
+            </button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   // Nothing to say until there is a past. No empty state, no skeleton — this
@@ -118,6 +185,7 @@ export function PastPrograms({
   return (
     <div className="space-y-2" data-testid="past-programs">
       <h2 className="text-sm font-semibold text-muted-foreground">Programs you have finished</h2>
+      {error && <p className="text-xs text-red-500">{error}</p>}
       <Card>
         <CardContent className="divide-y p-0">
           {(showAll ? past : past.slice(0, SHOWN)).map((e) => {

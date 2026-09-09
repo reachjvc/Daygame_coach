@@ -261,3 +261,89 @@ test("correcting a program session moves the weights it prescribed", async ({ pa
     await fetch(`/api/programs/enrollments/${ids.enrollmentId}?permanent=1`, { method: "DELETE" })
   }, seeded)
 })
+
+/**
+ * DELETING A SESSION MOVES THE WEIGHTS BACK DOWN.
+ *
+ * The bug: `deleteWorkoutLog` deleted the row and stopped. If the workout
+ * answered a program, the weight it advanced you to stayed advanced — you
+ * squatted 100 kg on Tuesday, the program moved you to 102.5, you deleted
+ * Tuesday as a mistake, and it kept asking for 102.5 from a session that no
+ * longer existed. There was no way back by hand: the state a log advanced FROM
+ * is not stored.
+ *
+ * This asserts the number from the server, not from the screen.
+ */
+test("deleting a program session moves the weights back down", async ({ page }) => {
+  test.setTimeout(240000)
+  await page.goto("/programs")
+
+  const seeded = await page.evaluate(async () => {
+    const live0 = await (await fetch("/api/workouts/live")).json()
+    if (live0) await fetch(`/api/workouts/${live0.id}`, { method: "DELETE" })
+    for (const e of await (await fetch("/api/programs/enrollments")).json()) {
+      const d = await (await fetch(`/api/programs/enrollments/${e.id}`)).json()
+      for (const l of d.logs ?? []) await fetch(`/api/programs/enrollments/${e.id}/log/${l.id}`, { method: "DELETE" })
+      await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
+      await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
+    }
+    const made = await (
+      await fetch("/api/programs/enrollments", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ programId: "stronglifts-5x5", level: "beginner", unitSystem: "kg" }),
+      })
+    ).json()
+    const enrollmentId = made.enrollment.id
+    const asked = made.prescription.exercises[0]
+
+    const started = await (
+      await fetch("/api/workouts", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enrollmentId, clientKey: `del-${Date.now()}` }),
+      })
+    ).json()
+    for (const set of asked.sets) {
+      await fetch(`/api/workouts/${started.id}/sets`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          exerciseId: asked.exerciseId, exercise: asked.name,
+          weight: set.weight, reps: set.reps, setNumber: set.setNumber, kind: "working",
+        }),
+      })
+    }
+    await fetch(`/api/workouts/${started.id}/finish`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ intensity: 3 }),
+    })
+    const after = await (await fetch(`/api/programs/enrollments/${enrollmentId}`)).json()
+    return {
+      workoutId: started.id,
+      enrollmentId,
+      liftName: asked.name,
+      askedAt: asked.sets[0].weight,
+      advancedTo: after.prescription.exercises.find((e: { name: string }) => e.name === asked.name)?.sets[0].weight,
+    }
+  })
+
+  expect(seeded.advancedTo, "a full session should have moved the weight up").toBeGreaterThan(seeded.askedAt)
+
+  // Delete it the way a person does: the History tab.
+  await page.reload({ waitUntil: "networkidle" })
+  await page.getByRole("button", { name: "History" }).first().click()
+  page.once("dialog", (d) => void d.accept())
+  await page.getByTestId(`history-delete-${seeded.workoutId}`).click()
+  await page.waitForTimeout(3000)
+
+  const after = await page.evaluate(async (ids) => {
+    const detail = await (await fetch(`/api/programs/enrollments/${ids.enrollmentId}`)).json()
+    const logs = await (await fetch("/api/health/workout?days=3650")).json()
+    return {
+      nowAsks: detail.prescription.exercises.find((e: { name: string }) => e.name === ids.liftName)?.sets[0].weight,
+      stillThere: (logs as { id: string }[]).some((l) => l.id === ids.workoutId),
+    }
+  }, seeded)
+
+  console.log("DELETED", JSON.stringify({ ...seeded, ...after }))
+  expect(after.stillThere, "the workout should be gone").toBe(false)
+  expect(after.nowAsks, "a deleted session must not still be advancing the weight").toBe(seeded.askedAt)
+})

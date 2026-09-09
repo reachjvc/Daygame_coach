@@ -464,7 +464,7 @@ function toStored(set: LiveWorkoutSet): StoredSet {
  * progression engine then compares the two and stalls the weight. There is no
  * safe guess for this, so a failure stops the workout instead of corrupting it.
  */
-async function unitFor(userId: string, enrollmentId: string | null): Promise<"kg" | "lb"> {
+export async function unitFor(userId: string, enrollmentId: string | null): Promise<"kg" | "lb"> {
   if (enrollmentId) {
     const enr = await getEnrollmentById(userId, enrollmentId)
     if (enr) return enr.unitSystem

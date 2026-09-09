@@ -23,9 +23,9 @@ import {
   getTodaySession,
   getSessionLogs,
 } from "@/src/db/programRepo"
-import { getLiveWorkout } from "@/src/db/workoutRepo"
+import { getLiveWorkout, unitFor } from "@/src/db/workoutRepo"
 import { TrainingScreen } from "@/src/programs/components/TrainingScreen"
-import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment } from "@/src/programs/types"
+import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment, UnitSystem } from "@/src/programs/types"
 
 export default async function ProgramsPage() {
   const auth = await requireAuth()
@@ -34,6 +34,8 @@ export default async function ProgramsPage() {
   let past: ProgramEnrollment[] = []
   let detail: EnrollmentDetail | null = null
   let live: LiveWorkout | null = null
+  let accountUnit: UnitSystem | null = null
+  let failed = false
 
   if (auth.success) {
     try {
@@ -54,10 +56,30 @@ export default async function ProgramsPage() {
         ])
         detail = { enrollment: active[0], prescription, logs }
       }
+      accountUnit = await unitFor(auth.userId, null)
     } catch (error) {
+      /**
+       * A FAILED READ IS NOT AN EMPTY ACCOUNT.
+       *
+       * This swallowed the error and fell through with `active = []`, which the
+       * screen renders identically to "you have no training program" — to
+       * somebody three weeks into StrongLifts, during a database hiccup. It then
+       * opened on the "Anything else" tab, because that is what no-program looks
+       * like. `failed` is passed down so the screen can say it does not know.
+       */
       console.error("Failed to pre-render training:", error)
+      failed = true
     }
   }
 
-  return <TrainingScreen initialActive={active} initialPast={past} initialDetail={detail} live={live} />
+  return (
+    <TrainingScreen
+      initialActive={active}
+      initialPast={past}
+      initialDetail={detail}
+      live={live}
+      accountUnit={accountUnit}
+      failed={failed}
+    />
+  )
 }

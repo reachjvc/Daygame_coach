@@ -25,7 +25,7 @@ import { BackLink } from "@/components/BackLink"
 import { Segmented } from "./ui"
 import { getProgram } from "../data/catalog"
 import { effectiveProgram, scheduleDays } from "../customize"
-import { isWeekdayAnchored } from "../programsService"
+import { isWeekdayAnchored, unitForDisplay } from "../programsService"
 import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment, UnitSystem } from "../types"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
@@ -54,11 +54,30 @@ interface Props {
   initialDetail: EnrollmentDetail | null
   /** A workout already open, so "Resume" is on the first paint. */
   live: LiveWorkout | null
+  /** What the account says it trains in, when no program is running. */
+  accountUnit: UnitSystem | null
+  /** The server read failed — this is NOT the same as having no programs. */
+  failed?: boolean
 }
 
-export function TrainingScreen({ initialActive, initialPast, initialDetail, live }: Props) {
+export function TrainingScreen({
+  initialActive,
+  initialPast,
+  initialDetail,
+  live,
+  accountUnit,
+  failed,
+}: Props) {
   const running = initialActive[0]
-  const unit: UnitSystem = running?.unitSystem === "lb" ? "lb" : "kg"
+  /**
+   * WHOSE UNIT. This was `running?.unitSystem === "lb" ? "lb" : "kg"`, so the
+   * moment no program was running — you ended one, or you only ever use "Start
+   * a workout now" — every number on History and Progress silently converted to
+   * kilograms. Same sets, different numbers, no warning. `unitForDisplay` asks
+   * the enrollment first, then the account, and says `null` when neither knows
+   * rather than answering kilograms on their behalf.
+   */
+  const unit: UnitSystem = unitForDisplay(running?.unitSystem, accountUnit) ?? "kg"
   /**
    * Training days a week the running program asks for — ONLY when it says so.
    *

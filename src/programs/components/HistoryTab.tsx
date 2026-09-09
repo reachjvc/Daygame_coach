@@ -298,6 +298,7 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
                   type="button"
                   onClick={() => void remove(log)}
                   aria-label={`Delete the workout from ${new Date(log.logged_at).toLocaleDateString(undefined, DAY)}`}
+                  data-testid={`history-delete-${log.id}`}
                   className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"
                 >
                   <Trash2 className="size-4" />
