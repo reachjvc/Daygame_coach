@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import { periodStartFor, toDateISO } from "@/src/shared/dateUtils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dumbbell, Plus, ChevronRight, ChevronLeft } from "lucide-react"
@@ -108,12 +109,22 @@ export function ProgramsApp({ initialActive, initialPast, initialDetail, live = 
           you could not use. The band earns its place where nothing else says
           what is running (the Life Mastery Templates tab); here the list is
           better at the same job, so the list carries the facts instead. */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">My Programs</h2>
-        <Button size="sm" onClick={() => setView({ mode: "browse" })}>
-          <Plus className="size-4 mr-1" /> Browse
-        </Button>
-      </div>
+      {/*
+        ONE PRIMARY ACTION, NOT TWO IDENTICAL ONES.
+        This heading sat above a "Browse" button, and the empty state below it
+        carried a second "Browse programs" button doing exactly the same thing,
+        forty pixels apart. When there IS a program the heading is furniture —
+        you came to train, not to read an inventory — so it only appears when
+        there is a choice to make.
+      */}
+      {enrollments.length > 0 && (
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium text-muted-foreground">Your programs</h2>
+          <Button size="sm" variant="ghost" onClick={() => setView({ mode: "browse" })}>
+            <Plus className="size-4 mr-1" /> Browse
+          </Button>
+        </div>
+      )}
 
       {/* A FAILED REQUEST IS NOT AN EMPTY LIST. Emptying the list on failure
           told somebody three weeks into a program that they had none and should
@@ -140,9 +151,9 @@ export function ProgramsApp({ initialActive, initialPast, initialDetail, live = 
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : enrollments.length === 0 && !error ? (
         <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+          <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
             <Dumbbell className="size-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">No active program. Browse the catalog to start one.</p>
+            <p className="text-sm">Pick a program and this page becomes today&apos;s workout.</p>
             <Button size="sm" onClick={() => setView({ mode: "browse" })}>Browse programs</Button>
           </CardContent>
         </Card>
@@ -197,6 +208,13 @@ function ActiveProgram({
   /** A session the user picked instead of the one the app offered. */
   const [pickedDayId, setPickedDayId] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
+  /**
+   * Monday of the week now, as a date string, from the one implementation of
+   * "which week is this" — `periodStartFor`. Hand-rolling it is refused by
+   * `tests/unit/architecture.test.ts`, and rightly: this app has had two
+   * separate bugs from two functions disagreeing about where a week starts.
+   */
+  const weekStartedOn = useMemo(() => periodStartFor("weekly", new Date()), [])
 
   /**
    * A FAILED READ IS NOT A SLOW ONE.
@@ -275,9 +293,20 @@ function ActiveProgram({
       {/* THE WEEK, above today's session. You open the app to log, not to
           browse — so the week answers "what is today and what is coming" in one
           glance and stays out of the way. */}
+      {/*
+        THIS WEEK ONLY.
+        This handed WeekStrip every weekday ever trained, so a Monday you trained
+        once in July showed green every Monday afterwards — including Monday
+        morning of a week in which nothing had been done, directly above today's
+        session. After a two-week break it still read "done" under all three
+        training days. A week strip that cannot go back to empty is not
+        reporting anything.
+      */}
       <WeekStrip
         enrollment={detail.enrollment}
-        trainedWeekdays={detail.logs.map((l) => isoWeekday(new Date(l.logged_at)))}
+        trainedWeekdays={detail.logs
+          .filter((l) => toDateISO(new Date(l.logged_at)) >= weekStartedOn)
+          .map((l) => isoWeekday(new Date(l.logged_at)))}
         onSaved={refresh}
       />
 

@@ -99,29 +99,6 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
     }
   }
 
-  /**
-   * Remove one session, then recompute everything after it.
-   *
-   * The consequence is said BEFORE it happens, not discovered afterwards: a
-   * correction that changes your current weights and does not mention it is a
-   * surprise, and a correction that does NOT change them is not a correction.
-   */
-  async function removeSession(logId: string, label: string) {
-    if (!confirm(`Delete the ${label} session? Your weights from here on are recalculated as if it never happened.`)) return
-    setBusy(true)
-    try {
-      const res = await fetch(`/api/programs/enrollments/${enrollmentId}/log/${logId}`, { method: "DELETE" })
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null
-        alert(body?.error ?? "Could not delete that session.")
-        return
-      }
-      onChanged()
-    } finally {
-      setBusy(false)
-    }
-  }
-
   async function unenroll() {
     // It no longer removes anything. Ending a program archives it, so the
     // sessions stay and can be read back; what stops is the prescribing.
@@ -248,19 +225,15 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
                     <span className="shrink-0 text-muted-foreground">
                       {new Date(l.logged_at).toLocaleDateString()}
                     </span>
-                    {/* A SESSION YOU CAN TAKE BACK. Until now a program session
-                        was write-once — a mistyped one was permanent, which is
-                        the single most cited reason people leave a tracker. */}
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => removeSession(l.id, dayLabel(l.day_id))}
-                      aria-label={`Delete the ${dayLabel(l.day_id)} session from ${new Date(l.logged_at).toLocaleDateString()}`}
-                      data-testid="delete-session"
-                      className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:text-destructive disabled:opacity-40"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
+                    {/*
+                      NO BIN HERE ANY MORE.
+                      There were two lists of the same sessions with two different
+                      deletes: this one, which could only remove a row, and
+                      History, where you can open a session, read its sets, correct
+                      it or delete it — and where deleting now replays the program.
+                      Two ways to destroy the same thing is one too many, and this
+                      was the one that showed you least before you did it.
+                    */}
                   </li>
                 ))}
               </ul>
@@ -271,6 +244,9 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
                   {showAll ? "Show recent only" : `Show all ${logs.length}`}
                 </Button>
               )}
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Open one, correct it or delete it on the History tab.
+              </p>
             </div>
           </>
         )}
