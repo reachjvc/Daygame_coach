@@ -31,7 +31,6 @@
  */
 
 import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
 import { setWeekday } from "../builder"
 import { effectiveProgram } from "../customize"
 import { requireProgram } from "../data/catalog"
@@ -115,11 +114,17 @@ export function WeekStrip({ enrollment, trainedWeekdays = [], onSaved }: Props) 
    * "there is no week here".
    */
   if (!anchored && assignedCount === 0) {
+    /*
+     * AN ASIDE IS NOT AN OBJECT.
+     * This was a Card holding one wrapped sentence and a text link — 113px
+     * sitting directly above the workout, outweighing it. The comment above
+     * already says "this is ONE LINE, not a card". The sentence's second clause
+     * is gone too: it restated the first and was what made it wrap.
+     */
     return (
-      <Card data-testid="week-strip">
-        <CardContent className="space-y-1.5 p-3">
+      <div data-testid="week-strip" className="space-y-1.5">
           <p className="text-xs text-muted-foreground">
-            Runs in order rather than on set days — do the next one whenever you train.
+            Runs in order rather than on set days.
           </p>
           <button
             type="button"
@@ -144,14 +149,16 @@ export function WeekStrip({ enrollment, trainedWeekdays = [], onSaved }: Props) 
             </div>
           )}
           {error && <p className="text-xs text-destructive">{error}</p>}
-        </CardContent>
-      </Card>
+      </div>
     )
   }
 
+  /*
+   * Seven bordered tiles inside one more border: the outer box only competed
+   * with the one border in here that means something — today's.
+   */
   return (
-    <Card data-testid="week-strip">
-      <CardContent className="space-y-2 p-3">
+    <div data-testid="week-strip" className="space-y-2">
         <div className="grid grid-cols-7 gap-1">
           {DAYS.map(({ weekday, short }) => {
             const day = days.find((d) => d.weekday === weekday)
@@ -220,7 +227,6 @@ export function WeekStrip({ enrollment, trainedWeekdays = [], onSaved }: Props) 
           </div>
         )}
         {error && <p className="text-xs text-destructive">{error}</p>}
-      </CardContent>
-    </Card>
+    </div>
   )
 }

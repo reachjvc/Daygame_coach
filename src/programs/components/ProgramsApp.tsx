@@ -274,21 +274,25 @@ function ActiveProgram({
       {/* THE PROGRAM IS THE HEADLINE. It was a thin line of grey 11px text above
           the card — the one thing you are actually doing, rendered smaller than
           everything around it. */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="truncate text-lg font-semibold" data-testid="active-program-name">
-            {enrollmentName(detail.enrollment)}
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            {LEVEL_LABELS[detail.enrollment.level]} · started{" "}
-            {new Date(detail.enrollment.started_at).toLocaleDateString()}
-          </p>
-        </div>
-        {/* Reads as a control, not a caption. As a bare ghost button beside the
-            program name it looked like a second heading. */}
-        <Button variant="outline" size="sm" className="shrink-0" onClick={onExit}>
-          <ChevronLeft className="mr-1 size-4" /> All programs
-        </Button>
+      {/*
+        ONE BORDERED CONTROL ON THIS TAB, AND IT IS THE ONE YOU CAME FOR.
+        "All programs" was an outlined Button the same size as Start, so the
+        screen offered two boxed choices of equal weight — one of them being
+        "leave this screen". The level and the start date went with it: neither
+        changes what you do today, and "Beginner · started 9/10/2026" was the
+        second line of the page.
+      */}
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="min-w-0 truncate text-lg font-semibold" data-testid="active-program-name">
+          {enrollmentName(detail.enrollment)}
+        </h2>
+        <button
+          type="button"
+          onClick={onExit}
+          className="-mr-2 inline-flex min-h-11 shrink-0 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground transition-colors hover:text-foreground sm:min-h-0 sm:py-1"
+        >
+          <ChevronLeft className="size-3.5" /> All programs
+        </button>
       </div>
       {/* THE WEEK, above today's session. You open the app to log, not to
           browse — so the week answers "what is today and what is coming" in one

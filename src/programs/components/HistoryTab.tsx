@@ -106,6 +106,12 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
 
   const label = UNIT_CONFIG[unit].label
   const show = (kg: number) => Math.round(fromKg(kg, unit) * 10) / 10
+  /**
+   * Totals are whole units with a separator. A month came to "30,833.3 kg" —
+   * six digits reporting a thirty-tonne total to a tenth of a kilo, which claims
+   * a precision the data does not have and reads as one long number.
+   */
+  const showTotal = (kg: number) => Math.round(fromKg(kg, unit)).toLocaleString()
 
   async function remove(log: WorkoutLogWithSets) {
     const when = new Date(log.logged_at).toLocaleDateString(undefined, DAY)
@@ -251,7 +257,7 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
   }
 
   return (
-    <div className="space-y-2" data-testid="workout-history">
+    <div data-testid="workout-history">
       {error && <p className="text-xs text-destructive">{error}</p>}
 
       {lifts.length > 1 && (
@@ -313,7 +319,7 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
         const volume = working.reduce((t, s) => t + s.weight_kg * s.reps, 0)
 
         return (
-          <div key={log.id} className="space-y-2">
+          <div key={log.id}>
             {/* THE MONTH, once, with what it came to. A sticky header is what
                 makes a long scroll navigable instead of endless — you can see
                 where you are without counting cards. */}
@@ -323,13 +329,21 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
                 {totals && (
                   <span className="text-[11px] tabular-nums text-muted-foreground">
                     {totals.sessions} {totals.sessions === 1 ? "session" : "sessions"} ·{" "}
-                    {show(totals.volumeKg).toLocaleString()} {label}
+                    {showTotal(totals.volumeKg)} {label}
                   </span>
                 )}
               </div>
             )}
-          <Card>
-            <CardContent className="p-3">
+          {/*
+            A LIST ROW IS NOT AN OBJECT.
+            Every workout was a Card — 16px of the card's own padding plus 12px
+            of content padding, so a 110px slab carried about 54px of text and
+            five workouts filled a phone. `Card` already has vertical padding and
+            every call site added more on top; that double padding is the whole
+            reason these screens felt airy and said little. A hairline between
+            rows does the same job in half the height.
+          */}
+          <div className="border-b border-border/60 py-2.5">
               <div className="flex items-start gap-2">
                 <button
                   type="button"
@@ -350,9 +364,19 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
                   ) : (
                     <ChevronRight className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                   )}
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium">
-                      {new Date(log.logged_at).toLocaleDateString(undefined, DAY)}
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-baseline justify-between gap-3">
+                      <span className="text-sm font-medium">
+                        {new Date(log.logged_at).toLocaleDateString(undefined, DAY)}
+                      </span>
+                      {/* The numbers form a right-hand column you can scan down,
+                          rather than a third line under the lifts. */}
+                      <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground/70">
+                        {log.duration_min} min
+                        {working.length > 0
+                          ? ` · ${working.length} ${working.length === 1 ? "set" : "sets"} · ${showTotal(volume)} ${label}`
+                          : ""}
+                      </span>
                     </span>
                     {/* The lifts and their top set: what tells you which
                         session this was, rather than just when it happened. */}
@@ -362,12 +386,6 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
                             .map((e) => `${e.exercise} ${show(e.weightKg)}×${e.reps}`)
                             .join(" · ")
                         : `${log.session_type}${log.distance_km ? ` · ${log.distance_km} km` : ""}`}
-                    </span>
-                    <span className="block text-[11px] text-muted-foreground/70">
-                      {log.duration_min} min
-                      {working.length > 0
-                        ? ` · ${working.length} ${working.length === 1 ? "set" : "sets"} · ${Math.round(fromKg(volume, unit))} ${label}`
-                        : ""}
                     </span>
                   </span>
                 </button>
@@ -531,8 +549,7 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
                   </button>
                 </div>
               ) : null}
-            </CardContent>
-          </Card>
+          </div>
           </div>
         )
       })}

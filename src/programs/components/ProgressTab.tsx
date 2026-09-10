@@ -103,8 +103,7 @@ export function ProgressTab({ plannedPerWeek, unit }: Props) {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardContent className="space-y-2 p-4">
+      <section className="space-y-2">
           <div className="flex items-baseline justify-between gap-2">
             <h3 className="text-sm font-medium">This week</h3>
             <span className="text-xs text-muted-foreground">
@@ -129,8 +128,7 @@ export function ProgressTab({ plannedPerWeek, unit }: Props) {
             ))}
           </div>
           {/* A day that has not happened is not a day you missed. */}
-        </CardContent>
-      </Card>
+      </section>
 
       {/*
         A CHART YOU CAN READ A NUMBER OFF.
@@ -140,8 +138,15 @@ export function ProgressTab({ plannedPerWeek, unit }: Props) {
         "20 27 03 10 17 24 31 07" came from. A reader could see that one week was
         taller than another and nothing else.
       */}
-      <Card>
-        <CardContent className="space-y-2 p-4">
+      {/*
+        SECTIONS, NOT SLABS.
+        `Card` already carries its own vertical padding, and every call site then
+        added `p-4` on top of it — so each of these three blocks paid about 32px
+        of dead space above and below its content, in a lighter grey box on a
+        dark page. Three boxes of identical weight say "three separate objects";
+        these are three sections of one screen, so a rule separates them.
+      */}
+      <section className="space-y-2 border-t border-border/60 pt-4">
           <div className="flex items-baseline justify-between gap-2">
             <h3 className="text-sm font-medium">Weight moved, per week</h3>
             <span className="text-[11px] text-muted-foreground">working sets only</span>
@@ -162,39 +167,57 @@ export function ProgressTab({ plannedPerWeek, unit }: Props) {
                 <span>{show(peak / 2)}</span>
                 <span>0</span>
               </div>
-              <div className="flex flex-1 items-end gap-1.5" data-testid="volume-bars">
-                {volume.map((v, i) => {
-                  const d = new Date(v.weekStart)
-                  // The month, printed once when it changes, so the row of
-                  // numbers is a date rather than eight loose integers.
-                  const prev = i > 0 ? new Date(volume[i - 1].weekStart) : null
-                  const newMonth = !prev || prev.getMonth() !== d.getMonth()
-                  return (
-                    <div key={v.weekStart} className="flex flex-1 flex-col items-center gap-1">
+              {/*
+                THE BARS AND THE LABELS ARE TWO ROWS, NOT EIGHT COLUMNS.
+                They were one row of columns, each column being a bar above its
+                own label, bottom-aligned with `items-end`. Three of the eight
+                labels carry a month underneath ("Jul", "Aug", "Sep"), which made
+                those three columns taller — and because the columns were aligned
+                at their bottoms, those three bars were lifted about 13px off the
+                baseline the other five sat on. The chart said the most recent
+                week was smaller than the one before it while it was actually
+                larger. A bar chart whose bars do not share a baseline is not a
+                bar chart.
+              */}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-end gap-1.5" style={{ height: "72px" }} data-testid="volume-bars">
+                  {volume.map((v) => (
+                    <span
+                      key={v.weekStart}
+                      title={`Week of ${v.weekStart}: ${show(v.volumeKg)} ${label} over ${v.sets} sets`}
+                      className="flex-1 rounded-t bg-primary/70"
+                      style={{ height: `${Math.max(2, (v.volumeKg / peak) * 72)}px` }}
+                    />
+                  ))}
+                </div>
+                <div className="mt-1 flex gap-1.5">
+                  {volume.map((v, i) => {
+                    const d = new Date(v.weekStart)
+                    // The month, printed once when it changes, so the row reads
+                    // as a date rather than eight loose integers.
+                    const prev = i > 0 ? new Date(volume[i - 1].weekStart) : null
+                    const newMonth = !prev || prev.getMonth() !== d.getMonth()
+                    return (
                       <span
-                        title={`Week of ${v.weekStart}: ${show(v.volumeKg)} ${label} over ${v.sets} sets`}
-                        className="w-full rounded-t bg-primary/70"
-                        style={{ height: `${Math.max(2, (v.volumeKg / peak) * 72)}px` }}
-                      />
-                      <span className="text-[11px] tabular-nums leading-tight text-muted-foreground">
+                        key={v.weekStart}
+                        className="flex-1 text-center text-[11px] tabular-nums leading-tight text-muted-foreground"
+                      >
                         {v.weekStart.slice(8)}
                         {newMonth && (
-                          <span className="block text-[11px]">
+                          <span className="block">
                             {d.toLocaleDateString(undefined, { month: "short" })}
                           </span>
                         )}
                       </span>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+      </section>
 
-      <Card>
-        <CardContent className="space-y-2 p-4">
+      <section className="space-y-2 border-t border-border/60 pt-4">
           <h3 className="text-sm font-medium">Your bests</h3>
           {bests.length === 0 ? (
             <p className="text-sm text-muted-foreground">
@@ -223,8 +246,7 @@ export function ProgressTab({ plannedPerWeek, unit }: Props) {
           )}
           {/* Two bests because they are different achievements: 100×8 is a
               harder set than 110×1, and the heaviest single cannot see it. */}
-        </CardContent>
-      </Card>
+      </section>
 
       <Suspense fallback={null}>
         <LiftHistory unit={unit} />

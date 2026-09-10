@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { History, SkipForward, RotateCcw, Trash2, ChevronDown, ChevronUp } from "lucide-react"
 import { formatLoad, summariseProgression, unbrokenRun, UNBROKEN_RUN_QUESTION_AT } from "../programsService"
@@ -128,27 +127,35 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
           ? ` · ${progress[0].name} ${formatLoad(progress[0].first)} → ${formatLoad(progress[0].latest)} ${unitLabel}`
           : "")
 
+  /*
+   * A FOLDED PANEL IS NOT AN OBJECT EITHER.
+   * Closed, this was a Card containing one line — 91px to say "History, nothing
+   * logged yet", directly under the workout and in the same visual language as
+   * it. It is a disclosure row now, matching the "Log a workout you already
+   * did" row above it, so the bottom of the tab reads as two controls rather
+   * than two more slabs.
+   */
   return (
-    <Card>
+    <div className="rounded-md border border-border">
       <button
         type="button"
         onClick={() => setShowHistory((v) => !v)}
         aria-expanded={showHistory}
         data-testid="history-toggle"
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left"
       >
         <span className="flex min-w-0 items-center gap-2">
-          <History className="size-4 shrink-0" />
-          <span className="min-w-0">
-            <span className="block text-base font-semibold">History</span>
-            <span className="block truncate text-xs text-muted-foreground">{headline}</span>
+          <History className="size-4 shrink-0 text-muted-foreground" />
+          <span className="min-w-0 truncate text-sm">
+            History
+            <span className="ml-2 text-xs text-muted-foreground">{headline}</span>
           </span>
         </span>
         {showHistory ? <ChevronUp className="size-4 shrink-0" /> : <ChevronDown className="size-4 shrink-0" />}
       </button>
 
       {showHistory && (
-      <CardContent className="space-y-4 pt-0">
+      <div className="space-y-4 px-3 pb-3">
         {logs.length === 0 ? (
           <p className="text-sm text-muted-foreground">No sessions logged yet.</p>
         ) : (
@@ -290,8 +297,8 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
             {failed}
           </p>
         )}
-      </CardContent>
+      </div>
       )}
-    </Card>
+    </div>
   )
 }

@@ -121,28 +121,37 @@ export function TrainingScreen({
           every Training screen ended in a strip of dead space; and `max-w-4xl`
           was wider than the dashboard people arrive from, so the page jumped
           width on the way in. */}
-      <div className="mx-auto max-w-3xl px-4 py-6">
+      <div className="mx-auto max-w-3xl px-4 pb-6 pt-4">
         <BackLink
           fallback="/dashboard"
           fallbackLabel="Dashboard"
-          className="mb-3 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          className="mb-2 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         />
-        <h1 className="mb-1 text-2xl font-bold">Training</h1>
-        {/* Training and the plan that produced it were two places that never
-            referred to each other. */}
-        {/* THE LIVE ADDRESS, not the bench one. This pointed at
-            `/test/life-mastery`, and every page under `/test` answers 404 in
-            production by design (`app/test/layout.tsx`) — so on the deployed
-            site the one link joining training to the plan it belongs to was a
-            dead end. `/dashboard/goals/plan` is the same flow with the account
-            behind it, and is where the rest of the app already sends people. */}
-        <p className="mb-3 text-sm text-muted-foreground">
-          Part of your{" "}
-          <Link href={LIFE_MASTERY} className="underline underline-offset-2 hover:text-foreground">
-            Life Mastery plan
-          </Link>
-          .
-        </p>
+        {/*
+          THE MASTHEAD WAS 22% OF THE PHONE.
+          A back link, then "Training" at 24px, then a sentence about the Life
+          Mastery plan, then the tabs: 184px before anything about training
+          appeared, on every one of the four tabs. The tabs directly below
+          already say which screen you are on, so the word "Training" does not
+          need to be the largest thing on it. One line now, with the plan link
+          as an aside inside it.
+        */}
+        <h1 className="mb-3 text-base font-semibold">
+          Training{" "}
+          {/* THE LIVE ADDRESS, not the bench one. This pointed at
+              `/test/life-mastery`, and every page under `/test` answers 404 in
+              production by design (`app/test/layout.tsx`) — so on the deployed
+              site the one link joining training to the plan it belongs to was a
+              dead end. `/dashboard/goals/plan` is the same flow with the
+              account behind it, and is where the rest of the app already sends
+              people. */}
+          <span className="text-xs font-normal text-muted-foreground">
+            · part of your{" "}
+            <Link href={LIFE_MASTERY} className="underline underline-offset-2 hover:text-foreground">
+              Life Mastery plan
+            </Link>
+          </span>
+        </h1>
 
         {/*
           THE SERVER READ FAILED, AND THAT IS NOT "YOU HAVE NO PROGRAMS".
@@ -169,7 +178,7 @@ export function TrainingScreen({
           </div>
         )}
 
-        <div className="mb-4">
+        <div className="mb-3">
           <Segmented
             label="What are you logging?"
             value={tab}
