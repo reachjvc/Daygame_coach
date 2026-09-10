@@ -16,7 +16,7 @@
 
 import { z } from "zod"
 import { entryWhenFields, hasDateIfTime, NEEDS_DATE_FOR_TIME } from "@/src/health/schemas"
-import { MAX_WEIGHT_KG } from "@/src/shared/weight"
+import { MAX_DISTANCE_KM, MAX_DURATION_MIN, MAX_WEIGHT_KG } from "@/src/shared/weight"
 
 const positiveInt = (max: number) => z.number().int().min(1).max(max)
 
@@ -245,9 +245,9 @@ export const LogSessionSchema = z
     // HOW LONG IT ACTUALLY TOOK, and how hard. Every session used to be written
     // down as exactly 45 minutes at effort 3 whatever had happened, which is
     // where the dashboard's invented "training hours" number came from.
-    durationMin: z.number().min(1).max(600),
+    durationMin: z.number().min(1).max(MAX_DURATION_MIN),
     intensity: z.number().int().min(1).max(5),
-    distanceKm: z.number().min(0).max(MAX_WEIGHT_KG).optional(),
+    distanceKm: z.number().min(0).max(MAX_DISTANCE_KM).optional(),
     rpe: z.number().int().min(1).max(10).optional(),
     notes: z.string().max(1000).optional(),
     // THE DAY YOU TRAINED. A session could only be stamped "now", so a Saturday

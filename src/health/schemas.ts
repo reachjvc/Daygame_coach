@@ -7,6 +7,7 @@
  */
 
 import { z } from "zod"
+import { MAX_DISTANCE_KM, MAX_DURATION_MIN } from "@/src/shared/weight"
 
 const NoteField = z.string().trim().max(500).nullable().optional()
 
@@ -72,9 +73,9 @@ export const WorkoutSetSchema = z.object({
 
 export const CreateWorkoutSchema = z.object({
   session_type: z.enum(["weights", "cardio", "mobility", "yoga", "running"]),
-  duration_min: z.number().int().positive().max(600),
+  duration_min: z.number().int().positive().max(MAX_DURATION_MIN),
   intensity: z.number().int().min(1).max(5),
-  distance_km: z.number().min(0).max(1000).nullable().optional(),
+  distance_km: z.number().min(0).max(MAX_DISTANCE_KM).nullable().optional(),
   sets: z.array(WorkoutSetSchema).optional(),
 
   ...entryWhenFields,

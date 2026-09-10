@@ -15,7 +15,7 @@
 import { describe, it, expect } from "vitest"
 import * as fs from "fs"
 import * as path from "path"
-import { KG_PER_LB, MAX_WEIGHT_KG, toKg, fromKg } from "@/src/shared/weight"
+import { KG_PER_LB, MAX_DISTANCE_KM, MAX_DURATION_MIN, MAX_WEIGHT_KG, toKg, fromKg } from "@/src/shared/weight"
 
 describe("weight conversion", () => {
   it("round-trips without drifting", () => {
@@ -88,5 +88,31 @@ describe("the weight ceiling", () => {
     const [, precision, scale] = decl!
     const ceiling = Number("9".repeat(Number(precision) - Number(scale)) + "." + "9".repeat(Number(scale)))
     expect(MAX_WEIGHT_KG).toBe(ceiling)
+  })
+})
+
+describe("the other limits, which are NOT the weight limit", () => {
+  /**
+   * These exist because one constant was used for two different facts: a blanket
+   * replacement of `max(1000)` with the weight ceiling capped DISTANCE at
+   * 999.99 km, for no reason at all. Each is pinned to the migration that
+   * declares it, so the code cannot drift from the database again.
+   */
+  const migrations = (): string => {
+    const dir = path.resolve(__dirname, "../../../supabase/migrations")
+    return fs.readdirSync(dir).map((f) => fs.readFileSync(path.join(dir, f), "utf-8")).join("\n")
+  }
+
+  it("a distance may reach 1000 km, where a weight may not reach 1000 kg", () => {
+    expect(MAX_DISTANCE_KM).toBe(1000)
+    expect(MAX_WEIGHT_KG).toBeLessThan(MAX_DISTANCE_KM)
+    expect(migrations()).toMatch(/distance_km[\s\S]{0,80}<=\s*1000/)
+  })
+
+  it("a workout is under 600 minutes, so 599 is the most that can be stored", () => {
+    // The CHECK is `< 600`, not `<= 600`. Both schemas said 600 and the database
+    // refused it — an off-by-one nobody sees until somebody logs a long session.
+    expect(MAX_DURATION_MIN).toBe(599)
+    expect(migrations()).toMatch(/duration_min[\s\S]{0,80}<\s*600/)
   })
 })

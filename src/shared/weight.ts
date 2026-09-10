@@ -48,3 +48,21 @@ export function toKg(value: number, unit: Unit): number {
 export function fromKg(kg: number, unit: Unit): number {
   return unit === "lb" ? kg / KG_PER_LB : kg
 }
+
+/**
+ * NOT A WEIGHT, and deliberately here beside one.
+ *
+ * `workout_logs.distance_km` is `NUMERIC(6,2)` with `CHECK (distance_km <= 1000)`,
+ * so 1000 is genuinely allowed — unlike `weight_kg`, which stops at 999.99. A
+ * blanket replacement of `max(1000)` with the weight ceiling capped distance at
+ * 999.99 km for no reason, which is what happens when one constant is used for
+ * two different facts. They are separate because the columns are.
+ */
+export const MAX_DISTANCE_KM = 1000
+
+/**
+ * `workout_logs.duration_min` is `CHECK (duration_min > 0 AND duration_min < 600)`
+ * — strictly less than 600, so 599 is the real maximum. Both the health and the
+ * programs schema said `max(600)`, which the database then refused.
+ */
+export const MAX_DURATION_MIN = 599
