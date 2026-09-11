@@ -88,47 +88,60 @@ export function SetRow({
   return (
     <div
       data-testid={`set-row-${setNumber}`}
-      className={`grid grid-cols-[2rem_1fr_1fr_2.75rem] items-center gap-2 rounded-md px-1 py-1 ${
+      className={`grid grid-cols-[1.75rem_4.5rem_1fr_1fr_2.75rem] items-center gap-2 rounded-md px-1 py-1 ${
         ticked ? "bg-emerald-500/10" : ""
       }`}
     >
       <span className="text-xs tabular-nums text-muted-foreground">{label}</span>
 
+      {/*
+        PREVIOUS IS A COLUMN, and it is tappable.
+        It was a line UNDER the row, so it only existed when there was room for
+        it and it read as an afterthought. Every tracker lifters use puts it
+        second in the row — SET, PREVIOUS, WEIGHT, REPS, ✓ — because "what did I
+        do last time" is the decision you are making while you stand there.
+        Blank when there is no last time: blank is the honest answer and must
+        never be a zero.
+      */}
+      {previous ? (
+        <button
+          type="button"
+          onClick={() => {
+            setWeight(String(previous.weight))
+            setReps(String(previous.reps))
+          }}
+          aria-label={`Use last time: ${previous.weight} ${unitLabel} by ${previous.reps}`}
+          className="min-w-0 truncate text-left text-[11px] tabular-nums text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {previous.weight}×{previous.reps}
+        </button>
+      ) : (
+        <span aria-hidden />
+      )}
+
       {bodyweight ? (
         <span className="text-xs text-muted-foreground">bodyweight</span>
       ) : (
-        <label className="flex items-center gap-1">
-          <Input
-            type="number"
-            inputMode="decimal"
-            aria-label={`Weight for set ${setNumber} in ${unitLabel}`}
-            // Not the unit: the unit is already printed beside the box, and
-            // "kg kg ×" is what that produced.
-            placeholder={prescribed.weight ? undefined : "weight"}
-            className="h-11 w-full sm:h-9"
-            value={weight}
-            onChange={(e) => setWeight(e.target.value)}
-          />
-          <span className="shrink-0 text-xs text-muted-foreground">{unitLabel}</span>
-        </label>
-      )}
-
-      <label className="flex items-center gap-1">
-        {/* The × that makes the row a sentence. Without it the row read "20 kg
-            5" and nothing on it said the 5 was reps — the only clue was the
-            plan line above the whole lift. */}
-        <span aria-hidden className="shrink-0 text-xs text-muted-foreground">×</span>
         <Input
           type="number"
-          inputMode="numeric"
-          aria-label={`${repUnit === "sec" ? "Seconds" : "Reps"} for set ${setNumber}`}
-          placeholder={prescribed.amrap ? "max" : (range ?? (prescribed.reps ? String(prescribed.reps) : "reps"))}
+          inputMode="decimal"
+          aria-label={`Weight for set ${setNumber} in ${unitLabel}`}
+          placeholder={prescribed.weight ? undefined : "weight"}
           className="h-11 w-full sm:h-9"
-          value={reps}
-          onChange={(e) => setReps(e.target.value)}
+          value={weight}
+          onChange={(e) => setWeight(e.target.value)}
         />
-        <span className="shrink-0 text-xs text-muted-foreground">{repUnit === "sec" ? "s" : ""}</span>
-      </label>
+      )}
+
+      <Input
+        type="number"
+        inputMode="numeric"
+        aria-label={`${repUnit === "sec" ? "Seconds" : "Reps"} for set ${setNumber}`}
+        placeholder={prescribed.amrap ? "max" : (range ?? (prescribed.reps ? String(prescribed.reps) : "reps"))}
+        className="h-11 w-full sm:h-9"
+        value={reps}
+        onChange={(e) => setReps(e.target.value)}
+      />
 
       <button
         type="button"
@@ -146,22 +159,8 @@ export function SetRow({
         <Check className="size-5" />
       </button>
 
-      {previous && !ticked && (
-        <button
-          type="button"
-          onClick={() => {
-            // Tapping "last time" copies it in — the gesture every tracker has,
-            // because matching or beating it is the decision being made.
-            setWeight(String(previous.weight))
-            setReps(String(previous.reps))
-          }}
-          className="col-span-4 -mt-0.5 text-left text-[11px] text-muted-foreground hover:text-foreground"
-        >
-          last time {previous.weight} {unitLabel} × {previous.reps}
-        </button>
-      )}
       {unsaved && (
-        <span className="col-span-4 text-[11px] text-amber-500">not saved yet — waiting for signal</span>
+        <span className="col-span-5 text-[11px] text-amber-500">not saved yet — waiting for signal</span>
       )}
     </div>
   )

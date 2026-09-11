@@ -336,6 +336,24 @@ export function LiveWorkoutScreen({
                   </div>
                 )}
 
+                {/*
+                  THE COLUMNS ARE NAMED ONCE.
+                  The unit used to be printed inside every row — "20 kg × 5",
+                  five times for a 5×5 — so a lift said "kg" five times and "×"
+                  five times to convey one fact about the columns. Every tracker
+                  lifters use captions the row once at the top and leaves the
+                  rows as numbers, which is what makes a column scannable.
+                */}
+                {!isSkipped && rowsFor(ex).length > 0 && (
+                  <div className="grid grid-cols-[1.75rem_4.5rem_1fr_1fr_2.75rem] items-center gap-2 px-1 pb-0.5 text-[11px] uppercase tracking-wider text-muted-foreground">
+                    <span>Set</span>
+                    <span>Last</span>
+                    <span>{unitLabel}</span>
+                    <span>Reps</span>
+                    <span aria-hidden />
+                  </div>
+                )}
+
                 {!isSkipped &&
                   rowsFor(ex).map((set, index) => {
                     const ticked = done.find((s) => s.setNumber === set.setNumber && s.kind !== "warmup")
