@@ -1,4 +1,4 @@
-import { LayoutDashboard, BarChart3, Swords, HelpCircle, BookOpen, Settings, Timer } from "lucide-react"
+import { LayoutDashboard, BarChart3, Dumbbell, Swords, HelpCircle, BookOpen, Settings, Timer } from "lucide-react"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 /**
@@ -16,6 +16,19 @@ export const TABS = [
   // navigation is being rebuilt around one consolidated surface. Until that
   // exists, the plan is reachable by URL at /life-mastery, and nothing in the
   // bar points at goals at all.
+  /**
+   * TRAINING, IN THE BAR.
+   *
+   * It was reachable by exactly one route in the whole product: the dashboard
+   * has no training card, the tab bar had no training tab, and the only link
+   * lived inside a Quick Actions panel on the Tracking page. So logging a set
+   * meant knowing that the gym tracker is filed under "Tracking", taking four
+   * to six taps to get there, and landing on whichever tab you last used.
+   *
+   * It is a top-level thing people do several times a week; it belongs beside
+   * the other things people do several times a week.
+   */
+  { label: "Training", icon: Dumbbell, href: "/programs", exact: false },
   { label: "Tracking", icon: BarChart3, href: "/dashboard/tracking", exact: false },
   { label: "Scenarios", icon: Swords, href: "/dashboard/scenarios", exact: false },
   { label: "Time", icon: Timer, href: "/dashboard/time", exact: false },

@@ -11,6 +11,7 @@ import { TodayCard } from "./TodayCard"
 import { SessionNotices } from "./SessionNotices"
 import { TodaySessionWidget } from "./TodaySessionWidget"
 import { ProgressionView } from "./ProgressionView"
+import { StartLooseWorkout } from "./StartLooseWorkout"
 import { EditActiveProgram } from "./EditActiveProgram"
 import { WeekStrip } from "./WeekStrip"
 import { PastPrograms } from "./PastPrograms"
@@ -151,10 +152,23 @@ export function ProgramsApp({ initialActive, initialPast, initialDetail, live = 
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : enrollments.length === 0 && !error ? (
         <Card>
+          {/*
+            BOTH DOORS, ON THE SCREEN YOU LAND ON.
+            With no program the app opened on the "Anything else" tab — a
+            write-it-up-afterwards form — so a new user never learned that
+            programs existed, and somebody who just wanted to log today's session
+            had to find the right tab first. The two things a person can do here
+            are "follow a program" and "log what I am about to do", so both are
+            on the first screen and neither is behind a tab.
+          */}
           <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
             <Dumbbell className="size-8 text-muted-foreground" />
             <p className="text-sm">Pick a program and this page becomes today&apos;s workout.</p>
             <Button size="sm" onClick={() => setView({ mode: "browse" })}>Browse programs</Button>
+            <p className="text-xs text-muted-foreground">
+              or start one now and add each lift as you get to it
+            </p>
+            <StartLooseWorkout live={live} />
           </CardContent>
         </Card>
       ) : (

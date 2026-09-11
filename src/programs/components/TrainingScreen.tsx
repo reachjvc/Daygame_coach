@@ -106,14 +106,20 @@ export function TrainingScreen({
   })()
 
   /**
-   * The default is DECIDED, not flickered into.
+   * TODAY, ALWAYS — the tab is not a guess about what you want.
    *
-   * The server already knows whether there is a program, so somebody with none
-   * lands on "Anything else" on the very first paint rather than being shown an
-   * empty session tab for a moment first.
+   * It used to send anybody with no program to "Anything else", a form for
+   * writing up a session after the fact. So a new user's first sight of the
+   * training feature was a page about workouts they had already done, with no
+   * mention anywhere that programs exist; and the tab called "Today" was the one
+   * place they were never shown. The Today tab now carries both doors — pick a
+   * program, or start one now — so there is nothing left to route around.
+   *
+   * The default is still DECIDED rather than flickered into: the server already
+   * knows whether there is a program, so the first paint is the right tab.
    */
   const [picked, setPicked] = useState<Tab | null>(null)
-  const tab: Tab = picked ?? (initialActive.length === 0 ? "anything" : "session")
+  const tab: Tab = picked ?? "session"
 
   return (
     <div className="min-h-screen bg-background">

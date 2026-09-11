@@ -19,13 +19,15 @@
  */
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Dumbbell } from "lucide-react"
+import { Dumbbell, Loader2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useActiveEnrollments, useEnrollment } from "../hooks/useEnrollment"
 import { enrollmentName } from "../data/catalog"
 import { trainingCardState } from "../programsService"
+import { startKeyFor } from "../hooks/useLiveWorkout"
 import { WEEKDAY_SHORT } from "../config"
 import type { LiveWorkout } from "../types"
 
@@ -43,6 +45,41 @@ export function TrainingCard({ live: given }: { live?: LiveWorkout | null }) {
    * state: somebody standing in a gym was shown today's plan again instead of
    * the way back into the workout they were already in.
    */
+  const router = useRouter()
+  const [starting, setStarting] = useState(false)
+  const [startError, setStartError] = useState<string | null>(null)
+
+  /**
+   * Start today's session from here, rather than sending you to a screen with
+   * another Start button on it. Uses the same client key as `TodayCard`, which
+   * is what stops a second tap opening a second workout — the database allows
+   * one at a time, so without the shared key the second request is refused with
+   * a raw error.
+   */
+  async function startNow(enrollmentId: string) {
+    setStarting(true)
+    setStartError(null)
+    try {
+      const res = await fetch("/api/workouts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // No dayId: `workoutRepo` falls back to `prescription.dayId`, which is
+        // today's session — the same one this card just named.
+        body: JSON.stringify({ enrollmentId, clientKey: startKeyFor(enrollmentId) }),
+      })
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null
+        setStartError(body?.error ?? "Could not start that workout.")
+        return
+      }
+      router.push("/programs/live")
+    } catch {
+      setStartError("Could not reach the server, so nothing was started.")
+    } finally {
+      setStarting(false)
+    }
+  }
+
   const [fetched, setFetched] = useState<LiveWorkout | null>(null)
   const [liveUnknown, setLiveUnknown] = useState(false)
   useEffect(() => {
@@ -168,9 +205,33 @@ export function TrainingCard({ live: given }: { live?: LiveWorkout | null }) {
                 </span>
               )}
             </p>
-            <Button asChild size="sm" className="w-full" data-testid="training-card-start">
-              <Link href="/programs">Start</Link>
+            {/*
+              ONE START, NOT TWO.
+              This said "Start" and went to /programs, where you found another
+              button also saying "Start workout". Two identical-sounding buttons
+              for one action, and a screen in between that you did not ask for.
+              It starts the workout now and takes you to the screen you log on —
+              the same request `TodayCard` makes, with the same retry key, so
+              tapping both does not open two workouts.
+            */}
+            <Button
+              size="sm"
+              className="w-full"
+              data-testid="training-card-start"
+              disabled={starting}
+              onClick={() => void startNow(state.enrollmentId)}
+            >
+              {starting ? <Loader2 className="mr-1 size-4 animate-spin" /> : null}
+              Start
             </Button>
+            {startError && (
+              <p className="text-xs text-destructive">
+                {startError}{" "}
+                <Link href="/programs" className="underline">
+                  Open training
+                </Link>
+              </p>
+            )}
           </>
         )}
 
