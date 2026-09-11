@@ -272,8 +272,19 @@ export function LiveWorkoutScreen({
           const rest = restSecondsFor({ name: ex.name })
 
           return (
-            <Card key={ex.exerciseId} className={isSkipped ? "opacity-60" : undefined}>
-              <CardContent className="space-y-1 p-3">
+            /*
+              THE SAME DOUBLE PADDING AS EVERY OTHER SCREEN, ON THE ONE YOU
+              STAND IN FRONT OF FOR AN HOUR. `Card` carries its own vertical
+              padding and this added `p-3` inside it, so a three-lift session
+              barely fitted one and a half lifts on a phone — on the screen where
+              scrolling costs you most, between sets, with a bar in your hands.
+              A bordered block, one padding.
+            */
+            <div
+              key={ex.exerciseId}
+              className={`rounded-lg border border-border bg-card px-3 py-2.5 ${isSkipped ? "opacity-60" : ""}`}
+            >
+              <div className="space-y-1">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="flex items-center gap-2 font-medium">
@@ -407,8 +418,8 @@ export function LiveWorkoutScreen({
                     Bar: {describePlates(platesFor(ex.sets[0].weight, unit, plates), unitLabel)}
                   </p>
                 ) : null}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )
         })}
 

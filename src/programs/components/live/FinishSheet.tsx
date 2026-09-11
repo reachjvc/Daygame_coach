@@ -77,6 +77,7 @@ export function FinishSheet({
     .sort()
     .pop()
   const [endedAt, setEndedAt] = useState(toLocalInput(lastTick ?? new Date().toISOString()))
+  const [editingEnd, setEditingEnd] = useState(false)
   const [intensity, setIntensity] = useState(3)
   const [notes, setNotes] = useState("")
   const [summary, setSummary] = useState<WorkoutSummary | null>(null)
@@ -161,21 +162,33 @@ export function FinishSheet({
           you say. */}
       {unfinished.length > 0 && (
         <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3">
+          {/* THE RULE ONCE, THE LIFTS AS A LIST. It read "so it counts as a
+              miss" on every row — three lifts meant the same clause three
+              times, and three bordered "Don't count it" buttons stacked down
+              the right made a warning box look like a form. The consequence is
+              stated once, at the top, where a rule belongs. */}
           <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
             Not everything was ticked
           </p>
-          <ul className="mt-1.5 space-y-1.5 text-sm">
+          <p className="mt-0.5 text-xs text-amber-600/80 dark:text-amber-400/80">
+            These count as misses and will bring the weight down. Say so if you stopped for another
+            reason.
+          </p>
+          <ul className="mt-2 space-y-1 text-sm">
             {unfinished.map((u) => (
-              <li key={u.exerciseId} className="flex items-center justify-between gap-2">
-                <span>
-                  {u.name} — {u.done} of {u.asked} sets, so it counts as a miss
+              <li key={u.exerciseId} className="flex items-baseline justify-between gap-3">
+                <span className="min-w-0 truncate">
+                  {u.name}{" "}
+                  <span className="tabular-nums text-muted-foreground">
+                    {u.done} of {u.asked}
+                  </span>
                 </span>
                 <button
                   type="button"
                   onClick={() => onSkipLift(u.exerciseId)}
-                  className="shrink-0 rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-accent"
+                  className="min-h-11 shrink-0 rounded-md px-2 text-xs text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground sm:min-h-0 sm:py-1"
                 >
-                  Don&apos;t count it
+                  not a miss
                 </button>
               </li>
             ))}
@@ -183,23 +196,44 @@ export function FinishSheet({
         </div>
       )}
 
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-muted-foreground">Started</span>
-          <span className="text-sm tabular-nums">{started.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-muted-foreground">Ended</span>
-          <Input
-            type="datetime-local"
-            className="h-11 w-52 sm:h-9"
-            value={endedAt}
-            onChange={(e) => setEndedAt(e.target.value)}
-            aria-label="When the workout ended"
-          />
-        </label>
-        <p className="text-sm text-muted-foreground">{minutes} min</p>
+      {/*
+        THE TIME READS AS A SENTENCE, AND THE EDITOR IS BEHIND A TAP.
+        This put a raw `datetime-local` — the operating system's own widget, with
+        its own calendar button and its own date format — in the middle of a dark
+        themed sheet, next to a plain text "Started 02:38 PM" and a bare
+        "1 min". Three alignments, two date formats, one foreign control, on the
+        last screen you see after training. Almost nobody needs to change the end
+        time; the few who do can still reach it.
+      */}
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm">
+          <span className="tabular-nums">
+            {started.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </span>
+          <span className="text-muted-foreground"> → </span>
+          <span className="tabular-nums">
+            {new Date(endedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </span>
+          <span className="ml-2 text-muted-foreground">{minutes} min</span>
+        </p>
+        <button
+          type="button"
+          onClick={() => setEditingEnd((v) => !v)}
+          aria-expanded={editingEnd}
+          className="min-h-11 shrink-0 rounded-md px-2 text-xs text-muted-foreground transition-colors hover:text-foreground sm:min-h-0 sm:py-1"
+        >
+          {editingEnd ? "Done" : "Change"}
+        </button>
       </div>
+      {editingEnd && (
+        <Input
+          type="datetime-local"
+          className="h-11 w-full sm:h-9"
+          value={endedAt}
+          onChange={(e) => setEndedAt(e.target.value)}
+          aria-label="When the workout ended"
+        />
+      )}
 
       {tooLong && (
         <p className="rounded-md border border-destructive/40 bg-destructive/10 px-2.5 py-2 text-xs text-destructive">
@@ -216,19 +250,31 @@ export function FinishSheet({
         </p>
       )}
 
-      <label className="flex flex-col gap-1">
-        <span className="text-xs text-muted-foreground">How hard was it? (1–5)</span>
-        <select
-          value={intensity}
-          onChange={(e) => setIntensity(Number(e.target.value))}
+      {/* Five choices is a row of five, not a dropdown you open, scroll and
+          close. The native select was also the second unstyled OS control on
+          this sheet. */}
+      <div className="flex flex-col gap-1">
+        <span className="text-xs text-muted-foreground">How hard was it?</span>
+        <div
+          role="group"
           aria-label="How hard the workout was, 1 to 5"
-          className="h-11 w-24 rounded-md border border-input bg-background px-2 text-sm sm:h-9"
+          className="inline-flex w-fit overflow-hidden rounded-md border border-input"
         >
           {[1, 2, 3, 4, 5].map((n) => (
-            <option key={n} value={n}>{n}</option>
+            <button
+              key={n}
+              type="button"
+              onClick={() => setIntensity(n)}
+              aria-pressed={intensity === n}
+              className={`min-h-11 w-11 border-r border-input text-sm tabular-nums transition-colors last:border-r-0 sm:min-h-9 ${
+                intensity === n ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-accent"
+              }`}
+            >
+              {n}
+            </button>
           ))}
-        </select>
-      </label>
+        </div>
+      </div>
 
       <label className="flex flex-col gap-1">
         <span className="text-xs text-muted-foreground">Anything worth remembering?</span>
