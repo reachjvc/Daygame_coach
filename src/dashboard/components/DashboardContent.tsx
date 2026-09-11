@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import { MessageCircle, Brain, Dumbbell, HelpCircle, ArrowRight, Lock, BarChart3, BookOpen, Swords } from "lucide-react";
+import { MessageCircle, Brain, HelpCircle, ArrowRight, Lock, BarChart3, BookOpen, Swords } from "lucide-react";
 import { UserPreferences, LevelProgressBar } from "@/src/profile/components";
-import { TrainingCard } from "@/src/programs/components/TrainingCard";
 import { hasDatingPreferences } from "@/src/profile/config";
 import type { DashboardProfileData } from "../types";
 
@@ -87,37 +86,14 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
       ) : null}
 
       {/*
-        TRAINING, WHERE YOU OPEN THE APP.
-        This dashboard is the front door and it had nothing about training on it
-        — not a card, not a link. The only way in was a Quick Actions panel on
-        the Tracking page, so logging a set meant knowing the gym tracker was
-        filed under "Tracking". `TrainingCard` was written for this spot and
-        never mounted; it shows Resume when a workout is open, today's session
-        when one is due, and renders nothing at all when there is nothing to say,
-        so it costs no space on the days it has no news.
+        NO TRAINING HERE. It was briefly on this page — a live card and a module
+        tile — and it did not belong: this dashboard is "choose a training
+        module", meaning Scenarios, Cold Approach and Inner Game, which are all
+        conversation practice. A gym tracker sitting among them as a peer is a
+        category error. It lives on the Tracking page, with the logging and the
+        progress it feeds, and in the tab bar.
       */}
-      <div className="mb-6" data-testid="dashboard-training">
-        <TrainingCard />
-      </div>
-
       <div className="grid md:grid-cols-3 gap-4 md:gap-8">
-        {/* Training — the door that is always there, even on a rest day. */}
-        <Link href="/programs" className="group" data-testid="dashboard-training-link">
-          <Card className="p-5 sm:p-8 bg-card border-border hover:border-primary transition-all duration-300 h-full flex flex-col items-center text-center cursor-pointer group-hover:shadow-lg">
-            <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
-              <Dumbbell className="size-10 text-primary" />
-            </div>
-            <h2 className="text-2xl font-bold mb-3">Training</h2>
-            <p className="text-muted-foreground mb-6 flex-grow">
-              Run a strength program, log every set as you do it, and see what your lifts have done
-              over time.
-            </p>
-            <div className="mt-auto inline-flex items-center gap-2 text-primary">
-              Open training <ArrowRight className="size-4" />
-            </div>
-          </Card>
-        </Link>
-
         {/* Scenarios */}
         <Link href="/dashboard/scenarios" className="group" data-testid="dashboard-scenarios-link">
           <Card className="p-5 sm:p-8 bg-card border-border hover:border-primary transition-all duration-300 h-full flex flex-col items-center text-center cursor-pointer group-hover:shadow-lg">

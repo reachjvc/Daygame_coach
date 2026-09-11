@@ -81,6 +81,21 @@ export function ProgressDashboard({ initialDashboard }: { initialDashboard?: Das
           the load: no fetch, and it renders nothing until the plan is read. */}
       <SeasonBand />
 
+      {/*
+        TODAY'S TRAINING, BACK AT THE TOP.
+        It was pushed to the bottom of this page for a good reason that has since
+        stopped being true: the card here USED to embed every lift and every set
+        of the session, so a five-lift day pushed everything else below the fold.
+        That card is gone. This one is four lines — Resume when a workout is
+        open, today's session and a Start when one is due, what is next on a rest
+        day — and it renders NOTHING AT ALL when there is nothing to say, so it
+        costs no space on the days it has no news. A thing you act on belongs
+        above the things you read.
+      */}
+      <Suspense fallback={null}>
+        <TrainingCard />
+      </Suspense>
+
       {/* Stat tiles — user-configurable; see StatTileGrid */}
       <StatTileGrid initial={initialDashboard} />
 
@@ -127,17 +142,6 @@ export function ProgressDashboard({ initialDashboard }: { initialDashboard?: Das
         {/* Daily Reflection */}
         <div className="md:col-span-2">
           <DailyReviewCard />
-        </div>
-
-        {/* TODAY'S TRAINING SESSION, low on the page on purpose.
-            It was above Quick Actions, where a five-lift day pushed everything
-            else below the fold — a card you open the page for once a day should
-            not outrank the things you open it for every time. Renders nothing
-            without an active program. */}
-        <div className="md:col-span-2">
-          <Suspense fallback={null}>
-            <TrainingCard />
-          </Suspense>
         </div>
 
         {/* Weekly Reviews */}

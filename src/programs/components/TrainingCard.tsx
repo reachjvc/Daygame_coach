@@ -214,8 +214,18 @@ export function TrainingCard({ live: given }: { live?: LiveWorkout | null }) {
               the same request `TodayCard` makes, with the same retry key, so
               tapping both does not open two workouts.
             */}
+            {/*
+              SECONDARY, BECAUSE THIS PAGE ALREADY HAS A PRIMARY.
+              The Tracking page leads with "Start Session" — its own orange
+              call to action — and a second orange button directly under it made
+              two equal shouts on one screen, neither of which is obviously the
+              main one. Resume stays primary (an open workout is urgent and you
+              are being asked to go back to something you left); a session that
+              is merely due is an offer, not an interruption.
+            */}
             <Button
               size="sm"
+              variant="outline"
               className="w-full"
               data-testid="training-card-start"
               disabled={starting}
