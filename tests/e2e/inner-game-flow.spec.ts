@@ -6,8 +6,25 @@ const AUTH_TIMEOUT = 15000
 
 test.describe('Inner Game Flow', () => {
   test.beforeEach(async ({ page }) => {
-    // Arrange: Navigate to inner game page
+    /**
+     * THIS SPEC USED TO POISON ITSELF.
+     *
+     * Four of its five tests assert that the welcome card is on the page, and
+     * the fifth dismisses it — which writes `welcomeDismissed` to the shared
+     * test account. So the first run passed and every run after it failed four
+     * tests, and running the file alone passed while running it in the suite
+     * did not. The state is reset here rather than assumed, which is the only
+     * thing that makes a test about a first-time screen repeatable.
+     */
     await page.goto('/dashboard/inner-game', { timeout: AUTH_TIMEOUT })
+    await page.evaluate(async () => {
+      await fetch('/api/inner-game/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ welcomeDismissed: false }),
+      })
+    })
+    await page.reload({ timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   })
 
@@ -98,7 +115,15 @@ test.describe('Inner Game Flow', () => {
     await expect(page.getByTestId(SELECTORS.innerGame.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
     // Assert: Back button should be visible
-    const backButton = page.getByRole('link', { name: /back/i })
-    await expect(backButton).toBeVisible({ timeout: AUTH_TIMEOUT })
+    /**
+     * The control is called "Exit", not "Back" — it was renamed and this test
+     * was not, so it had been asserting the absence of a word rather than the
+     * presence of a way out. What matters is that there IS one and that it goes
+     * to the dashboard, so that is what is asserted; the wording can change
+     * again without this failing for no reason.
+     */
+    const wayOut = page.getByRole('link', { name: /exit|back/i })
+    await expect(wayOut).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await expect(wayOut).toHaveAttribute('href', '/dashboard')
   })
 })

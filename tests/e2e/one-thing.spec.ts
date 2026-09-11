@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test"
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 /**
  * AT6 — the one thing, end to end.
@@ -9,7 +10,12 @@ import { test, expect } from "@playwright/test"
  * words you typed, on the other page.
  */
 
-const PLAN = "/dashboard/goals/plan?step=one"
+/**
+ * Life Mastery moved to /life-mastery on 2026-09-09; /dashboard/goals/plan is
+ * now a redirect that carries the step across. Built from the constant so the
+ * next move does not leave this asserting an address that no longer exists.
+ */
+const PLAN = `${LIFE_MASTERY}?step=one`
 const TRACKING = "/dashboard/tracking"
 
 /**
@@ -65,7 +71,7 @@ test.describe("the one thing", () => {
     await header.waitFor({ state: "visible" })
     await header.click()
 
-    await expect(page).toHaveURL(/\/dashboard\/goals\/plan\?step=one/)
+    await expect(page).toHaveURL(new RegExp(`${LIFE_MASTERY}\\?step=one`))
     // …and carries the way back, so you are not stranded in a thirteen-step flow.
     await expect(page.getByTestId("back-link")).toHaveText(/Tracking/)
   })
