@@ -1,0 +1,55 @@
+-- Drop four tables that no code has touched in months: public.conversations,
+-- public.goal_check_ins, public.goal_completions, public.user_xp.
+--
+-- WHAT THEY WERE
+--
+-- conversations      (id, user_id, title, scenario, created_at, updated_at)
+-- goal_check_ins     (id, user_id, goal_id, value, note, mood, checked_in_at, created_at)
+-- goal_completions   (id, goal_id, user_id, period_start, period_end,
+--                     target_value, achieved_value, completed, created_at)
+-- user_xp            (user_id, xp, last_updated)
+--
+-- Four features that were designed into the schema and then built differently
+-- or not at all. Scenario chats do not persist a conversation row. Goals record
+-- progress by incrementing the goal itself, not by writing a check-in. Period
+-- completion is derived by `rollGoalPeriods` rather than stored, which is the
+-- decision the counters work settled on: a stored copy of a derivable fact is a
+-- second version of it, and two versions eventually disagree. And nothing feeds
+-- a level or XP anywhere in the app -- the Settings and profile cards that would
+-- show it render a "Coming soon" placeholder for exactly that reason.
+--
+-- WHAT IS LOST
+--
+-- Nothing. Measured on the live database immediately before writing this, all
+-- four tables hold 0 rows. Not "approximately zero" from pg_stat_user_tables --
+-- that view reported 0 for core_values on 2026-09-09 when the real count was
+-- 222, so it is not trustworthy here. These are `select count(*)`.
+--
+-- WHY IT IS SAFE TO DROP RATHER THAN LEAVE
+--
+-- Checked before writing, all four:
+--   * No code reference. grep over src/, app/, scripts/ and tests/ finds the
+--     table names nowhere outside old migration files.
+--   * No inbound foreign keys. Nothing points at these, so no other table
+--     loses a column or a constraint. (This is what rules out core_values and
+--     life_areas, which are also unreferenced by code but ARE pointed at by
+--     user_values and user_goals.)
+--   * No views and no functions or triggers mention them.
+--   * RLS is on for all four, so nothing was exposed while they sat unused.
+--     Their six policies -- 4 on conversations, 1 each on goal_check_ins and
+--     goal_completions -- are dropped by the DROP TABLE itself. user_xp had RLS
+--     on with no policies at all, which is the correct locked-down state for a
+--     table nothing reads.
+--
+-- An empty unused table is not harmful in itself. It is harmful as a signal:
+-- the next person to design goal check-ins finds a goal_check_ins table, assumes
+-- it is the place to write, and half-implements against a schema nobody chose.
+--
+-- THIS IS NOT REVERSIBLE in the sense that a DROP destroys the table, but there
+-- is no data to lose. The column definitions above are the whole of what would
+-- need recreating, and any real implementation would want to design its own.
+
+drop table if exists public.conversations;
+drop table if exists public.goal_check_ins;
+drop table if exists public.goal_completions;
+drop table if exists public.user_xp;
