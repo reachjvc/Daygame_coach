@@ -35,7 +35,7 @@ and nothing else — the service-role key, the SQL editor and every script you
 write walk straight past it. "There is no UPDATE policy, so this cannot be
 rewritten" was the claim; the probe above disproved it in one statement. If a
 rule must hold for *everyone*, it is a `CHECK`, a `NOT NULL`, a foreign key or a
-trigger. See `20260827_life_answers_no_update.sql` for the trigger form.
+trigger. See `20260827010000_life_answers_no_update.sql` for the trigger form.
 
 **A read with no upper bound is a bug waiting for a heavy user.** The database
 returns at most 1,000 rows per request and says nothing about it — no error, no
