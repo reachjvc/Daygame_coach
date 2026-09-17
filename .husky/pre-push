@@ -9,3 +9,8 @@
 # the pushed commit.
 echo "🔎 Type-check ratchet (working tree)..."
 node scripts/typecheck-ratchet.mjs || exit 1
+
+# Lint errors may only go down. Same bargain, same caveat: this measures the
+# working tree and CI measures the pushed commit. See scripts/lint-ratchet.mjs.
+echo "🔎 Lint ratchet (working tree)..."
+node scripts/lint-ratchet.mjs || exit 1

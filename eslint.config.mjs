@@ -15,16 +15,31 @@ export default [
       "coverage/**",
       "data/**",
       "training-data/**",
+      // Gitignored scratch: throwaway Playwright captures, not repository code.
+      // Linting it reported 31 errors in files that are not even committed.
+      ".playwright-mcp/**",
     ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    /**
+     * `mjs` and `cjs` belong here or the globals below do not reach them.
+     *
+     * Without them every `.mjs` under scripts/ linted as if `console`,
+     * `process` and `URL` did not exist: 91 `no-undef` errors, 23 of them in
+     * scripts/typecheck-ratchet.mjs — the repo's own quality gate failing lint
+     * because of how lint was configured, not because of anything it did.
+     * `tests/**` is here for the same reason: it is code, and it was linted
+     * with no environment at all.
+     */
     files: [
-      "app/**/*.{js,jsx,ts,tsx}",
-      "src/**/*.{js,jsx,ts,tsx}",
-      "components/**/*.{js,jsx,ts,tsx}",
-      "scripts/**/*.{js,jsx,ts,tsx}",
+      "app/**/*.{js,jsx,mjs,cjs,ts,tsx}",
+      "src/**/*.{js,jsx,mjs,cjs,ts,tsx}",
+      "components/**/*.{js,jsx,mjs,cjs,ts,tsx}",
+      "scripts/**/*.{js,jsx,mjs,cjs,ts,tsx}",
+      "tests/**/*.{js,jsx,mjs,cjs,ts,tsx}",
+      "*.{js,mjs,cjs}",
     ],
     languageOptions: {
       ecmaVersion: "latest",
@@ -43,6 +58,18 @@ export default [
     rules: {
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs["core-web-vitals"].rules,
+    },
+  },
+  {
+    /**
+     * The service worker runs in neither the browser window nor node. It has
+     * its own globals — `self`, `caches`, `clients`, `skipWaiting` — so without
+     * this block public/sw.js reported 19 undefined names for the ordinary
+     * vocabulary of a service worker.
+     */
+    files: ["public/sw.js"],
+    languageOptions: {
+      globals: { ...globals.serviceworker },
     },
   },
 ]

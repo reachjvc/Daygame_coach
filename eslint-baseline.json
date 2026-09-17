@@ -1,0 +1,611 @@
+{
+  "_comment": "Lint errors that already existed, by file and rule. May only shrink. Regenerate with: node scripts/lint-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
+  "_format": "eslint-findings-v1",
+  "total": 357,
+  "files": {
+    "app/api/goals/[id]/route.ts": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1
+    },
+    "app/api/goals/tree-of-life/route.ts": {
+      "@typescript-eslint/no-unused-vars: 'getUserGoals' is defined but never used.": 1
+    },
+    "app/test/animations/page.tsx": {
+      "@typescript-eslint/no-unused-vars: 'Play' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'useCallback' is defined but never used.": 1
+    },
+    "app/test/articles/page.tsx": {
+      "@typescript-eslint/no-unused-vars: 'i' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'renderHighlightedText' is assigned a value but never used.": 1,
+      "prefer-const: 'idx' is never reassigned. Use 'const' instead.": 1
+    },
+    "app/test/curve-customization/_components/VariantCyberpunk.tsx": {
+      "@typescript-eslint/no-unused-vars: 'config' is assigned a value but never used.": 1
+    },
+    "app/test/curve-customization/_components/VariantGold.tsx": {
+      "@typescript-eslint/no-unused-vars: 'CARD_ELEVATED' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'SECONDARY' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'TERTIARY' is assigned a value but never used.": 1
+    },
+    "app/test/curve-customization/_components/VariantZen.tsx": {
+      "@typescript-eslint/no-unused-vars: 'PRIMARY_LIGHT' is assigned a value but never used.": 1
+    },
+    "app/test/direction-colors/VariantA.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 2
+    },
+    "app/test/direction-colors/VariantB.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1
+    },
+    "app/test/direction-colors/VariantC.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1
+    },
+    "app/test/goal-model/GoalModelPage.tsx": {
+      "@typescript-eslint/no-unused-vars: 'ShieldCheck' is defined but never used.": 1
+    },
+    "app/test/goals/VariantA.tsx": {
+      "@typescript-eslint/no-unused-vars: 'Button' is defined but never used.": 1
+    },
+    "app/test/goals/variant-a/GoalPathPicker.tsx": {
+      "@typescript-eslint/no-unused-vars: 'CATEGORY_LABELS' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'onSelectSuggestion' is defined but never used.": 1
+    },
+    "app/test/goals/variant-a/StepIndicator.tsx": {
+      "@typescript-eslint/no-unused-vars: 'isFuture' is assigned a value but never used.": 1
+    },
+    "app/test/goals/variant-b/QuestBoard.tsx": {
+      "@typescript-eslint/no-unused-vars: 'accentHex' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'Button' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'onSelectQuest' is defined but never used.": 1
+    },
+    "app/test/goals/variant-b/RealmMap.tsx": {
+      "@typescript-eslint/no-unused-vars: 'useState' is defined but never used.": 1
+    },
+    "app/test/goals/variant-d/CommitmentBuilder.tsx": {
+      "@typescript-eslint/no-unused-vars: 'Check' is defined but never used.": 1
+    },
+    "app/test/goals/variant-d/GoalExpansion.tsx": {
+      "@typescript-eslint/no-unused-vars: 'CATEGORY_DESCRIPTIONS' is assigned a value but never used.": 1
+    },
+    "app/test/goalsv2/VariantF.tsx": {
+      "@typescript-eslint/no-unused-vars: '_areaId' is defined but never used.": 1
+    },
+    "app/test/goalsv2/variant-f/ForgeComplete.tsx": {
+      "@typescript-eslint/no-unused-vars: 'GoalTemplate' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'l2Goals' is assigned a value but never used.": 1
+    },
+    "app/test/goalsv2/variant-f/ForgeCustomize.tsx": {
+      "@typescript-eslint/no-unused-vars: 'Check' is defined but never used.": 1
+    },
+    "app/test/goalsv2/variant-f/TheForge.tsx": {
+      "@typescript-eslint/no-unused-vars: 'range' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'selectedL3s' is defined but never used.": 1
+    },
+    "app/test/goalsv2/variant-g/ConstellationChart.tsx": {
+      "@typescript-eslint/no-unused-vars: 'goals' is defined but never used.": 1
+    },
+    "app/test/goalsv2/variant-h/MomentumComplete.tsx": {
+      "@typescript-eslint/no-unused-vars: 'pathColor' is defined but never used.": 1
+    },
+    "app/test/goalsv2/variant-h/MomentumCustomize.tsx": {
+      "@typescript-eslint/no-unused-vars: 'Check' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'isCyber' is assigned a value but never used.": 1
+    },
+    "app/test/goalsv2/variant-h/MomentumForge.tsx": {
+      "@typescript-eslint/no-unused-vars: 'CATEGORY_LABELS' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'CYBER_CATEGORY_LABELS' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'GoalDisplayCategory' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'milestones' is assigned a value but never used.": 1
+    },
+    "app/test/goalsv2/variant-h/MomentumGoalSelection.tsx": {
+      "@typescript-eslint/no-unused-vars: 'CornerBrackets' is defined but never used.": 1
+    },
+    "app/test/goalsv2/variant-h/MomentumStepBar.tsx": {
+      "@typescript-eslint/no-unused-vars: 'isFuture' is assigned a value but never used.": 1
+    },
+    "app/test/goalsv2/variant-i/SeasonCustomize.tsx": {
+      "@typescript-eslint/no-unused-vars: 'Check' is defined but never used.": 1
+    },
+    "app/test/goalsv2/variant-i/SeasonPlanner.tsx": {
+      "@typescript-eslint/no-unused-vars: '_cust' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'pathColor' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'selectedL1' is defined but never used.": 1
+    },
+    "app/test/goalsv2/variant-j/CampaignComplete.tsx": {
+      "@typescript-eslint/no-unused-vars: 'CornerBrackets' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'phaseLabel' is assigned a value but never used.": 1
+    },
+    "app/test/goalsv2/variant-j/StrategyLanding.tsx": {
+      "@typescript-eslint/no-unused-vars: 'ThemedCard' is defined but never used.": 1
+    },
+    "app/test/goalsv2/variant-j/TacticalCustomize.tsx": {
+      "@typescript-eslint/no-unused-vars: 'Check' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'CornerBrackets' is defined but never used.": 1
+    },
+    "app/test/goalsv2/variant-j/WarRoom.tsx": {
+      "@typescript-eslint/no-unused-vars: 'CornerBrackets' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'Trophy' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'Zap' is defined but never used.": 1
+    },
+    "app/test/goalsv3/variant-a/OrreryChart.tsx": {
+      "@typescript-eslint/no-unused-vars: 'darkBrass' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'goals' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'pathColor' is defined but never used.": 1
+    },
+    "app/test/goalsv3/variant-a/OrreryComplete.tsx": {
+      "@typescript-eslint/no-unused-vars: 'pathColor' is defined but never used.": 1
+    },
+    "app/test/goalsv3/variant-a/StarCustomizer.tsx": {
+      "@typescript-eslint/no-unused-vars: 'pathColor' is defined but never used.": 1
+    },
+    "app/test/goalsv3/variant-b/NebulaChart.tsx": {
+      "@typescript-eslint/no-unused-vars: 'goals' is defined but never used.": 1
+    },
+    "app/test/goalsv3/variant-b/NebulaLanding.tsx": {
+      "@typescript-eslint/no-unused-vars: 'daygameArea' is assigned a value but never used.": 1
+    },
+    "app/test/goalsv3/variant-c/ColonyChart.tsx": {
+      "@typescript-eslint/no-unused-vars: 'blueGlow' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'goals' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'magentaGlow' is assigned a value but never used.": 1
+    },
+    "app/test/goalsv3/variant-d/CircuitBackground.tsx": {
+      "@typescript-eslint/no-unused-vars: 'start' is assigned a value but never used.": 1
+    },
+    "app/test/goalsv3/variant-d/NetworkChart.tsx": {
+      "@typescript-eslint/no-unused-vars: 'goals' is defined but never used.": 1
+    },
+    "app/test/goalsv3/variant-e/AuroraChart.tsx": {
+      "@typescript-eslint/no-unused-vars: 'goals' is defined but never used.": 1
+    },
+    "app/test/goalsv3/variant-e/AuroraLanding.tsx": {
+      "@typescript-eslint/no-unused-vars: 'Star' is defined but never used.": 1
+    },
+    "app/test/goalsv4/variant-a/GoalCustomizer.tsx": {
+      "@typescript-eslint/no-unused-vars: 'pathColor' is defined but never used.": 1
+    },
+    "app/test/goalsv4/variant-a/OrreryChart.tsx": {
+      "@typescript-eslint/no-unused-vars: 'goals' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'pathColor' is defined but never used.": 1
+    },
+    "app/test/goalsv4/variant-a/OrreryComplete.tsx": {
+      "@typescript-eslint/no-unused-vars: 'pathColor' is defined but never used.": 1
+    },
+    "app/test/goalsv4/variant-b/HoloChart.tsx": {
+      "@typescript-eslint/no-unused-vars: 'goals' is defined but never used.": 1
+    },
+    "app/test/goalsv4/variant-b/HoloOrreryView.tsx": {
+      "@typescript-eslint/no-unused-vars: 'CYAN_DIM' is assigned a value but never used.": 1
+    },
+    "app/test/goalsv4/variant-b/HoloStepBar.tsx": {
+      "@typescript-eslint/no-unused-vars: 'CYAN_DIM' is assigned a value but never used.": 1
+    },
+    "app/test/goalsv4/variant-c/AuroraVisualization.tsx": {
+      "@typescript-eslint/no-unused-vars: 'goals' is defined but never used.": 1
+    },
+    "app/test/goalsv4/variant-d/StormChart.tsx": {
+      "@typescript-eslint/no-unused-vars: 'goals' is defined but never used.": 1
+    },
+    "app/test/goalsv5/VariantA.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3
+    },
+    "app/test/goalsv5/VariantD.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1
+    },
+    "app/test/goalsv5/VariantF.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1,
+      "@typescript-eslint/no-unused-vars: 'useLifeAreas' is defined but never used.": 1
+    },
+    "app/test/goalsv5/VariantG.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1,
+      "@typescript-eslint/no-unused-vars: 'Check' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'i' is defined but never used.": 1
+    },
+    "app/test/goalsv6/VariantA.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3
+    },
+    "app/test/goalsv7/VariantA.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3
+    },
+    "app/test/goalsv7/VariantB.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3,
+      "@typescript-eslint/no-unused-vars: 'MorphingCard' is defined but never used.": 1,
+      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 1
+    },
+    "app/test/goalsv7/VariantC.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3,
+      "@typescript-eslint/no-unused-vars: 'ChevronDown' is defined but never used.": 1
+    },
+    "app/test/goalsv7/VariantD.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3,
+      "@typescript-eslint/no-unused-vars: 'Compass' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'curveConfig' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'defaultCurve' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'Sparkles' is defined but never used.": 1
+    },
+    "app/test/goalsv8/V8.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3
+    },
+    "app/test/goalsv9/V9A.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3,
+      "@typescript-eslint/no-unused-vars: 'segLen' is assigned a value but never used.": 1
+    },
+    "app/test/goalsv9/V9B.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3,
+      "@typescript-eslint/no-unused-vars: '_' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'i' is defined but never used.": 1
+    },
+    "app/test/goalsv9/V9C.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3,
+      "@typescript-eslint/no-unused-vars: 'areaId' is defined but never used.": 1
+    },
+    "app/test/goalsv9/V9D.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3
+    },
+    "app/test/tour-variants/VariantB.tsx": {
+      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 3
+    },
+    "app/test/tour-variants/VariantC.tsx": {
+      "@typescript-eslint/no-unused-vars: 'setSelectedGoals' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'setTargets' is assigned a value but never used.": 1,
+      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 2
+    },
+    "app/test/tour-variants/VariantD.tsx": {
+      "@typescript-eslint/no-unused-vars: 'setSelectedGoals' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'setTargets' is assigned a value but never used.": 1,
+      "prefer-const: 'left' is never reassigned. Use 'const' instead.": 1,
+      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 3
+    },
+    "next.config.mjs": {
+      "no-redeclare: 'process' is already defined as a built-in global variable.": 1
+    },
+    "scripts/scenario-engine/engine.ts": {
+      "@typescript-eslint/no-unused-vars: 'SwapItem' is defined but never used.": 1
+    },
+    "scripts/test-llm-grounding.ts": {
+      "@typescript-eslint/no-unused-vars: 'getBucket' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'tagsMatch' is assigned a value but never used.": 1
+    },
+    "scripts/training-data/09.EXT.chunk-embed.ts": {
+      "@typescript-eslint/no-unused-vars: 'splitTextBySize' is defined but never used.": 1
+    },
+    "scripts/training-data/10.EXT.ingest-test.ts": {
+      "@typescript-eslint/no-unused-vars: 'totalChunks' is assigned a value but never used.": 1
+    },
+    "scripts/training-data/10.EXT.ingest.ts": {
+      "@typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.": 10,
+      "@typescript-eslint/no-unused-vars: 'filePath' is defined but never used.": 1
+    },
+    "scripts/training-data/lib/ingestQaScreen.ts": {
+      "@typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.": 1,
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1
+    },
+    "scripts/verify-realistic-responses.ts": {
+      "@typescript-eslint/no-unused-vars: 'applyPacingCap' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'checkEndRules' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'getInterestBucket' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'getScoreDelta' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'PROFILES' is defined but never used.": 1
+    },
+    "scripts/vision-plan-flow-audit.mjs": {
+      "@typescript-eslint/no-unused-vars: 'mode' is assigned a value but never used.": 1,
+      "no-regex-spaces: Spaces are hard to count. Use {2}.": 1
+    },
+    "src/api_ai/apiAiService.ts": {
+      "@typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.": 8,
+      "@typescript-eslint/no-unused-vars: 'tables' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'WarningLevel' is defined but never used.": 1
+    },
+    "src/dashboard/components/DashboardPage.tsx": {
+      "@typescript-eslint/no-unused-vars: 'redirect' is defined but never used.": 1
+    },
+    "src/db/goalRepo.ts": {
+      "@typescript-eslint/no-unused-vars: '_tempParentId' is assigned a value but never used.": 1
+    },
+    "src/db/programRepo.ts": {
+      "@typescript-eslint/no-unused-vars: 'createWorkoutLog' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'loadStyleOf' is defined but never used.": 1
+    },
+    "src/goals/components/GoalCard.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1,
+      "@typescript-eslint/no-unused-vars: 'isOverdue' is assigned a value but never used.": 1
+    },
+    "src/goals/components/GoalCatalogPicker.tsx": {
+      "@typescript-eslint/no-unused-vars: 'GoalDisplayCategory' is defined but never used.": 1
+    },
+    "src/goals/components/GoalFormModal.tsx": {
+      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 1
+    },
+    "src/goals/components/GoalFormVariant6.tsx": {
+      "@typescript-eslint/no-unused-vars: 'periodInfo' is assigned a value but never used.": 1
+    },
+    "src/goals/components/GoalHierarchyView.tsx": {
+      "@typescript-eslint/no-unused-vars: 'GoalDisplayCategory' is defined but never used.": 1
+    },
+    "src/goals/components/HeatmapCalendar.tsx": {
+      "@typescript-eslint/no-unused-vars: 'percent' is assigned a value but never used.": 1
+    },
+    "src/goals/components/new-goals/GoalsConfigStep.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3,
+      "@typescript-eslint/no-unused-vars: 'activePillars' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'getDeduplicatedTargetsForPillar' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'isTemplateActive' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'makeCustomFrameworkTarget' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'objectiveDates' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'onToggleObjective' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'RELATIONS_PATHS' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'suggestedTargetDate' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'TEMPLATES' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'useRef' is defined but never used.": 1,
+      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 6
+    },
+    "src/goals/components/new-goals/SummaryStep.tsx": {
+      "@typescript-eslint/no-unused-vars: 'getDriversForObjective' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'getMetricsForObjective' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'SHARED_DRIVERS' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'TARGETS' is defined but never used.": 1
+    },
+    "src/goals/components/north-star/AreaBuilder.tsx": {
+      "@typescript-eslint/no-unused-vars: 'parseProgression' is defined but never used.": 1
+    },
+    "src/goals/components/setup/DirectionStep.tsx": {
+      "@typescript-eslint/no-unused-vars: 'i' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'idx' is defined but never used.": 1
+    },
+    "src/goals/components/setup/GoalSetupWizard.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 4
+    },
+    "src/goals/components/setup/GoalsStep.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1,
+      "@typescript-eslint/no-unused-vars: 'getAreaIdForGoal' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'lifeAreas' is defined but never used.": 1,
+      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 1
+    },
+    "src/goals/components/tree-of-life/TreeOfLifeCanvas.tsx": {
+      "@typescript-eslint/no-unused-vars: 't' is defined but never used.": 1
+    },
+    "src/goals/components/tree-of-life/TreeOfLifeView.tsx": {
+      "@typescript-eslint/no-unused-vars: 'GoalTreeNode' is defined but never used.": 1
+    },
+    "src/goals/components/tree-of-life/useTreeLayout.ts": {
+      "@typescript-eslint/no-unused-vars: 'l1Goals' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'l3Goals' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'ROOT_DEPTH' is assigned a value but never used.": 1
+    },
+    "src/goals/components/views/ScorecardView.tsx": {
+      "@typescript-eslint/no-unused-vars: 'configA' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'configB' is assigned a value but never used.": 1
+    },
+    "src/goals/components/views/TreeView.tsx": {
+      "@typescript-eslint/no-unused-vars: 'allGoals' is defined but never used.": 1
+    },
+    "src/goals/components/views/V11ViewA.tsx": {
+      "@typescript-eslint/no-unused-vars: 'lifeAreas' is defined but never used.": 3,
+      "@typescript-eslint/no-unused-vars: 'onCreate' is defined but never used.": 2
+    },
+    "src/goals/components/views/V11ViewB.tsx": {
+      "@typescript-eslint/no-unused-vars: 'BatchGoalInsert' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'discoveryIndex' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'onBatchCreate' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'X' is defined but never used.": 1
+    },
+    "src/goals/components/views/V11ViewC.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3,
+      "@typescript-eslint/no-unused-vars: 'countDescendants' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'Filter' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'Layers' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'LEVEL_ICONS' is assigned a value but never used.": 1
+    },
+    "src/goals/components/views/V11ViewD.tsx": {
+      "@typescript-eslint/no-unused-vars: 'ChevronDown' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'ChevronUp' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'LifeAreaConfig' is defined but never used.": 1
+    },
+    "src/goals/components/views/V11ViewE.tsx": {
+      "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3,
+      "@typescript-eslint/no-unused-vars: 'existingTemplateIds' is assigned a value but never used.": 1
+    },
+    "src/goals/components/vision-plan/VisionPlanLab.tsx": {
+      "@typescript-eslint/no-unused-vars: 'composeSentence' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'lifewideReady' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'questionsForPage' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'VALUE_SUGGESTIONS' is defined but never used.": 1,
+      "no-constant-binary-expression: Unexpected constant truthiness on the left-hand side of a `&&` expression.": 1,
+      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 2
+    },
+    "src/goals/config.ts": {
+      "@typescript-eslint/no-unused-vars: 'GOAL_DISPLAY_CATEGORIES' is defined but never used.": 1
+    },
+    "src/goals/data/goalCategories.ts": {
+      "@typescript-eslint/no-unused-vars: 'LIFE_AREA_MAP' is defined but never used.": 1
+    },
+    "src/goals/data/goalGraph.ts": {
+      "@typescript-eslint/no-unused-vars: 'L2_TO_L3_EDGES' is assigned a value but never used.": 1
+    },
+    "src/inner-game/components/CuttingStep/EliminatePhase.tsx": {
+      "@typescript-eslint/no-unused-vars: 'CUTTING_CONFIG' is defined but never used.": 1
+    },
+    "src/inner-game/components/InnerGamePage.tsx": {
+      "@typescript-eslint/no-unused-vars: 'activeSection' is assigned a value but never used.": 1
+    },
+    "src/inner-game/components/ValuesHub.tsx": {
+      "@typescript-eslint/no-unused-vars: 'Button' is defined but never used.": 1
+    },
+    "src/profile/data/archetypes.ts": {
+      "@typescript-eslint/no-unused-vars: 'AGE_FOLDERS' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'ARCHETYPE_FILES' is assigned a value but never used.": 1
+    },
+    "src/programs/programsService.ts": {
+      "@typescript-eslint/no-unused-vars: 'didHitLinear' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'UNIT_CONFIG' is defined but never used.": 1
+    },
+    "src/qa/prompt.ts": {
+      "prefer-const: 'out' is never reassigned. Use 'const' instead.": 1
+    },
+    "src/qa/qaService.ts": {
+      "@typescript-eslint/no-unused-vars: 'provider' is defined but never used.": 1
+    },
+    "src/qa/retrieval.ts": {
+      "@typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.": 6
+    },
+    "src/scenarios/components/ScenariosHub.tsx": {
+      "@typescript-eslint/no-unused-vars: 'scenariosCompleted' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'userLevel' is defined but never used.": 1
+    },
+    "src/scenarios/keepitgoing/chat.ts": {
+      "@typescript-eslint/no-unused-vars: 'RUBRIC' is defined but never used.": 1
+    },
+    "src/scenarios/keepitgoing/claudeCode.ts": {
+      "@typescript-eslint/no-require-imports: A `require()` style import is forbidden.": 1
+    },
+    "src/scenarios/keepitgoing/generator.ts": {
+      "prefer-const: 'newExitRisk' is never reassigned. Use 'const' instead.": 1
+    },
+    "src/scenarios/openers/evaluator.ts": {
+      "@typescript-eslint/no-unused-vars: 'buildEvaluationSystemPrompt' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'EvaluationSchema' is assigned a value but never used.": 1
+    },
+    "src/scenarios/scenariosService.ts": {
+      "prefer-const: 'keepItGoingContext' is never reassigned. Use 'const' instead.": 1
+    },
+    "src/settings/components/SettingsPage.tsx": {
+      "@typescript-eslint/no-unused-vars: 'getVoiceLanguageLabel' is defined but never used.": 1
+    },
+    "src/tracking/achievementsService.ts": {
+      "@typescript-eslint/no-unused-vars: 'lastWeek' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'today' is assigned a value but never used.": 1
+    },
+    "src/tracking/components/CustomReportBuilder.tsx": {
+      "no-case-declarations: Unexpected lexical declaration in case block.": 1
+    },
+    "src/tracking/components/SessionTrackerPage.tsx": {
+      "@typescript-eslint/no-unused-vars: '_note' is assigned a value but never used.": 1
+    },
+    "src/tracking/components/VoiceRecorderButton.tsx": {
+      "@typescript-eslint/no-unused-vars: 'transcription' is assigned a value but never used.": 1
+    },
+    "src/tracking/config.ts": {
+      "@typescript-eslint/no-unused-vars: 'APPROACH_OUTCOMES' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'SET_TYPES' is defined but never used.": 1
+    },
+    "src/vice/components/ViceFlow.tsx": {
+      "@typescript-eslint/no-unused-vars: 'QuietButton' is defined but never used.": 1
+    },
+    "src/vice/components/steps/AwarenessSteps.tsx": {
+      "@typescript-eslint/no-unused-vars: 'useState' is defined but never used.": 1
+    },
+    "tests/e2e/_visual-check-milestone-curve.spec.ts": {
+      "@typescript-eslint/no-unused-vars: 'trackRightX' is assigned a value but never used.": 1
+    },
+    "tests/e2e/articles.spec.ts": {
+      "@typescript-eslint/no-unused-vars: 'ACTION_TIMEOUT' is assigned a value but never used.": 1
+    },
+    "tests/e2e/goals-data-consistency.spec.ts": {
+      "@typescript-eslint/no-unused-vars: 'ACTION_TIMEOUT' is assigned a value but never used.": 1
+    },
+    "tests/e2e/helpers/goals.helper.ts": {
+      "@typescript-eslint/no-unused-vars: 'ACTION_TIMEOUT' is assigned a value but never used.": 1
+    },
+    "tests/e2e/security-idor.spec.ts": {
+      "@typescript-eslint/no-unused-vars: 'AUTH_TIMEOUT' is assigned a value but never used.": 1
+    },
+    "tests/e2e/security-input.spec.ts": {
+      "@typescript-eslint/no-unused-vars: 'ACTION_TIMEOUT' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'AUTH_TIMEOUT' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'SELECTORS' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'session' is assigned a value but never used.": 1
+    },
+    "tests/e2e/security-rls.spec.ts": {
+      "@typescript-eslint/no-unused-vars: 'ACTION_TIMEOUT' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'BrowserContext' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'Page' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'userAStats' is assigned a value but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'userBStats' is assigned a value but never used.": 1
+    },
+    "tests/e2e/start-session.spec.ts": {
+      "@typescript-eslint/no-unused-vars: 'SELECTORS' is defined but never used.": 1
+    },
+    "tests/integration/db/trackingRepo.integration.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'userId' is assigned a value but never used.": 1
+    },
+    "tests/unit/architecture.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'DOC_HEADER_SKIP_PATTERNS' is assigned a value but never used.": 1
+    },
+    "tests/unit/articles/feedbackEnum.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'key' is assigned a value but never used.": 1
+    },
+    "tests/unit/articles/schemas.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'title' is assigned a value but never used.": 1
+    },
+    "tests/unit/db/linkedMetrics.test.ts": {
+      "@typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.": 1,
+      "@typescript-eslint/no-unused-vars: 'LinkedMetric' is defined but never used.": 1
+    },
+    "tests/unit/goals/goalCategories.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'GoalSuggestion' is defined but never used.": 1
+    },
+    "tests/unit/goals/goalGraph.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'area' is assigned a value but never used.": 1
+    },
+    "tests/unit/goals/goalListIntake.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'goalIsPlanned' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'planConformance' is defined but never used.": 1
+    },
+    "tests/unit/goals/goalsService.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'getMilestoneLadderValues' is defined but never used.": 1
+    },
+    "tests/unit/goals/graduation.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'PacingInfo' is defined but never used.": 1
+    },
+    "tests/unit/goals/lifeDirectionService.test.ts": {
+      "prefer-const: 'p' is never reassigned. Use 'const' instead.": 3
+    },
+    "tests/unit/goals/lifeMasteryCopyLint.test.ts": {
+      "no-useless-escape: Unnecessary escape character: \\\".": 1
+    },
+    "tests/unit/goals/lifeMasteryRegressions.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'goalNeedsWhy' is defined but never used.": 1
+    },
+    "tests/unit/goals/northStarPromises.test.ts": {
+      "prefer-const: 'plan' is never reassigned. Use 'const' instead.": 1
+    },
+    "tests/unit/goals/northStarService.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'ONE_THING_KEY' is defined but never used.": 1
+    },
+    "tests/unit/goals/streakFreeze.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'afterEach' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'beforeEach' is defined but never used.": 1,
+      "@typescript-eslint/no-unused-vars: 'vi' is defined but never used.": 1
+    },
+    "tests/unit/goals/treeGenerationService.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'BatchGoalInsert' is defined but never used.": 1
+    },
+    "tests/unit/pipeline/ingestQaScreen.test.ts": {
+      "@typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.": 1
+    },
+    "tests/unit/programs/builder.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'dayId' is assigned a value but never used.": 3,
+      "@typescript-eslint/no-unused-vars: 'ids' is assigned a value but never used.": 1,
+      "prefer-const: 'dayId' is never reassigned. Use 'const' instead.": 4,
+      "prefer-const: 'ids' is never reassigned. Use 'const' instead.": 1
+    },
+    "tests/unit/programs/customLifts.test.ts": {
+      "prefer-const: 'out' is never reassigned. Use 'const' instead.": 1,
+      "prefer-const: 's' is never reassigned. Use 'const' instead.": 1
+    },
+    "tests/unit/scenarios/difficulty.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'level' is assigned a value but never used.": 1
+    },
+    "tests/unit/settings/settingsToggles.test.tsx": {
+      "@typescript-eslint/no-unused-vars: '_s' is defined but never used.": 3,
+      "@typescript-eslint/no-unused-vars: 'beforeEach' is defined but never used.": 1
+    },
+    "tests/unit/shared/historyBarrier.test.ts": {
+      "@typescript-eslint/no-unused-vars: 'addEventSpy' is assigned a value but never used.": 1
+    },
+    "tests/unit/tracking/schemas.test.ts": {
+      "@typescript-eslint/no-unused-vars: '_' is assigned a value but never used.": 4
+    },
+    "tests/unit/vice/viceService.test.ts": {
+      "prefer-const: 'state' is never reassigned. Use 'const' instead.": 1
+    }
+  }
+}

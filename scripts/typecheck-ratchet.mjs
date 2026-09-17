@@ -27,6 +27,11 @@
  * every error it is about to bless so that it shows up in review as a decision
  * somebody made rather than a number that drifted.
  *
+ * THE MACHINERY IS SHARED. Everything here that is not about tsc specifically —
+ * the comparison, the refusal to raise a baseline, the checker-did-not-run
+ * guards — lives in scripts/lib/ratchet.mjs, because scripts/lint-ratchet.mjs
+ * needs exactly the same thing and two copies of it would drift apart silently.
+ *
  * WHERE IT RUNS, AND WHAT THAT COVERS: `.github/workflows/ci.yml` on every push
  * and pull request — that is the gate, and it checks the pushed commit.
  * `.husky/pre-push` runs it too, as a fast local warning, but it checks the
@@ -37,7 +42,7 @@
  */
 
 import { spawnSync } from "node:child_process"
-import { readFileSync, writeFileSync, existsSync } from "node:fs"
+import { applyRatchet, assertCheckerRan, tally } from "./lib/ratchet.mjs"
 
 const BASELINE = "tsc-baseline.json"
 const update = process.argv.includes("--update")
@@ -54,30 +59,13 @@ const run = spawnSync("npx", ["tsc", "--noEmit", "--pretty", "false"], {
 const output = (run.stdout + run.stderr).replace(/\r/g, "")
 const lines = output.split("\n").filter((l) => /error TS\d+/.test(l))
 
-/*
- * A CHECKER THAT COULD NOT RUN IS NOT A CHECKER THAT FOUND NOTHING.
- *
- * Three separate ways for that to happen, and all three used to read as a pass:
- * killed by a signal (out of memory is the usual one), exiting with a status tsc
- * never uses for "I found errors" (0 clean, 1 or 2 with errors), or a
- * configuration failure, which tsc reports as an error with no file attached.
- */
-if (run.error) {
-  console.error(`tsc could not be started: ${run.error.message}`)
-  process.exit(1)
-}
-if (run.signal) {
-  console.error(`tsc was killed by ${run.signal} — its report is incomplete, so this is not a pass.`)
-  process.exit(1)
-}
-if (![0, 1, 2].includes(run.status)) {
-  console.error(`tsc exited with ${run.status}, which is not a result it uses for "checked, found errors":\n${output.trim()}`)
-  process.exit(1)
-}
-if (run.status !== 0 && lines.length === 0) {
-  console.error(`tsc reported a failure but no type errors — refusing to treat that as a pass:\n${output.trim()}`)
-  process.exit(1)
-}
+assertCheckerRan(run, {
+  tool: "tsc",
+  // 0 clean, 1 or 2 with errors. Anything else is not a result tsc uses.
+  okStatuses: [0, 1, 2],
+  found: lines.length,
+  output,
+})
 
 /**
  * One error, as the thing that makes it the same error next time.
@@ -115,104 +103,19 @@ function normalise(message) {
   )
 }
 
-/** file → signature → how many times it occurs */
-const current = {}
-for (const line of lines) {
-  const { file, signature } = parse(line)
-  current[file] ??= {}
-  current[file][signature] = (current[file][signature] ?? 0) + 1
-}
-const total = lines.length
+const findings = lines.map(parse)
+const total = findings.length
 
-function sortDeep(counts) {
-  const files = {}
-  for (const file of Object.keys(counts).sort()) {
-    files[file] = Object.fromEntries(Object.entries(counts[file]).sort(([a], [b]) => a.localeCompare(b)))
-  }
-  return files
-}
-
-/** Everything in `a` that `b` does not cover, as printable lines. */
-function excess(a, b) {
-  const out = []
-  for (const [file, signatures] of Object.entries(a)) {
-    for (const [signature, count] of Object.entries(signatures)) {
-      const allowed = b[file]?.[signature] ?? 0
-      if (count > allowed) out.push(`${file}: ${signature}${count > 1 ? ` (x${count - allowed} more than baselined)` : ""}`)
-    }
-  }
-  return out.sort()
-}
-
-/**
- * The baseline, if it is one this version can compare against.
- *
- * An earlier version stored a plain count per file. Comparing signatures against
- * counts makes every error look new, so a baseline without `_format` is treated
- * as absent and rebuilt — once, loudly — rather than refusing to run.
- */
-const FORMAT = "signatures-v2"
-const stored = existsSync(BASELINE) ? JSON.parse(readFileSync(BASELINE, "utf8")) : null
-if (stored && stored._format !== FORMAT) {
-  console.warn(`${BASELINE} is in an older format (${stored._format ?? "counts"}); rebuilding it as ${FORMAT}.`)
-}
-const baseline = stored && stored._format === FORMAT ? stored : null
-
-if (update) {
-  if (baseline) {
-    const added = excess(current, baseline.files)
-    if (added.length && !acceptNew) {
-      console.error(
-        `Refusing to write a baseline that accepts ${added.length} error(s) the current one does not:\n  ` +
-          added.join("\n  ") +
-          `\n\nFix them, or say so out loud with --update --accept-new so the decision is visible in the diff.`,
-      )
-      process.exit(1)
-    }
-    if (added.length) {
-      console.warn(`Accepting ${added.length} NEW type error(s) into the baseline:\n  ` + added.join("\n  "))
-    }
-  }
-  writeFileSync(
-    BASELINE,
-    JSON.stringify(
-      {
-        _comment:
-          "Type errors that already existed, by file and message. May only shrink. Regenerate with: node scripts/typecheck-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
-        _format: FORMAT,
-        total,
-        files: sortDeep(current),
-      },
-      null,
-      2,
-    ) + "\n",
-  )
-  console.log(`baseline written: ${total} errors across ${Object.keys(current).length} files`)
-  process.exit(0)
-}
-
-if (!baseline) {
-  console.error(
-    stored
-      ? `${BASELINE} is in an older format and cannot be compared against. Rebuild it: node scripts/typecheck-ratchet.mjs --update`
-      : `No ${BASELINE}. Create it once with: node scripts/typecheck-ratchet.mjs --update`,
-  )
-  process.exit(1)
-}
-
-const added = excess(current, baseline.files)
-if (added.length) {
-  console.error(
-    `${added.length} type error(s) that are not in ${BASELINE}:\n  ` +
-      added.join("\n  ") +
-      `\n\nFix them. Do not raise the baseline.`,
-  )
-  process.exit(1)
-}
-
-const fixed = baseline.total - total
-if (fixed > 0) {
-  console.log(`Type errors: ${total} (baseline ${baseline.total}). ${fixed} fewer — lower the baseline: node scripts/typecheck-ratchet.mjs --update`)
-} else {
-  console.log(`Type errors: ${total}, none new.`)
-}
+applyRatchet({
+  path: BASELINE,
+  format: "signatures-v2",
+  comment:
+    "Type errors that already existed, by file and message. May only shrink. Regenerate with: node scripts/typecheck-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
+  current: tally(findings),
+  total,
+  noun: "type error",
+  label: "Type errors",
+  update,
+  acceptNew,
+  regenerate: "node scripts/typecheck-ratchet.mjs --update",
+})

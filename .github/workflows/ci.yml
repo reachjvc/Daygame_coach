@@ -21,8 +21,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
+      # Lint errors may only go down, the same bargain as the type ratchet
+      # below. A bare `eslint .` failed here for days on 492 pre-existing
+      # errors, which trains everyone to ignore a red tick; 140 of those turned
+      # out to be eslint configuration rather than code. See
+      # scripts/lint-ratchet.mjs.
+      - name: Lint ratchet
+        run: npm run lint:ratchet
 
       # Type errors may only go down: fails on any file whose count rose above
       # tsc-baseline.json. The build itself ignores type errors (next.config.mjs),
