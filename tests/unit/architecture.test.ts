@@ -643,7 +643,6 @@ describe('Architecture Compliance', () => {
       'src/programs/components/CustomProgramBuilder.tsx',
       'src/programs/components/EditActiveProgram.tsx',
       'src/programs/components/HistoryTab.tsx',
-      'src/programs/components/LiftHistory.tsx',
       'src/programs/components/PastPrograms.tsx',
       'src/programs/components/ProgramDetail.tsx',
       'src/programs/components/ProgramsApp.tsx',

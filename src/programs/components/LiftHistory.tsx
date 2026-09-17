@@ -14,7 +14,7 @@
  * second chart.
  */
 
-import { useEffect, useState } from "react"
+import { useLoad } from "@/src/shared/useLoad"
 import { Card, CardContent } from "@/components/ui/card"
 import { liftsWithHistory, workoutsToCsv } from "@/src/health/healthService"
 import type { WorkoutLogWithSets } from "@/src/health/types"
@@ -22,7 +22,6 @@ import { formatLoad, fromKg } from "../programsService"
 import { UNIT_CONFIG } from "../config"
 import type { UnitSystem } from "../types"
 import { Sparkline } from "./Sparkline"
-import type { LoadPoint } from "../types"
 
 /**
  * Three years. The endpoint defaults to 90 days, which would silently truncate
@@ -43,50 +42,53 @@ const SHOWN = 8
  * screen. Making it a required prop is what stops the next caller forgetting.
  */
 export function LiftHistory({ unit }: { unit: UnitSystem }) {
-  const [failed, setFailed] = useState(false)
   const label = UNIT_CONFIG[unit].label
   /** Stored kilograms, shown in the lifter's unit, rounded the way this app rounds. */
   const show = (kg: number) => formatLoad(fromKg(kg, unit))
-  const [lifts, setLifts] = useState<{ exercise: string; points: LoadPoint[] }[] | null>(null)
-  /** Kept so the export writes exactly what is on screen, with no second fetch. */
-  const [logs, setLogs] = useState<WorkoutLogWithSets[]>([])
 
-  useEffect(() => {
-    let alive = true
-    fetch(`/api/health/workout?days=${HISTORY_DAYS}&include=sets`)
-      .then((r) => (r.ok ? r.json() : []))
-      .then((logs: { logged_at: string; sets?: unknown[] }[]) => {
-        if (!alive) return
-        // The endpoint nests sets under their log; `liftsWithHistory` wants them
-        // flat with the day attached, because a set has no date of its own.
-        const flat = logs.flatMap((log) =>
-          ((log.sets ?? []) as Record<string, unknown>[]).map((s) => ({ ...s, logged_at: log.logged_at }))
-        )
-        setLogs(logs as WorkoutLogWithSets[])
-        setLifts(liftsWithHistory(flat as never))
-      })
-      /**
-       * NOT AN EMPTY LIST. `setLifts([])` renders nothing at all — the whole
-       * "Your lifts over time" section and the Export CSV button with it — so
-       * somebody with three years of lifts saw the rest of the tab render fine
-       * and this section simply absent, with nothing to say it had failed.
-       */
-      .catch(() => alive && setFailed(true))
-    return () => {
-      alive = false
+  /**
+   * THE SHARED LOADER, NOT A HAND-WRITTEN ONE.
+   *
+   * This used to be `.then((r) => (r.ok ? r.json() : []))`, which turned any
+   * server error into an empty list — and an empty list renders as nothing at
+   * all here, so a 500 removed the whole section and the Export CSV button with
+   * it, silently. Only a thrown request reached the failure branch, so the
+   * commonest failure was the one that lied.
+   *
+   * `useLoad` treats a non-ok response as a failure, which is the entire
+   * difference.
+   */
+  const loaded = useLoad(`/api/health/workout?days=${HISTORY_DAYS}&include=sets`, (body) => {
+    const logs = (body ?? []) as { logged_at: string; sets?: unknown[] }[]
+    // The endpoint nests sets under their log; `liftsWithHistory` wants them
+    // flat with the day attached, because a set has no date of its own.
+    const flat = logs.flatMap((log) =>
+      ((log.sets ?? []) as Record<string, unknown>[]).map((s) => ({ ...s, logged_at: log.logged_at }))
+    )
+    return {
+      /** Kept so the export writes exactly what is on screen, with no second fetch. */
+      logs: logs as WorkoutLogWithSets[],
+      lifts: liftsWithHistory(flat as never),
     }
-  }, [])
+  })
 
-  if (failed) {
+  if (loaded.state === "failed") {
     return (
       <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[11.5px] text-amber-600 dark:text-amber-400" data-testid="lift-history-failed">
-        Your lifts over time could not be loaded.
+        Your lifts over time could not be loaded.{" "}
+        <button type="button" onClick={loaded.retry} className="underline" data-testid="lift-history-retry">
+          Try again
+        </button>
       </div>
     )
   }
 
+  if (loaded.state === "loading") return null
+
+  const { logs, lifts } = loaded.data
+
   // Nothing to say until a lift has been done twice.
-  if (!lifts || lifts.length === 0) return null
+  if (lifts.length === 0) return null
 
   return (
     <div className="space-y-2" data-testid="lift-history">

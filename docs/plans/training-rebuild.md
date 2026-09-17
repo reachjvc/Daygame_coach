@@ -883,7 +883,10 @@ taken, see last time, and have supersets behave like supersets.
    lift the *program* has seen before — a loose workout ("Start a workout now")
    has no previous at all, because the endpoint that would answer across
    programs, `app/api/workouts/lifts/route.ts`, has no caller and returns raw
-   kilograms. Wire it up and convert its output. Second, it is drawn under the
+   kilograms. Wire it up and convert its output. It calls `liftHistory(userId,
+   name, sessions = 3)`; "last time" is element 0, so ask for 1 rather than
+   adding a second repo function for the single-session case — that is what
+   `getLastWorkoutSets` was, and Phase 9 correctly deleted it. Second, it is drawn under the
    row rather than as the PREVIOUS *column* the grid above calls for, which is
    what Hevy and Boostcamp both ship
    (<https://www.hevyapp.com/features/track-exercises/>,
@@ -1014,12 +1017,14 @@ routes' debt at 0, run twice to prove it is stable.
    while `training` runs in the chromium job, the two jobs have no `needs:`
    between them, and both wipe the same shared account. **Blocked on B1 for
    verification.**
-3. **Dead code — check the plan before deleting.** `isLoadable` has no caller;
-   delete it. **`getLastWorkoutSets` (`src/db/healthRepo.ts:349`) and
-   `app/api/workouts/lifts/route.ts` are the read Phase 6 step 1 wires up.** If
-   Phase 6 has run, they have callers and stay. If you are running Phase 9 first,
-   leave both and come back. Deleting them is how a later phase discovers its
-   foundation is gone.
+3. ~~**Dead code — check the plan before deleting.**~~ **Done, and the warning
+   was wrong.** `isLoadable` was deleted. `getLastWorkoutSets` was deleted too,
+   and that was correct: `liftHistory` in `src/db/workoutRepo.ts` returns the
+   last N sessions for a lift, where `getLastWorkoutSets` returned only the most
+   recent one — a strict superset, reshaped. Keeping both would have been two
+   functions answering one question. `app/api/workouts/lifts/route.ts` survives
+   and already calls `liftHistory`; it is still the read Phase 6 step 1 wires up,
+   and it still has no caller.
 4. **Stale documentation.** `training-overhaul.md`'s status table says phases
    2–8 are not started; six of them shipped. `.claude/rules/testing.md:20` still
    calls the mobile suite a skeleton. `tests/unit/architecture.test.ts:609`
