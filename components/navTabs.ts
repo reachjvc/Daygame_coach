@@ -1,5 +1,4 @@
 import { LayoutDashboard, BarChart3, Swords, HelpCircle, BookOpen, Settings, Timer } from "lucide-react"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 /**
  * WHERE THE TAB BAR CAN GO, as data rather than as markup.
@@ -14,8 +13,8 @@ export const TABS = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", exact: true },
   // NO GOALS TAB. The hub is archived at /test/archive/goals-hub and the
   // navigation is being rebuilt around one consolidated surface. Until that
-  // exists, the plan is reachable by URL at /life-mastery, and nothing in the
-  // bar points at goals at all.
+  // exists, /dashboard/goals/plan is reachable by URL, and nothing in the bar
+  // points at goals at all.
   { label: "Tracking", icon: BarChart3, href: "/dashboard/tracking", exact: false },
   { label: "Scenarios", icon: Swords, href: "/dashboard/scenarios", exact: false },
   { label: "Time", icon: Timer, href: "/dashboard/time", exact: false },
@@ -35,6 +34,6 @@ export const TAB_ROUTES: string[] = [...TABS, ...MORE_ITEMS].map((t) => t.href)
 export const ROUTE_LABELS: Record<string, string> = {
   ...Object.fromEntries([...TABS, ...MORE_ITEMS].map((t) => [t.href, t.label])),
   "/dashboard/tracking/history": "History",
-  [LIFE_MASTERY]: "Your plan",
+  "/dashboard/goals/plan": "Your plan",
   "/programs": "Training",
 }

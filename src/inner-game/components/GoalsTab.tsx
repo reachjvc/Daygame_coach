@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Aperture, ArrowRight } from "lucide-react"
 import Link from "next/link"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 interface GoalsTabProps {
   isPreviewMode?: boolean
@@ -38,7 +37,7 @@ export function GoalsTab({ isPreviewMode = false }: GoalsTabProps) {
           and auto-sync with your daygame sessions.
         </p>
         <Button asChild size="lg" className="gap-2">
-          <Link href={LIFE_MASTERY}>
+          <Link href="/dashboard/goals/plan">
             Go to your plan
             <ArrowRight className="h-4 w-4" />
           </Link>

@@ -4,7 +4,6 @@ import { useState } from "react"
 import Link from "next/link"
 import { ArrowLeft, Beaker, BookOpen, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard, Waves, Archive, Aperture, Type } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
 
 const testPages = [
   {
@@ -158,11 +157,8 @@ const testPages = [
     icon: Telescope,
   },
   {
-    // MOVED OUT OF THE BENCH. It is the product now, not a test page, and it
-    // lives at /life-mastery. Kept on this list because this is where people
-    // look for it, and pointed at its real address.
-    name: "Life Mastery (North Star) — CANON, now live at /life-mastery",
-    href: LIFE_MASTERY,
+    name: "Life Mastery (North Star) — CANON",
+    href: "/test/life-mastery",
     description: "The canonical life-planning flow, and the only one not in Archives. Thirteen steps, all reachable at any time: north star and values → your 10 and rating in each of the twelve areas → the one thing → the fork (want / will do / one routine) → templates, custom weeks, systems, experiences → focus, values, commit → track (pushes into real goals) → today",
     icon: Telescope,
   },
@@ -209,9 +205,8 @@ const testPages = [
     icon: Clapperboard,
   },
   {
-    // Moved with Life Mastery, whose routine card links into it.
-    name: "Quitting a vice — now live at /life-mastery/quit-vice",
-    href: QUIT_VICE,
+    name: "Quitting a vice",
+    href: "/test/quit-vice",
     description: "Four flows built on four positions the research disagrees about: watch it first (expected vs actual payoff), a negotiated bounded experiment with a daily task, one unconditional line, or pure environment design — plus an urge tool, a lapse debrief and a card that work with no setup. No streak counter anywhere, on purpose",
     icon: Waves,
   },
