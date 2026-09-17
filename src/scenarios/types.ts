@@ -256,36 +256,6 @@ export interface Archetype {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Recommendation Types
-// ─────────────────────────────────────────────────────────────────────────────
-
-/** Weights for each scenario (0.0 - 1.0) */
-export type ScenarioWeights = Record<ScenarioId, number>
-
-/** A goal pattern with regex and scenario weights */
-export interface GoalPattern {
-  /** Regex pattern to match goal text */
-  pattern: RegExp
-  /** Human-readable description */
-  description: string
-  /** Weights for each scenario (0.0 - 1.0) */
-  weights: ScenarioWeights
-}
-
-/** A user goal for recommendation matching */
-export interface UserGoal {
-  title: string
-}
-
-/** Score result for a scenario recommendation */
-export interface ScenarioScore {
-  scenarioId: ScenarioId
-  score: number
-  /** Which goal patterns contributed to this score */
-  matchedPatterns: string[]
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
