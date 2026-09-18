@@ -141,16 +141,31 @@ test.describe('Mobile goals', () => {
     await page.goto('/test/archive/goals-hub', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
+    /**
+     * THIS USED TO PASS WHEN NOTHING RENDERED.
+     *
+     * Every step was wrapped in "skip if not visible", and there was no
+     * assertion anywhere, so a screen that drew none of the four view options
+     * ran the loop zero times and reported success — under the name "view
+     * switcher options are all tappable". A test that cannot fail is worse than
+     * no test, because the count still goes up and somebody reads it as cover.
+     *
+     * Individual views legitimately come and go, so the loop still tolerates a
+     * missing one. What it no longer tolerates is ALL of them missing.
+     */
     const views = ['today', 'hierarchy', 'tree', 'orrery'] as const
+    let tapped = 0
     for (const view of views) {
       const btn = page.getByTestId(SELECTORS.goals.viewOption(view))
-      // Some views may not be present — skip if not visible
       const visible = await btn.isVisible().catch(() => false)
-      if (visible) {
-        await btn.click({ timeout: ACTION_TIMEOUT })
-        await page.waitForTimeout(300)
-      }
+      if (!visible) continue
+      await btn.click({ timeout: ACTION_TIMEOUT })
+      await page.waitForTimeout(300)
+      // The tap has to leave the control usable, not navigate away from it.
+      await expect(btn).toBeVisible()
+      tapped += 1
     }
+    expect(tapped, 'no view switcher option rendered at all — the switcher is gone, not passing').toBeGreaterThan(0)
   })
 
   test.afterEach(async ({ page }) => {

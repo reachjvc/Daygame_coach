@@ -80,11 +80,12 @@ test.describe('Inner Game Flow', () => {
     const startButton = page.getByTestId(SELECTORS.innerGame.welcomeStartButton)
     const hasStartButton = await startButton.isVisible().catch(() => false)
 
-    if (!hasStartButton) {
-      // Skip this test if in preview mode
-      test.skip()
-      return
-    }
+    // A reason, not a bare skip: an unexplained skip in the report is
+    // indistinguishable from a test that quietly stopped covering anything.
+    test.skip(
+      !hasStartButton,
+      'inner game rendered in preview mode — the signed-in start button is absent, so there is no flow to walk',
+    )
 
     // Act: Click start button
     await startButton.click({ timeout: ACTION_TIMEOUT })
@@ -102,11 +103,12 @@ test.describe('Inner Game Flow', () => {
     const startButton = page.getByTestId(SELECTORS.innerGame.welcomeStartButton)
     const hasStartButton = await startButton.isVisible().catch(() => false)
 
-    if (!hasStartButton) {
-      // Skip this test if in preview mode
-      test.skip()
-      return
-    }
+    // A reason, not a bare skip: an unexplained skip in the report is
+    // indistinguishable from a test that quietly stopped covering anything.
+    test.skip(
+      !hasStartButton,
+      'inner game rendered in preview mode — the signed-in start button is absent, so there is no flow to walk',
+    )
 
     // Dismiss welcome card
     await startButton.click({ timeout: ACTION_TIMEOUT })

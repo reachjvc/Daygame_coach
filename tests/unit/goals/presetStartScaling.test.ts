@@ -25,20 +25,6 @@ const presetLadder = (target: (typeof TARGETS)[number], value: number) => {
 }
 
 describe("preset start scaling — health templates produce sensible ladders", () => {
-  test("PRINT: ladders per template/level", () => {
-    for (const tmpl of healthTemplates) {
-      for (const level of tmpl.levels) {
-        for (const [tid, value] of Object.entries(level.targetValues)) {
-          const target = TARGETS.find((t) => t.id === tid)
-          if (!target?.milestoneConfig || !scales(target)) continue
-          const ladder = presetLadder(target, value).map((m) => m.value)
-          // eslint-disable-next-line no-console
-          console.log(`${tmpl.label.padEnd(20)} ${level.label.padEnd(13)} ${target.label.padEnd(20)} ${ladder.join(" → ")} ${target.unit}`)
-        }
-      }
-    }
-  })
-
   test("every threshold target: start is on the correct side of target, ladder monotonic", () => {
     for (const tmpl of healthTemplates) {
       for (const level of tmpl.levels) {
