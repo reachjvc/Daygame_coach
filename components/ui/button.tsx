@@ -12,12 +12,22 @@ const buttonVariants = cva(
         default: 'bg-primary text-primary-foreground hover:bg-primary/90',
         destructive:
           'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
+        // A bordered button sits on a slate card, so it must not paint itself
+        // the page's near-black background -- that is what made "Start" on the
+        // Tracking card read as disabled. And `--accent` in this app is the
+        // sunset red, so hovering an outline or ghost button used to flash red,
+        // which reads as a warning rather than "you can press this".
+        //
+        // The `dark:` halves these two variants used to carry were dead code:
+        // `dark:` here means "inside an element with the `dark` class"
+        // (app/globals.css), and nothing in the app ever sets that class. They
+        // are deleted rather than kept, because a rule that never applies only
+        // hides what the button actually looks like.
         outline:
-          'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
+          'border border-border bg-transparent hover:bg-muted/50 hover:text-foreground',
         secondary:
           'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        ghost:
-          'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
+        ghost: 'hover:bg-muted/50 hover:text-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       // Every size is 44px tall on a touch screen (h-11 / size-11) and smaller

@@ -206,6 +206,17 @@
   --app-vh: 1vh;
 }
 
+/* A bottom sheet enters by sliding up from the bottom edge. Declared outside
+   the layer because keyframes are not layered rules. */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 @layer utilities {
   .min-h-dvh {
     min-height: calc(var(--app-vh) * 100);
@@ -239,10 +250,36 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Prevent iOS Safari auto-zoom on input focus (triggers when font-size < 16px) */
+  /* The slide-up a bottom sheet enters with -- see the @keyframes above
+     @layer utilities. It used to live in a <style> tag inside MobileTabBar,
+     which was fine while that file was the only sheet in the app; the sheet is
+     a shared component now, so the animation has to exist whether or not the
+     tab bar happens to be on the page. */
+  .animate-slide-up {
+    animation: slideUp 0.2s ease-out;
+  }
+
+  /* TAPPING A BOX MUST NOT ZOOM THE PAGE.
+     iOS Safari zooms the whole page when you focus a text box whose font is
+     under 16px -- and it does not zoom back out, so the rest of the page is
+     left oversized until you pinch it yourself.
+
+     This rule used to lose that fight. A plain `input` selector is weaker than
+     any Tailwind size class, so every `text-sm` or `text-[12.5px]` box beat it;
+     there are 433 such boxes across this app, which is far too many to fix one
+     file at a time. `!important` is the blunt instrument that ends the class of
+     bug in one place.
+
+     The `:not()` guards are why it is safe. `max(16px, 1em)` reads the PARENT's
+     size, so without them the nine boxes the app deliberately makes large --
+     quick add, the field report, the report builder, the area dialog -- would
+     be forced DOWN to 16px on a phone. A box that asked to be large keeps the
+     size it asked for; everything else comes up to 16. */
   @media screen and (max-width: 767px) {
-    input, textarea, select {
-      font-size: max(16px, 1em);
+    input:not([class~="text-lg"]):not([class~="text-xl"]):not([class~="text-2xl"]):not([class~="text-3xl"]),
+    textarea:not([class~="text-lg"]):not([class~="text-xl"]):not([class~="text-2xl"]):not([class~="text-3xl"]),
+    select:not([class~="text-lg"]):not([class~="text-xl"]):not([class~="text-2xl"]):not([class~="text-3xl"]) {
+      font-size: max(16px, 1em) !important;
     }
   }
 

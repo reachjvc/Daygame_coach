@@ -26,7 +26,11 @@ test.describe('Mobile Navigation', () => {
 
     const dialog = page.getByRole('dialog')
     await expect(dialog).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(dialog.getByText('Goals')).toBeVisible()
+    // "Articles", not "Goals". The Goals link was deleted from the header on
+    // 2026-09-02 when the app was consolidated onto one goals surface, and this
+    // assertion has been looking for it ever since — the test only got as far
+    // as failing on the dialog itself, so nobody saw the stale line underneath.
+    await expect(dialog.getByText('Articles')).toBeVisible()
     await expect(dialog.getByText('Settings')).toBeVisible()
     await expect(dialog.getByText('Log Out')).toBeVisible()
   })

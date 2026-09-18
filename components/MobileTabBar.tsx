@@ -3,8 +3,9 @@
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { useState } from "react"
-import { Menu, LogOut, X } from "lucide-react"
+import { Menu, LogOut } from "lucide-react"
 import { signOut } from "@/app/actions/auth"
+import { BottomSheet, SheetRow } from "@/components/BottomSheet"
 import { TABS, MORE_ITEMS } from "@/components/navTabs"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
@@ -23,6 +24,13 @@ const HIDDEN_ROUTE_PREFIXES = [
   "/dashboard/tracking/review",
 ]
 
+/**
+ * Every item in the bar, measured on an iPhone 14, used to be 43.75px tall with
+ * an 11px label — a quarter of a pixel under the 44px a fingertip needs, and a
+ * pixel under the smallest text this app is willing to show. Six of them, on
+ * every page. `min-h-11` and `text-xs` are the floors.
+ */
+const BAR_ITEM = "flex min-h-11 flex-col items-center justify-center gap-0.5 min-w-[56px] py-1"
 
 function isActive(pathname: string, href: string, exact: boolean) {
   if (exact) return pathname === href
@@ -52,13 +60,11 @@ export function MobileTabBar() {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`flex flex-col items-center justify-center gap-0.5 min-w-[56px] py-1 ${
-                  active ? "text-primary" : "text-muted-foreground"
-                }`}
+                className={`${BAR_ITEM} ${active ? "text-primary" : "text-muted-foreground"}`}
                 data-testid={`tab-${tab.label.toLowerCase()}`}
               >
                 <tab.icon className="size-5" />
-                <span className="text-[11px] leading-tight">{tab.label}</span>
+                <span className="text-xs leading-tight">{tab.label}</span>
               </Link>
             )
           })}
@@ -66,84 +72,46 @@ export function MobileTabBar() {
           {/* More button */}
           <button
             onClick={() => setMoreOpen(true)}
-            className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] py-1 text-muted-foreground"
+            className={`${BAR_ITEM} text-muted-foreground`}
             data-testid="tab-more"
           >
             <Menu className="size-5" />
-            <span className="text-[11px] leading-tight">More</span>
+            <span className="text-xs leading-tight">More</span>
           </button>
         </div>
       </nav>
 
-      {/* "More" bottom sheet */}
-      {moreOpen && (
-        <div
-          className="sm:hidden fixed inset-0 z-50"
-          data-testid="more-sheet"
-        >
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-background/60 backdrop-blur-sm"
+      {/* "More" menu. The shared sheet — the same one every ⋮ menu in the app
+          opens — rather than this file's own copy of one. */}
+      <BottomSheet
+        open={moreOpen}
+        onClose={() => setMoreOpen(false)}
+        title="More"
+        testId="more-sheet"
+      >
+        {MORE_ITEMS.map((item) => (
+          <SheetRow
+            key={item.href}
+            href={item.href}
+            icon={item.icon}
             onClick={() => setMoreOpen(false)}
-          />
+          >
+            {item.label}
+          </SheetRow>
+        ))}
 
-          {/* Sheet */}
-          <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-2xl border-t border-border pb-safe animate-slide-up">
-            {/* Handle + close */}
-            <div className="flex items-center justify-between px-5 pt-4 pb-2">
-              <span className="text-sm font-semibold text-foreground">More</span>
-              <button
-                onClick={() => setMoreOpen(false)}
-                className="text-muted-foreground"
-              >
-                <X className="size-5" />
-              </button>
-            </div>
+        <div className="border-t border-border my-2" />
 
-            {/* Links */}
-            <div className="px-3 pb-4 space-y-1">
-              {MORE_ITEMS.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMoreOpen(false)}
-                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-foreground hover:bg-muted transition-colors"
-                >
-                  <item.icon className="size-5 text-muted-foreground" />
-                  <span className="text-sm font-medium">{item.label}</span>
-                </Link>
-              ))}
-
-              {/* Divider */}
-              <div className="border-t border-border my-2" />
-
-              {/* Log Out */}
-              <form action={signOut}>
-                <button
-                  type="submit"
-                  onClick={() => setMoreOpen(false)}
-                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-foreground hover:bg-muted transition-colors w-full"
-                  data-testid="more-logout-button"
-                >
-                  <LogOut className="size-5 text-muted-foreground" />
-                  <span className="text-sm font-medium">Log Out</span>
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Slide-up animation */}
-      <style>{`
-        @keyframes slideUp {
-          from { transform: translateY(100%); }
-          to { transform: translateY(0); }
-        }
-        .animate-slide-up {
-          animation: slideUp 0.2s ease-out;
-        }
-      `}</style>
+        {/* NO onClick HERE. Closing the sheet unmounts this form before the
+            browser submits it, so Log Out did nothing at all — you tapped it,
+            the menu slid away, and you were still signed in. Signing out
+            redirects to the front page, which takes the sheet with it. */}
+        <form action={signOut}>
+          <SheetRow type="submit" icon={LogOut} testId="more-logout-button">
+            Log Out
+          </SheetRow>
+        </form>
+      </BottomSheet>
     </>
   )
 }

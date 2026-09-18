@@ -440,7 +440,11 @@ export function Segmented<T extends string | number>({
             onClick={() => onChange(option.id)}
             className={cn(
               "shrink-0 whitespace-nowrap rounded px-3 font-medium transition-colors",
-              size === "sm" ? "h-9 text-xs sm:h-7" : "h-10 text-sm sm:h-8",
+              // 44px on a phone whichever size this is: a segmented control is
+              // a row of small targets sitting right next to each other, which
+              // is the easiest thing in a UI to mis-tap. Desktop keeps the
+              // compact heights.
+              size === "sm" ? "h-11 text-xs sm:h-7" : "h-11 text-sm sm:h-8",
               value === option.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >

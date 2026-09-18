@@ -126,7 +126,7 @@ export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   Sprout: ["personal growth life area", "garden view growth stages"],
   Sparkles: ["AI/magic features", "sparkle decoration"],
   Star: ["favorites", "dream goals", "primary mission", "suggestion highlight"],
-  Timer: ["time tracker navigation"],
+  Timer: ["time tracker navigation", "rest countdown (RestBar)", "time-limited reflection principle"],
   Snowflake: ["seasonal/weather decoration"],
   Swords: ["scenarios module", "practice/sparring"],
   Sun: ["daily view"],
@@ -148,6 +148,39 @@ export const ALL_REGISTERED_ICONS = new Set([
   ...UTILITY_ICONS,
   ...Object.keys(SEMANTIC_ICON_ROLES),
 ])
+
+// ---------------------------------------------------------------------------
+// Context-locked icons — a role is a place, not just a name.
+//
+// THE FAILURE THIS EXISTS TO PREVENT. The registry above only asked whether an
+// icon used in two files was written down somewhere. It never asked whether the
+// second file was doing the job the icon was registered for. So the stopwatch
+// (Timer) was registered for the Time-tracker tab and then quietly picked up by
+// the live workout's rest countdown, and every test passed — the reuse the
+// rules say needs a yes went through without one being asked for.
+//
+// An icon listed here may only be imported from the files named. The list may
+// SHRINK (a file is deleted, a screen stops using it) and never grow without
+// the owner saying yes, the same convention every allowlist in this codebase
+// follows. Enforced by tests/unit/architecture.test.ts.
+//
+// CLAUDE: Do NOT add entries or expand allowed patterns without explicit user approval.
+// ---------------------------------------------------------------------------
+export const CONTEXT_LOCKED_ICONS: Record<string, RegExp[]> = {
+  // Approved 2026-09-17 for its second job, the rest countdown. A stopwatch on
+  // a rest timer is what people expect; the lock is what stops it drifting into
+  // a third context without being noticed.
+  Timer: [
+    /^components\/navTabs\.ts$/, // the Time tracker tab
+    /^src\/programs\/components\/live\/RestBar\.tsx$/, // the rest countdown
+    /^src\/programs\/components\/RestTimer\.tsx$/, // the older rest timer, until it goes
+    // Already here when the lock was written, and found by running the check
+    // rather than by listing files from memory — which is the point of running
+    // it. Principle 17 is "set a time limit on rumination", so a stopwatch is
+    // the same idea a third time: a clock that is counting something down.
+    /^src\/tracking\/data\/principles\.tsx$/,
+  ],
+}
 
 // ---------------------------------------------------------------------------
 // Custom icon components — project-specific SVG components that act as icons.

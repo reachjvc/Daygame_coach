@@ -14,7 +14,7 @@
 import { describe, test, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
-import { UTILITY_ICONS, SEMANTIC_ICON_ROLES, CUSTOM_ICON_COMPONENTS } from '../../src/shared/iconRoles'
+import { UTILITY_ICONS, SEMANTIC_ICON_ROLES, CUSTOM_ICON_COMPONENTS, CONTEXT_LOCKED_ICONS } from '../../src/shared/iconRoles'
 
 const projectRoot = path.resolve(__dirname, '../..')
 
@@ -787,6 +787,304 @@ describe('Architecture Compliance', () => {
     })
   })
 
+  describe('One visual language on the training screens', () => {
+    /**
+     * THE TRAINING SCREENS WERE A DIFFERENT APP.
+     *
+     * Not a metaphor: /programs shipped its own component kit painted in
+     * blue-grey (zinc panels, sky-blue selections, white-on-black text) while
+     * every other page in the product was slate cards, off-white text and one
+     * safety-orange accent. On top of that, sixteen files had each typed out
+     * their own green for "done", three files disagreed about how wide the
+     * column was, controls sat at 26px, 28px and 36px where a thumb needs 44px,
+     * and number boxes at 12.5px, which is under the 16px below which Safari
+     * zooms the entire page when you tap one.
+     *
+     * None of that was one careless commit. It is what happens when every file
+     * makes the same decision separately, months apart. So the rule is not
+     * "use nice colours" — it is that these decisions are made in exactly one
+     * place (src/programs/components/trainingStyles.ts and the app's own kit),
+     * and a file that makes them again fails here.
+     *
+     * TRAINING_STYLE_DEBT below is every file that broke the rule on the day it
+     * landed. It may SHRINK and never grow: a file that is cleaned up or
+     * deleted has to come off the list, or the last test in this block fails.
+     * The list is long today on purpose — the later phases of the rebuild empty
+     * it — and it was produced by RUNNING this scanner, never by typing names.
+     */
+
+    /** Every file the one-language rule applies to. */
+    function trainingFiles(): string[] {
+      const files = getAllFiles(path.join(projectRoot, 'src/programs'), /\.tsx$/).map((f) =>
+        path.relative(projectRoot, f),
+      )
+      return [
+        ...files,
+        // The Life Mastery plan's program block: a training screen that happens
+        // to live in the goals slice.
+        'src/goals/components/north-star/WorkoutPrograms.tsx',
+        // The two shared parts built for training in this phase. They are not
+        // under src/programs, and they are exactly the files a second colour
+        // scheme would come back through.
+        'components/BottomSheet.tsx',
+        'components/ui/stepper.tsx',
+      ].filter((rel) => fs.existsSync(path.join(projectRoot, rel)))
+    }
+
+    /**
+     * A file's source with its comments removed.
+     *
+     * Every comment in these files explains the rule it is keeping, quoting the
+     * very classes the rule forbids. Linting the prose would report the
+     * explanation as the offence.
+     */
+    function code(rel: string): string {
+      return fs
+        .readFileSync(path.join(projectRoot, rel), 'utf-8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/^[^\n'"`]*\/\/.*$/gm, '')
+    }
+
+    /**
+     * Every opening tag of a CONTROL — the things a finger has to hit.
+     *
+     * A line-based scan would find almost nothing: in this codebase a
+     * `className` is essentially never on the same line as its `<button`. So
+     * this walks from the tag name to the `>` that closes it, ignoring `>`
+     * inside `{...}` (an arrow function in an onClick) and inside quotes.
+     */
+    function controlTags(source: string, start: RegExp): string[] {
+      const tags: string[] = []
+      const finder = new RegExp(start.source, 'g')
+      let match: RegExpExecArray | null
+      while ((match = finder.exec(source)) !== null) {
+        let depth = 0
+        let quote: string | null = null
+        let i = match.index
+        for (; i < source.length; i++) {
+          const c = source[i]
+          if (quote) {
+            if (c === quote) quote = null
+            continue
+          }
+          if (c === '"' || c === "'" || c === '`') quote = c
+          else if (c === '{') depth++
+          else if (c === '}') depth--
+          else if (c === '>' && depth === 0) break
+        }
+        tags.push(source.slice(match.index, i + 1))
+        finder.lastIndex = i + 1
+      }
+      return tags
+    }
+
+    /**
+     * The classes a control actually ends up with, tag or no tag.
+     *
+     * A well-written component almost never spells its classes out in the tag:
+     * it writes `const rowClass = cn("flex min-h-14 …")` at the top and then
+     * `className={rowClass}` on the element. Reading only the tag would see an
+     * empty class list and pass — and the two parts this phase built,
+     * ProgramRow and the sheet's rows, are both written exactly that way, as is
+     * every row the later phases will copy from them. So the names used inside
+     * `className={…}` are looked up as constants in the same file and their
+     * values read as well.
+     *
+     * The lookup stops at the end of the constant's own value (brace-, bracket-
+     * and quote-aware), never running on into the next line of code, so a small
+     * height somewhere else in the file cannot be blamed on this control.
+     */
+    function initializerOf(source: string, ident: string): string {
+      const found = new RegExp(`\\bconst\\s+${ident}\\s*=\\s*`).exec(source)
+      if (!found) return ''
+      let depth = 0
+      let quote: string | null = null
+      let i = found.index + found[0].length
+      const start = i
+      for (; i < source.length; i++) {
+        const c = source[i]
+        if (quote) {
+          if (c === quote) quote = null
+          continue
+        }
+        if (c === '"' || c === "'" || c === '`') quote = c
+        else if (c === '(' || c === '[' || c === '{') depth++
+        else if (c === ')' || c === ']' || c === '}') {
+          depth--
+          if (depth < 0) break
+        } else if (c === '\n' && depth === 0) break
+      }
+      return source.slice(start, i)
+    }
+
+    function classesOf(source: string, tag: string): string {
+      const expression = /className=\{([\s\S]*?)\}\s*(?:\n|\/?>|[\w-]+=)/.exec(tag)?.[1] ?? ''
+      let resolved = tag
+      for (const name of new Set(expression.match(/\b[A-Za-z_$][\w$]*\b/g) ?? [])) {
+        resolved += ' ' + initializerOf(source, name)
+      }
+      return resolved
+    }
+
+    const ANY_CONTROL = /<(?:button|Button|Link|input|Input|select|textarea|Textarea)\b|<a\s/
+    const TYPED_BOX = /<(?:input|Input|select|textarea|Textarea)\b/
+
+    /** What a file may not say, anywhere in it. */
+    function secondLanguage(rel: string): string[] {
+      const source = code(rel)
+      const found: string[] = []
+      const flag = (what: string, re: RegExp) => {
+        const hits = source.match(new RegExp(re.source, 'g'))
+        if (hits) found.push(`${what}: ${[...new Set(hits)].slice(0, 4).join(', ')}`)
+      }
+
+      // The blue-grey kit, and the hand-typed reds and greens.
+      flag(
+        'a raw palette colour instead of a token',
+        /\b(?:bg|text|border|divide|ring|placeholder|hover:bg|hover:text|focus:border|focus:ring)-(?:zinc|sky|slate|neutral|gray|rose|red|green|violet|white|black)\b/,
+      )
+      // `--accent` in this app is the sunset red, so this is a hand-rolled
+      // button flashing red on hover. Use <Button>.
+      flag('a hand-rolled button that flashes red on hover', /hover:(?:bg-accent|text-accent-foreground)\b/)
+      // Text nobody can read. The one exception in all of training is the set
+      // grid's column captions, which live in trainingStyles.ts.
+      flag('text under 14px set by hand', /text-\[(?:9|9\.5|10|10\.5|11|11\.5|12|12\.5|13)px\]/)
+      // Green means done, and done lives in one file.
+      flag('green typed out instead of taken from DONE', /emerald-/)
+      // A `tone` prop is a component carrying a second skin around with it.
+      flag('a tone prop — a second skin per component', /\btone\s*(?:=|===)/)
+      // The column width comes from TRAINING_COLUMN. `max-w-full` and
+      // `max-w-[...]` are not column widths and are fine.
+      flag('a column width of its own', /\bmax-w-(?:xs|sm|md|lg|xl|\dxl)\b/)
+
+      // A control smaller than 44px on a phone. `sm:` sizes are desktop.
+      const small = /(?<!sm:)\b(?:min-h-(?:7|8|9|10)|size-(?:4\.5|5|6|7|8|9|10)|h-(?:7|8|9|10))\b/
+      const tooSmall = controlTags(source, ANY_CONTROL).filter((t) =>
+        small.test(classesOf(source, t)),
+      )
+      if (tooSmall.length) {
+        found.push(`${tooSmall.length} control(s) under 44px on a phone`)
+      }
+
+      return found
+    }
+
+    /** A typed box under 16px makes an iPhone zoom the whole page on focus. */
+    function zoomingBoxes(rel: string): number {
+      const source = code(rel)
+      const small = /(?<!sm:)(?<!md:)\btext-(?:xs|sm|\[1[0-5](?:\.5)?px\])\b/
+      return controlTags(source, TYPED_BOX).filter((t) => small.test(classesOf(source, t))).length
+    }
+
+    /**
+     * SEEDED BY RUNNING THE SCANNER, NOT BY TYPING FILENAMES.
+     *
+     * Every one of these speaks the old language somewhere. Phases 5 to 8 of
+     * the rebuild replace these screens and take their lines off this list;
+     * the last step of the rebuild deletes the list itself.
+     */
+    const TRAINING_STYLE_DEBT = new Set<string>([
+      'src/goals/components/north-star/WorkoutPrograms.tsx',
+      'src/programs/components/CustomProgramBuilder.tsx',
+      'src/programs/components/EditActiveProgram.tsx',
+      'src/programs/components/HistoryTab.tsx',
+      'src/programs/components/LiftHistory.tsx',
+      'src/programs/components/PastPrograms.tsx',
+      'src/programs/components/ProgramEditor.tsx',
+      'src/programs/components/ProgramPicker.tsx',
+      'src/programs/components/ProgramsApp.tsx',
+      'src/programs/components/ProgressTab.tsx',
+      'src/programs/components/ProgressionView.tsx',
+      'src/programs/components/RestTimer.tsx',
+      'src/programs/components/RunningPrograms.tsx',
+      'src/programs/components/SavedWeeks.tsx',
+      'src/programs/components/SessionNotices.tsx',
+      'src/programs/components/TodayCard.tsx',
+      'src/programs/components/TodaySessionWidget.tsx',
+      'src/programs/components/TrainingScreen.tsx',
+      'src/programs/components/WeekStrip.tsx',
+      'src/programs/components/live/AddLift.tsx',
+      'src/programs/components/live/FinishSheet.tsx',
+      'src/programs/components/live/LiveWorkoutScreen.tsx',
+      'src/programs/components/live/RestBar.tsx',
+      'src/programs/components/live/SetRow.tsx',
+      'src/programs/components/ui.tsx',
+    ])
+
+    test('no NEW training file speaks a second visual language', () => {
+      const offenders = trainingFiles()
+        .filter((rel) => !TRAINING_STYLE_DEBT.has(rel))
+        .map((rel) => ({ rel, problems: secondLanguage(rel) }))
+        .filter(({ problems }) => problems.length > 0)
+        .map(({ rel, problems }) => `${rel}\n    ${problems.join('\n    ')}`)
+
+      expect(
+        offenders,
+        'These training files speak a second visual language. Widths, card\n' +
+          'padding, chips, the failed line and the colour of "done" come from\n' +
+          'src/programs/components/trainingStyles.ts; buttons, inputs and tabs\n' +
+          'come from components/ui. Nothing here invents its own:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+    })
+
+    test('no training input under 16 px on a phone', () => {
+      const offenders = trainingFiles()
+        .filter((rel) => !TRAINING_STYLE_DEBT.has(rel))
+        .map((rel) => ({ rel, n: zoomingBoxes(rel) }))
+        .filter(({ n }) => n > 0)
+        .map(({ rel, n }) => `${rel}: ${n} box(es)`)
+
+      expect(
+        offenders,
+        'Tapping a text box smaller than 16px makes iOS Safari zoom the whole\n' +
+          'page, and it does not zoom back. Use the default size on phones and\n' +
+          'shrink with sm: if you must:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+    })
+
+    test('the training-style debt list only shrinks', () => {
+      const cleaned = [...TRAINING_STYLE_DEBT].filter(
+        (rel) =>
+          !fs.existsSync(path.join(projectRoot, rel)) ||
+          (secondLanguage(rel).length === 0 && zoomingBoxes(rel) === 0),
+      )
+
+      expect(
+        cleaned,
+        'These are fixed or gone — remove them from TRAINING_STYLE_DEBT:\n' + cleaned.join('\n'),
+      ).toEqual([])
+    })
+
+    test('green is only ever done', () => {
+      /**
+       * Orange is "do this", amber is "that did not work", green is "finished".
+       * A screen that borrows green for "went up" or "good" takes the meaning
+       * away from the ticks that need it — so green is not only in one file,
+       * it is READ by a named few.
+       */
+      const MAY_SAY_DONE = new Set([
+        'src/programs/components/live/SetRow.tsx', // a set you ticked
+        'src/programs/components/live/RestBar.tsx', // rest is over
+        'src/programs/components/SessionNotices.tsx', // the program is complete
+        'src/programs/components/WeekStrip.tsx', // a day you trained
+        'src/programs/components/ProgressTab.tsx', // the trained-day dot
+        'src/programs/components/WorkoutReceipt.tsx', // "new best" on the finish
+        'src/goals/components/north-star/WorkoutPrograms.tsx', // "everything you logged is kept"
+      ])
+
+      const offenders = trainingFiles()
+        .filter((rel) => !MAY_SAY_DONE.has(rel))
+        .filter((rel) => /\bDONE\./.test(code(rel)))
+
+      expect(
+        offenders,
+        'These use the "done" green for something that is not done:\n' + offenders.join('\n'),
+      ).toEqual([])
+    })
+  })
+
   describe('Reads that outgrow one page', () => {
     /**
      * NO NEW UNPAGED READ — the numbers only go down.
@@ -1002,6 +1300,97 @@ describe('Architecture Compliance', () => {
       expect(
         violations,
         `Unregistered icons used in multiple files (add to src/shared/iconRoles.ts):\n${violations.join('\n\n')}`
+      ).toHaveLength(0)
+    })
+
+    test('context-locked icons are only imported where their role lives', () => {
+      /**
+       * A ROLE IS A PLACE, NOT JUST A NAME.
+       *
+       * The test above only asks whether an icon used in two files is written
+       * down in the registry. It never asks whether the second file is doing
+       * the job the icon was registered for — so the stopwatch, registered for
+       * the Time-tracker tab, was picked up by the live workout's rest bar and
+       * nothing said a word. The rules require a yes before an icon is reused
+       * in a new context; this is what actually asks for one.
+       */
+      const dirsToScan = ['src', 'components', 'app']
+      const importPattern = /import\s*\{([^}]+)\}\s*from\s*['"]lucide-react['"]/g
+
+      const violations: string[] = []
+
+      for (const [iconName, allowed] of Object.entries(CONTEXT_LOCKED_ICONS)) {
+        const named = new RegExp(`\\b${iconName}\\b`)
+
+        for (const dir of dirsToScan) {
+          const files = getAllFiles(path.join(projectRoot, dir), /\.tsx?$/)
+            .filter((f) => !f.includes('/test/') && !f.includes('/tests/'))
+
+          for (const file of files) {
+            const content = fs.readFileSync(file, 'utf-8')
+            const relativePath = path.relative(projectRoot, file)
+
+            let imports = false
+            importPattern.lastIndex = 0
+            let match
+            while ((match = importPattern.exec(content)) !== null) {
+              if (named.test(match[1])) imports = true
+            }
+            if (!imports) continue
+
+            if (!allowed.some((p) => p.test(relativePath))) {
+              violations.push(
+                `${iconName} imported in ${relativePath}, which is not one of its roles.\n` +
+                  `  Allowed: ${allowed.map((p) => p.source).join(', ')}`,
+              )
+            }
+          }
+        }
+      }
+
+      expect(
+        violations,
+        'A registered icon has been reused somewhere its role does not cover.\n' +
+          'Reusing an icon in a new context needs the owner\'s yes first — ask,\n' +
+          'then add the file to CONTEXT_LOCKED_ICONS in src/shared/iconRoles.ts:\n' +
+          violations.join('\n\n'),
+      ).toHaveLength(0)
+    })
+
+    test('the context-locked icon lists only shrink', () => {
+      // A pattern that matches nothing is a file that has been deleted or has
+      // stopped using the icon — the list has to come down with it, or it slowly
+      // becomes a list of permissions nobody is using and nobody can audit.
+      const importPattern = /import\s*\{([^}]+)\}\s*from\s*['"]lucide-react['"]/g
+      const allFiles = ['src', 'components', 'app'].flatMap((dir) =>
+        getAllFiles(path.join(projectRoot, dir), /\.tsx?$/)
+          .filter((f) => !f.includes('/test/') && !f.includes('/tests/'))
+          .map((f) => path.relative(projectRoot, f)),
+      )
+
+      const stale: string[] = []
+      for (const [iconName, allowed] of Object.entries(CONTEXT_LOCKED_ICONS)) {
+        const named = new RegExp(`\\b${iconName}\\b`)
+        const importers = allFiles.filter((rel) => {
+          const content = fs.readFileSync(path.join(projectRoot, rel), 'utf-8')
+          importPattern.lastIndex = 0
+          let match
+          while ((match = importPattern.exec(content)) !== null) {
+            if (named.test(match[1])) return true
+          }
+          return false
+        })
+
+        for (const pattern of allowed) {
+          if (!importers.some((rel) => pattern.test(rel))) {
+            stale.push(`${iconName}: ${pattern.source} matches no file that imports it`)
+          }
+        }
+      }
+
+      expect(
+        stale,
+        `These entries are spent — remove them from CONTEXT_LOCKED_ICONS:\n${stale.join('\n')}`,
       ).toHaveLength(0)
     })
 
