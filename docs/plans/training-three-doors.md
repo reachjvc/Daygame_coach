@@ -773,6 +773,14 @@ None dropped. Two related findings sit outside this phase's scope and are named 
 - The fake-client tests assumed `tests/helpers/fakeSupabase.ts` can record an rpc; it has no `rpc` (and no unit test asserts an rpc payload today — `finishWorkout`'s "asserted" is by mention only). Fixed: helper extended, named in touches.
 - Step 5's refusal breaks two training specs' cleanups (`programs-drafts.spec.ts:111`, `life-mastery-saved-weeks.spec.ts:163,197` end programs without deleting an open workout first). Fixed: step 12.
 - Step 6 described ProgramsApp's "restart" as a `/resume`; it is `action: "reset"` (`ProgramsApp.tsx:354-358`). Fixed: mapped explicitly. The three start POSTs (`ProgramDetail.tsx:74`, `CustomProgramBuilder.tsx:217`, `WorkoutPrograms.tsx:182`) were checked and already surface `body.error`, so the 409 sentence reaches them unchanged.
+
+**Found while building it, 18 September (steps 6–12).**
+- Step 11's duplicate branch returned `result.changes` — the list of weight movements the screen prints verbatim. `result` is computed by advancing from the state as it stands, which the FIRST copy of the write-up has already advanced, so a retry would have shown "Squat 62.5 → 65 kg" when the earlier request moved it 60 → 62.5 and this one moved nothing. Exactly the class of lie this phase removes. Fixed: `{ enrollment: enr, changes: [], next: <the prescription it actually gives> }`, with a named test.
+- Step 9's `getEnrollmentDetail` read the account's clock twice — once itself and once inside `getTodaySession`. Two reads of the fact whose single-sourcing is the entire point of the step. Fixed: one read, passed into `todaysSessionFor`; `sessionLogsFor` used directly with the enrollment already in hand, which also removes a third `getEnrollmentById`.
+- Step 11's `setRowsFor` first read the amrap flags off the cursor's day. A session written up three days late is Workout B's whatever the program points at now, so the all-out set would have been marked on the wrong lift. Fixed: the day being logged decides.
+- `tests/unit/settings/clockSync.test.tsx` passed with an arrow function as the `Intl.DateTimeFormat` mock — an arrow cannot be constructed, so `browserZone()` threw, the component gave up, and six tests passed by the component doing nothing. Caught because the one test that asserted a PUT failed. Fixed: a plain `function`, and the reason is written above the mock.
+- Step 10's trigger could not be proven by any existing harness (no `auth.users` in `tests/integration/schema.sql`, and `createTestUser` writes `profiles` directly). The plan's answer was a throwaway signup against the live database. Done better: `auth.users`, `handle_new_user` and the trigger are built inside the integration container, exercised with a real zone, four forged ones (including `'; drop table profiles; --`) and no zone at all, then dropped. No live account created, and the `pg_timezone_names` gate is proven rather than assumed.
+- The lint ratchet OOMs on this machine at ~4 GB — in the eslint CHILD process, so `node --max-old-space-size` on the wrapper does nothing. It has to be `NODE_OPTIONS`. Worth knowing before anybody reads a crash as a lint failure; the ratchet itself is correct and refuses to treat non-JSON output as a pass.
 - Step 1 claimed atomicity; what it cannot make unrepresentable is two tabs starting two different strength programs at once (discipline lives in code). Stated in the step rather than implied away.
 - Opening called the default "London time"; UTC is not London for half the year. Reworded, and it now says no screen changes in this phase.
 - Checked and found sound: `ON CONFLICT (user_id, client_key) WHERE client_key IS NOT NULL` matches the partial index at `20260907100000:115`; `authenticated` exists in `schema.sql:594` so the GRANTs copy verbatim; `isWeekdayAnchored` is false for endurance so Skip stays for cursor-driven plans; `getLongestRunKm` already has `.limit(1)`; `updateTimezone` writes both columns in one statement; the `settings/actions.ts:84` path defaults to `chosen`.
@@ -2526,6 +2534,25 @@ drops its own copy. Nothing else in the later phase changes.
    page** (it is S3 element 24, Phase 6's surface), and Phase 3's done-today button and Phase 5's
    "See today's workout" point at it through `workoutReceiptHref`. Until Phase 6 runs, both buttons
    go to `/programs?tab=history` (Phase 3 open question 2's recommendation).
+8. **What the plan stores about a program — added 2026-09-18, and it settles a
+   conflict between two phases.** Phase 2 step 7 shrinks `NsRoutineProgram`
+   (`src/goals/types.ts:1718`) to `{ enrollmentId }`. Phase 8 step 2 keeps all
+   four of today's fields, because its "the program has ended" state names the
+   program from the plan's copy of `label`. Both cannot be right.
+   **`{ enrollmentId: string }` wins, and the ended state does not name the
+   program.** Why: `programId` and `startedAt` are readable from the enrollment,
+   so a copy of them can only be a copy that goes stale; `label` is the same, and
+   the ended state does not need it — "The program this week followed has
+   finished. Everything you logged is kept." plus "Choose what is next" says
+   everything a person needs, with no second representation of a name. The
+   comment at `types.ts:1712` defends the `label` copy with "the plan has to
+   render signed out": that stopped being true when Life Mastery moved behind a
+   sign-in gate (`app/life-mastery/layout.tsx`), and no code reads any of the
+   four fields today, because `loadNsPlan` drops the whole `program` field on
+   reload. So nothing is lost by the shrink and nothing has to be migrated.
+   *Told to the session planning `docs/plans/life-mastery-deployment.md` on
+   2026-09-18, because its `life_plan_routines` table mirrors these four fields
+   and three of the columns now have nothing to hold.*
 
 
 ## Coverage check

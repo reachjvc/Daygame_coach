@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,6 +16,7 @@ import {
   LAYOFF_DAYS,
 } from "../programsService"
 import { RestTimer } from "./RestTimer"
+import { newClientKey } from "../hooks/useLiveWorkout"
 import { REST_SECONDS } from "../config"
 import { hasWeight } from "../builder"
 import { UNIT_CONFIG, WEEKDAY_SHORT } from "../config"
@@ -58,6 +59,12 @@ export function TodaySessionWidget({
   // What you actually did, keyed by `${exerciseId}:${setNumber}` and seeded to
   // what was prescribed — so an as-prescribed session is one button.
   const [reps, setReps] = useState<Record<string, string>>({})
+  /**
+   * This form's id for the write-up it is about to send. One per attempt, not
+   * one per keystroke, so a retry carries the SAME key and the database can
+   * recognise it as the session already there.
+   */
+  const retryKey = useRef(newClientKey())
   const [weights, setWeights] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [changes, setChanges] = useState<ProgressionChange[] | null>(null)
@@ -169,6 +176,10 @@ export function TodaySessionWidget({
          * was silently filed under the day it was typed.
          */
         ...(when ? { entry_date: when } : {}),
+        // ONE KEY PER WRITE-UP, so pressing Save again after a lost reply is
+        // recognised as the same session rather than logged as a second one.
+        // Rotated only after a save that landed.
+        clientKey: retryKey.current,
       }
       const res = await fetch(`/api/programs/enrollments/${enrollmentId}/log`, {
         method: "POST",
@@ -184,11 +195,22 @@ export function TodaySessionWidget({
         return
       }
       const data = await res.json()
+      // The session is on the server now, so the next write-up is a NEW one.
+      retryKey.current = newClientKey()
       setChanges(data.changes ?? [])
       setError(null)
       onLogged()
     } catch {
-      setError("Could not reach the server. Nothing was recorded.")
+      /**
+       * "Nothing was recorded" WAS A GUESS, and half the time a wrong one.
+       *
+       * A request that throws has told us nothing about whether the server got
+       * it: a reply lost on the way back is the commonest way this happens in a
+       * gym. Saying nothing was recorded sent people to press Save again, which
+       * is exactly what the retry key now makes safe — but the words still have
+       * to stop claiming a fact nobody has.
+       */
+      setError("Could not confirm the save — check History before trying again.")
     } finally {
       setSaving(false)
     }

@@ -107,26 +107,11 @@ function fakeSupabase(opts: FakeOptions) {
             error: null,
           })
         }
-        if (patch && patch.is_active === false) {
-          if (opts.writeFails) {
-            return Promise.resolve({
-              data: null,
-              error: { code: "08006", message: "connection to server was lost" },
-            })
-          }
-          if (opts.triggerRefuses) {
-            return Promise.resolve({
-              data: null,
-              // The shape supabase-js hands back for a RAISE EXCEPTION.
-              error: { code: "55000", message: "Finish or throw away the open workout first." },
-            })
-          }
-          pausedIds.push(String(filters.id))
-          return Promise.resolve({ data: null, error: null })
-        }
         if (patch) {
-          // An enrolment insert.
-          return Promise.resolve({ data: enrollmentRow("e-new"), error: null })
+          throw new Error(
+            "Nothing writes program_enrollments directly any more — every start, " +
+              "end and restart goes through a database function. See the rpc below."
+          )
         }
         return Promise.resolve({
           data: (opts.active ?? []).map(enrollmentRow),
@@ -142,7 +127,38 @@ function fakeSupabase(opts: FakeOptions) {
     return chain
   }
 
-  return { client: { from: table }, pausedIds }
+  /**
+   * THE WRITES MOVED, THE RULE DID NOT.
+   *
+   * Starting, ending and restarting a program used to be two or three separate
+   * `.update()` / `.insert()` calls, and this fake watched for `is_active:
+   * false` to know something had been paused. They are one database function
+   * each now — that is what makes "nothing is paused if any of it is refused"
+   * true by construction rather than by careful ordering — so the fake watches
+   * the function call instead, and `pausedIds` still means the same thing: the
+   * programs this write would switch off.
+   */
+  const rpcCalls: { name: string; args: Record<string, unknown> }[] = []
+
+  async function rpc(name: string, args: Record<string, unknown>) {
+    rpcCalls.push({ name, args })
+    if (opts.writeFails) {
+      return { data: null, error: { code: "08006", message: "connection to server was lost" } }
+    }
+    if (opts.triggerRefuses) {
+      // The shape supabase-js hands back for a RAISE EXCEPTION.
+      return { data: null, error: { code: "55000", message: "Finish or throw away the open workout first." } }
+    }
+    if (name === "end_enrollment") {
+      pausedIds.push(String(args.p_id))
+      return { data: args.p_id, error: null }
+    }
+    for (const id of (args.p_displace as string[]) ?? []) pausedIds.push(id)
+    if (name === "resume_enrollment") return { data: enrollmentRow(String(args.p_id)), error: null }
+    return { data: enrollmentRow("e-new"), error: null }
+  }
+
+  return { client: { from: table, rpc }, pausedIds, rpcCalls }
 }
 
 async function repoWith(opts: FakeOptions) {
@@ -189,10 +205,10 @@ describe("a program with a workout open on it", () => {
         unitSystem: "kg",
       })
     ).rejects.toThrow("Finish or throw away the open workout first.")
-    // e1 comes first in the loop and is NOT the busy one. If the check ran
-    // inside the loop rather than before it, e1 would already be switched off
-    // and the person would be left with no running program at all.
+    // e1 is not the busy one. The refusal has to come before anything is sent,
+    // or the person is left with no running program at all.
     expect(fake.pausedIds).toEqual([])
+    expect(fake.rpcCalls, "nothing was even sent").toEqual([])
   })
 
   test("picking an old program back up is refused too, before anything is paused", async () => {
@@ -208,6 +224,7 @@ describe("a program with a workout open on it", () => {
       "Finish or throw away the open workout first."
     )
     expect(fake.pausedIds).toEqual([])
+    expect(fake.rpcCalls, "nothing was even sent").toEqual([])
   })
 
   test("a check that could not be run refuses too, rather than passing", async () => {

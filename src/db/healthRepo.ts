@@ -195,8 +195,10 @@ export async function deleteSleepLog(userId: string, logId: string): Promise<voi
  * One helper rather than a filter repeated at every call site, and a unit test
  * greps for it, so a reader added later cannot quietly forget.
  */
+export const FINISHED_WORKOUTS_FILTER = "ended_at.not.is.null,started_at.is.null"
+
 export function finishedWorkouts<T extends { or: (f: string) => T }>(query: T): T {
-  return query.or("ended_at.not.is.null,started_at.is.null")
+  return query.or(FINISHED_WORKOUTS_FILTER)
 }
 
 /**
@@ -462,6 +464,21 @@ export async function deleteWorkoutLog(
     .maybeSingle()
   if (readError) throw new Error(`Failed to read that workout: ${readError.message}`)
 
+  /**
+   * A PROGRAM SESSION IS DELETED AND RECALCULATED TOGETHER, OR NOT AT ALL.
+   *
+   * These were two writes: delete, then recalculate. The delete committed, so a
+   * recalculation that failed left the session gone AND the weights still
+   * advanced by it — for ever, from a session that no longer exists — while the
+   * screen said the delete had failed. `removeProgramSession` computes the new
+   * weights first and commits them with the delete in one statement.
+   */
+  if (log?.enrollment_id) {
+    const { removeProgramSession } = await import("./programRepo")
+    await removeProgramSession(userId, log.enrollment_id, logId)
+    return { recalculated: true }
+  }
+
   // Sets cascade delete via FK
   const { error } = await supabase
     .from("workout_logs")
@@ -470,11 +487,6 @@ export async function deleteWorkoutLog(
     .eq("user_id", userId)
   if (error) throw new Error(`Failed to delete workout log: ${error.message}`)
 
-  if (log?.enrollment_id) {
-    const { recalculateEnrollment } = await import("./programRepo")
-    await recalculateEnrollment(userId, log.enrollment_id)
-    return { recalculated: true }
-  }
   return { recalculated: false }
 }
 
@@ -990,15 +1002,21 @@ export async function getYogaSessionsWeekly(userId: string, timezone: string): P
 
 export async function getFlexibilityHoursCumulative(userId: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  const { data, error } = await finishedWorkouts(
+  // PAGED, and the filter is written inline rather than wrapped: the guard in
+  // tests/unit/architecture.test.ts reads the chain that starts at `.from(`, and
+  // a `.range()` outside the `finishedWorkouts(...)` wrapper is invisible to it.
+  // A lifetime total is exactly the read that outgrows one page.
+  const data = await readAllRows<{ duration_min: number }>("flexibility sessions", (from, to) =>
     supabase
-    .from("workout_logs")
-    .select("duration_min")
-    .eq("user_id", userId)
-    .in("session_type", ["mobility", "yoga"])
+      .from("workout_logs")
+      .select("duration_min")
+      .eq("user_id", userId)
+      .in("session_type", ["mobility", "yoga"])
+      .or(FINISHED_WORKOUTS_FILTER)
+      .order("id", { ascending: true })
+      .range(from, to)
   )
-  if (error) throw new Error(`Failed to sum flexibility hours: ${error.message}`)
-  if (!data || data.length === 0) return 0
+  if (data.length === 0) return 0
   return Math.round(data.reduce((sum, d) => sum + d.duration_min, 0) / 60)
 }
 
@@ -1020,16 +1038,18 @@ export async function getRunningSessionsWeekly(userId: string, timezone: string)
 
 export async function getRunningDistanceCumulative(userId: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  const { data, error } = await finishedWorkouts(
+  const data = await readAllRows<{ distance_km: number | null }>("running distances", (from, to) =>
     supabase
-    .from("workout_logs")
-    .select("distance_km")
-    .eq("user_id", userId)
-    .eq("session_type", "running")
-    .not("distance_km", "is", null)
+      .from("workout_logs")
+      .select("distance_km")
+      .eq("user_id", userId)
+      .eq("session_type", "running")
+      .not("distance_km", "is", null)
+      .or(FINISHED_WORKOUTS_FILTER)
+      .order("id", { ascending: true })
+      .range(from, to)
   )
-  if (error) throw new Error(`Failed to sum running distance: ${error.message}`)
-  if (!data || data.length === 0) return 0
+  if (data.length === 0) return 0
   return Math.round(data.reduce((sum, d) => sum + (d.distance_km ?? 0), 0) * 10) / 10
 }
 
@@ -1052,17 +1072,21 @@ export async function getLongestRunKm(userId: string): Promise<number> {
 
 export async function getConsecutiveCardioWeeks(userId: string, timezone: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  const { data, error } = await finishedWorkouts(
+  // A run of weeks is measured over the WHOLE history, so a page of 1,000 would
+  // silently cut the streak off at whatever week that page reached.
+  const data = await readAllRows<{ logged_at: string }>("cardio sessions", (from, to) =>
     supabase
-    .from("workout_logs")
-    .select("logged_at")
-    .eq("user_id", userId)
-    .in("session_type", ["cardio", "running"])
+      .from("workout_logs")
+      .select("logged_at")
+      .eq("user_id", userId)
+      .in("session_type", ["cardio", "running"])
+      .or(FINISHED_WORKOUTS_FILTER)
+      .order("id", { ascending: true })
+      .range(from, to)
   )
-  if (error) throw new Error(`Failed to get cardio weeks: ${error.message}`)
-  if (!data || data.length === 0) return 0
+  if (data.length === 0) return 0
 
-  return weeksTrainedInARow(data.map((row) => row.logged_at as string), timezone)
+  return weeksTrainedInARow(data.map((row) => row.logged_at), timezone)
 }
 
 export async function getSleepWeeklyAvgHours(userId: string, timezone: string): Promise<number | null> {

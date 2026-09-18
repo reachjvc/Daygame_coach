@@ -17,17 +17,31 @@ import {
   needsInput,
   pickTodaysDay,
   replayEnrollment,
+  repairUneventfulEdit,
   restSecondsFor,
   roundToLoadable,
   seedEnrollment,
+  skipRefusal,
+  resetConfirmText,
+  RESET_EFFECT,
 } from "@/src/programs/programsService"
 import { strongLifts5x5 } from "@/src/programs/data/strength/stronglifts5x5"
 import { upperLower } from "@/src/programs/data/bodybuilding/upperLower"
 import { recommendedRoutine } from "@/src/programs/data/calisthenics/recommendedRoutine"
 import { splitsMobility } from "@/src/programs/data/flexibility/splitsMobility"
+import { customProgram } from "@/src/programs/data/customProgram"
 import { REST_SECONDS } from "@/src/programs/config"
 import { isoWeekdayInTimezone } from "@/src/shared/dateUtils"
-import type { LevelId, LoggedExercise, ProgramDefinition, ProgramEnrollment } from "@/src/programs/types"
+import type {
+  ExerciseState,
+  LevelId,
+  LoadExercise,
+  LoggedExercise,
+  ProgramDefinition,
+  ProgramEnrollment,
+  ProgramSchedule,
+  ReplayEvent,
+} from "@/src/programs/types"
 
 function enroll(program: ProgramDefinition, level: LevelId = "beginner"): ProgramEnrollment {
   const { exerciseState, cursor } = seedEnrollment(program, level, "kg")
@@ -410,11 +424,167 @@ describe("rebuilding the weights", () => {
     const replayed = replayEnrollment(
       strongLifts5x5,
       start,
-      [session("2026-01-01T10:00:00.000Z", "A", 5, start.exerciseState.squat.workingWeight!)],
+      [session("2026-01-05T10:00:00.000Z", "A", 5, start.exerciseState.squat.workingWeight!)],
       [{ at: "2026-01-05T10:00:00.000Z", kind: "weight", exerciseId: "squat", to: 42.5 }]
     )
     expect(replayed.exerciseState.squat.workingWeight).toBe(42.5)
     expect(replayed.exerciseState.squat.consecutiveFails).toBe(0)
+  })
+
+  /**
+   * THE WEEK IS PART OF THE HISTORY TOO.
+   *
+   * Editing a program after starting it left no record of what it had been, so
+   * the replay ran every earlier session against TODAY's week. Three things went
+   * wrong and each has a test here: a lift added by the edit had no starting
+   * weight to replay from (it lived in the live state and nowhere else), a
+   * session logged on a day a later edit removed crashed the whole replay, and a
+   * week somebody wrote themselves was replayed against the catalogue shell's
+   * single placeholder day, which crashed it on the first session.
+   */
+  const lift = (id: string, name: string): LoadExercise => ({
+    id,
+    name,
+    metricType: "load",
+    scheme: { kind: "linear", sets: 5, reps: 5 },
+    progression: { kind: "linear_load", incrementKg: 2.5, incrementLb: 5, deloadAfterFails: 3, deloadPct: 0.1 },
+  })
+
+  const week = (days: { id: string; label: string; exercises: LoadExercise[] }[]): ProgramSchedule => ({
+    kind: "linear_rotation",
+    days,
+  })
+
+  /** An enrollment on a week somebody wrote themselves. */
+  function ownWeek(
+    schedule: ProgramSchedule,
+    weights: Record<string, number>,
+    seedWeights: Record<string, number> = weights
+  ): ProgramEnrollment {
+    const toState = (w: Record<string, number>): Record<string, ExerciseState> =>
+      Object.fromEntries(Object.entries(w).map(([id, v]) => [id, { workingWeight: v, consecutiveFails: 0 }]))
+    return {
+      id: "own",
+      user_id: "u1",
+      program_id: customProgram.id,
+      level: "intermediate",
+      unitSystem: "kg",
+      exerciseState: toState(weights),
+      initialExerciseState: toState(seedWeights),
+      cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 },
+      is_active: true,
+      started_at: "2026-01-01T00:00:00.000Z",
+      customSchedule: schedule,
+    }
+  }
+
+  const squatOnly = week([{ id: "day1", label: "Squat day", exercises: [lift("squat", "Back Squat")] }])
+  const squatAndPull = week([
+    { id: "day1", label: "Squat day", exercises: [lift("squat", "Back Squat"), lift("facepull", "Face Pull")] },
+  ])
+
+  const logOf = (at: string, dayId: string, entries: LoggedExercise[]) => ({
+    logged_at: at,
+    dayId,
+    cycle: 1,
+    week: 1,
+    entries,
+  })
+  const fiveAt = (exerciseId: string, weight: number): LoggedExercise => ({
+    exerciseId,
+    sets: Array.from({ length: 5 }, (_, i) => ({ setNumber: i + 1, reps: 5, weight })),
+  })
+
+  test("a lift added after the start keeps its starting weight when an earlier session is removed", () => {
+    // Face Pull came in with an edit, so it is in no starting-weight record.
+    // Before the schedule event carried it, this threw "missing state for
+    // facepull" — and the throw came out of the delete that asked for the replay.
+    const start = ownWeek(squatOnly, { squat: 60 })
+    const events: ReplayEvent[] = [
+      { at: "2026-01-01T00:00:00.000Z", kind: "schedule" as const, schedule: squatOnly, seeded: {} },
+      {
+        at: "2026-01-03T00:00:00.000Z",
+        kind: "schedule" as const,
+        schedule: squatAndPull,
+        seeded: { facepull: { workingWeight: 20, consecutiveFails: 0 } },
+      },
+    ]
+    const both = [
+      logOf("2026-01-02T10:00:00.000Z", "day1", [fiveAt("squat", 60)]),
+      logOf("2026-01-04T10:00:00.000Z", "day1", [fiveAt("squat", 62.5), fiveAt("facepull", 20)]),
+    ]
+
+    const withoutTheFirst = replayEnrollment(customProgram, start, [both[1]], events)
+    expect(withoutTheFirst.exerciseState.facepull.workingWeight).toBe(22.5)
+    // One session left, so one session counted: the delete actually took.
+    expect(withoutTheFirst.cursor.sessionCount).toBe(1)
+  })
+
+  test("a session logged before a day was removed still moves the lifts that day had, and the cursor lands on a day that exists", () => {
+    const threeDays = week([
+      { id: "A", label: "A", exercises: [lift("squat", "Back Squat")] },
+      { id: "B", label: "B", exercises: [lift("bench", "Bench Press")] },
+      { id: "C", label: "C", exercises: [lift("row", "Barbell Row")] },
+    ])
+    const justA = week([{ id: "A", label: "A", exercises: [lift("squat", "Back Squat")] }])
+    const start = ownWeek(threeDays, { squat: 60, bench: 40, row: 50 })
+
+    const replayed = replayEnrollment(
+      customProgram,
+      start,
+      [
+        // Logged while B existed.
+        logOf("2026-01-02T10:00:00.000Z", "B", [fiveAt("bench", 40)]),
+        // Logged after B and C were gone, naming a day that no longer exists —
+        // the case that used to throw "no day at index 2" mid-replay.
+        logOf("2026-01-05T10:00:00.000Z", "C", [fiveAt("squat", 60)]),
+      ],
+      [
+        { at: "2026-01-01T00:00:00.000Z", kind: "schedule" as const, schedule: threeDays, seeded: {} },
+        { at: "2026-01-04T00:00:00.000Z", kind: "schedule" as const, schedule: justA, seeded: {} },
+      ]
+    )
+
+    // The bench session happened and still counts, even though its day is gone.
+    expect(replayed.exerciseState.bench.workingWeight).toBe(42.5)
+    expect(replayed.cursor.sessionCount).toBe(2)
+    expect(replayed.cursor.dayIndex).toBeLessThan(1)
+  })
+
+  test("a self-built week replays against the week that was built, not the catalogue placeholder", () => {
+    // The shell a self-built program is filed under has ONE placeholder day
+    // holding a lift nobody has state for. Replaying against it threw on the
+    // very first session.
+    const start = ownWeek(squatOnly, { squat: 60 })
+    const logs = [logOf("2026-01-02T10:00:00.000Z", "day1", [fiveAt("squat", 60)])]
+
+    expect(() => replayEnrollment(customProgram, start, logs, [])).toThrow()
+    const replayed = replayEnrollment(customProgram, start, logs, [
+      { at: "2026-01-01T00:00:00.000Z", kind: "schedule", schedule: squatOnly, seeded: {} },
+    ])
+    expect(replayed.exerciseState.squat.workingWeight).toBe(62.5)
+  })
+
+  test("an edit made before edits were recorded is replayed from the weights it had, not from nothing", () => {
+    // Face Pull is in the live state at 30 and in no starting-weight record: it
+    // came in with an edit made before edits were part of the history.
+    const start = ownWeek(squatAndPull, { squat: 60, facepull: 30 }, { squat: 60 })
+
+    const repair = repairUneventfulEdit(start)!
+    expect(repair.kind).toBe("schedule")
+    expect(repair.at).toBe(start.started_at)
+    expect(repair).toMatchObject({ seeded: { facepull: { workingWeight: 30, consecutiveFails: 0 } } })
+    // Nothing to repair once the history has a schedule event of its own.
+    expect(repairUneventfulEdit({ ...start, replayEvents: [repair] })).toBeNull()
+    expect(repairUneventfulEdit({ ...start, customSchedule: null })).toBeNull()
+
+    const replayed = replayEnrollment(
+      customProgram,
+      { ...start, exerciseState: start.initialExerciseState! },
+      [logOf("2026-01-02T10:00:00.000Z", "day1", [fiveAt("squat", 60), fiveAt("facepull", 30)])],
+      [repair]
+    )
+    expect(replayed.exerciseState.facepull.workingWeight).toBe(32.5)
   })
 })
 
@@ -494,5 +664,63 @@ describe("a lift the person said not to count", () => {
   test("a lift stopped short counts the same way", () => {
     const entries = entriesFromSets([stored(5, 1)], { incomplete: ["squat"] }, "kg")
     expect(entries.find((e) => e.exerciseId === "squat")?.skipped).toBe(true)
+  })
+})
+
+/**
+ * SKIP, AND WHEN IT MEANS NOTHING.
+ *
+ * "Skip session" advances the cursor. On a program you work through in order
+ * that is the whole point. On a week pinned to weekdays nothing reads the
+ * cursor — `getTodaySession` picks the day by what day it actually is — so the
+ * button advanced a number nobody looks at, wrote a "skipped" mark into the
+ * program's history, and left the screen showing the same session.
+ */
+describe("what can be skipped", () => {
+  const anchored = (weekdays: (number | null)[]): ProgramSchedule => {
+    const base = strongLifts5x5.schedule
+    if (base.kind !== "linear_rotation") throw new Error("fixture assumes a rotation")
+    return { ...base, days: base.days.map((d, i) => ({ ...d, weekday: weekdays[i] ?? undefined })) }
+  }
+
+  test("a week pinned to weekdays has nothing to skip, and an in-order program does", () => {
+    expect(skipRefusal(anchored([1, 4]))).toMatch(/nothing to skip/i)
+    // StrongLifts as shipped: no weekdays, worked through in order.
+    expect(skipRefusal(strongLifts5x5.schedule)).toBeNull()
+  })
+
+  test("a half-pinned week keeps Skip, because it is not run by the calendar", () => {
+    // `isWeekdayAnchored` is all-or-nothing on purpose; a week where one day
+    // has a weekday and one does not still runs off the cursor.
+    expect(skipRefusal(anchored([1, null]))).toBeNull()
+  })
+
+  test("an endurance plan keeps Skip", () => {
+    // Weeks and sessions, not days — the cursor is what moves it along.
+    expect(skipRefusal({ kind: "endurance_weeks", weeks: [] } as unknown as ProgramSchedule)).toBeNull()
+  })
+})
+
+/**
+ * WHAT RESET PROMISES.
+ *
+ * The confirm box said the weights went back to where you began and that it
+ * could not be undone. `resetEnrollment` rewinds the cursor and does not touch
+ * `exercise_state`. Both branches are asserted so that the day the product
+ * decides reset SHOULD take the weights back, flipping the one constant moves
+ * the words with it.
+ */
+describe("what reset says it does", () => {
+  test("the reset confirm says weights stay when the event keeps them, and would say they go back if it did not", () => {
+    expect(resetConfirmText({ cursor: true, weights: false })).toMatch(/weights stay where they are/i)
+    expect(resetConfirmText({ cursor: true, weights: false })).not.toMatch(/cannot be undone/i)
+
+    expect(resetConfirmText({ cursor: true, weights: true })).toMatch(/go back to where you began/i)
+    expect(resetConfirmText({ cursor: true, weights: true })).toMatch(/cannot be undone/i)
+  })
+
+  test("the default is what the database actually does today", () => {
+    expect(RESET_EFFECT).toEqual({ cursor: true, weights: false })
+    expect(resetConfirmText()).toBe(resetConfirmText(RESET_EFFECT))
   })
 })

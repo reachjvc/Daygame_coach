@@ -14,6 +14,9 @@ import { describe, it, expect } from "vitest"
 import { LogSessionSchema } from "@/src/programs/schemas"
 
 const body = {
+  // Required, so every fixture carries one. See the retry-key test at the foot
+  // of this file for why.
+  clientKey: "w-abc12345",
   dayId: "A",
   cycle: 1,
   week: 1,
@@ -49,5 +52,30 @@ describe("LogSessionSchema", () => {
 
   it("refuses a date that is not a date", () => {
     expect(LogSessionSchema.safeParse({ ...body, entry_date: "22/08/2026" }).success).toBe(false)
+  })
+})
+
+/**
+ * THE RETRY KEY.
+ *
+ * A write-up sent twice — the reply lost on gym wifi, the button pressed again
+ * because nothing appeared to happen — wrote a second session and advanced the
+ * program twice, so a squat went up 5 kg for one session's work. The key is
+ * what lets the database recognise the second one as the first.
+ */
+describe("the retry key", () => {
+  it("refuses a write-up without one", () => {
+    const { clientKey, ...noKey } = body
+    void clientKey
+    const parsed = LogSessionSchema.safeParse(noKey)
+    expect(parsed.success).toBe(false)
+    expect(parsed.success === false && Object.keys(parsed.error.flatten().fieldErrors)).toContain(
+      "clientKey"
+    )
+  })
+
+  it("refuses one too short to be unique, and one absurdly long", () => {
+    expect(LogSessionSchema.safeParse({ ...body, clientKey: "w-abc" }).success).toBe(false)
+    expect(LogSessionSchema.safeParse({ ...body, clientKey: "w".repeat(65) }).success).toBe(false)
   })
 })

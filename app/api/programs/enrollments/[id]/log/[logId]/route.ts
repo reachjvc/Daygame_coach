@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { reviseSessionLog } from "@/src/db/programRepo"
+import { statusFor } from "@/src/programs/errors"
 
 /**
  * PATCH IS GONE, DELETE STAYS.
@@ -25,5 +26,5 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   try {
     const { id, logId } = await params
     return NextResponse.json(await reviseSessionLog(auth.userId, id, logId))
-  } catch (e) { console.error("delete session:", e); return err((e as Error).message, 400) }
+  } catch (e) { console.error("delete session:", e); return err((e as Error).message, statusFor(e)) }
 }

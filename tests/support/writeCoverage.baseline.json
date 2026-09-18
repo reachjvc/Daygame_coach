@@ -57,7 +57,7 @@
   "src/db/programRepo.ts:enrollInProgram": "unasserted",
   "src/db/programRepo.ts:ensureEnrollment": "unasserted",
   "src/db/programRepo.ts:logProgramSession": "unasserted",
-  "src/db/programRepo.ts:recalculateEnrollment": "asserted",
+  "src/db/programRepo.ts:removeProgramSession": "asserted",
   "src/db/programRepo.ts:resetEnrollment": "unasserted",
   "src/db/programRepo.ts:resumeEnrollment": "unasserted",
   "src/db/programRepo.ts:reviseSessionLog": "unasserted",

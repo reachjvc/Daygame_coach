@@ -19,6 +19,7 @@ import {
   getScenarioStats,
   getSettingsProfile,
 } from "@/src/db/settingsRepo"
+import type { TimezoneSource } from "@/src/db/settingsRepo"
 import {
   type SubscriptionInfo,
   type UserStats,
@@ -130,13 +131,20 @@ function isValidTimezone(tz: string): boolean {
  */
 export async function handleUpdateTimezone(
   userId: string,
-  timezone: string
+  timezone: string,
+  /**
+   * CHOSEN BY DEFAULT, because both of the callers that omit it are a person
+   * acting: the Settings page's save, and the goals dialog's time picker. Only
+   * the one-time browser sync passes 'detected', and it is the only caller
+   * allowed to, because only it wrote a zone nobody asked for.
+   */
+  source: TimezoneSource = "chosen"
 ): Promise<void> {
   if (!isValidTimezone(timezone)) {
     throw createSettingsError("Invalid timezone", "INVALID_INPUT")
   }
 
-  await repoUpdateTimezone(userId, timezone)
+  await repoUpdateTimezone(userId, timezone, source)
 }
 
 // ============================================

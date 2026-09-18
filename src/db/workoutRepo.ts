@@ -22,7 +22,14 @@
 import { createServerSupabaseClient } from "./supabase"
 import { readAllRows } from "./paging"
 import { DEFAULT_BAR_KG, DEFAULT_PLATE_KG, type TrainingSettings } from "@/src/programs/trainingSettings"
-import { getEnrollmentById, programFor, plateSetupFor, todaysSessionFor } from "./programRepo"
+import {
+  getEnrollmentById,
+  programFor,
+  plateSetupFor,
+  replayedState,
+  todaysSessionFor,
+} from "./programRepo"
+import { ProgramRefused } from "@/src/programs/errors"
 import { personalBestBaseline } from "./healthRepo"
 import { getUserTimezone } from "./settingsRepo"
 import { toDateISO, toZonedDate } from "@/src/shared/dateUtils"
@@ -900,7 +907,11 @@ export async function reviseWorkout(
   const supabase = await createServerSupabaseClient()
   const { data: log, error } = await supabase
     .from("workout_logs")
-    .select("id, enrollment_id, ended_at, started_at")
+    // `adjustments` carries which lifts were marked "did not do", and the engine
+    // needs it to read the corrected sets back as a session. It was not selected,
+    // so a correction on a session with a skipped lift would have replayed it as
+    // though the lift had been done.
+    .select("id, enrollment_id, ended_at, started_at, adjustments")
     .eq("id", workoutId)
     .eq("user_id", userId)
     .maybeSingle()
@@ -909,25 +920,6 @@ export async function reviseWorkout(
   if (log.started_at && !log.ended_at) {
     throw new Error("That workout is still open — finish it before correcting it.")
   }
-
-  /**
-   * The rows as they are, kept so a failed write can be put back.
-   *
-   * There is no transaction across two PostgREST calls, and the delete commits
-   * before the insert is attempted — so without this, a dropped connection
-   * between them left the workout with no sets at all and nothing to restore
-   * them from.
-   */
-  // Paged: this is what the workout is PUT BACK from if the write fails, so a
-  // short read here would restore a short workout and call it a rollback.
-  const previous = await readAllRows<WorkoutSetRow>("that workout's sets", (from, to) =>
-    supabase
-      .from("workout_sets")
-      .select("*")
-      .eq("log_id", workoutId)
-      .order("id", { ascending: true })
-      .range(from, to)
-  )
 
   const rows = sets.map((set) => ({
     log_id: workoutId,
@@ -949,27 +941,56 @@ export async function reviseWorkout(
     rpe: set.rpe ?? null,
   }))
 
-  const { error: cleared } = await supabase.from("workout_sets").delete().eq("log_id", workoutId)
-  if (cleared) throw new Error(`Could not update that workout: ${cleared.message}`)
-
-  if (rows.length > 0) {
-    const { error: written } = await supabase.from("workout_sets").insert(rows)
-    if (written) {
-      // Put back exactly what was there. Better a correction that did not take
-      // than a workout emptied by a failed write.
-      if (previous.length > 0) {
-        await supabase.from("workout_sets").insert(previous.map(({ id, ...rest }) => ({ id, ...rest })))
-      }
-      throw new Error(`Those sets could not be saved, so the workout was left as it was: ${written.message}`)
-    }
-  }
+  /**
+   * THE WEIGHTS ARE WORKED OUT BEFORE ANYTHING IS WRITTEN.
+   *
+   * This used to delete every set, insert the new ones, put the old ones back
+   * BY HAND if the insert failed, and then recalculate the program in a fourth
+   * write. Four writes and a rollback written in application code, for one
+   * correction — and the recalculation could still fail after the sets had
+   * committed, leaving the program prescribing from numbers nobody logged.
+   *
+   * `replace_sets_and_replay` takes the new sets and the recalculated weights
+   * and commits them together. The hand-rolled restore is gone because the
+   * database has a real one.
+   */
+  let exerciseState: Record<string, unknown> | null = null
+  let cursor: Record<string, unknown> | null = null
+  let replayEvents: unknown = null
+  let expectedSessionCount = 0
 
   if (log.enrollment_id) {
-    const { recalculateEnrollment } = await import("./programRepo")
-    await recalculateEnrollment(userId, log.enrollment_id)
-    return { recalculated: true }
+    const enr = await getEnrollmentById(userId, log.enrollment_id)
+    if (!enr) throw new Error("That program was not found")
+    const replayed = await replayedState(userId, log.enrollment_id, {
+      replaceLogId: workoutId,
+      entries: entriesFromSets(rows as unknown as StoredSet[], log.adjustments, enr.unitSystem),
+    })
+    exerciseState = replayed.enrollment.exerciseState as unknown as Record<string, unknown>
+    cursor = replayed.enrollment.cursor as unknown as Record<string, unknown>
+    replayEvents = replayed.replayEvents ?? null
+    expectedSessionCount = replayed.expectedSessionCount
   }
-  return { recalculated: false }
+
+  const { error: written } = await supabase.rpc("replace_sets_and_replay", {
+    p_log_id: workoutId,
+    p_sets: rows,
+    p_enrollment_id: log.enrollment_id ?? null,
+    p_exercise_state: exerciseState,
+    p_cursor: cursor,
+    p_replay_events: replayEvents,
+    p_expected_session_count: expectedSessionCount,
+  })
+  if (written) {
+    // 55000 is how every program-write function says no on purpose — here, a
+    // program that moved on while the correction was being computed. The person
+    // can act on that, so it keeps its own sentence and its own status.
+    throw written.code === "55000"
+      ? new ProgramRefused(written.message)
+      : new Error(`Those sets could not be saved, so the workout was left as it was: ${written.message}`)
+  }
+
+  return { recalculated: log.enrollment_id != null }
 }
 
 /**

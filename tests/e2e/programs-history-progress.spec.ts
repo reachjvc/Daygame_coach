@@ -360,3 +360,194 @@ test("deleting a program session moves the weights back down", async ({ page }) 
   expect(after.stillThere, "the workout should be gone").toBe(false)
   expect(after.nowAsks, "a deleted session must not still be advancing the weight").toBe(seeded.askedAt)
 })
+
+/**
+ * DELETING A SESSION ON A PROGRAM YOU EDITED AFTER STARTING IT.
+ *
+ * WHAT WENT WRONG, in plain language. Editing a program after starting it left
+ * no record of what the week had looked like, so replaying its history ran every
+ * earlier session against TODAY's week — and for a week you wrote yourself, the
+ * shell the program is filed under has one placeholder day nobody has weights
+ * for. The replay threw. The delete had already committed, so the session went
+ * and the weights stayed advanced by it, and the screen said the delete had
+ * failed. Three statements, all true, and the result was nonsense.
+ *
+ * This is the whole path at once: build a week, start it, add a lift to it,
+ * train twice, delete a session. The assertions read the numbers back from the
+ * server, not off the screen.
+ *
+ * It cleans up ONLY what it made. The shared training account carries a seeded
+ * year of workouts that later phases measure against.
+ */
+test("deleting a session on a program edited after it started moves the weights back", async ({ page }) => {
+  test.setTimeout(240000)
+  await page.goto("/programs")
+
+  const lift = (id: string, name: string) => ({
+    id,
+    name,
+    metricType: "load" as const,
+    scheme: { kind: "linear" as const, sets: 5, reps: 5 },
+    progression: {
+      kind: "linear_load" as const,
+      incrementKg: 2.5,
+      incrementLb: 5,
+      deloadAfterFails: 3,
+      deloadPct: 0.1,
+    },
+  })
+
+  const seeded = await page.evaluate(
+    async (built) => {
+      // A workout left open by an earlier spec would refuse every end below.
+      const live0 = await (await fetch("/api/workouts/live")).json()
+      if (live0) await fetch(`/api/workouts/${live0.id}`, { method: "DELETE" })
+
+      const twoLifts = {
+        kind: "linear_rotation",
+        days: [{ id: "d1", label: "Full body", exercises: [built.squat, built.bench] }],
+      }
+      const made = await (
+        await fetch("/api/programs/enrollments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            programId: "custom",
+            level: "intermediate",
+            unitSystem: "kg",
+            customSchedule: twoLifts,
+            workingWeights: { zzsquat: 100, zzbench: 60 },
+            label: "ZZEdited week",
+          }),
+        })
+      ).json()
+      if (!made?.enrollment?.id) return { error: made?.error ?? "enrol failed" }
+      const enrollmentId = made.enrollment.id
+
+      const threeLifts = {
+        kind: "linear_rotation",
+        days: [
+          { id: "d1", label: "Full body", exercises: [built.squat, built.bench, built.facepull] },
+        ],
+      }
+
+      /**
+       * ONE SESSION, THEN THE EDIT, THEN A SECOND — in that order, because the
+       * order is the whole point.
+       *
+       * The fault this test exists for is a session logged BEFORE a lift
+       * existed. Editing first would put the face pull in both sessions, and
+       * then deleting one would simply walk it back a step — which the replay
+       * managed even when it was broken. Only a remaining session that predates
+       * the lift forces the replay to know which schedule was in force when,
+       * and that is what used to throw.
+       */
+      const ids: string[] = []
+      for (let i = 0; i < 2; i++) {
+        if (i === 1) {
+          // THE EDIT. A third lift, added after the program was already
+          // running — the lift that had no starting weight to replay from.
+          const edited = await fetch(`/api/programs/enrollments/${enrollmentId}/schedule`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ customSchedule: threeLifts, workingWeights: { zzfacepull: 20 } }),
+          })
+          if (!edited.ok) return { error: (await edited.json().catch(() => null))?.error ?? "edit failed" }
+        }
+        const detail = await (await fetch(`/api/programs/enrollments/${enrollmentId}`)).json()
+        const started = await (
+          await fetch("/api/workouts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ enrollmentId, clientKey: `edit-del-${i}-${Date.now()}` }),
+          })
+        ).json()
+        for (const ex of detail.prescription.exercises) {
+          for (const set of ex.sets) {
+            await fetch(`/api/workouts/${started.id}/sets`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                exerciseId: ex.exerciseId,
+                exercise: ex.name,
+                weight: set.weight,
+                reps: set.reps,
+                setNumber: set.setNumber,
+                kind: "working",
+              }),
+            })
+          }
+        }
+        await fetch(`/api/workouts/${started.id}/finish`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ intensity: 3 }),
+        })
+        ids.push(started.id)
+      }
+
+      const after = await (await fetch(`/api/programs/enrollments/${enrollmentId}`)).json()
+      const weight = (name: string) =>
+        after.prescription.exercises.find((e: { name: string }) => e.name === name)?.sets[0].weight
+      return {
+        enrollmentId,
+        lastWorkoutId: ids[1],
+        squatNow: weight("ZZSquat"),
+        faceNow: weight("ZZFace Pull"),
+      }
+    },
+    { squat: lift("zzsquat", "ZZSquat"), bench: lift("zzbench", "ZZBench"), facepull: lift("zzfacepull", "ZZFace Pull") }
+  )
+
+  expect(seeded.error, "seeding must work").toBeUndefined()
+  // Two clean sessions from 100 kg at 2.5 kg a time.
+  expect(seeded.squatNow, "two clean sessions should have moved the squat up twice").toBe(105)
+  // The added lift trained once, in session two — it did not exist for session one.
+  expect(seeded.faceNow, "the added lift should have moved once from 20").toBe(22.5)
+
+  /**
+   * THE SECOND SESSION, not the first — and the reason matters.
+   *
+   * The engine ratchets from what was actually LIFTED: session two was done at
+   * 102.5, so removing session one leaves the squat exactly where session two
+   * put it. That assertion would pass whether or not the replay worked. Removing
+   * the last session is the one that has a different right answer, so it is the
+   * one worth asserting. (The plan wrote "the first"; this is the same code path
+   * with an assertion that can actually fail.)
+   */
+  await page.reload({ waitUntil: "networkidle" })
+  await page.getByRole("button", { name: "History" }).first().click()
+  await page.getByTestId(`history-row-${seeded.lastWorkoutId}`).click()
+  page.once("dialog", (d) => void d.accept())
+  await page.getByTestId(`history-delete-${seeded.lastWorkoutId}`).click()
+  await page.waitForTimeout(3000)
+
+  const after = await page.evaluate(async (ids) => {
+    const detail = await (await fetch(`/api/programs/enrollments/${ids.enrollmentId}`)).json()
+    const logs = await (await fetch("/api/health/workout?days=3650")).json()
+    const weight = (name: string) =>
+      detail.prescription.exercises.find((e: { name: string }) => e.name === name)?.sets[0].weight
+    return {
+      stillThere: (logs as { id: string }[]).some((l) => l.id === ids.lastWorkoutId),
+      squatNow: weight("ZZSquat"),
+      faceNow: weight("ZZFace Pull"),
+    }
+  }, seeded)
+
+  console.log("EDITED-DELETE", JSON.stringify({ ...seeded, ...after }))
+  expect(after.stillThere, "the session should be gone").toBe(false)
+  // One session left, so the squat has moved once rather than twice — and the
+  // lift the edit added is back at the 20 kg the edit gave it, which is the
+  // number that used to make the whole replay throw instead.
+  expect(after.squatNow, "the weights should have moved back by one session").toBe(102.5)
+  expect(after.faceNow, "the added lift is back at the weight the edit gave it").toBe(20)
+
+  // Only what this test made.
+  await page.evaluate(async (ids) => {
+    const d = await (await fetch(`/api/programs/enrollments/${ids.enrollmentId}`)).json()
+    for (const l of d.logs ?? [])
+      await fetch(`/api/programs/enrollments/${ids.enrollmentId}/log/${l.id}`, { method: "DELETE" })
+    await fetch(`/api/programs/enrollments/${ids.enrollmentId}`, { method: "DELETE" })
+    await fetch(`/api/programs/enrollments/${ids.enrollmentId}?permanent=1`, { method: "DELETE" })
+  }, seeded)
+})

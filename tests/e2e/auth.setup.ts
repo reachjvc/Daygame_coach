@@ -18,6 +18,20 @@ setup('authenticate as test user', async ({ page }) => {
 
   await page.waitForURL(/\/(dashboard|redirect|preferences)/, { timeout: AUTH_TIMEOUT })
 
+  /**
+   * PIN THE ACCOUNT'S CLOCK, ONCE AND FOR GOOD.
+   *
+   * Every date in the app is filed in the account's timezone, and the new
+   * one-time browser sync writes the browser's zone into any account that
+   * still holds the signup default. It may fire on this very landing. Recording
+   * a CHOSEN zone here wins over it and stops it for good, so the fixtures the
+   * training specs depend on cannot drift with whatever zone the machine
+   * running them happens to be in.
+   */
+  await page.request.put("/api/settings/time-preferences", {
+    data: { timezone: "UTC", source: "chosen" },
+  })
+
   const errorVisible = await page.getByTestId(SELECTORS.auth.errorMessage).isVisible().catch(() => false)
   if (errorVisible) {
     const errorText = await page.getByTestId(SELECTORS.auth.errorMessage).textContent()

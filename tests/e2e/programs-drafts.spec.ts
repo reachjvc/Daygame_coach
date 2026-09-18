@@ -106,6 +106,13 @@ test("a saved week survives a rename, refuses to start half-built, and starts un
 
     // Clean up everything this test made.
     await fetch(`/api/programs/drafts/${id}`, { method: "DELETE" })
+    // A WORKOUT LEFT OPEN NOW REFUSES THE END. `end_enrollment` will not stop a
+    // program somebody is mid-workout on, so a spec that left one open used to
+    // leave this program running too — and the next spec found it and failed
+    // somewhere else entirely. Two lines, the same two the other training specs
+    // already have.
+    const live = await (await fetch("/api/workouts/live")).json()
+    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
     for (const e of await (await fetch("/api/programs/enrollments")).json()) {
       if (e.program_id === "custom") {
         await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })

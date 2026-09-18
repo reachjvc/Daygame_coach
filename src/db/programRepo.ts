@@ -21,20 +21,25 @@ import {
   toKg,
   unknownExerciseIds,
   replayEnrollment,
+  repairUneventfulEdit,
   pickTodaysDay,
   entriesFromSets,
   sessionTypeFor,
+  weekSoFar,
+  skipRefusal,
+  RESET_EFFECT,
 } from "@/src/programs/programsService"
-import { requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
+import { getProgram, requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
+import { ProgramRefused } from "@/src/programs/errors"
 import {
   clampCursorDay,
   effectiveProgram,
-  scheduleDays,
   isCustomizable,
   seedForAddedExercises,
   applyWeightOverrides,
+  scheduleDaysOrNone,
 } from "@/src/programs/customize"
-import { getUserTimezone } from "./settingsRepo"
+import { getUserTimezone, getUserClock } from "./settingsRepo"
 import { loggedAtForEntry } from "@/src/health/healthService"
 import { isoWeekdayInTimezone } from "@/src/shared/dateUtils"
 import {
@@ -43,10 +48,14 @@ import {
   DEFAULT_PLATES,
   KG_PER_LB,
 } from "@/src/programs/config"
-import { finishedWorkouts } from "./healthRepo"
+import { FINISHED_WORKOUTS_FILTER } from "./healthRepo"
+import { readAllRows } from "./paging"
 import type {
+  EnrollmentDetail,
   ApplyLogResult,
+  ExerciseState,
   LevelId,
+  LoggedExercise,
   ProgramDefinition,
   ProgramEnrollment,
   ProgramEnrollmentRow,
@@ -159,19 +168,29 @@ export async function listActiveEnrollments(userId: string): Promise<ProgramEnro
    * and a second copy of it would be one more pair of things that can disagree
    * — which is the exact bug this area is being dug out of.
    */
-  const { data: logs, error: logErr } = await finishedWorkouts(
-    supabase
-      .from("workout_logs")
-      .select("enrollment_id, logged_at")
-      .eq("user_id", userId)
-      .in("enrollment_id", enrollments.map((e) => e.id))
-  ).order("logged_at", { ascending: false })
-  if (logErr) throw new Error(`Failed to read session history: ${logErr.message}`)
-
+  /**
+   * ONE QUERY PER RUNNING PROGRAM, asking only for the newest row.
+   *
+   * This read EVERY workout of every running program to find the latest date of
+   * each, which is an unbounded read: past a thousand sessions the database
+   * silently returns a thousand and "last trained" became whatever that page
+   * happened to reach. The N+1 the old comment feared is bounded by the number
+   * of disciplines — there is at most one running program per discipline, so
+   * this is a handful of single-row queries, not one per row.
+   */
   const lastByEnrollment = new Map<string, string>()
-  for (const row of (logs ?? []) as { enrollment_id: string; logged_at: string }[]) {
-    // Ordered newest-first, so the first one seen for an enrollment is its last.
-    if (!lastByEnrollment.has(row.enrollment_id)) lastByEnrollment.set(row.enrollment_id, row.logged_at)
+  for (const e of enrollments) {
+    const { data: latest, error: logErr } = await supabase
+      .from("workout_logs")
+      .select("logged_at")
+      .eq("user_id", userId)
+      .eq("enrollment_id", e.id)
+      .or(FINISHED_WORKOUTS_FILTER)
+      .order("logged_at", { ascending: false })
+      .limit(1)
+    if (logErr) throw new Error(`Failed to read session history: ${logErr.message}`)
+    const row = (latest ?? [])[0] as { logged_at: string } | undefined
+    if (row) lastByEnrollment.set(e.id, row.logged_at)
   }
   return enrollments.map((e) => ({ ...e, lastLoggedAt: lastByEnrollment.get(e.id) ?? null }))
 }
@@ -199,20 +218,35 @@ export async function listPastEnrollments(userId: string): Promise<ProgramEnroll
   const enrollments = (data ?? []).map((r) => toDomain(r as ProgramEnrollmentRow))
   if (enrollments.length === 0) return enrollments
 
-  const { data: logs, error: logErr } = await finishedWorkouts(
-    supabase
-      .from("workout_logs")
-      .select("enrollment_id, logged_at")
-      .eq("user_id", userId)
-      .in("enrollment_id", enrollments.map((e) => e.id))
-  ).order("logged_at", { ascending: false })
-  if (logErr) throw new Error(`Failed to read session history: ${logErr.message}`)
+  /**
+   * PAGED, because this one really does need every row: a finished program shows
+   * how many sessions it held, and a count cut off at a thousand is wrong for
+   * exactly the people who used the program most.
+   */
+  const logs = await readAllRows<{ enrollment_id: string; logged_at: string }>(
+    "past program sessions",
+    (from, to) =>
+      supabase
+        .from("workout_logs")
+        .select("enrollment_id, logged_at")
+        .eq("user_id", userId)
+        .in("enrollment_id", enrollments.map((e) => e.id))
+        .or(FINISHED_WORKOUTS_FILTER)
+        // Ordered by id, not by date: paging is two reads of a moving table and
+        // rows that tie on a date can appear in both pages.
+        .order("id", { ascending: true })
+        .range(from, to)
+  )
 
   const counts = new Map<string, { last: string; n: number }>()
-  for (const row of (logs ?? []) as { enrollment_id: string; logged_at: string }[]) {
+  for (const row of logs) {
     const cur = counts.get(row.enrollment_id)
     if (!cur) counts.set(row.enrollment_id, { last: row.logged_at, n: 1 })
-    else cur.n++
+    else {
+      cur.n++
+      // Not ordered by date any more, so the latest is taken by comparison.
+      if (row.logged_at > cur.last) cur.last = row.logged_at
+    }
   }
   return enrollments.map((e) => ({
     ...e,
@@ -283,37 +317,32 @@ export async function enrollInProgram(
    * self-built program is filed under "strength", so starting StrongLifts
    * removed it without a word and nothing on any screen mentioned it again.
    * The rule stays; the silence does not.
+   *
+   * `getProgram`, not `requireProgram`: an old enrollment whose program has
+   * since left the catalogue used to throw here, so one retired program on the
+   * account made it impossible to start ANY new one. It is left alone and not
+   * displaced, because nothing can say what discipline it was.
    */
   const sameDiscipline = (await listActiveEnrollments(userId)).filter(
-    (e) => requireProgram(e.program_id).discipline === program.discipline
+    (e) => getProgram(e.program_id)?.discipline === program.discipline
   )
   /**
-   * NOTHING IS PAUSED IF ANY OF IT IS REFUSED. Checked for every program about
-   * to be displaced BEFORE the first write — otherwise a refusal on the second
-   * one leaves the first already switched off, which is the half-done state
-   * this guard exists to prevent.
+   * The sentence, before the write. The database refuses this too — the
+   * busy-program trigger fires the moment anything tries to switch a program
+   * off — but a refusal that arrives as a database exception has no words the
+   * person can act on, and this is where they come from.
    */
   for (const e of sameDiscipline) await assertNoOpenWorkoutOn(userId, e.id)
 
-  const displaced: ProgramEnrollment[] = []
-  for (const e of sameDiscipline) {
-    const { error: pauseError } = await supabase
-      .from("program_enrollments")
-      .update({ is_active: false })
-      .eq("id", e.id)
-      .eq("user_id", userId)
-    if (pauseError) {
-      throw asProgramBusy(
-        pauseError.message,
-        `Could not make room for that program: ${pauseError.message}`
-      )
-    }
-    displaced.push(e)
-  }
-
-  const { data, error } = await supabase
-    .from("program_enrollments")
-    .insert({
+  /**
+   * ONE STATEMENT. This used to switch the old programs off and THEN insert the
+   * new one, with nothing joining the two: a refused insert — the same program
+   * already running, a weight the column cannot hold — left the person on no
+   * program at all. `start_enrollment` does both inside one transaction, so a
+   * refusal anywhere leaves the program you were on exactly as it was.
+   */
+  const { data, error } = await supabase.rpc("start_enrollment", {
+    p_row: {
       user_id: userId,
       program_id: program.id,
       level,
@@ -325,17 +354,37 @@ export async function enrollInProgram(
       // a beginner's 60 the first time they deleted a session.
       initial_exercise_state: exerciseState,
       cursor,
-      is_active: true,
       custom_schedule: input.customSchedule ?? null,
-      ...(input.barWeightKg != null ? { bar_weight_kg: input.barWeightKg } : {}),
-      ...(input.label ? { label: input.label } : {}),
-    })
-    .select()
-    .single()
-  if (error) throw new Error(`Failed to enroll: ${error.message}`)
+      /**
+       * THE WEEK IT STARTED AS, recorded from the first moment.
+       *
+       * A program started WITH its own schedule — every week somebody writes
+       * themselves — had no record of what it began as, and the catalogue shell
+       * it is filed under is a single placeholder day. Replaying its history
+       * therefore ran its first sessions against that placeholder and threw.
+       */
+      replay_events: input.customSchedule
+        ? [
+            {
+              at: new Date().toISOString(),
+              kind: "schedule",
+              schedule: input.customSchedule,
+              seeded: {},
+            },
+          ]
+        : [],
+      bar_weight_kg: input.barWeightKg ?? null,
+      label: input.label ?? null,
+    },
+    p_displace: sameDiscipline.map((e) => e.id),
+  })
+  if (error) {
+    const refusal = refusalFrom(error)
+    throw refusal instanceof ProgramRefused ? refusal : new Error(`Failed to enroll: ${error.message}`)
+  }
 
   const enrollment = toDomain(data as ProgramEnrollmentRow)
-  return { enrollment, prescription: computePrescription(program, enrollment), displaced }
+  return { enrollment, prescription: computePrescription(program, enrollment), displaced: sameDiscipline }
 }
 
 /**
@@ -398,12 +447,13 @@ export async function listActiveSelections(
 export async function unenroll(userId: string, id: string): Promise<void> {
   await assertNoOpenWorkoutOn(userId, id)
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase
-    .from("program_enrollments")
-    .update({ is_active: false })
-    .eq("id", id)
-    .eq("user_id", userId)
-  if (error) throw asProgramBusy(error.message, `Failed to end program: ${error.message}`)
+  const { error } = await supabase.rpc("end_enrollment", { p_id: id })
+  if (error) {
+    const refusal = refusalFrom(error)
+    throw refusal instanceof ProgramRefused
+      ? refusal
+      : new Error(`Failed to end program: ${error.message}`)
+  }
 }
 
 /**
@@ -415,18 +465,30 @@ export async function unenroll(userId: string, id: string): Promise<void> {
  * secret, for a plan you had just ended — and the new program sat at week 1 as
  * if you had never trained.
  */
-export class ProgramBusy extends Error {
+export class ProgramBusy extends ProgramRefused {
   constructor(message = "Finish or throw away the open workout first.") {
     super(message)
     this.name = "ProgramBusy"
   }
 }
 
-/** The database's own refusal, turned into the one sentence the app shows. */
-function asProgramBusy(dbMessage: string, fallback: string): Error {
-  return dbMessage.includes("Finish or throw away the open workout first")
+/**
+ * A database refusal, turned into something a route can price.
+ *
+ * SQL state 55000 is what every one of the program-write functions raises when
+ * it says no on purpose — a workout still open, a calculation made against a
+ * history that has since moved, a session that is not there. Anything else is a
+ * genuine failure and keeps its own message.
+ *
+ * `ProgramBusy` is kept as its own class because the trigger's sentence is the
+ * one the screens already recognise, and because it is the refusal three routes
+ * were written against before this existed.
+ */
+function refusalFrom(error: { code?: string; message: string }): Error {
+  if (error.code !== "55000") return new Error(error.message)
+  return error.message.includes("Finish or throw away the open workout first")
     ? new ProgramBusy()
-    : new Error(fallback)
+    : new ProgramRefused(error.message)
 }
 
 /**
@@ -519,40 +581,38 @@ export async function resumeEnrollment(
   if (!target) throw new Error("That program is not on your account")
   if (target.is_active) throw new Error("That program is already running")
 
-  const discipline = requireProgram(target.program_id).discipline
+  /**
+   * A PROGRAM THAT HAS LEFT THE CATALOGUE CANNOT BE RUN AGAIN, and says so.
+   * `requireProgram` threw a developer's sentence — "Unknown program: x" —
+   * which reached the screen as a 500.
+   */
+  const targetProgram = getProgram(target.program_id)
+  if (!targetProgram) {
+    throw new ProgramRefused("That program is no longer in the catalogue, so it cannot be run again")
+  }
   const sameDiscipline = (await listActiveEnrollments(userId)).filter(
-    (e) => requireProgram(e.program_id).discipline === discipline
+    (e) => getProgram(e.program_id)?.discipline === targetProgram.discipline
   )
   /**
    * THE SAME GUARD AS ENROLLING, for the same reason. Picking an old program
    * back up pauses whatever is running in its discipline — and if a workout is
    * open on that one, it would finish onto a plan nobody is shown any more.
-   * Checked for every program first, so a refusal leaves nothing half-paused.
+   * The sentence comes from here; the database refuses it either way.
    */
   for (const e of sameDiscipline) await assertNoOpenWorkoutOn(userId, e.id)
 
-  const displaced: ProgramEnrollment[] = []
-  for (const e of sameDiscipline) {
-    const { error } = await supabase
-      .from("program_enrollments")
-      .update({ is_active: false })
-      .eq("id", e.id)
-      .eq("user_id", userId)
-    if (error) {
-      throw asProgramBusy(error.message, `Failed to pause ${e.program_id}: ${error.message}`)
-    }
-    displaced.push(e)
+  // One statement again: the pause and the restart, together or not at all.
+  const { data, error } = await supabase.rpc("resume_enrollment", {
+    p_id: id,
+    p_displace: sameDiscipline.map((e) => e.id),
+  })
+  if (error) {
+    const refusal = refusalFrom(error)
+    throw refusal instanceof ProgramRefused
+      ? refusal
+      : new Error(`Failed to restart the program: ${error.message}`)
   }
-
-  const { data, error } = await supabase
-    .from("program_enrollments")
-    .update({ is_active: true })
-    .eq("id", id)
-    .eq("user_id", userId)
-    .select()
-    .single()
-  if (error) throw new Error(`Failed to restart the program: ${error.message}`)
-  return { enrollment: toDomain(data as ProgramEnrollmentRow), displaced }
+  return { enrollment: toDomain(data as ProgramEnrollmentRow), displaced: sameDiscipline }
 }
 
 /** Reset cursor to the start of the program; keeps current working weights / TMs. */
@@ -569,7 +629,10 @@ export async function resetEnrollment(userId: string, id: string): Promise<Progr
       // next time somebody edits a session.
       replay_events: [
         ...(enr.replayEvents ?? []),
-        { at: new Date().toISOString(), kind: "reset", cursor: true, weights: false },
+        // Spelled by RESET_EFFECT, not by hand: the confirm box, this row and
+        // the replay branch that reads it all have to agree about whether a
+        // reset takes the weights back, and they only do if there is one copy.
+        { at: new Date().toISOString(), kind: "reset", ...RESET_EFFECT },
       ],
     })
     .eq("id", id)
@@ -629,8 +692,29 @@ export async function updateEnrollmentSchedule(
   // A weight somebody set by hand has to survive a later correction, so it goes
   // into the replay alongside the skips and resets.
   const at = new Date().toISOString()
+  /**
+   * THE EDIT ITSELF IS PART OF THE HISTORY, always — not only when a weight
+   * changed with it.
+   *
+   * This appended weight events and nothing else, so an edit that added a day or
+   * dropped a lift left no trace: the replay ran every earlier session against
+   * the NEW week, and a session logged on a day this edit removed crashed it. The
+   * lifts `seedForAddedExercises` invented were written into the live state and
+   * nowhere else, so the starting weights never learned about them either —
+   * hence `seeded`, which carries exactly the entries this save created.
+   *
+   * THE SCHEDULE EVENT COMES FIRST. It shares its timestamp with the weight
+   * events of the same save, and `Array.prototype.sort` in the replay is stable,
+   * so array order is what breaks the tie: the week changes, then the weights
+   * somebody typed on top of it.
+   */
+  const seededNow: Record<string, ExerciseState> = {}
+  for (const [id, state] of Object.entries(seeded)) {
+    if (!enr.exerciseState[id]) seededNow[id] = state
+  }
   const replayEvents: ReplayEvent[] = [
     ...(enr.replayEvents ?? []),
+    { at, kind: "schedule", schedule, seeded: seededNow },
     ...changed.map((c) => ({ at, kind: "weight" as const, exerciseId: c.exerciseId, to: c.to })),
   ]
 
@@ -641,7 +725,9 @@ export async function updateEnrollmentSchedule(
       custom_schedule: schedule,
       exercise_state: exerciseState,
       cursor,
-      ...(changed.length > 0 ? { replay_events: replayEvents } : {}),
+      // Unconditional now: the schedule event above exists for every save, so
+      // there is no longer a version of this write that records nothing.
+      replay_events: replayEvents,
     })
     .eq("id", enrollmentId)
     .eq("user_id", userId)
@@ -677,6 +763,40 @@ export async function getTodaySession(userId: string, enrollmentId: string): Pro
 }
 
 /**
+ * EVERYTHING ONE PROGRAM SCREEN NEEDS, ANSWERED ONCE.
+ *
+ * Two callers built this by hand — the GET route and the server-rendered first
+ * paint of `/programs` — and neither could include the week, because working
+ * out "which days have I trained this week" needs the account's timezone and
+ * that is a database read neither of them was doing. So the strip did it in
+ * the browser instead, off the phone's clock, and disagreed with the session
+ * card beside it.
+ *
+ * Built here so there is one answer and one clock read. Without it the first
+ * paint would have no week at all and the strip would sit empty until a
+ * refetch filled it in.
+ */
+export async function getEnrollmentDetail(
+  userId: string,
+  id: string
+): Promise<EnrollmentDetail | null> {
+  const enrollment = await getEnrollmentById(userId, id)
+  if (!enrollment) return null
+
+  // ONE CLOCK READ, shared. "Which session is today" and "which days did I
+  // train this week" are two answers to the same question, and reading the
+  // zone twice is how two answers on one screen come to disagree — which is
+  // the fault this function exists to fix.
+  const clock = await getUserClock(userId)
+  const [prescription, logs] = await Promise.all([
+    todaysSessionFor(userId, enrollment, clock),
+    sessionLogsFor(userId, enrollment),
+  ])
+
+  return { enrollment, prescription, logs, week: weekSoFar(logs, clock.timezone, new Date()) }
+}
+
+/**
  * The same rule, for a caller that already has the enrollment in its hand.
  *
  * THE ONE PLACE THAT ANSWERS "WHICH SESSION IS TODAY". It was inside
@@ -687,7 +807,9 @@ export async function getTodaySession(userId: string, enrollmentId: string): Pro
  */
 export async function todaysSessionFor(
   userId: string,
-  enr: ProgramEnrollment
+  enr: ProgramEnrollment,
+  /** A clock already read by the caller, so one screen makes one read. */
+  clock?: { timezone: string; known: boolean }
 ): Promise<SessionPrescription> {
   const program = programFor(enr)
 
@@ -702,10 +824,12 @@ export async function todaysSessionFor(
    * suite and by the integration suite alike, so the one rule that answers "am I
    * training today" was the one rule nobody could check.
    */
-  const timezone = await getUserTimezone(userId)
+  // `known` rides along because every screen holding a prescription needs to
+  // know whether "today" is a fact or the UTC default nobody set.
+  const { timezone, known } = clock ?? (await getUserClock(userId))
   const todayWeekday = isoWeekdayInTimezone(timezone)
   const picked = pickTodaysDay(program.schedule, todayWeekday)
-  if (!picked) return { ...computePrescription(program, enr), todayWeekday }
+  if (!picked) return { ...computePrescription(program, enr), todayWeekday, clockKnown: known }
 
   const prescription = computePrescription(program, {
     ...enr,
@@ -714,6 +838,7 @@ export async function todaysSessionFor(
   return {
     ...prescription,
     todayWeekday,
+    clockKnown: known,
     ...(picked.restDay ? { restDay: true } : {}),
     ...(picked.scheduledWeekday != null ? { scheduledWeekday: picked.scheduledWeekday } : {}),
   }
@@ -724,6 +849,12 @@ export async function skipSession(userId: string, enrollmentId: string): Promise
   const enr = await getEnrollmentById(userId, enrollmentId)
   if (!enr) throw new Error("Enrollment not found")
   const program = programFor(enr)
+  // REFUSE RATHER THAN PRETEND. On a week pinned to weekdays nothing reads the
+  // cursor, so advancing it changed no screen and left a phantom skip in the
+  // history each time it was tapped. The button is hidden for these programs;
+  // this is the same rule on the server, for anyone who posts anyway.
+  const refusal = skipRefusal(program.schedule)
+  if (refusal) throw new ProgramRefused(refusal)
   const { enrollment } = applyLog(program, enr, {
     enrollment_id: enr.id,
     dayId: "",
@@ -752,7 +883,13 @@ export async function logProgramSession(
   rpe?: number,
   notes?: string,
   /** The day the person says they trained. Absent means now. */
-  when?: { entry_date?: string; entry_time?: string }
+  when?: { entry_date?: string; entry_time?: string },
+  /**
+   * The form's own id for this write-up, so a retry is the same session rather
+   * than a second one. Required by `LogSessionSchema`, so the route always has
+   * one; last in the list because `when` predates it.
+   */
+  clientKey?: string
 ): Promise<ApplyLogResult & { next: SessionPrescription }> {
   const enr = await getEnrollmentById(userId, enrollmentId)
   if (!enr) throw new Error("Enrollment not found")
@@ -786,40 +923,172 @@ export async function logProgramSession(
     loggedAt = resolved
   }
 
-  // ONE RECORD. The engine's state, then the workout — which IS the session.
   /**
-   * THE WORKOUT FIRST, THE WEIGHTS AFTER.
+   * ONE STATEMENT: THE WORKOUT, ITS SETS AND THE WEIGHTS IT MOVED.
    *
-   * These two were the other way round, with no rollback between them. Type
-   * 1000 into a weight box — a plausible slip for 100 — and the engine advanced
-   * every lift and stored it, and THEN the set insert was refused by the
-   * database's NUMERIC(5,2) column. The result was a program advanced by a
-   * session that was never recorded, and an error message about numeric
-   * overflow that no user can act on.
+   * This was three writes in a row with no rollback between them. The one that
+   * actually bit: type 1000 into a weight box — a plausible slip for 100 — and
+   * the workout row went in, then the set insert was refused by the database's
+   * NUMERIC(5,2) column, and the reply was an error about numeric overflow with
+   * an empty session left behind. Reordering the writes only moved which half
+   * survived; nothing in application code can make three writes into one.
    *
-   * Writing the workout first means a refused write leaves the program exactly
-   * as it was. The reverse order cannot be made safe by catching, because the
-   * state a log advanced FROM is not stored — there is nothing to put back.
+   * AND A RETRY IS NOT A SECOND SESSION. `clientKey` is minted by the form, so
+   * the same write-up sent twice — the reply lost on gym wifi, the button
+   * pressed again — is recognised by the database as the session already
+   * there. It answers `inserted: false`, touches nothing, and the program is
+   * NOT advanced a second time.
    */
-  await writeWorkout(userId, enr, program, logInput, { rpe, notes, loggedAt })
-  await persistState(userId, result.enrollment)
+  const supabase = await createServerSupabaseClient()
+  const duration = Math.min(599, Math.max(1, Math.round(logInput.durationMin ?? BRIDGE_DEFAULT_DURATION_MIN)))
+  const intensity = Math.min(5, Math.max(1, Math.round(logInput.intensity ?? BRIDGE_DEFAULT_INTENSITY)))
+  const skipped = logInput.entries.filter((e) => e.skipped).map((e) => e.exerciseId)
+
+  const { data, error } = await supabase.rpc("log_session_and_advance", {
+    p_workout: {
+      user_id: userId,
+      session_type: sessionTypeFor(program),
+      duration_min: duration,
+      intensity,
+      distance_km: logInput.distanceKm ?? null,
+      enrollment_id: enr.id,
+      program_day_id: logInput.dayId,
+      program_cycle: logInput.cycle,
+      program_week: logInput.week,
+      adjustments: skipped.length > 0 ? { skipped } : {},
+      rpe: rpe ?? null,
+      notes: notes ?? null,
+      client_key: clientKey,
+      ...(loggedAt ? { logged_at: loggedAt } : {}),
+    },
+    // The set rows carry no log id: the function has just made it, and letting
+    // the app guess one is how an orphaned set gets written.
+    p_sets: setRowsFor(program, enr, logInput),
+    p_exercise_state: result.enrollment.exerciseState,
+    p_cursor: result.enrollment.cursor,
+    p_expected_session_count: enr.cursor.sessionCount,
+  })
+  if (error) {
+    const refusal = refusalFrom(error)
+    throw refusal instanceof ProgramRefused ? refusal : new Error(`Failed to save the workout: ${error.message}`)
+  }
+
+  /**
+   * ALREADY WRITTEN. This request changed nothing, and must not claim to have.
+   *
+   * `result` was computed by advancing from the state as it is NOW — which the
+   * first copy of this write-up has already advanced. So its `changes` would
+   * read "Squat 62.5 → 65 kg" when the truth is that the earlier request moved
+   * it 60 → 62.5 and this one moved it nowhere. The screen prints that list
+   * verbatim, so returning it is the same class of lie this phase exists to
+   * remove: a number on screen that no write produced.
+   *
+   * The enrollment as it stands, the prescription it actually gives, and an
+   * empty list of movements — all three true of this request.
+   */
+  const written = data as { workout_id: string; inserted: boolean } | null
+  if (written && written.inserted === false) {
+    return { enrollment: enr, changes: [], next: computePrescription(program, enr) }
+  }
 
   return { ...result, next: computePrescription(program, result.enrollment) }
 }
 
 /**
- * Change or remove a logged session, and recompute everything after it.
+ * What the weights WOULD say, with a change applied. Writes nothing.
  *
- * An edit that does not change what comes next is a note, not a correction. The
- * state a log advanced FROM is not stored, so a single log cannot be reversed —
- * the only honest way to apply a change is to replay every session over a fresh
- * seed. `replayEnrollment` can do that because the engine is pure.
+ * WHY THE CALCULATION IS SEPARATE FROM THE WRITE. This used to be one function
+ * that read, replayed and saved — and it was called AFTER the delete or the set
+ * rewrite had already committed. So a replay that threw left the session gone
+ * and the weights still advanced by it, and the screen said the delete had
+ * failed. All three statements were true and the result was nonsense.
  *
- * `entries === null` deletes the session. Both paths go through the same replay,
- * so there is one rule for "what do the weights say now" rather than two.
+ * Now the answer is worked out first, in memory, from the history WITH the
+ * change already applied; then one database function writes the change and the
+ * answer together, or neither. If the calculation throws, nothing was written
+ * and nothing needs undoing.
+ *
+ * `expectedSessionCount` is what the program said when this was read. It travels
+ * with the write so the database can refuse a calculation that describes a
+ * history the program has since moved on from — two tabs, or a workout finishing
+ * while a correction was being computed.
+ *
+ * `replayEvents` comes back ONLY when a legacy edit had to be repaired (see
+ * `repairUneventfulEdit`); otherwise the stored events are already right and the
+ * write leaves them alone.
  */
+export async function replayedState(
+  userId: string,
+  enrollmentId: string,
+  change?: { withoutLogId: string } | { replaceLogId: string; entries: LoggedExercise[] }
+): Promise<{
+  enrollment: ProgramEnrollment
+  expectedSessionCount: number
+  replayEvents?: ReplayEvent[]
+}> {
+  const enr = await getEnrollmentById(userId, enrollmentId)
+  if (!enr) throw new Error("Enrollment not found")
+  /**
+   * THE CATALOGUE'S WEEK, not the enrollment's edited one.
+   *
+   * The replay walks the schedule events in the history and switches weeks as it
+   * passes them, so handing it the CURRENT week would replay every session
+   * before the last edit against the wrong one — the exact fault those events
+   * were added to remove. `requireProgram` is where the walk starts; the first
+   * schedule event takes it the rest of the way.
+   */
+  const program = requireProgram(enr.program_id)
+
+  const seedState = enr.initialExerciseState
+  if (!seedState) {
+    throw new Error(
+      "This program was started before starting weights were kept, so its history cannot be recalculated. Ending and restarting it will fix that."
+    )
+  }
+
+  const stored = await sessionLogsFor(userId, enr)
+  /**
+   * THE HISTORY AS IT WILL BE, not as it is.
+   *
+   * The change is applied to the list in memory. That is what makes "compute
+   * first, write once" possible at all: the answer is derived from the future
+   * state of the history rather than from the state after a write that may not
+   * have happened.
+   */
+  const applied =
+    change == null
+      ? stored
+      : "withoutLogId" in change
+        ? stored.filter((l) => l.id !== change.withoutLogId)
+        : stored.map((l) => (l.id === change.replaceLogId ? { ...l, entries: change.entries } : l))
+
+  // An edit made before edits were recorded, stitched in at the front. See
+  // `repairUneventfulEdit` for what can and cannot be recovered.
+  const repair = repairUneventfulEdit(enr)
+  const events: ReplayEvent[] = [...(repair ? [repair] : []), ...(enr.replayEvents ?? [])]
+
+  const replayed = replayEnrollment(
+    program,
+    { ...enr, exerciseState: seedState, cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 } },
+    applied.map((l) => ({
+      entries: l.entries,
+      logged_at: l.logged_at,
+      dayId: l.day_id,
+      cycle: l.cycle,
+      week: l.week,
+    })),
+    events
+  )
+
+  return {
+    enrollment: replayed,
+    expectedSessionCount: enr.cursor.sessionCount,
+    ...(repair ? { replayEvents: events } : {}),
+  }
+}
+
 /**
- * Remove one logged session, and replay everything after it.
+ * Remove one logged session and move the weights back, in one statement.
  *
  * ONE JOB NOW. This also carried a "correct the session" path, taking
  * `{exerciseId, setNumber, reps, weight}` and rewriting the workout from it —
@@ -831,91 +1100,40 @@ export async function logProgramSession(
  * The state a log advanced FROM is not stored, so a single log cannot be undone
  * arithmetically. The only honest answer is to replay every remaining session
  * over the stored seed, which `replayEnrollment` can do because the engine is
- * pure.
+ * pure — and the delete and the result of that replay are now committed
+ * together by `remove_session_and_replay`.
  */
+export async function removeProgramSession(
+  userId: string,
+  enrollmentId: string,
+  logId: string
+): Promise<ProgramEnrollment> {
+  const { enrollment, expectedSessionCount, replayEvents } = await replayedState(
+    userId,
+    enrollmentId,
+    { withoutLogId: logId }
+  )
+
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase.rpc("remove_session_and_replay", {
+    p_log_id: logId,
+    p_enrollment_id: enrollmentId,
+    p_exercise_state: enrollment.exerciseState,
+    p_cursor: enrollment.cursor,
+    p_replay_events: replayEvents ?? null,
+    p_expected_session_count: expectedSessionCount,
+  })
+  if (error) throw refusalFrom(error)
+  return toDomain(data as ProgramEnrollmentRow)
+}
+
+/** The delete-a-session route's name for the same thing. */
 export async function reviseSessionLog(
   userId: string,
   enrollmentId: string,
   logId: string
 ): Promise<ProgramEnrollment> {
-  const supabase = await createServerSupabaseClient()
-  const enr = await getEnrollmentById(userId, enrollmentId)
-  if (!enr) throw new Error("Enrollment not found")
-
-  {
-    // Deleting the workout takes its sets with it (ON DELETE CASCADE) — and,
-    // because there is only one record now, it also takes it out of the
-    // dashboard count, the calendar, the personal records and the export.
-    // Deleting used to leave every one of those untouched.
-    const { data: gone, error } = await supabase
-      .from("workout_logs")
-      .delete()
-      .eq("id", logId)
-      .eq("enrollment_id", enrollmentId)
-      .eq("user_id", userId)
-      .select("id")
-    if (error) throw new Error(`Failed to delete the session: ${error.message}`)
-    if ((gone ?? []).length === 0) throw new Error("That session was not found, so nothing was deleted.")
-  }
-
-  /**
-   * REPLAY FROM WHAT THE PERSON TYPED, not from the catalogue.
-   *
-   * This used to call `seedEnrollment` again, which re-derives the starting
-   * weights from the LEVEL's defaults — so anybody who entered their real
-   * numbers at enrolment had them replaced by the catalogue's the first time
-   * they corrected a session, silently, and anybody on a self-built program
-   * (which has no level seeds at all) got a delete that went through and then
-   * threw. The seed is stored at enrolment now and is the enrollment's own
-   * history; it is never recomputed.
-   */
-  return recalculateEnrollment(userId, enrollmentId)
-}
-
-/**
- * Re-derive a program's weights from the sessions that are stored.
- *
- * REPLAY FROM WHAT THE PERSON TYPED, not from the catalogue. This used to call
- * `seedEnrollment` again, which re-derives the starting weights from the
- * LEVEL's defaults — so anybody who entered their real numbers at enrolment had
- * them replaced by the catalogue's the first time they corrected a session,
- * silently, and anybody on a self-built program (which has no level seeds at
- * all) got a delete that went through and then threw. The seed is stored at
- * enrolment now and is the enrollment's own history; it is never recomputed.
- *
- * Extracted so a correction can write its sets FAITHFULLY and then ask for the
- * recalculation, rather than going through a writer that only understands
- * working sets and throws warm-ups, notes and effort away on the way past.
- */
-export async function recalculateEnrollment(
-  userId: string,
-  enrollmentId: string
-): Promise<ProgramEnrollment> {
-  const enr = await getEnrollmentById(userId, enrollmentId)
-  if (!enr) throw new Error("Enrollment not found")
-  const program = programFor(enr)
-
-  const seedState = enr.initialExerciseState
-  if (!seedState) {
-    throw new Error(
-      "This program was started before starting weights were kept, so its history cannot be recalculated. Ending and restarting it will fix that."
-    )
-  }
-  const logs = await getSessionLogs(userId, enrollmentId)
-  const replayed = replayEnrollment(
-    program,
-    { ...enr, exerciseState: seedState, cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 } },
-    logs.map((l) => ({
-      entries: l.entries,
-      logged_at: l.logged_at,
-      dayId: l.day_id,
-      cycle: l.cycle,
-      week: l.week,
-    })),
-    enr.replayEvents ?? []
-  )
-  await persistState(userId, replayed)
-  return replayed
+  return removeProgramSession(userId, enrollmentId, logId)
 }
 
 async function persistState(
@@ -937,90 +1155,67 @@ async function persistState(
 }
 
 /**
- * Write the workout. There is only one row to write.
+ * The sets, stamped with the program's own id for each lift.
  *
- * IT USED TO BE TWO, and nothing joined them: a `program_session_logs` row for
- * the engine and a `workout_logs` row for the dashboard, written one after the
- * other. Deleting a session removed one and left the other in every count,
- * chart and export; editing reached neither. The engine now reads the sets that
- * are stored, so there is nothing left to disagree.
- *
- * `client_key` makes a retry a no-op rather than a second session: a save that
- * failed halfway used to leave the weights advanced and say nothing, so the
- * next thing anybody did was press the button again.
+ * NO `log_id`: `log_session_and_advance` creates the workout row and fills it
+ * in. Handing one in from here would mean guessing an id the database has not
+ * issued yet.
  */
-async function writeWorkout(
-  userId: string,
-  enr: ProgramEnrollment,
-  program: ProgramDefinition,
-  logInput: Omit<ProgramSessionLogInput, "enrollment_id">,
-  meta: { rpe?: number; notes?: string; loggedAt?: string; clientKey?: string }
-): Promise<void> {
-  const supabase = await createServerSupabaseClient()
-
-  const duration = Math.min(599, Math.max(1, Math.round(logInput.durationMin ?? BRIDGE_DEFAULT_DURATION_MIN)))
-  const intensity = Math.min(5, Math.max(1, Math.round(logInput.intensity ?? BRIDGE_DEFAULT_INTENSITY)))
-  const skipped = logInput.entries.filter((e) => e.skipped).map((e) => e.exerciseId)
-
-  const { data: workout, error } = await supabase
-    .from("workout_logs")
-    .insert({
-      user_id: userId,
-      session_type: sessionTypeFor(program),
-      duration_min: duration,
-      intensity,
-      distance_km: logInput.distanceKm ?? null,
-      enrollment_id: enr.id,
-      program_day_id: logInput.dayId,
-      program_cycle: logInput.cycle,
-      program_week: logInput.week,
-      adjustments: skipped.length > 0 ? { skipped } : {},
-      rpe: meta.rpe ?? null,
-      notes: meta.notes ?? null,
-      ...(meta.clientKey ? { client_key: meta.clientKey } : {}),
-      ...(meta.loggedAt ? { logged_at: meta.loggedAt } : {}),
-    })
-    .select("id")
-    .single()
-  if (error) throw new Error(`Failed to save the workout: ${error.message}`)
-
-  const sets = setRowsFor(program, enr.unitSystem, logInput, workout.id)
-  if (sets.length === 0) return
-  const { error: setsError } = await supabase.from("workout_sets").insert(sets)
-  if (setsError) throw new Error(`Failed to save the sets: ${setsError.message}`)
-}
-
-/** The sets, stamped with the program's own id for each lift. */
 function setRowsFor(
   program: ProgramDefinition,
-  unit: UnitSystem,
-  logInput: Omit<ProgramSessionLogInput, "enrollment_id">,
-  logId: string
-): WorkoutSetInsert[] {
-  const byId = new Map(
-    scheduleDays(program.schedule).flatMap((d) => d.exercises.map((ex) => [ex.id, ex] as const))
-  )
-  const rows: WorkoutSetInsert[] = []
+  enr: ProgramEnrollment,
+  logInput: Omit<ProgramSessionLogInput, "enrollment_id">
+): Omit<WorkoutSetInsert, "log_id">[] {
+  const days = scheduleDaysOrNone(program.schedule)
+  const byId = new Map(days.flatMap((d) => d.exercises.map((ex) => [ex.id, ex] as const)))
+
+  /**
+   * WHICH SETS WERE ALL-OUT, taken from what the program actually asked for.
+   *
+   * Every set written up after the fact was stored as "working" — including
+   * the last set of a 5×5 that the program marks `amrap`, meaning as many reps
+   * as you can manage. The live screen stores those correctly, so one session
+   * looked different in History depending on which door it came in by, and a
+   * personal best set on an all-out set was invisible to one of them.
+   *
+   * Read from the day being logged, not from the cursor: a session written up
+   * three days late is Workout B's, whatever the program is pointing at now.
+   */
+  const allOut = new Map<string, Set<number>>()
+  const dayIndex = days.findIndex((d) => d.id === logInput.dayId)
+  if (dayIndex >= 0) {
+    const prescribed = computePrescription(program, {
+      ...enr,
+      cursor: { ...enr.cursor, cycle: logInput.cycle, week: logInput.week, dayIndex },
+    })
+    for (const ex of prescribed.exercises) {
+      const numbers = ex.sets.filter((set) => set.amrap).map((set) => set.setNumber)
+      if (numbers.length > 0) allOut.set(ex.exerciseId, new Set(numbers))
+    }
+  }
+
+  const rows: Omit<WorkoutSetInsert, "log_id">[] = []
   for (const entry of logInput.entries) {
     if (entry.skipped) continue
     const ex = byId.get(entry.exerciseId)
+    const amrapSets = allOut.get(entry.exerciseId)
     for (const set of entry.sets) {
       rows.push({
-        log_id: logId,
         exercise: ex?.name ?? entry.exerciseId,
         // THE PROGRAM'S OWN ID. Matching a logged set back to its lift by NAME
         // is what made "my bench" split in two the moment a program renamed it.
         exercise_id: entry.exerciseId,
-        weight_kg: round2(toKg(set.weight, unit)),
+        weight_kg: round2(toKg(set.weight, enr.unitSystem)),
         reps: set.reps,
         set_number: set.setNumber,
-        set_kind: "working",
+        set_kind: amrapSets?.has(set.setNumber) ? "amrap" : "working",
         ...(set.side ? { side: set.side } : {}),
       })
     }
   }
   return rows
 }
+
 
 // ---------------------------------------------------------------------------
 // History
@@ -1049,16 +1244,28 @@ async function sessionLogsFor(
   enr: ProgramEnrollment
 ): Promise<ProgramSessionLogRow[]> {
   const supabase = await createServerSupabaseClient()
-  const { data, error } = await finishedWorkouts(
+  /**
+   * PAGED. This is the read the whole replay is built on, and a year of
+   * StrongLifts is 150 sessions — but somebody four years in is past a thousand,
+   * and the database would then have replayed the first thousand and silently
+   * called that the history. Every weight in the program would be wrong, and
+   * nothing would say so.
+   */
+  const data = await readAllRows<WorkoutRowWithSets>("this program's sessions", (from, to) =>
     supabase
       .from("workout_logs")
       .select("*, workout_sets(*)")
       .eq("user_id", userId)
       .eq("enrollment_id", enr.id)
-  ).order("logged_at", { ascending: false })
-  if (error) throw new Error(`Failed to get session logs: ${error.message}`)
+      .or(FINISHED_WORKOUTS_FILTER)
+      // Date first for the order callers expect, `id` after it so two sessions
+      // logged in the same instant cannot swap pages and lose one.
+      .order("logged_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(from, to)
+  )
 
-  return (data ?? []).map((row: WorkoutRowWithSets) => ({
+  return data.map((row: WorkoutRowWithSets) => ({
     id: row.id,
     enrollment_id: enr.id,
     user_id: userId,

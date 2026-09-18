@@ -456,11 +456,27 @@ export interface EnrollmentCursor {
  * the cursor and deliberately keeps the weights; a manual weight change is the
  * lifter overruling the engine. All three are facts about the past and all
  * three have to survive a correction.
+ *
+ * AND SO IS THE SHAPE OF THE WEEK. A program you edit after starting it — a day
+ * added, a lift dropped, a whole self-built week — used to leave no record of
+ * what it looked like before, so replaying an old session ran it against
+ * TODAY's week. A session logged on a day that has since been removed then fell
+ * through to whatever the cursor happened to say and the replay threw, taking
+ * the delete down with it. A `schedule` event says "from this moment the week
+ * was this", and `seeded` carries the starting weights of the lifts that edit
+ * introduced, which were previously written into the live state and nowhere
+ * else. `schedule: null` means "back to the catalogue's own week".
  */
 export type ReplayEvent =
   | { at: string; kind: "skip" }
   | { at: string; kind: "reset"; cursor: true; weights: false }
   | { at: string; kind: "weight"; exerciseId: string; to: number }
+  | {
+      at: string
+      kind: "schedule"
+      schedule: ProgramSchedule | null
+      seeded: Record<string, ExerciseState>
+    }
 
 export interface ProgramEnrollment {
   id: string
@@ -624,6 +640,18 @@ export interface SessionPrescription {
    * the two could name different days on one screen.
    */
   todayWeekday?: number
+  /**
+   * Whether anybody has ever told the app what timezone this account is in.
+   *
+   * False means `timezone` is still the signup default of UTC — which is not
+   * a zone somebody chose, it is the app never having asked. Screens that file
+   * something by date say so rather than presenting a guess as a fact.
+   *
+   * One owner: `settingsRepo.getUserClock`. It rides on the prescription
+   * because every screen that shows a day already has one, and a screen
+   * deciding for itself whether UTC is a real answer is how the fact drifts.
+   */
+  clockKnown?: boolean
 }
 
 // ============================================================================
@@ -839,6 +867,12 @@ export interface EnrollmentDetail {
   enrollment: ProgramEnrollment
   prescription: SessionPrescription
   logs: ProgramSessionLogRow[]
+  /**
+   * This week as the ACCOUNT's calendar sees it — computed on the server, in
+   * the account's zone, and handed down so the strip and the session card
+   * cannot name different days. See `weekSoFar`.
+   */
+  week: { todayWeekday: number; trainedWeekdays: number[] }
 }
 
 /**

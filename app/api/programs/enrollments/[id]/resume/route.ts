@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { resumeEnrollment, ProgramBusy } from "@/src/db/programRepo"
+import { resumeEnrollment } from "@/src/db/programRepo"
+import { statusFor } from "@/src/programs/errors"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -14,7 +15,8 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   } catch (e) {
     console.error("resume program:", e)
     // 409: nothing about the request was wrong — there is a workout to finish
-    // on the program this one would push aside.
-    return err((e as Error).message, e instanceof ProgramBusy ? 409 : 400)
+    // on the program this one would push aside, or the program has left the
+    // catalogue. Either way it is not a fault on our side.
+    return err((e as Error).message, statusFor(e))
   }
 }

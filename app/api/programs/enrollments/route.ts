@@ -4,9 +4,9 @@ import {
   listActiveEnrollments,
   listPastEnrollments,
   enrollInProgram,
-  ProgramBusy,
 } from "@/src/db/programRepo"
 import { CustomScheduleSchema } from "@/src/programs/schemas"
+import { statusFor } from "@/src/programs/errors"
 import { z } from "zod"
 
 const EnrollSchema = z.object({
@@ -43,10 +43,10 @@ export async function POST(request: Request) {
     console.error("enroll:", e)
     /**
      * Starting a program of the same kind pauses the one already running. If a
-     * workout is open on that one, this is refused — and it is refused before
-     * anything is switched off. 409 rather than the 500 it used to be: nothing
-     * is broken, there is just a workout to finish first.
+     * workout is open on that one, this is refused — and the start and the
+     * pause are one statement, so nothing was switched off. 409 rather than the
+     * 500 it used to be: nothing is broken, there is just a workout to finish.
      */
-    return err((e as Error).message, e instanceof ProgramBusy ? 409 : 500)
+    return err((e as Error).message, statusFor(e))
   }
 }

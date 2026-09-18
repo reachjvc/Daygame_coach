@@ -143,6 +143,9 @@ async function startWith(opts: FakeOptions) {
   vi.doMock("@/src/db/supabase", () => ({ createServerSupabaseClient: async () => fake.client }))
   vi.doMock("@/src/db/settingsRepo", () => ({
     getUserTimezone: async () => TZ,
+    // The account has a zone somebody set; these tests are about which DAY is
+    // picked, not about whether the app knows the zone.
+    getUserClock: async () => ({ timezone: TZ, known: true }),
     getTrainingSettings: async () => ({ barWeightKg: 20, smallestPlateKg: 1.25 }),
   }))
   const repo = await import("@/src/db/workoutRepo")

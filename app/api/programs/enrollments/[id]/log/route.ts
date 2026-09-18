@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { logProgramSession } from "@/src/db/programRepo"
 import { LogSessionSchema } from "@/src/programs/schemas"
+import { statusFor } from "@/src/programs/errors"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -19,9 +20,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         { status: 400 }
       )
     }
-    const { rpe, notes, entry_date, entry_time, ...log } = parsed.data
+    const { rpe, notes, entry_date, entry_time, clientKey, ...log } = parsed.data
     return NextResponse.json(
-      await logProgramSession(auth.userId, id, log, rpe, notes, { entry_date, entry_time })
+      await logProgramSession(auth.userId, id, log, rpe, notes, { entry_date, entry_time }, clientKey)
     )
-  } catch (e) { console.error("log session:", e); return err((e as Error).message) }
+  // A refusal ("your program moved on while this was being written up") is a
+  // 409 and its sentence is shown as written; a failure is still a 500.
+  } catch (e) { console.error("log session:", e); return err((e as Error).message, statusFor(e)) }
 }

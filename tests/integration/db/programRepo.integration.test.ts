@@ -285,3 +285,325 @@ describe("program schema", () => {
     })
   })
 })
+
+
+/**
+ * THE SIX PROGRAM WRITES HAPPEN COMPLETELY, OR NOT AT ALL.
+ *
+ * WHAT IS BEING PROVEN, in plain language. Every button that moves a program
+ * used to write two or three separate things with nothing holding them
+ * together: the old program was switched off and then the new one inserted, a
+ * session was deleted and then the weights recalculated, a write-up inserted a
+ * workout and then its sets and then advanced the plan. Each of those pairs
+ * could come apart, and when it did the app was left in a state nobody had
+ * asked for — on no program at all, or with the weights of a session that no
+ * longer exists.
+ *
+ * WHY HERE AND NOT IN THE UNIT SUITE. "Together or not at all" is a property of
+ * a transaction, and only a real Postgres has one. A fake client can prove the
+ * app sends ONE call (the unit tests do that); only this can prove that the
+ * refused half takes the other half with it.
+ */
+describe("a program write is one statement", () => {
+  beforeEach(async () => {
+    await truncateAllTables()
+  })
+
+  /** One statement, one connection — the pattern the sibling files here use. */
+  async function sql<T extends Record<string, unknown> = Record<string, unknown>>(
+    text: string,
+    params: unknown[] = []
+  ): Promise<T[]> {
+    const client = await getClient()
+    try {
+      return (await client.query(text, params)).rows as T[]
+    } finally {
+      await client.end()
+    }
+  }
+
+  async function isActive(id: string): Promise<boolean> {
+    const [row] = await sql<{ is_active: boolean }>(
+      `SELECT is_active FROM program_enrollments WHERE id = $1`,
+      [id]
+    )
+    return row!.is_active
+  }
+
+  async function sessionCount(id: string): Promise<number> {
+    const [row] = await sql<{ n: number }>(
+      `SELECT (cursor ->> 'sessionCount')::int AS n FROM program_enrollments WHERE id = $1`,
+      [id]
+    )
+    return row!.n
+  }
+
+  /** A workout you are in the middle of: started, not ended. */
+  async function openWorkout(userId: string, enrollmentId: string): Promise<string> {
+    const [row] = await sql<{ id: string }>(
+      `INSERT INTO workout_logs (user_id, session_type, enrollment_id, program_day_id,
+                                 program_cycle, program_week, started_at, logged_at)
+        VALUES ($1, 'weights', $2, 'A', 1, 1, now(), now()) RETURNING id`,
+      [userId, enrollmentId]
+    )
+    return row!.id
+  }
+
+  test("ending a program with a workout open on it is refused, and the program stays running", async () => {
+    const me = await createTestUser("end-busy@example.com")
+    const running = await enroll(me)
+    await openWorkout(me, running)
+
+    await expect(sql(`SELECT end_enrollment($1)`, [running])).rejects.toThrow(
+      /Finish or throw away the open workout first/
+    )
+    // The whole point: the refusal left it prescribing rather than half-ended.
+    expect(await isActive(running)).toBe(true)
+  })
+
+  test("ending a program with nothing open on it stops it prescribing", async () => {
+    const me = await createTestUser("end-free@example.com")
+    const running = await enroll(me)
+
+    await sql(`SELECT end_enrollment($1)`, [running])
+    expect(await isActive(running)).toBe(false)
+  })
+
+  test("a start whose insert is refused leaves the program you were on running", async () => {
+    const me = await createTestUser("start-refused@example.com")
+    // Already on StrongLifts, and on a week of my own. Starting StrongLifts
+    // again while the first one is still live is refused by
+    // uq_program_enrollments_active — and the week of my own was the thing
+    // being paused to make room.
+    const strongLifts = await enroll(me, "stronglifts-5x5")
+    const myOwnWeek = await enroll(me, "custom")
+
+    await expect(
+      sql(`SELECT start_enrollment($1::jsonb, $2::uuid[])`, [
+        JSON.stringify({
+          user_id: me,
+          program_id: "stronglifts-5x5",
+          level: "beginner",
+          unit_system: "kg",
+          exercise_state: {},
+          initial_exercise_state: {},
+          cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 },
+        }),
+        [myOwnWeek],
+      ])
+      // The unique index by name, not merely "something went wrong": a test
+      // that accepts any error passes when the function does not exist at all.
+    ).rejects.toThrow(/uq_program_enrollments_active/)
+
+    expect(await isActive(myOwnWeek)).toBe(true)
+    expect(await isActive(strongLifts)).toBe(true)
+    const [row] = await sql<{ n: number }>(
+      `SELECT count(*)::int AS n FROM program_enrollments WHERE user_id = $1`,
+      [me]
+    )
+    expect(row!.n).toBe(2)
+  })
+
+  test("a start that goes through pauses what it displaced, in the same statement", async () => {
+    const me = await createTestUser("start-ok@example.com")
+    const myOwnWeek = await enroll(me, "custom")
+
+    const [row] = await sql<{ start_enrollment: { id: string; is_active: boolean } }>(
+      `SELECT start_enrollment($1::jsonb, $2::uuid[])`,
+      [
+        JSON.stringify({
+          user_id: me,
+          program_id: "stronglifts-5x5",
+          level: "beginner",
+          unit_system: "kg",
+          exercise_state: { squat: { workingWeight: 60, consecutiveFails: 0 } },
+          initial_exercise_state: { squat: { workingWeight: 60, consecutiveFails: 0 } },
+          cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 },
+          replay_events: [{ at: "2026-09-18T08:00:00.000Z", kind: "schedule", schedule: null, seeded: {} }],
+        }),
+        [myOwnWeek],
+      ]
+    )
+    expect(row!.start_enrollment.is_active).toBe(true)
+    expect(await isActive(myOwnWeek)).toBe(false)
+    // The starting schedule is part of the history from the first moment.
+    const [events] = await sql<{ kinds: string[] }>(
+      `SELECT array_agg(e ->> 'kind') AS kinds
+         FROM program_enrollments, jsonb_array_elements(replay_events) e
+        WHERE program_enrollments.id = $1`,
+      [row!.start_enrollment.id]
+    )
+    expect(events!.kinds).toEqual(["schedule"])
+  })
+
+  test("a start is refused while a workout is open on the program it would displace", async () => {
+    const me = await createTestUser("start-busy@example.com")
+    const myOwnWeek = await enroll(me, "custom")
+    await openWorkout(me, myOwnWeek)
+
+    await expect(
+      sql(`SELECT start_enrollment($1::jsonb, $2::uuid[])`, [
+        JSON.stringify({
+          user_id: me,
+          program_id: "stronglifts-5x5",
+          level: "beginner",
+          unit_system: "kg",
+          exercise_state: {},
+          initial_exercise_state: {},
+          cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 },
+        }),
+        [myOwnWeek],
+      ])
+    ).rejects.toThrow(/Finish or throw away the open workout first/)
+
+    expect(await isActive(myOwnWeek)).toBe(true)
+    const [row] = await sql<{ n: number }>(
+      `SELECT count(*)::int AS n FROM program_enrollments WHERE user_id = $1`,
+      [me]
+    )
+    expect(row!.n).toBe(1)
+  })
+
+  test("removing a session and moving the weights is one statement — a stale session count is refused and the session stays", async () => {
+    const me = await createTestUser("remove-stale@example.com")
+    const running = await enroll(me)
+    await logSessions(running, me, 2)
+    await sql(
+      `UPDATE program_enrollments SET cursor = jsonb_set(cursor, '{sessionCount}', '2') WHERE id = $1`,
+      [running]
+    )
+    const [session] = await sql<{ id: string }>(
+      `SELECT id FROM workout_logs WHERE enrollment_id = $1 LIMIT 1`,
+      [running]
+    )
+
+    // The app counted five sessions when it worked the new weights out; the
+    // program says two. That calculation is about a different history.
+    await expect(
+      sql(`SELECT remove_session_and_replay($1, $2, '{}'::jsonb, $3::jsonb, NULL, 5)`, [
+        session!.id,
+        running,
+        JSON.stringify({ cycle: 1, week: 1, dayIndex: 0, sessionCount: 1 }),
+      ])
+    ).rejects.toThrow(/moved on while this was being recalculated/)
+
+    expect(await countSessions(running)).toBe(2)
+    expect(await sessionCount(running)).toBe(2)
+
+    // With the count it actually read, the session goes and the weights move
+    // in the same breath.
+    await sql(
+      `SELECT remove_session_and_replay($1, $2, $3::jsonb, $4::jsonb, NULL, 2)`,
+      [
+        session!.id,
+        running,
+        JSON.stringify({ squat: { workingWeight: 62.5, consecutiveFails: 0 } }),
+        JSON.stringify({ cycle: 1, week: 1, dayIndex: 0, sessionCount: 1 }),
+      ]
+    )
+    expect(await countSessions(running)).toBe(1)
+    expect(await sessionCount(running)).toBe(1)
+    const [state] = await sql<{ w: string }>(
+      `SELECT exercise_state -> 'squat' ->> 'workingWeight' AS w
+         FROM program_enrollments WHERE id = $1`,
+      [running]
+    )
+    expect(Number(state!.w)).toBe(62.5)
+  })
+
+  test("a correction refused for a stale count leaves the old sets exactly as they were", async () => {
+    const me = await createTestUser("correct-stale@example.com")
+    const running = await enroll(me)
+    await logSessions(running, me, 1)
+    const [session] = await sql<{ id: string }>(
+      `SELECT id FROM workout_logs WHERE enrollment_id = $1`,
+      [running]
+    )
+    await sql(
+      `INSERT INTO workout_sets (log_id, exercise, exercise_id, weight_kg, reps, set_number)
+        VALUES ($1, 'Squat', 'squat', 60, 5, 1)`,
+      [session!.id]
+    )
+
+    await expect(
+      sql(`SELECT replace_sets_and_replay($1, $2::jsonb, $3, '{}'::jsonb, $4::jsonb, NULL, 9)`, [
+        session!.id,
+        JSON.stringify([
+          { exercise: "Squat", exercise_id: "squat", weight_kg: 100, reps: 5, set_number: 1 },
+        ]),
+        running,
+        JSON.stringify({ cycle: 1, week: 1, dayIndex: 1, sessionCount: 1 }),
+      ])
+    ).rejects.toThrow(/moved on while this was being recalculated/)
+
+    const [kept] = await sql<{ n: number; w: string }>(
+      `SELECT count(*)::int AS n, max(weight_kg)::text AS w FROM workout_sets WHERE log_id = $1`,
+      [session!.id]
+    )
+    // The delete and the insert are in the same transaction as the refusal, so
+    // the workout still holds exactly the set it held before.
+    expect(kept!.n).toBe(1)
+    expect(Number(kept!.w)).toBe(60)
+  })
+
+  test("the same write-up sent twice records one workout and advances the program once", async () => {
+    const me = await createTestUser("retry-writeup@example.com")
+    const running = await enroll(me)
+    const workout = {
+      user_id: me,
+      session_type: "weights",
+      duration_min: 52,
+      intensity: 3,
+      enrollment_id: running,
+      program_day_id: "A",
+      program_cycle: 1,
+      program_week: 1,
+      client_key: "phase1-retry-key",
+    }
+    const sets = [{ exercise: "Squat", exercise_id: "squat", weight_kg: 60, reps: 5, set_number: 1 }]
+    const advanced = JSON.stringify({ cycle: 1, week: 1, dayIndex: 1, sessionCount: 1 })
+
+    const [first] = await sql<{ log_session_and_advance: { workout_id: string; inserted: boolean } }>(
+      `SELECT log_session_and_advance($1::jsonb, $2::jsonb, $3::jsonb, $4::jsonb, 0)`,
+      [JSON.stringify(workout), JSON.stringify(sets), JSON.stringify({}), advanced]
+    )
+    expect(first!.log_session_and_advance.inserted).toBe(true)
+    expect(await sessionCount(running)).toBe(1)
+
+    // The retry. It answers with the workout that is already there and touches
+    // nothing — note that it is sent with the SAME expected count of 0, which
+    // no longer matches: a no-op must not be refused for being stale.
+    const [second] = await sql<{ log_session_and_advance: { workout_id: string; inserted: boolean } }>(
+      `SELECT log_session_and_advance($1::jsonb, $2::jsonb, $3::jsonb, $4::jsonb, 0)`,
+      [JSON.stringify(workout), JSON.stringify(sets), JSON.stringify({}), advanced]
+    )
+    expect(second!.log_session_and_advance.inserted).toBe(false)
+    expect(second!.log_session_and_advance.workout_id).toBe(first!.log_session_and_advance.workout_id)
+
+    expect(await countSessions(running)).toBe(1)
+    expect(await sessionCount(running)).toBe(1)
+    const [setRows] = await sql<{ n: number }>(
+      `SELECT count(*)::int AS n FROM workout_sets WHERE log_id = $1`,
+      [first!.log_session_and_advance.workout_id]
+    )
+    expect(setRows!.n).toBe(1)
+  })
+
+  test("running a finished program again pauses what it displaces, in one statement", async () => {
+    const me = await createTestUser("resume-one@example.com")
+    const finished = await enroll(me, "custom", false)
+    const running = await enroll(me, "stronglifts-5x5")
+
+    const [row] = await sql<{ resume_enrollment: { id: string; is_active: boolean } }>(
+      `SELECT resume_enrollment($1, $2::uuid[])`,
+      [finished, [running]]
+    )
+    expect(row!.resume_enrollment.is_active).toBe(true)
+    expect(await isActive(running)).toBe(false)
+
+    // And a second attempt says so rather than reporting success.
+    await expect(sql(`SELECT resume_enrollment($1, $2::uuid[])`, [finished, []])).rejects.toThrow(
+      /already running/
+    )
+  })
+})

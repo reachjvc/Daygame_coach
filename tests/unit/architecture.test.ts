@@ -21,7 +21,6 @@ const projectRoot = path.resolve(__dirname, '../..')
 // Grandfathered violations - existing files that violate rules
 // Remove items from these lists as they get fixed
 const ALLOWED_LONG_ROUTES = new Set([
-  'app/api/articles/alternatives/route.ts',
   'app/api/inner-game/comparisons/route.ts',
   'app/api/inner-game/values/route.ts',
   'app/api/test/analyze-comments/route.ts',
@@ -110,6 +109,7 @@ describe('Architecture Compliance', () => {
 
       // Act & Assert: Check each route file
       const violations: string[] = []
+      const stillLong = new Set<string>()
 
       for (const file of routeFiles) {
         const content = fs.readFileSync(file, 'utf-8')
@@ -117,12 +117,29 @@ describe('Architecture Compliance', () => {
         const relativePath = path.relative(projectRoot, file)
 
         // 50 lines is generous - the rule says 30, but we allow some buffer
-        if (lineCount > 50 && !ALLOWED_LONG_ROUTES.has(relativePath)) {
-          violations.push(`${relativePath}: ${lineCount} lines (max 50)`)
+        if (lineCount > 50) {
+          if (ALLOWED_LONG_ROUTES.has(relativePath)) stillLong.add(relativePath)
+          else violations.push(`${relativePath}: ${lineCount} lines (max 50)`)
         }
       }
 
       expect(violations, `NEW API routes too long (not in allowlist):\n${violations.join('\n')}`).toHaveLength(0)
+
+      /**
+       * AND THE ALLOWLIST ONLY SHRINKS — the half that was missing.
+       *
+       * An entry whose route was shortened, or deleted, is a free pass sitting
+       * there waiting for the violation to come back: the file could grow past
+       * 50 lines again and this test would stay green. It had one, for a route
+       * deleted in the September 2026 cleanup. Asserted off the SAME scan
+       * rather than a second one, so the rule for "too long" cannot drift
+       * between the two halves.
+       */
+      const staleAllowances = [...ALLOWED_LONG_ROUTES].filter((f) => !stillLong.has(f))
+      expect(
+        staleAllowances,
+        `These are fixed or gone — remove them from ALLOWED_LONG_ROUTES:\n${staleAllowances.join('\n')}`,
+      ).toHaveLength(0)
     })
 
     test('API routes should not import business logic directly (only services)', () => {
@@ -229,6 +246,7 @@ describe('Architecture Compliance', () => {
     test('Type exports should only be in types.ts files', () => {
       // Arrange: Get all non-types.ts files in slices
       const violations: string[] = []
+      const stillExporting = new Set<string>()
 
       for (const slice of slices) {
         const sliceDir = path.join(projectRoot, 'src', slice)
@@ -242,14 +260,12 @@ describe('Architecture Compliance', () => {
           const content = fs.readFileSync(file, 'utf-8')
           const relativePath = path.relative(projectRoot, file)
 
-          // Skip if in allowlist
-          if (ALLOWED_TYPE_EXPORTS.has(relativePath)) continue
-
           // Look for exported type/interface declarations
           if (/export\s+(type|interface)\s+\w+/.test(content)) {
             // Allow re-exports from types.ts
             if (!/export.*from ['"].*types['"]/.test(content)) {
-              violations.push(`${relativePath}: exports types (should be in types.ts)`)
+              if (ALLOWED_TYPE_EXPORTS.has(relativePath)) stillExporting.add(relativePath)
+              else violations.push(`${relativePath}: exports types (should be in types.ts)`)
             }
           }
         }
@@ -257,6 +273,13 @@ describe('Architecture Compliance', () => {
 
       // Assert
       expect(violations, `NEW type exports outside types.ts (not in allowlist):\n${violations.join('\n')}`).toHaveLength(0)
+
+      // And the allowlist only shrinks. Same scan, so the two halves agree.
+      const staleAllowances = [...ALLOWED_TYPE_EXPORTS].filter((f) => !stillExporting.has(f))
+      expect(
+        staleAllowances,
+        `These are fixed or gone — remove them from ALLOWED_TYPE_EXPORTS:\n${staleAllowances.join('\n')}`,
+      ).toHaveLength(0)
     })
   })
 
@@ -380,6 +403,7 @@ describe('Architecture Compliance', () => {
 
     test('no NEW hand-rolled week boundary', () => {
       const offenders: string[] = []
+      const stillHandRolling = new Set<string>()
       for (const file of sourceFiles()) {
         const relativePath = path.relative(projectRoot, file)
         if (relativePath === 'src/shared/dateUtils.ts') continue
@@ -392,9 +416,8 @@ describe('Architecture Compliance', () => {
         for (let i = 0; i < lines.length; i++) {
           if (lines[i].includes('getDay()')) lastGetDay = i
           if (lines[i].includes('setDate(') && i - lastGetDay <= 4) {
-            if (!HAND_ROLLED_WEEK_ALLOWED.has(relativePath)) {
-              offenders.push(`${relativePath}:${i + 1}`)
-            }
+            if (HAND_ROLLED_WEEK_ALLOWED.has(relativePath)) stillHandRolling.add(relativePath)
+            else offenders.push(`${relativePath}:${i + 1}`)
             break
           }
         }
@@ -403,6 +426,13 @@ describe('Architecture Compliance', () => {
       expect(
         offenders,
         `Hand-rolled week boundary. Use periodStartFor("weekly", zonedDate).\n${offenders.join('\n')}`
+      ).toHaveLength(0)
+
+      // And the allowlist only shrinks. Same scan, so the two halves agree.
+      const staleAllowances = [...HAND_ROLLED_WEEK_ALLOWED].filter((f) => !stillHandRolling.has(f))
+      expect(
+        staleAllowances,
+        `These are fixed or gone — remove them from HAND_ROLLED_WEEK_ALLOWED:\n${staleAllowances.join('\n')}`,
       ).toHaveLength(0)
     })
   })
@@ -681,10 +711,8 @@ describe('Architecture Compliance', () => {
       'src/programs/components/HistoryTab.tsx',
       'src/programs/components/PastPrograms.tsx',
       'src/programs/components/ProgramDetail.tsx',
-      'src/programs/components/ProgramsApp.tsx',
       'src/programs/components/ProgressTab.tsx',
       'src/programs/components/ProgressionView.tsx',
-      'src/programs/components/RunningPrograms.tsx',
       'src/programs/components/SavedWeeks.tsx',
       'src/programs/components/TodaySessionWidget.tsx',
       'src/programs/components/TrainingCard.tsx',
@@ -1282,11 +1310,11 @@ describe('Architecture Compliance', () => {
       'src/db/dashboardRepo.ts': 1,
       'src/db/embeddingsRepo.ts': 1,
       'src/db/goalRepo.ts': 14,
-      'src/db/healthRepo.ts': 9,
+      'src/db/healthRepo.ts': 6,
       'src/db/lifeAnswerRepo.ts': 1,
       'src/db/lifeChapterRepo.ts': 1,
       'src/db/programDraftRepo.ts': 1,
-      'src/db/programRepo.ts': 5,
+      'src/db/programRepo.ts': 2,
       'src/db/scenarioRepo.ts': 1,
       'src/db/trackingRepo.ts': 12,
       'src/db/valueComparisonRepo.ts': 2,
@@ -1408,6 +1436,209 @@ describe('Architecture Compliance', () => {
       expect(
         overstated,
         `Some of these are fixed. Lower the numbers in UNPAGED_READS_ALLOWED:\n${overstated.join('\n')}`,
+      ).toEqual([])
+    })
+  })
+
+  /**
+   * ONE OWNER FOR EVERY WRITE THAT MOVES A PROGRAM.
+   *
+   * WHAT GOES WRONG WITHOUT THIS, in plain language. Each of these facts — the
+   * week your program runs, which program is running, what a program button did
+   * — was worked out in two or three places, and the copies disagreed. A second
+   * writer of the same fact is not a style problem: it is how "End program" came
+   * to report success for a program that was still prescribing, and how the week
+   * strip and the session card came to name different days on one screen.
+   *
+   * Every list here may SHRINK and may never grow.
+   */
+  describe('One owner for the program writes', () => {
+    /** Comments blanked so a sentence about a rule is not read as the rule. */
+    function codeOf(rel: string): string {
+      return fs
+        .readFileSync(path.join(projectRoot, rel), 'utf-8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/[^\n]*/g, '')
+    }
+
+    function filesUnder(...dirs: string[]): string[] {
+      return dirs
+        .flatMap((d) => getAllFiles(path.join(projectRoot, d), /\.tsx?$/))
+        .map((f) => path.relative(projectRoot, f).replace(/\\/g, '/'))
+    }
+
+    /**
+     * WHICH PROGRAM IS RUNNING IS DECIDED BY THE DATABASE, NOT BY A WRITE.
+     *
+     * `is_active` is the difference between "this program is telling me what to
+     * lift" and "this is a record of what I used to do". It used to be flipped
+     * by hand in three places — end, start, restart — each of them a write of
+     * its own with nothing joining it to the write beside it, which is how
+     * starting a program could switch the old one off and then fail to start
+     * the new one. The three database functions own it now, and this test is
+     * what stops a fourth place being added.
+     *
+     * Scoped to `program_enrollments`: other repos write an `is_active` of
+     * their own on other tables, and those are not this rule.
+     */
+    test('is_active is only ever changed by the database functions', () => {
+      const src = codeOf('src/db/programRepo.ts')
+      const writes = [...src.matchAll(/(\.insert\(|\.update\()([\s\S]{0,600}?)\)/g)]
+        .filter(([, , body]) => /\bis_active\s*:/.test(body))
+        .map(([whole]) => whole.slice(0, 60).replace(/\s+/g, ' '))
+
+      expect(
+        writes,
+        'Starting, ending and restarting a program are start_enrollment,\n' +
+          'end_enrollment and resume_enrollment. A direct write here cannot be\n' +
+          'in the same transaction as the other half of what it is doing:\n' +
+          writes.join('\n'),
+      ).toEqual([])
+    })
+
+    /**
+     * The week a program runs is written in ONE place.
+     *
+     * The week and the record of every week it has had must move together: the
+     * schedule is what the program runs now, the replay events are the history.
+     * A second writer that saved the schedule without recording it would leave
+     * the history claiming the program had always looked the way it looks today,
+     * which is exactly the fault that made deleting a session crash.
+     */
+    test('custom_schedule is written in one place', () => {
+      const ALLOWED = ['src/db/programRepo.ts']
+      const writers = filesUnder('src', 'app', 'components').filter((rel) =>
+        // A write, not a read: the column name inside an insert, an update or an
+        // rpc payload rather than in a select list.
+        /(\.insert\(|\.update\(|\.rpc\()[\s\S]{0,900}?custom_schedule\s*:/.test(codeOf(rel)),
+      )
+
+      const offenders = writers.filter((rel) => !ALLOWED.includes(rel))
+      expect(
+        offenders,
+        'These write the program week. It belongs to src/db/programRepo.ts, which\n' +
+          'records the week in the replay history in the same statement — a second\n' +
+          'writer loses that record:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+
+      const gone = ALLOWED.filter((rel) => !writers.includes(rel))
+      expect(gone, 'Fixed — remove from the allowlist:\n' + gone.join('\n')).toEqual([])
+    })
+
+    /**
+     * A BUTTON THAT CHANGES A PROGRAM HAS TO LOOK AT THE ANSWER.
+     *
+     * End, Skip, Reset, Restart and Remove were each written as a bare
+     * `await fetch(...)` followed by navigating away, so a refusal from the
+     * server — "finish the workout you have open first" — looked exactly like
+     * success and the screen left a program that was still running.
+     *
+     * `src/programs/programActions.ts` does the fetch, reads the server's
+     * sentence out of the body and hands back ok/not-ok. This test is what
+     * stops a screen added later going back to not looking. The allowlist is
+     * empty on purpose: there is no second place this may be done.
+     */
+    test('program actions go through programActions.ts', () => {
+      const ALLOWED = ['src/programs/programActions.ts']
+      const offenders = filesUnder('src', 'components').filter((rel) => {
+        if (ALLOWED.includes(rel)) return false
+        const src = codeOf(rel)
+        // Each fetch call, with enough of what follows to see the options object.
+        return [...src.matchAll(/fetch\(([\s\S]{0,400}?)\)\s*$/gm), ...src.matchAll(/fetch\(([\s\S]{0,400})/g)].some(
+          ([, call]) =>
+            /\/api\/programs\/enrollments\//.test(call) &&
+            (/method:\s*["'`]DELETE["'`]/.test(call) || /\/action`/.test(call) || /\/resume`/.test(call)),
+        )
+      })
+
+      expect(
+        offenders,
+        'These end, skip, reset, restart or remove a program with a raw fetch.\n' +
+          'Use src/programs/programActions.ts, which reads the server\'s refusal\n' +
+          'instead of treating it as success:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+    })
+  })
+
+  /**
+   * WHOSE CLOCK DECIDES WHAT DAY IT IS.
+   *
+   * Three separate bugs in this codebase have come from a calendar fact — what
+   * day is today, which week is this, was that workout this week — being read
+   * from whichever clock happened to be nearest. On the training screens that
+   * clock is the phone's, and the session beside it is decided on the server
+   * from the ACCOUNT's timezone. They disagree for anybody travelling, and for
+   * anybody whose phone and account simply differ: the strip outlined
+   * Wednesday while the card prescribed Tuesday's session.
+   *
+   * The server hands these facts down now (`weekSoFar`, `todayWeekday`). This
+   * counts what is left, per file, so the number can only go down.
+   */
+  describe('No calendar fact is read from the browser clock', () => {
+    /** Comments blanked: a sentence about `new Date()` is not a call to it. */
+    function codeOf(rel: string): string {
+      return fs
+        .readFileSync(path.join(projectRoot, rel), 'utf-8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/[^\n]*/g, '')
+    }
+
+    /**
+     * The three that are left, and why each is allowed.
+     *
+     * Every one of these is an INSTANT — a moment in time — not a calendar
+     * fact. An instant is the same everywhere; which day it falls on is not.
+     *
+     *   ProgressTab       "this week" for adherence and volume. This one IS a
+     *                     calendar fact and IS still wrong; it is held at
+     *                     exactly one here until that tab is rebuilt, so it
+     *                     cannot spread while it waits.
+     *   live/FinishSheet  the default end time of the workout you just did.
+     *   LiftHistory       the date in a downloaded file's name.
+     */
+    const BROWSER_CLOCK_DEBT: Record<string, number> = {
+      'ProgressTab.tsx': 1,
+      'live/FinishSheet.tsx': 1,
+      'LiftHistory.tsx': 1,
+    }
+
+    function readsPerFile(): Record<string, number> {
+      const dir = path.join(projectRoot, 'src/programs/components')
+      const found: Record<string, number> = {}
+      for (const file of getAllFiles(dir, /\.tsx?$/)) {
+        const rel = path.relative(dir, file).replace(/\\/g, '/')
+        const hits = codeOf(path.relative(projectRoot, file).replace(/\\/g, '/')).match(/new Date\(\)/g)
+        if (hits) found[rel] = hits.length
+      }
+      return found
+    }
+
+    test('no training component reads the browser clock for a calendar fact', () => {
+      const found = readsPerFile()
+      const offenders = Object.entries(found)
+        .filter(([rel, n]) => n > (BROWSER_CLOCK_DEBT[rel] ?? 0))
+        .map(([rel, n]) => `${rel}: ${n}, allowed ${BROWSER_CLOCK_DEBT[rel] ?? 0}`)
+
+      expect(
+        offenders,
+        'These read the phone\'s clock. What day it is where the PERSON is comes\n' +
+          'from the server — `detail.week.todayWeekday` and `trainedWeekdays`,\n' +
+          'computed by `weekSoFar` in the account\'s timezone:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+    })
+
+    test('the browser-clock allowance only shrinks', () => {
+      const found = readsPerFile()
+      const cleaned = Object.entries(BROWSER_CLOCK_DEBT)
+        .filter(([rel, n]) => (found[rel] ?? 0) < n)
+        .map(([rel, n]) => `${rel}: now ${found[rel] ?? 0}, allowance still ${n}`)
+
+      expect(
+        cleaned,
+        'Fixed — lower these in BROWSER_CLOCK_DEBT so they cannot come back:\n' + cleaned.join('\n'),
       ).toEqual([])
     })
   })

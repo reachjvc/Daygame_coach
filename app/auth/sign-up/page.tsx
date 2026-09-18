@@ -55,6 +55,19 @@ export default function SignUpPage() {
           emailRedirectTo: `${window.location.origin}/auth/confirm?next=/redirect`,
           data: {
             full_name: fullName,
+            /**
+             * THE ZONE THE BROWSER ALREADY KNOWS, sent once at signup.
+             *
+             * Without it every new account starts on UTC and stays there until
+             * somebody finds Settings — so a session logged at half eleven at
+             * night in Copenhagen is filed as tomorrow's, and the week strip
+             * shows a day that has not happened yet.
+             *
+             * `handle_new_user` checks it against the database's own list of
+             * zones before storing it, because this value is whatever the
+             * client sent.
+             */
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           },
         },
       })

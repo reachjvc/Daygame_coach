@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { skipSession, resetEnrollment } from "@/src/db/programRepo"
+import { statusFor } from "@/src/programs/errors"
 import { z } from "zod"
 
 const ActionSchema = z.object({ action: z.enum(["skip", "reset"]) })
@@ -15,5 +16,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!parsed.success) return err("Validation failed", 400)
     if (parsed.data.action === "skip") return NextResponse.json(await skipSession(auth.userId, id))
     return NextResponse.json(await resetEnrollment(auth.userId, id))
-  } catch (e) { console.error("program action:", e); return err((e as Error).message) }
+  // A refusal ("this week runs by the calendar, so there is nothing to skip")
+  // is a 409 and the sentence is shown as written; a failure is still a 500.
+  } catch (e) { console.error("program action:", e); return err((e as Error).message, statusFor(e)) }
 }

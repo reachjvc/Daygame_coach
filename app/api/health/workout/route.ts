@@ -5,6 +5,7 @@ import type { WorkoutLogInsert, WorkoutSetInsert } from "@/src/health/types"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { loggedAtForEntry } from "@/src/health/healthService"
 import { CreateWorkoutSchema } from "@/src/health/schemas"
+import { statusFor } from "@/src/programs/errors"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -45,7 +46,12 @@ export async function DELETE(request: Request) {
   try {
     const id = new URL(request.url).searchParams.get("id")
     if (!id) return err("Missing id", 400)
-    await deleteWorkoutLog(auth.userId, id)
-    return NextResponse.json({ success: true })
-  } catch (e) { console.error("Error deleting workout log:", e); return err("Failed to delete workout log") }
+    // WHAT ACTUALLY HAPPENED. This answered a fixed "Failed to delete workout
+    // log" whatever went wrong, and `{ success: true }` whatever went right —
+    // so a refused delete and a delete that moved the weights back read the
+    // same. `recalculated` says whether a program was moved; the message is the
+    // server's own sentence.
+    const result = await deleteWorkoutLog(auth.userId, id)
+    return NextResponse.json({ success: true, ...result })
+  } catch (e) { console.error("Error deleting workout log:", e); return err((e as Error).message, statusFor(e)) }
 }

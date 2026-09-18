@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { reviseWorkout } from "@/src/db/workoutRepo"
 import { ReviseWorkoutSchema } from "@/src/programs/schemas"
+import { statusFor } from "@/src/programs/errors"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -18,6 +19,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json(await reviseWorkout(auth.userId, (await params).id, parsed.data.sets))
   } catch (e) {
     console.error("revise workout:", e)
-    return err((e as Error).message, 400)
+    // 409 when the program moved on while this was being computed — nothing is
+    // broken and reloading makes it work. Everything else is ours.
+    return err((e as Error).message, statusFor(e))
   }
 }

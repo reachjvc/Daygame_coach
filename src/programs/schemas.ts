@@ -223,6 +223,16 @@ export const UpdateScheduleSchema = z.object({
  */
 export const LogSessionSchema = z
   .object({
+    /**
+     * The form's own id for this write-up, minted before the request goes out.
+     *
+     * REQUIRED, like `StartWorkoutSchema`'s. Without it a retry after a lost
+     * reply — a phone on gym wifi, a button pressed again because nothing
+     * happened — wrote a second session and advanced the program twice, so a
+     * squat went up 5 kg for one session's work. The database recognises the
+     * key and answers "already written" instead.
+     */
+    clientKey: z.string().min(8).max(64),
     dayId: z.string().min(1),
     cycle: z.number().int().positive(),
     week: z.number().int().positive(),

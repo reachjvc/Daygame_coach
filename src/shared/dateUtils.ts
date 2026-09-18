@@ -152,9 +152,17 @@ export function periodStartFor(period: GoalPeriod, now: Date): string {
   return toDateISO(monday)
 }
 
-/** `periodStartFor` for the user's own timezone rather than the server's. */
-export function periodStartInTimezone(period: GoalPeriod, timezone: string): string {
-  return periodStartFor(period, getNowInTimezone(timezone))
+/**
+ * `periodStartFor` for the user's own timezone rather than the server's.
+ *
+ * `at` exists so a test can fix the instant, like every sibling here
+ * (`getTodayInTimezone`, `isoWeekdayInTimezone`, `getNowInTimezone`). Without
+ * it "is this workout in this week" could only be tested against whatever
+ * moment the test suite happened to run at, which is exactly the shape of
+ * assertion that passes all week and fails on a Sunday night.
+ */
+export function periodStartInTimezone(period: GoalPeriod, timezone: string, at: Date = new Date()): string {
+  return periodStartFor(period, getNowInTimezone(timezone, at))
 }
 
 /**

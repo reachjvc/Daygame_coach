@@ -20,8 +20,7 @@ import { requireAuth } from "@/src/db/auth"
 import {
   listActiveEnrollments,
   listPastEnrollments,
-  getTodaySession,
-  getSessionLogs,
+  getEnrollmentDetail,
 } from "@/src/db/programRepo"
 import { getLiveWorkout, unitFor } from "@/src/db/workoutRepo"
 import { TrainingScreen } from "@/src/programs/components/TrainingScreen"
@@ -50,11 +49,7 @@ export default async function ProgramsPage() {
       // With exactly one program the screen opens straight onto its session, so
       // that session is resolved here too rather than in a second round trip.
       if (active.length === 1) {
-        const [prescription, logs] = await Promise.all([
-          getTodaySession(auth.userId, active[0].id),
-          getSessionLogs(auth.userId, active[0].id),
-        ])
-        detail = { enrollment: active[0], prescription, logs }
+        detail = await getEnrollmentDetail(auth.userId, active[0].id)
       }
       accountUnit = await unitFor(auth.userId, null)
     } catch (error) {

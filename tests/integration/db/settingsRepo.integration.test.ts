@@ -511,4 +511,214 @@ describe("settingsRepo Integration Tests", () => {
       }
     })
   })
+
+  /**
+   * DOES THE APP KNOW YOUR CLOCK, OR IS IT GUESSING?
+   *
+   * `timezone` is NOT NULL DEFAULT 'UTC', which cannot tell somebody who lives
+   * on UTC from somebody the app has never asked. Every screen that files a
+   * workout by date read the default as a real answer, so a session logged at
+   * half eleven at night in Copenhagen landed on tomorrow.
+   *
+   * These run against real Postgres because the column default and the CHECK
+   * are the whole mechanism — a fake client cannot refuse a bad value.
+   */
+  describe("whether the account's clock is known", () => {
+    test("a new profile's clock is the signup default and says so", async () => {
+      const userId = await createTestUser()
+      const client = await getClient()
+
+      try {
+        const result = await client.query(
+          `SELECT timezone, timezone_source FROM profiles WHERE id = $1`,
+          [userId]
+        )
+        expect(result.rows[0].timezone).toBe("UTC")
+        expect(result.rows[0].timezone_source).toBe("signup_default")
+      } finally {
+        await client.end()
+      }
+    })
+
+    test("a zone the person chose is never the signup default", async () => {
+      const userId = await createTestUser()
+      const client = await getClient()
+
+      try {
+        // Both columns in ONE statement, as updateTimezone writes them. Two
+        // statements could leave a chosen zone still labelled never-set, and
+        // the one-time browser sync would then overwrite the choice.
+        await client.query(
+          `UPDATE profiles SET timezone = $2, timezone_source = $3 WHERE id = $1`,
+          [userId, "Europe/Copenhagen", "chosen"]
+        )
+
+        const result = await client.query(
+          `SELECT timezone, timezone_source FROM profiles WHERE id = $1`,
+          [userId]
+        )
+        expect(result.rows[0].timezone).toBe("Europe/Copenhagen")
+        expect(result.rows[0].timezone_source).toBe("chosen")
+      } finally {
+        await client.end()
+      }
+    })
+
+    test("the source column refuses a value it does not know", async () => {
+      const userId = await createTestUser()
+      const client = await getClient()
+
+      try {
+        // Without the CHECK, a typo stores a fourth state that every reader
+        // silently treats as "known" — the exact failure this column prevents.
+        await expect(
+          client.query(`UPDATE profiles SET timezone_source = $2 WHERE id = $1`, [userId, "guessed"])
+        ).rejects.toThrow()
+      } finally {
+        await client.end()
+      }
+    })
+
+    test("the three it does know are all accepted", async () => {
+      const userId = await createTestUser()
+      const client = await getClient()
+
+      try {
+        for (const source of ["signup_default", "detected", "chosen"]) {
+          await client.query(`UPDATE profiles SET timezone_source = $2 WHERE id = $1`, [userId, source])
+          const result = await client.query(`SELECT timezone_source FROM profiles WHERE id = $1`, [userId])
+          expect(result.rows[0].timezone_source).toBe(source)
+        }
+      } finally {
+        await client.end()
+      }
+    })
+  })
+
+  /**
+   * THE SIGNUP TRIGGER, PROVED RATHER THAN ASSUMED.
+   *
+   * `handle_new_user` now reads the browser's zone out of the signup payload —
+   * but only if Postgres recognises it as a real zone. That check is not
+   * optional: `raw_user_meta_data` is whatever the client sent, and an
+   * unrecognised zone makes `toZonedDate` fall back to UTC silently on every
+   * call for that account, while the column claims the zone is known. That is
+   * precisely the fault the column exists to remove, dressed up as a fix.
+   *
+   * The shared test schema has no `auth.users` and its `createTestUser` inserts
+   * into `profiles` directly, so no existing test can reach this. The table,
+   * the function and the trigger are built here, exercised, and dropped — the
+   * alternative was signing a throwaway account up against the live database,
+   * which proves the same thing and leaves rubbish in it.
+   */
+  describe("the signup trigger, on real Postgres", () => {
+    /**
+     * INSIDE A TRANSACTION THAT IS ROLLED BACK, always.
+     *
+     * The container is shared with every other integration file, and creating a
+     * table in it takes locks that another file's `truncateAllTables()` then
+     * waits on. Wrapping the whole thing — the table, the function, the trigger,
+     * the signups and the reads — in one transaction that never commits means
+     * nothing of this exists outside it and nothing is left to clean up.
+     */
+    const build = async (client: Awaited<ReturnType<typeof getClient>>) => {
+      await client.query("BEGIN")
+      await client.query(`CREATE TABLE auth.users (
+        id UUID PRIMARY KEY, email TEXT, raw_user_meta_data JSONB
+      )`)
+      // The body copied from 20260917110000_timezone_source.sql.
+      await client.query(`
+        CREATE OR REPLACE FUNCTION public.handle_new_user()
+        RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
+        AS $fn$
+        DECLARE
+          claimed text := new.raw_user_meta_data->>'timezone';
+          known boolean := claimed is not null
+            and exists (select 1 from pg_timezone_names where name = claimed);
+        BEGIN
+          INSERT INTO public.profiles (id, email, full_name, timezone, timezone_source)
+          VALUES (
+            new.id, new.email,
+            coalesce(new.raw_user_meta_data->>'full_name', null),
+            case when known then claimed else 'UTC' end,
+            case when known then 'detected' else 'signup_default' end
+          )
+          ON CONFLICT (id) DO NOTHING;
+          RETURN new;
+        END;
+        $fn$;`)
+      await client.query(`DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users`)
+      await client.query(`CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users
+        FOR EACH ROW EXECUTE FUNCTION public.handle_new_user()`)
+    }
+
+    const signUp = async (
+      client: Awaited<ReturnType<typeof getClient>>,
+      meta: Record<string, string> | null
+    ) => {
+      const { rows } = await client.query(
+        `INSERT INTO auth.users (id, email, raw_user_meta_data)
+         VALUES (gen_random_uuid(), 'x-' || gen_random_uuid() || '@t.local', $1) RETURNING id`,
+        [meta === null ? null : JSON.stringify(meta)]
+      )
+      const { rows: profile } = await client.query(
+        `SELECT timezone, timezone_source FROM profiles WHERE id = $1`,
+        [rows[0].id]
+      )
+      return profile[0] as { timezone: string; timezone_source: string }
+    }
+
+    test("a signup carrying a real zone records it as detected", async () => {
+      const client = await getClient()
+      try {
+        await build(client)
+        expect(await signUp(client, { timezone: "Europe/Copenhagen" })).toEqual({
+          timezone: "Europe/Copenhagen",
+          timezone_source: "detected",
+        })
+      } finally {
+        // Undoes the table, the function, the trigger and every row above.
+        await client.query("ROLLBACK").catch(() => {})
+        await client.end()
+      }
+    })
+
+    test("a zone Postgres does not recognise is refused, and the account stays a known unknown", async () => {
+      const client = await getClient()
+      try {
+        await build(client)
+        // Each of these would otherwise be stored verbatim and then silently
+        // treated as UTC by the app, with the column claiming it was known.
+        for (const bad of ["Middle/Earth", "", "'; drop table profiles; --", "UTC+2"]) {
+          expect(await signUp(client, { timezone: bad }), bad).toEqual({
+            timezone: "UTC",
+            timezone_source: "signup_default",
+          })
+        }
+      } finally {
+        // Undoes the table, the function, the trigger and every row above.
+        await client.query("ROLLBACK").catch(() => {})
+        await client.end()
+      }
+    })
+
+    test("a signup with no zone at all still works, and says nobody has said", async () => {
+      const client = await getClient()
+      try {
+        await build(client)
+        expect(await signUp(client, { full_name: "No Zone" })).toEqual({
+          timezone: "UTC",
+          timezone_source: "signup_default",
+        })
+        expect(await signUp(client, null)).toEqual({
+          timezone: "UTC",
+          timezone_source: "signup_default",
+        })
+      } finally {
+        // Undoes the table, the function, the trigger and every row above.
+        await client.query("ROLLBACK").catch(() => {})
+        await client.end()
+      }
+    })
+  })
 })

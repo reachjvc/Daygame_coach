@@ -158,6 +158,12 @@ test("a started week appears under its own name, not \"Your own program\"", asyn
   await page.goto("/programs")
   // Clear any running self-built program, then save and start a named week.
   const started = await page.evaluate(async (week) => {
+    // A WORKOUT LEFT OPEN NOW REFUSES THE END. `end_enrollment` will not stop a
+    // program somebody is mid-workout on, so a spec that left one open used to
+    // leave this program running too — and the next spec found it and failed
+    // somewhere else entirely. The same two lines the other training specs have.
+    const live = await (await fetch("/api/workouts/live")).json()
+    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
     for (const e of await (await fetch("/api/programs/enrollments")).json()) {
       if (e.program_id === "custom") {
         await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
@@ -192,6 +198,12 @@ test("a started week appears under its own name, not \"Your own program\"", asyn
 
   // Clean up the program this test started.
   await page.evaluate(async () => {
+    // A WORKOUT LEFT OPEN NOW REFUSES THE END. `end_enrollment` will not stop a
+    // program somebody is mid-workout on, so a spec that left one open used to
+    // leave this program running too — and the next spec found it and failed
+    // somewhere else entirely. The same two lines the other training specs have.
+    const live = await (await fetch("/api/workouts/live")).json()
+    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
     for (const e of await (await fetch("/api/programs/enrollments")).json()) {
       if (e.program_id === "custom") {
         await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })

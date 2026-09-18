@@ -140,50 +140,75 @@ export async function updateVoiceLanguage(userId: string, language: string): Pro
   }
 }
 
+/** Where `profiles.timezone` came from. See the 20260917110000 migration. */
+export type TimezoneSource = "signup_default" | "detected" | "chosen"
+
 /**
- * A user's timezone. Never null.
+ * The account's timezone, AND whether anybody actually set it.
  *
- * `profiles.timezone` is NOT NULL DEFAULT 'UTC' as of
- * 20260828100000_timezone_not_null, so a profile always has one and onboarding
- * overwrites it with the detected zone. The only way to reach the fallback is a
- * user with no profile row at all, and that is loud rather than silent: every
- * period boundary in the app is computed from this value, and a wrong one moves
- * somebody's week by hours.
+ * THE FACT THAT WAS MISSING. `timezone` is NOT NULL DEFAULT 'UTC', so it can
+ * never tell you the difference between somebody who lives on UTC and somebody
+ * the app has simply never asked. Every screen that files a workout by date was
+ * treating the second as the first: a new account in Copenhagen logs a session
+ * at half eleven at night and it lands on tomorrow, with nothing on screen
+ * saying why.
+ *
+ * `known` is that difference, and it has exactly one owner — here. Screens read
+ * it off the prescription rather than deciding for themselves, because "is UTC
+ * a real answer" is not a judgement a card should be making.
  */
-export async function getUserTimezone(userId: string): Promise<string> {
+export async function getUserClock(userId: string): Promise<{ timezone: string; known: boolean }> {
   const supabase = await createServerSupabaseClient()
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("timezone")
+    .select("timezone, timezone_source")
     .eq("id", userId)
     .single()
 
   if (error) {
     if (error.code === "PGRST116") {
       console.error(`[settingsRepo] no profile row for ${userId} — periods will be computed in UTC`)
-      return "UTC"
+      return { timezone: "UTC", known: false }
     }
     throw new Error(`Failed to get timezone: ${error.message}`)
   }
 
   if (!data?.timezone) {
     console.error(`[settingsRepo] profile ${userId} has no timezone despite NOT NULL — periods in UTC`)
-    return "UTC"
+    return { timezone: "UTC", known: false }
   }
 
-  return data.timezone
+  return { timezone: data.timezone, known: data.timezone_source !== "signup_default" }
+}
+
+/**
+ * A user's timezone. Never null.
+ *
+ * Twenty-six callers only need the zone itself, and they are unchanged. The
+ * one question this cannot answer — "did anybody set it?" — is `getUserClock`.
+ */
+export async function getUserTimezone(userId: string): Promise<string> {
+  return (await getUserClock(userId)).timezone
 }
 
 /**
  * Update timezone for a user.
+ *
+ * `source` is written in the SAME statement as the zone, never after it: two
+ * writes could leave a zone somebody typed still labelled as never-set, and the
+ * one-time browser sync would then overwrite their choice.
  */
-export async function updateTimezone(userId: string, timezone: string): Promise<void> {
+export async function updateTimezone(
+  userId: string,
+  timezone: string,
+  source: TimezoneSource = "chosen"
+): Promise<void> {
   const supabase = await createServerSupabaseClient()
 
   const { error } = await supabase
     .from("profiles")
-    .update({ timezone })
+    .update({ timezone, timezone_source: source })
     .eq("id", userId)
 
   if (error) {
@@ -206,25 +231,29 @@ export async function updateTimezone(userId: string, timezone: string): Promise<
  */
 export async function getTimePreferences(userId: string): Promise<{
   timezone: string | null
+  timezone_source: TimezoneSource
   week_start_day: number
 }> {
   const supabase = await createServerSupabaseClient()
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("timezone, week_start_day")
+    .select("timezone, week_start_day, timezone_source")
     .eq("id", userId)
     .single()
 
   if (error) {
     if (error.code === "PGRST116") {
-      return { timezone: null, week_start_day: 0 }
+      return { timezone: null, timezone_source: "signup_default", week_start_day: 0 }
     }
     throw new Error(`Failed to get time preferences: ${error.message}`)
   }
 
   return {
     timezone: data?.timezone ?? null,
+    // The one-time browser sync reads this to decide whether to offer the
+    // browser's zone at all, so a missing value must read as never-set.
+    timezone_source: (data?.timezone_source as TimezoneSource) ?? "signup_default",
     week_start_day: data?.week_start_day ?? 0,
   }
 }

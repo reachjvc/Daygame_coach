@@ -1,7 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { periodStartFor, toDateISO } from "@/src/shared/dateUtils"
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dumbbell, Plus, ChevronRight, ChevronLeft } from "lucide-react"
@@ -19,8 +18,9 @@ import { useActiveEnrollments, useEnrollment } from "../hooks/useEnrollment"
 import { requireProgram, enrollmentName } from "../data/catalog"
 import { effectiveProgram } from "../customize"
 import { computePrescription } from "../programsService"
-import { LEVEL_LABELS, isoWeekday } from "../config"
+import { LEVEL_LABELS } from "../config"
 import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment } from "../types"
+import { endProgram, resetProgram } from "../programActions"
 
 type View =
   | { mode: "home" }
@@ -222,14 +222,8 @@ function ActiveProgram({
   /** A session the user picked instead of the one the app offered. */
   const [pickedDayId, setPickedDayId] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
-  /**
-   * Monday of the week now, as a date string, from the one implementation of
-   * "which week is this" — `periodStartFor`. Hand-rolling it is refused by
-   * `tests/unit/architecture.test.ts`, and rightly: this app has had two
-   * separate bugs from two functions disagreeing about where a week starts.
-   */
-  const weekStartedOn = useMemo(() => periodStartFor("weekly", new Date()), [])
-
+  /** The server's sentence when "I am done with this" or "Run it again" is refused. */
+  const [finishFailed, setFinishFailed] = useState<string | null>(null)
   /**
    * A FAILED READ IS NOT A SLOW ONE.
    *
@@ -322,9 +316,8 @@ function ActiveProgram({
       */}
       <WeekStrip
         enrollment={detail.enrollment}
-        trainedWeekdays={detail.logs
-          .filter((l) => toDateISO(new Date(l.logged_at)) >= weekStartedOn)
-          .map((l) => isoWeekday(new Date(l.logged_at)))}
+        today={detail.week.todayWeekday}
+        trainedWeekdays={detail.week.trainedWeekdays}
         onSaved={refresh}
       />
 
@@ -346,19 +339,24 @@ function ActiveProgram({
           logs={detail.logs}
           unit={detail.enrollment.unitSystem}
           onFinish={async (choice) => {
-            if (choice === "archive") {
-              await fetch(`/api/programs/enrollments/${enrollmentId}`, { method: "DELETE" })
-              onExit()
+            setFinishFailed(null)
+            // Both of these used to fire and forget. "Archive" then left the
+            // screen for a program the server had refused to end.
+            const res =
+              choice === "archive" ? await endProgram(enrollmentId) : await resetProgram(enrollmentId)
+            if (!res.ok) {
+              setFinishFailed(res.error)
               return
             }
-            await fetch(`/api/programs/enrollments/${enrollmentId}/action`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ action: "reset" }),
-            })
-            refresh()
+            if (choice === "archive") onExit()
+            else refresh()
           }}
         />
+        {finishFailed && (
+          <p className="mt-2 text-xs text-destructive" data-testid="finish-action-failed">
+            {finishFailed}
+          </p>
+        )}
       </TodayCard>
 
       {/* LOG ONE YOU ALREADY DID. Same form as before, demoted to what it is

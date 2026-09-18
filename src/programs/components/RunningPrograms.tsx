@@ -29,6 +29,7 @@ import { Loader2 } from "lucide-react"
 import { getProgram, enrollmentName } from "../data/catalog"
 import { LEVEL_LABELS } from "../config"
 import type { ProgramEnrollment } from "../types"
+import { endProgram } from "../programActions"
 
 interface Props {
   /** Day names the surrounding plan believes it is training, if it has any. */
@@ -56,6 +57,7 @@ export function RunningPrograms({ planDays = [], onEnded, tone = "dark" }: Props
    */
   const { enrollments, loading, refresh } = useActiveEnrollments()
   const [ending, setEnding] = useState<string | null>(null)
+  const [endFailed, setEndFailed] = useState<string | null>(null)
 
   async function end(id: string, name: string) {
     // ONE CLICK IS NOT ENOUGH FOR THIS. It stops a program somebody is running;
@@ -63,8 +65,15 @@ export function RunningPrograms({ planDays = [], onEnded, tone = "dark" }: Props
     // button sits next to five others in a band you did not come here to use.
     if (!confirm(`End ${name}? It stops prescribing sessions. Everything you logged is kept.`)) return
     setEnding(id)
+    setEndFailed(null)
     try {
-      await fetch(`/api/programs/enrollments/${id}`, { method: "DELETE" })
+      // The answer matters: a workout left open on this program is a refusal,
+      // and calling `onEnded` on one told the rest of the page it had stopped.
+      const res = await endProgram(id)
+      if (!res.ok) {
+        setEndFailed(res.error)
+        return
+      }
       await refresh()
       onEnded?.(id)
     } finally {
@@ -170,6 +179,13 @@ export function RunningPrograms({ planDays = [], onEnded, tone = "dark" }: Props
           </li>
         ))}
       </ul>
+      {/* The server's own sentence — usually "finish the workout you have open
+          first", which is a thing the person can go and do. */}
+      {endFailed && (
+        <p className={`mt-1.5 text-[11px] ${dark ? "text-red-300" : "text-destructive"}`} data-testid="running-end-failed">
+          {endFailed}
+        </p>
+      )}
       {enrollments.length > 1 && (
         <p className={`mt-1.5 text-[11px] ${dark ? "text-amber-300/80" : "text-amber-600"}`}>
           More than one is running, so more than one session is prescribed. Ending a program keeps

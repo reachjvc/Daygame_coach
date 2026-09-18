@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import {
-  getEnrollmentById,
-  getTodaySession,
-  getSessionLogs,
+  getEnrollmentDetail,
   unenroll,
   deleteEnrollmentPermanently,
-  ProgramBusy,
 } from "@/src/db/programRepo"
+import { statusFor } from "@/src/programs/errors"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -16,13 +14,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!auth.success) return auth.response
   try {
     const { id } = await params
-    const enrollment = await getEnrollmentById(auth.userId, id)
-    if (!enrollment) return err("Enrollment not found", 404)
-    const [prescription, logs] = await Promise.all([
-      getTodaySession(auth.userId, id),
-      getSessionLogs(auth.userId, id),
-    ])
-    return NextResponse.json({ enrollment, prescription, logs })
+    const detail = await getEnrollmentDetail(auth.userId, id)
+    if (!detail) return err("Enrollment not found", 404)
+    return NextResponse.json(detail)
   } catch (e) { console.error("get enrollment:", e); return err((e as Error).message) }
 }
 
@@ -43,6 +37,6 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     console.error("end program:", e)
     // 409, not 400: nothing about the request was wrong — the program is busy,
     // and the answer changes the moment the open workout is finished.
-    return err((e as Error).message, e instanceof ProgramBusy ? 409 : 400)
+    return err((e as Error).message, statusFor(e))
   }
 }

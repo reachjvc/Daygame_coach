@@ -35,9 +35,6 @@ import { setWeekday } from "../builder"
 import { effectiveProgram } from "../customize"
 import { requireProgram } from "../data/catalog"
 import { isWeekdayAnchored } from "../builder"
-// The one ISO-weekday conversion in this slice; the engine already uses it to
-// pick today's session, so the strip must agree with it exactly.
-import { isoWeekday } from "../config"
 import type { ProgramEnrollment, ProgramSchedule } from "../types"
 
 /** Monday-first, matching every other week in this app. */
@@ -53,12 +50,22 @@ const DAYS: { weekday: number; short: string }[] = [
 
 interface Props {
   enrollment: ProgramEnrollment
-  /** Days already trained, as ISO weekdays, so the week can show what is done. */
+  /**
+   * What day it is where the PERSON is, 1 = Monday, worked out on the server
+   * from the account's timezone.
+   *
+   * It used to be `isoWeekday(new Date())` — the phone's clock — while the
+   * session card beside it was decided on the account's. On a phone whose zone
+   * differs from the account's the two named different days on one screen: the
+   * strip lit Wednesday and the card prescribed Tuesday's session.
+   */
+  today: number
+  /** Days already trained, as ISO weekdays — also the account's, for the same reason. */
   trainedWeekdays?: number[]
   onSaved: () => void
 }
 
-export function WeekStrip({ enrollment, trainedWeekdays = [], onSaved }: Props) {
+export function WeekStrip({ enrollment, today, trainedWeekdays = [], onSaved }: Props) {
   const [saving, setSaving] = useState(false)
   const [picking, setPicking] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -79,7 +86,6 @@ export function WeekStrip({ enrollment, trainedWeekdays = [], onSaved }: Props) 
   const days = schedule.days
   const anchored = isWeekdayAnchored(schedule)
   const assignedCount = days.filter((d) => d.weekday != null).length
-  const today = isoWeekday(new Date())
 
   async function assign(dayId: string, weekday: number | null) {
     setSaving(true)
@@ -171,6 +177,10 @@ export function WeekStrip({ enrollment, trainedWeekdays = [], onSaved }: Props) 
                 onClick={() => setPicking(picking === weekday ? null : weekday)}
                 aria-label={`${short}: ${day ? day.label : "rest"}. Tap to change.`}
                 data-testid={`week-day-${weekday}`}
+                // Which day is today is the fact this strip got wrong for a
+                // year; it is worth being able to assert on it directly rather
+                // than through a colour.
+                data-today={isToday ? "1" : undefined}
                 className={`min-h-[56px] rounded-md border px-1 py-1.5 text-center transition-colors ${
                   isToday ? "border-primary/60 bg-primary/10" : "border-border hover:bg-accent"
                 } ${picking === weekday ? "ring-1 ring-primary" : ""}`}

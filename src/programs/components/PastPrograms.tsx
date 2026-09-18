@@ -19,6 +19,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { getProgram, enrollmentName } from "../data/catalog"
 import { LEVEL_LABELS } from "../config"
 import type { ProgramEnrollment } from "../types"
+import { restartProgram, deletePastProgram } from "../programActions"
 
 /**
  * How many finished programs to show before folding the rest away.
@@ -93,17 +94,14 @@ export function PastPrograms({
   async function resume(e: ProgramEnrollment, name: string) {
     setBusy(e.id)
     try {
-      const res = await fetch(`/api/programs/enrollments/${e.id}/resume`, { method: "POST" })
-      const body = (await res.json().catch(() => null)) as
-        | { displaced?: { program_id: string }[]; error?: string }
-        | null
+      const res = await restartProgram(e.id)
       if (!res.ok) {
-        alert(body?.error ?? "Could not restart that program.")
+        alert(res.error)
         return
       }
       // Say what it displaced rather than letting somebody discover it later —
       // being silently swapped is the fault this whole feature is recovering from.
-      const displaced = body?.displaced ?? []
+      const displaced = res.data?.displaced ?? []
       if (displaced.length > 0) {
         const names = displaced.map((d) => getProgram(d.program_id)?.name ?? d.program_id).join(", ")
         alert(`${name} is running again. ${names} moved to your finished programs — everything it logged is kept.`)
@@ -141,14 +139,12 @@ export function PastPrograms({
     setBusy(e.id)
     setError(null)
     try {
-      const res = await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
+      const res = await deletePastProgram(e.id)
       if (!res.ok) {
-        setError("That program could not be removed.")
+        setError(res.error)
         return
       }
       await load()
-    } catch {
-      setError("Could not reach the server, so nothing was removed.")
     } finally {
       setBusy(null)
     }

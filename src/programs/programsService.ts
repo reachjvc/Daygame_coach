@@ -47,7 +47,7 @@ import type {
   SessionPrescription,
   UnitSystem,
 } from "./types"
-import { scheduleDays } from "./customize"
+import { clampCursorDay, effectiveProgram, scheduleDays } from "./customize"
 
 // ============================================================================
 // Units, rounding, 1RM
@@ -60,6 +60,11 @@ import { scheduleDays } from "./customize"
  * nineteen existing call sites did not all have to move in one commit.
  */
 import { toKg, fromKg, MAX_WEIGHT_KG } from "@/src/shared/weight"
+import {
+  getTodayInTimezone,
+  isoWeekdayInTimezone,
+  periodStartInTimezone,
+} from "@/src/shared/dateUtils"
 export { toKg, fromKg, MAX_WEIGHT_KG }
 
 /**
@@ -164,6 +169,93 @@ export function loadStyleOf(
 export function isWeekdayAnchored(schedule: ProgramSchedule): boolean {
   if (schedule.kind !== "linear_rotation" && schedule.kind !== "weekly_waved") return false
   return schedule.days.length > 0 && schedule.days.every((d) => d.weekday != null)
+}
+
+/**
+ * WHAT THIS WEEK LOOKS LIKE, ON THE ACCOUNT'S OWN CALENDAR.
+ *
+ * THE BUG THIS REPLACES. The week strip worked out today's weekday from the
+ * phone's clock (`isoWeekday(new Date())`) and which days had been trained
+ * from the phone's zone, while the server decided which session was due from
+ * the account's zone. Two answers to "what day is it" on one screen, and on a
+ * phone whose zone differs from the account's they disagree: the strip lit
+ * Wednesday while the card prescribed Tuesday's session.
+ *
+ * The answer belongs to whoever owns the account's clock, so it is computed on
+ * the server and handed down. This function is the pure half so it can be
+ * tested at a fixed instant in two zones — the class of bug it fixes is
+ * invisible to any test that runs in one.
+ *
+ * "This week" is Monday-based, like every other period in the app.
+ */
+export function weekSoFar(
+  logs: { logged_at: string }[],
+  timezone: string,
+  now: Date
+): { todayWeekday: number; trainedWeekdays: number[] } {
+  const weekStart = periodStartInTimezone("weekly", timezone, now)
+  const trained = new Set<number>()
+  for (const log of logs) {
+    const at = new Date(log.logged_at)
+    if (Number.isNaN(at.getTime())) continue
+    // The DAY the session was filed under where the person is — not the UTC
+    // date, which moves a late-evening session east of London into tomorrow.
+    if (getTodayInTimezone(timezone, at) < weekStart) continue
+    trained.add(isoWeekdayInTimezone(timezone, at))
+  }
+  return {
+    todayWeekday: isoWeekdayInTimezone(timezone, now),
+    trainedWeekdays: [...trained].sort((a, b) => a - b),
+  }
+}
+
+/**
+ * WHY SKIP IS NOT ALWAYS A THING YOU CAN DO.
+ *
+ * "Skip session" moves the program's cursor on one. That is meaningful for a
+ * program you work through in order: skip leg day and tomorrow is push day
+ * instead of leg day again.
+ *
+ * On a week pinned to weekdays it means nothing, because nothing reads the
+ * cursor — `getTodaySession` picks the day by what day of the week it actually
+ * is. So the button advanced a number nobody looks at, wrote a "skipped" mark
+ * into the program's history, and the screen came back showing the same
+ * session. Tap it three times and you have three phantom skips and no change.
+ *
+ * One function decides, so the button that offers it and the server that
+ * performs it cannot disagree: a non-null answer is the reason, written as a
+ * sentence to show, and also the refusal the server sends back.
+ */
+export function skipRefusal(schedule: ProgramSchedule): string | null {
+  if (!isWeekdayAnchored(schedule)) return null
+  return "This week runs by the calendar, so there is nothing to skip. Wednesday's session is Wednesday's whether or not you did it."
+}
+
+/**
+ * WHAT RESET ACTUALLY DOES — one fact, and the words follow it.
+ *
+ * The button said "Your current weights go back to where you began. This
+ * cannot be undone." It does not touch the weights. `resetEnrollment` rewinds
+ * the cursor to cycle 1, week 1, day 1 and leaves `exercise_state` exactly as
+ * it was, which is also what the replay does with a `reset` event.
+ *
+ * So somebody who had worked a squat from 60 to 110 was told, in a confirm box
+ * with no way back, that the 110 was about to be destroyed. Either they cancel
+ * a harmless action out of fear, or they accept and spend the next session
+ * confused about why the weight is still 110.
+ *
+ * The effect is declared once here, the confirm text is derived from it, and
+ * the repo writes this same object into the replay event — so if the product
+ * ever decides reset should take the weights back too, `weights: true` changes
+ * the database write, the replay and the words on the button together, and it
+ * is impossible to change one without the others.
+ */
+export const RESET_EFFECT = { cursor: true, weights: false } as const
+
+export function resetConfirmText(effect: { cursor: boolean; weights: boolean } = RESET_EFFECT): string {
+  return effect.weights
+    ? "Start again from week 1? Your weights go back to where you began. This cannot be undone."
+    : "Start again from week 1? Your weights stay where they are — to start from your original weights, end this program and start it again."
 }
 
 /** The day to do on a given ISO weekday, if this schedule is anchored. */
@@ -1831,6 +1923,15 @@ export function describePlates(load: PlateLoad, unitLabel: string): string {
  * weights are the enrollment's own history and re-resolving them from today's
  * catalogue would silently rewrite somebody's past if a program were ever
  * corrected upstream.
+ *
+ * `program` IS THE CATALOGUE PROGRAM, not the enrollment's edited version. The
+ * signature has not changed — what it means has. A `schedule` event in the
+ * history says what the week looked like from that moment, and the walk
+ * switches to it as it passes; so a program edited three times replays each
+ * session against the week that was in force when it was logged, rather than
+ * against today's. With no schedule events (every test that predates them, and
+ * every enrollment that was never edited) `program` is used throughout, which
+ * is exactly the old behaviour.
  */
 export function replayEnrollment(
   program: ProgramDefinition,
@@ -1859,10 +1960,12 @@ export function replayEnrollment(
     ...seed,
     cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 },
   }
+  /** The week in force at this point in the walk. */
+  let current = program
 
   for (const step of timeline) {
     if (step.kind === "log") {
-      state = applyLog(program, state, {
+      state = applyLog(current, state, {
         enrollment_id: seed.id,
         dayId: step.log.dayId,
         cycle: step.log.cycle,
@@ -1872,10 +1975,27 @@ export function replayEnrollment(
       continue
     }
     const event = step.event
-    if (event.kind === "skip") {
+    if (event.kind === "schedule") {
+      current = effectiveProgram(program, event.schedule)
+      /**
+       * THE CURSOR HAS TO LAND ON A DAY THAT EXISTS.
+       *
+       * Without this clamp, a week edited down from four days to two leaves the
+       * cursor at index 3; the next session logged on a day the edit removed
+       * falls back to that index in `applyLog`, and `dayAt` throws — mid-replay,
+       * which takes down the delete or correction that asked for the replay. The
+       * crash this event exists to remove would have been re-introduced by the
+       * event itself.
+       */
+      state = {
+        ...state,
+        exerciseState: { ...event.seeded, ...state.exerciseState },
+        cursor: { ...state.cursor, dayIndex: clampCursorDay(current.schedule, state.cursor.dayIndex) },
+      }
+    } else if (event.kind === "skip") {
       // The same call the skip endpoint makes: no entries, so every lift holds
       // and only the cursor moves.
-      state = applyLog(program, state, {
+      state = applyLog(current, state, {
         enrollment_id: seed.id,
         dayId: "",
         cycle: state.cursor.cycle,
@@ -1901,6 +2021,44 @@ export function replayEnrollment(
     }
   }
   return state
+}
+
+/**
+ * The schedule event an older enrollment never got to record.
+ *
+ * WHAT IT IS FOR, in plain language. Programs edited (or written from scratch)
+ * before the history started recording the week have a `custom_schedule` and no
+ * record of where it came from. Replaying one of those runs its very first
+ * session against the catalogue's own week — and for a program somebody wrote
+ * themselves that week is a single placeholder day, so the replay throws and the
+ * delete or correction that asked for it fails.
+ *
+ * So one is synthesised, dated the moment the program started: from the
+ * beginning, this week was in force. `seeded` is the state of every lift that is
+ * not in the starting weights — those lifts came in with an edit, their weights
+ * were written into the live state and nowhere else, and the fail counter is
+ * cleared because what it counted happened under a week we cannot reconstruct.
+ *
+ * HONEST LIMIT. For these rows every session replays against TODAY's week,
+ * because the week each was logged under was never kept. The crash goes away;
+ * the fall-back to the cursor for a session logged on a day a later edit removed
+ * does not, and cannot — that fact was never stored.
+ *
+ * Returns null when there is nothing to repair, which is every program started
+ * after this became part of the history.
+ */
+export function repairUneventfulEdit(enr: ProgramEnrollment): ReplayEvent | null {
+  if (!enr.customSchedule) return null
+  if ((enr.replayEvents ?? []).some((e) => e.kind === "schedule")) return null
+
+  const seed = enr.initialExerciseState ?? {}
+  const seeded: Record<string, ExerciseState> = {}
+  for (const [id, state] of Object.entries(enr.exerciseState)) {
+    if (seed[id]) continue
+    seeded[id] = { ...state, consecutiveFails: 0 }
+  }
+
+  return { at: enr.started_at, kind: "schedule", schedule: enr.customSchedule, seeded }
 }
 
 /**

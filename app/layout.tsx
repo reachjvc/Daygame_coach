@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { ViewportHeightUpdater } from "@/components/ViewportHeightUpdater"
+import { ClockSync } from "@/components/ClockSync"
 import { HistoryBarrierProvider } from "@/src/shared/HistoryBarrierContext"
 import "./globals.css"
 import { ErrorReporting } from "@/src/shared/components/ErrorReporting"
@@ -73,6 +74,10 @@ export default function RootLayout({
             used to be cleared only on the two pages that mount the tracker. */}
         <StaleWorkerCleanup />
         <ViewportHeightUpdater />
+        {/* Every signed-in page files things by date, so the account has to
+            know which day it is on before any of them draw. Does nothing when
+            signed out, and nothing at all if a zone was ever set. */}
+        <ClockSync />
         <HistoryBarrierProvider>
           {children}
         </HistoryBarrierProvider>

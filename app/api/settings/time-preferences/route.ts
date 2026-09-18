@@ -22,10 +22,14 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json()
-    const { timezone } = body
+    const { timezone, source } = body
 
     if (timezone !== undefined) {
-      await handleUpdateTimezone(auth.userId, timezone)
+      // 'detected' is the browser telling us once, unasked, and is the only
+      // value a caller may send; anything else — including a missing one, and
+      // including somebody trying "chosen" by hand — is a person choosing,
+      // which is the stronger claim and the safe one to record.
+      await handleUpdateTimezone(auth.userId, timezone, source === "detected" ? "detected" : "chosen")
     }
     // `week_start_day` is deliberately not accepted. Nothing honours it — every
     // period in the app is Monday-based — and a setting that silently does

@@ -3,7 +3,15 @@
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { History, SkipForward, RotateCcw, Trash2, ChevronDown, ChevronUp } from "lucide-react"
-import { formatLoad, summariseProgression, unbrokenRun, UNBROKEN_RUN_QUESTION_AT } from "../programsService"
+import {
+  formatLoad,
+  summariseProgression,
+  unbrokenRun,
+  UNBROKEN_RUN_QUESTION_AT,
+  skipRefusal,
+  resetConfirmText,
+} from "../programsService"
+import { endProgram, skipSession, resetProgram } from "../programActions"
 import { Sparkline } from "./Sparkline"
 import { effectiveProgram } from "../customize"
 import { scheduleDaysOrNone } from "../customize"
@@ -34,8 +42,11 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
    * was printing `ohp-day` and `bench` at people. The program knows the names;
    * nothing was asking it.
    */
+  // Lifted out of the memo below because the Skip button needs the schedule to
+  // decide whether skipping means anything at all.
+  const program = effectiveProgram(requireProgram(enrollment.program_id), enrollment.customSchedule)
+
   const { progress, dayLabel, unitLabel, run } = useMemo(() => {
-    const program = effectiveProgram(requireProgram(enrollment.program_id), enrollment.customSchedule)
     // OR NONE: a running plan has weeks, not days, and asking `scheduleDays`
     // for its days threw — taking the whole page down for anybody enrolled in
     // Couch to 5K. It has no lifts to name, which is an answer.
@@ -67,7 +78,7 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
       unitLabel: UNIT_CONFIG[enrollment.unitSystem].label,
       run: unbrokenRun(logs, (id) => targetReps.get(id) ?? null),
     }
-  }, [logs, enrollment])
+  }, [logs, enrollment, program])
 
   const [failed, setFailed] = useState<string | null>(null)
 
@@ -80,22 +91,28 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
    * the second one lands you have skipped twice. "End program" was worse: it
    * navigated away from a program that was still running and still prescribing.
    */
-  async function action(action: "skip" | "reset") {
+  /**
+   * Names the session being skipped and the one it moves to, because "Skip
+   * session?" does not tell you what you end up doing tomorrow.
+   */
+  function skipConfirmText(): string {
+    const days = scheduleDaysOrNone(program.schedule)
+    const here = days[enrollment.cursor.dayIndex]
+    const next = days.length > 0 ? days[(enrollment.cursor.dayIndex + 1) % days.length] : undefined
+    const moves = next && next !== here ? ` The program moves on to ${next.label}` : " The program moves on"
+    return `Skip ${here ? here.label : "this session"}?${moves} as if today's session had happened. Your weights do not change.`
+  }
+
+  async function action(kind: "skip" | "reset") {
     setBusy(true)
     setFailed(null)
     try {
-      const res = await fetch(`/api/programs/enrollments/${enrollmentId}/action`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
-      })
+      const res = kind === "skip" ? await skipSession(enrollmentId) : await resetProgram(enrollmentId)
       if (!res.ok) {
-        setFailed(action === "skip" ? "That session was not skipped." : "The program was not reset.")
+        setFailed(res.error)
         return
       }
       onChanged()
-    } catch {
-      setFailed("Could not reach the server, so nothing was changed.")
     } finally {
       setBusy(false)
     }
@@ -106,8 +123,16 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
     // sessions stay and can be read back; what stops is the prescribing.
     if (!confirm("End this program? It stops prescribing sessions. Everything you logged is kept.")) return
     setBusy(true)
+    setFailed(null)
     try {
-      await fetch(`/api/programs/enrollments/${enrollmentId}`, { method: "DELETE" })
+      // STAY PUT WHEN IT IS REFUSED. This used to navigate away whatever came
+      // back, so a program the server had kept running looked ended until the
+      // next screen showed it prescribing again.
+      const res = await endProgram(enrollmentId)
+      if (!res.ok) {
+        setFailed(res.error)
+        return
+      }
       onUnenrolled()
     } finally {
       setBusy(false)
@@ -272,19 +297,38 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
               Change this program
             </Button>
           )}
-          <Button variant="outline" size="sm" disabled={busy} onClick={() => action("skip")}>
-            <SkipForward className="size-4 mr-1" /> Skip session
-          </Button>
-          {/* CONFIRMED, like the two buttons either side of it. This throws the
-              program back to cycle 1, week 1, day 1 and cannot be undone, and it
-              sat unconfirmed in a wrapping row between Skip and End — one mis-tap
-              on a phone from losing every weight you had worked up to. */}
+          {/* OFFERED ONLY WHERE IT DOES SOMETHING. On a week pinned to
+              weekdays the cursor this advances is not what decides today's
+              session, so the button changed nothing and wrote a phantom skip
+              each time it was pressed. `skipRefusal` is the same rule the
+              server refuses by. */}
+          {!skipRefusal(program.schedule) && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={busy}
+              onClick={() => {
+                // ASKS FIRST, like the two beside it. It moves the program on a
+                // session, and a mis-tap on a phone was silent and unrecoverable.
+                if (!confirm(skipConfirmText())) return
+                void action("skip")
+              }}
+            >
+              <SkipForward className="size-4 mr-1" /> Skip session
+            </Button>
+          )}
+          {/* CONFIRMED, like the two buttons either side of it. It throws the
+              program back to cycle 1, week 1, day 1; it sat unconfirmed in a
+              wrapping row between Skip and End. What it does NOT do is touch
+              the weights — the old box said it did. */}
           <Button
             variant="outline"
             size="sm"
             disabled={busy}
             onClick={() => {
-              if (!confirm("Start this program again from week 1? Your current weights go back to where you began. This cannot be undone.")) return
+              // The words come from RESET_EFFECT, because this box used to
+              // promise a weight reset that never happened.
+              if (!confirm(resetConfirmText())) return
               void action("reset")
             }}
           >
