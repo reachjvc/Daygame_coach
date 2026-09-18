@@ -18,8 +18,24 @@ import { UTILITY_ICONS, SEMANTIC_ICON_ROLES, CUSTOM_ICON_COMPONENTS, CONTEXT_LOC
 
 const projectRoot = path.resolve(__dirname, '../..')
 
-// Grandfathered violations - existing files that violate rules
-// Remove items from these lists as they get fixed
+/**
+ * Grandfathered violations — existing files that violate rules. Remove items
+ * from these lists as they get fixed.
+ *
+ * EVERY LIST HERE SHRINKS, AND TWO SHAPES DO THAT JOB. Some have a separate
+ * `test('… only shrinks')` of their own; the rest carry a second `expect` at
+ * the foot of the guard test itself, reading "These are fixed or gone — remove
+ * them from X". The second shape is deliberate and is the better of the two,
+ * because both halves read the same scan and so cannot disagree about which
+ * files were looked at. It is also invisible to a grep for `test(`, which has
+ * already made one reviewer report these lists as unguarded when they are not.
+ * Do not "fix" that by splitting them apart.
+ *
+ * Either shape catches an entry for a file that no longer exists: a deleted
+ * file is never scanned, so it never lands in the still-offending set, so the
+ * stale filter flags it. Proven by planting a dead entry in each list and
+ * watching all three tests go red.
+ */
 const ALLOWED_LONG_ROUTES = new Set([
   'app/api/inner-game/comparisons/route.ts',
   'app/api/inner-game/values/route.ts',

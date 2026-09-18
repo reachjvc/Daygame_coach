@@ -18,6 +18,13 @@ export default [
       // Gitignored scratch: throwaway Playwright captures, not repository code.
       // Linting it reported 31 errors in files that are not even committed.
       ".playwright-mcp/**",
+      // Any Next build output under a `--distDir` of its own: `.next-audit`,
+      // `.next-audit2`, whatever the next verification build is called. They
+      // are not matched by `.next/**` above, because that pattern matches the
+      // name exactly. Linting one walks a whole compiled bundle and exhausts
+      // eslint's heap, so the ratchet could not start at all — and a gate that
+      // cannot start is indistinguishable from a gate that passes.
+      ".next-*/**",
     ],
   },
   js.configs.recommended,
