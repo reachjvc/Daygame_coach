@@ -1,7 +1,7 @@
 {
   "_comment": "Lint errors that already existed, by file and rule. May only shrink. Regenerate with: node scripts/lint-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
   "_format": "eslint-findings-v1",
-  "total": 352,
+  "total": 341,
   "files": {
     "app/api/goals/[id]/route.ts": {
       "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1
@@ -569,16 +569,6 @@
     },
     "tests/unit/pipeline/ingestQaScreen.test.ts": {
       "@typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.": 1
-    },
-    "tests/unit/programs/builder.test.ts": {
-      "@typescript-eslint/no-unused-vars: 'dayId' is assigned a value but never used.": 3,
-      "@typescript-eslint/no-unused-vars: 'ids' is assigned a value but never used.": 1,
-      "prefer-const: 'dayId' is never reassigned. Use 'const' instead.": 4,
-      "prefer-const: 'ids' is never reassigned. Use 'const' instead.": 1
-    },
-    "tests/unit/programs/customLifts.test.ts": {
-      "prefer-const: 'out' is never reassigned. Use 'const' instead.": 1,
-      "prefer-const: 's' is never reassigned. Use 'const' instead.": 1
     },
     "tests/unit/scenarios/difficulty.test.ts": {
       "@typescript-eslint/no-unused-vars: 'level' is assigned a value but never used.": 1

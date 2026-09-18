@@ -25,25 +25,9 @@
 import { readFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { join } from "node:path"
-
-/** Tables that are deliberately reachable without a per-user rule, with the reason. */
-const INTENTIONAL: Record<string, string> = {
-  beta_invites:
-    "RLS on, no policies: readable only by service role and the claim_beta_slot() function.",
-  waitlist_emails:
-    "RLS on, no policies: inserted server-side via service role only.",
-  plan_snapshots:
-    "RLS on, no policies: written by the admin client in planSnapshotRepo. Unauthenticated by design, keyed by a browser-generated id.",
-  values: "Reference data. Public read is intended; the app reads this table.",
-  core_values:
-    "RLS on, no policies: no code reads it. Near-duplicate of `values`. Server-only until consolidated.",
-  error_reports:
-    "RLS on, no policies: crash reports, written and read only by the service role through /api/errors and the admin page. The browser must never touch this table.",
-  embeddings_test:
-    "RLS on, no policies: read only via the service role in embeddingsTestRepo. Retrieval runs server-side.",
-  user_xp: "RLS on, no policies: empty, unreferenced, duplicates profiles.xp. Pending a keep-or-drop decision.",
-  embeddings: "Shared coaching corpus. Any signed-in user may read all rows.",
-}
+// One owner for the list of tables that need no per-person rule, so a unit test
+// can hold it to "every excuse names a table that still exists".
+import { INTENTIONAL } from "./auditRlsExpectations"
 
 type Row = {
   tbl: string
@@ -125,7 +109,7 @@ async function main() {
   }
 
   console.log(`${guarded.length} table(s) have RLS on with rules. ` +
-    `${Object.keys(INTENTIONAL).length} known exceptions are listed in this script.`)
+    `${Object.keys(INTENTIONAL).length} known exceptions are listed in scripts/auditRlsExpectations.ts.`)
 
   if (exposed.length) {
     console.error(`\nFAIL: ${exposed.length} table(s) are open to the internet.`)

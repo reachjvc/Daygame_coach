@@ -15,9 +15,9 @@
  * covered the moment it exists, without anyone remembering anything.
  *
  * Used by:
- *   - tests/unit/navigation/*                  (way in, way back)
- *   - tests/e2e/cross-browser/route-sweep.spec.ts   (renders, weight, targets)
- *   - tests/e2e/cross-browser/junk-params.spec.ts   (garbled URLs)
+ *   - tests/unit/navigation/*                (way in, way back, sweep debt)
+ *   - tests/e2e/sweep/route-sweep.spec.ts    (renders, weight, targets)
+ *   - tests/e2e/sweep/junk-params.spec.ts    (garbled URLs)
  */
 
 import * as fs from "fs"

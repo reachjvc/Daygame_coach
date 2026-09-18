@@ -195,7 +195,7 @@ describe("progression is a choice", () => {
 
 describe("supersets", () => {
   test("joining two neighbours puts them in one lettered group", () => {
-    const { schedule, dayId, ids } = twoLiftDay()
+    const { schedule, dayId } = twoLiftDay()
     const s = joinWithNext(schedule, dayId, 0)
     const [a, b] = lifts(s, dayId)
     expect(a.supersetGroup).toBe("A")
@@ -220,8 +220,8 @@ describe("supersets", () => {
   })
 
   test("a third lift joins the existing pair rather than starting a rival group", () => {
-    let { schedule, dayId } = twoLiftDay()
-    schedule = addExercise(schedule, dayId, libraryExercise("lib_cable_fly")!).schedule
+    const { schedule: twoLifts, dayId } = twoLiftDay()
+    const schedule = addExercise(twoLifts, dayId, libraryExercise("lib_cable_fly")!).schedule
     let s = joinWithNext(schedule, dayId, 0)
     s = joinWithNext(s, dayId, 1)
     expect(lifts(s, dayId).map((e) => e.supersetGroup)).toEqual(["A", "A", "A"])
@@ -230,7 +230,8 @@ describe("supersets", () => {
   })
 
   test("a second, separate pair gets its own letter", () => {
-    let { schedule, dayId } = twoLiftDay()
+    const { schedule: twoLifts, dayId } = twoLiftDay()
+    let schedule = twoLifts
     for (const id of ["lib_cable_fly", "lib_triceps_pushdown"]) {
       schedule = addExercise(schedule, dayId, libraryExercise(id)!).schedule
     }
@@ -247,8 +248,8 @@ describe("supersets", () => {
   })
 
   test("unpairing from a group of three leaves the other two paired", () => {
-    let { schedule, dayId } = twoLiftDay()
-    schedule = addExercise(schedule, dayId, libraryExercise("lib_cable_fly")!).schedule
+    const { schedule: twoLifts, dayId } = twoLiftDay()
+    const schedule = addExercise(twoLifts, dayId, libraryExercise("lib_cable_fly")!).schedule
     let s = joinWithNext(schedule, dayId, 0)
     s = joinWithNext(s, dayId, 1)
     s = unjoin(s, dayId, lifts(s, dayId)[2].id)
@@ -270,7 +271,7 @@ describe("supersets", () => {
 
 describe("a self-designed program runs on the real engine", () => {
   test("it prescribes the lifts, in the order they were put in", () => {
-    const { schedule, dayId, ids } = twoLiftDay()
+    const { schedule, ids } = twoLiftDay()
     const enr = enrollCustom(schedule, { [ids[0]]: 60, [ids[1]]: 10 })
     const rx = computePrescription(effectiveProgram(customProgram, schedule), enr)
     expect(rx.dayLabel).toBe("Push")
@@ -374,12 +375,11 @@ describe('"leave it to me" holds the weight', () => {
   })
 
   test("the cursor still advances, so a held lift is not a stuck program", () => {
-    let { schedule, dayId, ids } = twoLiftDay()
-    schedule = addDay(schedule, "Pull")
-    const pullId = scheduleDays(schedule)[1].id
-    const third = addExercise(schedule, pullId, libraryExercise("lib_barbell_row")!)
-    schedule = third.schedule
-    const held = setProgression(schedule, dayId, ids[0], "none")
+    const { schedule: pushOnly, dayId, ids } = twoLiftDay()
+    const withPull = addDay(pushOnly, "Pull")
+    const pullId = scheduleDays(withPull)[1].id
+    const third = addExercise(withPull, pullId, libraryExercise("lib_barbell_row")!)
+    const held = setProgression(third.schedule, dayId, ids[0], "none")
 
     const enr = enrollCustom(held, { [ids[0]]: 60, [ids[1]]: 10, [third.exerciseId]: 50 })
     const program = effectiveProgram(customProgram, held)
@@ -412,7 +412,7 @@ describe("the wire schema accepts a design", () => {
   })
 
   test("a superset group cannot be arbitrary free text", () => {
-    const { schedule, dayId } = twoLiftDay()
+    const { schedule } = twoLiftDay()
     const bad = structuredClone(schedule) as unknown as {
       days: Array<{ exercises: Array<Record<string, unknown>> }>
     }
@@ -490,7 +490,7 @@ describe("a lift is rounded to a weight it can actually be loaded at", () => {
   })
 
   test("a light accessory added to a design is seeded and progressed light", () => {
-    const { schedule, dayId, ids } = twoLiftDay()
+    const { schedule, ids } = twoLiftDay()
     const enr = enrollCustom(schedule, { [ids[0]]: 60, [ids[1]]: 6 })
     // 6 kg stays 6 — not rounded to 5 by the barbell's step, and not raised to
     // the 20 kg bar. Both of those used to happen to accessories.

@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterAll } from "vitest"
-import { getClient, truncateAllTables, createTestUser } from "../setup"
+import { getClient, truncateAllTables, createTestUser, asUser } from "../setup"
 
 const WEEK = JSON.stringify({
   kind: "linear_rotation",
@@ -41,28 +41,6 @@ async function sql<T extends Record<string, unknown> = Record<string, unknown>>(
   try {
     const res = await client.query(text, params)
     return res.rows as T[]
-  } finally {
-    await client.end()
-  }
-}
-
-/**
- * Run statements as a signed-in person rather than as the table owner.
- *
- * ON ONE CONNECTION, which is the whole trick. `getClient()` opens a NEW
- * connection every call, so a `SET ROLE` issued on one and a query issued on
- * another are two different sessions — the role never applies, RLS is never
- * exercised, and every denial test passes while proving nothing.
- */
-async function asUser<T>(
-  userId: string,
-  run: (q: (text: string, params?: unknown[]) => Promise<Record<string, unknown>[]>) => Promise<T>
-): Promise<T> {
-  const client = await getClient()
-  try {
-    await client.query("SELECT set_config('test.uid', $1, false)", [userId])
-    await client.query("SET ROLE authenticated")
-    return await run(async (text, params = []) => (await client.query(text, params)).rows)
   } finally {
     await client.end()
   }

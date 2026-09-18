@@ -1,10 +1,16 @@
 name: CI
 
+# Every branch, not only main and beta. A working branch that is never checked
+# is the whole problem: this one carried 23 commits without a single green or
+# red tick, because the workflow only fired for two branch names.
+# workflow_dispatch is the "run it now" button, for when a check has to be
+# repeated without pushing anything.
 on:
   push:
-    branches: [main, beta]
+    branches: ['**']
   pull_request:
     branches: [main, beta]
+  workflow_dispatch:
 
 jobs:
   lint-and-test:
@@ -37,3 +43,12 @@ jobs:
 
       - name: Unit tests
         run: npm test
+
+      # The database tests start a real Postgres in Docker (testcontainers) and
+      # run the app's own schema against it — row-level security, the finish
+      # function, the weight ceiling. They had never run anywhere but a laptop,
+      # so nothing stopped a schema rule from being wrong for weeks.
+      # GitHub's ubuntu runners ship Docker.
+      - name: Database tests
+        run: npm run test:integration
+        timeout-minutes: 15

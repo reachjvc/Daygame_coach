@@ -55,7 +55,7 @@ describe("adding the same lift to two days", () => {
    */
   test("shares one id across days, so progress accrues to one lift", () => {
     let s = addDay(emptyCustomSchedule(), "Push")
-    let out = addExercise(s, scheduleDays(s)[0].id, tricep())
+    const out = addExercise(s, scheduleDays(s)[0].id, tricep())
     s = out.schedule
     s = addDay(s, "Pull")
     const second = addExercise(s, scheduleDays(s)[1].id, tricep())
@@ -72,7 +72,7 @@ describe("adding the same lift to two days", () => {
   })
 
   test("but twice in ONE day is two slots, which the log has to tell apart", () => {
-    let s = addDay(emptyCustomSchedule(), "Push")
+    const s = addDay(emptyCustomSchedule(), "Push")
     const dayId = scheduleDays(s)[0].id
     const a = addExercise(s, dayId, tricep())
     const b = addExercise(a.schedule, dayId, tricep())

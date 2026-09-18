@@ -89,6 +89,22 @@ describe("the weight ceiling", () => {
     const ceiling = Number("9".repeat(Number(precision) - Number(scale)) + "." + "9".repeat(Number(scale)))
     expect(MAX_WEIGHT_KG).toBe(ceiling)
   })
+
+  it("the integration schema says the same ceiling as the migrations", () => {
+    /*
+     * The database tests run against their own copy of the schema
+     * (tests/integration/schema.sql) in a throwaway Postgres. That copy said
+     * `weight_kg <= 1000` for four days after the real database was narrowed to
+     * 999.99 — so a test could have "proved" that 1000 kg is storable while
+     * production refused it. A mirror that disagrees with what it mirrors is
+     * worse than no mirror.
+     */
+    const root = path.resolve(__dirname, "../../..")
+    const mirror = fs.readFileSync(path.join(root, "tests/integration/schema.sql"), "utf-8")
+    const found = mirror.match(/CONSTRAINT workout_sets_weight_max CHECK \(weight_kg <= ([\d.]+)\)/)
+    expect(found, "the test schema no longer declares workout_sets_weight_max").toBeTruthy()
+    expect(Number(found![1])).toBe(MAX_WEIGHT_KG)
+  })
 })
 
 describe("the other limits, which are NOT the weight limit", () => {

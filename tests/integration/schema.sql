@@ -629,6 +629,25 @@ $$;
 CREATE TRIGGER life_answers_no_update BEFORE UPDATE ON life_answers
   FOR EACH ROW EXECUTE FUNCTION life_answers_reject_update();
 
+-- Row rules, from 20260827000000_create_life_answers.sql:59-69. Without these
+-- the table was wide open in the test database, so any test asking "is someone
+-- else refused?" would have passed for the wrong reason.
+--
+-- There is no UPDATE policy, and that absence is the enforcement: an answer
+-- cannot be rewritten, only replaced by a newer one or deleted. The GRANT still
+-- names UPDATE because Supabase grants all four to `authenticated` on every
+-- table it creates, and the mirror has to be what production is, not what it
+-- ought to be — an UPDATE gets past the grant and is then stopped by RLS.
+ALTER TABLE life_answers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "read own life answers" ON life_answers
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "write own life answers" ON life_answers
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "delete own life answers" ON life_answers
+  FOR DELETE USING (auth.uid() = user_id);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON life_answers TO authenticated;
+
 -- ============================================
 -- Workout programs
 -- Mirrors supabase/migrations/20260618_create_program_tables.sql and the
@@ -679,6 +698,23 @@ CREATE UNIQUE INDEX uq_program_enrollments_active
 
 ALTER TABLE program_enrollments ADD COLUMN label TEXT
   CHECK (label IS NULL OR char_length(label) BETWEEN 1 AND 60);
+
+-- Row rules, from 20260618_create_program_tables.sql:33-45. The GRANT is what
+-- plain Postgres does not do for itself: Supabase gives `authenticated` all
+-- four rights on every table, and RLS is what narrows them to your own rows.
+-- Without the grant, a denial test would pass because of a missing privilege
+-- rather than because of the policy, which proves nothing about production.
+ALTER TABLE program_enrollments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can read own enrollments" ON program_enrollments
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own enrollments" ON program_enrollments
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own enrollments" ON program_enrollments
+  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own enrollments" ON program_enrollments
+  FOR DELETE USING (auth.uid() = user_id);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON program_enrollments TO authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Workouts. Verbatim from 20260305 + 20260716 + 20260907100000, because these
@@ -747,6 +783,19 @@ CREATE TRIGGER workout_logs_enrollment_is_own_trg
   BEFORE INSERT OR UPDATE OF enrollment_id, user_id ON workout_logs
   FOR EACH ROW EXECUTE FUNCTION workout_logs_enrollment_is_own();
 
+-- Row rules, from 20260305_create_health_tracking_tables.sql:79-91.
+ALTER TABLE workout_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can read own workout logs" ON workout_logs
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own workout logs" ON workout_logs
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own workout logs" ON workout_logs
+  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own workout logs" ON workout_logs
+  FOR DELETE USING (auth.uid() = user_id);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON workout_logs TO authenticated;
+
 CREATE TABLE workout_sets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   log_id UUID NOT NULL REFERENCES workout_logs(id) ON DELETE CASCADE,
@@ -765,11 +814,119 @@ CREATE TABLE workout_sets (
   rpe SMALLINT CHECK (rpe IS NULL OR (rpe >= 1 AND rpe <= 10)),
   side TEXT CHECK (side IS NULL OR side IN ('left', 'right')),
   CONSTRAINT workout_sets_reps_check CHECK (reps >= 0 AND reps <= 1000),
-  CONSTRAINT workout_sets_weight_max CHECK (weight_kg <= 1000)
+  -- 999.99, not 1000, since 20260910090000_weight_check_matches_column.sql:
+  -- the column is NUMERIC(5,2), so 1000 is a weight it cannot physically hold.
+  -- The two disagreed once and every validator in the app copied the wrong one.
+  CONSTRAINT workout_sets_weight_max CHECK (weight_kg <= 999.99)
 );
 
 CREATE UNIQUE INDEX uq_workout_sets_slot
   ON workout_sets(log_id, COALESCE(exercise_id, exercise), set_kind, set_number, COALESCE(side, ''));
+
+-- Row rules, from 20260305_create_health_tracking_tables.sql:107-123. A set has
+-- no user_id of its own, so whose it is comes from the workout it hangs off.
+ALTER TABLE workout_sets ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can read own workout sets" ON workout_sets
+  FOR SELECT USING (EXISTS (SELECT 1 FROM workout_logs WHERE workout_logs.id = workout_sets.log_id AND workout_logs.user_id = auth.uid()));
+CREATE POLICY "Users can insert own workout sets" ON workout_sets
+  FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM workout_logs WHERE workout_logs.id = workout_sets.log_id AND workout_logs.user_id = auth.uid()));
+CREATE POLICY "Users can update own workout sets" ON workout_sets
+  FOR UPDATE USING (EXISTS (SELECT 1 FROM workout_logs WHERE workout_logs.id = workout_sets.log_id AND workout_logs.user_id = auth.uid()));
+CREATE POLICY "Users can delete own workout sets" ON workout_sets
+  FOR DELETE USING (EXISTS (SELECT 1 FROM workout_logs WHERE workout_logs.id = workout_sets.log_id AND workout_logs.user_id = auth.uid()));
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON workout_sets TO authenticated;
+
+-- ---------------------------------------------------------------------------
+-- finish_program_workout, copied from the latest migration that defines it:
+-- supabase/migrations/20260907110000_finish_workout.sql.
+--
+-- WHY IT IS HERE. Finishing a workout closes the workout and moves the
+-- program's weights, and both must happen or neither. There is no client-side
+-- transaction in supabase-js, so this function is the only thing that is
+-- actually atomic — and it is also the double-finish guard. Until now it
+-- existed nowhere under tests/, so nothing anywhere proved that a double tap
+-- cannot advance your program twice.
+--
+-- KEEP IT IDENTICAL. tests/unit/db/schemaMirror.test.ts compares this text with
+-- the latest migration's, word for word. When a migration changes the
+-- signature, this copy changes with it or that test goes red.
+-- ---------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION finish_program_workout(
+  p_workout_id UUID,
+  p_ended_at TIMESTAMPTZ,
+  p_duration_min INTEGER,
+  p_intensity SMALLINT,
+  p_rpe SMALLINT,
+  p_notes TEXT,
+  p_exercise_state JSONB,
+  p_cursor JSONB,
+  p_replay_events JSONB,
+  -- What the caller believed the program had done when it computed the new
+  -- weights. If it has moved since, the computation is stale and is refused.
+  p_expected_session_count INTEGER
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+DECLARE
+  v_enrollment UUID;
+BEGIN
+  -- Lock the workout and confirm it is still running. Zero rows means somebody
+  -- (or some retry) already finished it.
+  SELECT enrollment_id INTO v_enrollment
+  FROM workout_logs
+  WHERE id = p_workout_id AND started_at IS NOT NULL AND ended_at IS NULL
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'That workout has already been finished' USING ERRCODE = '55000';
+  END IF;
+
+  IF v_enrollment IS NOT NULL THEN
+    -- Lock the program and confirm it is where the caller thought it was.
+    PERFORM 1
+    FROM program_enrollments
+    WHERE id = v_enrollment
+      AND (cursor ->> 'sessionCount')::int = p_expected_session_count
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Your program moved on while this workout was open — reload and finish it again'
+        USING ERRCODE = '55000';
+    END IF;
+
+    UPDATE program_enrollments
+    SET exercise_state = p_exercise_state,
+        cursor = p_cursor,
+        replay_events = COALESCE(p_replay_events, replay_events)
+    WHERE id = v_enrollment;
+  END IF;
+
+  UPDATE workout_logs
+  SET ended_at = p_ended_at,
+      duration_min = p_duration_min,
+      intensity = p_intensity,
+      rpe = COALESCE(p_rpe, rpe),
+      notes = COALESCE(p_notes, notes)
+  WHERE id = p_workout_id;
+
+  RETURN p_workout_id;
+END $$;
+
+-- Nobody but a signed-in person, and never the anonymous role.
+REVOKE ALL ON FUNCTION finish_program_workout(
+  UUID, TIMESTAMPTZ, INTEGER, SMALLINT, SMALLINT, TEXT, JSONB, JSONB, JSONB, INTEGER
+) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION finish_program_workout(
+  UUID, TIMESTAMPTZ, INTEGER, SMALLINT, SMALLINT, TEXT, JSONB, JSONB, JSONB, INTEGER
+) TO authenticated;
+
+COMMENT ON FUNCTION finish_program_workout IS
+  'Closes a live workout and moves the program''s weights in one transaction. Refuses a second call for the same workout, so a retry cannot advance the program twice.';
 
 -- ============================================
 -- Saved training weeks (program_drafts) — 20260908100000.

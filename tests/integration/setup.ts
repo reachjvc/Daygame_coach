@@ -119,6 +119,40 @@ export function getConnectionString(): string {
 }
 
 /**
+ * Run statements as a signed-in person rather than as the table owner.
+ *
+ * WHY IT MATTERS. The account that owns the tables is exempt from the row rules
+ * — Postgres lets an owner see everything on its own tables — so a test that
+ * asks "is someone else refused?" while connected as the owner passes without
+ * the rules ever being consulted. `SET ROLE authenticated` steps down to the
+ * role a signed-in person actually has.
+ *
+ * ON ONE CONNECTION, which is the whole trick. `getClient()` opens a NEW
+ * connection every call, so a `SET ROLE` issued on one and a query issued on
+ * another are two different sessions — the role never applies, RLS is never
+ * exercised, and every denial test passes while proving nothing.
+ *
+ * `test.uid` is what the schema's stub of Supabase's `auth.uid()` reads, so
+ * setting it here is how the database is told who is asking.
+ *
+ * It lives here rather than in one spec because a second copy would drift, and
+ * a drifted copy of this is a suite that quietly stops checking anything.
+ */
+export async function asUser<T>(
+  userId: string,
+  run: (q: (text: string, params?: unknown[]) => Promise<Record<string, unknown>[]>) => Promise<T>
+): Promise<T> {
+  const client = await getClient()
+  try {
+    await client.query("SELECT set_config('test.uid', $1, false)", [userId])
+    await client.query("SET ROLE authenticated")
+    return await run(async (text, params = []) => (await client.query(text, params)).rows)
+  } finally {
+    await client.end()
+  }
+}
+
+/**
  * Truncate all tables to reset state between tests.
  * Call this in beforeEach to ensure test isolation.
  */
