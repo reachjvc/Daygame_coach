@@ -41,14 +41,27 @@ async function sql<T extends Record<string, unknown> = Record<string, unknown>>(
   }
 }
 
-/** The same call the app makes, with every parameter cast the way the app's does. */
+/**
+ * The same call the app makes, with every parameter cast the way the app's does.
+ *
+ * THE LAST TWO ARE THE RECEIPT — what the finish screen told you it had done:
+ * the bests you beat and what the program will ask for next time. They are
+ * written in this same statement, which is the whole point of them: worked out
+ * again later they give a different answer once the program has been edited.
+ * NULL in either means "not kept", never "nothing happened".
+ */
 const FINISH = `SELECT finish_program_workout(
   $1::uuid, $2::timestamptz, $3::int, $4::smallint, $5::smallint, $6::text,
-  $7::jsonb, $8::jsonb, $9::jsonb, $10::int
+  $7::jsonb, $8::jsonb, $9::jsonb, $10::int, $11::jsonb, $12::jsonb
 ) AS id`
 
 const NEXT_STATE = JSON.stringify({ bench: { workingWeight: 62.5 } })
 const NEXT_CURSOR = JSON.stringify({ dayIndex: 1, cycle: 1, week: 1, sessionCount: 1 })
+const CHANGES = JSON.stringify([{ exerciseId: "bench", name: "Bench Press", reason: "+2.5 kg" }])
+const RECORDS = JSON.stringify({
+  records: [{ exercise: "Bench Press", weight_kg: 62.5, weight: 62.5, reps: 5, date: "2026-09-17", isNew: true }],
+  firstTimeLifts: [],
+})
 
 describe("finish_program_workout", () => {
   let me = ""
@@ -87,14 +100,14 @@ describe("finish_program_workout", () => {
 
   it("finishing a workout twice is refused the second time, and the program moves once", async () => {
     const [first] = await sql<{ id: string }>(FINISH, [
-      workoutId, new Date().toISOString(), 45, 3, null, null, NEXT_STATE, NEXT_CURSOR, null, 0,
+      workoutId, new Date().toISOString(), 45, 3, null, null, NEXT_STATE, NEXT_CURSOR, null, 0, CHANGES, RECORDS,
     ])
     expect(first!.id).toBe(workoutId)
 
     // The retry. It reads "already finished" from the lock, not from anything
     // the app remembered, which is why two tabs cannot both get through.
     await expect(
-      sql(FINISH, [workoutId, new Date().toISOString(), 45, 3, null, null, NEXT_STATE, NEXT_CURSOR, null, 1])
+      sql(FINISH, [workoutId, new Date().toISOString(), 45, 3, null, null, NEXT_STATE, NEXT_CURSOR, null, 1, CHANGES, RECORDS])
     ).rejects.toMatchObject({ code: "55000" })
 
     const [enrollment] = await sql<{ sessions: string }>(
@@ -102,6 +115,18 @@ describe("finish_program_workout", () => {
       [enrollmentId]
     )
     expect(Number(enrollment!.sessions)).toBe(1)
+
+    // And the receipt is on the row, put there by the same statement that
+    // closed the workout. This is what makes "open it again next month and see
+    // what you were told" true rather than a second guess at it.
+    const [saved] = await sql<{
+      changes: { name: string }[] | null
+      records: { records: { exercise: string }[] } | null
+    }>(`SELECT progression_changes AS changes, personal_records AS records FROM workout_logs WHERE id = $1`, [
+      workoutId,
+    ])
+    expect(saved!.changes![0]!.name).toBe("Bench Press")
+    expect(saved!.records!.records[0]!.exercise).toBe("Bench Press")
   })
 
   it("another signed-in person cannot finish your workout", async () => {
@@ -117,7 +142,7 @@ describe("finish_program_workout", () => {
     // finds nothing and it refuses — the same answer as "already finished".
     await expect(
       asUser(someoneElse, (q) =>
-        q(FINISH, [workoutId, new Date().toISOString(), 45, 3, null, null, NEXT_STATE, NEXT_CURSOR, null, 0])
+        q(FINISH, [workoutId, new Date().toISOString(), 45, 3, null, null, NEXT_STATE, NEXT_CURSOR, null, 0, CHANGES, RECORDS])
       )
     ).rejects.toMatchObject({ code: "55000" })
 
@@ -139,7 +164,7 @@ describe("finish_program_workout", () => {
     // The caller believed the program had done 5 sessions; it has done none, so
     // the new weights it worked out are based on something that never happened.
     await expect(
-      sql(FINISH, [workoutId, new Date().toISOString(), 45, 3, null, null, NEXT_STATE, NEXT_CURSOR, null, 5])
+      sql(FINISH, [workoutId, new Date().toISOString(), 45, 3, null, null, NEXT_STATE, NEXT_CURSOR, null, 5, CHANGES, RECORDS])
     ).rejects.toMatchObject({ code: "55000" })
 
     const [workout] = await sql<{ ended_at: Date | null }>(

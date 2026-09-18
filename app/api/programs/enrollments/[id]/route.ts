@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { getEnrollmentById, getTodaySession, getSessionLogs, unenroll, deleteEnrollmentPermanently } from "@/src/db/programRepo"
+import {
+  getEnrollmentById,
+  getTodaySession,
+  getSessionLogs,
+  unenroll,
+  deleteEnrollmentPermanently,
+  ProgramBusy,
+} from "@/src/db/programRepo"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -32,5 +39,10 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
       await unenroll(auth.userId, id)
     }
     return NextResponse.json({ success: true })
-  } catch (e) { console.error("end program:", e); return err((e as Error).message, 400) }
+  } catch (e) {
+    console.error("end program:", e)
+    // 409, not 400: nothing about the request was wrong — the program is busy,
+    // and the answer changes the moment the open workout is finished.
+    return err((e as Error).message, e instanceof ProgramBusy ? 409 : 400)
+  }
 }

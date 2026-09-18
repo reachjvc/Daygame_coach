@@ -20,6 +20,8 @@ import {
   staleLifts,
   lastTimePerLift,
   unknownExerciseIds,
+  isSessionOf,
+  sessionTypeFor,
   platesFor,
   replayEnrollment,
   describePlates,
@@ -37,7 +39,7 @@ import { fiveKToTenK } from "@/src/programs/data/cardio/fiveKToTenK"
 import { sprintTriathlon, halfIronman } from "@/src/programs/data/endurance/triathlon"
 import { ALL_PROGRAMS } from "@/src/programs/data/catalog"
 import { resolveProgramForLevel } from "@/src/programs/data/catalog"
-import { scheduleDays } from "@/src/programs/customize"
+import { scheduleDays, scheduleDaysOrNone } from "@/src/programs/customize"
 import type {
   LevelId,
   PrescribedExercise,
@@ -1217,5 +1219,81 @@ describe("replayEnrollment", () => {
     const replayed = replayEnrollment(strongLifts5x5, start, [])
     expect(replayed.exerciseState).toEqual(start.exerciseState)
     expect(replayed.cursor.sessionCount).toBe(0)
+  })
+})
+
+/**
+ * WHICH DAYS ARE ACTUALLY IN THIS PROGRAM.
+ *
+ * In plain terms: the server has to be able to say "that is not a day of this
+ * program" before it stores a made-up id on a workout. The only helper that
+ * could list a program's days THREW for a running plan — so the check could not
+ * be written for Couch to 5K at all. One function answers for every shape.
+ */
+describe("isSessionOf", () => {
+  test("knows an endurance session id and refuses a made-up one", () => {
+    expect(isSessionOf(couchTo5k, "w1-r1")).toBe(true)
+    expect(isSessionOf(couchTo5k, "w5-3")).toBe(true)
+    expect(isSessionOf(couchTo5k, "leg-day")).toBe(false)
+  })
+
+  test("knows a lifting day id and refuses a made-up one", () => {
+    const dayId = strongLifts5x5.schedule.kind === "linear_rotation" ? strongLifts5x5.schedule.days[0].id : ""
+    expect(isSessionOf(strongLifts5x5, dayId)).toBe(true)
+    expect(isSessionOf(strongLifts5x5, "w1-r1")).toBe(false)
+  })
+})
+
+/**
+ * EVERY PROGRAM IN THE CATALOGUE CAN BE DESCRIBED.
+ *
+ * In plain terms, the failure this closes. A running plan is a list of weeks,
+ * not a list of days, and the helper that returns a program's days THROWS for
+ * one. Four separate screens reached for it anyway — so enrolling in Couch to
+ * 5K took the whole Training page down with "Endurance plans have weeks, not
+ * days", and the live screen could not open at all.
+ *
+ * Guarding each screen one at a time is how the fourth one gets missed. This
+ * runs every program in the catalogue through the questions a screen asks, so a
+ * new program of a new shape fails here rather than on somebody's phone.
+ */
+describe("every program can be described without crashing", () => {
+  test("its days can be listed, or honestly reported as none", () => {
+    for (const program of ALL_PROGRAMS) {
+      const days = scheduleDaysOrNone(program.schedule)
+      expect(Array.isArray(days), program.id).toBe(true)
+      if (program.schedule.kind === "endurance_weeks") {
+        expect(days, `${program.id} has weeks, not days`).toEqual([])
+      } else {
+        expect(days.length, `${program.id} should have days`).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  test("its first session is a session of it, and a made-up id is not", () => {
+    for (const program of ALL_PROGRAMS) {
+      const first =
+        program.schedule.kind === "endurance_weeks"
+          ? program.schedule.weeks[0].sessions[0].id
+          : program.schedule.days[0].id
+      expect(isSessionOf(program, first), program.id).toBe(true)
+      expect(isSessionOf(program, "no-such-day"), program.id).toBe(false)
+    }
+  })
+
+  test("it says what its workouts count as", () => {
+    for (const program of ALL_PROGRAMS) {
+      expect(["weights", "cardio", "running", "mobility"], program.id).toContain(
+        sessionTypeFor(program)
+      )
+    }
+    // A workout answering no program at all is a gym session, which is what
+    // every dashboard tile has always assumed.
+    expect(sessionTypeFor(null)).toBe("weights")
+  })
+
+  test("an entry sent against a running plan is unknown, not a crash", () => {
+    const endurance = ALL_PROGRAMS.find((p) => p.schedule.kind === "endurance_weeks")!
+    expect(unknownExerciseIds(endurance, [{ exerciseId: "squat" }])).toEqual(["squat"])
   })
 })

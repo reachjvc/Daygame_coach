@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { listActiveEnrollments, listPastEnrollments, enrollInProgram } from "@/src/db/programRepo"
+import {
+  listActiveEnrollments,
+  listPastEnrollments,
+  enrollInProgram,
+  ProgramBusy,
+} from "@/src/db/programRepo"
 import { CustomScheduleSchema } from "@/src/programs/schemas"
 import { z } from "zod"
 
@@ -34,5 +39,14 @@ export async function POST(request: Request) {
     const parsed = EnrollSchema.safeParse(await request.json())
     if (!parsed.success) return err("Validation failed", 400)
     return NextResponse.json(await enrollInProgram(auth.userId, parsed.data), { status: 201 })
-  } catch (e) { console.error("enroll:", e); return err((e as Error).message) }
+  } catch (e) {
+    console.error("enroll:", e)
+    /**
+     * Starting a program of the same kind pauses the one already running. If a
+     * workout is open on that one, this is refused — and it is refused before
+     * anything is switched off. 409 rather than the 500 it used to be: nothing
+     * is broken, there is just a workout to finish first.
+     */
+    return err((e as Error).message, e instanceof ProgramBusy ? 409 : 500)
+  }
 }

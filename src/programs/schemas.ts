@@ -336,7 +336,14 @@ export const FinishWorkoutSchema = z.object({
   intensity: z.number().int().min(1).max(5),
   rpe: z.number().int().min(1).max(10).nullable().optional(),
   notes: z.string().max(1000).nullable().optional(),
-  sessionType: z.enum(["weights", "cardio", "mobility", "yoga", "running"]).optional(),
+  /**
+   * NO `sessionType` HERE, DELIBERATELY. It used to be accepted and written by
+   * a second update after the transaction whose error was thrown away — and no
+   * caller ever sent it, so every live run was stored as a gym session and the
+   * running tiles never moved. What a workout counts as is decided from the
+   * program when the workout STARTS (`sessionTypeFor`), which is the only
+   * moment anything actually knows; the finish does not get a vote.
+   */
 })
 
 // ============================================================================

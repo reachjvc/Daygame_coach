@@ -12,6 +12,7 @@
  */
 
 import {
+  BRIDGE_SESSION_TYPE,
   DEFAULT_PLATES,
   FREE_PRECISION,
   LOAD_TOLERANCE,
@@ -36,6 +37,7 @@ import type {
   ReplayEvent,
   StoredSet,
   WorkoutAdjustments,
+  LiveWorkoutSet,
   ProgramDefinition,
   ProgramEnrollment,
   ProgramSessionLogInput,
@@ -213,6 +215,24 @@ export function pickTodaysDay(
     restDay: !today,
     ...(target.weekday != null ? { scheduledWeekday: target.weekday } : {}),
   }
+}
+
+/**
+ * Is this day id actually part of this program?
+ *
+ * ONE OWNER, BECAUSE THE TWO SHAPES ANSWER DIFFERENTLY. A running plan is a
+ * list of weeks each holding sessions; everything else is a list of days. Code
+ * that reached for `scheduleDays()` to answer this THREW for a running plan
+ * rather than saying no, so the check could not be written where it was needed.
+ * Ask here instead, and an unknown day is refused the same way whatever kind of
+ * program it is.
+ */
+export function isSessionOf(program: ProgramDefinition, dayId: string): boolean {
+  const schedule = program.schedule
+  if (schedule.kind === "endurance_weeks") {
+    return schedule.weeks.some((w) => w.sessions.some((s) => s.id === dayId))
+  }
+  return scheduleDays(schedule).some((d) => d.id === dayId)
 }
 
 /**
@@ -1901,6 +1921,105 @@ export function enduranceMinutes(sets: EnduranceSet[]): number {
 }
 
 // ============================================================================
+// What a workout counts as
+// ============================================================================
+
+/**
+ * What kind of session this program's workouts count as.
+ *
+ * ONE PLACE DECIDES, and until now nowhere did. Starting a workout hard-coded
+ * `session_type: "weights"`, so every live run was stored as a gym session and
+ * the running tiles on the dashboard never moved. Finishing had a follow-up
+ * write that could have corrected it — except its error was thrown away and no
+ * caller ever sent the value, so the whole path was dead code pretending to be
+ * a fallback.
+ *
+ * A calisthenics session is weights (it counts towards gym sessions), a
+ * mobility routine is mobility, a running plan is running, and a multi-sport
+ * plan is generic cardio. `null` — a workout answering no program at all — is
+ * weights, which is what the dashboard has always assumed; Phase 6 gives a
+ * loose workout a way to say otherwise.
+ *
+ * Here rather than in `programRepo` so `workoutRepo` can ask it at the moment a
+ * workout STARTS, which is the only moment anything actually knows.
+ */
+export function sessionTypeFor(
+  program: ProgramDefinition | null
+): "weights" | "cardio" | "running" | "mobility" {
+  if (!program) return BRIDGE_SESSION_TYPE
+  if (program.metricType === "endurance") {
+    return program.discipline === "triathlon" || program.discipline === "ironman"
+      ? "cardio"
+      : "running"
+  }
+  if (program.metricType === "hold_range") return "mobility"
+  return BRIDGE_SESSION_TYPE
+}
+
+// ============================================================================
+// What is left undone at the end of a workout
+// ============================================================================
+
+/**
+ * What is unfinished, and what that means — told apart from what was ADDED.
+ *
+ * WHAT WENT WRONG. An added lift gets three empty rows on the live screen so
+ * there is somewhere to put the sets. The finish sheet counted those rows as
+ * sets the program had asked for, so "Front Squat 0 of 3" appeared under
+ * "These count as misses and will bring the weight down" — for a lift nobody
+ * had prescribed, at a weight the program does not track, from a count the app
+ * invented. A lift you chose to do is never a lift you failed to do.
+ *
+ * `short` is the real thing: a prescribed lift with some sets left. `asked > 0`
+ * because a lift with nothing prescribed cannot be short of anything, and
+ * skipped lifts are left out entirely — skipping is already a decision the
+ * person made.
+ *
+ * `untouchedAdded` is a lift added on the day with no ticked set. It belongs on
+ * the sheet (you meant to do it and did not) but with no "of N" and no miss
+ * wording. An added lift with even one ticked set is on neither list: it
+ * happened, and there is no plan for it to fall short of.
+ *
+ * Pure, and formats nothing — the sheet decides the words.
+ */
+export function unfinishedLifts(
+  prescribed: PrescribedExercise[],
+  adjustments: WorkoutAdjustments,
+  sets: LiveWorkoutSet[]
+): {
+  short: { exerciseId: string; name: string; done: number; asked: number }[]
+  untouchedAdded: { exerciseId: string; name: string }[]
+} {
+  const skipped = new Set(adjustments.skipped ?? [])
+  const added = adjustments.added ?? []
+  const addedIds = new Set(added.map((a) => a.exerciseId))
+
+  /** Ticked WORKING sets per lift — a warm-up is not one of the sets asked for. */
+  const doneByLift = new Map<string, number>()
+  for (const s of sets) {
+    if (s.kind === "warmup") continue
+    const key = s.exerciseId ?? s.exercise
+    doneByLift.set(key, (doneByLift.get(key) ?? 0) + 1)
+  }
+
+  const short = prescribed
+    .filter((ex) => !skipped.has(ex.exerciseId) && !addedIds.has(ex.exerciseId))
+    .map((ex) => ({
+      exerciseId: ex.exerciseId,
+      name: ex.name,
+      done: doneByLift.get(ex.exerciseId) ?? 0,
+      asked: ex.sets.length,
+    }))
+    .filter((u) => u.asked > 0 && u.done < u.asked)
+
+  const untouchedAdded = added
+    .filter((a) => !skipped.has(a.exerciseId) && (doneByLift.get(a.exerciseId) ?? 0) === 0)
+    .map((a) => ({ exerciseId: a.exerciseId, name: a.name }))
+
+  return { short, untouchedAdded }
+}
+
+// ============================================================================
 // The training card on the dashboard
 // ============================================================================
 
@@ -1920,8 +2039,12 @@ export function enduranceMinutes(sets: EnduranceSet[]): number {
 export type TrainingCardState =
   | { kind: "live"; workoutId: string; minutes: number }
   | { kind: "stale"; workoutId: string; startedAt: string; minutes: number }
-  | { kind: "today"; enrollmentId: string; dayLabel: string; lifts: number }
-  | { kind: "rest"; enrollmentId: string; nextLabel: string; nextWeekday?: number }
+  /**
+   * `dayId` travels with the label so the card cannot name one session and
+   * start another: whoever renders this hands the id straight to Start.
+   */
+  | { kind: "today"; enrollmentId: string; dayId: string; dayLabel: string; lifts: number }
+  | { kind: "rest"; enrollmentId: string; dayId: string; nextLabel: string; nextWeekday?: number }
   | { kind: "none" }
 
 /** After this long, an open workout is forgotten rather than running. */
@@ -1946,6 +2069,7 @@ export function trainingCardState(
     return {
       kind: "rest",
       enrollmentId,
+      dayId: prescription.dayId,
       nextLabel: prescription.dayLabel,
       ...(prescription.scheduledWeekday ? { nextWeekday: prescription.scheduledWeekday } : {}),
     }
@@ -1954,6 +2078,7 @@ export function trainingCardState(
   return {
     kind: "today",
     enrollmentId,
+    dayId: prescription.dayId,
     dayLabel: prescription.dayLabel,
     // Endurance days prescribe blocks rather than lifts, so this is 0 for them
     // and the card says the day's name without a count it does not have.

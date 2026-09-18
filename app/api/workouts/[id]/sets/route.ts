@@ -15,7 +15,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try {
     const { id } = await params
     const parsed = CompleteSetSchema.safeParse(await request.json())
-    if (!parsed.success) return err("Could not save that set", 400)
+    /**
+     * THE FIRST PROBLEM IN PLAIN WORDS, like the finish route. "Could not save
+     * that set" said nothing about which number was wrong, and the screen now
+     * shows this sentence on the row itself.
+     */
+    if (!parsed.success) {
+      return err(parsed.error.issues[0]?.message ?? "Could not save that set", 400)
+    }
     return NextResponse.json(await completeSet(auth.userId, id, parsed.data))
   } catch (e) { console.error("complete set:", e); return err((e as Error).message, 400) }
 }

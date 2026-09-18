@@ -68,6 +68,16 @@ test("shows what each workout was, and what the weeks added up to", async ({ pag
 
   await page.getByRole("button", { name: "Progress" }).first().click()
   await expect(page.getByTestId("week-dots")).toBeVisible({ timeout: 20000 })
+  /**
+   * WAITING FOR THE BESTS SEPARATELY, and this changed on purpose.
+   *
+   * "Your bests" used to be worked out in the browser from the 365 days this
+   * screen had already loaded — which is why it meant "your bests this year"
+   * and gave a different answer from the finish summary for the same set. It is
+   * now one server read over ALL of your training, so it lands on its own
+   * schedule and `week-dots` no longer implies it is here.
+   */
+  await expect(page.getByTestId("lift-bests")).toBeVisible({ timeout: 20000 })
   const prog = await page.locator("body").innerText()
   expect(prog).toContain("Your bests")
   expect(prog, "the estimated max is a separate figure").toContain("est. max")

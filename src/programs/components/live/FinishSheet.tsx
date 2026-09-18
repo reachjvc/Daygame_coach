@@ -26,6 +26,12 @@ interface Props {
   workout: LiveWorkout
   /** Lifts with sets left unticked, and what the engine will make of them. */
   unfinished: Array<{ exerciseId: string; name: string; done: number; asked: number }>
+  /**
+   * Lifts added on the day with nothing ticked. Listed, because you meant to do
+   * them — but never with a count, and never as misses: nothing prescribed
+   * them, so there is no plan for them to have fallen short of.
+   */
+  untouchedAdded: Array<{ exerciseId: string; name: string }>
   /** Sets whose write failed and is waiting for signal. */
   unsaved: number
   /** Sets whose write is on the wire right now. */
@@ -63,6 +69,7 @@ function toLocalInput(iso: string): string {
 export function FinishSheet({
   workout,
   unfinished,
+  untouchedAdded,
   unsaved,
   saving,
   busy,
@@ -101,10 +108,28 @@ export function FinishSheet({
     return (
       <div data-testid="workout-summary" className="space-y-4">
         <h2 className="text-lg font-semibold">Done.</h2>
+
+        {/* SAVED, AND NOTHING ELSE IS KNOWN. The reply was lost, the server has
+            confirmed the workout did close, and the totals could not be read
+            back. "0 sets, 0 kg lifted" after an hour of training would be a
+            claim about the person that is not true, so every number is withheld
+            instead. */}
+        {summary.unavailable && (
+          <p
+            data-testid="summary-unavailable"
+            className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-2 text-xs text-amber-600 dark:text-amber-400"
+          >
+            Saved, but the totals could not be worked out.
+          </p>
+        )}
+
         <div className="grid grid-cols-3 gap-3 text-center">
-          <Stat label="minutes" value={summary.durationMin} />
-          <Stat label="sets" value={summary.sets} />
-          <Stat label={`${summary.unit} lifted`} value={Math.round(summary.volume)} />
+          <Stat label="minutes" value={summary.unavailable ? "—" : summary.durationMin} />
+          <Stat label="sets" value={summary.unavailable ? "—" : summary.sets} />
+          <Stat
+            label={`${summary.unit} lifted`}
+            value={summary.unavailable ? "—" : Math.round(summary.volume)}
+          />
         </div>
 
         {/* A RECORD CANNOT BE CLAIMED, OR RULED OUT, AGAINST A HISTORY NOBODY
@@ -132,7 +157,26 @@ export function FinishSheet({
           </div>
         )}
 
-        {summary.changes.length > 0 && (
+        {/* A LIFT YOU HAD NEVER DONE HAS NOTHING TO BEAT. Every set used to be
+            announced as a personal best against an empty history, which made
+            "New best" mean nothing on the first session. A first is named as a
+            first — true, and still worth seeing. */}
+        {summary.firstTimeLifts.length > 0 && (
+          <p data-testid="first-time-lifts" className="text-sm text-muted-foreground">
+            First time logged: {summary.firstTimeLifts.join(", ")}
+          </p>
+        )}
+
+        {/* NOT KEPT IS NOT NOTHING. A workout finished before the receipt was
+            stored on the row has no record of what the program did next, and
+            saying nothing here would read as "nothing changed". */}
+        {summary.changesUnavailable && (
+          <p className="text-sm text-muted-foreground">
+            What changed for next time was not kept for this workout.
+          </p>
+        )}
+
+        {!summary.changesUnavailable && summary.changes.length > 0 && (
           <div>
             <p className="text-sm font-medium">Next time</p>
             <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">
@@ -160,7 +204,7 @@ export function FinishSheet({
           save, not discovered next session. Stopping short because the gym is
           closing is not the same as failing, and the engine cannot tell unless
           you say. */}
-      {unfinished.length > 0 && (
+      {(unfinished.length > 0 || untouchedAdded.length > 0) && (
         <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3">
           {/* THE RULE ONCE, THE LIFTS AS A LIST. It read "so it counts as a
               miss" on every row — three lifts meant the same clause three
@@ -170,10 +214,12 @@ export function FinishSheet({
           <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
             Not everything was ticked
           </p>
-          <p className="mt-0.5 text-xs text-amber-600/80 dark:text-amber-400/80">
-            These count as misses and will bring the weight down. Say so if you stopped for another
-            reason.
-          </p>
+          {unfinished.length > 0 && (
+            <p className="mt-0.5 text-xs text-amber-600/80 dark:text-amber-400/80">
+              These count as misses and will bring the weight down. Say so if you stopped for
+              another reason.
+            </p>
+          )}
           <ul className="mt-2 space-y-1 text-sm">
             {unfinished.map((u) => (
               <li key={u.exerciseId} className="flex items-baseline justify-between gap-3">
@@ -190,6 +236,13 @@ export function FinishSheet({
                 >
                   not a miss
                 </button>
+              </li>
+            ))}
+            {/* NO "of N" AND NO MISS WORDING. Nothing asked for these, so there
+                is no count to be short of and no weight to bring down. */}
+            {untouchedAdded.map((a) => (
+              <li key={a.exerciseId} className="min-w-0 truncate">
+                {a.name} <span className="text-muted-foreground">— added, nothing ticked</span>
               </li>
             ))}
           </ul>
@@ -315,7 +368,8 @@ export function FinishSheet({
   )
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+/** `value` takes a string so an unknown total can read "—" rather than 0. */
+function Stat({ label, value }: { label: string; value: number | string }) {
   return (
     <div>
       <div className="text-2xl font-bold tabular-nums">{value}</div>

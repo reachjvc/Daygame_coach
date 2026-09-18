@@ -46,6 +46,37 @@ async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Promise<voi
   }, unit)
 }
 
+/**
+ * A lift this account has provably never done, by construction.
+ *
+ * THE ALTERNATIVE DESTROYED THE ACCOUNT'S HISTORY, and it did it silently. To
+ * prove "a first is not a best" a test needs a lift with nothing behind it, and
+ * the obvious way to get one is to delete every workout on the account first.
+ * That is what an earlier version of these two tests did — and this account
+ * carries the seeded training year (roughly 150 sessions, written by
+ * `npm run seed:training`) that History, Progress, the month paging and the
+ * all-time bests are measured against. One run of this file wiped all of it.
+ * The tests passed; the fixture the rest of the suite depends on was gone.
+ *
+ * A name nobody has lifted is a first with nothing deleted. Every run mints its
+ * own, so the same test can prove BOTH halves in one session: the first finish
+ * has nothing to beat, the second beats it.
+ */
+function unlifted(what: string): string {
+  return `ZZ ${what} ${Date.now().toString(36)}`
+}
+
+/**
+ * Add a lift that is not in the 165-entry library, so it carries no library id
+ * and is matched by name alone — which is what makes `unlifted` reliable.
+ */
+async function addOwnLift(page: Page, name: string): Promise<void> {
+  await page.getByTestId("add-lift").click()
+  await page.getByTestId("add-lift-search").fill(name)
+  await page.getByTestId("add-lift-own").click()
+  await expect(page.getByText(name, { exact: false }).first()).toBeVisible({ timeout: 20000 })
+}
+
 async function cleanUp(page: Page): Promise<void> {
   await page.evaluate(async () => {
     const live = await (await fetch("/api/workouts/live")).json()
@@ -136,25 +167,35 @@ test.describe("live workout", () => {
   })
 
   test("finishing shows what you did, and the summary stays on screen", async ({ page }) => {
+    /**
+     * A lift with no past, minted for this run, so the first finish below has
+     * nothing to beat and the second one does — without deleting a single row
+     * of the account's training year. See `unlifted`.
+     */
+    const lift = unlifted("Press")
     await page.reload({ waitUntil: "networkidle" })
     await page.getByTestId("start-workout").click()
     await page.waitForURL("**/programs/live", { timeout: 20000 })
     await expect(page.getByTestId("set-row-1").first()).toBeVisible({ timeout: 20000 })
+    await addOwnLift(page, lift)
 
     /**
-     * A weight nobody in this account has lifted, typed in by hand. Two things
-     * at once: the number saved is the number typed, not one the app rounded to
-     * a plate on the way past, and the set is beyond any history so the summary
-     * has to call it a best.
+     * Typed in by hand, on the lift added on the day — which is the last card
+     * on the screen, hence `.last()`. Two things at once: the number saved is
+     * the number typed, not one the app rounded to a plate on the way past, and
+     * the lift has no history, so the summary has to call it a first.
      */
     const heavy = 185
     await page
       .getByRole("spinbutton", { name: /weight for set 1/i })
-      .first()
+      .last()
       .fill(String(heavy))
-    await page.getByTestId("tick-1").first().click()
-    await page.getByTestId("tick-2").first().click()
-    await expect(page.getByTestId("tick-2").first()).toHaveAttribute("aria-pressed", "true")
+    await page.getByRole("spinbutton", { name: /reps for set 1/i }).last().fill("5")
+    await page.getByTestId("tick-1").last().click()
+    await page.getByRole("spinbutton", { name: /weight for set 2/i }).last().fill(String(heavy))
+    await page.getByRole("spinbutton", { name: /reps for set 2/i }).last().fill("5")
+    await page.getByTestId("tick-2").last().click()
+    await expect(page.getByTestId("tick-2").last()).toHaveAttribute("aria-pressed", "true")
 
     /**
      * Finish IMMEDIATELY, the way a person does — the ✓ on the last set and
@@ -181,16 +222,16 @@ test.describe("live workout", () => {
     await expect(summary).toContainText(/kg lifted/i)
     // And what the program will ask for next time, per lift.
     await expect(summary).toContainText(/next time/i)
+
     /**
-     * THE BEST YOU HAVE DONE, NAMED. The history was wiped before this test, so
-     * the first working set of the first workout is a personal best and the
-     * summary has to say which lift it was — once, not once per set.
+     * A FIRST IS NOT A BEST — and this used to assert that it was.
+     *
+     * Nobody has ever lifted this name, so there is nothing to beat and "New
+     * best" on it would mean nothing. It is named as a first instead.
      */
-    await expect(summary).toContainText(/new best/i)
-    // Once, not once per set: three sets at a new weight is one record.
-    const best = summary.getByRole("listitem").filter({ hasText: new RegExp(String(heavy)) })
-    await expect(best).toHaveCount(1)
-    await expect(best).toContainText(/squat/i)
+    await expect(summary).toContainText(/first time logged/i)
+    await expect(summary).toContainText(lift)
+    await expect(summary, "nothing to beat is not a best").not.toContainText(/new best/i)
 
     // The set that was still saving when Finish was pressed is in the totals.
     await expect(summary).toContainText("2")
@@ -198,6 +239,84 @@ test.describe("live workout", () => {
     // It survives a repaint rather than flashing past.
     await page.waitForTimeout(1500)
     await expect(summary).toBeVisible()
+
+    /**
+     * NOW THERE IS A HISTORY, so a heavier set the next session IS a best — and
+     * once, not once per set.
+     */
+    await page.goto("/programs")
+    await page.reload({ waitUntil: "networkidle" })
+    await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
+    await page.getByTestId("start-workout").click()
+    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await expect(page.getByTestId("set-row-1").first()).toBeVisible({ timeout: 20000 })
+    // The same name again. A lift added on the day lives on the workout, not on
+    // the program, so the second session has to add it back — and because the
+    // name is the same, the first session's sets are the history it beats.
+    await addOwnLift(page, lift)
+
+    const heavier = heavy + 5
+    await page
+      .getByRole("spinbutton", { name: /weight for set 1/i })
+      .last()
+      .fill(String(heavier))
+    await page.getByRole("spinbutton", { name: /reps for set 1/i }).last().fill("5")
+    const savedAgain = page.waitForResponse(
+      (r) => r.url().includes("/sets") && r.request().method() === "POST"
+    )
+    await page.getByTestId("tick-1").last().click()
+    await savedAgain
+    await page.getByTestId("finish-workout").click()
+    await page.getByRole("button", { name: /save this workout/i }).click()
+
+    const second = page.getByTestId("workout-summary")
+    await expect(second).toBeVisible({ timeout: 20000 })
+    await expect(second).toContainText(/new best/i)
+    const best = second.getByRole("listitem").filter({ hasText: new RegExp(String(heavier)) })
+    await expect(best).toHaveCount(1)
+    await expect(best).toContainText(lift)
+    await expect(second, "the squat is not new any more").not.toContainText(/first time logged/i)
+  })
+
+  /**
+   * A LIFT YOU HAVE NEVER DONE HAS NOTHING TO BEAT.
+   *
+   * Add Front Squat on the day, tick one set, finish: this used to come back as
+   * "New best — Front Squat", against an empty history. That is not a best, it
+   * is a first, and the difference is the whole point of the label.
+   */
+  test("a lift never done before is 'first time logged', not a new best", async ({ page }) => {
+    /**
+     * Only the added lift is ticked here, so no other lift gains a history and
+     * nothing has to be deleted to make this true. The name is minted for this
+     * run, so "never done before" is a fact about the account rather than a
+     * hope about the order the tests ran in.
+     */
+    const lift = unlifted("Landmine Press")
+    await page.reload({ waitUntil: "networkidle" })
+    await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
+    await page.getByTestId("start-workout").click()
+    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await expect(page.getByTestId("add-lift")).toBeVisible({ timeout: 20000 })
+    await addOwnLift(page, lift)
+
+    const saved = page.waitForResponse(
+      (r) => r.url().includes("/sets") && r.request().method() === "POST"
+    )
+    const rows = page.getByRole("spinbutton", { name: /weight for set 1/i })
+    await rows.last().fill("60")
+    await page.getByRole("spinbutton", { name: /reps for set 1/i }).last().fill("8")
+    await page.getByTestId("tick-1").last().click()
+    await saved
+
+    await page.getByTestId("finish-workout").click()
+    await page.getByRole("button", { name: /save this workout/i }).click()
+
+    const summary = page.getByTestId("workout-summary")
+    await expect(summary).toBeVisible({ timeout: 20000 })
+    await expect(summary).toContainText(/first time logged/i)
+    await expect(summary).toContainText(lift)
+    await expect(summary).not.toContainText(/new best/i)
   })
 
   test("the rest clock is still right after the tab has been in the background", async ({ page }) => {
@@ -345,6 +464,219 @@ test.describe("live workout", () => {
   })
   })
 
+  /**
+   * A RUN IS A RUN IN THE DATABASE.
+   *
+   * Two failures in one flow. Starting a workout wrote the literal "weights",
+   * so every live run counted as a gym session and the running tiles never
+   * moved — and the live screen could not even OPEN for a running plan,
+   * because the code that resolves the day asked a plan-of-weeks for its list
+   * of days and threw. The `endurance-plan` card rendering is the proof of the
+   * second; the `session_type` read back is the proof of the first.
+   */
+  test("a run started from its program is a run in the database", async ({ page }) => {
+    await page.goto("/programs")
+    await page.evaluate(async () => {
+      const live = await (await fetch("/api/workouts/live")).json()
+      if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
+      for (const e of await (await fetch("/api/programs/enrollments")).json()) {
+        await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
+        await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
+      }
+      await fetch("/api/programs/enrollments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          programId: "couch-to-5k",
+          level: "beginner",
+          unitSystem: "kg",
+        }),
+      })
+    })
+
+    await page.reload({ waitUntil: "networkidle" })
+    await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
+    await page.getByTestId("start-workout").click()
+    await page.waitForURL("**/programs/live", { timeout: 20000 })
+
+    // The screen opens at all — this is the crash the day-resolution fix closes.
+    await expect(page.getByTestId("endurance-plan")).toBeVisible({ timeout: 20000 })
+
+    await page.getByTestId("finish-workout").click()
+    await page.getByRole("button", { name: /save this workout/i }).click()
+    await expect(page.getByTestId("workout-summary")).toBeVisible({ timeout: 20000 })
+
+    const kinds = await page.evaluate(async () => {
+      const logs = await (await fetch("/api/health/workout?days=1")).json()
+      return (logs as { session_type: string }[]).map((l) => l.session_type)
+    })
+    expect(kinds, "a run, not a gym session").toContain("running")
+  })
+
+  /**
+   * ENDING A PROGRAM YOU ARE MID-WORKOUT ON.
+   *
+   * Asserted at the API, because the End buttons on /programs still ignore the
+   * reply (that is Phase 5's work) — so today a refused End silently looks like
+   * nothing happened, which IS the right outcome, just not a visible one. What
+   * matters is that the program is still there and the open workout still has
+   * something to finish onto.
+   */
+  test("End is refused while a workout is open on the program, by the API", async ({ page }) => {
+    await page.reload({ waitUntil: "networkidle" })
+
+    const out = await page.evaluate(async () => {
+      const enrollments = await (await fetch("/api/programs/enrollments")).json()
+      const enrollmentId = enrollments[0].id
+      await fetch("/api/workouts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enrollmentId, clientKey: "busy-" + String(Date.now()) }),
+      })
+      const end = await fetch(`/api/programs/enrollments/${enrollmentId}`, { method: "DELETE" })
+      const body = await end.json()
+      const stillActive = (await (await fetch("/api/programs/enrollments")).json()).some(
+        (e: { id: string }) => e.id === enrollmentId
+      )
+      return { status: end.status, error: body?.error, stillActive }
+    })
+
+    expect(out.status).toBe(409)
+    expect(out.error).toBe("Finish or throw away the open workout first.")
+    expect(out.stillActive, "the program is still running").toBe(true)
+  })
+
+  /**
+   * THE SAVE WENT THROUGH AND THE ANSWER NEVER CAME BACK.
+   *
+   * Playwright lets the request reach the real server and then throws the reply
+   * away, which is exactly what a gym basement does. The workout is saved; the
+   * browser heard nothing. It used to say "Nothing was finished", show no
+   * summary, and leave a used-up start key behind so every later Start was
+   * refused too. It now asks the server whether a workout is still open, finds
+   * none, and fetches the summary the person earned.
+   */
+  test("a dropped finish reply still ends in the summary, and Start works afterwards", async ({
+    page,
+  }) => {
+    await page.reload({ waitUntil: "networkidle" })
+    await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
+    await page.getByTestId("start-workout").click()
+    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await expect(page.getByTestId("set-row-1").first()).toBeVisible({ timeout: 20000 })
+
+    const saved = page.waitForResponse(
+      (r) => r.url().includes("/sets") && r.request().method() === "POST"
+    )
+    await page.getByTestId("tick-1").first().click()
+    await saved
+
+    // The server processes the finish; the page never hears the answer.
+    await page.route("**/finish", async (route) => {
+      await route.fetch()
+      await route.abort()
+    })
+
+    await page.getByTestId("finish-workout").click()
+    await page.getByRole("button", { name: /save this workout/i }).click()
+
+    await expect(page.getByTestId("workout-summary")).toBeVisible({ timeout: 30000 })
+    await page.unroute("**/finish")
+
+    // And the next Start is not blocked by the key this workout used.
+    await page.goto("/programs")
+    await page.reload({ waitUntil: "networkidle" })
+    await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
+    await page.getByTestId("start-workout").click()
+    await page.waitForURL("**/programs/live", { timeout: 20000 })
+  })
+
+  /**
+   * FINISHED ON THE LAPTOP, STARTING ON THE PHONE.
+   *
+   * The retry key is minted in the browser and kept until a start succeeds. It
+   * was never cleared afterwards, so it outlived the workout it opened: finish
+   * that workout anywhere else and this browser's next Start re-used a key the
+   * database had already seen, was refused by a unique index, and printed
+   * "duplicate key value violates unique constraint" on the card — every tap,
+   * for ever, with nothing a person could do about it.
+   */
+  test("finished on another device, Start on this one still works", async ({ page, browser }) => {
+    await page.reload({ waitUntil: "networkidle" })
+    await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
+    await page.getByTestId("start-workout").click()
+    await page.waitForURL("**/programs/live", { timeout: 20000 })
+
+    // The other device: a second browser context on the same account.
+    const other = await browser.newContext({ storageState: "tests/e2e/.auth/user.json" })
+    const otherPage = await other.newPage()
+    await otherPage.goto("/programs")
+    await otherPage.evaluate(async () => {
+      const live = await (await fetch("/api/workouts/live")).json()
+      await fetch(`/api/workouts/${live.id}/finish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ intensity: 4 }),
+      })
+    })
+    await other.close()
+
+    // Back on this device, with the used-up key still in its localStorage.
+    await page.goto("/programs")
+    await page.reload({ waitUntil: "networkidle" })
+    await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
+    await page.getByTestId("start-workout").click()
+    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await expect(page.locator("body")).not.toContainText("duplicate key")
+  })
+
+  /**
+   * TWO TAPS IN THE SAME INSTANT.
+   *
+   * Two tabs, or the Tracking card and the Training page within a second of
+   * each other. Both requests found nothing open, both tried to insert, and the
+   * loser hit a unique index — whose complaint ("duplicate key value violates
+   * unique constraint uq_workout_logs_live") went straight to the screen. The
+   * loser is now told a workout is open and handed it, which is the same answer
+   * a second tap a moment later gets.
+   */
+  test("two starts at once open one workout and never show a database message", async ({ page }) => {
+    await page.reload({ waitUntil: "networkidle" })
+
+    const out = await page.evaluate(async () => {
+      const enrollments = await (await fetch("/api/programs/enrollments")).json()
+      const enrollmentId = enrollments[0].id
+      const start = (key: string) =>
+        fetch("/api/workouts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ enrollmentId, clientKey: key }),
+        })
+
+      const stamp = String(Date.now())
+      const [a, b] = await Promise.all([start(`race-a-${stamp}`), start(`race-b-${stamp}`)])
+      const bodies = [await a.json(), await b.json()]
+      const live = await (await fetch("/api/workouts/live")).json()
+      return {
+        statuses: [a.status, b.status].sort(),
+        bodies: JSON.stringify(bodies),
+        winnerId: live?.id ?? null,
+        openWorkoutIds: bodies.map((x) => x?.id ?? x?.workout?.id ?? null),
+        codes: bodies.map((x) => x?.code ?? null),
+      }
+    })
+
+    // One created it; the other was told it was already open.
+    expect(out.statuses).toEqual([201, 409])
+    expect(out.codes).toContain("already_open")
+    expect(out.bodies, "the database's own words must never reach a person").not.toContain(
+      "duplicate key"
+    )
+    // Both replies name the SAME workout, so either tab can just go to it.
+    expect(new Set(out.openWorkoutIds).size).toBe(1)
+    expect(out.openWorkoutIds[0]).toBe(out.winnerId)
+  })
+
   test("a bad connection cannot start two workouts or log a set twice", async ({ page }) => {
     await page.reload({ waitUntil: "networkidle" })
 
@@ -408,9 +740,17 @@ test.describe("live workout", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ intensity: 4 }),
         })
+      r.finishedWorkoutId = workout.id
       r.finishStatus = (await finish()).status
-      // Finishing twice must not advance the program twice.
-      r.secondFinishStatus = (await finish()).status
+      /**
+       * Finishing twice must not advance the program twice — and must not
+       * report a failure either. A second Save is what a lost reply looks like
+       * from the browser, and the workout IS saved, so it is answered with the
+       * same summary rather than "not open any more".
+       */
+      const second = await finish()
+      r.secondFinishStatus = second.status
+      r.secondFinishSummaryId = (await second.json())?.workoutId
       r.liveAfterFinish = await (await fetch("/api/workouts/live")).json()
       return r
     })
@@ -425,7 +765,10 @@ test.describe("live workout", () => {
     expect(out.setsAfterRetick, "re-ticking a set should correct it, not add one").toBe(2)
     expect(out.correctedReps).toBe(3)
     expect(out.finishStatus).toBe(200)
-    expect(out.secondFinishStatus, "finishing twice should be refused").not.toBe(200)
+    expect(out.secondFinishStatus, "a repeat Save returns the same summary").toBe(200)
+    expect(out.secondFinishSummaryId, "and it is the same workout's summary").toBe(
+      out.finishedWorkoutId
+    )
     expect(out.liveAfterFinish, "no workout is open once it is finished").toBeNull()
   })
 })

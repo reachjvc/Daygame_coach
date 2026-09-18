@@ -127,6 +127,23 @@ export function scheduleDays(schedule: ProgramSchedule): AnyDay[] {
   return schedule.days
 }
 
+/**
+ * The day list, or none, for code that is DESCRIBING a program.
+ *
+ * WHY BOTH EXIST. `scheduleDays` throwing is right for the builder: you cannot
+ * add a lift to a day of a running plan, because it has no days, and a silent
+ * empty list there would hide a real mistake. But a screen that merely shows
+ * what is running has to cope with every kind of program, and three of them
+ * reached for `scheduleDays` — so enrolling in Couch to 5K took the whole
+ * /programs page down with "Endurance plans have weeks, not days".
+ *
+ * An endurance plan genuinely has no lifts to list, and "none" is the answer to
+ * "which lifts are in it", not an error.
+ */
+export function scheduleDaysOrNone(schedule: ProgramSchedule): AnyDay[] {
+  return schedule.kind === "endurance_weeks" ? [] : schedule.days
+}
+
 /** Rebuild a schedule of the same kind around a new day list. */
 function withDays(schedule: ProgramSchedule, days: AnyDay[]): ProgramSchedule {
   switch (schedule.kind) {

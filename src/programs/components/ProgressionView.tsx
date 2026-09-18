@@ -6,7 +6,7 @@ import { History, SkipForward, RotateCcw, Trash2, ChevronDown, ChevronUp } from 
 import { formatLoad, summariseProgression, unbrokenRun, UNBROKEN_RUN_QUESTION_AT } from "../programsService"
 import { Sparkline } from "./Sparkline"
 import { effectiveProgram } from "../customize"
-import { scheduleDays } from "../customize"
+import { scheduleDaysOrNone } from "../customize"
 import { requireProgram } from "../data/catalog"
 import { UNIT_CONFIG } from "../config"
 import type { ProgramEnrollment, ProgramSessionLogRow } from "../types"
@@ -36,7 +36,10 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
    */
   const { progress, dayLabel, unitLabel, run } = useMemo(() => {
     const program = effectiveProgram(requireProgram(enrollment.program_id), enrollment.customSchedule)
-    const days = scheduleDays(program.schedule)
+    // OR NONE: a running plan has weeks, not days, and asking `scheduleDays`
+    // for its days threw — taking the whole page down for anybody enrolled in
+    // Couch to 5K. It has no lifts to name, which is an answer.
+    const days = scheduleDaysOrNone(program.schedule)
     const liftNames = new Map<string, string>()
     for (const d of days) for (const ex of d.exercises) liftNames.set(ex.id, ex.name)
     const dayNames = new Map(days.map((d) => [d.id, d.label]))

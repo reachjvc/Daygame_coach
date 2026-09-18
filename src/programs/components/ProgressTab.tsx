@@ -22,7 +22,7 @@
 
 import { lazy, Suspense, useCallback, useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { adherenceThisWeek, weeklyVolume, liftBests } from "@/src/health/healthService"
+import { adherenceThisWeek, weeklyVolume } from "@/src/health/healthService"
 // `fromKg`, not the health slice's `convertWeight`: that one spells the unit
 // "lbs" and this slice spells it "lb". Two spellings of one unit is how a
 // number ends up converted twice or not at all.
@@ -30,6 +30,7 @@ import { fromKg } from "../programsService"
 import { UNIT_CONFIG } from "../config"
 import type { UnitSystem } from "../types"
 import type { WorkoutLogWithSets } from "@/src/health/types"
+import type { LiftBest } from "@/src/health/healthService"
 
 const LiftHistory = lazy(() => import("./LiftHistory").then((m) => ({ default: m.LiftHistory })))
 
@@ -44,6 +45,15 @@ const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"]
 export function ProgressTab({ plannedPerWeek, unit }: Props) {
   const [logs, setLogs] = useState<WorkoutLogWithSets[] | null>(null)
   const [state, setState] = useState<"loading" | "ready" | "failed">("loading")
+  /**
+   * YOUR BESTS COME FROM THE SERVER NOW, and from all of your training rather
+   * than the 365 days this screen happens to have loaded. "Your bests" meant
+   * "your bests this year" — a different answer from the one the finish summary
+   * gave for the same set. Its own state, because a failed bests read must say
+   * so rather than render as "nothing to beat".
+   */
+  const [bests, setBests] = useState<LiftBest[] | null>(null)
+  const [bestsState, setBestsState] = useState<"loading" | "ready" | "failed">("loading")
 
   const load = useCallback(async () => {
     try {
@@ -61,9 +71,24 @@ export function ProgressTab({ plannedPerWeek, unit }: Props) {
     }
   }, [])
 
+  const loadBests = useCallback(async () => {
+    setBestsState("loading")
+    try {
+      const res = await fetch("/api/health/workout/bests")
+      if (!res.ok) throw new Error(String(res.status))
+      const body = (await res.json()) as unknown
+      if (!Array.isArray(body)) throw new Error("unexpected shape")
+      setBests(body as LiftBest[])
+      setBestsState("ready")
+    } catch {
+      setBestsState("failed")
+    }
+  }, [])
+
   useEffect(() => {
     void load()
-  }, [load])
+    void loadBests()
+  }, [load, loadBests])
 
   if (state === "failed") {
     return (
@@ -92,7 +117,6 @@ export function ProgressTab({ plannedPerWeek, unit }: Props) {
   const now = new Date()
   const week = adherenceThisWeek(logs, plannedPerWeek, now)
   const volume = weeklyVolume(logs, now, 8)
-  const bests = liftBests(logs).slice(0, 8)
   const label = UNIT_CONFIG[unit].label
   /**
    * Grouped, because these run to five figures. "25293 kg" is a number you have
@@ -219,13 +243,33 @@ export function ProgressTab({ plannedPerWeek, unit }: Props) {
 
       <section className="space-y-2 border-t border-border/60 pt-4">
           <h3 className="text-sm font-medium">Your bests</h3>
-          {bests.length === 0 ? (
+          {bestsState === "loading" && (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          )}
+          {/* A FAILED READ IS NOT AN EMPTY HISTORY. "Nothing to beat" to
+              somebody three years into training is a claim, not a blank. */}
+          {bestsState === "failed" && (
+            <div className="flex items-center justify-between gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 p-3">
+              <p className="text-sm text-amber-600 dark:text-amber-400">
+                Your bests could not be loaded. This is not a statement about your training.
+              </p>
+              <button
+                type="button"
+                onClick={() => void loadBests()}
+                className="shrink-0 rounded-md border border-amber-500/40 px-2.5 py-1 text-xs text-amber-600 transition-colors hover:bg-amber-500/10 dark:text-amber-400"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+          {bestsState === "ready" && bests !== null && bests.length === 0 && (
             <p className="text-sm text-muted-foreground">
               No working sets logged yet, so there is nothing to beat.
             </p>
-          ) : (
+          )}
+          {bestsState === "ready" && bests !== null && bests.length > 0 && (
             <ul className="space-y-1.5" data-testid="lift-bests">
-              {bests.map((b) => (
+              {bests.slice(0, 8).map((b) => (
                 <li key={b.exercise} className="flex items-baseline justify-between gap-3 text-sm">
                   <span className="min-w-0 truncate">{b.exercise}</span>
                   {/* A pull-up has no weight on it, so "0 kg × 12 · est. max 0"

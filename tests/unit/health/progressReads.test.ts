@@ -102,12 +102,22 @@ describe("weeklyVolume", () => {
   })
 })
 
+/**
+ * THE ACCOUNT'S CALENDAR, PASSED IN.
+ *
+ * `liftBests` used to read the day off whatever clock the code was running on —
+ * the browser's, and then the server's (UTC) the moment this moved server-side.
+ * A 23:30 Copenhagen set would have been filed on the previous day. The
+ * timezone is now a required argument, so the class of bug is unrepresentable.
+ */
+const TZ = "Europe/Copenhagen"
+
 describe("liftBests", () => {
   it("reports the heaviest single set with the day it happened", () => {
     const bests = liftBests([
       log("2026-08-10", [{ weight_kg: 100, reps: 5 }]),
       log("2026-08-17", [{ weight_kg: 110, reps: 3 }]),
-    ])
+    ], TZ)
     expect(bests[0]).toMatchObject({ bestWeightKg: 110, bestWeightReps: 3, bestWeightDate: "2026-08-17" })
   })
 
@@ -115,7 +125,7 @@ describe("liftBests", () => {
     const bests = liftBests([
       log("2026-08-10", [{ weight_kg: 100, reps: 5 }]),
       log("2026-08-17", [{ weight_kg: 100, reps: 8 }]),
-    ])
+    ], TZ)
     expect(bests[0].bestWeightReps).toBe(8)
   })
 
@@ -127,21 +137,21 @@ describe("liftBests", () => {
     const bests = liftBests([
       log("2026-08-10", [{ weight_kg: 110, reps: 1 }]),
       log("2026-08-17", [{ weight_kg: 100, reps: 8 }]),
-    ])
+    ], TZ)
     expect(bests[0].bestWeightKg, "the heaviest single is still the heaviest single").toBe(110)
     expect(bests[0].bestEstimatedMaxKg).toBeCloseTo(126.7, 0)
     expect(bests[0].bestEstimatedDate).toBe("2026-08-17")
   })
 
   it("does not let a twenty-rep set be announced as a max nobody has lifted", () => {
-    const bests = liftBests([log("2026-08-17", [{ weight_kg: 60, reps: 20 }])])
+    const bests = liftBests([log("2026-08-17", [{ weight_kg: 60, reps: 20 }])], TZ)
     expect(bests[0].bestEstimatedMaxKg, "capped at the weight itself above ten reps").toBe(60)
   })
 
   it("ignores warm-ups", () => {
     const bests = liftBests([
       log("2026-08-17", [{ weight_kg: 200, reps: 1, set_kind: "warmup" }, { weight_kg: 100, reps: 5 }]),
-    ])
+    ], TZ)
     expect(bests[0].bestWeightKg).toBe(100)
   })
 
@@ -151,7 +161,7 @@ describe("liftBests", () => {
         { exercise: "Squat", weight_kg: 140, reps: 5 },
         { exercise: "Bench Press", weight_kg: 100, reps: 5 },
       ]),
-    ])
+    ], TZ)
     expect(bests.map((b) => b.exercise)).toEqual(["Squat", "Bench Press"])
   })
 })
@@ -178,12 +188,12 @@ describe("work that is not weight times reps", () => {
   })
 
   it("does not put a timed hold in your bests as a one-rep max", () => {
-    const bests = liftBests([log("2026-08-19", [{ exercise: "Plank", weight_kg: 40, reps: 45 }])])
+    const bests = liftBests([log("2026-08-19", [{ exercise: "Plank", weight_kg: 40, reps: 45 }])], TZ)
     expect(bests.find((b) => b.exercise === "Plank")).toBeUndefined()
   })
 
   it("marks a lift with nothing loaded on it as bodyweight", () => {
-    const bests = liftBests([log("2026-08-19", [{ exercise: "Pull-up", weight_kg: 0, reps: 12 }])])
+    const bests = liftBests([log("2026-08-19", [{ exercise: "Pull-up", weight_kg: 0, reps: 12 }])], TZ)
     expect(bests[0]).toMatchObject({ exercise: "Pull-up", bodyweight: true, bestWeightReps: 12 })
   })
 
@@ -191,7 +201,7 @@ describe("work that is not weight times reps", () => {
     const bests = liftBests([
       log("2026-08-10", [{ exercise: "Pull-up", weight_kg: 0, reps: 12 }]),
       log("2026-08-19", [{ exercise: "Pull-up", weight_kg: 20, reps: 5 }]),
-    ])
+    ], TZ)
     expect(bests[0]).toMatchObject({ bodyweight: false, bestWeightKg: 20 })
   })
 })

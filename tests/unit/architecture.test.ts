@@ -342,6 +342,42 @@ describe('Architecture Compliance', () => {
       ).toHaveLength(0)
     })
 
+    /**
+     * NOBODY TAKES "TODAY" FROM THE SERVER'S OWN CLOCK.
+     *
+     * In plain terms: the server runs on UTC. Asking it what day it is gives
+     * the wrong answer for everybody who does not live there — a Copenhagen
+     * lifter's 00:30 Tuesday personal best was filed on Monday, and a Los
+     * Angeles one's 18:00 Monday on Tuesday. The day has to come from the
+     * account's own timezone (`getUserTimezone`), which means it is passed IN
+     * to anything that formats it.
+     *
+     * `detectPersonalRecords` is why this exists. Its day was an optional
+     * argument that fell back to `toDateISO(new Date())`. Every caller happened
+     * to pass the account's day, so the fall-back was unreachable and no test
+     * could go red for it — it sat there waiting for the next caller to forget.
+     * No allowlist: there is no correct use of it.
+     */
+    test('no day is taken from the server clock', () => {
+      const offenders: string[] = []
+      for (const file of sourceFiles()) {
+        const rel = path.relative(projectRoot, file).replace(/\\/g, '/')
+        if (rel === 'src/shared/dateUtils.ts') continue // documents the pattern
+        const src = fs
+          .readFileSync(file, 'utf-8')
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/\/\/[^\n]*/g, '')
+        if (/toDateISO\(\s*new Date\(\s*\)\s*\)/.test(src)) offenders.push(rel)
+      }
+      expect(
+        offenders,
+        'toDateISO(new Date()) is the SERVER\'s calendar day, which is UTC. Take the\n' +
+          'account\'s timezone (getUserTimezone) and use toDateISO(toZonedDate(d, tz)),\n' +
+          'or take the day as a parameter:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+    })
+
     test('no NEW hand-rolled week boundary', () => {
       const offenders: string[] = []
       for (const file of sourceFiles()) {
@@ -650,8 +686,6 @@ describe('Architecture Compliance', () => {
       'src/programs/components/ProgressionView.tsx',
       'src/programs/components/RunningPrograms.tsx',
       'src/programs/components/SavedWeeks.tsx',
-      'src/programs/components/StartLooseWorkout.tsx',
-      'src/programs/components/TodayCard.tsx',
       'src/programs/components/TodaySessionWidget.tsx',
       'src/programs/components/TrainingCard.tsx',
       'src/programs/components/WeekStrip.tsx',
@@ -784,6 +818,140 @@ describe('Architecture Compliance', () => {
         cleaned,
         `These no longer fetch — remove them from COMPONENTS_THAT_FETCH_THEIR_OWN_DATA:\n${cleaned.join('\n')}`,
       ).toHaveLength(0)
+    })
+
+    /**
+     * ONE PLACE ASKS THE SERVER TO OPEN A WORKOUT.
+     *
+     * In plain terms: three buttons — the Tracking card, the Training page's
+     * today card and "start a workout now" — each wrote out the request
+     * themselves. They disagreed about what to say when it failed (one said
+     * "nothing was started", which is a guess and the wrong one exactly when
+     * the reply gets lost), and not one of them forgot the retry key
+     * afterwards. So a workout finished on the laptop left a used-up key on the
+     * phone, and every later Start there was refused with the database's own
+     * complaint printed on the card.
+     *
+     * No allowlist. A fourth Start button must use the helper.
+     */
+    /**
+     * A BLANK BOX IS NEVER TURNED INTO A NUMBER.
+     *
+     * In plain terms: `Number("")` is 0. An empty weight box on a bench press
+     * used to save the set as 0 kg — and the server accepts 0, because a
+     * pull-up with nothing added really IS zero, so nothing downstream could
+     * ever tell "unweighted" from "forgot to type it". The zero then hid inside
+     * every volume total and every personal best.
+     *
+     * `typedNumber` (src/shared/typedNumber.ts) returns null for a blank box,
+     * which is the third state every one of these forms was missing. The
+     * allowlist below is the two places that still do it and the reason each is
+     * safe; it may SHRINK and never grow.
+     */
+    const BLANK_TO_NUMBER_ALLOWED = new Set([
+      // Guarded by an explicit `weight.trim() !== ""` on the same line.
+      'src/programs/components/CustomProgramBuilder.tsx',
+      // A correction screen reading back numbers the server already stored;
+      // Phase 7 rebuilds it (history-progress-07).
+      'src/programs/components/HistoryTab.tsx',
+    ])
+
+    function blankToNumberOffenders(): string[] {
+      const dirs = ['src/programs/components', 'src/health/components']
+      const hits: string[] = []
+      for (const dir of dirs) {
+        for (const file of getAllFiles(path.join(projectRoot, dir), /\.tsx?$/)) {
+          const rel = path.relative(projectRoot, file).replace(/\\/g, '/')
+          // Comments blanked, so a doc comment EXPLAINING the rule does not
+          // count as breaking it.
+          const src = fs
+            .readFileSync(file, 'utf-8')
+            .replace(/\/\*[\s\S]*?\*\//g, '')
+            .replace(/\/\/[^\n]*/g, '')
+          // `(?<![A-Za-z])` so `typedNumber(weight)` — the fix — is not read as
+          // the bug it replaces.
+          if (/(?<![A-Za-z])Number\((weight|reps|set\.weight|set\.reps)\)/.test(src)) {
+            hits.push(rel)
+          }
+        }
+      }
+      return hits
+    }
+
+    test('no NEW form turns a blank box into a number', () => {
+      const offenders = blankToNumberOffenders().filter(
+        (rel) => !BLANK_TO_NUMBER_ALLOWED.has(rel)
+      )
+      expect(
+        offenders,
+        'Number("") is 0, so an empty weight box saves the set as 0 kg — and 0 is\n' +
+          'legitimate (a pull-up with nothing added), so nothing downstream can tell\n' +
+          'the two apart. Use typedNumber from src/shared/typedNumber.ts and decide\n' +
+          'what null means on this lift:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+    })
+
+    test('the blank-to-number allowlist only shrinks', () => {
+      const stillDoingIt = new Set(blankToNumberOffenders())
+      const cleaned = [...BLANK_TO_NUMBER_ALLOWED].filter((f) => !stillDoingIt.has(f))
+      expect(
+        cleaned,
+        `These no longer do it — remove them from BLANK_TO_NUMBER_ALLOWED:\n${cleaned.join('\n')}`,
+      ).toHaveLength(0)
+    })
+
+    /**
+     * WHAT A WORKOUT COUNTS AS IS DECIDED IN ONE PLACE.
+     *
+     * In plain terms: starting a workout wrote the literal "weights", so every
+     * live run was stored as a gym session and the running tiles on the
+     * dashboard never moved. The finish had a second write that could have
+     * corrected it — except its error was thrown away and no caller ever sent a
+     * value, so the whole path was dead code pretending to be a fallback.
+     *
+     * `sessionTypeFor` in programsService answers it now, including for a
+     * workout on no program at all, so there is no case left that needs a
+     * literal. No allowlist: a literal here IS the bug.
+     */
+    test('only sessionTypeFor decides what a workout counts as', () => {
+      const offenders: string[] = []
+      for (const file of getAllFiles(path.join(projectRoot, 'src/db'), /\.ts$/)) {
+        const rel = path.relative(projectRoot, file).replace(/\\/g, '/')
+        const src = fs
+          .readFileSync(file, 'utf-8')
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/\/\/[^\n]*/g, '')
+        if (/session_type:\s*["'`]/.test(src)) offenders.push(rel)
+      }
+      expect(
+        offenders,
+        'A session type written out as a literal is how every live run came to be\n' +
+          'stored as a gym session. Call sessionTypeFor(program) from\n' +
+          'src/programs/programsService.ts — it answers for a loose workout too:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+    })
+
+    test('only startWorkoutRequest posts to /api/workouts', () => {
+      const HELPER = 'src/programs/hooks/useLiveWorkout.ts'
+      const offenders = [
+        ...sourceFiles(),
+        ...getAllFiles(path.join(projectRoot, 'app'), /\.tsx?$/),
+      ]
+        .map((f) => path.relative(projectRoot, f))
+        .filter((rel) => rel !== HELPER)
+        .filter((rel) => {
+          const src = fs.readFileSync(path.join(projectRoot, rel), 'utf-8')
+          return /fetch\(\s*(?:"\/api\/workouts"|'\/api\/workouts'|`\/api\/workouts`)/.test(src)
+        })
+      expect(
+        offenders,
+        'These post to /api/workouts directly. Call startWorkoutRequest from\n' +
+          `${HELPER} instead — it is what forgets the retry key once the server\n` +
+          'has answered, and what gives every Start button the same sentences:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
     })
   })
 

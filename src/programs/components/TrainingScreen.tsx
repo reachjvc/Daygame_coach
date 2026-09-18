@@ -24,7 +24,7 @@ import { ProgramsApp } from "./ProgramsApp"
 import { BackLink } from "@/components/BackLink"
 import { Segmented } from "./ui"
 import { getProgram } from "../data/catalog"
-import { effectiveProgram, scheduleDays } from "../customize"
+import { effectiveProgram, scheduleDaysOrNone } from "../customize"
 import { isWeekdayAnchored, unitForDisplay } from "../programsService"
 import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment, UnitSystem } from "../types"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
@@ -95,14 +95,15 @@ export function TrainingScreen({
     if (!running) return 0
     const catalog = getProgram(running.program_id)
     if (!catalog) return 0
-    try {
-      const schedule = effectiveProgram(catalog, running.customSchedule).schedule
-      if (!isWeekdayAnchored(schedule)) return 0
-      return scheduleDays(schedule).length
-    } catch {
-      // A schedule this build cannot read is not a reason to break the page.
-      return 0
-    }
+    /**
+     * NO try/catch ANY MORE. This swallowed whatever `scheduleDays` threw and
+     * answered 0 — which reads on screen as "your program asks for nothing".
+     * The one thing it actually threw for was a running plan, which is not
+     * weekday-anchored anyway, so the honest version needs no catch at all.
+     */
+    const schedule = effectiveProgram(catalog, running.customSchedule).schedule
+    if (!isWeekdayAnchored(schedule)) return 0
+    return scheduleDaysOrNone(schedule).length
   })()
 
   /**

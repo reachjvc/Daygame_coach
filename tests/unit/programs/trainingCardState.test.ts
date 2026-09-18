@@ -56,6 +56,7 @@ describe("trainingCardState", () => {
     expect(trainingCardState(null, session(), "e1", NOW)).toEqual({
       kind: "today",
       enrollmentId: "e1",
+      dayId: "A",
       dayLabel: "Upper",
       lifts: 2,
     })
@@ -68,7 +69,13 @@ describe("trainingCardState", () => {
       "e1",
       NOW
     )
-    expect(state).toEqual({ kind: "rest", enrollmentId: "e1", nextLabel: "Lower", nextWeekday: 4 })
+    expect(state).toEqual({
+      kind: "rest",
+      enrollmentId: "e1",
+      dayId: "A",
+      nextLabel: "Lower",
+      nextWeekday: 4,
+    })
   })
 
   it("leaves out a weekday the schedule does not pin", () => {
@@ -78,6 +85,26 @@ describe("trainingCardState", () => {
 
   it("says nothing when no program is running", () => {
     expect(trainingCardState(null, null, null, NOW)).toEqual({ kind: "none" })
+  })
+
+  /**
+   * THE CARD CANNOT NAME A DAY WITHOUT CARRYING ITS ID.
+   *
+   * In plain terms: the card said "Today: Legs" and Start opened Pull, because
+   * the card worked out today from the calendar and the server worked it out
+   * from the program's own counter. The id now travels with the label, so
+   * whoever renders this hands Start the session it just named.
+   */
+  it("carries the day id so Start opens the day it named", () => {
+    const today = trainingCardState(null, session({ dayId: "legs" }), "e1", NOW)
+    expect(today).toMatchObject({ kind: "today", dayId: "legs" })
+    const rest = trainingCardState(
+      null,
+      session({ dayId: "pull", restDay: true, dayLabel: "Pull" }),
+      "e1",
+      NOW
+    )
+    expect(rest).toMatchObject({ kind: "rest", dayId: "pull" })
   })
 
   /** An endurance day prescribes blocks, not lifts. Zero is the honest count. */

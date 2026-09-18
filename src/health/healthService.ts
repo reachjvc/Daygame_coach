@@ -5,7 +5,7 @@
  * cross-domain correlations, and PR detection.
  */
 
-import { periodStartFor, previousPeriodStart, isStreakCurrent, middayInstant, localTimeInstant, getTodayInTimezone, toDateISO } from "@/src/shared/dateUtils"
+import { periodStartFor, previousPeriodStart, isStreakCurrent, middayInstant, localTimeInstant, getTodayInTimezone, toDateISO, toZonedDate } from "@/src/shared/dateUtils"
 import { weeklyStreakRun } from "@/src/shared/streakRuns"
 import { estimateOneRepMax } from "@/src/programs/programsService"
 import { libraryByName } from "@/src/programs/data/exerciseLibrary"
@@ -228,11 +228,17 @@ export function isWorkingSet(set: { set_kind?: string | null }): boolean {
  *   00:30 Tuesday record on Monday and a Los Angeles lifter's 18:00 Monday one
  *   on Tuesday. It is also the day of the WORKOUT rather than the day it was
  *   written up, so a Tuesday session closed on Thursday still reads Tuesday.
+ *
+ *   REQUIRED, not optional with a fall-back to the clock. It was optional, and
+ *   the fall-back was `new Date()` — the exact thing the paragraph above says
+ *   must never happen. Every caller today passes the account's day, so the
+ *   fall-back was unreachable; leaving it in place meant the next caller who
+ *   forgot would get the server's calendar silently instead of a red build.
  */
 export function detectPersonalRecords(
   allSets: (WorkoutSetRow & { logged_at: string })[],
   newSets: WorkoutSetRow[],
-  onDate?: string
+  onDate: string
 ): PersonalRecord[] {
   const records: PersonalRecord[] = []
   const exerciseMaxes = new Map<string, { weight_kg: number; reps: number }>()
@@ -259,7 +265,17 @@ export function detectPersonalRecords(
     if (!isWorkingSet(s)) continue
     const key = s.exercise.toLowerCase()
     const prev = exerciseMaxes.get(key)
-    if (!prev || s.weight_kg > prev.weight_kg || (s.weight_kg === prev.weight_kg && s.reps > prev.reps)) {
+    /**
+     * A LIFT YOU HAVE NEVER DONE HAS NOTHING TO BEAT.
+     *
+     * With no history at all, `prev` is undefined and every single set counted
+     * as a record — so the very first set a new account ever logged came back
+     * as "New best", and so did all six lifts of somebody's first session. That
+     * is not a best, it is a first: `firstTimeLifts` names those instead, which
+     * is true and still worth seeing.
+     */
+    if (!prev) continue
+    if (s.weight_kg > prev.weight_kg || (s.weight_kg === prev.weight_kg && s.reps > prev.reps)) {
       exerciseMaxes.set(key, { weight_kg: s.weight_kg, reps: s.reps })
       // Replace an earlier announcement for the same lift rather than adding to
       // it: what stands at the end of the session is the record.
@@ -269,13 +285,55 @@ export function detectPersonalRecords(
         exercise: s.exercise,
         weight_kg: s.weight_kg,
         reps: s.reps,
-        date: onDate ?? toDateISO(new Date()),
+        date: onDate,
         isNew: true,
       })
     }
   }
 
   return records
+}
+
+/**
+ * Lifts in this session that have never been logged before.
+ *
+ * THE OTHER HALF OF "New best". Records are claimed against a history, and a
+ * lift with no history cannot beat anything — so these are named as firsts.
+ * Both answers come from ONE read of the past (`personalBestBaseline`), because
+ * worked out separately at different moments they would disagree.
+ *
+ * Warm-ups do not count as having done a lift: five reps of the empty bar is
+ * not "you have benched before".
+ */
+export function firstTimeLifts(
+  prior: (WorkoutSetRow & { logged_at: string })[],
+  newSets: WorkoutSetRow[]
+): string[] {
+  const known = new Set(
+    prior.filter(isWorkingSet).map((s) => s.exercise.trim().toLowerCase())
+  )
+  const firsts = new Map<string, string>()
+  for (const s of newSets) {
+    if (!isWorkingSet(s)) continue
+    const key = s.exercise.trim().toLowerCase()
+    if (known.has(key) || firsts.has(key)) continue
+    firsts.set(key, s.exercise.trim())
+  }
+  return [...firsts.values()]
+}
+
+/**
+ * An estimated one-rep max, with the cap that keeps it honest.
+ *
+ * ONE FORMULA, BECAUSE THERE WERE TWO. Epley (`weight × (1 + reps/30)`)
+ * inflates badly at high reps: a 60 kg set of twenty comes out as 100 kg, a
+ * weight nobody in that example has ever lifted. `liftBests` capped it at ten
+ * reps and the "estimated 1RM" tile on the dashboard did not, so the same set
+ * produced two different numbers on two screens. Above ten reps the honest
+ * answer is the weight itself.
+ */
+export function cappedEstimate(weightKg: number, reps: number): number {
+  return reps > 10 ? weightKg : estimateOneRepMax(weightKg, reps)
 }
 
 /** Local-date key (YYYY-MM-DD) so a 23:30 workout counts on the day the user trained. */
@@ -830,21 +888,25 @@ export interface LiftBest {
  * grinding out eight at a weight you used to do five at, which is progress the
  * heaviest-single number cannot see.
  *
- * The estimate is capped at ten reps: above that Epley inflates badly, and a
- * twenty-rep set would otherwise be announced as a max nobody has ever lifted.
+ * WHOSE CALENDAR THE DATE IS ON. `timezone` is required, and it is the
+ * account's. This used to stamp each best with `new Date(logged_at)` read
+ * through whatever calendar the code happened to be running in — the browser's,
+ * which was roughly right, and then the SERVER's the moment this moved
+ * server-side, which is UTC and belongs to no country. A 23:30 Copenhagen set
+ * would have been filed on the previous day.
  */
-export function liftBests(logs: WorkoutLogWithSets[]): LiftBest[] {
+export function liftBests(logs: WorkoutLogWithSets[], timezone: string): LiftBest[] {
   const best = new Map<string, LiftBest>()
 
   for (const log of logs) {
-    const date = localDateKey(new Date(log.logged_at))
+    const date = toDateISO(toZonedDate(new Date(log.logged_at), timezone))
     for (const set of log.sets ?? []) {
       if (!isWorkingSet(set) || set.reps <= 0) continue
       const key = set.exercise.trim().toLowerCase()
       // A timed hold has seconds in `reps`; estimating a one-rep max from
       // "30" would announce a max nobody has ever lifted.
       if (isTimedLift(set.exercise)) continue
-      const estimate = set.reps > 10 ? set.weight_kg : estimateOneRepMax(set.weight_kg, set.reps)
+      const estimate = cappedEstimate(set.weight_kg, set.reps)
       const cur = best.get(key)
       if (!cur) {
         best.set(key, {

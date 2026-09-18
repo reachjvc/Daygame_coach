@@ -23,6 +23,7 @@ import {
   replayEnrollment,
   pickTodaysDay,
   entriesFromSets,
+  sessionTypeFor,
 } from "@/src/programs/programsService"
 import { requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
 import {
@@ -37,7 +38,6 @@ import { getUserTimezone } from "./settingsRepo"
 import { loggedAtForEntry } from "@/src/health/healthService"
 import { isoWeekdayInTimezone } from "@/src/shared/dateUtils"
 import {
-  BRIDGE_SESSION_TYPE,
   BRIDGE_DEFAULT_DURATION_MIN,
   BRIDGE_DEFAULT_INTENSITY,
   DEFAULT_PLATES,
@@ -284,12 +284,31 @@ export async function enrollInProgram(
    * removed it without a word and nothing on any screen mentioned it again.
    * The rule stays; the silence does not.
    */
+  const sameDiscipline = (await listActiveEnrollments(userId)).filter(
+    (e) => requireProgram(e.program_id).discipline === program.discipline
+  )
+  /**
+   * NOTHING IS PAUSED IF ANY OF IT IS REFUSED. Checked for every program about
+   * to be displaced BEFORE the first write — otherwise a refusal on the second
+   * one leaves the first already switched off, which is the half-done state
+   * this guard exists to prevent.
+   */
+  for (const e of sameDiscipline) await assertNoOpenWorkoutOn(userId, e.id)
+
   const displaced: ProgramEnrollment[] = []
-  for (const e of await listActiveEnrollments(userId)) {
-    if (requireProgram(e.program_id).discipline === program.discipline) {
-      await supabase.from("program_enrollments").update({ is_active: false }).eq("id", e.id).eq("user_id", userId)
-      displaced.push(e)
+  for (const e of sameDiscipline) {
+    const { error: pauseError } = await supabase
+      .from("program_enrollments")
+      .update({ is_active: false })
+      .eq("id", e.id)
+      .eq("user_id", userId)
+    if (pauseError) {
+      throw asProgramBusy(
+        pauseError.message,
+        `Could not make room for that program: ${pauseError.message}`
+      )
     }
+    displaced.push(e)
   }
 
   const { data, error } = await supabase
@@ -377,13 +396,65 @@ export async function listActiveSelections(
  * program you did last year does not collide with the record of last year.
  */
 export async function unenroll(userId: string, id: string): Promise<void> {
+  await assertNoOpenWorkoutOn(userId, id)
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase
     .from("program_enrollments")
     .update({ is_active: false })
     .eq("id", id)
     .eq("user_id", userId)
-  if (error) throw new Error(`Failed to end program: ${error.message}`)
+  if (error) throw asProgramBusy(error.message, `Failed to end program: ${error.message}`)
+}
+
+/**
+ * A program cannot be ended, or pushed aside, while you are mid-workout on it.
+ *
+ * WHAT WENT WRONG. "End program" and starting a different program both flipped
+ * `is_active` with no check. The workout you were in the middle of then
+ * finished onto a program nobody is shown any more — its weights moved, in
+ * secret, for a plan you had just ended — and the new program sat at week 1 as
+ * if you had never trained.
+ */
+export class ProgramBusy extends Error {
+  constructor(message = "Finish or throw away the open workout first.") {
+    super(message)
+    this.name = "ProgramBusy"
+  }
+}
+
+/** The database's own refusal, turned into the one sentence the app shows. */
+function asProgramBusy(dbMessage: string, fallback: string): Error {
+  return dbMessage.includes("Finish or throw away the open workout first")
+    ? new ProgramBusy()
+    : new Error(fallback)
+}
+
+/**
+ * Refuse if a workout is open on this enrollment.
+ *
+ * ITS OWN QUERY, not an import of `workoutRepo` — that file already imports
+ * this one, and a cycle between them is how a module ends up half-initialised.
+ *
+ * HONEST LIMIT: this is a check followed by a write, so a Start landing in the
+ * milliseconds between the two still slips through. The trigger added in
+ * `20260917100100_program_busy_while_workout_open.sql` is what closes that gap
+ * for everyone, scripts included; this check is what gives the person a
+ * sentence instead of a database exception.
+ */
+export async function assertNoOpenWorkoutOn(userId: string, enrollmentId: string): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("workout_logs")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("enrollment_id", enrollmentId)
+    .not("started_at", "is", null)
+    .is("ended_at", null)
+    .maybeSingle()
+  // A check that could not be run is not a check that passed: a program ended
+  // while a workout is open on it moves weights nobody can see again.
+  if (error) throw new Error("Could not check whether a workout is open, so nothing was changed.")
+  if (data) throw new ProgramBusy()
 }
 
 /**
@@ -449,15 +520,27 @@ export async function resumeEnrollment(
   if (target.is_active) throw new Error("That program is already running")
 
   const discipline = requireProgram(target.program_id).discipline
+  const sameDiscipline = (await listActiveEnrollments(userId)).filter(
+    (e) => requireProgram(e.program_id).discipline === discipline
+  )
+  /**
+   * THE SAME GUARD AS ENROLLING, for the same reason. Picking an old program
+   * back up pauses whatever is running in its discipline — and if a workout is
+   * open on that one, it would finish onto a plan nobody is shown any more.
+   * Checked for every program first, so a refusal leaves nothing half-paused.
+   */
+  for (const e of sameDiscipline) await assertNoOpenWorkoutOn(userId, e.id)
+
   const displaced: ProgramEnrollment[] = []
-  for (const e of await listActiveEnrollments(userId)) {
-    if (requireProgram(e.program_id).discipline !== discipline) continue
+  for (const e of sameDiscipline) {
     const { error } = await supabase
       .from("program_enrollments")
       .update({ is_active: false })
       .eq("id", e.id)
       .eq("user_id", userId)
-    if (error) throw new Error(`Failed to pause ${e.program_id}: ${error.message}`)
+    if (error) {
+      throw asProgramBusy(error.message, `Failed to pause ${e.program_id}: ${error.message}`)
+    }
     displaced.push(e)
   }
 
@@ -590,6 +673,22 @@ export async function updateEnrollmentSchedule(
 export async function getTodaySession(userId: string, enrollmentId: string): Promise<SessionPrescription> {
   const enr = await getEnrollmentById(userId, enrollmentId)
   if (!enr) throw new Error("Enrollment not found")
+  return todaysSessionFor(userId, enr)
+}
+
+/**
+ * The same rule, for a caller that already has the enrollment in its hand.
+ *
+ * THE ONE PLACE THAT ANSWERS "WHICH SESSION IS TODAY". It was inside
+ * `getTodaySession`, so `startWorkout` could not reach it and answered the
+ * question itself with the program's own cursor — the card said Legs and Start
+ * opened Pull. Anything that needs today's session calls this, and the timezone
+ * read stays inside it so there is exactly one place that asks whose day it is.
+ */
+export async function todaysSessionFor(
+  userId: string,
+  enr: ProgramEnrollment
+): Promise<SessionPrescription> {
   const program = programFor(enr)
 
   /**
@@ -889,21 +988,6 @@ async function writeWorkout(
   if (sets.length === 0) return
   const { error: setsError } = await supabase.from("workout_sets").insert(sets)
   if (setsError) throw new Error(`Failed to save the sets: ${setsError.message}`)
-}
-
-/**
- * What kind of session this counts as on the dashboard.
- *
- * Unchanged from the old bridge: a calisthenics session is weights (it counts
- * towards gym sessions), a mobility routine is mobility, a running plan is
- * running, and a multi-sport plan is generic cardio.
- */
-function sessionTypeFor(program: ProgramDefinition) {
-  if (program.metricType === "endurance") {
-    return program.discipline === "triathlon" || program.discipline === "ironman" ? "cardio" : "running"
-  }
-  if (program.metricType === "hold_range") return "mobility"
-  return BRIDGE_SESSION_TYPE
 }
 
 /** The sets, stamped with the program's own id for each lift. */

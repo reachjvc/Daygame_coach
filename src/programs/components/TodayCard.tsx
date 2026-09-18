@@ -21,7 +21,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { describeSets } from "../programsService"
 import { UNIT_CONFIG, WEEKDAY_SHORT } from "../config"
-import { startKeyFor } from "../hooks/useLiveWorkout"
+import { startWorkoutRequest } from "../hooks/useLiveWorkout"
 import type { LiveWorkout, SessionPrescription, UnitSystem } from "../types"
 
 interface Props {
@@ -60,39 +60,24 @@ export function TodayCard({
   const openMinutes = live ? Math.floor((Date.now() - new Date(live.startedAt).getTime()) / 60000) : 0
   const stale = openMinutes > STALE_HOURS * 60
 
+  /**
+   * One helper, shared with every other Start button in the app.
+   *
+   * This used to post `/api/workouts` itself, as did the Tracking card and
+   * "start a workout now" — three copies that disagreed about what to say when
+   * it failed, and none of which forgot the retry key afterwards, so a workout
+   * finished on another device blocked every later start from this one.
+   */
   async function start() {
     setStarting(true)
     setError(null)
-    try {
-      const res = await fetch("/api/workouts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          enrollmentId,
-          dayId: prescription.dayId,
-          // The SAME key on every attempt, kept in this browser until a start
-          // succeeds — a fresh one per tap is how the retry protection came to
-          // do nothing at all.
-          clientKey: startKeyFor(enrollmentId),
-        }),
-      })
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null
-        setError(body?.error ?? "Could not start that workout.")
-        return
-      }
+    const outcome = await startWorkoutRequest({ enrollmentId, dayId: prescription.dayId })
+    setStarting(false)
+    if (outcome.kind === "started" || outcome.kind === "already-open") {
       router.push("/programs/live")
-    } catch {
-      /**
-       * The request may well have landed — a reply lost on the way back looks
-       * exactly like a request that never arrived. Saying "nothing was started"
-       * was a guess, and the wrong one often enough to strand people on a card
-       * showing Start for a workout that was already running.
-       */
-      setError("Could not reach the server. Tap Start again — if it did go through, this opens that same workout.")
-    } finally {
-      setStarting(false)
+      return
     }
+    setError(outcome.message)
   }
 
   return (

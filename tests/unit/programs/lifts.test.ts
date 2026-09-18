@@ -21,6 +21,7 @@ import {
   libraryExercise,
   patternForName,
   searchLibrary,
+  canBeUnweighted,
 } from "@/src/programs/data/exerciseLibrary"
 import { addDay, addExercise, loadExerciseFromLibrary, scheduleDays } from "@/src/programs/customize"
 import { emptyCustomSchedule } from "@/src/programs/components/CustomProgramBuilder"
@@ -313,5 +314,55 @@ describe("finding a lift where you would look for it", () => {
     const own = customLibraryEntry("Reverse Hyper Machine", "hamstrings_glutes")!
     expect(own.group).toBe("hamstrings_glutes")
     expect(own.pattern).toBe("hinge")
+  })
+})
+
+/**
+ * WHICH LIFTS CAN BE DONE WITH NOTHING ADDED.
+ *
+ * In plain terms, why this matters: an empty weight box means two different
+ * things. On a bench press it means "I forgot to type it", and the set must not
+ * be saved as 0 kg. On a pull-up it means "just me, no plates" — the truth, and
+ * it saves as 0. The library is the one place that knows which is which, and it
+ * derives the answer from the beginner seed weight rather than carrying a
+ * second hand-written flag that could drift from it.
+ *
+ * The rule is NOT "all three seeds are zero". Pull-up is 0/5/20, chin-up
+ * 0/5/20, dip 0/10/25, inverted row 0/0/10 — an advanced lifter adds plates to
+ * every one of them, and that rule would have refused a beginner's pull-up.
+ */
+describe("lifts you can do with nothing added", () => {
+  test("a lift seeded at 0 for beginners can be done unweighted, and only those", () => {
+    for (const ex of EXERCISE_LIBRARY) {
+      expect(ex.unweightedOk === true, `${ex.name} (beginner ${ex.suggestedKg.beginner})`).toBe(
+        ex.suggestedKg.beginner === 0
+      )
+    }
+  })
+
+  test("names the lifts a person would expect on each side of the line", () => {
+    for (const name of ["Pull-up", "Dip", "Push-up"]) {
+      expect(canBeUnweighted(undefined, name), name).toBe(true)
+    }
+    // Assisted Pull-up is seeded WITH assistance, so a blank box there is a
+    // missing number, not "nothing added".
+    for (const name of ["Bench Press", "Assisted Pull-up", "Barbell Squat"]) {
+      expect(canBeUnweighted(undefined, name), name).toBe(false)
+    }
+  })
+
+  test("answers by library id as well as by name", () => {
+    const pullUp = EXERCISE_LIBRARY.find((e) => e.name === "Pull-up")!
+    expect(canBeUnweighted(pullUp.id)).toBe(true)
+    const bench = EXERCISE_LIBRARY.find((e) => e.name === "Bench Press")!
+    expect(canBeUnweighted(bench.id)).toBe(false)
+  })
+
+  test("a lift nobody recognises is treated as needing a weight", () => {
+    // The safe direction: refusing a blank weight costs one typed zero,
+    // accepting it stores a set at 0 kg that no total can explain.
+    expect(canBeUnweighted(undefined, "Reverse Hyper Machine")).toBe(false)
+    expect(canBeUnweighted("lib_not_a_lift")).toBe(false)
+    expect(canBeUnweighted()).toBe(false)
   })
 })

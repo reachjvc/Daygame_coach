@@ -15,7 +15,12 @@
 import { useEffect, useState } from "react"
 import { Check } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { typedNumber } from "@/src/shared/typedNumber"
+import { MAX_WEIGHT_KG } from "@/src/shared/weight"
 import type { LiveWorkoutSet } from "../../types"
+
+/** Nobody does a thousand reps, and nothing on a bar is 1,000 kg. */
+const MAX_REPS = 1000
 
 export interface SetRowProps {
   setNumber: number
@@ -27,6 +32,13 @@ export interface SetRowProps {
   unitLabel: string
   repUnit: "reps" | "sec"
   bodyweight?: boolean
+  /**
+   * This lift can honestly be done with nothing added — a pull-up, a dip, a
+   * plank. The weight box stays (weighted pull-ups exist) but an empty one
+   * means "just me" and saves as 0, which is the truth. On every other lift an
+   * empty box means the number was not typed, and the ✓ stays greyed out.
+   */
+  unweightedOk?: boolean
   kind?: LiveWorkoutSet["kind"]
   /** Not yet reached the server. Shown, never hidden. */
   unsaved?: boolean
@@ -42,6 +54,7 @@ export function SetRow({
   unitLabel,
   repUnit,
   bodyweight,
+  unweightedOk,
   kind = "working",
   unsaved,
   onTick,
@@ -85,6 +98,42 @@ export function SetRow({
   const label = kind === "warmup" ? `W${setNumber}` : String(setNumber)
   const range = prescribed.repRangeMax ? `${prescribed.reps}–${prescribed.repRangeMax}` : null
 
+  /**
+   * BLANK IS NOT ZERO, and this row is where that is decided.
+   *
+   * `Number("")` is 0, so an empty weight box on a bench press used to save the
+   * set as 0 kg. The server accepts 0 because 0 is legitimate — a pull-up with
+   * nothing added really is zero — so nothing downstream could ever tell
+   * "unweighted" from "forgot to type it", and the zero hid inside every volume
+   * total and every personal best.
+   *
+   * So: a weight is REQUIRED unless the lift is one you can do with nothing
+   * added, or has no weight box at all.
+   */
+  const typedWeight = typedNumber(weight)
+  const typedReps = typedNumber(reps)
+  const weightRequired = !bodyweight && !unweightedOk
+  const weightForTick = bodyweight ? 0 : (typedWeight ?? 0)
+
+  /**
+   * A NUMBER OUTSIDE THE BOUNDS IS REFUSED HERE, BY NAME.
+   *
+   * The server bounds it too (`CompleteSetSchema`), but its 400 arrives after
+   * the tick has gone green and the rest clock has started. The limit is the
+   * same number in whichever unit the box is showing, so this is never looser
+   * than the server.
+   */
+  const outOfBounds =
+    (typedWeight !== null && (typedWeight < 0 || typedWeight > MAX_WEIGHT_KG)) ||
+    (typedReps !== null && (typedReps < 0 || typedReps > MAX_REPS))
+  const boundsMessage =
+    typedWeight !== null && (typedWeight < 0 || typedWeight > MAX_WEIGHT_KG)
+      ? `Weight has to be between 0 and ${MAX_WEIGHT_KG} ${unitLabel}.`
+      : `${repUnit === "sec" ? "Seconds" : "Reps"} have to be between 0 and ${MAX_REPS}.`
+
+  const canTick =
+    typedReps !== null && !outOfBounds && (!weightRequired || typedWeight !== null)
+
   return (
     <div
       data-testid={`set-row-${setNumber}`}
@@ -125,8 +174,17 @@ export function SetRow({
         <Input
           type="number"
           inputMode="decimal"
+          min={0}
+          max={MAX_WEIGHT_KG}
+          step="any"
           aria-label={`Weight for set ${setNumber} in ${unitLabel}`}
-          placeholder={prescribed.weight ? undefined : "weight"}
+          /**
+           * "+kg" on a lift you can do unweighted, because an empty box there
+           * means "nothing added" rather than "not filled in yet".
+           */
+          placeholder={
+            unweightedOk ? `+${unitLabel}` : prescribed.weight ? undefined : "weight"
+          }
           className="h-11 w-full sm:h-9"
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
@@ -136,6 +194,9 @@ export function SetRow({
       <Input
         type="number"
         inputMode="numeric"
+        min={0}
+        max={MAX_REPS}
+        step={1}
         aria-label={`${repUnit === "sec" ? "Seconds" : "Reps"} for set ${setNumber}`}
         placeholder={prescribed.amrap ? "max" : (range ?? (prescribed.reps ? String(prescribed.reps) : "reps"))}
         className="h-11 w-full sm:h-9"
@@ -148,8 +209,8 @@ export function SetRow({
         data-testid={`tick-${setNumber}`}
         aria-label={ticked ? `Undo set ${setNumber}` : `Save set ${setNumber}`}
         aria-pressed={ticked}
-        disabled={reps.trim() === ""}
-        onClick={() => (ticked && onUndo ? onUndo() : onTick(Number(weight), Number(reps)))}
+        disabled={!ticked && !canTick}
+        onClick={() => (ticked && onUndo ? onUndo() : onTick(weightForTick, typedReps ?? 0))}
         className={`flex h-11 w-11 items-center justify-center rounded-md border transition-colors disabled:opacity-30 ${
           ticked
             ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-500"
@@ -158,6 +219,10 @@ export function SetRow({
       >
         <Check className="size-5" />
       </button>
+
+      {outOfBounds && !ticked && (
+        <span className="col-span-5 text-[11px] text-amber-500">{boundsMessage}</span>
+      )}
 
       {unsaved && (
         <span className="col-span-5 text-[11px] text-amber-500">not saved yet — waiting for signal</span>

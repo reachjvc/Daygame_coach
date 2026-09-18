@@ -157,6 +157,22 @@ const make = (barbell: boolean) => (
   defaultRepMin: repMin,
   defaultRepMax: repMax,
   suggestedKg: { beginner, intermediate, advanced },
+  /**
+   * CAN THIS BE DONE WITH NOTHING ADDED? Derived from the beginner seed being
+   * zero, not typed out — the fact is already in the data, and two copies of
+   * one fact drift.
+   *
+   * It matters because an empty weight box means two different things. On a
+   * bench press it means "I forgot to type it" and the set must not be saved.
+   * On a pull-up it means "just me, no plates", which is the truth and saves as
+   * 0. Every lift a beginner does unweighted is seeded at 0 for beginners:
+   * pull-up 0/5/20, dip 0/10/25, push-up, plank. A bench press is not.
+   *
+   * NOT "all three seeds are zero" — that rule would file the pull-up, chin-up,
+   * dip and inverted row as weighted, because an advanced lifter adds plates to
+   * all four, and a beginner's pull-up with an empty box would be refused.
+   */
+  ...(beginner === 0 ? { unweightedOk: true as const } : {}),
   ...(TIMED_IDS.has(`lib_${id}`) ? { timed: true } : {}),
   ...(ASSISTED_IDS.has(`lib_${id}`) ? { assisted: true } : {}),
 })
@@ -547,6 +563,26 @@ export function patternForName(name: string): MovementPattern | null {
  * to rest (a barbell compound is not a cable pushdown) and which muscle group a
  * logged set belongs to.
  */
+/**
+ * Can this lift honestly be done with nothing added?
+ *
+ * ONE ANSWER FOR BOTH FORMS. The live screen knows a lift by its library id;
+ * the fill-in-later form only knows the name a person typed. Both ask here, so
+ * the rule about what an empty weight box means cannot differ between them.
+ *
+ * An unknown lift answers false — the safe direction. A name nobody recognises
+ * might be anything, and refusing a blank weight on it costs a person one
+ * typed zero; accepting it stores a set at 0 kg that no total can ever explain.
+ */
+export function canBeUnweighted(libraryId?: string, name?: string): boolean {
+  if (libraryId) {
+    const byId = EXERCISE_LIBRARY.find((e) => e.id === libraryId)
+    if (byId) return byId.unweightedOk === true
+  }
+  if (name) return libraryByName(name)?.unweightedOk === true
+  return false
+}
+
 export function libraryByName(name: string): LibraryExercise | undefined {
   const norm = name.trim().toLowerCase()
   const hit = EXERCISE_LIBRARY.find((e) => e.name.toLowerCase() === norm)

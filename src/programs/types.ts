@@ -557,6 +557,12 @@ export interface PrescribedExercise {
   /** Drops off the last set, if the author asked for them. Display only. */
   dropSets?: number
   bodyweight?: boolean // skill/hold: no external weight to show
+  /**
+   * An empty weight box is honest on this lift — a pull-up, a dip, a plank.
+   * Distinct from `bodyweight`, which HIDES the box: a weighted pull-up is a
+   * real thing, so the box stays and blank means "nothing added".
+   */
+  unweightedOk?: boolean
   /** Done one limb at a time — the reps are per side, and so is the volume. */
   perSide?: boolean
   repUnit?: "reps" | "sec" // what the logged number means (default reps)
@@ -768,7 +774,28 @@ export interface WorkoutSummary {
     date: string
     isNew: boolean
   }>
+  /**
+   * Lifts with no history at all, so there was nothing to beat.
+   *
+   * A FIRST IS NOT A RECORD. With no history every set was announced as a
+   * personal best — the very first set an account ever logged came back as
+   * "New best", which is meaningless. These are named as firsts instead, which
+   * is both true and still worth seeing.
+   */
+  firstTimeLifts: string[]
   changes: ProgressionChange[]
+  /**
+   * What the program will do next time was not KEPT for this workout — not
+   * "nothing changed". True for every workout finished before the receipt was
+   * stored on the row (2026-09-17).
+   */
+  changesUnavailable?: true
+  /**
+   * The workout was saved, but its totals could not be read back — the one case
+   * where a lost reply is confirmed as having landed and nothing more is known.
+   * Every number on the sheet then shows "—" rather than 0.
+   */
+  unavailable?: true
 }
 
 // ============================================================================
@@ -857,6 +884,16 @@ export interface LibraryExercise {
   defaultRepMin: number
   defaultRepMax: number
   suggestedKg: Record<LevelId, number>
+  /**
+   * Can be done with nothing added — a pull-up, a dip, a push-up, a plank.
+   *
+   * DERIVED FROM `suggestedKg.beginner === 0` in `make()`, never typed out, so
+   * the flag and the seed cannot disagree. It decides what an empty weight box
+   * means: on these it means "just me", and saves as 0; on everything else it
+   * means the number was not typed, and the set is refused rather than stored
+   * as a 0 kg bench press.
+   */
+  unweightedOk?: true
   /**
    * Measured in seconds held, not reps done — a plank, a side plank, a carry.
    *

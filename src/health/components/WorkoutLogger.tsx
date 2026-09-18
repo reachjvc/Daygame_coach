@@ -9,9 +9,10 @@ import { Dumbbell, Minus, Plus, Trash2, X } from "lucide-react"
 import {
   summarizeWorkoutSets,
   findLastExerciseSets,
-  detectPersonalRecords,
   workoutsOnDate,
 } from "../healthService"
+import { canBeUnweighted } from "@/src/programs/data/exerciseLibrary"
+import { typedNumber } from "@/src/shared/typedNumber"
 import type {
   WorkoutLogWithSets,
   SessionType,
@@ -89,6 +90,12 @@ export function WorkoutLogger() {
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [newPRs, setNewPRs] = useState<PersonalRecord[]>([])
+  /**
+   * Lifts logged for the very first time. A lift with no history cannot beat
+   * anything, and calling that "New PR" made the label mean nothing on a new
+   * account — every set of the first session was announced as a record.
+   */
+  const [firstTimes, setFirstTimes] = useState<string[]>([])
 
   /**
    * TWO LIES FROM ONE DROPPED REQUEST.
@@ -103,9 +110,11 @@ export function WorkoutLogger() {
    *      EVERY lift is a record. So the next save congratulated them on six
    *      personal bests at weights they had been lifting for months.
    *
-   * `historyFailed` separates "you have none" from "we could not find out", and
-   * the record check is suppressed while it is true — a record announced from a
-   * history the app could not read is not a record, it is a guess.
+   * `historyFailed` separates "you have none" from "we could not find out", so
+   * the list below never claims an empty history. The record check itself is no
+   * longer made here at all — the server makes it, against everything ever
+   * logged, and flags its own failed read rather than announcing records from a
+   * history nobody could read.
    */
   const [historyFailed, setHistoryFailed] = useState(false)
 
@@ -173,22 +182,53 @@ export function WorkoutLogger() {
       })
     )
 
-  const flattenSets = (): Omit<WorkoutSetInsert, "set_number">[] =>
-    exercises.flatMap((ex) => {
+  /**
+   * The typed boxes, turned into sets — or a sentence saying what is missing.
+   *
+   * WHAT WENT WRONG. This filtered on `s.weight_kg && s.reps`, so a set with a
+   * blank box was silently DROPPED: type the squat, forget the weight on the
+   * bench, press Save, and the bench simply was not there — no message, no
+   * mark, nothing. And because the filter treated "0" as falsy too, a genuine
+   * unweighted pull-up could not be recorded at all.
+   *
+   * Three answers now, and each is said out loud:
+   *   - blank weight on a lift you can do unweighted → 0, which is the truth
+   *   - blank weight on anything else                → refused, by lift name
+   *   - blank reps                                   → refused, by lift name
+   */
+  const buildSets = (): { sets: Omit<WorkoutSetInsert, "set_number">[]; problem: string | null } => {
+    const out: Omit<WorkoutSetInsert, "set_number">[] = []
+    for (const ex of exercises) {
       const name = ex.exercise.trim()
-      if (!name) return []
+      if (!name) continue
       const exerciseNotes = ex.notes.trim() || null
-      return ex.sets
-        .filter((s) => s.weight_kg && s.reps)
-        .map((s) => ({
+      const unweighted = canBeUnweighted(undefined, name)
+      for (const s of ex.sets) {
+        const weight = typedNumber(s.weight_kg)
+        const reps = typedNumber(s.reps)
+        // A row where nothing at all was typed is a row nobody filled in.
+        if (weight === null && reps === null) continue
+        if (reps === null) {
+          return { sets: [], problem: `${name}: type how many reps you did, or clear the weight.` }
+        }
+        if (weight === null && !unweighted) {
+          return {
+            sets: [],
+            problem: `${name}: type the weight you used. Leave it blank only on a lift you do with nothing added.`,
+          }
+        }
+        out.push({
           exercise: name,
-          weight_kg: parseFloat(s.weight_kg),
-          reps: parseInt(s.reps),
+          weight_kg: weight ?? 0,
+          reps,
           set_kind: s.is_warmup ? ("warmup" as const) : ("working" as const),
           notes: s.notes.trim() || null,
           exercise_notes: exerciseNotes,
-        }))
-    })
+        })
+      }
+    }
+    return { sets: out, problem: null }
+  }
 
   const handleSubmit = async () => {
     const dur = parseInt(duration)
@@ -196,7 +236,23 @@ export function WorkoutLogger() {
     setIsSaving(true)
     setSaveError(null)
 
-    const validSets: WorkoutSetInsert[] = flattenSets().map((s, i) => ({ ...s, set_number: i + 1 }))
+    const built = buildSets()
+    if (built.problem) {
+      setSaveError(built.problem)
+      setIsSaving(false)
+      return
+    }
+    /**
+     * A GYM SESSION WITH NO SETS RECORDS NOTHING AND STILL COUNTS. It went in
+     * as `sets: undefined` — a workout row that adds to the streak, the heatmap
+     * and the session totals while saying nothing about what was lifted.
+     */
+    if (sessionType === "weights" && built.sets.length === 0) {
+      setSaveError("Add at least one set, or pick a different kind of session.")
+      setIsSaving(false)
+      return
+    }
+    const validSets: WorkoutSetInsert[] = built.sets.map((s, i) => ({ ...s, set_number: i + 1 }))
 
     try {
       const res = await fetch("/api/health/workout", {
@@ -216,13 +272,20 @@ export function WorkoutLogger() {
         }),
       })
       if (!res.ok) throw new Error(await readApiError(res))
-      // PR check: compare the saved sets against everything logged before them
-      const created: WorkoutLogWithSets = await res.json()
-      // Never claim a record against a history that could not be read.
-      if (!historyFailed) {
-        const priorSets = logs.flatMap((l) => (l.sets ?? []).map((s) => ({ ...s, logged_at: l.logged_at })))
-        setNewPRs(detectPersonalRecords(priorSets, created.sets ?? []))
+      /**
+       * THE SERVER DECIDES WHAT A RECORD IS, and this form computes none of its
+       * own. It used to run the check here against the 90 days it happened to
+       * have loaded — a third definition of "personal best", disagreeing with
+       * the finish summary's 400 workouts and Progress's 365 days on the same
+       * set. The 201 carries the answer, measured against everything you have
+       * ever logged, plus the lifts you had never done before.
+       */
+      const created = (await res.json()) as WorkoutLogWithSets & {
+        personalRecords?: PersonalRecord[]
+        firstTimeLifts?: string[]
       }
+      setNewPRs(created.personalRecords ?? [])
+      setFirstTimes(created.firstTimeLifts ?? [])
       setDuration("")
       setIntensity(3)
       setDistanceKm("")
@@ -269,7 +332,7 @@ export function WorkoutLogger() {
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => { setNewPRs([]); setIsAdding(!isAdding) }}
+            onClick={() => { setNewPRs([]); setFirstTimes([]); setIsAdding(!isAdding) }}
             title="Write up a workout you have already done"
           >
             <Plus className="h-4 w-4" />
@@ -299,6 +362,13 @@ export function WorkoutLogger() {
               <X className="h-3.5 w-3.5" />
             </button>
           </div>
+        )}
+
+        {/* A first is not a record, and it is still worth seeing. */}
+        {firstTimes.length > 0 && (
+          <p data-testid="first-time-lifts" className="text-sm text-muted-foreground">
+            First time logged: {firstTimes.join(", ")}
+          </p>
         )}
 
         {historyFailed && !isAdding && (
@@ -565,7 +635,13 @@ export function WorkoutLogger() {
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setIsAdding(false)}>Cancel</Button>
             </div>
-            {saveError && <p className="text-xs text-red-500">Workout not saved: {saveError}</p>}
+            {/* `role="alert"` because this is the only thing on screen saying a
+                set was left out. It used to drop the set silently. */}
+            {saveError && (
+              <p role="alert" className="text-xs text-red-500">
+                Workout not saved: {saveError}
+              </p>
+            )}
 
           </div>
         )}

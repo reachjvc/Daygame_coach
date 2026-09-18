@@ -27,7 +27,7 @@ import { Button } from "@/components/ui/button"
 import { useActiveEnrollments, useEnrollment } from "../hooks/useEnrollment"
 import { enrollmentName } from "../data/catalog"
 import { trainingCardState } from "../programsService"
-import { startKeyFor } from "../hooks/useLiveWorkout"
+import { startWorkoutRequest } from "../hooks/useLiveWorkout"
 import { WEEKDAY_SHORT } from "../config"
 import type { LiveWorkout } from "../types"
 
@@ -51,33 +51,28 @@ export function TrainingCard({ live: given }: { live?: LiveWorkout | null }) {
 
   /**
    * Start today's session from here, rather than sending you to a screen with
-   * another Start button on it. Uses the same client key as `TodayCard`, which
-   * is what stops a second tap opening a second workout — the database allows
-   * one at a time, so without the shared key the second request is refused with
-   * a raw error.
+   * another Start button on it.
+   *
+   * THE DAY THIS CARD JUST NAMED, sent explicitly. It used to send none and say
+   * in a comment that the server would work today out for itself — the server
+   * used the program's own counter instead, so the card read "Legs" and the
+   * screen that opened was Pull.
+   *
+   * The request itself belongs to `startWorkoutRequest`, shared with every
+   * other Start in the app. This one used to say "nothing was started" when the
+   * connection dropped, which is a guess, and the wrong one exactly when a
+   * reply gets lost on the way back.
    */
-  async function startNow(enrollmentId: string) {
+  async function startNow(enrollmentId: string, dayId: string) {
     setStarting(true)
     setStartError(null)
-    try {
-      const res = await fetch("/api/workouts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // No dayId: `workoutRepo` falls back to `prescription.dayId`, which is
-        // today's session — the same one this card just named.
-        body: JSON.stringify({ enrollmentId, clientKey: startKeyFor(enrollmentId) }),
-      })
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null
-        setStartError(body?.error ?? "Could not start that workout.")
-        return
-      }
+    const outcome = await startWorkoutRequest({ enrollmentId, dayId })
+    setStarting(false)
+    if (outcome.kind === "started" || outcome.kind === "already-open") {
       router.push("/programs/live")
-    } catch {
-      setStartError("Could not reach the server, so nothing was started.")
-    } finally {
-      setStarting(false)
+      return
     }
+    setStartError(outcome.message)
   }
 
   const [fetched, setFetched] = useState<LiveWorkout | null>(null)
@@ -229,7 +224,7 @@ export function TrainingCard({ live: given }: { live?: LiveWorkout | null }) {
               className="w-full"
               data-testid="training-card-start"
               disabled={starting}
-              onClick={() => void startNow(state.enrollmentId)}
+              onClick={() => void startNow(state.enrollmentId, state.dayId)}
             >
               {starting ? <Loader2 className="mr-1 size-4 animate-spin" /> : null}
               Start

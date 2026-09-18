@@ -9,8 +9,16 @@ import { chunkIds, readAllRows } from "./paging"
 import { libraryByName } from "@/src/programs/data/exerciseLibrary"
 import { getNowInTimezone, periodStartFor, startOfDayInstant } from "../shared/dateUtils"
 import { weeklyStreakRun } from "../shared/streakRuns"
+import {
+  cappedEstimate,
+  detectPersonalRecords,
+  firstTimeLifts,
+  liftBests,
+} from "@/src/health/healthService"
+import { getUserTimezone } from "./settingsRepo"
 import { previousPeriodStart, toZonedDate, toDateISO, isStreakCurrent } from "../shared/dateUtils"
 import type {
+  PersonalRecord,
   WeightLogRow,
   WeightLogInsert,
   SleepLogRow,
@@ -191,11 +199,27 @@ export function finishedWorkouts<T extends { or: (f: string) => T }>(query: T): 
   return query.or("ended_at.not.is.null,started_at.is.null")
 }
 
+/**
+ * Write a workout that is already over, and say what it beat.
+ *
+ * WHY THE RECORDS ARE COMPUTED HERE. The form used to work them out in the
+ * BROWSER from a 90-day window of its own — a third definition of "personal
+ * best", disagreeing with the finish summary's 400 workouts and Progress's 365
+ * days. There is now one definition, all time, and it lives on the server;
+ * the answer travels back with the 201 so the form has nothing left to decide.
+ */
 export async function createWorkoutLog(
   userId: string,
   log: WorkoutLogInsert,
   sets?: WorkoutSetInsert[]
-): Promise<WorkoutLogRow & { sets: WorkoutSetRow[] }> {
+): Promise<
+  WorkoutLogRow & {
+    sets: WorkoutSetRow[]
+    personalRecords: PersonalRecord[]
+    firstTimeLifts: string[]
+    recordsUnavailable: boolean
+  }
+> {
   const supabase = await createServerSupabaseClient()
   const { data: logData, error: logError } = await supabase
     .from("workout_logs")
@@ -226,7 +250,23 @@ export async function createWorkoutLog(
     insertedSets = (setsData ?? []) as WorkoutSetRow[]
   }
 
-  return { ...(logData as WorkoutLogRow), sets: insertedSets }
+  const row = logData as WorkoutLogRow
+  // Read AFTER the insert but excluding this workout, so its own sets are never
+  // counted as their own previous best.
+  const baseline = await personalBestBaseline(userId, {
+    workoutId: row.id,
+    loggedAt: row.logged_at,
+  })
+  const onDate = toDateISO(toZonedDate(new Date(row.logged_at), await getUserTimezone(userId)))
+  return {
+    ...row,
+    sets: insertedSets,
+    recordsUnavailable: baseline.unavailable,
+    personalRecords: baseline.unavailable
+      ? []
+      : detectPersonalRecords(baseline.sets, insertedSets, onDate),
+    firstTimeLifts: baseline.unavailable ? [] : firstTimeLifts(baseline.sets, insertedSets),
+  }
 }
 
 export async function getWorkoutLogs(userId: string, days: number = 90): Promise<WorkoutLogRow[]> {
@@ -639,13 +679,129 @@ export async function getExerciseMax(userId: string, exercise: string): Promise<
   }
   if (sets.length === 0) return 0
 
-  // Epley formula for estimated 1RM: weight × (1 + reps/30)
+  /**
+   * THE SAME FORMULA "Your bests" USES, and it did not used to be.
+   *
+   * This ran Epley uncapped while `liftBests` capped it at ten reps, so a
+   * twenty-rep set of 60 kg put "100 kg" on this tile and "60 kg" in the Progress
+   * list — two numbers for one set, on two screens, neither labelled as an
+   * estimate of anything different. One function owns it now.
+   */
   let maxEstimated = 0
   for (const s of sets) {
-    const estimated = s.reps === 1 ? s.weight_kg : s.weight_kg * (1 + s.reps / 30)
+    const estimated = cappedEstimate(s.weight_kg, s.reps)
     if (estimated > maxEstimated) maxEstimated = estimated
   }
   return Math.round(maxEstimated)
+}
+
+/**
+ * Every working set you have ever logged — the history a best is measured from.
+ *
+ * ALL TIME, AND ALL OF IT. Three screens each had their own window: the finish
+ * summary looked at the last 400 workouts, Progress at 365 days, the
+ * past-workout form at 90. So one lift was a record on one screen and not on
+ * the next, and a lifter coming back after a year was congratulated on weights
+ * they had beaten before.
+ *
+ * PAGED IN TWO STEPS, never as a nested `workout_sets(*)` on an unpaged parent:
+ * a year of training is around 2,400 set rows and the database silently hands
+ * over 1,000. A short baseline is worse than no baseline, because it announces
+ * records that are not records.
+ *
+ * `before` narrows it to what was logged BEFORE one particular workout, so the
+ * workout being finished is never counted as its own previous best.
+ *
+ * A FAILED READ IS NOT AN EMPTY HISTORY. It comes back flagged, so the caller
+ * can say "not checked" rather than "nothing to beat".
+ */
+export async function personalBestBaseline(
+  userId: string,
+  before?: { workoutId: string; loggedAt: string }
+): Promise<{ sets: (WorkoutSetRow & { logged_at: string })[]; unavailable: boolean }> {
+  const supabase = await createServerSupabaseClient()
+  try {
+    /**
+     * TWO WHOLE CHAINS RATHER THAN ONE BUILT UP IN STEPS, and `.range()` inside
+     * the `finishedWorkouts(...)` wrapper rather than after it.
+     *
+     * Both are so the paging is VISIBLE. `tests/unit/architecture.test.ts`
+     * counts reads with no upper bound by looking at the chain that starts at
+     * `.from(` — so a query assembled across several statements, or one whose
+     * `.range()` lands outside the wrapper's parentheses, reads as unbounded.
+     * The guard that catches a genuinely unbounded read is worth the repetition.
+     * `getWorkoutLogs` above is written the same way, for the same reason.
+     */
+    const logs = await readAllRows<{ id: string; logged_at: string }>(
+      "finished workouts",
+      (from, to) =>
+        before
+          ? finishedWorkouts(
+              supabase
+                .from("workout_logs")
+                .select("id, logged_at")
+                .eq("user_id", userId)
+                .lt("logged_at", before.loggedAt)
+                .neq("id", before.workoutId)
+                .order("logged_at", { ascending: true })
+                .order("id", { ascending: true })
+                .range(from, to)
+            )
+          : finishedWorkouts(
+              supabase
+                .from("workout_logs")
+                .select("id, logged_at")
+                .eq("user_id", userId)
+                .order("logged_at", { ascending: true })
+                .order("id", { ascending: true })
+                .range(from, to)
+            )
+    )
+    if (logs.length === 0) return { sets: [], unavailable: false }
+
+    const loggedAt = new Map(logs.map((l) => [l.id, l.logged_at]))
+    const sets: (WorkoutSetRow & { logged_at: string })[] = []
+    for (const ids of chunkIds(logs.map((l) => l.id))) {
+      const page = await readAllRows<WorkoutSetRow>("workout sets", (from, to) =>
+        supabase
+          .from("workout_sets")
+          .select("*")
+          .in("log_id", ids)
+          .order("id", { ascending: true })
+          .range(from, to)
+      )
+      for (const row of page) sets.push({ ...row, logged_at: loggedAt.get(row.log_id) ?? "" })
+    }
+    return { sets, unavailable: false }
+  } catch (e) {
+    /**
+     * The workout itself must still save. Losing an hour of training because a
+     * nice-to-have could not be computed is the worse trade — so the failure is
+     * carried out with the answer.
+     */
+    console.error("could not read training history for personal records:", e)
+    return { sets: [], unavailable: true }
+  }
+}
+
+/**
+ * The best on every lift, all time, on the account's own calendar.
+ *
+ * The Progress screen used to work this out in the browser from a 365-day
+ * window, which made "Your bests" mean "your bests this year" and put a
+ * different answer on it from the finish summary's.
+ */
+export async function liftBestsAllTime(userId: string) {
+  const baseline = await personalBestBaseline(userId)
+  if (baseline.unavailable) throw new Error("Could not read your training history.")
+  const byLog = new Map<string, { logged_at: string; sets: WorkoutSetRow[] }>()
+  for (const set of baseline.sets) {
+    const group = byLog.get(set.log_id)
+    if (group) group.sets.push(set)
+    else byLog.set(set.log_id, { logged_at: set.logged_at, sets: [set] })
+  }
+  const logs = [...byLog.entries()].map(([id, g]) => ({ id, logged_at: g.logged_at, sets: g.sets }))
+  return liftBests(logs as unknown as Parameters<typeof liftBests>[0], await getUserTimezone(userId))
 }
 
 export async function getProgressPhotoCount(userId: string): Promise<number> {

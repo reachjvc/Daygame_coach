@@ -48,6 +48,16 @@ export interface QueuedSet {
   at: number
 }
 
+/**
+ * What happened to a ticked set.
+ *
+ * "queued" is the offline case and it is expected — a gym is where signal dies.
+ * "refused" is the server saying no, which a retry will never fix, so it must
+ * not be treated as offline: the ✓ comes off and the rest clock it started is
+ * cleared.
+ */
+export type TickOutcome = "saved" | "queued" | "refused" | "no-workout"
+
 const slotOf = (s: {
   exerciseId: string | null
   exercise: string
@@ -218,10 +228,16 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
    * It appears immediately, because the person is standing at a rack. The write
    * follows; if it fails, the set is queued under its slot so replaying it
    * corrects the same set rather than adding a second one.
+   *
+   * IT SAYS WHAT HAPPENED, because the screen has a rest clock to clear.
+   * Every non-OK reply used to be thrown and queued as though the phone were
+   * offline — so a set the server had REFUSED sat there ticked and "waiting for
+   * signal" for up to twenty seconds until the queue gave up on it, with the
+   * rest clock already running for a set that was never saved.
    */
   const tick = useCallback(
-    async (set: Omit<QueuedSet, "workoutId" | "at">) => {
-      if (!workout) return
+    async (set: Omit<QueuedSet, "workoutId" | "at">): Promise<TickOutcome> => {
+      if (!workout) return "no-workout"
       const item: QueuedSet = { ...set, workoutId: workout.id, at: Date.now() }
 
       // On screen first.
@@ -262,13 +278,30 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(item),
         })
+        if (res.status >= 400 && res.status < 500) {
+          /**
+           * A REFUSAL WILL NEVER SUCCEED ON A RETRY, so it is not queued. The
+           * optimistic ✓ comes off NOW and the reason is named, rather than the
+           * set sitting green and "waiting for signal" until the queue drops it.
+           */
+          const body = (await res.json().catch(() => null)) as { error?: string } | null
+          setWorkout((prev) =>
+            prev ? { ...prev, sets: prev.sets.filter((x) => slotOf(x) !== slotOf(item)) } : prev
+          )
+          setError(
+            `That ${item.exercise} set could not be saved: ${body?.error ?? "the server refused it"}`
+          )
+          return "refused"
+        }
         if (!res.ok) throw new Error(String(res.status))
         applyServer(seq, (await res.json()) as LiveWorkout)
         setError(null)
+        return "saved"
       } catch {
         const next = [...readQueue().filter((q) => slotOf(q) !== slotOf(item)), item]
         writeQueue(next)
         setQueue(next)
+        return "queued"
       } finally {
         bumpInFlight(-1)
       }
@@ -331,6 +364,69 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     [workout, applyServer]
   )
 
+  /**
+   * Did that finish actually land? Asked of the server, never assumed.
+   *
+   * Three answers. The same workout is still open → it did not go through, say
+   * so and keep the sheet. Nothing is open (or something else is) → it DID go
+   * through, so forget the start key, clear the screen, and fetch the summary
+   * the person earned. And if the check itself cannot be made, say that — an
+   * unanswered question is not a "no".
+   */
+  const checkWhetherItLanded = useCallback(
+    async (finished: LiveWorkout): Promise<WorkoutSummary | null> => {
+      let stillOpen: LiveWorkout | null
+      try {
+        const res = await fetch("/api/workouts/live")
+        if (!res.ok) throw new Error(String(res.status))
+        stillOpen = (await res.json()) as LiveWorkout | null
+      } catch {
+        setError(
+          "Could not reach the server to check whether it went through. Tap Save again when you have signal."
+        )
+        return null
+      }
+
+      if (stillOpen?.id === finished.id) {
+        setError("The reply was lost, and the workout is still open. Tap Save again.")
+        return null
+      }
+
+      clearStartKey(finished.enrollmentId)
+      setWorkout(null)
+      try {
+        const res = await fetch(`/api/workouts/${finished.id}/summary`)
+        if (res.ok) return (await res.json()) as WorkoutSummary
+        if (res.status === 404) {
+          // The row is gone. Not "saved with no totals" — deleted somewhere
+          // else, and there is nothing to show for it.
+          setError("This workout was thrown away on another device.")
+          return null
+        }
+        throw new Error(String(res.status))
+      } catch {
+        /**
+         * Saved, and that is all that is known. Every number is withheld rather
+         * than shown as 0 — "0 sets, 0 kg lifted" after an hour of training is
+         * a claim the app has no grounds for.
+         */
+        return {
+          workoutId: finished.id,
+          unit: finished.unit,
+          unavailable: true,
+          personalRecords: [],
+          firstTimeLifts: [],
+          changes: [],
+          durationMin: 0,
+          sets: 0,
+          volumeKg: 0,
+          volume: 0,
+        }
+      }
+    },
+    []
+  )
+
   const finish = useCallback(
     async (input: { intensity: number; endedAt?: string; durationMin?: number; notes?: string | null; rpe?: number | null }): Promise<WorkoutSummary | null> => {
       if (!workout) return null
@@ -354,6 +450,13 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
         })
         const body = await res.json().catch(() => null)
         if (!res.ok) {
+          /**
+           * THE SERVER SAID NO, AND SAID WHY. This is a REFUSAL, not a lost
+           * reply — "A workout cannot end before it started", "Your program
+           * moved on". It used to be answered with a guess about the
+           * connection; the server's own sentence is the only honest thing to
+           * show, and the sheet stays open so it can be acted on.
+           */
           setError((body as { error?: string })?.error ?? "That workout could not be finished.")
           return null
         }
@@ -361,13 +464,23 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
         setWorkout(null)
         return body as WorkoutSummary
       } catch {
-        setError("Could not reach the server. Nothing was finished.")
-        return null
+        /**
+         * NOBODY KNOWS WHETHER IT WENT THROUGH — so ASK, do not guess.
+         *
+         * A reply lost on the way back looks exactly like a request that never
+         * arrived, and this used to say "Nothing was finished." That is wrong
+         * precisely when it matters: the workout was saved, the person was told
+         * it was not, the summary was never shown, and the next Save was
+         * refused with "not open any more — reload".
+         *
+         * The one question that settles it is whether a workout is still open.
+         */
+        return await checkWhetherItLanded(workout)
       } finally {
         setBusy(false)
       }
     },
-    [workout]
+    [workout, checkWhetherItLanded]
   )
 
   const discard = useCallback(async () => {
@@ -403,6 +516,113 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     discard,
     refresh,
     flush,
+  }
+}
+
+/**
+ * What happened when a start was asked for.
+ *
+ * FOUR ANSWERS, because the three buttons that start a workout each invented
+ * their own and disagreed. "started" and "already-open" both mean "you are in a
+ * workout, go to it" — the second is what a race, or a second tap, comes back
+ * as. "refused" is the server saying no, and its own sentence is carried.
+ * "unreachable" is the one case where nobody knows whether it went through, and
+ * the sentence has to say so rather than guess.
+ */
+export type StartOutcome =
+  | { kind: "started"; workout: LiveWorkout }
+  | { kind: "already-open"; workout: LiveWorkout }
+  | { kind: "refused"; message: string }
+  | { kind: "unreachable"; message: string }
+
+/**
+ * Ask the server to open a workout. THE ONLY PLACE THAT POSTS `/api/workouts`.
+ *
+ * Three buttons did this themselves — the Tracking card, the Training page's
+ * today card and "start a workout now" — and all three got it slightly wrong in
+ * different ways. None of them forgot the start key after a success, so the key
+ * outlived the workout it opened: finish on the laptop and every later Start on
+ * the phone was refused, for ever, with the database's own complaint. And they
+ * disagreed on what to say when it failed; one said "nothing was started",
+ * which is a guess, and the wrong one exactly when the signal drops.
+ *
+ * THE KEY IS FORGOTTEN THE MOMENT THE SERVER ANSWERS AT ALL. It exists to make
+ * a retry after a LOST REPLY land on the same workout, so it is needed between
+ * "sent" and "heard anything back", and not one moment longer. It is kept only
+ * where the row might exist but we did not hear: a network failure, or a 5xx
+ * after the insert.
+ */
+export async function startWorkoutRequest(input: {
+  enrollmentId?: string | null
+  dayId?: string | null
+}): Promise<StartOutcome> {
+  const bucket = input.enrollmentId ?? null
+
+  const attempt = async (key: string) =>
+    await fetch("/api/workouts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...(input.enrollmentId ? { enrollmentId: input.enrollmentId } : {}),
+        ...(input.dayId ? { dayId: input.dayId } : {}),
+        clientKey: key,
+      }),
+    })
+
+  try {
+    let res = await attempt(startKeyFor(bucket))
+    let body = (await res.json().catch(() => null)) as
+      | { error?: string; code?: string; workout?: LiveWorkout }
+      | null
+
+    /**
+     * A SPENT KEY IS RECOVERABLE, ONCE. The workout this key opened is over —
+     * finished on another device, most likely. Forget it, mint a new one and
+     * ask again. Exactly once: a second "spent" is a real refusal, never a loop.
+     */
+    if (res.status === 409 && body?.code === "start_key_spent") {
+      clearStartKey(bucket)
+      res = await attempt(startKeyFor(bucket))
+      body = (await res.json().catch(() => null)) as typeof body
+    }
+
+    if (res.ok) {
+      clearStartKey(bucket)
+      return { kind: "started", workout: body as unknown as LiveWorkout }
+    }
+    if (res.status === 409 && body?.code === "already_open") {
+      clearStartKey(bucket)
+      /**
+       * THE SENTENCE AND THE BEHAVIOUR HAVE TO AGREE.
+       *
+       * The server always sends the open workout with this code, and the caller
+       * goes straight to it. If it ever does not, the person was shown the
+       * server's own "a workout is already open — opening it" as an ERROR while
+       * nothing opened: a sentence promising something the code was not doing.
+       * Without the workout there is nothing to open, so it says the true thing
+       * instead and names where to go.
+       */
+      if (!body.workout) {
+        return {
+          kind: "refused",
+          message: "You already have a workout open. Open training to go back to it.",
+        }
+      }
+      return { kind: "already-open", workout: body.workout }
+    }
+    if (res.status >= 400 && res.status < 500) {
+      clearStartKey(bucket)
+      return { kind: "refused", message: body?.error ?? "Could not start that workout." }
+    }
+    // 5xx: the row may well exist — the insert can succeed and a later read
+    // fail. Keeping the key means the next tap is handed that same workout.
+    return { kind: "refused", message: "Could not start that workout." }
+  } catch {
+    return {
+      kind: "unreachable",
+      message:
+        "Could not reach the server. Tap Start again — if it did go through, this opens that same workout.",
+    }
   }
 }
 

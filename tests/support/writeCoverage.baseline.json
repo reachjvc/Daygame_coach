@@ -4,6 +4,7 @@
   "src/api_ai/apiAiService.ts:testLogging": "unasserted",
   "src/api_ai/apiAiService.ts:testUserLogging": "unasserted",
   "src/db/betaRepo.ts:addWaitlistEmail": "unasserted",
+  "src/db/betaRepo.ts:claimBetaSlot": "unasserted",
   "src/db/dashboardRepo.ts:replaceWidgets": "mentioned",
   "src/db/embeddingsRepo.ts:deleteEmbeddingsBySource": "mentioned",
   "src/db/embeddingsRepo.ts:storeEmbeddings": "mentioned",

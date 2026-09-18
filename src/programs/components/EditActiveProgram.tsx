@@ -24,7 +24,7 @@ import { useState } from "react"
 import { Check, Loader2 } from "lucide-react"
 import { ProgramEditor } from "./ProgramEditor"
 import {
-  scheduleDays,
+  scheduleDaysOrNone,
   editableSchedule,
   isCustomizable,
   isModified,
@@ -77,7 +77,9 @@ export function EditActiveProgram({
    */
   type CurrentWeight = { exerciseId: string; name: string; weight: number; isMax: boolean }
   const current: CurrentWeight[] = schedule
-    ? scheduleDays(schedule).flatMap((d) =>
+    ? // OR NONE, for the same reason as ProgressionView: an endurance
+      // enrollment has no lifts to list, and asking for its days threw.
+      scheduleDaysOrNone(schedule).flatMap((d) =>
         (d.exercises as { id: string; name: string }[]).flatMap((ex): CurrentWeight[] => {
           const state = enrollment.exerciseState[ex.id]
           if (!state) return []

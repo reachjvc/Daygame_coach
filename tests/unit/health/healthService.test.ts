@@ -63,6 +63,15 @@ function set(exercise: string, weight: number, reps: number, overrides: Partial<
 // Wed 2026-07-15 noon local — fixed reference date for determinism
 const TODAY = new Date(2026, 6, 15, 12, 0, 0)
 
+/**
+ * The lifter's own calendar day, which `detectPersonalRecords` requires rather
+ * than taking from the clock — it used to default to the SERVER's calendar,
+ * which filed a Copenhagen lifter's 00:30 Tuesday record on Monday. The tests
+ * that pass this are not about the date, so one constant serves them all; the
+ * test that IS about the date passes its own day and asserts on it.
+ */
+const ON_DAY = "2026-09-17"
+
 describe("buildWorkoutHeatmapWeeks", () => {
   it("returns the requested number of Monday-start weeks ending with the current week", () => {
     const grid = buildWorkoutHeatmapWeeks([], TODAY, 13)
@@ -353,7 +362,7 @@ describe("detectPersonalRecords", () => {
       set("Squat", 100, 5, { set_number: 2 }),
       set("Squat", 100, 5, { set_number: 3 }),
     ]
-    const prs = detectPersonalRecords(history, today)
+    const prs = detectPersonalRecords(history, today, ON_DAY)
     expect(prs).toHaveLength(1)
     expect(prs[0]).toMatchObject({ exercise: "Squat", weight_kg: 100, reps: 5 })
   })
@@ -365,17 +374,25 @@ describe("detectPersonalRecords", () => {
       set("Squat", 97.5, 5, { set_number: 1 }),
       set("Squat", 100, 5, { set_number: 2 }),
       set("Squat", 102.5, 3, { set_number: 3 }),
-    ])
+    ], ON_DAY)
     expect(prs).toHaveLength(1)
     expect(prs[0]).toMatchObject({ weight_kg: 102.5, reps: 3 })
   })
 
+  /**
+   * CHANGED 2026-09-18, DELIBERATELY. This fixture gave Bench Press no history
+   * at all and expected it to be announced as a record — which is the bug
+   * behind "New best" on the very first set an account ever logged. A lift with
+   * no history is a FIRST, not a best, so the fixture now gives the bench a
+   * past to beat.
+   */
   it("still reports each lift separately", () => {
-    const prs = detectPersonalRecords(history, [
+    const withBench = [...history, { ...set("Bench Press", 55, 5), logged_at: "2026-09-01T10:00:00Z" }]
+    const prs = detectPersonalRecords(withBench, [
       set("Squat", 100, 5, { set_number: 1 }),
       set("Squat", 100, 5, { set_number: 2 }),
       set("Bench Press", 60, 5, { set_number: 1 }),
-    ])
+    ], ON_DAY)
     expect(prs.map((p) => p.exercise).sort()).toEqual(["Bench Press", "Squat"])
   })
 
@@ -385,7 +402,7 @@ describe("detectPersonalRecords", () => {
     const prs = detectPersonalRecords(history, [
       set("Squat", 100, 5, { set_number: 1 }),
       set("Squat", 100, 6, { set_number: 2 }),
-    ])
+    ], ON_DAY)
     expect(prs).toHaveLength(1)
     expect(prs[0]!.reps).toBe(6)
   })
@@ -394,12 +411,12 @@ describe("detectPersonalRecords", () => {
     const prs = detectPersonalRecords(history, [
       set("Squat", 140, 1, { set_kind: "warmup" }),
       set("Squat", 140, 1, { set_kind: "drop" }),
-    ])
+    ], ON_DAY)
     expect(prs).toEqual([])
   })
 
   it("says nothing when the session did not beat the history", () => {
-    expect(detectPersonalRecords(history, [set("Squat", 90, 5)])).toEqual([])
+    expect(detectPersonalRecords(history, [set("Squat", 90, 5)], ON_DAY)).toEqual([])
   })
 
   /**

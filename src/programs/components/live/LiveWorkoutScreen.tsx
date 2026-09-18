@@ -25,6 +25,7 @@ import { MoreHorizontal } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { BackLink } from "@/components/BackLink"
+import { canBeUnweighted } from "../../data/exerciseLibrary"
 import { SetRow } from "./SetRow"
 import { RestBar } from "./RestBar"
 import { FinishSheet } from "./FinishSheet"
@@ -33,6 +34,7 @@ import { useLiveWorkout } from "../../hooks/useLiveWorkout"
 import {
   describeSets,
   restSecondsFor,
+  unfinishedLifts,
   describePlates,
   platesFor,
   enduranceMinutes,
@@ -106,6 +108,12 @@ export function LiveWorkoutScreen({
       // No prescription means no suggested numbers: the boxes start empty
       // rather than pre-filled with something nobody asked for.
       sets: [1, 2, 3].map((setNumber) => ({ setNumber, weight: 0, reps: 0 })),
+      /**
+       * Whether an empty weight box is honest on this lift. A pull-up added on
+       * the day saves with nothing added; a front squat added on the day does
+       * not save until a weight is typed.
+       */
+      unweightedOk: canBeUnweighted(a.libraryId, a.name),
     })) as PrescribedExercise[],
   ]
 
@@ -128,15 +136,20 @@ export function LiveWorkoutScreen({
 
   const skipped = new Set(shown?.adjustments.skipped ?? [])
 
-  const unfinished = exercises
-    .filter((ex) => !skipped.has(ex.exerciseId))
-    .map((ex) => ({
-      exerciseId: ex.exerciseId,
-      name: ex.name,
-      done: (doneByLift.get(ex.exerciseId) ?? []).filter((s) => s.kind !== "warmup").length,
-      asked: ex.sets.length,
-    }))
-    .filter((u) => u.done < u.asked)
+  /**
+   * A LIFT YOU ADDED IS NOT A LIFT YOU FAILED.
+   *
+   * This used to run over `exercises`, which includes added lifts and their
+   * three placeholder rows — so "Front Squat 0 of 3" appeared under "these
+   * count as misses and will bring the weight down", for a lift nobody
+   * prescribed. `unfinishedLifts` is pure and tested and tells the two apart;
+   * this screen computes none of it.
+   */
+  const { short: unfinished, untouchedAdded } = unfinishedLifts(
+    prescription?.exercises ?? [],
+    shown?.adjustments ?? {},
+    shown?.sets ?? []
+  )
 
   /**
    * THE SUMMARY OUTLIVES THE WORKOUT.
@@ -154,6 +167,7 @@ export function LiveWorkoutScreen({
         <FinishSheet
           workout={shown}
           unfinished={unfinished}
+          untouchedAdded={untouchedAdded}
           unsaved={live.unsaved}
           saving={live.saving}
           busy={live.busy}
@@ -379,8 +393,9 @@ export function LiveWorkoutScreen({
                         unitLabel={unitLabel}
                         repUnit={ex.repUnit ?? "reps"}
                         bodyweight={ex.bodyweight}
+                        unweightedOk={ex.unweightedOk ?? canBeUnweighted(undefined, ex.name)}
                         onTick={(weight, reps) => {
-                          void live.tick({
+                          const saving = live.tick({
                             exerciseId: ex.exerciseId,
                             exercise: ex.name,
                             weight,
@@ -389,13 +404,35 @@ export function LiveWorkoutScreen({
                             kind: set.amrap ? "amrap" : "working",
                             side: null,
                           })
-                          // The clock starts here, and only after the second
-                          // lift of a superset pair.
-                          if (isLastOfGroup(ex, i)) {
+                          /**
+                           * THE CLOCK STARTS ON THE TAP, not on the reply.
+                           * Waiting for the round trip starts it late on gym
+                           * wifi and, with no signal at all, not until the
+                           * request gives up — so the rest you actually took
+                           * is not the rest it counted.
+                           *
+                           * Only after the second lift of a superset pair.
+                           */
+                          const startedAt = isLastOfGroup(ex, i) ? Date.now() : null
+                          if (startedAt !== null) {
                             setRestSeconds(rest.seconds)
                             setRestOurs(rest.ours)
-                            setRestFrom(Date.now())
+                            setRestFrom(startedAt)
                           }
+                          void saving.then((outcome) => {
+                            if (startedAt === null || outcome !== "refused") return
+                            /**
+                             * Cleared only if it is still THIS set's clock.
+                             *
+                             * There is nothing to rest from after a refused
+                             * set — but clearing unconditionally took the wrong
+                             * one: tick set 1, tick set 2, and set 1's refusal
+                             * arrives second, wiping the rest you had just
+                             * started on set 2. The instant is the clock's
+                             * identity, so a late answer can only clear its own.
+                             */
+                            setRestFrom((current) => (current === startedAt ? null : current))
+                          })
                         }}
                         onUndo={ticked ? () => void live.removeSet(ticked.id) : undefined}
                       />

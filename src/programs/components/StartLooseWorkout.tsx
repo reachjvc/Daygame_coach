@@ -17,7 +17,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { startKeyFor } from "../hooks/useLiveWorkout"
+import { startWorkoutRequest } from "../hooks/useLiveWorkout"
 import type { LiveWorkout } from "../types"
 
 export function StartLooseWorkout({ live }: { live: LiveWorkout | null }) {
@@ -38,26 +38,14 @@ export function StartLooseWorkout({ live }: { live: LiveWorkout | null }) {
   async function start() {
     setStarting(true)
     setError(null)
-    try {
-      const res = await fetch("/api/workouts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // No enrollment and no day: this session is not answering a plan.
-        body: JSON.stringify({ clientKey: startKeyFor(null) }),
-      })
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null
-        setError(body?.error ?? "Could not start that workout.")
-        return
-      }
+    // No enrollment and no day: this session is not answering a plan.
+    const outcome = await startWorkoutRequest({})
+    setStarting(false)
+    if (outcome.kind === "started" || outcome.kind === "already-open") {
       router.push("/programs/live")
-    } catch {
-      setError(
-        "Could not reach the server. Tap Start again — if it did go through, this opens that same workout."
-      )
-    } finally {
-      setStarting(false)
+      return
     }
+    setError(outcome.message)
   }
 
   return (

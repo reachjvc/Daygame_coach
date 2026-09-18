@@ -745,6 +745,11 @@ CREATE TABLE workout_logs (
   rpe SMALLINT CHECK (rpe IS NULL OR (rpe >= 1 AND rpe <= 10)),
   notes TEXT CHECK (notes IS NULL OR char_length(notes) <= 1000),
   client_key TEXT,
+  -- The receipt the finish screen showed: what the program will do next time,
+  -- and what was beaten. NULL means "not kept" (every workout finished before
+  -- 2026-09-17), never "nothing changed" or "nothing was beaten".
+  progression_changes JSONB,
+  personal_records JSONB,
   CONSTRAINT workout_logs_lifecycle CHECK (
        (started_at IS NULL     AND ended_at IS NULL AND duration_min IS NOT NULL AND intensity IS NOT NULL)
     OR (started_at IS NOT NULL AND ended_at IS NULL AND duration_min IS NULL     AND intensity IS NULL)
@@ -839,7 +844,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON workout_sets TO authenticated;
 
 -- ---------------------------------------------------------------------------
 -- finish_program_workout, copied from the latest migration that defines it:
--- supabase/migrations/20260907110000_finish_workout.sql.
+-- supabase/migrations/20260917100000_workout_keeps_its_summary.sql.
 --
 -- WHY IT IS HERE. Finishing a workout closes the workout and moves the
 -- program's weights, and both must happen or neither. There is no client-side
@@ -865,7 +870,11 @@ CREATE OR REPLACE FUNCTION finish_program_workout(
   p_replay_events JSONB,
   -- What the caller believed the program had done when it computed the new
   -- weights. If it has moved since, the computation is stale and is refused.
-  p_expected_session_count INTEGER
+  p_expected_session_count INTEGER,
+  -- The receipt, written in this same transaction so it cannot drift from what
+  -- the screen showed. NULL for either means "not kept", not "empty".
+  p_changes JSONB,
+  p_records JSONB
 )
 RETURNS UUID
 LANGUAGE plpgsql
@@ -911,7 +920,9 @@ BEGIN
       duration_min = p_duration_min,
       intensity = p_intensity,
       rpe = COALESCE(p_rpe, rpe),
-      notes = COALESCE(p_notes, notes)
+      notes = COALESCE(p_notes, notes),
+      progression_changes = p_changes,
+      personal_records = p_records
   WHERE id = p_workout_id;
 
   RETURN p_workout_id;
@@ -919,14 +930,59 @@ END $$;
 
 -- Nobody but a signed-in person, and never the anonymous role.
 REVOKE ALL ON FUNCTION finish_program_workout(
-  UUID, TIMESTAMPTZ, INTEGER, SMALLINT, SMALLINT, TEXT, JSONB, JSONB, JSONB, INTEGER
+  UUID, TIMESTAMPTZ, INTEGER, SMALLINT, SMALLINT, TEXT, JSONB, JSONB, JSONB, INTEGER, JSONB, JSONB
 ) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION finish_program_workout(
-  UUID, TIMESTAMPTZ, INTEGER, SMALLINT, SMALLINT, TEXT, JSONB, JSONB, JSONB, INTEGER
+  UUID, TIMESTAMPTZ, INTEGER, SMALLINT, SMALLINT, TEXT, JSONB, JSONB, JSONB, INTEGER, JSONB, JSONB
 ) TO authenticated;
 
 COMMENT ON FUNCTION finish_program_workout IS
-  'Closes a live workout and moves the program''s weights in one transaction. Refuses a second call for the same workout, so a retry cannot advance the program twice.';
+  'Closes a live workout, moves the program''s weights and writes the receipt the screen showed — all in one transaction. Refuses a second call for the same workout, so a retry cannot advance the program twice.';
+
+-- ---------------------------------------------------------------------------
+-- refuse_to_pause_a_busy_program, copied from the migration that defines it:
+-- supabase/migrations/20260917100100_program_busy_while_workout_open.sql.
+--
+-- WHY IT IS HERE. "End program", and starting a different program of the same
+-- kind (which pauses the old one to make room), both just flipped `is_active`
+-- off. Mid-workout, that workout then finished onto a plan nobody is shown any
+-- more. The app checks first, but a check followed by a write has a gap, and a
+-- script has no check at all — so the rule that actually holds for everybody is
+-- this trigger, and the only place a trigger can be proven is a real Postgres.
+--
+-- KEEP IT IDENTICAL, the same way `finish_program_workout` above is.
+-- ---------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION refuse_to_pause_a_busy_program()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+BEGIN
+  IF OLD.is_active AND NOT NEW.is_active THEN
+    -- "Open" is started-and-not-ended, and nothing looser: a workout typed in
+    -- after the fact has no start time and is not something you are in.
+    IF EXISTS (
+      SELECT 1 FROM workout_logs
+      WHERE enrollment_id = NEW.id
+        AND started_at IS NOT NULL
+        AND ended_at IS NULL
+    ) THEN
+      RAISE EXCEPTION 'Finish or throw away the open workout first.' USING ERRCODE = '55000';
+    END IF;
+  END IF;
+  RETURN NEW;
+END $$;
+
+DROP TRIGGER IF EXISTS program_busy_while_workout_open ON program_enrollments;
+CREATE TRIGGER program_busy_while_workout_open
+  BEFORE UPDATE OF is_active ON program_enrollments
+  FOR EACH ROW
+  EXECUTE FUNCTION refuse_to_pause_a_busy_program();
+
+COMMENT ON FUNCTION refuse_to_pause_a_busy_program IS
+  'Refuses to switch a program off while a workout is open on it. The app checks this too, but a check followed by a write has a gap, and a script has no check at all.';
 
 -- ============================================
 -- Saved training weeks (program_drafts) — 20260908100000.

@@ -22,7 +22,40 @@ import * as path from "path"
 const root = path.resolve(__dirname, "../..")
 
 /** A Supabase write. `.select()` and `.eq()` are reads and filters, not writes. */
-const WRITE_CALL = /\.(insert|update|upsert|delete)\s*\(/
+const DIRECT_WRITE = /\.(insert|update|upsert|delete)\s*\(/
+
+/**
+ * Database functions that only READ.
+ *
+ * WHY THE LIST IS THIS WAY ROUND. A `.rpc(...)` call is opaque to a scanner —
+ * `finish_program_workout` closes a workout and moves a program's weights, and
+ * `claim_beta_slot` takes a slot, while `match_embeddings` is a search. Nothing
+ * in the call says which. So the default is "it writes", and a read has to be
+ * named here: a new database function nobody classifies then shows up as
+ * unclassified debt rather than disappearing.
+ *
+ * `finishWorkout` is why this exists. Its direct `.update()` was removed when
+ * the finish moved entirely inside the transaction, and the function — which
+ * writes a workout, an enrollment's weights and the receipt — silently dropped
+ * out of the register the guard is built to keep.
+ */
+const READ_ONLY_RPCS = new Set(["match_embeddings", "match_embeddings_test"])
+
+const RPC_CALL = /\.rpc\s*\(\s*["'`]([^"'`]+)["'`]/g
+
+/**
+ * Does this function write user data, directly or through a database function?
+ *
+ * `body` is the stripped source (comments and string CONTENTS blanked) and
+ * `rawBody` the same span of the file, which is where the RPC's name still is.
+ */
+function writesItself(body: string, rawBody: string): boolean {
+  if (DIRECT_WRITE.test(body)) return true
+  for (const call of rawBody.matchAll(RPC_CALL)) {
+    if (!READ_ONLY_RPCS.has(call[1])) return true
+  }
+  return false
+}
 
 export interface WriteFn {
   /** Repo-relative file path. */
@@ -163,9 +196,18 @@ function bodyBrace(src: string, startIndex: number): number {
   return src.indexOf("{", startIndex)
 }
 
-function functionBody(src: string, startIndex: number): string {
+/**
+ * The body's span, so a caller can take the same slice of the RAW source.
+ *
+ * `stripNonCode` blanks the INSIDE of every string and leaves the quotes, so it
+ * is the same length as the file — which means a span found by brace-matching
+ * the stripped source lines up exactly with the original. That matters for one
+ * thing only: telling `.rpc("finish_program_workout")` from
+ * `.rpc("match_embeddings")`, where the name has been blanked away.
+ */
+function bodySpan(src: string, startIndex: number): { from: number; to: number } | null {
   const open = bodyBrace(src, startIndex)
-  if (open === -1) return ""
+  if (open === -1) return null
 
   let depth = 0
   for (let i = open; i < src.length; i++) {
@@ -173,10 +215,10 @@ function functionBody(src: string, startIndex: number): string {
     if (ch === "{") depth++
     else if (ch === "}") {
       depth--
-      if (depth === 0) return src.slice(open, i + 1)
+      if (depth === 0) return { from: open, to: i + 1 }
     }
   }
-  return src.slice(open)
+  return { from: open, to: src.length }
 }
 
 /**
@@ -204,6 +246,8 @@ export function writeFunctions(): WriteFn[] {
     rel: string
     name: string
     body: string
+    /** The same span of the unstripped file — RPC names survive here. */
+    rawBody: string
     exported: boolean
   }
 
@@ -212,21 +256,24 @@ export function writeFunctions(): WriteFn[] {
   for (const file of candidateFiles()) {
     // Comments and strings blanked first: prose that reads like code was being
     // scanned as code, and one sentence created a phantom function named `is`.
-    const src = stripNonCode(fs.readFileSync(file, "utf-8"))
+    const raw = fs.readFileSync(file, "utf-8")
+    const src = stripNonCode(raw)
     const rel = path.relative(root, file).replace(/\\/g, "/")
 
     for (const match of src.matchAll(/(export\s+)?(?:async\s+)?function\s+(\w+)/g)) {
+      const span = bodySpan(src, match.index ?? 0)
       all.push({
         rel,
         name: match[2],
-        body: functionBody(src, match.index ?? 0),
+        body: span ? src.slice(span.from, span.to) : "",
+        rawBody: span ? raw.slice(span.from, span.to) : "",
         exported: Boolean(match[1]),
       })
     }
   }
 
   // Seed: anything performing a Supabase write itself.
-  const writers = new Set(all.filter((f) => WRITE_CALL.test(f.body)).map((f) => f.name))
+  const writers = new Set(all.filter((f) => writesItself(f.body, f.rawBody)).map((f) => f.name))
 
   // Grow: anything calling a known writer becomes one. Repeat until stable, so
   // a chain of any depth is followed.

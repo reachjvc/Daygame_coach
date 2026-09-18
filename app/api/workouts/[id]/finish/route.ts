@@ -20,5 +20,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     // saying the end time was the thing to change.
     if (!parsed.success) return err(parsed.error.issues[0]?.message ?? "Could not finish that workout", 400)
     return NextResponse.json(await finishWorkout(auth.userId, id, parsed.data))
-  } catch (e) { console.error("finish workout:", e); return err((e as Error).message, 409) }
+  } catch (e) {
+    console.error("finish workout:", e)
+    const message = (e as Error).message
+    // A workout that is GONE is not a workout that was refused: the browser
+    // needs to tell "thrown away on another device" from "the server said no".
+    return err(message, message === "That workout no longer exists." ? 404 : 409)
+  }
 }
