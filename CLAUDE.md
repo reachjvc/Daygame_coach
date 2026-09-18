@@ -88,9 +88,11 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   `setup/`. One trap: the Vision Plan **Lab screen**
   is test-only, but `visionPlanService` behind it is live and Life Mastery calls
   it. Judge each file, not the folder.
-- `vice/` — quitting a vice, at `/life-mastery/quit-vice`. Eight steps —
-  learn, shortlist, map, where, gives, week, line, experiment — arranged into
-  several flows over one stored state. Read the memory note before touching
+- `vice/` — quitting a vice, at `/life-mastery/quit-vice`. Six flows over one
+  stored state — where, gives, map, experiment, line, week — plus a `learn`
+  teaching spine, a `shortlist` page, and seven tools you can open without any
+  setup. Counts from `ViceFlowId` and `ViceToolId`; the memory note's older
+  "four flows, three tools" was true in August. Read the memory note before touching
   it: no streak counter, no pros-and-cons list, and rulers that compare only
   downwards are each a deliberate research finding, not an oversight.
 - `programs/` — the gym. Hand-encoded strength programs, a custom program
