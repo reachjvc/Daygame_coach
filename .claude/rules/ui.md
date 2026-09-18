@@ -6,7 +6,7 @@ paths:
 
 # UI
 
-**Verify in the browser before saying it's done.** Playwright MCP: navigate, click the whole flow, confirm it looks right. App on localhost:3000; test user `test-user-b@daygame-coach-test.local`; fresh users land on `/preferences`, so navigate straight to the target URL after login. Shipping UI the user has to QA by hand costs more than checking it.
+**Checking UI means the browser, per rule 1.** Playwright MCP: navigate, click the whole flow. App on localhost:3000; test user `test-user-b@daygame-coach-test.local`; fresh users land on `/preferences`, so navigate straight to the target URL after login.
 
 **Walk the lifecycle, not the happy path.** Forward action → is the UI still usable afterwards → can it be undone, and if not is it confirmed → what happens when every item is gone → does state survive leaving the page and coming back.
 

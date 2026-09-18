@@ -9,7 +9,7 @@ paths:
 
 Read `docs/pipeline/learnings.md` before changing a stage, and add to it when you learn something new. Quality > speed > coverage.
 
-**Ground every claim in the script or the data.** Not in a summary, a visualization, or the comment at the top of the file. The recurring failure here is assuming a stage does what its docstring says. Open it. Count the artifacts.
+**Assuming a stage does what its docstring says is the recurring failure here.** Open it. Count the artifacts.
 
 **Count by YouTube ID, not source folder.** Source folders mix batches — `coach_kyle_how_to_approach_a_girl` holds P001 *and* P002 videos. Pull the IDs from the manifest, then `find data/<stage> -name "*<id>*"` per ID. A folder-level count is never a batch-level count.
 
