@@ -28,9 +28,17 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }))
 
+/**
+ * STARTED A MOMENT AGO, not on a fixed date.
+ *
+ * The rest clock only runs for a workout that is happening NOW — a session
+ * more than six hours old is one being written up, and starting a 90-second
+ * timer on a set you did yesterday would be nonsense. A hard-coded start date
+ * quietly aged past that line and took these tests with it.
+ */
 const workout: LiveWorkout = {
   id: "w1",
-  startedAt: "2026-09-18T07:00:00.000Z",
+  startedAt: new Date(Date.now() - 10 * 60_000).toISOString(),
   enrollmentId: "e1",
   dayId: "A",
   cycle: 1,
@@ -79,6 +87,7 @@ function renderScreen(over: Partial<LiveWorkout> = {}, presc = prescription) {
       programName="StrongLifts 5×5"
       unit="kg"
       lastTime={{}}
+      timezone="UTC"
     />
   )
 }

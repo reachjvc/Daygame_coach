@@ -10,6 +10,7 @@ import { redirect } from "next/navigation"
 import { requireAuth } from "@/src/db/auth"
 import { getLiveWorkout, prescriptionForDay } from "@/src/db/workoutRepo"
 import { getEnrollmentById, getSessionLogs } from "@/src/db/programRepo"
+import { getUserTimezone } from "@/src/db/settingsRepo"
 import { enrollmentName } from "@/src/programs/data/catalog"
 import { LiveWorkoutScreen } from "@/src/programs/components/live/LiveWorkoutScreen"
 import { lastSetsPerLift } from "@/src/programs/programsService"
@@ -33,6 +34,11 @@ export default async function LiveWorkoutPage() {
    * lifter typed 225, the boxes said "kg", and the set was stored as 102 kg:
    * the screen and the database disagreed about what the number meant.
    */
+  // ONE READ, for every workout — the loose ones too, which the program branch
+  // below never reaches. Every time on the live screen and its finish sheet is
+  // shown and read in this zone.
+  const timezone = await getUserTimezone(auth.userId)
+
   let unit: UnitSystem = live.unit
   let plates: PlateSetup | undefined
   let programName: string | null = null
@@ -66,6 +72,7 @@ export default async function LiveWorkoutPage() {
       unit={unit}
       plates={plates}
       lastTime={lastTime}
+      timezone={timezone}
     />
   )
 }

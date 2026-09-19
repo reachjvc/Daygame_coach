@@ -19,26 +19,62 @@ import { seedFinishedWorkout } from "./helpers/seedWorkout"
 
 test.describe.configure({ mode: "serial" })
 
-/** Nothing running, nothing open, one StrongLifts enrollment. */
+/**
+ * Nothing running, nothing open, one StrongLifts enrollment started NOW.
+ *
+ * IT CHECKS ITS OWN WORK. The first version ignored every response, and in the
+ * full training run it left an enrollment from an earlier spec in place —
+ * started days ago, so a session dated two days ago was legitimately allowed
+ * and the refusal test failed with nothing to point at. A fixture that fails
+ * silently makes the test that depends on it lie about what it found.
+ */
 async function reset(page: Page): Promise<void> {
   await page.goto("/programs")
-  await page.evaluate(async () => {
+  const out = await page.evaluate(async () => {
+    const problems: string[] = []
+    const check = async (res: Response, what: string) => {
+      if (!res.ok) problems.push(`${what}: HTTP ${res.status}`)
+      return res
+    }
+
     const live = await (await fetch("/api/workouts/live")).json()
-    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
+    if (live) await check(await fetch(`/api/workouts/${live.id}`, { method: "DELETE" }), "discard open workout")
+
     for (const e of await (await fetch("/api/programs/enrollments")).json()) {
       const detail = await (await fetch(`/api/programs/enrollments/${e.id}`)).json()
       for (const l of detail.logs ?? []) {
         await fetch(`/api/programs/enrollments/${e.id}/log/${l.id}`, { method: "DELETE" })
       }
       await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
-      await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
+      await check(
+        await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" }),
+        `delete enrollment ${e.id}`
+      )
     }
-    await fetch("/api/programs/enrollments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ programId: "stronglifts-5x5", level: "beginner", unitSystem: "kg" }),
-    })
+
+    await check(
+      await fetch("/api/programs/enrollments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ programId: "stronglifts-5x5", level: "beginner", unitSystem: "kg" }),
+      }),
+      "enrol"
+    )
+
+    // THE POSTCONDITION, not the requests. Exactly one program, and it began
+    // moments ago — which is what makes "two days ago" backdated at all.
+    const after = (await (await fetch("/api/programs/enrollments")).json()) as {
+      id: string
+      started_at: string
+    }[]
+    if (after.length !== 1) problems.push(`${after.length} enrollments after reset, expected 1`)
+    const age = after[0] ? Date.now() - new Date(after[0].started_at).getTime() : Infinity
+    if (age > 5 * 60_000) problems.push(`the enrollment is ${Math.round(age / 60_000)} min old`)
+    return problems
   })
+  // Throws rather than skipping: a failed fixture must fail the test, not hide
+  // inside it as a wrong answer.
+  expect(out, "reset left the account in the wrong state").toEqual([])
 }
 
 /** Two days ago at 18:00, as a `datetime-local` string. */
