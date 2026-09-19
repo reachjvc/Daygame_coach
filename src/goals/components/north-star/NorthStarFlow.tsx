@@ -57,7 +57,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { ArrowLeft, Check, ChevronDown } from "lucide-react"
-import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlace, NsPlan, NsRoutineProgram, VisionGoalType } from "@/src/goals/types"
+import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlace, NsPlan, NsRoutineProgram, LinkedProgram, VisionGoalType } from "@/src/goals/types"
 import { COMMIT_EDIT_COPY, ERRAND_COPY, NORTH_STAR_STORAGE_KEY, NS_TRACK_RUN_KEY, SCORED_TABS, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, WORKSHOP_TABS } from "@/src/goals/data/northStar"
 import type { RoutineNeed } from "@/src/goals/data/northStarBuild"
 import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
@@ -85,6 +85,14 @@ import { ValuesSoFar } from "./ValuesSoFar"
 import { ValuesWork } from "./ValuesWork"
 import { RecapTab, type RecapHandlers } from "./RecapTab"
 import { BackLink } from "@/components/BackLink"
+// ONE DOOR into the gym slice — see src/programs/forLifeMastery.ts and the
+// architecture test that holds the line.
+import {
+  useActiveEnrollments,
+  enrollmentName,
+  describeTrainingWeek,
+  getProgram,
+} from "@/src/programs/forLifeMastery"
 
 /**
  * A fresh run id: what pushed goals are tagged with alongside their plan id.
@@ -254,6 +262,48 @@ export function NorthStarFlow({
     setRunId(run)
     setLoaded(true)
   }, [])
+
+  /**
+   * WHAT IS ACTUALLY RUNNING, and what the plan believes.
+   *
+   * Everything the Systems step says about the training week is derived here,
+   * from the database, and handed down — the card itself reaches into the gym
+   * slice for nothing.
+   */
+  const { enrollments, loading: programsLoading, error: programsError } = useActiveEnrollments()
+
+  /**
+   * THE PLAN RECONCILES AGAINST THE DATABASE EVERY TIME IT OPENS.
+   *
+   * End a program on the Training page, or start one on your phone, and the
+   * reference in this browser is wrong until this runs. Guarded on a SUCCESSFUL
+   * read: a failed list must never read as "nothing is running", which would
+   * detach a program that is running perfectly well.
+   */
+  useEffect(() => {
+    if (!loaded || programsLoading || programsError) return
+    // Returns the same object when nothing changed, so this does not write to
+    // storage on every mount.
+    setPlan((p) => ns.reconcileProgramReference(p, enrollments))
+  }, [loaded, programsLoading, programsError, enrollments])
+
+  /** The five states the Systems step can be in about its training week. */
+  const linkedProgram = useMemo((): LinkedProgram => {
+    if (programsLoading) return { state: "loading" }
+    if (programsError) return { state: "failed" }
+    const referenced = plan.routines.find((r) => r.blueprintId === "workout")?.program?.enrollmentId
+    const enrollment = referenced ? enrollments.find((e) => e.id === referenced) : undefined
+    if (!enrollment) return { state: "none" }
+    if (enrollments.length > 1) return { state: "several", count: enrollments.length }
+    const program = getProgram(enrollment.program_id)
+    return {
+      state: "linked",
+      name: enrollmentName(enrollment),
+      // Read from the enrollment's OWN schedule, so a swapped lift or a renamed
+      // day is what it says.
+      week: program ? describeTrainingWeek(program, enrollment) : "",
+    }
+  }, [plan, enrollments, programsLoading, programsError])
 
   // Saving before the load has finished would write the empty plan over the
   // saved one on every refresh.
@@ -866,6 +916,7 @@ export function NorthStarFlow({
             guideHandlers={guideHandlers}
             routineHandlers={routineHandlers}
             systemHandlers={systemHandlers}
+            linkedProgram={linkedProgram}
             onAddRoutine={areaHandlers.onAddRoutine}
             openRoutineId={openRoutineId}
             setOpenRoutineId={setOpenRoutineId}

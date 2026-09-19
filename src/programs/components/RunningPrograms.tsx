@@ -25,15 +25,25 @@
 
 import { useState } from "react"
 import { useActiveEnrollments } from "../hooks/useEnrollment"
-import { Loader2 } from "lucide-react"
-import { getProgram, enrollmentName } from "../data/catalog"
+import { AlertTriangle, Loader2 } from "lucide-react"
+import { enrollmentName } from "../data/catalog"
 import { LEVEL_LABELS } from "../config"
 import type { ProgramEnrollment } from "../types"
 import { endProgram } from "../programActions"
 
+/*
+ * THE DISAGREEMENT WARNING IS GONE, because nothing can disagree any more.
+ *
+ * It compared the plan's COPY of the day names against the CATALOGUE's days —
+ * ignoring the enrollment's own schedule entirely. So it fired on every
+ * renamed day, every self-built week and every endurance plan: "Your written
+ * week (Push / Pull / Legs) is not the week any of these prescribe", in amber,
+ * about the program you were actually running.
+ *
+ * The plan no longer keeps a copy of the week, so there is no second version
+ * to compare against a first.
+ */
 interface Props {
-  /** Day names the surrounding plan believes it is training, if it has any. */
-  planDays?: string[]
   /**
    * Told which enrollment ended, so the caller can stop claiming it.
    *
@@ -46,7 +56,7 @@ interface Props {
   tone?: "dark" | "app"
 }
 
-export function RunningPrograms({ planDays = [], onEnded, tone = "dark" }: Props) {
+export function RunningPrograms({ onEnded, tone = "dark" }: Props) {
   /**
    * The SHARED list, not a third copy of it.
    *
@@ -55,7 +65,7 @@ export function RunningPrograms({ planDays = [], onEnded, tone = "dark" }: Props
    * its own copy, so ending a program here left the rest of the page showing a
    * program that no longer existed until something else happened to refetch.
    */
-  const { enrollments, loading, refresh } = useActiveEnrollments()
+  const { enrollments, loading, error, refresh } = useActiveEnrollments()
   const [ending, setEnding] = useState<string | null>(null)
   const [endFailed, setEndFailed] = useState<string | null>(null)
 
@@ -88,18 +98,37 @@ export function RunningPrograms({ planDays = [], onEnded, tone = "dark" }: Props
       </p>
     )
   }
-  // A signed-out visitor gets an empty list from the endpoint, which renders
-  // nothing — the same outcome as having no programs, which is correct for both.
-  if (enrollments.length === 0) return null
-
   const dark = tone === "dark"
+
   /**
-   * The disagreement, named rather than resolved.
+   * A LIST THAT COULD NOT BE READ IS NOT AN EMPTY LIST.
    *
-   * Overwriting one side with the other would be guessing which is right. A
-   * week you wrote by hand is not wrong just because you are also on a program,
-   * and a program is not wrong just because your plan says something else.
+   * `error` was never looked at, so a failed request rendered exactly like
+   * "you have no programs": the band returned null and the page went on to
+   * offer Start. Press it and you silently pause the program you were already
+   * on — the app having decided, on no evidence, that there was nothing there.
+   *
+   * Shown in both branches: with a stale list still on screen it is just as
+   * important, because the stale list is the thing that looks trustworthy.
    */
+  const unavailable = error ? (
+    <p
+      role="alert"
+      data-testid="running-programs-unavailable"
+      className={`flex flex-wrap items-center gap-1.5 text-[11px] ${dark ? "text-amber-300/80" : "text-amber-600"}`}
+    >
+      <AlertTriangle className="size-3 shrink-0" />
+      Your programs could not be loaded, so this may be out of date.
+      <button type="button" onClick={() => void refresh()} className="underline underline-offset-2">
+        Try again
+      </button>
+    </p>
+  ) : null
+
+  // A signed-out visitor gets an empty list from the endpoint, which renders
+  // nothing — the same outcome as having no programs, which is correct for
+  // both. A FAILED read is neither, and says so.
+  if (enrollments.length === 0) return unavailable
   const names = enrollments.map(enrollmentName)
   /**
    * A program is only "forgotten" once it has had time to be forgotten.
@@ -115,16 +144,6 @@ export function RunningPrograms({ planDays = [], onEnded, tone = "dark" }: Props
     const days = (Date.now() - new Date(e.started_at).getTime()) / 86_400_000
     return days >= FORGOTTEN_AFTER_DAYS ? "forgotten" : "new"
   }
-  const planDiffers =
-    planDays.length > 0 &&
-    enrollments.length > 0 &&
-    !enrollments.some((e) => {
-      const p = getProgram(e.program_id)
-      if (!p) return false
-      const days = "days" in p.schedule ? p.schedule.days.map((d) => d.label) : []
-      return days.length === planDays.length && days.every((d, i) => d === planDays[i])
-    })
-
   return (
     <div
       className={`rounded-md border p-2.5 ${
@@ -179,6 +198,7 @@ export function RunningPrograms({ planDays = [], onEnded, tone = "dark" }: Props
           </li>
         ))}
       </ul>
+      {unavailable}
       {/* The server's own sentence — usually "finish the workout you have open
           first", which is a thing the person can go and do. */}
       {endFailed && (
@@ -190,12 +210,6 @@ export function RunningPrograms({ planDays = [], onEnded, tone = "dark" }: Props
         <p className={`mt-1.5 text-[11px] ${dark ? "text-amber-300/80" : "text-amber-600"}`}>
           More than one is running, so more than one session is prescribed. Ending a program keeps
           everything you have already logged.
-        </p>
-      )}
-      {planDiffers && (
-        <p className={`mt-1.5 text-[11px] ${dark ? "text-amber-300/80" : "text-amber-600"}`}>
-          Your written week ({planDays.join(" / ")}) is not the week any of these prescribe. Starting
-          a program below rewrites the written one to match.
         </p>
       )}
     </div>

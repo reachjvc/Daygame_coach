@@ -172,11 +172,6 @@ export function BuildBoard({ plan, today, handlers }: {
         <WorkoutPrograms
           onProgramStarted={handlers.onProgramStarted}
           onProgramEnded={handlers.onProgramEnded}
-          /* The week this plan has written down, so the Templates tab can say
-             when it and the database disagree instead of both asserting. */
-          planDays={
-            plan.routines.find((r) => r.blueprintId === "workout")?.splitDays.map((d) => d.name) ?? []
-          }
         />
       </div>
 

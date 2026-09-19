@@ -38,7 +38,7 @@
 
 import { useState } from "react"
 import { Check, Pencil, Plus, X } from "lucide-react"
-import type { NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlan, VisionGoalType } from "@/src/goals/types"
+import type { LinkedProgram, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlan, VisionGoalType } from "@/src/goals/types"
 import { HALVES_COPY, MILESTONES_COPY, PLAN_INTRO, ROUTINES_INTRO, ROUTINE_BLUEPRINTS, SYSTEMS_COPY } from "@/src/goals/data/northStar"
 import {
   areaSystemMilestones,
@@ -91,6 +91,7 @@ export function MilestonesTab({
   guideHandlers,
   routineHandlers,
   systemHandlers,
+  linkedProgram,
   onAddRoutine,
   openRoutineId,
   setOpenRoutineId,
@@ -108,6 +109,8 @@ export function MilestonesTab({
   guideHandlers: GuideHandlers
   routineHandlers: RoutineHandlers
   systemHandlers: SystemHandlers
+  /** What the database says about the program behind the training week. */
+  linkedProgram: LinkedProgram
   onAddRoutine: (blueprintId: string) => void
   openRoutineId: string | null
   setOpenRoutineId: (id: string | null) => void
@@ -311,6 +314,7 @@ export function MilestonesTab({
               open
               onToggleOpen={() => setOpenRoutineId(null)}
               handlers={routineHandlers}
+              linkedProgram={linkedProgram}
             />
             <DerivedMilestones plan={plan} routineId={openRoutine.id} onAdd={systemHandlers.onAddSystemMilestone} />
           </div>

@@ -1643,6 +1643,17 @@ export function routineCoverage(routine: NsRoutine): { mind: boolean; body: bool
 
 /** The one-line summary on a collapsed routine card. */
 export function routineSummary(routine: NsRoutine): string {
+  /**
+   * A WEEK A PROGRAM OWNS IS NOT DESCRIBED FROM THE COPY.
+   *
+   * This printed the plan's own day names and its own "N days a week" — and
+   * that number was the count of the PROGRAM's day templates, so StrongLifts
+   * read "2 days a week" while being trained three times. The real week is one
+   * database read away and is shown on the card itself; a summary line is not
+   * the place to guess at it.
+   */
+  if (routine.program) return "Tracked by a program"
+
   if (routine.steps.length === 0) {
     // A named training week with no exercises in it is not "nothing yet". The
     // split IS the work on that card, and saying otherwise reads as data loss.
@@ -3879,7 +3890,13 @@ export function planAsText(plan: NsPlan, today = todayISO()): string {
         .map((r) => {
           const head = `${r.label} (${routineSummary(r)})`
           const steps = r.steps.map((s, i) => `  ${i + 1}. ${s.title}${r.kind === "weekly" ? ` — ${s.daysPerWeek}×/wk` : ""}`)
-          const split = r.splitDays.length > 0 ? [`  Training days: ${r.splitDays.map((d) => d.name).join(" · ")}`] : []
+          // A program's week is read live, so the text export names the source
+          // rather than a copy that may be months out of date.
+          const split = r.program
+            ? ["  Training week: from a program — see Training"]
+            : r.splitDays.length > 0
+              ? [`  Training days: ${r.splitDays.map((d) => d.name).join(" · ")}`]
+              : []
           return [head, ...steps, ...split].join("\n")
         })
         .join("\n\n")}`,

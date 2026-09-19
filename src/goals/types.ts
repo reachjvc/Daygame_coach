@@ -1741,6 +1741,27 @@ export interface NsRoutine {
  * were typed by hand, which stays a first-class case: a hand-written week is
  * not wrong, it is just not tracked by anything.
  */
+/**
+ * WHAT THE SYSTEMS STEP KNOWS ABOUT THE PROGRAM BEHIND THE TRAINING WEEK.
+ *
+ * Derived on the surface above the card, from the enrollment list, and handed
+ * down — so the card never reaches into the gym slice to work it out, and so
+ * the five states are distinguishable in a test without a network.
+ *
+ * `loading` and `failed` are separate states on purpose. They used to be the
+ * same as `none`: a list that could not be read rendered as an editable week
+ * designer, and anything typed into it described a week the program had never
+ * heard of.
+ */
+export type LinkedProgram =
+  | { state: "loading" }
+  | { state: "failed" }
+  /** No program is tracking this week. A hand-written week is a real thing. */
+  | { state: "none" }
+  | { state: "linked"; name: string; week: string }
+  /** The referenced one is running AND so is at least one other. */
+  | { state: "several"; count: number }
+
 export interface NsRoutineProgram {
   /** The row in `program_enrollments` this week is tracked by. */
   enrollmentId: string

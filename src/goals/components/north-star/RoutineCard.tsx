@@ -21,12 +21,13 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Check, ChevronDown, Minus, Plus, X } from "lucide-react"
-import type { NsArea, NsRoutine } from "@/src/goals/types"
+import { AlertTriangle, Check, ChevronDown, Minus, Plus, X } from "lucide-react"
+import type { LinkedProgram, NsArea, NsRoutine } from "@/src/goals/types"
 import { NS_SPLITS, ROUTINES_INTRO, ROUTINE_BLUEPRINT_MAP, SERVES_COPY } from "@/src/goals/data/northStar"
 import { libraryStepsInStack, presetCost, routineCoverage, routineIsUntouched, routineMinutes, routineSummary, splitPreview } from "@/src/goals/northStarService"
 import { Peek } from "./Peek"
-import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { withReturn } from "@/src/shared/returnTo"
 import { DraftInput } from "@/components/ui/draft-input"
 
 const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -121,6 +122,7 @@ export function RoutineCard({
   open,
   onToggleOpen,
   handlers,
+  linkedProgram = { state: "none" },
 }: {
   routine: NsRoutine
   areas: NsArea[]
@@ -129,6 +131,14 @@ export function RoutineCard({
   open: boolean
   onToggleOpen: () => void
   handlers: RoutineHandlers
+  /**
+   * What the DATABASE says about the program behind this week, worked out on
+   * the surface above and handed down.
+   *
+   * Defaults to "none" because every other routine — morning, evening, reading
+   * — has no program and never will.
+   */
+  linkedProgram?: LinkedProgram
 }) {
   const bp = ROUTINE_BLUEPRINT_MAP.get(routine.blueprintId)
   const area = areas.find((a) => a.id === routine.areaId)
@@ -139,6 +149,20 @@ export function RoutineCard({
   const untouched = routineIsUntouched(routine)
   const sequence = routine.kind === "sequence"
   const presets = bp?.presets ?? []
+  /**
+   * WHEN THIS WEEK IS NOT YOURS TO EDIT.
+   *
+   * A program prescribes the week; editing a copy of it here changed nothing
+   * anywhere and produced a second version of one fact. `failed` counts too —
+   * a list that could not be read must not render as a week you may type into,
+   * because whatever you typed would describe nothing.
+   */
+  const tracked =
+    !!bp?.split &&
+    (linkedProgram.state === "linked" ||
+      linkedProgram.state === "several" ||
+      linkedProgram.state === "failed" ||
+      linkedProgram.state === "loading")
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [draft, setDraft] = useState("")
   const [draftMinutes, setDraftMinutes] = useState(5)
@@ -265,6 +289,11 @@ export function RoutineCard({
               ))}
             </select>
 
+            {/* NOT RENDERED WHEN A PROGRAM OWNS THE WEEK. "2×/wk" was the
+                plan's own count of the program's day TEMPLATES, and it was
+                wrong for every program in the catalogue. Hiding it with a
+                class would leave a control a keyboard can still reach. */}
+            {!tracked && (
             <span className="ml-auto flex items-center gap-1.5">
               <span className="text-[11px] text-zinc-500">{sequence ? "runs" : "training days"}</span>
               <button
@@ -281,6 +310,7 @@ export function RoutineCard({
                 className="size-5 rounded border border-white/15 text-zinc-400 hover:bg-white/10 disabled:opacity-30 flex items-center justify-center"
               ><Plus className="size-3" /></button>
             </span>
+            )}
           </div>
 
           {presets.length > 0 && (
@@ -529,10 +559,82 @@ export function RoutineCard({
             </div>
           </div>
 
-          {/* The training-week designer. Only the workout routine has one. */}
-          {bp?.split && <SplitDesigner routine={routine} color={color} handlers={handlers} />}
+          {/* The training-week designer. Only the workout routine has one, and
+              only when no program owns the week — see TrainingWeek. */}
+          {bp?.split &&
+            (tracked ? (
+              <TrainingWeek linked={linkedProgram} />
+            ) : (
+              <SplitDesigner routine={routine} color={color} handlers={handlers} />
+            ))}
         </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * THE TRAINING WEEK, WHEN A PROGRAM OWNS IT.
+ *
+ * What used to be here was a designer over the plan's own COPY of the week:
+ * rename a day, move it, remove it, set "2×/wk". None of it reached the
+ * program. Somebody renamed Workout A to "Chest day" in their plan, went to
+ * the gym, and the app prescribed Workout A — two versions of one week and
+ * nothing able to say which was right.
+ *
+ * So when a program owns the week, the week is READ, not edited, and the way
+ * to change it is the link to the page that can actually change it.
+ *
+ * `failed` shows no week and no number at all. A guessed "2×/wk" under an
+ * amber warning would be exactly the silent-plausible-number failure this
+ * codebase keeps relearning.
+ */
+function TrainingWeek({ linked }: { linked: LinkedProgram }) {
+  const change = (
+    <Link
+      href={withReturn("/programs", `${LIFE_MASTERY}?step=systems`)}
+      className="inline-flex min-h-11 items-center text-[12px] text-zinc-300 underline underline-offset-4 hover:text-white"
+    >
+      Change on the Training page ›
+    </Link>
+  )
+
+  if (linked.state === "loading") {
+    return <div className="h-[92px] animate-pulse rounded-xl border border-white/10 bg-white/[0.02]" />
+  }
+
+  if (linked.state === "failed") {
+    return (
+      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3" data-testid="training-week-failed">
+        <p className="flex items-center gap-1.5 text-[12px] text-amber-300/80">
+          <AlertTriangle className="size-3 shrink-0" />
+          Could not read your program
+        </p>
+        <div className="mt-2">{change}</div>
+      </div>
+    )
+  }
+
+  if (linked.state === "several") {
+    return (
+      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3" data-testid="training-week-several">
+        <p className="text-[12px] text-zinc-300">
+          {linked.count} programs running — see Training
+        </p>
+        <div className="mt-2">{change}</div>
+      </div>
+    )
+  }
+
+  if (linked.state !== "linked") return null
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3" data-testid="training-week-linked">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+        Training week · from {linked.name}
+      </p>
+      {linked.week && <p className="mt-1.5 text-sm text-zinc-200">{linked.week}</p>}
+      <div className="mt-2">{change}</div>
     </div>
   )
 }

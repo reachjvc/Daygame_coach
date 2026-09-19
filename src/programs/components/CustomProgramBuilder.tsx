@@ -66,7 +66,7 @@ import {
   searchLibrary,
 } from "../data/exerciseLibrary"
 import { searchCustomLifts } from "../customLifts"
-import { refreshEnrollments } from "../hooks/useEnrollment"
+import { refreshEnrollments, useActiveEnrollments } from "../hooks/useEnrollment"
 import { CUSTOM_PROGRAM_ID } from "../data/customProgram"
 import { WEEKDAYS } from "../config"
 import {
@@ -179,7 +179,11 @@ export function CustomProgramBuilder({
   const problems = designProblems(schedule)
   const allLifts = days.flatMap((d) => d.exercises as LoadExercise[])
   const missingWeights = allLifts.filter((e) => !hasWeight(weights, e.id))
-  const canStart = problems.length === 0 && missingWeights.length === 0 && state !== "saving"
+  // See WorkoutPrograms: starting pauses whatever is running, so it is off
+  // while the app cannot see what that is.
+  const { error: runningUnknown } = useActiveEnrollments()
+  const canStart =
+    problems.length === 0 && missingWeights.length === 0 && state !== "saving" && !runningUnknown
 
   function apply(fn: () => ProgramSchedule) {
     try {
@@ -420,7 +424,12 @@ export function CustomProgramBuilder({
                   Start tracking this
                 </span>
               </Action>
-              {problems.length > 0 ? (
+              {runningUnknown ? (
+                <span className="text-[11px] text-amber-300/80">
+                  Start is off until your programs can be checked — starting now could pause one you
+                  are on.
+                </span>
+              ) : problems.length > 0 ? (
                 <span className="text-[11px] text-amber-300/80">{problems[0]}</span>
               ) : missingWeights.length > 0 ? (
                 <span className="text-[11px] text-amber-300/80">

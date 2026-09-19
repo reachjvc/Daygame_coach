@@ -44,7 +44,7 @@ import { fromKg, roundToLoadable } from "@/src/programs/programsService"
 import { hasWeight, numericWeights } from "@/src/programs/builder"
 import { ProgramEditor } from "@/src/programs/components/ProgramEditor"
 import { RunningPrograms } from "@/src/programs/components/RunningPrograms"
-import { refreshEnrollments } from "@/src/programs/hooks/useEnrollment"
+import { refreshEnrollments, useActiveEnrollments } from "@/src/programs/hooks/useEnrollment"
 import { Segmented } from "@/src/programs/components/ui"
 import { BuildYourOwn } from "./BuildYourOwn"
 import type { Discipline, LevelId, ProgramSchedule, UnitSystem } from "@/src/programs/types"
@@ -61,8 +61,6 @@ export const PROGRAM_COPY = {
 }
 
 interface Props {
-  /** The training week this plan has written down, for the disagreement notice. */
-  planDays?: string[]
   /**
    * Write the started program's day names into the plan's workout routine, so
    * the training week on this page matches the one being tracked. Null when the
@@ -77,7 +75,7 @@ interface Props {
   onProgramEnded?: (enrollmentId: string) => void
 }
 
-export function WorkoutPrograms({ onProgramStarted, onProgramEnded, planDays = [] }: Props) {
+export function WorkoutPrograms({ onProgramStarted, onProgramEnded }: Props) {
   /** Bumped after starting or ending one, to re-read what is running. */
   const [runningKey, setRunningKey] = useState(0)
   /** Take one that exists, or build your own. Two answers to the same question. */
@@ -171,7 +169,17 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded, planDays = [
   // A day added but not yet filled makes the program unstartable, not invalid —
   // it is a normal half-finished edit, so it is named rather than blocked.
   const problems = schedule ? scheduleProblems(schedule) : []
-  const canStart = !!program && problems.length === 0 && missingFilled && oneRmsFilled && state !== "saving"
+  /**
+   * START IS OFF WHILE WE CANNOT SEE WHAT IS RUNNING.
+   *
+   * Starting a program of the same kind pauses the one already running. If the
+   * list of running programs could not be read, the app does not know what it
+   * is about to pause — and the failure looked exactly like "nothing running",
+   * so the button sat there inviting the press.
+   */
+  const { error: runningUnknown } = useActiveEnrollments()
+  const canStart =
+    !!program && problems.length === 0 && missingFilled && oneRmsFilled && state !== "saving" && !runningUnknown
 
   async function start() {
     if (!program || !programId) return
@@ -271,7 +279,7 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded, planDays = [
             program" before they had seen either, and put two answers to one
             question in two different places. */}
         <div className="mt-3 space-y-3">
-          <RunningPrograms key={runningKey} planDays={planDays} onEnded={(id) => { onProgramEnded?.(id); setRunningKey((k) => k + 1) }} />
+          <RunningPrograms key={runningKey} onEnded={(id) => { onProgramEnded?.(id); setRunningKey((k) => k + 1) }} />
           <BuildYourOwn onProgramStarted={onProgramStarted} />
         </div>
       </div>
@@ -287,7 +295,7 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded, planDays = [
           a person still had to work out which of three screens was the one they
           trained on. */}
       <div className="mt-3 space-y-2">
-        <RunningPrograms key={runningKey} planDays={planDays} onEnded={(id) => { onProgramEnded?.(id); setRunningKey((k) => k + 1) }} />
+        <RunningPrograms key={runningKey} onEnded={(id) => { onProgramEnded?.(id); setRunningKey((k) => k + 1) }} />
         <Link
           href="/programs"
           className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400/40 bg-emerald-500/10 px-3 py-1.5 text-[12.5px] text-emerald-200 transition-colors hover:bg-emerald-500/20"
@@ -503,7 +511,13 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded, planDays = [
                 {state === "saving" && <Loader2 className="size-3 animate-spin" />}
                 Start tracking this
               </button>
-              {problems.length > 0 && (
+              {runningUnknown && (
+                <span className="text-[11px] text-amber-300/80">
+                  Start is off until your programs can be checked — starting now could pause one you
+                  are on.
+                </span>
+              )}
+              {!runningUnknown && problems.length > 0 && (
                 <span className="text-[11px] text-amber-300/80">{problems[0]}</span>
               )}
               {problems.length === 0 && !missingFilled && (

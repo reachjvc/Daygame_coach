@@ -665,7 +665,11 @@ export function RecapTab({
                     </li>
                   ))}
                 </ol>
-                {routine.splitDays.length > 0 && (
+                {/* The copied day list is not printed for a week a program
+                    owns: it is a snapshot of something that has since moved. */}
+                {routine.program ? (
+                  <p className="text-[11px] text-zinc-500 mt-2">Training week: from a program — see Training</p>
+                ) : routine.splitDays.length > 0 && (
                   <p className="text-[11px] text-zinc-500 mt-2">{routine.splitDays.map((d) => d.name).join(" · ")}</p>
                 )}
               </div>
