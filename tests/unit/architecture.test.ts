@@ -1673,7 +1673,10 @@ describe('Architecture Compliance', () => {
       'components/ProgressionView.tsx': 3,
       'components/RunningPrograms.tsx': 2,
       'components/TodayCard.tsx': 1,
-      'components/live/FinishSheet.tsx': 1,
+      // Zero since the long-gap note stopped reading the device's clock
+      // (2026-09-19). Kept at 0 rather than deleted: this file is the one that
+      // formats times, so a new `new Date()` here is exactly what to catch.
+      'components/live/FinishSheet.tsx': 0,
       // The converter itself, and the engine's one caller of it.
       'config.ts': 1,
       'programsService.ts': 1,

@@ -38,6 +38,8 @@ import {
   describePlates,
   platesFor,
   enduranceMinutes,
+  isStaleWorkout,
+  fixedRowsToTick,
 } from "../../programsService"
 import { REST_SECONDS, UNIT_CONFIG } from "../../config"
 import type {
@@ -50,6 +52,9 @@ import type {
 } from "../../types"
 
 interface Props {
+  /** The ACCOUNT's zone, for every time this screen shows or reads. */
+  timezone: string
+
   initial: LiveWorkout
   prescription: SessionPrescription | null
   programName: string | null
@@ -66,8 +71,19 @@ export function LiveWorkoutScreen({
   unit,
   plates,
   lastTime,
+  timezone,
 }: Props) {
   const live = useLiveWorkout(initial)
+  /**
+   * IS THIS A SESSION BEING WRITTEN UP, rather than one happening now?
+   *
+   * The same six-hour rule the Tracking card uses for "still open": a workout
+   * left open since Monday and one deliberately backdated are the same
+   * situation on this screen, and both want the same thing — no minute
+   * counter racing away, and no rest clock starting on a set you did
+   * yesterday.
+   */
+  const past = isStaleWorkout(initial.startedAt)
   const router = useRouter()
   const [restFrom, setRestFrom] = useState<number | null>(null)
   const [restSeconds, setRestSeconds] = useState<number>(REST_SECONDS.accessory)
@@ -165,6 +181,10 @@ export function LiveWorkoutScreen({
     return (
       <div className="mx-auto max-w-2xl px-4 py-6">
         <FinishSheet
+          timezone={timezone}
+          past={past}
+          endurance={Boolean(prescription?.enduranceSets?.length)}
+          loose={!shown.enrollmentId}
           workout={shown}
           unfinished={unfinished}
           untouchedAdded={untouchedAdded}
@@ -233,6 +253,8 @@ export function LiveWorkoutScreen({
         startedAt={workout.startedAt}
         programName={programName}
         dayLabel={prescription?.dayLabel}
+        past={past}
+        timezone={timezone}
         onFinish={() => {
           setFinished(workout)
           setFinishing(true)
@@ -284,6 +306,10 @@ export function LiveWorkoutScreen({
           const isSkipped = skipped.has(ex.exerciseId)
           const previous = lastTime[ex.exerciseId] ?? []
           const rest = restSecondsFor({ name: ex.name })
+          const fixedToTick = fixedRowsToTick(
+            rowsFor(ex),
+            new Set(done.filter((s) => s.kind !== "warmup").map((s) => s.setNumber))
+          )
 
           return (
             /*
@@ -413,7 +439,12 @@ export function LiveWorkoutScreen({
                            *
                            * Only after the second lift of a superset pair.
                            */
-                          const startedAt = isLastOfGroup(ex, i) ? Date.now() : null
+                          /**
+                           * NO REST CLOCK ON A SESSION THAT ALREADY HAPPENED.
+                           * Ticking Tuesday's third set on Thursday must not
+                           * start a 90-second timer.
+                           */
+                          const startedAt = !past && isLastOfGroup(ex, i) ? Date.now() : null
                           if (startedAt !== null) {
                             setRestSeconds(rest.seconds)
                             setRestOurs(rest.ours)
@@ -438,6 +469,38 @@ export function LiveWorkoutScreen({
                       />
                     )
                   })}
+
+                {/*
+                  THE REPLACEMENT FOR "I DID ALL OF THIS — SAVE IT".
+                  That button saved a whole session at its prescribed numbers
+                  in one tap, including rows whose prescription is a range or
+                  an AMRAP, which is how a session came to claim numbers
+                  nobody did. This one exists only when you are writing up a
+                  session that already happened, ticks only the rows with one
+                  definite prescription, and says how many that is.
+                */}
+                {!isSkipped && past && fixedToTick.length > 0 && (
+                  <button
+                    type="button"
+                    data-testid={`tick-all-${ex.exerciseId}`}
+                    onClick={() => {
+                      for (const set of fixedToTick) {
+                        void live.tick({
+                          exerciseId: ex.exerciseId,
+                          exercise: ex.name,
+                          weight: set.weight,
+                          reps: set.reps,
+                          setNumber: set.setNumber,
+                          kind: "working",
+                          side: null,
+                        })
+                      }
+                    }}
+                    className="min-h-11 w-full rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  >
+                    Did the {fixedToTick.length} fixed set{fixedToTick.length === 1 ? "" : "s"} as shown
+                  </button>
+                )}
 
                 {!isSkipped && (
                   <div className="flex items-center gap-2 pt-0.5">
@@ -535,11 +598,16 @@ function Elapsed({
   programName,
   dayLabel,
   onFinish,
+  past,
+  timezone,
 }: {
   startedAt: string
   programName: string | null
   dayLabel?: string
   onFinish: () => void
+  /** A session being written up: say WHEN, not how long ago. */
+  past: boolean
+  timezone: string
 }) {
   const [now, setNow] = useState(() => Date.now())
   // useEffect, not useMemo: a memo's return value is a value, not a cleanup, so
@@ -562,7 +630,20 @@ function Elapsed({
             {dayLabel ?? "Workout"}
             {programName ? <span className="text-muted-foreground"> · {programName}</span> : null}
           </p>
-          <p className="text-xs tabular-nums text-muted-foreground">{mins} min</p>
+          {/* A COUNTER IS WRONG FOR A SESSION THAT ALREADY HAPPENED. A
+              workout dated yesterday read "1,440 min" and climbing. */}
+          <p className="text-xs tabular-nums text-muted-foreground">
+            {past
+              ? `since ${new Date(startedAt).toLocaleString([], {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  timeZone: timezone,
+                })}`
+              : `${mins} min`}
+          </p>
         </div>
         <Button size="sm" onClick={onFinish} data-testid="finish-workout">
           Finish

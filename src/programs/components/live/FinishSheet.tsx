@@ -19,6 +19,8 @@ import { useState } from "react"
 import { Award, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { instantToWallClock, wallClockToInstant } from "@/src/shared/dateUtils"
+import { distanceUnitFor, toKmFromDisplay } from "../../programsService"
 import { Textarea } from "@/components/ui/textarea"
 import type { LiveWorkout, WorkoutSummary } from "../../types"
 
@@ -41,29 +43,55 @@ interface Props {
   onSkipLift: (exerciseId: string) => void
   onFinish: (input: {
     intensity: number
+    startedAt?: string
     endedAt?: string
-    durationMin?: number
     notes?: string | null
     rpe?: number | null
+    distanceKm?: number | null
+    sessionType?: "weights" | "cardio" | "mobility" | "yoga" | "running"
   }) => Promise<WorkoutSummary | null>
   onCancel: () => void
+  /**
+   * The ACCOUNT's zone. Every time on this sheet is read and written in it.
+   *
+   * It used to be the browser's, so somebody who trained at 18:00 in
+   * Copenhagen and opened the app on a laptop still set to Tokyo was shown
+   * 01:00 the next day — and "correcting" it broke a time that was right.
+   */
+  timezone: string
+  /**
+   * This session happened earlier, so both times are open and nothing about
+   * "now" is assumed. Same six-hour rule as the door's still-open state: a
+   * workout left open since Monday and one deliberately backdated are the
+   * same situation.
+   */
+  past?: boolean
+  /** The day prescribes blocks rather than lifts, so ask how far. */
+  endurance?: boolean
+  /** No program, so nothing knows what kind of session this was but the person. */
+  loose?: boolean
 }
 
 /**
- * ISO instant to the `datetime-local` shape, in the browser's own clock.
+ * `toLocalInput` used to live here and read the BROWSER's clock.
  *
- * ROUNDED UP TO THE MINUTE. The input has no seconds, so a workout that started
- * at 20:43:37 and ended at 20:43:52 would come back as 20:43:00 — before it
- * began. Rounding up keeps the default at or after the moment it describes.
+ * `instantToWallClock` / `wallClockToInstant` in `src/shared/dateUtils.ts` do
+ * the same job in the account's zone, which is the zone every other date in
+ * this app is filed by. The rounding-up it did is kept below, where the
+ * default end time is set.
  */
-function toLocalInput(iso: string): string {
-  const d = new Date(iso)
-  if (d.getSeconds() > 0 || d.getMilliseconds() > 0) {
-    d.setSeconds(0, 0)
-    d.setMinutes(d.getMinutes() + 1)
+/**
+ * The input has no seconds, so a workout that started at 20:43:37 and ended
+ * fifteen seconds later would default to 20:43:00 — before it began. Rounding
+ * up keeps the default at or after the moment it describes.
+ */
+function roundUpToMinute(iso: string): string {
+  const at = new Date(iso)
+  if (at.getSeconds() > 0 || at.getMilliseconds() > 0) {
+    at.setSeconds(0, 0)
+    at.setMinutes(at.getMinutes() + 1)
   }
-  const pad = (n: number) => String(n).padStart(2, "0")
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return at.toISOString()
 }
 
 export function FinishSheet({
@@ -77,21 +105,66 @@ export function FinishSheet({
   onSkipLift,
   onFinish,
   onCancel,
+  timezone,
+  past = false,
+  endurance = false,
+  loose = false,
 }: Props) {
   const lastTick = workout.sets
     .map((s) => s.completedAt)
     .filter((t): t is string => Boolean(t))
     .sort()
     .pop()
-  const [endedAt, setEndedAt] = useState(toLocalInput(lastTick ?? new Date().toISOString()))
-  const [editingEnd, setEditingEnd] = useState(false)
+  /**
+   * NOTHING IS INVENTED IN PAST MODE.
+   *
+   * A live workout defaults its end to the last set you ticked. A session you
+   * are writing up has no such moment worth guessing from, so Ended starts
+   * EMPTY and Save says why it is disabled — rather than offering a plausible
+   * time somebody will accept without reading.
+   */
+  const [startedAt, setStartedAt] = useState(() => instantToWallClock(workout.startedAt, timezone))
+  const [endedAt, setEndedAt] = useState(() =>
+    past ? "" : instantToWallClock(roundUpToMinute(lastTick ?? new Date().toISOString()), timezone)
+  )
+  const [editingEnd, setEditingEnd] = useState(past)
   const [intensity, setIntensity] = useState(3)
   const [notes, setNotes] = useState("")
+  const [distance, setDistance] = useState("")
+  const [kind, setKind] = useState<"weights" | "cardio" | "mobility" | "yoga" | "running" | null>(
+    // Preselected only when there is evidence: a ticked set is a gym session
+    // unless somebody says otherwise. Nothing ticked means nothing is known.
+    loose && workout.sets.some((set) => set.completedAt) ? "weights" : null
+  )
   const [summary, setSummary] = useState<WorkoutSummary | null>(null)
 
-  const started = new Date(workout.startedAt)
-  const minutes = Math.max(1, Math.round((new Date(endedAt).getTime() - started.getTime()) / 60000))
-  const longGap = Date.now() - started.getTime() > 4 * 60 * 60 * 1000
+  /**
+   * AN EMPTY BOX IS A STATE, NOT A CRASH.
+   *
+   * `startedAt` was read straight into `new Date(wallClockToInstant(…))`, which
+   * throws on "". Clearing the Started field — the first thing anybody does
+   * before typing a different time — threw during render and took the whole
+   * live screen down mid-workout, with every unsaved set on it.
+   */
+  const started = startedAt ? new Date(wallClockToInstant(startedAt, timezone)) : null
+  const endedInstant = endedAt ? new Date(wallClockToInstant(endedAt, timezone)) : null
+  const minutes =
+    endedInstant && started
+      ? Math.max(1, Math.round((endedInstant.getTime() - started.getTime()) / 60000))
+      : 0
+  // In past mode the open row IS the message; the note would repeat it.
+  const longGap = !past && started !== null && Date.now() - started.getTime() > 4 * 60 * 60 * 1000
+
+  const distanceUnit = distanceUnitFor(workout.unit)
+  const askDistance = endurance || kind === "running" || kind === "cardio"
+  /** Why Save cannot be pressed yet, in the person's words. */
+  const blocked = !startedAt
+    ? "Say when it started"
+    : past && !endedAt
+      ? "Say when it ended"
+      : loose && !kind
+        ? "Say what kind of session it was"
+        : null
   /**
    * TOO LONG TO BE A WORKOUT — said HERE, not as a 400 after the fact.
    *
@@ -261,31 +334,103 @@ export function FinishSheet({
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm">
           <span className="tabular-nums">
-            {started.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            {started
+              ? started.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: timezone })
+              : "—"}
           </span>
           <span className="text-muted-foreground"> → </span>
           <span className="tabular-nums">
-            {new Date(endedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            {endedInstant
+              ? endedInstant.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: timezone })
+              : "—"}
           </span>
-          <span className="ml-2 text-muted-foreground">{minutes} min</span>
+          {endedInstant && <span className="ml-2 text-muted-foreground">{minutes} min</span>}
         </p>
-        <button
-          type="button"
-          onClick={() => setEditingEnd((v) => !v)}
-          aria-expanded={editingEnd}
-          className="min-h-11 shrink-0 rounded-md px-2 text-xs text-muted-foreground transition-colors hover:text-foreground sm:min-h-0 sm:py-1"
-        >
-          {editingEnd ? "Done" : "Change"}
-        </button>
+        {!past && (
+          <button
+            type="button"
+            onClick={() => setEditingEnd((v) => !v)}
+            aria-expanded={editingEnd}
+            className="min-h-11 shrink-0 rounded-md px-2 text-xs text-muted-foreground transition-colors hover:text-foreground sm:min-h-0 sm:py-1"
+          >
+            {editingEnd ? "Done" : "Change"}
+          </button>
+        )}
       </div>
       {editingEnd && (
-        <Input
-          type="datetime-local"
-          className="h-11 w-full sm:h-9"
-          value={endedAt}
-          onChange={(e) => setEndedAt(e.target.value)}
-          aria-label="When the workout ended"
-        />
+        <div className="grid gap-2 sm:grid-cols-2">
+          {/* BOTH TIMES. Only the end could be edited, so a session written up
+              later was stuck with the moment Start happened to be pressed. */}
+          <div className="flex flex-col gap-1">
+            <label htmlFor="finish-started" className="text-xs text-muted-foreground">
+              Started
+            </label>
+            <Input
+              id="finish-started"
+              type="datetime-local"
+              className="h-11 w-full sm:h-9"
+              value={startedAt}
+              onChange={(e) => setStartedAt(e.target.value)}
+              aria-label="When the workout started"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="finish-ended" className="text-xs text-muted-foreground">
+              Ended
+            </label>
+            <Input
+              id="finish-ended"
+              type="datetime-local"
+              className="h-11 w-full sm:h-9"
+              value={endedAt}
+              onChange={(e) => setEndedAt(e.target.value)}
+              aria-label="When the workout ended"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* WHAT WAS THIS? Only where nothing else knows: a loose workout has no
+          program to ask, and a run recorded as one was stored as a gym session
+          and appeared in no running total anywhere. */}
+      {loose && (
+        <div className="flex flex-col gap-1" data-testid="finish-kind">
+          <span className="text-xs text-muted-foreground">What was this?</span>
+          <div className="flex flex-wrap gap-1.5">
+            {(["weights", "cardio", "mobility", "yoga", "running"] as const).map((k) => (
+              <Button
+                key={k}
+                type="button"
+                variant="outline"
+                size="sm"
+                aria-pressed={kind === k}
+                onClick={() => setKind(k)}
+                className={`min-h-11 capitalize sm:min-h-9 ${kind === k ? "border-primary/50 bg-primary/10 text-primary" : ""}`}
+              >
+                {k}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {askDistance && (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="finish-distance" className="text-xs text-muted-foreground">
+            How far ({distanceUnit})
+          </label>
+          <Input
+            id="finish-distance"
+            type="number"
+            inputMode="decimal"
+            className="h-11 w-full sm:h-9"
+            value={distance}
+            onChange={(e) => setDistance(e.target.value)}
+            // Asked in miles for a pounds lifter, stored as kilometres either
+            // way — one unit in the database, as with weight.
+            aria-label={`How far, in ${distanceUnit}`}
+          />
+        </div>
       )}
 
       {tooLong && (
@@ -297,9 +442,12 @@ export function FinishSheet({
 
       {longGap && (
         <p className="text-xs text-amber-600 dark:text-amber-400">
-          This started {started.toLocaleDateString()} at{" "}
-          {started.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}. Check when it
-          really ended before saving.
+          {/* The account's zone, like every other time on this sheet. Read in
+              the device's, this told a traveller their session started on a
+              day they were not even training. */}
+          This started {started?.toLocaleDateString([], { timeZone: timezone })} at{" "}
+          {started?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: timezone })}.
+          Check when it really ended before saving.
         </p>
       )}
 
@@ -346,19 +494,31 @@ export function FinishSheet({
           className="flex-1"
           // Saving before the last set lands would report a workout that did
           // not happen and progress the program on it.
-          disabled={busy || unsaved > 0 || saving > 0 || tooLong}
+          disabled={busy || unsaved > 0 || saving > 0 || tooLong || blocked !== null}
           onClick={async () => {
             const result = await onFinish({
               intensity,
-              endedAt: new Date(endedAt).toISOString(),
-              durationMin: minutes,
+              // Both read in the ACCOUNT's zone. The start is sent only when
+              // it was actually changed, so a live finish leaves it alone.
+              ...(startedAt !== instantToWallClock(workout.startedAt, timezone)
+                ? { startedAt: wallClockToInstant(startedAt, timezone) }
+                : {}),
+              endedAt: wallClockToInstant(endedAt, timezone),
+              // NO durationMin. The server derives it from the two instants;
+              // sending a third number is how "45 minutes at effort 3" got in.
               notes: notes.trim() || null,
+              ...(askDistance && distance.trim()
+                ? { distanceKm: toKmFromDisplay(Number(distance), workout.unit) }
+                : {}),
+              ...(loose && kind ? { sessionType: kind } : {}),
             })
             if (result) setSummary(result)
           }}
         >
           {(busy || saving > 0) && <Loader2 className="mr-1 size-4 animate-spin" />}
-          {saving > 0 ? "Saving your last set…" : "Save this workout"}
+          {/* WHY IT IS OFF, on the button itself. A disabled control with no
+              reason is a dead end somebody taps twice and then leaves. */}
+          {blocked ?? (saving > 0 ? "Saving your last set…" : "Save this workout")}
         </Button>
         <Button variant="outline" onClick={onCancel} disabled={busy}>
           Keep going

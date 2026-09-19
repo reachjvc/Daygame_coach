@@ -53,7 +53,8 @@ async function openTracking(page: Page): Promise<void> {
   await page.goto("/dashboard/tracking", { waitUntil: "networkidle" })
 }
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(() => {
+  // The door waits on the real programs API, and this project runs one worker.
   test.setTimeout(180000)
 })
 

@@ -2283,6 +2283,39 @@ export function isStaleWorkout(startedAt: string, now: Date = new Date()): boole
 }
 
 /**
+ * WHICH ROWS "AS SHOWN" MAY TICK FOR YOU.
+ *
+ * The deleted "I did all of this — save it" button saved every prescribed row
+ * at its prescribed numbers. For two kinds of row that INVENTS a number:
+ *
+ *   - a rep-range row ("8–12") carries the BOTTOM of the range in `reps`
+ *     (`types.ts:543`), so "as shown" would record the worst set you could
+ *     have done as the set you did
+ *   - an AMRAP row carries a MINIMUM, and the whole point of the row is the
+ *     number you got above it
+ *   - a bodyweight row prescribed 0 reps has no prescription at all
+ *
+ * Those three are left for the person. Everything else has exactly one
+ * defensible reading, and the label counts only what it will actually tick —
+ * "Did the 4 fixed sets as shown" on a 5/3/1 day whose fifth row is the AMRAP.
+ *
+ * `done` is the set numbers already recorded: ticking one twice would file a
+ * second set at the same number.
+ */
+export function fixedRowsToTick<T extends { setNumber: number; reps: number; repRangeMax?: number | null; amrap?: boolean | null }>(
+  rows: readonly T[],
+  done: ReadonlySet<number>
+): T[] {
+  return rows.filter(
+    (r) =>
+      !done.has(r.setNumber) &&
+      !r.amrap &&
+      (r.repRangeMax === null || r.repRangeMax === undefined) &&
+      r.reps > 0
+  )
+}
+
+/**
  * WHICH PROGRAM THE CARD IS ABOUT — a rule, not a position in a list.
  *
  * It was `enrollments[0]`: the most recently started, whatever that happened
@@ -2367,6 +2400,28 @@ export function nextSessionAfterToday(
   // In sequence: the cursor's day, which a finished session has already moved.
   const next = computePrescription(program, enrollment)
   return { dayId: next.dayId, label: next.dayLabel }
+}
+
+/**
+ * WHAT DISTANCE IS ASKED FOR IN, and the one conversion.
+ *
+ * Somebody training in pounds thinks in miles, and asking them for kilometres
+ * is the same class of mistake as showing them kilograms. The STORED value is
+ * always kilometres — one unit in the database, as with weight — so the
+ * conversion happens once, here, rather than in whichever screen remembers.
+ */
+export const distanceUnitFor = (unit: UnitSystem): "km" | "miles" => (unit === "lb" ? "miles" : "km")
+
+const KM_PER_MILE = 1.609344
+
+/** A typed distance, in whatever the person was asked for, as kilometres. */
+export function toKmFromDisplay(value: number, unit: UnitSystem): number {
+  return unit === "lb" ? round2(value * KM_PER_MILE) : round2(value)
+}
+
+/** And back, for showing a stored distance in what they were asked in. */
+export function fromKmToDisplay(km: number, unit: UnitSystem): number {
+  return unit === "lb" ? round2(km / KM_PER_MILE) : round2(km)
 }
 
 /**
