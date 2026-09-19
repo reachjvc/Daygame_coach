@@ -37,6 +37,9 @@ import { buildTrackInserts, pushedRealIds, trackRows, trackTemplateId } from "@/
 import { TRACK_COPY } from "@/src/goals/data/northStar"
 import { GoalsHubContent } from "@/src/goals/components/GoalsHubContent"
 import { TrackSchedule } from "./TrackSchedule"
+import { useLoad } from "@/src/shared/useLoad"
+import { STEP_FOR_SESSION_TYPE, workoutsByLocalDate } from "@/src/health/healthService"
+import type { SessionType } from "@/src/health/types"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 /** The batch route takes 50 at a time; the push loops until it is done. */
@@ -53,11 +56,18 @@ export function TrackTab({
   plan,
   runId,
   today,
+  timezone,
   onToggleStep,
 }: {
   plan: NsPlan
   runId: string
   today: string
+  /**
+   * The ACCOUNT's zone, so a finished workout is filed on the day it happened
+   * where the person was. A 23:45 session in Copenhagen is Monday's, not
+   * Tuesday's, and ticking the wrong column is worse than not ticking at all.
+   */
+  timezone: string
   /**
    * Ticking one of today's routine steps off from inside the schedule.
    *
@@ -76,6 +86,56 @@ export function TrackTab({
   // Bumped after a push so the hub below remounts and refetches. It owns its
   // own data, and there is no prop that would tell it the list just changed.
   const [hubKey, setHubKey] = useState(0)
+
+  /**
+   * WHAT YOU ACTUALLY DID, from the training log.
+   *
+   * The ticks on this step lived only in the plan in the browser, so a week
+   * with three finished gym sessions showed zero against "Strength session"
+   * until somebody ticked it by hand. Two records of one workout, kept apart,
+   * free to disagree — and the one being ignored was the one the person had
+   * actually done.
+   *
+   * Nine days rather than seven: the grid shows eight columns and the server
+   * cuts the history by ITS day, so a person far enough east or west needs the
+   * extra one to have their whole week.
+   */
+  const workouts = useLoad<Array<{ logged_at: string; session_type: SessionType }>>(
+    "/api/health/workout?days=9",
+    (body) => (Array.isArray(body) ? (body as Array<{ logged_at: string; session_type: SessionType }>) : [])
+  )
+
+  /**
+   * Date → the ids of the steps that day's finished sessions tick.
+   *
+   * Translated into the PLAN's own step ids here, because that is what the
+   * schedule's rows and `stepLogged` speak. `STEP_FOR_SESSION_TYPE` answers in
+   * library-step ids ("strength"), which are the same on everybody's plan; the
+   * step that carries one has an id of its own ("s3") that is not.
+   */
+  const derivedTicks = useMemo(() => {
+    const byDate = new Map<string, Set<string>>()
+    if (workouts.state !== "ready") return byDate
+
+    const stepIdFor = new Map<string, string[]>()
+    for (const routine of plan.routines) {
+      for (const step of routine.steps) {
+        if (!step.libraryStepId) continue
+        const already = stepIdFor.get(step.libraryStepId)
+        if (already) already.push(step.id)
+        else stepIdFor.set(step.libraryStepId, [step.id])
+      }
+    }
+
+    for (const [date, types] of workoutsByLocalDate(workouts.data, timezone)) {
+      const ids = new Set<string>()
+      for (const type of types) {
+        for (const id of stepIdFor.get(STEP_FOR_SESSION_TYPE[type]) ?? []) ids.add(id)
+      }
+      if (ids.size > 0) byDate.set(date, ids)
+    }
+    return byDate
+  }, [workouts, timezone, plan])
 
   const loadHub = useCallback(async () => {
     try {
@@ -186,7 +246,14 @@ export function TrackTab({
   if (auth === "checking") {
     return (
       <div className="space-y-5">
-        <TrackSchedule plan={plan} today={today} onToggleStep={onToggleStep} />
+        <TrackSchedule
+          plan={plan}
+          today={today}
+          onToggleStep={onToggleStep}
+          derivedTicks={derivedTicks}
+          logUnavailable={workouts.state === "failed"}
+          onRetryLog={workouts.state === "failed" ? workouts.retry : undefined}
+        />
         <p className="text-sm text-zinc-500">Checking your goals…</p>
       </div>
     )
@@ -198,7 +265,14 @@ export function TrackTab({
         {/* The schedule is read off the plan and needs no account, so being
             signed out costs you the counting, not the answer to "what am I
             doing next week". */}
-        <TrackSchedule plan={plan} today={today} onToggleStep={onToggleStep} />
+        <TrackSchedule
+          plan={plan}
+          today={today}
+          onToggleStep={onToggleStep}
+          derivedTicks={derivedTicks}
+          logUnavailable={workouts.state === "failed"}
+          onRetryLog={workouts.state === "failed" ? workouts.retry : undefined}
+        />
         <section className="rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-6">
           <h2 className="text-sm font-semibold text-zinc-200">{TRACK_COPY.signedOutTitle}</h2>
           <p className="text-[12px] text-zinc-400 mt-2 leading-relaxed max-w-prose">{TRACK_COPY.signedOut}</p>

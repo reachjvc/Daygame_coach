@@ -15,6 +15,8 @@
  */
 
 import { describe, expect, it } from "vitest"
+import fs from "fs"
+import path from "path"
 import { SCORED_TABS, TAB_ORDER } from "@/src/goals/data/northStar"
 import { COMMIT_DATE_KEY, COMMIT_KEY, ONE_ANSWERS } from "@/src/goals/data/northStarStart"
 import { VISION_RUNGS } from "@/src/goals/data/lifeMasteryWhy"
@@ -215,5 +217,55 @@ describe("what each step counts as full", () => {
       expect(stepState(completePlan(), tab, SAVED), tab).toBe("done")
       expect(stepState(emptyNsPlan(), tab), tab).toBe("empty")
     }
+  })
+})
+
+/**
+ * THE ADDRESS FOLLOWS THE STEP YOU ARE ON.
+ *
+ * `?step=` was read once, on the server, and never written back. So work
+ * through to the Systems step, follow "Go to today's session" to the Training
+ * page, press Back — and Life Mastery reopens on the north star paragraph,
+ * with no way for it to know where you had been.
+ *
+ * WHY `replaceState` AND NOT THE ROUTER. `app/life-mastery/page.tsx` is a
+ * server component: a router navigation re-runs it, so every step change would
+ * repeat the auth check, the timezone read and the goals pre-read. These tests
+ * are what stop somebody "tidying" it into `router.replace` later, because the
+ * cost of that is invisible on a fast connection.
+ */
+describe("changing step writes the address", () => {
+  const flowCode = () =>
+    fs
+      .readFileSync(
+        path.join(path.resolve(__dirname, "../../.."), "src/goals/components/north-star/NorthStarFlow.tsx"),
+        "utf-8"
+      )
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\/\/[^\n]*/g, "")
+
+  const stepSetter = () => flowCode().match(/const setTab = useCallback\([\s\S]*?\}, \[\]\)/)?.[0] ?? ""
+
+  it("writes ?step= through history, not through a navigation", () => {
+    expect(flowCode()).toContain("window.history.replaceState")
+    expect(flowCode()).toMatch(/\?step=\$\{next\}/)
+  })
+
+  it("does not navigate on a step change", () => {
+    const setter = stepSetter()
+    expect(setter, "premise: the step setter should be findable").not.toBe("")
+    expect(setter).not.toMatch(/router\.(replace|push)/)
+  })
+
+  it("builds the address from the one route constant, never by hand", () => {
+    expect(flowCode()).toContain("`${LIFE_MASTERY}?step=")
+  })
+
+  it("survives a browser that refuses history writes", () => {
+    const setter = stepSetter()
+    // The step must still change if the address cannot be written.
+    expect(setter).toContain("try")
+    expect(setter).toContain("catch")
+    expect(setter.indexOf("setTabState")).toBeLessThan(setter.indexOf("replaceState"))
   })
 })

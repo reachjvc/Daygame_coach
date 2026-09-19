@@ -41,7 +41,7 @@
  */
 
 import { useMemo, useState } from "react"
-import { CalendarDays, Check, ChevronDown, Rows3, TrendingUp } from "lucide-react"
+import { AlertTriangle, CalendarDays, Check, ChevronDown, Rows3, TrendingUp } from "lucide-react"
 import type { NsPlan } from "@/src/goals/types"
 import { WEEK_DAYS } from "@/src/goals/data/northStarStart"
 import { SCHEDULE_COPY } from "@/src/goals/data/northStar"
@@ -91,11 +91,25 @@ export function TrackSchedule({
   plan,
   today,
   onToggleStep,
+  derivedTicks,
+  logUnavailable = false,
+  onRetryLog,
 }: {
   plan: NsPlan
   today: string
   /** Ticking a step off today. Absent when this is rendered read-only. */
   onToggleStep?: (stepId: string) => void
+  /**
+   * Date → the step ids that day's FINISHED workouts already tick.
+   *
+   * Derived at render and never written into `plan.logged`: the workout is the
+   * record, and copying it into a second store is what let the two disagree in
+   * the first place.
+   */
+  derivedTicks?: Map<string, Set<string>>
+  /** The training log could not be read — so the ticks below are hand-ticked only. */
+  logUnavailable?: boolean
+  onRetryLog?: () => void
 }) {
   /**
    * WHICH VIEW OPENS FIRST, decided by the plan rather than fixed.
@@ -182,6 +196,25 @@ export function TrackSchedule({
           ))}
         </div>
       </div>
+
+      {/* A LOG THAT COULD NOT BE READ IS NOT A WEEK YOU DID NOT TRAIN. Without
+          this, a failed request renders as an untouched week and the honest
+          hand ticks below look like the whole story. */}
+      {logUnavailable && (
+        <p
+          role="alert"
+          data-testid="training-log-unavailable"
+          className="mx-5 mt-3 flex flex-wrap items-center gap-1.5 text-[11px] text-amber-300/80"
+        >
+          <AlertTriangle className="size-3 shrink-0" />
+          Could not read your training log — ticks below are hand-ticked only.
+          {onRetryLog && (
+            <button type="button" onClick={onRetryLog} className="underline underline-offset-2">
+              Try again
+            </button>
+          )}
+        </p>
+      )}
 
       {view === "week" ? (
         <div className="mt-4 overflow-x-auto">
@@ -345,7 +378,11 @@ export function TrackSchedule({
                           {open && (
                             <ul className="pl-5 mt-0.5 space-y-0.5">
                               {group.activities.map((activity) => {
-                                const done = stepLogged(plan, day.dateISO, activity.id)
+                                const hand = stepLogged(plan, day.dateISO, activity.id)
+                                // A finished workout IS the tick. Derived at
+                                // render, never written into the plan.
+                                const fromLog = derivedTicks?.get(day.dateISO)?.has(activity.id) ?? false
+                                const done = hand || fromLog
                                 /* A TICK IS A RECORD, so it is only offered on
                                    today. Thursday's steps are shown on Thursday
                                    and nowhere else; a checkbox on them invites a
@@ -354,7 +391,12 @@ export function TrackSchedule({
                                   return (
                                     <li key={activity.id} className="flex items-center gap-2 min-w-0 py-0.5">
                                       <Dot color={activity.areaColor} />
-                                      <span className="text-[11px] text-zinc-400 truncate">{activity.title}</span>
+                                      <span className={`text-[11px] truncate ${fromLog ? "text-zinc-600 line-through" : "text-zinc-400"}`}>
+                                        {activity.title}
+                                      </span>
+                                      {fromLog && (
+                                        <span className="shrink-0 text-[10px] text-zinc-600">from your training log</span>
+                                      )}
                                     </li>
                                   )
                                 }
@@ -364,13 +406,22 @@ export function TrackSchedule({
                                       <input
                                         type="checkbox"
                                         checked={done}
+                                        // A tick the training log already made
+                                        // cannot be un-ticked here: the workout
+                                        // is the record, and letting a checkbox
+                                        // contradict it is the two-answers
+                                        // problem this replaces.
+                                        disabled={fromLog}
                                         onChange={() => onToggleStep(activity.id)}
-                                        className="size-3.5 shrink-0 accent-violet-500"
+                                        className="size-3.5 shrink-0 accent-violet-500 disabled:opacity-60"
                                         aria-label={`Did ${activity.title}`}
                                       />
                                       <span className={`text-[11px] truncate ${done ? "text-zinc-600 line-through" : "text-zinc-300"}`}>
                                         {activity.title}
                                       </span>
+                                      {fromLog && (
+                                        <span className="shrink-0 text-[10px] text-zinc-600">from your training log</span>
+                                      )}
                                     </label>
                                   </li>
                                 )

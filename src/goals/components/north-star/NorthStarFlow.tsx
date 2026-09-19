@@ -86,6 +86,7 @@ import { ValuesWork } from "./ValuesWork"
 import { RecapTab, type RecapHandlers } from "./RecapTab"
 import { BackLink } from "@/components/BackLink"
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 // ONE DOOR into the gym slice — see src/programs/forLifeMastery.ts and the
 // architecture test that holds the line.
 import {
@@ -155,7 +156,31 @@ export function NorthStarFlow({
 } = {}) {
   const [plan, setPlan] = useState<NsPlan>(ns.emptyNsPlan)
   const [loaded, setLoaded] = useState(false)
-  const [tab, setTab] = useState<NorthStarTabId>(initialTab)
+  const [tab, setTabState] = useState<NorthStarTabId>(initialTab)
+
+  /**
+   * THE ADDRESS FOLLOWS THE STEP YOU ARE ON.
+   *
+   * `?step=` was read once, on the server, and never written back — so leaving
+   * for the Training page and pressing Back landed you on the north star
+   * paragraph rather than the step you had been working on, whatever that was.
+   *
+   * `replaceState`, NOT `router.replace`: `app/life-mastery/page.tsx` is a
+   * server component, so a router navigation re-runs it — auth, the timezone
+   * read, the goals pre-read — on every single step change. This writes the
+   * address and nothing else.
+   *
+   * Wrapped in try/catch because a browser that refuses history writes must not
+   * take the step change down with it.
+   */
+  const setTab = useCallback((next: NorthStarTabId) => {
+    setTabState(next)
+    try {
+      window.history.replaceState(null, "", `${LIFE_MASTERY}?step=${next}`)
+    } catch {
+      /* The step still changes; only the address is left behind. */
+    }
+  }, [])
   const [confirmReset, setConfirmReset] = useState(false)
   /**
    * WHICH RUN OF THE PLAN THIS IS, for the goals pushed on the track step.
@@ -1139,6 +1164,7 @@ export function NorthStarFlow({
               plan={plan}
               runId={runId}
               today={today ?? ns.todayISO()}
+              timezone={timezone}
               /* The SAME tick the Today step writes. The schedule shows
                  today's morning routine here too, and two screens showing one
                  routine must not keep two answers to "did you read it". */
