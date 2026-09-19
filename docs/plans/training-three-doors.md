@@ -968,6 +968,19 @@ Numbered as the steps above refer to them. Each carries a recommendation.
 - **Whose clock, re-checked**: step 23's `getTodayInTimezone` must run in the client effect (the flow's own comment at 160–161 explains the hydration reason) and `SeasonBand.tsx:126` computed its own today; both fixed; the class test now covers the whole north-star directory. `getWorkoutLogs` cuts its window by server time (`healthRepo.ts:234`) — a 9-day window absorbs it; said so.
 - **Checked and found sound**: the shared-hook read from `NorthStarFlow` does not trip the fetching-screens rule (the `fetch(` is in `hooks/`, not `components/`); `export type { … } from "./types"` passes the type-export rule (`architecture.test.ts:229–256`); `AlertTriangle`/`Loader2` are registered; the rail button's accessible name is "5 Templates" so `/Templates/` works; the three baseline test files pass (46/46).
 
+
+**Found while building it, 19 September (all 25 steps).**
+- Step 12's stepper was first hidden with a CSS class rather than not rendered — a control a keyboard can still reach and a screen reader still announces.
+- Step 7's change made a freshly created routine differ in SHAPE from a loaded one: no `program` key versus `program: null`. A saved-then-loaded plan no longer equalled the plan it came from, which an existing round-trip test caught. One shape now.
+- Step 22's derived map speaks library-step ids (`"strength"`, the same on everybody's plan) while the schedule's rows use the plan's own step ids (`"s3"`, which are not). Translated once, in TrackTab, the only place holding both.
+- Step 23's plan said SeasonBand takes `today` from the flow. It does not: `ProgressDashboard` mounts it, with no props, from the tracking dashboard. Held at exactly one browser-clock read with a named, shrinking allowance rather than pretended fixed.
+- Step 20's `convertTyped` was a new direct import from `src/goals` into `src/programs`, which step 11's own guard refused. Routed through `forLifeMastery.ts` — the door working as intended on the first thing that tried to go round it.
+- The UTC-date guard read whole files including comments, so the moment a second file explained the rule in its own words it fired on the explanation. It reads code now, and its shrink test reads the same way so the two halves cannot disagree.
+- Step 18's first by-id test renamed "Monday Push" to "Monday push", which the OLD by-name match found anyway because it lowercased both — it passed under both implementations. It renames to something matching no saved week now, and goes red when the old matching is restored.
+- Step 24's first draft asserted no per-week number anywhere on the page. A routine's individual steps legitimately carry their own cadence and their day pickers list those as options; the assertion found ten. Scoped to the card, and the stepper asserted through its buttons.
+- Step 25 surfaced a real behaviour change: the saved-weeks spec pressed "Save this week" to save a LOADED week under a new name. That now means "save back to the week I opened" — the point of step 18 — so the spec presses "Save as new".
+- Step 24 also caught three things no unit test could: a text box behind a toggle, a label that did not exist, and a navigation racing the POST, which read as "the name did not stick" when the truth was "nothing was started".
+
 ### Open questions for Phase 2
 
 Numbered as the steps above refer to them. Each carries a recommendation.
