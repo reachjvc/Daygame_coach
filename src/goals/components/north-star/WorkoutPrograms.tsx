@@ -38,7 +38,6 @@ import {
   isModified,
   materializeSchedule,
   missingWorkingWeights,
-  scheduleDays,
   scheduleProblems,
 } from "@/src/programs/customize"
 import { fromKg, roundToLoadable } from "@/src/programs/programsService"
@@ -69,7 +68,7 @@ interface Props {
    * the training week on this page matches the one being tracked. Null when the
    * plan has no workout routine yet, in which case starting still enrolls.
    */
-  onProgramStarted: (dayNames: string[], program: NsRoutineProgram | null) => void
+  onProgramStarted: (program: NsRoutineProgram | null) => void
   /**
    * A program was ended here, so the plan must stop saying it tracks it.
    * Without this the plan keeps a reference to a dead row — the same
@@ -230,32 +229,26 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded, planDays = [
        */
       const displaced = created?.displaced ?? []
       setDisplacedNames(displaced.map((d) => getProgram(d.program_id)?.name ?? d.program_id))
+      // The id and nothing else. The name, the days and the start date are all
+      // read live from it — copying them is what let a program renamed on the
+      // Training page keep its old name here.
       const ref: NsRoutineProgram | null = created?.enrollment
-        ? {
-            programId: created.enrollment.program_id,
-            enrollmentId: created.enrollment.id,
-            label: program.name,
-            startedAt: created.enrollment.started_at,
-          }
+        ? { enrollmentId: created.enrollment.id }
         : null
 
       /**
-       * TELL THE PLAN, WHATEVER KIND OF PROGRAM IT IS.
+       * TELL THE PLAN WHICH PROGRAM, WHATEVER KIND IT IS.
        *
-       * This used to be gated on `isCustomizable`, which is false for every
-       * endurance plan. So starting Couch to 5K from this page enrolled you for
-       * real and told the plan NOTHING — no days, and no reference to the
-       * enrollment. The plan then went on describing whatever week it had
-       * before, which is exactly "it is not linked to what I chose".
+       * This used to compute the program's day names and send them too, gated
+       * on `isCustomizable` — false for every endurance plan, so starting
+       * Couch to 5K enrolled you for real and told the plan nothing at all.
        *
-       * An endurance week has no editable day list, so there are no day names
-       * to write; the REFERENCE still matters and is always sent. `applyProgram`
-       * ignores an empty day list, so the written week is left alone rather
-       * than blanked.
+       * The day names are gone entirely now: they were a copy of a week the
+       * plan could then edit without the program ever hearing about it. The
+       * reference is the whole message, and it is sent for every kind of
+       * program.
        */
-      const dayNames =
-        schedule && isCustomizable(program) ? scheduleDays(schedule).map((d) => d.label) : []
-      onProgramStarted(dayNames, ref)
+      onProgramStarted(ref)
       setState("done")
       // RE-READ WHAT IS RUNNING. Remounting the band was not enough: the list
       // is shared and, once loaded, never asked again — so "Running now" kept

@@ -209,9 +209,10 @@ export function matchingDatePreset(date: string | null, today = todayISO()): str
  * how long a thing takes and how often it is worth doing, and it cannot know
  * which morning you are free.
  */
-function stepFromLibrary(s: RoutineBlueprintStep): NsRoutineStep {
+function libraryStepFields(s: RoutineBlueprintStep): Omit<NsRoutineStep, "id"> {
   return {
-    id: s.id,
+    // The library's own name, which used to be the id. See `libraryStepId`.
+    libraryStepId: s.id,
     title: s.title,
     minutes: s.minutes,
     daysPerWeek: s.daysPerWeek,
@@ -228,6 +229,12 @@ function stepFromLibrary(s: RoutineBlueprintStep): NsRoutineStep {
     // somewhere to write. Authored, for the same reason.
     asks: s.asks ?? inferStepQuestion(s.title),
   }
+}
+
+/** The same, with an id off the counter. Every new step in a stack comes from here. */
+function stepFromLibrary(plan: NsPlan, s: RoutineBlueprintStep): { plan: NsPlan; step: NsRoutineStep } {
+  const { plan: next, id } = nextId(plan, "s")
+  return { plan: next, step: { id, ...libraryStepFields(s) } }
 }
 
 /**
@@ -268,6 +275,17 @@ export function inferStepDestination(title: string): string | null {
  * they did not write.
  */
 /**
+ * The library entry a SAVED step came from, by the rule the loader backfills on.
+ *
+ * A step written after the id/name split carries `libraryStepId`. One written
+ * before it has the library's name sitting in `id`, which is exactly the thing
+ * being separated — so that is the fallback, and only for a saved object.
+ */
+function savedLibraryStepId(saved: Record<string, unknown>): string {
+  return typeof saved.libraryStepId === "string" ? saved.libraryStepId : String(saved.id)
+}
+
+/**
  * WHETHER A SAVED STEP IS STILL OURS, so the library may speak for it.
  *
  * The migrations below adopt what the library now says about a step. They may
@@ -277,7 +295,10 @@ export function inferStepDestination(title: string): string | null {
  * where it goes or what it asks.
  */
 function isUntouchedLibraryStep(saved: Record<string, unknown>, bp: RoutineBlueprint): RoutineBlueprintStep | null {
-  const entry = bp.library.find((l) => l.id === String(saved.id))
+  // `libraryStepId` when the save has one; otherwise the id, which is what the
+  // library name was stored as before the two were separated. Same lookup, one
+  // field later. See `NsRoutineStep.libraryStepId`.
+  const entry = bp.library.find((l) => l.id === savedLibraryStepId(saved))
   if (!entry) return null
   return String(saved.title).trim() === entry.title.trim() ? entry : null
 }
@@ -397,6 +418,15 @@ function seedRoutine(bp: RoutineBlueprint, startSeq: number, areaIds: Set<string
       steps: seedSteps(),
       daysPerWeek: split.daysPerWeek,
       splitDays: split.days,
+      /**
+       * Tracked by nothing until somebody starts a program, and explicitly so.
+       *
+       * Absent and null used to be two shapes for one meaning: a routine just
+       * created had no key, a routine read back from storage had null, and a
+       * saved-then-loaded plan therefore did not equal the plan it came from.
+       * One shape, so the round trip is an identity.
+       */
+      program: null,
     },
     seq,
   }
@@ -484,6 +514,23 @@ export function loadNsPlan(raw: string | null): NsPlan | null {
   } catch {
     return null
   }
+  return normalizeNsPlan(parsed)
+}
+
+/**
+ * EVERY RULE ABOUT WHAT A PLAN IS, in one place, applied to anything shaped
+ * like one.
+ *
+ * Extracted from `loadNsPlan` unchanged, and not for tidiness: the plan is
+ * moving to a database, and the code that rebuilds it from rows needs the same
+ * repairs, defaults and prunes the browser copy gets. Written twice they drift,
+ * and the second copy would live in a file with no tests — so there is one, and
+ * `loadNsPlan` is now `JSON.parse` plus this.
+ *
+ * Returns null for anything that is not an object, which is what a plan that
+ * cannot be read has always done rather than throwing.
+ */
+export function normalizeNsPlan(parsed: unknown): NsPlan | null {
   if (!parsed || typeof parsed !== "object") return null
   const obj = parsed as Record<string, unknown>
   /**
@@ -537,6 +584,15 @@ export function loadNsPlan(raw: string | null): NsPlan | null {
                   .filter((s) => typeof s.id === "string" && typeof s.title === "string")
                   .map((s) => ({
                     id: String(s.id),
+                    /**
+                     * BACKFILLED, so nothing has to read an id to know where a
+                     * step came from. A saved id that names an entry in this
+                     * routine's own library IS that entry — that is what the
+                     * field held before the two were separated. A step
+                     * somebody typed matches nothing and stays null.
+                     */
+                    libraryStepId:
+                      bp.library.some((l) => l.id === savedLibraryStepId(s)) ? savedLibraryStepId(s) : null,
                     title: String(s.title),
                     minutes: Math.max(0, numberOr(s.minutes, 5)),
                     daysPerWeek: clamp(numberOr(s.daysPerWeek, 7), 1, 7),
@@ -573,6 +629,22 @@ export function loadNsPlan(raw: string | null): NsPlan | null {
                   .filter((d) => typeof d.id === "string" && typeof d.name === "string")
                   .map((d) => ({ id: String(d.id), name: String(d.name) }))
               : [],
+            /**
+             * WHICH PROGRAM THIS WEEK FOLLOWS — read back, at last.
+             *
+             * This was written by `applyProgramReference` and then dropped
+             * here, so the plan has never once remembered its program past a
+             * single page load. Start StrongLifts from Life Mastery, reload,
+             * and the link was gone with nothing saying so.
+             *
+             * Only the id survives a load. An older save carrying `programId`,
+             * `label` and `startedAt` loses them here, which is the point:
+             * those were copies and this is a reference.
+             */
+            program:
+              typeof (r.program as Record<string, unknown> | undefined)?.enrollmentId === "string"
+                ? { enrollmentId: String((r.program as Record<string, unknown>).enrollmentId) }
+                : null,
           }
         })
     : []
@@ -808,9 +880,33 @@ export function loadNsPlan(raw: string | null): NsPlan | null {
   const seenInOrder = new Set(savedOrder)
   const priorityIds = [...savedOrder, ...linkedGoals.filter((g) => !seenInOrder.has(g.id)).map((g) => g.id)]
 
-  const ids = [...resolvedAreas.map((a) => a.id), ...routines.map((r) => r.id), ...linkedGoals.map((g) => g.id)]
+  /**
+   * EVERY ID THE COUNTER HAS EVER HANDED OUT, for the floor under `seq`.
+   *
+   * Areas, routines and goals used to be the whole list, and the other nine
+   * kinds come off the same counter. A plan whose highest id was a checkpoint
+   * or a routine step therefore restarted the counter below it, and the next
+   * new goal took an id a checkpoint already held — after which a daily
+   * question written under the goal renders under the checkpoint. Cheap to
+   * miss, because it needs a plan whose newest thing is not an area, routine
+   * or goal, which is most plans past the first week.
+   */
+  const ids = [
+    ...resolvedAreas.map((a) => a.id),
+    ...routines.map((r) => r.id),
+    ...routines.flatMap((r) => r.steps.map((st) => st.id)),
+    ...routines.flatMap((r) => r.splitDays.map((d) => d.id)),
+    ...linkedGoals.map((g) => g.id),
+    ...linkedGoals.flatMap((g) => g.checkpoints.map((c) => c.id)),
+    ...linkedGoals.flatMap((g) => g.obstacles.map((o) => o.id)),
+    ...linkedGoals.flatMap((g) => g.beliefs.map((b) => b.id)),
+    ...linkedGoals.flatMap((g) => g.habits.map((h) => h.id)),
+    ...experiences.map((e) => e.id),
+    ...fields.map((f) => f.id),
+    ...subSteps.map((sub) => sub.id),
+  ]
 
-  return {
+  return withUniqueIds({
     version: NS_PLAN_VERSION,
     horizonYears: HORIZON_CHOICES.includes(obj.horizonYears as (typeof HORIZON_CHOICES)[number])
       ? (obj.horizonYears as number)
@@ -843,7 +939,7 @@ export function loadNsPlan(raw: string | null): NsPlan | null {
     // never hand out an id that is already in use.
     seq: Math.max(numberOr(obj.seq, 0), highestSeq(ids)),
     updatedAt: typeof obj.updatedAt === "string" ? obj.updatedAt : null,
-  }
+  })
 }
 
 function readStringList(value: unknown): string[] {
@@ -946,6 +1042,82 @@ function readGoal(g: Record<string, unknown>): NsGoal {
     serves: readStringList(g.serves),
     asked: readStringList(g.asked),
   }
+}
+
+/**
+ * ONE ID PER THING, ACROSS THE WHOLE PLAN.
+ *
+ * Twelve kinds of thing come off one counter and are pointed at by one id
+ * space: `plan.logged` names steps, fields and sub-steps in one list,
+ * `NsDailyField.targetId` names a goal or a step or an experience, and the
+ * database gives the lot one `UNIQUE (plan_id, local_id)`. A plan holding the
+ * same id twice is therefore not a plan the database can store, and was never
+ * a plan the app could render honestly: a tick on one `stretch` drew both.
+ *
+ * THE FIRST OCCURRENCE KEEPS ITS ID, and that is the whole reason this is safe
+ * to run on somebody's existing plan. Every tick, every daily question and
+ * every sub-step already points at that id and goes on pointing at the same
+ * row. Only the later duplicate is renamed, and nothing could have been
+ * pointing at it unambiguously in the first place.
+ *
+ * Runs on load, so a plan written by any earlier version arrives repaired and
+ * nobody's browser has to be visited. Costs one walk and, for the overwhelming
+ * majority of plans, changes nothing at all.
+ */
+function withUniqueIds(plan: NsPlan): NsPlan {
+  const seen = new Set<string>()
+  let seq = plan.seq
+  /**
+   * Keep the first, mint for any repeat. Returns the id this thing now has.
+   *
+   * A REPEAT KEEPS ITS OWN PREFIX where it has one, because on one kind the
+   * prefix is not decorative: a checkpoint minted by the ladder carries `m`
+   * and a hand-written one carries `c`, and `setMilestones`/`setProgression`
+   * tell the two apart with `id.startsWith("m")`. Renaming an `m` rung to `c`
+   * would quietly make it un-regenerable and leave it stranded on the goal the
+   * next time the climb is rebuilt.
+   */
+  const claim = (id: string, prefix: string): string => {
+    if (!seen.has(id)) {
+      seen.add(id)
+      return id
+    }
+    seq += 1
+    const own = /^([a-z]+)\d+$/.exec(id)
+    const minted = `${own ? own[1] : prefix}${seq}`
+    seen.add(minted)
+    return minted
+  }
+  const areas = plan.areas.map((a) => ({ ...a, id: claim(a.id, "a") }))
+  const routines = plan.routines.map((r) => ({
+    ...r,
+    id: claim(r.id, "r"),
+    steps: r.steps.map((st) => ({ ...st, id: claim(st.id, "s") })),
+    splitDays: r.splitDays.map((d) => ({ ...d, id: claim(d.id, "d") })),
+  }))
+  const goals = plan.goals.map((g) => ({
+    ...g,
+    id: claim(g.id, "g"),
+    checkpoints: g.checkpoints.map((c) => ({ ...c, id: claim(c.id, "c") })),
+    obstacles: g.obstacles.map((o) => ({ ...o, id: claim(o.id, "o") })),
+    beliefs: g.beliefs.map((b) => ({ ...b, id: claim(b.id, "b") })),
+    habits: g.habits.map((h) => ({ ...h, id: claim(h.id, "h") })),
+  }))
+  const experiences = plan.experiences.map((e) => ({ ...e, id: claim(e.id, "x") }))
+  const fields = plan.fields.map((f) => ({ ...f, id: claim(f.id, "f") }))
+  const subSteps = plan.subSteps.map((sub) => ({ ...sub, id: claim(sub.id, "u") }))
+  /**
+   * The priority list has to COVER EVERY GOAL EXACTLY ONCE — a goal's rank is
+   * its index, and `orderedGoals` renders from this list, so a goal missing
+   * from it disappears from every ordered view. A renamed duplicate is exactly
+   * that case: the list still holds the id, and the id now belongs only to the
+   * goal that kept it. Appending the uncovered ones restores the invariant.
+   */
+  const live = new Set(goals.map((g) => g.id))
+  const covered = plan.priorityIds.filter((id) => live.has(id))
+  const seenInOrder = new Set(covered)
+  const priorityIds = [...covered, ...goals.filter((g) => !seenInOrder.has(g.id)).map((g) => g.id)]
+  return { ...plan, areas, routines, goals, experiences, fields, subSteps, priorityIds, seq }
 }
 
 function highestSeq(ids: string[]): number {
@@ -1100,20 +1272,29 @@ function withRoutine(plan: NsPlan, routineId: string, fn: (r: NsRoutine) => NsRo
   return touch({ ...plan, routines: plan.routines.map((r) => (r.id === routineId ? fn(r) : r)) }, now)
 }
 
-/** Toggle a library step in or out. Library ids are stable, so this is an id test. */
-export function toggleRoutineStep(plan: NsPlan, routineId: string, stepId: string, now = nowIso()): NsPlan {
+/**
+ * Toggle a library step in or out.
+ *
+ * `libraryStepId` is the test, not the step's own id: the two were the same
+ * field until a plan could hold two steps from two libraries with one name.
+ * The argument is still the LIBRARY entry's id, because that is what the menu
+ * of available steps is keyed by.
+ */
+export function toggleRoutineStep(plan: NsPlan, routineId: string, libraryStepId: string, now = nowIso()): NsPlan {
   const routine = plan.routines.find((r) => r.id === routineId)
   if (!routine) return plan
   const bp = ROUTINE_BLUEPRINT_MAP.get(routine.blueprintId)
-  const item = bp?.library.find((s) => s.id === stepId)
+  const item = bp?.library.find((s) => s.id === libraryStepId)
   if (!item) return plan
-  const has = routine.steps.some((s) => s.id === stepId)
-  return withRoutine(plan, routineId, (r) => ({
-    ...r,
-    steps: has
-      ? r.steps.filter((s) => s.id !== stepId)
-      : [...r.steps, stepFromLibrary(item)],
-  }), now)
+  const has = routineHasLibraryStep(routine, libraryStepId)
+  if (has) {
+    return withRoutine(plan, routineId, (r) => ({
+      ...r,
+      steps: r.steps.filter((s) => s.libraryStepId !== libraryStepId),
+    }), now)
+  }
+  const { plan: withStep, step } = stepFromLibrary(plan, item)
+  return withRoutine(withStep, routineId, (r) => ({ ...r, steps: [...r.steps, step] }), now)
 }
 
 /**
@@ -1138,6 +1319,8 @@ export function addCustomStep(
   const days = cleanDays(placement?.days ?? [])
   const step: NsRoutineStep = {
     id,
+    // Somebody's own words, so it belongs to no library entry.
+    libraryStepId: null,
     title: trimmed,
     minutes: Math.max(0, Math.round(minutes)),
     // A placed step's frequency IS how many days it is on, so the two cannot
@@ -1225,12 +1408,35 @@ export function applyRoutinePreset(plan: NsPlan, routineId: string, presetId: st
   // Rebuilding it from the library would silently un-place it, and "I moved my
   // meditation to 6am and changing preset put it back to nowhere" is the kind
   // of loss nobody reports, they just stop using the grid.
-  const placed = new Map(routine.steps.map((s) => [s.id, s]))
-  const steps = ids
-    .map((id) => bp.library.find((s) => s.id === id))
-    .filter((s): s is NonNullable<typeof s> => !!s)
-    .map((s) => ({ ...stepFromLibrary(s), days: placed.get(s.id)?.days ?? [], startMin: placed.get(s.id)?.startMin ?? null }))
-  return withRoutine(plan, routineId, (r) => ({ ...r, steps }), now)
+  // Keyed by `libraryStepId`, because the step's own id is now a counter value
+  // and the preset names library entries. Keyed by id, every placed step lost
+  // its slot on the grid the moment the ids stopped being library names.
+  const placed = new Map(routine.steps.filter((s) => s.libraryStepId).map((s) => [s.libraryStepId as string, s]))
+  let next = plan
+  const steps: NsRoutineStep[] = []
+  for (const libraryId of ids) {
+    const entry = bp.library.find((s) => s.id === libraryId)
+    if (!entry) continue
+    const before = placed.get(libraryId)
+    if (before) {
+      /**
+       * A STEP THAT SURVIVES THE SWAP KEEPS ITS ID, not just its slot.
+       *
+       * Minting a fresh one here looks harmless and is not: the ticks in
+       * `plan.logged`, the answers in `plan.journal`, a daily question's
+       * `targetId` and a sub-step's `targetId` are all keyed by the step's id.
+       * Change it and three months of writing stops belonging to the row it
+       * was written under, with nothing on screen to say so. The library's
+       * words are refreshed, which is what a preset is for.
+       */
+      steps.push({ ...libraryStepFields(entry), id: before.id, days: before.days, startMin: before.startMin })
+      continue
+    }
+    const made = stepFromLibrary(next, entry)
+    next = made.plan
+    steps.push(made.step)
+  }
+  return withRoutine(next, routineId, (r) => ({ ...r, steps }), now)
 }
 
 export function clearRoutineSteps(plan: NsPlan, routineId: string, now = nowIso()): NsPlan {
@@ -1268,42 +1474,33 @@ export function applySplit(plan: NsPlan, routineId: string, splitId: string, now
  * else the routine carries (protein, steps, a weigh-in), and a program has no
  * opinion about those.
  */
+/**
+ * STARTING A PROGRAM RECORDS WHICH ONE, AND NOTHING ELSE.
+ *
+ * This used to copy the program's day names into `splitDays` and set
+ * `daysPerWeek` to how many there were. Both were wrong, and the second one
+ * visibly so: StrongLifts is two day TEMPLATES trained three times a week, so
+ * the plan read "2 days a week"; the Recommended Routine has one, so it read
+ * "1×/wk". The number of named days is not the number of training days and
+ * never was.
+ *
+ * The copied names were the deeper fault: they were editable in the Systems
+ * step, so somebody could rename Workout A to "Chest day" in their plan and the
+ * program never heard about it — two versions of one week, with nothing able to
+ * say which was right.
+ *
+ * The hand-written week is left exactly as it was, on purpose. It is what the
+ * plan returns to when the program ends, and overwriting it would destroy
+ * something a person typed in order to describe something they can read live.
+ */
 export function applyProgramDays(
   plan: NsPlan,
   routineId: string,
-  dayNames: string[],
   now = nowIso(),
   program: NsRoutineProgram | null = null
 ): NsPlan {
-  /**
-   * A PROGRAM WITH NO NAMED DAYS IS STILL A PROGRAM YOU STARTED.
-   *
-   * This returned the plan untouched whenever `dayNames` was empty, which threw
-   * away the reference along with it. Two real cases hit that every time: an
-   * endurance program prescribes blocks rather than named days, and a save from
-   * the goals planner carries selections without day names. In both, somebody
-   * started a program and their plan went on saying nothing was running.
-   *
-   * The days are left exactly as they are — there are none to write — and only
-   * the reference is recorded.
-   */
-  if (dayNames.length === 0) {
-    if (!program) return plan
-    return withRoutine(plan, routineId, (r) => ({ ...r, program }), now)
-  }
-  let next = plan
-  const days: NsSplitDay[] = []
-  for (const name of dayNames) {
-    const { plan: withSeq, id } = nextId(next, "d")
-    next = withSeq
-    days.push({ id, name })
-  }
-  return withRoutine(
-    next,
-    routineId,
-    (r) => ({ ...r, splitDays: days, daysPerWeek: clamp(days.length, 1, 7), program }),
-    now
-  )
+  if (!program) return plan
+  return withRoutine(plan, routineId, (r) => ({ ...r, program }), now)
 }
 
 /**
@@ -1328,8 +1525,57 @@ export function detachProgramFromRoutines(
 }
 
 /** The enrollments this plan believes it is training, newest first. */
-export function trackedEnrollmentIds(plan: NsPlan): string[] {
-  return plan.routines.map((r) => r.program?.enrollmentId).filter((id): id is string => Boolean(id))
+/**
+ * THE PLAN CHECKS ITS REFERENCE AGAINST THE DATABASE, EVERY TIME IT OPENS.
+ *
+ * WHAT WAS WRONG. The reference was written once, when a program was started
+ * from Life Mastery, and removed only by the End button in Life Mastery's own
+ * Templates band. Everything else left it wrong:
+ *
+ *   - End the program on the Training page → the plan still points at a row
+ *     that is no longer running, and goes on describing it.
+ *   - Start a program on your phone → open the laptop and the plan there knows
+ *     nothing about it, because the reference lives in that browser's storage.
+ *   - Clear your browser data → the link is gone while the program runs on.
+ *
+ * The plan cannot be the authority on what is running; the database is. So
+ * every time the plan opens, this reconciles the two — and it is the reason
+ * the reference could shrink to an id in the first place.
+ *
+ * PURE, so all six cases are testable without a browser. The caller supplies
+ * the active enrollments and only when the read actually succeeded: a failed
+ * list must never be read as "nothing is running", which would silently detach
+ * a program that is running perfectly well.
+ *
+ * Returns the SAME object when nothing changed, so the effect that calls it
+ * does not write to storage on every mount.
+ */
+export function reconcileProgramReference(
+  plan: NsPlan,
+  active: Array<{ id: string; started_at: string }>,
+  now = nowIso()
+): NsPlan {
+  const activeIds = new Set(active.map((e) => e.id))
+  const referenced = plan.routines
+    .map((r) => r.program?.enrollmentId)
+    .filter((id): id is string => Boolean(id))
+
+  // A reference to something that is no longer running: drop the claim, keep
+  // the week. "Not tracked" is a real state, not an error.
+  const dead = referenced.filter((id) => !activeIds.has(id))
+  if (dead.length > 0) {
+    return dead.reduce((acc, id) => detachProgramFromRoutines(acc, id, now), plan)
+  }
+
+  // Already pointing at something that is running: leave it exactly alone,
+  // including its identity, so no save fires.
+  if (referenced.length > 0) return plan
+
+  // Nothing referenced, but something IS running — started on another device,
+  // or from the Training page. Adopt the most recently started one.
+  if (active.length === 0) return plan
+  const newest = [...active].sort((a, b) => b.started_at.localeCompare(a.started_at))[0]
+  return applyProgramToWorkoutRoutine(plan, now, { enrollmentId: newest.id })
 }
 
 /**
@@ -1342,17 +1588,18 @@ export function trackedEnrollmentIds(plan: NsPlan): string[] {
  */
 export function applyProgramToWorkoutRoutine(
   plan: NsPlan,
-  dayNames: string[],
   now = nowIso(),
   program: NsRoutineProgram | null = null
 ): NsPlan {
-  // Same rule as `applyProgramDays`: no day names is not no program.
-  if (dayNames.length === 0 && !program) return plan
+  if (!program) return plan
+  // A plan that has never had a training routine gets one here — the default
+  // set ships without one, so starting a program from a fresh plan had nowhere
+  // to record itself.
   const existing = plan.routines.find((r) => r.blueprintId === "workout")
   const next = existing ? plan : addRoutine(plan, "workout", now)
   const routine = next.routines.find((r) => r.blueprintId === "workout")
   if (!routine) return plan
-  return applyProgramDays(next, routine.id, dayNames, now, program)
+  return applyProgramDays(next, routine.id, now, program)
 }
 
 export function addSplitDay(plan: NsPlan, routineId: string, now = nowIso()): NsPlan {
@@ -3544,12 +3791,14 @@ export function practiceState(
   date = todayISO()
 ): { running: NsPractice[]; offer: NsPracticeOffer | null } {
   const spec = RECAP_PRACTICES[key]
+  // The candidates name LIBRARY entries, so they are matched against the step's
+  // `libraryStepId` and never against its own id, which is a counter value.
   const ids = new Set(spec.candidates.map((c) => c.stepId))
   const running: NsPractice[] = []
 
   for (const routine of plan.routines) {
     for (const step of routine.steps) {
-      const byId = ids.has(step.id)
+      const byId = step.libraryStepId != null && ids.has(step.libraryStepId)
       const byPhrase = spec.phrases.some((phrase) => step.title.toLowerCase().includes(phrase))
       if (!byId && !byPhrase) continue
       running.push({
@@ -3591,8 +3840,8 @@ export function practiceState(
  * and the log is a different store with a different lifetime, and a function
  * that quietly did both would be the only writer in this file that does.
  */
-export function trackPractice(plan: NsPlan, blueprintId: string, stepId: string, now = nowIso()): NsPlan {
-  if (!libraryStep(blueprintId, stepId)) return plan
+export function trackPractice(plan: NsPlan, blueprintId: string, libraryStepId: string, now = nowIso()): NsPlan {
+  if (!libraryStep(blueprintId, libraryStepId)) return plan
   let next = plan
   let routine = next.routines.find((r) => r.blueprintId === blueprintId)
   if (!routine) {
@@ -3600,8 +3849,8 @@ export function trackPractice(plan: NsPlan, blueprintId: string, stepId: string,
     routine = next.routines[next.routines.length - 1]
   }
   if (!routine) return plan
-  if (routine.steps.some((s) => s.id === stepId)) return next
-  return toggleRoutineStep(next, routine.id, stepId, now)
+  if (routineHasLibraryStep(routine, libraryStepId)) return next
+  return toggleRoutineStep(next, routine.id, libraryStepId, now)
 }
 
 export function planAsText(plan: NsPlan, today = todayISO()): string {
@@ -4371,8 +4620,11 @@ export function templateFootprint(plan: NsPlan, areaId: string, templateId: stri
     const routine = plan.routines.find((r) => r.blueprintId === need.blueprintId)
     if (!routine) continue
     for (const step of routine.steps) {
-      if (!need.stepIds.includes(step.id)) continue
-      if (keep.has(`${need.blueprintId}:${step.id}`)) continue
+      // Matched by LIBRARY entry, because that is what a need names. The id
+      // carried out of here is the step's own, because that is what removes it.
+      const fromLibrary = step.libraryStepId
+      if (fromLibrary == null || !need.stepIds.includes(fromLibrary)) continue
+      if (keep.has(`${need.blueprintId}:${fromLibrary}`)) continue
       steps.push({ routineId: routine.id, routineLabel: routine.label, stepId: step.id, title: step.title })
     }
   }
@@ -4564,7 +4816,9 @@ export function unmetRoutineNeeds(plan: NsPlan, areaId: string): RoutineNeed[] {
 export function routineNeedState(plan: NsPlan, need: RoutineNeed): "missing" | "partial" | "met" {
   const routine = plan.routines.find((r) => r.blueprintId === need.blueprintId)
   if (!routine) return "missing"
-  const have = new Set(routine.steps.map((s) => s.id))
+  // Against the LIBRARY entries the routine runs — `need.stepIds` names those,
+  // not the counter ids the steps carry. See `routineHasLibraryStep`.
+  const have = libraryStepsInStack(routine)
   return need.stepIds.every((id) => have.has(id)) ? "met" : "partial"
 }
 
@@ -4593,19 +4847,45 @@ export function applyRoutineNeed(plan: NsPlan, need: RoutineNeed, now = nowIso()
     if (need.splitId) next = applySplit(next, routine.id, need.splitId, now)
   }
   const id = routine.id
-  const have = new Set((next.routines.find((r) => r.id === id)?.steps ?? []).map((s) => s.id))
-  for (const stepId of need.stepIds) {
-    if (!have.has(stepId)) next = toggleRoutineStep(next, id, stepId, now)
+  // `need.stepIds` are LIBRARY entries, so what the routine already has is read
+  // off `libraryStepId`. Read off `s.id` this turned every step on a second
+  // time the moment step ids stopped being library names.
+  const current = next.routines.find((r) => r.id === id)
+  const have = current ? libraryStepsInStack(current) : new Set<string>()
+  for (const libraryStepId of need.stepIds) {
+    if (!have.has(libraryStepId)) next = toggleRoutineStep(next, id, libraryStepId, now)
   }
   return next
 }
 
 // -- practices ---------------------------------------------------------------
 
+/**
+ * DOES THIS ROUTINE ALREADY RUN THE LIBRARY ENTRY NAMED HERE?
+ *
+ * The one place that answers it, because it was answered in seven places and
+ * every one of them compared a LIBRARY name against the step's OWN id. That
+ * worked only while the two were the same field, and they stopped being the
+ * same field the moment a plan could hold a morning `stretch` and a night
+ * `stretch` at once. Hand-rolled, the comparison silently returns false
+ * forever: the library menu shows nothing ticked, "add this practice" adds a
+ * second copy every time it is pressed, and a routine need never reads as met.
+ *
+ * So: callers ask this, never `s.id === someLibraryId`.
+ */
+export function routineHasLibraryStep(routine: NsRoutine, libraryStepId: string): boolean {
+  return routine.steps.some((s) => s.libraryStepId === libraryStepId)
+}
+
+/** The library entries a routine is running, for a menu that ticks what is on. */
+export function libraryStepsInStack(routine: NsRoutine): Set<string> {
+  return new Set(routine.steps.map((s) => s.libraryStepId).filter((v): v is string => v != null))
+}
+
 /** Is this practice already running in the plan? */
-export function practiceIsOn(plan: NsPlan, blueprintId: string, stepId: string): boolean {
+export function practiceIsOn(plan: NsPlan, blueprintId: string, libraryStepId: string): boolean {
   const routine = plan.routines.find((r) => r.blueprintId === blueprintId)
-  return !!routine?.steps.some((s) => s.id === stepId)
+  return !!routine && routineHasLibraryStep(routine, libraryStepId)
 }
 
 /**
@@ -4614,9 +4894,9 @@ export function practiceIsOn(plan: NsPlan, blueprintId: string, stepId: string):
  * an area becomes a step in a routine that then shows up under every area that
  * routine serves.
  */
-export function addPractice(plan: NsPlan, blueprintId: string, stepId: string, now = nowIso()): NsPlan {
+export function addPractice(plan: NsPlan, blueprintId: string, libraryStepId: string, now = nowIso()): NsPlan {
   const bp = ROUTINE_BLUEPRINT_MAP.get(blueprintId)
-  if (!bp || !bp.library.some((s) => s.id === stepId)) return plan
+  if (!bp || !bp.library.some((s) => s.id === libraryStepId)) return plan
   let next = plan
   let routine = next.routines.find((r) => r.blueprintId === blueprintId)
   if (!routine) {
@@ -4624,15 +4904,15 @@ export function addPractice(plan: NsPlan, blueprintId: string, stepId: string, n
     routine = next.routines[next.routines.length - 1]
     if (!routine) return plan
   }
-  if (routine.steps.some((s) => s.id === stepId)) return next
-  return toggleRoutineStep(next, routine.id, stepId, now)
+  if (routineHasLibraryStep(routine, libraryStepId)) return next
+  return toggleRoutineStep(next, routine.id, libraryStepId, now)
 }
 
 /** Turn a practice off. The routine stays; emptying somebody's stack is not our call. */
-export function removePractice(plan: NsPlan, blueprintId: string, stepId: string, now = nowIso()): NsPlan {
+export function removePractice(plan: NsPlan, blueprintId: string, libraryStepId: string, now = nowIso()): NsPlan {
   const routine = plan.routines.find((r) => r.blueprintId === blueprintId)
-  if (!routine || !routine.steps.some((s) => s.id === stepId)) return plan
-  return toggleRoutineStep(plan, routine.id, stepId, now)
+  if (!routine || !routineHasLibraryStep(routine, libraryStepId)) return plan
+  return toggleRoutineStep(plan, routine.id, libraryStepId, now)
 }
 
 // ---------------------------------------------------------------- the cascade

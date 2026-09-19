@@ -72,7 +72,7 @@ function load(raw: string | null): SavedDesign | null {
 export function BuildYourOwn({
   onProgramStarted,
 }: {
-  onProgramStarted: (dayNames: string[], program: NsRoutineProgram | null) => void
+  onProgramStarted: (program: NsRoutineProgram | null) => void
 }) {
   const [schedule, setSchedule] = useState<ProgramSchedule>(emptyCustomSchedule)
   const [unit, setUnit] = useState<UnitSystem>("kg")

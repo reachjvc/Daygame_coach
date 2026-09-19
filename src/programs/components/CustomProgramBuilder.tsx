@@ -115,7 +115,7 @@ interface Props {
   onRememberLift: (entry: LibraryExercise) => void
   onForget: (id: string) => void
   /** Day names go into the plan's workout routine once it is started. */
-  onStarted: (dayNames: string[], program: NsRoutineProgram | null) => void
+  onStarted: (program: NsRoutineProgram | null) => void
 }
 
 export function CustomProgramBuilder({
@@ -244,17 +244,9 @@ export function CustomProgramBuilder({
       // Same reason as the catalogue path: the shared list must be re-read or
       // every other surface keeps showing what was running a moment ago.
       await refreshEnrollments()
-      onStarted(
-        days.map((d) => d.label),
-        created?.enrollment
-          ? {
-              programId: created.enrollment.program_id,
-              enrollmentId: created.enrollment.id,
-              label: "Your program",
-              startedAt: created.enrollment.started_at,
-            }
-          : null
-      )
+      // The hard-coded "Your program" went with the copies: the week's real
+      // name now comes from the enrollment, which the server makes you give.
+      onStarted(created?.enrollment ? { enrollmentId: created.enrollment.id } : null)
       setState("done")
     } catch {
       setError("Could not reach the server. Nothing was started.")

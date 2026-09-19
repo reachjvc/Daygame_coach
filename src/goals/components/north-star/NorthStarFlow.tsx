@@ -537,9 +537,9 @@ export function NorthStarFlow({
     // A program that is now running in the database, reflected in the plan the
     // page is showing. The enrollment is the source of truth for what gets
     // trained; this keeps the week on screen from disagreeing with it.
-    onProgramStarted: (dayNames: string[], program: NsRoutineProgram | null) =>
-      // `now` keeps its default; the reference is what this call is for.
-      setPlan((p) => ns.applyProgramToWorkoutRoutine(p, dayNames, undefined, program)),
+    onProgramStarted: (program: NsRoutineProgram | null) =>
+      // `now` keeps its default; the reference is all this call carries.
+      setPlan((p) => ns.applyProgramToWorkoutRoutine(p, undefined, program)),
     /* The week stays; only the claim that something tracks it goes. */
     onProgramEnded: (enrollmentId: string) =>
       setPlan((p) => ns.detachProgramFromRoutines(p, enrollmentId)),

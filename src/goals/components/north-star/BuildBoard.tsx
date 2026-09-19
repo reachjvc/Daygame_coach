@@ -75,7 +75,7 @@ export interface BoardHandlers {
    * A training program was started. The day names come back so the plan's
    * workout routine can be set to the week that is now actually being tracked.
    */
-  onProgramStarted: (dayNames: string[], program: NsRoutineProgram | null) => void
+  onProgramStarted: (program: NsRoutineProgram | null) => void
   onProgramEnded: (enrollmentId: string) => void
 }
 

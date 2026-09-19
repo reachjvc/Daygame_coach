@@ -15,7 +15,6 @@ import { SummaryStep } from "./SummaryStep"
 import { clarifierPrompt, clarifierOption, AUTHORED_CLARIFIERS } from "./clarifiers"
 import { ArrowLeft, ArrowRight, Check, Compass, Dumbbell, Heart, Landmark, type LucideIcon } from "lucide-react"
 import { applyProgramReference } from "@/src/goals/northStarStorage"
-import { getProgram } from "@/src/programs/data/catalog"
 
 /** What POST /api/goals/plan reports back about the programs it enrolled. */
 interface EnrolledRef {
@@ -174,12 +173,7 @@ export function NewGoalsFlow({
        */
       const body = (await res.json().catch(() => null)) as { enrolled?: EnrolledRef[] } | null
       for (const ref of body?.enrolled ?? []) {
-        applyProgramReference({
-          programId: ref.programId,
-          enrollmentId: ref.enrollmentId,
-          label: getProgram(ref.programId)?.name ?? ref.programId,
-          startedAt: ref.startedAt,
-        })
+        applyProgramReference({ enrollmentId: ref.enrollmentId })
       }
       setSaveStatus("saved")
       // Hand off to the Track view after a beat so the "✓ Saved" confirmation shows.

@@ -1592,6 +1592,82 @@ describe('Architecture Compliance', () => {
    * The server hands these facts down now (`weekSoFar`, `todayWeekday`). This
    * counts what is left, per file, so the number can only go down.
    */
+  /**
+   * LIFE MASTERY REACHES THE GYM THROUGH ONE DOOR.
+   *
+   * `src/goals` imports from fourteen different modules inside `src/programs`,
+   * and every one is a place the two slices can grow into each other without
+   * anybody noticing. That coupling is what let the plan keep its own COPY of
+   * the program — its day names, its name, how many days a week — and then
+   * disagree with the database about all three at once.
+   *
+   * `src/programs/forLifeMastery.ts` is the door. It exports what Life Mastery
+   * legitimately needs (what is running, what it is called, what its week looks
+   * like) and deliberately not the things that let it describe a week from its
+   * own copy, or edit a program's days.
+   *
+   * The list below is what existed on 2026-09-19. It may only shrink; a later
+   * phase deletes the components that make up most of it and empties the rest.
+   */
+  describe('Life Mastery reaches the gym through one door', () => {
+    const GOALS_TO_PROGRAMS_IMPORTS_ALLOWED = new Set([
+      'src/goals/components/new-goals/GoalsConfigStep.tsx @/src/programs/components/ProgramPicker',
+      'src/goals/components/new-goals/GoalsConfigStep.tsx @/src/programs/data/catalog',
+      'src/goals/components/new-goals/GoalsConfigStep.tsx @/src/programs/types',
+      'src/goals/components/new-goals/NewGoalsFlow.tsx @/src/programs/types',
+      'src/goals/components/north-star/BuildYourOwn.tsx @/src/programs/components/CustomProgramBuilder',
+      'src/goals/components/north-star/BuildYourOwn.tsx @/src/programs/components/SavedWeeks',
+      'src/goals/components/north-star/BuildYourOwn.tsx @/src/programs/customLifts',
+      'src/goals/components/north-star/BuildYourOwn.tsx @/src/programs/customize',
+      'src/goals/components/north-star/BuildYourOwn.tsx @/src/programs/types',
+      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/builder',
+      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/components/ProgramEditor',
+      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/components/RunningPrograms',
+      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/components/ui',
+      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/config',
+      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/customize',
+      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/data/catalog',
+      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/hooks/useEnrollment',
+      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/programsService',
+      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/types',
+    ])
+
+    /** Every `src/goals` file paired with each `src/programs` path it imports. */
+    function crossings(): string[] {
+      const dir = path.join(projectRoot, 'src/goals')
+      const found: string[] = []
+      for (const file of getAllFiles(dir, /\.tsx?$/)) {
+        const rel = path.relative(projectRoot, file).replace(/\\/g, '/')
+        const src = fs.readFileSync(file, 'utf-8')
+        for (const [, spec] of src.matchAll(/from\s+["'](@\/src\/programs[^"']*)["']/g)) {
+          if (spec === '@/src/programs/forLifeMastery') continue
+          found.push(`${rel} ${spec}`)
+        }
+      }
+      return [...new Set(found)].sort()
+    }
+
+    test('no new direct import from src/goals into src/programs', () => {
+      const offenders = crossings().filter((c) => !GOALS_TO_PROGRAMS_IMPORTS_ALLOWED.has(c))
+      expect(
+        offenders,
+        'Life Mastery reaches the gym through src/programs/forLifeMastery.ts.\n' +
+          'A direct import is how the plan came to keep its own copy of the\n' +
+          'program and then disagree with the database about it:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+    })
+
+    test('the direct-import allowlist only shrinks', () => {
+      const live = new Set(crossings())
+      const gone = [...GOALS_TO_PROGRAMS_IMPORTS_ALLOWED].filter((c) => !live.has(c))
+      expect(
+        gone,
+        'These imports are gone — remove them from GOALS_TO_PROGRAMS_IMPORTS_ALLOWED:\n' + gone.join('\n'),
+      ).toEqual([])
+    })
+  })
+
   describe('No calendar fact is read from the browser clock', () => {
     /** Comments blanked: a sentence about `new Date()` is not a call to it. */
     function codeOf(rel: string): string {

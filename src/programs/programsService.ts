@@ -18,6 +18,7 @@ import {
   LOAD_TOLERANCE,
   PLATES,
   REST_SECONDS,
+  WEEKDAY_SHORT,
 } from "./config"
 import { libraryByName } from "./data/exerciseLibrary"
 import type {
@@ -47,7 +48,7 @@ import type {
   SessionPrescription,
   UnitSystem,
 } from "./types"
-import { clampCursorDay, effectiveProgram, scheduleDays } from "./customize"
+import { clampCursorDay, effectiveProgram, scheduleDays, scheduleDaysOrNone } from "./customize"
 
 // ============================================================================
 // Units, rounding, 1RM
@@ -207,6 +208,53 @@ export function weekSoFar(
     todayWeekday: isoWeekdayInTimezone(timezone, now),
     trainedWeekdays: [...trained].sort((a, b) => a - b),
   }
+}
+
+/**
+ * ONE SENTENCE FOR "WHAT DOES YOUR TRAINING WEEK LOOK LIKE".
+ *
+ * Four places invented this from the plan's own copy of the program, and each
+ * got it wrong in its own way. The worst was "2 days a week" for StrongLifts —
+ * two day TEMPLATES, trained three times a week — and "1×/wk" for the
+ * Recommended Routine, which has one template and is trained three times. The
+ * number of named days is not the number of training days and never was.
+ *
+ * READ FROM THE ENROLLMENT'S OWN SCHEDULE, not from the catalogue's. Somebody
+ * who swapped Bench for Dip on their copy of a program was still told they were
+ * benching — the copies never heard about the swap.
+ *
+ * A per-week count is deliberately never given for a program worked through in
+ * turn: there is no honest one. A/B alternating is three sessions one week and
+ * two the next, and both are correct.
+ */
+export function describeTrainingWeek(
+  program: ProgramDefinition,
+  enrollment: ProgramEnrollment
+): string {
+  const schedule = effectiveProgram(program, enrollment.customSchedule).schedule
+
+  if (schedule.kind === "endurance_weeks") {
+    const week = Math.max(1, enrollment.cursor.week)
+    const total = schedule.weeks.length
+    const sessions = schedule.weeks[week - 1]?.sessions.length ?? 0
+    return `Week ${week} of ${total} · ${sessions} ${sessions === 1 ? "session" : "sessions"} this week`
+  }
+
+  const days = scheduleDaysOrNone(schedule)
+  if (days.length === 0) return "No days set yet"
+
+  if (isWeekdayAnchored(schedule)) {
+    // `isWeekdayAnchored` is only true for the two kinds whose days carry a
+    // weekday, and only when every one of them does — so the cast is what that
+    // check has already established.
+    const pinned = [...(days as DayTemplate[])].sort((a, b) => (a.weekday ?? 0) - (b.weekday ?? 0))
+    // In WEEKDAY order, not schedule order: a week reads Monday first, whatever
+    // order the days happened to be typed in.
+    const names = pinned.map((d) => WEEKDAY_SHORT[d.weekday as number]).join(" · ")
+    return `${names} — ${pinned.map((d) => d.label).join(" / ")}`
+  }
+
+  return `${days.map((d) => d.label).join(" · ")}, in turn`
 }
 
 /**

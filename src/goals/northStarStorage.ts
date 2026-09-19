@@ -40,15 +40,12 @@ import type { NsRoutineProgram } from "@/src/goals/types"
  * change than the fault justifies, and the losing case is one stale reference
  * that the Templates tab already shows and lets you correct.
  */
-export function applyProgramReference(
-  program: NsRoutineProgram,
-  dayNames: string[] = []
-): boolean {
+export function applyProgramReference(program: NsRoutineProgram): boolean {
   if (typeof window === "undefined") return false
   try {
     const plan = loadNsPlan(window.localStorage.getItem(NORTH_STAR_STORAGE_KEY))
     if (!plan) return false
-    const next = applyProgramToWorkoutRoutine(plan, dayNames, undefined, program)
+    const next = applyProgramToWorkoutRoutine(plan, undefined, program)
     window.localStorage.setItem(NORTH_STAR_STORAGE_KEY, serializeNsPlan(next))
     return true
   } catch {

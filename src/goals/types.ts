@@ -1580,6 +1580,26 @@ export type NsRoutineKind = "sequence" | "weekly"
 
 export interface NsRoutineStep {
   id: string
+  /**
+   * WHICH LIBRARY ENTRY THIS STEP CAME FROM, or null for a step somebody typed.
+   *
+   * The id used to BE the library's name, and that made two steps in one plan
+   * able to share an id: `stretch` is in the morning library and the night
+   * library, `incantations` in the morning and manifestation ones, and morning
+   * and night both ship by default. Nothing noticed, because nothing keyed on
+   * a step id being unique — until the plan moved to a database, where
+   * `UNIQUE (plan_id, local_id)` refuses a plan the browser considers valid,
+   * and where `plan.logged`, `NsDailyField.targetId` and `NsSubStep.targetId`
+   * would each point at two rows at once.
+   *
+   * So the id comes off the counter like every other id, and the library's own
+   * name lives here. Everything that asks "is this the library's stretch"
+   * reads this; nothing reads the id for that question any more.
+   *
+   * Backfilled on load for steps written before this existed: a saved id that
+   * matches an entry in the routine's own library IS that entry.
+   */
+  libraryStepId: string | null
   title: string
   /** Rough length, for the "~25 min" readout. Sequence routines only. */
   minutes: number
@@ -1709,20 +1729,21 @@ export interface NsRoutine {
 /**
  * A plan's training week, pointed at the enrollment that owns it.
  *
- * `label` is the one piece of duplication here and it is deliberate: the plan
- * has to render signed out, with no database to ask, and "the program you
- * started" reading as a blank is worse than reading as a possibly-renamed name.
- * Everything that DECIDES anything — what is prescribed, what progresses — is
- * looked up live from `enrollmentId`.
+ * ONE FIELD, DELIBERATELY. It carried `programId`, `label` and `startedAt`
+ * beside the id, justified by a signed-out render that no longer exists —
+ * `/life-mastery` has been signed-in gated since the route moved. What the
+ * copies bought was two versions of one fact: a program renamed on the Training
+ * page still read by its old name in Life Mastery, and a phone and a laptop
+ * holding different weeks with nothing able to say which was right.
+ *
+ * Everything anybody wants to know — the name, the days, whether it is still
+ * running, what is prescribed — is read live from this id. Null when the days
+ * were typed by hand, which stays a first-class case: a hand-written week is
+ * not wrong, it is just not tracked by anything.
  */
 export interface NsRoutineProgram {
-  /** Catalog id, e.g. "stronglifts-5x5", or "custom" for one you built. */
-  programId: string
   /** The row in `program_enrollments` this week is tracked by. */
   enrollmentId: string
-  /** Program name as it read when started — for the signed-out render only. */
-  label: string
-  startedAt: string
 }
 
 /** What could stop you, and what you will do when it does. */

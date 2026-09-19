@@ -45,7 +45,6 @@ import {
   emptyNsPlan,
   applyProgramToWorkoutRoutine,
   detachProgramFromRoutines,
-  trackedEnrollmentIds,
   goalGaps,
   goalHorizon,
   goalIsQualified,
@@ -181,7 +180,7 @@ import {
 import { TARGETS, TEMPLATES } from "@/src/goals/data/newGoalFramework"
 import type { NsPlan } from "@/src/goals/types"
 
-import { BUILDER_COPY, COMMIT_DATE_KEY, COMMIT_KEY, IDEAL_DAY_KEY, ONE_ANSWERS, ONE_THING_KEY, STARTER_KEY } from "@/src/goals/data/northStarStart"
+import { BUILDER_COPY, COMMIT_DATE_KEY, COMMIT_KEY, IDEAL_DAY_KEY, ONE_ANSWERS, STARTER_KEY } from "@/src/goals/data/northStarStart"
 
 const NOW = "2026-08-07T10:00:00.000Z"
 const TODAY = "2026-08-07"
@@ -344,7 +343,9 @@ describe("routines", () => {
     const plan = clearRoutineSteps(base, base.routines[0].id, NOW)
     const id = plan.routines[0].id
     const on = toggleRoutineStep(plan, id, "water", NOW)
-    expect(on.routines[0].steps.map((s) => s.id)).toEqual(["water"])
+    // The step's own id is a counter value now; which library entry it came
+    // from is `libraryStepId`, and that is what the toggle is keyed by.
+    expect(on.routines[0].steps.map((s) => s.libraryStepId)).toEqual(["water"])
     const off = toggleRoutineStep(on, id, "water", NOW)
     expect(off.routines[0].steps).toEqual([])
   })
@@ -361,14 +362,14 @@ describe("routines", () => {
     const plan = emptyNsPlan()
     const id = plan.routines[0].id
     const after = applyRoutinePreset(plan, id, "15", NOW)
-    expect(after.routines[0].steps.map((s) => s.id)).toEqual(["water", "bed", "star", "gratitude", "breath", "plan"])
+    expect(after.routines[0].steps.map((s) => s.libraryStepId)).toEqual(["water", "bed", "star", "gratitude", "breath", "plan"])
   })
 
   it("moves a step and refuses to move past either end", () => {
     let plan = applyRoutinePreset(emptyNsPlan(), emptyNsPlan().routines[0].id, "15", NOW)
     const id = plan.routines[0].id
     plan = moveStep(plan, id, 0, 1, NOW)
-    expect(plan.routines[0].steps.map((s) => s.id).slice(0, 2)).toEqual(["bed", "water"])
+    expect(plan.routines[0].steps.map((s) => s.libraryStepId).slice(0, 2)).toEqual(["bed", "water"])
     const unchanged = moveStep(plan, id, 0, -1, NOW)
     expect(unchanged.routines[0].steps.map((s) => s.id)).toEqual(plan.routines[0].steps.map((s) => s.id))
   })
@@ -976,7 +977,7 @@ describe("presets", () => {
     const base = emptyNsPlan()
     const id = base.routines[0].id
     const full = applyRoutinePreset(base, id, "full", NOW)
-    expect(full.routines[0].steps[0].id).toBe("smile")
+    expect(full.routines[0].steps[0].libraryStepId).toBe("smile")
     expect(full.routines[0].steps).toHaveLength(10)
     const back = applyRoutinePreset(full, id, "15", NOW)
     expect(back.routines[0].steps).toHaveLength(6)
@@ -2252,7 +2253,7 @@ describe("a goal drags its routine in behind it", () => {
     expect(routine).toBeTruthy()
     // The split is the shape of the week, not work added to it, so it comes.
     expect(routine.splitDays.length).toBeGreaterThan(0)
-    expect(need.stepIds.every((id) => routine.steps.some((s) => s.id === id))).toBe(true)
+    expect(need.stepIds.every((id) => routine.steps.some((s) => s.libraryStepId === id))).toBe(true)
     expect(routineNeedState(next, need)).toBe("met")
     /**
      * AND NOTHING ELSE. The preset used to come with it, so one goal in Friends
@@ -2260,7 +2261,7 @@ describe("a goal drags its routine in behind it", () => {
      * showed "Give one genuine compliment" already ticked, chosen by nobody.
      * Reported from the page. The presets stay one click away on the card.
      */
-    expect(routine.steps.map((s) => s.id).sort()).toEqual([...need.stepIds].sort())
+    expect(routine.steps.map((s) => s.libraryStepId).sort()).toEqual([...need.stepIds].sort())
   })
 
   it("only adds the missing steps to a routine that is already there, and never twice", () => {
@@ -2268,14 +2269,14 @@ describe("a goal drags its routine in behind it", () => {
     // not replace the stack somebody has already built.
     const plan = emptyNsPlan()
     const morning = plan.routines.find((r) => r.blueprintId === "morning")!
-    const before = morning.steps.map((s) => s.id)
+    const before = morning.steps.map((s) => s.libraryStepId)
     const need = routineNeedsForObjectives(["obj_practice"])[0]
     expect(need.blueprintId).toBe("morning")
     expect(routineNeedState(plan, need)).toBe("partial")
 
     const once = applyRoutineNeed(plan, need, NOW)
     const after = once.routines.find((r) => r.blueprintId === "morning")!
-    expect(before.every((id) => after.steps.some((s) => s.id === id))).toBe(true)
+    expect(before.every((id) => after.steps.some((s) => s.libraryStepId === id))).toBe(true)
     expect(routineNeedState(once, need)).toBe("met")
     expect(once.routines).toHaveLength(plan.routines.length)
 
@@ -4133,109 +4134,106 @@ describe("written rungs carry dates too", () => {
  * These cover the reference that settles it.
  */
 describe("a training week knows which enrollment tracks it", () => {
-  const REF = {
-    programId: "stronglifts-5x5",
-    enrollmentId: "enr-1",
-    label: "StrongLifts 5×5",
-    startedAt: "2026-09-03T10:00:00.000Z",
-  }
+  const REF = { enrollmentId: "enr-1" }
 
-  it("records the enrollment, not just the day names", () => {
-    const plan = applyProgramToWorkoutRoutine(emptyNsPlan(), ["Workout A", "Workout B"], NOW, REF)
+  it("records the enrollment, and nothing copied from the program", () => {
+    const plan = applyProgramToWorkoutRoutine(emptyNsPlan(), NOW, REF)
     const routine = plan.routines.find((r) => r.blueprintId === "workout")!
-    expect(routine.program?.enrollmentId).toBe("enr-1")
-    expect(routine.program?.programId).toBe("stronglifts-5x5")
-    expect(trackedEnrollmentIds(plan)).toEqual(["enr-1"])
+    // One field. The name, the days and the start date are read live from it.
+    expect(routine.program).toEqual({ enrollmentId: "enr-1" })
   })
 
   it("a hand-written week is tracked by nothing, and that is not an error", () => {
-    const plan = applyProgramToWorkoutRoutine(emptyNsPlan(), ["Push", "Pull", "Legs"], NOW)
+    const plan = addRoutine(emptyNsPlan(), "workout", NOW)
     const routine = plan.routines.find((r) => r.blueprintId === "workout")!
     expect(routine.program ?? null).toBeNull()
-    expect(trackedEnrollmentIds(plan)).toEqual([])
-    // The week itself is untouched — not tracked is not the same as not real.
-    expect(routine.splitDays.map((d) => d.name)).toEqual(["Push", "Pull", "Legs"])
   })
 
   it("starting a second program replaces the reference, never keeps both", () => {
-    let plan = applyProgramToWorkoutRoutine(emptyNsPlan(), ["Workout A", "Workout B"], NOW, REF)
-    plan = applyProgramToWorkoutRoutine(plan, ["Upper", "Lower"], NOW, { ...REF, enrollmentId: "enr-2" })
-    expect(trackedEnrollmentIds(plan)).toEqual(["enr-2"])
+    let plan = applyProgramToWorkoutRoutine(emptyNsPlan(), NOW, REF)
+    plan = applyProgramToWorkoutRoutine(plan, NOW, { enrollmentId: "enr-2" })
+    expect(plan.routines.find((r) => r.blueprintId === "workout")!.program).toEqual({
+      enrollmentId: "enr-2",
+    })
   })
 
   it("ending a program keeps the week and drops only the claim it is tracked", () => {
-    const plan = applyProgramToWorkoutRoutine(emptyNsPlan(), ["Workout A", "Workout B"], NOW, REF)
+    let plan = addRoutine(emptyNsPlan(), "workout", NOW)
+    const routineId = plan.routines.find((r) => r.blueprintId === "workout")!.id
+    plan = updateRoutine(plan, routineId, { daysPerWeek: 4 }, NOW)
+    plan = applyProgramToWorkoutRoutine(plan, NOW, REF)
+
     const after = detachProgramFromRoutines(plan, "enr-1", NOW)
     const routine = after.routines.find((r) => r.blueprintId === "workout")!
     expect(routine.program).toBeNull()
-    expect(routine.splitDays.map((d) => d.name)).toEqual(["Workout A", "Workout B"])
-    expect(routine.daysPerWeek).toBe(2)
+    // The week the person wrote is what they come back to.
+    expect(routine.daysPerWeek).toBe(4)
   })
 
   it("ending someone else's enrollment leaves this plan exactly as it was", () => {
-    const plan = applyProgramToWorkoutRoutine(emptyNsPlan(), ["Workout A"], NOW, REF)
+    const plan = applyProgramToWorkoutRoutine(emptyNsPlan(), NOW, REF)
     expect(detachProgramFromRoutines(plan, "enr-999", NOW)).toBe(plan)
   })
 })
 
+/**
+ * IT RECORDS WHICH PROGRAM, AND WRITES NOTHING ELSE.
+ *
+ * Every case about day names that used to live here went with the behaviour.
+ * Copying the program's day names into the plan gave the Systems step an
+ * editable copy of a week the program never heard about, and setting
+ * `daysPerWeek` from how many day TEMPLATES a program has made StrongLifts —
+ * two templates, trained three times a week — read "2 days a week".
+ */
 describe("applyProgramToWorkoutRoutine", () => {
-  it("writes the program's days into an existing workout routine", () => {
+  it("records the reference on an existing workout routine", () => {
     const withRoutine = addRoutine(emptyNsPlan(), "workout", NOW)
-    const plan = applyProgramToWorkoutRoutine(withRoutine, ["Upper A", "Lower A", "Upper B", "Lower B"], NOW)
+    const plan = applyProgramToWorkoutRoutine(withRoutine, NOW, { enrollmentId: "enr-1" })
 
-    const routine = plan.routines.find((r) => r.blueprintId === "workout")!
-    expect(routine.splitDays.map((d) => d.name)).toEqual(["Upper A", "Lower A", "Upper B", "Lower B"])
-    expect(routine.daysPerWeek).toBe(4)
+    expect(plan.routines.find((r) => r.blueprintId === "workout")!.program).toEqual({
+      enrollmentId: "enr-1",
+    })
   })
 
   it("adds the workout routine when the plan has not got one", () => {
-    const plan = applyProgramToWorkoutRoutine(emptyNsPlan(), ["Workout A", "Workout B"], NOW)
+    const plan = applyProgramToWorkoutRoutine(emptyNsPlan(), NOW, { enrollmentId: "enr-1" })
     const routine = plan.routines.find((r) => r.blueprintId === "workout")
     expect(routine).toBeDefined()
-    expect(routine!.splitDays.map((d) => d.name)).toEqual(["Workout A", "Workout B"])
-    expect(routine!.daysPerWeek).toBe(2)
+    expect(routine!.program).toEqual({ enrollmentId: "enr-1" })
   })
 
   it("finds the routine by blueprint, so a renamed one is still the one", () => {
     let plan = addRoutine(emptyNsPlan(), "workout", NOW)
     const id = plan.routines.find((r) => r.blueprintId === "workout")!.id
     plan = updateRoutine(plan, id, { label: "Gym" }, NOW)
-    plan = applyProgramToWorkoutRoutine(plan, ["Push", "Pull", "Legs"], NOW)
+    plan = applyProgramToWorkoutRoutine(plan, NOW, { enrollmentId: "enr-1" })
 
     expect(plan.routines.filter((r) => r.blueprintId === "workout")).toHaveLength(1)
-    const routine = plan.routines.find((r) => r.id === id)!
-    expect(routine.label).toBe("Gym")
-    expect(routine.splitDays.map((d) => d.name)).toEqual(["Push", "Pull", "Legs"])
+    expect(plan.routines.find((r) => r.id === id)!.label).toBe("Gym")
   })
 
-  it("replaces a previous split rather than appending to it", () => {
-    let plan = addRoutine(emptyNsPlan(), "workout", NOW)
-    plan = applyProgramToWorkoutRoutine(plan, ["Push", "Pull", "Legs"], NOW)
-    plan = applyProgramToWorkoutRoutine(plan, ["Full Body A", "Full Body B"], NOW)
-
-    const routine = plan.routines.find((r) => r.blueprintId === "workout")!
-    expect(routine.splitDays.map((d) => d.name)).toEqual(["Full Body A", "Full Body B"])
-    expect(routine.daysPerWeek).toBe(2)
-  })
-
-  it("keeps the routine's steps — a program says when you train, not what else the routine carries", () => {
+  it("keeps the routine's steps — a program says which program, not what else the routine carries", () => {
     let plan = addRoutine(emptyNsPlan(), "workout", NOW)
     const routineId = plan.routines.find((r) => r.blueprintId === "workout")!.id
     const stepsBefore = plan.routines.find((r) => r.id === routineId)!.steps.map((s) => s.id)
 
-    plan = applyProgramToWorkoutRoutine(plan, ["Upper", "Lower"], NOW)
+    plan = applyProgramToWorkoutRoutine(plan, NOW, { enrollmentId: "enr-1" })
     expect(plan.routines.find((r) => r.id === routineId)!.steps.map((s) => s.id)).toEqual(stepsBefore)
   })
 
-  it("an empty day list is a no-op rather than a wiped split", () => {
+  it("leaves a hand-written week exactly where it was", () => {
     let plan = addRoutine(emptyNsPlan(), "workout", NOW)
-    plan = applyProgramToWorkoutRoutine(plan, ["Push", "Pull"], NOW)
-    expect(applyProgramToWorkoutRoutine(plan, [], NOW)).toBe(plan)
+    const routineId = plan.routines.find((r) => r.blueprintId === "workout")!.id
+    plan = updateRoutine(plan, routineId, { daysPerWeek: 5 }, NOW)
+
+    plan = applyProgramToWorkoutRoutine(plan, NOW, { enrollmentId: "enr-1" })
+    // Five is what the person typed. A program running does not make it wrong,
+    // and it is what the week returns to when the program ends.
+    expect(plan.routines.find((r) => r.id === routineId)!.daysPerWeek).toBe(5)
   })
 
-  it("gives every day a distinct id, so renaming one does not rename another", () => {
-    const plan = applyProgramToWorkoutRoutine(emptyNsPlan(), ["Upper", "Upper", "Lower"], NOW)
-    const ids = plan.routines.find((r) => r.blueprintId === "workout")!.splitDays.map((d) => d.id)
-    expect(new Set(ids).size).toBe(3)
+  it("no program is a no-op", () => {
+    const plan = addRoutine(emptyNsPlan(), "workout", NOW)
+    expect(applyProgramToWorkoutRoutine(plan, NOW, null)).toBe(plan)
   })
 })
