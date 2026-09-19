@@ -28,7 +28,9 @@ import {
   supersetGroups,
   supersetLabel,
   unjoin,
+  convertTyped,
 } from "@/src/programs/builder"
+import { fromKg, toKg } from "@/src/shared/weight"
 import { addDay, addExercise, moveExercise, scheduleDays, seedForAddedExercises } from "@/src/programs/customize"
 import { applyLog, computePrescription, roundToLoadable, seedEnrollment } from "@/src/programs/programsService"
 import { getProgram, requireProgram } from "@/src/programs/data/catalog"
@@ -763,5 +765,60 @@ describe("logging the session you actually did", () => {
       result.enrollment.exerciseState[bench].workingWeight,
       "next time must build on the 65 lifted, not the 60 asked for"
     ).toBeGreaterThan(65)
+  })
+})
+
+/**
+ * SWITCHING THE UNIT CONVERTS WHAT YOU TYPED.
+ *
+ * The Templates step's kg/lb buttons called `setWeights({})` and
+ * `setOneRms({})` — every number typed for every lift, gone, with nothing on
+ * screen saying so. Somebody filling in eight starting weights who then
+ * noticed the wrong unit lost all eight.
+ *
+ * The builder next door did the opposite wrong thing: it kept the numbers and
+ * changed the label, so 60 kg silently became 60 lb. Neither is a conversion.
+ */
+describe("switching between kilograms and pounds", () => {
+  const barbell = () => "barbell" as const
+
+  test("converts 60 kg to pounds and rounds it to something you can load", () => {
+    const out = convertTyped({ squat: "60" }, "kg", "lb", barbell)
+    const expected = String(roundToLoadable(fromKg(toKg(60, "kg"), "lb"), "lb", "barbell"))
+    expect(out.squat).toBe(expected)
+    // Sanity, so this cannot pass while both sides are wrong together:
+    // 60 kg is a bit over 130 lb.
+    expect(Number(out.squat)).toBeGreaterThan(125)
+    expect(Number(out.squat)).toBeLessThan(140)
+  })
+
+  test("a blank stays blank, and half-typed text is left exactly as typed", () => {
+    // Overwriting "6" as somebody types the second digit would be its own bug.
+    const out = convertTyped({ a: "", b: "  ", c: "abc", d: "6" }, "kg", "lb", barbell)
+    expect(out.a).toBe("")
+    expect(out.b).toBe("  ")
+    expect(out.c).toBe("abc")
+    expect(out.d).not.toBe("6")
+  })
+
+  test("switching to the same unit changes nothing at all", () => {
+    const map = { squat: "60" }
+    expect(convertTyped(map, "kg", "kg", barbell)).toBe(map)
+  })
+
+  test("rounds a dumbbell to a dumbbell, not to a plate pair", () => {
+    const asBarbell = convertTyped({ x: "20" }, "kg", "lb", () => "barbell")
+    const asFree = convertTyped({ x: "20" }, "kg", "lb", () => "free")
+    // The two rounding rules are different; if they were not, the loadStyle
+    // argument would be decoration.
+    expect(asBarbell.x).not.toBe(asFree.x)
+  })
+
+  test("a round trip lands back on a loadable number near where it started", () => {
+    const there = convertTyped({ squat: "60" }, "kg", "lb", barbell)
+    const back = convertTyped(there, "lb", "kg", barbell)
+    // Not exactly 60: each leg rounds to what the bar can hold, which is the
+    // point. Within one plate pair.
+    expect(Math.abs(Number(back.squat) - 60)).toBeLessThanOrEqual(2.5)
   })
 })

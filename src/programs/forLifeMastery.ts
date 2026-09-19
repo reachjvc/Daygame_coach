@@ -27,5 +27,8 @@
 export { useActiveEnrollments, refreshEnrollments } from "./hooks/useEnrollment"
 export { enrollmentName, getProgram } from "./data/catalog"
 export { describeTrainingWeek } from "./programsService"
+// Switching kg↔lb converts what was typed rather than deleting it; Life
+// Mastery's own builder needs the same rule, not a second copy of it.
+export { convertTyped } from "./builder"
 
 export type { ProgramEnrollment } from "./types"

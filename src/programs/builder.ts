@@ -21,7 +21,9 @@
  * precisely what the flat tag preserves.
  */
 
-import type { LibraryExercise, LoadExercise, LoadProgressionRule, ProgramSchedule } from "./types"
+import type { LibraryExercise, LoadExercise, LoadProgressionRule, ProgramSchedule, UnitSystem } from "./types"
+import { toKg, fromKg } from "@/src/shared/weight"
+import { roundToLoadable } from "./programsService"
 import { scheduleDays } from "./customize"
 
 /** The progression rules a self-designed lift can be given, with plain names. */
@@ -466,4 +468,42 @@ export function designProblems(schedule: ProgramSchedule): string[] {
     )
   }
   return problems
+}
+
+/**
+ * SWITCHING KG↔LB CONVERTS WHAT YOU TYPED. It used to delete it.
+ *
+ * The unit buttons on the Templates step called `setWeights({})` and
+ * `setOneRms({})` — every number you had typed for every lift, gone, with
+ * nothing on screen saying so. Somebody filling in eight starting weights who
+ * then noticed the wrong unit lost all eight and had to start again.
+ *
+ * The builder's own unit button did the opposite wrong thing: it kept the
+ * numbers and changed the label, so 60 kg silently became 60 lb.
+ *
+ * Neither is a conversion. This is: each typed value is converted, then rounded
+ * to something you can actually load — a barbell to the nearest plate pair, a
+ * dumbbell to the nearest dumbbell. A blank stays blank, and anything that is
+ * not a number is left exactly as typed, because a half-typed "6" is not a
+ * weight yet and overwriting it as somebody types would be its own bug.
+ */
+export function convertTyped(
+  map: Record<string, string>,
+  from: UnitSystem,
+  to: UnitSystem,
+  styleFor: (exerciseId: string) => "barbell" | "free" | "bodyweight"
+): Record<string, string> {
+  if (from === to) return map
+  const out: Record<string, string> = {}
+  for (const [id, raw] of Object.entries(map)) {
+    const value = Number(raw)
+    if (raw.trim() === "" || !Number.isFinite(value)) {
+      out[id] = raw
+      continue
+    }
+    // Through kilograms, which is how every stored weight is held.
+    const converted = to === "kg" ? toKg(value, from) : fromKg(toKg(value, from), to)
+    out[id] = String(roundToLoadable(converted, to, styleFor(id)))
+  }
+  return out
 }

@@ -6,6 +6,7 @@
  */
 
 import type { Discipline, LevelId, ProgramDefinition } from "../types"
+import { DISCIPLINES } from "../config"
 import { strongLifts5x5 } from "./strength/stronglifts5x5"
 import { wendler531 } from "./strength/wendler531"
 import { startingStrength } from "./strength/startingStrength"
@@ -67,6 +68,22 @@ export function programsByDiscipline(discipline: Discipline): ProgramDefinition[
 export function hasProgramsForDiscipline(discipline: Discipline): boolean {
   return ALL_PROGRAMS.some((p) => p.discipline === discipline)
 }
+
+/**
+ * THE DISCIPLINES A PERSON CAN ACTUALLY BROWSE — derived, never listed.
+ *
+ * The list was typed by hand in the Templates step and named six. The
+ * catalogue has seven, and the seventh — Ironman — holds the Half Ironman
+ * plan, which was therefore unreachable from every screen in the app while
+ * the sentence beside the list counted it among "thirteen cited programs".
+ *
+ * Derived here rather than in `config.ts` because config must not import the
+ * program data: the disciplines are a vocabulary, the programs are content,
+ * and content depending on vocabulary is the direction that works.
+ */
+export const OFFERED_DISCIPLINES: Discipline[] = (
+  Object.keys(DISCIPLINES) as Discipline[]
+).filter((d) => DISCIPLINES[d].implemented && hasProgramsForDiscipline(d))
 
 /** Programs that serve a given level without routing elsewhere. */
 export function programsForLevel(level: LevelId): ProgramDefinition[] {

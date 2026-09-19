@@ -24,7 +24,8 @@ import {
 } from "@/src/programs/components/CustomProgramBuilder"
 import { SavedWeeks } from "@/src/programs/components/SavedWeeks"
 import type { NsRoutineProgram } from "@/src/goals/types"
-import { scheduleDays } from "@/src/programs/customize"
+import { scheduleDays, scheduleDaysOrNone } from "@/src/programs/customize"
+import { convertTyped } from "@/src/programs/forLifeMastery"
 import {
   CUSTOM_LIFTS_STORAGE_KEY,
   forgetCustomLift,
@@ -73,6 +74,7 @@ function load(raw: string | null): SavedDesign | null {
       schedule: parsed.schedule,
       unit: parsed.unit === "lb" ? "lb" : "kg",
       weights: parsed.weights && typeof parsed.weights === "object" ? parsed.weights : {},
+      enrollmentId: typeof parsed.enrollmentId === "string" ? parsed.enrollmentId : null,
     }
   } catch {
     return null
@@ -159,7 +161,22 @@ export function BuildYourOwn({
             schedule={schedule}
             onChange={setSchedule}
             unit={unit}
-            onUnit={setUnit}
+            onUnit={(next) => {
+              // THE OPPOSITE WRONG THING to the Templates step, which deleted
+              // the numbers: this kept them and changed the label, so 60 kg
+              // silently became 60 lb. Convert, and round to something you can
+              // actually load.
+              if (next === unit) return
+              const styleFor = (id: string) => {
+                for (const day of scheduleDaysOrNone(schedule)) {
+                  const found = day.exercises.find((e) => e.id === id)
+                  if (found) return (found as { loadStyle?: "barbell" | "free" | "bodyweight" }).loadStyle ?? "barbell"
+                }
+                return "barbell" as const
+              }
+              setWeights((w) => convertTyped(w, unit, next, styleFor))
+              setUnit(next)
+            }}
             weights={weights}
             onWeight={(id, raw) => setWeights((w) => ({ ...w, [id]: raw }))}
             onWeights={setWeights}

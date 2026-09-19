@@ -27,6 +27,7 @@ import type {
   NutritionLogRow,
   NutritionStats,
   CorrelationInsight,
+  SessionType,
 } from "./types"
 
 // ============================================================================
@@ -992,4 +993,51 @@ export function collapseSets(
     })
   }
   return out
+}
+
+/**
+ * WHICH STEP OF THE TRAINING WEEK A FINISHED WORKOUT TICKS.
+ *
+ * The Track step's ticks lived only in the plan in the browser, so a week with
+ * three finished gym sessions showed zero on "Strength session" until somebody
+ * ticked it by hand. Two records of one workout, kept separately, free to
+ * disagree — and the one the person actually did was the one being ignored.
+ *
+ * The ids on the right are the workout routine's own library steps
+ * (`src/goals/data/northStar.ts`). Five session types, three steps: a run and
+ * a bike are both cardio, yoga and mobility are both mobility.
+ */
+export const STEP_FOR_SESSION_TYPE: Record<SessionType, "strength" | "cardio" | "mobility"> = {
+  weights: "strength",
+  cardio: "cardio",
+  running: "cardio",
+  mobility: "mobility",
+  yoga: "mobility",
+}
+
+/**
+ * Finished workouts grouped by the day they happened ON THE PERSON'S calendar.
+ *
+ * WHOSE CLOCK. `workoutsOnDate` keys by the running process's clock, which on
+ * the server is UTC — so a 23:45 session in Copenhagen counts as the next day
+ * and ticks the wrong column of the week grid. `toZonedDate` and `toDateISO`
+ * are the two functions in this codebase that get this right; three separate
+ * bugs have come from `toISOString().split("T")[0]` instead.
+ */
+export function workoutsByLocalDate(
+  logs: Array<{ logged_at: string; session_type: SessionType }>,
+  timezone: string
+): Map<string, SessionType[]> {
+  const byDate = new Map<string, SessionType[]>()
+  for (const log of logs) {
+    const at = new Date(log.logged_at)
+    // A date that cannot be read is left out rather than filed under today,
+    // which would tick a day nobody trained.
+    if (Number.isNaN(at.getTime())) continue
+    const date = toDateISO(toZonedDate(at, timezone))
+    const already = byDate.get(date)
+    if (already) already.push(log.session_type)
+    else byDate.set(date, [log.session_type])
+  }
+  return byDate
 }

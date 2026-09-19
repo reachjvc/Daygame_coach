@@ -85,6 +85,7 @@ import { ValuesSoFar } from "./ValuesSoFar"
 import { ValuesWork } from "./ValuesWork"
 import { RecapTab, type RecapHandlers } from "./RecapTab"
 import { BackLink } from "@/components/BackLink"
+import { getTodayInTimezone } from "@/src/shared/dateUtils"
 // ONE DOOR into the gym slice — see src/programs/forLifeMastery.ts and the
 // architecture test that holds the line.
 import {
@@ -119,10 +120,20 @@ export function NorthStarFlow({
   backHref = "/dashboard",
   backLabel = "Dashboard",
   initialTab = "star",
+  timezone = "UTC",
   goalsPromise,
 }: {
   backHref?: string
   backLabel?: string
+  /**
+   * The ACCOUNT's timezone, read on the server.
+   *
+   * Life Mastery's "today" used to be the browser's, while the ticks derived
+   * from finished workouts arrive on the account's local date — so on a phone
+   * in a different zone a session ticked a column the person had not trained
+   * on. Defaults to UTC for the lab pages that mount this flow directly.
+   */
+  timezone?: string
   /**
    * Which step to open on. The rail still reaches every other one.
    *
@@ -239,7 +250,15 @@ export function NorthStarFlow({
   }, [])
 
   useEffect(() => {
-    setToday(ns.todayISO())
+    /**
+     * WHOSE TODAY. `todayISO()` is the BROWSER's day. The ticks derived from
+     * finished workouts arrive on the ACCOUNT's local date, so on a phone in a
+     * different zone a session ticked the wrong column of the week grid.
+     *
+     * Still in this effect rather than on the server: the comment above
+     * explains why today is not computed during render.
+     */
+    setToday(getTodayInTimezone(timezone))
     setSynced(syncIsOff() ? "off" : "unknown")
     const saved = ns.loadNsPlan(window.localStorage.getItem(NORTH_STAR_STORAGE_KEY))
     if (saved) setPlan(saved)
@@ -627,7 +646,9 @@ export function NorthStarFlow({
     onRemoveStep: (routineId: string, stepId: string) => setPlan((p) => ns.removeStep(p, routineId, stepId)),
     /** The list that is not goals. */
     onAddExperiences: (text: string, areaId: string | null) => setPlan((p) => ns.addExperiences(p, text, areaId)),
-    onToggleExperience: (id: string) => setPlan((p) => ns.toggleExperienceDone(p, id, ns.todayISO())),
+    // `today` is the ACCOUNT's day; the fallback is for the single render
+    // before the effect sets it, as everywhere else in this file.
+    onToggleExperience: (id: string) => setPlan((p) => ns.toggleExperienceDone(p, id, today ?? ns.todayISO())),
     onPromoteExperience: (id: string, areaId: string) => setPlan((p) => ns.promoteExperience(p, id, areaId)),
     onUpdateExperience: (id: string, patch: { areaId?: string | null; title?: string }) => setPlan((p) => ns.updateExperience(p, id, patch)),
     onRemoveExperience: (id: string) => setPlan((p) => ns.removeExperience(p, id)),

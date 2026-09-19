@@ -352,7 +352,14 @@ describe('Architecture Compliance', () => {
       for (const file of sourceFiles()) {
         const relativePath = path.relative(projectRoot, file)
         if (relativePath === 'src/shared/dateUtils.ts') continue // documents the pattern
-        const content = fs.readFileSync(file, 'utf-8')
+        // COMMENTS BLANKED, like the other guards in this file. `dateUtils.ts`
+        // was skipped by name for documenting the pattern; the moment a second
+        // file explained the same rule in its own comment, this fired on the
+        // explanation rather than on any code.
+        const content = fs
+          .readFileSync(file, 'utf-8')
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/\/\/[^\n]*/g, '')
         if (!content.includes('toISOString().split("T")[0]')) continue
         if (!UTC_DATE_SHIFT_ALLOWED.has(relativePath)) offenders.push(relativePath)
       }
@@ -371,6 +378,8 @@ describe('Architecture Compliance', () => {
             if (rel === 'src/shared/dateUtils.ts') return false
             return fs
               .readFileSync(path.join(projectRoot, rel), 'utf-8')
+              .replace(/\/\*[\s\S]*?\*\//g, '')
+              .replace(/\/\/[^\n]*/g, '')
               .includes('toISOString().split("T")[0]')
           })
       )

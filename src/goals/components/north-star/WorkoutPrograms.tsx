@@ -28,20 +28,28 @@
  * with no account. Editing works signed out — only starting needs the account.
  */
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import Link from "next/link"
 import { Check, Loader2 } from "lucide-react"
 import { DISCIPLINES, LEVEL_LABELS } from "@/src/programs/config"
-import { enrollmentName, programsByDiscipline, requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
+import {
+  ALL_PROGRAMS,
+  OFFERED_DISCIPLINES,
+  enrollmentName,
+  programsByDiscipline,
+  requireProgram,
+  resolveProgramForLevel,
+} from "@/src/programs/data/catalog"
 import {
   isCustomizable,
   isModified,
   materializeSchedule,
   missingWorkingWeights,
   scheduleProblems,
+  scheduleDaysOrNone,
 } from "@/src/programs/customize"
 import { fromKg, roundToLoadable } from "@/src/programs/programsService"
-import { hasWeight, numericWeights } from "@/src/programs/builder"
+import { hasWeight, numericWeights, convertTyped } from "@/src/programs/builder"
 import { ProgramEditor } from "@/src/programs/components/ProgramEditor"
 import { RunningPrograms } from "@/src/programs/components/RunningPrograms"
 import { refreshEnrollments, useActiveEnrollments } from "@/src/programs/hooks/useEnrollment"
@@ -49,9 +57,6 @@ import { Segmented } from "@/src/programs/components/ui"
 import { BuildYourOwn } from "./BuildYourOwn"
 import type { Discipline, LevelId, ProgramSchedule, UnitSystem } from "@/src/programs/types"
 import type { NsRoutineProgram } from "@/src/goals/types"
-
-/** The disciplines offered under Fitness, in the order people ask for them. */
-const OFFERED: Discipline[] = ["strength", "bodybuilding", "calisthenics", "cardio", "flexibility", "triathlon"]
 
 export const PROGRAM_COPY = {
   title: "Take a training program",
@@ -165,6 +170,20 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded }: Props) {
       : []
 
   const missingFilled = missing.every((m) => hasWeight(weights, m.exerciseId))
+  /**
+   * How each lift is loaded, so a unit switch rounds a dumbbell to a dumbbell
+   * and a barbell to a plate pair rather than to the same number.
+   */
+  const loadStyles = useMemo(() => {
+    const byId = new Map<string, "barbell" | "free" | "bodyweight">()
+    if (!schedule) return byId
+    for (const day of scheduleDaysOrNone(schedule)) {
+      for (const ex of day.exercises) {
+        byId.set(ex.id, (ex as { loadStyle?: "barbell" | "free" | "bodyweight" }).loadStyle ?? "barbell")
+      }
+    }
+    return byId
+  }, [schedule])
   const oneRmsFilled = oneRmExercises.every((e) => Number(oneRms[e.id]) > 0)
   // A day added but not yet filled makes the program unstartable, not invalid —
   // it is a normal half-finished edit, so it is named rather than blocked.
@@ -310,7 +329,7 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded }: Props) {
 
       {/* Discipline */}
       <div className="flex flex-wrap gap-1 mt-2">
-        {OFFERED.map((d) => (
+        {OFFERED_DISCIPLINES.map((d) => (
           <button
             key={d}
             onClick={() => {
@@ -382,9 +401,14 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded }: Props) {
                   <button
                     key={u}
                     onClick={() => {
+                      if (u === unit) return
+                      // CONVERTED, not deleted. This used to wipe every number
+                      // typed for every lift, with nothing on screen saying so.
+                      const styleFor = (id: string) =>
+                        loadStyles.get(id) ?? "barbell"
+                      setWeights((w) => convertTyped(w, unit, u, styleFor))
+                      setOneRms((w) => convertTyped(w, unit, u, styleFor))
                       setUnit(u)
-                      setWeights({})
-                      setOneRms({})
                     }}
                     className={`text-[11px] px-2 py-0.5 rounded border transition-colors ${
                       unit === u ? "border-white/25 bg-white/10 text-white" : "border-white/10 text-zinc-400 hover:bg-white/5"
@@ -624,7 +648,7 @@ function ModeSwitch({
         {
           value: "ready" as const,
           label: "Take a ready-made one",
-          hint: "Thirteen cited programs, all fully editable once you pick one.",
+          hint: `${ALL_PROGRAMS.length} cited programs, all fully editable once you pick one.`,
         },
         {
           value: "own" as const,

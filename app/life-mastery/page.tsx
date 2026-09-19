@@ -42,15 +42,24 @@ export default async function LifeMasteryPage({
   const { step } = await searchParams
   const initialTab = TAB_ORDER.includes(step as NorthStarTabId) ? (step as NorthStarTabId) : undefined
 
+  /**
+   * THE ACCOUNT'S ZONE, read once for the whole page.
+   *
+   * Life Mastery's "today" was the browser's, while the ticks derived from
+   * finished workouts arrive on the account's local date — so a lifter whose
+   * phone and account differ saw a session tick a column that was not the one
+   * they trained on. One read, one answer, handed down.
+   */
+  const timezone = await getUserTimezone(user.id).catch(() => "UTC")
+
   // Started, not awaited. Same order the API route uses: expired counters are
   // rolled before they are read, so a weekly total from last week is not shown
   // as this week's.
   const goalsPromise =
     initialTab === "today"
       ? (async () => {
-          const tz = await getUserTimezone(user.id)
-          await rollGoalPeriods(user.id, tz)
-          return getUserGoals(user.id, false, tz)
+          await rollGoalPeriods(user.id, timezone)
+          return getUserGoals(user.id, false, timezone)
         })().catch((error) => {
           // The step falls back to fetching for itself.
           console.error("Failed to pre-read goals for the Today step:", error)
@@ -63,6 +72,7 @@ export default async function LifeMasteryPage({
       backHref="/dashboard"
       backLabel="Dashboard"
       initialTab={initialTab}
+      timezone={timezone}
       goalsPromise={goalsPromise}
     />
   )
