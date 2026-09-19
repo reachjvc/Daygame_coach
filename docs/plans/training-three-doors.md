@@ -1097,6 +1097,15 @@ No blockers.
 - Checked and unchanged: every cited symbol exists (`listActiveEnrollments` :139, `getTodaySession` :590, `getLiveWorkout` :183, `prescriptionForDay` :618, `getUserTimezone` :153, `finishedWorkouts` :190, `getTodayInTimezone` :23, `toZonedDate` :50, `isoWeekdayInTimezone` :102, `pickTodaysDay` :188, `enduranceMinutes` :1895, `startKeyFor` :423, `clearStartKey` :440, `withReturn` :42, `enrollmentName` catalog.ts:108, `WEEKDAY_SHORT` config.ts:54); `pickTodaysDay` with tomorrow's weekday wraps past Sunday as claimed; Playwright `^1.58.1` has `page.clock` and `page.unrouteAll()`; `AlertTriangle`, `ChevronRight`, `Loader2`, `Play` are utility icons and `Dumbbell` is registered for this context, so no icon-registry ask; `training-link` is referenced by no test; `couch-to-5k` is `discipline: "cardio"` so it coexists with StrongLifts; 2026-09-14 is a Monday, so the Copenhagen and Auckland fixtures say what they claim.
 - New icons: none.
 
+
+**Found while building it, 19 September (all 15 steps).**
+- Step 9 asked for a new `src/programs/startWorkoutRequest.ts`. Phase 0 had already built one in `hooks/useLiveWorkout.ts`, AND an architecture guard already names that file as the only place allowed to post `/api/workouts` — so the guard failed on my duplicate within minutes. Phase 0's is the better of the two (it recovers a spent key once, and treats "already open" as the thing the person was reaching for), so the new file was deleted rather than the guard widened.
+- `useLoad` exposed `retry` only on its `failed` state. Step 11 (7) needs to re-read from `ready` — that is how a refused Start corrects itself to Resume without reading the refusal's wording. `reload` is now on every state; three existing tests compared the whole returned object with `toEqual` and had to become `toMatchObject`.
+- Step 14's first scan fired on `TrainingCard.tsx` — in its own doc comment, which explains the rule using the very string the rule forbids. Same trap as the UTC-date guard two phases earlier. Both comment kinds are blanked now, and the count was taken again afterwards.
+- Step 12 turned a lazy `import()` of the card into a real one, which immediately tripped Phase 2's one-door guard: Life Mastery embeds the same card, and the lazy form had been hiding that crossing from the rule. Exported through `forLifeMastery.ts`.
+- Step 1 was supposed to seed the type-export allowlist with "what the first run reports". It reported seven files, one of which was `programsService.ts` itself — the three types the plan names. Those moved; the other six are allowlisted with a one-line reason each, as the plan asked.
+- Not a defect, but worth recording: four commit attempts failed on another session's untracked `zz-*` scratch tests under `tests/unit/goals`, because the pre-commit hook runs the whole suite. Messaged them rather than reaching for `--no-verify`; the hook had already caught two real regressions of mine that day.
+
 ### Open questions for Phase 3
 
 Numbered as the steps above refer to them. Each carries a recommendation.
