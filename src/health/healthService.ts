@@ -22,7 +22,6 @@ import type {
   WorkoutLogWithSets,
   WorkoutSetRow,
   HeatmapDay,
-  ExerciseSummary,
   PersonalRecord,
   NutritionLogRow,
   NutritionStats,
@@ -463,22 +462,11 @@ export function workoutsToCsv(logs: WorkoutLogWithSets[]): string {
 }
 
 /**
- * The workouts already logged on a given local date.
- *
- * TWO FACTS THAT MUST AGREE, STORED APART. A program session bridges into
- * `workout_logs` when it is logged on the Training page, and the free-form
- * logger writes to the same table. Nothing links the two, so one gym session
- * written up both ways is two rows — and two sessions on the week count, the
- * streak, the heatmap and any goal reading the metric.
- *
- * Not forbidden: people genuinely train twice a day, and refusing the second
- * one would be wrong. It just has to be SAID, before the save rather than
- * after, which is why this returns the rows instead of a boolean — the warning
- * names what is already there.
+ * `workoutsOnDate` was here, keyed by the running process's clock — see
+ * tests/unit/health/workoutsByLocalDate.test.ts for why that is the wrong
+ * clock. Its one caller was the deleted form. What day a workout belongs to is
+ * answered in the account's zone, by `workoutsByLocalDate`.
  */
-export function workoutsOnDate(logs: WorkoutLogRow[], dateKey: string): WorkoutLogRow[] {
-  return logs.filter((log) => localDateKey(new Date(log.logged_at)) === dateKey)
-}
 
 /**
  * Aligned activity grid: `weeks` Monday-start columns of 7 days, ending with
@@ -535,48 +523,19 @@ export function computeWeekStreak(logs: WorkoutLogRow[], today: Date): number {
 }
 
 /**
- * Compact per-exercise summary of a workout's sets, in first-seen order.
- * Detail collapses uniform sets ("80kg × 5 × 3 sets") and lists mixed ones
- * ("80×5, 85×5, 85×3"); warm-up sets are marked with a "w" suffix.
+ * `summarizeWorkoutSets` was here. It built "Squat 120 kg × 5" from a set
+ * list, with kilograms baked into the string — so a pounds lifter read their
+ * own history in numbers they never lifted. `HistoryTab` builds that line
+ * itself, in the lifter's unit; there is no second copy to drift now.
  */
-export function summarizeWorkoutSets(sets: WorkoutSetRow[]): ExerciseSummary[] {
-  const groups = new Map<string, WorkoutSetRow[]>()
-  for (const s of sets) {
-    const key = s.exercise.toLowerCase()
-    const group = groups.get(key)
-    if (group) group.push(s)
-    else groups.set(key, [s])
-  }
-
-  return Array.from(groups.values()).map((group) => {
-    const working = group.filter(isWorkingSet)
-    const uniform =
-      working.length > 1 &&
-      working.every((s) => s.weight_kg === working[0].weight_kg && s.reps === working[0].reps) &&
-      working.length === group.length
-    const detail = uniform
-      ? `${working[0].weight_kg}kg × ${working[0].reps} × ${working.length} sets`
-      : group.map((s) => `${s.weight_kg}×${s.reps}${isWorkingSet(s) ? "" : "w"}`).join(", ")
-    return { exercise: group[0].exercise, detail, setCount: group.length }
-  })
-}
 
 /**
- * The most recent logged sets for an exercise (case-insensitive), for
- * last-time hints. Expects logs sorted by logged_at ascending.
+ * `findLastExerciseSets` was here: the last time you did a given lift, for the
+ * form that pre-filled its rows from it. The live screen asks the server for
+ * the same fact (`lastTime`, resolved in `app/programs/live/page.tsx`), which
+ * is the one that has the whole history rather than the 90 days the form had
+ * loaded.
  */
-export function findLastExerciseSets(
-  logs: WorkoutLogWithSets[],
-  exercise: string
-): { date: string; sets: WorkoutSetRow[] } | null {
-  const name = exercise.trim().toLowerCase()
-  if (!name) return null
-  for (let i = logs.length - 1; i >= 0; i--) {
-    const match = (logs[i].sets ?? []).filter((s) => s.exercise.toLowerCase() === name)
-    if (match.length > 0) return { date: logs[i].logged_at, sets: match }
-  }
-  return null
-}
 
 // ============================================================================
 // Nutrition Stats

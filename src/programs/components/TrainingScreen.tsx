@@ -29,23 +29,20 @@ import { isWeekdayAnchored, unitForDisplay } from "../programsService"
 import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment, UnitSystem } from "../types"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
-/**
- * 800-odd lines of set rows, templates, heatmap and personal-record detection,
- * behind a tab. Somebody who never opens the other tab never downloads it.
- */
-const WorkoutLogger = lazy(() =>
-  import("@/src/health/components/WorkoutLogger").then((m) => ({ default: m.WorkoutLogger }))
-)
-// Small and always shown on this tab, so not worth splitting out.
-const StartLooseWorkout = lazy(() =>
-  import("./StartLooseWorkout").then((m) => ({ default: m.StartLooseWorkout }))
-)
 /* Two more tabs, each a year of workouts and a pile of charts. Nobody who stays
    on today's session downloads either. */
 const HistoryTab = lazy(() => import("./HistoryTab").then((m) => ({ default: m.HistoryTab })))
 const ProgressTab = lazy(() => import("./ProgressTab").then((m) => ({ default: m.ProgressTab })))
 
-type Tab = "session" | "history" | "progress" | "anything"
+/**
+ * THREE TABS, not four.
+ *
+ * "Anything else" existed to hold two things: an improvised workout, and a
+ * form for writing up one you had already done. The form is gone — there is
+ * one way to record a workout now — and starting an empty one belongs beside
+ * today's session, not on a tab of its own that nobody opened.
+ */
+type Tab = "session" | "history" | "progress"
 
 interface Props {
   initialActive: ProgramEnrollment[]
@@ -58,6 +55,8 @@ interface Props {
   accountUnit: UnitSystem | null
   /** The server read failed — this is NOT the same as having no programs. */
   failed?: boolean
+  /** The account's zone, for dating a workout written up afterwards. */
+  timezone?: string
 }
 
 export function TrainingScreen({
@@ -67,6 +66,7 @@ export function TrainingScreen({
   live,
   accountUnit,
   failed,
+  timezone,
 }: Props) {
   const running = initialActive[0]
   /**
@@ -194,7 +194,6 @@ export function TrainingScreen({
               { value: "session" as Tab, label: "Today" },
               { value: "history" as Tab, label: "History" },
               { value: "progress" as Tab, label: "Progress" },
-              { value: "anything" as Tab, label: "Anything else" },
             ]}
           />
         </div>
@@ -208,47 +207,24 @@ export function TrainingScreen({
           */}
         {tab === "history" ? (
           <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
-            <HistoryTab unit={unit} />
+            <HistoryTab
+              unit={unit}
+              enrollments={initialActive}
+              liveOpen={live !== null}
+              timezone={timezone}
+            />
           </Suspense>
         ) : tab === "progress" ? (
           <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
             <ProgressTab plannedPerWeek={plannedPerWeek} unit={unit} />
           </Suspense>
-        ) : tab === "session" ? (
+        ) : (
           <ProgramsApp
             initialActive={initialActive}
             initialPast={initialPast}
             initialDetail={initialDetail}
             live={live}
           />
-        ) : (
-          <div className="space-y-8">
-            {/* DOING ONE NOW comes before writing one up. The set-by-set screen
-                could only be opened by starting today's prescribed session, so
-                anything improvised had to be reconstructed from memory
-                afterwards. */}
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Anything you did that isn&apos;t today&apos;s session — a class, a run, a session you
-                improvised. It counts towards your tracked sessions just the same.
-              </p>
-              <Suspense fallback={null}>
-                <StartLooseWorkout live={live} />
-              </Suspense>
-            </div>
-
-            <div>
-              <p className="mb-3 text-sm text-muted-foreground">
-                Or write up something you have already done.
-              </p>
-              <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
-                <WorkoutLogger />
-              </Suspense>
-            </div>
-            {/* "Your lifts over time" moved to the Progress tab, which is
-                where somebody goes to read rather than to log. Leaving a copy
-                here meant the same chart on two tabs. */}
-          </div>
         )}
       </div>
     </div>

@@ -181,11 +181,11 @@ export interface HeatmapDay {
 }
 
 // Compact per-exercise summary of a workout's sets, for history rows and hints
-export interface ExerciseSummary {
-  exercise: string
-  detail: string
-  setCount: number
-}
+/**
+ * `ExerciseSummary` was here — the return of `summarizeWorkoutSets`, which
+ * built "Squat 120 kg × 5" with kilograms baked into the string. `HistoryTab`
+ * builds that line in the LIFTER'S unit and has no need of a type for it.
+ */
 
 export interface PersonalRecord {
   exercise: string

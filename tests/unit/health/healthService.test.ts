@@ -2,9 +2,6 @@ import { describe, it, expect } from "vitest"
 import {
   buildWorkoutHeatmapWeeks,
   computeWeekStreak,
-  summarizeWorkoutSets,
-  findLastExerciseSets,
-  workoutsOnDate,
   liftHistory,
   liftsWithHistory,
   workoutsToCsv,
@@ -121,107 +118,21 @@ describe("computeWeekStreak", () => {
   })
 })
 
-describe("summarizeWorkoutSets", () => {
-  it("collapses uniform working sets", () => {
-    const sets = [
-      set("Bench Press", 80, 5, { set_number: 1 }),
-      set("Bench Press", 80, 5, { set_number: 2 }),
-      set("Bench Press", 80, 5, { set_number: 3 }),
-    ]
-    expect(summarizeWorkoutSets(sets)).toEqual([
-      { exercise: "Bench Press", detail: "80kg × 5 × 3 sets", setCount: 3 },
-    ])
-  })
-
-  it("lists mixed sets and marks warm-ups", () => {
-    const sets = [
-      set("Squat", 60, 5, { set_number: 1, set_kind: "warmup" }),
-      set("Squat", 100, 5, { set_number: 2 }),
-      set("Squat", 105, 3, { set_number: 3 }),
-    ]
-    expect(summarizeWorkoutSets(sets)).toEqual([
-      { exercise: "Squat", detail: "60×5w, 100×5, 105×3", setCount: 3 },
-    ])
-  })
-
-  it("groups case-insensitively and preserves first-seen order", () => {
-    const sets = [
-      set("Bench Press", 80, 5, { set_number: 1 }),
-      set("Row", 70, 8, { set_number: 2 }),
-      set("bench press", 80, 5, { set_number: 3 }),
-    ]
-    const result = summarizeWorkoutSets(sets)
-    expect(result.map((r) => r.exercise)).toEqual(["Bench Press", "Row"])
-    expect(result[0].setCount).toBe(2)
-  })
-})
-
-describe("findLastExerciseSets", () => {
-  const logs: WorkoutLogWithSets[] = [
-    { ...log("a", "2026-07-01T10:00:00"), sets: [set("Bench Press", 75, 5)] },
-    { ...log("b", "2026-07-08T10:00:00"), sets: [set("Bench Press", 80, 5), set("Row", 70, 8)] },
-    { ...log("c", "2026-07-14T10:00:00"), sets: [set("Squat", 100, 5)] },
-  ]
-
-  it("returns the most recent sets matching the exercise, case-insensitively", () => {
-    const result = findLastExerciseSets(logs, "bench press")
-    expect(result?.date).toBe("2026-07-08T10:00:00")
-    expect(result?.sets.map((s) => s.weight_kg)).toEqual([80])
-  })
-
-  it("returns null for unknown or blank exercise names", () => {
-    expect(findLastExerciseSets(logs, "Deadlift")).toBeNull()
-    expect(findLastExerciseSets(logs, "  ")).toBeNull()
-  })
-})
-
 /**
- * The double-log guard. A program session logged on /programs bridges into
- * workout_logs, and the free-form logger writes to the same table — so one gym
- * session written up both ways counts twice, on the week total, the streak, the
- * heatmap and any goal reading the metric. These assert on the thing that
- * actually matters: that a workout is matched to the day the person TRAINED, in
- * their own timezone, not the day UTC happened to be on.
- */
-describe("workoutsOnDate", () => {
-  it("finds the workout already logged on that day", () => {
-    const logs = [
-      log("a", new Date(2026, 6, 15, 7, 30).toISOString()),
-      log("b", new Date(2026, 6, 14, 18, 0).toISOString()),
-    ]
-    expect(workoutsOnDate(logs, "2026-07-15").map((l) => l.id)).toEqual(["a"])
-  })
-
-  it("returns nothing on a day that was not trained", () => {
-    const logs = [log("a", new Date(2026, 6, 15, 7, 30).toISOString())]
-    expect(workoutsOnDate(logs, "2026-07-16")).toEqual([])
-  })
-
-  it("counts a late-evening workout on the day it was done, not the next UTC day", () => {
-    // 23:30 local. In any timezone east of UTC this instant is already tomorrow
-    // in UTC, and a naive toISOString().split("T")[0] would file it a day late —
-    // the same clock bug this codebase has now hit three times.
-    const lateNight = new Date(2026, 6, 15, 23, 30)
-    expect(workoutsOnDate([log("a", lateNight.toISOString())], "2026-07-15")).toHaveLength(1)
-  })
-
-  it("reports every workout on the day, so a second one can be named", () => {
-    const logs = [
-      log("morning", new Date(2026, 6, 15, 7, 0).toISOString()),
-      log("evening", new Date(2026, 6, 15, 19, 0).toISOString()),
-    ]
-    expect(workoutsOnDate(logs, "2026-07-15")).toHaveLength(2)
-  })
-})
-
-/**
- * ONE LIFT, ACROSS EVERY PROGRAM.
+ * "summarizeWorkoutSets", "findLastExerciseSets" and "workoutsOnDate" were
+ * tested here. All three had one caller — the fill-in-afterwards form — and
+ * went with it.
  *
- * `summariseProgression` reads one enrollment, so "my bench" resets every time
- * you change program — backwards, because the lift persists and the program is
- * what changes. `workout_sets` already spans both program sessions and loose
- * workouts, keyed by exercise name.
+ * WHERE THEIR SUBJECTS LIVE NOW:
+ *   - the summary line: `HistoryTab` builds it in the LIFTER'S unit, which is
+ *     the bug the deleted one had
+ *   - the last time you did a lift: resolved server-side and handed to the
+ *     live screen as `lastTime`
+ *   - which workouts happened on a day: `workoutsByLocalDate`, in the
+ *     account's zone rather than the running process's
  */
+
+
 describe("liftHistory", () => {
   const s = (exercise: string, weight: number, loggedAt: string, overrides: Partial<WorkoutSetRow> = {}) => ({
     ...set(exercise, weight, 5, overrides),

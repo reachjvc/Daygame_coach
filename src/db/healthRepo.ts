@@ -11,22 +11,17 @@ import { getNowInTimezone, periodStartFor, startOfDayInstant } from "../shared/d
 import { weeklyStreakRun } from "../shared/streakRuns"
 import {
   cappedEstimate,
-  detectPersonalRecords,
-  firstTimeLifts,
   liftBests,
 } from "@/src/health/healthService"
 import { getUserTimezone } from "./settingsRepo"
 import { previousPeriodStart, toZonedDate, toDateISO, isStreakCurrent } from "../shared/dateUtils"
 import type {
-  PersonalRecord,
   WeightLogRow,
   WeightLogInsert,
   SleepLogRow,
   SleepLogInsert,
   WorkoutLogRow,
-  WorkoutLogInsert,
   WorkoutSetRow,
-  WorkoutSetInsert,
   NutritionLogRow,
   NutritionLogInsert,
 } from "@/src/health/types"
@@ -202,74 +197,16 @@ export function finishedWorkouts<T extends { or: (f: string) => T }>(query: T): 
 }
 
 /**
- * Write a workout that is already over, and say what it beat.
+ * `createWorkoutLog` was here: one insert that wrote a finished workout and
+ * all its sets.
  *
- * WHY THE RECORDS ARE COMPUTED HERE. The form used to work them out in the
- * BROWSER from a 90-day window of its own — a third definition of "personal
- * best", disagreeing with the finish summary's 400 workouts and Progress's 365
- * days. There is now one definition, all time, and it lives on the server;
- * the answer travels back with the 201 so the form has nothing left to decide.
+ * It was the second way to record a workout. It read every weight as
+ * kilograms whatever the account trains in, and it wrote the workout row
+ * before its sets — so a refused set left an empty session counting towards
+ * the streak, the heatmap and the totals while recording nothing. A workout
+ * is now started and finished, which is two calls and one set of rules.
  */
-export async function createWorkoutLog(
-  userId: string,
-  log: WorkoutLogInsert,
-  sets?: WorkoutSetInsert[]
-): Promise<
-  WorkoutLogRow & {
-    sets: WorkoutSetRow[]
-    personalRecords: PersonalRecord[]
-    firstTimeLifts: string[]
-    recordsUnavailable: boolean
-  }
-> {
-  const supabase = await createServerSupabaseClient()
-  const { data: logData, error: logError } = await supabase
-    .from("workout_logs")
-    .insert({ user_id: userId, ...log })
-    .select()
-    .single()
-  if (logError) throw new Error(`Failed to create workout log: ${logError.message}`)
 
-  let insertedSets: WorkoutSetRow[] = []
-  if (sets && sets.length > 0) {
-    const setsWithLogId = sets.map((s) => ({ ...s, log_id: logData.id }))
-    const { data: setsData, error: setsError } = await supabase
-      .from("workout_sets")
-      .insert(setsWithLogId)
-      .select()
-    if (setsError) {
-      /**
-       * ALL OF IT, OR NONE OF IT.
-       *
-       * The workout row goes in first and the sets after, so a failure on the
-       * sets used to leave an empty workout behind — it counts towards the
-       * streak, the heatmap and the session totals while recording nothing that
-       * happened. The person sees an error, tries again, and now has two.
-       */
-      await supabase.from("workout_logs").delete().eq("id", logData.id).eq("user_id", userId)
-      throw new Error(`Failed to create workout sets: ${setsError.message}`)
-    }
-    insertedSets = (setsData ?? []) as WorkoutSetRow[]
-  }
-
-  const row = logData as WorkoutLogRow
-  // Read AFTER the insert but excluding this workout, so its own sets are never
-  // counted as their own previous best.
-  const baseline = await personalBestBaseline(userId, {
-    workoutId: row.id,
-    loggedAt: row.logged_at,
-  })
-  const onDate = toDateISO(toZonedDate(new Date(row.logged_at), await getUserTimezone(userId)))
-  return {
-    ...row,
-    sets: insertedSets,
-    recordsUnavailable: baseline.unavailable,
-    personalRecords: baseline.unavailable
-      ? []
-      : detectPersonalRecords(baseline.sets, insertedSets, onDate),
-    firstTimeLifts: baseline.unavailable ? [] : firstTimeLifts(baseline.sets, insertedSets),
-  }
-}
 
 export async function getWorkoutLogs(userId: string, days: number = 90): Promise<WorkoutLogRow[]> {
   const supabase = await createServerSupabaseClient()

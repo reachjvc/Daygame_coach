@@ -361,6 +361,18 @@ export function instantToWallClock(iso: string, timezone: string): string {
  * DST change, which is the case that makes a naive implementation wrong twice
  * a year rather than never.
  */
+/**
+ * What a `datetime-local` box should read as "now" for THIS account.
+ *
+ * One line, but it has a name because a component reaching for `new Date()`
+ * is the start of every "whose clock" bug in this codebase, and an
+ * architecture test says so. The instant is universal; turning it into a date
+ * and a time is the part that needs a zone.
+ */
+export function wallClockNow(timezone: string, now: Date = new Date()): string {
+  return instantToWallClock(now.toISOString(), timezone)
+}
+
 export function wallClockToInstant(dateTimeLocal: string, timezone: string): string {
   const [date, time = "00:00"] = dateTimeLocal.split("T")
   return localTimeInstant(date, time, timezone)

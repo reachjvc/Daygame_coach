@@ -173,7 +173,6 @@ export const CONTEXT_LOCKED_ICONS: Record<string, RegExp[]> = {
   Timer: [
     /^components\/navTabs\.ts$/, // the Time tracker tab
     /^src\/programs\/components\/live\/RestBar\.tsx$/, // the rest countdown
-    /^src\/programs\/components\/RestTimer\.tsx$/, // the older rest timer, until it goes
     // Already here when the lock was written, and found by running the check
     // rather than by listing files from memory — which is the point of running
     // it. Principle 17 is "set a time limit on rumination", so a stopwatch is

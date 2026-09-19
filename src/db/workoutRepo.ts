@@ -291,7 +291,20 @@ export async function startWorkout(
       400
     )
   }
-  if (enrollment && new Date(startedAt).getTime() < new Date(enrollment.started_at).getTime()) {
+  /**
+   * THE SAME MINUTE OF SLACK, AND FOR A SECOND REASON HERE.
+   *
+   * Without it: enrol in a program, open "Log a past workout" and try to
+   * record the session you just did. The time box has MINUTE resolution, so
+   * "now" arrives as 19:30:00 while the enrollment began at 19:30:14, and the
+   * only time the box can express is refused — on a screen whose entire job
+   * is to accept it. Rounding down to the minute is not a person claiming to
+   * have trained before they enrolled.
+   */
+  if (
+    enrollment &&
+    new Date(startedAt).getTime() < new Date(enrollment.started_at).getTime() - 60_000
+  ) {
     throw new StartRefused("before_program", "That is before you started this program.", 400)
   }
   const { data, error } = await supabase

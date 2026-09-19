@@ -66,8 +66,14 @@ const BASELINE_PATH = path.resolve(__dirname, "../support/writeCoverage.baseline
  * whose supposed body was the real code below it. Because the propagation
  * matches by name, every Supabase read filtering with `.is(...)` then looked
  * like a write. Comments and string literals are blanked before scanning now.
+ *
+ * Lowered 136 -> 132 on 2026-09-18. Nothing was fixed to earn it; the ceiling
+ * had simply been left above the real count, and four unasserted write paths
+ * of headroom is four new ones that could land unnoticed. Found by checking
+ * all three ratchets after the same drift was caught in eslint-baseline.json
+ * the same evening. See `.claude/rules/testing.md`: fixing is half of it.
  */
-const MAX_UNASSERTED = 136
+const MAX_UNASSERTED = 131
 
 type Baseline = Record<string, string>
 

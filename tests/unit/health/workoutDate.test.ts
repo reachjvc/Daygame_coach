@@ -16,7 +16,6 @@ import { describe, it, expect, vi, afterEach } from "vitest"
 import { z } from "zod"
 import { loggedAtForEntry } from "@/src/health/healthService"
 import {
-  CreateWorkoutSchema,
   entryWhenFields,
   hasDateIfTime,
   NEEDS_DATE_FOR_TIME,
@@ -145,10 +144,24 @@ describe("logging today", () => {
   })
 })
 
+/**
+ * `CreateWorkoutSchema` USED TO BE THE SUBJECT HERE, and it is gone with the
+ * form that posted it. What these tests are actually about survives: the
+ * shared `entryWhenFields` + `hasDateIfTime` pair that sleep, weight and
+ * nutrition all use to say WHEN something happened. They are re-pointed at the
+ * pair itself rather than at one route's copy of it.
+ *
+ * Workouts answer "when" differently now — `startedAt`, an instant, on the
+ * start call — and that is pinned in tests/unit/programs/workoutSchemas.test.ts
+ * and tests/unit/db/workoutRepoStart.test.ts.
+ */
 describe("what the API will and will not accept", () => {
+  const CreateWorkoutSchema = z
+    .object({ note: z.string().optional(), ...entryWhenFields })
+    .refine(hasDateIfTime, NEEDS_DATE_FOR_TIME)
+
   it("refuses a time with no date, rather than assuming today", async () => {
-    const { CreateWorkoutSchema } = await import("@/src/health/schemas")
-    const base = { session_type: "weights" as const, duration_min: 45, intensity: 3 }
+    const base = { note: "anything" }
 
     // A time with no day is not a fact about anything. Assuming "today" would
     // write a timestamp into a weekly counter the user never asked for.
@@ -162,8 +175,7 @@ describe("what the API will and will not accept", () => {
   })
 
   it("refuses a date or time that is not one", async () => {
-    const { CreateWorkoutSchema } = await import("@/src/health/schemas")
-    const base = { session_type: "weights" as const, duration_min: 45, intensity: 3 }
+    const base = { note: "anything" }
 
     for (const entry_date of ["01/09/2026", "2026-9-1", "yesterday", "2026-09-01T10:00:00Z"]) {
       expect(CreateWorkoutSchema.safeParse({ ...base, entry_date }).success, entry_date).toBe(false)
@@ -201,7 +213,8 @@ describe("every health entry answers 'when' the same way", () => {
 
   /** One per real route, shaped like the route's own schema. */
   const schemas = [
-    ["workout", CreateWorkoutSchema, { session_type: "weights", duration_min: 45, intensity: 3 }],
+    // No "workout" row: a workout is dated by `startedAt`, an instant on the
+    // start call, not by these two fields. The route that took them is gone.
     ["sleep", withWhen({ bedtime: z.string(), wake_time: z.string() }), { bedtime: "23:00", wake_time: "07:00" }],
     ["weight", withWhen({ weight_kg: z.number().positive().max(500), time_of_day: z.enum(["morning", "post_workout", "evening"]) }), { weight_kg: 80, time_of_day: "morning" }],
     ["nutrition", withWhen({ quality_score: z.number().int().min(1).max(5), note: z.string().min(1).max(500) }), { quality_score: 4, note: "ok" }],

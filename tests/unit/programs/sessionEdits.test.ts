@@ -30,7 +30,6 @@ import {
   replayedState,
   skipSession,
   resetEnrollment,
-  logProgramSession,
 } from "@/src/db/programRepo"
 import { reviseWorkout } from "@/src/db/workoutRepo"
 import { ProgramRefused, statusFor } from "@/src/programs/errors"
@@ -365,110 +364,21 @@ describe("resetting a program", () => {
  * NUMERIC(5,2) column, and the reply was an error about numeric overflow with
  * an empty session left behind.
  */
-describe("logging a session that already happened", () => {
-  const WRITE_UP = {
-    dayId: "A",
-    cycle: 1,
-    week: 1,
-    durationMin: 45,
-    intensity: 3,
-    entries: [
-      {
-        exerciseId: "squat",
-        sets: [1, 2, 3, 4, 5].map((n) => ({ setNumber: n, reps: 5, weight: 62.5 })),
-      },
-    ],
-  }
-
-  it("sends the workout, its sets and the advanced state in one rpc", async () => {
-    rpcAnswer = () => ({ data: { workout_id: "new-log", inserted: true }, error: null })
-
-    await logProgramSession(USER, ENROLLMENT, WRITE_UP, 8, "felt good", undefined, "w-key12345")
-
-    expect(calls).toHaveLength(1)
-    expect(calls[0].name).toBe("log_session_and_advance")
-    const args = calls[0].args as Record<string, never>
-    const workout = args.p_workout as unknown as Record<string, unknown>
-    expect(workout.client_key).toBe("w-key12345")
-    expect(workout.enrollment_id).toBe(ENROLLMENT)
-    expect(workout.program_day_id).toBe("A")
-    expect(workout.rpe).toBe(8)
-    // Five sets, and none of them carrying a log id the database has not issued.
-    const sets = args.p_sets as unknown as Record<string, unknown>[]
-    expect(sets).toHaveLength(5)
-    expect(sets.every((row) => !("log_id" in row))).toBe(true)
-    // The session count the app READ, which is what the database checks against.
-    expect(args.p_expected_session_count).toBe(1)
-  })
-
-  it("the same write-up sent twice advances the program once", async () => {
-    rpcAnswer = () => ({ data: { workout_id: "already-there", inserted: false }, error: null })
-
-    const result = await logProgramSession(USER, ENROLLMENT, WRITE_UP, undefined, undefined, undefined, "w-key12345")
-
-    // The squat was already at 62.5 before this call. A second advance would
-    // put it at 65 for one session's work.
-    expect(result.enrollment.exerciseState.squat.workingWeight).toBe(62.5)
-    expect(result.next.cycle).toBe(1)
-  })
-
-  it("a write-up that was already recorded reports no weight movement", async () => {
-    rpcAnswer = () => ({ data: { workout_id: "already-there", inserted: false }, error: null })
-
-    const result = await logProgramSession(USER, ENROLLMENT, WRITE_UP, undefined, undefined, undefined, "w-key12345")
-
-    // The screen prints this list verbatim. Computed from the state as it now
-    // stands it would read "Squat 62.5 → 65", which is a movement this request
-    // did not make and the earlier one did not make either.
-    expect(result.changes).toEqual([])
-  })
-
-  it("a program that moved on underneath surfaces as ProgramRefused, and the route answers 409", async () => {
-    rpcAnswer = () => ({
-      data: null,
-      error: { code: "55000", message: "Your program moved on while this was being written up — reload and try again" },
-    })
-
-    const thrown = await logProgramSession(USER, ENROLLMENT, WRITE_UP, undefined, undefined, undefined, "w-key12345").catch(
-      (e: unknown) => e
-    )
-    expect(thrown).toBeInstanceOf(ProgramRefused)
-    expect(statusFor(thrown)).toBe(409)
-  })
-
-  it("an all-out set written up after the fact is stored as amrap", async () => {
-    rpcAnswer = () => ({ data: { workout_id: "new-log", inserted: true }, error: null })
-
-    // A program whose last set of the day is "as many as you can manage".
-    tables.program_enrollments = [
-      {
-        ...enrollmentRow(),
-        custom_schedule: {
-          kind: "linear_rotation",
-          days: [
-            {
-              id: "A",
-              label: "Workout A",
-              exercises: [
-                {
-                  id: "squat",
-                  name: "Squat",
-                  scheme: { kind: "straight_amrap", sets: 5, reps: 5 },
-                  progression: { kind: "linear_load", incrementKg: 2.5, deloadPct: 10, failuresBeforeDeload: 3 },
-                },
-              ],
-            },
-          ],
-        },
-      },
-    ]
-
-    await logProgramSession(USER, ENROLLMENT, WRITE_UP, undefined, undefined, undefined, "w-key12345")
-
-    const sets = calls[0].args.p_sets as unknown as { set_number: number; set_kind: string }[]
-    // The live screen already stores this correctly. Before this, History
-    // showed the same session differently depending on which door it came in by.
-    expect(sets.filter((row) => row.set_kind === "amrap").map((row) => row.set_number)).toEqual([5])
-    expect(sets.filter((row) => row.set_kind === "working")).toHaveLength(4)
-  })
-})
+/**
+ * "LOGGING A SESSION THAT ALREADY HAPPENED" USED TO BE TESTED HERE.
+ *
+ * It covered `logProgramSession`, the second write path — the one that took
+ * a whole session in one call. Both it and the form that called it are gone;
+ * a past session is now written by starting a workout dated then, ticking its
+ * sets and finishing it.
+ *
+ * WHERE ITS THREE REAL CONCERNS LIVE NOW, because they did not go away:
+ *   - the same write sent twice must advance the program once →
+ *     "a second finish of the same workout is refused", in
+ *     tests/integration/db/finishWorkoutTimes.integration.test.ts, against
+ *     the real database rather than a stubbed rpc
+ *   - a program that moved on underneath → the same 55000 path, still
+ *     raised by `finish_program_workout`
+ *   - an all-out set stored as amrap → the live screen has always done this
+ *     correctly, and it is now the only door in
+ */

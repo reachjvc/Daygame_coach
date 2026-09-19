@@ -400,6 +400,25 @@ describe("a workout that happened earlier", () => {
     expect(fake.inserted).toHaveLength(0)
   })
 
+  test("the minute the box rounds down to is not 'before the program began'", async () => {
+    /**
+     * Enrol, then open "Log a past workout" and try to record what you just
+     * did. The time box has MINUTE resolution: it offers 19:30:00 while the
+     * enrollment began at 19:30:14, so the only time it can express was
+     * refused — on the screen whose job is to accept it.
+     */
+    vi.resetModules()
+    const enrolledAt = new Date(Date.now() - 14_000).toISOString()
+    const { repo, fake } = await startWith({
+      enrollment: { ...enrollmentRow(), started_at: enrolledAt },
+    })
+
+    // The current minute, exactly as the box would send it.
+    const thisMinute = new Date(Math.floor(Date.now() / 60_000) * 60_000).toISOString()
+    await repo.startWorkout(USER, { enrollmentId: "e1", clientKey: "k1", startedAt: thisMinute })
+    expect(fake.inserted).toHaveLength(1)
+  })
+
   test("a loose workout has no program to be before, so any past time is fine", async () => {
     vi.resetModules()
     const { repo, fake } = await startWith({})

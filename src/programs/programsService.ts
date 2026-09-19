@@ -12,7 +12,7 @@
  */
 
 import {
-  BRIDGE_SESSION_TYPE,
+  DEFAULT_SESSION_TYPE,
   DEFAULT_PLATES,
   FREE_PRECISION,
   LOAD_TOLERANCE,
@@ -2190,14 +2190,14 @@ export function enduranceMinutes(sets: EnduranceSet[]): number {
 export function sessionTypeFor(
   program: ProgramDefinition | null
 ): "weights" | "cardio" | "running" | "mobility" {
-  if (!program) return BRIDGE_SESSION_TYPE
+  if (!program) return DEFAULT_SESSION_TYPE
   if (program.metricType === "endurance") {
     return program.discipline === "triathlon" || program.discipline === "ironman"
       ? "cardio"
       : "running"
   }
   if (program.metricType === "hold_range") return "mobility"
-  return BRIDGE_SESSION_TYPE
+  return DEFAULT_SESSION_TYPE
 }
 
 // ============================================================================

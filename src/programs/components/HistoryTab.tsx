@@ -19,7 +19,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { collapseSets, isWorkingSet } from "@/src/health/healthService"
 import { fromKg, toKg } from "../programsService"
 import { UNIT_CONFIG } from "../config"
-import type { UnitSystem } from "../types"
+import { LogPastWorkoutDialog } from "./LogPastWorkoutDialog"
+import type { ProgramEnrollment, UnitSystem } from "../types"
 import type { WorkoutLogWithSets, WorkoutSetRow } from "@/src/health/types"
 
 const DAY = { weekday: "short", day: "numeric", month: "short" } as const
@@ -57,7 +58,18 @@ interface EditableSet {
   rpe: number | null
 }
 
-export function HistoryTab({ unit }: { unit: UnitSystem }) {
+export function HistoryTab({
+  unit,
+  enrollments = [],
+  liveOpen = false,
+  timezone,
+}: {
+  unit: UnitSystem
+  enrollments?: readonly ProgramEnrollment[]
+  liveOpen?: boolean
+  /** The account's zone. Without it a past session lands on the wrong day. */
+  timezone?: string
+}) {
   const [logs, setLogs] = useState<WorkoutLogWithSets[] | null>(null)
   const [state, setState] = useState<"loading" | "ready" | "failed">("loading")
   const [open, setOpen] = useState<Set<string>>(new Set())
@@ -259,6 +271,20 @@ export function HistoryTab({ unit }: { unit: UnitSystem }) {
   return (
     <div data-testid="workout-history">
       {error && <p className="text-xs text-destructive">{error}</p>}
+
+      {/* THE ONE WAY IN FOR A SESSION YOU ALREADY DID. History is where you
+          notice one is missing, so it is where the way to add it belongs.
+          Absent without a time zone rather than guessing the browser's: a
+          workout filed a day out is worse than one not filed yet. */}
+      {timezone && (
+        <div className="flex justify-end">
+          <LogPastWorkoutDialog
+            enrollments={enrollments}
+            liveOpen={liveOpen}
+            timezone={timezone}
+          />
+        </div>
+      )}
 
       {lifts.length > 1 && (
         <div className="flex items-center gap-2">

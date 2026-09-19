@@ -148,16 +148,11 @@ export const LOAD_TOLERANCE = 0.05
 export const REST_SECONDS = { compound: 180, accessory: 90, warmup: 45 } as const
 
 // ============================================================================
-// Bridge defaults — values written to workout_logs when a program session is
-// logged (so gym_sessions_weekly and linked goal metrics update unchanged).
-//
-// ⚠️ DUE TO BE DELETED. Writing "45 minutes at intensity 3" onto every session
-// is why the dashboard's training-hours number is invented. The session screen
-// now asks for the real duration and intensity; these remain only until the
-// last caller stops needing a fallback (docs/plans/training-overhaul.md,
-// Phase 1). Do not add a new reader.
+// The session kind a program is recorded under, when the program itself does
+// not say. Two siblings lived here — a 45-minute duration and an intensity of
+// 3 — written onto every session logged through the form that has since been
+// deleted. That is why the dashboard's training-hours number used to be
+// invented; the live screen asks for both, so there is nothing to default.
 // ============================================================================
 
-export const BRIDGE_SESSION_TYPE = "weights" as const
-export const BRIDGE_DEFAULT_DURATION_MIN = 45
-export const BRIDGE_DEFAULT_INTENSITY = 3
+export const DEFAULT_SESSION_TYPE = "weights" as const

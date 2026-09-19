@@ -13,6 +13,7 @@
  */
 
 import { test, expect } from "@playwright/test"
+import { seedFinishedWorkout, deleteWorkoutsNamed } from "./helpers/seedWorkout"
 
 test.describe.configure({ mode: "serial" })
 
@@ -21,26 +22,20 @@ test("shows what each workout was, and what the weeks added up to", async ({ pag
   await page.setViewportSize({ width: 390, height: 900 })
   await page.goto("/programs")
   // Seed a couple of real workouts so both tabs have something to show.
-  const made = await page.evaluate(async () => {
-    const ids: string[] = []
-    const days = ["2026-09-01", "2026-09-03", "2026-09-05"]
-    for (const d of days) {
-      const res = await fetch("/api/health/workout", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_type: "weights", duration_min: 55, intensity: 3, entry_date: d,
-          sets: [
-            { exercise: "ZZHist Squat", weight_kg: 60, reps: 5, set_number: 1, set_kind: "warmup" },
-            { exercise: "ZZHist Squat", weight_kg: 120, reps: 5, set_number: 2, set_kind: "working" },
-            { exercise: "ZZHist Bench", weight_kg: 90, reps: 5, set_number: 1, set_kind: "working" },
-          ],
-        }),
+  const made: string[] = []
+  for (const d of ["2026-09-01", "2026-09-03", "2026-09-05"]) {
+    made.push(
+      await seedFinishedWorkout(page, {
+        startedAt: `${d}T10:00:00.000Z`,
+        endedAt: `${d}T10:55:00.000Z`,
+        sets: [
+          { exercise: "ZZHist Squat", weightKg: 60, reps: 5, setNumber: 1, kind: "warmup" },
+          { exercise: "ZZHist Squat", weightKg: 120, reps: 5, setNumber: 2 },
+          { exercise: "ZZHist Bench", weightKg: 90, reps: 5, setNumber: 3 },
+        ],
       })
-      const b = await res.json().catch(() => null)
-      if (b?.id) ids.push(b.id)
-    }
-    return ids
-  })
+    )
+  }
   expect(made.length, "seeding must work").toBe(3)
 
   await page.reload({ waitUntil: "networkidle" })
@@ -106,24 +101,12 @@ test("shows what each workout was, and what the weeks added up to", async ({ pag
  */
 test("corrects a set and removes one that never happened", async ({ page }) => {
 await page.goto("/programs")
-const id = await page.evaluate(async () => {
-  const logs = await (await fetch("/api/health/workout?days=3650&include=sets")).json()
-  for (const l of logs as { id: string; sets?: { exercise: string }[] }[]) {
-    if ((l.sets ?? []).some((s) => s.exercise.startsWith("ZZEdit"))) {
-      await fetch(`/api/health/workout?id=${l.id}`, { method: "DELETE" })
-    }
-  }
-  const res = await fetch("/api/health/workout", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      session_type: "weights", duration_min: 40, intensity: 3,
-      sets: [
-        { exercise: "ZZEdit Press", weight_kg: 100, reps: 5, set_number: 1, set_kind: "working" },
-        { exercise: "ZZEdit Press", weight_kg: 100, reps: 5, set_number: 2, set_kind: "working" },
-      ],
-    }),
-  })
-  return (await res.json()).id as string
+await deleteWorkoutsNamed(page, "ZZEdit")
+const id = await seedFinishedWorkout(page, {
+  sets: [
+    { exercise: "ZZEdit Press", weightKg: 100, reps: 5, setNumber: 1 },
+    { exercise: "ZZEdit Press", weightKg: 100, reps: 5, setNumber: 2 },
+  ],
 })
 
 await page.reload({ waitUntil: "networkidle" })

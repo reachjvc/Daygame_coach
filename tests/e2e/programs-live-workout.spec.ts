@@ -432,8 +432,8 @@ test.describe("live workout", () => {
     if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
   })
   await page.reload({ waitUntil: "networkidle" })
-  await page.getByRole("button", { name: "Anything else" }).first().click()
-  await page.waitForTimeout(1500)
+  // ON TODAY, not on a fourth tab. "Anything else" existed to hold this button
+  // and a form that is now deleted; the button belongs beside today's session.
   await page.getByTestId("start-loose-workout").click()
   await page.waitForURL("**/programs/live", { timeout: 20000 })
 

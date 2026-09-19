@@ -5,7 +5,6 @@ import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WeightTracker } from "@/src/health/components/WeightTracker"
 import { SleepTracker } from "@/src/health/components/SleepTracker"
-import { WorkoutLogger } from "@/src/health/components/WorkoutLogger"
 import { NutritionTracker } from "@/src/health/components/NutritionTracker"
 import { CorrelationPanel } from "@/src/health/components/CorrelationPanel"
 
@@ -25,7 +24,6 @@ export default function HealthTestPage() {
         <div className="grid gap-6 md:grid-cols-2">
           <WeightTracker />
           <SleepTracker />
-          <WorkoutLogger />
           <NutritionTracker />
         </div>
 

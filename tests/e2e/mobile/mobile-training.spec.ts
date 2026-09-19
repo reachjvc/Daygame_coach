@@ -85,14 +85,19 @@ test.describe.serial("training on a phone", () => {
     expect(height, `page is ${height}px tall on a phone`).toBeLessThan(MAX_PAGE_HEIGHT)
   })
 
-  test("both ways of logging are reachable without scrolling", async ({ page }) => {
-    // The free-form logger used to be ~1400px down the page and most people
-    // never met it.
+  test("both ways of training are reachable without scrolling", async ({ page }) => {
+    /**
+     * The free-form logger used to be ~1400px down the page and most people
+     * never met it, which is why this test exists.
+     *
+     * It is gone, and so is the "Anything else" tab that held it — three tabs
+     * now. The two ways to train are today's prescribed session and an empty
+     * workout, and both live on Today.
+     */
     await page.goto("/programs")
-    // The tabs are Today · History · Progress · Anything else since the history
-    // and progress views landed.
     await expect(page.getByRole("button", { name: "Today", exact: true })).toBeInViewport()
-    await expect(page.getByRole("button", { name: /Anything else/ })).toBeInViewport()
+    await expect(page.getByRole("button", { name: /Anything else/ })).toHaveCount(0)
+    await expect(page.getByTestId("start-loose-workout")).toBeInViewport()
   })
 
   test("a session records what you actually did, not what it asked for", async ({ page }) => {

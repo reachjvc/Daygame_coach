@@ -20,7 +20,22 @@ import { Button } from "@/components/ui/button"
 import { startWorkoutRequest } from "../hooks/useLiveWorkout"
 import type { LiveWorkout } from "../types"
 
-export function StartLooseWorkout({ live }: { live: LiveWorkout | null }) {
+/**
+ * TWO SHAPES, ONE BUTTON.
+ *
+ * With no program this is the main thing to do, so it is a full bar. With one
+ * running it is the alternative to today's session, so it is a quiet row under
+ * it. It used to be mounted twice — once in each place — and the walk found
+ * three "Start a workout now" buttons across two tabs, all doing the same
+ * thing. One mount, one prop.
+ */
+export function StartLooseWorkout({
+  live,
+  variant = "primary",
+}: {
+  live: LiveWorkout | null
+  variant?: "primary" | "row"
+}) {
   const router = useRouter()
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -28,6 +43,10 @@ export function StartLooseWorkout({ live }: { live: LiveWorkout | null }) {
   // One workout at a time is a rule of the database, so say which one rather
   // than letting the request fail.
   if (live) {
+    // As a row this is a second way to say what the card above already says,
+    // and a row that means "go to your workout" beside a button that means the
+    // same thing is just two of them.
+    if (variant === "row") return null
     return (
       <Button variant="outline" className="w-full" onClick={() => router.push("/programs/live")}>
         {live.enrollmentId ? "Finish the workout you have open first" : "Back to your workout"}
@@ -46,6 +65,24 @@ export function StartLooseWorkout({ live }: { live: LiveWorkout | null }) {
       return
     }
     setError(outcome.message)
+  }
+
+  if (variant === "row") {
+    return (
+      <div className="space-y-1">
+        <button
+          type="button"
+          data-testid="start-loose-workout"
+          disabled={starting}
+          onClick={start}
+          className="inline-flex min-h-11 items-center text-sm text-primary hover:underline disabled:opacity-60"
+        >
+          {starting && <Loader2 className="mr-1 size-4 animate-spin" />}
+          Start an empty workout instead ›
+        </button>
+        {error && <p className="text-xs text-destructive">{error}</p>}
+      </div>
+    )
   }
 
   return (

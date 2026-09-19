@@ -52,7 +52,6 @@ vi.mock("@/src/db/supabase", () => ({
 const { resolveMetricValues } = await import("@/src/db/metricsRepo")
 const { loggedAtForEntry } = await import("@/src/health/healthService")
 const {
-  createWorkoutLog,
   getConsecutiveTrainingWeeks,
   getConsecutiveCardioWeeks,
   getWorkoutWeeklyCount,
@@ -65,7 +64,11 @@ const {
   getProteinDaysHitWeekly,
   getCalorieDaysHitWeekly,
 } = await import("@/src/db/healthRepo")
-const { reconcileUserProgress } = await import("@/src/tracking/achievementsSyncService")
+// One await, not two: the count of top-level awaits in this file is baselined.
+const [{ startWorkout, finishWorkout }, { reconcileUserProgress }] = await Promise.all([
+  import("@/src/db/workoutRepo"),
+  import("@/src/tracking/achievementsSyncService"),
+])
 
 /**
  * Everything below is relative to THIS week, not to a date typed into the file.
@@ -443,14 +446,34 @@ describe("a back-dated workout lands in the week it happened", () => {
     await admin.from("profiles").update({ timezone: TZ }).eq("id", userId)
   })
 
+  /**
+   * THROUGH THE PATH THE APP USES, because there is only one now.
+   *
+   * This called `createWorkoutLog`, which wrote a finished workout in a single
+   * insert and was the last thing doing so. Start-then-finish is the same two
+   * calls the live screen makes, and `startedAt` is what dates the session —
+   * which is the whole subject of this file.
+   */
   async function logOn(date: string, time?: string) {
     const loggedAt = loggedAtForEntry(date, TZ, time)
     if (loggedAt === null) throw new Error(`${date} ${time ?? ""} was refused as future`)
-    // The repo writes with the user-scoped client, which is the admin client
-    // here; that is the only substitution in this file.
-    return createWorkoutLog(userId, {
-      session_type: "weights", duration_min: 45, intensity: 3, logged_at: loggedAt,
-    } as never)
+    const started = await startWorkout(userId, {
+      clientKey: `tz-${date}-${time ?? ""}-${Math.random()}`,
+      startedAt: loggedAt,
+    })
+    await finishWorkout(userId, started.id, {
+      startedAt: loggedAt,
+      endedAt: new Date(new Date(loggedAt).getTime() + 45 * 60_000).toISOString(),
+      intensity: 3,
+      sessionType: "weights",
+    })
+    return started.id
+  }
+
+  /** What the database ended up storing for a workout, by id. */
+  async function loggedAtOf(id: string): Promise<string> {
+    const { data } = await admin.from("workout_logs").select("logged_at").eq("id", id).single()
+    return (data as { logged_at: string }).logged_at
   }
 
   it("counts towards last week when you say it happened last week", async () => {
@@ -481,8 +504,10 @@ describe("a back-dated workout lands in the week it happened", () => {
     const { count } = await admin
       .from("workout_logs").select("*", { count: "exact", head: true }).eq("user_id", userId)
     expect(count).toBe(4)
-    expect(new Date(morning.logged_at).getTime()).toBeLessThan(
-      new Date(evening.logged_at).getTime()
+    // Read back from the database, not from what the test asked for: the
+    // question is where the session LANDED, which is the subject of this file.
+    expect(new Date(await loggedAtOf(morning)).getTime()).toBeLessThan(
+      new Date(await loggedAtOf(evening)).getTime()
     )
 
     // And the repo hands them back oldest-first, which is what "last time you

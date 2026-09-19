@@ -8,7 +8,6 @@ import { ProgramCatalog } from "./ProgramCatalog"
 import { ProgramDetail } from "./ProgramDetail"
 import { TodayCard } from "./TodayCard"
 import { SessionNotices } from "./SessionNotices"
-import { TodaySessionWidget } from "./TodaySessionWidget"
 import { ProgressionView } from "./ProgressionView"
 import { StartLooseWorkout } from "./StartLooseWorkout"
 import { EditActiveProgram } from "./EditActiveProgram"
@@ -54,18 +53,36 @@ export function ProgramsApp({ initialActive, initialPast, initialDetail, live = 
    * had to click to reach today's session — a menu of one, in front of the only
    * thing you came for. With two or more the list is the point and it stays.
    */
+  /**
+   * THE ONE MOUNT OF "start an empty workout".
+   *
+   * It was rendered in two places — the empty state here and the fourth tab on
+   * the training screen — and the walk found three of these buttons across two
+   * tabs. Held in a const so there is exactly one in the source; where it goes
+   * is a placement question, what it is is not.
+   *
+   * Never in `browse` or `detail`: you are reading about a program there, not
+   * about to train.
+   */
+  const looseStart = (
+    <StartLooseWorkout live={live} variant={enrollments.length === 0 ? "primary" : "row"} />
+  )
+
   if (view.mode === "home" && !loading && enrollments.length === 1) {
     return (
-      <ActiveProgram
-        enrollmentId={enrollments[0].id}
-        initialDetail={initialDetail ?? null}
-        initialPast={initialPast}
-        live={live}
-        onExit={() => {
-          refresh()
-          setView({ mode: "browse" })
-        }}
-      />
+      <div className="space-y-3">
+        <ActiveProgram
+          enrollmentId={enrollments[0].id}
+          initialDetail={initialDetail ?? null}
+          initialPast={initialPast}
+          live={live}
+          onExit={() => {
+            refresh()
+            setView({ mode: "browse" })
+          }}
+        />
+        {looseStart}
+      </div>
     )
   }
 
@@ -94,7 +111,12 @@ export function ProgramsApp({ initialActive, initialPast, initialDetail, live = 
   }
 
   if (view.mode === "active") {
-    return <ActiveProgram enrollmentId={view.enrollmentId} live={live} onExit={() => { refresh(); setView({ mode: "home" }) }} />
+    return (
+      <div className="space-y-3">
+        <ActiveProgram enrollmentId={view.enrollmentId} live={live} onExit={() => { refresh(); setView({ mode: "home" }) }} />
+        {looseStart}
+      </div>
+    )
   }
 
   // home
@@ -168,7 +190,7 @@ export function ProgramsApp({ initialActive, initialPast, initialDetail, live = 
             <p className="text-xs text-muted-foreground">
               or start one now and add each lift as you get to it
             </p>
-            <StartLooseWorkout live={live} />
+            {looseStart}
           </CardContent>
         </Card>
       ) : (
@@ -359,27 +381,10 @@ function ActiveProgram({
         )}
       </TodayCard>
 
-      {/* LOG ONE YOU ALREADY DID. Same form as before, demoted to what it is
-          good at: writing up a session after the fact. */}
-      <details className="rounded-md border border-border">
-        <summary className="cursor-pointer px-3 py-2 text-sm text-muted-foreground">
-          Log a workout you already did
-        </summary>
-        <div className="p-2">
-          <TodaySessionWidget
-            enrollmentId={enrollmentId}
-            prescription={prescription}
-            unit={detail.enrollment.unitSystem}
-            logs={detail.logs}
-            days={days}
-            onPickDay={setPickedDayId}
-            onLogged={() => {
-              setPickedDayId(null)
-              refresh()
-            }}
-          />
-        </div>
-      </details>
+      {/* "Log a workout you already did" was here, a second form with its own
+          weight boxes, its own personal-best rule and its own save path. It is
+          now "Log a past workout" on History, which opens the ordinary live
+          screen dated when you say. One way to record a workout. */}
       {/* The program is not fixed once it is running — the gym changes, the
           shoulder changes. Weights carry over across an edit. Opened from the
           history controls so every control for this program sits together. */}

@@ -23,6 +23,7 @@ import {
   getEnrollmentDetail,
 } from "@/src/db/programRepo"
 import { getLiveWorkout, unitFor } from "@/src/db/workoutRepo"
+import { getUserTimezone } from "@/src/db/settingsRepo"
 import { TrainingScreen } from "@/src/programs/components/TrainingScreen"
 import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment, UnitSystem } from "@/src/programs/types"
 
@@ -34,6 +35,7 @@ export default async function ProgramsPage() {
   let detail: EnrollmentDetail | null = null
   let live: LiveWorkout | null = null
   let accountUnit: UnitSystem | null = null
+  let timezone: string | undefined
   let failed = false
 
   if (auth.success) {
@@ -52,6 +54,9 @@ export default async function ProgramsPage() {
         detail = await getEnrollmentDetail(auth.userId, active[0].id)
       }
       accountUnit = await unitFor(auth.userId, null)
+      // For "Log a past workout": the day a session is filed under is the
+      // account's day, never the server's or the browser's.
+      timezone = await getUserTimezone(auth.userId)
     } catch (error) {
       /**
        * A FAILED READ IS NOT AN EMPTY ACCOUNT.
@@ -74,6 +79,7 @@ export default async function ProgramsPage() {
       initialDetail={detail}
       live={live}
       accountUnit={accountUnit}
+      timezone={timezone}
       failed={failed}
     />
   )

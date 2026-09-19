@@ -15,8 +15,7 @@
  */
 
 import { z } from "zod"
-import { entryWhenFields, hasDateIfTime, NEEDS_DATE_FOR_TIME } from "@/src/health/schemas"
-import { MAX_DISTANCE_KM, MAX_DURATION_MIN, MAX_WEIGHT_KG } from "@/src/shared/weight"
+import { MAX_DISTANCE_KM, MAX_WEIGHT_KG } from "@/src/shared/weight"
 import { CUSTOM_PROGRAM_ID } from "./data/customProgram"
 
 const positiveInt = (max: number) => z.number().int().min(1).max(max)
@@ -227,76 +226,14 @@ export const UpdateScheduleSchema = z.object({
 
 
 /**
- * POST body for /api/programs/enrollments/[id]/log.
+ * `LogSessionSchema` was here: a whole session — every set, a duration, an
+ * intensity and the day you say you trained — in one request body.
  *
- * Here rather than in the route because the route has a 50-line ceiling
- * (`tests/unit/architecture.test.ts`) and because validation is slice logic:
- * the same shape is what `logProgramSession` promises to accept.
+ * It described the second way to record a workout, and the route that took it
+ * is gone. A session is now `StartWorkoutSchema` (with `startedAt` when it
+ * already happened), then one `CompleteSetSchema` per set, then
+ * `FinishWorkoutSchema`. One shape of truth per fact.
  */
-export const LogSessionSchema = z
-  .object({
-    /**
-     * The form's own id for this write-up, minted before the request goes out.
-     *
-     * REQUIRED, like `StartWorkoutSchema`'s. Without it a retry after a lost
-     * reply — a phone on gym wifi, a button pressed again because nothing
-     * happened — wrote a second session and advanced the program twice, so a
-     * squat went up 5 kg for one session's work. The database recognises the
-     * key and answers "already written" instead.
-     */
-    clientKey: z.string().min(8).max(64),
-    dayId: z.string().min(1),
-    cycle: z.number().int().positive(),
-    week: z.number().int().positive(),
-    entries: z.array(
-      z.object({
-        exerciseId: z.string().min(1),
-        // A lift you were there for and deliberately did not do. It holds the
-        // weight; an absent lift used to be scored as a failed one.
-        skipped: z.boolean().optional(),
-        sets: z.array(
-          z.object({
-            setNumber: z.number().int().positive(),
-            // 0 = attempted and failed. A set not attempted has no row at all.
-            reps: z.number().int().min(0).max(1000),
-            weight: z.number().min(0).max(MAX_WEIGHT_KG),
-          })
-        ),
-      })
-    ),
-    // HOW LONG IT ACTUALLY TOOK, and how hard. Every session used to be written
-    // down as exactly 45 minutes at effort 3 whatever had happened, which is
-    // where the dashboard's invented "training hours" number came from.
-    durationMin: z.number().min(1).max(MAX_DURATION_MIN),
-    intensity: z.number().int().min(1).max(5),
-    distanceKm: z.number().min(0).max(MAX_DISTANCE_KM).optional(),
-    rpe: z.number().int().min(1).max(10).optional(),
-    notes: z.string().max(1000).optional(),
-    // THE DAY YOU TRAINED. A session could only be stamped "now", so a Saturday
-    // workout written up on Monday landed in Monday's week.
-    ...entryWhenFields,
-  })
-  /**
-   * STRICT, so a misspelled field is refused instead of ignored.
-   *
-   * The date on this form was sent as `entryDate` while this schema asks for
-   * `entry_date`. A validator silently deletes what it was not told about, so
-   * the feature never worked and nothing ever failed — the session simply went
-   * in under today's date. Refusing the unknown key turns a silent nothing into
-   * an error somebody can see.
-   */
-  .strict()
-  .refine(hasDateIfTime, NEEDS_DATE_FOR_TIME)
-
-
-// ===========================================================================
-// A workout that is happening right now
-//
-// In the slice rather than in the routes, because every route under
-// /api/workouts has a 50-line ceiling (`tests/unit/architecture.test.ts`) and
-// because the shape IS the contract `workoutRepo` promises to accept.
-// ===========================================================================
-
 export const StartWorkoutSchema = z.object({
   enrollmentId: z.string().uuid().nullable().optional(),
   dayId: z.string().min(1).max(80).nullable().optional(),

@@ -18,13 +18,10 @@ import {
   applyLog,
   computePrescription,
   seedEnrollment,
-  toKg,
-  unknownExerciseIds,
   replayEnrollment,
   repairUneventfulEdit,
   pickTodaysDay,
   entriesFromSets,
-  sessionTypeFor,
   weekSoFar,
   skipRefusal,
   RESET_EFFECT,
@@ -37,14 +34,10 @@ import {
   isCustomizable,
   seedForAddedExercises,
   applyWeightOverrides,
-  scheduleDaysOrNone,
 } from "@/src/programs/customize"
-import { getUserTimezone, getUserClock } from "./settingsRepo"
-import { loggedAtForEntry } from "@/src/health/healthService"
+import { getUserClock } from "./settingsRepo"
 import { isoWeekdayInTimezone } from "@/src/shared/dateUtils"
 import {
-  BRIDGE_DEFAULT_DURATION_MIN,
-  BRIDGE_DEFAULT_INTENSITY,
   DEFAULT_PLATES,
   KG_PER_LB,
 } from "@/src/programs/config"
@@ -52,14 +45,11 @@ import { FINISHED_WORKOUTS_FILTER } from "./healthRepo"
 import { readAllRows } from "./paging"
 import type {
   EnrollmentDetail,
-  ApplyLogResult,
   ExerciseState,
   LevelId,
   LoggedExercise,
-  ProgramDefinition,
   ProgramEnrollment,
   ProgramEnrollmentRow,
-  ProgramSessionLogInput,
   ProgramSchedule,
   ProgramSessionLogRow,
   ReplayEvent,
@@ -68,7 +58,6 @@ import type {
   SessionPrescription,
   UnitSystem,
 } from "@/src/programs/types"
-import type { WorkoutSetInsert } from "@/src/health/types"
 
 // ---------------------------------------------------------------------------
 // Row mapping
@@ -139,7 +128,6 @@ export function programFor(enrollment: ProgramEnrollment) {
   return effectiveProgram(requireProgram(enrollment.program_id), enrollment.customSchedule)
 }
 
-const round2 = (n: number) => Math.round(n * 100) / 100
 
 // ---------------------------------------------------------------------------
 // Enrollments
@@ -873,126 +861,22 @@ export async function skipSession(userId: string, enrollmentId: string): Promise
 }
 
 // ---------------------------------------------------------------------------
-// Logging a session (engine + persist + bridge)
+// Logging a session: THERE IS NO LONGER A SECOND WAY
 // ---------------------------------------------------------------------------
 
-export async function logProgramSession(
-  userId: string,
-  enrollmentId: string,
-  logInput: Omit<ProgramSessionLogInput, "enrollment_id">,
-  rpe?: number,
-  notes?: string,
-  /** The day the person says they trained. Absent means now. */
-  when?: { entry_date?: string; entry_time?: string },
-  /**
-   * The form's own id for this write-up, so a retry is the same session rather
-   * than a second one. Required by `LogSessionSchema`, so the route always has
-   * one; last in the list because `when` predates it.
-   */
-  clientKey?: string
-): Promise<ApplyLogResult & { next: SessionPrescription }> {
-  const enr = await getEnrollmentById(userId, enrollmentId)
-  if (!enr) throw new Error("Enrollment not found")
-  const program = programFor(enr)
-
-  // A session naming lifts the program does not have is unrecoverable once
-  // stored: the engine has no state to progress and every screen prints the raw
-  // id for ever. Refuse it at the door, and say which one was wrong.
-  const unknown = unknownExerciseIds(program, logInput.entries ?? [])
-  if (unknown.length > 0) {
-    throw new Error(
-      `${program.name} has no exercise called ${unknown.join(", ")}. Nothing was logged.`
-    )
-  }
-
-  const result = applyLog(program, enr, { ...logInput, enrollment_id: enr.id })
-
-  /**
-   * THE DAY THEY TRAINED, IN THEIR OWN CALENDAR.
-   *
-   * A session could only ever be stamped "now", on both copies, so a Saturday
-   * workout written up on Monday landed in Monday's week and every calendar
-   * view was wrong about it. `loggedAtForEntry` is the health slice's rule for
-   * exactly this and already handles "today means this moment, not noon".
-   */
-  let loggedAt: string | undefined
-  if (when?.entry_date) {
-    const timezone = await getUserTimezone(userId)
-    const resolved = loggedAtForEntry(when.entry_date, timezone, when.entry_time)
-    if (!resolved) throw new Error("That is in the future — pick a day you have already trained.")
-    loggedAt = resolved
-  }
-
-  /**
-   * ONE STATEMENT: THE WORKOUT, ITS SETS AND THE WEIGHTS IT MOVED.
-   *
-   * This was three writes in a row with no rollback between them. The one that
-   * actually bit: type 1000 into a weight box — a plausible slip for 100 — and
-   * the workout row went in, then the set insert was refused by the database's
-   * NUMERIC(5,2) column, and the reply was an error about numeric overflow with
-   * an empty session left behind. Reordering the writes only moved which half
-   * survived; nothing in application code can make three writes into one.
-   *
-   * AND A RETRY IS NOT A SECOND SESSION. `clientKey` is minted by the form, so
-   * the same write-up sent twice — the reply lost on gym wifi, the button
-   * pressed again — is recognised by the database as the session already
-   * there. It answers `inserted: false`, touches nothing, and the program is
-   * NOT advanced a second time.
-   */
-  const supabase = await createServerSupabaseClient()
-  const duration = Math.min(599, Math.max(1, Math.round(logInput.durationMin ?? BRIDGE_DEFAULT_DURATION_MIN)))
-  const intensity = Math.min(5, Math.max(1, Math.round(logInput.intensity ?? BRIDGE_DEFAULT_INTENSITY)))
-  const skipped = logInput.entries.filter((e) => e.skipped).map((e) => e.exerciseId)
-
-  const { data, error } = await supabase.rpc("log_session_and_advance", {
-    p_workout: {
-      user_id: userId,
-      session_type: sessionTypeFor(program),
-      duration_min: duration,
-      intensity,
-      distance_km: logInput.distanceKm ?? null,
-      enrollment_id: enr.id,
-      program_day_id: logInput.dayId,
-      program_cycle: logInput.cycle,
-      program_week: logInput.week,
-      adjustments: skipped.length > 0 ? { skipped } : {},
-      rpe: rpe ?? null,
-      notes: notes ?? null,
-      client_key: clientKey,
-      ...(loggedAt ? { logged_at: loggedAt } : {}),
-    },
-    // The set rows carry no log id: the function has just made it, and letting
-    // the app guess one is how an orphaned set gets written.
-    p_sets: setRowsFor(program, enr, logInput),
-    p_exercise_state: result.enrollment.exerciseState,
-    p_cursor: result.enrollment.cursor,
-    p_expected_session_count: enr.cursor.sessionCount,
-  })
-  if (error) {
-    const refusal = refusalFrom(error)
-    throw refusal instanceof ProgramRefused ? refusal : new Error(`Failed to save the workout: ${error.message}`)
-  }
-
-  /**
-   * ALREADY WRITTEN. This request changed nothing, and must not claim to have.
-   *
-   * `result` was computed by advancing from the state as it is NOW — which the
-   * first copy of this write-up has already advanced. So its `changes` would
-   * read "Squat 62.5 → 65 kg" when the truth is that the earlier request moved
-   * it 60 → 62.5 and this one moved it nowhere. The screen prints that list
-   * verbatim, so returning it is the same class of lie this phase exists to
-   * remove: a number on screen that no write produced.
-   *
-   * The enrollment as it stands, the prescription it actually gives, and an
-   * empty list of movements — all three true of this request.
-   */
-  const written = data as { workout_id: string; inserted: boolean } | null
-  if (written && written.inserted === false) {
-    return { enrollment: enr, changes: [], next: computePrescription(program, enr) }
-  }
-
-  return { ...result, next: computePrescription(program, result.enrollment) }
-}
+/**
+ * `logProgramSession` was here, with `setRowsFor` below it.
+ *
+ * It took a whole session in one call — every set at its prescribed numbers,
+ * a duration and an intensity — and advanced the program in the same rpc. It
+ * was the second way to record a workout, and the two disagreed about units,
+ * about personal bests, and about what a rep range means. A session that
+ * already happened is now written the same way as one happening now: start a
+ * workout dated then, tick what you actually did, finish it.
+ *
+ * `log_session_and_advance` is still in the database, called by nothing.
+ * Dropping it is a migration of its own, not a code change.
+ */
 
 /**
  * What the weights WOULD say, with a change applied. Writes nothing.
@@ -1152,68 +1036,6 @@ async function persistState(
     .eq("id", enrollment.id)
     .eq("user_id", userId)
   if (error) throw new Error(`Failed to persist enrollment state: ${error.message}`)
-}
-
-/**
- * The sets, stamped with the program's own id for each lift.
- *
- * NO `log_id`: `log_session_and_advance` creates the workout row and fills it
- * in. Handing one in from here would mean guessing an id the database has not
- * issued yet.
- */
-function setRowsFor(
-  program: ProgramDefinition,
-  enr: ProgramEnrollment,
-  logInput: Omit<ProgramSessionLogInput, "enrollment_id">
-): Omit<WorkoutSetInsert, "log_id">[] {
-  const days = scheduleDaysOrNone(program.schedule)
-  const byId = new Map(days.flatMap((d) => d.exercises.map((ex) => [ex.id, ex] as const)))
-
-  /**
-   * WHICH SETS WERE ALL-OUT, taken from what the program actually asked for.
-   *
-   * Every set written up after the fact was stored as "working" — including
-   * the last set of a 5×5 that the program marks `amrap`, meaning as many reps
-   * as you can manage. The live screen stores those correctly, so one session
-   * looked different in History depending on which door it came in by, and a
-   * personal best set on an all-out set was invisible to one of them.
-   *
-   * Read from the day being logged, not from the cursor: a session written up
-   * three days late is Workout B's, whatever the program is pointing at now.
-   */
-  const allOut = new Map<string, Set<number>>()
-  const dayIndex = days.findIndex((d) => d.id === logInput.dayId)
-  if (dayIndex >= 0) {
-    const prescribed = computePrescription(program, {
-      ...enr,
-      cursor: { ...enr.cursor, cycle: logInput.cycle, week: logInput.week, dayIndex },
-    })
-    for (const ex of prescribed.exercises) {
-      const numbers = ex.sets.filter((set) => set.amrap).map((set) => set.setNumber)
-      if (numbers.length > 0) allOut.set(ex.exerciseId, new Set(numbers))
-    }
-  }
-
-  const rows: Omit<WorkoutSetInsert, "log_id">[] = []
-  for (const entry of logInput.entries) {
-    if (entry.skipped) continue
-    const ex = byId.get(entry.exerciseId)
-    const amrapSets = allOut.get(entry.exerciseId)
-    for (const set of entry.sets) {
-      rows.push({
-        exercise: ex?.name ?? entry.exerciseId,
-        // THE PROGRAM'S OWN ID. Matching a logged set back to its lift by NAME
-        // is what made "my bench" split in two the moment a program renamed it.
-        exercise_id: entry.exerciseId,
-        weight_kg: round2(toKg(set.weight, enr.unitSystem)),
-        reps: set.reps,
-        set_number: set.setNumber,
-        set_kind: amrapSets?.has(set.setNumber) ? "amrap" : "working",
-        ...(set.side ? { side: set.side } : {}),
-      })
-    }
-  }
-  return rows
 }
 
 

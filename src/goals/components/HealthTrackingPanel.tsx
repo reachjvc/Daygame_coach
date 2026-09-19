@@ -11,9 +11,6 @@ const WeightTracker = lazy(() =>
 const SleepTracker = lazy(() =>
   import("@/src/health/components/SleepTracker").then((m) => ({ default: m.SleepTracker }))
 )
-const WorkoutLogger = lazy(() =>
-  import("@/src/health/components/WorkoutLogger").then((m) => ({ default: m.WorkoutLogger }))
-)
 const NutritionTracker = lazy(() =>
   import("@/src/health/components/NutritionTracker").then((m) => ({ default: m.NutritionTracker }))
 )
@@ -67,7 +64,6 @@ export function HealthTrackingPanel() {
           <div className="grid gap-4 sm:grid-cols-2">
             <WeightTracker />
             <SleepTracker />
-            <WorkoutLogger />
             <NutritionTracker />
             <TrainingCard from={`${LIFE_MASTERY}?step=track`} />
           </div>

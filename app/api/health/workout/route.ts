@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { createWorkoutLog, getWorkoutLogs, getWorkoutLogsWithSets, deleteWorkoutLog } from "@/src/db/healthRepo"
-import type { WorkoutLogInsert, WorkoutSetInsert } from "@/src/health/types"
-import { getUserTimezone } from "@/src/db/settingsRepo"
-import { loggedAtForEntry } from "@/src/health/healthService"
-import { CreateWorkoutSchema } from "@/src/health/schemas"
+import { getWorkoutLogs, getWorkoutLogsWithSets, deleteWorkoutLog } from "@/src/db/healthRepo"
 import { statusFor } from "@/src/programs/errors"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
@@ -20,25 +16,20 @@ export async function GET(request: Request) {
   } catch (e) { console.error("Error getting workout logs:", e); return err("Failed to get workout logs") }
 }
 
-export async function POST(request: Request) {
-  const auth = await requireAuth()
-  if (!auth.success) return auth.response
-  try {
-    const parsed = CreateWorkoutSchema.safeParse(await request.json())
-    if (!parsed.success) return NextResponse.json({ error: "Validation failed", details: parsed.error.flatten().fieldErrors }, { status: 400 })
-    const { sets, entry_date, entry_time, ...log } = parsed.data
-    const loggedAt = entry_date
-      ? loggedAtForEntry(entry_date, await getUserTimezone(auth.userId), entry_time)
-      : undefined
-    if (loggedAt === null) return err("That is in the future", 400)
-
-    const insert = { ...log, ...(loggedAt ? { logged_at: loggedAt } : {}) } as WorkoutLogInsert
-    return NextResponse.json(
-      await createWorkoutLog(auth.userId, insert, sets as WorkoutSetInsert[] | undefined),
-      { status: 201 }
-    )
-  } catch (e) { console.error("Error creating workout log:", e); return err("Failed to create workout log") }
-}
+/**
+ * THERE IS NO POST HERE ANY MORE.
+ *
+ * It took a whole workout — its sets, its duration, its intensity — in one
+ * call, and it was the second way to record one. The two disagreed: this path
+ * read weights as kilograms whatever the account trains in, had its own
+ * 90-day personal-best rule, and wrote the workout row before its sets, so a
+ * refused set left an empty session counting towards the streak.
+ *
+ * A workout is recorded by starting one and finishing it: POST /api/workouts,
+ * POST /api/workouts/[id]/sets, POST /api/workouts/[id]/finish — the same
+ * three calls whether you are in the gym or writing up Tuesday on Thursday.
+ * GET and DELETE stay: History reads and deletes through them.
+ */
 
 export async function DELETE(request: Request) {
   const auth = await requireAuth()

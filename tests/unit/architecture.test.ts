@@ -754,7 +754,6 @@ describe('Architecture Compliance', () => {
       'src/health/components/NutritionTracker.tsx',
       'src/health/components/SleepTracker.tsx',
       'src/health/components/WeightTracker.tsx',
-      'src/health/components/WorkoutLogger.tsx',
       'src/inner-game/components/InnerGamePage.tsx',
       'src/profile/components/InteractiveWorldMap.tsx',
       'src/programs/components/CustomProgramBuilder.tsx',
@@ -764,7 +763,6 @@ describe('Architecture Compliance', () => {
       'src/programs/components/ProgressTab.tsx',
       'src/programs/components/ProgressionView.tsx',
       'src/programs/components/SavedWeeks.tsx',
-      'src/programs/components/TodaySessionWidget.tsx',
       'src/programs/components/WeekStrip.tsx',
       'src/qa/components/QAPage.tsx',
       'src/scenarios/components/ChatWindow.tsx',
@@ -1202,8 +1200,18 @@ describe('Architecture Compliance', () => {
       // `max-w-[...]` are not column widths and are fine.
       flag('a column width of its own', /\bmax-w-(?:xs|sm|md|lg|xl|\dxl)\b/)
 
-      // A control smaller than 44px on a phone. `sm:` sizes are desktop.
-      const small = /(?<!sm:)\b(?:min-h-(?:7|8|9|10)|size-(?:4\.5|5|6|7|8|9|10)|h-(?:7|8|9|10))\b/
+      /**
+       * A control smaller than 44px on a phone. `sm:` sizes are desktop.
+       *
+       * THE EXEMPTION HAS TO BE ANCHORED AT THE START OF THE CLASS. With
+       * `(?<!sm:)\b`, "sm:min-h-9" was flagged anyway — not through its
+       * `min-h-9` branch, which the lookbehind did exclude, but through the
+       * bare `h-9` one, whose match starts after the hyphen where nothing
+       * says "sm:". So the exemption this comment promises never applied to a
+       * single `min-h-*` class, and the rule was quietly stricter than it
+       * says. Requiring a class boundary in front makes it mean what it says.
+       */
+      const small = /(?:^|[\s"'`{])(?:min-h-(?:7|8|9|10)|size-(?:4\.5|5|6|7|8|9|10)|h-(?:7|8|9|10))\b/
       const tooSmall = controlTags(source, ANY_CONTROL).filter((t) =>
         small.test(classesOf(source, t)),
       )
@@ -1240,12 +1248,10 @@ describe('Architecture Compliance', () => {
       'src/programs/components/ProgramsApp.tsx',
       'src/programs/components/ProgressTab.tsx',
       'src/programs/components/ProgressionView.tsx',
-      'src/programs/components/RestTimer.tsx',
       'src/programs/components/RunningPrograms.tsx',
       'src/programs/components/SavedWeeks.tsx',
       'src/programs/components/SessionNotices.tsx',
       'src/programs/components/TodayCard.tsx',
-      'src/programs/components/TodaySessionWidget.tsx',
       'src/programs/components/TrainingScreen.tsx',
       'src/programs/components/WeekStrip.tsx',
       'src/programs/components/live/AddLift.tsx',

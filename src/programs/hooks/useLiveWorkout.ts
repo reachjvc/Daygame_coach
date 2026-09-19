@@ -555,6 +555,16 @@ export type StartOutcome =
 export async function startWorkoutRequest(input: {
   enrollmentId?: string | null
   dayId?: string | null
+  /**
+   * When the session actually happened, as an instant.
+   *
+   * Omitted for every workout started in the gym — the server uses now. Sent
+   * only by "Log a past workout", which is why it goes through THIS helper
+   * rather than posting itself: the retry rule above (keep the key on a lost
+   * reply, forget it on any answer) is what makes a second tap land on the
+   * same workout instead of opening a second one.
+   */
+  startedAt?: string | null
 }): Promise<StartOutcome> {
   const bucket = input.enrollmentId ?? null
 
@@ -565,6 +575,7 @@ export async function startWorkoutRequest(input: {
       body: JSON.stringify({
         ...(input.enrollmentId ? { enrollmentId: input.enrollmentId } : {}),
         ...(input.dayId ? { dayId: input.dayId } : {}),
+        ...(input.startedAt ? { startedAt: input.startedAt } : {}),
         clientKey: key,
       }),
     })

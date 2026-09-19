@@ -7,7 +7,6 @@
  */
 
 import { z } from "zod"
-import { MAX_DISTANCE_KM, MAX_DURATION_MIN } from "@/src/shared/weight"
 
 const NoteField = z.string().trim().max(500).nullable().optional()
 
@@ -71,12 +70,8 @@ export const WorkoutSetSchema = z.object({
   exercise_notes: NoteField,
 })
 
-export const CreateWorkoutSchema = z.object({
-  session_type: z.enum(["weights", "cardio", "mobility", "yoga", "running"]),
-  duration_min: z.number().int().positive().max(MAX_DURATION_MIN),
-  intensity: z.number().int().min(1).max(5),
-  distance_km: z.number().min(0).max(MAX_DISTANCE_KM).nullable().optional(),
-  sets: z.array(WorkoutSetSchema).optional(),
-
-  ...entryWhenFields,
-}).refine(hasDateIfTime, NEEDS_DATE_FOR_TIME)
+/**
+ * `CreateWorkoutSchema` was here — the body of `POST /api/health/workout`,
+ * which wrote a finished workout and all its sets in one call. That route no
+ * longer has a POST. `WorkoutSetSchema` above stays: History still edits sets.
+ */

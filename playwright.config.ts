@@ -58,6 +58,7 @@ export default defineConfig({
         /life-mastery-program-link\.spec\.ts/,
         /health-past-workout\.spec\.ts/,
         /dashboard-training-card\.spec\.ts/,
+        /programs-past-workout\.spec\.ts/,
         /programs-offline\.spec\.ts/,
         // Session-creating tests run in isolated project to avoid parallel conflicts
         /session-tracking\.spec\.ts/,
@@ -147,6 +148,7 @@ export default defineConfig({
         /life-mastery-program-link\.spec\.ts/,
         /health-past-workout\.spec\.ts/,
         /dashboard-training-card\.spec\.ts/,
+        /programs-past-workout\.spec\.ts/,
         /programs-offline\.spec\.ts/,
       ],
       fullyParallel: false,
