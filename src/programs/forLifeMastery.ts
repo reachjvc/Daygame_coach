@@ -30,5 +30,14 @@ export { describeTrainingWeek } from "./programsService"
 // Switching kg↔lb converts what was typed rather than deleting it; Life
 // Mastery's own builder needs the same rule, not a second copy of it.
 export { convertTyped } from "./builder"
+/**
+ * The training card itself. Life Mastery's Track step embeds the SAME card the
+ * Tracking page shows — not a second copy — so what it says in one place and
+ * what it says in the other cannot drift.
+ *
+ * It was previously reached by a lazy `import()`, which this door's guard
+ * cannot see; direct and through here is the honest version of the same thing.
+ */
+export { TrainingCard } from "./components/TrainingCard"
 
 export type { ProgramEnrollment } from "./types"

@@ -1642,6 +1642,91 @@ describe('Architecture Compliance', () => {
    * The list below is what existed on 2026-09-19. It may only shrink; a later
    * phase deletes the components that make up most of it and empties the rest.
    */
+  /**
+   * NO TRAINING SCREEN READS THE BROWSER'S CALENDAR.
+   *
+   * Every date in this app is filed in the ACCOUNT's timezone, and the screens
+   * that show those dates were reading the phone's. So a session logged on
+   * Monday in Copenhagen was labelled Tuesday to a phone still set to Tokyo,
+   * and the week strip lit a different day from the one the card prescribed.
+   *
+   * THREE SHAPES, all of them the browser's clock wearing a different hat:
+   *   `toLocaleDateString(undefined, …)`  the phone's zone and locale
+   *   `isoWeekday(…)`                     the browser-zone converter
+   *   `periodStartFor(…, new Date())`     a week boundary from the phone
+   *
+   * The right versions all take a timezone: `isoWeekdayInTimezone`,
+   * `getTodayInTimezone`, `periodStartInTimezone`, `toZonedDate`.
+   *
+   * The list below is what existed on 2026-09-19, and it may only shrink.
+   * `TrainingCard.tsx` is deliberately absent: it was the worst of them and is
+   * now the example.
+   */
+  describe('No training screen reads the browser calendar', () => {
+    const TRAINING_BROWSER_CLOCK_ALLOWED: Record<string, number> = {
+      'components/CustomProgramBuilder.tsx': 1,
+      'components/HistoryTab.tsx': 4,
+      'components/LiftHistory.tsx': 2,
+      'components/PastPrograms.tsx': 2,
+      'components/ProgramsApp.tsx': 2,
+      'components/ProgressTab.tsx': 1,
+      'components/ProgressionView.tsx': 3,
+      'components/RunningPrograms.tsx': 2,
+      'components/TodayCard.tsx': 1,
+      'components/live/FinishSheet.tsx': 1,
+      // The converter itself, and the engine's one caller of it.
+      'config.ts': 1,
+      'programsService.ts': 1,
+    }
+
+    const BROWSER_CLOCK =
+      /toLocale(Date|Time)String\(\s*(undefined|\))|\bisoWeekday\(|periodStartFor\([^)]*new Date\(\)/g
+
+    function clockReads(): Record<string, number> {
+      const dir = path.join(projectRoot, 'src/programs')
+      const found: Record<string, number> = {}
+      for (const file of getAllFiles(dir, /\.tsx?$/)) {
+        const rel = path.relative(dir, file).replace(/\\/g, '/')
+        // Comments blanked, BOTH kinds. A doc comment explaining the rule is
+        // not the rule — the first draft of this guard fired on its own prose.
+        const code = fs
+          .readFileSync(file, 'utf-8')
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/\/\/[^\n]*/g, '')
+        const hits = code.match(BROWSER_CLOCK)
+        if (hits) found[rel] = hits.length
+      }
+      return found
+    }
+
+    test('no NEW browser-clock date on a training screen', () => {
+      const found = clockReads()
+      const offenders = Object.entries(found)
+        .filter(([rel, n]) => n > (TRAINING_BROWSER_CLOCK_ALLOWED[rel] ?? 0))
+        .map(([rel, n]) => `${rel}: ${n}, allowed ${TRAINING_BROWSER_CLOCK_ALLOWED[rel] ?? 0}`)
+
+      expect(
+        offenders,
+        "These read the phone's clock for a date the account owns. Use the\n" +
+          'timezone-taking versions — isoWeekdayInTimezone, getTodayInTimezone,\n' +
+          'periodStartInTimezone, toZonedDate:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+    })
+
+    test('the browser-clock allowlist only shrinks', () => {
+      const found = clockReads()
+      const cleaned = Object.entries(TRAINING_BROWSER_CLOCK_ALLOWED)
+        .filter(([rel, n]) => (found[rel] ?? 0) < n)
+        .map(([rel, n]) => `${rel}: now ${found[rel] ?? 0}, allowance still ${n}`)
+
+      expect(
+        cleaned,
+        'Fixed — lower these in TRAINING_BROWSER_CLOCK_ALLOWED:\n' + cleaned.join('\n'),
+      ).toEqual([])
+    })
+  })
+
   describe('Life Mastery reaches the gym through one door', () => {
     const GOALS_TO_PROGRAMS_IMPORTS_ALLOWED = new Set([
       'src/goals/components/new-goals/GoalsConfigStep.tsx @/src/programs/components/ProgramPicker',

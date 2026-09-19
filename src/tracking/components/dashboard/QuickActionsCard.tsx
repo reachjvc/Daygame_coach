@@ -1,7 +1,7 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Play, Clock, PlusCircle, Calendar, Sun, ArrowRight, Dumbbell } from "lucide-react"
+import { Play, Clock, PlusCircle, Calendar, Sun, ArrowRight } from "lucide-react"
 import Link from "next/link"
 
 interface QuickActionsCardProps {
@@ -53,19 +53,12 @@ export function QuickActionsCard({ onQuickAddClick }: QuickActionsCardProps) {
             <ArrowRight className="size-4 text-muted-foreground" />
           </div>
         </Link>
-        {/* TRAINING, FROM THE PAGE PEOPLE ACTUALLY OPEN.
-            /programs prescribes and logs the session, and a logged session
-            feeds the gym-sessions tile on this very dashboard — but nothing in
-            the app linked to it, so the only way in was typing the URL. */}
-        <Link href="/programs" className="block" data-testid="training-link">
-          <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
-            <div className="flex items-center gap-3">
-              <Dumbbell className="size-5 text-primary" />
-              <span>Training</span>
-            </div>
-            <ArrowRight className="size-4 text-muted-foreground" />
-          </div>
-        </Link>
+        {/* THE TRAINING ROW IS GONE, and this is where it was.
+            It was added when nothing in the app linked to /programs, so the
+            only way in was typing the address. Two things link there now: the
+            tab bar, and the training card at the top of this very page — which
+            says what today's session actually is rather than just pointing.
+            A third door, 2,800 px below the first, is not a door. */}
         <Link href="/dashboard/tracking/daily" className="block" data-testid="daily-reflection-link">
           <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
             <div className="flex items-center gap-3">

@@ -10,6 +10,7 @@ import { QuickAddModal } from "./QuickAddModal"
 import { SeasonBand } from "@/src/goals/components/north-star/SeasonBand"
 import type { DashboardLayoutResponse } from "../types"
 import { TRACKING } from "@/src/shared/trainingRoutes"
+import { TrainingCard } from "@/src/programs/components/TrainingCard"
 import {
   DashboardSkeleton,
   StatTileGrid,
@@ -27,21 +28,19 @@ const AchievementsModal = lazy(() =>
 )
 
 /**
- * TODAY'S PRESCRIBED SESSION, ON THE PAGE OPENED DAILY.
+ * TODAY'S TRAINING, ON THE PAGE OPENED DAILY.
  *
  * A training program that only tells you what to do once you have navigated to
- * it is a program you follow on the days you remember to go looking. The panel
- * RENDERS NOTHING without an active enrollment, so it costs a person with no
- * program a single request and no screen space.
+ * it is a program you follow on the days you remember to go looking.
  *
- * The same component the goals page embeds — not a second copy — so the session
- * shown here and the session shown there cannot drift apart.
+ * IMPORTED DIRECTLY, not lazily. `lazy()` plus `Suspense fallback={null}` meant
+ * even the card's own placeholder arrived late, so the page still jumped — the
+ * exact thing the placeholder exists to stop. The card is small and this page
+ * needs its data anyway.
+ *
+ * The same component the goals page embeds — not a second copy — so what it
+ * says there and what it says here cannot drift apart.
  */
-/* A card, not the whole session form. The dashboard used to embed every lift
-   and every set of today's session inside a panel meant to be glanced at. */
-const TrainingCard = lazy(() =>
-  import("@/src/programs/components/TrainingCard").then(m => ({ default: m.TrainingCard }))
-)
 
 export function ProgressDashboard({ initialDashboard }: { initialDashboard?: DashboardLayoutResponse }) {
   const { state, deleteSession, deleteFieldReport, refresh } = useTrackingStats()
@@ -83,19 +82,15 @@ export function ProgressDashboard({ initialDashboard }: { initialDashboard?: Das
       <SeasonBand />
 
       {/*
-        TODAY'S TRAINING, BACK AT THE TOP.
+        TODAY'S TRAINING, ABOVE THE THINGS YOU READ.
         It was pushed to the bottom of this page for a good reason that has since
         stopped being true: the card here USED to embed every lift and every set
         of the session, so a five-lift day pushed everything else below the fold.
-        That card is gone. This one is four lines — Resume when a workout is
-        open, today's session and a Start when one is due, what is next on a rest
-        day — and it renders NOTHING AT ALL when there is nothing to say, so it
-        costs no space on the days it has no news. A thing you act on belongs
-        above the things you read.
+        That card is gone. This one is four lines and ALWAYS there — including
+        when there is no program, which is exactly when somebody needs the way
+        in. A thing you act on belongs above the things you read.
       */}
-      <Suspense fallback={null}>
-        <TrainingCard from={TRACKING} />
-      </Suspense>
+      <TrainingCard from={TRACKING} className="mb-6" />
 
       {/* Stat tiles — user-configurable; see StatTileGrid */}
       <StatTileGrid initial={initialDashboard} />

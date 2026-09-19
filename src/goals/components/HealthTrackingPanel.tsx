@@ -2,7 +2,8 @@
 
 import { useState, useEffect, lazy, Suspense } from "react"
 import { Activity, ChevronDown, ChevronRight } from "lucide-react"
-import { TRACKING } from "@/src/shared/trainingRoutes"
+import { TrainingCard } from "@/src/programs/forLifeMastery"
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 const WeightTracker = lazy(() =>
   import("@/src/health/components/WeightTracker").then((m) => ({ default: m.WeightTracker }))
@@ -16,11 +17,9 @@ const WorkoutLogger = lazy(() =>
 const NutritionTracker = lazy(() =>
   import("@/src/health/components/NutritionTracker").then((m) => ({ default: m.NutritionTracker }))
 )
-/* A card, not the whole session form. The dashboard used to embed every lift
-   and every set of today's session inside a panel meant to be glanced at. */
-const TrainingCard = lazy(() =>
-  import("@/src/programs/components/TrainingCard").then((m) => ({ default: m.TrainingCard }))
-)
+/* Imported directly, not lazily: `lazy()` with a null fallback meant even the
+   card's own placeholder arrived late, which is the page jump it exists to
+   stop. */
 
 const STORAGE_KEY = "health-tracking-collapsed"
 
@@ -70,7 +69,7 @@ export function HealthTrackingPanel() {
             <SleepTracker />
             <WorkoutLogger />
             <NutritionTracker />
-            <TrainingCard from={TRACKING} />
+            <TrainingCard from={`${LIFE_MASTERY}?step=track`} />
           </div>
         </Suspense>
       )}
