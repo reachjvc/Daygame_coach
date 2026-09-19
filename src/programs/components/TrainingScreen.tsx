@@ -18,15 +18,22 @@
  * and any goal linked to it.
  */
 
-import { lazy, Suspense, useState } from "react"
+import { lazy, Suspense, useEffect, useState } from "react"
 import Link from "next/link"
 import { ProgramsApp } from "./ProgramsApp"
 import { BackLink } from "@/components/BackLink"
-import { Segmented } from "./ui"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getProgram } from "../data/catalog"
 import { effectiveProgram, scheduleDaysOrNone } from "../customize"
 import { isWeekdayAnchored, unitForDisplay } from "../programsService"
-import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment, UnitSystem } from "../types"
+import type {
+  EnrollmentDetail,
+  LiveWorkout,
+  ProgramEnrollment,
+  ProgramsLocation,
+  UnitSystem,
+} from "../types"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 /* Two more tabs, each a year of workouts and a pile of charts. Nobody who stays
@@ -42,7 +49,7 @@ const ProgressTab = lazy(() => import("./ProgressTab").then((m) => ({ default: m
  * one way to record a workout now — and starting an empty one belongs beside
  * today's session, not on a tab of its own that nobody opened.
  */
-type Tab = "session" | "history" | "progress"
+type Tab = ProgramsLocation["tab"]
 
 interface Props {
   initialActive: ProgramEnrollment[]
@@ -57,6 +64,14 @@ interface Props {
   failed?: boolean
   /** The account's zone, for dating a workout written up afterwards. */
   timezone?: string
+  /**
+   * Which screen the address bar asked for, resolved on the server.
+   *
+   * Named `where` rather than `location` because `location` is a global in a
+   * browser — shadowing it inside a component is how a typo silently reads
+   * `window.location` instead.
+   */
+  where: ProgramsLocation
 }
 
 export function TrainingScreen({
@@ -67,6 +82,7 @@ export function TrainingScreen({
   accountUnit,
   failed,
   timezone,
+  where,
 }: Props) {
   const running = initialActive[0]
   /**
@@ -119,8 +135,46 @@ export function TrainingScreen({
    * The default is still DECIDED rather than flickered into: the server already
    * knows whether there is a program, so the first paint is the right tab.
    */
+  /**
+   * THE TAB IS IN THE ADDRESS BAR, and the address bar is the only copy.
+   *
+   * It was `useState`, so no link could name a tab, Back always landed on
+   * Today whatever you had been reading, and the server could not resolve the
+   * first paint. The server parses the URL and hands the answer in; this holds
+   * it only so a switch repaints without waiting for a round trip.
+   */
   const [picked, setPicked] = useState<Tab | null>(null)
-  const tab: Tab = picked ?? "session"
+  const tab: Tab = picked ?? where.tab
+
+  function goToTab(next: string) {
+    const t = (["today", "history", "progress"] as const).find((v) => v === next) ?? "today"
+    setPicked(t)
+    /**
+     * `replaceState`, NOT a router push.
+     *
+     * Next feeds this to `useSearchParams` without re-running the server page,
+     * and re-running it would repeat the five queries `ProgramsPage` makes —
+     * a tab switch is not new data. It is also not worth a history entry:
+     * Back should leave Training, not walk back through the tabs.
+     */
+    const url = new URL(window.location.href)
+    if (t === "today") url.searchParams.delete("tab")
+    else url.searchParams.set("tab", t)
+    window.history.replaceState(null, "", url)
+  }
+
+  /**
+   * ONCE OPENED, A TAB STAYS MOUNTED.
+   *
+   * Every switch used to unmount History and Progress, and each re-downloads a
+   * year of sets when it mounts — so going Today → History → Today → History
+   * fetched the same year twice. Lazily loaded still (the chunk arrives on
+   * first open), but not thrown away afterwards.
+   */
+  const [opened, setOpened] = useState<Set<Tab>>(() => new Set<Tab>([where.tab]))
+  useEffect(() => {
+    setOpened((seen) => (seen.has(tab) ? seen : new Set(seen).add(tab)))
+  }, [tab])
 
   return (
     <div className="min-h-screen bg-background">
@@ -175,28 +229,11 @@ export function TrainingScreen({
             className="mb-4 flex items-center justify-between gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400"
           >
             <span>Your training could not be loaded, so this page may be incomplete.</span>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="shrink-0 rounded-md border border-amber-500/40 px-2 py-1 text-xs transition-colors hover:bg-amber-500/15"
-            >
+            <Button size="sm" variant="outline" className="shrink-0" onClick={() => window.location.reload()}>
               Try again
-            </button>
+            </Button>
           </div>
         )}
-
-        <div className="mb-3">
-          <Segmented
-            label="What are you logging?"
-            value={tab}
-            onChange={(t) => setPicked(t)}
-            options={[
-              { value: "session" as Tab, label: "Today" },
-              { value: "history" as Tab, label: "History" },
-              { value: "progress" as Tab, label: "Progress" },
-            ]}
-          />
-        </div>
 
         {/**
           * WHAT THE UNIT AND THE WEEKLY TARGET COME FROM.
@@ -205,27 +242,56 @@ export function TrainingScreen({
           * asks for in a week. With nothing running there is no target, and
           * "0 of 0" is not a goal — the progress view says "3 so far" instead.
           */}
-        {tab === "history" ? (
-          <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
-            <HistoryTab
-              unit={unit}
-              enrollments={initialActive}
-              liveOpen={live !== null}
-              timezone={timezone}
+        <Tabs value={tab} onValueChange={goToTab}>
+          {/* FULL WIDTH AND THUMB HEIGHT. The old strip was four 11px sky-blue
+              options huddled at the left — the app's only sky-blue control,
+              and under half a thumb tall on the screen you hold in a gym. */}
+          <TabsList className="grid h-auto w-full grid-cols-3 p-1">
+            <TabsTrigger value="today" className="h-11 sm:h-8">
+              Today
+            </TabsTrigger>
+            <TabsTrigger value="history" className="h-11 sm:h-8">
+              History
+            </TabsTrigger>
+            <TabsTrigger value="progress" className="h-11 sm:h-8">
+              Progress
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="today" className="mt-3">
+            <ProgramsApp
+              initialActive={initialActive}
+              initialPast={initialPast}
+              initialDetail={initialDetail}
+              live={live}
             />
-          </Suspense>
-        ) : tab === "progress" ? (
-          <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
-            <ProgressTab plannedPerWeek={plannedPerWeek} unit={unit} />
-          </Suspense>
-        ) : (
-          <ProgramsApp
-            initialActive={initialActive}
-            initialPast={initialPast}
-            initialDetail={initialDetail}
-            live={live}
-          />
-        )}
+          </TabsContent>
+
+          {/* `forceMount` + `hidden`: rendered once opened and kept, so the
+              second visit issues no request. Not mounted before the first
+              visit, so the chunk and the year of sets are still only fetched
+              by somebody who asks for them. */}
+          {opened.has("history") && (
+            <TabsContent value="history" forceMount hidden={tab !== "history"} className="mt-3">
+              <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
+                <HistoryTab
+                  unit={unit}
+                  enrollments={initialActive}
+                  liveOpen={live !== null}
+                  timezone={timezone}
+                />
+              </Suspense>
+            </TabsContent>
+          )}
+
+          {opened.has("progress") && (
+            <TabsContent value="progress" forceMount hidden={tab !== "progress"} className="mt-3">
+              <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
+                <ProgressTab plannedPerWeek={plannedPerWeek} unit={unit} />
+              </Suspense>
+            </TabsContent>
+          )}
+        </Tabs>
       </div>
     </div>
   )

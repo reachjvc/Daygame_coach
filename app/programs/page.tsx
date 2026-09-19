@@ -25,10 +25,17 @@ import {
 import { getLiveWorkout, unitFor } from "@/src/db/workoutRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { TrainingScreen } from "@/src/programs/components/TrainingScreen"
+import { parseProgramsLocation } from "@/src/programs/programsService"
 import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment, UnitSystem } from "@/src/programs/types"
 
-export default async function ProgramsPage() {
+export default async function ProgramsPage({
+  searchParams,
+}: {
+  // Next 16: a Promise, awaited before it is read.
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   const auth = await requireAuth()
+  const params = await searchParams
 
   let active: ProgramEnrollment[] = []
   let past: ProgramEnrollment[] = []
@@ -72,8 +79,22 @@ export default async function ProgramsPage() {
     }
   }
 
+  /**
+   * THE FIRST PAINT IS ALREADY THE RIGHT SCREEN.
+   *
+   * The tab and the view were client state, so every arrival rendered Today
+   * and then jumped to whatever the URL asked for. Parsed here, against the
+   * programs this page has already read, so a link to History opens History.
+   */
+  const query = new URLSearchParams()
+  for (const [k, v] of Object.entries(params)) {
+    if (typeof v === "string") query.set(k, v)
+    else if (Array.isArray(v) && v[0] !== undefined) query.set(k, v[0])
+  }
+
   return (
     <TrainingScreen
+      where={parseProgramsLocation(query, active)}
       initialActive={active}
       initialPast={past}
       initialDetail={detail}

@@ -133,7 +133,15 @@ describe("starting an empty workout has one home", () => {
     )
     expect(screen).not.toContain("Anything else")
     expect(screen).not.toContain('"anything"')
-    const labels = [...screen.matchAll(/label:\s*"([^"]+)"/g)].map((m) => m[1])
-    expect(labels).toEqual(["Today", "History", "Progress"])
+    // The tab strip itself, whatever component draws it. This read the old
+    // `Segmented` options by their `label:` keys, and went quiet the moment
+    // Phase 5 swapped in shadcn `Tabs` — a guard that silently stops looking
+    // is worse than no guard.
+    const values = [...screen.matchAll(/<TabsTrigger\s+value="([^"]+)"/g)].map((m) => m[1])
+    expect(values, "premise: the screen should draw its own tabs").toEqual([
+      "today",
+      "history",
+      "progress",
+    ])
   })
 })

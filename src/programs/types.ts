@@ -478,6 +478,29 @@ export type ReplayEvent =
       seeded: Record<string, ExerciseState>
     }
 
+/**
+ * WHICH SCREEN YOU ARE ON — read from the address bar, not from React state.
+ *
+ * The tab and the view were `useState`, so nothing could link to a tab, to a
+ * program or to the catalogue, and Back always landed on the inventory
+ * whatever you had been looking at. Everything here comes from the URL, which
+ * means the server can resolve it for the first paint and a link can carry it.
+ */
+export interface ProgramsLocation {
+  tab: "today" | "history" | "progress"
+  view: "today" | "programs" | "detail" | "edit"
+  /** A RUNNING enrollment's id, or null — see `notice`. */
+  programId: string | null
+  /** A catalogue program, for `view=detail`. */
+  catalogId: string | null
+  /** An enrollment being edited, for `view=edit`. */
+  enrollmentId: string | null
+  /** Where Back goes, already checked for open-redirect tricks. */
+  from: string | null
+  /** Something the URL asked for that is no longer true, said in one line. */
+  notice: string | null
+}
+
 export interface ProgramEnrollment {
   id: string
   user_id: string

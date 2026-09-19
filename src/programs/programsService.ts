@@ -23,6 +23,7 @@ import {
 import { libraryByName } from "./data/exerciseLibrary"
 import { CUSTOM_PROGRAM_ID } from "./data/customProgram"
 import { enrollmentName } from "./data/catalog"
+import { readReturn } from "@/src/shared/returnTo"
 import type {
   AlsoRunning,
   TrainingDoorFacts,
@@ -48,6 +49,7 @@ import type {
   LiveWorkoutSet,
   ProgramDefinition,
   ProgramEnrollment,
+  ProgramsLocation,
   ProgramSessionLogInput,
   PrescribedExercise,
   PrescribedSet,
@@ -2280,6 +2282,57 @@ export const STALE_WORKOUT_HOURS = 6
  */
 export function isStaleWorkout(startedAt: string, now: Date = new Date()): boolean {
   return now.getTime() - new Date(startedAt).getTime() > STALE_WORKOUT_HOURS * 3_600_000
+}
+
+/**
+ * WHICH SCREEN THE ADDRESS BAR IS ASKING FOR.
+ *
+ * Pure, and the only reader of these five parameters. The screen used to keep
+ * its tab and its view in React state, so a link could not name either, Back
+ * always landed on the inventory, and the server could not resolve the first
+ * paint — you saw today's session appear a moment after the page did.
+ *
+ * ANYTHING UNKNOWN FALLS BACK TO TODAY rather than to an error. A URL is
+ * something anyone can type, and a mistyped one should land on the screen
+ * somebody would have wanted, not on a dead end.
+ *
+ * `?program=` is the exception, because silently ignoring it would be the app
+ * showing a different program from the one the link named: when the id is not
+ * a program you are running, the id is dropped AND `notice` says so.
+ */
+export function parseProgramsLocation(
+  params: URLSearchParams,
+  running: readonly { id: string }[]
+): ProgramsLocation {
+  const tabs = ["today", "history", "progress"] as const
+  const views = ["today", "programs", "detail", "edit"] as const
+
+  const asked = params.get("tab")
+  const tab = (tabs as readonly string[]).includes(asked ?? "")
+    ? (asked as ProgramsLocation["tab"])
+    : "today"
+
+  const askedView = params.get("view")
+  const view = (views as readonly string[]).includes(askedView ?? "")
+    ? (askedView as ProgramsLocation["view"])
+    : "today"
+
+  const askedProgram = params.get("program")
+  const isRunning = askedProgram !== null && running.some((e) => e.id === askedProgram)
+  const programId = isRunning ? askedProgram : null
+  const notice =
+    askedProgram !== null && !isRunning ? "That program is not running any more" : null
+
+  return {
+    tab,
+    view,
+    programId,
+    catalogId: view === "detail" ? params.get("catalog") : null,
+    enrollmentId: view === "edit" ? params.get("enrollment") : null,
+    // Checked for the open-redirect tricks a `?from=` can carry.
+    from: readReturn(params.get("from")),
+    notice,
+  }
 }
 
 /**
