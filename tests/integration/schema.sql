@@ -742,7 +742,7 @@ CREATE TABLE workout_logs (
   session_type TEXT NOT NULL CHECK (session_type IN ('weights', 'cardio', 'mobility', 'yoga', 'running')),
   duration_min INTEGER CHECK (duration_min > 0 AND duration_min < 600),
   intensity SMALLINT CHECK (intensity >= 1 AND intensity <= 5),
-  distance_km NUMERIC(6,2),
+  distance_km NUMERIC(6,2) CHECK (distance_km IS NULL OR (distance_km >= 0 AND distance_km <= 1000)),
   logged_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   started_at TIMESTAMPTZ,
@@ -854,7 +854,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON workout_sets TO authenticated;
 
 -- ---------------------------------------------------------------------------
 -- finish_program_workout, copied from the latest migration that defines it:
--- supabase/migrations/20260917100000_workout_keeps_its_summary.sql.
+-- supabase/migrations/20260919100000_finish_workout_times_and_kind.sql.
 --
 -- WHY IT IS HERE. Finishing a workout closes the workout and moves the
 -- program's weights, and both must happen or neither. There is no client-side
@@ -884,7 +884,11 @@ CREATE OR REPLACE FUNCTION finish_program_workout(
   -- The receipt, written in this same transaction so it cannot drift from what
   -- the screen showed. NULL for either means "not kept", not "empty".
   p_changes JSONB,
-  p_records JSONB
+  p_records JSONB,
+  -- When the session really happened, what kind it was, and how far.
+  p_started_at TIMESTAMPTZ DEFAULT NULL,
+  p_session_type TEXT DEFAULT NULL,
+  p_distance_km NUMERIC DEFAULT NULL
 )
 RETURNS UUID
 LANGUAGE plpgsql
@@ -932,7 +936,14 @@ BEGIN
       rpe = COALESCE(p_rpe, rpe),
       notes = COALESCE(p_notes, notes),
       progression_changes = p_changes,
-      personal_records = p_records
+      personal_records = p_records,
+      -- Together, always: `workout_logs_logged_is_start` requires it, and a
+      -- session filed under the day you wrote it up rather than the day you
+      -- did it is the fault this exists to fix.
+      started_at = COALESCE(p_started_at, started_at),
+      logged_at = COALESCE(p_started_at, logged_at),
+      session_type = COALESCE(p_session_type, session_type),
+      distance_km = p_distance_km
   WHERE id = p_workout_id;
 
   RETURN p_workout_id;
@@ -940,14 +951,16 @@ END $$;
 
 -- Nobody but a signed-in person, and never the anonymous role.
 REVOKE ALL ON FUNCTION finish_program_workout(
-  UUID, TIMESTAMPTZ, INTEGER, SMALLINT, SMALLINT, TEXT, JSONB, JSONB, JSONB, INTEGER, JSONB, JSONB
+  UUID, TIMESTAMPTZ, INTEGER, SMALLINT, SMALLINT, TEXT, JSONB, JSONB, JSONB, INTEGER, JSONB, JSONB,
+  TIMESTAMPTZ, TEXT, NUMERIC
 ) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION finish_program_workout(
-  UUID, TIMESTAMPTZ, INTEGER, SMALLINT, SMALLINT, TEXT, JSONB, JSONB, JSONB, INTEGER, JSONB, JSONB
+  UUID, TIMESTAMPTZ, INTEGER, SMALLINT, SMALLINT, TEXT, JSONB, JSONB, JSONB, INTEGER, JSONB, JSONB,
+  TIMESTAMPTZ, TEXT, NUMERIC
 ) TO authenticated;
 
 COMMENT ON FUNCTION finish_program_workout IS
-  'Closes a live workout, moves the program''s weights and writes the receipt the screen showed — all in one transaction. Refuses a second call for the same workout, so a retry cannot advance the program twice.';
+  'Closes a live workout, moves the program''s weights and writes the receipt the screen showed — all in one transaction. Refuses a second call for the same workout, so a retry cannot advance the program twice. Also sets, when given: the start instant (started_at and logged_at together, so a session written up later is filed under the day it happened), the session kind, and the distance.';
 
 -- ---------------------------------------------------------------------------
 -- refuse_to_pause_a_busy_program, copied from the migration that defines it:

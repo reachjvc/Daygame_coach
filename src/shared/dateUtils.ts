@@ -333,3 +333,35 @@ export function localTimeInstant(dateISO: string, timeHHMM: string, timezone: st
     return new Date(asUTC).toISOString()
   }
 }
+
+/**
+ * A STORED INSTANT, SHOWN AS A WALL-CLOCK TIME THE ACCOUNT WOULD RECOGNISE.
+ *
+ * `YYYY-MM-DDTHH:mm` — what an `<input type="datetime-local">` reads and
+ * writes. The finish sheet built this with the BROWSER's clock, so somebody
+ * who trained at 18:00 in Copenhagen and opened the app on a laptop still set
+ * to Tokyo was shown 01:00 the next day, and correcting it "fixed" a time that
+ * had been right.
+ *
+ * Everything else in this app files a workout by the account's timezone
+ * (`loggedAtForEntry`, `workoutDay`). This is the pair that makes the one
+ * screen where a person TYPES a time agree with them.
+ */
+export function instantToWallClock(iso: string, timezone: string): string {
+  const at = toZonedDate(new Date(iso), timezone)
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}T${pad(at.getHours())}:${pad(at.getMinutes())}`
+}
+
+/**
+ * The other direction: a typed wall-clock time, read in the account's zone.
+ *
+ * `new Date("2026-09-15T18:00")` reads that string in whatever zone the DEVICE
+ * is in. `localTimeInstant` resolves it in the zone given, including across a
+ * DST change, which is the case that makes a naive implementation wrong twice
+ * a year rather than never.
+ */
+export function wallClockToInstant(dateTimeLocal: string, timezone: string): string {
+  const [date, time = "00:00"] = dateTimeLocal.split("T")
+  return localTimeInstant(date, time, timezone)
+}

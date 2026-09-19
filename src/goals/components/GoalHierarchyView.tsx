@@ -148,10 +148,23 @@ export function GoalHierarchyView({
               </div>
             )}
 
-            {/* Health Tracking — only for health_fitness sections, outside customize mode */}
-            {section.l1Goal.life_area === "health_fitness" && !isCustomizeMode && (
-              <HealthTrackingPanel />
-            )}
+            {/*
+              HEALTH TRACKING — and the value it compares against was never
+              produced by anything.
+
+              `life_area` is written by `areaSlug` (northStarTrackService.ts),
+              which strips the "lm_" prefix — so Life Mastery's `lm_health` and
+              `lm_fitness` areas arrive here as "health" and "fitness". The
+              string "health_fitness" exists only in `metricCatalog.ts`, which
+              is an unrelated vocabulary. So this panel — weight, sleep, the
+              training card — rendered for nobody, unless somebody happened to
+              create a custom area they named "Health & Fitness".
+
+              Named rather than pattern-matched, so a third area cannot join by
+              accident.
+            */}
+            {(section.l1Goal.life_area === "health" || section.l1Goal.life_area === "fitness") &&
+              !isCustomizeMode && <HealthTrackingPanel />}
 
             {/* Goal Categories */}
             <div className="space-y-4">

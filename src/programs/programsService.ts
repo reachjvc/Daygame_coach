@@ -2272,6 +2272,17 @@ export function unfinishedLifts(
 export const STALE_WORKOUT_HOURS = 6
 
 /**
+ * ONE OWNER FOR THE SIX-HOUR RULE.
+ *
+ * It existed twice — here, and as a private `STALE_HOURS = 6` inside
+ * `TodayCard.tsx`. Two constants for one rule is two rules waiting to
+ * disagree, on two screens that describe the same workout.
+ */
+export function isStaleWorkout(startedAt: string, now: Date = new Date()): boolean {
+  return now.getTime() - new Date(startedAt).getTime() > STALE_WORKOUT_HOURS * 3_600_000
+}
+
+/**
  * WHICH PROGRAM THE CARD IS ABOUT — a rule, not a position in a list.
  *
  * It was `enrollments[0]`: the most recently started, whatever that happened
@@ -2419,7 +2430,8 @@ export function trainingCardState(facts: TrainingDoorFacts, now: Date = new Date
       setsAsked: facts.live.setsAsked,
       also,
     }
-    return elapsed > STALE_WORKOUT_HOURS * 3_600_000
+    void elapsed
+    return isStaleWorkout(facts.live.startedAt, now)
       ? { kind: "stale", ...open }
       : { kind: "live", ...open }
   }
