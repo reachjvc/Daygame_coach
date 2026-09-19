@@ -47,6 +47,16 @@ interface SavedDesign {
   schedule: ProgramSchedule
   unit: UnitSystem
   weights: Record<string, string>
+  /**
+   * The enrollment this design started, if it ever did.
+   *
+   * WHY IT IS SAVED RATHER THAN HELD IN STATE. The builder's own "started"
+   * flag returned to idle on every remount, so the green Start sat armed the
+   * next day — and pressing it silently paused the copy you were weeks into
+   * and began a fresh one from your typed weights. Optional, so a design saved
+   * before this existed still loads.
+   */
+  enrollmentId?: string | null
 }
 
 function load(raw: string | null): SavedDesign | null {
@@ -77,6 +87,8 @@ export function BuildYourOwn({
   const [schedule, setSchedule] = useState<ProgramSchedule>(emptyCustomSchedule)
   const [unit, setUnit] = useState<UnitSystem>("kg")
   const [weights, setWeights] = useState<Record<string, string>>({})
+  /** Which enrollment this design started, so Start does not stay armed. */
+  const [startedEnrollmentId, setStartedEnrollmentId] = useState<string | null>(null)
   /**
    * SEPARATE STORAGE FROM THE DESIGN, on purpose.
    *
@@ -94,6 +106,7 @@ export function BuildYourOwn({
       setSchedule(saved.schedule)
       setUnit(saved.unit)
       setWeights(saved.weights)
+      setStartedEnrollmentId(saved.enrollmentId ?? null)
     }
     setOwnLifts(parseCustomLifts(window.localStorage.getItem(CUSTOM_LIFTS_STORAGE_KEY)))
     setLoaded(true)
@@ -103,8 +116,11 @@ export function BuildYourOwn({
   // saved one on every refresh — the same trap the plan itself guards against.
   useEffect(() => {
     if (!loaded) return
-    window.localStorage.setItem(BUILDER_STORAGE_KEY, JSON.stringify({ schedule, unit, weights }))
-  }, [schedule, unit, weights, loaded])
+    window.localStorage.setItem(
+      BUILDER_STORAGE_KEY,
+      JSON.stringify({ schedule, unit, weights, enrollmentId: startedEnrollmentId })
+    )
+  }, [schedule, unit, weights, startedEnrollmentId, loaded])
 
   useEffect(() => {
     if (!loaded) return
@@ -132,6 +148,9 @@ export function BuildYourOwn({
               setSchedule(d.schedule)
               setUnit(d.unit)
               setWeights(d.weights)
+              // A week loaded from the saved list is not the one that started
+              // whatever is running, so the recorded id does not follow it.
+              setStartedEnrollmentId(null)
             }}
           />
         )}
@@ -153,6 +172,8 @@ export function BuildYourOwn({
             }}
             onForget={(id) => setOwnLifts((cur) => forgetCustomLift(cur, id))}
             onStarted={onProgramStarted}
+            startedEnrollmentId={startedEnrollmentId}
+            onStartedEnrollment={setStartedEnrollmentId}
           />
         )}
       </div>

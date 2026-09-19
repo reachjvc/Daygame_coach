@@ -21,6 +21,7 @@ import {
   WEEKDAY_SHORT,
 } from "./config"
 import { libraryByName } from "./data/exerciseLibrary"
+import { CUSTOM_PROGRAM_ID } from "./data/customProgram"
 import type {
   ApplyLogResult,
   DayTemplate,
@@ -208,6 +209,74 @@ export function weekSoFar(
     todayWeekday: isoWeekdayInTimezone(timezone, now),
     trainedWeekdays: [...trained].sort((a, b) => a - b),
   }
+}
+
+/**
+ * IS THE WEEK IN THE BUILDER ALREADY RUNNING?
+ *
+ * The builder's "started" state was component state, so it returned to "idle"
+ * the moment anything remounted it — and the design saved in the browser was
+ * never marked as started at all. Come back the next day, press the armed
+ * green Start again, and you have silently paused the copy you were three
+ * weeks into and begun a fresh one from your typed weights.
+ *
+ * TWO WAYS TO MATCH, in order. The design records the enrollment it started,
+ * which is exact. Failing that — a design saved before the id was recorded, or
+ * one restored on another device — the week is compared STRUCTURALLY against
+ * every running self-built program.
+ *
+ * Weights are deliberately not compared: after one session the enrollment's
+ * weights have moved on, so any comparison including them would stop matching
+ * exactly when it mattered most. Nor is `JSON.stringify` used — it would make
+ * the answer depend on key order, which is luck, not equality.
+ */
+export function runningCopyOf(
+  design: { enrollmentId: string | null; schedule: ProgramSchedule },
+  active: ProgramEnrollment[]
+): ProgramEnrollment | null {
+  if (design.enrollmentId) {
+    const byId = active.find((e) => e.id === design.enrollmentId)
+    if (byId) return byId
+  }
+  return (
+    active.find(
+      (e) => e.program_id === CUSTOM_PROGRAM_ID && e.customSchedule && sameWeek(e.customSchedule, design.schedule)
+    ) ?? null
+  )
+}
+
+/**
+ * Two weeks are the same week when their days and lifts are, in order.
+ *
+ * Day ids, labels and weekday pins; each day's lifts by id, name and scheme.
+ * Not the weights, and not the progression rules — a week you edited the
+ * increment on is still the week you started.
+ */
+export function sameWeek(a: ProgramSchedule, b: ProgramSchedule): boolean {
+  const left = scheduleDaysOrNone(a)
+  const right = scheduleDaysOrNone(b)
+  if (left.length === 0 || left.length !== right.length) return false
+
+  return left.every((day, i) => {
+    const other = right[i]
+    if (day.id !== other.id || day.label !== other.label) return false
+    if ((day as DayTemplate).weekday !== (other as DayTemplate).weekday) return false
+    if (day.exercises.length !== other.exercises.length) return false
+    return day.exercises.every((ex, j) => {
+      const mine = other.exercises[j]
+      if (ex.id !== mine.id || ex.name !== mine.name) return false
+      return JSON.stringify(sortedScheme(ex)) === JSON.stringify(sortedScheme(mine))
+    })
+  })
+}
+
+/** A scheme with its keys in a fixed order, so equality is not key-order luck. */
+function sortedScheme(exercise: unknown): unknown {
+  const scheme = (exercise as { scheme?: Record<string, unknown> }).scheme
+  if (!scheme) return null
+  return Object.keys(scheme)
+    .sort()
+    .map((k) => [k, scheme[k]])
 }
 
 /**

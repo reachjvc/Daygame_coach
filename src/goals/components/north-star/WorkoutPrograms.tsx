@@ -32,7 +32,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Check, Loader2 } from "lucide-react"
 import { DISCIPLINES, LEVEL_LABELS } from "@/src/programs/config"
-import { getProgram, programsByDiscipline, requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
+import { enrollmentName, programsByDiscipline, requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
 import {
   isCustomizable,
   isModified,
@@ -236,7 +236,9 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded }: Props) {
        * nothing on any screen to say where it went.
        */
       const displaced = created?.displaced ?? []
-      setDisplacedNames(displaced.map((d) => getProgram(d.program_id)?.name ?? d.program_id))
+      // `enrollmentName`, so a displaced self-built week is named by what you
+      // called it rather than by the shell every one of them shares.
+      setDisplacedNames(displaced.map(enrollmentName))
       // The id and nothing else. The name, the days and the start date are all
       // read live from it — copying them is what let a program renamed on the
       // Training page keep its old name here.

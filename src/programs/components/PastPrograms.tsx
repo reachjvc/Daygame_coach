@@ -16,7 +16,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { getProgram, enrollmentName } from "../data/catalog"
+import { enrollmentName } from "../data/catalog"
 import { LEVEL_LABELS } from "../config"
 import type { ProgramEnrollment } from "../types"
 import { restartProgram, deletePastProgram } from "../programActions"
@@ -103,7 +103,7 @@ export function PastPrograms({
       // being silently swapped is the fault this whole feature is recovering from.
       const displaced = res.data?.displaced ?? []
       if (displaced.length > 0) {
-        const names = displaced.map((d) => getProgram(d.program_id)?.name ?? d.program_id).join(", ")
+        const names = displaced.map(enrollmentName).join(", ")
         alert(`${name} is running again. ${names} moved to your finished programs — everything it logged is kept.`)
       }
       onResumed?.()

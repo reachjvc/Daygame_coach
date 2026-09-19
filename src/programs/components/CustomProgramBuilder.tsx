@@ -67,6 +67,17 @@ import {
 } from "../data/exerciseLibrary"
 import { searchCustomLifts } from "../customLifts"
 import { refreshEnrollments, useActiveEnrollments } from "../hooks/useEnrollment"
+import { enrollmentName } from "../data/catalog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { runningCopyOf } from "../programsService"
 import { CUSTOM_PROGRAM_ID } from "../data/customProgram"
 import { WEEKDAYS } from "../config"
 import {
@@ -114,8 +125,18 @@ interface Props {
   ownLifts: LibraryExercise[]
   onRememberLift: (entry: LibraryExercise) => void
   onForget: (id: string) => void
-  /** Day names go into the plan's workout routine once it is started. */
+  /** The reference goes into the plan's workout routine once it is started. */
   onStarted: (program: NsRoutineProgram | null) => void
+  /**
+   * The enrollment this design started, if it has ever been started.
+   *
+   * Kept by the caller, in the saved design, because the builder's own
+   * "started" flag was component state: it returned to idle on every remount,
+   * so the armed green Start sat there the next day waiting to silently pause
+   * the copy you were three weeks into.
+   */
+  startedEnrollmentId?: string | null
+  onStartedEnrollment?: (enrollmentId: string) => void
 }
 
 export function CustomProgramBuilder({
@@ -130,8 +151,15 @@ export function CustomProgramBuilder({
   onRememberLift,
   onForget,
   onStarted,
+  startedEnrollmentId = null,
+  onStartedEnrollment,
 }: Props) {
   const [newDay, setNewDay] = useState("")
+  /** The "Name this week" dialog, and what has been typed into it. */
+  const [naming, setNaming] = useState(false)
+  const [typedName, setTypedName] = useState("")
+  /** What starting this week pushed aside, so it can be said out loud. */
+  const [displacedNames, setDisplacedNames] = useState<string[]>([])
   /**
    * The written form, while it is being edited.
    *
@@ -181,7 +209,20 @@ export function CustomProgramBuilder({
   const missingWeights = allLifts.filter((e) => !hasWeight(weights, e.id))
   // See WorkoutPrograms: starting pauses whatever is running, so it is off
   // while the app cannot see what that is.
-  const { error: runningUnknown } = useActiveEnrollments()
+  const { enrollments, error: runningUnknown } = useActiveEnrollments()
+
+  /** The running copy of THIS week, if there is one. */
+  const running = runningCopyOf({ enrollmentId: startedEnrollmentId, schedule }, enrollments)
+
+  /**
+   * What to call it, offered rather than imposed.
+   *
+   * The day labels, never a date: a name that embeds "today" depends on whose
+   * clock made it, and this one is made in the browser.
+   */
+  const suggestedName = scheduleDays(schedule)
+    .map((d) => d.label)
+    .join(" / ")
   const canStart =
     problems.length === 0 && missingWeights.length === 0 && state !== "saving" && !runningUnknown
 
@@ -215,9 +256,10 @@ export function CustomProgramBuilder({
     setNewDay("")
   }
 
-  async function start() {
+  async function start(label: string) {
     setState("saving")
     setError(null)
+    setNaming(false)
     try {
       const res = await fetch("/api/programs/enrollments", {
         method: "POST",
@@ -228,6 +270,10 @@ export function CustomProgramBuilder({
           unitSystem: unit,
           workingWeights: numericWeights(weights),
           customSchedule: schedule,
+          // THE NAME. Without it every week you write is called "Your own
+          // program" — the shared catalogue shell — on every screen at once.
+          // The server refuses a custom start without one.
+          label,
         }),
       })
       if (res.status === 401) {
@@ -243,7 +289,10 @@ export function CustomProgramBuilder({
       }
       // Same as the catalogue path: hand the plan the row, not just the names.
       const created = (await res.json().catch(() => null)) as
-        | { enrollment?: { id: string; program_id: string; started_at: string } }
+        | {
+            enrollment?: { id: string; program_id: string; started_at: string }
+            displaced?: { program_id: string; label?: string | null }[]
+          }
         | null
       // Same reason as the catalogue path: the shared list must be re-read or
       // every other surface keeps showing what was running a moment ago.
@@ -251,6 +300,11 @@ export function CustomProgramBuilder({
       // The hard-coded "Your program" went with the copies: the week's real
       // name now comes from the enrollment, which the server makes you give.
       onStarted(created?.enrollment ? { enrollmentId: created.enrollment.id } : null)
+      // Recorded on the DESIGN, so the next mount knows this week is running.
+      if (created?.enrollment) onStartedEnrollment?.(created.enrollment.id)
+      // SAY WHAT IT PAUSED, as the catalogue path already does. Being silently
+      // swapped is the fault this whole area is recovering from.
+      setDisplacedNames((created?.displaced ?? []).map(enrollmentName))
       setState("done")
     } catch {
       setError("Could not reach the server. Nothing was started.")
@@ -418,12 +472,54 @@ export function CustomProgramBuilder({
             </div>
           ) : (
             <div className="flex flex-wrap items-center gap-2.5">
-              <Action onClick={start} disabled={!canStart} variant="primary">
+              {running ? (
+                /**
+                 * ALREADY RUNNING — so Start is not offered.
+                 *
+                 * This is what the armed green button used to be: press it a
+                 * second time and the copy you were weeks into was silently
+                 * paused and a fresh one begun from your typed weights.
+                 */
+                <div className="flex flex-wrap items-center gap-2.5" data-testid="builder-already-running">
+                  <span className="text-[12.5px] text-sky-300/90">
+                    Running since {new Date(running.started_at).toLocaleDateString()}
+                  </span>
+                  <Link
+                    href="/programs"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-sky-400/40 bg-sky-500/10 px-3 py-1.5 text-[12.5px] text-sky-200 transition-colors hover:bg-sky-500/20"
+                  >
+                    Go to today&apos;s session
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (
+                        !confirm("This pauses the copy you are on and starts from your typed weights.")
+                      )
+                        return
+                      setTypedName(suggestedName)
+                      setNaming(true)
+                    }}
+                    className="text-[11px] text-zinc-400 underline underline-offset-2 hover:text-zinc-200"
+                  >
+                    Start a fresh copy
+                  </button>
+                </div>
+              ) : (
+              <Action
+                onClick={() => {
+                  setTypedName(suggestedName)
+                  setNaming(true)
+                }}
+                disabled={!canStart}
+                variant="primary"
+              >
                 <span className="inline-flex items-center gap-1.5">
                   {state === "saving" && <Loader2 className="size-3 animate-spin" />}
                   Start tracking this
                 </span>
               </Action>
+              )}
               {runningUnknown ? (
                 <span className="text-[11px] text-amber-300/80">
                   Start is off until your programs can be checked — starting now could pause one you
@@ -440,6 +536,12 @@ export function CustomProgramBuilder({
               ) : null}
             </div>
           )}
+          {displacedNames.length > 0 && (
+            <p className="text-[11px] text-amber-300/80" data-testid="builder-displaced">
+              {displacedNames.join(", ")} moved to your finished programs — everything it logged is
+              kept.
+            </p>
+          )}
           <p className={TYPE.hint}>
             Starting saves it to your account, so you will need to be signed in. Nothing here is
             guessed for you — every lift needs a starting weight, because there is no cited program to
@@ -447,6 +549,39 @@ export function CustomProgramBuilder({
           </p>
         </div>
       )}
+
+      {/* NAME IT BEFORE IT STARTS. Without a name every week somebody writes
+          is called "Your own program" — the shared catalogue shell — in the
+          live header, in History and on the Tracking card at once. */}
+      <Dialog open={naming} onOpenChange={setNaming}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Name this week</DialogTitle>
+            <DialogDescription>
+              This is what it will be called on Training, on Tracking and in your history.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={typedName}
+            onChange={(e) => setTypedName(e.target.value)}
+            // Not "Name this week", which is the dialog's own title — two
+            // things with one accessible name is ambiguous to a screen reader
+            // and to anybody searching the page for the box.
+            aria-label="Week name"
+            className="h-11"
+            placeholder={suggestedName}
+          />
+          <DialogFooter>
+            <Action
+              onClick={() => void start(typedName.trim())}
+              disabled={typedName.trim().length === 0}
+              variant="primary"
+            >
+              Start tracking this
+            </Action>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

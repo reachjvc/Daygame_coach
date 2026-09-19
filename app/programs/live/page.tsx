@@ -9,8 +9,8 @@
 import { redirect } from "next/navigation"
 import { requireAuth } from "@/src/db/auth"
 import { getLiveWorkout, prescriptionForDay } from "@/src/db/workoutRepo"
-import { getSessionLogs } from "@/src/db/programRepo"
-import { getProgram } from "@/src/programs/data/catalog"
+import { getEnrollmentById, getSessionLogs } from "@/src/db/programRepo"
+import { enrollmentName } from "@/src/programs/data/catalog"
 import { LiveWorkoutScreen } from "@/src/programs/components/live/LiveWorkoutScreen"
 import { lastSetsPerLift } from "@/src/programs/programsService"
 import type { PlateSetup, SessionPrescription, UnitSystem } from "@/src/programs/types"
@@ -43,7 +43,16 @@ export default async function LiveWorkoutPage() {
     prescription = resolved.prescription
     unit = resolved.unit
     plates = resolved.plates
-    programName = getProgram(prescription.programId)?.name ?? null
+    /**
+     * NAMED BY THE ENROLLMENT, not by the catalogue entry behind it.
+     *
+     * Every self-built week is `program_id: "custom"`, whose catalogue entry is
+     * the shared shell called "Your own program" — so the header above a
+     * session read "Your own program" for three different weeks at once, and
+     * for the one you had carefully named.
+     */
+    const enrollment = await getEnrollmentById(auth.userId, live.enrollmentId)
+    programName = enrollment ? enrollmentName(enrollment) : null
     // What each lift did last time, so the number you are deciding against sits
     // beside the box you are typing in.
     lastTime = lastSetsPerLift(await getSessionLogs(auth.userId, live.enrollmentId))
