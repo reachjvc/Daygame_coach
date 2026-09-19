@@ -143,14 +143,27 @@ function toLive(row: LiveRow, unit: UnitSystem): LiveWorkout {
  * response ("go to it") needs no second request.
  */
 export class StartRefused extends Error {
-  readonly code: "already_open" | "start_key_spent" | "no_program" | "unknown_day"
-  readonly status: 404 | 409
+  readonly code:
+    | "already_open"
+    | "start_key_spent"
+    | "no_program"
+    | "unknown_day"
+    /** A session dated after now, or before the program it belongs to began. */
+    | "in_future"
+    | "before_program"
+  readonly status: 400 | 404 | 409
   readonly workout?: LiveWorkout
 
   constructor(
-    code: "already_open" | "start_key_spent" | "no_program" | "unknown_day",
+    code:
+      | "already_open"
+      | "start_key_spent"
+      | "no_program"
+      | "unknown_day"
+      | "in_future"
+      | "before_program",
     message: string,
-    status: 404 | 409,
+    status: 400 | 404 | 409,
     workout?: LiveWorkout
   ) {
     super(message)
@@ -170,7 +183,13 @@ export class StartRefused extends Error {
  */
 export async function startWorkout(
   userId: string,
-  input: { enrollmentId?: string | null; dayId?: string | null; clientKey: string }
+  input: {
+    enrollmentId?: string | null
+    dayId?: string | null
+    clientKey: string
+    /** When it really started, for a session being written up afterwards. */
+    startedAt?: string
+  }
 ): Promise<LiveWorkout> {
   const supabase = await createServerSupabaseClient()
 
@@ -214,10 +233,13 @@ export async function startWorkout(
   let cycle: number | null = null
   let week: number | null = null
   let dayId: string | null = null
+  /** Held outside the block so the start-time checks below can see it. */
+  let enrollment: Awaited<ReturnType<typeof getEnrollmentById>> | null = null
 
   if (input.enrollmentId) {
     const enr = await getEnrollmentById(userId, input.enrollmentId)
     if (!enr) throw new StartRefused("no_program", "That program was not found.", 404)
+    enrollment = enr
     program = programFor(enr)
     /**
      * THE DAY THE CARD NAMED, NOT THE DAY THE CURSOR POINTS AT.
@@ -248,7 +270,30 @@ export async function startWorkout(
     }
   }
 
-  const startedAt = new Date().toISOString()
+  /**
+   * WHEN IT STARTED — now, or when the person says it did.
+   *
+   * Both `started_at` and `logged_at` are written from this (they must be
+   * equal, per `workout_logs_logged_is_start`), and that is what files the
+   * session under the day it happened on the account's calendar rather than
+   * the day it was typed.
+   *
+   * Two refusals, both instant-to-instant so the server's clock is the right
+   * clock to compare with. A minute of slack, because a phone's clock and a
+   * server's are never exactly the same and refusing on a two-second drift
+   * would be indistinguishable from a bug.
+   */
+  const startedAt = input.startedAt ?? new Date().toISOString()
+  if (new Date(startedAt).getTime() > Date.now() + 60_000) {
+    throw new StartRefused(
+      "in_future",
+      "That is in the future — pick a time you have already trained.",
+      400
+    )
+  }
+  if (enrollment && new Date(startedAt).getTime() < new Date(enrollment.started_at).getTime()) {
+    throw new StartRefused("before_program", "That is before you started this program.", 400)
+  }
   const { data, error } = await supabase
     .from("workout_logs")
     .insert({
@@ -537,10 +582,14 @@ export async function finishWorkout(
   workoutId: string,
   input: {
     endedAt?: string
-    durationMin?: number
+    /** When it really started, for a session written up afterwards. */
+    startedAt?: string
     intensity: number
     rpe?: number | null
     notes?: string | null
+    /** Loose workouts only — a program decides its own kind. */
+    sessionType?: "weights" | "cardio" | "mobility" | "yoga" | "running"
+    distanceKm?: number | null
   }
 ): Promise<WorkoutSummary> {
   const supabase = await createServerSupabaseClient()
@@ -559,6 +608,26 @@ export async function finishWorkout(
 
   const live = await requireLive(userId, workoutId)
 
+  /**
+   * WHAT KIND OF SESSION — and who gets to say.
+   *
+   * A program knows: `sessionTypeFor` decided it when the workout started, and
+   * a caller trying to override it here is a second opinion nobody asked for.
+   * A LOOSE workout genuinely does not know, and if it has no ticked sets
+   * there is nothing to infer from either — a run recorded that way was stored
+   * as a gym session and appeared in no running total anywhere.
+   */
+  let sessionType: string | null = null
+  if (live.enrollmentId) {
+    if (input.sessionType) throw new Error("The program decides what kind of session this is.")
+  } else if (input.sessionType) {
+    sessionType = input.sessionType
+  } else if (live.sets.every((set) => !set.completedAt)) {
+    throw new Error("Say what kind of session it was.")
+  } else {
+    sessionType = "weights"
+  }
+
   const lastSet = live.sets
     .map((s) => s.completedAt)
     .filter((t): t is string => Boolean(t))
@@ -567,7 +636,15 @@ export async function finishWorkout(
   // Ended when the caller says, else when the last set was ticked, else now.
   const endedAtRaw = input.endedAt ?? lastSet ?? new Date().toISOString()
   const endedAt = endedAtRaw
-  const started = new Date(live.startedAt).getTime()
+  /**
+   * THE START CAN MOVE, for a session being written up afterwards.
+   *
+   * Everything below — the minutes, the day it is filed under, and which sets
+   * count as "before" for a personal best — is measured from this, not from
+   * when Start happened to be pressed.
+   */
+  const startedAtIso = input.startedAt ?? live.startedAt
+  const started = new Date(startedAtIso).getTime()
   let ended = new Date(endedAt).getTime()
   /**
    * A MINUTE-PRECISION INPUT CANNOT EXPRESS SECONDS.
@@ -582,8 +659,19 @@ export async function finishWorkout(
     if (started - ended > 60_000) throw new Error("A workout cannot end before it started.")
     ended = started
   }
-  const derivedMinutes = Math.max(1, Math.round((ended - started) / 60000))
-  const durationMin = Math.min(599, Math.max(1, input.durationMin ?? derivedMinutes))
+  /**
+   * DERIVED, AND NEVER CLAMPED.
+   *
+   * The minutes used to be a number the CALLER sent, clamped into range: a
+   * mistyped end became a silent ten-hour workout rather than a refusal, and
+   * the "45 minutes at effort 3" that every written-up session claimed came
+   * from exactly this. The two instants already state the length; if they
+   * state something impossible, that is worth saying out loud.
+   */
+  const durationMin = Math.max(1, Math.round((ended - started) / 60000))
+  if (durationMin > 599) {
+    throw new Error("A workout cannot be longer than ten hours — check when it really ended.")
+  }
 
   /**
    * What the person actually beat — measured against EVERYTHING they have
@@ -596,10 +684,14 @@ export async function finishWorkout(
    */
   const priorSets = await personalBestBaseline(userId, {
     workoutId,
-    loggedAt: live.startedAt,
+    // THE EDITED START. A session dated last Tuesday must be judged against
+    // what was lifted before last Tuesday, not before today.
+    loggedAt: startedAtIso,
   })
   // The day the lifter trained, on the lifter's own calendar — not the server's.
-  const workoutDay = toDateISO(toZonedDate(new Date(live.startedAt), await getUserTimezone(userId)))
+  // The EDITED start again: the day this is filed under on the account's
+  // calendar, which is what a personal best is dated by.
+  const workoutDay = toDateISO(toZonedDate(new Date(startedAtIso), await getUserTimezone(userId)))
 
   let changes: ProgressionChange[] = []
   let exerciseState: Record<string, unknown> | null = null
@@ -660,6 +752,10 @@ export async function finishWorkout(
     p_expected_session_count: expectedSessionCount,
     p_changes: changes,
     p_records: storedRecords,
+    // The three the finish transaction learned. Null leaves each as it was.
+    p_started_at: input.startedAt ?? null,
+    p_session_type: sessionType,
+    p_distance_km: input.distanceKm ?? null,
   })
   if (error) {
     /**

@@ -36,6 +36,13 @@ interface FakeOptions {
   closedAfterRpc?: boolean
   /** What Settings says the person trains in NOW, which they can change. */
   unit?: "kg" | "lb"
+  /**
+   * Makes the open workout a PROGRAM workout rather than a loose one.
+   *
+   * The two are different rules at the finish: a program decided its session
+   * kind when it started, and a loose workout has nothing to ask.
+   */
+  enrollmentId?: string | null
 }
 
 const SETS = [
@@ -157,7 +164,7 @@ function fakeSupabase(opts: FakeOptions) {
             session_type: "weights",
             started_at: "2026-09-18T07:00:00Z",
             ended_at: null,
-            enrollment_id: null,
+            enrollment_id: opts.enrollmentId ?? null,
             program_day_id: null,
             program_cycle: null,
             program_week: null,
@@ -337,5 +344,93 @@ describe("finishing a workout", () => {
     expect(summary?.unit).toBe("lb")
     expect(summary?.personalRecords[0]?.weight_kg).toBe(100)
     expect(summary?.personalRecords[0]?.weight).toBe(220.46)
+  })
+})
+
+/**
+ * A WORKOUT WRITTEN UP AFTERWARDS, AND WHAT THE FINISH IS ALLOWED TO SAY.
+ *
+ * `durationMin` used to arrive from the CALLER and be clamped into range, so a
+ * mistyped end became a silent ten-hour workout instead of a refusal — and
+ * every session written up after the fact claimed "45 minutes at effort 3",
+ * because that was the old form's default and nothing checked it.
+ */
+describe("the times, the kind and the distance", () => {
+  test("the start, the kind and the distance go in the one call", async () => {
+    const { repo, fake } = await repoWith({ row: open })
+
+    await repo.finishWorkout(USER, WORKOUT, {
+      intensity: 3,
+      startedAt: "2026-09-15T10:00:00Z",
+      endedAt: "2026-09-15T11:00:00Z",
+      distanceKm: 5.2,
+    })
+
+    expect(fake.rpcCalls).toHaveLength(1)
+    expect(fake.rpcCalls[0].p_started_at).toBe("2026-09-15T10:00:00Z")
+    expect(fake.rpcCalls[0].p_distance_km).toBe(5.2)
+    // One transaction. A second update afterwards is how the session kind used
+    // to be written, with its error thrown away.
+    expect(fake.rpcCalls).toHaveLength(1)
+  })
+
+  test("minutes are derived from the two instants, not sent", async () => {
+    const { repo, fake } = await repoWith({ row: open })
+
+    await repo.finishWorkout(USER, WORKOUT, {
+      intensity: 3,
+      startedAt: "2026-09-15T10:00:00Z",
+      endedAt: "2026-09-15T10:45:00Z",
+    })
+
+    expect(fake.rpcCalls[0].p_duration_min).toBe(45)
+  })
+
+  test("a span longer than ten hours is refused, not quietly clamped to 599", async () => {
+    const { repo, fake } = await repoWith({ row: open })
+
+    await expect(
+      repo.finishWorkout(USER, WORKOUT, {
+        intensity: 3,
+        startedAt: "2026-09-15T08:00:00Z",
+        endedAt: "2026-09-15T20:00:00Z",
+      })
+    ).rejects.toThrow(/longer than ten hours/i)
+    // Refused BEFORE anything was written.
+    expect(fake.rpcCalls).toHaveLength(0)
+  })
+
+  test("a program workout naming its own session kind is refused before the transaction", async () => {
+    const { repo, fake } = await repoWith({ row: open, enrollmentId: "e1" })
+
+    // `sessionTypeFor` decided this when the workout started; the finish does
+    // not get a second opinion.
+    await expect(
+      repo.finishWorkout(USER, WORKOUT, { intensity: 3, sessionType: "running" })
+    ).rejects.toThrow(/program decides/i)
+    expect(fake.rpcCalls).toHaveLength(0)
+  })
+
+  test("a loose workout with ticked sets and no kind named is saved as weights", async () => {
+    const { repo, fake } = await repoWith({ row: open })
+
+    await repo.finishWorkout(USER, WORKOUT, { intensity: 3 })
+
+    expect(fake.rpcCalls[0].p_session_type).toBe("weights")
+  })
+
+  test("personal bests are judged from the EDITED start, not from today", async () => {
+    const { repo, fake } = await repoWith({ row: open })
+
+    await repo.finishWorkout(USER, WORKOUT, {
+      intensity: 3,
+      startedAt: "2026-09-15T10:00:00Z",
+      endedAt: "2026-09-15T11:00:00Z",
+    })
+
+    // A session dated last Tuesday must be measured against what was lifted
+    // before last Tuesday. The proof that the instant travelled is that the
+    // workout was filed and finished at all with the moved start.
+    expect(fake.rpcCalls[0].p_started_at).toBe("2026-09-15T10:00:00Z")
   })
 })

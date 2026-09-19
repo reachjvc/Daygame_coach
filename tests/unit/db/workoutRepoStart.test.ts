@@ -340,3 +340,71 @@ describe("what a workout counts as", () => {
     expect(loose.fake.inserted[0].session_type).toBe("weights")
   })
 })
+
+/**
+ * WRITING UP A SESSION THAT ALREADY HAPPENED.
+ *
+ * `started_at` was `new Date().toISOString()` with no way to say otherwise, so
+ * Tuesday's session written up on Thursday was filed under Thursday — and
+ * everything downstream (which day it counts for, which sets count as "before"
+ * for a personal best) followed the wrong date.
+ *
+ * Both columns move together because `workout_logs_logged_is_start` requires
+ * it, and because the day a workout is filed under is `logged_at`.
+ */
+describe("a workout that happened earlier", () => {
+  test("is inserted with started_at and logged_at both equal to the time given", async () => {
+    vi.resetModules()
+    const { repo, fake } = await startWith({})
+
+    await repo.startWorkout(USER, { clientKey: "k1", startedAt: "2026-09-15T10:00:00.000Z" })
+
+    expect(fake.inserted[0].started_at).toBe("2026-09-15T10:00:00.000Z")
+    expect(fake.inserted[0].logged_at).toBe("2026-09-15T10:00:00.000Z")
+  })
+
+  test("a start in the future is refused, and nothing is inserted", async () => {
+    vi.resetModules()
+    const { repo, fake } = await startWith({})
+    const tomorrow = new Date(Date.now() + 24 * 3_600_000).toISOString()
+
+    await expect(repo.startWorkout(USER, { clientKey: "k1", startedAt: tomorrow })).rejects.toThrow(
+      /in the future/i
+    )
+    expect(fake.inserted).toHaveLength(0)
+  })
+
+  test("a clock a minute out is not a session in the future", async () => {
+    // A phone's clock and a server's are never exactly the same, and refusing
+    // on a two-second drift is indistinguishable from a bug.
+    vi.resetModules()
+    const { repo, fake } = await startWith({})
+    const soon = new Date(Date.now() + 30_000).toISOString()
+
+    await repo.startWorkout(USER, { clientKey: "k1", startedAt: soon })
+    expect(fake.inserted).toHaveLength(1)
+  })
+
+  test("a program session dated before the program began is refused", async () => {
+    vi.resetModules()
+    const { repo, fake } = await startWith({ enrollment: enrollmentRow() })
+
+    await expect(
+      repo.startWorkout(USER, {
+        enrollmentId: "e1",
+        clientKey: "k1",
+        // The enrollment started 2026-09-01.
+        startedAt: "2026-08-20T10:00:00.000Z",
+      })
+    ).rejects.toThrow(/before you started this program/i)
+    expect(fake.inserted).toHaveLength(0)
+  })
+
+  test("a loose workout has no program to be before, so any past time is fine", async () => {
+    vi.resetModules()
+    const { repo, fake } = await startWith({})
+
+    await repo.startWorkout(USER, { clientKey: "k1", startedAt: "2020-01-01T10:00:00.000Z" })
+    expect(fake.inserted).toHaveLength(1)
+  })
+})

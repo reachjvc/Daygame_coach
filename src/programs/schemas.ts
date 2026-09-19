@@ -306,6 +306,13 @@ export const StartWorkoutSchema = z.object({
    * opening a second one — which is what a gym with bad signal produces.
    */
   clientKey: z.string().min(8).max(64),
+  /**
+   * WHEN IT REALLY STARTED, for a session being written up afterwards.
+   *
+   * Absent means now, which is every live workout. The server refuses a time
+   * in the future, and one before the program began.
+   */
+  startedAt: z.string().datetime().optional(),
 })
 
 export const CompleteSetSchema = z.object({
@@ -342,31 +349,46 @@ export const AdjustWorkoutSchema = z.object({
   rpe: z.number().int().min(1).max(10).nullable().optional(),
 })
 
-export const FinishWorkoutSchema = z.object({
-  /**
-   * When it really ended. Defaults to the last set you ticked, never to "now" —
-   * a workout you forgot to finish on Tuesday and close on Thursday is not a
-   * two-day workout, and the 600-minute ceiling would refuse it anyway.
-   */
-  endedAt: z.string().datetime().optional(),
-  durationMin: z
-    .number()
-    .int()
-    .min(1)
-    .max(599, "A workout cannot be longer than ten hours — check when it really ended.")
-    .optional(),
-  intensity: z.number().int().min(1).max(5),
-  rpe: z.number().int().min(1).max(10).nullable().optional(),
-  notes: z.string().max(1000).nullable().optional(),
-  /**
-   * NO `sessionType` HERE, DELIBERATELY. It used to be accepted and written by
-   * a second update after the transaction whose error was thrown away — and no
-   * caller ever sent it, so every live run was stored as a gym session and the
-   * running tiles never moved. What a workout counts as is decided from the
-   * program when the workout STARTS (`sessionTypeFor`), which is the only
-   * moment anything actually knows; the finish does not get a vote.
-   */
-})
+export const FinishWorkoutSchema = z
+  .object({
+    /**
+     * When it really ended. Defaults to the last set you ticked, never to "now" —
+     * a workout you forgot to finish on Tuesday and close on Thursday is not a
+     * two-day workout, and the 600-minute ceiling would refuse it anyway.
+     */
+    endedAt: z.string().datetime().optional(),
+    /**
+     * And when it really started, for a session written up afterwards.
+     *
+     * NO `durationMin`. It was a second copy of a fact these two instants
+     * already state, and the server clamped a longer span to 599 rather than
+     * saying anything — so a mistyped end quietly became a ten-hour workout
+     * instead of being refused. The server derives the minutes now.
+     */
+    startedAt: z.string().datetime().optional(),
+    intensity: z.number().int().min(1).max(5),
+    rpe: z.number().int().min(1).max(10).nullable().optional(),
+    notes: z.string().max(1000).nullable().optional(),
+    /**
+     * WHAT KIND OF SESSION — for a LOOSE workout only.
+     *
+     * It was removed entirely because it used to be written by a second update
+     * after the transaction, whose error was thrown away, and no caller sent
+     * it — so every live run was stored as a gym session. It is back for the
+     * one case that genuinely does not know: "start a workout now", with no
+     * program to ask. The server refuses it on a program workout, because
+     * `sessionTypeFor` owns that and the finish does not get a vote.
+     */
+    sessionType: z.enum(["weights", "cardio", "mobility", "yoga", "running"]).optional(),
+    /** How far, for a run or a ride. Null clears it. */
+    distanceKm: z.number().min(0).max(MAX_DISTANCE_KM).nullable().optional(),
+  })
+  .refine((body) => !body.startedAt || !!body.endedAt, {
+    path: ["endedAt"],
+    // A moved start with an end guessed from a set's tick time is how a
+    // backdated session ends up claiming to have lasted two days.
+    message: "Say when it ended as well as when it started.",
+  })
 
 // ============================================================================
 // Saved training weeks
