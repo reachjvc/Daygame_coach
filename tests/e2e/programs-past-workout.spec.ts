@@ -15,6 +15,7 @@
  */
 
 import { test, expect, type Page } from "@playwright/test"
+import { seedFinishedWorkout } from "./helpers/seedWorkout"
 
 test.describe.configure({ mode: "serial" })
 
@@ -179,4 +180,104 @@ test("a workout already open blocks the dialog and points at it", async ({ page 
   // Only one workout may be open, so this has to say so rather than fail later.
   await expect(page.getByTestId("past-blocked-by-live")).toBeVisible()
   await expect(page.getByTestId("open-past-workout")).toHaveCount(0)
+})
+
+test("a finished program session lands in History and moves the program on", async ({ page }) => {
+  await page.goto("/programs", { waitUntil: "networkidle" })
+
+  const before = await page.evaluate(async () => {
+    const [e] = await (await fetch("/api/programs/enrollments")).json()
+    const detail = await (await fetch(`/api/programs/enrollments/${e.id}`)).json()
+    return { id: e.id as string, count: detail.enrollment.cursor.sessionCount as number }
+  })
+
+  // Through the dialog's own door: History → Log a past workout → today's
+  // session. The ceiling is "now" in the ACCOUNT's zone, which is the only
+  // clock that gets to decide what day this is.
+  await page.getByRole("button", { name: "History" }).first().click()
+  await page.getByTestId("log-past-workout").click()
+  const when = page.getByLabel("When the workout was")
+  await when.fill((await when.getAttribute("max"))!)
+  await page.getByRole("button", { name: /^Workout A/ }).click()
+  await page.getByTestId("open-past-workout").click()
+  await page.waitForURL(/\/programs\/live/)
+
+  // One real set, then finish it the way a person does.
+  await page.getByTestId("tick-1").first().click()
+  // The id BEFORE finishing: "the newest row with sets" could be any earlier
+  // spec's, and an assertion on the wrong row is not an assertion.
+  const workoutId = await page.evaluate(
+    async () => ((await (await fetch("/api/workouts/live")).json()) as { id: string }).id
+  )
+  await page.getByTestId("finish-workout").click()
+  await page.getByRole("button", { name: /save this workout/i }).click()
+  // The finish is a round trip that advances the program in the same
+  // transaction. Reading before the summary appears reads the program as it
+  // was, which is a race the assertion cannot tell from a real failure.
+  await expect(page.getByTestId("workout-summary")).toBeVisible({ timeout: 30000 })
+
+  const after = await page.evaluate(
+    async ([enrollmentId, logId]: string[]) => {
+      const detail = await (await fetch(`/api/programs/enrollments/${enrollmentId}`)).json()
+      const logs = (await (
+        await fetch("/api/health/workout?days=3&include=sets")
+      ).json()) as { id: string; started_at: string | null; logged_at: string }[]
+      const mine = logs.find((l) => l.id === logId)
+      return {
+        count: detail.enrollment.cursor.sessionCount as number,
+        found: Boolean(mine),
+        startedAt: mine?.started_at ?? null,
+        loggedAt: mine?.logged_at ?? null,
+      }
+    },
+    [before.id, workoutId]
+  )
+
+  expect(after.found, "the workout just finished is in History").toBe(true)
+
+  expect(after.count, "the program moved on by exactly one").toBe(before.count + 1)
+  // `workout_logs_logged_is_start` requires these two to be equal, and the day
+  // a session is FILED under is logged_at. A session filed under the day it
+  // was typed was the whole fault this phase set out to fix.
+  expect(after.startedAt).toBeTruthy()
+  expect(new Date(after.loggedAt!).toISOString()).toBe(new Date(after.startedAt!).toISOString())
+})
+
+test("a run is stored as a run, reads as one in History, and counts as one", async ({ page }) => {
+  await page.goto("/programs", { waitUntil: "networkidle" })
+
+  // Seeded rather than walked: the dialog's run path needs an endurance
+  // enrollment, and the subject here is what the FINISH writes and what the
+  // rest of the app then reads.
+  const id = await seedFinishedWorkout(page, {
+    startedAt: new Date(Date.now() - 2 * 3600_000).toISOString(),
+    endedAt: new Date(Date.now() - 2 * 3600_000 + 31 * 60_000).toISOString(),
+    sessionType: "running",
+    sets: [],
+  })
+
+  const stored = await page.evaluate(async (logId: string) => {
+    await fetch(`/api/workouts/${logId}/finish`, { method: "POST" }).catch(() => null)
+    const logs = (await (await fetch("/api/health/workout?days=3")).json()) as {
+      id: string
+      session_type: string
+      duration_min: number | null
+    }[]
+    const mine = logs.find((l) => l.id === logId)
+    return { type: mine?.session_type, minutes: mine?.duration_min }
+  }, id)
+
+  // A run recorded through the old loose path was stored as "weights", so it
+  // appeared in no running total anywhere.
+  expect(stored.type).toBe("running")
+  expect(stored.minutes, "the server derives the minutes from the two instants").toBe(31)
+
+  // And History says what it was, rather than printing the raw column value.
+  await page.reload({ waitUntil: "networkidle" })
+  await page.getByRole("button", { name: "History" }).first().click()
+  await expect(page.getByTestId("workout-history")).toContainText("Run · 31 min")
+
+  await page.evaluate(async (logId: string) => {
+    await fetch(`/api/health/workout?id=${logId}`, { method: "DELETE" })
+  }, id)
 })

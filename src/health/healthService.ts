@@ -354,6 +354,39 @@ function mondayOf(d: Date): Date {
 }
 
 /**
+ * WHAT A SESSION WAS, IN WORDS, for a row that has no lifts to name.
+ *
+ * History described a workout by its top sets — which says nothing at all
+ * about a run, a yoga class or a mobility session, because they have none. A
+ * finished 5 km read as `running`, the raw column value, lower-cased and on
+ * its own, and opening it said "No sets were recorded for this one" as though
+ * something had gone wrong.
+ *
+ * A NUMBER THAT IS NOT THERE IS NOT ZERO. A missing distance or duration is
+ * left out of the sentence rather than printed as "0 km" — the silent-failure
+ * rule, in the one place a reader would believe it.
+ */
+export function describeSessionRow(log: {
+  session_type: string
+  distance_km?: number | null
+  duration_min?: number | null
+}): string {
+  // "running" reads as a state; "Run" reads as a thing you did.
+  const kind =
+    log.session_type === "running"
+      ? "Run"
+      : log.session_type.charAt(0).toUpperCase() + log.session_type.slice(1)
+  const parts = [kind]
+  if (log.distance_km !== null && log.distance_km !== undefined) {
+    parts.push(`${log.distance_km} km`)
+  }
+  if (log.duration_min !== null && log.duration_min !== undefined) {
+    parts.push(`${log.duration_min} min`)
+  }
+  return parts.join(" · ")
+}
+
+/**
  * One lift's whole history, across every program and every loose workout.
  *
  * `summariseProgression` reads ONE enrollment's session logs, so "my bench"

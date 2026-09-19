@@ -101,8 +101,16 @@ test.describe.serial("training on a phone", () => {
   })
 
   test("a session records what you actually did, not what it asked for", async ({ page }) => {
+    /**
+     * THIS USED TO GO THROUGH "Log a workout you already did" — a disclosure on
+     * the Today tab holding a form with its own weight boxes and its own save
+     * path. Both are gone. The same journey now runs through the dialog on
+     * History and the ordinary live screen, on a phone.
+     */
     await page.goto("/programs")
     await page.evaluate(async () => {
+      const live = await (await fetch("/api/workouts/live")).json()
+      if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
       const r = await fetch("/api/programs/enrollments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -114,21 +122,27 @@ test.describe.serial("training on a phone", () => {
     // the wait is on the data arriving rather than on a fixed pause.
     await page.reload({ waitUntil: "networkidle" })
 
-    // Writing up a session after the fact moved behind a disclosure when the
-    // set-by-set screen took over the "doing it now" case.
-    await page.getByText(/Log a workout you already did/i).first().click()
-    const firstLift = page.getByTestId(/^lift-row-/).first()
-    await expect(firstLift).toBeVisible({ timeout: 15000 })
-    await firstLift.click()
+    await page.getByRole("button", { name: "History" }).first().click()
+    await page.getByTestId("log-past-workout").click()
+    const when = page.getByLabel("When the workout was")
+    // "Now" in the ACCOUNT's zone, which is what the box's own ceiling is.
+    await when.fill((await when.getAttribute("max"))!)
+    await page.getByRole("button", { name: /^Workout A/ }).click()
+    await page.getByTestId("open-past-workout").click()
+    await page.waitForURL(/\/programs\/live/, { timeout: 20000 })
 
-    // Five prescribed sets; record four.
-    const before = await page.locator('input[type="number"]').count()
-    await page.getByRole("button", { name: "− one set" }).first().click()
-    const after = await page.locator('input[type="number"]').count()
-    expect(after, "removing a set did not remove its inputs").toBeLessThan(before)
+    // Five prescribed sets; record four. What you DID, not what it asked for.
+    for (const n of [1, 2, 3, 4]) {
+      await page.getByTestId(`tick-${n}`).first().click()
+    }
+    await page.getByTestId("finish-workout").click()
+    // Four of the five it asked for, said plainly rather than counted as a
+    // clean session.
+    await expect(page.getByText("Not everything was ticked")).toBeVisible({ timeout: 15000 })
+    await expect(page.getByText(/Squat\s*4 of 5/)).toBeVisible()
+    await page.getByRole("button", { name: /save this workout/i }).click()
 
-    await page.getByRole("button", { name: /save/i }).first().click()
-    await expect(page.getByTestId("history-toggle")).toContainText(/session/i)
+    await expect(page.getByTestId("workout-summary")).toBeVisible({ timeout: 20000 })
   })
 
   test("a program you built yourself survives starting a cited one, and can be restarted", async ({ page }) => {

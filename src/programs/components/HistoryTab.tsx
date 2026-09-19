@@ -16,7 +16,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { ChevronDown, ChevronRight, Loader2, Pencil, Trash2, X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { collapseSets, isWorkingSet } from "@/src/health/healthService"
+import { collapseSets, describeSessionRow, isWorkingSet } from "@/src/health/healthService"
 import { fromKg, toKg } from "../programsService"
 import { UNIT_CONFIG } from "../config"
 import { LogPastWorkoutDialog } from "./LogPastWorkoutDialog"
@@ -411,7 +411,7 @@ export function HistoryTab({
                         ? summary
                             .map((e) => `${e.exercise} ${show(e.weightKg)}×${e.reps}`)
                             .join(" · ")
-                        : `${log.session_type}${log.distance_km ? ` · ${log.distance_km} km` : ""}`}
+                                        : describeSessionRow(log)}
                     </span>
                   </span>
                 </button>
@@ -502,8 +502,14 @@ export function HistoryTab({
               ) : isOpen ? (
                 <div className="mt-2 space-y-2 border-t pt-2" data-testid={`history-detail-${log.id}`}>
                   {(log.sets ?? []).length === 0 ? (
+                    /* A RUN HAS NO SETS, AND THAT IS NOT A FAILURE. This said
+                       "No sets were recorded for this one" over every run,
+                       class and mobility session — which reads as something
+                       having gone wrong with a session that went fine. */
                     <p className="text-xs text-muted-foreground">
-                      No sets were recorded for this one.
+                      {log.session_type === "weights"
+                        ? "No sets were recorded for this one."
+                        : describeSessionRow(log)}
                     </p>
                   ) : (
                     Object.entries(
