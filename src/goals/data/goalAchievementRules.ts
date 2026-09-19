@@ -162,9 +162,13 @@ function totalReachedOn(facts: GoalFacts, n: number): string | null {
 function climbReachedOn(facts: GoalFacts, pct: number): string | null {
   const c = facts.climb
   if (!c) return null
-  // A descending or flat climb has no meaningful percentage — `goalToInsert`
-  // turns those into finish lines precisely because `current / target` lies.
-  if (c.target <= c.start) return null
+  /* A FLAT climb has no percentage — there is no distance to be a fraction of.
+     A DESCENDING one does, and earns the same quarter, half and three-quarter
+     badges going down as going up: (85-96)/(85-96) is the same arithmetic as
+     (24-22)/(26-22). The guard that used to refuse it cited `goalToInsert`
+     flattening descending ladders into finish lines, and `goalToInsert` cited
+     this formula lying — each workaround justified by the other. */
+  if (c.target === c.start) return null
   const done = ((c.current - c.start) / (c.target - c.start)) * 100
   if (done < pct) return null
   /* The climb's number is a live value with no history of its own, so the best

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { rungReached } from "@/src/db/goalProgress"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { RotateCcw, ChevronDown, ChevronUp, Flame, Calendar, Loader2, GitBranch, Link, Plus, TrendingUp, Clock, ShieldCheck, Check } from "lucide-react"
@@ -306,7 +307,7 @@ export function GoalCard({
                 <p className="font-medium">Milestone ladder:</p>
                 <div className="flex flex-wrap gap-1.5">
                   {ladderValues.map((m) => {
-                    const reached = goal.current_value >= m
+                    const reached = rungReached(goal, m)
                     return (
                       <span key={m} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] ${reached ? "bg-green-500/15 text-green-400 border-green-500/30" : "bg-muted text-muted-foreground border-border"}`}>
                         {reached ? "✓" : "○"} {m}

@@ -31,8 +31,6 @@ const projectRoot = path.resolve(__dirname, "../../..")
 
 /** The one owner, plus the screens that are not in the product. */
 const ALLOWED = new Set([
-  // The one owner.
-  "src/db/goalProgress.ts",
   // Nine generations of goal-screen experiments behind /test, which 404s in
   // production (app/test/layout.tsx). Live code may not do this; a bench copy
   // nobody can reach is not worth the churn of editing five near-identical
@@ -145,8 +143,12 @@ describe("how far along a goal is — one owner", () => {
   test("the scan actually reads files, so a green result means something", () => {
     // Not vacuous: if the walk breaks or the patterns stop matching, this fires
     // before the two tests above pass by finding nothing at all.
-    const owner = fs.readFileSync(path.join(projectRoot, "src/db/goalProgress.ts"), "utf-8")
-    expect(OFFENCES.some((o) => o.pattern.test(owner))).toBe(true)
+    // The owner itself is no longer on the allowlist: since descending goals
+    // were switched on it reads `(current - start) / (target - start)` and
+    // compares against a direction, so it does not spell either offence.
+    expect(OFFENCES[0].pattern.test("x.current_value / x.target_value")).toBe(true)
+    expect(OFFENCES[1].pattern.test("g.current_value >= g.target_value")).toBe(true)
+    expect(OFFENCES[1].pattern.test("climb.current >= climb.target")).toBe(false)
     // And the comment stripper must not eat the code around a comment.
     expect(stripComments("const a = 1 // note\nconst b = 2")).toContain("const b = 2")
     expect(stripComments("/* current_value / target_value */ const c = 3")).not.toContain("target_value")

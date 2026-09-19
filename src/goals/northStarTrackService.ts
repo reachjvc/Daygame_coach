@@ -120,18 +120,18 @@ const clampInt = (n: number, min: number) => Math.max(min, Math.round(Number.isF
  *     so the hub draws the same rungs the plan drew.
  *   - **A finish line** (`achievement`) is done or not done, so it is a boolean.
  *
- * **A descending ladder becomes a finish line, on purpose.** The hub computes
- * progress as `current / target` and completion as `current >= target`
- * (`computeGoalProgress`), so pushing "95 kg now, 85 kg by June" as a counter
- * would read 100% and complete on the day it was created. Rather than ship a
- * goal that lies, it goes over as one thing you either did or did not do, with
- * both numbers written into the description so nothing is lost.
+ * **A descending ladder is a climb, not a finish line.** It used to become one:
+ * the hub computed progress as `current / target`, so "95 kg now, 85 kg by
+ * June" read 100% complete the day it was created, and rather than ship a goal
+ * that lied it went over as a yes/no box with both numbers written into prose.
+ * `src/db/goalProgress.ts` measures the distance travelled now, in either
+ * direction, so the row holds the real numbers and the climb earns the same
+ * rungs and the same badges going down as going up.
  */
 export function goalToInsert(plan: NsPlan, runId: string, goal: NsGoal): NsTrackInsert {
   const area = plan.areas.find((a) => a.id === goal.areaId)
   const lifeArea = area ? areaSlug(area) : "custom"
   const descending = goal.ladder != null && isDescending(goal.ladder)
-  const unit = goal.unit.trim() ? ` ${goal.unit.trim()}` : ""
 
   const insert: NsTrackInsert = {
     _tempId: goal.id,
@@ -151,11 +151,13 @@ export function goalToInsert(plan: NsPlan, runId: string, goal: NsGoal): NsTrack
   const why = goal.why.trim()
   if (why) insert.motivation_note = why.slice(0, 500)
 
-  // The sentence is the goal as the plan states it; the description is where
-  // the hub shows it. Numbers a descending goal would otherwise lose go here.
+  /* The sentence is the goal as the plan states it; the description is where
+     the hub shows it. A descending goal's numbers used to be written into
+     prose here because the row could not hold them — it can now, so the prose
+     copy is gone rather than sitting beside the real columns disagreeing with
+     them the first time somebody edits one. */
   const parts: string[] = []
   if (goal.sentence.trim()) parts.push(goal.sentence.trim())
-  if (descending && goal.ladder) parts.push(`From ${goal.ladder.start}${unit} down to ${goal.ladder.target}${unit}.`)
   if (parts.length) insert.description = parts.join(" ").slice(0, 2000)
 
   if (goal.targetDate) insert.target_date = goal.targetDate
@@ -171,9 +173,25 @@ export function goalToInsert(plan: NsPlan, runId: string, goal: NsGoal): NsTrack
     return insert
   }
 
-  if (goal.ladder && !descending) {
+  if (goal.ladder) {
+    /* A CLIMB, IN EITHER DIRECTION.
+    
+       Ninety kilos down to eighty used to arrive as a yes/no box with "From 90
+       kg down to 80 kg." written into the description, because progress was
+       `current / target` and a descending goal read 100% complete the day it
+       was made. `src/db/goalProgress.ts` measures the distance travelled
+       instead, so the row can now hold the real numbers and the ladder earns
+       the same rungs and the same quarter/half/three-quarter badges going down
+       as going up.
+    
+       `current_value` is the STARTING number, not zero, and that matters more
+       downwards than up: zero read as a weight means "past the target,
+       therefore finished". A descending goal is measured from the moment it
+       exists. */
     insert.tracking_type = "counter"
-    insert.target_value = clampInt(goal.ladder.target, 1)
+    insert.target_value = descending
+      ? clampInt(goal.ladder.target, 0)
+      : clampInt(goal.ladder.target, 1)
     insert.current_value = clampInt(goal.ladder.start, 0)
     insert.milestone_config = goal.ladder as unknown as Record<string, unknown>
     insert.period = goal.targetDate ? "custom" : "yearly"
@@ -181,7 +199,7 @@ export function goalToInsert(plan: NsPlan, runId: string, goal: NsGoal): NsTrack
     return insert
   }
 
-  // Finish line, and every descending ladder.
+  // Finish line.
   if (goal.targetDate) {
     insert.period = "custom"
     insert.custom_end_date = goal.targetDate

@@ -6,7 +6,7 @@ import { isPracticeRow } from "@/src/goals/data/goalShapes"
 import type { GoalWithProgress, GoalTreeNode, GoalFilterState, InputMode, CelebrationTier, MilestoneLadderConfig, HabitRampStep, PreviewGoalState, TimeOfDayBracket, WeeklyRhythm, PacingInfo, MilestoneCelebrationData, BadgeStatus, TierUpgradeEvent, WeeklyReviewData, WeeklyGoalMomentum, GoalSetupSelections, WillGateResult, BottleneckResult, GoalTemplate, PhaseTransitionEvent, GoalPeriodStats } from "./types"
 import type { DailyGoalSnapshotRow, GoalPhase, LinkedMetric, UserGoalRow } from "@/src/db/goalTypes"
 import { computeGoalProgress } from "@/src/db/goalTypes"
-import { isGoalComplete, progressPercent, type ProgressFields } from "@/src/db/goalProgress"
+import { isGoalComplete, progressPercent, rungReached, type ProgressFields } from "@/src/db/goalProgress"
 import type { BatchGoalInsert } from "./treeGenerationService"
 import type { NewGoalsFlowState } from "./types"
 import { PILLARS, OBJECTIVES, TARGETS, getSharedDriver, makeCustomFrameworkTarget } from "./data/newGoalFramework"
@@ -873,7 +873,7 @@ export function buildMilestoneCelebrationData(
 
   const milestoneValues = milestones.map((m) => m.value)
   // Find which milestone was just hit (highest milestone <= current_value)
-  const hitMilestones = milestoneValues.filter((v) => goal.current_value >= v)
+  const hitMilestones = milestoneValues.filter((v) => rungReached(goal, v))
   if (hitMilestones.length === 0) return null
 
   const milestoneValue = hitMilestones[hitMilestones.length - 1]

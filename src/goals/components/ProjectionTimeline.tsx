@@ -1,6 +1,7 @@
 "use client"
 
 import { TrendingUp, Clock } from "lucide-react"
+import { rungReached } from "@/src/db/goalProgress"
 import { getMilestoneLadderValues, computeProjectedDate, computePacing } from "../goalsService"
 import type { GoalWithProgress } from "../types"
 
@@ -45,10 +46,10 @@ export function ProjectionTimeline({ goal }: ProjectionTimelineProps) {
       {/* Milestone ladder visualization */}
       <div className="flex items-center gap-1.5 flex-wrap">
         {ladderValues.map((value, index) => {
-          const reached = goal.current_value >= value
+          const reached = rungReached(goal, value)
           const isNext =
             !reached &&
-            (index === 0 || goal.current_value >= ladderValues[index - 1])
+            (index === 0 || rungReached(goal, ladderValues[index - 1]))
 
           return (
             <div key={value} className="flex flex-col items-center gap-0.5">

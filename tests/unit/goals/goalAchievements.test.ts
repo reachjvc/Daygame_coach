@@ -196,16 +196,60 @@ describe("a goal with no history", () => {
   })
 })
 
-describe("a descending climb", () => {
-  /** 95 kg down to 85 kg. `current / target` reads 100% on day one, which is why
-   *  goalToInsert pushes these as finish lines. A percentage badge here would be
-   *  the same lie in a different place. */
-  it("earns no climb badge", () => {
-    const down = goal({
-      goal_type: "milestone", tracking_type: "counter", target_value: 85, current_value: 95,
+describe("a descending climb earns the same badges as a climb up", () => {
+  /**
+   * The owner, 2026-09-19: "bring a number down is the reverse of climb to
+   * number. It should have the same type of achievements or notifications
+   * along the way."
+   *
+   * It used to earn nothing. `climbReachedOn` returned null for any climb whose
+   * target sat below its start, citing `goalToInsert` flattening those into
+   * finish lines — while `goalToInsert` cited `current / target` lying. Both
+   * are fixed: progress is the distance travelled, in either direction.
+   *
+   * The test this replaces asserted "earns no climb badge" against a goal
+   * sitting at its own starting weight — 0% of the way along. It would have
+   * gone on passing after the fix, for the wrong reason, which is the shape of
+   * check this project calls decorative.
+   */
+  const down = (current: number) =>
+    goal({
+      goal_type: "milestone", tracking_type: "counter", target_value: 85, current_value: current,
       milestone_config: { start: 95, target: 85 },
     })
-    const ids = earnedFor(factsFor(down, [], TODAY)).map((b) => b.ruleId)
-    expect(ids.filter((i) => i.startsWith("climb_"))).toEqual([])
+  const climbs = (current: number) =>
+    earnedFor(factsFor(down(current), [], TODAY)).map((b) => b.ruleId).filter((i) => i.startsWith("climb_"))
+
+  it("earns nothing at the weight it started from", () => {
+    expect(climbs(95)).toEqual([])
+  })
+
+  it("earns a quarter at 92.5 kg and a half at 90", () => {
+    expect(climbs(92)).toContain("climb_25")
+    expect(climbs(92)).not.toContain("climb_50")
+    expect(climbs(90)).toContain("climb_50")
+  })
+
+  it("earns three quarters at 87.5 and all three by the target", () => {
+    expect(climbs(87)).toEqual(["climb_25", "climb_50", "climb_75"])
+    expect(climbs(85)).toEqual(["climb_25", "climb_50", "climb_75"])
+  })
+
+  it("earns nothing for going the wrong way", () => {
+    expect(climbs(98)).toEqual([])
+  })
+
+  it("earns nothing when no weight has been recorded", () => {
+    // current_value 0 is the column default, not a measurement. Read as one it
+    // is below the target and would hand over every badge at once.
+    expect(climbs(0)).toEqual([])
+  })
+
+  it("a flat climb still has no percentage to be a fraction of", () => {
+    const flat = goal({
+      goal_type: "milestone", tracking_type: "counter", target_value: 85, current_value: 85,
+      milestone_config: { start: 85, target: 85 },
+    })
+    expect(earnedFor(factsFor(flat, [], TODAY)).map((b) => b.ruleId).filter((i) => i.startsWith("climb_"))).toEqual([])
   })
 })

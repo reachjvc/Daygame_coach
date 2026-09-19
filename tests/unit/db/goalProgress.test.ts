@@ -12,7 +12,7 @@
  */
 
 import { describe, test, expect } from "vitest"
-import { climbOf, progressPercent, isGoalComplete } from "@/src/db/goalProgress"
+import { climbOf, progressPercent, isGoalComplete, hasMeasurement, rungReached } from "@/src/db/goalProgress"
 
 /** Only the three fields the rule reads. */
 function row(current: number, target: number, start?: number) {
@@ -115,28 +115,81 @@ describe("progressPercent — the compatibility floor", () => {
   })
 })
 
-describe("progressPercent — descending goals are deliberately left alone", () => {
+describe("progressPercent — downwards is the same climb in reverse", () => {
   /**
-   * NOT AN ENDORSEMENT. The arithmetic above already works downwards — 85 on a
-   * climb from 90 to 80 is (85-90)/(80-80-10) = 50% — and switching it on is
-   * one edit in `goalProgress.ts`. What stops it is DATA: three of the owner's
-   * live descending rows carry `current_value = 0`, the column default rather
-   * than a measurement, and read downwards that says he is past his target and
-   * therefore finished. These tests pin today's reading so that turning the
-   * direction on is a deliberate act that makes them fail, not an accident.
+   * The owner's correction, 2026-09-19: "bring a number down is the reverse of
+   * climb to number. It should have the same type of achievements or
+   * notifications along the way."
+   *
+   * 90 kg on a climb from 96 to 85 is (90-96)/(85-96) = 55%, which is the same
+   * arithmetic that gives 55% going up. There is no special case.
    */
-  test("a descending row still reads the old way", () => {
-    expect(progressPercent(row(96, 85, 96))).toBe(100)
+  test("the owner's Body Weight goal, 96 kg down to 85 kg", () => {
+    expect(progressPercent(row(96, 85, 96))).toBe(0)
+    expect(progressPercent(row(90, 85, 96))).toBe(55)
+    expect(progressPercent(row(85, 85, 96))).toBe(100)
   })
 
-  test("an unmeasured descending row still reads 0% and is not complete", () => {
-    // The owner's Body Weight, Body Fat % and Waist Measurement rows, today.
-    expect(progressPercent(row(0, 85, 96))).toBe(0)
-    expect(isGoalComplete(row(0, 85, 96))).toBe(false)
+  test("going past the target is still 100%, not more", () => {
+    expect(progressPercent(row(84, 85, 96))).toBe(100)
+  })
+
+  test("going the wrong way is 0%, never a negative bar", () => {
+    expect(progressPercent(row(99, 85, 96))).toBe(0)
+  })
+
+  test("a goal aimed AT zero works — twenty a day down to none", () => {
+    // target_value 0 is allowed through `hasMeasurement` precisely so this
+    // reads correctly; it is the one descending shape where 0 is the answer.
+    expect(progressPercent(row(20, 0, 20))).toBe(0)
+    expect(progressPercent(row(10, 0, 20))).toBe(50)
+    expect(progressPercent(row(0, 0, 20))).toBe(100)
+    expect(isGoalComplete(row(0, 0, 20))).toBe(true)
   })
 })
 
-describe("isGoalComplete — unchanged in every direction, on purpose", () => {
+describe("a descending row with no measurement is not a finished one", () => {
+  /**
+   * THE BUG THIS PREVENTS, and it is the reason the direction was not switched
+   * on in the same change as the formula. Three of the owner's live rows carry
+   * `current_value` 0 with a ladder from 96 to 85. Read as a measurement that
+   * says he weighs nothing, which downwards is past the target — so the app
+   * would have congratulated him on reaching a goal he has not started.
+   */
+  test("zero against a positive target is the column default, not a weight", () => {
+    expect(hasMeasurement(row(0, 85, 96))).toBe(false)
+    expect(progressPercent(row(0, 85, 96))).toBe(0)
+    expect(isGoalComplete(row(0, 85, 96))).toBe(false)
+    expect(rungReached(row(0, 85, 96), 90)).toBe(false)
+  })
+
+  test("a real measurement is read normally", () => {
+    expect(hasMeasurement(row(90, 85, 96))).toBe(true)
+  })
+
+  test("climbing goals are always measured — zero is a real starting point", () => {
+    expect(hasMeasurement(row(0, 500, 0))).toBe(true)
+    expect(progressPercent(row(0, 500, 0))).toBe(0)
+  })
+})
+
+describe("rungReached — the notifications along the way", () => {
+  test("climbing, a rung is passed by reaching it", () => {
+    expect(rungReached(row(23, 26, 22), 23)).toBe(true)
+    expect(rungReached(row(23, 26, 22), 24)).toBe(false)
+  })
+
+  test("descending, a rung is passed by dropping below it", () => {
+    // Written by hand as `current >= rung` every rung of a descending climb is
+    // already "passed" on day one, because the starting weight is above all of
+    // them — the owner's notifications arriving all at once, before he starts.
+    expect(rungReached(row(96, 85, 96), 93)).toBe(false)
+    expect(rungReached(row(93, 85, 96), 93)).toBe(true)
+    expect(rungReached(row(88, 85, 96), 93)).toBe(true)
+  })
+})
+
+describe("isGoalComplete", () => {
   test("reached", () => {
     expect(isGoalComplete(row(3, 3))).toBe(true)
     expect(isGoalComplete(row(4, 3))).toBe(true)
@@ -149,5 +202,11 @@ describe("isGoalComplete — unchanged in every direction, on purpose", () => {
   test("a climb is complete at its target even though it began above zero", () => {
     expect(isGoalComplete(row(26, 26, 22))).toBe(true)
     expect(isGoalComplete(row(24, 26, 22))).toBe(false)
+  })
+
+  test("downwards, complete means below — 84 kg finishes an 85 kg goal, 96 does not", () => {
+    expect(isGoalComplete(row(84, 85, 96))).toBe(true)
+    expect(isGoalComplete(row(85, 85, 96))).toBe(true)
+    expect(isGoalComplete(row(96, 85, 96))).toBe(false)
   })
 })

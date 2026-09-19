@@ -40,9 +40,24 @@
  * complete. Turning the direction on before those rows carry a real starting
  * measurement would replace a wrong percentage with a false "done".
  *
- * So: `isDescending` is computed and exported, every descending row is routed
- * to the OLD behaviour unchanged, and no goal's completion moves. Switching
- * the branch on is one edit here, once the rows are repaired.
+ * SWITCHED ON 2026-09-19, with one guard. Progress, completion and rungs all
+ * run in both directions now. The data problem above is handled by
+ * `hasMeasurement`, not by guessing:
+ *
+ *   A descending row whose `current_value` is 0 while its target is above 0
+ *   carries no measurement. Zero is the column's default, and read as a weight
+ *   it says the owner weighs nothing — which downwards means "past the target,
+ *   therefore finished". Those rows report 0% and NOT complete, exactly as they
+ *   read before, until a real starting number is written into them.
+ *
+ * The one case this misreads is a goal aimed above zero that is genuinely
+ * driven all the way TO zero — a debt of 50,000 paid down to a target of
+ * 10,000 and then to nothing. It reads as unmeasured rather than finished.
+ * That fails safe: it withholds a "done" rather than inventing one, and a goal
+ * that deliberately aims AT zero (`target_value` 0) is allowed through.
+ *
+ * New rows never land here: `goalToInsert` gives every descending goal a
+ * `current_value` equal to its starting number, so it is measured from birth.
  */
 
 import type { UserGoalRow } from "./goalTypes"
@@ -103,23 +118,24 @@ export function climbOf(goal: ProgressFields): GoalClimb {
  * a negative bar; the old formula could not produce a negative because it
  * measured from zero, so this end of the clamp is new.
  */
+export function hasMeasurement(goal: ProgressFields): boolean {
+  const climb = climbOf(goal)
+  if (!climb.descending) return true
+  return climb.current > 0 || climb.target <= 0
+}
+
 export function progressPercent(goal: ProgressFields): number {
   const climb = climbOf(goal)
 
-  // See the file comment: descending rows keep the old reading until their
-  // starting measurements are repaired. This branch is the only thing standing
-  // between here and two-directional progress.
-  if (climb.descending) {
-    return climb.target > 0
-      ? Math.min(100, Math.round((climb.current / climb.target) * 100))
-      : 0
-  }
+  // No starting number written down yet. Reported as "not started" rather than
+  // as a number nobody measured — see the file comment.
+  if (!hasMeasurement(goal)) return 0
 
   // Nothing to measure against. Kept ahead of everything below so the
   // long-standing contract "target_value 0 reads 0%" survives this change —
   // `tests/unit/db/goalTypes.test.ts` has asserted it since before the ladder
   // existed.
-  if (climb.target <= 0) return 0
+  if (climb.target <= 0 && !climb.descending) return 0
 
   // No distance to travel: it is done when it is reached, and nothing in
   // between exists to report. Must precede the division, which would be by
@@ -133,11 +149,27 @@ export function progressPercent(goal: ProgressFields): number {
 /**
  * Has it been reached.
  *
- * Unchanged from the hand-written form it replaces, in every direction,
- * deliberately: this change moves percentages only. Centralising it now means
- * teaching descending goals to complete is one edit in one file later, rather
- * than finding the six places that ask the question by hand.
+ * Downwards, reaching it means going BELOW it: 84 kg on the way to 85 kg is
+ * finished, and 96 kg is not. Upwards this is the same comparison it has
+ * always been.
  */
 export function isGoalComplete(goal: ProgressFields): boolean {
-  return goal.current_value >= goal.target_value
+  const climb = climbOf(goal)
+  if (!hasMeasurement(goal)) return false
+  return climb.descending ? climb.current <= climb.target : climb.current >= climb.target
+}
+
+/**
+ * Has this rung of the ladder been passed.
+ *
+ * The question `GoalCard`, `ProjectionTimeline` and the celebration builder ask
+ * of each generated milestone. Written by hand as `current >= rung` it silently
+ * marks every rung of a descending climb as already passed, because the
+ * starting weight is above all of them — which is the owner's "same
+ * notifications along the way" arriving all at once, on day one.
+ */
+export function rungReached(goal: ProgressFields, rung: number): boolean {
+  const climb = climbOf(goal)
+  if (!hasMeasurement(goal)) return false
+  return climb.descending ? climb.current <= rung : climb.current >= rung
 }
