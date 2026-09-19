@@ -52,7 +52,7 @@ import { fromKg, roundToLoadable } from "@/src/programs/programsService"
 import { hasWeight, numericWeights, convertTyped } from "@/src/programs/builder"
 import { ProgramEditor } from "@/src/programs/components/ProgramEditor"
 import { RunningPrograms } from "@/src/programs/components/RunningPrograms"
-import { refreshEnrollments, useActiveEnrollments } from "@/src/programs/hooks/useEnrollment"
+import { refreshEnrollments, useActiveEnrollments, saveRunningSchedule } from "@/src/programs/hooks/useEnrollment"
 import { Segmented } from "@/src/programs/components/ui"
 import { BuildYourOwn } from "./BuildYourOwn"
 import type { Discipline, LevelId, ProgramSchedule, UnitSystem } from "@/src/programs/types"
@@ -92,7 +92,26 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded }: Props) {
   const [schedule, setSchedule] = useState<ProgramSchedule | null>(null)
   const [weights, setWeights] = useState<Record<string, string>>({})
   const [oneRms, setOneRms] = useState<Record<string, string>>({})
-  const [state, setState] = useState<"idle" | "saving" | "done">("idle")
+  /**
+   * `changed` is the state that was missing.
+   *
+   * After "StrongLifts 5×5 is running — your version" the editor stayed live,
+   * every change was accepted on screen, and not one of them was sent. The
+   * person edited their program, watched the edit appear, and the gym went on
+   * prescribing what it had before.
+   */
+  const [state, setState] = useState<"idle" | "saving" | "done" | "changed" | "updating">("idle")
+  /** Which enrollment the start created, so an edit after it can be sent. */
+  const [startedId, setStartedId] = useState<string | null>(null)
+
+  /**
+   * An edit made after the program started is an edit to the RUNNING program.
+   *
+   * Wrapping the two setters rather than watching the values with an effect:
+   * an effect would also fire on the state the start itself writes, and mark
+   * a freshly started program as changed before anybody had touched it.
+   */
+  const markChanged = () => setState((cur) => (cur === "done" ? "changed" : cur))
   /** Programs this start paused, named on the confirmation. */
   const [displacedNames, setDisplacedNames] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -278,6 +297,7 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded }: Props) {
        * program.
        */
       onProgramStarted(ref)
+      setStartedId(created?.enrollment?.id ?? null)
       setState("done")
       // RE-READ WHAT IS RUNNING. Remounting the band was not enough: the list
       // is shared and, once loaded, never asked again — so "Running now" kept
@@ -436,7 +456,10 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded }: Props) {
               schedule={schedule}
               level={level}
               unit={unit}
-              onChange={setSchedule}
+              onChange={(next) => {
+                markChanged()
+                setSchedule(next)
+              }}
               workingWeights={weights}
               onWorkingWeight={(id, raw) => setWeights((w) => ({ ...w, [id]: raw }))}
               onReset={() => {
@@ -493,7 +516,10 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded }: Props) {
               level={level}
               unit={unit}
               values={weights}
-              onChange={(id, raw) => setWeights((w) => ({ ...w, [id]: raw }))}
+              onChange={(id, raw) => {
+                markChanged()
+                setWeights((w) => ({ ...w, [id]: raw }))
+              }}
             />
           )}
 
@@ -503,7 +529,32 @@ export function WorkoutPrograms({ onProgramStarted, onProgramEnded }: Props) {
             </p>
           )}
 
-          {state === "done" ? (
+          {state === "changed" || state === "updating" ? (
+            /* AN EDIT AFTER THE START HAS SOMEWHERE TO GO. */
+            <div className="flex flex-wrap items-center gap-2" data-testid="program-changed">
+              <button
+                onClick={async () => {
+                  if (!startedId) return
+                  setState("updating")
+                  setError(null)
+                  const res = await saveRunningSchedule(startedId, schedule ?? null, numericWeights(weights))
+                  if (!res.ok) {
+                    // The edits stay on screen: losing them because the save
+                    // failed would be the worse of the two failures.
+                    setError(res.error)
+                    setState("changed")
+                    return
+                  }
+                  setState("done")
+                }}
+                disabled={state === "updating"}
+                className="flex items-center gap-1.5 text-[12.5px] px-3 py-1.5 rounded-md border border-emerald-400/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 disabled:opacity-40 transition-colors"
+              >
+                {state === "updating" && <Loader2 className="size-3 animate-spin" />}
+                Update the running program
+              </button>
+            </div>
+          ) : state === "done" ? (
             /* WHERE IT NOW LIVES, said out loud and linked.
                Starting a program used to end here, with "your first session is
                waiting" and no way to reach it — the page that prescribes and

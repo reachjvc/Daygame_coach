@@ -92,6 +92,14 @@ export function BuildYourOwn({
   /** Which enrollment this design started, so Start does not stay armed. */
   const [startedEnrollmentId, setStartedEnrollmentId] = useState<string | null>(null)
   /**
+   * Which SAVED week is open in the builder.
+   *
+   * Save used to match on the typed name, so correcting "Monday Push" to
+   * "Monday push" made a second week rather than updating the one on screen.
+   */
+  const [loadedDraftId, setLoadedDraftId] = useState<string | null>(null)
+  const [loadedDraftName, setLoadedDraftName] = useState("")
+  /**
    * SEPARATE STORAGE FROM THE DESIGN, on purpose.
    *
    * A lift you invented outlives the week you invented it in. Clearing the
@@ -146,10 +154,14 @@ export function BuildYourOwn({
             schedule={schedule}
             unit={unit}
             weights={weights}
+            loadedId={loadedDraftId}
+            loadedName={loadedDraftName}
             onLoad={(d) => {
               setSchedule(d.schedule)
               setUnit(d.unit)
               setWeights(d.weights)
+              setLoadedDraftId(d.draftId)
+              setLoadedDraftName(d.name)
               // A week loaded from the saved list is not the one that started
               // whatever is running, so the recorded id does not follow it.
               setStartedEnrollmentId(null)

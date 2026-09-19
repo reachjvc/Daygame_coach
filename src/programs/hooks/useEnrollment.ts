@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useSyncExternalStore } from "react"
-import type { EnrollmentDetail, ProgramEnrollment } from "../types"
+import type { EnrollmentDetail, ProgramEnrollment, ProgramSchedule } from "../types"
 
 /**
  * ONE REQUEST FOR THE ENROLLMENT LIST, however many components want it.
@@ -225,4 +225,41 @@ export function useEnrollment(id: string | null, initial?: EnrollmentDetail | nu
   }, [refresh, id, detail])
 
   return { detail, loading, error, refresh }
+}
+
+/**
+ * SAVING AN EDIT TO A PROGRAM THAT IS ALREADY RUNNING — one path, two callers.
+ *
+ * `EditActiveProgram` had this inline, and the Templates step had nothing at
+ * all: after "StrongLifts 5×5 is running — your version" the editor stayed
+ * live, every change was accepted on screen, and not one of them was sent. The
+ * person edited their program, saw the edit, and the gym went on prescribing
+ * what it had before.
+ *
+ * Returns the server's own sentence on a refusal rather than a generic one,
+ * because the refusals here are things a person can act on — "your program
+ * moved on while this was being saved" is a reload, not a bug.
+ */
+export async function saveRunningSchedule(
+  enrollmentId: string,
+  customSchedule: ProgramSchedule | null,
+  workingWeights: Record<string, number>
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const res = await fetch(`/api/programs/enrollments/${enrollmentId}/schedule`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ customSchedule, workingWeights }),
+    })
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as { error?: string } | null
+      return { ok: false, error: body?.error ?? "Could not save your changes." }
+    }
+    // The shared list holds the schedule, so every other surface would keep
+    // showing the week as it was before this edit.
+    await refreshEnrollments()
+    return { ok: true }
+  } catch {
+    return { ok: false, error: "Could not reach the server. Nothing was changed." }
+  }
 }

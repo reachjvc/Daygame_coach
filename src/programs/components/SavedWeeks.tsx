@@ -39,14 +39,24 @@ interface Props {
   unit: UnitSystem
   /** The builder holds weights as typed text; a draft holds them as numbers. */
   weights: Record<string, string>
-  onLoad: (draft: { schedule: ProgramSchedule; unit: UnitSystem; weights: Record<string, string> }) => void
+  onLoad: (draft: {
+    schedule: ProgramSchedule
+    unit: UnitSystem
+    weights: Record<string, string>
+    /** Which saved week this is, so Save updates it rather than making another. */
+    draftId: string
+    name: string
+  }) => void
+  /** The week currently loaded into the builder, if one was loaded. */
+  loadedId?: string | null
+  loadedName?: string
 }
 
 const dayCount = (s: ProgramSchedule): number => ("days" in s ? s.days.length : 0)
 const liftCount = (s: ProgramSchedule): number =>
   "days" in s ? s.days.reduce((n, d) => n + d.exercises.length, 0) : 0
 
-export function SavedWeeks({ schedule, unit, weights, onLoad }: Props) {
+export function SavedWeeks({ schedule, unit, weights, onLoad, loadedId = null, loadedName = "" }: Props) {
   const [drafts, setDrafts] = useState<Draft[]>([])
   /**
    * Three states, not two. `failed` is NOT an empty list — telling somebody
@@ -55,6 +65,17 @@ export function SavedWeeks({ schedule, unit, weights, onLoad }: Props) {
    */
   const [state, setState] = useState<"loading" | "ready" | "failed">("loading")
   const [name, setName] = useState("")
+
+  /**
+   * The name box follows the week that was loaded.
+   *
+   * Loading a week replaced the design and left the box empty, so Save was
+   * disabled on a week you had just opened — and typing the name back in by
+   * hand was the only way to save an edit to it.
+   */
+  useEffect(() => {
+    if (loadedName) setName(loadedName)
+  }, [loadedName])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState<string | null>(null)
@@ -77,16 +98,32 @@ export function SavedWeeks({ schedule, unit, weights, onLoad }: Props) {
     void load()
   }, [load])
 
+  /** The week on screen, next to the one it was loaded from. */
+  const loaded = loadedId ? drafts.find((d) => d.id === loadedId) : undefined
+  const changedSinceLoad =
+    !!loaded &&
+    (JSON.stringify(loaded.schedule) !== JSON.stringify(schedule) ||
+      loaded.unitSystem !== unit ||
+      JSON.stringify(loaded.workingWeights ?? {}) !== JSON.stringify(numericWeights(weights)))
+
   const days = dayCount(schedule)
   const lifts = liftCount(schedule)
   const canSave = name.trim().length > 0 && days > 0
 
-  async function save() {
+  async function save({ asNew = false }: { asNew?: boolean } = {}) {
     setBusy(true)
     setError(null)
     setSaved(null)
     try {
-      const existing = drafts.find((d) => d.name.toLowerCase() === name.trim().toLowerCase())
+      /**
+       * WHICH WEEK THIS SAVE GOES TO — the one that was loaded, by id.
+       *
+       * It used to match on the TYPED NAME. Load "Monday Push", edit it,
+       * correct the name to "Monday push" and Save made a second week under
+       * the near-duplicate rather than updating the one on screen — and there
+       * was no way to tell which of the two the builder was showing.
+       */
+      const existing = asNew ? undefined : loadedId ? drafts.find((d) => d.id === loadedId) : undefined
       const body = JSON.stringify({
         name: name.trim(),
         schedule,
@@ -181,6 +218,8 @@ export function SavedWeeks({ schedule, unit, weights, onLoad }: Props) {
                     weights: Object.fromEntries(
                       Object.entries(d.workingWeights ?? {}).map(([k, v]) => [k, String(v)])
                     ),
+                    draftId: d.id,
+                    name: d.name,
                   })
                 }
                 className="flex flex-1 items-center justify-between gap-2 rounded-md border border-white/10 px-2.5 py-1.5 text-left text-[12px] text-zinc-200 transition-colors hover:bg-white/5"
@@ -227,9 +266,29 @@ export function SavedWeeks({ schedule, unit, weights, onLoad }: Props) {
           className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-sky-400/40 bg-sky-500/10 px-2.5 text-[12px] text-sky-200 transition-colors hover:bg-sky-500/20 disabled:opacity-40"
         >
           {busy ? <Loader2 className="size-3 animate-spin" /> : <Save className="size-3" />}
-          Save this week
+          {loaded ? "Save this week" : "Save this week"}
         </button>
+        {/* OFFERED ONLY WHILE SOMETHING IS LOADED, because that is the only
+            time "new" and "the one I opened" are two different things. */}
+        {loaded && (
+          <button
+            type="button"
+            onClick={() => void save({ asNew: true })}
+            disabled={!canSave || busy}
+            className="inline-flex h-8 shrink-0 items-center rounded-md border border-white/10 px-2.5 text-[12px] text-zinc-400 transition-colors hover:bg-white/5 disabled:opacity-40"
+          >
+            Save as new
+          </button>
+        )}
       </div>
+
+      {/* WHICH WEEK YOU ARE EDITING. Without it, the builder showed a week with
+          nothing saying where it came from or whether the edits were safe. */}
+      {loaded && (
+        <p className="text-[11px] text-zinc-500" data-testid="saved-weeks-editing">
+          Editing &ldquo;{loaded.name}&rdquo;{changedSinceLoad ? " · unsaved changes" : ""}
+        </p>
+      )}
 
       {/* Saving is allowed on a half-built week on purpose; starting is not. */}
       {days > 0 && lifts === 0 && (

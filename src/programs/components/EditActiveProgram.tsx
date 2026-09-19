@@ -31,6 +31,7 @@ import {
   missingWorkingWeights,
   scheduleProblems,
 } from "../customize"
+import { saveRunningSchedule } from "../hooks/useEnrollment"
 import { hasWeight, numericWeights } from "../builder"
 import { requireProgram } from "../data/catalog"
 import type { ProgramEnrollment, ProgramSchedule } from "../types"
@@ -99,28 +100,17 @@ export function EditActiveProgram({
   async function save(next: ProgramSchedule | null) {
     setState("saving")
     setError(null)
-    try {
-      const res = await fetch(`/api/programs/enrollments/${enrollment.id}/schedule`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customSchedule: next,
-          workingWeights: numericWeights(weights),
-        }),
-      })
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null
-        setError(body?.error ?? "Could not save your changes.")
-        setState("idle")
-        return
-      }
-      setState("done")
-      setOpen(false)
-      onSaved()
-    } catch {
-      setError("Could not reach the server. Nothing was changed.")
+    // One save path, shared with the Templates step — which had none at all,
+    // and accepted edits on screen that it never sent.
+    const res = await saveRunningSchedule(enrollment.id, next, numericWeights(weights))
+    if (!res.ok) {
+      setError(res.error)
       setState("idle")
+      return
     }
+    setState("done")
+    setOpen(false)
+    onSaved()
   }
 
   if (!open) {
