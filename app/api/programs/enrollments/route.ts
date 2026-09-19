@@ -5,18 +5,8 @@ import {
   listPastEnrollments,
   enrollInProgram,
 } from "@/src/db/programRepo"
-import { CustomScheduleSchema } from "@/src/programs/schemas"
+import { EnrollSchema } from "@/src/programs/schemas"
 import { statusFor } from "@/src/programs/errors"
-import { z } from "zod"
-
-const EnrollSchema = z.object({
-  programId: z.string().min(1),
-  level: z.enum(["beginner", "intermediate", "advanced"]),
-  unitSystem: z.enum(["kg", "lb"]),
-  oneRepMaxes: z.record(z.string(), z.number().positive()).optional(),
-  workingWeights: z.record(z.string(), z.number().positive()).optional(),
-  customSchedule: CustomScheduleSchema.nullish(),
-})
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -37,7 +27,14 @@ export async function POST(request: Request) {
   if (!auth.success) return auth.response
   try {
     const parsed = EnrollSchema.safeParse(await request.json())
-    if (!parsed.success) return err("Validation failed", 400)
+    if (!parsed.success) {
+      // NAME THE FIELD. "Validation failed" is shown to the person verbatim by
+      // both screens that post here, and the weight map has one entry per lift
+      // — so the message alone never said which lift, or even that it was a
+      // lift at all.
+      const issue = parsed.error.issues[0]
+      return err(`${issue.path.join(".")}: ${issue.message}`, 400)
+    }
     return NextResponse.json(await enrollInProgram(auth.userId, parsed.data), { status: 201 })
   } catch (e) {
     console.error("enroll:", e)

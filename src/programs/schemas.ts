@@ -17,8 +17,26 @@
 import { z } from "zod"
 import { entryWhenFields, hasDateIfTime, NEEDS_DATE_FOR_TIME } from "@/src/health/schemas"
 import { MAX_DISTANCE_KM, MAX_DURATION_MIN, MAX_WEIGHT_KG } from "@/src/shared/weight"
+import { CUSTOM_PROGRAM_ID } from "./data/customProgram"
 
 const positiveInt = (max: number) => z.number().int().min(1).max(max)
+
+/**
+ * WHAT A STARTING WEIGHT MAY BE — one rule, one object, three callers.
+ *
+ * ZERO IS ALLOWED, and is the whole point for bodyweight work: a push-up, a
+ * dip and an unweighted pull-up all start at nothing.
+ *
+ * This existed three times and one copy was wrong. The enrol route spelled its
+ * own `.positive()` inline while the schedule update and the draft body each
+ * said `.min(0)` — so a 0 kg push-up could be SAVED as a week and EDITED into a
+ * running program, but never STARTED. Somebody building a calisthenics week hit
+ * "Validation failed" with nothing naming the field.
+ *
+ * `tests/unit/programs/schemas.test.ts` asserts that all three callers unwrap
+ * to this same object, so a fourth inline copy cannot appear quietly.
+ */
+export const WorkingWeightsSchema = z.record(z.string(), z.number().min(0).max(MAX_WEIGHT_KG))
 
 /** Weight increments are per-unit and never converted, so both must be sane. */
 const IncrementSchema = {
@@ -203,14 +221,8 @@ export const DraftScheduleSchema = scheduleUnion(0)
 export const UpdateScheduleSchema = z.object({
   /** null restores the catalog program — the only way back from an edit. */
   customSchedule: CustomScheduleSchema.nullable(),
-  /**
-   * Starting weights for lifts the level's seed table does not cover.
-   *
-   * ZERO IS ALLOWED, and is the whole point for bodyweight work: a push-up, a
-   * dip and an unweighted pull-up all start at nothing. `.positive()` here used
-   * to make them impossible to enrol.
-   */
-  workingWeights: z.record(z.string(), z.number().min(0).max(MAX_WEIGHT_KG)).optional(),
+  /** Starting weights for lifts the level's seed table does not cover. */
+  workingWeights: WorkingWeightsSchema.optional(),
 })
 
 
@@ -368,13 +380,41 @@ const DraftBody = {
     .optional(),
   unitSystem: z.enum(["kg", "lb"]).optional(),
   schedule: DraftScheduleSchema,
-  /**
-   * Zero is allowed and is the point for bodyweight work — a push-up, a dip and
-   * an unweighted pull-up all start at nothing. `.positive()` on the enrollment
-   * route is what used to make them impossible to enrol.
-   */
-  workingWeights: z.record(z.string(), z.number().min(0).max(MAX_WEIGHT_KG)).optional(),
+  workingWeights: WorkingWeightsSchema.optional(),
 }
+
+/**
+ * STARTING A PROGRAM. Lived inline in the route, which is why its weight rule
+ * drifted from the other two.
+ *
+ * The `superRefine` is the one place that decides "a week you wrote yourself
+ * starts under a name". It is on the SERVER because the alternative is every
+ * screen remembering to ask: today's builder, the rebuilt one, a curl. Without
+ * it, `enrollInProgram` falls back to the catalogue shell's own name and the
+ * live header, History and the Tracking card all read "Your own program" —
+ * three weeks in and every one of them is called the same thing.
+ */
+export const EnrollSchema = z
+  .object({
+    programId: z.string().min(1),
+    level: z.enum(["beginner", "intermediate", "advanced"]),
+    unitSystem: z.enum(["kg", "lb"]),
+    // Stays positive, unlike the working weights: a one-rep max of nothing is
+    // not a max, it is a lift you cannot do.
+    oneRepMaxes: z.record(z.string(), z.number().positive()).optional(),
+    workingWeights: WorkingWeightsSchema.optional(),
+    customSchedule: CustomScheduleSchema.nullish(),
+    label: DraftBody.name.optional(),
+  })
+  .superRefine((body, ctx) => {
+    if (body.programId !== CUSTOM_PROGRAM_ID) return
+    if (body.label && body.label.trim().length > 0) return
+    ctx.addIssue({
+      code: "custom",
+      path: ["label"],
+      message: "Give this week a name before starting it.",
+    })
+  })
 
 export const CreateDraftSchema = z.object({
   ...DraftBody,

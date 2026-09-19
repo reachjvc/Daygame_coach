@@ -77,6 +77,7 @@ import {
 } from "../programText"
 import { UNIT_CONFIG } from "../config"
 import type { BodyGroup, LibraryExercise, LoadExercise, ProgramSchedule, UnitSystem } from "../types"
+import { DraftInput } from "@/components/ui/draft-input"
 
 export const BUILDER_STORAGE_KEY = "custom-program-v1"
 
@@ -491,11 +492,12 @@ function DayCard({
         <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-white/[0.07] text-[10px] tabular-nums text-zinc-400">
           {index + 1}
         </span>
-        <input
+        {/* See ProgramEditor: trimming is a commit rule, not a typing rule. */}
+        <DraftInput
           value={day.label}
-          onChange={(e) => apply(() => renameDay(schedule, day.id, e.target.value || day.label))}
+          onCommit={(name) => apply(() => renameDay(schedule, day.id, name))}
           aria-label={`Name of training day ${index + 1}`}
-          className="min-w-0 flex-1 border-b border-transparent bg-transparent py-0.5 text-[12.5px] font-medium text-zinc-100 transition-colors hover:border-white/10 focus:border-sky-400/50 focus:outline-none"
+          className="min-w-0 flex-1 h-auto rounded-none border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-[12.5px] font-medium text-zinc-100 shadow-none transition-colors hover:border-white/10 focus-visible:border-sky-400/50 focus-visible:ring-0"
         />
         <span className={`shrink-0 ${TYPE.meta}`}>
           {day.exercises.length} {day.exercises.length === 1 ? "lift" : "lifts"}

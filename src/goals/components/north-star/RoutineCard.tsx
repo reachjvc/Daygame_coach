@@ -24,9 +24,10 @@ import Link from "next/link"
 import { Check, ChevronDown, Minus, Plus, X } from "lucide-react"
 import type { NsArea, NsRoutine } from "@/src/goals/types"
 import { NS_SPLITS, ROUTINES_INTRO, ROUTINE_BLUEPRINT_MAP, SERVES_COPY } from "@/src/goals/data/northStar"
-import { presetCost, routineCoverage, routineIsUntouched, routineMinutes, routineSummary, splitPreview } from "@/src/goals/northStarService"
+import { libraryStepsInStack, presetCost, routineCoverage, routineIsUntouched, routineMinutes, routineSummary, splitPreview } from "@/src/goals/northStarService"
 import { Peek } from "./Peek"
 import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { DraftInput } from "@/components/ui/draft-input"
 
 const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -132,7 +133,8 @@ export function RoutineCard({
   const bp = ROUTINE_BLUEPRINT_MAP.get(routine.blueprintId)
   const area = areas.find((a) => a.id === routine.areaId)
   const color = area?.color ?? "#a1a1aa"
-  const inStack = new Set(routine.steps.map((s) => s.id))
+  // Library entries, not step ids: the menu below ticks by library entry.
+  const inStack = libraryStepsInStack(routine)
   const coverage = routineCoverage(routine)
   const untouched = routineIsUntouched(routine)
   const sequence = routine.kind === "sequence"
@@ -584,11 +586,13 @@ function SplitDesigner({ routine, color, handlers }: { routine: NsRoutine; color
               className="text-[10px] font-bold size-4.5 rounded-full flex items-center justify-center shrink-0 tabular-nums"
               style={{ backgroundColor: `${color}26`, color }}
             >{i + 1}</span>
-            <input
+            {/* `renameSplitDay` trims and ignores empty, so as a per-keystroke
+                handler it made a two-word day name impossible to type. */}
+            <DraftInput
               value={d.name}
-              onChange={(e) => handlers.onRenameSplitDay(routine.id, d.id, e.target.value)}
+              onCommit={(name) => handlers.onRenameSplitDay(routine.id, d.id, name)}
               aria-label={`Name for training day ${i + 1}`}
-              className="flex-1 min-w-0 bg-transparent border-b border-transparent hover:border-white/10 focus:border-white/25 text-[12.5px] text-zinc-200 focus:outline-none py-0.5 transition-colors"
+              className="flex-1 min-w-0 h-auto rounded-none border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-[12.5px] text-zinc-200 shadow-none transition-colors hover:border-white/10 focus-visible:border-white/25 focus-visible:ring-0"
             />
             <span className="flex items-center gap-0.5 shrink-0">
               <button

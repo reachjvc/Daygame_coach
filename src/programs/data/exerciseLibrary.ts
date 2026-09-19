@@ -478,12 +478,29 @@ export function searchLibrary(query: string, limit = 14): LibraryExercise[] {
  * Weights start at zero on every level: we have no idea what they lift, and a
  * made-up suggestion under a made-up lift is a number pretending to be advice.
  */
+/**
+ * The id a lift gets when the library does not know it.
+ *
+ * ONE SLUG RULE, because two callers mint these: the palette's "add my own",
+ * and the text parser when somebody types a lift by name. When they disagreed,
+ * a typed "Zercher Squat" and a palette-added one were two different lifts with
+ * two working weights that drifted apart — the same bar, the same body.
+ *
+ * Returns null for a name that is nothing but whitespace.
+ */
+export function customLiftId(name: string): string | null {
+  const clean = name.trim().replace(/\s+/g, " ").slice(0, 120)
+  if (!clean) return null
+  return `custom_${norm(clean).slice(0, 40) || "lift"}`
+}
+
 export function customLibraryEntry(name: string, group: BodyGroup): LibraryExercise | null {
   const clean = name.trim().replace(/\s+/g, " ").slice(0, 120)
   if (!clean) return null
-  const slug = norm(clean).slice(0, 40) || "lift"
+  const id = customLiftId(clean)
+  if (!id) return null
   return {
-    id: `custom_${slug}`,
+    id,
     name: clean,
     group,
     // A representative pattern for the body part, so a custom lift still has

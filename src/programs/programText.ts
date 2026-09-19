@@ -37,7 +37,8 @@
  */
 
 import type { DayTemplate, LoadExercise, ProgramSchedule } from "./types"
-import { EXERCISE_LIBRARY, patternForName } from "./data/exerciseLibrary"
+import { EXERCISE_LIBRARY, patternForName, customLiftId } from "./data/exerciseLibrary"
+import { freshId } from "./customize"
 import { buildExercise } from "./builder"
 
 export interface ParsedProblem {
@@ -100,7 +101,9 @@ function libraryMatch(name: string) {
 function parseLift(
   raw: string,
   id: string
-): { exercise: LoadExercise; weight: string | null; superset: boolean } | { error: string } {
+):
+  | { exercise: LoadExercise; weight: string | null; superset: boolean; libraryId: string | null }
+  | { error: string } {
   const superset = SUPERSET_PREFIX.test(raw)
   let rest = raw.replace(SUPERSET_PREFIX, "").trim()
 
@@ -176,7 +179,7 @@ function parseLift(
           }
   }
 
-  return { exercise, weight, superset }
+  return { exercise, weight, superset, libraryId: entry ? entry.id : null }
 }
 
 /**
@@ -225,11 +228,35 @@ export function parseProgramText(text: string): ParsedProgram {
     // makes "Pull" readable as a heading and "Face Pull" readable as a lift.
 
     const day = current!
-    const id = `${day.id}_e${day.exercises.length + 1}`
-    const parsed = parseLift(line, id)
+    /**
+     * THE SAME LIFT ON TWO DAYS IS ONE LIFT — in text too.
+     *
+     * The id used to be minted from the POSITION before the name was even
+     * read: `d1_e1`, `d2_e1`. So "Bench Press" on Push A and on Push B were two
+     * different lifts, with two working weights that drifted apart. The
+     * click-to-add path had already decided the opposite (`addExercise`, "your
+     * bench is your bench") — the two doors into the same editor disagreed.
+     *
+     * So the name is resolved first and the id follows from it, exactly as
+     * `addExercise` does it: the library's own id where the lift is recognised,
+     * `customLiftId` where it is not, and the positional suffix kept only for
+     * the case it was written for — the same lift twice in ONE day, a top set
+     * and a back-off, which have to be told apart.
+     */
+    const parsed = parseLift(line, `${day.id}_e${day.exercises.length + 1}`)
     if ("error" in parsed) {
       problems.push({ line: i + 1, text: line, reason: parsed.error })
       return
+    }
+
+    const wanted = parsed.libraryId ?? customLiftId(parsed.exercise.name)
+    let id = parsed.exercise.id
+    if (wanted) {
+      const idsInThisDay = new Set(day.exercises.map((e) => e.id))
+      const taken = new Set(days.flatMap((d) => d.exercises.map((e) => e.id)))
+      // Already on another day → share it. Already on THIS day → a second slot.
+      id = idsInThisDay.has(wanted) ? freshId(wanted, taken) : wanted
+      parsed.exercise.id = id
     }
 
     if (parsed.superset) {
@@ -316,20 +343,58 @@ export function carryAuthoredSettings(
   next: ProgramSchedule
 ): ProgramSchedule {
   if (previous.kind === "endurance_weeks" || next.kind === "endurance_weeks") return next
-  const before = new Map<string, LoadExercise>()
-  for (const d of previous.days) for (const e of d.exercises) before.set(e.id, e as LoadExercise)
 
-  const days: DayTemplate[] = next.days.map((d) => ({
-    id: d.id,
-    label: d.label,
-    exercises: (d.exercises as LoadExercise[]).map((e): LoadExercise => {
-      const old = before.get(e.id)
-      if (!old || old.name !== e.name) return e
-      const carried: LoadExercise = { ...e, progression: old.progression }
-      if (old.note) carried.note = old.note
-      return carried
-    }),
-  }))
+  /**
+   * MATCH DAYS BY NAME FIRST, THEN BY POSITION — never by guessing.
+   *
+   * The rebuilt day was `{id, label, exercises}` and nothing else, so
+   * `weekday` was dropped on the floor. Type one character into the text box of
+   * a week pinned Monday/Thursday and both pins were gone: the week silently
+   * stopped running by the calendar and started running in order, with nothing
+   * on screen saying so.
+   *
+   * By label (trimmed, case-insensitive) because renaming a day is rarer than
+   * reordering one; by index only when the day count is unchanged, where the
+   * correspondence is not a guess. A changed count means days were added or
+   * removed and there is no honest answer, so nothing is carried.
+   */
+  const byLabel = new Map<string, DayTemplate>()
+  for (const d of previous.days) byLabel.set(d.label.trim().toLowerCase(), d as DayTemplate)
+  const sameCount = previous.days.length === next.days.length
+
+  const days: DayTemplate[] = next.days.map((d, i) => {
+    const oldDay = byLabel.get(d.label.trim().toLowerCase()) ?? (sameCount ? (previous.days[i] as DayTemplate) : undefined)
+
+    /**
+     * Within a matched day, by id first and by NAME second. After the id rule
+     * above a library lift keeps its id across a re-parse — but a week loaded
+     * from an account saved before that rule still holds positional ids, and
+     * matching only on id would silently reset its weight step and its note.
+     */
+    const oldById = new Map<string, LoadExercise>()
+    const oldByName = new Map<string, LoadExercise>()
+    for (const e of (oldDay?.exercises ?? []) as LoadExercise[]) {
+      oldById.set(e.id, e)
+      oldByName.set(e.name.trim().toLowerCase(), e)
+    }
+
+    const day: DayTemplate = {
+      id: d.id,
+      label: d.label,
+      exercises: (d.exercises as LoadExercise[]).map((e): LoadExercise => {
+        const old = oldById.get(e.id) ?? oldByName.get(e.name.trim().toLowerCase())
+        if (!old) return e
+        // `progression` is where the weight step lives (incrementKg/Lb) and
+        // where "leave it to me" is recorded as `kind: "none"`.
+        const carried: LoadExercise = { ...e, progression: old.progression }
+        if (old.note) carried.note = old.note
+        if (old.dropSets) carried.dropSets = old.dropSets
+        return carried
+      }),
+    }
+    if (oldDay?.weekday != null) day.weekday = oldDay.weekday
+    return day
+  })
   return { kind: "linear_rotation", days }
 }
 

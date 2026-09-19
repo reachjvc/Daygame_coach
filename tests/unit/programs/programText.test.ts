@@ -15,9 +15,10 @@ import {
   parseProgramText,
 } from "@/src/programs/programText"
 import { scheduleDays } from "@/src/programs/customize"
+import { customLibraryEntry, customLiftId } from "@/src/programs/data/exerciseLibrary"
 import { designProblems } from "@/src/programs/builder"
 import { CustomScheduleSchema } from "@/src/programs/schemas"
-import type { LoadExercise, ProgramSchedule } from "@/src/programs/types"
+import type { DayTemplate, LoadExercise, ProgramSchedule } from "@/src/programs/types"
 
 const lifts = (s: ProgramSchedule, i: number) => scheduleDays(s)[i].exercises as LoadExercise[]
 
@@ -330,5 +331,178 @@ Back Squat 5x5 @80
 Romanian Deadlift 3x8 @60`)
     const parsed = CustomScheduleSchema.safeParse(schedule)
     expect(parsed.success, parsed.error?.issues[0]?.message).toBe(true)
+  })
+})
+
+/**
+ * ONE LIFT, ONE ID — the rule the click-to-add path already had.
+ *
+ * The parser minted the id from the POSITION before it had read the name, so
+ * "Bench Press" on Push A was `d1_e1` and on Push B was `d2_e1`. Two ids means
+ * two entries in `exerciseState`, which means two working weights for one bar,
+ * drifting apart from the first session. `addExercise` had decided the opposite
+ * years earlier and said so in a comment — the two doors into the same editor
+ * disagreed.
+ */
+describe("the id a typed lift gets", () => {
+  const idsOf = (schedule: ProgramSchedule) =>
+    scheduleDays(schedule).map((d) => d.exercises.map((e) => e.id))
+
+  test("the same lift on two days gets one id and one starting weight", () => {
+    const { schedule, weights } = parseProgramText(
+      ["Push A", "Bench Press 5x5 @60", "", "Push B", "Bench Press 5x5 @60"].join("\n")
+    )
+    const [dayA, dayB] = idsOf(schedule)
+    expect(dayA[0]).toBe(dayB[0])
+    // And therefore ONE weight, not two that drift.
+    expect(Object.keys(weights)).toHaveLength(1)
+    expect(weights[dayA[0]]).toBe("60")
+  })
+
+  test("the same lift twice in one day is two slots", () => {
+    // A top set and a back-off. These have to be distinguishable or the log
+    // cannot say which one it is talking about — the case the suffix exists for.
+    const { schedule } = parseProgramText(["Push", "Bench Press 1x5 @100", "Bench Press 3x8 @80"].join("\n"))
+    const [day] = idsOf(schedule)
+    expect(day[0]).not.toBe(day[1])
+    expect(day[1]).toMatch(/_2$/)
+  })
+
+  test("a typed unknown lift and a palette-added one share an id", () => {
+    // Deliberately not in the library — Zercher Squat is, which is why the
+    // first draft of this test passed for the wrong reason.
+    const ODD = "Wobble Board Overhead Hold"
+    const { schedule } = parseProgramText(["Legs", `${ODD} 3x8 @40`].join("\n"))
+    const typed = idsOf(schedule)[0][0]
+
+    // Guard the premise: if the library ever learns this lift, say so here
+    // rather than silently testing the library path again.
+    expect(typed, "premise: the library must not know this lift").toMatch(/^custom_/)
+    // The palette mints its id through customLibraryEntry; both go through the
+    // same slug rule now, so a typed lift and a clicked one are one lift.
+    expect(typed).toBe(customLibraryEntry(ODD, "quads")!.id)
+    expect(typed).toBe(customLiftId(ODD))
+  })
+
+  test("a recognised lift uses the library's own id, not a positional one", () => {
+    const { schedule } = parseProgramText(["Push", "bench press 5x5"].join("\n"))
+    expect(idsOf(schedule)[0][0]).toBe("lib_bench_press")
+  })
+})
+
+/**
+ * RE-APPLYING THE TEXT KEEPS WHAT THE TEXT CANNOT SAY.
+ *
+ * A weekday pin, "leave it to me", a custom weight step and a note are all
+ * things the text box has no syntax for. The rebuild dropped `weekday`
+ * entirely, so typing one character into a week pinned Monday/Thursday
+ * unpinned it — the week stopped running by the calendar and started running
+ * in order, silently.
+ */
+/** A parsed week is always load days; `scheduleDays` cannot know that. */
+const loadDays = (schedule: ProgramSchedule): DayTemplate[] =>
+  scheduleDays(schedule) as DayTemplate[]
+
+describe("what survives re-applying the text", () => {
+  const pinned = (): ProgramSchedule => {
+    const { schedule } = parseProgramText(["Upper", "Bench Press 5x5 @60", "", "Lower", "Squat 5x5 @80"].join("\n"))
+    // `scheduleDays` answers AnyDay[]; a parsed week is always load days.
+    const days = loadDays(schedule).map((d, i): DayTemplate => ({ ...d, weekday: i === 0 ? 1 : 4 }))
+    const withSettings: DayTemplate[] = days.map((d, i) =>
+      i === 0
+        ? {
+            ...d,
+            exercises: (d.exercises as LoadExercise[]).map((e) => ({
+              ...e,
+              progression: { kind: "none" as const },
+              note: "elbows in",
+              dropSets: 2,
+            })),
+          }
+        : d
+    )
+    return { kind: "linear_rotation", days: withSettings }
+  }
+
+  test("keeps a Monday pin, 'leave it to me', the weight step and the note", () => {
+    const before = pinned()
+    const { schedule: reparsed } = parseProgramText(formatProgramText(before, { lib_bench_press: "60", lib_squat: "80" }))
+    const after = carryAuthoredSettings(before, reparsed)
+
+    const [upper, lower] = loadDays(after)
+    expect(upper.weekday).toBe(1)
+    expect(lower.weekday).toBe(4)
+    const bench = upper.exercises[0] as LoadExercise
+    expect(bench.progression.kind).toBe("none")
+    expect(bench.note).toBe("elbows in")
+    expect(bench.dropSets).toBe(2)
+  })
+
+  test("renaming one day keeps its pin, because the count has not changed", () => {
+    const before = pinned()
+    const { schedule: reparsed } = parseProgramText(["Upper Body", "Bench Press 5x5 @60", "", "Lower", "Squat 5x5 @80"].join("\n"))
+    const after = carryAuthoredSettings(before, reparsed)
+
+    // Matched by position, since the label no longer matches.
+    expect(loadDays(after)[0].weekday).toBe(1)
+    expect(loadDays(after)[1].weekday).toBe(4)
+  })
+
+  test("reordering the days moves each pin with its day, by name", () => {
+    const before = pinned()
+    const { schedule: reparsed } = parseProgramText(["Lower", "Squat 5x5 @80", "", "Upper", "Bench Press 5x5 @60"].join("\n"))
+    const after = carryAuthoredSettings(before, reparsed)
+
+    // Lower is Thursday's wherever it sits in the list.
+    expect(loadDays(after)[0].label).toBe("Lower")
+    expect(loadDays(after)[0].weekday).toBe(4)
+    expect(loadDays(after)[1].weekday).toBe(1)
+  })
+
+  test("a lift whose id changed but whose name did not keeps its settings", () => {
+    // A week saved before the id rule above: positional ids, real names.
+    const legacy: ProgramSchedule = {
+      kind: "linear_rotation",
+      days: [
+        {
+          id: "d1",
+          label: "Upper",
+          weekday: 1,
+          exercises: [
+            {
+              id: "d1_e1",
+              name: "Bench Press",
+              metricType: "load",
+              scheme: { kind: "linear", sets: 5, reps: 5 },
+              progression: { kind: "none" },
+              note: "paused",
+            } as LoadExercise,
+          ],
+        },
+      ],
+    }
+    const { schedule: reparsed } = parseProgramText(["Upper", "Bench Press 5x5 @60"].join("\n"))
+    const after = carryAuthoredSettings(legacy, reparsed)
+
+    const bench = loadDays(after)[0].exercises[0] as LoadExercise
+    expect(bench.id).toBe("lib_bench_press")
+    expect(bench.progression.kind).toBe("none")
+    expect(bench.note).toBe("paused")
+  })
+
+  test("adding a day carries nothing rather than guessing which is which", () => {
+    const before = pinned()
+    const { schedule: reparsed } = parseProgramText(
+      ["Arms", "Curl 3x10 @20", "", "Upper", "Bench Press 5x5 @60", "", "Lower", "Squat 5x5 @80"].join("\n")
+    )
+    const after = carryAuthoredSettings(before, reparsed)
+
+    const days = loadDays(after)
+    // Upper and Lower still match by name. Arms is new and has no pin invented
+    // for it from whichever day happened to sit at index 0.
+    expect(days[0].label).toBe("Arms")
+    expect(days[0].weekday).toBeUndefined()
+    expect(days[1].weekday).toBe(1)
+    expect(days[2].weekday).toBe(4)
   })
 })

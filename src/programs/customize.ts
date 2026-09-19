@@ -169,14 +169,14 @@ function withDays(schedule: ProgramSchedule, days: AnyDay[]): ProgramSchedule {
  * until it finds a free slot, so removing and re-adding never resurrects an id
  * that a logged session still refers to within the same schedule.
  */
-function freshId(base: string, taken: Set<string>): string {
+export function freshId(base: string, taken: Set<string>): string {
   if (!taken.has(base)) return base
   let n = 2
   while (taken.has(`${base}_${n}`)) n++
   return `${base}_${n}`
 }
 
-function allExerciseIds(schedule: ProgramSchedule): Set<string> {
+export function allExerciseIds(schedule: ProgramSchedule): Set<string> {
   const ids = new Set<string>()
   for (const day of scheduleDays(schedule)) for (const ex of day.exercises) ids.add(ex.id)
   return ids

@@ -66,6 +66,7 @@ import type {
   ProgramSchedule,
   UnitSystem,
 } from "../types"
+import { DraftInput } from "@/components/ui/draft-input"
 
 interface Props {
   /** The catalog program — the thing being edited away from. */
@@ -158,11 +159,14 @@ export function ProgramEditor({
           return (
             <Panel key={day.id}>
               <div className="flex items-center gap-2 px-2.5 py-2">
-                <input
+                {/* DraftInput, not a controlled input: pushing every keystroke
+                    through `renameDay` trims as you type, so the space in
+                    "Upper Body" was deleted the moment it was typed. */}
+                <DraftInput
                   value={day.label}
-                  onChange={(e) => apply(() => renameDay(schedule, day.id, e.target.value || day.label))}
+                  onCommit={(name) => apply(() => renameDay(schedule, day.id, name))}
                   aria-label={`Name of training day ${i + 1}`}
-                  className="flex-1 min-w-0 bg-transparent text-[12.5px] font-medium text-zinc-100 border-b border-transparent hover:border-white/10 focus:border-white/30 focus:outline-none py-0.5"
+                  className="flex-1 min-w-0 h-auto rounded-none border-0 bg-transparent px-0 py-0.5 text-[12.5px] font-medium text-zinc-100 shadow-none border-b border-transparent hover:border-white/10 focus-visible:border-white/30 focus-visible:ring-0"
                 />
                 <span className={`shrink-0 ${TYPE.meta}`}>
                   {day.exercises.length} {day.exercises.length === 1 ? "lift" : "lifts"}
