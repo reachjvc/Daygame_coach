@@ -261,7 +261,7 @@ export function LiveWorkoutScreen({
         }}
       />
 
-      <div className="mx-auto max-w-2xl space-y-3 px-4 py-3">
+      <div data-testid="live-column" className="mx-auto max-w-2xl space-y-3 px-4 py-3">
         {/**
           * A RUN IS A WORKOUT TOO. An endurance session prescribes blocks, not
           * sets, so `exercises` is empty and this screen said "nothing

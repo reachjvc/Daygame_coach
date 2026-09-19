@@ -42,6 +42,41 @@ export const MORE_ITEMS = [
 ] as const
 
 /** Every route the bar itself reaches: a destination, never a sub-page. */
+/**
+ * Routes where the bar is hidden, because they draw their own bottom edge.
+ *
+ * HERE AS DATA, not as markup inside the bar. It was a module-private const in
+ * `MobileTabBar.tsx`, so no test could import it and nothing could check that
+ * a route claiming its own bottom edge was actually listed.
+ */
+export const HIDDEN_ROUTE_PREFIXES: string[] = [
+  // Life Mastery and the vice module inside it: both draw their own bottom
+  // controls, and two bars stacked on a phone is one bar too many. A prefix, so
+  // every step of the flow and every vice route is covered by the one entry.
+  //
+  // BELT AND BRACES TODAY. This bar is mounted per page rather than in a root
+  // layout, and no page under /life-mastery mounts it — so nothing here is
+  // currently doing any work. It is the answer for the day somebody mounts the
+  // bar app-wide, which is the day this would otherwise sit on top of the
+  // flow's own controls.
+  LIFE_MASTERY,
+  "/dashboard/tracking/review",
+  // The live workout screen: `RestBar` owns its bottom edge, and a rest
+  // countdown you cannot see because a nav bar is over it is the one thing
+  // that screen exists to show.
+  "/programs/live",
+  // The time tracker draws its own six-section bar; two stacked bars would
+  // take 120px of an 844px screen and leave you guessing which moves you
+  // where. Its way out is the back arrow in its header.
+  //
+  // THIS DECISION WAS ONLY A COMMENT until 2026-09-19, inside
+  // `TimetrackScreen.tsx` where nothing could read it — so "Time" was the
+  // second tab sending people somewhere with no bar, and the guard could not
+  // tell that apart from the Training bug. A reason that is not in the data
+  // is a reason no test can check.
+  "/dashboard/time",
+]
+
 export const TAB_ROUTES: string[] = [...TABS, ...MORE_ITEMS].map((t) => t.href)
 
 /** What to call a route in a back link, for the routes that have a name. */

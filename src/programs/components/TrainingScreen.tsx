@@ -22,6 +22,7 @@ import { lazy, Suspense, useEffect, useState } from "react"
 import Link from "next/link"
 import { ProgramsApp } from "./ProgramsApp"
 import { BackLink } from "@/components/BackLink"
+import { MobileTabBar } from "@/components/MobileTabBar"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getProgram } from "../data/catalog"
@@ -178,11 +179,17 @@ export function TrainingScreen({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* `pb-tab-bar` reserved 64px for a bottom bar this route never mounts, so
-          every Training screen ended in a strip of dead space; and `max-w-4xl`
-          was wider than the dashboard people arrive from, so the page jumped
-          width on the way in. */}
-      <div className="mx-auto max-w-3xl px-4 pb-6 pt-4">
+      {/*
+        THE BAR IS HERE NOW, so the space is no longer dead.
+        The comment that stood here said this route never mounts a bottom bar,
+        which was true and was the bug: the bar's own "Training" tab was the
+        one destination in the app that arrived somewhere with no bar, so the
+        way back out disappeared the moment you used it.
+
+        `max-w-2xl` matches the live workout screen, so the column does not
+        shrink again on the way from here into the session.
+      */}
+      <div data-testid="training-screen" className="mx-auto max-w-2xl px-4 pb-tab-bar pt-4">
         <BackLink
           fallback="/dashboard"
           fallbackLabel="Dashboard"
@@ -293,6 +300,7 @@ export function TrainingScreen({
           )}
         </Tabs>
       </div>
+      <MobileTabBar />
     </div>
   )
 }

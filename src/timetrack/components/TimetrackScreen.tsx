@@ -8,6 +8,10 @@
  * stacked bars would take 120px of an 844px screen and leave the user guessing
  * which one moves them where. The way out is the back arrow in the header,
  * which is how every other feature page in this app behaves.
+ *
+ * That decision is recorded in `HIDDEN_ROUTE_PREFIXES` (`components/navTabs.ts`),
+ * not only here: a guard checks that every tab destination either renders the
+ * bar or says in writing that it does not.
  */
 
 import { TogglLab } from "./TogglLab"

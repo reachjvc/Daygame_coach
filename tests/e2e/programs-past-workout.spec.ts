@@ -318,3 +318,46 @@ test("a run is stored as a run, reads as one in History, and counts as one", asy
     await fetch(`/api/health/workout?id=${logId}`, { method: "DELETE" })
   }, id)
 })
+
+test("the bottom bar is on /programs, and the column does not shrink on the way in", async ({
+  page,
+}) => {
+  /**
+   * "Training" is one of the five tabs in the bottom bar, and it was the one
+   * destination in the app that rendered no bar — so the way back out vanished
+   * the moment you used it. The live screen is the deliberate exception:
+   * `RestBar` owns that bottom edge.
+   */
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto("/programs", { waitUntil: "networkidle" })
+
+  await expect(page.getByTestId("mobile-tab-bar")).toBeVisible()
+  await expect(
+    page.getByRole("link", { name: "Training" }).first(),
+    "and it knows you are already here"
+  ).toHaveAttribute("aria-current", "page")
+
+  // THE WIDTH DOES NOT JUMP. Training was max-w-3xl and the workout screen
+  // max-w-2xl, so the column narrowed again the moment you pressed Start.
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto("/programs", { waitUntil: "networkidle" })
+  const training = await page.getByTestId("training-screen").boundingBox()
+
+  await page.evaluate(async () => {
+    const live = await (await fetch("/api/workouts/live")).json()
+    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
+  })
+  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.getByTestId("start-loose-workout").click()
+  await page.waitForURL(/\/programs\/live/)
+
+  const liveCol = await page.getByTestId("live-column").boundingBox()
+  expect(training, "premise: both columns must be measurable").toBeTruthy()
+  expect(liveCol).toBeTruthy()
+  expect(Math.abs(training!.width - liveCol!.width)).toBeLessThanOrEqual(2)
+
+  // And the bar is not on the live screen, where it would sit over the rest
+  // clock. By its own testid, not by a link named "Training" — the live screen
+  // has one of those, going back to /programs, and it is not the bar.
+  await expect(page.getByTestId("mobile-tab-bar")).toHaveCount(0)
+})

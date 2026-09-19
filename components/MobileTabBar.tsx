@@ -6,23 +6,7 @@ import { useState } from "react"
 import { Menu, LogOut } from "lucide-react"
 import { signOut } from "@/app/actions/auth"
 import { BottomSheet, SheetRow } from "@/components/BottomSheet"
-import { TABS, MORE_ITEMS } from "@/components/navTabs"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
-
-/** Routes where the tab bar should be hidden (they have their own bottom bars). */
-const HIDDEN_ROUTE_PREFIXES = [
-  // Life Mastery and the vice module inside it: both draw their own bottom
-  // controls, and two bars stacked on a phone is one bar too many. A prefix, so
-  // every step of the flow and every vice route is covered by the one entry.
-  //
-  // BELT AND BRACES TODAY. This bar is mounted per page rather than in a root
-  // layout, and no page under /life-mastery mounts it — so nothing here is
-  // currently doing any work. It is the answer for the day somebody mounts the
-  // bar app-wide, which is the day this would otherwise sit on top of the
-  // flow's own controls.
-  LIFE_MASTERY,
-  "/dashboard/tracking/review",
-]
+import { TABS, MORE_ITEMS, HIDDEN_ROUTE_PREFIXES } from "@/components/navTabs"
 
 /**
  * Every item in the bar, measured on an iPhone 14, used to be 43.75px tall with
@@ -60,6 +44,15 @@ export function MobileTabBar() {
               <Link
                 key={tab.href}
                 href={tab.href}
+                /**
+                 * WHICH TAB YOU ARE ON, said in more than colour.
+                 *
+                 * The only signal was `text-primary`. A screen reader was told
+                 * nothing at all, and anybody who cannot separate those two
+                 * greys reads five identical tabs — on the control whose whole
+                 * job is saying where you are.
+                 */
+                aria-current={active ? "page" : undefined}
                 className={`${BAR_ITEM} ${active ? "text-primary" : "text-muted-foreground"}`}
                 data-testid={`tab-${tab.label.toLowerCase()}`}
               >
