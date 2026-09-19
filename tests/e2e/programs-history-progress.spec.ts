@@ -13,6 +13,7 @@
  */
 
 import { test, expect } from "@playwright/test"
+import { openTab } from "./helpers/trainingTabs"
 import { seedFinishedWorkout, deleteWorkoutsNamed } from "./helpers/seedWorkout"
 
 test.describe.configure({ mode: "serial" })
@@ -40,7 +41,7 @@ test("shows what each workout was, and what the weeks added up to", async ({ pag
 
   await page.reload({ waitUntil: "networkidle" })
 
-  await page.getByRole("button", { name: "History" }).first().click()
+  await openTab(page, "history")
   await expect(page.getByTestId("workout-history")).toBeVisible({ timeout: 20000 })
   const histText = await page.getByTestId("workout-history").innerText()
   expect(histText).toContain("ZZHist Squat")
@@ -61,7 +62,7 @@ test("shows what each workout was, and what the weeks added up to", async ({ pag
   expect(detail, "and the working set is there in full").toContain("120")
   await page.screenshot({ path: ".playwright-mcp/p4-history-open.png" })
 
-  await page.getByRole("button", { name: "Progress" }).first().click()
+  await openTab(page, "progress")
   await expect(page.getByTestId("week-dots")).toBeVisible({ timeout: 20000 })
   /**
    * WAITING FOR THE BESTS SEPARATELY, and this changed on purpose.
@@ -110,7 +111,7 @@ const id = await seedFinishedWorkout(page, {
 })
 
 await page.reload({ waitUntil: "networkidle" })
-await page.getByRole("button", { name: "History" }).first().click()
+await openTab(page, "history")
 await page.getByTestId("workout-history").getByRole("button", { name: /ZZEdit/ }).first().click()
 await page.getByTestId(`history-edit-open-${id}`).click()
 
@@ -213,7 +214,7 @@ test("correcting a program session moves the weights it prescribed", async ({ pa
 
   // Correct it: the last set was actually a miss.
   await page.reload({ waitUntil: "networkidle" })
-  await page.getByRole("button", { name: "History" }).first().click()
+  await openTab(page, "history")
   // By id, not by lift name: an account with a year of training in it has many
   // workouts containing a squat, and the first one is not this one.
   await page.getByTestId(`history-row-${seeded.workoutId}`).click()
@@ -322,7 +323,7 @@ test("deleting a program session moves the weights back down", async ({ page }) 
 
   // Delete it the way a person does: the History tab.
   await page.reload({ waitUntil: "networkidle" })
-  await page.getByRole("button", { name: "History" }).first().click()
+  await openTab(page, "history")
   // Delete lives inside the workout now, not on the row — a destructive control
   // does not belong beside the one you tap 141 times.
   await page.getByTestId(`history-row-${seeded.workoutId}`).click()
@@ -499,7 +500,7 @@ test("deleting a session on a program edited after it started moves the weights 
    * with an assertion that can actually fail.)
    */
   await page.reload({ waitUntil: "networkidle" })
-  await page.getByRole("button", { name: "History" }).first().click()
+  await openTab(page, "history")
   await page.getByTestId(`history-row-${seeded.lastWorkoutId}`).click()
   page.once("dialog", (d) => void d.accept())
   await page.getByTestId(`history-delete-${seeded.lastWorkoutId}`).click()

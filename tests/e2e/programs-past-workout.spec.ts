@@ -15,6 +15,7 @@
  */
 
 import { test, expect, type Page } from "@playwright/test"
+import { openTab } from "./helpers/trainingTabs"
 import { seedFinishedWorkout } from "./helpers/seedWorkout"
 
 test.describe.configure({ mode: "serial" })
@@ -97,7 +98,7 @@ test("History opens the live screen at the time you choose, and it knows it is t
   const { local, day } = twoDaysAgoAt18()
 
   await page.goto("/programs", { waitUntil: "networkidle" })
-  await page.getByRole("button", { name: "History" }).first().click()
+  await openTab(page, "history")
 
   const openDialog = page.getByTestId("log-past-workout")
   await expect(openDialog).toBeVisible()
@@ -149,7 +150,7 @@ test("a program session from before the program started is refused, in the dialo
   const { local } = twoDaysAgoAt18()
 
   await page.goto("/programs", { waitUntil: "networkidle" })
-  await page.getByRole("button", { name: "History" }).first().click()
+  await openTab(page, "history")
   await page.getByTestId("log-past-workout").click()
   await page.getByLabel("When the workout was").fill(local)
   await page.getByRole("button", { name: /^Workout A/ }).click()
@@ -175,7 +176,7 @@ test("a session dated a minute ago opens LIVE, not in past mode", async ({ page 
    * in tests/unit/programs/liveScreenPastMode.test.tsx, and revert-proved.
    */
   await page.goto("/programs", { waitUntil: "networkidle" })
-  await page.getByRole("button", { name: "History" }).first().click()
+  await openTab(page, "history")
   await page.getByTestId("log-past-workout").click()
 
   /**
@@ -210,7 +211,7 @@ test("a workout already open blocks the dialog and points at it", async ({ page 
     })
   })
   await page.reload({ waitUntil: "networkidle" })
-  await page.getByRole("button", { name: "History" }).first().click()
+  await openTab(page, "history")
   await page.getByTestId("log-past-workout").click()
 
   // Only one workout may be open, so this has to say so rather than fail later.
@@ -230,7 +231,7 @@ test("a finished program session lands in History and moves the program on", asy
   // Through the dialog's own door: History → Log a past workout → today's
   // session. The ceiling is "now" in the ACCOUNT's zone, which is the only
   // clock that gets to decide what day this is.
-  await page.getByRole("button", { name: "History" }).first().click()
+  await openTab(page, "history")
   await page.getByTestId("log-past-workout").click()
   const when = page.getByLabel("When the workout was")
   await when.fill((await when.getAttribute("max"))!)
@@ -310,7 +311,7 @@ test("a run is stored as a run, reads as one in History, and counts as one", asy
 
   // And History says what it was, rather than printing the raw column value.
   await page.reload({ waitUntil: "networkidle" })
-  await page.getByRole("button", { name: "History" }).first().click()
+  await openTab(page, "history")
   await expect(page.getByTestId("workout-history")).toContainText("Run · 31 min")
 
   await page.evaluate(async (logId: string) => {

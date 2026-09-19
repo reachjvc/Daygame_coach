@@ -19,6 +19,7 @@
  */
 
 import { test, expect } from "@playwright/test"
+import { openTab } from "../helpers/trainingTabs"
 
 /**
  * A ceiling that the WORST realistic case has to pass, not the best.
@@ -95,8 +96,8 @@ test.describe.serial("training on a phone", () => {
      * workout, and both live on Today.
      */
     await page.goto("/programs")
-    await expect(page.getByRole("button", { name: "Today", exact: true })).toBeInViewport()
-    await expect(page.getByRole("button", { name: /Anything else/ })).toHaveCount(0)
+    await expect(page.getByRole("tab", { name: "Today", exact: true })).toBeInViewport()
+    await expect(page.getByRole("tab", { name: /Anything else/ })).toHaveCount(0)
     await expect(page.getByTestId("start-loose-workout")).toBeInViewport()
   })
 
@@ -122,7 +123,7 @@ test.describe.serial("training on a phone", () => {
     // the wait is on the data arriving rather than on a fixed pause.
     await page.reload({ waitUntil: "networkidle" })
 
-    await page.getByRole("button", { name: "History" }).first().click()
+    await openTab(page, "history")
     await page.getByTestId("log-past-workout").click()
     const when = page.getByLabel("When the workout was")
     // "Now" in the ACCOUNT's zone, which is what the box's own ceiling is.
