@@ -27,6 +27,7 @@ import {
   programFor,
   plateSetupFor,
   replayedState,
+  getSessionLogs,
   todaysSessionFor,
 } from "./programRepo"
 import { ProgramRefused } from "@/src/programs/errors"
@@ -716,17 +717,61 @@ export async function finishWorkout(
     if (!enr) throw new Error("That program was not found")
     const program = programFor(enr)
     const entries = entriesFromSets(live.sets.map(toStored), live.adjustments, enr.unitSystem)
-    const result = applyLog(program, enr, {
+    const session = {
       enrollment_id: enr.id,
       dayId: live.dayId ?? "",
       cycle: live.cycle ?? enr.cursor.cycle,
       week: live.week ?? enr.cursor.week,
       entries,
-    })
-    changes = result.changes
-    exerciseState = result.enrollment.exerciseState as unknown as Record<string, unknown>
-    cursor = result.enrollment.cursor as unknown as Record<string, unknown>
-    expectedSessionCount = enr.cursor.sessionCount
+    }
+
+    /**
+     * A SESSION DATED BEFORE ONE YOU HAVE ALREADY RECORDED.
+     *
+     * You forgot Tuesday and write it up on Friday, after Thursday's session.
+     * Moving the weights on from where they stand — which is what the deleted
+     * form did — leaves the program disagreeing with what a correction would
+     * compute from the same history: Tuesday's result would sit on top of
+     * Thursday's rather than between Monday's and Thursday's.
+     *
+     * So the whole history is replayed in date order, by the same function the
+     * correction screen already uses. One question, one answer.
+     */
+    const stored = await getSessionLogs(userId, enr.id)
+    const newest = stored.reduce<string | null>(
+      (latest: string | null, l: { logged_at: string }) =>
+        latest === null || l.logged_at > latest ? l.logged_at : latest,
+      null
+    )
+    const backdated = newest !== null && new Date(startedAtIso).getTime() < new Date(newest).getTime()
+
+    if (backdated) {
+      /**
+       * A PROGRAM WITHOUT ITS STARTING WEIGHTS CANNOT BE REPLAYED, and
+       * guessing is worse than refusing. Nothing has been written at this
+       * point, so the refusal costs the session nothing but the retry.
+       */
+      if (!enr.initialExerciseState) {
+        throw new Error(
+          "This program was started before starting weights were kept, so a session cannot be dated before your last one. Date it after your last session, or end and restart the program."
+        )
+      }
+      const replayed = await replayedState(userId, enr.id, {
+        addLog: { ...session, logged_at: startedAtIso },
+      })
+      exerciseState = replayed.enrollment.exerciseState as unknown as Record<string, unknown>
+      cursor = replayed.enrollment.cursor as unknown as Record<string, unknown>
+      expectedSessionCount = replayed.expectedSessionCount
+      // What THIS session moved — computed against the history up to it, not
+      // against where the program stands today.
+      changes = replayed.changesForAdded ?? []
+    } else {
+      const result = applyLog(program, enr, session)
+      changes = result.changes
+      exerciseState = result.enrollment.exerciseState as unknown as Record<string, unknown>
+      cursor = result.enrollment.cursor as unknown as Record<string, unknown>
+      expectedSessionCount = enr.cursor.sessionCount
+    }
   }
 
   /**

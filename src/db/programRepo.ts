@@ -48,6 +48,7 @@ import type {
   ExerciseState,
   LevelId,
   LoggedExercise,
+  ProgressionChange,
   ProgramEnrollment,
   ProgramEnrollmentRow,
   ProgramSchedule,
@@ -904,11 +905,37 @@ export async function skipSession(userId: string, enrollmentId: string): Promise
 export async function replayedState(
   userId: string,
   enrollmentId: string,
-  change?: { withoutLogId: string } | { replaceLogId: string; entries: LoggedExercise[] }
+  change?:
+    | { withoutLogId: string }
+    | { replaceLogId: string; entries: LoggedExercise[] }
+    /**
+     * A SESSION DATED BEFORE ONE ALREADY RECORDED.
+     *
+     * You forgot Tuesday and write it up on Friday, after Thursday's session.
+     * The deleted form counted it as your next session and moved the weights
+     * on from where they stand — so the program's weights then disagreed with
+     * what a correction would compute from the same history.
+     *
+     * Added here rather than in a second replay of its own, because "what do
+     * the weights say, given this history" is one question and deserves one
+     * answer. The list is sorted by `logged_at` inside `replayEnrollment`, so
+     * where in the list it is appended does not matter.
+     */
+    | { addLog: { entries: LoggedExercise[]; logged_at: string; dayId: string; cycle: number; week: number } }
 ): Promise<{
   enrollment: ProgramEnrollment
   expectedSessionCount: number
   replayEvents?: ReplayEvent[]
+  /**
+   * With `addLog`: what THAT session moved, and nothing else.
+   *
+   * Not the difference between the state before the replay and after it —
+   * that includes every later session being recomputed, so a Tuesday session
+   * would be credited with weights Thursday moved. Computed here because this
+   * is where the ordered history already exists; deriving it at the call site
+   * would be a second copy of "which sessions came before this one".
+   */
+  changesForAdded?: ProgressionChange[]
 }> {
   const enr = await getEnrollmentById(userId, enrollmentId)
   if (!enr) throw new Error("Enrollment not found")
@@ -939,12 +966,23 @@ export async function replayedState(
    * state of the history rather than from the state after a write that may not
    * have happened.
    */
-  const applied =
+  const applied: { entries: LoggedExercise[]; logged_at: string; day_id: string; cycle: number; week: number }[] =
     change == null
       ? stored
       : "withoutLogId" in change
         ? stored.filter((l) => l.id !== change.withoutLogId)
-        : stored.map((l) => (l.id === change.replaceLogId ? { ...l, entries: change.entries } : l))
+        : "replaceLogId" in change
+          ? stored.map((l) => (l.id === change.replaceLogId ? { ...l, entries: change.entries } : l))
+          : [
+              ...stored,
+              {
+                entries: change.addLog.entries,
+                logged_at: change.addLog.logged_at,
+                day_id: change.addLog.dayId,
+                cycle: change.addLog.cycle,
+                week: change.addLog.week,
+              },
+            ]
 
   // An edit made before edits were recorded, stitched in at the front. See
   // `repairUneventfulEdit` for what can and cannot be recovered.
@@ -964,10 +1002,39 @@ export async function replayedState(
     events
   )
 
+  let changesForAdded: ProgressionChange[] | undefined
+  if (change != null && "addLog" in change) {
+    // Strictly before: a session sharing an instant with an existing one is
+    // the later of the two, which is the same tie-break `replayEnrollment`
+    // uses (a stable sort leaves equal keys in array order, and the added log
+    // is appended last).
+    const before = applied.filter((l) => l.logged_at < change.addLog.logged_at)
+    const stateBefore = replayEnrollment(
+      program,
+      { ...enr, exerciseState: seedState, cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 } },
+      before.map((l) => ({
+        entries: l.entries,
+        logged_at: l.logged_at,
+        dayId: l.day_id,
+        cycle: l.cycle,
+        week: l.week,
+      })),
+      events
+    )
+    changesForAdded = applyLog(programFor(stateBefore), stateBefore, {
+      enrollment_id: enr.id,
+      dayId: change.addLog.dayId,
+      cycle: change.addLog.cycle,
+      week: change.addLog.week,
+      entries: change.addLog.entries,
+    }).changes
+  }
+
   return {
     enrollment: replayed,
     expectedSessionCount: enr.cursor.sessionCount,
     ...(repair ? { replayEvents: events } : {}),
+    ...(changesForAdded ? { changesForAdded } : {}),
   }
 }
 
