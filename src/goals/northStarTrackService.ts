@@ -164,10 +164,13 @@ export function goalToInsert(plan: NsPlan, runId: string, goal: NsGoal): NsTrack
   if (goal.values.length) insert.aligned_values = goal.values.slice(0, 7)
 
   if (isSystem(goal)) {
-    // How much a week, or how often a week when there is no "how much".
+    /* How much a week, or how often a week when there is no "how much" — and
+       when there is a ramp, what the FIRST week of it asks for. A ramp is the
+       whole point of easing in; starting at the steady rate is starting at the
+       hardest setting. See `practiceRateInWeek`. */
     insert.tracking_type = "counter"
     insert.period = "weekly"
-    insert.target_value = clampInt(goal.perWeek ?? goal.daysPerWeek, 1)
+    insert.target_value = clampInt(practiceRateInWeek(goal, 1), 1)
     insert.goal_type = "habit_ramp"
     if (goal.rampSteps?.length) insert.ramp_steps = goal.rampSteps as unknown as Record<string, unknown>[]
     return insert
@@ -368,6 +371,43 @@ export interface TrackActivity {
   ramp: HabitRampStep[] | null
 }
 
+/**
+ * WHAT A PRACTICE ASKS FOR IN WEEK N — the one place that walks a ramp.
+ *
+ * THE BUG THIS FIXES. The owner's Approaches goal carries a ramp of five a
+ * week for eight weeks, rising to twenty-one. The goal it created asked for
+ * SEVEN a week from day one — neither end of the ramp. Seven was
+ * `daysPerWeek`, a count of DAYS, standing in for a count of approaches
+ * because `perWeek` was never set, and `goalToInsert` never looked at the ramp
+ * at all.
+ *
+ * Meanwhile `activityPerWeek` walked the ramp correctly, so the week grid on
+ * the Track step showed five while the goal directly beneath it asked for
+ * seven. Two answers to one question, 250 lines apart in this file. Both now
+ * come from here.
+ *
+ * PAST THE END OF THE RAMP the steady rate is the ramp's own last step, not
+ * `daysPerWeek`. Approaches ramps to twenty-one a week; falling back to the
+ * day count would have the schedule read 5, 10, 15, 20, 21 and then SEVEN.
+ * An explicit `perWeek` still wins, because that is somebody saying it.
+ */
+export function practiceRateInWeek(
+  practice: { perWeek: number | null; daysPerWeek: number; rampSteps: HabitRampStep[] | null },
+  weekIndex: number,
+): number {
+  const ramp = practice.rampSteps
+  if (ramp?.length) {
+    let week = 0
+    for (const step of ramp) {
+      week += Math.max(1, Math.round(step.durationWeeks))
+      if (weekIndex <= week) return Math.max(0, Math.round(step.frequencyPerWeek))
+    }
+    // Past the end: what the ramp built up to, unless somebody named a rate.
+    return Math.max(0, Math.round(practice.perWeek ?? ramp[ramp.length - 1].frequencyPerWeek))
+  }
+  return Math.max(0, Math.round(practice.perWeek ?? practice.daysPerWeek))
+}
+
 /** Everything in the plan that repeats, in the plan's own priority order. */
 export function trackActivities(plan: NsPlan): TrackActivity[] {
   const areaOf = (areaId: string | null) => plan.areas.find((a) => a.id === areaId)
@@ -428,13 +468,12 @@ export function trackActivities(plan: NsPlan): TrackActivity[] {
  * of the ramp it is the steady rate.
  */
 export function activityPerWeek(activity: TrackActivity, weekIndex: number): number {
-  if (!activity.ramp?.length) return activity.perWeek
-  let week = 0
-  for (const step of activity.ramp) {
-    week += Math.max(1, Math.round(step.durationWeeks))
-    if (weekIndex <= week) return Math.max(0, Math.round(step.frequencyPerWeek))
-  }
-  return activity.perWeek
+  // `perWeek` on a TrackActivity is already the steady rate somebody named, so
+  // it goes in as an explicit one rather than as a fallback.
+  return practiceRateInWeek(
+    { perWeek: activity.perWeek, daysPerWeek: activity.perWeek, rampSteps: activity.ramp },
+    weekIndex,
+  )
 }
 
 export interface TrackWeekRow {
