@@ -29,6 +29,7 @@ import type {
   MetricValue,
 } from "./types"
 import type { UserGoalRow } from "@/src/db/goalTypes"
+import { progressPercent } from "@/src/db/goalProgress"
 import { CircleDot } from "lucide-react"
 import { METRIC_BY_ID, METRIC_BY_LINKED_METRIC } from "./data/metricCatalog"
 
@@ -256,7 +257,7 @@ export function readGoalMetric(
       return { ...base, value: goal.best_streak }
     case "percent":
       return goal.target_value > 0
-        ? { ...base, value: Math.round((goal.current_value / goal.target_value) * 100), target: 100 }
+        ? { ...base, value: progressPercent(goal), target: 100 }
         : { ...base, value: null, reason: "This goal has no target to measure against" }
   }
 }

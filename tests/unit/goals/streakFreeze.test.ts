@@ -12,6 +12,11 @@ describe("shouldAutoFreeze", () => {
     current_streak: 5,
     streak_freezes_available: 2,
     last_freeze_date: null as string | null,
+    // Required by `ProgressFields`: "is this goal complete" is answered in one
+    // place now (src/db/goalProgress.ts), and that place needs the ladder to
+    // know which way the goal runs. Required rather than optional on purpose —
+    // a caller who omits it would silently be told the goal starts at zero.
+    milestone_config: null as Record<string, unknown> | null,
   }
 
   test("returns true when all conditions met", () => {

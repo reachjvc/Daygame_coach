@@ -20,6 +20,7 @@ import { getUserTimezone } from "@/src/db/settingsRepo"
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import { buildGoalMetricId } from "@/src/tracking/metricsService"
 import { shapeOfRow } from "@/src/goals/data/goalShapes"
+import { isGoalComplete } from "@/src/db/goalProgress"
 import {
   GOAL_ACHIEVEMENT_RULES,
   GOAL_RULE_IDS,
@@ -95,7 +96,7 @@ export function factsFor(
       ladder && typeof ladder.start === "number" && typeof ladder.target === "number"
         ? { start: ladder.start, target: ladder.target, current: goal.current_value }
         : null,
-    complete: goal.target_value > 0 && goal.current_value >= goal.target_value,
+    complete: goal.target_value > 0 && isGoalComplete(goal),
     firstMoveOn: asc.find((s) => (s.current_value ?? 0) > 0)?.snapshot_date
       ?? (goal.current_value > 0 ? today : null),
   }

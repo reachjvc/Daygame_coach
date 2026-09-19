@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import { progressPercent, isGoalComplete } from "@/src/db/goalProgress"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
@@ -184,7 +185,7 @@ export function GoalsHubContent({
             ...g,
             current_value: g.current_value + amount,
             progress_percentage: Math.min(100, Math.round(((g.current_value + amount) / g.target_value) * 100)),
-            is_complete: g.current_value + amount >= g.target_value,
+            is_complete: isGoalComplete({ ...g, current_value: g.current_value + amount }),
           }
         : g
     ))
@@ -196,7 +197,7 @@ export function GoalsHubContent({
       })
       if (!response.ok) throw new Error("Failed to increment")
       fetchGoals()
-      if (goal && !goal.is_complete && goal.current_value + amount >= goal.target_value) {
+      if (goal && !goal.is_complete && isGoalComplete({ ...goal, current_value: goal.current_value + amount })) {
         triggerCelebration(goal)
       }
     } catch {
@@ -213,8 +214,12 @@ export function GoalsHubContent({
         ? {
             ...g,
             current_value: value,
-            progress_percentage: Math.min(100, Math.round((value / g.target_value) * 100)),
-            is_complete: value >= g.target_value,
+            /* The same rule the server uses (src/db/goalProgress.ts). Written
+               out by hand here it was the old from-zero sum, so the optimistic
+               update flashed a different number from the one the refetch
+               brought back a moment later. */
+            progress_percentage: progressPercent({ ...g, current_value: value }),
+            is_complete: isGoalComplete({ ...g, current_value: value }),
           }
         : g
     ))
@@ -226,7 +231,7 @@ export function GoalsHubContent({
       })
       if (!response.ok) throw new Error("Failed to set value")
       fetchGoals()
-      if (goal && !goal.is_complete && value >= goal.target_value) {
+      if (goal && !goal.is_complete && isGoalComplete({ ...goal, current_value: value })) {
         triggerCelebration(goal)
       }
     } catch {

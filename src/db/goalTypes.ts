@@ -6,6 +6,7 @@
  */
 
 import { getTodayInTimezone } from "../shared/dateUtils"
+import { progressPercent, isGoalComplete } from "./goalProgress"
 
 export type {
   GoalTrackingType,
@@ -178,12 +179,13 @@ export interface DailyGoalSnapshotInsert {
  * Compute progress fields from a goal row
  */
 export function computeGoalProgress(goal: UserGoalRow, timezone: string): GoalWithProgress {
-  const progress_percentage =
-    goal.target_value > 0
-      ? Math.min(100, Math.round((goal.current_value / goal.target_value) * 100))
-      : 0
+  /* Both come from `goalProgress.ts`, which is the one place that knows a goal
+     can start somewhere other than zero. Written out by hand here, the sum
+     measured the distance from zero rather than the distance travelled, and a
+     climb from 1 to 6 reported 17% before anything happened. */
+  const progress_percentage = progressPercent(goal)
 
-  const is_complete = goal.current_value >= goal.target_value
+  const is_complete = isGoalComplete(goal)
 
   let days_remaining: number | null = null
   const dateStr = goal.target_date ?? goal.custom_end_date

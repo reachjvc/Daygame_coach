@@ -14,6 +14,7 @@ import type {
   DailyGoalSnapshotRow,
 } from "./goalTypes"
 import { computeGoalProgress } from "./goalTypes"
+import { isGoalComplete, type ProgressFields } from "./goalProgress"
 import { resolveMetricValues } from "./metricsRepo"
 import { getTodayInTimezone, getNowInTimezone, periodStartFor, type GoalPeriod } from "../shared/dateUtils"
 import { ROLLING_PERIODS } from "./goalEnums"
@@ -610,7 +611,7 @@ export async function incrementGoalProgress(
   // First get current value
   const { data: current, error: fetchError } = await supabase
     .from("user_goals")
-    .select("current_value, target_value, current_streak, best_streak")
+    .select("current_value, target_value, current_streak, best_streak, milestone_config")
     .eq("id", goalId)
     .eq("user_id", userId)
     .single()
@@ -620,8 +621,12 @@ export async function incrementGoalProgress(
   }
 
   const newValue = (current.current_value as number) + amount
-  const wasComplete = current.current_value >= current.target_value
-  const isNowComplete = newValue >= current.target_value
+  /* `isGoalComplete` (src/db/goalProgress.ts) owns this question, so a goal
+     whose number runs downwards starts completing correctly everywhere at
+     once rather than in whichever file was edited last. */
+  const asRow = current as unknown as ProgressFields
+  const wasComplete = isGoalComplete(asRow)
+  const isNowComplete = isGoalComplete({ ...asRow, current_value: newValue })
 
   // Update streak if just completed
   let updateData: Record<string, unknown> = { current_value: newValue }
@@ -666,7 +671,7 @@ export async function resetGoalPeriod(
   // Get current state to check if goal was completed
   const { data: current, error: fetchError } = await supabase
     .from("user_goals")
-    .select("current_value, target_value, current_streak, period")
+    .select("current_value, target_value, current_streak, period, milestone_config")
     .eq("id", goalId)
     .eq("user_id", userId)
     .single()
@@ -675,7 +680,7 @@ export async function resetGoalPeriod(
     throw new Error(`Failed to fetch goal for reset: ${fetchError.message}`)
   }
 
-  const wasComplete = current.current_value >= current.target_value
+  const wasComplete = isGoalComplete(current as unknown as ProgressFields)
 
   // The new period starts on its BOUNDARY, not today. Stamping today made a
   // manually-reset weekly goal run Wednesday-to-Wednesday while every other
@@ -725,7 +730,7 @@ export async function resetGoalPeriod(
  * the USER'S timezone and the next one starts at Monday 00:00.
  */
 const RESET_COLUMNS =
-  "id, current_value, target_value, current_streak, best_streak, period, period_start_date, streak_freezes_available, streak_freezes_used, last_freeze_date, linked_metric"
+  "id, current_value, target_value, current_streak, best_streak, period, period_start_date, streak_freezes_available, streak_freezes_used, last_freeze_date, linked_metric, milestone_config"
 
 async function resetGoalsForPeriods(
   userId: string,
@@ -773,7 +778,7 @@ async function resetGoalsForPeriods(
   // value back. That keeps period_start_date, streaks and snapshots honest for
   // every goal rather than only the ones nothing else writes to.
   for (const goal of goals) {
-    const wasComplete = goal.current_value >= goal.target_value
+    const wasComplete = isGoalComplete(goal as unknown as ProgressFields)
 
     const updateData: Record<string, unknown> = {
       current_value: 0,
@@ -936,7 +941,7 @@ export async function syncLinkedGoals(
  */
 export async function snapshotGoals(
   userId: string,
-  goals: Array<{ id: string; current_value: number; target_value: number; current_streak: number; best_streak: number; period: string }>,
+  goals: Array<ProgressFields & { id: string; current_streak: number; best_streak: number; period: string }>,
   snapshotDate: string
 ): Promise<number> {
   if (goals.length === 0) return 0
@@ -948,7 +953,7 @@ export async function snapshotGoals(
     snapshot_date: snapshotDate,
     current_value: g.current_value,
     target_value: g.target_value,
-    was_complete: g.current_value >= g.target_value,
+    was_complete: isGoalComplete(g),
     current_streak: g.current_streak,
     best_streak: g.best_streak,
     period: g.period,

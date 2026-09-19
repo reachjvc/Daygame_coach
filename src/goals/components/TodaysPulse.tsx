@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
+import { isGoalComplete } from "@/src/db/goalProgress"
 import { Sparkles } from "lucide-react"
 import { formatStreakLabel } from "../goalsService"
 import type { GoalWithProgress, TimeOfDayBracket } from "../types"
@@ -21,7 +22,7 @@ const TIME_MESSAGES: Record<TimeOfDayBracket, (done: number, total: number, rema
 
 export function TodaysPulse({ goals, timeOfDay }: TodaysPulseProps) {
   const { completed, total, percentage, maxStreak } = useMemo(() => {
-    const completedGoals = goals.filter((g) => g.current_value >= g.target_value)
+    const completedGoals = goals.filter(isGoalComplete)
     const streak = goals.reduce((max, g) => Math.max(max, g.current_streak), 0)
     const pct = goals.length > 0 ? Math.round((completedGoals.length / goals.length) * 100) : 0
     return { completed: completedGoals.length, total: goals.length, percentage: pct, maxStreak: streak }

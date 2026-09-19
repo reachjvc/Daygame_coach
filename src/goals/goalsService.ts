@@ -6,6 +6,7 @@ import { isPracticeRow } from "@/src/goals/data/goalShapes"
 import type { GoalWithProgress, GoalTreeNode, GoalFilterState, InputMode, CelebrationTier, MilestoneLadderConfig, HabitRampStep, PreviewGoalState, TimeOfDayBracket, WeeklyRhythm, PacingInfo, MilestoneCelebrationData, BadgeStatus, TierUpgradeEvent, WeeklyReviewData, WeeklyGoalMomentum, GoalSetupSelections, WillGateResult, BottleneckResult, GoalTemplate, PhaseTransitionEvent, GoalPeriodStats } from "./types"
 import type { DailyGoalSnapshotRow, GoalPhase, LinkedMetric, UserGoalRow } from "@/src/db/goalTypes"
 import { computeGoalProgress } from "@/src/db/goalTypes"
+import { isGoalComplete, progressPercent, type ProgressFields } from "@/src/db/goalProgress"
 import type { BatchGoalInsert } from "./treeGenerationService"
 import type { NewGoalsFlowState } from "./types"
 import { PILLARS, OBJECTIVES, TARGETS, getSharedDriver, makeCustomFrameworkTarget } from "./data/newGoalFramework"
@@ -427,10 +428,10 @@ import { periodStartFor } from "@/src/shared/dateUtils"
  * Conditions: goal incomplete, has streak worth protecting, freeze available, not already frozen today.
  */
 export function shouldAutoFreeze(
-  goal: { current_value: number; target_value: number; current_streak: number; streak_freezes_available: number; last_freeze_date: string | null },
+  goal: ProgressFields & { current_streak: number; streak_freezes_available: number; last_freeze_date: string | null },
   today: string
 ): boolean {
-  if (goal.current_value >= goal.target_value) return false
+  if (isGoalComplete(goal)) return false
   if (goal.current_streak <= 0) return false
   if (goal.streak_freezes_available <= 0) return false
   if (goal.last_freeze_date === today) return false
@@ -466,7 +467,12 @@ export function getTimeOfDayBracket(hour: number): TimeOfDayBracket {
  */
 export function isAlmostComplete(goal: GoalWithProgress, threshold = 0.8): boolean {
   if (goal.target_value <= 0) return false
-  const ratio = goal.current_value / goal.target_value
+  /* Computed from the row, never read off `progress_percentage`: that field is
+     a snapshot taken by whoever built the object, and a caller who assembled a
+     goal by hand leaves it stale. `progressPercent` counts from where the goal
+     started, so a climb from 90 to 100 sitting at 98 is 80% of the way rather
+     than 98% of the way. */
+  const ratio = progressPercent(goal) / 100
   return ratio >= threshold && ratio < 1
 }
 
