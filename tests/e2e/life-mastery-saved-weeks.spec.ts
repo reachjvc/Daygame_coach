@@ -14,6 +14,7 @@
  */
 
 import { test, expect } from "@playwright/test"
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 test.describe.configure({ mode: "serial" })
 
@@ -37,10 +38,17 @@ const WEEK = {
   ],
 }
 
-/** Open the builder: plan → Templates → Build my own. */
+/**
+ * Open the builder: Templates → Build my own.
+ *
+ * BY NAME, NOT BY NUMBER. This went through the `/dashboard/goals/plan`
+ * redirect and clicked `/^5/` — the rail button whose accessible name begins
+ * with its position. One step inserted anywhere before Templates and this spec
+ * silently opens a different screen and fails somewhere else entirely.
+ */
 async function openBuilder(page: import("@playwright/test").Page): Promise<void> {
-  await page.goto("/dashboard/goals/plan", { waitUntil: "networkidle" })
-  await page.getByRole("button", { name: /^5/ }).first().click()
+  await page.goto(`${LIFE_MASTERY}?step=templates`, { waitUntil: "networkidle" })
+  await page.getByRole("button", { name: /Templates/ }).first().click()
   await page.getByRole("button", { name: /build my own/i }).first().click()
   await expect(page.getByText(/Your saved weeks/i)).toBeVisible({ timeout: 20000 })
 }
@@ -115,9 +123,17 @@ test("saving a week keeps it after the page is closed and reopened", async ({ pa
   await page.getByTestId("saved-weeks-list").getByRole("button", { name: /^Seed/ }).click()
   await expect(page.getByText(/Bench Press/i).first()).toBeVisible({ timeout: 10000 })
 
-  // Save the loaded week under a second name.
+  /**
+   * SAVE THE LOADED WEEK UNDER A SECOND NAME — which is "Save as new".
+   *
+   * "Save this week" now means the week you opened, by id. It used to match on
+   * the TYPED NAME, so renaming the week on screen quietly made a second one
+   * and left the original behind with nothing saying which you were looking
+   * at. "Save as new" is the button that means what this test means, and it is
+   * offered only while something is loaded.
+   */
   await page.getByLabel(/Name for the week you are saving/i).fill("Kept Week")
-  await page.getByRole("button", { name: /save this week/i }).click()
+  await page.getByRole("button", { name: /save as new/i }).click()
   await expect(page.getByText(/Saved as "Kept Week"/)).toBeVisible({ timeout: 20000 })
 
   /**

@@ -54,6 +54,8 @@ export default defineConfig({
         /programs-drafts\.spec\.ts/,
         /programs-history-progress\.spec\.ts/,
         /life-mastery-saved-weeks\.spec\.ts/,
+        // Starts programs on the shared account, so it belongs beside the rest.
+        /life-mastery-program-link\.spec\.ts/,
         /health-past-workout\.spec\.ts/,
         /dashboard-training-card\.spec\.ts/,
         /programs-offline\.spec\.ts/,
@@ -142,6 +144,7 @@ export default defineConfig({
         /programs-drafts\.spec\.ts/,
         /programs-history-progress\.spec\.ts/,
         /life-mastery-saved-weeks\.spec\.ts/,
+        /life-mastery-program-link\.spec\.ts/,
         /health-past-workout\.spec\.ts/,
         /dashboard-training-card\.spec\.ts/,
         /programs-offline\.spec\.ts/,
