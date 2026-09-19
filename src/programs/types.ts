@@ -979,3 +979,202 @@ export type MovementPattern =
   | "shoulders"
   | "core"
   | "calves"
+
+// ============================================================================
+// What the screens read
+//
+// These three lived in `programsService.ts` — the engine — for months, and
+// nothing noticed, because the architecture rule that keeps types in types.ts
+// walked a list of slices that did not include `programs`. That list now does.
+// ============================================================================
+
+/** What one lift did over every session logged on a program. */
+export interface LiftProgress {
+  exerciseId: string
+  name: string
+  /** Heaviest working weight the first time it was logged. */
+  first: number
+  /** Heaviest working weight the last time it was logged. */
+  latest: number
+  /** Heaviest ever, which is not always the latest — a deload moves it down. */
+  best: number
+  sessions: number
+  firstAt: string
+  latestAt: string
+  /**
+   * The working weight at each session, oldest first — the SHAPE of the year.
+   *
+   * First and latest say where it started and where it is; they cannot say
+   * whether it climbed steadily, stalled for four months, or came back from a
+   * deload. That is the part somebody actually recognises as their training.
+   *
+   * Downsampled to at most `SPARK_POINTS`, evenly across the run and always
+   * keeping the true first and last, so a three-year log renders the same size
+   * as a three-week one and the endpoints still match the numbers beside it.
+   */
+  points: LoadPoint[]
+}
+
+/** What to hang on each side of the bar, heaviest first. */
+export interface PlateLoad {
+  /** Plates for ONE side, heaviest first. */
+  perSide: number[]
+  /** The weight this actually makes — equal to the target when exact. */
+  achievable: number
+  /** True when the plates cannot make the target exactly. */
+  approximate: boolean
+  /** True when the target is at or below the empty bar. */
+  barOnly: boolean
+}
+
+/**
+ * What the dashboard should say about training right now.
+ *
+ * FOUR STATES, AND THE ORDER MATTERS. A workout you are in the middle of beats
+ * everything: somebody standing in a gym does not need to be told what today's
+ * session is, they need the way back into it. A workout left open for hours is
+ * a different thing again — it is almost certainly forgotten rather than
+ * running, and offering "Resume · 431 min" is the app pretending not to notice.
+ *
+ * Pure, and formats nothing. Minutes and ids come out; how they are worded is
+ * the card's business, and a pure function that returns a sentence cannot be
+ * reused by anything that words it differently.
+ */
+/**
+ * A second program, running alongside the one the card is about.
+ *
+ * Running two at once is a real state — a lifting program and a running plan —
+ * and the card used to show the first in the list and say nothing about the
+ * other, so half of somebody's training was invisible on the page that is
+ * meant to be the door to it. `todayLabel` is null when that program rests
+ * today.
+ */
+export interface AlsoRunning {
+  enrollmentId: string
+  name: string
+  todayLabel: string | null
+}
+
+export type TrainingCardState =
+  /** A workout happening right now. Beats everything: the way back in. */
+  | {
+      kind: "live"
+      workoutId: string
+      enrollmentId: string | null
+      dayLabel: string | null
+      startedAt: string
+      setsTicked: number
+      /** Null for a loose workout, which asked for nothing. */
+      setsAsked: number | null
+      also: AlsoRunning[]
+    }
+  /** Open for hours: almost certainly forgotten rather than running. */
+  | {
+      kind: "stale"
+      workoutId: string
+      enrollmentId: string | null
+      dayLabel: string | null
+      startedAt: string
+      setsTicked: number
+      setsAsked: number | null
+      also: AlsoRunning[]
+    }
+  /**
+   * Today's session, not yet started.
+   *
+   * `dayId` travels with the label so the card cannot name one session and
+   * start another: whoever renders this hands the id straight to Start.
+   */
+  | {
+      kind: "today"
+      enrollmentId: string
+      dayId: string
+      dayLabel: string
+      /** The lifts BY NAME. "3 lifts" tells nobody whether to bring their belt. */
+      lifts: string[]
+      /** A run or a ride, described in words — it has no lifts to list. */
+      endurance?: { blocks: string; minutes: number }
+      /** What happened the last time this same day came round. */
+      lastTime?: { loggedAt: string; setsDone: number; complete: boolean }
+      also: AlsoRunning[]
+    }
+  /**
+   * Nothing prescribed today — and what IS next, because "rest day" with no
+   * way forward was a dead end on the one screen meant to be a door.
+   */
+  | {
+      kind: "rest"
+      enrollmentId: string
+      nextDayId: string
+      nextLabel: string
+      nextWeekday?: number
+      also: AlsoRunning[]
+    }
+  /**
+   * Already trained today. The card used to say Start, which invites a second
+   * workout on a day somebody has finished.
+   */
+  | {
+      kind: "done"
+      workoutId: string
+      enrollmentId: string | null
+      dayLabel: string | null
+      durationMin: number | null
+      sets: number | null
+      next: { label: string; weekday?: number } | null
+      also: AlsoRunning[]
+    }
+  /** Every session in the program has been logged. */
+  | {
+      kind: "finished"
+      enrollmentId: string
+      name: string
+      sessions: number
+      startedAt: string
+      also: AlsoRunning[]
+    }
+  /** No program, nothing open. Still a card, because the door must be there. */
+  | { kind: "none" }
+
+/**
+ * EVERYTHING THE TRACKING CARD NEEDS, READ ONCE, ON THE SERVER.
+ *
+ * The card used to chain three requests in the browser — the enrollment list,
+ * then that enrollment's detail, then the live workout — so it arrived in
+ * three instalments: it popped in late, and it flipped from Start to Resume in
+ * front of you when the third answer landed.
+ *
+ * NOTHING HERE IS A FORMATTED STRING, and `recentlyFinished` is deliberately
+ * the last 48 hours rather than "today": one pure function decides what today
+ * contains, on the account's calendar, and it cannot do that if the server has
+ * already decided for it.
+ */
+export interface TrainingDoorFacts {
+  timezone: string
+  /** `YYYY-MM-DD` on the ACCOUNT's calendar, never the server's or the phone's. */
+  todayDate: string
+  todayWeekday: number
+  live: {
+    id: string
+    enrollmentId: string | null
+    dayId: string | null
+    dayLabel: string | null
+    startedAt: string
+    setsTicked: number
+    setsAsked: number | null
+  } | null
+  programs: Array<{
+    enrollment: ProgramEnrollment
+    prescription: SessionPrescription
+    next: { dayId: string; label: string; weekday?: number } | null
+    lastTimeThisDay: { loggedAt: string; setsDone: number; complete: boolean } | null
+  }>
+  recentlyFinished: Array<{
+    workoutId: string
+    enrollmentId: string | null
+    dayLabel: string | null
+    loggedAt: string
+    durationMin: number | null
+    sets: number | null
+  }>
+}

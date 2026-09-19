@@ -72,7 +72,7 @@ describe("useLoad", () => {
     const { result } = renderHook(() => useLoad("/api/thing", (b) => b as { id: number }[]))
 
     await waitFor(() => expect(result.current.state).toBe("ready"))
-    expect(result.current).toEqual({ state: "ready", data: [{ id: 1 }] })
+    expect(result.current).toMatchObject({ state: "ready", data: [{ id: 1 }] })
   })
 
   /**
@@ -86,7 +86,7 @@ describe("useLoad", () => {
     const { result } = renderHook(() => useLoad("/api/thing", (b) => b as unknown[]))
 
     await waitFor(() => expect(result.current.state).toBe("ready"))
-    expect(result.current).toEqual({ state: "ready", data: [] })
+    expect(result.current).toMatchObject({ state: "ready", data: [] })
   })
 
   it("retry asks again and can succeed", async () => {
@@ -106,7 +106,7 @@ describe("useLoad", () => {
     act(() => failed.retry())
 
     await waitFor(() => expect(result.current.state).toBe("ready"))
-    expect(result.current).toEqual({ state: "ready", data: [{ id: 7 }] })
+    expect(result.current).toMatchObject({ state: "ready", data: [{ id: 7 }] })
     expect(spy).toHaveBeenCalledTimes(2)
   })
 

@@ -22,7 +22,13 @@ import {
 } from "./config"
 import { libraryByName } from "./data/exerciseLibrary"
 import { CUSTOM_PROGRAM_ID } from "./data/customProgram"
+import { enrollmentName } from "./data/catalog"
 import type {
+  AlsoRunning,
+  TrainingDoorFacts,
+  LiftProgress,
+  PlateLoad,
+  TrainingCardState,
   ApplyLogResult,
   DayTemplate,
   EnduranceBlock,
@@ -1672,32 +1678,6 @@ export function formatLoad(weight: number): string {
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
 }
 
-/** What one lift did over every session logged on a program. */
-export interface LiftProgress {
-  exerciseId: string
-  name: string
-  /** Heaviest working weight the first time it was logged. */
-  first: number
-  /** Heaviest working weight the last time it was logged. */
-  latest: number
-  /** Heaviest ever, which is not always the latest — a deload moves it down. */
-  best: number
-  sessions: number
-  firstAt: string
-  latestAt: string
-  /**
-   * The working weight at each session, oldest first — the SHAPE of the year.
-   *
-   * First and latest say where it started and where it is; they cannot say
-   * whether it climbed steadily, stalled for four months, or came back from a
-   * deload. That is the part somebody actually recognises as their training.
-   *
-   * Downsampled to at most `SPARK_POINTS`, evenly across the run and always
-   * keeping the true first and last, so a three-year log renders the same size
-   * as a three-week one and the endpoints still match the numbers beside it.
-   */
-  points: LoadPoint[]
-}
 
 /** Enough to show a shape, few enough to stay a glyph rather than a chart. */
 const SPARK_POINTS = 40
@@ -1950,17 +1930,6 @@ export function unknownExerciseIds(
   return [...new Set(entries.map((e) => e.exerciseId))].filter((id) => !known.has(id))
 }
 
-/** What to hang on each side of the bar, heaviest first. */
-export interface PlateLoad {
-  /** Plates for ONE side, heaviest first. */
-  perSide: number[]
-  /** The weight this actually makes — equal to the target when exact. */
-  achievable: number
-  /** True when the plates cannot make the target exactly. */
-  approximate: boolean
-  /** True when the target is at or below the empty bar. */
-  barOnly: boolean
-}
 
 /**
  * Which plates to load for a target weight.
@@ -2298,65 +2267,219 @@ export function unfinishedLifts(
 // The training card on the dashboard
 // ============================================================================
 
-/**
- * What the dashboard should say about training right now.
- *
- * FOUR STATES, AND THE ORDER MATTERS. A workout you are in the middle of beats
- * everything: somebody standing in a gym does not need to be told what today's
- * session is, they need the way back into it. A workout left open for hours is
- * a different thing again — it is almost certainly forgotten rather than
- * running, and offering "Resume · 431 min" is the app pretending not to notice.
- *
- * Pure, and formats nothing. Minutes and ids come out; how they are worded is
- * the card's business, and a pure function that returns a sentence cannot be
- * reused by anything that words it differently.
- */
-export type TrainingCardState =
-  | { kind: "live"; workoutId: string; minutes: number }
-  | { kind: "stale"; workoutId: string; startedAt: string; minutes: number }
-  /**
-   * `dayId` travels with the label so the card cannot name one session and
-   * start another: whoever renders this hands the id straight to Start.
-   */
-  | { kind: "today"; enrollmentId: string; dayId: string; dayLabel: string; lifts: number }
-  | { kind: "rest"; enrollmentId: string; dayId: string; nextLabel: string; nextWeekday?: number }
-  | { kind: "none" }
 
 /** After this long, an open workout is forgotten rather than running. */
 export const STALE_WORKOUT_HOURS = 6
 
-export function trainingCardState(
-  live: { id: string; startedAt: string } | null,
-  prescription: SessionPrescription | null,
-  enrollmentId: string | null,
-  now: Date = new Date()
-): TrainingCardState {
-  if (live) {
-    const minutes = Math.max(0, Math.floor((now.getTime() - new Date(live.startedAt).getTime()) / 60000))
-    return minutes > STALE_WORKOUT_HOURS * 60
-      ? { kind: "stale", workoutId: live.id, startedAt: live.startedAt, minutes }
-      : { kind: "live", workoutId: live.id, minutes }
-  }
+/**
+ * WHICH PROGRAM THE CARD IS ABOUT — a rule, not a position in a list.
+ *
+ * It was `enrollments[0]`: the most recently started, whatever that happened
+ * to be. Run a lifting program and a running plan and the card showed one of
+ * them and said nothing about the other, so half of somebody's training was
+ * invisible on the page that is meant to be the door to it.
+ *
+ * In order: the program the open workout belongs to; the one already trained
+ * today (so the done state, its link and its "also" line all name the same
+ * program); then, among those with a session actually due, the one most
+ * recently trained, ties to the earliest started. A never-trained program is
+ * chosen only when nothing else qualifies.
+ */
+export function chooseCardEnrollment(
+  facts: TrainingDoorFacts,
+  trainedTodayEnrollmentId: string | null
+): { chosen: TrainingDoorFacts["programs"][number] | null; also: AlsoRunning[] } {
+  const all = facts.programs
+  if (all.length === 0) return { chosen: null, also: [] }
 
-  if (!prescription || !enrollmentId) return { kind: "none" }
+  const alsoFor = (chosen: TrainingDoorFacts["programs"][number]) =>
+    all
+      .filter((p) => p.enrollment.id !== chosen.enrollment.id)
+      .map((p) => ({
+        enrollmentId: p.enrollment.id,
+        name: enrollmentName(p.enrollment),
+        todayLabel: p.prescription.restDay ? null : p.prescription.dayLabel,
+      }))
 
-  if (prescription.restDay) {
+  const pick = (from: TrainingDoorFacts["programs"]) =>
+    [...from].sort((a, b) => {
+      const at = a.enrollment.lastLoggedAt ?? ""
+      const bt = b.enrollment.lastLoggedAt ?? ""
+      // Most recently trained first; never-trained last.
+      if (at !== bt) return bt.localeCompare(at)
+      return a.enrollment.started_at.localeCompare(b.enrollment.started_at)
+    })[0]
+
+  const byId = (id: string | null) => (id ? all.find((p) => p.enrollment.id === id) : undefined)
+
+  const chosen =
+    byId(facts.live?.enrollmentId ?? null) ??
+    byId(trainedTodayEnrollmentId) ??
+    // Due today: not resting, not finished.
+    pick(all.filter((p) => !p.prescription.restDay && !p.prescription.isComplete)) ??
+    pick(all)
+
+  return { chosen: chosen ?? null, also: chosen ? alsoFor(chosen) : [] }
+}
+
+/**
+ * WHAT IS NEXT, after today — one owner.
+ *
+ * A rest day used to be a dead end: "nothing today" and no way to see what was
+ * coming, on the one screen meant to be a door. And after finishing a session
+ * on a weekday-pinned program nothing could say what was next at all, because
+ * `getTodaySession` answers with today's own day again.
+ */
+export function nextSessionAfterToday(
+  program: ProgramDefinition,
+  enrollment: ProgramEnrollment,
+  todayWeekday: number
+): { dayId: string; label: string; weekday?: number } | null {
+  const schedule = effectiveProgram(program, enrollment.customSchedule).schedule
+  const days = scheduleDaysOrNone(schedule)
+  if (days.length === 0) return null
+
+  if (isWeekdayAnchored(schedule)) {
+    // Tomorrow's weekday, wrapping Sunday → Monday. `pickTodaysDay` walks
+    // forward from there to the nearest pinned day.
+    const tomorrow = (todayWeekday % 7) + 1
+    const picked = pickTodaysDay(schedule, tomorrow)
+    if (!picked) return null
+    const day = days[picked.dayIndex]
     return {
-      kind: "rest",
-      enrollmentId,
-      dayId: prescription.dayId,
-      nextLabel: prescription.dayLabel,
-      ...(prescription.scheduledWeekday ? { nextWeekday: prescription.scheduledWeekday } : {}),
+      dayId: day.id,
+      label: day.label,
+      ...(picked.scheduledWeekday != null ? { weekday: picked.scheduledWeekday } : {}),
     }
   }
 
+  // In sequence: the cursor's day, which a finished session has already moved.
+  const next = computePrescription(program, enrollment)
+  return { dayId: next.dayId, label: next.dayLabel }
+}
+
+/**
+ * A RUN DESCRIBED IN WORDS, because it has no lifts to count.
+ *
+ * The card printed a lift count, which is 0 for every endurance day — so a
+ * Couch to 5K session appeared on the dashboard as a name and nothing else,
+ * and the one thing a person wants to know before putting their shoes on
+ * (how long, and what the intervals are) was on another screen.
+ */
+export function describeEndurance(sets: EnduranceSet[]): { blocks: string; minutes: number } {
+  const blocks = sets
+    .map((set) => {
+      const inner = set.blocks.map((b) => b.label).join(" / ")
+      return set.repeat > 1 ? `${set.repeat} × ${inner}` : inner
+    })
+    .join(" · ")
+  return { blocks, minutes: enduranceMinutes(sets) }
+}
+
+/**
+ * WHAT THE DOOR SAYS ABOUT TRAINING RIGHT NOW.
+ *
+ * ORDER OF PRECEDENCE, and each step of it is a complaint that was made:
+ *
+ *   1. A workout in progress beats everything. Somebody standing in a gym does
+ *      not need to be told what today's session is; they need the way back in.
+ *   2. A workout open for hours is a different thing — almost certainly
+ *      forgotten, and "Resume · 431 min" is the app pretending not to notice.
+ *   3. A session already finished today. The card used to say Start, which
+ *      invites a second workout on a day you have already trained.
+ *   4. Then, and only then, what is due.
+ *
+ * WHOSE TODAY. `trainedToday` is the ONE place in the app that turns a
+ * workout's instant into "today" for this card, and it does it on the
+ * account's calendar — which is what makes a 23:45 Copenhagen session count as
+ * Monday and a 00:10 one count as Tuesday. `now` is used for elapsed minutes
+ * and nothing else.
+ *
+ * Pure, and formats nothing: labels, counts and instants come out, and how
+ * they are worded is the card's business. A pure function that returns a
+ * sentence cannot be reused by anything that words it differently — and Phase
+ * 5's Today card reuses exactly this one.
+ */
+export function trainingCardState(facts: TrainingDoorFacts, now: Date = new Date()): TrainingCardState {
+  const trainedToday = facts.recentlyFinished.filter(
+    (w) => getTodayInTimezone(facts.timezone, new Date(w.loggedAt)) === facts.todayDate
+  )
+  const newestToday = trainedToday[0] ?? null
+
+  const { chosen, also } = chooseCardEnrollment(facts, newestToday?.enrollmentId ?? null)
+
+  if (facts.live) {
+    const elapsed = Math.max(0, now.getTime() - new Date(facts.live.startedAt).getTime())
+    const open = {
+      workoutId: facts.live.id,
+      enrollmentId: facts.live.enrollmentId,
+      dayLabel: facts.live.dayLabel,
+      startedAt: facts.live.startedAt,
+      setsTicked: facts.live.setsTicked,
+      setsAsked: facts.live.setsAsked,
+      also,
+    }
+    return elapsed > STALE_WORKOUT_HOURS * 3_600_000
+      ? { kind: "stale", ...open }
+      : { kind: "live", ...open }
+  }
+
+  if (newestToday) {
+    return {
+      kind: "done",
+      workoutId: newestToday.workoutId,
+      enrollmentId: newestToday.enrollmentId,
+      dayLabel: newestToday.dayLabel,
+      durationMin: newestToday.durationMin,
+      sets: newestToday.sets,
+      next: chosen?.next ? { label: chosen.next.label, ...(chosen.next.weekday != null ? { weekday: chosen.next.weekday } : {}) } : null,
+      also,
+    }
+  }
+
+  if (!chosen) return { kind: "none" }
+
+  const { enrollment, prescription } = chosen
+
+  if (prescription.isComplete) {
+    return {
+      kind: "finished",
+      enrollmentId: enrollment.id,
+      name: enrollmentName(enrollment),
+      sessions: prescription.sessionCount,
+      startedAt: enrollment.started_at,
+      also,
+    }
+  }
+
+  if (prescription.restDay) {
+    // A rest day with nowhere to go was the dead end. `next` is why this state
+    // is worth showing at all.
+    if (!chosen.next) return { kind: "none" }
+    return {
+      kind: "rest",
+      enrollmentId: enrollment.id,
+      nextDayId: chosen.next.dayId,
+      nextLabel: chosen.next.label,
+      ...(chosen.next.weekday != null ? { nextWeekday: chosen.next.weekday } : {}),
+      also,
+    }
+  }
+
+  const endurance =
+    prescription.exercises.length === 0 && prescription.enduranceSets
+      ? describeEndurance(prescription.enduranceSets)
+      : undefined
+
   return {
     kind: "today",
-    enrollmentId,
+    enrollmentId: enrollment.id,
     dayId: prescription.dayId,
     dayLabel: prescription.dayLabel,
-    // Endurance days prescribe blocks rather than lifts, so this is 0 for them
-    // and the card says the day's name without a count it does not have.
-    lifts: prescription.exercises.length,
+    // BY NAME. "3 lifts" does not tell anybody whether to bring their belt.
+    lifts: prescription.exercises.map((e) => e.name),
+    ...(endurance ? { endurance } : {}),
+    ...(chosen.lastTimeThisDay ? { lastTime: chosen.lastTimeThisDay } : {}),
+    also,
   }
 }

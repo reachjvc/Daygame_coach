@@ -38,13 +38,24 @@ import { useCallback, useEffect, useRef, useState } from "react"
  * must go through. That comment described something that did not exist until
  * this file; it is now true.
  */
+/**
+ * `reload` is on EVERY state, not just `failed`.
+ *
+ * A screen that has already loaded sometimes needs to ask again — after it
+ * changed something the answer depends on. The Tracking card is the case that
+ * added it: when a Start is refused, the honest response is not to guess at
+ * the refusal's wording but to re-read and let the facts say what happened.
+ *
+ * `retry` stays on `failed` as its own name, because "try that again" is what
+ * the button under a failure says and reads better at the call site.
+ */
 export type Load<T> =
-  | { state: "loading" }
-  | { state: "ready"; data: T }
-  | { state: "failed"; retry: () => void }
+  | { state: "loading"; reload: () => void }
+  | { state: "ready"; data: T; reload: () => void }
+  | { state: "failed"; retry: () => void; reload: () => void }
 
 export function useLoad<T>(url: string, parse: (body: unknown) => T): Load<T> {
-  const [result, setResult] = useState<Load<T>>({ state: "loading" })
+  const [result, setResult] = useState<Omit<Load<T>, "reload">>({ state: "loading" } as Omit<Load<T>, "reload">)
 
   /**
    * `parse` is almost always an inline arrow, so it is a new function on every
@@ -70,7 +81,7 @@ export function useLoad<T>(url: string, parse: (body: unknown) => T): Load<T> {
     let alive = true
 
     const fail = () => {
-      if (alive) setResult({ state: "failed", retry })
+      if (alive) setResult({ state: "failed", retry } as Omit<Load<T>, "reload">)
     }
 
     fetch(url)
@@ -84,7 +95,7 @@ export function useLoad<T>(url: string, parse: (body: unknown) => T): Load<T> {
         if (!alive) return
         // parse() throwing lands in the catch below, which is what we want: a
         // body we cannot read is not data.
-        setResult({ state: "ready", data: parseRef.current(body) })
+        setResult({ state: "ready", data: parseRef.current(body) } as Omit<Load<T>, "reload">)
       })
       .catch(fail)
 
@@ -93,5 +104,6 @@ export function useLoad<T>(url: string, parse: (body: unknown) => T): Load<T> {
     }
   }, [url, attempt, retry])
 
-  return result
+  // `reload` on every state, so a screen that has already loaded can ask again.
+  return { ...result, reload: retry } as Load<T>
 }

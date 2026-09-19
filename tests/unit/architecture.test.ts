@@ -51,6 +51,24 @@ const ALLOWED_LONG_ROUTES = new Set([
 ])
 
 const ALLOWED_TYPE_EXPORTS = new Set([
+  // --- src/programs, seeded when `programs` joined the scanned slices. Each
+  // one is a type that belongs WITH its code rather than in the slice's shared
+  // vocabulary; the list may only shrink.
+  //
+  // A component's own props, read by nothing else.
+  'src/programs/components/live/SetRow.tsx',
+  // Unions OF the shared types, for narrowing a schedule's days — they describe
+  // the customiser's view of types.ts rather than adding to it.
+  'src/programs/customize.ts',
+  // The outcomes of this hook's own actions: "saved | queued | refused".
+  'src/programs/hooks/useLiveWorkout.ts',
+  // The ok/not-ok shape every program button answers with.
+  'src/programs/programActions.ts',
+  // What the text parser returns, including where each problem was.
+  'src/programs/programText.ts',
+  // One settings record, read back by the screen that writes it.
+  'src/programs/trainingSettings.ts',
+
   'src/articles/schemas.ts',
   'src/qa/providers/index.ts',
   'src/qa/schemas.ts',
@@ -222,7 +240,15 @@ describe('Architecture Compliance', () => {
   })
 
   describe('Slice Structure', () => {
-    const slices = ['qa', 'inner-game', 'scenarios', 'tracking', 'profile', 'settings', 'articles']
+    /**
+     * `programs` was absent, and so the type rule never looked at the gym.
+     *
+     * `TrainingCardState`, `LiftProgress` and `PlateLoad` all lived in
+     * `programsService.ts` for months with nothing noticing — the one slice
+     * whose types the Tracking card, the Training page and the live screen all
+     * read.
+     */
+    const slices = ['qa', 'inner-game', 'scenarios', 'tracking', 'profile', 'settings', 'articles', 'programs']
 
     test('Each slice should have a types.ts file', () => {
       // Arrange & Act
@@ -739,7 +765,6 @@ describe('Architecture Compliance', () => {
       'src/programs/components/ProgressionView.tsx',
       'src/programs/components/SavedWeeks.tsx',
       'src/programs/components/TodaySessionWidget.tsx',
-      'src/programs/components/TrainingCard.tsx',
       'src/programs/components/WeekStrip.tsx',
       'src/qa/components/QAPage.tsx',
       'src/scenarios/components/ChatWindow.tsx',

@@ -9,6 +9,7 @@ import Link from "next/link"
 import { QuickAddModal } from "./QuickAddModal"
 import { SeasonBand } from "@/src/goals/components/north-star/SeasonBand"
 import type { DashboardLayoutResponse } from "../types"
+import { TRACKING } from "@/src/shared/trainingRoutes"
 import {
   DashboardSkeleton,
   StatTileGrid,
@@ -93,7 +94,7 @@ export function ProgressDashboard({ initialDashboard }: { initialDashboard?: Das
         above the things you read.
       */}
       <Suspense fallback={null}>
-        <TrainingCard />
+        <TrainingCard from={TRACKING} />
       </Suspense>
 
       {/* Stat tiles — user-configurable; see StatTileGrid */}
