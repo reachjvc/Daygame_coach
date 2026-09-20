@@ -20,6 +20,7 @@ import { getTodayInTimezone, getNowInTimezone, periodStartFor, type GoalPeriod }
 import { ROLLING_PERIODS } from "./goalEnums"
 import { metricFitsPeriod } from "../tracking/metricsService"
 import { shouldAutoFreeze, isPeriodStale } from "../goals/goalsService"
+import { practiceRateInWeek } from "../goals/northStarTrackService"
 
 // ============================================
 // Duplicate Prevention
@@ -732,7 +733,36 @@ export async function resetGoalPeriod(
  * the USER'S timezone and the next one starts at Monday 00:00.
  */
 const RESET_COLUMNS =
-  "id, current_value, target_value, current_streak, best_streak, period, period_start_date, streak_freezes_available, streak_freezes_used, last_freeze_date, linked_metric, milestone_config"
+  "id, current_value, target_value, current_streak, best_streak, period, period_start_date, streak_freezes_available, streak_freezes_used, last_freeze_date, linked_metric, milestone_config, ramp_steps, created_at"
+
+/**
+ * What a ramped weekly goal should be asking for, now.
+ *
+ * Null when the goal has no ramp, or is not weekly — a ramp is a rate per week,
+ * and applying it to a daily or yearly counter would be inventing a meaning it
+ * does not have. `created_at` is the start of week one.
+ */
+export function rampTargetForPeriod(
+  goal: { period: unknown; ramp_steps: unknown; created_at: unknown; target_value: number },
+  today: string,
+): number | null {
+  if (goal.period !== "weekly") return null
+  const ramp = goal.ramp_steps
+  if (!Array.isArray(ramp) || ramp.length === 0) return null
+  const createdAt = typeof goal.created_at === "string" ? goal.created_at.slice(0, 10) : null
+  if (!createdAt) return null
+
+  const started = Date.parse(`${createdAt}T00:00:00Z`)
+  const now = Date.parse(`${today}T00:00:00Z`)
+  if (!Number.isFinite(started) || !Number.isFinite(now) || now < started) return null
+
+  const weekIndex = Math.floor((now - started) / (7 * 86400000)) + 1
+  const rate = practiceRateInWeek(
+    { perWeek: null, daysPerWeek: goal.target_value, rampSteps: ramp as never },
+    weekIndex,
+  )
+  return Math.max(1, rate)
+}
 
 async function resetGoalsForPeriods(
   userId: string,
@@ -785,6 +815,24 @@ async function resetGoalsForPeriods(
     const updateData: Record<string, unknown> = {
       current_value: 0,
       period_start_date: starts.get(goal.period as string)!,
+    }
+
+    /* THE RAMP MOVES THE TARGET, WHICH IS THE WHOLE POINT OF HAVING ONE.
+    
+       The owner's Approaches goal says five a week for eight weeks, then ten,
+       then fifteen. `ramp_steps` has been stored on the row since the goal was
+       created and NOTHING HAS EVER READ IT to change anything: week nine asked
+       for exactly what week one asked for, for ever. He found this himself —
+       "remembers it, never acts on it".
+    
+       The new period's number is whatever the ramp says for the week the goal
+       has now reached, counted from the day it was created. Past the end of the
+       ramp it is what the ramp built up to. `practiceRateInWeek` is the same
+       function the Track step's week grid uses, so the schedule and the goal
+       cannot drift apart. */
+    const nextTarget = rampTargetForPeriod(goal, today)
+    if (nextTarget !== null && nextTarget !== goal.target_value) {
+      updateData.target_value = nextTarget
     }
 
     if (!wasComplete) {
