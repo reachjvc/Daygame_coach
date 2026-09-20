@@ -12,11 +12,12 @@ import { ProgressionView } from "./ProgressionView"
 import { StartLooseWorkout } from "./StartLooseWorkout"
 import { EditActiveProgram } from "./EditActiveProgram"
 import { WeekStrip } from "./WeekStrip"
+import { DayAssignment } from "./DayAssignment"
 import { PastPrograms } from "./PastPrograms"
 import { useActiveEnrollments, useEnrollment } from "../hooks/useEnrollment"
-import { requireProgram, enrollmentName } from "../data/catalog"
+import { requireProgram, enrollmentName, getProgram } from "../data/catalog"
 import { effectiveProgram } from "../customize"
-import { computePrescription } from "../programsService"
+import { formatDateOnly, computePrescription } from "../programsService"
 import { LEVEL_LABELS } from "../config"
 import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment } from "../types"
 import { endProgram, resetProgram } from "../programActions"
@@ -201,12 +202,13 @@ export function ProgramsApp({ initialActive, initialPast, initialDetail, live = 
                 <div className="min-w-0">
                   <div className="truncate font-medium">{enrollmentName(e)}</div>
                   <div className="text-xs text-muted-foreground">
-                    {LEVEL_LABELS[e.level]} · started {new Date(e.started_at).toLocaleDateString()}
+                    {LEVEL_LABELS[e.level]} · started{" "}
+                    {e.startedOn ? formatDateOnly(e.startedOn, "short") : "—"}
                   </div>
                   {/* The fact that tells a live program from a forgotten one. */}
                   <div className="text-xs text-muted-foreground">
-                    {e.lastLoggedAt
-                      ? `last trained ${new Date(e.lastLoggedAt).toLocaleDateString()}`
+                    {e.lastLoggedOn
+                      ? `last trained ${formatDateOnly(e.lastLoggedOn!, "short")}`
                       : "not trained yet"}
                   </div>
                 </div>
@@ -227,6 +229,23 @@ export function ProgramsApp({ initialActive, initialPast, initialDetail, live = 
   )
 }
 
+/**
+ * What the program asks for on each weekday, for the strip's screen-reader text.
+ *
+ * Only a days-and-lifts program has weekdays at all: an endurance plan is a
+ * sequence of weeks, and skill routines are day lists with no weekday field.
+ * Those get no labels rather than invented ones.
+ */
+function weekdayLabels(enrollment: ProgramEnrollment): Record<number, string | undefined> {
+  const program = getProgram(enrollment.program_id)
+  if (!program) return {}
+  const schedule = effectiveProgram(program, enrollment.customSchedule).schedule
+  if (schedule.kind !== "linear_rotation" && schedule.kind !== "weekly_waved") return {}
+  const out: Record<number, string | undefined> = {}
+  for (const d of schedule.days) if (d.weekday != null) out[d.weekday] = d.label
+  return out
+}
+
 function ActiveProgram({
   enrollmentId,
   initialDetail,
@@ -243,6 +262,8 @@ function ActiveProgram({
   const { detail, loading, error, refresh } = useEnrollment(enrollmentId, initialDetail)
   /** A session the user picked instead of the one the app offered. */
   const [pickedDayId, setPickedDayId] = useState<string | null>(null)
+  /** Which weekday's assignment is open, 1 = Monday. */
+  const [pickingWeekday, setPickingWeekday] = useState<number | null>(null)
   const [editing, setEditing] = useState(false)
   /** The server's sentence when "I am done with this" or "Run it again" is refused. */
   const [finishFailed, setFinishFailed] = useState<string | null>(null)
@@ -337,11 +358,21 @@ function ActiveProgram({
         reporting anything.
       */}
       <WeekStrip
-        enrollment={detail.enrollment}
-        today={detail.week.todayWeekday}
-        trainedWeekdays={detail.week.trainedWeekdays}
-        onSaved={refresh}
+        week={detail.week}
+        labels={weekdayLabels(detail.enrollment)}
+        onPickDay={setPickingWeekday}
       />
+      {pickingWeekday !== null && (
+        <DayAssignment
+          enrollment={detail.enrollment}
+          weekday={pickingWeekday}
+          onSaved={() => {
+            setPickingWeekday(null)
+            void refresh()
+          }}
+          onCancel={() => setPickingWeekday(null)}
+        />
+      )}
 
       {/* WHAT TODAY IS, AND THE BUTTON THAT STARTS IT.
           Reading the session and doing it used to be one screen — a form with

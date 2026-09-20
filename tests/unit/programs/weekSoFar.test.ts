@@ -15,7 +15,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { weekSoFar } from "@/src/programs/programsService"
+import { weekSoFar, formatDateOnly } from "@/src/programs/programsService"
 
 /** Monday midday UTC. Tuesday 00:00 in Auckland (UTC+12), Monday 13:00 in London. */
 const MONDAY_MIDDAY = new Date("2026-09-14T12:00:00.000Z")
@@ -91,5 +91,67 @@ describe("which days of this week were trained", () => {
     const sundayLast = { logged_at: "2026-09-13T23:59:59.000Z" }
     expect(weekSoFar([mondayMidnight], "UTC", now).trainedWeekdays).toEqual([1])
     expect(weekSoFar([sundayLast], "UTC", now).trainedWeekdays).toEqual([])
+  })
+})
+
+describe("the two fields the strip and the card both need", () => {
+  it("says which zone it answered in, so a reader can tell", () => {
+    // Without this the object is four numbers with no way to know whose
+    // calendar produced them — which is how two screens came to disagree.
+    const week = weekSoFar([], "Europe/Copenhagen", new Date("2026-09-16T10:00:00Z"))
+    expect(week.timezone).toBe("Europe/Copenhagen")
+  })
+
+  it("names the Monday the week started on, as a date with no zone left in it", () => {
+    // Wednesday 16 September 2026; the Monday before it is the 14th.
+    const week = weekSoFar([], "Europe/Copenhagen", new Date("2026-09-16T10:00:00Z"))
+    expect(week.weekStartedOn).toBe("2026-09-14")
+  })
+
+  it("answers 'trained today' itself, rather than leaving it to be re-derived", () => {
+    // Derived anywhere else, it needs today's weekday again — and the place
+    // most likely to ask for that is a component, from the phone's clock.
+    const now = new Date("2026-09-16T10:00:00Z")
+    expect(weekSoFar([], "Europe/Copenhagen", now).trainedToday).toBe(false)
+    expect(
+      weekSoFar([{ logged_at: "2026-09-16T06:00:00Z" }], "Europe/Copenhagen", now).trainedToday
+    ).toBe(true)
+    // Trained this week but not today is not "trained today".
+    expect(
+      weekSoFar([{ logged_at: "2026-09-14T06:00:00Z" }], "Europe/Copenhagen", now).trainedToday
+    ).toBe(false)
+  })
+
+  it("a 23:45 Copenhagen session counts as today, not tomorrow", () => {
+    // 21:45Z on the 16th is 23:45 in Copenhagen — still Wednesday there, and
+    // the UTC date agrees; the 22:30Z one is already Thursday in Copenhagen.
+    const now = new Date("2026-09-16T21:50:00Z")
+    const week = weekSoFar([{ logged_at: "2026-09-16T21:45:00Z" }], "Europe/Copenhagen", now)
+    expect(week.trainedToday).toBe(true)
+    expect(week.trainedWeekdays).toEqual([3])
+  })
+})
+
+describe("formatDateOnly", () => {
+  it("prints the day it was given, never the day before", () => {
+    /**
+     * The whole point: `new Date("2026-09-14")` is midnight UTC, and a
+     * formatter running west of London prints the 13th. Pinning UTC and
+     * building the date at noon means no zone can move it.
+     */
+    expect(formatDateOnly("2026-09-14", "short")).toMatch(/14/)
+    expect(formatDateOnly("2026-09-14", "short")).not.toMatch(/13/)
+    expect(formatDateOnly("2026-01-01", "short")).toMatch(/1/)
+    expect(formatDateOnly("2026-01-01", "short")).not.toMatch(/31/)
+  })
+
+  it("can say the weekday instead", () => {
+    // 14 September 2026 is a Monday.
+    expect(formatDateOnly("2026-09-14", "weekday")).toMatch(/Mon/)
+  })
+
+  it("hands back anything it cannot read, rather than printing a wrong date", () => {
+    expect(formatDateOnly("not-a-date", "short")).toBe("not-a-date")
+    expect(formatDateOnly("", "short")).toBe("")
   })
 })

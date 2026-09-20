@@ -512,6 +512,16 @@ export interface ProgramEnrollment {
   is_active: boolean
   started_at: string
   /**
+   * The same two facts as dates on the ACCOUNT's calendar, `YYYY-MM-DD`.
+   *
+   * Beside the instants rather than instead of them: an instant is the truth,
+   * but every screen that PRINTS one was doing `new Date(x).toLocaleDateString()`
+   * — the browser's zone — so "started 3 Feb" could read as 2 Feb for somebody
+   * travelling. A date-only string has no zone left to get wrong.
+   */
+  startedOn?: string
+  lastLoggedOn?: string | null
+  /**
    * The user's own version of the schedule, or null to follow the catalog.
    *
    * COPY-ON-WRITE, not a diff. Null until the first edit, so an untouched
@@ -895,7 +905,29 @@ export interface EnrollmentDetail {
    * the account's zone, and handed down so the strip and the session card
    * cannot name different days. See `weekSoFar`.
    */
-  week: { todayWeekday: number; trainedWeekdays: number[] }
+  week: WeekSoFar
+}
+
+/**
+ * THIS WEEK, ON THE ACCOUNT'S CALENDAR.
+ *
+ * Four things on the training screens used to answer "what day is it" and
+ * three of them asked the phone. A 23:45 Monday session in Copenhagen is
+ * Tuesday in UTC, so the strip lit the wrong dot, the card offered the wrong
+ * session, and "trained today" was false on the day you trained.
+ *
+ * Every field here is decided on the server, in one place, and carried down.
+ * `weekStartedOn` and the weekday numbers are ISO: Monday is 1.
+ */
+export interface WeekSoFar {
+  /** The zone every field below was computed in, so a reader can say which. */
+  timezone: string
+  /** Monday of this week, `YYYY-MM-DD` — a string with no zone to get wrong. */
+  weekStartedOn: string
+  todayWeekday: number
+  trainedWeekdays: number[]
+  /** Whether one of those is today. Derived here so nobody derives it twice. */
+  trainedToday: boolean
 }
 
 /**

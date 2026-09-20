@@ -35,8 +35,8 @@ import {
   seedForAddedExercises,
   applyWeightOverrides,
 } from "@/src/programs/customize"
-import { getUserClock } from "./settingsRepo"
-import { isoWeekdayInTimezone } from "@/src/shared/dateUtils"
+import { getUserClock, getUserTimezone } from "./settingsRepo"
+import { getTodayInTimezone, isoWeekdayInTimezone } from "@/src/shared/dateUtils"
 import {
   DEFAULT_PLATES,
   KG_PER_LB,
@@ -181,7 +181,30 @@ export async function listActiveEnrollments(userId: string): Promise<ProgramEnro
     const row = (latest ?? [])[0] as { logged_at: string } | undefined
     if (row) lastByEnrollment.set(e.id, row.logged_at)
   }
-  return enrollments.map((e) => ({ ...e, lastLoggedAt: lastByEnrollment.get(e.id) ?? null }))
+  return await withLocalDates(
+    userId,
+    enrollments.map((e) => ({ ...e, lastLoggedAt: lastByEnrollment.get(e.id) ?? null }))
+  )
+}
+
+/**
+ * The two dates every program list PRINTS, on the account's calendar.
+ *
+ * One private helper because both lists need the same answer and they were
+ * each handing an instant to the browser: `new Date(started_at).toLocaleDateString()`
+ * reads it in the PHONE's zone, so "started 3 Feb" showed as 2 Feb to somebody
+ * travelling west, on a fact the server already knew exactly.
+ */
+async function withLocalDates<T extends { started_at: string; lastLoggedAt?: string | null }>(
+  userId: string,
+  rows: T[]
+): Promise<(T & { startedOn: string; lastLoggedOn: string | null })[]> {
+  const timezone = await getUserTimezone(userId)
+  return rows.map((e) => ({
+    ...e,
+    startedOn: getTodayInTimezone(timezone, new Date(e.started_at)),
+    lastLoggedOn: e.lastLoggedAt ? getTodayInTimezone(timezone, new Date(e.lastLoggedAt)) : null,
+  }))
 }
 
 /**
@@ -237,11 +260,14 @@ export async function listPastEnrollments(userId: string): Promise<ProgramEnroll
       if (row.logged_at > cur.last) cur.last = row.logged_at
     }
   }
-  return enrollments.map((e) => ({
-    ...e,
-    lastLoggedAt: counts.get(e.id)?.last ?? null,
-    sessionsLogged: counts.get(e.id)?.n ?? 0,
-  }))
+  return await withLocalDates(
+    userId,
+    enrollments.map((e) => ({
+      ...e,
+      lastLoggedAt: counts.get(e.id)?.last ?? null,
+      sessionsLogged: counts.get(e.id)?.n ?? 0,
+    }))
+  )
 }
 
 export async function getEnrollmentById(userId: string, id: string): Promise<ProgramEnrollment | null> {

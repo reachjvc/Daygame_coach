@@ -14,6 +14,7 @@
  * detail belongs to the program you are running now.
  */
 
+import { formatDateOnly } from "../programsService"
 import { useCallback, useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { enrollmentName } from "../data/catalog"
@@ -195,7 +196,8 @@ export function PastPrograms({
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{name}</span>
                   <span className="block text-xs text-muted-foreground">
-                    {LEVEL_LABELS[e.level]} · started {new Date(e.started_at).toLocaleDateString()}
+                    {LEVEL_LABELS[e.level]} · started{" "}
+                    {e.startedOn ? formatDateOnly(e.startedOn, "short") : "—"}
                   </span>
                 </span>
                 <span className="flex shrink-0 items-center gap-3">
@@ -205,8 +207,8 @@ export function PastPrograms({
                     ) : (
                       <>
                         <span className="text-foreground">{n} session{n === 1 ? "" : "s"}</span>
-                        {e.lastLoggedAt && (
-                          <span className="block">last {new Date(e.lastLoggedAt).toLocaleDateString()}</span>
+                        {e.lastLoggedOn && (
+                          <span className="block">last {formatDateOnly(e.lastLoggedOn!, "short")}</span>
                         )}
                       </>
                     )}

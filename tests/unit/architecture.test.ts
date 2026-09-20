@@ -729,6 +729,12 @@ describe('Architecture Compliance', () => {
      * Phase 2 covers the training screens, which are done.
      */
     const COMPONENTS_THAT_FETCH_THEIR_OWN_DATA = new Set([
+      // A WRITE, not a load. This rule exists because a screen that loads its
+      // own data has to decide what to show when the read fails, and the cheap
+      // answer ("nothing yet") is a claim about the person that is not true.
+      // `DayAssignment` reads nothing: it PUTs one schedule and renders the
+      // server's own refusal when it says no.
+      'src/programs/components/DayAssignment.tsx',
       'src/exercising/components/ExercisingPage.tsx',
       'src/goals/components/GoalBadges.tsx',
       'src/goals/components/GoalCatalogPicker.tsx',
@@ -763,7 +769,6 @@ describe('Architecture Compliance', () => {
       'src/programs/components/ProgressTab.tsx',
       'src/programs/components/ProgressionView.tsx',
       'src/programs/components/SavedWeeks.tsx',
-      'src/programs/components/WeekStrip.tsx',
       'src/qa/components/QAPage.tsx',
       'src/scenarios/components/ChatWindow.tsx',
       'src/scenarios/components/ScenarioLab.tsx',
@@ -834,7 +839,6 @@ describe('Architecture Compliance', () => {
       'src/programs/components/EditActiveProgram.tsx',
       'src/programs/components/ProgramEditor.tsx',
       'src/programs/components/RunningPrograms.tsx',
-      'src/programs/components/WeekStrip.tsx',
       'src/programs/components/ui.tsx',
     ])
 
@@ -1319,7 +1323,6 @@ describe('Architecture Compliance', () => {
         'src/programs/components/live/SetRow.tsx', // a set you ticked
         'src/programs/components/live/RestBar.tsx', // rest is over
         'src/programs/components/SessionNotices.tsx', // the program is complete
-        'src/programs/components/WeekStrip.tsx', // a day you trained
         'src/programs/components/ProgressTab.tsx', // the trained-day dot
         'src/programs/components/WorkoutReceipt.tsx', // "new best" on the finish
         'src/goals/components/north-star/WorkoutPrograms.tsx', // "everything you logged is kept"
@@ -1673,8 +1676,11 @@ describe('Architecture Compliance', () => {
       'components/CustomProgramBuilder.tsx': 1,
       'components/HistoryTab.tsx': 4,
       'components/LiftHistory.tsx': 2,
-      'components/PastPrograms.tsx': 2,
-      'components/ProgramsApp.tsx': 2,
+      // Zero since both lists started printing the server's date-only string
+      // instead of handing an instant to the browser (2026-09-20). Kept at 0
+      // rather than deleted: these two are where "started 3 Feb" is printed.
+      'components/PastPrograms.tsx': 0,
+      'components/ProgramsApp.tsx': 0,
       'components/ProgressTab.tsx': 1,
       'components/ProgressionView.tsx': 3,
       'components/RunningPrograms.tsx': 2,
@@ -1691,6 +1697,32 @@ describe('Architecture Compliance', () => {
     const BROWSER_CLOCK =
       /toLocale(Date|Time)String\(\s*(undefined|\))|\bisoWeekday\(|periodStartFor\([^)]*new Date\(\)/g
 
+    /**
+     * A CALL THAT PINS A ZONE IS THE FIX, NOT THE FAULT.
+     *
+     * The pattern above matches `toLocaleDateString(undefined, …)` whatever
+     * follows — including `{ timeZone: tz }`, which is exactly what this
+     * guard's own message tells people to write. So the compliant form was
+     * flagged, and the only way past was an allowance, which then hid a real
+     * one behind the same number.
+     *
+     * Anything else is still caught: no arguments at all, or options that say
+     * nothing about a zone.
+     */
+    function pinsAZone(code: string, at: number): boolean {
+      const open = code.indexOf('(', at)
+      if (open === -1) return false
+      let depth = 0
+      for (let i = open; i < code.length && i < open + 400; i++) {
+        if (code[i] === '(') depth++
+        else if (code[i] === ')') {
+          depth--
+          if (depth === 0) return /\btimeZone\s*:/.test(code.slice(open, i))
+        }
+      }
+      return false
+    }
+
     function clockReads(): Record<string, number> {
       const dir = path.join(projectRoot, 'src/programs')
       const found: Record<string, number> = {}
@@ -1702,8 +1734,12 @@ describe('Architecture Compliance', () => {
           .readFileSync(file, 'utf-8')
           .replace(/\/\*[\s\S]*?\*\//g, '')
           .replace(/\/\/[^\n]*/g, '')
-        const hits = code.match(BROWSER_CLOCK)
-        if (hits) found[rel] = hits.length
+        let n = 0
+        for (const m of code.matchAll(BROWSER_CLOCK)) {
+          if (m[0].startsWith('toLocale') && pinsAZone(code, m.index)) continue
+          n++
+        }
+        if (n) found[rel] = n
       }
       return found
     }

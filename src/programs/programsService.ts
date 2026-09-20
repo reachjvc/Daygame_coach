@@ -50,6 +50,7 @@ import type {
   ProgramDefinition,
   ProgramEnrollment,
   ProgramsLocation,
+  WeekSoFar,
   ProgramSessionLogInput,
   PrescribedExercise,
   PrescribedSet,
@@ -202,7 +203,7 @@ export function weekSoFar(
   logs: { logged_at: string }[],
   timezone: string,
   now: Date
-): { todayWeekday: number; trainedWeekdays: number[] } {
+): WeekSoFar {
   const weekStart = periodStartInTimezone("weekly", timezone, now)
   const trained = new Set<number>()
   for (const log of logs) {
@@ -213,10 +214,37 @@ export function weekSoFar(
     if (getTodayInTimezone(timezone, at) < weekStart) continue
     trained.add(isoWeekdayInTimezone(timezone, at))
   }
+  const todayWeekday = isoWeekdayInTimezone(timezone, now)
   return {
-    todayWeekday: isoWeekdayInTimezone(timezone, now),
+    timezone,
+    weekStartedOn: weekStart,
+    todayWeekday,
     trainedWeekdays: [...trained].sort((a, b) => a - b),
+    // Derived HERE so that nothing downstream derives it a second time from
+    // the phone's idea of which weekday today is.
+    trainedToday: trained.has(todayWeekday),
   }
+}
+
+/**
+ * A `YYYY-MM-DD` printed for a person, without a zone anywhere near it.
+ *
+ * Every "started 3 Feb" and "last Fri" on these screens was
+ * `new Date(instant).toLocaleDateString()` — the browser's zone applied to a
+ * fact the server already decided, so the same session read as two different
+ * days depending on where the phone was. A date-only string has nothing left
+ * to convert, which is the whole point of passing one.
+ */
+export function formatDateOnly(iso: string, style: "weekday" | "short"): string {
+  const [y, m, d] = iso.split("-").map(Number)
+  if (!y || !m || !d) return iso
+  // Noon UTC: far enough from either midnight that no formatter's own zone
+  // handling can move the date, which is the bug this function exists to stop.
+  const at = new Date(Date.UTC(y, m - 1, d, 12))
+  return at.toLocaleDateString(undefined, {
+    timeZone: "UTC",
+    ...(style === "weekday" ? { weekday: "short" } : { day: "numeric", month: "short" }),
+  })
 }
 
 /**

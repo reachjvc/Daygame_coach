@@ -1,41 +1,22 @@
 "use client"
 
 /**
- * Your training week, drawn — and editable.
+ * THIS WEEK, AS SEVEN DOTS.
  *
- * Nothing in the app showed this. "Upper Monday, Lower Tuesday, Upper Thursday,
- * Lower Friday" existed only as `DayTemplate.weekday` in the data, consumed by
- * the engine to pick today's session and rendered nowhere, so the one question
- * everybody asks about a program — *what am I doing this week?* — had no answer
- * on any screen.
+ * It was seven 56px bordered tiles inside one more border, each carrying a day
+ * label, and the word "done" under the ones you had trained — a grid of text
+ * competing with the session card below it, which is the thing you opened the
+ * app for. Seven dots answer the same question in a glance.
  *
- * TWO SHAPES OF PROGRAM, and conflating them would be a lie about both:
- *
- *   - **Anchored.** Every day carries a weekday. Monday means Upper. This is
- *     what somebody writing their own week almost always wants.
- *   - **In order, whenever.** StrongLifts is A/B/A alternating three times a
- *     week and its author never said which days. Drawing Monday–Sunday for it
- *     would invent a rule its source does not have, so it is drawn as an ordered
- *     run with "next" marked instead.
- *
- * ALL OR NOTHING, because the engine says so. Per `DayTemplate.weekday`: when
- * every day carries one the next session is chosen by today's date; when none
- * do the cursor walks the list; "those are the only two states; a half-assigned
- * week is refused at the point of editing rather than resolved by guessing." So
- * a partly-assigned week is shown as unfinished, with the count still needed —
- * never as saved.
- *
- * The assignment itself is `setWeekday` from `builder.ts`, which already
- * validates the range and already takes the weekday off whichever other day held
- * it. This component is a surface over that function and owns no rule of its own.
+ * PRESENTATIONAL, AND THAT IS THE POINT. It used to ask the phone what day it
+ * was (`isoWeekday(new Date())`) while the card beside it used the account's
+ * zone, so on a travelling phone the strip lit Wednesday and the card
+ * prescribed Tuesday's session. It also owned a PUT and an error line. Both
+ * are gone: every fact arrives as a prop, decided once on the server, and the
+ * one write lives in `DayAssignment`.
  */
 
-import { useState } from "react"
-import { setWeekday } from "../builder"
-import { effectiveProgram } from "../customize"
-import { requireProgram } from "../data/catalog"
-import { isWeekdayAnchored } from "../builder"
-import type { ProgramEnrollment, ProgramSchedule } from "../types"
+import type { WeekSoFar } from "../types"
 
 /** Monday-first, matching every other week in this app. */
 const DAYS: { weekday: number; short: string }[] = [
@@ -49,194 +30,70 @@ const DAYS: { weekday: number; short: string }[] = [
 ]
 
 interface Props {
-  enrollment: ProgramEnrollment
-  /**
-   * What day it is where the PERSON is, 1 = Monday, worked out on the server
-   * from the account's timezone.
-   *
-   * It used to be `isoWeekday(new Date())` — the phone's clock — while the
-   * session card beside it was decided on the account's. On a phone whose zone
-   * differs from the account's the two named different days on one screen: the
-   * strip lit Wednesday and the card prescribed Tuesday's session.
-   */
-  today: number
-  /** Days already trained, as ISO weekdays — also the account's, for the same reason. */
-  trainedWeekdays?: number[]
-  onSaved: () => void
+  /** Computed on the server, in the account's zone. See `weekSoFar`. */
+  week: WeekSoFar
+  /** What the program asks for on each weekday, when it names weekdays. */
+  labels?: Record<number, string | undefined>
+  /** Tapping a cell opens the day picker. Absent = the strip is read-only. */
+  onPickDay?: (weekday: number) => void
 }
 
-export function WeekStrip({ enrollment, today, trainedWeekdays = [], onSaved }: Props) {
-  const [saving, setSaving] = useState(false)
-  const [picking, setPicking] = useState<number | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  const program = effectiveProgram(requireProgram(enrollment.program_id), enrollment.customSchedule)
-  const schedule = program.schedule
-
-  /**
-   * Only a days-and-lifts program has weekdays.
-   *
-   * An endurance plan is a fixed sequence of weeks with no week to arrange, and
-   * skill/hold routines are day lists without a `weekday` field at all. This is
-   * the same narrowing `setWeekday` itself performs — matching it here means the
-   * component can never call it with something it would throw on.
-   */
-  if (schedule.kind !== "linear_rotation" && schedule.kind !== "weekly_waved") return null
-
-  const days = schedule.days
-  const anchored = isWeekdayAnchored(schedule)
-  const assignedCount = days.filter((d) => d.weekday != null).length
-
-  async function assign(dayId: string, weekday: number | null) {
-    setSaving(true)
-    setError(null)
-    try {
-      const next: ProgramSchedule = setWeekday(schedule, dayId, weekday)
-      const res = await fetch(`/api/programs/enrollments/${enrollment.id}/schedule`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customSchedule: next }),
-      })
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null
-        setError(body?.error ?? "Could not save the week.")
-        return
-      }
-      setPicking(null)
-      onSaved()
-    } catch (e) {
-      setError((e as Error).message)
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  /**
-   * An unanchored program has no calendar to draw — so this is ONE LINE, not a card.
-   *
-   * It used to list the day names as chips, directly above a session card whose
-   * own day picker lists exactly the same names. Two rows of identical chips
-   * saying nothing the other did not, taking 150px of a phone screen to say
-   * "there is no week here".
-   */
-  if (!anchored && assignedCount === 0) {
-    /*
-     * AN ASIDE IS NOT AN OBJECT.
-     * This was a Card holding one wrapped sentence and a text link — 113px
-     * sitting directly above the workout, outweighing it. The comment above
-     * already says "this is ONE LINE, not a card". The sentence's second clause
-     * is gone too: it restated the first and was what made it wrap.
-     */
-    return (
-      <div data-testid="week-strip" className="space-y-1.5">
-          <p className="text-xs text-muted-foreground">
-            Runs in order rather than on set days.
-          </p>
-          <button
-            type="button"
-            onClick={() => setPicking(picking === null ? today : null)}
-            className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
-          >
-            {picking === null ? "Put it on set days instead" : "Never mind"}
-          </button>
-          {picking !== null && (
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {days.map((d) => (
-                <button
-                  key={d.id}
-                  type="button"
-                  disabled={saving}
-                  onClick={() => assign(d.id, picking)}
-                  className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-accent disabled:opacity-40"
-                >
-                  {d.label} → {DAYS.find((x) => x.weekday === picking)?.short}
-                </button>
-              ))}
-            </div>
-          )}
-          {error && <p className="text-xs text-destructive">{error}</p>}
-      </div>
-    )
-  }
-
-  /*
-   * Seven bordered tiles inside one more border: the outer box only competed
-   * with the one border in here that means something — today's.
-   */
+export function WeekStrip({ week, labels, onPickDay }: Props) {
   return (
-    <div data-testid="week-strip" className="space-y-2">
-        <div className="grid grid-cols-7 gap-1">
-          {DAYS.map(({ weekday, short }) => {
-            const day = days.find((d) => d.weekday === weekday)
-            const isToday = weekday === today
-            const trained = trainedWeekdays.includes(weekday)
-            return (
-              <button
-                key={weekday}
-                type="button"
-                onClick={() => setPicking(picking === weekday ? null : weekday)}
-                aria-label={`${short}: ${day ? day.label : "rest"}. Tap to change.`}
-                data-testid={`week-day-${weekday}`}
-                // Which day is today is the fact this strip got wrong for a
-                // year; it is worth being able to assert on it directly rather
-                // than through a colour.
-                data-today={isToday ? "1" : undefined}
-                className={`min-h-[56px] rounded-md border px-1 py-1.5 text-center transition-colors ${
-                  isToday ? "border-primary/60 bg-primary/10" : "border-border hover:bg-accent"
-                } ${picking === weekday ? "ring-1 ring-primary" : ""}`}
-              >
-                <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">{short}</span>
-                <span className={`block truncate text-[11px] ${day ? "font-medium" : "text-muted-foreground"}`}>
-                  {day ? day.label : "—"}
-                </span>
-                {trained && <span className="block text-[10px] text-emerald-600">done</span>}
-              </button>
-            )
-          })}
-        </div>
+    <div data-testid="week-strip" className="grid grid-cols-7 gap-1">
+      {DAYS.map(({ weekday, short }) => {
+        const isToday = weekday === week.todayWeekday
+        const trained = week.trainedWeekdays.includes(weekday)
+        const label = labels?.[weekday]
+        const what = trained ? "trained" : label ? label : "nothing planned"
+        const body = (
+          <>
+            <span className="text-xs uppercase text-muted-foreground">{short}</span>
+            <span
+              aria-hidden
+              className={`size-2 rounded-full ${
+                trained
+                  ? "bg-emerald-500"
+                  : isToday
+                    ? "ring-1 ring-primary"
+                    : "bg-muted-foreground/30"
+              }`}
+            />
+          </>
+        )
+        const shared = "flex h-11 flex-col items-center justify-center gap-1 rounded-md text-xs"
 
-        {/* Half-assigned is a real state and has to be named: the engine falls
-            back to walking the list until every day has a weekday. */}
-        {assignedCount > 0 && assignedCount < days.length && (
-          <p className="text-xs text-amber-600 dark:text-amber-400">
-            {days.length - assignedCount} of {days.length} days still need a weekday. Until they all
-            have one, sessions run in order rather than by the calendar.
-          </p>
-        )}
-
-        {picking !== null && (
-          <div className="space-y-1.5 border-t pt-2">
-            <p className="text-xs text-muted-foreground">
-              What happens on {DAYS.find((d) => d.weekday === picking)?.short}?
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {days.map((d) => (
-                <button
-                  key={d.id}
-                  type="button"
-                  disabled={saving}
-                  onClick={() => assign(d.id, picking)}
-                  className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-accent disabled:opacity-40"
-                >
-                  {d.label}
-                </button>
-              ))}
-              <button
-                type="button"
-                disabled={saving}
-                onClick={() => {
-                  const held = days.find((d) => d.weekday === picking)
-                  if (held) void assign(held.id, null)
-                  else setPicking(null)
-                }}
-                className="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent disabled:opacity-40"
-              >
-                Rest day
-              </button>
+        // Which day is today is the fact this strip got wrong for a year, so it
+        // is worth asserting on directly rather than through a colour.
+        if (!onPickDay) {
+          return (
+            <div
+              key={weekday}
+              data-testid={`week-day-${weekday}`}
+              data-today={isToday ? "1" : undefined}
+              data-trained={trained ? "1" : undefined}
+              className={shared}
+              aria-label={`${short}: ${what}`}
+            >
+              {body}
             </div>
-          </div>
-        )}
-        {error && <p className="text-xs text-destructive">{error}</p>}
+          )
+        }
+        return (
+          <button
+            key={weekday}
+            type="button"
+            onClick={() => onPickDay(weekday)}
+            data-testid={`week-day-${weekday}`}
+            data-today={isToday ? "1" : undefined}
+            data-trained={trained ? "1" : undefined}
+            className={`${shared} transition-colors hover:bg-accent`}
+            aria-label={`${short}: ${what}. Tap to change.`}
+          >
+            {body}
+          </button>
+        )
+      })}
     </div>
   )
 }
