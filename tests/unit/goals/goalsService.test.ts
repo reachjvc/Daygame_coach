@@ -72,6 +72,7 @@ function createGoalWithProgress(overrides: Partial<GoalWithProgress> = {}): Goal
     last_freeze_date: null,
     aligned_values: [],
     is_abstinence: false,
+    stages: null,
     progress_percentage: 0,
     is_complete: false,
     days_remaining: null,

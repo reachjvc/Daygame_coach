@@ -1758,6 +1758,7 @@ export function buildLocalPlanGoals(
       goal_phase: ins.goal_phase ?? null,
       aligned_values: ins.aligned_values ?? [],
       is_abstinence: ins.is_abstinence ?? false,
+      stages: ins.stages ?? null,
     }, timezone),
   )
 }

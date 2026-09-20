@@ -469,6 +469,8 @@ CREATE TABLE user_goals (
   -- A goal NOT to do. Migration 20260920100000. Daily and yes-or-no like any
   -- standing rule, but rewarded by days accumulated rather than by a streak.
   is_abstinence BOOLEAN NOT NULL DEFAULT FALSE,
+  -- The named steps a staged goal is reached by. Migration 20260920110000.
+  stages TEXT[],
   -- Drift this file already carried: production has had aligned_values since
   -- the values work and this mirror never gained it, so any integration test
   -- that wrote one would have failed against a column that does exist.

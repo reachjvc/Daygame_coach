@@ -1488,6 +1488,8 @@ export interface NsTrackInsert {
   ramp_steps?: Record<string, unknown>[]
   /** A goal NOT to do. Daily, yes-or-no, and never rewarded with a streak. */
   is_abstinence?: boolean
+  /** The named steps a staged goal is reached by, in order. */
+  stages?: string[] | null
 }
 
 /** One row of the track step's list: a plan goal and what it becomes. */

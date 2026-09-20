@@ -302,21 +302,30 @@ export function GoalCard({
           {goal.goal_type === "milestone" && goal.milestone_config && (() => {
             const ladderValues = getMilestoneLadderValues(goal)
             if (!ladderValues || ladderValues.length === 0) return null
+            /* A STAGED GOAL SHOWS ITS NAMES. Its rungs are 1..n, and a row of
+               pills reading "1 2 3 4" is the same as not storing the names at
+               all — which is what the product did with them until the stages
+               column existed. `stages` is ordered, so rung m is stage m-1. */
+            const stages = goal.stages
+            const nameFor = (m: number) => stages?.[m - 1] ?? String(m)
             return (
               <div className="text-xs text-muted-foreground space-y-1">
-                <p className="font-medium">Milestone ladder:</p>
+                <p className="font-medium">{stages ? "Stages:" : "Milestone ladder:"}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {ladderValues.map((m) => {
                     const reached = rungReached(goal, m)
                     return (
                       <span key={m} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] ${reached ? "bg-green-500/15 text-green-400 border-green-500/30" : "bg-muted text-muted-foreground border-border"}`}>
-                        {reached ? "✓" : "○"} {m}
+                        {reached ? "✓" : "○"} {nameFor(m)}
                       </span>
                     )
                   })}
                 </div>
                 {nextMilestone && (
-                  <p className="text-emerald-400 mt-1">Next: {nextMilestone.nextValue} ({nextMilestone.remaining} more)</p>
+                  <p className="text-emerald-400 mt-1">
+                    Next: {nameFor(nextMilestone.nextValue)}
+                    {stages ? "" : ` (${nextMilestone.remaining} more)`}
+                  </p>
                 )}
               </div>
             )

@@ -53,6 +53,7 @@ function createMockGoal(overrides: Partial<GoalWithProgress>): GoalWithProgress 
     goal_phase: null,
     aligned_values: [],
     is_abstinence: false,
+    stages: null,
     ...overrides,
   }
 }

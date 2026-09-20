@@ -198,6 +198,38 @@ export function goalToInsert(plan: NsPlan, runId: string, goal: NsGoal): NsTrack
     return insert
   }
 
+  if (goal.checkpoints.length > 0 && !goal.ladder) {
+    /* A SEQUENCE OF NAMED STEPS.
+    
+       "Opening Skill" is four of them — open without a script, consistently,
+       and so on — and they used to reach the database as NOTHING. `goalToInsert`
+       emitted no checkpoint field at all, so four named stages became one
+       yes/no box whose description was empty. Unlike a descending ladder, which
+       at least kept its numbers in prose, the names existed only in the browser.
+    
+       Stages are ordered and reached in order, which is what makes them stages
+       rather than a checklist, so this is an ordinary climb from zero: the count
+       reached is the counter and the names ride alongside. Everything built for
+       climbs then works unchanged — progress out of the stages total, a rung
+       lighting per stage, and the quarter/half/three-quarter badges along the
+       way, which is the "notifications along the way" the owner asked for. */
+    insert.tracking_type = "counter"
+    insert.target_value = goal.checkpoints.length
+    insert.current_value = goal.checkpoints.filter((c) => c.done).length
+    insert.stages = goal.checkpoints.map((c) => c.title.trim().slice(0, 200))
+    insert.milestone_config = {
+      start: 0,
+      target: goal.checkpoints.length,
+      steps: goal.checkpoints.length,
+      curveTension: 0,
+      controlPoints: [],
+      pins: [],
+    }
+    insert.period = goal.targetDate ? "custom" : "yearly"
+    if (goal.targetDate) insert.custom_end_date = goal.targetDate
+    return insert
+  }
+
   if (goal.ladder) {
     /* A CLIMB, IN EITHER DIRECTION.
     

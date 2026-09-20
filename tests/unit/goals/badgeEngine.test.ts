@@ -52,6 +52,7 @@ function mockL3Goal(
     last_freeze_date: null,
     aligned_values: [],
     is_abstinence: false,
+    stages: null,
     goal_phase: null,
     ...overrides,
   }

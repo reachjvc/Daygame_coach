@@ -76,6 +76,16 @@ export interface UserGoalRow {
    * accumulated are counted instead. See the 20260920100000 migration.
    */
   is_abstinence: boolean
+  /**
+   * Ordered names of the steps this goal is reached by, or null when it is not
+   * a staged goal. "first pull-up", "visible abs", "run a 5k".
+   *
+   * The COUNT reached is `current_value` and the number of stages is
+   * `target_value`, so a staged goal is an ordinary climb from zero and every
+   * piece of climb machinery works on it unchanged. See the 20260920110000
+   * migration for why these are not child goals.
+   */
+  stages: string[] | null
 }
 
 /**
@@ -107,6 +117,7 @@ export interface UserGoalInsert {
   goal_phase?: GoalPhase | null
   aligned_values?: string[]
   is_abstinence?: boolean
+  stages?: string[] | null
 }
 
 /**
@@ -138,6 +149,7 @@ export interface UserGoalUpdate {
   goal_phase?: GoalPhase | null
   aligned_values?: string[]
   is_abstinence?: boolean
+  stages?: string[] | null
 }
 
 /**
