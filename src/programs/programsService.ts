@@ -227,6 +227,21 @@ export function weekSoFar(
 }
 
 /**
+ * THE WEEKDAY AN INSTANT FELL ON, where the person is.
+ *
+ * "Finish or discard Monday's workout" has to say the day the lifter thinks
+ * it was. `toLocaleDateString(undefined, { weekday: "long" })` reads the
+ * PHONE's zone, so a workout started 23:30 Monday in Copenhagen was offered
+ * as Tuesday's to a phone still on UTC.
+ *
+ * Both cards need this — the Tracking door and the session card — which is
+ * why it is here rather than private to one of them.
+ */
+export function weekdayNameIn(iso: string, timezone: string): string {
+  return WEEKDAY_SHORT[isoWeekdayInTimezone(timezone, new Date(iso))]
+}
+
+/**
  * A `YYYY-MM-DD` printed for a person, without a zone anywhere near it.
  *
  * Every "started 3 Feb" and "last Fri" on these screens was

@@ -361,3 +361,39 @@ test("the bottom bar is on /programs, and the column does not shrink on the way 
   // has one of those, going back to /programs, and it is not the bar.
   await expect(page.getByTestId("mobile-tab-bar")).toHaveCount(0)
 })
+
+test("'See today's workout' goes to a receipt, not a 404", async ({ page }) => {
+  /**
+   * The Tracking card's done-today state pushes /programs/workout/<id>. That
+   * route had no page at all, so the honest alternative to a second Start
+   * button was a dead end — worse than no button.
+   */
+  await page.goto("/programs", { waitUntil: "networkidle" })
+
+  const id = await seedFinishedWorkout(page, {
+    startedAt: new Date(Date.now() - 3 * 3600_000).toISOString(),
+    endedAt: new Date(Date.now() - 2 * 3600_000).toISOString(),
+    sets: [
+      { exercise: "ZZReceipt Squat", weightKg: 100, reps: 5, setNumber: 1 },
+      { exercise: "ZZReceipt Squat", weightKg: 100, reps: 5, setNumber: 2 },
+    ],
+  })
+
+  const res = await page.goto(`/programs/workout/${id}`, { waitUntil: "networkidle" })
+  expect(res?.status(), "the receipt route must exist").toBeLessThan(400)
+  await expect(page.getByTestId("workout-receipt")).toBeVisible()
+
+  // The figures written when it was finished: 60 minutes, 2 working sets.
+  await expect(page.getByTestId("workout-receipt")).toContainText("60")
+  await expect(page.getByTestId("workout-receipt")).toContainText("2")
+
+  // Somebody else's workout is not yours to read.
+  const missing = await page.goto("/programs/workout/00000000-0000-0000-0000-000000000000", {
+    waitUntil: "networkidle",
+  })
+  expect(missing?.status()).toBe(404)
+
+  await page.evaluate(async (logId: string) => {
+    await fetch(`/api/health/workout?id=${logId}`, { method: "DELETE" })
+  }, id)
+})

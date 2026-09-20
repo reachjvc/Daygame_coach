@@ -548,6 +548,7 @@ export async function summaryFor(userId: string, workoutId: string): Promise<Wor
 
   return {
     workoutId,
+    startedAt: row.started_at ?? undefined,
     durationMin: Math.min(599, Math.max(1, row.duration_min ?? derived)),
     sets: working.length,
     volumeKg: round2(volumeKg),

@@ -815,6 +815,14 @@ export interface StoredSet {
 /** What the finish screen says you just did. */
 export interface WorkoutSummary {
   workoutId: string
+  /**
+   * When it started, as an instant.
+   *
+   * The finish sheet never needed it — you had just done the workout. A
+   * receipt opened days later has no other way to say which day it is
+   * describing, and "today's workout" stops being today tomorrow.
+   */
+  startedAt?: string
   durationMin: number
   sets: number
   volumeKg: number

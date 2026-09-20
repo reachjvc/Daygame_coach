@@ -39,12 +39,12 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { enrollmentName } from "../data/catalog"
-import { trainingCardState } from "../programsService"
+import { trainingCardState, weekdayNameIn } from "../programsService"
 import { startWorkoutRequest } from "../hooks/useLiveWorkout"
 import { useTrainingDoor } from "../hooks/useTrainingDoor"
 import { LIVE_WORKOUT, PROGRAMS, withFrom, workoutReceipt } from "@/src/shared/trainingRoutes"
 import { WEEKDAY_SHORT } from "../config"
-import { isoWeekdayInTimezone, toZonedDate } from "@/src/shared/dateUtils"
+import { toZonedDate } from "@/src/shared/dateUtils"
 import type { AlsoRunning, TrainingCardState, TrainingDoorFacts } from "../types"
 
 /**
@@ -54,8 +54,8 @@ import type { AlsoRunning, TrainingCardState, TrainingDoorFacts } from "../types
  * Tuesday 02:02 in Auckland showed as Monday to a phone still set to London —
  * the card naming a different day from the one the session was filed under.
  */
-const weekdayIn = (iso: string, timezone: string): string =>
-  WEEKDAY_SHORT[isoWeekdayInTimezone(timezone, new Date(iso))]
+/** One owner, shared with the session card. See `weekdayNameIn`. */
+const weekdayIn = weekdayNameIn
 
 function clockIn(iso: string, timezone: string): string {
   const at = toZonedDate(new Date(iso), timezone)
