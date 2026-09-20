@@ -185,6 +185,28 @@ export function goalToInsert(plan: NsPlan, runId: string, goal: NsGoal): NsTrack
     return insert
   }
 
+  if (isSystem(goal) && isEveryDay(goal)) {
+    /* ALWAYS DO X — the owner's concept item 13, and the mirror of "never do Y"
+       directly above.
+    
+       Seven occasions a week IS every day, and the two are not the same
+       promise once they are written down. As a weekly counter with a target of
+       seven you can log all seven on Sunday evening and the week reads
+       complete; the point of "read every night" is that Wednesday had its own
+       answer. So it goes over the same way abstinence does — daily, yes or no —
+       and only the polarity differs.
+    
+       Narrow on purpose. It applies only where the goal counts OCCASIONS: a
+       practice with an amount per week ("twenty approaches") or a ramp is
+       counting things rather than days, and seven of those a week is a weekly
+       total that a daily yes/no cannot express. */
+    insert.tracking_type = "boolean"
+    insert.period = "daily"
+    insert.target_value = 1
+    insert.goal_type = "recurring"
+    return insert
+  }
+
   if (isSystem(goal)) {
     /* How much a week, or how often a week when there is no "how much" — and
        when there is a ramp, what the FIRST week of it asks for. A ramp is the
@@ -460,6 +482,19 @@ export function practiceRateInWeek(
     return Math.max(0, Math.round(practice.perWeek ?? ramp[ramp.length - 1].frequencyPerWeek))
   }
   return Math.max(0, Math.round(practice.perWeek ?? practice.daysPerWeek))
+}
+
+/**
+ * A practice that is simply EVERY DAY, rather than so many times a week.
+ *
+ * Counting occasions is the test: a practice with an amount per week or a ramp
+ * is counting THINGS, and seven of those a week is a weekly total rather than a
+ * daily rule. `goalToInsert` sends the first kind over as a daily yes/no and
+ * the second as a weekly counter, and `weeklyTotalOf` is how the two are
+ * compared without pretending they are the same number.
+ */
+export function isEveryDay(goal: NsGoal): boolean {
+  return goal.perWeek == null && !goal.rampSteps?.length && goal.daysPerWeek >= 7
 }
 
 /** Everything in the plan that repeats, in the plan's own priority order. */
