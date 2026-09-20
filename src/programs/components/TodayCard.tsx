@@ -4,61 +4,83 @@
  * What you are doing today, and the one button that starts it.
  *
  * WHAT THIS REPLACES. The session card WAS the form: every lift pre-filled,
- * every set a pair of boxes, and one save at the end. Reading what today is and
- * doing it were the same screen, so the thing you look at for three seconds was
- * built for the thing you use for an hour.
+ * every set a pair of boxes, and one save at the end. Reading what today is
+ * and doing it were the same screen, so the thing you look at for three
+ * seconds was built for the thing you use for an hour.
  *
- * They are now separate. This says what today is — the program, the day, the
- * lifts, and whether you are behind — and hands off to `/programs/live`. It is
- * also the only place that can say "you have a workout open", which nothing
- * could before, because an unfinished workout was not a thing that existed.
+ * IT NO LONGER DECIDES ANYTHING ABOUT TIME. It used to work out whether the
+ * open workout was stale by subtracting instants in the browser, and name its
+ * day with `toLocaleDateString` — the PHONE's zone — so a workout started
+ * 23:30 Monday in Copenhagen was offered as Tuesday's. Every one of those
+ * facts now arrives in `state`, decided once on the server by the same
+ * function the Tracking card uses, so the two doors into training cannot say
+ * different things.
  */
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, Play } from "lucide-react"
+import { Loader2, MoreVertical, Play } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { describeSets } from "../programsService"
+import { TRAINING_CARD, TRAINING_CARD_BODY, CHIP_ON } from "./trainingStyles"
 import { UNIT_CONFIG, WEEKDAY_SHORT } from "../config"
 import { startWorkoutRequest } from "../hooks/useLiveWorkout"
-import type { LiveWorkout, SessionPrescription, UnitSystem } from "../types"
+import { WeekStrip } from "./WeekStrip"
+import { LIVE_WORKOUT, workoutReceipt, withFrom } from "@/src/shared/trainingRoutes"
+import type {
+  SessionPrescription,
+  TrainingCardState,
+  UnitSystem,
+  WeekSoFar,
+} from "../types"
 
 interface Props {
   enrollmentId: string
   programName: string
   prescription: SessionPrescription
   unit: UnitSystem
-  /** A workout already open — this one, or another program's. */
-  live: LiveWorkout | null
+  /**
+   * Today, as the server sees it. Null only when the page could not read it —
+   * which is NOT the same as "nothing is happening", so the card says so
+   * rather than offering a Start it cannot honour.
+   */
+  state: TrainingCardState | null
+  /** This week on the account's calendar, for the strip inside the card. */
+  week?: WeekSoFar
   /** Every day in the program, so you can log the one you actually did. */
   days?: Array<{ id: string; label: string; weekday?: number }>
   onPickDay?: (dayId: string) => void
+  onPickWeekday?: (weekday: number) => void
+  /** Opens the program menu. Absent until Phase 5's sheet exists. */
+  onOpenMenu?: () => void
+  /** Where Back should return to from the screens this card opens. */
+  from?: string
   /** Extra notices — coming back after time off, a finished program. */
   children?: React.ReactNode
 }
-
-/** Hours after which an open workout is probably forgotten rather than running. */
-const STALE_HOURS = 6
 
 export function TodayCard({
   enrollmentId,
   programName,
   prescription,
   unit,
-  live,
+  state,
+  week,
   days,
   onPickDay,
+  onPickWeekday,
+  onOpenMenu,
+  from,
   children,
 }: Props) {
   const router = useRouter()
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [changingDay, setChangingDay] = useState(false)
 
   const unitLabel = UNIT_CONFIG[unit].label
-  const openHere = live?.enrollmentId === enrollmentId
-  const openMinutes = live ? Math.floor((Date.now() - new Date(live.startedAt).getTime()) / 60000) : 0
-  const stale = openMinutes > STALE_HOURS * 60
+  const go = (href: string) => router.push(from ? withFrom(href, from) : href)
 
   /**
    * One helper, shared with every other Start button in the app.
@@ -68,105 +90,230 @@ export function TodayCard({
    * it failed, and none of which forgot the retry key afterwards, so a workout
    * finished on another device blocked every later start from this one.
    */
-  async function start() {
+  async function start(dayId: string) {
     setStarting(true)
     setError(null)
-    const outcome = await startWorkoutRequest({ enrollmentId, dayId: prescription.dayId })
+    const outcome = await startWorkoutRequest({ enrollmentId, dayId })
     setStarting(false)
     if (outcome.kind === "started" || outcome.kind === "already-open") {
-      router.push("/programs/live")
+      go(LIVE_WORKOUT)
       return
     }
     setError(outcome.message)
   }
 
-  return (
-    <Card data-testid="today-card">
-      <CardContent className="space-y-3 p-4">
-        <div className="min-w-0">
-          <p className="truncate text-base font-semibold">
-            {prescription.restDay ? "Rest day" : prescription.dayLabel}
-            {!prescription.restDay && (
-              <span className="ml-2 text-xs font-normal text-muted-foreground">{programName}</span>
-            )}
+  /** The one button, chosen by what the server says today is. */
+  function TheButton() {
+    if (starting) {
+      return (
+        <Button size="lg" className="w-full" disabled>
+          <Loader2 className="mr-1 size-4 animate-spin" /> Starting…
+        </Button>
+      )
+    }
+
+    // A workout belonging to ANOTHER program. Two at once is not a state the
+    // database allows, so say which one rather than failing on the way in.
+    if ((state?.kind === "live" || state?.kind === "stale") && state.enrollmentId !== enrollmentId) {
+      return (
+        <Button size="lg" variant="outline" className="w-full" onClick={() => go(LIVE_WORKOUT)}>
+          Finish the workout you have open first
+        </Button>
+      )
+    }
+
+    switch (state?.kind) {
+      case "live":
+        return (
+          <Button
+            size="lg"
+            className="w-full"
+            data-testid="resume-workout"
+            onClick={() => go(LIVE_WORKOUT)}
+          >
+            Resume · {state.setsTicked} {state.setsTicked === 1 ? "set" : "sets"} in
+          </Button>
+        )
+      case "stale":
+        // The weekday comes from the state, in the account's zone. Computed
+        // here it read the phone's, and named the wrong day for a traveller.
+        return (
+          <Button
+            size="lg"
+            variant="outline"
+            className="w-full"
+            data-testid="resume-workout"
+            onClick={() => go(LIVE_WORKOUT)}
+          >
+            Finish or discard {state.startedOnWeekday}&apos;s workout
+          </Button>
+        )
+      case "done":
+        // NOT a Start button. Offering one on a day somebody has finished
+        // invites a second workout for the same session.
+        return (
+          <Button
+            size="lg"
+            variant="outline"
+            className="w-full"
+            data-testid="see-todays-workout"
+            onClick={() => go(workoutReceipt(state.workoutId))}
+          >
+            See today&apos;s workout
+          </Button>
+        )
+      case "finished":
+        // Every session is logged. The notices carry the two ways on.
+        return null
+      case "rest":
+        return (
+          <Button
+            size="lg"
+            className="w-full"
+            data-testid="start-workout"
+            onClick={() => void start(state.nextDayId)}
+          >
+            <Play className="mr-1 size-4" /> Start {state.nextLabel} early
+          </Button>
+        )
+      case "today":
+        return (
+          <Button
+            size="lg"
+            className="w-full"
+            data-testid="start-workout"
+            onClick={() => void start(state.dayId)}
+          >
+            <Play className="mr-1 size-4" /> Start workout
+          </Button>
+        )
+      default:
+        /**
+         * The read failed, or there is no program. Either way this card
+         * cannot honour a Start, and a Start that fails on the way in is
+         * worse than no Start — so it says what it knows instead.
+         */
+        return (
+          <p className="text-sm text-muted-foreground" data-testid="today-unavailable">
+            Today&apos;s session could not be loaded. Reload to try again.
           </p>
-          {prescription.restDay && (
-            <p className="text-xs text-muted-foreground">
-              Nothing scheduled today. Next up is {prescription.dayLabel}
-              {prescription.scheduledWeekday
-                ? ` on ${WEEKDAY_SHORT[prescription.scheduledWeekday]}`
-                : ""}
-              .
-            </p>
+        )
+    }
+  }
+
+  const multiDay = Boolean(days && days.length > 1 && onPickDay)
+
+  return (
+    <Card className={TRAINING_CARD} data-testid="today-card">
+      <CardContent className={`${TRAINING_CARD_BODY} space-y-3`}>
+        <div className="flex items-start justify-between gap-2">
+          <span className="min-w-0 truncate text-xs uppercase tracking-wide text-muted-foreground">
+            {programName}
+          </span>
+          {onOpenMenu && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="-mr-1 -mt-1 shrink-0 hover:bg-muted/50"
+              aria-label="Program options"
+              data-testid="program-menu"
+              onClick={onOpenMenu}
+            >
+              <MoreVertical className="size-4" />
+            </Button>
           )}
         </div>
 
+        {week && <WeekStrip week={week} onPickDay={onPickWeekday} />}
+
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="min-w-0 truncate text-lg font-semibold">
+            {prescription.restDay ? "Rest day" : prescription.dayLabel}
+          </p>
+          {multiDay && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="shrink-0"
+              aria-expanded={changingDay}
+              data-testid="change-day"
+              onClick={() => setChangingDay((v) => !v)}
+            >
+              {changingDay ? "Done" : "Change day"}
+            </Button>
+          )}
+        </div>
+
+        {prescription.restDay && (
+          <p className="text-xs text-muted-foreground">
+            Nothing scheduled today. Next up is {prescription.dayLabel}
+            {prescription.scheduledWeekday
+              ? ` on ${WEEKDAY_SHORT[prescription.scheduledWeekday]}`
+              : ""}
+            .
+          </p>
+        )}
+
         {/* WHICH DAY YOU ACTUALLY DID. The app's guess is a good default and a
-            bad rule — people swap Push and Pull, or come back on a rest day. */}
-        {days && days.length > 1 && onPickDay && (
+            bad rule — people swap Push and Pull, or come back on a rest day.
+            Behind a tap now: seven chips permanently on screen were the widest
+            thing on the card and the least used. */}
+        {multiDay && (changingDay || prescription.restDay) && (
           <div className="flex flex-wrap gap-1.5">
-            {days.map((d) => (
-              <button
+            {days!.map((d) => (
+              <Button
                 key={d.id}
                 type="button"
-                onClick={() => onPickDay(d.id)}
+                size="sm"
+                variant="outline"
+                onClick={() => onPickDay!(d.id)}
                 aria-pressed={d.id === prescription.dayId}
-                className={`min-h-9 rounded-md border px-2.5 py-1 text-xs transition-colors ${
-                  d.id === prescription.dayId
-                    ? "border-primary/50 bg-primary/10 text-primary"
-                    : "border-border text-muted-foreground hover:bg-accent"
-                }`}
+                className={`min-h-11 ${d.id === prescription.dayId ? CHIP_ON : ""}`}
               >
                 {d.label}
-                {d.weekday != null && <span className="ml-1 opacity-60">{WEEKDAY_SHORT[d.weekday]}</span>}
-              </button>
+                {d.weekday != null && (
+                  <span className="ml-1 opacity-60">{WEEKDAY_SHORT[d.weekday]}</span>
+                )}
+              </Button>
             ))}
           </div>
         )}
 
         {children}
 
-        <ul className="space-y-0.5 text-sm">
+        <ul className="space-y-1.5 text-sm">
           {prescription.exercises.map((ex) => (
             <li key={ex.exerciseId} className="flex items-baseline justify-between gap-3">
               <span className="min-w-0 truncate">{ex.name}</span>
-              <span className="shrink-0 text-xs text-muted-foreground">
+              <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
                 {describeSets(ex, unitLabel)}
               </span>
             </li>
           ))}
           {prescription.enduranceSets?.map((set, i) => (
-            <li key={i} className="text-xs text-muted-foreground">
+            <li key={i} className="text-sm text-muted-foreground">
               {set.repeat > 1 ? `${set.repeat}× ` : ""}
               {set.blocks.map((b) => b.label).join(" → ")}
             </li>
           ))}
         </ul>
 
-        {error && <p className="text-xs text-destructive">{error}</p>}
-
-        {live && !openHere ? (
-          // Another program's workout is open. Two workouts at once is not a
-          // state the database allows, so say which one rather than failing.
-          <Button variant="outline" className="w-full" onClick={() => router.push("/programs/live")}>
-            Finish the workout you have open first
-          </Button>
-        ) : openHere ? (
-          <Button
-            className="w-full"
-            data-testid="resume-workout"
-            onClick={() => router.push("/programs/live")}
-          >
-            {stale
-              ? `Finish or discard ${new Date(live!.startedAt).toLocaleDateString(undefined, { weekday: "long" })}'s workout`
-              : `Resume · ${openMinutes} min`}
-          </Button>
-        ) : (
-          <Button className="w-full" data-testid="start-workout" disabled={starting} onClick={start}>
-            {starting ? <Loader2 className="mr-1 size-4 animate-spin" /> : <Play className="mr-1 size-4" />}
-            Start workout
-          </Button>
+        {/* What happened the last time this same day came round. Only when
+            there IS a last time — "never" is not worth a line. */}
+        {state?.kind === "today" && state.lastTime && (
+          <p className="text-xs text-muted-foreground">
+            Last time: {state.lastTime.setsDone} sets
+            {state.lastTime.complete ? "" : ", not finished"}
+          </p>
         )}
+
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+
+        <TheButton />
       </CardContent>
     </Card>
   )

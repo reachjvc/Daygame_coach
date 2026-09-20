@@ -797,6 +797,12 @@ describe('Architecture Compliance', () => {
      * 11px is the floor here and `text-zinc-500` the darkest grey, because
      * those are what the training screens now use. Everything listed below
      * predates the rule; fixing a file means deleting its line.
+     *
+     * `src/vice` joined the scan on 2026-09-20 with NO entries on the list: the
+     * 101 offending spellings it had (84 `text-zinc-600`, 17 at 10px) were
+     * fixed rather than grandfathered, because the module was being given a new
+     * front door and shipping a fresh screen next to unreadable old ones is how
+     * a rule becomes decorative.
      */
     const UNREADABLE_TEXT_ALLOWED = new Set([
       'src/goals/components/north-star/AreaBuilder.tsx',
@@ -845,7 +851,12 @@ describe('Architecture Compliance', () => {
     function unreadableText(): string[] {
       return getAllFiles(path.join(projectRoot, 'src'), /\.tsx?$/)
         .map((f) => path.relative(projectRoot, f))
-        .filter((rel) => rel.startsWith('src/programs') || rel.startsWith('src/goals/components/north-star'))
+        .filter(
+          (rel) =>
+            rel.startsWith('src/programs') ||
+            rel.startsWith('src/goals/components/north-star') ||
+            rel.startsWith('src/vice'),
+        )
         .filter((rel) => /text-\[10(\.5)?px\]|text-zinc-600/.test(fs.readFileSync(path.join(projectRoot, rel), 'utf-8')))
     }
 
@@ -1255,7 +1266,6 @@ describe('Architecture Compliance', () => {
       'src/programs/components/RunningPrograms.tsx',
       'src/programs/components/SavedWeeks.tsx',
       'src/programs/components/SessionNotices.tsx',
-      'src/programs/components/TodayCard.tsx',
       'src/programs/components/TrainingScreen.tsx',
       'src/programs/components/WeekStrip.tsx',
       'src/programs/components/live/AddLift.tsx',
@@ -1684,7 +1694,10 @@ describe('Architecture Compliance', () => {
       'components/ProgressTab.tsx': 1,
       'components/ProgressionView.tsx': 3,
       'components/RunningPrograms.tsx': 2,
-      'components/TodayCard.tsx': 1,
+      // Zero since the card stopped naming a stale workout's day itself
+      // (2026-09-20) — the state carries it, computed where the account's
+      // zone is known. Kept at 0: this file prints a weekday.
+      'components/TodayCard.tsx': 0,
       // Zero since the long-gap note stopped reading the device's clock
       // (2026-09-19). Kept at 0 rather than deleted: this file is the one that
       // formats times, so a new `new Date()` here is exactly what to catch.

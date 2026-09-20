@@ -24,9 +24,16 @@ import {
 } from "@/src/db/programRepo"
 import { getLiveWorkout, unitFor } from "@/src/db/workoutRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
+import { getTrainingDoorFacts } from "@/src/db/trainingDoorRepo"
 import { TrainingScreen } from "@/src/programs/components/TrainingScreen"
-import { parseProgramsLocation } from "@/src/programs/programsService"
-import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment, UnitSystem } from "@/src/programs/types"
+import { parseProgramsLocation, trainingCardState } from "@/src/programs/programsService"
+import type {
+  EnrollmentDetail,
+  LiveWorkout,
+  ProgramEnrollment,
+  TrainingCardState,
+  UnitSystem,
+} from "@/src/programs/types"
 
 export default async function ProgramsPage({
   searchParams,
@@ -43,6 +50,14 @@ export default async function ProgramsPage({
   let live: LiveWorkout | null = null
   let accountUnit: UnitSystem | null = null
   let timezone: string | undefined
+  /**
+   * WHAT TODAY IS — the same answer the Tracking card gets.
+   *
+   * Both screens used to work it out themselves, from different reads, so the
+   * door on one page could say "Resume" while the other said "Start". One
+   * function, one set of facts, computed on the server.
+   */
+  let cardState: TrainingCardState | null = null
   let failed = false
 
   if (auth.success) {
@@ -64,6 +79,7 @@ export default async function ProgramsPage({
       // For "Log a past workout": the day a session is filed under is the
       // account's day, never the server's or the browser's.
       timezone = await getUserTimezone(auth.userId)
+      cardState = trainingCardState(await getTrainingDoorFacts(auth.userId))
     } catch (error) {
       /**
        * A FAILED READ IS NOT AN EMPTY ACCOUNT.
@@ -101,6 +117,7 @@ export default async function ProgramsPage({
       live={live}
       accountUnit={accountUnit}
       timezone={timezone}
+      cardState={cardState}
       failed={failed}
     />
   )

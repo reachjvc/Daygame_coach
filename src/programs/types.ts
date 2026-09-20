@@ -1138,6 +1138,14 @@ export type TrainingCardState =
       enrollmentId: string | null
       dayLabel: string | null
       startedAt: string
+      /**
+       * The weekday it began, named where the PERSON is — "Mon", not a date.
+       *
+       * Carried rather than derived, because both cards print it and both used
+       * to derive it from the browser: a workout started 23:30 Monday in
+       * Copenhagen was offered as Tuesday's to a phone still on UTC.
+       */
+      startedOnWeekday: string
       setsTicked: number
       setsAsked: number | null
       also: AlsoRunning[]

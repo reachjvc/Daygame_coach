@@ -33,6 +33,7 @@ import type {
   LiveWorkout,
   ProgramEnrollment,
   ProgramsLocation,
+  TrainingCardState,
   UnitSystem,
 } from "../types"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
@@ -73,6 +74,8 @@ interface Props {
    * `window.location` instead.
    */
   where: ProgramsLocation
+  /** Today, decided on the server — the same answer the Tracking card gets. */
+  cardState?: TrainingCardState | null
 }
 
 export function TrainingScreen({
@@ -84,6 +87,7 @@ export function TrainingScreen({
   failed,
   timezone,
   where,
+  cardState = null,
 }: Props) {
   const running = initialActive[0]
   /**
@@ -271,6 +275,7 @@ export function TrainingScreen({
               initialPast={initialPast}
               initialDetail={initialDetail}
               live={live}
+              cardState={cardState}
             />
           </TabsContent>
 

@@ -397,3 +397,46 @@ test("'See today's workout' goes to a receipt, not a 404", async ({ page }) => {
     await fetch(`/api/health/workout?id=${logId}`, { method: "DELETE" })
   }, id)
 })
+
+test("the session card is today's session, drawn from the server's answer", async ({ page }) => {
+  /**
+   * The card used to decide for itself whether the open workout was stale and
+   * name its day with the PHONE's clock, while the Tracking card decided the
+   * same things on the server. Two doors into training, two answers.
+   */
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto("/programs", { waitUntil: "networkidle" })
+
+  const card = page.getByTestId("today-card")
+  await expect(card).toBeVisible()
+
+  // The week lives inside the card now, seven cells, one marked today.
+  const strip = card.getByTestId("week-strip")
+  await expect(strip).toBeVisible()
+  await expect(strip.locator('[data-testid^="week-day-"]')).toHaveCount(7)
+  await expect(strip.locator('[data-today="1"]')).toHaveCount(1)
+
+  // Exactly one button that starts something.
+  await expect(card.getByTestId("start-workout")).toHaveCount(1)
+  await expect(card.getByTestId("resume-workout")).toHaveCount(0)
+
+  // The day chips are behind a tap — seven of them permanently on screen were
+  // the widest thing on the card and the least used.
+  await expect(card.getByRole("button", { name: /^Workout A/ })).toHaveCount(0)
+  await card.getByTestId("change-day").click()
+  await expect(card.getByRole("button", { name: /^Workout A/ })).toBeVisible()
+
+  // Start it, and the card reads Resume on the way back.
+  await card.getByTestId("change-day").click()
+  await card.getByTestId("start-workout").click()
+  await page.waitForURL(/\/programs\/live/)
+  await page.goto("/programs", { waitUntil: "networkidle" })
+
+  await expect(card.getByTestId("resume-workout")).toBeVisible()
+  await expect(card.getByTestId("start-workout")).toHaveCount(0)
+
+  await page.evaluate(async () => {
+    const live = await (await fetch("/api/workouts/live")).json()
+    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
+  })
+})

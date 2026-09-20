@@ -2583,7 +2583,13 @@ export function trainingCardState(facts: TrainingDoorFacts, now: Date = new Date
     }
     void elapsed
     return isStaleWorkout(facts.live.startedAt, now)
-      ? { kind: "stale", ...open }
+      ? {
+          kind: "stale",
+          ...open,
+          // Named HERE, where the account's zone is known. Both cards print
+          // it and both used to derive it from the browser's clock.
+          startedOnWeekday: weekdayNameIn(facts.live.startedAt, facts.timezone),
+        }
       : { kind: "live", ...open }
   }
 

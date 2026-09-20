@@ -19,7 +19,7 @@ import { requireProgram, enrollmentName, getProgram } from "../data/catalog"
 import { effectiveProgram } from "../customize"
 import { formatDateOnly, computePrescription } from "../programsService"
 import { LEVEL_LABELS } from "../config"
-import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment } from "../types"
+import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment, TrainingCardState } from "../types"
 import { endProgram, resetProgram } from "../programActions"
 
 type View =
@@ -33,6 +33,8 @@ interface ProgramsAppProps {
   initialActive?: ProgramEnrollment[]
   initialPast?: ProgramEnrollment[]
   initialDetail?: EnrollmentDetail | null
+  /** Today, decided on the server. See `trainingCardState`. */
+  cardState?: TrainingCardState | null
   /**
    * A workout already open, if there is one.
    *
@@ -43,7 +45,13 @@ interface ProgramsAppProps {
   live?: LiveWorkout | null
 }
 
-export function ProgramsApp({ initialActive, initialPast, initialDetail, live = null }: ProgramsAppProps = {}) {
+export function ProgramsApp({
+  initialActive,
+  initialPast,
+  initialDetail,
+  live = null,
+  cardState = null,
+}: ProgramsAppProps = {}) {
   const [view, setView] = useState<View>({ mode: "home" })
   const { enrollments, loading, error, refresh } = useActiveEnrollments(initialActive)
 
@@ -76,7 +84,7 @@ export function ProgramsApp({ initialActive, initialPast, initialDetail, live = 
           enrollmentId={enrollments[0].id}
           initialDetail={initialDetail ?? null}
           initialPast={initialPast}
-          live={live}
+          cardState={cardState}
           onExit={() => {
             refresh()
             setView({ mode: "browse" })
@@ -114,7 +122,14 @@ export function ProgramsApp({ initialActive, initialPast, initialDetail, live = 
   if (view.mode === "active") {
     return (
       <div className="space-y-3">
-        <ActiveProgram enrollmentId={view.enrollmentId} live={live} onExit={() => { refresh(); setView({ mode: "home" }) }} />
+        <ActiveProgram
+          enrollmentId={view.enrollmentId}
+          cardState={cardState}
+          onExit={() => {
+            refresh()
+            setView({ mode: "home" })
+          }}
+        />
         {looseStart}
       </div>
     )
@@ -250,13 +265,19 @@ function ActiveProgram({
   enrollmentId,
   initialDetail,
   initialPast,
-  live = null,
+  cardState = null,
   onExit,
 }: {
   enrollmentId: string
+  /**
+   * Today, from the server — including whether a workout is open and whose.
+   * This used to take a separate `live` prop and the card compared it with
+   * its own enrollment id; two sources for one fact, and the card's copy had
+   * no time zone, so it named a stale workout's day from the phone's clock.
+   */
+  cardState?: TrainingCardState | null
   initialDetail?: EnrollmentDetail | null
   initialPast?: ProgramEnrollment[]
-  live?: LiveWorkout | null
   onExit: () => void
 }) {
   const { detail, loading, error, refresh } = useEnrollment(enrollmentId, initialDetail)
@@ -383,9 +404,11 @@ function ActiveProgram({
         programName={enrollmentName(detail.enrollment)}
         prescription={prescription}
         unit={detail.enrollment.unitSystem}
-        live={live}
+        state={cardState}
+        week={detail.week}
         days={days}
         onPickDay={setPickedDayId}
+        onPickWeekday={setPickingWeekday}
       >
         <SessionNotices
           prescription={prescription}
