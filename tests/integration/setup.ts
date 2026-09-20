@@ -13,8 +13,32 @@ import { Client } from "pg"
 import fs from "fs"
 import path from "path"
 
-// Temp file to share connection info between globalSetup and tests
+/**
+ * HOW A TEST FINDS THE DATABASE — and why it is not simply a file.
+ *
+ * This was one path, `tests/integration/.test-connection.json`, written by
+ * `startContainer`, DELETED by `stopContainer`, and re-read from disk on every
+ * single `getClient()` call. One file, no lock, no per-run identity.
+ *
+ * Three agents share this checkout, so two integration runs overlap often. On
+ * 2026-09-20 that produced 165 failures across 17 files and a confident wrong
+ * diagnosis ("infrastructure"), because the two ways it goes wrong both look
+ * like something else:
+ *
+ *   - run A finishes and deletes the file; run B's remaining files then fail
+ *     with "container may not be started", which reads as a broken harness
+ *   - while both are up, the file points at whichever container wrote it last,
+ *     so `createTestUser()` inserts a profile into container A and the NEXT
+ *     query runs against container B. The profile is missing, and the error is
+ *     `user_goals_user_id_fkey` — which reads as a schema or a repo bug, and
+ *     sent somebody through src/db looking for one.
+ *
+ * The environment is per-process, so it cannot be overwritten or deleted by
+ * another run. The file stays as a fallback for anything that reaches these
+ * helpers without `globalSetup` having run in the same process tree.
+ */
 const CONNECTION_FILE = path.join(__dirname, ".test-connection.json")
+const CONNECTION_ENV = "INTEGRATION_DB_CONNECTION"
 
 let container: StartedPostgreSqlContainer | null = null
 
@@ -50,6 +74,10 @@ export async function startContainer(): Promise<void> {
     user: container.getUsername(),
     password: container.getPassword(),
   }
+  // Both: the env var is what this run's own workers read, the file is the
+  // fallback. The file is shared and another run may clobber it; the env
+  // cannot be reached by another process.
+  process.env[CONNECTION_ENV] = JSON.stringify(connectionInfo)
   fs.writeFileSync(CONNECTION_FILE, JSON.stringify(connectionInfo))
 
   // Initialize schema
@@ -82,14 +110,26 @@ export async function stopContainer(): Promise<void> {
 }
 
 /**
- * Get connection info from temp file.
- * Used by tests to connect to the container started by globalSetup.
+ * Where this run's database is. The environment first — see `CONNECTION_ENV`.
+ *
+ * Read on every `getClient()` call, which is what made the shared file so
+ * dangerous: two statements in one test could go to two different databases
+ * because the file changed between them. `process.env` cannot change under a
+ * running process, so within one run every call agrees.
  */
 function getConnectionInfo(): ConnectionInfo {
+  const fromEnv = process.env[CONNECTION_ENV]
+  if (fromEnv) return JSON.parse(fromEnv) as ConnectionInfo
+
   if (!fs.existsSync(CONNECTION_FILE)) {
     throw new Error(
-      "Connection file not found. Container may not be started. " +
-      "Make sure globalSetup ran successfully."
+      `No test database to connect to: ${CONNECTION_ENV} is unset and ` +
+        `${path.basename(CONNECTION_FILE)} does not exist.\n` +
+        "Either globalSetup did not run, or ANOTHER integration run finished " +
+        "and deleted the shared file while this one was still going — three " +
+        "agents share this checkout, and that is what a wall of failures in " +
+        "unrelated files usually means. Run `npm run test:integration` on its " +
+        "own before believing them."
     )
   }
 
