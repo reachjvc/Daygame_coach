@@ -71,10 +71,15 @@ function createGoalWithProgress(overrides: Partial<GoalWithProgress> = {}): Goal
     streak_freezes_used: 0,
     last_freeze_date: null,
     aligned_values: [],
+    is_abstinence: false,
     progress_percentage: 0,
     is_complete: false,
     days_remaining: null,
     ...overrides,
+    /* `Partial<GoalWithProgress>` widens every optional-looking field to
+       `| undefined`, and `goal_phase` is nullable rather than optional, so the
+       spread alone does not type-check. Normalised here rather than baselined. */
+    goal_phase: overrides.goal_phase ?? null,
   }
 }
 

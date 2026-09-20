@@ -1,7 +1,7 @@
 {
   "_comment": "Type errors that already existed, by file and message. May only shrink. Regenerate with: node scripts/typecheck-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
   "_format": "signatures-v2",
-  "total": 102,
+  "total": 98,
   "files": {
     "app/test/goalsv11/page.tsx": {
       "TS2345: Argument of type '\"a\" | \"b\" | \"c\" | \"d\" | \"e\"' is not assignable to parameter of type 'SetStateAction<\"a\">'.": 1
@@ -118,14 +118,8 @@
     "tests/manual/timezoneCounters.test.ts": {
       "TS1378: Top-level 'await' expressions are only allowed when the 'module' option is set to 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', 'nodenext', or 'preserve', and the 'target' option is set to 'es2017' or higher.": 4
     },
-    "tests/unit/db/goalTypes.test.ts": {
-      "TS2322: Type '{ id: string; user_id: string; title: string; category: string; tracking_type: GoalTrackingType; period: GoalPeriod; target_value: number; ... 27 more ...; aligned_values: string[]; }' is not assignable to type 'UserGoalRow'.": 1
-    },
     "tests/unit/e2e-isolation.test.ts": {
       "TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.": 1
-    },
-    "tests/unit/goals/goalHierarchyService.test.ts": {
-      "TS2322: Type '{ progress_percentage: number; is_complete: boolean; days_remaining: number | null; id: string; user_id: string; title: string; category: string; tracking_type: GoalTrackingType; ... 29 more ...; aligned_values: string[]; }' is not assignable to type 'GoalWithProgress'.": 1
     },
     "tests/unit/goals/goalPeriodRoll.test.ts": {
       "TS1378: Top-level 'await' expressions are only allowed when the 'module' option is set to 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', 'nodenext', or 'preserve', and the 'target' option is set to 'es2017' or higher.": 1
@@ -134,7 +128,6 @@
       "TS1378: Top-level 'await' expressions are only allowed when the 'module' option is set to 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', 'nodenext', or 'preserve', and the 'target' option is set to 'es2017' or higher.": 3
     },
     "tests/unit/goals/goalsService.test.ts": {
-      "TS2322: Type '{ progress_percentage: number; is_complete: boolean; days_remaining: number | null; id: string; user_id: string; title: string; category: string; tracking_type: GoalTrackingType; ... 29 more ...; aligned_values: string[]; }' is not assignable to type 'GoalWithProgress'.": 1,
       "TS2741: Property 'tierName' is missing in type '{ badgeId: string; title: string; progress: number; tier: \"bronze\"; unlocked: true; }' but required in type 'BadgeStatus'.": 2,
       "TS2741: Property 'tierName' is missing in type '{ badgeId: string; title: string; progress: number; tier: \"none\"; unlocked: false; }' but required in type 'BadgeStatus'.": 1
     },
@@ -146,9 +139,6 @@
     },
     "tests/unit/goals/northStarTrack.test.ts": {
       "TS2353: Object literal may only specify known properties, and 'curve' does not exist in type 'MilestoneLadderConfig'.": 1
-    },
-    "tests/unit/goals/weeklyReview.test.ts": {
-      "TS2322: Type '{ progress_percentage: number; is_complete: boolean; days_remaining: number | null; id: string; user_id: string; title: string; category: string; tracking_type: GoalTrackingType; ... 29 more ...; aligned_values: string[]; }' is not assignable to type 'GoalWithProgress'.": 1
     },
     "tests/unit/inner-game/progressUtils.test.ts": {
       "TS2322: Type '{ currentStep: InnerGameStep; currentSubstep: number; welcomeDismissed: boolean; valuesCompleted: boolean; shadowCompleted: boolean; peakExperienceCompleted: boolean; hurdlesCompleted: boolean; ... 14 more ...; deathbedInferredValues?: InferredValue[] | null | undefined; }' is not assignable to type 'InnerGameProgress'.": 1

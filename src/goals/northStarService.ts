@@ -673,13 +673,18 @@ export function normalizeNsPlan(parsed: unknown): NsPlan | null {
      * it then found it sitting under the things they want to have done, being
      * asked for a date by which they will have finished not smoking.
      *
-     * Narrow on purpose: only `readsAsAbstinence` titles, only when the goal is
-     * not already a driver, and only the type and the rate change. Everything
-     * else the person wrote about it survives, and the kind is three buttons
-     * inside the row if this reads it wrong.
+     * NEVER IS EVERY DAY, and this used to keep whatever day count the goal
+     * already had. The owner's "No weed" carried the template default of 3, so
+     * the product recorded "be weed-free three times this week" — and being
+     * clean Monday to Wednesday marked the week complete with a streak of one
+     * while he smoked the other four days. A prohibition is not a quota.
+     *
+     * The reading is taken ONCE and stored on `isAbstinence`. After that it is
+     * a fact the person owns: renaming the goal cannot silently change its
+     * kind, and the three buttons in the row still win if this read it wrong.
      */
-    ...(readsAsAbstinence(g.title) && g.type !== "habit_ramp"
-      ? { type: "habit_ramp" as const, daysPerWeek: g.daysPerWeek > 0 ? g.daysPerWeek : 7 }
+    ...(g.isAbstinence && g.type !== "habit_ramp"
+      ? { type: "habit_ramp" as const, daysPerWeek: 7 }
       : null),
   }))
 
@@ -954,6 +959,7 @@ function readGoal(g: Record<string, unknown>): NsGoal {
     id: String(g.id),
     areaId: String(g.areaId),
     title: String(g.title),
+    isAbstinence: typeof g.isAbstinence === "boolean" ? g.isAbstinence : readsAsAbstinence(String(g.title)),
     type,
     why: stringOr(g.why, ""),
     painWhy: stringOr(g.painWhy, ""),
@@ -1731,6 +1737,8 @@ export function addGoal(plan: NsPlan, areaId: string, title: string, type: Visio
     areaId,
     title: trimmed,
     type,
+    // Read once, from the line just typed, and stored. See `normalizeNsPlan`.
+    isAbstinence: readsAsAbstinence(trimmed),
     why: "",
     painWhy: "",
     sentence: "",

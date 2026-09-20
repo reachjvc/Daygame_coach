@@ -1486,6 +1486,8 @@ export interface NsTrackInsert {
   aligned_values?: string[]
   milestone_config?: Record<string, unknown>
   ramp_steps?: Record<string, unknown>[]
+  /** A goal NOT to do. Daily, yes-or-no, and never rewarded with a streak. */
+  is_abstinence?: boolean
 }
 
 /** One row of the track step's list: a plan goal and what it becomes. */
@@ -1805,6 +1807,16 @@ export interface NsCheckpoint {
 }
 
 export interface NsGoal {
+  /**
+   * A goal NOT to do — "No weed". Item 14 of the owner's concept list.
+   *
+   * Set once by `normalizeNsPlan` from `readsAsAbstinence`, and thereafter a
+   * stored fact rather than a reading of the title, so renaming the goal cannot
+   * silently change what kind of thing it is. It pushes as a DAILY yes-or-no
+   * rather than a weekly quota: "be weed-free three times this week" was what
+   * the product used to record, and hitting three by Wednesday marked it done.
+   */
+  isAbstinence: boolean
   id: string
   areaId: string
   title: string

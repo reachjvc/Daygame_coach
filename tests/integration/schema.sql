@@ -466,6 +466,13 @@ CREATE TABLE user_goals (
   streak_freezes_used INTEGER NOT NULL DEFAULT 0,
   last_freeze_date DATE,
   goal_phase TEXT CHECK (goal_phase IS NULL OR goal_phase IN ('acquisition', 'consolidation', 'graduated')),
+  -- A goal NOT to do. Migration 20260920100000. Daily and yes-or-no like any
+  -- standing rule, but rewarded by days accumulated rather than by a streak.
+  is_abstinence BOOLEAN NOT NULL DEFAULT FALSE,
+  -- Drift this file already carried: production has had aligned_values since
+  -- the values work and this mirror never gained it, so any integration test
+  -- that wrote one would have failed against a column that does exist.
+  aligned_values TEXT[] DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

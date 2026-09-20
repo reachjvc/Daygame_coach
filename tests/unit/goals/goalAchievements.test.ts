@@ -145,17 +145,20 @@ describe("a goal about stopping something", () => {
    */
   it("earns no streak badge at any history", () => {
     const rows = mondays(60).map((d) => snap(d, 7, true))
-    const ids = badgesForGoal(goal({ target_value: 7 }), rows, TODAY, true).map((b) => b.ruleId)
+    const ids = badgesForGoal(goal({ target_value: 7, is_abstinence: true }), rows, TODAY).map((b) => b.ruleId)
     expect(ids.filter((i) => i.startsWith("streak_"))).toEqual([])
   })
 
   it("still earns the totals — the number that only goes up", () => {
     const rows = mondays(20).map((d) => snap(d, 7, true))
-    const ids = badgesForGoal(goal({ target_value: 7 }), rows, TODAY, true).map((b) => b.ruleId)
+    const ids = badgesForGoal(goal({ target_value: 7, is_abstinence: true }), rows, TODAY).map((b) => b.ruleId)
     expect(ids).toContain("total_100")
   })
 
-  it("is off unless the caller says so — never guessed from the title", () => {
+  it("is off unless the ROW says so — never guessed from the title", () => {
+    // The flag lives on the row now (migration 20260920100000). A goal called
+    // "No weed" that nobody marked is an ordinary practice, and reading the
+    // title here would put the guess back that this area spent a week removing.
     const rows = mondays(4).map((d) => snap(d, 4, true))
     const ids = badgesForGoal(goal({ title: "No weed" }), rows, TODAY).map((b) => b.ruleId)
     expect(ids).toContain("streak_4")

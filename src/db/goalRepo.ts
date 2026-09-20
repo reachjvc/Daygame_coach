@@ -294,6 +294,7 @@ export async function createGoal(
     template_id: goal.template_id ?? null,
     milestone_config: goal.milestone_config ?? null,
     ramp_steps: goal.ramp_steps ?? null,
+    is_abstinence: goal.is_abstinence ?? false,
     goal_phase: goal.goal_phase ?? null,
     // CreateGoalSchema has accepted this since it was added and neither insert
     // path wrote it, so a goal created with its reason attached arrived with

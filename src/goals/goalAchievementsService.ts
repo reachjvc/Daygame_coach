@@ -47,16 +47,19 @@ export interface EarnedBadge {
  * own and still needs a date to be attributed to. Reading the clock here would
  * make every test depend on the day it ran.
  *
- * `isAbstinence` is an argument for the reason given on `GoalFacts`: nothing
- * sets it yet, and guessing it from the title is the fault this area has spent
- * a week removing.
+ * WHETHER THIS IS A GOAL NOT TO DO comes off the row, not off an argument and
+ * never off the title. It was an argument while nothing could set it; the
+ * `is_abstinence` column (migration 20260920100000) sets it now, so a caller
+ * that forgot to pass the flag can no longer hand somebody quitting weed a
+ * streak that a single bad day deletes. Guessing it from the title is the
+ * fault this area spent a week removing.
  */
 export function factsFor(
   goal: UserGoalRow,
   snapshots: DailyGoalSnapshotRow[],
   today: string,
-  isAbstinence = false,
 ): GoalFacts {
+  const isAbstinence = goal.is_abstinence === true
   const asc = [...snapshots].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date))
 
   /**
@@ -125,9 +128,8 @@ export function badgesForGoal(
   goal: UserGoalRow,
   snapshots: DailyGoalSnapshotRow[],
   today: string,
-  isAbstinence = false,
 ): EarnedBadge[] {
-  return earnedFor(factsFor(goal, snapshots, today, isAbstinence))
+  return earnedFor(factsFor(goal, snapshots, today))
 }
 
 

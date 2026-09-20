@@ -45,6 +45,10 @@ function createGoalRow(overrides: Partial<UserGoalRow> = {}): UserGoalRow {
     streak_freezes_used: 0,
     last_freeze_date: null,
     aligned_values: [],
+    is_abstinence: false,
+    /* Missing from the defaults, so its type came only from `Partial<...>` —
+       which is `T | undefined`. It sat in the typecheck baseline instead. */
+    goal_phase: null,
     ...overrides,
   }
 }

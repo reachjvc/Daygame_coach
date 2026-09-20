@@ -67,6 +67,15 @@ export interface UserGoalRow {
   last_freeze_date: string | null
   goal_phase: GoalPhase | null
   aligned_values: string[]
+  /**
+   * True when this is a goal NOT to do — "No weed".
+   *
+   * Daily and yes-or-no like any standing rule; what differs is the reward.
+   * Streak badges are suppressed (`goalAchievementRules.ts`), because a streak
+   * punishes one bad day by deleting the record of every good one, and days
+   * accumulated are counted instead. See the 20260920100000 migration.
+   */
+  is_abstinence: boolean
 }
 
 /**
@@ -97,6 +106,7 @@ export interface UserGoalInsert {
   motivation_note?: string | null
   goal_phase?: GoalPhase | null
   aligned_values?: string[]
+  is_abstinence?: boolean
 }
 
 /**
@@ -127,6 +137,7 @@ export interface UserGoalUpdate {
   motivation_note?: string | null
   goal_phase?: GoalPhase | null
   aligned_values?: string[]
+  is_abstinence?: boolean
 }
 
 /**

@@ -35,6 +35,17 @@ function mockGoal(overrides: Partial<GoalWithProgress> & { id: string }): GoalWi
     goal_level: null,
     template_id: null,
     aligned_values: [],
+    is_abstinence: false,
+    /* A factory produces a COMPLETE row. These were missing, so their type came
+       only from `Partial<GoalWithProgress>` — which is `T | undefined` — and the
+       result did not type-check. It sat in the typecheck baseline instead. */
+    milestone_config: null,
+    ramp_steps: null,
+    motivation_note: null,
+    streak_freezes_available: 0,
+    streak_freezes_used: 0,
+    last_freeze_date: null,
+    goal_phase: null,
     progress_percentage: 0,
     is_complete: false,
     days_remaining: null,

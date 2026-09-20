@@ -163,6 +163,28 @@ export function goalToInsert(plan: NsPlan, runId: string, goal: NsGoal): NsTrack
   if (goal.targetDate) insert.target_date = goal.targetDate
   if (goal.values.length) insert.aligned_values = goal.values.slice(0, 7)
 
+  if (goal.isAbstinence) {
+    /* A THING YOU DO NOT DO, and it is a day at a time.
+    
+       "No weed" used to go over as a WEEKLY COUNTER with a target of three,
+       because the abstinence repair kept whatever day count the goal already
+       had and the template default was three. Being clean Monday to Wednesday
+       then marked the week complete, with a streak of one, while the other
+       four days were smoked. A prohibition recorded as a quota.
+    
+       Every day is its own answer, so: daily, yes or no. The reward is the
+       days that accumulate — `is_abstinence` suppresses the streak badges
+       (`goalAchievementRules.ts`) because one bad day deleting the record of
+       two hundred good ones is what makes people stop opening the app, and the
+       total badges count clean days instead. */
+    insert.tracking_type = "boolean"
+    insert.period = "daily"
+    insert.target_value = 1
+    insert.goal_type = "recurring"
+    insert.is_abstinence = true
+    return insert
+  }
+
   if (isSystem(goal)) {
     /* How much a week, or how often a week when there is no "how much" — and
        when there is a ramp, what the FIRST week of it asks for. A ramp is the

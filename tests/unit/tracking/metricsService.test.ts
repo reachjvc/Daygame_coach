@@ -58,6 +58,7 @@ function goal(overrides: Partial<UserGoalRow> = {}): UserGoalRow {
     last_freeze_date: null,
     goal_phase: null,
     aligned_values: [],
+    is_abstinence: false,
     ...overrides,
   }
 }
