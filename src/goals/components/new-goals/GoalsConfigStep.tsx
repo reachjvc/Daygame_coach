@@ -29,10 +29,12 @@ import { suggestedTargetDate, todayISO, addDaysISO } from "@/src/goals/horizonSe
 import type { IntakeMatches } from "@/src/goals/intakeService"
 import { EditableTitle } from "./EditableTitle"
 import { PlanTimeline } from "./PlanTimeline"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { withReturn } from "@/src/shared/returnTo"
 import { AreaDateButton } from "./AreaDateButton"
 import { clarifierPrompt, clarifierOption, AUTHORED_CLARIFIERS } from "./clarifiers"
-import { ProgramPicker } from "@/src/programs/components/ProgramPicker"
-import { hasProgramsForDiscipline, requireProgram } from "@/src/programs/data/catalog"
+import { hasProgramsForDiscipline } from "@/src/programs/data/catalog"
 import type { Discipline, ProgramSelection } from "@/src/programs/types"
 
 // Which fitness objectives map to program discipline(s). A discipline's picker
@@ -187,6 +189,14 @@ interface GoalsConfigStepProps {
   objectiveDates?: Record<string, string>
   onChangeObjectiveDate?: (objectiveId: string, date: string) => void
   /** Workout programs attached under Health (≤1 per discipline) → enrolled on save. */
+  /**
+   * Kept so the flow's shape does not change, and unread here.
+   *
+   * Programs are chosen on the Training page now; this step links there. The
+   * field and the enrol loop behind `/api/goals/plan` are left alone
+   * deliberately — nothing sends a selection any more, and deciding whether
+   * that path should exist at all belongs with the goals work, not here.
+   */
   programSelections?: ProgramSelection[]
   onChangeProgramSelections?: (selections: ProgramSelection[]) => void
 }
@@ -1328,7 +1338,6 @@ export function GoalsConfigStep({
   onChangePillarDate,
   objectiveDates = {},
   onChangeObjectiveDate,
-  programSelections = [],
   onChangeProgramSelections,
 }: GoalsConfigStepProps) {
   // Areas in priority (rank) order, matching the Intake step; unranked active areas last.
@@ -1911,17 +1920,21 @@ export function GoalsConfigStep({
           [...(selectedObjectives ?? [])].flatMap((o) => OBJECTIVE_DISCIPLINE[o] ?? [])
         )].filter((d) => hasProgramsForDiscipline(d))
         if (disciplines.length === 0) return null
-        const selectionFor = (d: Discipline) =>
-          programSelections.find((s) => requireProgram(s.programId).discipline === d) ?? null
-        const setSelectionFor = (d: Discipline, sel: ProgramSelection | null) => {
-          const others = programSelections.filter((s) => requireProgram(s.programId).discipline !== d)
-          onChangeProgramSelections(sel ? [...others, sel] : others)
-        }
+        /**
+         * ONE PLACE TO PICK A PROGRAM.
+         *
+         * `ProgramPicker` was a second one — its own zinc-and-emerald list of
+         * the same programs, reachable only from this lab page, with its own
+         * idea of what choosing one means. Training is where programs are
+         * chosen, so this points there and carries a way back.
+         */
         return (
-          <div className="mt-5 space-y-3">
-            {disciplines.map((d) => (
-              <ProgramPicker key={d} discipline={d} value={selectionFor(d)} onChange={(sel) => setSelectionFor(d, sel)} />
-            ))}
+          <div className="mt-5">
+            <Button asChild variant="outline" size="sm">
+              <Link href={withReturn("/programs?view=programs", "/test/new-goals")}>
+                Pick a program on the Training page ›
+              </Link>
+            </Button>
           </div>
         )
       })()}

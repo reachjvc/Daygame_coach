@@ -1259,7 +1259,6 @@ describe('Architecture Compliance', () => {
       'src/programs/components/LiftHistory.tsx',
       'src/programs/components/PastPrograms.tsx',
       'src/programs/components/ProgramEditor.tsx',
-      'src/programs/components/ProgramPicker.tsx',
       'src/programs/components/ProgramsApp.tsx',
       'src/programs/components/ProgressTab.tsx',
       'src/programs/components/ProgressionView.tsx',
@@ -1787,7 +1786,6 @@ describe('Architecture Compliance', () => {
 
   describe('Life Mastery reaches the gym through one door', () => {
     const GOALS_TO_PROGRAMS_IMPORTS_ALLOWED = new Set([
-      'src/goals/components/new-goals/GoalsConfigStep.tsx @/src/programs/components/ProgramPicker',
       'src/goals/components/new-goals/GoalsConfigStep.tsx @/src/programs/data/catalog',
       'src/goals/components/new-goals/GoalsConfigStep.tsx @/src/programs/types',
       'src/goals/components/new-goals/NewGoalsFlow.tsx @/src/programs/types',
