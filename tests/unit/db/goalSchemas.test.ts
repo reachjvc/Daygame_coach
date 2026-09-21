@@ -104,10 +104,30 @@ describe("CreateGoalSchema", () => {
     expect(result.success).toBe(false)
   })
 
-  test("rejects target_value less than 1", () => {
+  /**
+   * ZERO IS A LEGITIMATE TARGET GOING DOWNWARDS, since 2026-09-20.
+   *
+   * This asserted `target_value: 0` was rejected, which was right while every
+   * target was something you counted UP to. Descending ladders are pushed as
+   * real counters now, and "twenty cigarettes a day down to none" aims at
+   * zero. The floor of 1 turned that one goal into a 400 for the WHOLE batch,
+   * so nothing in the plan was written while the button said "Send".
+   *
+   * Negative is still refused: a target below zero has no meaning in either
+   * direction.
+   */
+  test("accepts a target_value of zero, for a goal that counts down to none", () => {
     const result = CreateGoalSchema.safeParse({
       ...validMinimal,
       target_value: 0,
+    })
+    expect(result.success).toBe(true)
+  })
+
+  test("rejects a negative target_value", () => {
+    const result = CreateGoalSchema.safeParse({
+      ...validMinimal,
+      target_value: -1,
     })
     expect(result.success).toBe(false)
   })

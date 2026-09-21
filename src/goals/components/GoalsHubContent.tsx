@@ -184,7 +184,11 @@ export function GoalsHubContent({
         ? {
             ...g,
             current_value: g.current_value + amount,
-            progress_percentage: Math.min(100, Math.round(((g.current_value + amount) / g.target_value) * 100)),
+            /* The same rule the server uses. This one was missed when its two
+               siblings were converted, because the expression has `+ amount`
+               between the two column names and the rule that forbids the
+               hand-written form was matching them adjacent. */
+            progress_percentage: progressPercent({ ...g, current_value: g.current_value + amount }),
             is_complete: isGoalComplete({ ...g, current_value: g.current_value + amount }),
           }
         : g

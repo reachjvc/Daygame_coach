@@ -66,13 +66,25 @@ function filesUnder(dir: string): string[] {
  * different and legitimate question, asked by `ProjectionTimeline` and
  * `GoalCard`, and catching it here would train people to ignore this test.
  */
+/**
+ * `current_value` and `target_value` with ARITHMETIC ALLOWED IN BETWEEN.
+ *
+ * The first version required the two names to be adjacent, and missed
+ * `(g.current_value + amount) / g.target_value` in `GoalsHubContent` — the
+ * optimistic progress bar, on the live Track step, still computing the
+ * from-zero sum while its two siblings three lines away had been converted. A
+ * rule that only catches the tidiest spelling of a defect is a rule that
+ * reports the defect gone.
+ */
+const BETWEEN = "[^;\\n]{0,40}?"
+
 const OFFENCES: Array<{ pattern: RegExp; says: string }> = [
   {
-    pattern: /current_value\s*\/\s*[\w.]*target_value/,
+    pattern: new RegExp(`current_value${BETWEEN}/\\s*[\\w.]*target_value`),
     says: "computes progress as current / target — that counts from zero, not from where the goal started. Use progressPercent() from src/db/goalProgress.ts",
   },
   {
-    pattern: /current_value\s*(?:\+\s*[\w.]+\s*)?>=\s*[\w.]*target_value/,
+    pattern: new RegExp(`current_value${BETWEEN}>=\\s*[\\w.]*target_value`),
     says: "decides completion by hand — a goal that runs downwards completes the other way round. Use isGoalComplete() from src/db/goalProgress.ts",
   },
 ]
@@ -149,6 +161,11 @@ describe("how far along a goal is — one owner", () => {
     expect(OFFENCES[0].pattern.test("x.current_value / x.target_value")).toBe(true)
     expect(OFFENCES[1].pattern.test("g.current_value >= g.target_value")).toBe(true)
     expect(OFFENCES[1].pattern.test("climb.current >= climb.target")).toBe(false)
+    // The spelling that got past the first version of this rule.
+    expect(OFFENCES[0].pattern.test("((g.current_value + amount) / g.target_value) * 100")).toBe(true)
+    expect(OFFENCES[1].pattern.test("goal.current_value + amount >= goal.target_value")).toBe(true)
+    // ...without swallowing two unrelated statements on one line.
+    expect(OFFENCES[0].pattern.test("a.current_value; const b = x / y.target_value")).toBe(false)
     // And the comment stripper must not eat the code around a comment.
     expect(stripComments("const a = 1 // note\nconst b = 2")).toContain("const b = 2")
     expect(stripComments("/* current_value / target_value */ const c = 3")).not.toContain("target_value")

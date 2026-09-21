@@ -18,7 +18,18 @@ export const CreateGoalSchema = z.object({
   category: z.string().max(100).optional(),
   tracking_type: GoalTrackingTypeSchema.optional(),
   period: GoalPeriodSchema.optional(),
-  target_value: z.number().int().min(1),
+  /**
+   * ZERO IS A LEGITIMATE TARGET GOING DOWNWARDS.
+   *
+   * "Twenty cigarettes a day down to none" aims AT zero, and since descending
+   * ladders started being pushed as real counters (2026-09-20) `goalToInsert`
+   * emits target_value 0 for one. The floor of 1 here rejected it — and because
+   * the whole plan is pushed in one batch, ONE such goal turned the entire push
+   * into a 400 with "Validation failed" and nothing was written at all.
+   *
+   * Zero, not negative: a target below zero has no meaning in either direction.
+   */
+  target_value: z.number().int().min(0),
   current_value: z.number().int().min(0).optional(),
   current_streak: z.number().int().min(0).optional(),
   custom_end_date: z.string().optional(),
@@ -52,7 +63,8 @@ export const UpdateGoalSchema = z.object({
   category: z.string().max(100).optional(),
   tracking_type: GoalTrackingTypeSchema.optional(),
   period: GoalPeriodSchema.optional(),
-  target_value: z.number().int().min(1).optional(),
+  // See CreateGoalSchema: zero is a legitimate target going downwards.
+  target_value: z.number().int().min(0).optional(),
   current_value: z.number().int().min(0).optional(),
   is_active: z.boolean().optional(),
   is_archived: z.boolean().optional(),
