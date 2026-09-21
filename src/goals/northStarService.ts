@@ -5420,6 +5420,22 @@ export function shapeFromTitle(title: string): {
       rampSteps: null,
     }
   }
+  /* "X TO Y", IN EITHER DIRECTION. Runs before the "from N" fallback, which
+     only ever accepted a start BELOW the target and so discarded the 90 in
+     "from 90 to 80 kg", leaving a climb from nothing up to 90. */
+  const pair = connectedPair(title)
+  if (pair) {
+    return {
+      type: "milestone_ladder",
+      unit: parsed.unit,
+      target: pair.target,
+      start: pair.start,
+      daysPerWeek: 3,
+      perWeek: null,
+      rampSteps: null,
+    }
+  }
+
   const from = /(?:\bfra\b|\bfrom\b|\bup from\b)\s*(\d+(?:[.,]\d+)?)/i.exec(title)
   const start = from ? Number(from[1].replace(",", ".")) : null
   return {
@@ -5428,6 +5444,12 @@ export function shapeFromTitle(title: string): {
     target: parsed.value,
     // Only when it is genuinely below the target. "fra 7" on a goal of 10 is a
     // starting point; a bigger number is something else in the sentence.
+    //
+    // Deliberately NOT relaxed to allow a descending climb. "Squat 100 kg from
+    // 120 kg" would then become a goal to squat LESS, and a bare "from" with no
+    // connector is too weak to act on — which is the rule `connectedPair`
+    // above is built around. A line that means to come down says so: "from 120
+    // to 100".
     start: start != null && Number.isFinite(start) && start < parsed.value ? start : null,
     daysPerWeek: 3,
     perWeek: null,
@@ -5747,6 +5769,52 @@ export function climbPace(goal: NsGoal, today = todayISO()): {
   if (monthlyShare < 0.01) return { perMonth, months, verdict: "slow" }
   if (monthlyShare > 0.25) return { perMonth, months, verdict: "steep" }
   return { perMonth, months, verdict: "steady" }
+}
+
+/**
+ * A PAIR JOINED BY A WORD THAT SAYS WHICH WAY IT RUNS.
+ *
+ * "from 90 to 80 kg", "body fat 19 to 14", "bench from 70 to 100", "20 a day
+ * down to 0", "ned til 80 fra 90".
+ *
+ * `parseGoalTarget` takes the FIRST number in a line as the target, so
+ * "go from 90 to 80 kg" was recorded as a climb to 90 — and the "from N" guard
+ * only accepted a start BELOW the target, so the 90 was discarded as well and
+ * the row read "0 of 90 kg" for somebody who wants to lose weight.
+ * `risingNumbers` did not help: it demands each number be half again the last,
+ * so "from 70 to 100" is not rising enough to count.
+ *
+ * AN EXPLICIT CONNECTOR IS REQUIRED, and that is the whole of the safety. Two
+ * numbers in a line is far too weak a signal — "Read 12 books in 6 months"
+ * would become a goal to own six books, and "3x8 bench press 26 kg" is a set
+ * scheme rather than a climb. A "to", a "til", a "down to" or an arrow is
+ * somebody saying it out loud.
+ */
+const CONNECTED_PAIR =
+  /(\d+(?:[.,]\d+)?)[^\d]{0,24}?(?:\bdown to\b|\bned til\b|\bup to\b|\bto\b|\btil\b|->|\u2192)[^\d]{0,10}?(\d+(?:[.,]\d+)?)/i
+
+/**
+ * The same sentence with the target first, which is how Danish says it:
+ * "Ned til 80 kg fra 90". The direction is still stated out loud — "ned til"
+ * is down to — so this is the connector rule, not a relaxation of it.
+ */
+const CONNECTED_PAIR_REVERSED =
+  /(?:\bned til\b|\bdown to\b|\bop til\b|\bup to\b)\s*(\d+(?:[.,]\d+)?)[^\d]{0,24}?(?:\bfra\b|\bfrom\b)\s*(\d+(?:[.,]\d+)?)/i
+
+export function connectedPair(title: string): { start: number; target: number } | null {
+  const reversed = CONNECTED_PAIR_REVERSED.exec(title)
+  const m = reversed ?? CONNECTED_PAIR.exec(title)
+  if (!m) return null
+  // Reversed puts the target first: "ned til 80 ... fra 90".
+  const start = Number((reversed ? m[2] : m[1]).replace(",", "."))
+  const target = Number((reversed ? m[1] : m[2]).replace(",", "."))
+  if (!Number.isFinite(start) || !Number.isFinite(target)) return null
+  // A year is a deadline, not a rung — the rule `risingNumbers` already applies.
+  const isYear = (n: number) => n >= 1900 && n <= 2100 && Number.isInteger(n)
+  if (isYear(start) || isYear(target)) return null
+  // Equal numbers are a climb with no distance in it, which is not a climb.
+  if (target === start) return null
+  return { start, target }
 }
 
 /**
