@@ -218,7 +218,12 @@ export function TrackTab({
         const res = await fetch("/api/goals/batch", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ goals: batch }),
+          /* A SECOND PUSH MEANS "I CORRECTED THIS, SEND IT AGAIN".
+             It used to mean nothing: the row was found by its tag, skipped,
+             and the screen said it had been sent. What you typed is updated;
+             what you have earned against it — the count, the streak, the
+             period — is never touched. See `createGoalBatch`. */
+          body: JSON.stringify({ goals: batch, onDuplicate: "updateAuthored" }),
         })
         if (!res.ok) {
           const body = await res.json().catch(() => null)

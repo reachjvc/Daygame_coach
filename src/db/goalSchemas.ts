@@ -97,6 +97,13 @@ export const BatchCreateGoalSchema = z.object({
       _tempParentId: z.string().nullable().optional(),
     })
   ).min(1).max(50),
+  /**
+   * What a second push does to a goal that is already there. Defaults to the
+   * old behaviour — skip it — because the catalogue picker and the goal-graph
+   * mapper share this route and a repeat means something different to them.
+   * See `createGoalBatch`.
+   */
+  onDuplicate: z.enum(["skip", "updateAuthored"]).optional(),
 })
 
 // ============================================

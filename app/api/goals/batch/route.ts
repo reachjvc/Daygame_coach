@@ -14,7 +14,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Validation failed", details: result.error.flatten().fieldErrors }, { status: 400 })
     const tz = await getUserTimezone(auth.userId)
     // Zod refinement guarantees category||life_area; createGoalBatch fills defaults
-    const created = await createGoalBatch(auth.userId, result.data.goals as (UserGoalInsert & { _tempId: string; _tempParentId: string | null })[], tz)
+    const created = await createGoalBatch(
+      auth.userId,
+      result.data.goals as (UserGoalInsert & { _tempId: string; _tempParentId: string | null })[],
+      tz,
+      result.data.onDuplicate,
+    )
     return NextResponse.json(created, { status: 201 })
   } catch (error) {
     // A goal whose metric measures a different span than its period is a bad

@@ -15,7 +15,7 @@
   "src/db/goalRepo.ts:archiveGoalsBatch": "unasserted",
   "src/db/goalRepo.ts:awardStreakFreeze": "unasserted",
   "src/db/goalRepo.ts:createGoal": "mentioned",
-  "src/db/goalRepo.ts:createGoalBatch": "mentioned",
+  "src/db/goalRepo.ts:createGoalBatch": "asserted",
   "src/db/goalRepo.ts:deleteAllGoals": "mentioned",
   "src/db/goalRepo.ts:deleteGoal": "unasserted",
   "src/db/goalRepo.ts:incrementGoalProgress": "mentioned",

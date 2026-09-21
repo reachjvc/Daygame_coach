@@ -404,10 +404,46 @@ export async function createGoal(
  * Optimized: uses a single Supabase client, pre-fetches existing goals for
  * duplicate checking, and gets max position once upfront.
  */
+/**
+ * The authored fields — what a person TYPED about a goal, as opposed to what
+ * they have since earned against it.
+ *
+ * `current_value`, `current_streak`, `best_streak` and `period_start_date` are
+ * deliberately absent and must stay absent. A goal you rename should not lose
+ * the weeks you have logged, and this list is the only thing standing between
+ * a re-push and a wiped counter.
+ */
+const AUTHORED_FIELDS = [
+  "title", "description", "motivation_note", "life_area", "category",
+  "target_value", "tracking_type", "period", "goal_type", "goal_nature",
+  "milestone_config", "ramp_steps", "stages", "is_abstinence",
+  "target_date", "custom_end_date", "aligned_values", "display_category",
+] as const
+
 export async function createGoalBatch(
   userId: string,
   goals: (UserGoalInsert & { _tempId: string; _tempParentId: string | null })[],
-  timezone: string
+  timezone: string,
+  /**
+   * WHAT A SECOND PUSH DOES TO A GOAL THAT IS ALREADY THERE.
+   *
+   * `"skip"` is the old behaviour and stays the default, because this function
+   * is shared: the catalogue picker and the goal-graph mapper both call it, and
+   * for them a repeat is somebody adding the same template twice — overwriting
+   * a title they had edited by hand would be a worse bug than the one below.
+   *
+   * `"updateAuthored"` is for the Life Mastery push, where a repeat means "I
+   * corrected this goal, send it again". That did nothing at all: the row was
+   * found by `template_id`, mapped, and skipped, while the screen reported
+   * success. So a wrong shape could never be corrected from the plan — which is
+   * why the fifteen rows repaired on 2026-09-20 had to be repaired by a
+   * migration rather than by pressing the button that exists for it.
+   *
+   * It applies ONLY on the `template_id` branch. The other two duplicate rules
+   * are heuristics — same linked metric, same title in the same area — and a
+   * heuristic must never overwrite what somebody wrote.
+   */
+  onDuplicate: "skip" | "updateAuthored" = "skip"
 ): Promise<GoalWithProgress[]> {
   const supabase = await createServerSupabaseClient()
   const tempToReal = new Map<string, string>()
@@ -461,8 +497,33 @@ export async function createGoalBatch(
     }
 
     if (dupId) {
-      // Duplicate found — map temp ID to existing and skip insert
       tempToReal.set(_tempId, dupId)
+
+      /* A SECOND PUSH OF A CORRECTED GOAL. Only on the template branch, and
+         only when the caller asked for it — see `onDuplicate`. */
+      const byTemplate = Boolean(insert.template_id && existingByTemplate.get(insert.template_id) === dupId)
+      if (onDuplicate === "updateAuthored" && byTemplate) {
+        const patch: Record<string, unknown> = {}
+        for (const field of AUTHORED_FIELDS) {
+          const value = (insert as Record<string, unknown>)[field]
+          if (value !== undefined) patch[field] = value
+        }
+        if (Object.keys(patch).length > 0) {
+          const { data: updated, error: updateError } = await supabase
+            .from("user_goals")
+            .update(patch)
+            .eq("id", dupId)
+            .eq("user_id", userId)
+            .select()
+            .single()
+          if (updateError) throw new Error(`Failed to update goal: ${updateError.message}`)
+          if (updated) {
+            created.push(computeGoalProgress(updated as UserGoalRow, timezone))
+            continue
+          }
+        }
+      }
+
       const { data: existing } = await supabase
         .from("user_goals").select("*").eq("id", dupId).eq("user_id", userId).single()
       if (existing) created.push(computeGoalProgress(existing as UserGoalRow, timezone))
