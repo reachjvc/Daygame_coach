@@ -12,6 +12,7 @@ import { ProgressionView } from "./ProgressionView"
 import { StartLooseWorkout } from "./StartLooseWorkout"
 import { EditActiveProgram } from "./EditActiveProgram"
 import { WeekStrip } from "./WeekStrip"
+import { ProgramSheet } from "./ProgramSheet"
 import { DayAssignment } from "./DayAssignment"
 import { PastPrograms } from "./PastPrograms"
 import { useActiveEnrollments, useEnrollment } from "../hooks/useEnrollment"
@@ -285,6 +286,8 @@ function ActiveProgram({
   const [pickedDayId, setPickedDayId] = useState<string | null>(null)
   /** Which weekday's assignment is open, 1 = Monday. */
   const [pickingWeekday, setPickingWeekday] = useState<number | null>(null)
+  /** The ⋮ menu for this program. */
+  const [menuOpen, setMenuOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   /** The server's sentence when "I am done with this" or "Run it again" is refused. */
   const [finishFailed, setFinishFailed] = useState<string | null>(null)
@@ -409,6 +412,7 @@ function ActiveProgram({
         days={days}
         onPickDay={setPickedDayId}
         onPickWeekday={setPickingWeekday}
+        onOpenMenu={() => setMenuOpen(true)}
       >
         <SessionNotices
           prescription={prescription}
@@ -443,14 +447,25 @@ function ActiveProgram({
           shoulder changes. Weights carry over across an edit. Opened from the
           history controls so every control for this program sits together. */}
       {editing && <EditActiveProgram enrollment={detail.enrollment} onSaved={() => { setEditing(false); refresh() }} />}
-      <ProgressionView
-        enrollmentId={enrollmentId}
-        logs={detail.logs}
+      {/* EVERY PROGRAM CONTROL BEHIND THE ⋮, and off the screen you open to
+          train. The four that sat in a row here — Change, Skip, Reset, End —
+          put a destructive action a thumb-width from the others and asked with
+          the browser's own `confirm()` box. */}
+      <ProgramSheet
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
         enrollment={detail.enrollment}
-        onEditProgram={() => setEditing((v) => !v)}
         onChanged={refresh}
-        onUnenrolled={onExit}
+        onChangeDays={() => {
+          setMenuOpen(false)
+          setPickingWeekday(detail.week.todayWeekday)
+        }}
+        onEdit={() => {
+          setMenuOpen(false)
+          setEditing(true)
+        }}
       />
+      <ProgressionView logs={detail.logs} enrollment={detail.enrollment} />
       <PastPrograms initial={initialPast} onResumed={refresh} />
     </div>
   )

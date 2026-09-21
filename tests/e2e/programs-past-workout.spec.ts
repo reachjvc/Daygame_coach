@@ -440,3 +440,62 @@ test("the session card is today's session, drawn from the server's answer", asyn
     if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
   })
 })
+
+test("every program control is behind the ⋮, and a refusal stays on the sheet", async ({ page }) => {
+  /**
+   * Four buttons — Change, Skip, Reset, End — sat in a wrapping row under
+   * today's session, on the screen you open to train. End is destructive and
+   * was a thumb-width from the rest, and all four asked through the browser's
+   * own confirm() box.
+   */
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto("/programs", { waitUntil: "networkidle" })
+
+  // Not on the training screen any more.
+  await expect(page.getByRole("button", { name: /^End program$/ })).toHaveCount(0)
+
+  await page.getByTestId("program-menu").click()
+  const sheet = page.getByTestId("program-sheet")
+  await expect(sheet).toBeVisible()
+
+  /**
+   * 44px is the fingertip minimum. Measured heights come back as
+   * 43.99993896484375 for a `min-h-11` row — the same 44px, lost to subpixel
+   * rounding — so the comparison allows a hundredth of a pixel and not a
+   * hair more. The fault this guards against was real and much larger: the
+   * nav bar's rows were 43.75px on an iPhone 14, a quarter-pixel short.
+   */
+  const TAP_TARGET_PX = 43.99
+  for (const row of ["sheet-reset", "sheet-all", "sheet-end"]) {
+    const box = await sheet.getByTestId(row).boundingBox()
+    expect(box, row).toBeTruthy()
+    expect(box!.height, `${row} is ${box!.height}px`).toBeGreaterThanOrEqual(TAP_TARGET_PX)
+  }
+
+  // End asks first, and says what survives.
+  await sheet.getByTestId("sheet-end").click()
+  await expect(page.getByText(/everything you logged is kept/i)).toBeVisible()
+
+  // A refusal keeps you here. Mocked, because the only real way to make the
+  // server refuse is to leave a workout open, which other tests need clean.
+  await page.route("**/api/programs/enrollments/*", async (route) => {
+    if (route.request().method() === "DELETE") {
+      await route.fulfill({
+        status: 409,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Finish or throw away the workout you have open first" }),
+      })
+      return
+    }
+    await route.continue()
+  })
+
+  await page.getByTestId("sheet-confirm").click()
+  await expect(page.getByTestId("sheet-failed")).toContainText("Finish or throw away")
+  await expect(page).toHaveURL(/\/programs(?!\?view=programs)/)
+  // And the program is still there, still prescribing.
+  await page.unroute("**/api/programs/enrollments/*")
+  await page.keyboard.press("Escape")
+  await page.keyboard.press("Escape")
+  await expect(page.getByTestId("today-card")).toBeVisible()
+})

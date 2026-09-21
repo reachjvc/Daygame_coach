@@ -2,16 +2,13 @@
 
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { History, SkipForward, RotateCcw, Trash2, ChevronDown, ChevronUp } from "lucide-react"
+import { History, ChevronDown, ChevronUp } from "lucide-react"
 import {
   formatLoad,
   summariseProgression,
   unbrokenRun,
   UNBROKEN_RUN_QUESTION_AT,
-  skipRefusal,
-  resetConfirmText,
 } from "../programsService"
-import { endProgram, skipSession, resetProgram } from "../programActions"
 import { Sparkline } from "./Sparkline"
 import { effectiveProgram } from "../customize"
 import { scheduleDaysOrNone } from "../customize"
@@ -19,19 +16,18 @@ import { requireProgram } from "../data/catalog"
 import { UNIT_CONFIG } from "../config"
 import type { ProgramEnrollment, ProgramSessionLogRow } from "../types"
 
+/**
+ * READ-ONLY NOW. Every prop that existed to write something — the enrollment
+ * id it posted to, and the three callbacks it told the parent about — went
+ * with the buttons to `ProgramSheet`. What is left reports.
+ */
 interface Props {
-  enrollmentId: string
   logs: ProgramSessionLogRow[]
   /** Needed to turn stored ids back into the names and days a person recognises. */
   enrollment: ProgramEnrollment
-  /** Opens the program editor, so every control for this program sits together. */
-  onEditProgram?: () => void
-  onChanged: () => void
-  onUnenrolled: () => void
 }
 
-export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram, onChanged, onUnenrolled }: Props) {
-  const [busy, setBusy] = useState(false)
+export function ProgressionView({ logs, enrollment }: Props) {
   const [showAll, setShowAll] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
 
@@ -80,7 +76,6 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
     }
   }, [logs, enrollment, program])
 
-  const [failed, setFailed] = useState<string | null>(null)
 
   /**
    * CHECK WHETHER IT WORKED.
@@ -91,53 +86,13 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
    * the second one lands you have skipped twice. "End program" was worse: it
    * navigated away from a program that was still running and still prescribing.
    */
+
   /**
-   * Names the session being skipped and the one it moves to, because "Skip
-   * session?" does not tell you what you end up doing tomorrow.
+   * `action` and `unenroll` lived here. Both moved to `ProgramSheet`, so the
+   * sentence shown before a write and the write itself are in one file — the
+   * reset box spent months promising a weight reset the code never performed
+   * because they were in two.
    */
-  function skipConfirmText(): string {
-    const days = scheduleDaysOrNone(program.schedule)
-    const here = days[enrollment.cursor.dayIndex]
-    const next = days.length > 0 ? days[(enrollment.cursor.dayIndex + 1) % days.length] : undefined
-    const moves = next && next !== here ? ` The program moves on to ${next.label}` : " The program moves on"
-    return `Skip ${here ? here.label : "this session"}?${moves} as if today's session had happened. Your weights do not change.`
-  }
-
-  async function action(kind: "skip" | "reset") {
-    setBusy(true)
-    setFailed(null)
-    try {
-      const res = kind === "skip" ? await skipSession(enrollmentId) : await resetProgram(enrollmentId)
-      if (!res.ok) {
-        setFailed(res.error)
-        return
-      }
-      onChanged()
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function unenroll() {
-    // It no longer removes anything. Ending a program archives it, so the
-    // sessions stay and can be read back; what stops is the prescribing.
-    if (!confirm("End this program? It stops prescribing sessions. Everything you logged is kept.")) return
-    setBusy(true)
-    setFailed(null)
-    try {
-      // STAY PUT WHEN IT IS REFUSED. This used to navigate away whatever came
-      // back, so a program the server had kept running looked ended until the
-      // next screen showed it prescribing again.
-      const res = await endProgram(enrollmentId)
-      if (!res.ok) {
-        setFailed(res.error)
-        return
-      }
-      onUnenrolled()
-    } finally {
-      setBusy(false)
-    }
-  }
 
   /**
    * The headline, so the fold is worth leaving closed.
@@ -286,64 +241,11 @@ export function ProgressionView({ enrollmentId, logs, enrollment, onEditProgram,
           </>
         )}
 
-        {/* EVERY CONTROL FOR THIS PROGRAM, IN ONE PLACE. They were scattered
-            across two cards at three different visual weights, with "Change
-            this program" floating in the gap between them belonging to neither.
-            `End` is last and separated because it is the only one with
-            consequences. */}
-        <div className="flex flex-wrap items-center gap-2 border-t pt-3">
-          {onEditProgram && (
-            <Button variant="outline" size="sm" disabled={busy} onClick={onEditProgram}>
-              Change this program
-            </Button>
-          )}
-          {/* OFFERED ONLY WHERE IT DOES SOMETHING. On a week pinned to
-              weekdays the cursor this advances is not what decides today's
-              session, so the button changed nothing and wrote a phantom skip
-              each time it was pressed. `skipRefusal` is the same rule the
-              server refuses by. */}
-          {!skipRefusal(program.schedule) && (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={busy}
-              onClick={() => {
-                // ASKS FIRST, like the two beside it. It moves the program on a
-                // session, and a mis-tap on a phone was silent and unrecoverable.
-                if (!confirm(skipConfirmText())) return
-                void action("skip")
-              }}
-            >
-              <SkipForward className="size-4 mr-1" /> Skip session
-            </Button>
-          )}
-          {/* CONFIRMED, like the two buttons either side of it. It throws the
-              program back to cycle 1, week 1, day 1; it sat unconfirmed in a
-              wrapping row between Skip and End. What it does NOT do is touch
-              the weights — the old box said it did. */}
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={busy}
-            onClick={() => {
-              // The words come from RESET_EFFECT, because this box used to
-              // promise a weight reset that never happened.
-              if (!confirm(resetConfirmText())) return
-              void action("reset")
-            }}
-          >
-            <RotateCcw className="size-4 mr-1" /> Reset to start
-          </Button>
-          <span className="flex-1" />
-          <Button variant="ghost" size="sm" disabled={busy} onClick={unenroll} className="text-destructive">
-            <Trash2 className="size-4 mr-1" /> End program
-          </Button>
-        </div>
-        {failed && (
-          <p className="mt-2 text-xs text-red-500" data-testid="progression-action-failed">
-            {failed}
-          </p>
-        )}
+        {/* THE CONTROLS MOVED TO THE ⋮ MENU (`ProgramSheet`).
+            Four buttons in a wrapping row, on the screen you open to train,
+            with End — the only one with consequences — a thumb-width from the
+            rest, and every one of them asking through the browser's own
+            `confirm()` box. */}
       </div>
       )}
     </div>

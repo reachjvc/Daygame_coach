@@ -426,6 +426,23 @@ export function resetConfirmText(effect: { cursor: boolean; weights: boolean } =
     : "Start again from week 1? Your weights stay where they are — to start from your original weights, end this program and start it again."
 }
 
+/**
+ * Names the session being skipped AND the one it moves to.
+ *
+ * "Skip session?" does not tell you what you end up doing tomorrow, which is
+ * the only thing worth knowing before pressing it. Here rather than in a
+ * component because two screens ask it now, and a second copy of a sentence
+ * about what a write does is how the reset box came to promise a weight reset
+ * that never happened.
+ */
+export function skipConfirmText(schedule: ProgramSchedule, dayIndex: number): string {
+  const days = scheduleDaysOrNone(schedule)
+  const here = days[dayIndex]
+  const next = days.length > 0 ? days[(dayIndex + 1) % days.length] : undefined
+  const moves = next && next !== here ? ` The program moves on to ${next.label}` : " The program moves on"
+  return `Skip ${here ? here.label : "this session"}?${moves} as if today's session had happened. Your weights do not change.`
+}
+
 /** The day to do on a given ISO weekday, if this schedule is anchored. */
 export function dayForWeekday(schedule: ProgramSchedule, weekday: number) {
   if (schedule.kind !== "linear_rotation" && schedule.kind !== "weekly_waved") return undefined
