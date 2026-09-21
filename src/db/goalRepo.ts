@@ -275,11 +275,18 @@ export async function createGoal(
     title: goal.title,
     category,
     tracking_type: goal.tracking_type ?? "counter",
-    period: goal.period ?? "weekly",
+    /* A milestone is climbed to once, so "weekly" is not a sensible default for
+       it — and it is a DANGEROUS one, because weekly rolls. The goals editor
+       hides the period control for a milestone and sends nothing, which is how
+       seventy-four climbs ended up being zeroed every Monday. */
+    period: goal.period ?? (goal.goal_type === "milestone" ? "custom" : "weekly"),
     // The period this goal's count belongs to. Without it the column falls back
     // to `CURRENT_DATE` — the DATABASE's date, in UTC — so a weekly goal created
     // on a Wednesday was stamped Wednesday and its first week ran three days.
-    period_start_date: periodStartDateFor(goal.period ?? "weekly", timezone),
+    period_start_date: periodStartDateFor(
+      goal.period ?? (goal.goal_type === "milestone" ? "custom" : "weekly"),
+      timezone,
+    ),
     target_value: goal.target_value,
     custom_end_date: goal.custom_end_date ?? null,
     linked_metric: goal.linked_metric ?? null,
@@ -774,11 +781,33 @@ async function resetGoalsForPeriods(
   const now = getNowInTimezone(timezone)
   const starts = new Map(periods.map((p) => [p as string, periodStartFor(p, now)]))
 
+  /**
+   * A CLIMB HAS NO PERIOD, SO IT NEVER ROLLS.
+   *
+   * The roll zeroes `current_value` at every period boundary, and it used to do
+   * that to ANY row whose period had gone stale — including the ones that are
+   * not repeating at all. A "Squat 1RM, climb to 200 kg" made in the goals
+   * editor is filed as `goal_type` milestone, and because the editor never
+   * sends a period (`GoalFormModal` writes one only for recurring and
+   * habit_ramp shapes) `createGoal` defaulted it to weekly. So every Monday it
+   * was set back to zero, and it could never be finished.
+   *
+   * Seventy-four live rows are in that state. The same rule also stops an
+   * UNDATED finish line un-ticking itself every New Year, which it did for the
+   * same reason: no period sent, `yearly` inherited, `yearly` rolls.
+   *
+   * This is the safety net rather than the tidy-up. `createGoal` below no
+   * longer hands a milestone the weekly default, but the rows already written
+   * carry it, and excluding them here fixes those without touching a single
+   * one of them. Only `recurring` and `habit_ramp` — the shapes that genuinely
+   * repeat — have a period to roll.
+   */
   const { data: rows, error: fetchError } = await supabase
     .from("user_goals")
     .select(RESET_COLUMNS)
     .eq("user_id", userId)
     .in("period", periods)
+    .neq("goal_type", "milestone")
     .eq("is_active", true)
     .eq("is_archived", false)
 
