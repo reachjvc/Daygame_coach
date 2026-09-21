@@ -21,6 +21,33 @@ import { enrollmentName } from "../data/catalog"
 import { LEVEL_LABELS } from "../config"
 import type { ProgramEnrollment } from "../types"
 import { restartProgram, deletePastProgram } from "../programActions"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+
+/**
+ * WHAT REMOVING A FINISHED PROGRAM ACTUALLY DOES, in one place.
+ *
+ * The sessions are the thing lifters say they fear losing most, and they all
+ * survive: only the link to the program goes. Here rather than inside the
+ * handler so the words shown before the write and the write itself cannot
+ * drift apart — which is exactly how this box came to promise an erasure that
+ * never happened.
+ */
+function eraseEffect(e: ProgramEnrollment): string {
+  const n = e.sessionsLogged ?? 0
+  if (n === 0) return "It has no logged sessions."
+  return (
+    `Its ${n} logged session${n === 1 ? "" : "s"} stay${n === 1 ? "s" : ""} in your history, ` +
+    `and stop${n === 1 ? "s" : ""} counting towards this program.`
+  )
+}
 
 /**
  * How many finished programs to show before folding the rest away.
@@ -38,7 +65,20 @@ export function PastPrograms({
   const [showAll, setShowAll] = useState(false)
   // Seeded by the server component so this is not a third round trip.
   const [past, setPast] = useState<ProgramEnrollment[] | null>(initial ?? null)
-  const [busy, setBusy] = useState<string | null>(null)
+  /**
+   * TWO JOBS, TWO FLAGS.
+   *
+   * One shared `busy` id meant pressing "Start again" put the row's OTHER
+   * button into its pending state: the app said "Deleting…" beside a program
+   * you had just asked it to restart. Nothing was being deleted, and there is
+   * no worse sentence to show somebody about a year of training.
+   */
+  const [resumingId, setResumingId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  /** The program a delete is being confirmed for. */
+  const [confirming, setConfirming] = useState<ProgramEnrollment | null>(null)
+  /** What a restart displaced, said on the page rather than in an alert box. */
+  const [displacedNote, setDisplacedNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   /**
    * A FAILED READ IS NOT AN EMPTY ARCHIVE.
@@ -93,11 +133,16 @@ export function PastPrograms({
    * starting weights.
    */
   async function resume(e: ProgramEnrollment, name: string) {
-    setBusy(e.id)
+    setResumingId(e.id)
+    setError(null)
+    setDisplacedNote(null)
     try {
       const res = await restartProgram(e.id)
       if (!res.ok) {
-        alert(res.error)
+        // On the page, where the rest of this screen's errors are. An alert()
+        // box cannot be read back, cannot be styled, and is suppressed
+        // outright by some mobile browsers.
+        setError(res.error)
         return
       }
       // Say what it displaced rather than letting somebody discover it later —
@@ -105,12 +150,14 @@ export function PastPrograms({
       const displaced = res.data?.displaced ?? []
       if (displaced.length > 0) {
         const names = displaced.map(enrollmentName).join(", ")
-        alert(`${name} is running again. ${names} moved to your finished programs — everything it logged is kept.`)
+        setDisplacedNote(
+          `${name} is running again. ${names} moved to your finished programs — everything it logged is kept.`
+        )
       }
       onResumed?.()
       await load()
     } finally {
-      setBusy(null)
+      setResumingId(null)
     }
   }
 
@@ -130,14 +177,8 @@ export function PastPrograms({
    * that is what the confirmation names.
    */
   async function erase(e: ProgramEnrollment, name: string) {
-    const n = e.sessionsLogged ?? 0
-    const what =
-      n === 0
-        ? "It has no logged sessions."
-        : `Its ${n} logged session${n === 1 ? "" : "s"} stay${n === 1 ? "s" : ""} in your history, ` +
-          `and stop${n === 1 ? "s" : ""} counting towards this program.`
-    if (!confirm(`Remove ${name} from your finished programs? ${what}`)) return
-    setBusy(e.id)
+    void name
+    setDeletingId(e.id)
     setError(null)
     try {
       const res = await deletePastProgram(e.id)
@@ -147,7 +188,8 @@ export function PastPrograms({
       }
       await load()
     } finally {
-      setBusy(null)
+      setDeletingId(null)
+      setConfirming(null)
     }
   }
 
@@ -182,7 +224,52 @@ export function PastPrograms({
   return (
     <div className="space-y-2" data-testid="past-programs">
       <h2 className="text-sm font-semibold text-muted-foreground">Programs you have finished</h2>
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+      {/* WHAT A RESTART DISPLACED, on the page. It was an alert() box: a
+          sentence about a year of somebody's training, shown in a control
+          that cannot be read back, cannot be styled, and is suppressed
+          outright by some mobile browsers. */}
+      {displacedNote && (
+        <p role="status" className="text-sm text-muted-foreground" data-testid="displaced-note">
+          {displacedNote}
+        </p>
+      )}
+      <Dialog open={confirming !== null} onOpenChange={(v) => !v && setConfirming(null)}>
+        <DialogContent>
+          {confirming && (
+            <>
+              <DialogHeader>
+                <DialogTitle>
+                  Remove {enrollmentName(confirming)} from your finished programs?
+                </DialogTitle>
+                {/* THE SENTENCE MATCHES THE WRITE. This used to promise "its 47
+                    logged sessions will be erased, this cannot be undone" —
+                    and not one was erased. `workout_logs.enrollment_id` is ON
+                    DELETE SET NULL, so the sessions survive and are detached.
+                    The app claimed to destroy training history and then did
+                    not: nobody who wanted it gone got it, and anybody who
+                    mis-tapped was told their year was gone. */}
+                <DialogDescription>{eraseEffect(confirming)}</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="destructive"
+                  disabled={deletingId === confirming.id}
+                  data-testid="confirm-delete-past"
+                  onClick={() => void erase(confirming, enrollmentName(confirming))}
+                >
+                  {deletingId === confirming.id ? "Removing…" : "Remove it"}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Card>
         <CardContent className="divide-y p-0">
           {(showAll ? past : past.slice(0, SHOWN)).map((e) => {
@@ -216,21 +303,25 @@ export function PastPrograms({
                   <button
                     type="button"
                     onClick={() => resume(e, name)}
-                    disabled={busy === e.id}
+                    disabled={resumingId === e.id}
                     data-testid="resume-program"
                     className="rounded-md border border-border px-2 py-1 text-[11px] transition-colors hover:bg-accent disabled:opacity-40"
                   >
-                    {busy === e.id ? "…" : "Start again"}
+                    {resumingId === e.id ? "Starting…" : "Start again"}
                   </button>
                   <button
                     type="button"
-                    onClick={() => erase(e, name)}
-                    disabled={busy === e.id}
-                    aria-label={`Delete ${name} permanently`}
+                    onClick={() => setConfirming(e)}
+                    disabled={deletingId === e.id}
+                    /* NOT "permanently". A screen reader was told the one
+                       thing this button does not do: the sessions survive and
+                       are detached. The dialog's words were fixed and this
+                       one was left saying the old promise. */
+                    aria-label={`Remove ${name} from your finished programs`}
                     data-testid="delete-past-program"
                     className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-destructive disabled:opacity-40"
                   >
-                    {busy === e.id ? "Deleting…" : "Delete"}
+                    {deletingId === e.id ? "Deleting…" : "Delete"}
                   </button>
                 </span>
               </div>
