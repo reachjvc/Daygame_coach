@@ -499,3 +499,27 @@ test("every program control is behind the ⋮, and a refusal stays on the sheet"
   await page.keyboard.press("Escape")
   await expect(page.getByTestId("today-card")).toBeVisible()
 })
+
+test("'Change this program' opens the editor in one tap", async ({ page }) => {
+  /**
+   * It took two taps on two buttons with the SAME WORDS: the menu row mounted
+   * the component, and the component drew its own second "Change this
+   * program" that actually opened it. The first tap looked like it failed.
+   */
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto("/programs", { waitUntil: "networkidle" })
+
+  await page.getByTestId("program-menu").click()
+  await expect(page.getByText("Change this program")).toHaveCount(1)
+  await page.getByTestId("sheet-edit").click()
+
+  // Open, on the first tap, and nothing on screen repeats the words that
+  // brought you here.
+  await expect(page.getByRole("button", { name: /save changes/i })).toBeVisible()
+  await expect(page.getByRole("button", { name: /change this program/i })).toHaveCount(0)
+
+  // And it is a place, so the address says so and Back returns to the session.
+  await expect(page).toHaveURL(/view=edit/)
+  await page.getByRole("button", { name: /^cancel$/i }).click()
+  await expect(page.getByTestId("today-card")).toBeVisible()
+})

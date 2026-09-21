@@ -21,7 +21,7 @@
  */
 
 import { useState } from "react"
-import { Check, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { ProgramEditor } from "./ProgramEditor"
 import {
   scheduleDaysOrNone,
@@ -39,25 +39,39 @@ import type { ProgramEnrollment, ProgramSchedule } from "../types"
 export function EditActiveProgram({
   enrollment,
   onSaved,
+  onCancel,
 }: {
   enrollment: ProgramEnrollment
   onSaved: () => void
+  /** Leaves the editor. The screen behind decides where that goes. */
+  onCancel: () => void
 }) {
   const program = requireProgram(enrollment.program_id)
-  const [open, setOpen] = useState(false)
   const [schedule, setSchedule] = useState<ProgramSchedule | null>(null)
   const [weights, setWeights] = useState<Record<string, string>>({})
   const [state, setState] = useState<"idle" | "saving" | "done">("idle")
   const [error, setError] = useState<string | null>(null)
+  const [started, setStarted] = useState(false)
+  if (!started) {
+    // During the first render, so the editor has its schedule on the first
+    // paint rather than flashing empty and filling in.
+    begin()
+    setStarted(true)
+  }
 
   if (!isCustomizable(program)) return null
 
+  /**
+   * ALREADY EDITING. This component used to render its own second "Change
+   * this program" button and open on the click — so reaching the editor took
+   * two taps on two buttons with the same words, one in the menu and one on
+   * the page it opened.
+   */
   function begin() {
     setSchedule(editableSchedule(program, enrollment.customSchedule))
     setWeights({})
     setState("idle")
     setError(null)
-    setOpen(true)
   }
 
   const modified = schedule ? isModified(program, schedule) : false
@@ -109,28 +123,15 @@ export function EditActiveProgram({
       return
     }
     setState("done")
-    setOpen(false)
     onSaved()
   }
 
-  if (!open) {
-    return (
-      <div className="flex items-center gap-2">
-        <button
-          onClick={begin}
-          className="text-[12.5px] px-2.5 py-1 rounded-md border border-white/15 text-zinc-300 hover:bg-white/5 transition-colors"
-        >
-          Change this program
-        </button>
-        {enrollment.customSchedule && (
-          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300/80">
-            <Check className="size-3" /> running your version
-          </span>
-        )}
-        {state === "done" && <span className="text-[11px] text-emerald-300/80">Saved.</span>}
-      </div>
-    )
-  }
+  /**
+   * NO CLOSED STATE. There was one, holding a second "Change this program"
+   * button — the same words as the menu row that mounts this — so the editor
+   * took two taps on two identical labels. Mounting it IS opening it now, and
+   * `begin()` runs on mount.
+   */
 
   return (
     <div className="rounded-lg border border-white/10 bg-black/20 p-3 space-y-2.5">
@@ -200,7 +201,7 @@ export function EditActiveProgram({
           Save changes
         </button>
         <button
-          onClick={() => setOpen(false)}
+          onClick={onCancel}
           className="text-[12.5px] px-2.5 py-1.5 rounded-md border border-white/10 text-zinc-400 hover:bg-white/5 transition-colors"
         >
           Cancel

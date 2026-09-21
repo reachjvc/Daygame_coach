@@ -276,6 +276,7 @@ export function TrainingScreen({
               initialDetail={initialDetail}
               live={live}
               cardState={cardState}
+              where={where}
             />
           </TabsContent>
 

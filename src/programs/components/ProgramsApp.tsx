@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dumbbell, Plus, ChevronRight, ChevronLeft } from "lucide-react"
@@ -20,14 +21,29 @@ import { requireProgram, enrollmentName, getProgram } from "../data/catalog"
 import { effectiveProgram } from "../customize"
 import { formatDateOnly, computePrescription } from "../programsService"
 import { LEVEL_LABELS } from "../config"
-import type { EnrollmentDetail, LiveWorkout, ProgramEnrollment, TrainingCardState } from "../types"
+import type {
+  EnrollmentDetail,
+  LiveWorkout,
+  ProgramEnrollment,
+  ProgramsLocation,
+  TrainingCardState,
+} from "../types"
 import { endProgram, resetProgram } from "../programActions"
 
-type View =
-  | { mode: "home" }
-  | { mode: "browse" }
-  | { mode: "detail"; programId: string }
-  | { mode: "active"; enrollmentId: string }
+/**
+ * WHICH SCREEN, IN THE ADDRESS BAR.
+ *
+ * This was `useState<View>`, so nothing could link to the catalogue or to one
+ * program, Back always landed on the inventory whatever you were reading, and
+ * the server could not resolve the first paint. The four modes map onto the
+ * URL the server already parses: home is `?view=today`, browse is
+ * `?view=programs`, detail carries `?catalog=`, and active carries
+ * `?program=`.
+ *
+ * `router.replace` rather than `push`: these change what data the page needs,
+ * so the server page re-runs — and Back should leave Training rather than walk
+ * back through its screens.
+ */
 
 interface ProgramsAppProps {
   /** Resolved by the server component, so the first paint has data on it. */
@@ -36,6 +52,8 @@ interface ProgramsAppProps {
   initialDetail?: EnrollmentDetail | null
   /** Today, decided on the server. See `trainingCardState`. */
   cardState?: TrainingCardState | null
+  /** Which screen the address bar asked for, parsed on the server. */
+  where?: Pick<ProgramsLocation, "view" | "programId" | "catalogId">
   /**
    * A workout already open, if there is one.
    *
@@ -52,8 +70,30 @@ export function ProgramsApp({
   initialDetail,
   live = null,
   cardState = null,
+  where,
 }: ProgramsAppProps = {}) {
-  const [view, setView] = useState<View>({ mode: "home" })
+  const router = useRouter()
+  const view = where ?? { view: "today" as const, programId: null, catalogId: null }
+
+  /** Move to another screen by changing the address. */
+  function goTo(next: {
+    view: "today" | "programs" | "detail" | "edit"
+    program?: string | null
+    catalog?: string | null
+  }) {
+    const url = new URL(window.location.href)
+    const q = url.searchParams
+    if (next.view === "today") q.delete("view")
+    else q.set("view", next.view)
+    for (const [key, value] of [
+      ["program", next.program],
+      ["catalog", next.catalog],
+    ] as const) {
+      if (value) q.set(key, value)
+      else q.delete(key)
+    }
+    router.replace(`${url.pathname}?${q.toString()}`)
+  }
   const { enrollments, loading, error, refresh } = useActiveEnrollments(initialActive)
 
   /**
@@ -78,7 +118,14 @@ export function ProgramsApp({
     <StartLooseWorkout live={live} variant={enrollments.length === 0 ? "primary" : "row"} />
   )
 
-  if (view.mode === "home" && !loading && enrollments.length === 1) {
+  // `edit` shares this branch: the editor is a state of the one running
+  // program, not a screen of its own with its own data.
+  if (
+    (view.view === "today" || view.view === "edit") &&
+    !view.programId &&
+    !loading &&
+    enrollments.length === 1
+  ) {
     return (
       <div className="space-y-3">
         <ActiveProgram
@@ -86,9 +133,12 @@ export function ProgramsApp({
           initialDetail={initialDetail ?? null}
           initialPast={initialPast}
           cardState={cardState}
+          editing={view.view === "edit"}
+          onEditProgram={() => goTo({ view: "edit", program: enrollments[0]?.id })}
+          onLeaveEditor={() => goTo({ view: "today" })}
           onExit={() => {
             refresh()
-            setView({ mode: "browse" })
+            goTo({ view: "programs" })
           }}
         />
         {looseStart}
@@ -96,39 +146,42 @@ export function ProgramsApp({
     )
   }
 
-  if (view.mode === "browse") {
+  if (view.view === "programs") {
     return (
       <div className="space-y-4">
-        <Button variant="ghost" size="sm" onClick={() => setView({ mode: "home" })}>
+        <Button variant="ghost" size="sm" onClick={() => goTo({ view: "today" })}>
           ← My programs
         </Button>
-        <ProgramCatalog onSelect={(programId) => setView({ mode: "detail", programId })} />
+        <ProgramCatalog onSelect={(programId) => goTo({ view: "detail", catalog: programId })} />
       </div>
     )
   }
 
-  if (view.mode === "detail") {
+  if (view.view === "detail" && view.catalogId) {
     return (
       <ProgramDetail
-        programId={view.programId}
-        onBack={() => setView({ mode: "browse" })}
+        programId={view.catalogId}
+        onBack={() => goTo({ view: "programs" })}
         onEnrolled={(enrollmentId) => {
           refresh()
-          setView({ mode: "active", enrollmentId })
+          goTo({ view: "today", program: enrollmentId })
         }}
       />
     )
   }
 
-  if (view.mode === "active") {
+  if ((view.view === "today" || view.view === "edit") && view.programId) {
     return (
       <div className="space-y-3">
         <ActiveProgram
-          enrollmentId={view.enrollmentId}
+          enrollmentId={view.programId}
           cardState={cardState}
+          editing={view.view === "edit"}
+          onEditProgram={() => goTo({ view: "edit", program: view.programId })}
+          onLeaveEditor={() => goTo({ view: "today", program: view.programId })}
           onExit={() => {
             refresh()
-            setView({ mode: "home" })
+            goTo({ view: "today" })
           }}
         />
         {looseStart}
@@ -160,7 +213,7 @@ export function ProgramsApp({
       {enrollments.length > 0 && (
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-medium text-muted-foreground">Your programs</h2>
-          <Button size="sm" variant="ghost" onClick={() => setView({ mode: "browse" })}>
+          <Button size="sm" variant="ghost" onClick={() => goTo({ view: "programs" })}>
             <Plus className="size-4 mr-1" /> Browse
           </Button>
         </div>
@@ -203,7 +256,7 @@ export function ProgramsApp({
           <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
             <Dumbbell className="size-8 text-muted-foreground" />
             <p className="text-sm">Pick a program and this page becomes today&apos;s workout.</p>
-            <Button size="sm" onClick={() => setView({ mode: "browse" })}>Browse programs</Button>
+            <Button size="sm" onClick={() => goTo({ view: "programs" })}>Browse programs</Button>
             <p className="text-xs text-muted-foreground">
               or start one now and add each lift as you get to it
             </p>
@@ -213,7 +266,7 @@ export function ProgramsApp({
       ) : (
         <div className="space-y-2">
           {enrollments.map((e) => (
-            <Card key={e.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setView({ mode: "active", enrollmentId: e.id })}>
+            <Card key={e.id} className="cursor-pointer hover:bg-muted/40" onClick={() => goTo({ view: "today", program: e.id })}>
               <CardContent className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
                   <div className="truncate font-medium">{enrollmentName(e)}</div>
@@ -267,9 +320,18 @@ function ActiveProgram({
   initialDetail,
   initialPast,
   cardState = null,
+  editing = false,
+  onEditProgram,
+  onLeaveEditor,
   onExit,
 }: {
   enrollmentId: string
+  /** Whether the address bar is asking for the editor. */
+  editing?: boolean
+  /** Opens the editor by changing the address. */
+  onEditProgram: () => void
+  /** Leaves it again. */
+  onLeaveEditor: () => void
   /**
    * Today, from the server — including whether a workout is open and whose.
    * This used to take a separate `live` prop and the card compared it with
@@ -288,7 +350,6 @@ function ActiveProgram({
   const [pickingWeekday, setPickingWeekday] = useState<number | null>(null)
   /** The ⋮ menu for this program. */
   const [menuOpen, setMenuOpen] = useState(false)
-  const [editing, setEditing] = useState(false)
   /** The server's sentence when "I am done with this" or "Run it again" is refused. */
   const [finishFailed, setFinishFailed] = useState<string | null>(null)
   /**
@@ -446,7 +507,19 @@ function ActiveProgram({
       {/* The program is not fixed once it is running — the gym changes, the
           shoulder changes. Weights carry over across an edit. Opened from the
           history controls so every control for this program sits together. */}
-      {editing && <EditActiveProgram enrollment={detail.enrollment} onSaved={() => { setEditing(false); refresh() }} />}
+      {/* THE EDITOR IS A SCREEN, not a toggle. It was component state, so it
+          could not be linked to and Back walked out of Training entirely
+          rather than back to the session. */}
+      {editing && (
+        <EditActiveProgram
+          enrollment={detail.enrollment}
+          onSaved={() => {
+            onLeaveEditor()
+            refresh()
+          }}
+          onCancel={onLeaveEditor}
+        />
+      )}
       {/* EVERY PROGRAM CONTROL BEHIND THE ⋮, and off the screen you open to
           train. The four that sat in a row here — Change, Skip, Reset, End —
           put a destructive action a thumb-width from the others and asked with
@@ -462,7 +535,7 @@ function ActiveProgram({
         }}
         onEdit={() => {
           setMenuOpen(false)
-          setEditing(true)
+          onEditProgram()
         }}
       />
       <ProgressionView logs={detail.logs} enrollment={detail.enrollment} />
