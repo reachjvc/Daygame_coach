@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { ladderForSave } from "@/src/goals/goalsService"
 import {
   Dialog,
   DialogContent,
@@ -303,15 +304,21 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
           payload.goal_level = deriveChildLevel(parent.goal_level)
         }
       }
-      // Persist milestone curve config
-      if (goalType === "milestone" && trackingType === "counter" && targetValue > 1) {
-        payload.milestone_config = { ...milestoneConfig, target: targetValue }
-      }
-      // Persist habit ramp config
-      if (goalType === "habit_ramp") {
-        payload.ramp_steps = rampSteps
-        payload.milestone_config = milestoneConfig
-      }
+      /* The ladder, decided in one place. `milestoneConfig` here carries a
+         hard-coded start of 1 that no control on this form can change, and
+         since progress began counting from the start that turned "I am 96 kg,
+         I want 85" into a goal that reads 100% done the day it is made.
+         `ladderForSave` takes the start from the starting-progress field,
+         which is the same number. */
+      const ladder = ladderForSave({
+        goalType,
+        trackingType,
+        targetValue,
+        startingValue,
+        config: milestoneConfig,
+      })
+      if (ladder) payload.milestone_config = ladder as unknown as Record<string, unknown>
+      if (goalType === "habit_ramp") payload.ramp_steps = rampSteps
 
       // Starting progress (backfill — only on create)
       if (!isEditing) {

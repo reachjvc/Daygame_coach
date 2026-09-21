@@ -4,7 +4,7 @@
 
 import { isPracticeRow } from "@/src/goals/data/goalShapes"
 import type { GoalWithProgress, GoalTreeNode, GoalFilterState, InputMode, CelebrationTier, MilestoneLadderConfig, HabitRampStep, PreviewGoalState, TimeOfDayBracket, WeeklyRhythm, PacingInfo, MilestoneCelebrationData, BadgeStatus, TierUpgradeEvent, WeeklyReviewData, WeeklyGoalMomentum, GoalSetupSelections, WillGateResult, BottleneckResult, GoalTemplate, PhaseTransitionEvent, GoalPeriodStats } from "./types"
-import type { DailyGoalSnapshotRow, GoalPhase, LinkedMetric, UserGoalRow } from "@/src/db/goalTypes"
+import type { DailyGoalSnapshotRow, GoalPhase, GoalTrackingType, GoalType, LinkedMetric, UserGoalRow } from "@/src/db/goalTypes"
 import { computeGoalProgress } from "@/src/db/goalTypes"
 import { isGoalComplete, progressPercent, rungReached, type ProgressFields } from "@/src/db/goalProgress"
 import type { BatchGoalInsert } from "./treeGenerationService"
@@ -460,6 +460,50 @@ export function getTimeOfDayBracket(hour: number): TimeOfDayBracket {
   if (hour >= 12 && hour <= 16) return "afternoon"
   if (hour >= 17 && hour <= 20) return "evening"
   return "night"
+}
+
+/**
+ * THE LADDER A GOAL IS SAVED WITH, from what the form was told.
+ *
+ * THE DEFECT THIS EXISTS TO FIX. `GoalFormModal` held a curve in component
+ * state whose `start` was a hard-coded 1, and there is no control anywhere in
+ * the form to change it — the editor that would have shown it never came
+ * across in a half-finished migration and its state is marked unused. So every
+ * Target saved from the live goals editor claimed to begin at 1.
+ *
+ * That was survivable while progress counted from zero and simply ignored the
+ * start. It is not survivable now: progress is measured from the start, so a
+ * weight goal entered as "I am 96 kg, I want 85" was stored as a climb from 1
+ * to 85 sitting at 96 — which reads 100% complete with a green "Done" badge on
+ * the day it is created.
+ *
+ * WHERE YOU ARE NOW IS ALREADY ON THE FORM. It is the "starting progress"
+ * field, which the form collects to backfill history from before the app. That
+ * is the same number, so the ladder takes it instead of the 1.
+ *
+ * A PRACTICE COUNTS FROM ZERO. Four runs a week is four from nothing, every
+ * week, and a ladder starting at 1 would report the first run as the second.
+ * The curve is kept on a ramped practice only because the ramp projection
+ * draws its rungs from one; its start is not a measurement and must be zero.
+ */
+export function ladderForSave(input: {
+  goalType: GoalType
+  trackingType: GoalTrackingType
+  targetValue: number
+  startingValue: number
+  config: MilestoneLadderConfig
+}): MilestoneLadderConfig | null {
+  const { goalType, trackingType, targetValue, startingValue, config } = input
+
+  if (goalType === "habit_ramp") {
+    return { ...config, start: 0 }
+  }
+
+  if (goalType === "milestone" && trackingType === "counter" && targetValue > 1) {
+    return { ...config, start: Math.max(0, Math.round(startingValue)), target: targetValue }
+  }
+
+  return null
 }
 
 /**
