@@ -7,6 +7,12 @@ paths:
 
 # Pipeline
 
+Read `docs/pipeline/learnings.md` before pipeline work.
+
+Stages 02–10 run as `.venv/bin/python -u scripts/training-data/<stage> ...`.
+**Never system python** — the venv has pinned torch/ctranslate2/pyannote, and
+the wrong interpreter fails late and confusingly rather than at import.
+
 Read `docs/pipeline/learnings.md` before changing a stage, and add to it when you learn something new. Quality > speed > coverage.
 
 **Assuming a stage does what its docstring says is the recurring failure here.** Open it. Count the artifacts.

@@ -73,6 +73,10 @@
           {
             "type": "command",
             "command": ".claude/hooks/clear-test-marker.sh"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/known_failures.py --snapshot"
           }
         ]
       }
@@ -83,6 +87,10 @@
           {
             "type": "command",
             "command": ".claude/hooks/check-test-results.sh"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/known_failures.py --check"
           }
         ]
       }
