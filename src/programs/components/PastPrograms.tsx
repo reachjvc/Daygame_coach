@@ -17,6 +17,8 @@
 import { formatDateOnly } from "../programsService"
 import { useCallback, useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
+import { ProgramRow } from "./ProgramRow"
+import { TRAINING_CARD } from "./trainingStyles"
 import { enrollmentName } from "../data/catalog"
 import { LEVEL_LABELS } from "../config"
 import type { ProgramEnrollment } from "../types"
@@ -270,7 +272,7 @@ export function PastPrograms({
         </DialogContent>
       </Dialog>
 
-      <Card>
+      <Card className={TRAINING_CARD}>
         <CardContent className="divide-y p-0">
           {(showAll ? past : past.slice(0, SHOWN)).map((e) => {
             const name = enrollmentName(e)
@@ -279,52 +281,65 @@ export function PastPrograms({
             // "Upper / Lo…" by two buttons and the date wrapped onto three
             // lines. A row that cannot fit its own name is not a row.
             return (
-              <div key={e.id} className="flex flex-col gap-2 px-4 py-2.5 text-sm sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
-                <span className="min-w-0">
-                  <span className="block truncate font-medium">{name}</span>
-                  <span className="block text-xs text-muted-foreground">
+              /*
+                THE SAME ROW AS EVERY OTHER LIST OF PROGRAMS.
+                This was its own shape: a stacked div with two 11px bordered
+                buttons you had to aim at, on the list where the two actions
+                are "restart a year of training" and "remove it".
+              */
+              <ProgramRow
+                key={e.id}
+                name={name}
+                testId={`past-${e.id}`}
+                onClick={() => resume(e, name)}
+                meta={
+                  <>
                     {LEVEL_LABELS[e.level]} · started{" "}
                     {e.startedOn ? formatDateOnly(e.startedOn, "short") : "—"}
-                  </span>
-                </span>
-                <span className="flex shrink-0 items-center gap-3">
-                  <span className="flex-1 text-xs text-muted-foreground sm:flex-none sm:text-right">
-                    {n === 0 ? (
-                      "never trained"
-                    ) : (
+                    {n > 0 && (
                       <>
-                        <span className="text-foreground">{n} session{n === 1 ? "" : "s"}</span>
-                        {e.lastLoggedOn && (
-                          <span className="block">last {formatDateOnly(e.lastLoggedOn!, "short")}</span>
-                        )}
+                        {" · "}
+                        {n} session{n === 1 ? "" : "s"}
+                        {e.lastLoggedOn ? `, last ${formatDateOnly(e.lastLoggedOn, "short")}` : ""}
                       </>
                     )}
+                    {n === 0 && " · never trained"}
+                  </>
+                }
+                right={
+                  <span className="flex items-center gap-1">
+                    {/* Both are real buttons at 44px, and `stopPropagation`
+                        keeps them from also firing the row's restart. */}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="min-h-11"
+                      disabled={resumingId === e.id}
+                      data-testid="resume-program"
+                      onClick={(ev) => {
+                        ev.stopPropagation()
+                        void resume(e, name)
+                      }}
+                    >
+                      {resumingId === e.id ? "Starting…" : "Start again"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="min-h-11 text-muted-foreground hover:text-destructive"
+                      disabled={deletingId === e.id}
+                      aria-label={`Remove ${name} from your finished programs`}
+                      data-testid="delete-past-program"
+                      onClick={(ev) => {
+                        ev.stopPropagation()
+                        setConfirming(e)
+                      }}
+                    >
+                      {deletingId === e.id ? "Deleting…" : "Delete"}
+                    </Button>
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => resume(e, name)}
-                    disabled={resumingId === e.id}
-                    data-testid="resume-program"
-                    className="rounded-md border border-border px-2 py-1 text-[11px] transition-colors hover:bg-accent disabled:opacity-40"
-                  >
-                    {resumingId === e.id ? "Starting…" : "Start again"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirming(e)}
-                    disabled={deletingId === e.id}
-                    /* NOT "permanently". A screen reader was told the one
-                       thing this button does not do: the sessions survive and
-                       are detached. The dialog's words were fixed and this
-                       one was left saying the old promise. */
-                    aria-label={`Remove ${name} from your finished programs`}
-                    data-testid="delete-past-program"
-                    className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-destructive disabled:opacity-40"
-                  >
-                    {deletingId === e.id ? "Deleting…" : "Delete"}
-                  </button>
-                </span>
-              </div>
+                }
+              />
             )
           })}
         </CardContent>

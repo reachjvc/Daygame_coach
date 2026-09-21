@@ -523,3 +523,28 @@ test("'Change this program' opens the editor in one tap", async ({ page }) => {
   await page.getByRole("button", { name: /^cancel$/i }).click()
   await expect(page.getByTestId("today-card")).toBeVisible()
 })
+
+test("every program list is rows you can reach with a keyboard", async ({ page }) => {
+  /**
+   * The running list was a `Card` with an `onClick` — a div. A keyboard
+   * cannot tab to it and a screen reader does not announce it as something
+   * you can do, on the list whose whole purpose is choosing one.
+   */
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto("/programs?view=programs", { waitUntil: "networkidle" })
+
+  // The catalogue is rows, not thirteen "View" buttons.
+  await expect(page.getByRole("button", { name: /^view/i })).toHaveCount(0)
+  const row = page.getByTestId("catalog-stronglifts-5x5")
+  await expect(row).toBeVisible()
+
+  // A real control: focusable, and reachable by keyboard.
+  await row.focus()
+  await expect(row).toBeFocused()
+  const box = await row.boundingBox()
+  expect(box!.height, `the row is ${box!.height}px`).toBeGreaterThanOrEqual(43.99)
+
+  // And it opens the program rather than needing a button inside it.
+  await row.press("Enter")
+  await expect(page).toHaveURL(/catalog=stronglifts-5x5/)
+})

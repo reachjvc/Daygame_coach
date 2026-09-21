@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Dumbbell, Plus, ChevronRight, ChevronLeft } from "lucide-react"
+import { Dumbbell, Plus, ChevronLeft } from "lucide-react"
 import { ProgramCatalog } from "./ProgramCatalog"
 import { ProgramDetail } from "./ProgramDetail"
 import { TodayCard } from "./TodayCard"
@@ -13,6 +13,8 @@ import { ProgressionView } from "./ProgressionView"
 import { StartLooseWorkout } from "./StartLooseWorkout"
 import { EditActiveProgram } from "./EditActiveProgram"
 import { WeekStrip } from "./WeekStrip"
+import { ProgramRow } from "./ProgramRow"
+import { TRAINING_CARD } from "./trainingStyles"
 import { ProgramSheet } from "./ProgramSheet"
 import { DayAssignment } from "./DayAssignment"
 import { PastPrograms } from "./PastPrograms"
@@ -264,28 +266,37 @@ export function ProgramsApp({
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
-          {enrollments.map((e) => (
-            <Card key={e.id} className="cursor-pointer hover:bg-muted/40" onClick={() => goTo({ view: "today", program: e.id })}>
-              <CardContent className="flex items-center justify-between gap-3 py-3">
-                <div className="min-w-0">
-                  <div className="truncate font-medium">{enrollmentName(e)}</div>
-                  <div className="text-xs text-muted-foreground">
+        /*
+          ROWS, AND REAL CONTROLS.
+          These were `Card`s with an `onClick` — a div that a keyboard cannot
+          reach and a screen reader does not announce as anything you can do,
+          on the list whose entire purpose is choosing one. `ProgramRow` is a
+          button or a link, and the four other lists of programs in the app
+          use the same one.
+        */
+        <Card className={TRAINING_CARD}>
+          <CardContent className="divide-y p-0">
+            {enrollments.map((e) => (
+              <ProgramRow
+                key={e.id}
+                name={enrollmentName(e)}
+                testId={`running-${e.id}`}
+                onClick={() => goTo({ view: "today", program: e.id })}
+                meta={
+                  <>
                     {LEVEL_LABELS[e.level]} · started{" "}
                     {e.startedOn ? formatDateOnly(e.startedOn, "short") : "—"}
-                  </div>
-                  {/* The fact that tells a live program from a forgotten one. */}
-                  <div className="text-xs text-muted-foreground">
+                    {" · "}
+                    {/* The fact that tells a live program from a forgotten one. */}
                     {e.lastLoggedOn
-                      ? `last trained ${formatDateOnly(e.lastLoggedOn!, "short")}`
+                      ? `last trained ${formatDateOnly(e.lastLoggedOn, "short")}`
                       : "not trained yet"}
-                  </div>
-                </div>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  </>
+                }
+              />
+            ))}
+          </CardContent>
+        </Card>
       )}
 
       {/* THE ARCHIVE, VISIBLE FROM THE STATE YOU ARE ACTUALLY IN. This rendered
