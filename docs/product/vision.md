@@ -1,8 +1,8 @@
 # Where this product is going — the owner's vision
 
 **The owner's own description, condensed by Claude on 2026-09-19 and left in the
-owner's voice.** `CLAUDE.md` describes what exists. This describes what it is
-for. Read both before proposing work.
+owner's voice.** `docs/product/map.md` describes what exists. This describes what
+it is for. Read both before proposing work.
 
 Rules for this file:
 

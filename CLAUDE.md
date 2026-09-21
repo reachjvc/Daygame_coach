@@ -6,13 +6,12 @@ pipeline in `scripts/training-data/`.
 **A subscription web app that helps a man get better with women, which grew a
 life-improvement half around it.** **Nobody has ever paid and nothing is in front
 of users**: there is no Stripe webhook and no code writes `has_purchased`, so
-checkout cannot grant access. Price every recommendation for that stage. And the
-code is far bigger than the live product, so never say what the app does without
-reading `docs/product/map.md`.
+checkout cannot grant access. Price every recommendation for that stage.
 
-## The six rules
+## The five rules
 
-The failures that bought them, as a checklist: `docs/known-failures.md`.
+The end-of-turn checklist is `docs/known-failures.md`, and a hook hands you that
+file whenever a turn changed something — so it is not repeated here.
 
 1. **Check the thing itself, never a stand-in.** Read output in full, the way the
    user will — never from a doc, a comment or a summary of it.
@@ -20,42 +19,37 @@ The failures that bought them, as a checklist: `docs/known-failures.md`.
    goes in the first line, not the last.
 3. **Fix it now, and fix the class.** One place owns each rule, plus the test
    that fails when the next caller forgets.
-4. **Write for a non-programmer; the reply is the whole answer.** Simple words,
-   yes — simple engineering, no.
-5. **Build it once.** An extra day beats a rebuild; say *before* building when
+4. **Build it once.** An extra day beats a rebuild; say *before* building when
    something is not future-proof.
-6. **Outside advice: build their case before you answer.** Never make the owner
+5. **Outside advice: build their case before you answer.** Never make the owner
    fetch the reasoning.
 
 ## Never, and ask first
 
-- Never leave a failing test, add a silent fallback, or delete code you can't
-  explain the purpose of.
-- Never write a `.png` outside `.playwright-mcp/`.
-- Never offer a quick version and a durable version as a choice.
+Stray screenshots, sweeping git adds, stashing, and unwrapped writes to live data
+are refused by `.claude/hooks/never.py`, which also asks first about auth,
+payments, migrations, access control and icon reuse. These are the ones no hook
+can catch:
+
+- Never add a silent fallback; scripts fail loudly or ask the user.
+- Never delete code you can't explain the purpose of.
+- Ask first before deleting data, or anything else hard to reverse.
 - When asked to see text, put it in the reply, not through a tool.
-- **Ask first:** auth, payments, permissions, table write-policies, deleting
-  data, reusing an icon (`src/shared/iconRoles.ts`), anything destructive.
 - Warn about security risk every time it arises, unasked.
 
 ## Read before you act
 
-| Before | Read |
-| --- | --- |
-| saying what the app does | `docs/product/map.md` |
-| proposing work | `docs/product/vision.md` |
-| saying done | `docs/known-failures.md` |
+Before saying what the app does, read `docs/product/map.md` — having code is not
+being reachable. Before proposing work, read `docs/product/vision.md`.
 
-`.claude/rules/` auto-loads the rest — pipeline, database, UI, testing, plans,
-bulk data — when you touch matching files. Architecture is enforced by
-`tests/unit/architecture.test.ts`; run it rather than memorising it. A cited
-`docs/` path not on disk is expected: 482 were deleted 2026-09-09, and the name
-is what finds it in `git log --diff-filter=D -- <path>`.
+Architecture is enforced by `tests/unit/architecture.test.ts`; run it rather than
+memorising it. A cited `docs/` path not on disk is expected: 482 were deleted
+2026-09-09, and the name is what finds it in `git log --diff-filter=D -- <path>`.
 
 ## Commands
 
-`npm test` after every code change, not only at the end. Also `npm run test:e2e`
-and `npm run dev` (localhost:3000).
+`npm run dev` (localhost:3000) and `npm run test:e2e`. A Stop hook runs `npm test`
+for you and blocks on a failure.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

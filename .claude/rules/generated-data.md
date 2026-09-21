@@ -1,3 +1,11 @@
+---
+paths:
+  - "src/*/data/**"
+  - "scripts/training-data/**"
+  - "data/**"
+  - "docs/research/**"
+---
+
 # Bulk-generated data
 
 Applies when a script, extraction or agent fan-out produces many records a
