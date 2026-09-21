@@ -354,7 +354,7 @@ function ActiveProgram({
   initialPast?: ProgramEnrollment[]
   onExit: () => void
 }) {
-  const { detail, loading, error, refresh } = useEnrollment(enrollmentId, initialDetail)
+  const { detail, error, refresh } = useEnrollment(enrollmentId, initialDetail)
   /** A session the user picked instead of the one the app offered. */
   const [pickedDayId, setPickedDayId] = useState<string | null>(null)
   /** Which weekday's assignment is open, 1 = Monday. */
@@ -386,7 +386,26 @@ function ActiveProgram({
     )
   }
 
-  if (loading || !detail) return <p className="text-sm text-muted-foreground">Loading session…</p>
+  /**
+   * A REFRESH IS NOT A FIRST LOAD.
+   *
+   * This was `loading || !detail`, so ANY re-read replaced the card with
+   * "Loading session…" even though the session was already in hand. Skip,
+   * Reset, changing a weekday and writing up a workout all call `refresh()` —
+   * so every one of them made today's session disappear for a moment and come
+   * back with its day picker closed and its scroll position lost.
+   *
+   * Only the FIRST load has nothing to show. After that the card stays on
+   * screen and quietly updates underneath.
+   */
+  if (!detail) {
+    return (
+      <div
+        data-testid="today-card-loading"
+        className="h-[92px] animate-pulse rounded-xl bg-muted/40"
+      />
+    )
+  }
 
   /**
    * RECOMPUTED ON THE CLIENT, not fetched.

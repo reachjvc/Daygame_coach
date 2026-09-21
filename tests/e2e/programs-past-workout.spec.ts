@@ -548,3 +548,29 @@ test("every program list is rows you can reach with a keyboard", async ({ page }
   await row.press("Enter")
   await expect(page).toHaveURL(/catalog=stronglifts-5x5/)
 })
+
+test("today's session survives an action that re-reads it", async ({ page }) => {
+  /**
+   * The card was replaced by "Loading session…" on ANY re-read, not just the
+   * first. Skip, Reset, changing a weekday and writing up a workout all
+   * refresh — so each one made today's session vanish and come back with its
+   * day picker shut and the page scrolled elsewhere.
+   */
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto("/programs", { waitUntil: "networkidle" })
+
+  const card = page.getByTestId("today-card")
+  await expect(card).toBeVisible()
+
+  // Open the day picker, then do something that re-reads the program.
+  await card.getByTestId("change-day").click()
+  await expect(card.getByRole("button", { name: /^Workout B/ })).toBeVisible()
+
+  await page.getByTestId("program-menu").click()
+  await page.getByTestId("sheet-reset").click()
+  await page.getByTestId("sheet-confirm").click()
+
+  // The card never went away: it is the same element, still on screen.
+  await expect(card).toBeVisible()
+  await expect(page.getByText(/loading session/i)).toHaveCount(0)
+})
