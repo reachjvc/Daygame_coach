@@ -38,6 +38,7 @@ import {
   readsAsAbstinence,
   serializeNsPlan,
   setGoalType,
+  updateGoal,
 } from "@/src/goals/northStarService"
 
 /** Lines that genuinely mean "never do this". */
@@ -189,5 +190,52 @@ describe("the three shape buttons overrule the guess", () => {
     const { plan, id } = noWeed()
     const chosen = setGoalType(plan, id, "habit_ramp")
     expect(chosen.goals[0].isAbstinence).toBe(true)
+  })
+})
+
+describe("a climb is not a prohibition, and that beats the reading", () => {
+  /**
+   * THE DEFECT THIS PINS. "Quit sugar" with a ladder from 90 to 80 lost the
+   * ladder on the SECOND page load, silently. The first load flipped the type
+   * to a practice on the strength of the title; the second load then dropped
+   * the ladder, because a practice has no business carrying one. Two numbers
+   * the person typed, gone, with nothing on screen to say so.
+   *
+   * A ladder is explicit — somebody entered a start and a target. The title
+   * reading is a guess, and an explicit number always wins over a guess.
+   */
+  const withLadder = (title: string) => {
+    const seed = addGoal(emptyNsPlan(), "lm_health", title, "milestone_ladder")
+    return updateGoal(seed, seed.goals[0].id, {
+      ladder: { start: 90, target: 80, steps: 5, curveTension: 0, controlPoints: [], pins: [] },
+      unit: "kg",
+    })
+  }
+
+  it("the ladder survives four loads, where it used to die on the second", () => {
+    let plan = withLadder("Quit sugar")
+    for (let i = 0; i < 4; i += 1) plan = loadNsPlan(serializeNsPlan(plan))!
+
+    expect(plan.goals[0].ladder).toMatchObject({ start: 90, target: 80 })
+    expect(plan.goals[0].type).toBe("milestone_ladder")
+    expect(plan.goals[0].isAbstinence).toBe(false)
+  })
+
+  it("whatever the line says", () => {
+    for (const title of ["Cut out alcohol", "No weed", "Stop drinking"]) {
+      let plan = withLadder(title)
+      for (let i = 0; i < 3; i += 1) plan = loadNsPlan(serializeNsPlan(plan))!
+      expect(plan.goals[0].ladder, title).toMatchObject({ start: 90, target: 80 })
+      expect(plan.goals[0].isAbstinence, title).toBe(false)
+    }
+  })
+
+  it("and a prohibition with no numbers in it is still a prohibition", () => {
+    let plan = addGoal(emptyNsPlan(), "lm_health", "No weed", "achievement")
+    for (let i = 0; i < 3; i += 1) plan = loadNsPlan(serializeNsPlan(plan))!
+
+    expect(plan.goals[0].isAbstinence).toBe(true)
+    expect(plan.goals[0].type).toBe("habit_ramp")
+    expect(plan.goals[0].daysPerWeek).toBe(7)
   })
 })

@@ -15,6 +15,7 @@ import type {
 } from "./goalTypes"
 import { computeGoalProgress } from "./goalTypes"
 import { isGoalComplete, type ProgressFields } from "./goalProgress"
+import { shapeOfRow } from "../goals/data/goalShapes"
 import { resolveMetricValues } from "./metricsRepo"
 import { getTodayInTimezone, getNowInTimezone, periodStartFor, type GoalPeriod } from "../shared/dateUtils"
 import { ROLLING_PERIODS } from "./goalEnums"
@@ -619,6 +620,51 @@ export async function createGoalBatch(
 /**
  * Update a goal's properties
  */
+/**
+ * WHAT A GOAL STOPS CARRYING WHEN ITS SHAPE CHANGES.
+ *
+ * THE DEFECT THIS FIXES. The goals editor — live inside Life Mastery's Track
+ * step — can change a row's kind, and it only ever SENT the new kind. The old
+ * kind's structure stayed on the row: turn a Target into a Finish line and its
+ * ladder was still there; turn it into a Practice and the ladder stayed beside
+ * the new ramp.
+ *
+ * That was untidy while nothing read the leftovers. It stopped being untidy
+ * when progress began counting from `milestone_config.start`: a Practice
+ * carrying a stale ladder that starts at 70 reports the first of four runs as
+ * below zero, and a Finish line carrying one reports a percentage at all.
+ *
+ * Only structure is cleared, never anything earned or typed. The shape after
+ * the update is read with the same function every screen uses, so this cannot
+ * drift from what the row is then drawn as.
+ */
+function clearStructureForShape(
+  before: Pick<UserGoalRow, "goal_type" | "tracking_type">,
+  update: UserGoalUpdate,
+): UserGoalUpdate {
+  const after = {
+    goal_type: update.goal_type ?? before.goal_type,
+    tracking_type: update.tracking_type ?? before.tracking_type,
+  }
+  if (shapeOfRow(after) === shapeOfRow(before)) return update
+
+  const cleared: UserGoalUpdate = { ...update }
+  const shape = shapeOfRow(after)
+
+  // A climb is the only shape with a ladder; a practice is the only one with
+  // a ramp; stages hang off a climb. Anything else is left behind.
+  if (shape !== "milestone_ladder") {
+    if (cleared.milestone_config === undefined) cleared.milestone_config = null
+    if (cleared.stages === undefined) cleared.stages = null
+  }
+  if (shape !== "habit_ramp") {
+    if (cleared.ramp_steps === undefined) cleared.ramp_steps = null
+    // "Never do Y" is a daily rule. A climb or a finish line is not one.
+    if (cleared.is_abstinence === undefined) cleared.is_abstinence = false
+  }
+  return cleared
+}
+
 export async function updateGoal(
   userId: string,
   goalId: string,
@@ -628,9 +674,24 @@ export async function updateGoal(
   const supabase = await createServerSupabaseClient()
 
   // Keep category in sync with life_area for backward compat
-  const updateData = { ...update }
+  let updateData = { ...update }
   if (updateData.life_area && !updateData.category) {
     updateData.category = updateData.life_area
+  }
+
+  /* A change of kind takes the old kind's structure with it — see
+     `clearStructureForShape`. Read first, because the shape AFTER the update
+     depends on the half of the pair that was not sent. */
+  if (updateData.goal_type !== undefined || updateData.tracking_type !== undefined) {
+    const { data: shapeRow } = await supabase
+      .from("user_goals")
+      .select("goal_type, tracking_type")
+      .eq("id", goalId)
+      .eq("user_id", userId)
+      .single()
+    if (shapeRow) {
+      updateData = clearStructureForShape(shapeRow as Pick<UserGoalRow, "goal_type" | "tracking_type">, updateData)
+    }
   }
 
   // Either half of the pair can be edited alone, so the check needs the other

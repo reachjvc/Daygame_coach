@@ -682,8 +682,22 @@ export function normalizeNsPlan(parsed: unknown): NsPlan | null {
      * The reading is taken ONCE and stored on `isAbstinence`. After that it is
      * a fact the person owns: renaming the goal cannot silently change its
      * kind, and the three buttons in the row still win if this read it wrong.
+     *
+     * A CLIMB IS NOT A PROHIBITION, and that beats the reading outright.
+     *
+     * "Quit sugar" with a ladder from 90 to 80 used to lose the ladder on the
+     * SECOND page load, silently. The first load flipped the type to a
+     * practice on the strength of the title; the second load then dropped the
+     * ladder, because a practice has no business carrying one. Two numbers the
+     * person typed, gone, with nothing on screen to say so.
+     *
+     * A ladder is explicit — somebody entered a start and a target. The title
+     * reading is a guess. An explicit number always wins over a guess, which
+     * is the same rule `readsAsAbstinence` applies when it refuses a line with
+     * a quantity in it.
      */
-    ...(g.isAbstinence && g.type !== "habit_ramp"
+    ...(g.ladder ? { isAbstinence: false } : null),
+    ...(g.isAbstinence && !g.ladder && g.type !== "habit_ramp"
       ? { type: "habit_ramp" as const, daysPerWeek: 7 }
       : null),
   }))
