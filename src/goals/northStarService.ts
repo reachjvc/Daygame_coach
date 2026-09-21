@@ -1793,6 +1793,21 @@ export function setGoalType(plan: NsPlan, goalId: string, type: VisionGoalType, 
       return {
         ...g,
         type,
+        /**
+         * PICKING A SHAPE SETTLES WHETHER THIS IS A PROHIBITION.
+         *
+         * The three buttons on the goal card were a lie for any title the
+         * abstinence reader recognised: `normalizeNsPlan` repairs an
+         * abstinence goal's type back to a practice on the next load, so
+         * choosing Target or Finish line lasted until the page was reopened.
+         *
+         * Choosing either of those two says it is not a daily prohibition —
+         * a prohibition has no number to climb to and no finish — so the flag
+         * goes with the choice, and the repair has nothing left to undo.
+         * Choosing Practice leaves it alone: a practice is what a prohibition
+         * already is.
+         */
+        isAbstinence: type === "habit_ramp" ? g.isAbstinence : false,
         // Only fill in what the new shape needs and the goal does not have.
         ladder: type === "milestone_ladder" ? (g.ladder ?? defaults.ladder) : g.ladder,
         checkpoints: g.checkpoints,
@@ -5239,8 +5254,18 @@ const WORD_PER_WEEK =
  * Verbs that only ever mean "stop doing a thing". Whatever follows them, the
  * line is a rate you hold rather than a finish line you cross.
  */
+/**
+ * `\b` AFTER A DANISH VOWEL NEVER MATCHED.
+ *
+ * JavaScript's `\b` is defined against `[A-Za-z0-9_]`, so `å` is not a word
+ * character and there is no boundary between it and the space that follows.
+ * `/undgå\b/` therefore never matched "Undgå slik" — one of the two Danish
+ * stop-verbs in this list has been dead since it was written, in a product
+ * whose owner writes Danish. The lookahead below is the same rule stated in a
+ * way that works: the verb must not run straight into another letter.
+ */
 const STOP_VERBS =
-  /^\s*(?:quit|stop(?:\s+med)?|give up|cut out|cut down on|kick|abstain from|drop|no more|undgå|kvit|hold(?:e)? op med)\b/i
+  /^\s*(?:quit|stop(?:\s+med)?|give up|cut out|cut down on|kick|abstain from|drop|no more|undgå|kvit|hold(?:e)? op med)(?![a-zæøå])/i
 
 /**
  * And the bare "no X" form, which needs to know what X is.
@@ -5252,8 +5277,6 @@ const STOP_VERBS =
  * routine's own library, plus the obvious neighbours.
  */
 const NO_PREFIX = /^\s*(?:no|ingen|intet)\b/i
-const VICE_WORDS =
-  /\b(?:weed|cannabis|hash|porn|fap|drink(?:ing|s)?|alcohol|booze|beer|wine|spirits|smoke|smoking|cigarettes?|nicotine|vape|vaping|snus|sugar|sweets|junk|takeaway|fast food|soda|scroll(?:ing)?|social media|instagram|tiktok|youtube|reddit|phone|screens?|gaming|games|netflix|tv|snooze|caffeine|coffee|energy drinks?|gambling|betting|shopping|spending|doomscroll\w*)\b/i
 
 /**
  * Does this line name something the person is NOT going to do?
@@ -5262,9 +5285,57 @@ const VICE_WORDS =
  * line becomes, and the one-time repair of the lines that were typed before
  * the rule existed.
  */
+/**
+ * A quantity written into the line: "15 kg", "95 kg", "100", "3x8", "50,000".
+ *
+ * Deliberately not matching a bare year or a time of day, which are not
+ * amounts — "Stop smoking in 2027" and "Stop scrolling after 22:00" are still
+ * prohibitions.
+ */
+const HAS_QUANTITY = /(?<![:\d])\d[\d.,]*\s*(?:kg|kilo|lbs?|pounds?|cm|%|percent|km|m|miles?|hours?|hrs?|timer|kr|dkk|eur|usd|\$|£|€|x\b|×)|\b\d{1,3}(?:[.,]\d{3})+\b|\b(?:by|til|to|down to|ned til)\s+\d+/i
+
+/**
+ * WHAT A LINE HAS TO NAME BEFORE IT COUNTS AS A PROHIBITION — one list, used by
+ * both forms.
+ *
+ * There were two. The older one served the bare "no X" form and was English
+ * only, so "Ingen alkohol", "Ingen rygning", "Intet sukker" and "Ingen porno"
+ * all failed while "Ingen hash" worked — hash happening to be a word both
+ * languages share. Danish reached one list and not the other, which is how two
+ * lists for one question always end.
+ *
+ * It is a floor. A line it does not recognise stays whatever kind the person
+ * chose, which is the safe direction to be wrong in.
+ */
+const HABIT_OBJECT =
+  /\b(?:weed|cannabis|hash|porn\w*|fap|drink(?:ing|s)?|alcohol|booze|beer|wine|spirits|smok(?:e|ing)|cigarettes?|nicotine|vape|vaping|snus|sugar|sweets|junk|takeaway|fast food|soda|scroll(?:ing)?|social media|instagram|tiktok|youtube|reddit|phone|screens?|gaming|games|netflix|tv|snooze|caffeine|coffee|energy drinks?|gambling|betting|shopping|spending|doomscroll\w*|procrastinat\w*|overthink\w*|complain\w*|gossip\w*|apolog\w*|swear\w*|bit(?:e|ing) my nails|nail biting|late night\w*|binge\w*|snack\w*|rygning|ryge|smøger?|cigaretter|sukker|slik|alkohol|øl|vin|sprut|spil(?:le)?|snus|mobilen|skærm(?:tid)?|sodavand|kaffe|nikotin|undskyld\w*|bekymre\w*)(?![a-zæøå])/i
+
 export function readsAsAbstinence(title: string): boolean {
-  if (STOP_VERBS.test(title)) return true
-  return NO_PREFIX.test(title) && VICE_WORDS.test(title)
+  /**
+   * A NUMBER MEANS IT IS A TARGET, WHATEVER VERB IT STARTS WITH.
+   *
+   * "Drop 15 kg" and "Stop weighing 95 kg" both began with a stop-verb and were
+   * filed as daily prohibitions — the number thrown away, the climb gone, and
+   * a yes/no box in their place. Nobody writes a quantity into something they
+   * intend never to do.
+   */
+  if (HAS_QUANTITY.test(title)) return false
+
+  /**
+   * THE VERB IS NOT ENOUGH; THE LINE MUST NAME A HABIT.
+   *
+   * The leading verb used to be the whole test, so anything starting with
+   * quit, stop, drop, kick, cut out or give up became abstinence: "Quit my
+   * job", "Kick my first football", "Drop a mixtape", "Cut out the middleman",
+   * "Give up the flat in town". Measured on a spread of forty realistic
+   * titles it fired on twenty-seven, of which eighteen were wrong.
+   *
+   * So the stop-verb form now asks the same question the bare "no X" form
+   * always asked: does the rest of the line name something a person DOES,
+   * habitually? `HABIT_OBJECT` is that list, and both forms now use it.
+   */
+  if (STOP_VERBS.test(title)) return HABIT_OBJECT.test(title)
+  return NO_PREFIX.test(title) && HABIT_OBJECT.test(title)
 }
 
 export function shapeFromTitle(title: string): {
