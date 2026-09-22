@@ -40,23 +40,9 @@ if [ -n "$SLICES_TOUCHED" ]; then
     echo ""
 fi
 
-# Check if any docs were modified but missing today's date
-TODAY=$(TZ='Europe/Copenhagen' date '+%d-%m-%Y')
-DOCS_MODIFIED=$(echo "$ALL_CHANGES" | grep -E '\.md$')
-
-if [ -n "$DOCS_MODIFIED" ]; then
-    echo "📄 Docs modified - checking changelogs:"
-    for doc in $DOCS_MODIFIED; do
-        if [ -f "$doc" ]; then
-            if grep -q "$TODAY" "$doc"; then
-                echo "   ✅ $doc (has today's date)"
-            else
-                echo "   ⚠️  $doc (MISSING today's changelog entry!)"
-            fi
-        fi
-    done
-    echo ""
-fi
+# The doc-changelog check that stood here demanded today's date as DD-MM-YYYY,
+# for a convention that no longer exists and in a format the project does not
+# use. Removed 2026-09-22 alongside its twin in .husky/pre-commit.
 
 # API routes check
 API_ROUTES=$(echo "$ALL_CHANGES" | grep -E 'app/api.*route\.ts$')
@@ -75,5 +61,5 @@ fi
 
 echo "💡 Before ending session, ensure:"
 echo "   1. All relevant docs are updated"
-echo "   2. Changelog entries added with today's date"
+echo "   2. docs/known-failures.md answered against this session's work"
 echo "   3. npm test passes"

@@ -10,19 +10,13 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Check for changelog entries in modified docs
-echo "📝 Checking documentation changes..."
-MODIFIED_DOCS=$(git diff --cached --name-only --diff-filter=M | grep -E '^docs/.*\.md$' | grep -v '/archive/' | grep -v '/articles/' || true)
-
-if [ -n "$MODIFIED_DOCS" ]; then
-  TODAY=$(TZ='Europe/Copenhagen' date '+%d-%m-%Y')
-
-  for doc in $MODIFIED_DOCS; do
-    if ! grep -q "$TODAY" "$doc" 2>/dev/null; then
-      echo "⚠️  Warning: $doc was modified but may be missing today's changelog entry ($TODAY)"
-      echo "   CLAUDE.md requires: Add entry to top of any doc you modify"
-    fi
-  done
-fi
+# A doc-changelog check used to live here. It demanded today's date as
+# DD-MM-YYYY in every modified doc, citing a CLAUDE.md rule ("Add entry to top
+# of any doc you modify") that no longer exists — and the project writes dates
+# as YYYY-MM-DD, so it could not be satisfied by writing the entry it asked for.
+# It warned on essentially every doc edit and blocked nothing, which is how this
+# repo already taught itself to ignore a red tick (see the 492-lint-error story
+# in .github/workflows/ci.yml). Removed 2026-09-22. If doc freshness is worth
+# enforcing, it needs a check somebody can pass.
 
 echo "✅ Pre-commit checks passed!"
