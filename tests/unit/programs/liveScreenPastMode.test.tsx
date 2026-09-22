@@ -254,3 +254,65 @@ describe("'Did the fixed sets as shown'", () => {
     expect(screen.queryByTestId("tick-all-squat")).toBeNull()
   })
 })
+
+describe("throwing a workout away", () => {
+  it("asks in the app's own dialog, and says how many sets go", async () => {
+    const user = userEvent.setup()
+    const withSets = {
+      ...workout(JUST_NOW),
+      sets: [
+        { id: "s1", exerciseId: "squat", exercise: "Squat", weight: 100, weightKg: 100, reps: 5,
+          setNumber: 1, kind: "working", side: null, prescribedIndex: 0, rpe: null,
+          completedAt: new Date().toISOString() },
+        { id: "s2", exerciseId: "squat", exercise: "Squat", weight: 100, weightKg: 100, reps: 5,
+          setNumber: 2, kind: "working", side: null, prescribedIndex: 1, rpe: null,
+          completedAt: new Date().toISOString() },
+      ],
+    } as unknown as LiveWorkout
+
+    render(
+      <LiveWorkoutScreen
+        initial={withSets}
+        prescription={prescription}
+        programName="StrongLifts 5×5"
+        unit="kg"
+        lastTime={{}}
+        timezone="Europe/Copenhagen"
+      />
+    )
+
+    await user.click(screen.getByTestId("discard-workout"))
+
+    // "Nothing will be recorded" was true and useless. The question is how
+    // much of the session this is about to take.
+    expect(screen.getByText(/2 sets will be thrown away/i)).toBeTruthy()
+    expect(screen.getByText(/cannot be undone/i)).toBeTruthy()
+  })
+
+  it("says there is nothing to lose when nothing is ticked", async () => {
+    const user = userEvent.setup()
+    screenFor(JUST_NOW)
+
+    await user.click(screen.getByTestId("discard-workout"))
+    expect(screen.getByText(/nothing to lose/i)).toBeTruthy()
+  })
+
+  it("throws nothing away until the dialog is confirmed", async () => {
+    const user = userEvent.setup()
+    const calls: string[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (init?.method === "DELETE") calls.push(String(url))
+        return { ok: true, status: 200, json: async () => null } as unknown as Response
+      })
+    )
+    screenFor(JUST_NOW)
+
+    await user.click(screen.getByTestId("discard-workout"))
+    expect(calls, "opening the dialog must not discard anything").toEqual([])
+
+    await user.click(screen.getByTestId("confirm-discard"))
+    expect(calls.length, "confirming does").toBeGreaterThan(0)
+  })
+})

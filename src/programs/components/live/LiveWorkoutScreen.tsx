@@ -24,6 +24,14 @@ import { useRouter } from "next/navigation"
 import { MoreHorizontal } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { BackLink } from "@/components/BackLink"
 import { canBeUnweighted } from "../../data/exerciseLibrary"
 import { SetRow } from "./SetRow"
@@ -86,6 +94,8 @@ export function LiveWorkoutScreen({
   const past = isStaleWorkout(initial.startedAt)
   const router = useRouter()
   const [restFrom, setRestFrom] = useState<number | null>(null)
+  /** Whether the discard confirmation is open. */
+  const [discarding, setDiscarding] = useState(false)
   const [restSeconds, setRestSeconds] = useState<number>(REST_SECONDS.accessory)
   const [restOurs, setRestOurs] = useState(true)
   const [finishing, setFinishing] = useState(false)
@@ -105,6 +115,8 @@ export function LiveWorkoutScreen({
   const [extraRows, setExtraRows] = useState<Record<string, number>>({})
 
   const workout = live.workout
+  /** Working sets actually ticked — what a discard would throw away. */
+  const setsTicked = (workout?.sets ?? []).filter((set) => set.completedAt).length
   const unitLabel = UNIT_CONFIG[unit].label
 
   /**
@@ -555,6 +567,34 @@ export function LiveWorkoutScreen({
           </p>
         )}
 
+        <Dialog open={discarding} onOpenChange={(v) => !v && setDiscarding(false)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Throw this workout away?</DialogTitle>
+              {/* SAYS WHAT GOES. "Nothing will be recorded" is true and
+                  useless: the question is how much of your session it is
+                  about to take, and only this screen knows. */}
+              <DialogDescription>
+                {setsTicked === 0
+                  ? "Nothing has been ticked yet, so there is nothing to lose."
+                  : `${setsTicked} ${setsTicked === 1 ? "set" : "sets"} will be thrown away. This cannot be undone.`}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="destructive"
+                data-testid="confirm-discard"
+                onClick={() => {
+                  setDiscarding(false)
+                  void live.discard()
+                }}
+              >
+                Throw it away
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <AddLift
           alreadyHere={exercises.map((e) => e.name)}
           onAdd={(entry) =>
@@ -565,9 +605,18 @@ export function LiveWorkoutScreen({
         />
 
         <div className="flex items-center justify-between gap-2 pt-2">
-          <Button variant="ghost" size="sm" className="text-destructive" onClick={() => {
-            if (confirm("Throw this workout away? Nothing will be recorded.")) void live.discard()
-          }}>
+          {/* THE APP'S OWN DIALOG, not the browser's box.
+              `confirm()` cannot say how much work is about to go, is
+              unstyleable, and is suppressed outright by some mobile browsers —
+              which would fire this destructive action with nothing asked, on
+              the screen you are holding mid-workout. */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="min-h-11 text-destructive"
+            data-testid="discard-workout"
+            onClick={() => setDiscarding(true)}
+          >
             Discard workout
           </Button>
           {live.unsaved > 0 && (
