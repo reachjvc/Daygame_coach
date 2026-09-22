@@ -571,12 +571,6 @@ export function GoalsHubContent({
         <FireStreakBadge streak={weekStreak} bestStreak={bestWeekStreak} variant="card" />
       )}
 
-      {/* Streak system overhaul — placeholder */}
-      <div className="w-full rounded-xl border border-orange-500/30 bg-orange-500/10 p-6 text-center">
-        <span className="text-3xl font-bold text-orange-400">PLACEHOLDER</span>
-        <p className="text-sm text-muted-foreground mt-1">Streak system overhaul coming</p>
-      </div>
-
       {/* Active view */}
       <div>
         {renderActiveView()}
