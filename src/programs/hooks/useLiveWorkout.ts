@@ -33,6 +33,7 @@ import type { LiveWorkout, LiveWorkoutSet, WorkoutSummary } from "../types"
 import { toKg } from "@/src/shared/weight"
 
 const QUEUE_KEY = "live-workout-queue-v1"
+const REST_KEY = "live-workout-rest-v1"
 
 /** A set the browser has shown but the server has not confirmed. */
 export interface QueuedSet {
@@ -88,11 +89,69 @@ function writeQueue(items: QueuedSet[]): void {
   }
 }
 
+/**
+ * THE REST CLOCK SURVIVES A RELOAD.
+ *
+ * It was three `useState`s on the screen, so anything that remounted the page
+ * took the countdown with it — and the thing most likely to do that is a
+ * phone locking itself between sets, which is precisely when the clock is the
+ * only reason you are looking at it. You came back to no timer and no way to
+ * tell how long you had been standing there.
+ *
+ * Stored beside the offline queue, and the SAME rules apply: a rest that
+ * cannot be read is a rest that is gone and must not take the screen with it.
+ */
+export interface RestClock {
+  /** Whose rest this is, so another workout's clock is never restored. */
+  workoutId: string
+  exerciseId: string
+  /** Browser time, both of them: the server's clock never decides this. */
+  from: number
+  seconds: number
+  ours: boolean
+}
+
+/** Five seconds of grace, so a clock that has just run out still shows zero. */
+const REST_GRACE_MS = 5_000
+
+function readRest(workoutId: string | null): RestClock | null {
+  if (typeof window === "undefined" || !workoutId) return null
+  try {
+    const raw = window.localStorage.getItem(REST_KEY)
+    if (!raw) return null
+    const rest = JSON.parse(raw) as RestClock
+    if (rest?.workoutId !== workoutId) return null
+    // An expired clock is not restored: coming back an hour later to a rest
+    // bar counting a rest you took before lunch is worse than no bar.
+    if (rest.from + rest.seconds * 1000 + REST_GRACE_MS <= Date.now()) return null
+    return rest
+  } catch {
+    return null
+  }
+}
+
+function writeRest(rest: RestClock | null): void {
+  try {
+    if (rest) window.localStorage.setItem(REST_KEY, JSON.stringify(rest))
+    else window.localStorage.removeItem(REST_KEY)
+  } catch {
+    // Private browsing, or storage full. The clock still runs on this screen;
+    // only its survival across a reload is lost.
+  }
+}
+
 export function useLiveWorkout(initial: LiveWorkout | null) {
   const [workout, setWorkout] = useState<LiveWorkout | null>(initial)
   const [queue, setQueue] = useState<QueuedSet[]>([])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  /**
+   * The rest clock, restored from storage on the first render.
+   *
+   * Lazily, so a reload has its countdown on the first paint rather than
+   * flashing an empty bar and filling it in.
+   */
+  const [rest, setRestState] = useState<RestClock | null>(() => readRest(initial?.id ?? null))
   const flushing = useRef(false)
   /**
    * Writes on the wire right now. The ref is the truth, because `finish` has to
@@ -461,6 +520,10 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
           return null
         }
         clearStartKey(workout.enrollmentId)
+        // The clock goes with the workout, as it does on discard: a rest bar
+        // counting down over the receipt is a control with nothing behind it.
+        writeRest(null)
+        setRestState(null)
         setWorkout(null)
         return body as WorkoutSummary
       } catch {
@@ -498,11 +561,73 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     clearStartKey(workout.enrollmentId)
     writeQueue([])
     setQueue([])
+    // The clock goes with the workout. A rest bar counting down over the
+    // receipt of a workout you have just finished is a control with nothing
+    // behind it.
+    writeRest(null)
+    setRestState(null)
     setWorkout(null)
   }, [workout])
 
+  /** Begin resting after a set. Replaces any clock already running. */
+  const startRest = useCallback(
+    (exerciseId: string, seconds: number, ours: boolean) => {
+      if (!workout) return
+      const next: RestClock = { workoutId: workout.id, exerciseId, from: Date.now(), seconds, ours }
+      setRestState(next)
+      writeRest(next)
+    },
+    [workout]
+  )
+
+  /**
+   * Lengthen or shorten the clock that is RUNNING, not the saved target.
+   *
+   * Two different questions: "I need another thirty seconds today" and "this
+   * lift wants three minutes from now on". Conflating them meant one long set
+   * quietly rewrote the program.
+   */
+  const extendRest = useCallback((deltaSeconds: number) => {
+    setRestState((current) => {
+      if (!current) return current
+      const next = { ...current, seconds: Math.max(0, current.seconds + deltaSeconds) }
+      writeRest(next)
+      return next
+    })
+  }, [])
+
+  const dismissRest = useCallback(() => {
+    setRestState(null)
+    writeRest(null)
+  }, [])
+
+  /**
+   * Stop the clock, but only if it is still the one that started at `from`.
+   *
+   * A refused set has nothing to rest from — but clearing unconditionally
+   * took the wrong clock: tick set 1, tick set 2, and set 1's refusal arrives
+   * second, wiping the rest set 2 had just started. The instant is the
+   * clock's identity.
+   *
+   * The comparison happens INSIDE the setter because the caller is a promise
+   * callback holding a render's worth of stale state — reading `rest` out
+   * there compares against whatever was true before the clock started.
+   */
+  const dismissRestStartedAt = useCallback((from: number) => {
+    setRestState((current) => {
+      if (!current || current.from !== from) return current
+      writeRest(null)
+      return null
+    })
+  }, [])
+
   return {
     workout,
+    rest,
+    startRest,
+    extendRest,
+    dismissRest,
+    dismissRestStartedAt,
     /** Sets whose write FAILED and is waiting for signal. Shown to the person. */
     unsaved: queue.length,
     /** Sets whose write is on the wire right now. Finishing waits for these. */

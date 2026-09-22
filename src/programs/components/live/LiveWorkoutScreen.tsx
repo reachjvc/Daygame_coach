@@ -93,11 +93,8 @@ export function LiveWorkoutScreen({
    */
   const past = isStaleWorkout(initial.startedAt)
   const router = useRouter()
-  const [restFrom, setRestFrom] = useState<number | null>(null)
   /** Whether the discard confirmation is open. */
   const [discarding, setDiscarding] = useState(false)
-  const [restSeconds, setRestSeconds] = useState<number>(REST_SECONDS.accessory)
-  const [restOurs, setRestOurs] = useState(true)
   const [finishing, setFinishing] = useState(false)
   /**
    * The workout as it was when Finish was pressed. Kept because finishing
@@ -470,9 +467,10 @@ export function LiveWorkoutScreen({
                            */
                           const startedAt = !past && isLastOfGroup(ex, i) ? Date.now() : null
                           if (startedAt !== null) {
-                            setRestSeconds(rest.seconds)
-                            setRestOurs(rest.ours)
-                            setRestFrom(startedAt)
+                            // The hook owns the clock, and writes it to
+                            // storage — so a phone that locks and reloads
+                            // between sets comes back still counting.
+                            live.startRest(ex.exerciseId, rest.seconds, rest.ours)
                           }
                           void saving.then((outcome) => {
                             if (startedAt === null || outcome !== "refused") return
@@ -486,7 +484,11 @@ export function LiveWorkoutScreen({
                              * started on set 2. The instant is the clock's
                              * identity, so a late answer can only clear its own.
                              */
-                            setRestFrom((current) => (current === startedAt ? null : current))
+                            // Only if it is still THIS set's clock. The
+                            // comparison is inside the hook: out here, `live`
+                            // is a render old and would compare against the
+                            // state from before the clock started.
+                            live.dismissRestStartedAt(startedAt)
                           })
                         }}
                         onUndo={ticked ? () => void live.removeSet(ticked.id) : undefined}
@@ -639,12 +641,14 @@ export function LiveWorkoutScreen({
         </div>
       </div>
 
+      {/* Restored from storage on a reload, so a phone locking itself between
+          sets no longer takes the countdown with it. */}
       <RestBar
-        startedAt={restFrom}
-        targetSeconds={restSeconds}
-        ours={restOurs}
-        onDismiss={() => setRestFrom(null)}
-        onExtend={(delta) => setRestSeconds((s) => Math.max(15, s + delta))}
+        startedAt={live.rest?.from ?? null}
+        targetSeconds={live.rest?.seconds ?? REST_SECONDS.accessory}
+        ours={live.rest?.ours ?? true}
+        onDismiss={live.dismissRest}
+        onExtend={live.extendRest}
       />
     </div>
   )
