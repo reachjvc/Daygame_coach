@@ -128,7 +128,7 @@ export function HelpDoor({ state, on, onClose }: { state: ViceState; on: ViceHan
                           href={service.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[11px] text-zinc-600 hover:text-zinc-300 transition-colors"
+                          className="text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors"
                         >
                           {service.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
                         </a>

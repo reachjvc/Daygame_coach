@@ -39,7 +39,7 @@ const STAGE_LABELS: Record<TestimonialStage, string> = {
 /** Attribution line. Rendered under every quote, everywhere, without exception. */
 function Attribution({ t }: { t: Testimonial }) {
   return (
-    <p className="text-[11px] text-zinc-600 mt-1.5 leading-relaxed">
+    <p className="text-[11px] text-zinc-500 mt-1.5 leading-relaxed">
       {t.handle ?? "account since deleted"} · {t.source} · {t.date}
       {" · "}
       <a
@@ -117,7 +117,7 @@ function TechniqueList({ viceId, stage }: { viceId: string | null; stage: Testim
             <p className={`text-[13.5px] font-medium ${t.kind === "backfire" ? "text-amber-100" : "text-zinc-100"}`}>
               {t.name}
             </p>
-            <span className="ml-auto shrink-0 text-[10.5px] text-zinc-600 tabular-nums">
+            <span className="ml-auto shrink-0 text-[11px] text-zinc-500 tabular-nums">
               {t.kind === "backfire" ? "reported backfire" : t.recurrence > 1 ? `${t.recurrence} sources` : "1 source"}
             </span>
           </div>
@@ -132,7 +132,7 @@ function TechniqueList({ viceId, stage }: { viceId: string | null; stage: Testim
                     href={t.quoteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="not-italic text-[11px] text-zinc-600 underline underline-offset-2 decoration-white/20 hover:text-zinc-400 transition-colors"
+                    className="not-italic text-[11px] text-zinc-500 underline underline-offset-2 decoration-white/20 hover:text-zinc-400 transition-colors"
                   >
                     source
                   </a>
@@ -238,7 +238,7 @@ export function VoicesDialog({ viceId, onClose }: { viceId: string | null; onClo
           </>
         )}
 
-        <p className="text-[11px] text-zinc-600 leading-relaxed">
+        <p className="text-[11px] text-zinc-500 leading-relaxed">
           Every quote here is verbatim from the link beside it, checked against the raw page rather than a summary.
           Handles are as published; where an account has since been deleted the handle is withheld and the link kept.
         </p>
@@ -286,7 +286,7 @@ export function TechniqueHints({ stage, viceId, limit = 3, heading }: {
           <li key={t.id} className="rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5">
             <p className="flex items-baseline gap-2 text-[13px] text-zinc-100">
               {t.name}
-              <span className="ml-auto shrink-0 text-[10.5px] text-zinc-600 tabular-nums">
+              <span className="ml-auto shrink-0 text-[11px] text-zinc-500 tabular-nums">
                 {t.recurrence > 1 ? `${t.recurrence} sources` : "1 source"}
               </span>
             </p>

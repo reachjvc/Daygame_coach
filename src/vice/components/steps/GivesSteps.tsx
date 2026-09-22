@@ -85,7 +85,7 @@ export function StepBeliefs({ step, state, on }: StepProps) {
 /** The log line for a belief, when there is a log to draw on. */
 function LogLine({ state }: { state: StepProps["state"] }) {
   const payoff = payoffSummary(state)
-  if (payoff.n === 0) return <p className="text-[11.5px] text-zinc-600 leading-relaxed">{BELIEF_TEST.noLog}</p>
+  if (payoff.n === 0) return <p className="text-[11.5px] text-zinc-500 leading-relaxed">{BELIEF_TEST.noLog}</p>
   return (
     <p className="text-[11.5px] text-emerald-200/70 leading-relaxed">
       {BELIEF_TEST.fromLog
@@ -200,7 +200,7 @@ export function StepValues({ step, state, on }: StepProps) {
       <StepHeader title={step.title} blurb={step.blurb} source={step.source} />
 
       <p className="text-[12px] text-zinc-400">{VALUES_STEP.pickLabel}</p>
-      <p className="text-[11.5px] text-zinc-600 mt-0.5 mb-2.5 leading-relaxed">{VALUES_STEP.pickHelp}</p>
+      <p className="text-[11.5px] text-zinc-500 mt-0.5 mb-2.5 leading-relaxed">{VALUES_STEP.pickHelp}</p>
       <div className="flex flex-wrap gap-1.5">
         {VALUES.map((value) => (
           <Chip
@@ -221,7 +221,7 @@ export function StepValues({ step, state, on }: StepProps) {
       {picked.length > 0 && (
         <Panel className="mt-5">
           <p className="text-[12.5px] text-zinc-200">{VALUES_STEP.topLabel}</p>
-          <p className="text-[11.5px] text-zinc-600 mt-0.5 leading-relaxed">{VALUES_STEP.topHelp}</p>
+          <p className="text-[11.5px] text-zinc-500 mt-0.5 leading-relaxed">{VALUES_STEP.topHelp}</p>
           {/* Labelled group: these buttons carry the same names as the chips
               above them, so without it neither a screen reader nor a test can
               tell the ranking row from the picker. */}
@@ -324,7 +324,7 @@ export function StepFutures({ step, state, on }: StepProps) {
         {horizons.map((horizon) => (
           <div key={horizon.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-3.5">
             <p className="text-[13.5px] font-medium text-zinc-100">{horizon.label}</p>
-            <p className="text-[11.5px] text-zinc-600 mt-0.5 leading-relaxed">{horizon.hint}</p>
+            <p className="text-[11.5px] text-zinc-500 mt-0.5 leading-relaxed">{horizon.hint}</p>
             <div className="grid gap-3 mt-3 sm:grid-cols-2">
               <Field
                 label={FUTURES.unchangedLabel}
@@ -355,7 +355,7 @@ export function StepFutures({ step, state, on }: StepProps) {
         </button>
       )}
 
-      <p className="text-[11.5px] text-zinc-600 mt-4 leading-relaxed">{FUTURES.order}</p>
+      <p className="text-[11.5px] text-zinc-500 mt-4 leading-relaxed">{FUTURES.order}</p>
 
       {cues.length > 0 && (
         <Panel tone="live" className="mt-4">

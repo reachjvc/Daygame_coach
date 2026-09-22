@@ -71,21 +71,21 @@ export function Shortlist({ state, on }: { state: ViceState; on: ViceHandlers })
                   </p>
                   <p className="text-[12px] text-zinc-500 mt-1 leading-relaxed">{item.does}</p>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
-                    <span className="text-[10.5px] text-zinc-600 tabular-nums">
+                    <span className="text-[11px] text-zinc-500 tabular-nums">
                       {item.recurrence} sources
                     </span>
                     {item.offScreen && (
-                      <span className="text-[10.5px] text-zinc-600">{SHORTLIST_COPY.offScreenBadge}</span>
+                      <span className="text-[11px] text-zinc-500">{SHORTLIST_COPY.offScreenBadge}</span>
                     )}
                     {/* The cross-behaviour finding, marked per item rather than
                         explained once and forgotten. */}
                     {item.needsPerson && (
-                      <span className="text-[10.5px] text-amber-200/70">{SHORTLIST_COPY.personBadge}</span>
+                      <span className="text-[11px] text-amber-200/70">{SHORTLIST_COPY.personBadge}</span>
                     )}
                     {tool && (
                       <button
                         onClick={() => on.openTool(tool)}
-                        className="text-[10.5px] text-violet-300/80 hover:text-violet-200 underline underline-offset-2 decoration-violet-400/30 transition-colors"
+                        className="text-[11px] text-violet-300/80 hover:text-violet-200 underline underline-offset-2 decoration-violet-400/30 transition-colors"
                       >
                         do it here
                       </button>

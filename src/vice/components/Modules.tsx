@@ -50,12 +50,12 @@ export function Modules({ state, on }: { state: ViceState; on: ViceHandlers }) {
                 className="w-full p-4 text-left hover:bg-white/[0.02] transition-colors"
               >
                 <span className="flex items-baseline gap-2.5">
-                  <span className="text-[11px] text-zinc-600 tabular-nums shrink-0">
+                  <span className="text-[11px] text-zinc-500 tabular-nums shrink-0">
                     {isRead ? <Check className="size-3 text-emerald-400/70" /> : i + 1}
                   </span>
                   <span className="text-[15px] font-medium text-zinc-100">{m.title}</span>
                   <ChevronDown
-                    className={`size-4 ml-auto shrink-0 text-zinc-600 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    className={`size-4 ml-auto shrink-0 text-zinc-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
                   />
                 </span>
                 <span className="block text-[12.5px] text-zinc-500 mt-1 leading-relaxed pl-6">{m.premise}</span>
@@ -76,7 +76,7 @@ export function Modules({ state, on }: { state: ViceState; on: ViceHandlers }) {
                       className="block w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-left hover:border-violet-400/40 transition-colors"
                     >
                       <span className="text-[13.5px] text-zinc-100">{m.exercise.label}</span>
-                      <span className="block text-[11px] text-zinc-600 mt-0.5">about {m.minutes} min</span>
+                      <span className="block text-[11px] text-zinc-500 mt-0.5">about {m.minutes} min</span>
                     </button>
                   ) : (
                     <Link
@@ -87,7 +87,7 @@ export function Modules({ state, on }: { state: ViceState; on: ViceHandlers }) {
                       className="block rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 hover:border-violet-400/40 transition-colors"
                     >
                       <span className="text-[13.5px] text-zinc-100">{m.exercise.label}</span>
-                      <span className="block text-[11px] text-zinc-600 mt-0.5">about {m.minutes} min</span>
+                      <span className="block text-[11px] text-zinc-500 mt-0.5">about {m.minutes} min</span>
                     </Link>
                   )}
 
@@ -113,7 +113,7 @@ export function Modules({ state, on }: { state: ViceState; on: ViceHandlers }) {
         })}
       </ol>
 
-      <p className="text-[11.5px] text-zinc-600 mt-4 leading-relaxed">{MODULES_COPY.ejectNote}</p>
+      <p className="text-[11.5px] text-zinc-500 mt-4 leading-relaxed">{MODULES_COPY.ejectNote}</p>
       <Why label="what the count is"><p>{MODULES_COPY.progressNote}</p></Why>
     </div>
   )

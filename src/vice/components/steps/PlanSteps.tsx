@@ -87,7 +87,7 @@ export function StepNegotiate({ step, state, today, on }: StepProps) {
             That is too long. Show me a shorter one →
           </button>
         ) : (
-          <p className="mt-3 text-[11px] text-zinc-600 leading-relaxed">
+          <p className="mt-3 text-[11px] text-zinc-500 leading-relaxed">
             One day is on that list because it belongs there. A day you actually run tells you more than a month you abandon on the fourth.
           </p>
         )}
@@ -111,12 +111,12 @@ export function StepNegotiate({ step, state, today, on }: StepProps) {
                   }`}
                 >
                   {option.label}
-                  <span className="block text-[10px] text-zinc-500 mt-0.5 tabular-nums">{option.date}</span>
+                  <span className="block text-[11px] text-zinc-500 mt-0.5 tabular-nums">{option.date}</span>
                 </button>
               )
             })}
           </div>
-          <p className="text-[11px] text-zinc-600 mt-3 leading-relaxed">
+          <p className="text-[11px] text-zinc-500 mt-3 leading-relaxed">
             Today is on that list first and deliberately. Attempts that start on the spur of the moment do better than planned ones, not worse, so a picker that nudges everything to next week is throwing something away.
           </p>
         </Panel>
@@ -162,7 +162,7 @@ export function StepIfThen({ step, state, on }: StepProps) {
                 type="button"
                 onClick={() => on.removePlan(plan.id)}
                 aria-label="Remove this plan"
-                className="p-1 text-zinc-600 hover:text-rose-300 transition-colors shrink-0"
+                className="p-1 text-zinc-500 hover:text-rose-300 transition-colors shrink-0"
               >
                 <X className="size-3.5" />
               </button>
@@ -183,7 +183,7 @@ export function StepIfThen({ step, state, on }: StepProps) {
         )}
         <div className="flex items-center gap-3 mt-3">
           <PrimaryButton onClick={add} disabled={planProblem({ when, then }) !== null}>Add it</PrimaryButton>
-          <span className="text-[11px] text-zinc-600">{IFTHEN.rehearse}</span>
+          <span className="text-[11px] text-zinc-500">{IFTHEN.rehearse}</span>
         </div>
       </Panel>
     </div>
@@ -209,7 +209,7 @@ export function StepBinding({ step, state, on }: StepProps) {
           </Panel>
         ))}
       </div>
-      <p className="text-[11px] text-zinc-600 mt-4 leading-relaxed">
+      <p className="text-[11px] text-zinc-500 mt-4 leading-relaxed">
         Ticking one here does not do it. Doing one of them today, before the day gets away, is the entire value of this screen.
       </p>
     </div>
@@ -228,7 +228,7 @@ export function StepRefusal({ step, state, on }: StepProps) {
         <ol className="space-y-1.5 mt-2">
           {refusalLadder(state).map((line, i) => (
             <li key={i} className="flex items-start gap-2.5">
-              <span className="text-[11px] text-zinc-600 tabular-nums pt-0.5">{i + 1}</span>
+              <span className="text-[11px] text-zinc-500 tabular-nums pt-0.5">{i + 1}</span>
               <span className="text-[13px] text-zinc-100">&ldquo;{line}&rdquo;</span>
             </li>
           ))}
@@ -333,7 +333,7 @@ export function StepVoice({ step, state, on }: StepProps) {
           {PERMISSION_THOUGHTS.map((item) => (
             <div key={item.id} className="rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5">
               <p className="text-[13px] text-zinc-200">&ldquo;{item.thought}&rdquo;</p>
-              <p className="text-[10.5px] text-zinc-600 mt-0.5">{item.kind}</p>
+              <p className="text-[11px] text-zinc-500 mt-0.5">{item.kind}</p>
               <p className="text-[12.5px] text-zinc-400 mt-1.5 leading-relaxed">{item.rebuttal}</p>
               <div className="mt-2">
                 <Line
@@ -345,7 +345,7 @@ export function StepVoice({ step, state, on }: StepProps) {
               </div>
             </div>
           ))}
-          <p className="text-[11px] text-zinc-600 leading-relaxed">
+          <p className="text-[11px] text-zinc-500 leading-relaxed">
             A borrowed rebuttal does not hold at eleven at night. One you wrote does, which is what the boxes are for.
           </p>
         </div>
@@ -382,7 +382,7 @@ export function StepCard({ step, state, on }: StepProps) {
 
       {(state.card.reasons.length > 0 || state.card.line) && (
         <Panel tone="live" className="mt-4">
-          <p className="text-[10.5px] uppercase tracking-wide text-violet-300/70">How it will look</p>
+          <p className="text-[11px] uppercase tracking-wide text-violet-300/70">How it will look</p>
           <ul className="space-y-1 mt-2">
             {state.card.reasons.map((reason, i) => (
               <li key={i} className="text-[14px] text-violet-50">{reason}</li>
@@ -392,7 +392,7 @@ export function StepCard({ step, state, on }: StepProps) {
         </Panel>
       )}
 
-      <p className="text-[11px] text-zinc-600 mt-4 leading-relaxed">
+      <p className="text-[11px] text-zinc-500 mt-4 leading-relaxed">
         The card is on the toolbar at the bottom of every screen from here on, one tap away, including from inside the urge tool.
       </p>
     </div>

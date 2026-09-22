@@ -46,7 +46,7 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
               >
                 <span className="flex items-center gap-2">
                   <span className="text-[16px] font-medium text-zinc-100">{door.label}</span>
-                  <ChevronDown className={`size-4 ml-auto text-zinc-600 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`size-4 ml-auto text-zinc-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                 </span>
                 <span className="block text-[12.5px] text-zinc-500 mt-0.5">{door.sub}</span>
               </button>
@@ -109,11 +109,11 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
                               className="block rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 hover:text-white hover:bg-white/[0.03] transition-colors"
                             >
                               The short version
-                              <span className="block text-[11px] text-zinc-600">
+                              <span className="block text-[11px] text-zinc-500">
                                 Ten things, ranked by the evidence. Most happen away from here.
                               </span>
                             </Link>
-                            <p className="text-[11.5px] text-zinc-600 leading-relaxed pt-1">{GUIDED.changeIntro}</p>
+                            <p className="text-[11.5px] text-zinc-500 leading-relaxed pt-1">{GUIDED.changeIntro}</p>
                             {CHANGE_FLOWS.map((f) => (
                               <Link
                                 key={f.id}
@@ -121,7 +121,7 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
                                 className="block rounded-lg px-2.5 py-2 text-[13px] text-zinc-300 hover:text-white hover:bg-white/[0.03] transition-colors"
                               >
                                 {f.label}
-                                <span className="block text-[11px] text-zinc-600">{f.forWho}</span>
+                                <span className="block text-[11px] text-zinc-500">{f.forWho}</span>
                               </Link>
                             ))}
                           </div>

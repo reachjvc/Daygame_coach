@@ -71,7 +71,7 @@ export function StepCount({ step, state, on }: StepProps) {
               }`}
             >
               <div className="flex gap-3">
-                <span className="text-[11px] text-zinc-600 tabular-nums pt-0.5 shrink-0">{i + 1}</span>
+                <span className="text-[11px] text-zinc-500 tabular-nums pt-0.5 shrink-0">{i + 1}</span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[13.5px] text-zinc-200 leading-snug">{criterion.text}</p>
                   {criterion.help && <p className="text-[11.5px] text-zinc-500 mt-1 leading-relaxed">{criterion.help}</p>}
@@ -104,7 +104,7 @@ export function StepCount({ step, state, on }: StepProps) {
         })}
       </ul>
 
-      <p className="text-[11.5px] text-zinc-600 mt-3 leading-relaxed">{COUNT.unsureNote}</p>
+      <p className="text-[11.5px] text-zinc-500 mt-3 leading-relaxed">{COUNT.unsureNote}</p>
 
       {/* The moral-incongruence question. Behaviours and screens only, because
           for substances the distinction it draws is not the live one. */}
@@ -159,7 +159,7 @@ function NumberField({ label, help, value, onChange, placeholder }: {
   return (
     <label className="block">
       <span className="block text-[12px] text-zinc-400">{label}</span>
-      {help && <span className="block text-[11px] text-zinc-600 mt-0.5 leading-relaxed">{help}</span>}
+      {help && <span className="block text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{help}</span>}
       <input
         type="number"
         inputMode="decimal"
@@ -227,7 +227,7 @@ export function StepUsage({ step, state, on }: StepProps) {
           onChange={(v) => on.setUsage({ minutes: v })}
         />
       </div>
-      <p className="text-[11px] text-zinc-600 mt-2">{USAGE.noCurrencyNote}</p>
+      <p className="text-[11px] text-zinc-500 mt-2">{USAGE.noCurrencyNote}</p>
 
       {/* Taken before anything is totalled. Once a total is on screen there is
           no such thing as an uncontaminated guess. */}
@@ -302,7 +302,7 @@ export function StepFeedback({ step, state, on }: StepProps) {
       </Panel>
 
       {!predicted ? (
-        <p className="text-[12px] text-zinc-600 mt-4 leading-relaxed">
+        <p className="text-[12px] text-zinc-500 mt-4 leading-relaxed">
           The numbers are underneath. Worth writing the line above first — a prediction you made yourself is the thing
           the numbers can land against.
         </p>

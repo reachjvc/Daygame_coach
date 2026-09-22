@@ -93,7 +93,7 @@ function HourChart({ bars, peakHour }: { bars: Array<{ hour: number; count: numb
           </div>
         ))}
       </div>
-      <div className="flex justify-between text-[10px] text-zinc-600 mt-1 tabular-nums">
+      <div className="flex justify-between text-[11px] text-zinc-500 mt-1 tabular-nums">
         <span>00</span><span>06</span><span>12</span><span>18</span><span>23</span>
       </div>
     </div>
@@ -204,7 +204,7 @@ export function StepLog({ step, state, today, on }: StepProps) {
           <ul className="space-y-1.5">
             {state.episodes.slice(0, 12).map((episode) => (
               <li key={episode.id} className="flex items-start gap-2 rounded-lg border border-white/[0.07] bg-white/[0.015] px-3 py-2">
-                <span className="text-[11px] text-zinc-600 tabular-nums shrink-0">{episode.at.slice(5, 16).replace("T", " ")}</span>
+                <span className="text-[11px] text-zinc-500 tabular-nums shrink-0">{episode.at.slice(5, 16).replace("T", " ")}</span>
                 <span className="flex-1 min-w-0 text-[12px] text-zinc-400">
                   {episode.actedOn === false
                     ? `urge, ${episode.intensity ?? "–"}/10${episode.minutes !== null ? `, ${episode.minutes} min, passed` : ", passed"}`
@@ -223,7 +223,7 @@ export function StepLog({ step, state, today, on }: StepProps) {
             ))}
           </ul>
           {state.episodes.length > 12 && (
-            <p className="text-[11px] text-zinc-600 mt-2">and {state.episodes.length - 12} more.</p>
+            <p className="text-[11px] text-zinc-500 mt-2">and {state.episodes.length - 12} more.</p>
           )}
         </div>
       )}
@@ -327,7 +327,7 @@ export function StepMissions({ step, state, today, on }: StepProps) {
           <p className="text-[13px] text-zinc-300">
             Day {Math.min(day, MISSIONS.length)}{state.experiment.days ? ` of ${state.experiment.days}` : ""}
           </p>
-          <p className="text-[11px] text-zinc-600 tabular-nums">{doneCount} done</p>
+          <p className="text-[11px] text-zinc-500 tabular-nums">{doneCount} done</p>
         </div>
       )}
 
@@ -346,7 +346,7 @@ export function StepMissions({ step, state, today, on }: StepProps) {
       {/* The sequence has no reset in it and says so, because the thing that
           makes somebody stop opening one of these is a number going to nought
           on the evening they most needed the page. */}
-      <p className="text-[11px] text-zinc-600 mt-4 leading-relaxed">
+      <p className="text-[11px] text-zinc-500 mt-4 leading-relaxed">
         A missed day stays here rather than expiring, and nothing in this list resets. Doing day three on day nine is doing day three.
       </p>
     </div>
@@ -387,7 +387,7 @@ export function StepReview({ step, state, today, on }: StepProps) {
           {/* Says what is not known, rather than colouring it in. An app that
               assumes a quiet day was a good day ends up congratulating somebody
               who is holding a drink, and they never trust it again. */}
-          <p className="text-[11px] text-zinc-600 mt-2 leading-relaxed">
+          <p className="text-[11px] text-zinc-500 mt-2 leading-relaxed">
             Days with nothing logged are not counted either way. This page does not know what happened on them and does not guess.
           </p>
 
@@ -406,7 +406,7 @@ export function StepReview({ step, state, today, on }: StepProps) {
               <p className="text-[13px] text-zinc-200">
                 The ones you did not act on ran {urges.medianMinutes} minutes in the middle, and {urges.maxMinutes} at the longest.
               </p>
-              <p className="text-[11px] text-zinc-600 mt-1.5 leading-relaxed">{URGE.durationPolicy}</p>
+              <p className="text-[11px] text-zinc-500 mt-1.5 leading-relaxed">{URGE.durationPolicy}</p>
             </Panel>
           )}
 

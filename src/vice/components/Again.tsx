@@ -51,7 +51,7 @@ export function AgainTool({ state, on, onClose }: {
               <Chip key={c} label={c} on={count === c} onClick={() => on.setAnswer("again.count", count === c ? "" : c)} />
             ))}
           </div>
-          <p className="text-[11px] text-zinc-600 mt-1.5">{AGAIN.countNote}</p>
+          <p className="text-[11px] text-zinc-500 mt-1.5">{AGAIN.countNote}</p>
         </div>
 
         <div>
@@ -73,7 +73,7 @@ export function AgainTool({ state, on, onClose }: {
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-zinc-600 mt-1.5">{AGAIN.endingNote}</p>
+          <p className="text-[11px] text-zinc-500 mt-1.5">{AGAIN.endingNote}</p>
         </div>
 
         {/* The response is keyed to the specific ending, because that is what
@@ -114,7 +114,7 @@ export function AgainTool({ state, on, onClose }: {
               )
             })}
           </div>
-          <p className="text-[11px] text-zinc-600 mt-1.5">{AGAIN.differencesNote}</p>
+          <p className="text-[11px] text-zinc-500 mt-1.5">{AGAIN.differencesNote}</p>
         </div>
 
         {/* Said plainly rather than softened. An empty list is the finding. */}

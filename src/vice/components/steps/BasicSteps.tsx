@@ -132,7 +132,7 @@ export function StepPickVice({ step, state, on }: StepProps) {
 
       {/* Said once, here, rather than as a disclaimer nobody reads. It matters
           most for the two on this list that are not diagnoses of anything. */}
-      <p className="text-[11px] text-zinc-600 mt-4 leading-relaxed">
+      <p className="text-[11px] text-zinc-500 mt-4 leading-relaxed">
         Picking one off this list is not a diagnosis and this page does not think it is. It is a thing you would rather do less of.
       </p>
     </div>
@@ -290,7 +290,7 @@ export function StepRuler({ step, state, on }: StepProps) {
         })}
       </div>
       <Why label="what happens to what you write"><p>{RULER_NOTE}</p></Why>
-      <p className="text-[11px] text-zinc-600 mt-2 leading-relaxed">
+      <p className="text-[11px] text-zinc-500 mt-2 leading-relaxed">
         Both questions compare your number with a lower one rather than a higher one, on purpose. Asked the other way round, the honest answer is a list of reasons not to bother — and that list is the half that predicts nothing happening.
       </p>
     </div>

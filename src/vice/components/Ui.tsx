@@ -84,12 +84,12 @@ export function Field({ label, help, value, onChange, placeholder, rows = 3, min
         placeholder={placeholder}
         aria-label={label ? undefined : ariaLabel}
         rows={rows}
-        className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
+        className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
       />
       {/* Says what is short, and does not stop anybody. Nothing in this module
           blocks on a word count; a half-answer saved beats a blank field. */}
-      {short && <p className="text-[10.5px] text-zinc-600 mt-1">A bit more would help — {words} of about {minWords} words.</p>}
-      {example && <p className="text-[10.5px] text-zinc-600 mt-1 leading-relaxed">{example}</p>}
+      {short && <p className="text-[11px] text-zinc-500 mt-1">A bit more would help — {words} of about {minWords} words.</p>}
+      {example && <p className="text-[11px] text-zinc-500 mt-1 leading-relaxed">{example}</p>}
     </div>
   )
 }
@@ -113,7 +113,7 @@ export function Line({ label, value, onChange, placeholder, maxLength }: {
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         maxLength={maxLength}
-        className="w-full rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 transition-colors"
+        className="w-full rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-[13px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-violet-400/40 transition-colors"
       />
     </div>
   )
@@ -165,15 +165,15 @@ export function Scale({ label, help, value, onChange, lowAnchor, highAnchor, max
           onKeyUp={commit}
           className="flex-1 accent-violet-400"
         />
-        <span className={`w-8 text-right text-lg tabular-nums ${value === undefined ? "text-zinc-600" : "text-violet-200"}`}>
+        <span className={`w-8 text-right text-lg tabular-nums ${value === undefined ? "text-zinc-500" : "text-violet-200"}`}>
           {value === undefined ? "–" : value}
         </span>
       </div>
-      <div className="flex justify-between text-[10.5px] text-zinc-600 mt-0.5">
+      <div className="flex justify-between text-[11px] text-zinc-500 mt-0.5">
         <span>{lowAnchor}</span>
         <span>{highAnchor}</span>
       </div>
-      {value === undefined && <p className="text-[10.5px] text-zinc-600 mt-1">Not answered yet. Zero is a real answer — tap the slider to give it.</p>}
+      {value === undefined && <p className="text-[11px] text-zinc-500 mt-1">Not answered yet. Zero is a real answer — tap the slider to give it.</p>}
     </div>
   )
 }
@@ -248,7 +248,7 @@ export function ChipBank({ label, help, options, selected, onToggle, allowCustom
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add() } }}
             placeholder="Something else"
             aria-label={`Add your own to ${label}`}
-            className="flex-1 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[12px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 transition-colors"
+            className="flex-1 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[12px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-violet-400/40 transition-colors"
           />
           <button
             type="button"
@@ -295,7 +295,7 @@ export function LineList({ label, help, items, onChange, placeholder, seeds, max
         <ul className="space-y-1.5 mt-2">
           {items.map((item, i) => (
             <li key={`${item}-${i}`} className="flex items-start gap-2">
-              <span className="text-[11px] text-zinc-600 tabular-nums pt-2 w-4 shrink-0">{i + 1}</span>
+              <span className="text-[11px] text-zinc-500 tabular-nums pt-2 w-4 shrink-0">{i + 1}</span>
               <input
                 type="text"
                 value={item}
@@ -307,7 +307,7 @@ export function LineList({ label, help, items, onChange, placeholder, seeds, max
                 type="button"
                 onClick={() => onChange(items.filter((_, j) => j !== i))}
                 aria-label={`Remove item ${i + 1}`}
-                className="p-1.5 text-zinc-600 hover:text-rose-300 transition-colors shrink-0"
+                className="p-1.5 text-zinc-500 hover:text-rose-300 transition-colors shrink-0"
               >
                 <X className="size-3.5" />
               </button>
@@ -324,7 +324,7 @@ export function LineList({ label, help, items, onChange, placeholder, seeds, max
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(draft) } }}
             placeholder={placeholder}
             aria-label={`Add to ${name}`}
-            className="flex-1 min-w-0 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 transition-colors"
+            className="flex-1 min-w-0 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[13px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-violet-400/40 transition-colors"
           />
           <button
             type="button"
@@ -337,10 +337,10 @@ export function LineList({ label, help, items, onChange, placeholder, seeds, max
           </button>
         </div>
       )}
-      {full && <p className="text-[10.5px] text-zinc-600 mt-1.5">That is the {max} this one takes. Editing them is still open.</p>}
+      {full && <p className="text-[11px] text-zinc-500 mt-1.5">That is the {max} this one takes. Editing them is still open.</p>}
       {seeds && seeds.length > 0 && (
         <div className="mt-2">
-          <p className="text-[10.5px] text-zinc-600 mb-1">Or start from one of these:</p>
+          <p className="text-[11px] text-zinc-500 mb-1">Or start from one of these:</p>
           <div className="flex flex-wrap gap-1.5">
             {seeds.filter((s) => !items.includes(s)).map((seed) => (
               <button
@@ -403,7 +403,7 @@ export function CheckRow({ label, note, on, onClick }: { label: string; note?: s
     >
       <span className="flex items-start gap-2.5">
         <span className={`inline-flex items-center justify-center size-5 rounded-full shrink-0 mt-px ${
-          on ? "bg-emerald-500/25 text-emerald-200" : "bg-white/5 text-zinc-600"
+          on ? "bg-emerald-500/25 text-emerald-200" : "bg-white/5 text-zinc-500"
         }`}>
           {on ? <Check className="size-3" /> : <span className="size-1.5 rounded-full bg-current" />}
         </span>
@@ -446,7 +446,7 @@ export function Empty({ children }: { children: ReactNode }) {
 export function Why({ children, label = "why this" }: { children: ReactNode; label?: string }) {
   return (
     <details className="mt-2 group">
-      <summary className="cursor-pointer list-none text-[11.5px] text-zinc-600 hover:text-zinc-400 transition-colors">
+      <summary className="cursor-pointer list-none text-[11.5px] text-zinc-500 hover:text-zinc-400 transition-colors">
         {label}
       </summary>
       <div className="mt-1.5 space-y-2 text-[12px] text-zinc-500 leading-relaxed">{children}</div>

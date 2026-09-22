@@ -113,7 +113,7 @@ export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
               <button onClick={() => setConfirmReset(false)} className="text-zinc-500 hover:text-zinc-300">keep it</button>
             </span>
           ) : (
-            <button onClick={() => setConfirmReset(true)} className="text-[11px] text-zinc-600 hover:text-zinc-300 transition-colors">
+            <button onClick={() => setConfirmReset(true)} className="text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors">
               start over
             </button>
           )}
@@ -141,11 +141,11 @@ export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
             aria-expanded={railOpen}
             className="flex w-full items-center gap-2.5 text-left"
           >
-            <span className="text-[11px] text-zinc-600 tabular-nums shrink-0">
+            <span className="text-[11px] text-zinc-500 tabular-nums shrink-0">
               {index + 1}/{flow.steps.length}
             </span>
             <span className="text-[13px] text-zinc-200 truncate">{step.title}</span>
-            <ChevronDown className={`size-3.5 ml-auto shrink-0 text-zinc-600 transition-transform ${railOpen ? "rotate-180" : ""}`} />
+            <ChevronDown className={`size-3.5 ml-auto shrink-0 text-zinc-500 transition-transform ${railOpen ? "rotate-180" : ""}`} />
           </button>
           <div className="mt-2 h-0.5 w-full rounded-full bg-white/10 overflow-hidden">
             <div
@@ -172,7 +172,7 @@ export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
                           : "border-white/10 bg-white/[0.02] text-zinc-500 hover:border-white/30 hover:text-zinc-300"
                     }`}
                   >
-                    {done ? <Check className="size-3 shrink-0" /> : <span className="tabular-nums text-[10px] opacity-60">{i + 1}</span>}
+                    {done ? <Check className="size-3 shrink-0" /> : <span className="tabular-nums text-[11px] opacity-60">{i + 1}</span>}
                     {s.title}
                   </button>
                 )
@@ -227,7 +227,7 @@ export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
                   {flow.steps[index + 1].title} →
                 </button>
               ) : (
-                <span className="text-[11px] text-zinc-600 tabular-nums">{progress.done} of {progress.total} done</span>
+                <span className="text-[11px] text-zinc-500 tabular-nums">{progress.done} of {progress.total} done</span>
               )}
             </div>
 
@@ -245,14 +245,14 @@ export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
             )}
 
             <details className="mt-6">
-              <summary className="cursor-pointer text-[11px] text-zinc-600 hover:text-zinc-400 transition-colors">
+              <summary className="cursor-pointer text-[11px] text-zinc-500 hover:text-zinc-400 transition-colors">
                 {PROVENANCE.title}
               </summary>
               <div className="mt-2 space-y-2">
                 {PROVENANCE.lines.map((line, i) => (
-                  <p key={i} className="text-[11px] text-zinc-600 leading-relaxed">{line}</p>
+                  <p key={i} className="text-[11px] text-zinc-500 leading-relaxed">{line}</p>
                 ))}
-                <p className="text-[11px] text-zinc-600 leading-relaxed">{PROVENANCE.evidence}</p>
+                <p className="text-[11px] text-zinc-500 leading-relaxed">{PROVENANCE.evidence}</p>
               </div>
             </details>
           </>

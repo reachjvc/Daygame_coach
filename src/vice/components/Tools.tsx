@@ -289,7 +289,7 @@ export function UrgeTool({ state, on, onClose, onLapse }: {
                     <Scale label={URGE.steps.wait.after} value={after ?? intensity} onChange={setAfter} lowAnchor="Gone" highAnchor="Worse" />
                   )}
                   {summary.n > 0 && (
-                    <p className="text-[11px] text-zinc-600 mt-4 leading-relaxed text-center">
+                    <p className="text-[11px] text-zinc-500 mt-4 leading-relaxed text-center">
                       Your last {summary.n} that passed ran {summary.medianMinutes} minutes in the middle, {summary.maxMinutes} at the longest.
                     </p>
                   )}
@@ -573,7 +573,7 @@ export function CardTool({ state, on, onClose }: { state: ViceState; on: ViceHan
             <ul className="space-y-1.5">
               {futureCues(state).map((cue) => (
                 <li key={cue.horizonId}>
-                  <span className="text-[11px] text-zinc-600">{cue.label}</span>
+                  <span className="text-[11px] text-zinc-500">{cue.label}</span>
                   <p className="text-[13px] text-zinc-200 leading-relaxed">{cue.changed}</p>
                 </li>
               ))}

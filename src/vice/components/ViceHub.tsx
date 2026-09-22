@@ -184,7 +184,7 @@ export function ViceHub() {
           <section className="mb-8">
             <div className="flex items-baseline gap-2 mb-2">
               <h2 className="text-[13px] font-semibold text-zinc-200">Your numbers</h2>
-              {state.viceLabel && <span className="text-[11px] text-zinc-600">{state.viceLabel}</span>}
+              {state.viceLabel && <span className="text-[11px] text-zinc-500">{state.viceLabel}</span>}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <Stat value={String(votesCast(state))} caption="urges came and went without you acting" tone={votesCast(state) > 0 ? "good" : "plain"} />
@@ -210,7 +210,7 @@ export function ViceHub() {
               >
                 <div className="flex items-baseline gap-3">
                   <h3 className="text-[15px] font-semibold text-sky-50 group-hover:text-white transition-colors">{flow.label}</h3>
-                  <span className="text-[11px] text-zinc-600 tabular-nums ml-auto shrink-0">about {flow.minutes} min</span>
+                  <span className="text-[11px] text-zinc-500 tabular-nums ml-auto shrink-0">about {flow.minutes} min</span>
                 </div>
                 <p className="text-[13px] text-zinc-300 mt-1 leading-relaxed">{flow.pitch}</p>
                 <p className="text-[11.5px] text-zinc-500 mt-1.5 leading-relaxed">{flow.forWho}</p>
@@ -240,7 +240,7 @@ export function ViceHub() {
               >
                 <div className="flex items-baseline gap-3">
                   <h3 className="text-[15px] font-semibold text-zinc-100 group-hover:text-white transition-colors">{flow.label}</h3>
-                  <span className="text-[11px] text-zinc-600 tabular-nums ml-auto shrink-0">
+                  <span className="text-[11px] text-zinc-500 tabular-nums ml-auto shrink-0">
                     about {flow.minutes} min
                     {state.flowId === flow.id && <span className="text-violet-300/70"> · last opened</span>}
                   </span>
@@ -248,22 +248,22 @@ export function ViceHub() {
                 <p className="text-[13px] text-zinc-300 mt-1 leading-relaxed">{flow.pitch}</p>
                 <dl className="mt-2.5 space-y-1">
                   <div className="flex gap-2">
-                    <dt className="text-[11px] text-zinc-600 w-14 shrink-0">For</dt>
+                    <dt className="text-[11px] text-zinc-500 w-14 shrink-0">For</dt>
                     <dd className="text-[11.5px] text-zinc-400 leading-relaxed">{flow.forWho}</dd>
                   </div>
                   <div className="flex gap-2">
-                    <dt className="text-[11px] text-zinc-600 w-14 shrink-0">Asks</dt>
+                    <dt className="text-[11px] text-zinc-500 w-14 shrink-0">Asks</dt>
                     <dd className="text-[11.5px] text-zinc-400 leading-relaxed">{flow.asks}</dd>
                   </div>
                   <div className="flex gap-2">
-                    <dt className="text-[11px] text-zinc-600 w-14 shrink-0">Based on</dt>
+                    <dt className="text-[11px] text-zinc-500 w-14 shrink-0">Based on</dt>
                     <dd className="text-[11.5px] text-zinc-500 leading-relaxed">{flow.basis}</dd>
                   </div>
                 </dl>
               </Link>
             ))}
           </div>
-          <p className="text-[11px] text-zinc-600 mt-3 leading-relaxed">
+          <p className="text-[11px] text-zinc-500 mt-3 leading-relaxed">
             They share everything. Start one, move to another, and the log, the plans, the card and the voice work all come with you.
           </p>
         </section>
@@ -275,10 +275,10 @@ export function ViceHub() {
         <Panel tone="quiet" className="mt-8">
           <p className="text-[12px] text-zinc-400 leading-relaxed">{PROVENANCE.evidence}</p>
           <details className="mt-3">
-            <summary className="cursor-pointer text-[11px] text-zinc-600 hover:text-zinc-400 transition-colors">{PROVENANCE.title}</summary>
+            <summary className="cursor-pointer text-[11px] text-zinc-500 hover:text-zinc-400 transition-colors">{PROVENANCE.title}</summary>
             <div className="mt-2 space-y-2">
               {PROVENANCE.lines.map((line, i) => (
-                <p key={i} className="text-[11px] text-zinc-600 leading-relaxed">{line}</p>
+                <p key={i} className="text-[11px] text-zinc-500 leading-relaxed">{line}</p>
               ))}
             </div>
           </details>
@@ -287,7 +287,7 @@ export function ViceHub() {
 
         {versionLoaded && <VersionSwitcher version={version} onChange={setVersion} />}
 
-        <p className="text-[11px] text-zinc-600 mt-6 leading-relaxed">
+        <p className="text-[11px] text-zinc-500 mt-6 leading-relaxed">
           Everything you type stays in this browser. Nothing is sent anywhere, and there is no account. &ldquo;Start over&rdquo; inside any flow deletes the lot.
         </p>
       </div>

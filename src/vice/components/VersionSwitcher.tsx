@@ -14,7 +14,7 @@ export function VersionSwitcher({ version, onChange }: {
   return (
     <div className="mt-10 pt-5 border-t border-white/[0.07]">
       <div role="group" aria-label={SWITCHER.label} className="flex flex-wrap items-center gap-1.5">
-        <span className="text-[11px] text-zinc-600 mr-1">{SWITCHER.label}</span>
+        <span className="text-[11px] text-zinc-500 mr-1">{SWITCHER.label}</span>
         {VICE_VERSIONS.map((v) => (
           <button
             key={v.id}
@@ -32,7 +32,7 @@ export function VersionSwitcher({ version, onChange }: {
           </button>
         ))}
       </div>
-      <p className="text-[11px] text-zinc-600 mt-1.5 leading-relaxed">{SWITCHER.note}</p>
+      <p className="text-[11px] text-zinc-500 mt-1.5 leading-relaxed">{SWITCHER.note}</p>
     </div>
   )
 }
