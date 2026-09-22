@@ -21,6 +21,7 @@
 
 import type { BlackBoxRecord, ViceAttempt, ViceEndingId, ViceReport } from "../types"
 import { ENDING_FAMILIES } from "../data/blackbox"
+import { VICES } from "../data/vices"
 import { toDateISO } from "@/src/shared/dateUtils"
 
 /**
@@ -129,8 +130,24 @@ export function saveRecord(storage: Storage | null, record: BlackBoxRecord): voi
 
 export function startAttempt(
   record: BlackBoxRecord,
-  input: { viceId: string; label: string; startedOn: string; startedBy: string; structure: string[] },
+  input: {
+    viceId: string
+    label: string
+    startedOn: string
+    startedBy: string
+    structure: string[]
+    /** Whether they confirmed reading the withdrawal note. Only read for a vice that carries one. */
+    acknowledgedRisk: boolean
+  },
 ): BlackBoxRecord {
+  // THE SAFETY GATE, AT THE LAYER THAT CANNOT BE SKIPPED.
+  //
+  // Alcohol and benzodiazepine withdrawal can kill; every other vice on the
+  // list is only unpleasant. The old module gates date-setting in
+  // `viceService.dateIsBlocked` AND on the button, deliberately, because a
+  // gate that lives only in a component is one refactor from being gone and
+  // nothing would fail. The Black Box shipped with the button half only.
+  if (riskGateBlocks(input.viceId, input.acknowledgedRisk)) return record
   // A free-typed "16/08/2026" used to go straight in, and every length, bar
   // width and total downstream became NaN — persisted, so reloading did not
   // clear it. The screen also validates; this is the one that cannot be skipped.
@@ -147,6 +164,17 @@ export function startAttempt(
     endedByReportId: null,
   }
   return { ...record, attempts: [...record.attempts, attempt] }
+}
+
+/**
+ * Whether starting this run is blocked by the withdrawal note.
+ *
+ * Exported so the screen and the store ask the same question of the same
+ * catalogue, rather than each deciding what "risky" means.
+ */
+export function riskGateBlocks(viceId: string, acknowledgedRisk: boolean): boolean {
+  const vice = VICES.find((v) => v.id === viceId)
+  return (vice?.medicalRisk ?? false) && !acknowledgedRisk
 }
 
 /**

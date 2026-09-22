@@ -30,7 +30,14 @@ export function AttemptStart({
   onClose,
 }: {
   today: string
-  onStart: (input: { viceId: string; label: string; startedOn: string; startedBy: string; structure: string[] }) => void
+  onStart: (input: {
+    viceId: string
+    label: string
+    startedOn: string
+    startedBy: string
+    structure: string[]
+    acknowledgedRisk: boolean
+  }) => void
   onClose: () => void
 }) {
   const [viceId, setViceId] = useState("nicotine")
@@ -132,7 +139,7 @@ export function AttemptStart({
           <QuietButton onClick={onClose}>Cancel</QuietButton>
           <PrimaryButton
             disabled={blocked}
-            onClick={() => onStart({ viceId, label: vice.label, startedOn, startedBy, structure })}
+            onClick={() => onStart({ viceId, label: vice.label, startedOn, startedBy, structure, acknowledgedRisk: acknowledged })}
           >
             Start the run
           </PrimaryButton>

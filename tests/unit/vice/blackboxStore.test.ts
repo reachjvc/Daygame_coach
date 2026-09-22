@@ -19,7 +19,7 @@ import { VICE_STORAGE_KEY } from "@/src/vice/viceService"
 function started() {
   return startAttempt(emptyRecord(), {
     viceId: "smoking", label: "Cigarettes", startedOn: "2026-08-16",
-    startedBy: "Read my own record", structure: ["Told my brother"],
+    startedBy: "Read my own record", structure: ["Told my brother"], acknowledgedRisk: false,
   })
 }
 
@@ -163,7 +163,7 @@ describe("faults found in review", () => {
     const before = emptyRecord()
     const after = startAttempt(before, {
       viceId: "nicotine", label: "Cigarettes", startedOn: "16/08/2026",
-      startedBy: "", structure: [],
+      startedBy: "", structure: [], acknowledgedRisk: false,
     })
     expect(after.attempts).toHaveLength(0)
   })
@@ -221,7 +221,7 @@ describe("a run you already had", () => {
   const past = {
     viceId: "nicotine", label: "Cigarettes",
     startedOn: "2025-02-10", endedOn: "2025-05-09",
-    startedBy: "", structure: [],
+    startedBy: "", structure: [], acknowledgedRisk: false,
     ending: "fine" as const, thought: "Three months in, one at the wedding",
   }
 

@@ -65,7 +65,7 @@ describe("the numbers say what the screen claims they say", () => {
    */
   it("ranks a rare expensive thought above a frequent harmless one", () => {
     let r = emptyRecord()
-    r = startAttempt(r, { viceId: "s", label: "Cigarettes", startedOn: "2026-01-01", startedBy: "", structure: [] })
+    r = startAttempt(r, { viceId: "s", label: "Cigarettes", startedOn: "2026-01-01", startedBy: "", structure: [], acknowledgedRisk: false })
     const long = r.attempts[0].id
     for (let i = 0; i < 5; i++) {
       r = fileReport(r, {
@@ -97,7 +97,7 @@ describe("the numbers say what the screen claims they say", () => {
    */
   it("no headline number falls when a run ends", () => {
     let r = emptyRecord()
-    r = startAttempt(r, { viceId: "s", label: "Cigarettes", startedOn: "2026-08-01", startedBy: "", structure: [] })
+    r = startAttempt(r, { viceId: "s", label: "Cigarettes", startedOn: "2026-08-01", startedBy: "", structure: [], acknowledgedRisk: false })
     const before = stats(r, TODAY)
     r = fileReport(r, {
       attemptId: r.attempts[0].id, at: `${TODAY}T22:00:00.000Z`, wentThrough: true,
@@ -119,7 +119,7 @@ describe("the numbers say what the screen claims they say", () => {
    */
   it("filing a close call costs the record nothing", () => {
     let r = emptyRecord()
-    r = startAttempt(r, { viceId: "s", label: "Cigarettes", startedOn: "2026-08-01", startedBy: "", structure: [] })
+    r = startAttempt(r, { viceId: "s", label: "Cigarettes", startedOn: "2026-08-01", startedBy: "", structure: [], acknowledgedRisk: false })
     const before = stats(r, TODAY)
     r = fileReport(r, {
       attemptId: r.attempts[0].id, at: `${TODAY}T22:00:00.000Z`, wentThrough: false,

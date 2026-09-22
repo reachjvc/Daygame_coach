@@ -32,8 +32,9 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { afterEach, describe, expect, it } from "vitest"
 import type { BlackBoxRecord, ViceAttempt, ViceReport } from "@/src/vice/types"
 import { chartSpan, laneGeometry, runLanes, stats, thoughtCosts, viceLabelOf } from "@/src/vice/blackboxService"
-import { importRecord, recordPastRun } from "@/src/vice/blackbox/blackboxStore"
+import { importRecord, recordPastRun, riskGateBlocks, startAttempt } from "@/src/vice/blackbox/blackboxStore"
 import { Lanes } from "@/src/vice/components/blackbox/Lanes"
+import { VICES } from "@/src/vice/data/vices"
 
 afterEach(cleanup)
 
@@ -277,6 +278,42 @@ describe("two runs never cover the same day", () => {
       thought: "",
     })
     expect(after.attempts).toHaveLength(1)
+  })
+})
+
+describe("the withdrawal gate, which is the one thing here that can hurt somebody", () => {
+  const start = (viceId: string, acknowledgedRisk: boolean) =>
+    startAttempt(
+      { version: 1, attempts: [], reports: [] },
+      { viceId, label: "x", startedOn: "2026-09-01", startedBy: "", structure: [], acknowledgedRisk },
+    )
+
+  it("refuses to start a run off alcohol until the note is acknowledged", () => {
+    // Alcohol and benzodiazepine withdrawal can kill. The old module gates
+    // this in viceService AND on the button; the Black Box shipped with the
+    // button half only, and a component-only gate is one refactor from gone.
+    expect(start("alcohol", false).attempts).toHaveLength(0)
+    expect(start("alcohol", true).attempts).toHaveLength(1)
+  })
+
+  it("does not stand in the way of a vice that carries no such risk", () => {
+    expect(start("nicotine", false).attempts).toHaveLength(1)
+    expect(start("scrolling", false).attempts).toHaveLength(1)
+  })
+
+  it("asks the catalogue rather than keeping its own list of what is risky", () => {
+    // If a vice is added with medicalRisk, the gate covers it with no edit here.
+    for (const v of VICES.filter((x) => x.medicalRisk)) {
+      expect(riskGateBlocks(v.id, false), `${v.id} must be gated`).toBe(true)
+      expect(riskGateBlocks(v.id, true)).toBe(false)
+    }
+    expect(VICES.some((v) => v.medicalRisk)).toBe(true)
+  })
+
+  it("treats a vice it does not recognise as unrisky rather than guessing", () => {
+    // An id off the catalogue cannot be looked up; refusing it here would
+    // block every imported record instead of protecting anybody.
+    expect(riskGateBlocks("not-a-vice", false)).toBe(false)
   })
 })
 
