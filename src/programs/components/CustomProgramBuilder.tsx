@@ -158,6 +158,8 @@ export function CustomProgramBuilder({
   /** The "Name this week" dialog, and what has been typed into it. */
   const [naming, setNaming] = useState(false)
   const [typedName, setTypedName] = useState("")
+  /** Whether this naming is a FRESH copy, which pauses the running one. */
+  const [restarting, setRestarting] = useState(false)
   /** What starting this week pushed aside, so it can be said out loud. */
   const [displacedNames, setDisplacedNames] = useState<string[]>([])
   /**
@@ -493,10 +495,11 @@ export function CustomProgramBuilder({
                   <button
                     type="button"
                     onClick={() => {
-                      if (
-                        !confirm("This pauses the copy you are on and starts from your typed weights.")
-                      )
-                        return
+                      // The warning lives in the naming dialog below, where
+                      // the decision is actually made. It was a confirm() in
+                      // front of that dialog: two boxes for one choice, and
+                      // the first one suppressible.
+                      setRestarting(true)
                       setTypedName(suggestedName)
                       setNaming(true)
                     }}
@@ -553,12 +556,19 @@ export function CustomProgramBuilder({
       {/* NAME IT BEFORE IT STARTS. Without a name every week somebody writes
           is called "Your own program" — the shared catalogue shell — in the
           live header, in History and on the Tracking card at once. */}
-      <Dialog open={naming} onOpenChange={setNaming}>
+      <Dialog
+        open={naming}
+        onOpenChange={(v) => {
+          setNaming(v)
+          if (!v) setRestarting(false)
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Name this week</DialogTitle>
             <DialogDescription>
               This is what it will be called on Training, on Tracking and in your history.
+              {restarting && " Starting it pauses the copy you are on and begins from your typed weights."}
             </DialogDescription>
           </DialogHeader>
           <Input

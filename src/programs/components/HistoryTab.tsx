@@ -16,6 +16,15 @@
 import { useCallback, useEffect, useState } from "react"
 import { ChevronDown, ChevronRight, Loader2, Pencil, Trash2, X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { collapseSets, describeSessionRow, isWorkingSet } from "@/src/health/healthService"
 import { fromKg, toKg } from "../programsService"
 import { UNIT_CONFIG } from "../config"
@@ -74,6 +83,8 @@ export function HistoryTab({
   const [state, setState] = useState<"loading" | "ready" | "failed">("loading")
   const [open, setOpen] = useState<Set<string>>(new Set())
   const [error, setError] = useState<string | null>(null)
+  /** The workout a delete is being confirmed for. */
+  const [confirming, setConfirming] = useState<WorkoutLogWithSets | null>(null)
   /** The workout being corrected, and the rows as they are being edited. */
   const [editing, setEditing] = useState<string | null>(null)
   const [draft, setDraft] = useState<EditableSet[]>([])
@@ -126,8 +137,7 @@ export function HistoryTab({
   const showTotal = (kg: number) => Math.round(fromKg(kg, unit)).toLocaleString()
 
   async function remove(log: WorkoutLogWithSets) {
-    const when = new Date(log.logged_at).toLocaleDateString(undefined, DAY)
-    if (!window.confirm(`Delete the workout from ${when}? Everything in it goes with it.`)) return
+    setConfirming(null)
     setError(null)
     try {
       const res = await fetch(`/api/health/workout?id=${log.id}`, { method: "DELETE" })
@@ -270,6 +280,37 @@ export function HistoryTab({
 
   return (
     <div data-testid="workout-history">
+      <Dialog open={confirming !== null} onOpenChange={(v) => !v && setConfirming(null)}>
+        <DialogContent>
+          {confirming && (
+            <>
+              <DialogHeader>
+                <DialogTitle>
+                  Delete the workout from{" "}
+                  {new Date(confirming.logged_at).toLocaleDateString(undefined, DAY)}?
+                </DialogTitle>
+                {/* NAMES WHAT GOES. A workout's sets are the thing lifters say
+                    they fear losing, and unlike removing a finished PROGRAM —
+                    where they survive — this really does take them. */}
+                <DialogDescription>
+                  {(confirming.sets ?? []).length > 0
+                    ? `Its ${(confirming.sets ?? []).length} sets go with it. This cannot be undone.`
+                    : "Everything in it goes with it. This cannot be undone."}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="destructive"
+                  data-testid="confirm-delete-workout"
+                  onClick={() => void remove(confirming)}
+                >
+                  Delete it
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
       {error && <p className="text-xs text-destructive">{error}</p>}
 
       {/* THE ONE WAY IN FOR A SESSION YOU ALREADY DID. History is where you
@@ -572,7 +613,7 @@ export function HistoryTab({
                       than on the row you tap to open it. */}
                   <button
                     type="button"
-                    onClick={() => void remove(log)}
+                    onClick={() => setConfirming(log)}
                     aria-label={`Delete the workout from ${new Date(log.logged_at).toLocaleDateString(undefined, DAY)}`}
                     data-testid={`history-delete-${log.id}`}
                     className="ml-2 inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"

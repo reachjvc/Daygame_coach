@@ -209,14 +209,31 @@ describe("a design that is already running", () => {
   it("offers a fresh copy, and says what that costs before doing it", async () => {
     const user = userEvent.setup()
     const posted = server([running()])
-    const asked = vi.fn<(message?: string) => boolean>(() => false)
-    vi.stubGlobal("confirm", asked)
     builder({ startedEnrollmentId: "e-running" })
 
     await user.click(await screen.findByRole("button", { name: /start a fresh copy/i }))
 
-    expect(String(asked.mock.calls[0]?.[0])).toMatch(/pauses the copy you are on/i)
-    // Dismissed, so nothing was started.
+    /**
+     * The warning used to be a `confirm()` box in FRONT of the naming dialog:
+     * two boxes for one decision, and the first one suppressible by some
+     * mobile browsers — which would have started a fresh copy, pausing a
+     * running program, with nothing asked.
+     *
+     * It is inside the dialog now, where the choice is actually made.
+     */
+    expect(screen.getByText(/pauses the copy you are on/i)).toBeTruthy()
+    // Nothing started merely by opening it.
     expect(posted).toHaveLength(0)
+  })
+
+  it("does not warn about pausing when there is nothing running to pause", async () => {
+    const user = userEvent.setup()
+    server([])
+    builder({ startedEnrollmentId: null })
+
+    await user.click(await screen.findByRole("button", { name: /start tracking this/i }))
+
+    // Same dialog, and the sentence would be false here.
+    expect(screen.queryByText(/pauses the copy you are on/i)).toBeNull()
   })
 })

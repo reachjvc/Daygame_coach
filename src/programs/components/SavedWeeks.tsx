@@ -20,6 +20,15 @@
  */
 
 import { useCallback, useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Loader2, Save, Trash2, Upload } from "lucide-react"
 import { numericWeights } from "../builder"
 import type { ProgramSchedule, UnitSystem } from "../types"
@@ -65,6 +74,8 @@ export function SavedWeeks({ schedule, unit, weights, onLoad, loadedId = null, l
    */
   const [state, setState] = useState<"loading" | "ready" | "failed">("loading")
   const [name, setName] = useState("")
+  /** The week a delete is being confirmed for. */
+  const [confirming, setConfirming] = useState<Draft | null>(null)
 
   /**
    * The name box follows the week that was loaded.
@@ -158,7 +169,7 @@ export function SavedWeeks({ schedule, unit, weights, onLoad, loadedId = null, l
   }
 
   async function remove(draft: Draft) {
-    if (!window.confirm(`Delete the saved week "${draft.name}"? This does not touch anything you have already logged.`)) return
+    setConfirming(null)
     setError(null)
     try {
       const res = await fetch(`/api/programs/drafts/${draft.id}`, { method: "DELETE" })
@@ -172,8 +183,37 @@ export function SavedWeeks({ schedule, unit, weights, onLoad, loadedId = null, l
     }
   }
 
+  const confirmDialog = (
+    <Dialog open={confirming !== null} onOpenChange={(v) => !v && setConfirming(null)}>
+      <DialogContent>
+        {confirming && (
+          <>
+            <DialogHeader>
+              <DialogTitle>Delete the saved week &ldquo;{confirming.name}&rdquo;?</DialogTitle>
+              {/* The reassurance is the useful half: people hesitate here
+                  because they think it takes their training with it. */}
+              <DialogDescription>
+                This does not touch anything you have already logged.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="destructive"
+                data-testid="confirm-delete-week"
+                onClick={() => void remove(confirming)}
+              >
+                Delete it
+              </Button>
+            </DialogFooter>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+
   return (
     <div className="space-y-2.5 rounded-lg border border-white/10 bg-white/[0.02] p-3">
+      {confirmDialog}
       <div className="flex items-baseline justify-between gap-2">
         <h3 className="text-[12.5px] font-medium text-zinc-200">Your saved weeks</h3>
         <span className="text-[11px] text-zinc-500">
@@ -236,7 +276,7 @@ export function SavedWeeks({ schedule, unit, weights, onLoad, loadedId = null, l
               </button>
               <button
                 type="button"
-                onClick={() => void remove(d)}
+                onClick={() => setConfirming(d)}
                 aria-label={`Delete ${d.name}`}
                 className="flex size-8 shrink-0 items-center justify-center rounded-md text-zinc-500 transition-colors hover:bg-white/5 hover:text-zinc-300"
               >
