@@ -28,8 +28,13 @@ import * as path from "path"
 const root = path.resolve(__dirname, "../../..")
 const claudeMd = fs.readFileSync(path.join(root, "CLAUDE.md"), "utf8")
 
-/** The orientation is everything above the `## Commands` heading. */
-const orientation = claudeMd.split("\n## Commands")[0]
+/**
+ * The map moved out of CLAUDE.md on 2026-09-19. It was 1,300 words loaded into
+ * every session whether or not anyone needed them, and the owner was right that
+ * a 4,000-word preamble is not how you get a rule followed. It now costs one
+ * deliberate read, and CLAUDE.md carries the line that sends you to it.
+ */
+const orientation = fs.readFileSync(path.join(root, "docs/product/map.md"), "utf8")
 
 function dirsIn(rel: string): string[] {
   return fs
@@ -38,7 +43,7 @@ function dirsIn(rel: string): string[] {
     .map((e) => e.name)
 }
 
-describe("the orientation in CLAUDE.md", () => {
+describe("the product map in docs/product/map.md", () => {
   it("names every slice under src/", () => {
     const missing = dirsIn("src").filter((slice) => !orientation.includes(`\`${slice}/\``))
 
@@ -75,8 +80,33 @@ describe("the orientation in CLAUDE.md", () => {
       "## The slices, one line each",
       "## The data",
       "## Live, lab, or dead",
-    ]) {
-      expect(orientation, `CLAUDE.md lost its "${heading}" section.`).toContain(heading)
+      ]) {
+      expect(orientation, `docs/product/map.md lost its "${heading}" section.`).toContain(heading)
     }
+  })
+
+  it("is still reachable from CLAUDE.md, which is the only file always loaded", () => {
+    // A map nobody is sent to is the 482 deleted docs all over again.
+    expect(claudeMd, "CLAUDE.md no longer sends anyone to docs/product/map.md.").toContain(
+      "docs/product/map.md",
+    )
+  })
+
+  it("still points at the owner's vision, and the vision still has items", () => {
+    // The vision is the one file that says what the product is FOR. A pointer to
+    // a file nobody keeps is the failure the 482 deleted docs were, so both ends
+    // are checked: the orientation names it, and it still carries numbered items
+    // for a plan or a reply to cite.
+    const rel = "docs/product/vision.md"
+    expect(claudeMd, `CLAUDE.md no longer points at ${rel}.`).toContain(rel)
+
+    const vision = path.join(root, rel)
+    expect(fs.existsSync(vision), `${rel} is missing; the orientation points at it.`).toBe(true)
+
+    const items = fs
+      .readFileSync(vision, "utf8")
+      .split("\n")
+      .filter((line) => /^\d+\. \S/.test(line))
+    expect(items.length, `${rel} has no numbered items left.`).toBeGreaterThan(0)
   })
 })

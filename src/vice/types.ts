@@ -446,3 +446,173 @@ export interface ViceHandlers {
   /** Move to the next step. Supplied by the flow shell. */
   nextStep: () => void
 }
+
+// ================================================================ black box
+
+/**
+ * THE BLACK BOX — every run you have had, and every night you nearly went.
+ *
+ * This is a separate record from `ViceState` above, under its own storage key,
+ * and it is deliberately shaped like database rows rather than like a screen:
+ * two flat, append-only lists with stable ids and ISO dates, nothing derived
+ * ever stored. The platform move (leaving Supabase, decided 2026-09-17) turns
+ * `blackboxStore` into a repo and changes nothing else. Data born in a shape
+ * that cannot move is the thing that kills a record you intend to keep for
+ * years, and this record is worthless unless it survives years.
+ */
+
+/**
+ * How a run ended.
+ *
+ * The ids come from the corpus taxonomy already used by `data/again.ts`, so the
+ * two surfaces cannot disagree about what the endings are. `fine` is the one
+ * the whole module is built around — across eight sources the hazard is the good
+ * stretch rather than the bad night — and it is the only family the chart gives
+ * an accent colour to.
+ */
+export type ViceEndingId = "fine" | "justone" | "drink" | "stress" | "faded" | "other"
+
+/**
+ * One period of not doing it.
+ *
+ * `startedBy` and `structure` exist because the owner asked for what got a run
+ * going and what kept it underway, not only what ended it — the accounts are
+ * consistent that what separates a durable attempt from a fragile one is
+ * structural, and structure is only visible if somebody wrote it down at the
+ * start.
+ */
+export interface ViceAttempt {
+  id: string
+  /** Catalogue id or `custom`. Carried from day one so a second vice is not a migration. */
+  viceId: string
+  /** What the person calls it. */
+  label: string
+  /** YYYY-MM-DD in the person's own calendar, never a server day. */
+  startedOn: string
+  /** What got it going this time. */
+  startedBy: string
+  /** What they put in place to keep it going. */
+  structure: string[]
+  /** YYYY-MM-DD, or null while the run is still alive. */
+  endedOn: string | null
+  /** The report that ended it, or null while it is still alive. */
+  endedByReportId: string | null
+}
+
+/**
+ * One filed report — a night you nearly went, or a night you did.
+ *
+ * ONE FORM FOR BOTH, and `wentThrough` is the only field that differs. This is
+ * taken from the Aviation Safety Reporting System, which has collected
+ * voluntary close-call reports since 1976 on the premise that the chain behind
+ * a near miss is the same chain as behind the accident. Giving near misses a
+ * lighter, separate form is how they become second-class and stop being filed,
+ * and a log holding only your defeats is the object that makes the next one
+ * likelier rather than rarer.
+ */
+export interface ViceReport {
+  id: string
+  attemptId: string
+  /** ISO datetime, written in the browser. */
+  at: string
+  /** The one field that separates a close call from a relapse. */
+  wentThrough: boolean
+  /** The rationalisation, in the person's own words. */
+  thought: string
+  /** Which family the thought belongs to. Fixed per family, so the chart's accent never moves. */
+  ending: ViceEndingId
+  /** 0–10, how close it got. Null when they did not say. */
+  closeness: number | null
+  /**
+   * Who they were with.
+   *
+   * In a study of 791 quitters and 37,002 craving entries, being alone was a
+   * top-five predictor of whether a craving became a lapse. `ViceEpisode` above
+   * records `where` and has no field for company, and `data/again.ts` asks in
+   * prose whether past attempts "ended in the same company" with no way to
+   * answer it. This is that field.
+   */
+  withWhom: string
+  where: string
+  /**
+   * Contributing factors, PLURAL.
+   *
+   * Never "the reason". A blameless postmortem asks for two to five systemic
+   * contributors precisely because a single root cause is always a story told
+   * afterwards; "I thought I could moderate" was never the whole chain, and a
+   * form that asks for one answer collects one shallow answer.
+   */
+  factors: string[]
+  /** What they did instead. Only meaningful on a close call. */
+  didInstead: string
+}
+
+/** The whole record. Two flat lists; everything else is derived at read time. */
+export interface BlackBoxRecord {
+  version: 1
+  attempts: ViceAttempt[]
+  reports: ViceReport[]
+}
+
+// ------------------------------------------------------- derived, never stored
+
+/** One row of the runs chart. */
+export interface RunLane {
+  attempt: ViceAttempt
+  /** Whole days the run has lasted, to today when it is still alive. */
+  days: number
+  /**
+   * The calendar days close calls were filed on, oldest first.
+   *
+   * The DAYS, not a count. The chart draws a dot per close call and the whole
+   * reading the chart promises — "dense ticks before an ending" means one
+   * problem, "sparse ticks" means a different one — is a claim about WHEN they
+   * happened. A count can only be spread evenly, which manufactures the first
+   * reading for every run that has any.
+   */
+  closeCallDays: string[]
+  /** Null while the run is alive. */
+  ending: ViceEndingId | null
+  /** Whether the run is still going. */
+  live: boolean
+}
+
+/** One row of "what each thought has cost you". */
+export interface ThoughtCost {
+  ending: ViceEndingId
+  /** The family's plain-English name. */
+  label: string
+  /** The person's own most recent phrasing of it, when they wrote one. */
+  ownWords: string
+  /** Runs this family ended. */
+  runsEnded: number
+  /** Clean days inside the runs it ended — the number the ranking uses. */
+  daysEnded: number
+  /** Times it was filed and survived. */
+  survived: number
+}
+
+/** The three numbers at the top. */
+export interface BlackBoxStats {
+  longestDays: number
+  totalCleanDays: number
+  /** Null when no run is alive. */
+  currentDays: number | null
+  runs: number
+  closeCallsSurvived: number
+}
+
+/** What the "I'm having a thought" door answers with. */
+export interface ThoughtAnswer {
+  ending: ViceEndingId
+  label: string
+  /** Every previous time this family was filed, newest first. */
+  history: ViceReport[]
+  /** Runs it ended, and the clean days they held. */
+  runsEnded: number
+  daysEnded: number
+  /** Times it was filed and did NOT win. */
+  survived: number
+  /** True when there is nothing to say yet, so the screen says so instead of inventing a pattern. */
+  empty: boolean
+}

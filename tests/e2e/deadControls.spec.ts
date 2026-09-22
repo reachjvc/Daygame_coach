@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test"
-import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { QUIT_VICE, viceStep } from "@/src/shared/lifeMasteryRoutes"
 
 /**
  * Dead-control sweep.
@@ -16,6 +16,17 @@ import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
  * report anything that produces neither.
  */
 
+/**
+ * The old hub moved on 2026-09-20: `/quit-vice` became the Black Box and the
+ * hub went to `/quit-vice/old`. This file kept pointing at `/quit-vice`, so
+ * the hub sweep waited thirty seconds for a `data-hydrated` the Black Box did
+ * not set, went red, and covered NEITHER module. It is two constants now so
+ * the next move cannot quietly turn this suite into a no-op again.
+ */
+const OLD_HUB = viceStep("old")
+/** The Black Box, which is what the front door serves now. */
+const BLACK_BOX = QUIT_VICE
+/** The flows and modules did NOT move; only the hub did. */
 const HUB = QUIT_VICE
 const FLOWS = ["where", "gives", "map", "experiment", "line", "week"] as const
 
@@ -41,7 +52,11 @@ async function sweep(page: Page, tag: string): Promise<string[]> {
       if (!text) { faults.push(`NO LABEL @ ${where}`); return }
       // Reset controls and the copy confirmation are excluded: one is
       // destructive, the other intentionally shows transient text.
-      if (/start over|yes, start over|keep it|copy it all|copied|blocked the copy/i.test(text)) return
+      // "Save a copy" is excluded for a third reason: its whole effect is a
+      // file download, which this in-page probe cannot observe at all. It is
+      // not inert — `tests/unit/vice/blackboxStore.test.ts` covers what it
+      // writes — and reporting it would teach people to ignore this list.
+      if (/start over|yes, start over|keep it|copy it all|copied|blocked the copy|save a copy/i.test(text)) return
       // Re-selecting the option that is already selected is meant to be inert.
       if (btn.getAttribute("aria-pressed") === "true") return
       const key = `${where}::${text}`
@@ -54,14 +69,16 @@ async function sweep(page: Page, tag: string): Promise<string[]> {
       // wrong, not the product.
       if ((btn as HTMLElement).offsetParent === null || btn.disabled) return
 
-      const before = document.body.innerHTML.length + "|" + (localStorage.getItem("quit-vice-v1") || "").length
+      const stored = () =>
+        (localStorage.getItem("quit-vice-v1") || "").length + ":" + (localStorage.getItem("vice-blackbox-v1") || "").length
+      const before = document.body.innerHTML.length + "|" + stored()
       let mutated = false
       const obs = new MutationObserver(() => { mutated = true })
       obs.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true })
       try { btn.click() } catch { faults.push(`THREW "${text}" @ ${where}`); obs.disconnect(); return }
       await sleep(70)
       obs.disconnect()
-      const after = document.body.innerHTML.length + "|" + (localStorage.getItem("quit-vice-v1") || "").length
+      const after = document.body.innerHTML.length + "|" + stored()
       if (!mutated && before === after) faults.push(`DEAD "${text}" @ ${where}`)
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
       await sleep(55)
@@ -96,7 +113,7 @@ test("no dead controls on the hub, in any version", async ({ page }) => {
   test.setTimeout(180000)
   const all: string[] = []
   for (const v of ["plain", "guided", "full"]) {
-    await page.goto(HUB, { waitUntil: "domcontentloaded" })
+    await page.goto(OLD_HUB, { waitUntil: "domcontentloaded" })
     await page.evaluate((ver) => {
       localStorage.removeItem("quit-vice-v1")
       localStorage.setItem("quit-vice-version", ver)
@@ -134,3 +151,32 @@ for (const flow of FLOWS) {
     expect(faults, `dead controls in ${flow}:\n  ${faults.join("\n  ")}`).toEqual([])
   })
 }
+
+test("no dead controls on the Black Box", async ({ page }) => {
+  test.setTimeout(120000)
+  // The front door, swept on both states that render a different screen: an
+  // empty record, and one with a run going. Neither module was covered at all
+  // between 2026-09-20 and this test.
+  const started = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10)
+  const live = {
+    version: 1,
+    attempts: [{
+      id: "a1", viceId: "nicotine", label: "Smoking or vaping", startedOn: started,
+      startedBy: "Read my own record", structure: ["Told a specific person"],
+      endedOn: null, endedByReportId: null,
+    }],
+    reports: [],
+  }
+  const all: string[] = []
+  for (const [tag, record] of [["empty", null], ["live", live]] as const) {
+    await page.goto(BLACK_BOX, { waitUntil: "domcontentloaded" })
+    await page.evaluate((r) => {
+      if (r === null) localStorage.removeItem("vice-blackbox-v1")
+      else localStorage.setItem("vice-blackbox-v1", JSON.stringify(r))
+    }, record)
+    await page.reload({ waitUntil: "domcontentloaded" })
+    await settled(page)
+    all.push(...(await sweep(page, `blackbox:${tag}`)))
+  }
+  expect(all, `dead controls:\n  ${all.join("\n  ")}`).toEqual([])
+})

@@ -236,8 +236,12 @@ export function RoutineCard({
               className="block rounded-xl border border-violet-400/25 bg-violet-500/[0.06] px-3.5 py-2.5 hover:border-violet-400/50 hover:bg-violet-500/[0.1] transition-colors"
             >
               <span className="block text-[12px] text-violet-100">Working on one of these properly →</span>
+              {/* Describes what the address actually serves. It promised "four
+                  ways through quitting something, an urge tool and a debrief"
+                  until 2026-09-22 — the old hub, which moved to /quit-vice/old
+                  on the 20th. The door said one thing and opened onto another. */}
               <span className="block text-[10.5px] text-violet-200/60 mt-0.5 leading-relaxed">
-                Four ways through quitting something, an urge tool that needs no setup, and a debrief for after a slip. Ticking a box here is the scoreboard; that is the work.
+                Every run you have had on one chart, the nights you nearly went marked along it, and what each thought has cost you. Ticking a box here is the scoreboard; that is the work.
               </span>
             </Link>
           )}

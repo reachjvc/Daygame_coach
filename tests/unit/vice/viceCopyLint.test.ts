@@ -69,6 +69,7 @@ import {
   VALUES,
   VALUES_STEP,
 } from "@/src/vice/data/gives"
+import { ENDING_FAMILIES, FACTOR_SEEDS, STRUCTURE_SEEDS } from "@/src/vice/data/blackbox"
 
 interface Violation { where: string; rule: string; text: string }
 const violations: Violation[] = []
@@ -118,6 +119,18 @@ const label = (where: string, text: string) => lintAll(where, text, { prose: fal
 
 describe("quit-a-vice copy lint", () => {
   it("finds zero violations across every user-facing string", () => {
+    // --- the black box
+    // New copy is added here on the same day it is written. Copy that is not
+    // linted is where drift starts, and every rule above was bought by a real
+    // string that drifted.
+    for (const family of ENDING_FAMILIES) {
+      label(`ENDING_FAMILIES.${family.id}.label`, family.label)
+      label(`ENDING_FAMILIES.${family.id}.short`, family.short)
+      prose(`ENDING_FAMILIES.${family.id}.sounds`, family.sounds)
+    }
+    FACTOR_SEEDS.forEach((seed, i) => label(`FACTOR_SEEDS[${i}]`, seed))
+    STRUCTURE_SEEDS.forEach((seed, i) => label(`STRUCTURE_SEEDS[${i}]`, seed))
+
     // --- the vice catalogue
     for (const vice of VICES) {
       label(`VICES.${vice.id}.label`, vice.label)

@@ -1,7 +1,7 @@
 "use client"
 
-import { ViceHub } from "@/src/vice/components/ViceHub"
+import { BlackBoxPage } from "@/src/vice/components/blackbox/BlackBoxPage"
 
 export default function QuitVicePage() {
-  return <ViceHub />
+  return <BlackBoxPage />
 }
