@@ -36,7 +36,6 @@ import {
   isMilestone,
   datedRungs,
   milestoneCheckpoints,
-  parseProgression,
   isSystem,
   areaOfferNote,
   areaReview,
@@ -50,6 +49,7 @@ import {
   suggestedActions,
   targetsForTemplate,
   templateFootprint,
+  routineHasLibraryStep,
   templatesInArea,
 } from "@/src/goals/northStarService"
 import { MilestoneBuilder } from "./GoalCard"
@@ -1013,7 +1013,7 @@ function AreaOffers({ plan, area, handlers, half }: {
               <p className="text-[10.5px] text-zinc-600 mt-0.5 leading-relaxed">{BUILDER_COPY.practicesHelp}</p>
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {practices.map((p) => {
-                  const on = plan.routines.some((r) => r.blueprintId === p.blueprintId && r.steps.some((s) => s.id === p.stepId))
+                  const on = plan.routines.some((r) => r.blueprintId === p.blueprintId && routineHasLibraryStep(r, p.stepId))
                   return (
                     <button
                       key={`${p.blueprintId}-${p.stepId}`}

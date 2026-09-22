@@ -49,6 +49,7 @@ import {
   presetDate,
   seasonAreas,
   suggestedActions,
+  routineHasLibraryStep,
   targetsForTemplate,
 } from "@/src/goals/northStarService"
 import type { RoutineNeed } from "@/src/goals/data/northStarBuild"
@@ -478,7 +479,7 @@ function Offers({ plan, area, handlers }: { plan: NsPlan; area: NsArea; handlers
               <p className="text-[10px] text-zinc-600 mb-1">Practices go into a routine rather than the goal list.</p>
               <div className="flex flex-wrap gap-1.5">
                 {practices.map((p) => {
-                  const on = plan.routines.some((r) => r.blueprintId === p.blueprintId && r.steps.some((s) => s.id === p.stepId))
+                  const on = plan.routines.some((r) => r.blueprintId === p.blueprintId && routineHasLibraryStep(r, p.stepId))
                   return (
                     <button
                       key={`${p.blueprintId}-${p.stepId}`}

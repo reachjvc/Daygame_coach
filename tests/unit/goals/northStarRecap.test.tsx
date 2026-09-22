@@ -269,6 +269,17 @@ describe("ticking a practice off from the page you read it on", () => {
     return toggleRoutineStep(plan, morning.id, "star", NOW)
   }
 
+  /**
+   * The id the LOG is keyed by, for the step that came from a library entry.
+   * The step's own id is a counter value; `libraryStepId` says where it came
+   * from. Ticks and journal answers hang off the former.
+   */
+  function plantedId(plan: NsPlan, libraryStepId: string): string {
+    const step = plan.routines.flatMap((r) => r.steps).find((s) => s.libraryStepId === libraryStepId)
+    if (!step) throw new Error(`no step from library entry "${libraryStepId}"`)
+    return step.id
+  }
+
   it("offers to start tracking when nothing in the plan runs it", () => {
     const { running, offer } = practiceState(fullPlan(), "star", TODAY)
     expect(running).toEqual([])
@@ -278,8 +289,11 @@ describe("ticking a practice off from the page you read it on", () => {
   })
 
   it("never offers a second copy of something already running", () => {
-    const { running, offer } = practiceState(planTracking(), "star", TODAY)
-    expect(running.map((p) => p.stepId)).toEqual(["star"])
+    const plan = planTracking()
+    const { running, offer } = practiceState(plan, "star", TODAY)
+    // `stepId` on a running practice is the plan's step, not the library entry
+    // — it is what the tick and the journal are keyed by.
+    expect(running.map((p) => p.stepId)).toEqual([plantedId(plan, "star")])
     expect(offer).toBeNull()
   })
 
@@ -292,7 +306,7 @@ describe("ticking a practice off from the page you read it on", () => {
       ...plan,
       routines: plan.routines.map((r) =>
         r.id === night.id
-          ? { ...r, steps: [...r.steps, { id: "s99", title: "Read my north star before bed", minutes: 2, daysPerWeek: 7, dimension: null, servesGoalIds: [], days: [], startMin: null, goesTo: "star", asks: null }] }
+          ? { ...r, steps: [...r.steps, { id: "s99", libraryStepId: null, title: "Read my north star before bed", minutes: 2, daysPerWeek: 7, dimension: null, servesGoalIds: [], days: [], startMin: null, goesTo: "star", asks: null }] }
           : r
       ),
     }
@@ -305,18 +319,21 @@ describe("ticking a practice off from the page you read it on", () => {
     // One event, not two tallies. If these ever became separate stores, a plan
     // would say it was read here and not read there.
     const plan = planTracking()
-    expect(stepLogged(plan, TODAY, "star")).toBe(false)
-    const ticked = toggleStepLogged(plan, TODAY, "star")
-    expect(stepLogged(ticked, TODAY, "star")).toBe(true)
+    const starStep = plantedId(plan, "star")
+    expect(stepLogged(plan, TODAY, starStep)).toBe(false)
+    const ticked = toggleStepLogged(plan, TODAY, starStep)
+    expect(stepLogged(ticked, TODAY, starStep)).toBe(true)
     expect(practiceState(ticked, "star", TODAY).running[0].doneToday).toBe(true)
   })
 
   it("renders the tick under the north star, and presses it", () => {
     const onTickPractice = vi.fn()
-    show(planTracking(), { onTickPractice })
+    const plan = planTracking()
+    show(plan, { onTickPractice })
     const block = screen.getByText(RECAP_COPY.starTitle).closest("section")!
     fireEvent.click(within(block).getByText(RECAP_COPY.practiceTick))
-    expect(onTickPractice).toHaveBeenCalledWith("star")
+    // The row hands back the STEP's id, because that is what the log is keyed by.
+    expect(onTickPractice).toHaveBeenCalledWith(plantedId(plan, "star"))
   })
 
   it("presses the offer when nothing runs it yet", () => {
@@ -331,12 +348,12 @@ describe("ticking a practice off from the page you read it on", () => {
     const plan = fullPlan()
     const started = trackPractice(plan, "morning", "star", NOW)
     const morning = started.routines.find((r) => r.blueprintId === "morning")!
-    expect(morning.steps.filter((s) => s.id === "star")).toHaveLength(1)
+    expect(morning.steps.filter((s) => s.libraryStepId === "star")).toHaveLength(1)
     expect(started.routines).toHaveLength(plan.routines.length)
 
     // Pressing it twice must not stack two identical lines in the routine.
     const again = trackPractice(started, "morning", "star", NOW)
-    expect(again.routines.find((r) => r.blueprintId === "morning")!.steps.filter((s) => s.id === "star")).toHaveLength(1)
+    expect(again.routines.find((r) => r.blueprintId === "morning")!.steps.filter((s) => s.libraryStepId === "star")).toHaveLength(1)
 
     // The identity lines live only in the manifestation stack, which no plan
     // starts with, so that one really does have to create a routine.

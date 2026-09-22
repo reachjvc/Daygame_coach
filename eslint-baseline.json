@@ -1,7 +1,7 @@
 {
   "_comment": "Lint errors that already existed, by file and rule. May only shrink. Regenerate with: node scripts/lint-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
   "_format": "eslint-findings-v1",
-  "total": 341,
+  "total": 338,
   "files": {
     "app/api/goals/[id]/route.ts": {
       "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1
@@ -339,9 +339,6 @@
       "@typescript-eslint/no-unused-vars: 'SHARED_DRIVERS' is defined but never used.": 1,
       "@typescript-eslint/no-unused-vars: 'TARGETS' is defined but never used.": 1
     },
-    "src/goals/components/north-star/AreaBuilder.tsx": {
-      "@typescript-eslint/no-unused-vars: 'parseProgression' is defined but never used.": 1
-    },
     "src/goals/components/setup/DirectionStep.tsx": {
       "@typescript-eslint/no-unused-vars: 'i' is defined but never used.": 1,
       "@typescript-eslint/no-unused-vars: 'idx' is defined but never used.": 1
@@ -552,12 +549,6 @@
     },
     "tests/unit/goals/lifeMasteryRegressions.test.ts": {
       "@typescript-eslint/no-unused-vars: 'goalNeedsWhy' is defined but never used.": 1
-    },
-    "tests/unit/goals/northStarPromises.test.ts": {
-      "prefer-const: 'plan' is never reassigned. Use 'const' instead.": 1
-    },
-    "tests/unit/goals/northStarService.test.ts": {
-      "@typescript-eslint/no-unused-vars: 'ONE_THING_KEY' is defined but never used.": 1
     },
     "tests/unit/goals/streakFreeze.test.ts": {
       "@typescript-eslint/no-unused-vars: 'afterEach' is defined but never used.": 1,

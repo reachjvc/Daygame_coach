@@ -84,6 +84,25 @@ const LIBRARY: Array<{ blueprintId: string; step: RoutineBlueprintStep }> = ROUT
  * asks the code what the code meant cannot catch the code being wrong about it.
  * These are the verbs, and they are the ones that appeared in the report.
  */
+/**
+ * The step a library entry became, once it is in somebody's plan.
+ *
+ * A step's own id is a counter value; `libraryStepId` is which library entry it
+ * came from. They were one field until two steps in one plan could share an id
+ * (morning `stretch` and night `stretch`), so every "find the step for library
+ * entry X" goes through here.
+ */
+function planted(plan: NsPlan, libraryStepId: string) {
+  return plan.routines.flatMap((r) => r.steps).find((s) => s.libraryStepId === libraryStepId)
+}
+
+/** The same, when the test needs the id the journal and the log are keyed by. */
+function plantedId(plan: NsPlan, libraryStepId: string): string {
+  const step = planted(plan, libraryStepId)
+  if (!step) throw new Error(`no step from library entry "${libraryStepId}"`)
+  return step.id
+}
+
 const READS = ["read your", "read my", "re-read", "look at your", "see one scene", "feel it as though"]
 const WRITES = ["write ", "journal", "two lines", "note down", "jot down", "write down"]
 /**
@@ -116,17 +135,17 @@ describe("every routine step can keep the promise its title makes", () => {
       // lying differently.
       if (step.id === "visual-board") continue
       const withStep = addPractice(plan, blueprintId, step.id)
-      const planted = withStep.routines.flatMap((r) => r.steps).find((s) => s.id === step.id)
-      if (!planted) {
+      const landed = planted(withStep, step.id)
+      if (!landed) {
         broken.push(`${blueprintId}/${step.id}: never landed in the plan`)
         continue
       }
-      if (!planted.goesTo) {
+      if (!landed.goesTo) {
         broken.push(`${blueprintId}/${step.id} ("${step.title}"): says read, points nowhere`)
         continue
       }
-      if (!destination(withStep, planted.goesTo)) {
-        broken.push(`${blueprintId}/${step.id}: points at "${planted.goesTo}", which does not exist`)
+      if (!destination(withStep, landed.goesTo)) {
+        broken.push(`${blueprintId}/${step.id}: points at "${landed.goesTo}", which does not exist`)
       }
     }
     expect(broken).toEqual([])
@@ -140,16 +159,16 @@ describe("every routine step can keep the promise its title makes", () => {
       if (!WRITES.some((phrase) => title.includes(phrase))) continue
       if (NOT_A_QUESTION.has(step.id)) continue
       const withStep = addPractice(plan, blueprintId, step.id)
-      const planted = withStep.routines.flatMap((r) => r.steps).find((s) => s.id === step.id)
-      if (!planted?.asks?.trim()) {
+      const landed = planted(withStep, step.id)
+      if (!landed?.asks?.trim()) {
         broken.push(`${blueprintId}/${step.id} ("${step.title}"): asks for words, offers only a tick`)
         continue
       }
       // The box is only real if what goes into it comes back out. A step whose
       // id the journal refuses would render a textarea that forgets on blur,
       // which looks exactly like a working box until somebody reloads.
-      const written = setJournalEntry(withStep, "2026-08-25", step.id, "Something I wrote.")
-      if (journalEntry(written, "2026-08-25", step.id) !== "Something I wrote.") {
+      const written = setJournalEntry(withStep, "2026-08-25", landed.id, "Something I wrote.")
+      if (journalEntry(written, "2026-08-25", landed.id) !== "Something I wrote.") {
         broken.push(`${blueprintId}/${step.id}: has a question, and the answer does not save`)
       }
     }
@@ -196,6 +215,7 @@ describe("the journal holds everything that was written into it", () => {
     let plan = addPractice(filledPlan(), "morning", "gratitude")
     const routine = plan.routines[0]
     expect(routine).toBeDefined()
+    const stepId = plantedId(plan, "gratitude")
     plan = { ...plan, fields: [...plan.fields, { id: "f99", label: "One key learning", targetId: null, kind: "write", readSourceId: null }] }
 
     const questions = journalQuestions(plan, "2026-08-25")
@@ -203,7 +223,7 @@ describe("the journal holds everything that was written into it", () => {
     expect(questions.map((q) => q.question)).toContain("One key learning")
     // Where it came from is on the row, because an answer read back in
     // December has to be placeable.
-    expect(questions.find((q) => q.id === "gratitude")!.from).toContain("Morning")
+    expect(questions.find((q) => q.id === stepId)!.from).toContain("Morning")
     expect(questions.find((q) => q.id === "f99")!.from).toBe("your own question")
   })
 
@@ -215,9 +235,10 @@ describe("the journal holds everything that was written into it", () => {
    */
   it("keeps what was written under a question that is no longer asked", () => {
     let plan = addPractice(filledPlan(), "morning", "gratitude")
-    plan = setJournalEntry(plan, "2026-08-20", "gratitude", "Coffee, the sea, my brother.")
+    const stepId = plantedId(plan, "gratitude")
+    plan = setJournalEntry(plan, "2026-08-20", stepId, "Coffee, the sea, my brother.")
     // The step goes; the writing stays.
-    plan = { ...plan, routines: plan.routines.map((r) => ({ ...r, steps: r.steps.filter((s) => s.id !== "gratitude") })) }
+    plan = { ...plan, routines: plan.routines.map((r) => ({ ...r, steps: r.steps.filter((s) => s.id !== stepId) })) }
 
     const archive = journalArchive(plan, "2026-08-25")
     const day = archive.find((d) => d.date === "2026-08-20")
@@ -229,8 +250,9 @@ describe("the journal holds everything that was written into it", () => {
 
   it("puts the newest day first and leaves out the days nothing was written on", () => {
     let plan = addPractice(filledPlan(), "morning", "journal")
-    plan = setJournalEntry(plan, "2026-08-18", "journal", "Older.")
-    plan = setJournalEntry(plan, "2026-08-24", "journal", "Newer.")
+    const stepId = plantedId(plan, "journal")
+    plan = setJournalEntry(plan, "2026-08-18", stepId, "Older.")
+    plan = setJournalEntry(plan, "2026-08-24", stepId, "Newer.")
     const archive = journalArchive(plan, "2026-08-25")
     expect(archive.map((d) => d.date)).toEqual(["2026-08-24", "2026-08-18"])
   })
@@ -241,16 +263,17 @@ describe("the journal holds everything that was written into it", () => {
     let plan = addRoutine(emptyNsPlan(), "work")
     const routine = plan.routines.find((r) => r.blueprintId === "work")!
     plan = addPractice(plan, "work", "mit")
+    const stepId = plantedId(plan, "mit")
     plan = {
       ...plan,
       routines: plan.routines.map((r) =>
-        r.id === routine.id ? { ...r, steps: r.steps.map((s) => (s.id === "mit" ? { ...s, days: [3], daysPerWeek: 1 } : s)) } : r
+        r.id === routine.id ? { ...r, steps: r.steps.map((s) => (s.id === stepId ? { ...s, days: [3], daysPerWeek: 1 } : s)) } : r
       ),
     }
     // 2026-08-24 is a Monday; the step is placed on Thursday.
-    const monday = journalQuestions(plan, "2026-08-24").find((q) => q.id === "mit")
+    const monday = journalQuestions(plan, "2026-08-24").find((q) => q.id === stepId)
     expect(monday?.today).toBe(false)
-    const thursday = journalQuestions(plan, "2026-08-27").find((q) => q.id === "mit")
+    const thursday = journalQuestions(plan, "2026-08-27").find((q) => q.id === stepId)
     expect(thursday?.today).toBe(true)
   })
 })
@@ -277,7 +300,13 @@ describe("a plan saved before any of this adopts what the library now says", () 
     raw.version = 1
     for (const r of raw.routines) {
       for (const s of r.steps) {
-        // What v1 stored: null wherever the library had nothing to say yet.
+        // What v1 stored: the library's own name AS the id, and no separate
+        // `libraryStepId` — the two were one field. Restoring that here is the
+        // point of the fixture: the loader's backfill only gets exercised by a
+        // save that genuinely predates the split.
+        if (typeof s.libraryStepId === "string") s.id = s.libraryStepId
+        delete s.libraryStepId
+        // And null wherever the library had nothing to say yet.
         if (!["star", "read-star"].includes(s.id)) s.goesTo = null
         delete s.asks
       }
@@ -285,7 +314,8 @@ describe("a plan saved before any of this adopts what the library now says", () 
     return JSON.stringify(raw)
   }
 
-  const stepOf = (plan: NsPlan, id: string) => plan.routines.flatMap((r) => r.steps).find((s) => s.id === id)!
+  const stepOf = (plan: NsPlan, libraryStepId: string) =>
+    plan.routines.flatMap((r) => r.steps).find((s) => s.libraryStepId === libraryStepId)!
 
   it("gives the journal row its door and the driving force row its document", () => {
     const plan = loadNsPlan(oldSave(["journal", "driving-force"]))!
@@ -376,7 +406,7 @@ describe("the one thing is the sentence somebody wrote", () => {
   it("has a one thing to show before any season focus is picked at all", () => {
     // The commonest state: step 3 done, step 8 not reached. The band showed
     // "Nothing named yet" to somebody who had named it.
-    let plan = setAnswer(emptyNsPlan(), ONE_ANSWERS.oneThing, "Stop drinking on weeknights.")
+    const plan = setAnswer(emptyNsPlan(), ONE_ANSWERS.oneThing, "Stop drinking on weeknights.")
     expect(seasonFocus(plan)).toBeNull()
     expect(answerOf(plan, ONE_ANSWERS.oneThing).trim()).toBeTruthy()
   })

@@ -107,11 +107,15 @@ describe("what one plan goal becomes", () => {
     expect(insert.target_value).toBe(86)
   })
 
-  it("sends a DESCENDING ladder as a finish line, because a counter would read 100% on day one", () => {
-    // computeGoalProgress is current/target and complete is current >= target.
-    // 95 kg now, 85 kg by June, sent as a counter, is a goal that completes
-    // itself the moment it is created. It goes over as done-or-not-done, and
-    // the numbers go in the description so nothing is lost.
+  it("sends a DESCENDING ladder as a real climb, starting at the weight you are", () => {
+    /* It used to go over as a yes/no box with "From 95 kg down to 85 kg."
+       written into the description, because progress was `current / target`
+       and a counter would have read 100% complete on the day it was created.
+       `src/db/goalProgress.ts` measures the distance travelled now, so the row
+       holds the real numbers.
+
+       `current_value` is 95, not 0, and that is the part that matters: zero
+       read as a weight means "below the target, therefore finished". */
     const seed = emptyNsPlan()
     const { plan, goal } = withGoal(seed, "lm_health", "Bodyweight", "milestone_ladder")
     const next = updateGoal(plan, goal.id, {
@@ -120,11 +124,13 @@ describe("what one plan goal becomes", () => {
     })
 
     const insert = goalToInsert(next, RUN, next.goals[0])
-    expect(insert.tracking_type).toBe("boolean")
-    expect(insert.target_value).toBe(1)
-    expect(insert.current_value).toBeUndefined()
-    expect(insert.milestone_config).toBeUndefined()
-    expect(insert.description).toContain("From 95 kg down to 85 kg")
+    expect(insert.tracking_type).toBe("counter")
+    expect(insert.target_value).toBe(85)
+    expect(insert.current_value).toBe(95)
+    expect(insert.milestone_config).toMatchObject({ start: 95, target: 85 })
+    // The prose copy is gone: the columns carry it, and two copies disagree the
+    // first time somebody edits one.
+    expect(insert.description ?? "").not.toContain("down to")
   })
 
   it("sends a finish line as a boolean", () => {
@@ -996,7 +1002,7 @@ describe("a routine step that goes to the thing it names", () => {
     plan = setAnswer(plan, "conduct", "To be on time.")
     plan = setValues(plan, ["Health", "Freedom"])
 
-    const step = plan.routines.flatMap((r) => r.steps).find((s) => s.id === "driving-force")!
+    const step = plan.routines.flatMap((r) => r.steps).find((s) => s.libraryStepId === "driving-force")!
     expect(step.goesTo).toBe("driving")
 
     const source = readSource(plan, "driving")!
@@ -1021,7 +1027,7 @@ describe("a routine step that goes to the thing it names", () => {
 
   it("arrives already pointing there when the step is added", () => {
     const plan = addPractice(emptyNsPlan(), "manifestation", "read-star")
-    const step = plan.routines.flatMap((r) => r.steps).find((s) => s.id === "read-star")!
+    const step = plan.routines.flatMap((r) => r.steps).find((s) => s.libraryStepId === "read-star")!
     expect(step.goesTo).toBe("star")
     // And one written in somebody's own words, on the same rule.
     const routine = plan.routines[0]
@@ -1035,12 +1041,13 @@ describe("a routine step that goes to the thing it names", () => {
     // somebody who cleared it, and inference must leave that alone.
     const plan = addPractice(emptyNsPlan(), "manifestation", "read-star")
     const raw = JSON.parse(serializeNsPlan(plan))
-    const stepOf = (p: NsPlan) => p.routines.flatMap((r) => r.steps).find((s) => s.id === "read-star")!
+    const stepOf = (p: NsPlan) => p.routines.flatMap((r) => r.steps).find((s) => s.libraryStepId === "read-star")!
 
     for (const r of raw.routines) for (const st of r.steps) delete st.goesTo
     expect(stepOf(loadNsPlan(JSON.stringify(raw))!).goesTo).toBe("star")
 
-    const cleared = updateStep(plan, plan.routines.find((r) => r.steps.some((s) => s.id === "read-star"))!.id, "read-star", { goesTo: null })
+    const readStar = plan.routines.find((r) => r.steps.some((s) => s.libraryStepId === "read-star"))!
+    const cleared = updateStep(plan, readStar.id, stepOf(plan).id, { goesTo: null })
     expect(stepOf(loadNsPlan(serializeNsPlan(cleared))!).goesTo).toBeNull()
   })
 
@@ -1049,16 +1056,18 @@ describe("a routine step that goes to the thing it names", () => {
     // words is worse than leaving it where it was.
     const plan = addPractice(emptyNsPlan(), "morning", "water")
     const routineId = plan.routines[0].id
-    const renamed = updateStep(plan, routineId, "water", { title: "Read your north star, then water" })
-    expect(renamed.routines[0].steps.find((s) => s.id === "water")!.goesTo).toBeNull()
+    const waterId = plan.routines[0].steps.find((s) => s.libraryStepId === "water")!.id
+    const renamed = updateStep(plan, routineId, waterId, { title: "Read your north star, then water" })
+    expect(renamed.routines[0].steps.find((s) => s.libraryStepId === "water")!.goesTo).toBeNull()
   })
 
   it("keeps a destination somebody picked by hand across a reload", () => {
     const seeded = setAreaReview(addPractice(emptyNsPlan(), "morning", "water"), "lm_fitness", { ten: "Strong, and it shows." })
     const routineId = seeded.routines[0].id
-    const pointed = updateStep(seeded, routineId, "water", { goesTo: "area:lm_fitness:ten" })
+    const waterId = seeded.routines[0].steps.find((s) => s.libraryStepId === "water")!.id
+    const pointed = updateStep(seeded, routineId, waterId, { goesTo: "area:lm_fitness:ten" })
     const reloaded = loadNsPlan(serializeNsPlan(pointed))!
-    const step = reloaded.routines.flatMap((r) => r.steps).find((s) => s.id === "water")!
+    const step = reloaded.routines.flatMap((r) => r.steps).find((s) => s.libraryStepId === "water")!
     expect(step.goesTo).toBe("area:lm_fitness:ten")
     expect(readSource(reloaded, step.goesTo)!.home).toEqual({ tab: "now", areaId: "lm_fitness" })
   })
@@ -1068,7 +1077,7 @@ describe("a routine step that goes to the thing it names", () => {
     // is usually written later. Until then the row says the source is empty
     // instead of offering to open it.
     const plan = addPractice(emptyNsPlan(), "manifestation", "read-star")
-    const step = plan.routines.flatMap((r) => r.steps).find((s) => s.id === "read-star")!
+    const step = plan.routines.flatMap((r) => r.steps).find((s) => s.libraryStepId === "read-star")!
     expect(step.goesTo).toBe("star")
     expect(readSource(plan, step.goesTo)).toBeNull()
     expect(readSource(setNorthStar(plan, "A house I chose."), step.goesTo)!.text).toContain("A house I chose")
