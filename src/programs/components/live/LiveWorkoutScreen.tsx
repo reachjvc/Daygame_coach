@@ -42,6 +42,7 @@ import { useLiveWorkout } from "../../hooks/useLiveWorkout"
 import {
   describeSets,
   restTargetFor,
+  groupOrdinal,
   unfinishedLifts,
   describePlates,
   platesFor,
@@ -346,8 +347,11 @@ export function LiveWorkoutScreen({
                     <p className="flex items-center gap-2 font-medium">
                       {ex.supersetGroup && (
                         <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[11px] uppercase tracking-wide text-primary">
+                          {/* The number within the PAIR, not the position in
+                              the day: the second pair read "B4"/"B5", which
+                              reads as a set count or as a mistake. */}
                           {ex.supersetGroup}
-                          {i + 1}
+                          {groupOrdinal(exercises, i)}
                         </span>
                       )}
                       <span className="truncate">{ex.name}</span>
@@ -681,7 +685,16 @@ function Elapsed({
     const id = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(id)
   }, [])
-  const mins = Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / 60000))
+  /**
+   * mm:ss, NOT whole minutes.
+   *
+   * It read "0 min" for the first sixty seconds of a workout and then jumped
+   * to "1 min" — a clock ticking every second and only ever showing one of
+   * them. The first minute is the one where you are most likely to be looking
+   * at it, checking the thing you just started actually started.
+   */
+  const elapsed = Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / 1000))
+  const clock = `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, "0")}`
 
   return (
     <div className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
@@ -707,7 +720,7 @@ function Elapsed({
                   minute: "2-digit",
                   timeZone: timezone,
                 })}`
-              : `${mins} min`}
+              : clock}
           </p>
         </div>
         <Button size="sm" onClick={onFinish} data-testid="finish-workout">

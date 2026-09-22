@@ -652,6 +652,25 @@ export function withRest(
 export const MIN_REST_SEC = 15
 export const MAX_REST_SEC = 600
 
+/**
+ * WHICH ONE OF ITS PAIR A LIFT IS — A1, A2, B1, B2.
+ *
+ * The screen printed the lift's position in the WHOLE list, so the second
+ * pair of a Push day read "B4" and "B5". A superset tag whose number is not
+ * the number within the superset is worse than no tag: it reads as a set
+ * count, or as a mistake.
+ */
+export function groupOrdinal(
+  exercises: readonly { supersetGroup?: string }[],
+  index: number
+): number {
+  const group = exercises[index]?.supersetGroup
+  if (!group) return index + 1
+  let n = 0
+  for (let i = 0; i <= index; i++) if (exercises[i]?.supersetGroup === group) n++
+  return n
+}
+
 /** Epley 1RM estimate: w · (1 + reps/30). reps=1 → w. (Epley 1985.) */
 export function estimateOneRepMax(weight: number, reps: number): number {
   if (reps <= 1) return weight

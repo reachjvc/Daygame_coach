@@ -117,7 +117,7 @@ describe("a session being written up", () => {
 
     // "2,880 min" and climbing was the old header.
     expect(screen.getByText(/^since /i)).toBeTruthy()
-    expect(screen.queryByText(/^\d+ min$/)).toBeNull()
+    expect(screen.queryByText(/^\d+:\d{2}$/)).toBeNull()
   })
 
   it("reads that time in the account's zone, not the browser's", () => {
@@ -152,9 +152,11 @@ describe("a session being written up", () => {
 })
 
 describe("a workout happening now", () => {
-  it("counts the minutes, as it always did", () => {
+  it("counts up in mm:ss, not whole minutes", () => {
+    // It read "0 min" for the first sixty seconds and then jumped to "1 min":
+    // a clock ticking every second that only ever showed one of them.
     screenFor(JUST_NOW)
-    expect(screen.getByText(/^\d+ min$/)).toBeTruthy()
+    expect(screen.getByText(/^\d+:\d{2}$/)).toBeTruthy()
     expect(screen.queryByText(/^since /i)).toBeNull()
   })
 

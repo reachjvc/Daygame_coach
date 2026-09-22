@@ -18,6 +18,7 @@ import {
   MAX_REST_SEC,
   computePrescription,
   seedEnrollment,
+  groupOrdinal,
 } from "@/src/programs/programsService"
 import { requireProgram } from "@/src/programs/data/catalog"
 import type { PrescribedExercise } from "@/src/programs/types"
@@ -101,5 +102,42 @@ describe("editing a rest", () => {
 
   it("starts a map when the workout has none", () => {
     expect(withRest(undefined, "squat", 120)).toEqual({ squat: 120 })
+  })
+})
+
+describe("numbering a superset pair", () => {
+  it("numbers within the pair, not the day", () => {
+    /**
+     * The screen printed the lift's position in the whole list, so a Push day
+     * with two pairs read A1, A2, B3, B4 — or worse, A4/A5. A tag whose
+     * number is not the number within the superset reads as a set count.
+     */
+    const day = [
+      { supersetGroup: "A" },
+      { supersetGroup: "A" },
+      { supersetGroup: "B" },
+      { supersetGroup: "B" },
+    ]
+    expect(day.map((_, i) => groupOrdinal(day, i))).toEqual([1, 2, 1, 2])
+  })
+
+  it("counts only its own group, even when pairs are interleaved", () => {
+    const day = [
+      { supersetGroup: "A" },
+      { supersetGroup: "B" },
+      { supersetGroup: "A" },
+      { supersetGroup: "B" },
+    ]
+    expect(day.map((_, i) => groupOrdinal(day, i))).toEqual([1, 1, 2, 2])
+  })
+
+  it("a lift in no pair keeps its place in the day", () => {
+    const day = [{ supersetGroup: "A" }, {}, { supersetGroup: "A" }]
+    expect(groupOrdinal(day, 1)).toBe(2)
+  })
+
+  it("a day with no pairs at all is unchanged", () => {
+    const day = [{}, {}, {}]
+    expect(day.map((_, i) => groupOrdinal(day, i))).toEqual([1, 2, 3])
   })
 })
