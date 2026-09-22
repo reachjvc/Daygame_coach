@@ -266,6 +266,12 @@ export const CompleteSetSchema = z.object({
 })
 
 export const AdjustWorkoutSchema = z.object({
+  /**
+   * Fifteen seconds is not a rest and ten minutes is a different workout.
+   * Bounded here as well as on the screen because this is what a request can
+   * actually contain.
+   */
+  rest: z.record(z.string().min(1).max(80), z.number().int().min(15).max(600)).optional(),
   skipped: z.array(z.string().min(1).max(80)).max(40).optional(),
   incomplete: z.array(z.string().min(1).max(80)).max(40).optional(),
   swapped: z

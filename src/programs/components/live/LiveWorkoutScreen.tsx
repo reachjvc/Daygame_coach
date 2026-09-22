@@ -41,7 +41,7 @@ import { AddLift } from "./AddLift"
 import { useLiveWorkout } from "../../hooks/useLiveWorkout"
 import {
   describeSets,
-  restSecondsFor,
+  restTargetFor,
   unfinishedLifts,
   describePlates,
   platesFor,
@@ -317,7 +317,14 @@ export function LiveWorkoutScreen({
           const done = doneByLift.get(ex.exerciseId) ?? []
           const isSkipped = skipped.has(ex.exerciseId)
           const previous = lastTime[ex.exerciseId] ?? []
-          const rest = restSecondsFor({ name: ex.name })
+          /**
+           * ONE FUNCTION DECIDES THE REST — what you edited on this workout,
+           * then the program author's, then our guess. This asked
+           * `restSecondsFor({ name })`, dropping the first two, so a program
+           * specifying three minutes got our ninety seconds under a caption
+           * reading "our suggestion".
+           */
+          const rest = restTargetFor(ex, workout?.adjustments)
           const fixedToTick = fixedRowsToTick(
             rowsFor(ex),
             new Set(done.filter((s) => s.kind !== "warmup").map((s) => s.setNumber))
@@ -383,7 +390,12 @@ export function LiveWorkoutScreen({
                       {isSkipped ? "I did do this one" : "Skip this one"}
                     </button>
                     <span className="self-center text-xs text-muted-foreground">
-                      Rest {Math.round(rest.seconds / 60)} min{rest.ours ? " (our suggestion)" : ""}
+                      {/* Three states, not two: your own number, the
+                          program's, and ours. Saying "our suggestion" over
+                          the author's instruction was the fault. */}
+                      Rest {Math.floor(rest.seconds / 60)}:
+                      {String(rest.seconds % 60).padStart(2, "0")}
+                      {rest.edited ? ", your own" : rest.ours ? " (our suggestion)" : ""}
                     </span>
                   </div>
                 )}

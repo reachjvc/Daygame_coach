@@ -615,6 +615,15 @@ export interface PrescribedExercise {
   /** Done one limb at a time — the reps are per side, and so is the volume. */
   perSide?: boolean
   repUnit?: "reps" | "sec" // what the logged number means (default reps)
+  /**
+   * The rest the PROGRAM'S AUTHOR asked for, in seconds.
+   *
+   * It exists on the catalogue's exercise and was dropped on the way to the
+   * screen, so a program that specifies three minutes had its instruction
+   * thrown away and our own guess shown in its place — labelled "our
+   * suggestion", which was at least honest about being the wrong number.
+   */
+  restSec?: number
 }
 
 export interface SessionPrescription {
@@ -799,6 +808,15 @@ export interface WorkoutAdjustments {
   swapped?: Record<string, { name: string; libraryId?: string }>
   added?: Array<{ exerciseId: string; name: string; libraryId?: string }>
   order?: string[]
+  /**
+   * Rest you changed, per lift, in seconds.
+   *
+   * ON THE WORKOUT, not in component state, because the rest clock's whole job
+   * is to be right after you have put the phone down — and a phone that locks
+   * and reloads the page would otherwise hand back the number you had just
+   * rejected.
+   */
+  rest?: Record<string, number>
 }
 
 /** A stored set, as the one workouts table holds it. */

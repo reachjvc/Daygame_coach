@@ -604,6 +604,54 @@ export function restSecondsFor(
   return { seconds: compound ? REST_SECONDS.compound : REST_SECONDS.accessory, ours: true }
 }
 
+/**
+ * WHAT THE REST CLOCK SHOULD COUNT DOWN FROM — the only answer.
+ *
+ * Three things can decide it and they have an order: what you edited on this
+ * workout, then what the program's author asked for, then our own guess. The
+ * screen used to ask `restSecondsFor({ name })` — dropping both of the first
+ * two — so a program specifying three minutes got our ninety seconds, under a
+ * caption reading "our suggestion".
+ *
+ * `edited` is separate from `ours` because they answer different questions:
+ * `ours` means nobody but us chose this number, and `edited` means YOU did.
+ */
+export function restTargetFor(
+  ex: Pick<PrescribedExercise, "exerciseId" | "name" | "restSec">,
+  adjustments: { rest?: Record<string, number> } | null | undefined,
+  opts: { warmup?: boolean } = {}
+): { seconds: number; ours: boolean; edited: boolean } {
+  const yours = adjustments?.rest?.[ex.exerciseId]
+  // An edited rest beats the warm-up default too: you changed it on this lift,
+  // on this workout, which is as specific as an instruction gets.
+  if (yours != null) return { seconds: yours, ours: false, edited: true }
+  const { seconds, ours } = restSecondsFor(
+    { name: ex.name, restSec: ex.restSec },
+    { warmup: opts.warmup }
+  )
+  return { seconds, ours, edited: false }
+}
+
+/**
+ * The rest map with one lift changed, clamped to what a rest can be.
+ *
+ * Returns the WHOLE map rather than the one entry, because the write is a
+ * whole-map PATCH: building it at the call site is how one lift's edit comes
+ * to wipe another's.
+ */
+export function withRest(
+  adjustments: { rest?: Record<string, number> } | null | undefined,
+  exerciseId: string,
+  seconds: number
+): Record<string, number> {
+  const clamped = Math.max(MIN_REST_SEC, Math.min(MAX_REST_SEC, Math.round(seconds)))
+  return { ...(adjustments?.rest ?? {}), [exerciseId]: clamped }
+}
+
+/** Fifteen seconds is not a rest; ten minutes is a different workout. */
+export const MIN_REST_SEC = 15
+export const MAX_REST_SEC = 600
+
 /** Epley 1RM estimate: w · (1 + reps/30). reps=1 → w. (Epley 1985.) */
 export function estimateOneRepMax(weight: number, reps: number): number {
   if (reps <= 1) return weight
@@ -860,6 +908,7 @@ function carried(ex: LoadExercise): {
   note?: string
   perSide?: boolean
   repUnit?: "reps" | "sec"
+  restSec?: number
 } {
   return {
     ...(ex.supersetGroup ? { supersetGroup: ex.supersetGroup } : {}),
@@ -869,6 +918,9 @@ function carried(ex: LoadExercise): {
     ...(ex.note ? { note: ex.note } : {}),
     // "3×8 lunges" is eight each leg or four each, and only the author knows.
     ...(ex.perSide ? { perSide: true } : {}),
+    // The author's rest. Dropped here, the screen fell back to our own guess
+    // and called it "our suggestion" on a program that had specified one.
+    ...(ex.restSec != null ? { restSec: ex.restSec } : {}),
     // A plank logged as "3 reps" is not a plank.
     ...(ex.repUnit ? { repUnit: ex.repUnit } : {}),
   }
@@ -1376,6 +1428,12 @@ function computeSkillPrescription(program: ProgramDefinition, enrollment: Progra
       note: top ? `${tier.name} — top tier` : `${tier.name} — ${tier.unlockReps}+ on every set unlocks the next one`,
       bodyweight: true,
       repUnit: "reps" as const,
+      // THE AUTHOR'S OWN INSTRUCTIONS. This path built its exercise by hand
+      // and dropped both: Bodyweight Foundations pairs its lifts and asks for
+      // three minutes between pairs, and neither reached the screen — so the
+      // rest clock used our guess and the pairs were never treated as pairs.
+      ...(ex.supersetGroup ? { supersetGroup: ex.supersetGroup } : {}),
+      ...(ex.restSec != null ? { restSec: ex.restSec } : {}),
     }
   })
   return { programId: program.id, dayId: day.id, dayLabel: day.label, cycle: enrollment.cursor.cycle, week: enrollment.cursor.week, sessionCount: enrollment.cursor.sessionCount, periodised: false, exercises }
@@ -1430,6 +1488,12 @@ function computeHoldPrescription(program: ProgramDefinition, enrollment: Program
       note: `${hold}s${ex.perSide ? " each side" : ""}${atTarget ? " — target reached" : ` → ${ex.targetSec}s goal`}`,
       bodyweight: true,
       repUnit: "sec" as const,
+      // A hold routine's own rest would be carried here too, the way the
+      // skill path above does — but `HoldExercise` has no `restSec` or
+      // `supersetGroup` to carry, because no author has asked for either.
+      // Adding the fields to the type for a case that does not exist would be
+      // speculative; the day one appears, this is where it goes.
+      ...(ex.perSide ? { perSide: true } : {}),
     }
   })
   return { programId: program.id, dayId: day.id, dayLabel: day.label, cycle: enrollment.cursor.cycle, week: enrollment.cursor.week, sessionCount: enrollment.cursor.sessionCount, periodised: false, exercises }
