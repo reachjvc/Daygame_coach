@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ladderForSave } from "@/src/goals/goalsService"
 import {
   Dialog,
   DialogContent,
@@ -14,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Loader2, Trash2, Archive } from "lucide-react"
 import { LIFE_AREAS } from "../data/lifeAreas"
 import { GoalFormVariant6 } from "./GoalFormVariant6"
-import { deriveChildLevel } from "../goalsService"
+import { deriveChildLevel, ladderForSave } from "../goalsService"
 import { metricFitsPeriod } from "@/src/tracking/metricsService"
 import type {
   GoalWithProgress,

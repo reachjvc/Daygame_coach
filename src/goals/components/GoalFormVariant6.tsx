@@ -287,6 +287,12 @@ export function GoalFormVariant6({
             />
             <input
               type="text"
+              /* The form's whole body moved into this component and the title
+                 field's test id did not come with it, so the end-to-end test
+                 that creates a goal has been unable to find it ever since —
+                 the same half-finished migration that stranded the curve
+                 editor whose absence made every Target start at 1. */
+              data-testid="goal-form-title-input"
               value={goalTitle}
               onChange={(e) => {
                 setGoalTitle(e.target.value)
