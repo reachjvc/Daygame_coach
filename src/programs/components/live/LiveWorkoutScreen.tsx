@@ -36,6 +36,7 @@ import { BackLink } from "@/components/BackLink"
 import { canBeUnweighted } from "../../data/exerciseLibrary"
 import { SetRow } from "./SetRow"
 import { RestBar } from "./RestBar"
+import type { MissRule } from "../../types"
 import { FinishSheet } from "./FinishSheet"
 import { AddLift } from "./AddLift"
 import { useLiveWorkout } from "../../hooks/useLiveWorkout"
@@ -62,6 +63,11 @@ import type {
 
 interface Props {
   /** The ACCOUNT's zone, for every time this screen shows or reads. */
+  /**
+   * What a miss costs per lift, read on the server from the program and the
+   * enrollment. Absent for a loose workout, which has no program to deload.
+   */
+  missRules?: Record<string, MissRule>
   timezone: string
 
   initial: LiveWorkout
@@ -80,6 +86,7 @@ export function LiveWorkoutScreen({
   unit,
   plates,
   lastTime,
+  missRules,
   timezone,
 }: Props) {
   const live = useLiveWorkout(initial)
@@ -191,6 +198,7 @@ export function LiveWorkoutScreen({
     return (
       <div className="mx-auto max-w-2xl px-4 py-6">
         <FinishSheet
+          missRules={missRules}
           timezone={timezone}
           past={past}
           endurance={Boolean(prescription?.enduranceSets?.length)}

@@ -20,9 +20,15 @@ import { Award, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { instantToWallClock, wallClockToInstant } from "@/src/shared/dateUtils"
-import { distanceUnitFor, toKmFromDisplay } from "../../programsService"
+import {
+  distanceUnitFor,
+  toKmFromDisplay,
+  missOutcome,
+  missWording,
+} from "../../programsService"
 import { Textarea } from "@/components/ui/textarea"
 import type { LiveWorkout, WorkoutSummary } from "../../types"
+import type { MissRule } from "../../types"
 
 interface Props {
   workout: LiveWorkout
@@ -58,6 +64,11 @@ interface Props {
    * Copenhagen and opened the app on a laptop still set to Tokyo was shown
    * 01:00 the next day — and "correcting" it broke a time that was right.
    */
+  /**
+   * What a miss costs, per lift, read from the program and the enrollment.
+   * Absent for a loose workout, which has no program to deload.
+   */
+  missRules?: Record<string, MissRule>
   timezone: string
   /**
    * This session happened earlier, so both times are open and nothing about
@@ -105,6 +116,7 @@ export function FinishSheet({
   onSkipLift,
   onFinish,
   onCancel,
+  missRules,
   timezone,
   past = false,
   endurance = false,
@@ -289,8 +301,13 @@ export function FinishSheet({
           </p>
           {unfinished.length > 0 && (
             <p className="mt-0.5 text-xs text-amber-600/80 dark:text-amber-400/80">
-              These count as misses and will bring the weight down. Say so if you stopped for
-              another reason.
+              {/* WHAT HAPPENS IS PER LIFT, and it is on each row below. This
+                  said "these count as misses and will bring the weight down"
+                  over all of them — false two times in three on StrongLifts,
+                  whose rule is three consecutive misses before a deload. A
+                  sentence that threatens a drop that is not coming is how you
+                  teach somebody to fake a set. */}
+              Say so if you stopped for another reason.
             </p>
           )}
           <ul className="mt-2 space-y-1 text-sm">
@@ -301,6 +318,11 @@ export function FinishSheet({
                   <span className="tabular-nums text-muted-foreground">
                     {u.done} of {u.asked}
                   </span>
+                  {missRules && (
+                    <span className="block text-xs text-muted-foreground">
+                      {missWording(missOutcome(missRules[u.exerciseId]), missRules[u.exerciseId])}
+                    </span>
+                  )}
                 </span>
                 <button
                   type="button"

@@ -50,6 +50,8 @@ import type {
   ProgramDefinition,
   ProgramEnrollment,
   ProgramsLocation,
+  MissRule,
+  MissOutcome,
   WeekSoFar,
   ProgramSessionLogInput,
   PrescribedExercise,
@@ -2371,6 +2373,77 @@ export function sessionTypeFor(
  *
  * Pure, and formats nothing — the sheet decides the words.
  */
+/**
+ * WHAT A MISS ACTUALLY COSTS, per lift.
+ *
+ * The finish sheet said "these count as misses and will bring the weight
+ * down" over every short lift. For StrongLifts that is false twice out of
+ * three times: the rule is three consecutive misses before a deload, so the
+ * first two hold the weight exactly where it is. The app was telling somebody
+ * their squat was about to drop when it was not — which is the kind of
+ * sentence that makes people fake a set.
+ *
+ * `held` is for a lift that was skipped or swapped: it is not a miss at all
+ * and must not be counted as one.
+ */
+/**
+ * What today's miss does to this lift, in the program's own terms.
+ *
+ * `unknown` when the program has no linear rule to read — a skill ladder or a
+ * hold routine does not deload, and claiming either outcome would be inventing
+ * one.
+ */
+export function missOutcome(rule: MissRule | undefined): MissOutcome {
+  if (!rule || rule.deloadAfter == null) return "unknown"
+  return rule.failsSoFar + 1 >= rule.deloadAfter ? "deload" : "hold"
+}
+
+/** The sentence for one short lift, in the program's own numbers. */
+export function missWording(outcome: MissOutcome, rule?: MissRule): string {
+  switch (outcome) {
+    case "held":
+      return "not counted"
+    case "deload": {
+      const pct = rule?.deloadPct != null ? Math.round(rule.deloadPct * 100) : null
+      return pct != null
+        ? `miss ${(rule?.failsSoFar ?? 0) + 1} of ${rule?.deloadAfter} — the weight drops ${pct}%`
+        : `miss ${(rule?.failsSoFar ?? 0) + 1} of ${rule?.deloadAfter} — the weight drops`
+    }
+    case "hold":
+      return `miss ${(rule?.failsSoFar ?? 0) + 1} of ${rule?.deloadAfter} — the weight stays`
+    default:
+      // No rule to read, so no promise about what happens next.
+      return "counts as a miss"
+  }
+}
+
+/**
+ * The deload rule per lift, read from the program and the enrollment.
+ *
+ * Pure, so the sheet's sentence and the engine's behaviour are read from the
+ * same two numbers rather than one being typed out by hand — which is how the
+ * old sentence came to describe a rule the engine does not have.
+ */
+export function missRulesFor(
+  program: ProgramDefinition,
+  enrollment: Pick<ProgramEnrollment, "exerciseState">
+): Record<string, MissRule> {
+  const out: Record<string, MissRule> = {}
+  for (const day of scheduleDaysOrNone(program.schedule)) {
+    for (const ex of day.exercises) {
+      const progression = (ex as { progression?: { kind?: string; deloadAfterFails?: number; deloadPct?: number } })
+        .progression
+      const linear = progression?.kind === "linear_load" ? progression : null
+      out[ex.id] = {
+        failsSoFar: enrollment.exerciseState[ex.id]?.consecutiveFails ?? 0,
+        deloadAfter: linear?.deloadAfterFails ?? null,
+        deloadPct: linear?.deloadPct ?? null,
+      }
+    }
+  }
+  return out
+}
+
 export function unfinishedLifts(
   prescribed: PrescribedExercise[],
   adjustments: WorkoutAdjustments,

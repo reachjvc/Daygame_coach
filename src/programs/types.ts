@@ -802,6 +802,27 @@ export interface LiveWorkout {
 }
 
 /** What changed during a workout that the sets alone cannot say. */
+/**
+ * WHAT A MISS COSTS ON ONE LIFT.
+ *
+ * The finish sheet said "these count as misses and will bring the weight
+ * down" over every short lift — false two times in three on StrongLifts,
+ * whose rule is three consecutive misses before a deload. Both numbers come
+ * from the program and the enrollment so the sentence and the engine cannot
+ * disagree.
+ */
+export interface MissRule {
+  /** Misses already on this lift, before today. */
+  failsSoFar: number
+  /** How many in a row the program allows before it drops the weight. */
+  deloadAfter: number | null
+  /** How much it drops, as a fraction. Null when the program has no rule. */
+  deloadPct: number | null
+}
+
+/** `unknown` when the program has no linear rule; `held` when it is not a miss. */
+export type MissOutcome = "hold" | "deload" | "unknown" | "held"
+
 export interface WorkoutAdjustments {
   skipped?: string[]
   incomplete?: string[]

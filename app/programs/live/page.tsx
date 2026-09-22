@@ -11,7 +11,10 @@ import { requireAuth } from "@/src/db/auth"
 import { getLiveWorkout, prescriptionForDay } from "@/src/db/workoutRepo"
 import { getEnrollmentById, getSessionLogs } from "@/src/db/programRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
-import { enrollmentName } from "@/src/programs/data/catalog"
+import { enrollmentName, getProgram } from "@/src/programs/data/catalog"
+import { effectiveProgram } from "@/src/programs/customize"
+import { missRulesFor } from "@/src/programs/programsService"
+import type { MissRule } from "@/src/programs/types"
 import { LiveWorkoutScreen } from "@/src/programs/components/live/LiveWorkoutScreen"
 import { lastSetsPerLift } from "@/src/programs/programsService"
 import type { PlateSetup, SessionPrescription, UnitSystem } from "@/src/programs/types"
@@ -42,6 +45,7 @@ export default async function LiveWorkoutPage() {
   let unit: UnitSystem = live.unit
   let plates: PlateSetup | undefined
   let programName: string | null = null
+  let missRules: Record<string, MissRule> | undefined
   let lastTime: Record<string, { weight: number; reps: number }[]> = {}
 
   if (live.enrollmentId) {
@@ -59,6 +63,19 @@ export default async function LiveWorkoutPage() {
      */
     const enrollment = await getEnrollmentById(auth.userId, live.enrollmentId)
     programName = enrollment ? enrollmentName(enrollment) : null
+    /**
+     * WHAT A MISS COSTS, per lift, read from the program and the misses
+     * already on record.
+     *
+     * The finish sheet said "these count as misses and will bring the weight
+     * down" over every short lift — false two times in three on StrongLifts,
+     * whose rule is three consecutive misses before a deload. Computed here
+     * so the sentence and the engine read the same two numbers.
+     */
+    if (enrollment) {
+      const program = getProgram(enrollment.program_id)
+      if (program) missRules = missRulesFor(effectiveProgram(program, enrollment.customSchedule), enrollment)
+    }
     // What each lift did last time, so the number you are deciding against sits
     // beside the box you are typing in.
     lastTime = lastSetsPerLift(await getSessionLogs(auth.userId, live.enrollmentId))
@@ -72,6 +89,7 @@ export default async function LiveWorkoutPage() {
       unit={unit}
       plates={plates}
       lastTime={lastTime}
+      missRules={missRules}
       timezone={timezone}
     />
   )
