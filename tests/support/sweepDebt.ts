@@ -117,17 +117,16 @@ export const TAP_TARGET_DEBT: Record<string, number> = {
 
   // NOT RAISED, AND FAILING ON PURPOSE.
   //
-  // /programs and /programs/live measure 10 today against a budget of 3. That
-  // is not drift: it is new debt from the live-workout slice, added while it
-  // was being written. A back link at 20px, a tab row at 28px, an underlined
-  // text button at 15px, workout buttons pinned to min-h-9.
+  // /programs is GONE from this table as of 2026-09-22, not lowered: measured
+  // at 390px it has no control under 44px. It owed eleven — a back link at
+  // 20px, the Life Mastery aside at 16px, seven week-strip cells at 43px wide
+  // (one pixel short, from a four-pixel gap), the history toggle at 36px and
+  // "Show all" at 16px.
   //
-  // Raising these to 10 would make the suite green and make this guard a
-  // description of whatever happened, which is the one thing it must never be.
-  // They are deliberate compact styling, so bringing them to 44px is a visual
-  // decision for whoever owns that screen -- not something to change from
-  // outside it. The failure is the message.
-  "/programs": 3,
+  // /programs/live still owes and keeps its entry. Raising it to the real
+  // measurement would make the suite green and make this guard a description
+  // of whatever happened, which is the one thing it must never be. The
+  // failure is the message.
   "/programs/live": 3,
 }
 
@@ -146,6 +145,7 @@ export const TAP_TARGET_DEBT: Record<string, number> = {
  * states, applied honestly instead of by hand.
  */
 export const TRAINING_DEBT_CEILING: Record<string, number> = {
-  "/programs": 3,
+  // "/programs" was here. Deleted rather than lowered, which is what this
+  // comment block asks for: a page with no number must be clean.
   "/programs/live": 3,
 }

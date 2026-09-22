@@ -125,7 +125,7 @@ export function ProgressionView({ logs, enrollment }: Props) {
         onClick={() => setShowHistory((v) => !v)}
         aria-expanded={showHistory}
         data-testid="history-toggle"
-        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left"
+        className="flex min-h-11 w-full items-center justify-between gap-3 px-3 py-2 text-left"
       >
         <span className="flex min-w-0 items-center gap-2">
           <History className="size-4 shrink-0 text-muted-foreground" />

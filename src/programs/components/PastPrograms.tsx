@@ -348,7 +348,7 @@ export function PastPrograms({
         <button
           type="button"
           onClick={() => setShowAll((v) => !v)}
-          className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+          className="inline-flex min-h-11 items-center text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
         >
           {showAll ? "Show fewer" : `Show all ${past.length}`}
         </button>

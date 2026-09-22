@@ -197,7 +197,7 @@ export function TrainingScreen({
         <BackLink
           fallback="/dashboard"
           fallbackLabel="Dashboard"
-          className="mb-2 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          className="mb-2 inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         />
         {/*
           THE MASTHEAD WAS 22% OF THE PHONE.
@@ -219,7 +219,10 @@ export function TrainingScreen({
               people. */}
           <span className="text-xs font-normal text-muted-foreground">
             · part of your{" "}
-            <Link href={LIFE_MASTERY} className="underline underline-offset-2 hover:text-foreground">
+            <Link
+              href={LIFE_MASTERY}
+              className="inline-flex min-h-11 items-center underline underline-offset-2 hover:text-foreground"
+            >
               Life Mastery plan
             </Link>
           </span>

@@ -40,7 +40,13 @@ interface Props {
 
 export function WeekStrip({ week, labels, onPickDay }: Props) {
   return (
-    <div data-testid="week-strip" className="grid grid-cols-7 gap-1">
+    /*
+      gap-0.5, NOT gap-1. Seven cells inside the card's own px-4 leaves 326px
+      on a 390px phone; four-pixel gaps take 24 of it and each cell lands at
+      43px — one pixel under the fingertip minimum, measured. Two-pixel gaps
+      give 44.9.
+    */
+    <div data-testid="week-strip" className="grid grid-cols-7 gap-0.5">
       {DAYS.map(({ weekday, short }) => {
         const isToday = weekday === week.todayWeekday
         const trained = week.trainedWeekdays.includes(weekday)
