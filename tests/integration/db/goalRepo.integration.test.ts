@@ -47,7 +47,10 @@ describe("goalRepo Integration Tests", () => {
             `INSERT INTO user_goals (user_id, category) VALUES ($1, 'custom')`,
             [userId]
           )
-        ).rejects.toThrow()
+          // Naming the column matters: a bare .toThrow() passed all through
+          // 2026-09-20 on a FOREIGN KEY error from a cross-run container mixup,
+          // while claiming to prove a NOT NULL constraint it never reached.
+        ).rejects.toThrow(/null value in column "title"/)
       } finally {
         await client.end()
       }
@@ -65,7 +68,7 @@ describe("goalRepo Integration Tests", () => {
             `INSERT INTO user_goals (user_id, title) VALUES ($1, 'My Goal')`,
             [userId]
           )
-        ).rejects.toThrow()
+        ).rejects.toThrow(/null value in column "category"/)
       } finally {
         await client.end()
       }
