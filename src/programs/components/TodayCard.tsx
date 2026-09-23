@@ -119,12 +119,33 @@ export function TodayCard({
       )
     }
 
-    // A workout belonging to ANOTHER program. Two at once is not a state the
-    // database allows, so say which one rather than failing on the way in.
+    /**
+     * A workout belonging to ANOTHER program, or to none. Two at once is not a
+     * state the database allows, so say which one rather than failing on the
+     * way in.
+     *
+     * AND SAY WHICH THING TO DO WITH IT. This read "Finish the workout you have
+     * open first" whatever its age — including for one left open twelve days
+     * ago with nothing ticked in it. Finishing that writes a session that never
+     * happened: `summaryFor` clamps the duration at 599, so a fortnight-old
+     * empty workout lands in History as a ten-hour one. The advice for a stale
+     * workout is to discard it, and the button says so and names the day it
+     * belongs to, exactly as the stale branch below and the Tracking card both
+     * already did.
+     */
     if ((state?.kind === "live" || state?.kind === "stale") && state.enrollmentId !== enrollmentId) {
+      const stale = state.kind === "stale"
       return (
-        <Button size="lg" variant="outline" className="w-full" onClick={() => go(LIVE_WORKOUT)}>
-          Finish the workout you have open first
+        <Button
+          size="lg"
+          variant="outline"
+          className="w-full"
+          data-testid="other-workout-open"
+          onClick={() => go(LIVE_WORKOUT)}
+        >
+          {stale
+            ? `Finish or discard ${state.startedOnWeekday}'s workout`
+            : "Finish the workout you have open first"}
         </Button>
       )
     }
