@@ -842,7 +842,8 @@ describe('Architecture Compliance', () => {
       'src/goals/components/north-star/ValuesSoFar.tsx',
       'src/goals/components/north-star/ValuesWork.tsx',
       'src/goals/components/north-star/WeekGrid.tsx',
-      'src/goals/components/north-star/WorkoutPrograms.tsx',
+      // WorkoutPrograms came off on 2026-09-23: the 628-line second copy of
+      // the training feature is a status card with no type under 12 px in it.
       'src/programs/components/CustomProgramBuilder.tsx',
       // EditActiveProgram and ProgramEditor came off on 2026-09-23 — see the
       // note on TRAINING_STYLE_DEBT above.
@@ -1820,16 +1821,10 @@ describe('Architecture Compliance', () => {
       'src/goals/components/north-star/BuildYourOwn.tsx @/src/programs/customLifts',
       'src/goals/components/north-star/BuildYourOwn.tsx @/src/programs/customize',
       'src/goals/components/north-star/BuildYourOwn.tsx @/src/programs/types',
-      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/builder',
-      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/components/ProgramEditor',
-      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/components/RunningPrograms',
-      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/components/ui',
-      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/config',
-      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/customize',
-      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/data/catalog',
-      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/hooks/useEnrollment',
-      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/programsService',
-      'src/goals/components/north-star/WorkoutPrograms.tsx @/src/programs/types',
+      // WorkoutPrograms.tsx had TEN of these on 2026-09-23 — the editor, the
+      // running band, the blue-grey kit, the engine, the customiser — and it
+      // has none: the Templates step is a status card drawn from props, and
+      // what it needs comes through `forLifeMastery.ts` like everything else.
     ])
 
     /** Every `src/goals` file paired with each `src/programs` path it imports. */

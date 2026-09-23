@@ -371,7 +371,12 @@ export function NorthStarFlow({
    * from the database, and handed down — the card itself reaches into the gym
    * slice for nothing.
    */
-  const { enrollments, loading: programsLoading, error: programsError } = useActiveEnrollments()
+  const {
+    enrollments,
+    loading: programsLoading,
+    error: programsError,
+    refresh: refreshPrograms,
+  } = useActiveEnrollments()
   /**
    * The read, in one object, because that is what the reconciliation takes.
    *
@@ -397,11 +402,26 @@ export function NorthStarFlow({
    * `reconcileProgramReference` takes the whole read and owns that rule now,
    * with a test of its own for each of the two states.
    */
+  /**
+   * WHAT THE RECONCILIATION DID, kept for one telling.
+   *
+   * Not stored in the plan: "we adopted this" is a fact about this page load,
+   * not about somebody's life, and a notice that survives a reload is a notice
+   * nobody can dismiss.
+   */
+  const [adopted, setAdopted] = useState<NsRoutineProgram | null>(null)
+  const [endedProgram, setEndedProgram] = useState<NsRoutineProgram | null>(null)
+
   useEffect(() => {
     if (!loaded) return
     // Returns the same object when nothing changed, so this does not write to
     // storage on every mount.
-    setPlan((p) => reconcileProgramReference(p, programRead).plan)
+    setPlan((p) => {
+      const out = reconcileProgramReference(p, programRead)
+      if (out.adopted) setAdopted(out.adopted)
+      if (out.ended) setEndedProgram(out.ended)
+      return out.plan
+    })
     /**
      * `plan` IS A DEPENDENCY, and leaving it out lost the adoption.
      *
@@ -920,15 +940,14 @@ export function NorthStarFlow({
     // Same writer the build steps use, so a line typed in the catalogue is a
     // real goal in that area rather than a note that lives on this page.
     onAddOwn: (areaId: string, text: string) => setPlan((p) => ns.addGoalsFromDump(p, areaId, text)),
-    // A program that is now running in the database, reflected in the plan the
-    // page is showing. The enrollment is the source of truth for what gets
-    // trained; this keeps the week on screen from disagreeing with it.
-    onProgramStarted: (program: NsRoutineProgram | null) =>
-      // `now` keeps its default; the reference is all this call carries.
-      setPlan((p) => ns.applyProgramToWorkoutRoutine(p, undefined, program)),
-    /* The week stays; only the claim that something tracks it goes. */
-    onProgramEnded: (enrollmentId: string) =>
-      setPlan((p) => ns.detachProgramFromRoutines(p, enrollmentId)),
+    /**
+     * `onProgramStarted` and `onProgramEnded` WERE HERE, and they were the
+     * reason the plan only ever learned about a program THIS browser had
+     * started. Nothing starts or ends a program from this page any more, and
+     * the reconciliation above learns it from the database instead — which is
+     * the same answer on the phone, the laptop, and a browser whose storage was
+     * cleared.
+     */
   }), [])
 
   /**
@@ -1249,6 +1268,13 @@ export function NorthStarFlow({
             plan={plan}
             today={today}
             handlers={{ ...boardHandlers, onOpenArea: (id: string) => { boardHandlers.onOpenArea(id); setTab("milestones") } }}
+            program={{
+              read: programRead,
+              timezone,
+              adopted,
+              ended: endedProgram,
+              onRetry: refreshPrograms,
+            }}
           />
         ) : tab === "focus" ? (
           <FocusTab

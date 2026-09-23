@@ -32,8 +32,10 @@
  */
 
 import { useState, type ReactNode } from "react"
+import { Button } from "@/components/ui/button"
+import { CHIP_ON } from "@/src/programs/forLifeMastery"
 import { Check, ChevronDown, Plus } from "lucide-react"
-import type { NsArea, NsPlan, NsRoutineProgram } from "@/src/goals/types"
+import type { NsArea, NsPlan } from "@/src/goals/types"
 import { NS_FLOOR, ROUTINE_BLUEPRINT_MAP, SEASON_FOCUS_COPY, TEMPLATE_ADDED_COPY } from "@/src/goals/data/northStar"
 import { BOARD_COPY, LOAD_CEILING, type RoutineNeed } from "@/src/goals/data/northStarBuild"
 import type { Template } from "@/src/goals/data/newGoalFramework"
@@ -55,7 +57,7 @@ import {
   weeklyLoad,
   wheelRatings,
 } from "@/src/goals/northStarService"
-import { WorkoutPrograms } from "./WorkoutPrograms"
+import { TrainingProgramCard, type TrainingProgramCardProps } from "./WorkoutPrograms"
 
 const SHAPE_ICON: Record<string, string> = { milestone_ladder: "🎯", habit_ramp: "🔁", achievement: "🏁" }
 const LEVEL_LABELS = ["Beginner", "Intermediate", "Advanced"]
@@ -71,12 +73,6 @@ export interface BoardHandlers {
   onRemoveTemplate: (areaId: string, templateId: string) => void
   /** One line, straight into that area — the same dump the build steps take. */
   onAddOwn: (areaId: string, text: string) => void
-  /**
-   * A training program was started. The day names come back so the plan's
-   * workout routine can be set to the week that is now actually being tracked.
-   */
-  onProgramStarted: (program: NsRoutineProgram | null) => void
-  onProgramEnded: (enrollmentId: string) => void
 }
 
 /**
@@ -102,10 +98,20 @@ export interface BoardHandlers {
  * place on the tab.
  */
 
-export function BuildBoard({ plan, today, handlers }: {
+export function BuildBoard({ plan, today, handlers, program }: {
   plan: NsPlan
   today: string
   handlers: BoardHandlers
+  /**
+   * Everything the training card draws, already read.
+   *
+   * NOTHING STARTS OR ENDS A PROGRAM FROM THIS PAGE ANY MORE, so the two
+   * handlers that used to come through here are gone: picking, changing and
+   * ending all happen on the Training page, and the card reconciles against
+   * the database on the way back rather than being told by a callback that
+   * only fires in the browser that pressed the button.
+   */
+  program: TrainingProgramCardProps
 }) {
   /**
    * Level is one choice for the whole board rather than one per card. Somebody
@@ -150,29 +156,33 @@ export function BuildBoard({ plan, today, handlers }: {
         </div>
         <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{BOARD_COPY.help}</p>
 
-        <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
-          <span className="text-[10.5px] text-zinc-500">Level</span>
+        {/* ONE "LEVEL" CONTROL ON THE STEP, at 44 px. There were two — this
+            one and a second row inside the training block underneath, which
+            set a different thing entirely — and both were 21-px pills of
+            10.5-px text on a dark card. The training block has gone; this is
+            the survivor, in the app's own chip tokens. */}
+        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+          <span className="text-xs text-muted-foreground">Level</span>
           {LEVEL_LABELS.map((label, i) => (
-            <button
+            <Button
               key={label}
-              onClick={() => setLevel(i)}
+              size="sm"
+              variant="outline"
               aria-pressed={level === i}
-              className={`text-[10.5px] px-2 py-0.5 rounded-full border transition-colors ${
-                level === i ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-500 hover:text-zinc-300"
-              }`}
+              className={level === i ? CHIP_ON : undefined}
+              onClick={() => setLevel(i)}
             >
               {label}
-            </button>
+            </Button>
           ))}
-          <span className="text-[10px] text-zinc-600">Sets the numbers every goal arrives with. Editable after.</span>
+          <span className="text-xs text-muted-foreground">
+            Sets the numbers every goal arrives with. Editable after.
+          </span>
         </div>
       </div>
 
       <div className="px-5 py-4 border-b border-white/10">
-        <WorkoutPrograms
-          onProgramStarted={handlers.onProgramStarted}
-          onProgramEnded={handlers.onProgramEnded}
-        />
+        <TrainingProgramCard {...program} />
       </div>
 
       {shown.length === 0 ? (

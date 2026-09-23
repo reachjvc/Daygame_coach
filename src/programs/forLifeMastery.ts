@@ -27,6 +27,13 @@
 export { useActiveEnrollments, refreshEnrollments } from "./hooks/useEnrollment"
 export { enrollmentName, getProgram } from "./data/catalog"
 export { describeTrainingWeek } from "./programsService"
+/**
+ * Everything a running program says about itself, in one object, on the
+ * account's clock. The Templates card needs the name, the level, the week and
+ * when it was last trained; four separate reads of the enrollment is how those
+ * four facts drifted apart on the four screens that used to invent them.
+ */
+export { describeProgramWeek } from "./programWeekService"
 // Switching kg↔lb converts what was typed rather than deleting it; Life
 // Mastery's own builder needs the same rule, not a second copy of it.
 export { convertTyped } from "./builder"
@@ -39,5 +46,23 @@ export { convertTyped } from "./builder"
  * cannot see; direct and through here is the honest version of the same thing.
  */
 export { TrainingCard } from "./components/TrainingCard"
+/**
+ * ONE ROW SHAPE FOR EVERY LIST OF PROGRAMS, including the one on this page.
+ *
+ * The block inside the plan was the fifth of five different rows — five
+ * paddings, five type sizes, and one of them built from 26-px buttons you had
+ * to aim at. Nothing about a program changes between those screens.
+ */
+export { ProgramRow } from "./components/ProgramRow"
+/**
+ * The picked state of a choice chip. Life Mastery's Templates step has one
+ * "Level" row and the training screens have several; written out by hand in
+ * both places they drift, which is how this app ended up with four ways of
+ * showing that something is selected. A look rather than a fact about the gym,
+ * and the only reason it lives under `src/programs` is that training is where
+ * the token was first written down.
+ */
+export { CHIP_ON } from "./components/trainingStyles"
 
 export type { ProgramEnrollment } from "./types"
+export type { ProgramWeekDescription } from "./types"

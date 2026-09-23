@@ -1,712 +1,273 @@
 "use client"
 
 /**
- * Ready-made training programs, on the Templates tab, next to everything else
- * this page hands you.
+ * WHICH TRAINING PROGRAM YOU ARE ON — and nothing else.
  *
- * WHAT WAS MISSING. Saying "four workouts a week" here produced a number and a
- * split of DAY NAMES — Push, Pull, Legs — and nothing underneath them. Meanwhile
- * the app already carried thirteen cited programs with a working progression
- * engine, and they lived at /test/programs where nobody planning their life was
- * going to find them. So the plan said you would train four times a week and
- * the app could not tell you what to do on any of the four.
+ * WHAT WAS HERE. A 628-line second copy of the training feature, inside a step
+ * that measured 12,661 px: the discipline chips, a grid of thirteen programs, a
+ * second "Level" row under the one BuildBoard already has, a kg/lb switch, the
+ * whole program editor, a "build your own" mode, and a "RUNNING NOW" band. Six
+ * of its own disciplines were hard-coded, so Half Ironman — which the catalogue
+ * has — could not be reached from here at all.
  *
- * This closes that. Pick a program, change it until it is yours, and start it —
- * which creates a real enrollment, so the first session is prescribed and every
- * logged session progresses the weights and feeds the tracked metrics the rest
- * of the app already reads.
+ * None of that was wrong because it was ugly. It was wrong because it was a
+ * SECOND PLACE to do everything: two catalogues to keep in step, two editors,
+ * two ways to start a program, and the one on this page was the one nobody
+ * maintained. Picking, changing, ending and building now happen on the Training
+ * page, which is the door this plan is built around, and this step keeps the
+ * one fact it actually needs: which program you are on.
  *
- * TWO THINGS HAPPEN ON START, and both are the point:
- *   1. a real enrollment, in the database, tracked from now on
- *   2. the program's days are written into this plan's workout routine, so the
- *      week you are looking at here and the week you are training are the same
- *      week. They used to be able to disagree.
+ * IT HOLDS NO HOOK AND NO `fetch(`. Everything comes down as props from the
+ * flow, which owns `useActiveEnrollments` once — so the card is drawable in
+ * every one of its states without a network, and the Systems step's card and
+ * this one can never disagree about what is running.
  *
- * IT NEEDS AN ACCOUNT, and says so rather than pretending. The rest of this
- * page is localStorage and works signed out; an enrollment is per-user data in
- * a table with own-row policies, and there is nowhere to put one for a browser
- * with no account. Editing works signed out — only starting needs the account.
+ * NO ORANGE. The violet step button is this page's primary and there is exactly
+ * one of it; a card that shouts as loudly as the thing you are meant to press
+ * next is a card competing with the page it sits on.
  */
 
-import { useState, useMemo } from "react"
 import Link from "next/link"
-import { Check, Loader2 } from "lucide-react"
-import { DISCIPLINES, LEVEL_LABELS } from "@/src/programs/config"
+import { AlertTriangle } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+/**
+ * THROUGH THE ONE DOOR. `src/goals` reaches `src/programs` only through
+ * `forLifeMastery.ts`, and `tests/unit/architecture.test.ts` fails on a direct
+ * import — every direct one was a place the plan could quietly grow a second
+ * copy of the program, which is the fault this whole phase is unpicking.
+ */
 import {
-  ALL_PROGRAMS,
-  OFFERED_DISCIPLINES,
+  ProgramRow,
+  describeProgramWeek,
   enrollmentName,
-  programsByDiscipline,
-  requireProgram,
-  resolveProgramForLevel,
-} from "@/src/programs/data/catalog"
-import {
-  isCustomizable,
-  isModified,
-  materializeSchedule,
-  missingWorkingWeights,
-  scheduleProblems,
-  scheduleDaysOrNone,
-} from "@/src/programs/customize"
-import { fromKg, roundToLoadable } from "@/src/programs/programsService"
-import { hasWeight, numericWeights, convertTyped } from "@/src/programs/builder"
-import { ProgramEditor } from "@/src/programs/components/ProgramEditor"
-import { RunningPrograms } from "@/src/programs/components/RunningPrograms"
-import { refreshEnrollments, useActiveEnrollments, saveRunningSchedule } from "@/src/programs/hooks/useEnrollment"
-import { Segmented } from "@/src/programs/components/ui"
-import { BuildYourOwn } from "./BuildYourOwn"
-import type { Discipline, LevelId, ProgramSchedule, UnitSystem } from "@/src/programs/types"
+  type ProgramEnrollment,
+} from "@/src/programs/forLifeMastery"
+import { withReturn } from "@/src/shared/returnTo"
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 import type { NsRoutineProgram } from "@/src/goals/types"
 
-export const PROGRAM_COPY = {
-  title: "Take a training program",
-  help: "A goal says where you are going. A program says what you do on Tuesday. Pick one, change anything you like about it, and start it — the app then prescribes each session and moves the weights for you as you log them.",
-  editHint: "Everything here is editable. Rename the days, reorder them, swap a lift for one your gym has, change the sets and reps. It stays your version.",
-  needsAccount: "Starting a program saves it to your account, so you will need to be signed in. You can build your version first — it will still be here.",
+/** Where "back" goes from anything this card links to. */
+const HERE = `${LIFE_MASTERY}?step=templates`
+
+const PROGRAMS = "/programs?view=programs"
+const BUILD = "/programs?view=build"
+
+export interface TrainingProgramCardProps {
+  /** The shared read, whole — `loading` and `error` are states this draws. */
+  read: {
+    enrollments: ProgramEnrollment[]
+    loading: boolean
+    error: string | null
+  }
+  /** The ACCOUNT's zone. Every date on this card is in the lifter's calendar. */
+  timezone: string
+  /** A program adopted from another device on this load. Said once. */
+  adopted?: NsRoutineProgram | null
+  /** A reference dropped because the program is no longer running. */
+  ended?: NsRoutineProgram | null
+  onRetry: () => void
+  /** Fixed in tests; `describeProgramWeek` reads no clock of its own. */
+  now?: Date
 }
 
-interface Props {
-  /**
-   * Write the started program's day names into the plan's workout routine, so
-   * the training week on this page matches the one being tracked. Null when the
-   * plan has no workout routine yet, in which case starting still enrolls.
-   */
-  onProgramStarted: (program: NsRoutineProgram | null) => void
-  /**
-   * A program was ended here, so the plan must stop saying it tracks it.
-   * Without this the plan keeps a reference to a dead row — the same
-   * two-answers bug, just pointing at nothing instead of at the wrong thing.
-   */
-  onProgramEnded?: (enrollmentId: string) => void
-}
+export function TrainingProgramCard({
+  read,
+  timezone,
+  adopted = null,
+  ended = null,
+  onRetry,
+  now,
+}: TrainingProgramCardProps) {
+  const heading = (
+    <p className="text-xs uppercase tracking-wide text-muted-foreground">Training program</p>
+  )
 
-export function WorkoutPrograms({ onProgramStarted, onProgramEnded }: Props) {
-  /** Bumped after starting or ending one, to re-read what is running. */
-  const [runningKey, setRunningKey] = useState(0)
-  /** Take one that exists, or build your own. Two answers to the same question. */
-  const [mode, setMode] = useState<"ready" | "own">("ready")
-  const [discipline, setDiscipline] = useState<Discipline>("strength")
-  const [programId, setProgramId] = useState<string | null>(null)
-  const [level, setLevel] = useState<LevelId>("intermediate")
-  const [unit, setUnit] = useState<UnitSystem>("kg")
-  const [schedule, setSchedule] = useState<ProgramSchedule | null>(null)
-  const [weights, setWeights] = useState<Record<string, string>>({})
-  const [oneRms, setOneRms] = useState<Record<string, string>>({})
-  /**
-   * `changed` is the state that was missing.
-   *
-   * After "StrongLifts 5×5 is running — your version" the editor stayed live,
-   * every change was accepted on screen, and not one of them was sent. The
-   * person edited their program, watched the edit appear, and the gym went on
-   * prescribing what it had before.
-   */
-  const [state, setState] = useState<"idle" | "saving" | "done" | "changed" | "updating">("idle")
-  /** Which enrollment the start created, so an edit after it can be sent. */
-  const [startedId, setStartedId] = useState<string | null>(null)
-
-  /**
-   * An edit made after the program started is an edit to the RUNNING program.
-   *
-   * Wrapping the two setters rather than watching the values with an effect:
-   * an effect would also fire on the state the start itself writes, and mark
-   * a freshly started program as changed before anybody had touched it.
-   */
-  const markChanged = () => setState((cur) => (cur === "done" ? "changed" : cur))
-  /** Programs this start paused, named on the confirmation. */
-  const [displacedNames, setDisplacedNames] = useState<string[]>([])
-  const [error, setError] = useState<string | null>(null)
-
-  const programs = programsByDiscipline(discipline)
-  // A level can route to a different program entirely (Layer-1 calibration),
-  // and it is the RESOLVED one that gets enrolled and edited.
-  const resolved = programId ? resolveProgramForLevel(programId, level) : null
-  const program = resolved?.program ?? null
-  const routed = program && programId !== program.id
-
-  function choose(id: string) {
-    if (programId === id) {
-      setProgramId(null)
-      setSchedule(null)
-      return
-    }
-    const p = requireProgram(id)
-    const lvl = p.levels.find((l) => !l.structuralVariantOf)?.id ?? p.levels[0].id
-    const target = resolveProgramForLevel(id, lvl).program
-    setProgramId(id)
-    setLevel(lvl)
-    setSchedule(isCustomizable(target) ? materializeSchedule(target) : null)
-    setWeights({})
-    setOneRms({})
-    setState("idle")
-    setError(null)
-  }
-
-  function changeLevel(next: LevelId) {
-    setLevel(next)
-    setState("idle")
-    setError(null)
-    if (!programId) return
-
-    /**
-     * YOUR EDITS SURVIVE A CHANGE OF LEVEL. They did not, and that is the bug
-     * behind "it doesn't use the workout I customized".
-     *
-     * A level CAN route to a structurally different program — beginner on 5/3/1
-     * runs StrongLifts — and edits made against one schedule mean nothing
-     * against another, so resetting there is right. But this reset ran
-     * unconditionally, and for every other program in the catalogue all three
-     * levels resolve to the SAME program. So somebody would rebuild their week
-     * — swap a lift, drop a day — then nudge the level control sitting directly
-     * above it, and the whole thing was silently thrown away. No warning, no
-     * undo, and the app then started a program they had not designed.
-     *
-     * Now the question asked is the one that actually matters: did the PROGRAM
-     * change? If it did not, the edits still describe it and are kept.
-     */
-    const current = resolveProgramForLevel(programId, level).program
-    const target = resolveProgramForLevel(programId, next).program
-    if (target.id === current.id) return
-
-    setSchedule(isCustomizable(target) ? materializeSchedule(target) : null)
-    setWeights({})
-    setOneRms({})
-  }
-
-  const modified = program && schedule ? isModified(program, schedule) : false
-  const missing = program && schedule ? missingWorkingWeights(program, schedule, level, unit) : []
-  const needs1RM = program?.levels.find((l) => l.id === level)?.requires1RM ?? false
-
-  const oneRmExercises =
-    needs1RM && schedule && (schedule.kind === "linear_rotation" || schedule.kind === "weekly_waved")
-      ? [
-          ...new Map(
-            schedule.days
-              .flatMap((d) => d.exercises)
-              .filter((e) => e.progression.kind === "percentage_tm")
-              .map((e) => [e.id, e])
-          ).values(),
-        ]
-      : []
-
-  const missingFilled = missing.every((m) => hasWeight(weights, m.exerciseId))
-  /**
-   * How each lift is loaded, so a unit switch rounds a dumbbell to a dumbbell
-   * and a barbell to a plate pair rather than to the same number.
-   */
-  const loadStyles = useMemo(() => {
-    const byId = new Map<string, "barbell" | "free" | "bodyweight">()
-    if (!schedule) return byId
-    for (const day of scheduleDaysOrNone(schedule)) {
-      for (const ex of day.exercises) {
-        byId.set(ex.id, (ex as { loadStyle?: "barbell" | "free" | "bodyweight" }).loadStyle ?? "barbell")
-      }
-    }
-    return byId
-  }, [schedule])
-  const oneRmsFilled = oneRmExercises.every((e) => Number(oneRms[e.id]) > 0)
-  // A day added but not yet filled makes the program unstartable, not invalid —
-  // it is a normal half-finished edit, so it is named rather than blocked.
-  const problems = schedule ? scheduleProblems(schedule) : []
-  /**
-   * START IS OFF WHILE WE CANNOT SEE WHAT IS RUNNING.
-   *
-   * Starting a program of the same kind pauses the one already running. If the
-   * list of running programs could not be read, the app does not know what it
-   * is about to pause — and the failure looked exactly like "nothing running",
-   * so the button sat there inviting the press.
-   */
-  const { error: runningUnknown } = useActiveEnrollments()
-  const canStart =
-    !!program && problems.length === 0 && missingFilled && oneRmsFilled && state !== "saving" && !runningUnknown
-
-  async function start() {
-    if (!program || !programId) return
-    setState("saving")
-    setError(null)
-    try {
-      const res = await fetch("/api/programs/enrollments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          programId,
-          level,
-          unitSystem: unit,
-          ...(oneRmExercises.length ? { oneRepMaxes: numericWeights(oneRms) } : {}),
-          ...(Object.keys(weights).length ? { workingWeights: numericWeights(weights) } : {}),
-          // Only send a schedule that actually differs — an untouched program
-          // stays on the catalog and keeps getting its corrections.
-          customSchedule: modified ? schedule : null,
-        }),
-      })
-
-      if (res.status === 401) {
-        setError("Sign in to start a program — your version here is kept until you do.")
-        setState("idle")
-        return
-      }
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null
-        setError(body?.error ?? "Could not start the program.")
-        setState("idle")
-        return
-      }
-
-      /**
-       * THE ROW THAT WAS JUST CREATED, handed to the plan.
-       *
-       * The plan used to receive day names and nothing else, so it could never
-       * answer "which program is this week?" — only "what are the days called?"
-       * Now it holds the enrollment id, which is the fact everything else is
-       * decided from. The response has carried it all along; nobody was reading
-       * it.
-       */
-      const created = (await res.json().catch(() => null)) as
-        | {
-            enrollment?: { id: string; program_id: string; started_at: string }
-            displaced?: { program_id: string }[]
-          }
-        | null
-
-      /**
-       * SAY WHAT THIS REPLACED. One active program per discipline is the rule,
-       * and it used to be applied in silence — which is how somebody's own
-       * self-built week disappeared the day they tried a cited program, with
-       * nothing on any screen to say where it went.
-       */
-      const displaced = created?.displaced ?? []
-      // `enrollmentName`, so a displaced self-built week is named by what you
-      // called it rather than by the shell every one of them shares.
-      setDisplacedNames(displaced.map(enrollmentName))
-      // The id and nothing else. The name, the days and the start date are all
-      // read live from it — copying them is what let a program renamed on the
-      // Training page keep its old name here.
-      const ref: NsRoutineProgram | null = created?.enrollment
-        ? { enrollmentId: created.enrollment.id }
-        : null
-
-      /**
-       * TELL THE PLAN WHICH PROGRAM, WHATEVER KIND IT IS.
-       *
-       * This used to compute the program's day names and send them too, gated
-       * on `isCustomizable` — false for every endurance plan, so starting
-       * Couch to 5K enrolled you for real and told the plan nothing at all.
-       *
-       * The day names are gone entirely now: they were a copy of a week the
-       * plan could then edit without the program ever hearing about it. The
-       * reference is the whole message, and it is sent for every kind of
-       * program.
-       */
-      onProgramStarted(ref)
-      setStartedId(created?.enrollment?.id ?? null)
-      setState("done")
-      // RE-READ WHAT IS RUNNING. Remounting the band was not enough: the list
-      // is shared and, once loaded, never asked again — so "Running now" kept
-      // showing the program this one just replaced, and tapping through to the
-      // Training page arrived at the same stale answer.
-      await refreshEnrollments()
-      setRunningKey((k) => k + 1)
-    } catch {
-      setError("Could not reach the server. Nothing was started.")
-      setState("idle")
-    }
-  }
-
-  if (mode === "own") {
+  if (read.loading) {
     return (
-      <div>
-        <ModeSwitch mode={mode} onMode={setMode} />
-        {/* THE BENCH, ON THE SAME PAGE AS THE CATALOGUE. It was its own step in
-            the rail, which asked somebody to choose between "a program" and "my
-            program" before they had seen either, and put two answers to one
-            question in two different places. */}
-        <div className="mt-3 space-y-3">
-          <RunningPrograms key={runningKey} onEnded={(id) => { onProgramEnded?.(id); setRunningKey((k) => k + 1) }} />
-          <BuildYourOwn onProgramStarted={onProgramStarted} />
-        </div>
+      <div className="space-y-2">
+        {heading}
+        <div
+          data-testid="lm-training-program-loading"
+          className="h-[92px] animate-pulse rounded-xl bg-muted/40"
+          aria-hidden
+        />
       </div>
     )
   }
 
-  return (
-    <div>
-      <ModeSwitch mode={mode} onMode={setMode} />
-      {/* WHAT IS ACTUALLY RUNNING, before what you could start, with the way
-          onward attached. The page used to open with a catalogue and never once
-          mention the program the account was already on — and even once it did,
-          a person still had to work out which of three screens was the one they
-          trained on. */}
-      <div className="mt-3 space-y-2">
-        <RunningPrograms key={runningKey} onEnded={(id) => { onProgramEnded?.(id); setRunningKey((k) => k + 1) }} />
-        <Link
-          href="/programs"
-          className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400/40 bg-emerald-500/10 px-3 py-1.5 text-[12.5px] text-emerald-200 transition-colors hover:bg-emerald-500/20"
-        >
-          Go to today&apos;s session
-        </Link>
-      </div>
-      <h2 className="mt-3 text-sm font-semibold text-zinc-200">{PROGRAM_COPY.title}</h2>
-      <p className="text-[12.5px] text-zinc-400 mt-1 leading-relaxed">{PROGRAM_COPY.help}</p>
+  /**
+   * A RETIRED CATALOGUE ID IS A FAILED READ, NOT A CRASH.
+   *
+   * `describeProgramWeek` throws `Unknown program: <id>` rather than falling
+   * back to a week that belongs to no program. Caught here, named here, and the
+   * rest of the card still draws — an id this build no longer has must not take
+   * the whole Life Mastery page down with it.
+   */
+  let described: ReturnType<typeof describeProgramWeek> | null = null
+  let retired: string | null = null
+  const one = read.enrollments.length === 1 ? read.enrollments[0] : null
+  if (one && !read.error) {
+    try {
+      described = describeProgramWeek(one, { now: now ?? new Date(), timeZone: timezone })
+    } catch {
+      retired = one.program_id
+    }
+  }
 
-      {/* Discipline */}
-      <div className="flex flex-wrap gap-1 mt-2">
-        {OFFERED_DISCIPLINES.map((d) => (
-          <button
-            key={d}
-            onClick={() => {
-              setDiscipline(d)
-              setProgramId(null)
-              setSchedule(null)
-              setState("idle")
-              setError(null)
-            }}
-            className={`text-[11px] px-2 py-0.5 rounded border transition-colors ${
-              discipline === d
-                ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-200"
-                : "border-white/10 text-zinc-400 hover:bg-white/5"
-            }`}
-          >
-            {DISCIPLINES[d].label}
-          </button>
-        ))}
-      </div>
+  const change = (id: string) => withReturn(`${PROGRAMS}&program=${id}`, HERE)
 
-      {/* Programs */}
-      <div className="grid gap-1.5 sm:grid-cols-2 mt-2">
-        {programs.map((p) => {
-          const active = programId === p.id
-          return (
-            <button
-              key={p.id}
-              onClick={() => choose(p.id)}
-              className={`text-left rounded-lg border px-2.5 py-2 transition-colors ${
-                active
-                  ? "border-emerald-400/50 bg-emerald-500/[0.08]"
-                  : "border-white/10 bg-white/[0.02] hover:bg-white/[0.06]"
-              }`}
-            >
-              <span className="flex items-center gap-1.5">
-                {active && <Check className="size-3 text-emerald-300 shrink-0" />}
-                <span className="text-[12.5px] font-medium text-zinc-100">{p.name}</span>
-              </span>
-              <span className="block text-[11px] text-zinc-500 mt-0.5 leading-relaxed line-clamp-2">
-                {p.blurb}
-              </span>
-            </button>
-          )
-        })}
-      </div>
-
-      {program && (
-        <div className="mt-2.5 rounded-lg border border-white/10 bg-black/20 p-2.5 space-y-2.5">
-          {/* Level + units */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-1">
-              {requireProgram(programId!).levels.map((l) => (
-                <button
-                  key={l.id}
-                  onClick={() => changeLevel(l.id)}
-                  className={`text-[11px] px-2 py-0.5 rounded border transition-colors ${
-                    level === l.id
-                      ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-200"
-                      : "border-white/10 text-zinc-400 hover:bg-white/5"
-                  }`}
-                >
-                  {LEVEL_LABELS[l.id]}
-                </button>
-              ))}
+  /**
+   * THE LINKS STAY WHEN THE READ FAILS.
+   *
+   * A card that could not check must not say "No program yet" — that is a
+   * statement about somebody's training made on no evidence — and it must not
+   * become a dead end either. Pick and Change are the way out of both.
+   */
+  if (read.error !== null || retired !== null) {
+    return (
+      <div className="space-y-2">
+        {heading}
+        <Card className="gap-0 py-0" data-testid="lm-training-program">
+          <div className="space-y-2 px-4 py-4" data-testid="lm-training-unavailable">
+            <p className="flex items-start gap-1.5 text-sm text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+              {retired
+                ? `${retired} is no longer in the catalogue, so its week cannot be read.`
+                : "Could not check which program you are on."}
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" onClick={onRetry}>
+                Try again
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href={withReturn(PROGRAMS, HERE)}>Pick a program</Link>
+              </Button>
             </div>
-            {program.metricType === "load" && (
-              <div className="flex items-center gap-1">
-                {(["kg", "lb"] as UnitSystem[]).map((u) => (
-                  <button
-                    key={u}
-                    onClick={() => {
-                      if (u === unit) return
-                      // CONVERTED, not deleted. This used to wipe every number
-                      // typed for every lift, with nothing on screen saying so.
-                      const styleFor = (id: string) =>
-                        loadStyles.get(id) ?? "barbell"
-                      setWeights((w) => convertTyped(w, unit, u, styleFor))
-                      setOneRms((w) => convertTyped(w, unit, u, styleFor))
-                      setUnit(u)
-                    }}
-                    className={`text-[11px] px-2 py-0.5 rounded border transition-colors ${
-                      unit === u ? "border-white/25 bg-white/10 text-white" : "border-white/10 text-zinc-400 hover:bg-white/5"
-                    }`}
-                  >
-                    {u}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
+        </Card>
+      </div>
+    )
+  }
 
-          {routed && (
-            <p className="text-[11px] text-amber-300/80 leading-relaxed">
-              {LEVEL_LABELS[level]} runs <strong>{program.name}</strong> instead — it is the better
-              fit at this level, and it is the one you will be editing and starting.
-            </p>
-          )}
-
-          <p className="text-[10px] text-zinc-600 leading-relaxed">{PROGRAM_COPY.editHint}</p>
-
-          {schedule && (
-            <ProgramEditor
-              program={program}
-              schedule={schedule}
-              level={level}
-              unit={unit}
-              onChange={(next) => {
-                markChanged()
-                setSchedule(next)
-              }}
-              workingWeights={weights}
-              onWorkingWeight={(id, raw) => setWeights((w) => ({ ...w, [id]: raw }))}
-              onReset={() => {
-                setSchedule(materializeSchedule(program))
-                setWeights({})
-              }}
-            />
-          )}
-
-          {!schedule && !isCustomizable(program) && (
-            <ProgramEditor
-              program={program}
-              schedule={program.schedule}
-              level={level}
-              unit={unit}
-              onChange={() => {}}
-              workingWeights={{}}
-              onWorkingWeight={() => {}}
-              onReset={() => {}}
-            />
-          )}
-
-          {/* 5/3/1 and anything else built on a training max needs a real 1RM. */}
-          {oneRmExercises.length > 0 && (
-            <div>
-              <p className="text-[11px] text-zinc-300">Your one-rep max on each main lift ({unit})</p>
-              <p className="text-[10px] text-zinc-600 mt-0.5 leading-relaxed">
-                This program prescribes percentages of a training max, so it cannot start without
-                them. An honest recent single, not a best-ever.
-              </p>
-              <div className="grid sm:grid-cols-2 gap-1.5 mt-1.5">
-                {oneRmExercises.map((ex) => (
-                  <label key={ex.id} className="flex items-center gap-2">
-                    <span className="flex-1 min-w-0 text-[12.5px] text-zinc-300 truncate">{ex.name}</span>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      value={oneRms[ex.id] ?? ""}
-                      onChange={(e) => setOneRms((r) => ({ ...r, [ex.id]: e.target.value }))}
-                      aria-label={`One-rep max for ${ex.name} in ${unit}`}
-                      className="w-20 bg-white/5 border border-white/15 rounded px-1.5 py-0.5 text-[12.5px] text-white focus:outline-none focus:border-white/30"
-                    />
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Starting weights the level DOES seed, shown so they can be corrected. */}
-          {program.metricType === "load" && !needs1RM && schedule && (
-            <SeededWeights
-              program={program}
-              schedule={schedule}
-              level={level}
-              unit={unit}
-              values={weights}
-              onChange={(id, raw) => {
-                markChanged()
-                setWeights((w) => ({ ...w, [id]: raw }))
-              }}
-            />
-          )}
-
-          {error && (
-            <p className="text-[11px] text-rose-300/90 bg-rose-500/[0.07] border border-rose-400/20 rounded-md px-2.5 py-1.5">
-              {error}
-            </p>
-          )}
-
-          {state === "changed" || state === "updating" ? (
-            /* AN EDIT AFTER THE START HAS SOMEWHERE TO GO. */
-            <div className="flex flex-wrap items-center gap-2" data-testid="program-changed">
-              <button
-                onClick={async () => {
-                  if (!startedId) return
-                  setState("updating")
-                  setError(null)
-                  const res = await saveRunningSchedule(startedId, schedule ?? null, numericWeights(weights))
-                  if (!res.ok) {
-                    // The edits stay on screen: losing them because the save
-                    // failed would be the worse of the two failures.
-                    setError(res.error)
-                    setState("changed")
-                    return
-                  }
-                  setState("done")
-                }}
-                disabled={state === "updating"}
-                className="flex items-center gap-1.5 text-[12.5px] px-3 py-1.5 rounded-md border border-emerald-400/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 disabled:opacity-40 transition-colors"
-              >
-                {state === "updating" && <Loader2 className="size-3 animate-spin" />}
-                Update the running program
-              </button>
-            </div>
-          ) : state === "done" ? (
-            /* WHERE IT NOW LIVES, said out loud and linked.
-               Starting a program used to end here, with "your first session is
-               waiting" and no way to reach it — the page that prescribes and
-               logs the session is /programs, and nothing on this screen said
-               so. A confirmation that names no destination is a dead end. */
-            <div className="space-y-1.5">
-              <p className="text-[12.5px] text-emerald-300/90 flex items-center gap-1.5">
-                <Check className="size-3.5" /> {program.name} is running
-                {modified ? " — your version" : ""}. Your training week here now matches it.
-              </p>
-              {displacedNames.length > 0 && (
-                <p className="text-[11px] text-amber-300/80">
-                  {displacedNames.join(", ")} moved to your finished programs — everything it logged
-                  is kept, and you can start it again from the Training page.
+  if (read.enrollments.length === 0) {
+    return (
+      <div className="space-y-2">
+        {heading}
+        <Card className="gap-0 py-0" data-testid="lm-training-program">
+          <div className="space-y-2 px-4 py-4">
+            {ended ? (
+              <>
+                <p className="text-base font-semibold">That program is finished</p>
+                {/* Green is "done" everywhere else in this app, and a program
+                    you finished is the one thing on this card that IS done. */}
+                <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                  Finished — everything you logged is kept.
                 </p>
-              )}
+              </>
+            ) : (
+              <>
+                <p className="text-base font-semibold">No program yet</p>
+                <p className="text-sm text-muted-foreground">
+                  A goal says where you are going. A program says what you do on Tuesday.
+                </p>
+              </>
+            )}
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link href={withReturn(PROGRAMS, HERE)}>
+                  {ended ? "Choose what is next" : "Pick a program"}
+                </Link>
+              </Button>
               <Link
-                href="/programs"
-                className="inline-flex items-center gap-1.5 text-[12.5px] px-3 py-1.5 rounded-md border border-emerald-400/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 transition-colors"
+                href={withReturn(BUILD, HERE)}
+                className="inline-flex min-h-11 items-center text-sm text-muted-foreground underline underline-offset-4"
               >
-                Go to today&apos;s session
+                Build my own ›
               </Link>
             </div>
-          ) : (
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={start}
-                disabled={!canStart}
-                className="flex items-center gap-1.5 text-[12.5px] px-3 py-1.5 rounded-md border border-emerald-400/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 disabled:opacity-30 disabled:hover:bg-emerald-500/10 transition-colors"
-              >
-                {state === "saving" && <Loader2 className="size-3 animate-spin" />}
-                Start tracking this
-              </button>
-              {runningUnknown && (
-                <span className="text-[11px] text-amber-300/80">
-                  Start is off until your programs can be checked — starting now could pause one you
-                  are on.
-                </span>
-              )}
-              {!runningUnknown && problems.length > 0 && (
-                <span className="text-[11px] text-amber-300/80">{problems[0]}</span>
-              )}
-              {problems.length === 0 && !missingFilled && (
-                <span className="text-[11px] text-amber-300/80">
-                  Fill in the starting weights above first.
-                </span>
-              )}
-              {problems.length === 0 && missingFilled && !oneRmsFilled && (
-                <span className="text-[11px] text-amber-300/80">
-                  Enter all {oneRmExercises.length} maxes first.
-                </span>
-              )}
-            </div>
-          )}
-
-          <p className="text-[10px] text-zinc-600 leading-relaxed">{PROGRAM_COPY.needsAccount}</p>
-        </div>
-      )}
-    </div>
-  )
-}
-
-/**
- * The lifts the level already has a number for, shown rather than hidden.
- *
- * These are optional — leaving them blank starts at the level's own suggestion —
- * but a beginner squat seeded at 20 kg for somebody who squats 80 makes the
- * first three weeks meaningless, and the fix should not be "log six sessions
- * and let it ratchet".
- */
-function SeededWeights({
-  program,
-  schedule,
-  level,
-  unit,
-  values,
-  onChange,
-}: {
-  program: import("@/src/programs/types").ProgramDefinition
-  schedule: ProgramSchedule
-  level: LevelId
-  unit: UnitSystem
-  values: Record<string, string>
-  onChange: (exerciseId: string, raw: string) => void
-}) {
-  if (schedule.kind !== "linear_rotation" && schedule.kind !== "weekly_waved") return null
-  const seeds = program.levels.find((l) => l.id === level)?.seedWorkingWeightKg ?? {}
-  const seeded = [
-    ...new Map(
-      schedule.days
-        .flatMap((d) => d.exercises)
-        .filter((e) => seeds[e.id] != null)
-        .map((e) => [e.id, e])
-    ).values(),
-  ]
-  if (seeded.length === 0) return null
-
-  return (
-    <div>
-      <p className="text-[11px] text-zinc-300">Starting weights ({unit})</p>
-      <p className="text-[10px] text-zinc-600 mt-0.5 leading-relaxed">
-        Prefilled from {LEVEL_LABELS[level]}. Change any that are wrong — starting too light costs
-        weeks, starting too heavy costs the lift.
-      </p>
-      <div className="grid sm:grid-cols-2 gap-1.5 mt-1.5">
-        {seeded.map((ex) => (
-          <label key={ex.id} className="flex items-center gap-2">
-            <span className="flex-1 min-w-0 text-[12.5px] text-zinc-400 truncate">{ex.name}</span>
-            <input
-              type="number"
-              inputMode="decimal"
-              value={values[ex.id] ?? ""}
-              placeholder={String(roundToLoadable(fromKg(seeds[ex.id]!, unit), unit))}
-              onChange={(e) => onChange(ex.id, e.target.value)}
-              aria-label={`Starting weight for ${ex.name} in ${unit}`}
-              className="w-20 bg-white/5 border border-white/10 rounded px-1.5 py-0.5 text-[12.5px] text-white focus:outline-none focus:border-white/30"
-            />
-          </label>
-        ))}
+          </div>
+        </Card>
       </div>
-    </div>
-  )
-}
+    )
+  }
 
+  if (one && described) {
+    return (
+      <div className="space-y-2">
+        {heading}
+        <Card className="gap-0 py-0" data-testid="lm-training-program">
+          <div className="space-y-2 px-4 py-4">
+            <div className="flex items-center gap-2">
+              <p className="min-w-0 flex-1 truncate text-base font-semibold">{described.name}</p>
+              <Badge variant="secondary" className="shrink-0">
+                {described.level}
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">{described.week}</p>
+            {/* Amber for a program started a fortnight ago and never trained:
+                that is a thing worth noticing, not an error. */}
+            <p
+              className={
+                described.lastTrained === "forgotten"
+                  ? "text-xs text-amber-600 dark:text-amber-400"
+                  : "text-xs text-muted-foreground"
+              }
+            >
+              {described.lastTrainedLine}
+            </p>
+            {adopted && (
+              <p className="text-xs text-muted-foreground" data-testid="lm-training-adopted">
+                Your training week below now follows {described.name}.
+              </p>
+            )}
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link href={change(one.id)}>Change program</Link>
+              </Button>
+              <Link
+                href={`/programs?program=${one.id}`}
+                className="inline-flex min-h-11 items-center text-sm text-muted-foreground underline underline-offset-4"
+              >
+                Today&apos;s session ›
+              </Link>
+            </div>
+          </div>
+        </Card>
+      </div>
+    )
+  }
 
-/**
- * Ready-made, or your own. One question, two answers, side by side.
- */
-function ModeSwitch({
-  mode,
-  onMode,
-}: {
-  mode: "ready" | "own"
-  onMode: (mode: "ready" | "own") => void
-}) {
+  // Two or more. Every one of them named, because "you have 3 programs" without
+  // saying which three is a number you cannot act on.
   return (
-    <Segmented
-      label="Where your program comes from"
-      value={mode}
-      onChange={onMode}
-      options={[
-        {
-          value: "ready" as const,
-          label: "Take a ready-made one",
-          hint: `${ALL_PROGRAMS.length} cited programs, all fully editable once you pick one.`,
-        },
-        {
-          value: "own" as const,
-          label: "Build my own",
-          hint: "An empty week: your days, your lifts, your rep schemes.",
-        },
-      ]}
-    />
+    <div className="space-y-2">
+      {heading}
+      <Card className="gap-0 py-0" data-testid="lm-training-program">
+        <div className="space-y-2 px-4 py-4">
+          <p className="text-base font-semibold">{read.enrollments.length} programs running</p>
+          <p className="text-xs text-amber-600 dark:text-amber-400">
+            Training shows one session a day. End the ones you are not doing.
+          </p>
+        </div>
+        <ul className="divide-y divide-border border-t border-border">
+          {read.enrollments.map((e) => (
+            <li key={e.id}>
+              <ProgramRow
+                name={enrollmentName(e)}
+                href={change(e.id)}
+                testId={`lm-program-${e.id}`}
+              />
+            </li>
+          ))}
+        </ul>
+        <div className="px-4 py-4">
+          <Button variant="outline" size="sm" asChild>
+            <Link href={withReturn(PROGRAMS, HERE)}>Manage programs</Link>
+          </Button>
+        </div>
+      </Card>
+    </div>
   )
 }
