@@ -49,7 +49,6 @@ const TINY_TYPE_DEBT = new Set([
   "components/CustomProgramBuilder.tsx",
   // ProgramEditor came off on 2026-09-23 when it was rebuilt on the app's own
   // kit: its seven 10-px hints are sheet rows and `text-sm` sentences now.
-  "components/RunningPrograms.tsx",
   "components/ui.tsx",
 ])
 

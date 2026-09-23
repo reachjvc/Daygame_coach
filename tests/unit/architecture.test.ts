@@ -770,7 +770,6 @@ describe('Architecture Compliance', () => {
       // it takes its rows as props instead of fetching three years of sets on
       // top of the year the tab had already loaded.
       'src/programs/components/ProgressionView.tsx',
-      'src/programs/components/SavedWeeks.tsx',
       'src/qa/components/QAPage.tsx',
       'src/scenarios/components/ChatWindow.tsx',
       'src/scenarios/components/ScenarioLab.tsx',
@@ -812,7 +811,6 @@ describe('Architecture Compliance', () => {
       'src/goals/components/north-star/AreaGoals.tsx',
       'src/goals/components/north-star/AreaGoalsDialog.tsx',
       'src/goals/components/north-star/BuildBoard.tsx',
-      'src/goals/components/north-star/BuildYourOwn.tsx',
       'src/goals/components/north-star/Experiences.tsx',
       'src/goals/components/north-star/FocusTab.tsx',
       'src/goals/components/north-star/GoalCard.tsx',
@@ -847,7 +845,6 @@ describe('Architecture Compliance', () => {
       'src/programs/components/CustomProgramBuilder.tsx',
       // EditActiveProgram and ProgramEditor came off on 2026-09-23 — see the
       // note on TRAINING_STYLE_DEBT above.
-      'src/programs/components/RunningPrograms.tsx',
       'src/programs/components/ui.tsx',
     ])
 
@@ -1275,8 +1272,6 @@ describe('Architecture Compliance', () => {
       // so Safari stops zooming the page and never zooming back).
       'src/programs/components/ProgramsApp.tsx',
       'src/programs/components/ProgressionView.tsx',
-      'src/programs/components/RunningPrograms.tsx',
-      'src/programs/components/SavedWeeks.tsx',
       'src/programs/components/SessionNotices.tsx',
       'src/programs/components/TrainingScreen.tsx',
       'src/programs/components/WeekStrip.tsx',
@@ -1719,7 +1714,6 @@ describe('Architecture Compliance', () => {
       // catch.
       'components/ProgressTab.tsx': 0,
       'components/ProgressionView.tsx': 3,
-      'components/RunningPrograms.tsx': 2,
       // Zero since the card stopped naming a stale workout's day itself
       // (2026-09-20) — the state carries it, computed where the account's
       // zone is known. Kept at 0: this file prints a weekday.
@@ -1816,11 +1810,6 @@ describe('Architecture Compliance', () => {
       'src/goals/components/new-goals/GoalsConfigStep.tsx @/src/programs/data/catalog',
       'src/goals/components/new-goals/GoalsConfigStep.tsx @/src/programs/types',
       'src/goals/components/new-goals/NewGoalsFlow.tsx @/src/programs/types',
-      'src/goals/components/north-star/BuildYourOwn.tsx @/src/programs/components/CustomProgramBuilder',
-      'src/goals/components/north-star/BuildYourOwn.tsx @/src/programs/components/SavedWeeks',
-      'src/goals/components/north-star/BuildYourOwn.tsx @/src/programs/customLifts',
-      'src/goals/components/north-star/BuildYourOwn.tsx @/src/programs/customize',
-      'src/goals/components/north-star/BuildYourOwn.tsx @/src/programs/types',
       // WorkoutPrograms.tsx had TEN of these on 2026-09-23 — the editor, the
       // running band, the blue-grey kit, the engine, the customiser — and it
       // has none: the Templates step is a status card drawn from props, and
@@ -1849,6 +1838,33 @@ describe('Architecture Compliance', () => {
         'Life Mastery reaches the gym through src/programs/forLifeMastery.ts.\n' +
           'A direct import is how the plan came to keep its own copy of the\n' +
           'program and then disagree with the database about it:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+    })
+
+    test('Life Mastery hosts no second copy of the training feature', () => {
+      /**
+       * NORTH STAR REACHES THE GYM THROUGH THE DOOR AND NOWHERE ELSE.
+       *
+       * The allowlist above is a list of exceptions that already existed; this
+       * says a whole DIRECTORY has none left, which is a different and stronger
+       * claim. It is the one the phase actually made true: the Templates step
+       * held a catalogue, an editor, a builder and a running band — a second
+       * copy of the training feature, reachable only from inside the plan, and
+       * therefore the copy nobody maintained. Ten direct imports carried it.
+       *
+       * The two `new-goals` entries above are deliberately still allowed: that
+       * flow reads the catalogue to offer a program as a goal, which is
+       * reading, not a second copy. This rule is about the north-star step.
+       */
+      const offenders = crossings().filter((c) =>
+        c.startsWith('src/goals/components/north-star/'),
+      )
+      expect(
+        offenders,
+        'The Templates step grew a second copy of the training feature once, and\n' +
+          'every direct import was a way for that copy to look plausible. Add what\n' +
+          'is needed to src/programs/forLifeMastery.ts instead:\n' +
           offenders.join('\n'),
       ).toEqual([])
     })

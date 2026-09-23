@@ -24,8 +24,10 @@ import {
   canBeUnweighted,
 } from "@/src/programs/data/exerciseLibrary"
 import { addDay, addExercise, loadExerciseFromLibrary, scheduleDays } from "@/src/programs/customize"
-import { emptyCustomSchedule } from "@/src/programs/components/CustomProgramBuilder"
-import { setDropSets } from "@/src/programs/builder"
+// `builder.ts`, not the builder COMPONENT's re-export of it: a test that
+// imports a pure function through a 1,300-line React screen mounts nothing and
+// proves nothing about the screen, and it dies the day that screen is deleted.
+import { emptyCustomSchedule, setDropSets } from "@/src/programs/builder"
 import { formatProgramText, parseProgramText } from "@/src/programs/programText"
 import { CustomScheduleSchema } from "@/src/programs/schemas"
 import type { LoadExercise, ProgramSchedule } from "@/src/programs/types"
