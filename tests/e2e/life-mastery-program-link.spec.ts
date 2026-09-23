@@ -179,6 +179,54 @@ test.describe("Life Mastery and the training database", () => {
     await expect(card).toContainText("Training shows one session a day")
   })
 
+  test("when the program list cannot be read the card says so, and offers no empty state", async ({
+    page,
+  }) => {
+    /**
+     * A FAILED READ IS NOT "YOU HAVE NO PROGRAM".
+     *
+     * `useActiveEnrollments` keeps the last-known list and sets `error`, so a
+     * first failed request IS an empty list — and rendering that as "No program
+     * yet" invites somebody three weeks into a program to start a second one,
+     * which ends the first. The unit suite draws this state directly; this is
+     * the half that proves the wiring reaches it from a real failed request.
+     */
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.route("**/api/programs/enrollments*", (route) => route.abort())
+
+    try {
+      await page.goto(TEMPLATES, { waitUntil: "domcontentloaded" })
+      await page.getByRole("button", { name: /Templates/ }).first().click()
+
+      const unavailable = page.getByTestId("lm-training-unavailable")
+      await expect(unavailable).toBeVisible({ timeout: 20000 })
+      await expect(unavailable).toContainText("Could not check which program you are on")
+
+      // The claim it must not make.
+      await expect(page.getByText(/No program yet/i)).toHaveCount(0)
+
+      // And not a dead end: the way to the Training page is still there, with
+      // the way back on it.
+      const pick = page.getByRole("link", { name: /Pick a program/i })
+      const href = (await pick.getAttribute("href")) ?? ""
+      expect(href).toContain("view=programs")
+      expect(decodeURIComponent(href)).toContain("step=templates")
+
+      /**
+       * And the Systems step invents no number either. "2×/wk" was the plan's
+       * own count of a program's day TEMPLATES, and a guessed number under an
+       * amber warning is the exact failure this app keeps relearning.
+       */
+      await page.goto(`${LIFE_MASTERY}?step=systems`, { waitUntil: "domcontentloaded" })
+      await page.getByRole("button", { name: /Systems/ }).first().click()
+      await page.getByText("Training week", { exact: false }).first().click()
+      await expect(page.getByTestId("training-week-failed")).toBeVisible({ timeout: 20000 })
+      await expect(page.getByTestId("training-week-failed")).not.toContainText(/\d+\s?(?:days a week|×\/wk)/)
+    } finally {
+      await page.unrouteAll({ behavior: "ignoreErrors" })
+    }
+  })
+
   test("leaving for Training and coming back returns to the step you were on", async ({ page }) => {
     await page.goto(TEMPLATES, { waitUntil: "networkidle" })
     await page.getByRole("button", { name: /Systems/ }).first().click()
