@@ -342,6 +342,60 @@ test("a run is stored as a run, reads as one in History, and counts as one", asy
   }, id)
 })
 
+test("a day row in the editor reads its whole name at 390px, behind one options button", async ({
+  page,
+}) => {
+  /**
+   * WALK-07, MEASURED RATHER THAN LOOKED AT.
+   *
+   * The row used to be a text input committing a rename per keystroke, beside
+   * FOUR 44-px icon buttons. At 390 px the name got about 96 px of that row, so
+   * "Workout A" rendered as "Wor…" — the one thing the row exists to say was the
+   * thing that got clipped. jsdom has no layout, so the unit suite can prove the
+   * name is in the markup and cannot prove it is readable; this is the half that
+   * needs a browser.
+   *
+   * On the catalogue's detail screen, which is where the editor now lives: the
+   * week can be shaped BEFORE it is started, which it could not be until
+   * Phase 8.
+   */
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto("/programs?view=programs", { waitUntil: "networkidle" })
+  await page.getByRole("button", { name: /StrongLifts/i }).first().click()
+
+  const row = page.locator('[data-testid^="editor-day-"]').first()
+  await expect(row).toBeVisible()
+  const name = row.locator("span").first()
+  await expect(name).toHaveText(/\S/)
+
+  const clipped = await name.evaluate((el) => el.scrollWidth > el.clientWidth)
+  expect(clipped, `"${await name.textContent()}" is clipped at 390px`).toBe(false)
+
+  // ONE options button on the row, and a whole fingertip of it.
+  const menus = row.locator("xpath=..").getByRole("button", { name: /^Options for / })
+  await expect(menus).toHaveCount(1)
+  const box = await menus.first().boundingBox()
+  expect(box, "premise: the options button must be measurable").toBeTruthy()
+  expect(box!.width).toBeGreaterThanOrEqual(44)
+  expect(box!.height).toBeGreaterThanOrEqual(44)
+
+  /**
+   * AND THE ONE IRREVERSIBLE CONTROL IS STILL REACHABLE. Mounting an editor on
+   * this screen made the page taller than the viewport, and the bottom tab bar
+   * is fixed over the last 65 px of it.
+   */
+  const start = page.getByTestId("start-program")
+  await start.scrollIntoViewIfNeeded()
+  const startBox = await start.boundingBox()
+  const barBox = await page.getByTestId("mobile-tab-bar").boundingBox()
+  expect(startBox, "premise: Start must be measurable").toBeTruthy()
+  expect(barBox, "premise: the bar must be measurable").toBeTruthy()
+  expect(
+    startBox!.y + startBox!.height,
+    "Start is underneath the bottom tab bar"
+  ).toBeLessThanOrEqual(barBox!.y)
+})
+
 test("the bottom bar is on /programs, and the column does not shrink on the way in", async ({
   page,
 }) => {
