@@ -27,8 +27,9 @@ import {
   missWording,
 } from "../../programsService"
 import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
 import { ReceiptBody } from "../WorkoutReceipt"
-import type { LiveWorkout, WorkoutSummary } from "../../types"
+import type { KeepableChanges, LiveWorkout, WorkoutSummary } from "../../types"
 import type { MissRule } from "../../types"
 
 interface Props {
@@ -88,6 +89,18 @@ interface Props {
    * plan, not this session's judgement. It says what happened and stops there.
    */
   blocks?: { done: number; asked: number }
+  /**
+   * What of today's changes the PROGRAM can keep, decided on the server by
+   * `keepableChanges`. Absent for a loose workout, which has no program.
+   *
+   * The switch is not offered when there is nothing to keep — an inert control
+   * is a question nobody can answer — and a week-by-week plan says it cannot
+   * be edited instead, because that is a fact about the plan rather than about
+   * today.
+   */
+  keepable?: KeepableChanges | null
+  /** This program is a fixed week-by-week plan, so nothing can be kept. */
+  fixedPlan?: boolean
   /** No program, so nothing knows what kind of session this was but the person. */
   loose?: boolean
 }
@@ -130,6 +143,8 @@ export function FinishSheet({
   past = false,
   endurance = false,
   blocks,
+  keepable,
+  fixedPlan = false,
   loose = false,
 }: Props) {
   const lastTick = workout.sets
@@ -152,6 +167,12 @@ export function FinishSheet({
   const [editingEnd, setEditingEnd] = useState(past)
   const [intensity, setIntensity] = useState(3)
   const [notes, setNotes] = useState("")
+  /**
+   * OFF BY DEFAULT. Changing the program is a bigger thing than recording a
+   * workout, and a switch that starts on would edit next Tuesday for anybody
+   * who swapped a lift once and tapped Save without reading.
+   */
+  const [keepChanges, setKeepChanges] = useState(false)
   const [distance, setDistance] = useState("")
   const [kind, setKind] = useState<"weights" | "cardio" | "mobility" | "yoga" | "running" | null>(
     // Preselected only when there is evidence: a ticked set is a gym session
@@ -442,6 +463,44 @@ export function FinishSheet({
         </div>
       </div>
 
+      {/*
+        KEEP TODAY'S CHANGES — offered only when there is something to keep.
+        The rack was taken, you did front squats, and next Tuesday the program
+        asks for squats again. Strong asks this question; nothing here did, so
+        every swap was a one-off and the same fight happened every week.
+      */}
+      {keepable?.any && (
+        <div className="space-y-1">
+          <label className="flex min-h-11 items-center justify-between gap-3 text-sm">
+            <span>Keep these changes for next time</span>
+            <Switch
+              checked={keepChanges}
+              onCheckedChange={setKeepChanges}
+              data-testid="keep-changes"
+              aria-label="Keep these changes for next time"
+            />
+          </label>
+          {/*
+            WHAT CANNOT BE KEPT, AND WHY. A lift typed by hand has no
+            prescription to write, and a lift with no ticked set has no
+            starting weight — and guessing one is the invented number the rest
+            of this rebuild removes. Named, so it is a decision rather than a
+            surprise.
+          */}
+          {keepable.oneOffs.map((one) => (
+            <p key={one.name} className="text-xs text-muted-foreground" data-testid="keep-one-off">
+              {one.name} stays a one-off — {one.why}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {fixedPlan && (
+        <p className="text-xs text-muted-foreground" data-testid="fixed-plan">
+          This plan cannot be edited, so today&apos;s changes are for today only.
+        </p>
+      )}
+
       <label className="flex flex-col gap-1">
         <span className="text-xs text-muted-foreground">Anything worth remembering?</span>
         <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
@@ -476,6 +535,7 @@ export function FinishSheet({
                 ? { distanceKm: toKmFromDisplay(Number(distance), workout.unit) }
                 : {}),
               ...(loose && kind ? { sessionType: kind } : {}),
+              ...(keepChanges ? { keepChanges: true } : {}),
             })
             if (result) setSummary(result)
           }}

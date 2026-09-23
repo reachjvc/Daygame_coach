@@ -242,3 +242,68 @@ describe("a workout with no program behind it", () => {
     expect(screen.queryByTestId("finish-kind")).toBeNull()
   })
 })
+
+/**
+ * KEEPING TODAY'S CHANGES — a question, asked once, and only when there is
+ * something to ask about.
+ *
+ * An inert switch is worse than no switch: it invites a tap that does nothing
+ * and teaches people the control is broken. And a week-by-week plan cannot be
+ * edited at all, which is a fact about the plan rather than about today, so it
+ * is said rather than hidden.
+ */
+describe("keep these changes for next time", () => {
+  const keepable = {
+    swaps: [{ fromId: "squat", libraryId: "lib_front_squat", name: "Front Squat", weight: 85 }],
+    additions: [],
+    order: null,
+    rest: null,
+    oneOffs: [{ name: "Sled Push", why: "not in the lift list" }],
+    any: true,
+  }
+
+  it("is not offered when there is nothing to keep", () => {
+    sheet({ keepable: { ...keepable, swaps: [], oneOffs: [], any: false } })
+    expect(screen.queryByTestId("keep-changes")).toBeNull()
+  })
+
+  it("is not offered at all on a loose workout, which has no program", () => {
+    sheet({ keepable: null, loose: true })
+    expect(screen.queryByTestId("keep-changes")).toBeNull()
+  })
+
+  it("is off until it is asked for", async () => {
+    const user = userEvent.setup()
+    // A LIVE sheet: a fixed start in the past would make this a ten-hour
+    // workout and disable Save, which is the sheet behaving correctly and not
+    // what this test is about.
+    const { sent } = sheet({ keepable, workout: { startedAt: recent() } })
+    const toggle = screen.getByTestId("keep-changes")
+    expect(toggle.getAttribute("aria-checked")).toBe("false")
+
+    // Saving without touching it says nothing about the program.
+    await user.click(saveButton())
+    expect("keepChanges" in sent[0]).toBe(false)
+  })
+
+  it("sends the yes when it is on", async () => {
+    const user = userEvent.setup()
+    const { sent } = sheet({ keepable, workout: { startedAt: recent() } })
+    await user.click(screen.getByTestId("keep-changes"))
+    await user.click(saveButton())
+    expect(sent[0].keepChanges).toBe(true)
+  })
+
+  it("names what cannot be kept, with the reason", () => {
+    sheet({ keepable })
+    expect(screen.getByTestId("keep-one-off").textContent).toBe(
+      "Sled Push stays a one-off — not in the lift list"
+    )
+  })
+
+  it("says a fixed plan cannot be edited instead of offering the switch", () => {
+    sheet({ keepable: { ...keepable, any: false }, fixedPlan: true })
+    expect(screen.queryByTestId("keep-changes")).toBeNull()
+    expect(screen.getByTestId("fixed-plan").textContent).toContain("cannot be edited")
+  })
+})

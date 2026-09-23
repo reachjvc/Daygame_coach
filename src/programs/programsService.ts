@@ -63,6 +63,7 @@ import type {
   PrescribedExercise,
   PrescribedSet,
   ProgressionChange,
+  KeepableChanges,
   LiftRow,
   SessionPrescription,
   SetEntry,
@@ -2074,6 +2075,92 @@ export function saveStateFor(
 export const SAVE_QUIET_MS = 1_500
 /** Past this with no answer, it is treated as lost rather than slow. */
 export const SAVE_GIVEN_UP_MS = 10_000
+
+/**
+ * WHAT OF TODAY'S CHANGES CAN BE KEPT — one rule, asked before it is offered.
+ *
+ * The switch on the finish sheet cannot honestly say "keep these changes" and
+ * then keep some of them. So the same function decides what the switch is
+ * offering and what the schedule edit does, and everything it cannot keep is
+ * named under the switch with its reason.
+ *
+ * A LIFT NEEDS A LIBRARY ENTRY AND A TICKED SET. The library entry is the
+ * prescription — sets, reps, rest, how it is loaded — and a lift typed by hand
+ * has none. The ticked set is the starting weight: `seedForAddedExercises`
+ * THROWS for a lift added to a schedule without one, and the alternative is
+ * inventing a number, which is what the rest of this rebuild exists to stop.
+ *
+ * The heaviest WORKING set, not the last: a drop set or a back-off is lighter
+ * on purpose, and starting next week from it would walk the weight backwards.
+ */
+export function keepableChanges(
+  prescription: Pick<SessionPrescription, "exercises"> | null,
+  adjustments: WorkoutAdjustments,
+  sets: readonly LiveWorkoutSet[],
+  library: (id: string) => { id: string } | undefined
+): KeepableChanges {
+  const oneOffs: KeepableChanges["oneOffs"] = []
+  const swaps: KeepableChanges["swaps"] = []
+  const additions: KeepableChanges["additions"] = []
+
+  /** The heaviest working set ticked under a lift, in the lifter's unit. */
+  const topSet = (exerciseId: string): number | null => {
+    const mine = sets.filter(
+      (set) => (set.exerciseId ?? set.exercise) === exerciseId && set.kind !== "warmup" && set.kind !== "drop"
+    )
+    if (mine.length === 0) return null
+    return mine.reduce((top, set) => Math.max(top, set.weight), 0)
+  }
+
+  const consider = (
+    name: string,
+    libraryId: string | undefined,
+    exerciseId: string,
+    keep: (libraryId: string, weight: number) => void
+  ) => {
+    if (!libraryId || !library(libraryId)) {
+      oneOffs.push({ name, why: "not in the lift list" })
+      return
+    }
+    const weight = topSet(exerciseId)
+    if (weight === null) {
+      oneOffs.push({ name, why: "no set was ticked" })
+      return
+    }
+    keep(libraryId, weight)
+  }
+
+  for (const [fromId, to] of Object.entries(adjustments.swapped ?? {})) {
+    consider(to.name, to.libraryId, addedLiftId(to.name), (libraryId, weight) =>
+      swaps.push({ fromId, libraryId, name: to.name, weight })
+    )
+  }
+  for (const added of adjustments.added ?? []) {
+    consider(added.name, added.libraryId, added.exerciseId, (libraryId, weight) =>
+      additions.push({ libraryId, name: added.name, weight })
+    )
+  }
+
+  /**
+   * The order is only worth keeping if it says something the program does not
+   * already say. A list that matches today's prescription is not a change.
+   */
+  const asked = (prescription?.exercises ?? []).map((ex) => ex.exerciseId)
+  const order = adjustments.order ?? null
+  const movedOrder =
+    order && (order.length !== asked.length || order.some((id, i) => id !== asked[i])) ? order : null
+
+  const rest = adjustments.rest && Object.keys(adjustments.rest).length > 0 ? adjustments.rest : null
+
+  return {
+    swaps,
+    additions,
+    order: movedOrder,
+    rest,
+    oneOffs,
+    any: swaps.length > 0 || additions.length > 0 || movedOrder !== null || rest !== null,
+  }
+}
 
 /**
  * THE ORDER YOU ACTUALLY DID THEM IN.

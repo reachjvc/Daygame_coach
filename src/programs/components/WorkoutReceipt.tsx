@@ -47,6 +47,19 @@ export function ReceiptBody({ summary }: { summary: WorkoutSummary }) {
         </p>
       )}
 
+      {/* THE WORKOUT SAVED AND THE PROGRAM DID NOT CHANGE. Two facts, and the
+          finish only failed at the second one — so this is a note beside a
+          successful receipt rather than an error about the workout. Somebody
+          who ticked that switch would otherwise find out next Tuesday. */}
+      {summary.scheduleNotKept && (
+        <p
+          data-testid="summary-schedule-not-kept"
+          className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-2 text-xs text-amber-600 dark:text-amber-400"
+        >
+          Saved, but the program could not be changed for next time.
+        </p>
+      )}
+
       <div className="grid grid-cols-3 gap-2 text-center">
         <Figure label="Minutes" value={summary.unavailable ? null : summary.durationMin} />
         <Figure label="Sets" value={summary.unavailable ? null : summary.sets} />

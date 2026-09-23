@@ -917,6 +917,15 @@ export interface WorkoutSummary {
    * Every number on the sheet then shows "—" rather than 0.
    */
   unavailable?: true
+  /**
+   * "Keep these changes for next time" was asked for and did not land.
+   *
+   * The finish itself stands — it committed in its own transaction — so this
+   * is not a failure of the workout, and saying "could not save" would be
+   * false. But the program is unchanged, and somebody who ticked that switch
+   * will otherwise find out next Tuesday.
+   */
+  scheduleNotKept?: true
 }
 
 // ============================================================================
@@ -1371,4 +1380,32 @@ export interface LiftRow {
   workingIndex: number | null
   /** The set already ticked into this slot. */
   done: LiveWorkoutSet | null
+}
+
+/**
+ * WHAT OF TODAY'S CHANGES THE PROGRAM CAN ACTUALLY KEEP.
+ *
+ * A swap or an addition can only become part of the program if two things are
+ * true: the lift is in the app's library (a name typed by hand has no
+ * prescription to write) and at least one working set was ticked under it (the
+ * program needs a starting weight, and guessing one is exactly the invented
+ * number this rebuild removes).
+ *
+ * Anything that fails either test is NAMED, with the reason, rather than
+ * silently dropped — "Front Squat stays a one-off — no set was ticked" is
+ * something a person can act on.
+ */
+export interface KeepableChanges {
+  /** A swap the program can keep: its day's lift becomes this one. */
+  swaps: Array<{ fromId: string; libraryId: string; name: string; weight: number }>
+  /** A lift added on the day that the program can keep. */
+  additions: Array<{ libraryId: string; name: string; weight: number }>
+  /** The order lifts were done in, if it was changed. Always keepable. */
+  order: string[] | null
+  /** Rest you edited, per lift. Always keepable. */
+  rest: Record<string, number> | null
+  /** Named under the switch, with why each one cannot be kept. */
+  oneOffs: Array<{ name: string; why: string }>
+  /** Whether there is anything at all to keep — the switch is not shown otherwise. */
+  any: boolean
 }

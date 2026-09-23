@@ -29,6 +29,7 @@ import {
   replayedState,
   getSessionLogs,
   todaysSessionFor,
+  updateEnrollmentSchedule,
 } from "./programRepo"
 import { ProgramRefused } from "@/src/programs/errors"
 import { personalBestBaseline } from "./healthRepo"
@@ -40,6 +41,7 @@ import {
   computePrescription,
   entriesFromSets,
   isSessionOf,
+  keepableChanges,
   loadStyleOf,
   pickLastSets,
   setSlot,
@@ -47,7 +49,13 @@ import {
   toKg,
   fromKg,
 } from "@/src/programs/programsService"
-import { scheduleDays } from "@/src/programs/customize"
+import {
+  applyAdjustmentsToSchedule,
+  isCustomizable,
+  materializeSchedule,
+  scheduleDays,
+} from "@/src/programs/customize"
+import { requireProgram } from "@/src/programs/data/catalog"
 import type {
   LiftSessions,
   LiveWorkout,
@@ -59,7 +67,7 @@ import type {
   WorkoutSummary,
 } from "@/src/programs/types"
 import type { WorkoutSetRow } from "@/src/health/types"
-import { libraryByName } from "@/src/programs/data/exerciseLibrary"
+import { libraryByName, libraryExercise } from "@/src/programs/data/exerciseLibrary"
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
@@ -684,6 +692,13 @@ export async function finishWorkout(
     /** Loose workouts only — a program decides its own kind. */
     sessionType?: "weights" | "cardio" | "mobility" | "yoga" | "running"
     distanceKm?: number | null
+    /**
+     * Write today's swaps, additions, order and rest into the program.
+     *
+     * Only the person's yes: WHAT can be kept is `keepableChanges`, on the
+     * server, so this cannot smuggle a lift into a schedule.
+     */
+    keepChanges?: boolean
   }
 ): Promise<WorkoutSummary> {
   const supabase = await createServerSupabaseClient()
@@ -934,7 +949,66 @@ export async function finishWorkout(
     throw new Error(error.message)
   }
 
-  return await requireSummary(userId, workoutId)
+  /**
+   * AND THEN, SEPARATELY, KEEP THE CHANGES — after the transaction, never
+   * inside it.
+   *
+   * `updateEnrollmentSchedule` re-reads the enrollment, so it has to run once
+   * the RPC has committed: the cursor and the exercise state it reads must be
+   * the advanced ones, or it would write yesterday's program back over today's
+   * result.
+   *
+   * IF THIS FAILS, THE FINISH STILL STANDS. An hour of training is saved and
+   * the program is not changed, which are two different facts — so the summary
+   * carries the second one rather than the whole finish reporting failure.
+   */
+  let scheduleNotKept: true | undefined
+  if (input.keepChanges && live.enrollmentId) {
+    try {
+      await keepTodaysChanges(userId, live)
+    } catch (e) {
+      console.error("keep changes:", e)
+      scheduleNotKept = true
+    }
+  }
+
+  const summary = await requireSummary(userId, workoutId)
+  return scheduleNotKept ? { ...summary, scheduleNotKept } : summary
+}
+
+/**
+ * Write the day's swaps, additions, order and rest into the enrollment.
+ *
+ * Split out because the finish is long enough already, and because this is the
+ * one place that turns "what happened today" into "what the program asks for
+ * next time" — a reader looking for that should find it in one piece.
+ */
+async function keepTodaysChanges(userId: string, live: LiveWorkout): Promise<void> {
+  if (!live.enrollmentId || !live.dayId) return
+  const enr = await getEnrollmentById(userId, live.enrollmentId)
+  if (!enr) throw new Error("That program was not found")
+  const catalogProgram = requireProgram(enr.program_id)
+  /**
+   * A week-by-week plan cannot be edited — `updateEnrollmentSchedule` refuses
+   * it, and the sheet says so instead of offering the switch. Checked here as
+   * well because this is the caller that would otherwise turn a refusal into
+   * an amber warning nobody can act on.
+   */
+  if (!isCustomizable(catalogProgram)) return
+
+  const prescription = computePrescription(programFor(enr), enr)
+  const keepable = keepableChanges(prescription, live.adjustments, live.sets, libraryExercise)
+  if (!keepable.any) return
+
+  const { schedule, workingWeights } = applyAdjustmentsToSchedule(
+    // The schedule as it stands, materialised if the program has never been
+    // edited: a catalogue program has no `custom_schedule` row to edit.
+    enr.customSchedule ?? materializeSchedule(catalogProgram),
+    live.dayId,
+    keepable,
+    libraryExercise
+  )
+  await updateEnrollmentSchedule(userId, live.enrollmentId, schedule, workingWeights)
 }
 
 /**

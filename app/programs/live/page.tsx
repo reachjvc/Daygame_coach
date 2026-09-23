@@ -12,7 +12,7 @@ import { getLiveWorkout, lastSetsForLifts, prescriptionForDay } from "@/src/db/w
 import { getEnrollmentById } from "@/src/db/programRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { enrollmentName, getProgram } from "@/src/programs/data/catalog"
-import { effectiveProgram } from "@/src/programs/customize"
+import { effectiveProgram, isCustomizable } from "@/src/programs/customize"
 import { addedLiftId, missRulesFor } from "@/src/programs/programsService"
 import type { MissRule } from "@/src/programs/types"
 import { LiveWorkoutScreen } from "@/src/programs/components/live/LiveWorkoutScreen"
@@ -45,6 +45,7 @@ export default async function LiveWorkoutPage() {
   let plates: PlateSetup | undefined
   let programName: string | null = null
   let missRules: Record<string, MissRule> | undefined
+  let customizable = false
   const lastTime: Record<string, { weight: number; reps: number }[]> = {}
 
   if (live.enrollmentId) {
@@ -73,7 +74,16 @@ export default async function LiveWorkoutPage() {
      */
     if (enrollment) {
       const program = getProgram(enrollment.program_id)
-      if (program) missRules = missRulesFor(effectiveProgram(program, enrollment.customSchedule), enrollment)
+      if (program) {
+        missRules = missRulesFor(effectiveProgram(program, enrollment.customSchedule), enrollment)
+        /**
+         * Whether "keep these changes for next time" is a question this
+         * program can answer. A week-by-week plan cannot be edited —
+         * `updateEnrollmentSchedule` refuses it — so the sheet says so
+         * instead of offering a switch that would fail.
+         */
+        customizable = isCustomizable(program)
+      }
     }
   }
 
@@ -135,6 +145,7 @@ export default async function LiveWorkoutPage() {
       unit={unit}
       plates={plates}
       lastTime={lastTime}
+      customizable={customizable}
       previousUnavailable={previousUnavailable}
       missRules={missRules}
       timezone={timezone}

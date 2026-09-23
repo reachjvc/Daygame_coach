@@ -466,3 +466,36 @@ describe("the times, the kind and the distance", () => {
     expect(fake.rpcCalls[0].p_started_at).toBe("2026-09-15T10:00:00Z")
   })
 })
+
+/**
+ * KEEPING TODAY'S CHANGES IS A SECOND WRITE, AND IT RUNS AFTER THE FIRST.
+ *
+ * `updateEnrollmentSchedule` re-reads the enrollment, so it has to happen once
+ * the finish transaction has committed — reading it first would write
+ * yesterday's program back over today's result, cursor and all. And if it
+ * fails, the FINISH STILL STANDS: an hour of training is saved and the program
+ * is unchanged, which are two different facts.
+ *
+ * What is pinned HERE is the one case this fake can reach honestly: a workout
+ * with no program has no schedule to keep anything in, so the flag is ignored
+ * rather than producing a warning about a program that does not exist. The
+ * rule that decides WHAT is keepable is pure and pinned in
+ * `tests/unit/programs/keepChanges.test.ts`; the write itself needs a real
+ * enrollment and belongs to
+ * `tests/integration/db/workoutSchema.integration.test.ts`.
+ */
+describe("keeping the changes", () => {
+  test("a workout with no program ignores the flag rather than warning about one", async () => {
+    const { repo, fake } = await repoWith({ row: open })
+    const summary = await repo.finishWorkout(USER, WORKOUT, { intensity: 3, keepChanges: true })
+    expect(summary.scheduleNotKept).toBeUndefined()
+    // One write, and it is the finish.
+    expect(fake.rpcCalls).toHaveLength(1)
+  })
+
+  test("says nothing about the program when the switch was not asked for", async () => {
+    const { repo } = await repoWith({ row: open })
+    const summary = await repo.finishWorkout(USER, WORKOUT, { intensity: 3 })
+    expect(summary.scheduleNotKept).toBeUndefined()
+  })
+})

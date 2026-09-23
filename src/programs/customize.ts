@@ -28,6 +28,7 @@
 import type {
   DayTemplate,
   ExerciseState,
+  KeepableChanges,
   HoldDay,
   HoldExercise,
   LevelId,
@@ -237,6 +238,11 @@ function mapDay(schedule: ProgramSchedule, dayId: string, fn: (day: AnyDay) => A
   const days = scheduleDays(schedule)
   if (!days.some((d) => d.id === dayId)) throw new Error(`No day ${dayId} in this program`)
   return withDays(schedule, days.map((d) => (d.id === dayId ? fn(d) : d)))
+}
+
+/** Every day, for a fact about a LIFT rather than about a day. */
+function mapDays(schedule: ProgramSchedule, fn: (day: AnyDay) => AnyDay): ProgramSchedule {
+  return withDays(schedule, scheduleDays(schedule).map(fn))
 }
 
 /**
@@ -601,6 +607,88 @@ export function seedForAddedExercises(
     }
   }
   return next
+}
+
+/**
+ * TODAY'S CHANGES, WRITTEN INTO THE PROGRAM — pure, and one day only.
+ *
+ * The finish sheet's "Keep these changes for next time" needs the schedule the
+ * program would have had if you had edited it by hand, plus the starting
+ * weights the new lifts need. Doing it here rather than in the repository
+ * keeps it testable without a database, and keeps the repository's job to
+ * "write this".
+ *
+ * ONLY THE DAY THAT WAS TRAINED. A swap on Push A must not touch the Squat on
+ * Legs, and `keepable` is already the filtered list: everything that could not
+ * be kept has been named on the sheet by `keepableChanges`.
+ */
+export function applyAdjustmentsToSchedule(
+  schedule: ProgramSchedule,
+  dayId: string,
+  keepable: KeepableChanges,
+  library: (id: string) => LibraryExercise | undefined
+): { schedule: ProgramSchedule; workingWeights: Record<string, number> } {
+  let next = schedule
+  const workingWeights: Record<string, number> = {}
+
+  for (const swap of keepable.swaps) {
+    const entry = library(swap.libraryId)
+    if (!entry) continue
+    const done = swapExercise(next, dayId, swap.fromId, entry)
+    next = done.schedule
+    // The id the swap produced, not the library's: `swapExercise` may have
+    // suffixed it to keep it unique, and the weight has to land on the lift
+    // that is actually in the day.
+    workingWeights[done.exerciseId] = swap.weight
+  }
+
+  for (const addition of keepable.additions) {
+    const entry = library(addition.libraryId)
+    if (!entry) continue
+    const done = addExercise(next, dayId, entry)
+    next = done.schedule
+    workingWeights[done.exerciseId] = addition.weight
+  }
+
+  /**
+   * THE ORDER IS APPLIED LAST, and by id, because the two steps above may have
+   * changed the ids in the day. A lift the order does not mention keeps its
+   * place after the ones it does — the same rule the live screen draws by.
+   */
+  if (keepable.order) {
+    const rank = new Map(keepable.order.map((id, i) => [id, i]))
+    next = mapDay(next, dayId, (d) => ({
+      ...d,
+      exercises: [...(d.exercises as AnyExercise[])]
+        .map((ex, i) => ({ ex, i }))
+        .sort((a, b) => {
+          const ra = rank.get(a.ex.id)
+          const rb = rank.get(b.ex.id)
+          if (ra === undefined && rb === undefined) return a.i - b.i
+          if (ra === undefined) return 1
+          if (rb === undefined) return -1
+          return ra - rb
+        })
+        .map((w) => w.ex),
+    }) as AnyDay)
+  }
+
+  /**
+   * Rest is per lift and lives on the exercise, so an edited rest reaches
+   * every day that lift appears on — which is right: three minutes on squats
+   * is a fact about squats, not about Monday.
+   */
+  if (keepable.rest) {
+    const rest = keepable.rest
+    next = mapDays(next, (d) => ({
+      ...d,
+      exercises: (d.exercises as AnyExercise[]).map((ex) =>
+        rest[ex.id] != null ? { ...ex, restSec: rest[ex.id] } : ex
+      ),
+    }) as AnyDay)
+  }
+
+  return { schedule: next, workingWeights }
 }
 
 /**

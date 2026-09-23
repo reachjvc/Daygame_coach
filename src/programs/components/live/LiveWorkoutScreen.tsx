@@ -33,7 +33,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { BackLink } from "@/components/BackLink"
-import { canBeUnweighted } from "../../data/exerciseLibrary"
+import { canBeUnweighted, libraryExercise } from "../../data/exerciseLibrary"
 import { SetRow } from "./SetRow"
 import { RestBar } from "./RestBar"
 import { LiftMenu } from "./LiftMenu"
@@ -54,6 +54,7 @@ import {
   enduranceMinutes,
   isStaleWorkout,
   fixedRowsToTick,
+  keepableChanges,
   liftRows,
   setLabel,
   setSlot,
@@ -85,6 +86,12 @@ interface Props {
   programName: string | null
   unit: UnitSystem
   plates?: PlateSetup
+  /**
+   * Whether this program can be edited at all. A week-by-week plan (Couch to
+   * 5K, a triathlon build) cannot, so the finish sheet says so rather than
+   * offering a switch that would be refused.
+   */
+  customizable?: boolean
   /** What each lift did the last time it came round, keyed by exercise id. */
   lastTime: Record<string, { weight: number; reps: number }[]>
   /**
@@ -102,6 +109,7 @@ export function LiveWorkoutScreen({
   unit,
   plates,
   lastTime,
+  customizable = false,
   previousUnavailable,
   missRules,
   timezone,
@@ -285,6 +293,17 @@ export function LiveWorkoutScreen({
                 }
               : undefined
           }
+          /**
+           * WHAT THE PROGRAM CAN KEEP — the same pure rule the server applies
+           * when the switch is on, so the sheet cannot offer something the
+           * write would then refuse.
+           */
+          keepable={
+            shown.enrollmentId
+              ? keepableChanges(prescription, shown.adjustments, shown.sets, libraryExercise)
+              : null
+          }
+          fixedPlan={Boolean(shown.enrollmentId) && !customizable}
           loose={!shown.enrollmentId}
           workout={shown}
           unfinished={unfinished}

@@ -409,6 +409,14 @@ export const FinishWorkoutSchema = z
     sessionType: z.enum(["weights", "cardio", "mobility", "yoga", "running"]).optional(),
     /** How far, for a run or a ride. Null clears it. */
     distanceKm: z.number().min(0).max(MAX_DISTANCE_KM).nullable().optional(),
+    /**
+     * KEEP TODAY'S CHANGES IN THE PROGRAM.
+     *
+     * The server decides WHAT can be kept (`keepableChanges`), so this is only
+     * the person's yes — a caller cannot smuggle a lift into the schedule by
+     * naming it here.
+     */
+    keepChanges: z.boolean().optional(),
   })
   .refine((body) => !body.startedAt || !!body.endedAt, {
     path: ["endedAt"],
