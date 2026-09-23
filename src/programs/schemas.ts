@@ -350,6 +350,12 @@ export const AdjustWorkoutSchema = z.object({
    * actually contain.
    */
   rest: z.record(z.string().min(1).max(80), z.number().int().min(15).max(600)).optional(),
+  /**
+   * The blocks of a run that are done, by their row in the prescription. A
+   * repeat group is one row, drawn as one row, and ticked as one row — the
+   * inner blocks are the shape of the interval, not separate work.
+   */
+  blocksDone: z.array(z.number().int().min(0).max(60)).max(60).optional(),
   skipped: z.array(z.string().min(1).max(80)).max(40).optional(),
   incomplete: z.array(z.string().min(1).max(80)).max(40).optional(),
   swapped: z

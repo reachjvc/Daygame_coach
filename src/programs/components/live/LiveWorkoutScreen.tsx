@@ -21,7 +21,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { MoreVertical } from "lucide-react"
+import { Check, MoreVertical } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -271,6 +271,20 @@ export function LiveWorkoutScreen({
           timezone={timezone}
           past={past}
           endurance={Boolean(prescription?.enduranceSets?.length)}
+          /**
+           * How much of the run happened. Counted from the blocks ticked on
+           * the plan card, not guessed from the time: a session cut short
+           * after three of five intervals used to be recorded exactly like
+           * one that was finished.
+           */
+          blocks={
+            prescription?.enduranceSets?.length
+              ? {
+                  done: (shown.adjustments.blocksDone ?? []).length,
+                  asked: prescription.enduranceSets.length,
+                }
+              : undefined
+          }
           loose={!shown.enrollmentId}
           workout={shown}
           unfinished={unfinished}
@@ -362,25 +376,61 @@ export function LiveWorkoutScreen({
           * the end like every other workout.
           */}
         {prescription?.enduranceSets && prescription.enduranceSets.length > 0 && (
-          <Card data-testid="endurance-plan">
-            <CardContent className="space-y-1.5 p-3">
+          <Card data-testid="endurance-plan" className="gap-0 py-0">
+            <CardContent className="space-y-1.5 px-3 py-2.5">
               <p className="font-medium">{prescription.dayLabel}</p>
               <p className="text-xs text-muted-foreground">
                 About {enduranceMinutes(prescription.enduranceSets)} min
                 {prescription.summary ? ` · ${prescription.summary}` : ""}
               </p>
-              <ol className="space-y-1 pt-1 text-sm">
-                {prescription.enduranceSets.map((set, i) => (
-                  <li key={i} className="flex items-baseline gap-2">
-                    <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                      {set.repeat > 1 ? `${set.repeat}×` : ""}
-                    </span>
-                    <span className="min-w-0">{set.blocks.map((b) => b.label).join(" → ")}</span>
-                  </li>
-                ))}
-              </ol>
+              {/*
+                A RUN HAS SOMETHING TO TICK. This was a read-only list under
+                "Nothing to tick off here", so a session cut short after three
+                of five intervals was recorded exactly like one finished — and
+                the finish sheet had no way to say how much of it happened.
+
+                One tick per ROW of the prescription, which is the repeat group
+                as it is drawn: "6 × (1 min hard / 2 min easy)" is one thing
+                you do, not eighteen.
+              */}
+              <ul className="space-y-1 pt-1 text-sm">
+                {prescription.enduranceSets.map((set, i) => {
+                  const done = (shown?.adjustments.blocksDone ?? []).includes(i)
+                  return (
+                    <li key={i} className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        data-testid={`block-${i}`}
+                        aria-label={`Block ${i + 1} done`}
+                        aria-pressed={done}
+                        disabled={live.busy}
+                        onClick={() => {
+                          // The WHOLE list, every time: this field is written
+                          // whole, and building it from one index at the call
+                          // site is how one tick wipes another.
+                          const now = shown?.adjustments.blocksDone ?? []
+                          void live.adjust({
+                            blocksDone: done ? now.filter((n) => n !== i) : [...now, i].sort((a, b) => a - b),
+                          })
+                        }}
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-md border transition-colors ${
+                          done
+                            ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-500"
+                            : "border-border hover:bg-accent"
+                        }`}
+                      >
+                        <Check className="size-5" />
+                      </button>
+                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                        {set.repeat > 1 ? `${set.repeat}×` : ""}
+                      </span>
+                      <span className="min-w-0">{set.blocks.map((b) => b.label).join(" → ")}</span>
+                    </li>
+                  )
+                })}
+              </ul>
               <p className="pt-1 text-xs text-muted-foreground">
-                Nothing to tick off here. Press Finish when you are done and say how long it took.
+                Tick what you did. Press Finish when you are done and say how long it took.
               </p>
             </CardContent>
           </Card>

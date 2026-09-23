@@ -768,6 +768,32 @@ export async function finishWorkout(
   }
 
   /**
+   * AND THE START CANNOT BE AFTER THE FIRST SET YOU TICKED.
+   *
+   * The start moves for a session written up afterwards, and nothing stopped it
+   * moving PAST the sets already in the workout — leaving rows timed before the
+   * workout they belong to had begun. Every later reading of those sets (the
+   * day they are filed under, which workout they count towards, whether they
+   * were a personal best "before" something) is then measured from a start
+   * they precede.
+   *
+   * Named with the time, in the account's zone, because "that is too late" is
+   * not actionable and the person is looking at a field they can correct.
+   */
+  const firstSet = live.sets
+    .map((set) => set.completedAt)
+    .filter((at): at is string => Boolean(at))
+    .sort()[0]
+  if (input.startedAt && firstSet && new Date(input.startedAt).getTime() > new Date(firstSet).getTime()) {
+    const at = new Date(firstSet).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: await getUserTimezone(userId),
+    })
+    throw new Error(`Started cannot be after your first set at ${at}.`)
+  }
+
+  /**
    * What the person actually beat — measured against EVERYTHING they have
    * logged, not a window.
    *

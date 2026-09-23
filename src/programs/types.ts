@@ -838,6 +838,19 @@ export interface WorkoutAdjustments {
    * rejected.
    */
   rest?: Record<string, number>
+  /**
+   * WHICH BLOCKS OF A RUN YOU HAVE DONE, by their row in the prescription.
+   *
+   * An endurance session prescribes blocks, not sets, so it has nothing to
+   * tick — the screen said "Nothing to tick off here" and the finish sheet had
+   * no way to say how much of the session happened. A run cut short after
+   * three of five intervals was recorded exactly like one finished.
+   *
+   * The full list every time, not the newest index: it is written as a whole
+   * field, and building it at the call site is how one tick comes to wipe
+   * another.
+   */
+  blocksDone?: number[]
 }
 
 /** A stored set, as the one workouts table holds it. */

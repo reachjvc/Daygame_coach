@@ -80,6 +80,14 @@ interface Props {
   past?: boolean
   /** The day prescribes blocks rather than lifts, so ask how far. */
   endurance?: boolean
+  /**
+   * How much of a run happened: blocks ticked, and blocks prescribed.
+   *
+   * NO MISS WORDING. A run cut short is not a failed lift — there is no weight
+   * to hold or drop, and an endurance program's progression is its weekly
+   * plan, not this session's judgement. It says what happened and stops there.
+   */
+  blocks?: { done: number; asked: number }
   /** No program, so nothing knows what kind of session this was but the person. */
   loose?: boolean
 }
@@ -121,6 +129,7 @@ export function FinishSheet({
   timezone,
   past = false,
   endurance = false,
+  blocks,
   loose = false,
 }: Props) {
   const lastTick = workout.sets
@@ -362,6 +371,12 @@ export function FinishSheet({
             ))}
           </div>
         </div>
+      )}
+
+      {blocks && blocks.asked > 0 && (
+        <p data-testid="finish-blocks" className="text-sm text-muted-foreground">
+          {blocks.done} of {blocks.asked} blocks
+        </p>
       )}
 
       {askDistance && (

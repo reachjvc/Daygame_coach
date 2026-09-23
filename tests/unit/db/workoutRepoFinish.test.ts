@@ -400,6 +400,38 @@ describe("the times, the kind and the distance", () => {
     expect(fake.rpcCalls).toHaveLength(0)
   })
 
+  test("a start moved past the sets already ticked is refused, naming the time", async () => {
+    const { repo, fake } = await repoWith({ row: open })
+
+    /**
+     * The fixture's earliest set was ticked at 07:00Z, which is 09:00 in the
+     * account's zone. Moving the start to 10:00Z would leave that set timed
+     * before the workout it belongs to had begun — and everything read off
+     * those sets afterwards (the day they are filed under, what counts as
+     * "before" for a personal best) is measured from a start they precede.
+     */
+    await expect(
+      repo.finishWorkout(USER, WORKOUT, {
+        intensity: 3,
+        startedAt: "2026-09-18T10:00:00Z",
+        endedAt: "2026-09-18T11:00:00Z",
+      })
+    ).rejects.toThrow(/Started cannot be after your first set at 09:00/)
+    expect(fake.rpcCalls).toHaveLength(0)
+  })
+
+  test("a start moved to before the first set is fine, which is the whole point", async () => {
+    const { repo, fake } = await repoWith({ row: open })
+
+    await repo.finishWorkout(USER, WORKOUT, {
+      intensity: 3,
+      startedAt: "2026-09-18T06:30:00Z",
+      endedAt: "2026-09-18T07:30:00Z",
+    })
+
+    expect(fake.rpcCalls[0].p_started_at).toBe("2026-09-18T06:30:00Z")
+  })
+
   test("a program workout naming its own session kind is refused before the transaction", async () => {
     const { repo, fake } = await repoWith({ row: open, enrollmentId: "e1" })
 

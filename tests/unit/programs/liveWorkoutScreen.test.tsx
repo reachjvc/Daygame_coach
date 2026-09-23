@@ -128,9 +128,16 @@ describe("the rest clock", () => {
      * write (the clock survives a reload), and under a loaded full-suite run
      * that chain has been seen to take longer than a second. The behaviour is
      * right either way; a second is simply not a safe deadline for it.
+     *
+     * AND THE TEST'S OWN DEADLINE IS LONGER THAN THIS WAIT. It was five
+     * seconds for both, so a slow run hit the test timeout first and reported
+     * "Test timed out in 5000ms" — which says nothing about the rest bar and
+     * looks like a broken test rather than a loaded machine. Three sessions
+     * share this checkout and run the suite at once; fifteen seconds is not a
+     * weaker assertion, it is the same assertion able to report itself.
      */
     await waitFor(() => expect(screen.queryByTestId("rest-bar")).toBeNull(), { timeout: 5000 })
-  })
+  }, 15_000)
 
   it("stays when the set is merely queued", async () => {
     const user = userEvent.setup()
