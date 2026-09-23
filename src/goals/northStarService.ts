@@ -1563,59 +1563,17 @@ export function detachProgramFromRoutines(
   )
 }
 
-/** The enrollments this plan believes it is training, newest first. */
 /**
- * THE PLAN CHECKS ITS REFERENCE AGAINST THE DATABASE, EVERY TIME IT OPENS.
+ * `reconcileProgramReference` USED TO BE HERE.
  *
- * WHAT WAS WRONG. The reference was written once, when a program was started
- * from Life Mastery, and removed only by the End button in Life Mastery's own
- * Templates band. Everything else left it wrong:
- *
- *   - End the program on the Training page → the plan still points at a row
- *     that is no longer running, and goes on describing it.
- *   - Start a program on your phone → open the laptop and the plan there knows
- *     nothing about it, because the reference lives in that browser's storage.
- *   - Clear your browser data → the link is gone while the program runs on.
- *
- * The plan cannot be the authority on what is running; the database is. So
- * every time the plan opens, this reconciles the two — and it is the reason
- * the reference could shrink to an id in the first place.
- *
- * PURE, so all six cases are testable without a browser. The caller supplies
- * the active enrollments and only when the read actually succeeded: a failed
- * list must never be read as "nothing is running", which would silently detach
- * a program that is running perfectly well.
- *
- * Returns the SAME object when nothing changed, so the effect that calls it
- * does not write to storage on every mount.
+ * It moved to `src/goals/programReferenceService.ts` on 2026-09-23, because the
+ * rule it exists to protect — a read that FAILED is not an empty list — lived
+ * in the React effect that called it rather than in the function, where no test
+ * could reach it. Taking the whole read as a parameter is what fixed that, and
+ * it is a big enough idea to own a file. `applyProgramToWorkoutRoutine` and
+ * `detachProgramFromRoutines` stay here: they are plan edits, which is what
+ * this file is.
  */
-export function reconcileProgramReference(
-  plan: NsPlan,
-  active: Array<{ id: string; started_at: string }>,
-  now = nowIso()
-): NsPlan {
-  const activeIds = new Set(active.map((e) => e.id))
-  const referenced = plan.routines
-    .map((r) => r.program?.enrollmentId)
-    .filter((id): id is string => Boolean(id))
-
-  // A reference to something that is no longer running: drop the claim, keep
-  // the week. "Not tracked" is a real state, not an error.
-  const dead = referenced.filter((id) => !activeIds.has(id))
-  if (dead.length > 0) {
-    return dead.reduce((acc, id) => detachProgramFromRoutines(acc, id, now), plan)
-  }
-
-  // Already pointing at something that is running: leave it exactly alone,
-  // including its identity, so no save fires.
-  if (referenced.length > 0) return plan
-
-  // Nothing referenced, but something IS running — started on another device,
-  // or from the Training page. Adopt the most recently started one.
-  if (active.length === 0) return plan
-  const newest = [...active].sort((a, b) => b.started_at.localeCompare(a.started_at))[0]
-  return applyProgramToWorkoutRoutine(plan, now, { enrollmentId: newest.id })
-}
 
 /**
  * Point the plan's workout routine at a program that was just started.

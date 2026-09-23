@@ -66,6 +66,7 @@ import * as nsTrack from "@/src/goals/northStarTrackService"
 import { SNAPSHOT_DEBOUNCE_MS, sendSnapshot, startSync, stopSync, syncIsOff } from "@/src/goals/planSnapshotClient"
 import { fetchLifePlan, newNodeId, saveLifePlanFromBrowser, startLifePlan } from "@/src/goals/lifePlanClient"
 import { LIFE_PLAN_IMPORTED_KEY, canSave, decideOnLoad, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
+import { reconcileProgramReference } from "@/src/goals/programReferenceService"
 import { StarTab } from "./StarTab"
 import { NowTab } from "./NowTab"
 import { FocusTab } from "./FocusTab"
@@ -371,20 +372,36 @@ export function NorthStarFlow({
    * slice for nothing.
    */
   const { enrollments, loading: programsLoading, error: programsError } = useActiveEnrollments()
+  /**
+   * The read, in one object, because that is what the reconciliation takes.
+   *
+   * A NEW OBJECT EVERY RENDER WOULD RE-RUN THE EFFECT BELOW FOREVER: its
+   * dependency list holds `plan`, and an effect that calls `setPlan` with a
+   * dependency it recreates each render is a loop. Memoised on the three facts
+   * it carries.
+   */
+  const programRead = useMemo(
+    () => ({ enrollments, loading: programsLoading, error: programsError }),
+    [enrollments, programsLoading, programsError]
+  )
 
   /**
    * THE PLAN RECONCILES AGAINST THE DATABASE EVERY TIME IT OPENS.
    *
    * End a program on the Training page, or start one on your phone, and the
-   * reference in this browser is wrong until this runs. Guarded on a SUCCESSFUL
-   * read: a failed list must never read as "nothing is running", which would
-   * detach a program that is running perfectly well.
+   * reference in this browser is wrong until this runs.
+   *
+   * THE "SUCCESSFUL READ" GUARD IS NO LONGER HERE. It was an early return in
+   * this effect — `if (programsLoading || programsError) return` — which is the
+   * one place a test could not reach it and the next caller had to remember it.
+   * `reconcileProgramReference` takes the whole read and owns that rule now,
+   * with a test of its own for each of the two states.
    */
   useEffect(() => {
-    if (!loaded || programsLoading || programsError) return
+    if (!loaded) return
     // Returns the same object when nothing changed, so this does not write to
     // storage on every mount.
-    setPlan((p) => ns.reconcileProgramReference(p, enrollments))
+    setPlan((p) => reconcileProgramReference(p, programRead).plan)
     /**
      * `plan` IS A DEPENDENCY, and leaving it out lost the adoption.
      *
@@ -405,7 +422,7 @@ export function NorthStarFlow({
      * step: an adoption leaves the reference referenced, and a detach leaves
      * nothing referenced.
      */
-  }, [loaded, programsLoading, programsError, enrollments, plan])
+  }, [loaded, programRead, plan])
 
   /** The five states the Systems step can be in about its training week. */
   const linkedProgram = useMemo((): LinkedProgram => {
