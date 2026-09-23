@@ -7,7 +7,7 @@
 import { createServerSupabaseClient } from "./supabase"
 import { chunkIds, readAllRows } from "./paging"
 import { libraryByName } from "@/src/programs/data/exerciseLibrary"
-import { getNowInTimezone, periodStartFor, startOfDayInstant } from "../shared/dateUtils"
+import { getNowInTimezone, getTodayInTimezone, periodStartFor, startOfDayInstant } from "../shared/dateUtils"
 import { weeklyStreakRun } from "../shared/streakRuns"
 import {
   cappedEstimate,
@@ -1066,4 +1066,177 @@ export async function getSleepWeeklyAvgHours(userId: string, timezone: string): 
   const { computeSleepHours } = await import("@/src/health/healthService")
   const totalHours = data.reduce((sum, d) => sum + computeSleepHours(d.bedtime, d.wake_time), 0)
   return Math.round((totalHours / data.length) * 10) / 10
+}
+
+/**
+ * HISTORY, A MONTH AT A TIME, ALL THE WAY BACK.
+ *
+ * The screen asked for `days=365` and paged the array in the browser, so a
+ * workout from two years ago was not "further down the list" — it had never
+ * been read. "Show more" then ran out with no notice, which reads as "that is
+ * everything" and was not.
+ *
+ * WHY MONTHS RATHER THAN A ROW COUNT. The list is grouped by month with a total
+ * under each header, and a page that ends mid-month makes that total a lie —
+ * "September: 4 sessions" when the fifth is on the next page. A month is the
+ * unit the screen displays, so it is the unit the read hands over.
+ *
+ * `nextBefore` is a FACT THE SERVER CHECKED, not the absence of a next page:
+ * after filling the pages it probes once more below the oldest month read, so
+ * "That is everything" is something somebody asked the database.
+ */
+export async function readHistoryMonths(
+  userId: string,
+  opts: {
+    /** The ACCOUNT's zone: which month a 00:30 workout belongs to. */
+    timezone: string
+    /** Read strictly older than this instant. Defaults to now. */
+    before?: string
+    /** Only workouts containing this lift, and only its sets. */
+    lift?: string
+    /** Keep reading months until this many workouts are in hand. */
+    minRows?: number
+    /** However empty the months are, stop after this many. */
+    maxMonths?: number
+  }
+): Promise<{
+  months: { monthKey: string; monthStart: string; logs: (WorkoutLogRow & { sets: WorkoutSetRow[] })[] }[]
+  nextBefore: string | null
+}> {
+  const supabase = await createServerSupabaseClient()
+  const { timezone, lift } = opts
+  const minRows = opts.minRows ?? 20
+  const maxMonths = opts.maxMonths ?? 12
+  let before = opts.before ?? new Date().toISOString()
+
+  /**
+   * The newest finished workout strictly older than `at`, or null.
+   *
+   * `!inner` on the sets when filtering, so a month page holds only workouts
+   * that actually contain the lift — a filtered list of empty sessions is
+   * worse than no filter.
+   */
+  const newestBefore = async (at: string): Promise<{ id: string; logged_at: string } | null> => {
+    /**
+     * THE TWO CHAINS ARE WRITTEN OUT, not built through a variable.
+     *
+     * A query assembled in a `const` and then chained hides its own `.limit()`
+     * from the paging guard in `tests/unit/architecture.test.ts`, which reads
+     * the chain — so a bounded read gets reported as an unpaged one. I wrote it
+     * the tidy way first and the guard caught it. Duplication here, one whole
+     * chain each, is the price of a guard that can see.
+     */
+    const answer = lift
+      ? await finishedWorkouts(
+          supabase
+            .from("workout_logs")
+            .select("id, logged_at, workout_sets!inner(id)")
+            .eq("user_id", userId)
+            .eq("workout_sets.exercise", lift)
+            .lt("logged_at", at)
+            .order("logged_at", { ascending: false })
+            .order("id", { ascending: false })
+            .limit(1)
+        ).maybeSingle()
+      : await finishedWorkouts(
+          supabase
+            .from("workout_logs")
+            .select("id, logged_at")
+            .eq("user_id", userId)
+            .lt("logged_at", at)
+            .order("logged_at", { ascending: false })
+            .order("id", { ascending: false })
+            .limit(1)
+        ).maybeSingle()
+    if (answer.error) throw new Error(`Your history could not be read: ${answer.error.message}`)
+    return (answer.data as { id: string; logged_at: string } | null) ?? null
+  }
+
+  const months: {
+    monthKey: string
+    monthStart: string
+    logs: (WorkoutLogRow & { sets: WorkoutSetRow[] })[]
+  }[] = []
+  let rows = 0
+
+  while (months.length < maxMonths && rows < minRows) {
+    const probe = await newestBefore(before)
+    if (!probe) return { months, nextBefore: null }
+
+    const monthKey = getTodayInTimezone(timezone, new Date(probe.logged_at)).slice(0, 7)
+    const [year, month] = monthKey.split("-").map(Number)
+    const monthStart = startOfDayInstant(`${monthKey}-01`, timezone)
+    // Integer arithmetic on the month, not date maths on an instant: adding
+    // "one month" to a Date lands on the 1st of March for the 31st of January.
+    const nextKey = month === 12 ? `${year + 1}-01` : `${year}-${String(month + 1).padStart(2, "0")}`
+    const nextMonthStart = startOfDayInstant(`${nextKey}-01`, timezone)
+
+    const monthLogs = await readAllRows<WorkoutLogRow>("a month of workouts", (from, to) =>
+      lift
+        ? finishedWorkouts(
+            supabase
+              .from("workout_logs")
+              .select("*, workout_sets!inner(id)")
+              .eq("user_id", userId)
+              .eq("workout_sets.exercise", lift)
+              .gte("logged_at", monthStart)
+              .lt("logged_at", nextMonthStart)
+              .order("logged_at", { ascending: false })
+              .order("id", { ascending: false })
+              .range(from, to)
+          )
+        : finishedWorkouts(
+            supabase
+              .from("workout_logs")
+              .select("*")
+              .eq("user_id", userId)
+              .gte("logged_at", monthStart)
+              .lt("logged_at", nextMonthStart)
+              .order("logged_at", { ascending: false })
+              .order("id", { ascending: false })
+              .range(from, to)
+          )
+    )
+
+    const sets: WorkoutSetRow[] = []
+    for (const ids of chunkIds(monthLogs.map((l) => l.id))) {
+      sets.push(
+        ...(await readAllRows<WorkoutSetRow>("a month of sets", (from, to) =>
+          lift
+            ? supabase
+                .from("workout_sets")
+                .select("*")
+                .in("log_id", ids)
+                .eq("exercise", lift)
+                .order("id", { ascending: true })
+                .range(from, to)
+            : supabase
+                .from("workout_sets")
+                .select("*")
+                .in("log_id", ids)
+                .order("id", { ascending: true })
+                .range(from, to)
+        ))
+      )
+    }
+    const byLog = new Map<string, WorkoutSetRow[]>()
+    for (const set of sets) {
+      const group = byLog.get(set.log_id)
+      if (group) group.push(set)
+      else byLog.set(set.log_id, [set])
+    }
+
+    months.push({
+      monthKey,
+      monthStart,
+      logs: monthLogs.map((log) => ({
+        ...log,
+        sets: (byLog.get(log.id) ?? []).sort(inWorkoutOrder),
+      })),
+    })
+    rows += monthLogs.length
+    before = monthStart
+  }
+
+  return { months, nextBefore: (await newestBefore(before)) ? before : null }
 }

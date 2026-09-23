@@ -31,6 +31,8 @@ class FakeQuery {
   private headCount = false
   private window: { from: number; to: number } | null = null
   private emptyIsFine = false
+  private sorts: { col: string; ascending: boolean }[] = []
+  private cap: number | null = null
 
   constructor(
     private table: string,
@@ -58,6 +60,30 @@ class FakeQuery {
     return this
   }
   eq(col: string, val: unknown) {
+    /**
+     * `eq("workout_sets.exercise", …)` — a filter on an EMBEDDED table, which
+     * PostgREST applies to the join. Paired with `select("*, workout_sets!inner(…)")`
+     * it narrows the PARENT rows to those having a matching child.
+     *
+     * Understood explicitly for the one relationship this fake knows, and
+     * thrown for anything else. Without it the filter silently matched nothing
+     * — the mirror of the `or()` hazard this file already guards against, and
+     * it makes a filtered read look empty rather than wrong.
+     */
+    if (col.includes(".")) {
+      const [child, childCol] = col.split(".")
+      if (this.table !== "workout_logs" || child !== "workout_sets") {
+        throw new Error(
+          `fakeSupabase.eq does not know the relationship "${this.table} → ${child}" — teach it rather than guessing`
+        )
+      }
+      this.filters.push((parent) =>
+        (this.tables[child] ?? []).some(
+          (row) => row.log_id === parent.id && row[childCol] === val
+        )
+      )
+      return this
+    }
     this.filters.push((r) => r[col] === val)
     return this
   }
@@ -70,6 +96,17 @@ class FakeQuery {
     this.filters.push((r) => (r[col] ?? null) === val)
     return this
   }
+  /**
+   * Strictly greater than. The delta read in `viceRepo` uses it, and the
+   * boundary is the point: `gte` would hand a client back the row it already
+   * has on every sync forever, so a test that cannot tell `gt` from `gte`
+   * cannot pin the behaviour that keeps a quiet page quiet.
+   */
+  gt(col: string, val: string) {
+    this.filters.push((r) => String(r[col]) > val)
+    return this
+  }
+
   lt(col: string, val: string) {
     this.filters.push((r) => String(r[col]) < val)
     return this
@@ -106,10 +143,24 @@ class FakeQuery {
     this.filters.push((r) => terms.some((t) => t(r)))
     return this
   }
-  order() {
+  /**
+   * ORDER IS REAL NOW, and it has to be.
+   *
+   * It was a no-op, which is fine for a read whose caller sorts afterwards and
+   * wrong for one whose whole answer is "the newest row before this instant" —
+   * `readHistoryMonths` probes for exactly that, and against a no-op it would
+   * have read whichever row happened to be first in the array and passed.
+   *
+   * Applied in the order the calls arrive, like PostgREST: the first `.order()`
+   * is the primary key, and later ones break its ties.
+   */
+  order(col?: string, opts?: { ascending?: boolean }) {
+    if (col) this.sorts.push({ col, ascending: opts?.ascending !== false })
     return this
   }
-  limit() {
+  /** Taken after the sort, as the database does. */
+  limit(n?: number) {
+    if (typeof n === "number") this.cap = n
     return this
   }
   /** `range(from, to)` is inclusive at both ends, as PostgREST's is. */
@@ -140,7 +191,17 @@ class FakeQuery {
   }
 
   private matched() {
-    return this.rows().filter((r) => this.filters.every((f) => f(r)))
+    const hits = this.rows().filter((r) => this.filters.every((f) => f(r)))
+    if (this.sorts.length === 0) return hits
+    return [...hits].sort((a, b) => {
+      for (const { col, ascending } of this.sorts) {
+        const left = String(a[col] ?? "")
+        const right = String(b[col] ?? "")
+        if (left === right) continue
+        return (left < right ? -1 : 1) * (ascending ? 1 : -1)
+      }
+      return 0
+    })
   }
 
   then(resolve: (v: { data: unknown; error: unknown; count?: number }) => void) {
@@ -178,12 +239,13 @@ class FakeQuery {
      * that hands back everything makes an unpaged read look correct in tests and
      * wrong in production, which is the opposite of what a test is for.
      */
+    const bounded = this.cap === null ? hits : hits.slice(0, this.cap)
     const page = this.window
-      ? hits.slice(this.window.from, this.window.to + 1)
-      : hits.slice(0, PAGE_SIZE)
-    const data = this.one ? (hits[0] ? { ...hits[0] } : null) : page.map((r) => ({ ...r }))
+      ? bounded.slice(this.window.from, this.window.to + 1)
+      : bounded.slice(0, PAGE_SIZE)
+    const data = this.one ? (bounded[0] ? { ...bounded[0] } : null) : page.map((r) => ({ ...r }))
     const error =
-      this.one && !hits[0] && !this.emptyIsFine ? { message: "no rows", code: "PGRST116" } : null
+      this.one && !bounded[0] && !this.emptyIsFine ? { message: "no rows", code: "PGRST116" } : null
     return resolve({ data, error })
   }
 }

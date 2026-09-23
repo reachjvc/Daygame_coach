@@ -136,21 +136,21 @@ describe("the rest clock", () => {
      * share this checkout and run the suite at once; fifteen seconds is not a
      * weaker assertion, it is the same assertion able to report itself.
      *
-     * MEASURED, not guessed at, after the third spurious failure: this test
-     * takes 159 ms on its own and has exceeded twelve seconds inside a
-     * 290-file parallel run with two other sessions building on the same
-     * machine. That is a machine being starved, not a slow assertion — the
-     * thing under test is one state update and one `localStorage` write.
+     * AND THE RULE ITSELF IS NOT TESTED HERE ANY MORE.
      *
-     * A deadline is not an assertion. The test still fails if the rest bar
-     * never goes away; all a longer one gives up is how quickly a real
-     * regression is reported, and a spurious failure blocks every commit in
-     * the checkout. If it flakes again the answer is to test
-     * `dismissRestStartedAt` on the hook directly rather than to raise this
-     * a fourth time.
+     * This assertion went spurious three times — at five, twelve and thirty
+     * seconds — while taking 159 ms on an idle machine: a starved environment
+     * rather than a slow assertion, since the thing under test is one state
+     * update and one `localStorage` write. A deadline that keeps being raised
+     * is a result nobody can read, so rather than raise it a fourth time the
+     * rule moved to `useLiveWorkout.test.tsx` ("a late answer only clears its
+     * own rest"), where it is a function call and no waiting at all.
+     *
+     * What is left here is the wiring — that the SCREEN connects a refusal to
+     * the clock — and ten seconds is plenty for that.
      */
-    await waitFor(() => expect(screen.queryByTestId("rest-bar")).toBeNull(), { timeout: 28_000 })
-  }, 30_000)
+    await waitFor(() => expect(screen.queryByTestId("rest-bar")).toBeNull(), { timeout: 10_000 })
+  }, 12_000)
 
   it("stays when the set is merely queued", async () => {
     const user = userEvent.setup()

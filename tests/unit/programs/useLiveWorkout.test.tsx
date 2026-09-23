@@ -720,3 +720,57 @@ describe("startWorkoutRequest", () => {
     expect(bodies[1]).not.toHaveProperty("dayId")
   })
 })
+
+/**
+ * THE REST CLOCK, ASKED OF THE HOOK RATHER THAN OF THE SCREEN.
+ *
+ * `liveWorkoutScreen.test.tsx` proves the same rule through the DOM — tick,
+ * the bar appears, the server refuses, the bar goes — and that test has now
+ * been the only spurious failure in this suite three times, at five, twelve
+ * and thirty seconds, while taking 159 ms on an idle machine. It is a starved
+ * environment rather than a slow assertion, but a deadline that keeps being
+ * raised is a test nobody can read the result of.
+ *
+ * So the RULE lives here, where it is one function call and no waiting: a late
+ * answer may only clear the clock it started. Tick set 1, tick set 2, and set
+ * 1's refusal arriving second must not wipe the rest you are taking now.
+ */
+describe("a late answer only clears its own rest", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  it("clears the clock when the instant matches", () => {
+    const { result } = renderHook(() => useLiveWorkout(workout))
+    act(() => result.current.startRest("squat", 90, true))
+    const started = result.current.rest!.from
+    expect(started).toBeTypeOf("number")
+
+    act(() => result.current.dismissRestStartedAt(started))
+    expect(result.current.rest).toBeNull()
+  })
+
+  it("leaves a clock that a later set started", () => {
+    const { result } = renderHook(() => useLiveWorkout(workout))
+    act(() => result.current.startRest("squat", 90, true))
+    const first = result.current.rest!.from
+
+    // The second set's rest replaces it, and then the FIRST set's refusal
+    // arrives.
+    act(() => result.current.startRest("bench", 120, false))
+    act(() => result.current.dismissRestStartedAt(first - 1))
+
+    expect(result.current.rest, "the rest you are taking now survives").not.toBeNull()
+    expect(result.current.rest!.seconds).toBe(120)
+  })
+
+  it("forgets the clock in storage too, so a reload does not bring it back", () => {
+    const { result } = renderHook(() => useLiveWorkout(workout))
+    act(() => result.current.startRest("squat", 90, true))
+    expect(window.localStorage.getItem("live-workout-rest-v1")).not.toBeNull()
+
+    act(() => result.current.dismissRestStartedAt(result.current.rest!.from))
+    const stored = window.localStorage.getItem("live-workout-rest-v1")
+    expect(stored === null || stored === "null").toBe(true)
+  })
+})
