@@ -41,7 +41,7 @@ const SHOWN = 8
  * and, an inch below, "Bench Press 61 → 102 kg" for the same lift on the same
  * screen. Making it a required prop is what stops the next caller forgetting.
  */
-export function LiftHistory({ unit }: { unit: UnitSystem }) {
+export function LiftHistory({ unit, timezone }: { unit: UnitSystem; timezone: string }) {
   const label = UNIT_CONFIG[unit].label
   /** Stored kilograms, shown in the lifter's unit, rounded the way this app rounds. */
   const show = (kg: number) => formatLoad(fromKg(kg, unit))
@@ -68,7 +68,7 @@ export function LiftHistory({ unit }: { unit: UnitSystem }) {
     return {
       /** Kept so the export writes exactly what is on screen, with no second fetch. */
       logs: logs as WorkoutLogWithSets[],
-      lifts: liftsWithHistory(flat as never),
+      lifts: liftsWithHistory(flat as never, timezone),
     }
   })
 
@@ -101,7 +101,7 @@ export function LiftHistory({ unit }: { unit: UnitSystem }) {
           type="button"
           data-testid="export-csv"
           onClick={() => {
-            const blob = new Blob([workoutsToCsv(logs)], { type: "text/csv;charset=utf-8" })
+            const blob = new Blob([workoutsToCsv(logs, timezone)], { type: "text/csv;charset=utf-8" })
             const url = URL.createObjectURL(blob)
             const a = document.createElement("a")
             a.href = url

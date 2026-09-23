@@ -303,7 +303,12 @@ export function TrainingScreen({
           {opened.has("progress") && (
             <TabsContent value="progress" forceMount hidden={tab !== "progress"} className="mt-3">
               <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
-                <ProgressTab plannedPerWeek={plannedPerWeek} unit={unit} />
+                <ProgressTab
+                  plannedPerWeek={plannedPerWeek}
+                  unit={unit}
+                  /* The account's zone, the same one History is given. */
+                  timezone={timezone ?? "UTC"}
+                />
               </Suspense>
             </TabsContent>
           )}

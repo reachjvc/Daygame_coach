@@ -409,7 +409,13 @@ export function describeSessionRow(log: {
  */
 export function liftHistory(
   sets: (WorkoutSetRow & { logged_at: string })[],
-  exercise: string
+  exercise: string,
+  /**
+   * The ACCOUNT's zone. Required, because the alternative is the machine's —
+   * and on the server that is UTC, so a 23:30 Copenhagen set was filed on the
+   * previous day and a 18:00 Los Angeles one on the next.
+   */
+  timezone: string
 ): LoadPoint[] {
   const key = exercise.toLowerCase().trim()
   const topByDay = new Map<string, { at: string; weight: number }>()
@@ -417,7 +423,7 @@ export function liftHistory(
   for (const s of sets) {
     if (!isWorkingSet(s)) continue
     if (s.exercise.toLowerCase().trim() !== key) continue
-    const day = localDateKey(new Date(s.logged_at))
+    const day = getTodayInTimezone(timezone, new Date(s.logged_at))
     const cur = topByDay.get(day)
     if (!cur || s.weight_kg > cur.weight) topByDay.set(day, { at: s.logged_at, weight: s.weight_kg })
   }
@@ -434,6 +440,8 @@ export function liftHistory(
  */
 export function liftsWithHistory(
   sets: (WorkoutSetRow & { logged_at: string })[],
+  /** The account's zone, for the same reason `liftHistory` needs it. */
+  timezone: string,
   minDays = 2
 ): { exercise: string; points: LoadPoint[] }[] {
   const names = new Map<string, string>()
@@ -445,7 +453,7 @@ export function liftsWithHistory(
     if (!names.has(key)) names.set(key, s.exercise)
   }
   return [...names.values()]
-    .map((exercise) => ({ exercise, points: liftHistory(sets, exercise) }))
+    .map((exercise) => ({ exercise, points: liftHistory(sets, exercise, timezone) }))
     .filter((l) => l.points.length >= minDays)
     .sort((a, b) => b.points.length - a.points.length)
 }
@@ -464,7 +472,7 @@ export function liftsWithHistory(
  * to be doubled. Warm-ups are marked rather than dropped — they are part of what
  * happened, they are simply not working sets.
  */
-export function workoutsToCsv(logs: WorkoutLogWithSets[]): string {
+export function workoutsToCsv(logs: WorkoutLogWithSets[], timezone: string): string {
   // `set_kind` rather than a warm-up flag: the file can now say whether a set
   // was an all-out top set or a back-off, which "warm_up: false" could not.
   const header = ["date", "session_type", "duration_min", "exercise", "set", "reps", "weight_kg", "set_kind"]
@@ -476,7 +484,9 @@ export function workoutsToCsv(logs: WorkoutLogWithSets[]): string {
   const rows: string[] = [header.join(",")]
 
   for (const log of logs) {
-    const date = localDateKey(new Date(log.logged_at))
+    // The file you hold has to agree with the screen it came from: the day
+              // is the account's, not the machine's.
+    const date = getTodayInTimezone(timezone, new Date(log.logged_at))
     // A cardio session has no sets and still belongs in the file — leaving it
     // out would make the export disagree with the session count on screen.
     if (!log.sets || log.sets.length === 0) {
@@ -777,16 +787,24 @@ export interface WeekAdherence {
 export function adherenceThisWeek(
   logs: WorkoutLogRow[],
   plannedPerWeek: number,
-  today: Date
+  /** `now` as an INSTANT. Which day that is, is the next argument's business. */
+  now: Date,
+  /**
+   * The account's zone. This used to bucket on the machine's — UTC on the
+   * server — so a Sunday 23:30 session in Copenhagen counted towards the
+   * following week, and a traveller's week began on the wrong day.
+   */
+  timezone: string
 ): WeekAdherence {
-  const trained = new Set(logs.map((log) => localDateKey(new Date(log.logged_at))))
-  const todayKey = localDateKey(today)
-  const monday = mondayOf(today)
+  const dayOf = (instant: Date) => getTodayInTimezone(timezone, instant)
+  const trained = new Set(logs.map((log) => dayOf(new Date(log.logged_at))))
+  const todayKey = dayOf(now)
+  // `periodStartFor("weekly", …)` is the one implementation of a Monday in
+  // this codebase, and it is given the account's own zoned date.
+  const monday = periodStartFor("weekly", toZonedDate(now, timezone))
 
   const days = Array.from({ length: 7 }, (_, i) => {
-    const day = new Date(monday)
-    day.setDate(monday.getDate() + i)
-    const date = localDateKey(day)
+    const date = addDays(monday, i)
     return { date, done: trained.has(date), future: date > todayKey }
   })
 
@@ -796,14 +814,6 @@ export function adherenceThisWeek(
     days,
   }
 }
-
-/**
- * Is this lift measured in seconds rather than reps?
- *
- * Asked of the library by name, because the stored set does not say: the number
- * lives in `reps` whichever it is.
- */
-
 
 /**
  * WHAT ONE SET MOVED — the one multiplication in this codebase.
@@ -865,16 +875,23 @@ export interface WeekVolume {
  */
 export function weeklyVolume(
   logs: WorkoutLogWithSets[],
-  today: Date,
-  weeks: number = 8
+  /** `now` as an INSTANT; the account's zone decides which week that is. */
+  now: Date,
+  weeks: number = 8,
+  timezone: string = "UTC"
 ): WeekVolume[] {
   const byWeek = new Map<string, { volumeKg: number; sets: number }>()
-  const start = mondayOf(today)
-  start.setDate(start.getDate() - (weeks - 1) * 7)
-  const startKey = localDateKey(start)
+  /**
+   * THE WEEK IS THE ACCOUNT'S, not the machine's. This bucketed on the local
+   * Date of the process — UTC on the server — so a Sunday-night session landed
+   * in the next week's bar, and the squares on Progress disagreed with the
+   * week strip on Today, which reads the account's calendar.
+   */
+  const weekOf = (instant: Date) => periodStartFor("weekly", toZonedDate(instant, timezone))
+  const startKey = addDays(weekOf(now), -(weeks - 1) * 7)
 
   for (const log of logs) {
-    const week = localDateKey(mondayOf(new Date(log.logged_at)))
+    const week = weekOf(new Date(log.logged_at))
     if (week < startKey) continue
     const bucket = byWeek.get(week) ?? { volumeKg: 0, sets: 0 }
     for (const set of log.sets ?? []) {
@@ -896,9 +913,7 @@ export function weeklyVolume(
   }
 
   return Array.from({ length: weeks }, (_, i) => {
-    const day = new Date(start)
-    day.setDate(start.getDate() + i * 7)
-    const weekStart = localDateKey(day)
+    const weekStart = addDays(startKey, i * 7)
     const bucket = byWeek.get(weekStart) ?? { volumeKg: 0, sets: 0 }
     return { weekStart, volumeKg: Math.round(bucket.volumeKg), sets: bucket.sets }
   })

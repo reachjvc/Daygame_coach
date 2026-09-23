@@ -38,11 +38,20 @@ interface Props {
   /** Training days a week the running program asks for; 0 when none is. */
   plannedPerWeek: number
   unit: UnitSystem
+  /**
+   * The ACCOUNT's zone, and required.
+   *
+   * Every "which week was this" on this tab used to be decided by the
+   * machine's clock — the browser's here, UTC on the server — so a Sunday
+   * 23:30 session landed in the next week's bar and the squares disagreed
+   * with the week strip on the Today tab, which reads the account's calendar.
+   */
+  timezone: string
 }
 
 const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"]
 
-export function ProgressTab({ plannedPerWeek, unit }: Props) {
+export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
   const [logs, setLogs] = useState<WorkoutLogWithSets[] | null>(null)
   const [state, setState] = useState<"loading" | "ready" | "failed">("loading")
   /**
@@ -115,8 +124,8 @@ export function ProgressTab({ plannedPerWeek, unit }: Props) {
   }
 
   const now = new Date()
-  const week = adherenceThisWeek(logs, plannedPerWeek, now)
-  const volume = weeklyVolume(logs, now, 8)
+  const week = adherenceThisWeek(logs, plannedPerWeek, now, timezone)
+  const volume = weeklyVolume(logs, now, 8, timezone)
   const label = UNIT_CONFIG[unit].label
   /**
    * Grouped, because these run to five figures. "25293 kg" is a number you have
@@ -302,7 +311,7 @@ export function ProgressTab({ plannedPerWeek, unit }: Props) {
       </section>
 
       <Suspense fallback={null}>
-        <LiftHistory unit={unit} />
+        <LiftHistory unit={unit} timezone={timezone} />
       </Suspense>
     </div>
   )

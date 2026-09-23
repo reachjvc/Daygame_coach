@@ -133,6 +133,17 @@ describe("computeWeekStreak", () => {
  */
 
 
+/**
+ * THE ACCOUNT'S ZONE, PASSED IN EVERYWHERE.
+ *
+ * These functions used to bucket "which day was this" on the machine's clock —
+ * the browser's here, UTC on the server — so a 23:30 Copenhagen set was filed
+ * on the previous day the moment the work moved server-side. The zone is a
+ * required argument now, which makes that class of bug unrepresentable rather
+ * than merely absent.
+ */
+const TZ = "Europe/Copenhagen"
+
 describe("liftHistory", () => {
   const s = (exercise: string, weight: number, loggedAt: string, overrides: Partial<WorkoutSetRow> = {}) => ({
     ...set(exercise, weight, 5, overrides),
@@ -144,12 +155,12 @@ describe("liftHistory", () => {
       s("Bench Press", 60, "2026-01-10T10:00:00"),
       s("Bench Press", 80, "2026-06-10T10:00:00"),
     ]
-    expect(liftHistory(sets, "Bench Press").map((p) => p.weight)).toEqual([60, 80])
+    expect(liftHistory(sets, "Bench Press", TZ).map((p) => p.weight)).toEqual([60, 80])
   })
 
   it("matches on the same key personal records use, so spelling does not split a lift", () => {
     const sets = [s("bench press", 60, "2026-01-10T10:00:00"), s("Bench Press ", 70, "2026-02-10T10:00:00")]
-    expect(liftHistory(sets, "BENCH PRESS")).toHaveLength(2)
+    expect(liftHistory(sets, "BENCH PRESS", TZ)).toHaveLength(2)
   })
 
   it("excludes warm-ups — a warm-up counted as working weight reads as a collapse", () => {
@@ -157,7 +168,7 @@ describe("liftHistory", () => {
       s("Squat", 100, "2026-01-10T10:00:00"),
       s("Squat", 20, "2026-01-17T10:00:00", { set_kind: "warmup" }),
     ]
-    expect(liftHistory(sets, "Squat").map((p) => p.weight)).toEqual([100])
+    expect(liftHistory(sets, "Squat", TZ).map((p) => p.weight)).toEqual([100])
   })
 
   it("takes the heaviest set of a day, so five sets are one point and a drop set is not a fall", () => {
@@ -166,18 +177,18 @@ describe("liftHistory", () => {
       s("Squat", 100, "2026-01-10T10:05:00"),
       s("Squat", 60, "2026-01-10T10:10:00"),
     ]
-    const out = liftHistory(sets, "Squat")
+    const out = liftHistory(sets, "Squat", TZ)
     expect(out).toHaveLength(1)
     expect(out[0].weight).toBe(100)
   })
 
   it("returns oldest first, whatever order the rows arrive in", () => {
     const sets = [s("Row", 80, "2026-06-01T10:00:00"), s("Row", 40, "2026-01-01T10:00:00")]
-    expect(liftHistory(sets, "Row").map((p) => p.weight)).toEqual([40, 80])
+    expect(liftHistory(sets, "Row", TZ).map((p) => p.weight)).toEqual([40, 80])
   })
 
   it("a lift never done is empty, not an error", () => {
-    expect(liftHistory([], "Deadlift")).toEqual([])
+    expect(liftHistory([], "Deadlift", TZ)).toEqual([])
   })
 })
 
@@ -193,7 +204,7 @@ describe("liftsWithHistory", () => {
       s("Squat", 110, "2026-01-08T10:00:00"),
       s("Curl", 20, "2026-01-01T10:00:00"),
     ]
-    expect(liftsWithHistory(sets).map((l) => l.exercise)).toEqual(["Squat"])
+    expect(liftsWithHistory(sets, TZ).map((l) => l.exercise)).toEqual(["Squat"])
   })
 
   it("lists the most-trained lift first", () => {
@@ -201,7 +212,7 @@ describe("liftsWithHistory", () => {
       s("Squat", 100, "2026-01-01T10:00:00"), s("Squat", 105, "2026-01-08T10:00:00"), s("Squat", 110, "2026-01-15T10:00:00"),
       s("Row", 60, "2026-01-01T10:00:00"), s("Row", 62, "2026-01-08T10:00:00"),
     ]
-    expect(liftsWithHistory(sets).map((l) => l.exercise)).toEqual(["Squat", "Row"])
+    expect(liftsWithHistory(sets, TZ).map((l) => l.exercise)).toEqual(["Squat", "Row"])
   })
 
   it("keeps one spelling per lift rather than listing it twice", () => {
@@ -209,7 +220,7 @@ describe("liftsWithHistory", () => {
       s("Bench Press", 60, "2026-01-01T10:00:00"),
       s("bench press", 65, "2026-01-08T10:00:00"),
     ]
-    expect(liftsWithHistory(sets)).toHaveLength(1)
+    expect(liftsWithHistory(sets, TZ)).toHaveLength(1)
   })
 })
 
@@ -222,17 +233,17 @@ describe("workoutsToCsv", () => {
   })
 
   it("quotes an exercise name containing a comma, or the file splits a column", () => {
-    const csv = workoutsToCsv([workout("2026-03-01T10:00:00", [set("Bench Press, close grip", 60, 5)])])
+    const csv = workoutsToCsv([workout("2026-03-01T10:00:00", [set("Bench Press, close grip", 60, 5)])], TZ)
     expect(csv).toContain('"Bench Press, close grip"')
   })
 
   it("doubles a quote inside a name", () => {
-    const csv = workoutsToCsv([workout("2026-03-01T10:00:00", [set('The "good" one', 60, 5)])])
+    const csv = workoutsToCsv([workout("2026-03-01T10:00:00", [set('The "good" one', 60, 5)])], TZ)
     expect(csv).toContain('"The ""good"" one"')
   })
 
   it("marks warm-ups rather than dropping them", () => {
-    const csv = workoutsToCsv([workout("2026-03-01T10:00:00", [set("Squat", 20, 10, { set_kind: "warmup" })])])
+    const csv = workoutsToCsv([workout("2026-03-01T10:00:00", [set("Squat", 20, 10, { set_kind: "warmup" })])], TZ)
     // The column says WHAT the set was, not merely whether it was a warm-up:
     // a top set and a back-off are different facts and used to be the same one.
     expect(csv).toContain("warmup")
@@ -240,19 +251,19 @@ describe("workoutsToCsv", () => {
   })
 
   it("keeps a session with no sets, so the file agrees with the session count", () => {
-    const csv = workoutsToCsv([workout("2026-03-01T10:00:00", [])])
+    const csv = workoutsToCsv([workout("2026-03-01T10:00:00", [])], TZ)
     expect(csv.split("\n")).toHaveLength(2)
     expect(csv).toContain("2026-03-01")
   })
 
   it("dates each row by the day you trained, in your own calendar", () => {
     // 23:30 local must not be filed on tomorrow.
-    const csv = workoutsToCsv([workout("2026-03-01T23:30:00", [set("Squat", 100, 5)])])
+    const csv = workoutsToCsv([workout("2026-03-01T23:30:00", [set("Squat", 100, 5)])], TZ)
     expect(csv).toContain("2026-03-01")
   })
 
   it("has a header even with nothing to export", () => {
-    expect(workoutsToCsv([]).split("\n")).toEqual(["date,session_type,duration_min,exercise,set,reps,weight_kg,set_kind"])
+    expect(workoutsToCsv([], TZ).split("\n")).toEqual(["date,session_type,duration_min,exercise,set,reps,weight_kg,set_kind"])
   })
 })
 
