@@ -1,11 +1,21 @@
 -- ---------------------------------------------------------------------------
 -- CORRECTING OR DELETING A FINISHED WORKOUT IS ONE TRANSACTION.
 --
--- NOT APPLIED. This file is written and waiting for the owner: the two GRANTs
--- at the bottom are a permission change, which is theirs to approve. Nothing in
--- the app calls these functions yet, so applying it changes nothing on its own
--- and NOT applying it breaks nothing — `deleteWorkoutLog` and `reviseWorkout`
--- still do what they do today.
+-- NOT APPLIED, AND OUT OF THE PUSH PATH. This file is written and waiting for
+-- the owner: the two GRANTs at the bottom are a permission change, which is
+-- theirs to approve. Nothing in the app calls these functions yet, so applying
+-- it changes nothing on its own and NOT applying it breaks nothing —
+-- `deleteWorkoutLog` and `reviseWorkout` still do what they do today.
+--
+-- IT SITS IN `supabase/pending-owner-approval/`, OUTSIDE `migrations/`, because
+-- `supabase db push` takes every unapplied migration in that folder at once.
+-- Left there, nobody else could ship an unrelated migration without also
+-- shipping this permission change — which is somebody else deciding a question
+-- that was parked for the owner. Outside the folder rather than in a subfolder
+-- of it: `migrations/` is globbed by the CLI and read entry-by-entry by
+-- `tests/unit/shared/weight.test.ts`, and a directory inside it is a surprise
+-- to both. Move the file into `supabase/migrations/` when it is approved;
+-- nothing else about it changes.
 --
 -- WHAT IS WRONG TODAY. Deleting a session that belongs to a program is two
 -- writes: delete the row, then recalculate the weights the program had worked

@@ -115,8 +115,15 @@ describe("the other limits, which are NOT the weight limit", () => {
    * declares it, so the code cannot drift from the database again.
    */
   const migrations = (): string => {
+    // FILES ONLY. This read every entry as a file, so the first directory
+    // anybody put in `supabase/migrations/` made it throw EISDIR and the
+    // failure read as "the schema no longer declares the limit".
     const dir = path.resolve(__dirname, "../../../supabase/migrations")
-    return fs.readdirSync(dir).map((f) => fs.readFileSync(path.join(dir, f), "utf-8")).join("\n")
+    return fs
+      .readdirSync(dir, { withFileTypes: true })
+      .filter((entry) => entry.isFile() && entry.name.endsWith(".sql"))
+      .map((entry) => fs.readFileSync(path.join(dir, entry.name), "utf-8"))
+      .join("\n")
   }
 
   it("a distance may reach 1000 km, where a weight may not reach 1000 kg", () => {
