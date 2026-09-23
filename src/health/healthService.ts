@@ -366,11 +366,23 @@ function mondayOf(d: Date): Date {
  * left out of the sentence rather than printed as "0 km" — the silent-failure
  * rule, in the one place a reader would believe it.
  */
-export function describeSessionRow(log: {
-  session_type: string
-  distance_km?: number | null
-  duration_min?: number | null
-}): string {
+export function describeSessionRow(
+  log: {
+    session_type: string
+    distance_km?: number | null
+    duration_min?: number | null
+  },
+  /**
+   * `minutes: false` for a caller that already has a minutes column.
+   *
+   * History prints the duration in its own right-hand column, which is there so
+   * the numbers can be scanned down — and the sentence was printed beside it, so
+   * a run read "Run · 31 min    31 min". A flag rather than a second formatter:
+   * the rule for what a missing number does is the thing that must not be
+   * copied, and it is the only rule in here.
+   */
+  opts: { minutes?: boolean } = {}
+): string {
   // "running" reads as a state; "Run" reads as a thing you did.
   const kind =
     log.session_type === "running"
@@ -380,7 +392,7 @@ export function describeSessionRow(log: {
   if (log.distance_km !== null && log.distance_km !== undefined) {
     parts.push(`${log.distance_km} km`)
   }
-  if (log.duration_min !== null && log.duration_min !== undefined) {
+  if (opts.minutes !== false && log.duration_min !== null && log.duration_min !== undefined) {
     parts.push(`${log.duration_min} min`)
   }
   return parts.join(" · ")

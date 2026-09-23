@@ -33,10 +33,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useLoad } from "@/src/shared/useLoad"
-import { isWorkingSet, workingVolumeKg } from "@/src/health/healthService"
+import { describeSessionRow, isWorkingSet, workingVolumeKg } from "@/src/health/healthService"
 import { describeLoggedSet, fromKg } from "../programsService"
 import { dateKeyLabel } from "@/src/shared/dateUtils"
-import { UNIT_CONFIG } from "../config"
+import { DEFAULT_SESSION_TYPE, UNIT_CONFIG } from "../config"
 import { workoutReceipt } from "@/src/shared/trainingRoutes"
 import { LogPastWorkoutDialog } from "./LogPastWorkoutDialog"
 import type { ProgramEnrollment, UnitSystem } from "../types"
@@ -289,19 +289,42 @@ export function HistoryTab({
                             timeZone: zone,
                           })}
                         </span>
+                        {/*
+                          A RUN HAS NO SETS, AND THAT IS NOT A FAILURE.
+                          "No sets recorded" was printed over every run, class
+                          and mobility session — which reads as something having
+                          gone wrong with a session that went fine. The sentence
+                          is `describeSessionRow`'s, shared with the receipt, and
+                          it leaves the minutes to the column on the right.
+                        */}
                         <span className="block truncate text-xs text-muted-foreground">
                           {tops.length > 0
                             ? tops
                                 .map((top) => `${top.exercise} ${describeLoggedSet(top, unit)}`)
                                 .join(" · ")
-                            : "No sets recorded"}
+                            : log.session_type === DEFAULT_SESSION_TYPE
+                              ? "No sets recorded"
+                              : describeSessionRow(log, { minutes: false })}
                         </span>
                       </span>
+                      {/*
+                        A DURATION THAT IS NOT THERE IS NOT ZERO MINUTES.
+                        This was `{log.duration_min} min`, and the column is
+                        nullable — a workout whose instants the server could not
+                        subtract printed a bare " min". Built as parts so the
+                        separator cannot end up leading either.
+                      */}
                       <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                        {log.duration_min} min
-                        {working.length > 0
-                          ? ` · ${working.length} ${working.length === 1 ? "set" : "sets"}`
-                          : ""}
+                        {[
+                          log.duration_min === null || log.duration_min === undefined
+                            ? null
+                            : `${log.duration_min} min`,
+                          working.length > 0
+                            ? `${working.length} ${working.length === 1 ? "set" : "sets"}`
+                            : null,
+                        ]
+                          .filter((part): part is string => part !== null)
+                          .join(" · ")}
                       </span>
                     </Link>
                   </li>

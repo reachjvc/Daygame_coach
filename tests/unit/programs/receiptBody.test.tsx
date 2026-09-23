@@ -118,3 +118,56 @@ describe("what the program does next", () => {
     expect(screen.queryByText(/personal bests/i)).toBeNull()
   })
 })
+
+/**
+ * A RUN IS NOT A LIFTING SESSION THAT WENT BADLY.
+ *
+ * The receipt described every workout by its sets, and a run, a class and a
+ * mobility session have none — so a finished 5 km read "Minutes 31 · Sets 0 ·
+ * Volume 0" and said the word "run" nowhere. The two zeroes are the part that
+ * matters: they are not missing numbers, they are a frame that says a lifting
+ * session where nothing was lifted.
+ */
+describe("a session that is not lifting", () => {
+  it("names what it was, with its distance", () => {
+    render(
+      <ReceiptBody
+        summary={summary({ sessionType: "running", distanceKm: 5, durationMin: 31, sets: 0, volume: 0, volumeKg: 0 })}
+      />
+    )
+    // "running" is the raw column value; "Run" is a thing you did.
+    expect(screen.getByTestId("receipt-session-kind").textContent).toBe("Run · 5 km")
+  })
+
+  it("does not put a zero under Sets and Volume", () => {
+    render(
+      <ReceiptBody
+        summary={summary({ sessionType: "running", distanceKm: 5, durationMin: 31, sets: 0, volume: 0, volumeKg: 0 })}
+      />
+    )
+    expect(screen.queryByText("Sets")).toBeNull()
+    expect(screen.queryByText(/^Volume/)).toBeNull()
+    // The minutes and the kilometres are the figures a run actually has.
+    expect(screen.getByText("31")).toBeTruthy()
+    expect(screen.getByText("5")).toBeTruthy()
+  })
+
+  it("leaves out a distance the session did not have", () => {
+    // A yoga class has minutes and nothing else. "0 km" would be invented.
+    render(<ReceiptBody summary={summary({ sessionType: "yoga", durationMin: 45, sets: 0, volume: 0, volumeKg: 0 })} />)
+    expect(screen.getByTestId("receipt-session-kind").textContent).toBe("Yoga")
+    expect(screen.queryByText("km")).toBeNull()
+  })
+
+  it("keeps Sets and Volume when the session DID have sets", () => {
+    // A circuit class logged set by set is still a session with sets in it.
+    render(<ReceiptBody summary={summary({ sessionType: "hiit", sets: 12, volume: 900, volumeKg: 900 })} />)
+    expect(screen.getByText("Sets")).toBeTruthy()
+    expect(screen.getByText("12")).toBeTruthy()
+  })
+
+  it("says nothing extra about a lifting session", () => {
+    render(<ReceiptBody summary={summary()} />)
+    expect(screen.queryByTestId("receipt-session-kind")).toBeNull()
+  })
+})

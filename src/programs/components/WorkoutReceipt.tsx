@@ -14,10 +14,10 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { BackLink } from "@/components/BackLink"
-import { UNIT_CONFIG } from "../config"
+import { DEFAULT_SESSION_TYPE, UNIT_CONFIG } from "../config"
 import { TRAINING_COLUMN, TRAINING_CARD, TRAINING_CARD_BODY } from "./trainingStyles"
 import { describeLoggedSet, weekdayNameIn } from "../programsService"
-import { collapseSets } from "@/src/health/healthService"
+import { collapseSets, describeSessionRow } from "@/src/health/healthService"
 import { PROGRAMS } from "@/src/shared/trainingRoutes"
 import type { ReactNode } from "react"
 import type { WorkoutSummary } from "../types"
@@ -30,8 +30,46 @@ import type { WorkoutSummary } from "../types"
  * sheet knew about a lost reply, the page did not; the page named the day,
  * the sheet did not). A receipt is a record, so there is one of it.
  */
+/** Tailwind cannot take a column count built at runtime, so it is looked up. */
+const FIGURE_COLUMNS: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+}
+
 export function ReceiptBody({ summary }: { summary: WorkoutSummary }) {
   const unitLabel = UNIT_CONFIG[summary.unit].label
+  /**
+   * A RUN IS NOT A LIFTING SESSION THAT WENT BADLY.
+   *
+   * This receipt described every workout by its sets, and a run, a class and a
+   * mobility session have none — so a finished 5 km read "Minutes 31 · Sets 0 ·
+   * Volume 0" and never said the word "run" anywhere on the page. The two
+   * zeroes are the part that matters: they are not missing numbers, they are a
+   * frame that says a lifting session where nothing was lifted.
+   *
+   * The wording is `describeSessionRow`'s, shared with History, so the row you
+   * tapped and the page it opens cannot disagree about what the session was.
+   */
+  const sessionType = summary.sessionType ?? DEFAULT_SESSION_TYPE
+  const lifting = sessionType === DEFAULT_SESSION_TYPE
+  const figures: Array<{ label: string; value: number | null }> = [
+    { label: "Minutes", value: summary.unavailable ? null : summary.durationMin },
+  ]
+  // A distance the session did not have is left out rather than shown as 0 km.
+  if (!lifting && summary.distanceKm !== null && summary.distanceKm !== undefined) {
+    figures.push({ label: "km", value: summary.unavailable ? null : summary.distanceKm })
+  }
+  // On a lifting session "Sets 0" is the truth — a workout somebody opened and
+  // logged nothing into. On a run it is noise with a false implication.
+  if (lifting || summary.sets > 0) {
+    figures.push({ label: "Sets", value: summary.unavailable ? null : summary.sets })
+    figures.push({
+      label: `Volume (${unitLabel})`,
+      value: summary.unavailable ? null : Math.round(summary.volume),
+    })
+  }
 
   return (
     <div className="space-y-3">
@@ -62,13 +100,19 @@ export function ReceiptBody({ summary }: { summary: WorkoutSummary }) {
         </p>
       )}
 
-      <div className="grid grid-cols-3 gap-2 text-center">
-        <Figure label="Minutes" value={summary.unavailable ? null : summary.durationMin} />
-        <Figure label="Sets" value={summary.unavailable ? null : summary.sets} />
-        <Figure
-          label={`Volume (${unitLabel})`}
-          value={summary.unavailable ? null : Math.round(summary.volume)}
-        />
+      {!lifting && (
+        <p className="text-sm font-medium" data-testid="receipt-session-kind">
+          {describeSessionRow(
+            { session_type: sessionType, distance_km: summary.distanceKm ?? null },
+            { minutes: false }
+          )}
+        </p>
+      )}
+
+      <div className={`grid ${FIGURE_COLUMNS[figures.length] ?? "grid-cols-3"} gap-2 text-center`}>
+        {figures.map((figure) => (
+          <Figure key={figure.label} label={figure.label} value={figure.value} />
+        ))}
       </div>
 
       {/*

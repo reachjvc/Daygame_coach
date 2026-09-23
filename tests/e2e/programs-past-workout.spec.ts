@@ -194,8 +194,17 @@ test("a session dated a minute ago opens LIVE, not in past mode", async ({ page 
   await page.getByTestId("open-past-workout").click()
   await page.waitForURL(/\/programs\/live/)
 
-  // Counting minutes, and no bulk tick anywhere on the screen.
-  await expect(page.getByText(/^\d+ min$/)).toBeVisible()
+  /**
+   * A RUNNING CLOCK, and no bulk tick anywhere on the screen.
+   *
+   * `mm:ss`, not "N min": the header counted whole minutes until Phase 6
+   * (`01ea8765`) — it read "0 min" for the first sixty seconds and then jumped
+   * to "1 min", a clock ticking every second that only ever showed one of them.
+   * `tests/unit/programs/liveScreenPastMode.test.tsx` was updated with the
+   * change and this assertion was not, so it sat on the old wording until the
+   * whole `training` project was run again. The two now agree.
+   */
+  await expect(page.getByText(/^\d+:\d{2}$/)).toBeVisible()
   await expect(page.getByText(/^since /i)).toHaveCount(0)
   await expect(page.locator('[data-testid^="tick-all-"]')).toHaveCount(0)
 })
@@ -309,10 +318,24 @@ test("a run is stored as a run, reads as one in History, and counts as one", asy
   expect(stored.type).toBe("running")
   expect(stored.minutes, "the server derives the minutes from the two instants").toBe(31)
 
-  // And History says what it was, rather than printing the raw column value.
+  /**
+   * And History says what it WAS, rather than printing the raw column value.
+   *
+   * Asserted on the row itself, and in two halves. It used to look for
+   * "Run · 31 min" across the whole list, which only matched because the row
+   * printed the duration twice — once in the sentence and once in the numbers
+   * column beside it. The sentence leaves the minutes to that column now, so
+   * the two facts are checked where each one lives.
+   */
   await page.reload({ waitUntil: "networkidle" })
   await openTab(page, "history")
-  await expect(page.getByTestId("workout-history")).toContainText("Run · 31 min")
+  const row = page.getByTestId(`history-row-${id}`)
+  await expect(row).toContainText("Run")
+  await expect(row, "the raw column value, lower-cased").not.toContainText("running")
+  await expect(row).toContainText("31 min")
+  await expect(row, "a run has no sets, and that is not a failure").not.toContainText(
+    "No sets recorded"
+  )
 
   await page.evaluate(async (logId: string) => {
     await fetch(`/api/health/workout?id=${logId}`, { method: "DELETE" })

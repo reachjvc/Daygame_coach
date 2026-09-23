@@ -43,4 +43,21 @@ describe("describeSessionRow", () => {
       "Weights · 45 min"
     )
   })
+
+  /**
+   * The caller with its own minutes column. History prints the duration in a
+   * right-hand column so the numbers can be scanned down, and printed the whole
+   * sentence beside it — so a run read "Run · 31 min" next to "31 min".
+   */
+  it("leaves the minutes out when the caller already has them", () => {
+    expect(
+      describeSessionRow({ session_type: "running", distance_km: 5, duration_min: 31 }, { minutes: false })
+    ).toBe("Run · 5 km")
+  })
+
+  it("still leaves out a distance that is not there", () => {
+    expect(
+      describeSessionRow({ session_type: "running", distance_km: null, duration_min: 31 }, { minutes: false })
+    ).toBe("Run")
+  })
 })

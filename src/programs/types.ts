@@ -899,6 +899,21 @@ export interface WorkoutSummary {
    * describing, and "today's workout" stops being today tomorrow.
    */
   startedAt?: string
+  /**
+   * WHAT THE SESSION WAS — "weights", "running", "yoga", "mobility".
+   *
+   * A run, a class and a mobility session all have nothing in `workout_sets`,
+   * and this receipt described a workout entirely by its sets: a finished 5 km
+   * read "Sets 0 · Volume 0" and never said the word "run" anywhere. Two
+   * zeroes beside each other are a claim about somebody's session, and that one
+   * was false.
+   *
+   * Optional because a summary stored before this existed has no answer, and
+   * the reader defaults it rather than inventing "weights" on the way in.
+   */
+  sessionType?: string
+  /** Kilometres, when the session had a distance. Null is NOT zero. */
+  distanceKm?: number | null
   durationMin: number
   sets: number
   volumeKg: number
@@ -1048,6 +1063,24 @@ export interface ProgramSelection {
  * user confirms — it is never silently enrolled, because `seedEnrollment`
  * requires a working weight for every exercise and throws without one.
  */
+/**
+ * What a running program says about itself — `describeProgramWeek`'s answer.
+ *
+ * Here rather than beside the function because the architecture rule holds the
+ * slice's types in one file, and it is read by three screens.
+ */
+export interface ProgramWeekDescription {
+  /** What to call it — the person's own name for a week they wrote. */
+  name: string
+  /** The level they enrolled at, as the program itself labels it. */
+  level: string
+  /** "Mon · Wed · Fri — Upper / Lower / Upper", or "A · B, in turn". */
+  week: string
+  lastTrained: "trained" | "new" | "forgotten"
+  /** The same fact as a sentence, already in the account's calendar. */
+  lastTrainedLine: string
+}
+
 export interface LibraryExercise {
   id: string
   name: string

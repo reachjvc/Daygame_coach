@@ -22,6 +22,7 @@
 import { createServerSupabaseClient } from "./supabase"
 import { readAllRows } from "./paging"
 import { DEFAULT_BAR_KG, DEFAULT_PLATE_KG, type TrainingSettings } from "@/src/programs/trainingSettings"
+import { DEFAULT_SESSION_TYPE } from "@/src/programs/config"
 import {
   getEnrollmentById,
   programFor,
@@ -603,7 +604,9 @@ export async function summaryFor(userId: string, workoutId: string): Promise<Wor
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from("workout_logs")
-    .select("id, enrollment_id, started_at, ended_at, duration_min, progression_changes, personal_records")
+    .select(
+      "id, enrollment_id, started_at, ended_at, duration_min, session_type, distance_km, progression_changes, personal_records"
+    )
     .eq("id", workoutId)
     .eq("user_id", userId)
     .not("ended_at", "is", null)
@@ -616,6 +619,14 @@ export async function summaryFor(userId: string, workoutId: string): Promise<Wor
     started_at: string | null
     ended_at: string
     duration_min: number | null
+    /**
+     * WHAT THE SESSION WAS. A run, a class and a mobility session all have
+     * nothing in `workout_sets`, and the receipt described a workout entirely
+     * by its sets — so a finished 5 km read "Sets 0 · Volume 0" and never said
+     * the word "run" anywhere. Two zeroes are a claim about somebody's session.
+     */
+    session_type: string | null
+    distance_km: number | null
     progression_changes: ProgressionChange[] | null
     personal_records: StoredRecords | null
   }
@@ -646,6 +657,13 @@ export async function summaryFor(userId: string, workoutId: string): Promise<Wor
     // the weights it prescribed, and the receipt says so before asking.
     enrollmentId: row.enrollment_id,
     startedAt: row.started_at ?? undefined,
+    /**
+     * Passed through rather than flattened into a sentence here: the repo's job
+     * is the fact, and `describeSessionRow` already owns the wording — History
+     * and the receipt would otherwise be two places describing one run.
+     */
+    sessionType: row.session_type ?? DEFAULT_SESSION_TYPE,
+    distanceKm: row.distance_km,
     durationMin: Math.min(599, Math.max(1, row.duration_min ?? derived)),
     sets: working.length,
     /**
