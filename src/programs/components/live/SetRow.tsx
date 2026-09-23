@@ -15,7 +15,7 @@
 import { useEffect, useState } from "react"
 import { Check } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { readSetEntry } from "../../programsService"
+import { formatLoad, readSetEntry } from "../../programsService"
 import { SET_LIMITS, setLimitSentence } from "../../schemas"
 import type { LiveWorkoutSet } from "../../types"
 
@@ -138,14 +138,20 @@ export function SetRow({
       {previous ? (
         <button
           type="button"
+          /**
+           * ROUNDED THE WAY A BAR IS ADJUSTABLE, because this number came back
+           * through a conversion. 135 lb is stored as 61.23 kg and reads back
+           * as 134.99, and "134.99×5" beside a box you are about to type 135
+           * into is noise — and tapping it used to fill 134.99 in.
+           */
           onClick={() => {
-            setWeight(String(previous.weight))
+            setWeight(formatLoad(previous.weight))
             setReps(String(previous.reps))
           }}
-          aria-label={`Use last time: ${previous.weight} ${unitLabel} by ${previous.reps}`}
+          aria-label={`Use last time: ${formatLoad(previous.weight)} ${unitLabel} by ${previous.reps}`}
           className="min-w-0 truncate text-left text-[11px] tabular-nums text-muted-foreground transition-colors hover:text-foreground"
         >
-          {previous.weight}×{previous.reps}
+          {formatLoad(previous.weight)}×{previous.reps}
         </button>
       ) : (
         <span aria-hidden />

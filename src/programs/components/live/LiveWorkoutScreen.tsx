@@ -79,6 +79,12 @@ interface Props {
   plates?: PlateSetup
   /** What each lift did the last time it came round, keyed by exercise id. */
   lastTime: Record<string, { weight: number; reps: number }[]>
+  /**
+   * The read for `lastTime` failed. Said on screen, because an empty PREVIOUS
+   * column is a claim — "you have not done this before" — and that is the one
+   * claim it must never make wrongly.
+   */
+  previousUnavailable?: boolean
 }
 
 export function LiveWorkoutScreen({
@@ -88,6 +94,7 @@ export function LiveWorkoutScreen({
   unit,
   plates,
   lastTime,
+  previousUnavailable,
   missRules,
   timezone,
 }: Props) {
@@ -304,6 +311,18 @@ export function LiveWorkoutScreen({
       />
 
       <div data-testid="live-column" className="mx-auto max-w-2xl space-y-3 px-4 py-3">
+        {/*
+          A COLUMN THAT COULD NOT BE READ SAYS SO.
+          The read behind PREVIOUS used to discard its own error, so a database
+          that would not answer looked exactly like a lift you had never done:
+          blank. One amber line, once, above the lifts — not per row, which
+          would be twenty copies of the same sentence.
+        */}
+        {previousUnavailable && (
+          <p data-testid="previous-unavailable" className="text-xs text-amber-500">
+            Could not read your past sets — the PREVIOUS column is empty for now.
+          </p>
+        )}
         {/**
           * A RUN IS A WORKOUT TOO. An endurance session prescribes blocks, not
           * sets, so `exercises` is empty and this screen said "nothing

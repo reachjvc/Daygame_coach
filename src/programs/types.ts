@@ -1316,3 +1316,24 @@ export interface SetEntry {
   weight: number
   reps: number
 }
+
+/**
+ * ONE LIFT, ONE SESSION, ITS SETS — in the unit the reader reads.
+ *
+ * The weights here have already been converted out of the stored kilograms,
+ * because the last thing that happened to the old shape was a screen labelled
+ * "lb" printing kilograms into a box. `kind` travels with the set: a warm-up
+ * is not what you did last time, and only the caller knows whether it is
+ * drawing a history list (which shows them) or the PREVIOUS column (which does
+ * not).
+ */
+export interface LiftSessions {
+  /** When the workout was logged, as stored — formatted in the account's zone. */
+  at: string
+  sets: Array<{
+    weight: number
+    reps: number
+    setNumber: number
+    kind: string
+  }>
+}

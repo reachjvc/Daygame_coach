@@ -8,15 +8,14 @@
 
 import { redirect } from "next/navigation"
 import { requireAuth } from "@/src/db/auth"
-import { getLiveWorkout, prescriptionForDay } from "@/src/db/workoutRepo"
-import { getEnrollmentById, getSessionLogs } from "@/src/db/programRepo"
+import { getLiveWorkout, lastSetsForLifts, prescriptionForDay } from "@/src/db/workoutRepo"
+import { getEnrollmentById } from "@/src/db/programRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { enrollmentName, getProgram } from "@/src/programs/data/catalog"
 import { effectiveProgram } from "@/src/programs/customize"
-import { missRulesFor } from "@/src/programs/programsService"
+import { addedLiftId, missRulesFor } from "@/src/programs/programsService"
 import type { MissRule } from "@/src/programs/types"
 import { LiveWorkoutScreen } from "@/src/programs/components/live/LiveWorkoutScreen"
-import { lastSetsPerLift } from "@/src/programs/programsService"
 import type { PlateSetup, SessionPrescription, UnitSystem } from "@/src/programs/types"
 
 export default async function LiveWorkoutPage() {
@@ -46,7 +45,7 @@ export default async function LiveWorkoutPage() {
   let plates: PlateSetup | undefined
   let programName: string | null = null
   let missRules: Record<string, MissRule> | undefined
-  let lastTime: Record<string, { weight: number; reps: number }[]> = {}
+  const lastTime: Record<string, { weight: number; reps: number }[]> = {}
 
   if (live.enrollmentId) {
     const resolved = await prescriptionForDay(auth.userId, live.enrollmentId, live.dayId ?? undefined)
@@ -76,9 +75,56 @@ export default async function LiveWorkoutPage() {
       const program = getProgram(enrollment.program_id)
       if (program) missRules = missRulesFor(effectiveProgram(program, enrollment.customSchedule), enrollment)
     }
-    // What each lift did last time, so the number you are deciding against sits
-    // beside the box you are typing in.
-    lastTime = lastSetsPerLift(await getSessionLogs(auth.userId, live.enrollmentId))
+  }
+
+  /**
+   * WHAT EVERY LIFT ON THIS SCREEN DID LAST TIME — including the ones the
+   * program never asked for.
+   *
+   * This whole read used to sit inside `if (live.enrollmentId)` and go through
+   * that one enrollment's session logs, so the PREVIOUS column was empty for a
+   * workout started off a program (the entire point of "Start a workout now"),
+   * for a lift added because the rack was taken, and for a lift swapped in —
+   * which is exactly when a lifter has least idea what they did last time.
+   *
+   * The lifts asked for are the ones the screen will draw: prescribed, with a
+   * swap replacing the lift it stands in for (same id derivation the screen
+   * uses — `addedLiftId`), plus anything added on the day.
+   */
+  const swapped = live.adjustments.swapped ?? {}
+  const lifts = [
+    ...(prescription?.exercises ?? []).map((ex) => {
+      const to = swapped[ex.exerciseId]
+      return to
+        ? { key: addedLiftId(to.name), name: to.name, libraryId: to.libraryId ?? null }
+        : { key: ex.exerciseId, name: ex.name }
+    }),
+    ...(live.adjustments.added ?? []).map((a) => ({
+      key: a.exerciseId,
+      name: a.name,
+      libraryId: a.libraryId ?? null,
+    })),
+  ]
+
+  /**
+   * A READ THAT FAILED IS SAID OUT LOUD, not shown as an empty column.
+   *
+   * The old read discarded its query error, so a broken read and a lift never
+   * done looked identical — blank. Blank is a claim ("you have not done this"),
+   * and it is the one claim this column must never make wrongly.
+   */
+  let previousUnavailable = false
+  try {
+    const sessions = await lastSetsForLifts(auth.userId, lifts, unit)
+    for (const lift of lifts) {
+      // Warm-ups are not what you did last time; they are what you did before
+      // what you did last time.
+      const sets = (sessions[lift.key]?.[0]?.sets ?? []).filter((s) => s.kind !== "warmup")
+      if (sets.length > 0) lastTime[lift.key] = sets.map((s) => ({ weight: s.weight, reps: s.reps }))
+    }
+  } catch (e) {
+    console.error("previous sets:", e)
+    previousUnavailable = true
   }
 
   return (
@@ -89,6 +135,7 @@ export default async function LiveWorkoutPage() {
       unit={unit}
       plates={plates}
       lastTime={lastTime}
+      previousUnavailable={previousUnavailable}
       missRules={missRules}
       timezone={timezone}
     />

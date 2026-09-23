@@ -96,6 +96,18 @@ describe("ticking a set", () => {
     expect(screen.getByText(/between 0 and 999.99 kg/i)).toBeTruthy()
   })
 
+  it("shows last time at a weight a bar can be loaded to, and fills that in", async () => {
+    // 135 lb stored as 61.23 kg reads back as 134.99. This column is a number
+    // to copy, not a record of what was typed, so it reads 135 — and tapping
+    // it types 135, which it did not: it typed 134.99.
+    const user = userEvent.setup()
+    render(<SetRow {...base} unitLabel="lb" previous={{ weight: 134.99, reps: 5 }} onTick={vi.fn()} />)
+    const last = screen.getByLabelText(/use last time: 135 lb by 5/i)
+    expect(last.textContent).toBe("135×5")
+    await user.click(last)
+    expect((screen.getByLabelText(/weight for set 1 in lb/i) as HTMLInputElement).value).toBe("135")
+  })
+
   it("the boxes carry exactly the numbers the server enforces", () => {
     // The row used to spell its own `MAX_REPS = 1000` and nothing tied it to
     // `CompleteSetSchema`. A box whose max is looser than the column is a tick

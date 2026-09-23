@@ -1849,25 +1849,55 @@ export function describeSets(exercise: PrescribedExercise, unitLabel: string): s
 }
 
 /**
- * What each lift did the LAST time it came round, set by set.
+ * WHETHER A STORED SET IS THIS LIFT — one rule, and it has to be two-legged.
  *
- * `lastTimePerLift` already existed and returns one summary line per lift —
- * enough to read, not enough to pre-fill a row with. The live screen needs the
- * individual sets, because "what did I get on set three last week" is the
- * question being answered while the number is typed.
+ * `library_id` is the lift's identity across programs, so it wins when both
+ * sides have one. But rows written by `logProgramSession` carry no
+ * `library_id` at all, and a workout logged before that column was written has
+ * none either — for those the trimmed, lowercased NAME is the only key they
+ * have. A match on the id alone would make every older session invisible;
+ * a match on the name alone would miss a self-built week that calls it
+ * "Back Squat".
+ *
+ * This replaces the name-only comparison inside `workoutRepo.liftHistory` and
+ * the exercise-id-only lookup inside `lastSetsPerLift`, which disagreed about
+ * what "the same lift" means — so the PREVIOUS column and the lift history
+ * sheet could answer the same question differently on one screen.
  */
-export function lastSetsPerLift(
-  logs: { logged_at: string; entries: LoggedExercise[] }[]
-): Record<string, { weight: number; reps: number }[]> {
-  const out: Record<string, { weight: number; reps: number }[]> = {}
-  // Newest first, and the first one seen for a lift is its last session.
-  for (const log of [...logs].sort((a, b) => b.logged_at.localeCompare(a.logged_at))) {
-    for (const entry of log.entries) {
-      if (entry.skipped || entry.sets.length === 0 || out[entry.exerciseId]) continue
-      out[entry.exerciseId] = [...entry.sets]
-        .sort((a, b) => a.setNumber - b.setNumber)
-        .map((s) => ({ weight: s.weight, reps: s.reps }))
-    }
+export function setMatchesLift(
+  row: { exercise: string; libraryId?: string | null },
+  lift: { name: string; libraryId?: string | null }
+): boolean {
+  if (row.libraryId && lift.libraryId && row.libraryId === lift.libraryId) return true
+  return row.exercise.trim().toLowerCase() === lift.name.trim().toLowerCase()
+}
+
+/**
+ * The newest sessions that contain a given lift, from workouts already read.
+ *
+ * `workouts` arrives NEWEST FIRST and is not re-sorted here: the read that
+ * produced it ordered by `logged_at` with a tie-break, and re-deriving the
+ * order from a formatted date is how two workouts on one day swap places.
+ *
+ * A workout with no matching set is not a session for this lift — it is
+ * skipped, not returned empty, or "last time" becomes the last time you were
+ * in the gym rather than the last time you did this.
+ */
+export function pickLastSets<
+  S extends { exercise: string; libraryId?: string | null; setNumber: number },
+>(
+  workouts: readonly { at: string; sets: readonly S[] }[],
+  lift: { name: string; libraryId?: string | null },
+  sessions = 1
+): { at: string; sets: S[] }[] {
+  const out: { at: string; sets: S[] }[] = []
+  for (const workout of workouts) {
+    if (out.length >= sessions) break
+    const mine = workout.sets
+      .filter((set) => setMatchesLift(set, lift))
+      .slice()
+      .sort((a, b) => a.setNumber - b.setNumber)
+    if (mine.length > 0) out.push({ at: workout.at, sets: mine })
   }
   return out
 }

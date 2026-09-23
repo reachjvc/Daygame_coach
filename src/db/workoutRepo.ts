@@ -41,12 +41,14 @@ import {
   entriesFromSets,
   isSessionOf,
   loadStyleOf,
+  pickLastSets,
   sessionTypeFor,
   toKg,
   fromKg,
 } from "@/src/programs/programsService"
 import { scheduleDays } from "@/src/programs/customize"
 import type {
+  LiftSessions,
   LiveWorkout,
   LiveWorkoutSet,
   ProgressionChange,
@@ -59,6 +61,25 @@ import type { WorkoutSetRow } from "@/src/health/types"
 import { libraryByName } from "@/src/programs/data/exerciseLibrary"
 
 const round2 = (n: number) => Math.round(n * 100) / 100
+
+/**
+ * A workout with its sets, as PostgREST nests them. Named because the read for
+ * it is written out twice and an inline cast in the middle of a `.map()` chain
+ * is where a missing column goes unnoticed.
+ */
+type WorkoutLogSetsRow = {
+  logged_at: string
+  workout_sets:
+    | {
+        exercise: string
+        library_id: string | null
+        weight_kg: number
+        reps: number
+        set_number: number
+        set_kind: string
+      }[]
+    | null
+}
 
 /** Every column a live workout screen needs, plus its sets. */
 const LIVE_SELECT = "*, workout_sets(*)"
@@ -925,41 +946,71 @@ export async function unitFor(userId: string, enrollmentId: string | null): Prom
 }
 
 /**
- * One lift's recent history — the sheet behind tapping its name.
+ * WHAT THESE LIFTS DID LAST TIME — one read, one matching rule, two callers.
  *
- * "What did I do for ALL of it last time" is the question a lifter actually
- * asks between sets, and the session screen could only answer "what did I do
- * for the set with this number".
+ * This replaces `liftHistory`, which was wrong in four ways at once: it matched
+ * on the exercise NAME only (so a self-built week calling it "Back Squat" never
+ * counted towards Squat, which `library_id` exists to fix), it returned
+ * KILOGRAMS to a screen labelled in pounds, it read 40 workouts with no
+ * tie-break on the order, and — worst — it destructured `{ data }` and threw
+ * the query error away, so a failed read rendered as "you have never done this
+ * lift". A silent fallback in the one place whose whole job is to say what you
+ * did.
+ *
+ * It also replaces `programsService.lastSetsPerLift`, which read
+ * `program_session_logs` inside `if (live.enrollmentId)` — so the PREVIOUS
+ * column was empty for every workout started off a program, and for every lift
+ * added on the day, which is exactly when you have least idea what you did.
+ *
+ * ONE HUNDRED FINISHED WORKOUTS, newest first. Bounded because it is a read on
+ * a screen somebody is standing still for; a lift not touched within a hundred
+ * workouts is reported as never done, and the history sheet says so in words.
  */
-export async function liftHistory(
+export async function lastSetsForLifts(
   userId: string,
-  exerciseName: string,
-  sessions = 3
-): Promise<Array<{ at: string; sets: { weight: number; reps: number; kind: string }[] }>> {
+  /** `key` is the caller's own handle for the lift — an exercise id, or a name. */
+  lifts: readonly { key: string; name: string; libraryId?: string | null }[],
+  unit: UnitSystem,
+  sessions = 1
+): Promise<Record<string, LiftSessions[]>> {
+  if (lifts.length === 0) return {}
   const supabase = await createServerSupabaseClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("workout_logs")
-    .select("logged_at, workout_sets(exercise, weight_kg, reps, set_number, set_kind)")
+    .select("logged_at, workout_sets(exercise, library_id, weight_kg, reps, set_number, set_kind)")
     .eq("user_id", userId)
     .not("ended_at", "is", null)
     .order("logged_at", { ascending: false })
-    .limit(40)
+    // A TIE-BREAK, so two workouts logged on one day have a fixed order and
+    // "last time" does not change between two reads of the same data.
+    .order("id")
+    .limit(100)
+  if (error) throw new Error(`Your past sets could not be read: ${error.message}`)
 
-  const norm = exerciseName.trim().toLowerCase()
-  const out: Array<{ at: string; sets: { weight: number; reps: number; kind: string }[] }> = []
-  for (const log of (data ?? []) as {
-    logged_at: string
-    workout_sets: { exercise: string; weight_kg: number; reps: number; set_number: number; set_kind: string }[] | null
-  }[]) {
-    const mine = (log.workout_sets ?? [])
-      .filter((s) => s.exercise.trim().toLowerCase() === norm)
-      .sort((a, b) => a.set_number - b.set_number)
-    if (mine.length === 0) continue
-    out.push({
-      at: log.logged_at,
-      sets: mine.map((s) => ({ weight: s.weight_kg, reps: s.reps, kind: s.set_kind })),
-    })
-    if (out.length >= sessions) break
+  const workouts = ((data ?? []) as WorkoutLogSetsRow[]).map((log) => ({
+    at: log.logged_at,
+    sets: (log.workout_sets ?? []).map((set) => ({
+      exercise: set.exercise,
+      libraryId: set.library_id,
+      // Shown in the unit the person reads, never the stored kilograms: this
+      // number goes straight into a box labelled "lb".
+      weight: round2(fromKg(set.weight_kg, unit)),
+      reps: set.reps,
+      setNumber: set.set_number,
+      kind: set.set_kind,
+    })),
+  }))
+
+  const out: Record<string, LiftSessions[]> = {}
+  for (const lift of lifts) {
+    out[lift.key] = pickLastSets(
+      workouts,
+      // The library id is derived HERE when the caller has none, so every
+      // caller matches the same way — `completeSet` writes the column from the
+      // same function.
+      { name: lift.name, libraryId: lift.libraryId ?? libraryByName(lift.name)?.id ?? null },
+      sessions
+    )
   }
   return out
 }
