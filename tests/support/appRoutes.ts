@@ -120,6 +120,21 @@ export function searchParamNames(file: string): string[] {
  * Values that have broken a page in this codebase, plus the obvious neighbours.
  * "abc" is the one that produced "Step NaN of 5" in production.
  */
+/**
+ * A page whose whole job is `redirect(...)`: a shim, not a destination.
+ *
+ * ONE OWNER, because there were two. `backNavigation.test.ts` and
+ * `routeReachability.test.ts` each carried their own copy, identical on
+ * 2026-09-23 and with nothing keeping them that way — and the two guards use it
+ * for opposite purposes (one to excuse a route from needing a Back control, the
+ * other to excuse it from needing to be reachable). Two copies of "what counts
+ * as a shim" is two ways for a real page to start being excused.
+ */
+export function isRedirectShim(file: string): boolean {
+  const src = fs.readFileSync(file, "utf-8")
+  return /\bredirect\(/.test(src) && !/<[A-Za-z]/.test(src)
+}
+
 export const JUNK_PARAM_VALUES = ["abc", "-1", "0", "999999", "", "null", "%20"]
 
 /**

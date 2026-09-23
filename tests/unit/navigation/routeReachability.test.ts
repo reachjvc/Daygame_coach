@@ -50,6 +50,7 @@ import { describe, it, expect } from "vitest"
 import * as fs from "fs"
 import * as path from "path"
 import { TAB_ROUTES } from "@/components/navTabs"
+import { isRedirectShim } from "@/tests/support/appRoutes"
 import { LIFE_MASTERY, QUIT_VICE, viceStep } from "@/src/shared/lifeMasteryRoutes"
 
 const root = path.resolve(__dirname, "../../..")
@@ -239,11 +240,6 @@ function gateRoutes(): Set<string> {
   return found
 }
 
-/** A page whose whole job is `redirect(...)` is a shim, not a destination. */
-function isRedirectShim(file: string): boolean {
-  const src = fs.readFileSync(file, "utf-8")
-  return /\bredirect\(/.test(src) && !/<[A-Za-z]/.test(src)
-}
 
 /** A page that shows nothing until the admin key is typed in. */
 function isAdminGated(tree: Set<string>): boolean {

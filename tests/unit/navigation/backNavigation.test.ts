@@ -20,7 +20,7 @@ import { describe, it, expect } from "vitest"
 import * as fs from "fs"
 import * as path from "path"
 import { TAB_ROUTES } from "@/components/navTabs"
-import { coverageProblems, type CoverageReport } from "@/tests/support/appRoutes"
+import { coverageProblems, isRedirectShim, type CoverageReport } from "@/tests/support/appRoutes"
 
 const root = path.resolve(__dirname, "../../..")
 
@@ -115,11 +115,6 @@ function gateRoutes(): Set<string> {
   return found
 }
 
-/** A page whose whole job is `redirect(...)` has no UI to put a control on. */
-function isRedirectShim(file: string): boolean {
-  const src = fs.readFileSync(file, "utf-8")
-  return /\bredirect\(/.test(src) && !/<[A-Za-z]/.test(src)
-}
 
 describe("every screen has a way back", () => {
   it("has routes to check", () => {

@@ -14,6 +14,7 @@
 import { describe, test, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
+import { isRedirectShim, productRoutes } from '@/tests/support/appRoutes'
 
 const projectRoot = path.resolve(__dirname, '../..')
 const e2eDir = path.join(projectRoot, 'tests/e2e')
@@ -305,6 +306,48 @@ describe('E2E Test Isolation Compliance', () => {
     expect(
       offenders,
       "These read the runner's clock for a calendar fact the account owns:\n" +
+        offenders.join('\n'),
+    ).toEqual([])
+  })
+
+  test('no spec drives a redirect shim', () => {
+    /**
+     * A PAGE WHOSE WHOLE JOB IS `redirect(...)` HAS NOTHING TO TEST.
+     *
+     * A spec that opens one is measuring the page it lands on while claiming to
+     * be about the address it typed — so the day the shim's destination
+     * changes, the test goes on passing about somewhere else entirely, and the
+     * day the shim is deleted the test fails somewhere that looks unrelated.
+     *
+     * `isRedirectShim` has one owner in `tests/support/appRoutes.ts`. It used
+     * to have two, in the two navigation guards that use it for opposite
+     * purposes — one to excuse a route from needing a Back control, the other
+     * to excuse it from needing to be reachable.
+     */
+    const shims = productRoutes()
+      .filter((r) => r.file && isRedirectShim(r.file))
+      .map((r) => r.route)
+    // Without a shim to look for, this passes while checking nothing.
+    expect(shims.length, 'no redirect shims found — the detector is broken').toBeGreaterThan(0)
+
+    const offenders: string[] = []
+    for (const file of getAllE2EFiles()) {
+      const rel = path.relative(projectRoot, file).replace(/\\/g, '/')
+      const src = fs
+        .readFileSync(file, 'utf-8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/[^\n]*/g, '')
+      for (const shim of shims) {
+        // `goto("<shim>")` exactly — a longer path that merely starts with it is
+        // a different page.
+        if (new RegExp(`goto\\(\\s*["'\`]${shim}(?:[?#]|["'\`])`).test(src)) {
+          offenders.push(`${rel} opens ${shim}`)
+        }
+      }
+    }
+    expect(
+      offenders,
+      'These drive a page whose only job is to redirect. Open its destination:\n' +
         offenders.join('\n'),
     ).toEqual([])
   })
