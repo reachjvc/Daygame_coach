@@ -18,10 +18,30 @@
  * type. Mid-edit a schedule is routinely invalid — a day with nothing in it yet,
  * a lift added but not yet given a weight — and saving each keystroke would
  * either reject half of them or persist a program that cannot prescribe.
+ *
+ * ── WHAT CHANGED, 2026-09-23: ONLY THE CHROME ────────────────────────────────
+ *
+ * The staged-save logic is untouched, because it is the part that protects
+ * somebody's progress and it works. What changed is that this panel was drawn
+ * in a language no other screen in the app speaks: its own black-and-zinc box,
+ * 12.5-px inputs that make iPhone Safari zoom the page and never zoom back, and
+ * an EMERALD "Save changes" — green, which in this app means one thing and one
+ * thing only: a set you have ticked, a rest that is over, a program finished.
+ * A save button wearing it takes that meaning away from the ticks that need it.
+ *
+ * Now: a `Card` from the app's own kit, `Input` (16 px on phones by default),
+ * and "Save changes" is the plain `Button` — this view's one loud control.
+ * Cancel is an outline beside it, and a refusal is `text-destructive` rather
+ * than a hand-rolled rose panel.
  */
 
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { TRAINING_CARD, TRAINING_CARD_BODY } from "./trainingStyles"
 import { ProgramEditor } from "./ProgramEditor"
 import {
   scheduleDaysOrNone,
@@ -134,7 +154,8 @@ export function EditActiveProgram({
    */
 
   return (
-    <div className="rounded-lg border border-white/10 bg-black/20 p-3 space-y-2.5">
+    <Card className={TRAINING_CARD}>
+      <CardContent className={`${TRAINING_CARD_BODY} space-y-3`}>
       {schedule && (
         <ProgramEditor
           program={program}
@@ -152,70 +173,76 @@ export function EditActiveProgram({
       )}
 
       {currentUnique.length > 0 && (
-        <div>
-          <p className="text-[12.5px] text-zinc-300">Your weights</p>
-          <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">
+        <div className="space-y-1.5">
+          <p className="text-sm font-semibold">Your weights</p>
+          <p className="text-sm text-muted-foreground">
             Change any that are wrong. Leave the rest alone and they carry on exactly where they
             have got to.
           </p>
-          <div className="grid sm:grid-cols-2 gap-1.5 mt-1.5">
+          <div className="grid gap-2 sm:grid-cols-2">
             {currentUnique.map((lift) => (
-              <label key={lift.exerciseId} className="flex items-center gap-2">
-                <span className="flex-1 min-w-0 text-[12.5px] text-zinc-400 truncate">
+              <div key={lift.exerciseId} className="flex items-center gap-2">
+                <Label
+                  htmlFor={`weight-${lift.exerciseId}`}
+                  className="min-w-0 flex-1 truncate text-sm text-muted-foreground"
+                >
                   {lift.name}
-                  {lift.isMax && <span className="text-zinc-600"> (training max)</span>}
-                </span>
-                <input
+                  {lift.isMax && <span className="text-muted-foreground"> (training max)</span>}
+                </Label>
+                <Input
+                  id={`weight-${lift.exerciseId}`}
+                  className="w-24"
                   type="number"
                   inputMode="decimal"
                   value={weights[lift.exerciseId] ?? ""}
                   placeholder={String(lift.weight)}
                   onChange={(e) => setWeights((w) => ({ ...w, [lift.exerciseId]: e.target.value }))}
                   aria-label={`${lift.isMax ? "Training max" : "Working weight"} for ${lift.name} in ${enrollment.unitSystem}`}
-                  className="w-20 min-h-11 sm:min-h-0 bg-white/5 border border-white/15 rounded px-1.5 py-0.5 text-[12.5px] text-white focus:outline-none focus:border-white/30"
                 />
-              </label>
+              </div>
             ))}
           </div>
         </div>
       )}
 
-      <p className="text-[11px] text-zinc-500 leading-relaxed">
+      <p className="text-sm text-muted-foreground">
         Changing a weight here sets it from your next session on, and clears any misses against that
         lift. Lifts you add need a starting number.
       </p>
 
       {error && (
-        <p className="text-[11px] text-rose-300/90 bg-rose-500/[0.07] border border-rose-400/20 rounded-md px-2.5 py-1.5">
+        <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       )}
 
       <div className="flex flex-wrap items-center gap-2">
-        <button
+        {/* THE ONE LOUD BUTTON on this view, and not green: green is a set you
+            ticked and a program you finished, nothing else. */}
+        <Button
           onClick={() => save(modified ? schedule : null)}
           disabled={!ready || state === "saving"}
-          className="flex items-center gap-1.5 text-[12.5px] px-3 py-1.5 rounded-md border border-emerald-400/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 disabled:opacity-30 transition-colors"
+          data-testid="save-program-changes"
         >
-          {state === "saving" && <Loader2 className="size-3 animate-spin" />}
+          {state === "saving" && <Loader2 className="mr-1.5 size-4 animate-spin" />}
           Save changes
-        </button>
-        <button
-          onClick={onCancel}
-          className="text-[12.5px] px-2.5 py-1.5 rounded-md border border-white/10 text-zinc-400 hover:bg-white/5 transition-colors"
-        >
+        </Button>
+        <Button variant="outline" onClick={onCancel}>
           Cancel
-        </button>
+        </Button>
+        {/* AMBER, NOT RED. A program that cannot be saved yet because a lift
+            needs a number is not something anybody did wrong. */}
         {problems.length > 0 ? (
-          <span className="text-[11px] text-amber-300/80">{problems[0]}</span>
+          <span className="text-sm text-amber-600 dark:text-amber-400">{problems[0]}</span>
         ) : (
           !ready && (
-            <span className="text-[11px] text-amber-300/80">
+            <span className="text-sm text-amber-600 dark:text-amber-400">
               Give the lifts you added a starting weight first.
             </span>
           )
         )}
       </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

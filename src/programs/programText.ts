@@ -37,7 +37,7 @@
  */
 
 import type { DayTemplate, LoadExercise, ProgramSchedule } from "./types"
-import { EXERCISE_LIBRARY, patternForName, customLiftId } from "./data/exerciseLibrary"
+import { EXERCISE_LIBRARY, freeLiftEntry, patternForName, customLiftId } from "./data/exerciseLibrary"
 import { freshId } from "./customize"
 import { buildExercise } from "./builder"
 
@@ -139,21 +139,23 @@ function parseLift(
   }
 
   const entry = libraryMatch(name)
-  // A recognised lift brings its own sensible defaults and its bar/no-bar
-  // rounding; an unrecognised one is still kept, under the name as written.
-  const exercise: LoadExercise = entry
-    ? buildExercise(entry, id, { schemeKind: repMax !== null ? "rep_range" : "linear" })
-    : {
-        id,
-        name,
-        metricType: "load",
-        loadStyle: "free",
-        scheme:
-          repMax !== null
-            ? { kind: "rep_range", sets: sets ?? 3, repMin: repMin ?? 8, repMax }
-            : { kind: "linear", sets: sets ?? 3, reps: repMin ?? 8 },
-        progression: { kind: "double_progression", incrementKg: 2.5, incrementLb: 5 },
-      }
+  /**
+   * A recognised lift brings its own sensible defaults and its bar/no-bar
+   * rounding; an unrecognised one is still kept, under the name as written.
+   *
+   * THE UNRECOGNISED SHAPE USED TO BE WRITTEN OUT HERE, and it is now
+   * `freeLiftEntry` — the same entry the program editor's swap builds from, so
+   * a lift typed into a written week and the same lift picked in the editor
+   * cannot end up on two different progression rules. The fields are identical:
+   * `barbell: false` gives `loadStyle: "free"`, `compound: false` gives double
+   * progression at 2.5 kg / 5 lb, and the 3 × 8 defaults are overwritten a few
+   * lines below by whatever was actually written.
+   */
+  const fallback = freeLiftEntry(name)
+  if (!fallback) return { error: "that line names no lift" }
+  const exercise: LoadExercise = buildExercise(entry ?? fallback, id, {
+    schemeKind: repMax !== null ? "rep_range" : "linear",
+  })
 
   // Keep the name exactly as written when the library did not recognise it, and
   // use the library's canonical spelling when it did — so "bench press" becomes

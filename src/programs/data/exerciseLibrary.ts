@@ -494,6 +494,56 @@ export function customLiftId(name: string): string | null {
   return `custom_${norm(clean).slice(0, 40) || "lift"}`
 }
 
+/**
+ * A LIFT THE LIBRARY HAS NEVER HEARD OF, shaped so the rest of the app can
+ * plan with it — and shaped in ONE place.
+ *
+ * The 165 entries are the lifts the cited programs are built from, and
+ * somebody's gym has a machine that is not among them. Two screens already
+ * accepted one: the text parser, which keeps it under the name as written on
+ * double progression, and the palette's "add my own", which asked which body
+ * part it trained first. The editor's swap could accept one too and had no rule
+ * at all, because its old chip palette only ever offered library entries.
+ *
+ * So the parser's rule is this function and the parser calls it, rather than a
+ * second copy of "what an unknown lift is" living in a component.
+ *
+ * NO BODY-PART QUESTION. `customLibraryEntry` asks, because the builder was a
+ * form and one more field was cheap; `AddLift` deliberately does not, because
+ * it is used at a rack mid-set and answering for somebody would be the app
+ * inventing a fact about their training. `group` and `pattern` below are
+ * therefore PLACEHOLDERS, not claims: nothing reads either for a lift outside
+ * `EXERCISE_LIBRARY` — `patternForName`, `libraryByPattern` and `libraryByGroup`
+ * all walk the library itself, and a synthesised entry is never in it. The
+ * pattern is taken from the name when an alias happens to be recognised, which
+ * costs nothing and occasionally helps a later swap.
+ *
+ * Returns null for a name that is nothing but whitespace, like `customLiftId`.
+ */
+export function freeLiftEntry(name: string): LibraryExercise | null {
+  const clean = name.trim().replace(/\s+/g, " ").slice(0, 120)
+  const id = customLiftId(clean)
+  if (!id) return null
+  return {
+    id,
+    name: clean,
+    // Inert for anything not in the library — see above.
+    group: "core",
+    pattern: patternForName(clean) ?? "core",
+    // Double progression, which is the accessory rule and the only safe default
+    // for something we know nothing about. `barbell: false` keeps it off the
+    // 20 kg bar floor, which is a weight somebody may not be able to use.
+    compound: false,
+    barbell: false,
+    defaultSets: 3,
+    defaultRepMin: 8,
+    defaultRepMax: 12,
+    // A made-up suggestion under a made-up lift is a number pretending to be
+    // advice, so there is none.
+    suggestedKg: { beginner: 0, intermediate: 0, advanced: 0 },
+  }
+}
+
 export function customLibraryEntry(name: string, group: BodyGroup): LibraryExercise | null {
   const clean = name.trim().replace(/\s+/g, " ").slice(0, 120)
   if (!clean) return null

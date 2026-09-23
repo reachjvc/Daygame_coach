@@ -844,8 +844,8 @@ describe('Architecture Compliance', () => {
       'src/goals/components/north-star/WeekGrid.tsx',
       'src/goals/components/north-star/WorkoutPrograms.tsx',
       'src/programs/components/CustomProgramBuilder.tsx',
-      'src/programs/components/EditActiveProgram.tsx',
-      'src/programs/components/ProgramEditor.tsx',
+      // EditActiveProgram and ProgramEditor came off on 2026-09-23 — see the
+      // note on TRAINING_STYLE_DEBT above.
       'src/programs/components/RunningPrograms.tsx',
       'src/programs/components/ui.tsx',
     ])
@@ -1256,14 +1256,22 @@ describe('Architecture Compliance', () => {
     const TRAINING_STYLE_DEBT = new Set<string>([
       'src/goals/components/north-star/WorkoutPrograms.tsx',
       'src/programs/components/CustomProgramBuilder.tsx',
-      'src/programs/components/EditActiveProgram.tsx',
+      // EditActiveProgram came off on 2026-09-23: a `Card` from the app's own
+      // kit, `Input` in place of its 12.5-px boxes, and "Save changes" is the
+      // plain `Button` rather than the EMERALD one it used to be — green in
+      // this app is a set you ticked and a program you finished, and a save
+      // button wearing it took that meaning away from the ticks.
       // HistoryTab came off on 2026-09-23: the app's `Select`, `Button` and
       // `Link` throughout, no hand-rolled inputs, and the editor it used to
       // hold is on the workout's own page.
       // LiftHistory came off on 2026-09-23: no `Card`, no second heading
       // level, sections divided by a hairline like the rest of the tab.
       'src/programs/components/PastPrograms.tsx',
-      'src/programs/components/ProgramEditor.tsx',
+      // ProgramEditor came off on 2026-09-23: a day row is its full name and
+      // ONE options button, the four 44-px icons are rows in a `BottomSheet`
+      // with words on them, the rename is a `Dialog` that can refuse a blank
+      // name out loud, and every box is the app's `Input` (16 px on a phone,
+      // so Safari stops zooming the page and never zooming back).
       'src/programs/components/ProgramsApp.tsx',
       'src/programs/components/ProgressionView.tsx',
       'src/programs/components/RunningPrograms.tsx',
