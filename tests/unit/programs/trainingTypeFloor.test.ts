@@ -126,6 +126,45 @@ describe("no training screen speaks the old visual language", () => {
   })
 })
 
+describe("one mount per shared training component", () => {
+  test("the week strip is rendered in exactly one place", () => {
+    /**
+     * IT WAS RENDERED TWICE ON ONE SCREEN. With a program running, the Training
+     * tab drew `WeekStrip` itself AND `TodayCard` drew its own — two identical
+     * seven-day strips about twenty pixels apart, both interactive, both driven
+     * by the same handler.
+     *
+     * Found by a Playwright locator resolving to two elements while I was
+     * replacing a sleep with a wait, not by looking at the screen. That is the
+     * part worth admitting, and the reason for a test rather than a fix: the
+     * duplicate had been there long enough to survive every walkthrough.
+     *
+     * The card's is the one that survives, because the card is the shared
+     * thing — it is embedded on the dashboard and in Life Mastery's Track step,
+     * so a strip that travels with it is one strip everywhere.
+     */
+    const mounts: string[] = []
+    const walk = (dir: string) => {
+      for (const entry of fs.readdirSync(path.join(projectRoot, dir), { withFileTypes: true })) {
+        const rel = `${dir}/${entry.name}`
+        if (entry.isDirectory()) {
+          walk(rel)
+          continue
+        }
+        if (!/\.tsx$/.test(entry.name)) continue
+        const hits = (code(rel).match(/<WeekStrip\b/g) ?? []).length
+        for (let i = 0; i < hits; i += 1) mounts.push(rel)
+      }
+    }
+    for (const dir of ["src", "app"]) walk(dir)
+
+    expect(
+      mounts,
+      `The week strip is mounted ${mounts.length} times:\n${mounts.join("\n")}`
+    ).toEqual(["src/programs/components/TodayCard.tsx"])
+  })
+})
+
 describe("the blue-grey kit is gone, not repainted", () => {
   test("src/programs/components/ui.tsx does not exist and nothing imports it", () => {
     /**

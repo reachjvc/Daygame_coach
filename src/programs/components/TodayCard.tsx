@@ -50,6 +50,12 @@ interface Props {
   week?: WeekSoFar
   /** Every day in the program, so you can log the one you actually did. */
   days?: Array<{ id: string; label: string; weekday?: number }>
+  /**
+   * What the program asks for on each weekday, for the strip's screen-reader
+   * text. Without it a day reads as "Mon: nothing planned" on a program that
+   * prescribes Mon/Wed/Fri.
+   */
+  weekdayLabels?: Record<number, string | undefined>
   onPickDay?: (dayId: string) => void
   onPickWeekday?: (weekday: number) => void
   /** Opens the program menu. Absent until Phase 5's sheet exists. */
@@ -68,6 +74,7 @@ export function TodayCard({
   state,
   week,
   days,
+  weekdayLabels,
   onPickDay,
   onPickWeekday,
   onOpenMenu,
@@ -224,7 +231,7 @@ export function TodayCard({
           )}
         </div>
 
-        {week && <WeekStrip week={week} onPickDay={onPickWeekday} />}
+        {week && <WeekStrip week={week} labels={weekdayLabels} onPickDay={onPickWeekday} />}
 
         <div className="flex items-baseline justify-between gap-2">
           <p className="min-w-0 truncate text-lg font-semibold">

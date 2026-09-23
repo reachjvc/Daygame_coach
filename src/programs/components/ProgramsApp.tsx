@@ -12,7 +12,6 @@ import { SessionNotices } from "./SessionNotices"
 import { ProgressionView } from "./ProgressionView"
 import { StartLooseWorkout } from "./StartLooseWorkout"
 import { EditActiveProgram } from "./EditActiveProgram"
-import { WeekStrip } from "./WeekStrip"
 import { ProgramRow } from "./ProgramRow"
 import { BuildYourWeek } from "./BuildYourWeek"
 import { SavedWeeksSection } from "./SavedWeeksSection"
@@ -500,23 +499,19 @@ function ActiveProgram({
           <ChevronLeft className="size-3.5" /> All programs
         </button>
       </div>
-      {/* THE WEEK, above today's session. You open the app to log, not to
-          browse — so the week answers "what is today and what is coming" in one
-          glance and stays out of the way. */}
       {/*
-        THIS WEEK ONLY.
-        This handed WeekStrip every weekday ever trained, so a Monday you trained
-        once in July showed green every Monday afterwards — including Monday
-        morning of a week in which nothing had been done, directly above today's
-        session. After a two-week break it still read "done" under all three
-        training days. A week strip that cannot go back to empty is not
-        reporting anything.
+        THE WEEK STRIP WAS HERE, AND IT WAS THE SECOND ONE ON THE SCREEN.
+        `TodayCard` renders its own, so with one program running this tab drew
+        two identical seven-day strips about twenty pixels apart, both
+        interactive and both driven by this same `setPickingWeekday`. Found by
+        a locator that resolved to two elements while I was replacing a sleep
+        with a wait — not by looking at the screen, which is the part worth
+        admitting.
+        The card's is the one that survives, because the card is the shared
+        thing: it is embedded on the dashboard and in Life Mastery's Track
+        step, so a strip that travels with it is one strip everywhere rather
+        than three mounts to keep in step. Its `labels` prop came with it.
       */}
-      <WeekStrip
-        week={detail.week}
-        labels={weekdayLabels(detail.enrollment)}
-        onPickDay={setPickingWeekday}
-      />
       {pickingWeekday !== null && (
         <DayAssignment
           enrollment={detail.enrollment}
@@ -542,6 +537,7 @@ function ActiveProgram({
         week={detail.week}
         days={days}
         onPickDay={setPickedDayId}
+        weekdayLabels={weekdayLabels(detail.enrollment)}
         onPickWeekday={setPickingWeekday}
         onOpenMenu={() => setMenuOpen(true)}
       >

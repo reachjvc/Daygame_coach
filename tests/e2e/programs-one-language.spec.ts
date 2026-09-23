@@ -120,9 +120,23 @@ async function oranges(page: Page): Promise<string[]> {
   )
 }
 
+/**
+ * WAIT FOR THE TAB'S OWN CONTENT, not for a number of milliseconds.
+ *
+ * Both tabs are lazy, so a fixed sleep either measures the Suspense fallback —
+ * nine chrome controls, no tab content, and a pass that means nothing — or it is
+ * longer than it needs to be on every run for ever. Each tab names the thing
+ * that proves it has arrived.
+ */
+const ARRIVED = {
+  today: "week-strip",
+  history: "workout-history",
+  progress: "week-dots",
+} as const
+
 async function openTab(page: Page, tab: "today" | "history" | "progress") {
-  await page.goto(`/programs?tab=${tab}`, { waitUntil: "networkidle" })
-  await page.waitForTimeout(600)
+  await page.goto(`/programs?tab=${tab}`, { waitUntil: "domcontentloaded" })
+  await expect(page.getByTestId(ARRIVED[tab])).toBeVisible({ timeout: 30000 })
 }
 
 /**
@@ -230,7 +244,7 @@ test("the live screen: every control is 44px, and only the caption row is 11px",
   await openTab(page, "today")
   await page.getByTestId("start-workout").click()
   await page.waitForURL(/\/programs\/live/)
-  await page.waitForTimeout(800)
+  await expect(page.getByTestId("live-column")).toBeVisible({ timeout: 30000 })
 
   try {
     const small = (await controls(page)).filter((c) => c.height < FLOOR)

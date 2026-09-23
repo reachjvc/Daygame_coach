@@ -97,9 +97,23 @@ describe("components several screens depend on", () => {
     // below passes for ever while checking nothing — which is the same lie as
     // having no test.
     expect(shared.length, "no shared components found — the scan is broken").toBeGreaterThan(3)
-    // A name the scan must find, so a broken importer regex fails here rather
-    // than silently reporting that everything is fine.
-    expect(shared.map((s) => s.name)).toContain("WeekStrip")
+    /**
+     * A name the scan must find, so a broken importer regex fails here rather
+     * than silently reporting that everything is fine.
+     *
+     * It was `WeekStrip` until 2026-09-23, when that stopped being shared:
+     * `/programs` was rendering it AND `TodayCard` was rendering its own, so
+     * the Training tab drew two identical seven-day strips twenty pixels apart.
+     * The duplicate went and the canary had to move — which is the canary doing
+     * its job, not failing at it.
+     *
+     * `ProgramRow`, not `TodayCard`: this scan counts importers of the file
+     * itself, and the dashboard and Life Mastery reach the today card through
+     * `TrainingCard`, which wraps it — so it has one importer here and would
+     * have been a second canary that quietly stopped being true. `ProgramRow`
+     * is the row every list of programs uses, and there are five of them.
+     */
+    expect(shared.map((s) => s.name)).toContain("ProgramRow")
   })
 
   it("each has something constructing it with its real props", () => {

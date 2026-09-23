@@ -225,6 +225,90 @@ describe('E2E Test Isolation Compliance', () => {
    * Floor set below today's real number. Raise it as the suite grows; never
    * lower it to make a change pass.
    */
+  /**
+   * FIXED SLEEPS IN THE TRAINING SPECS ONLY GO DOWN.
+   *
+   * `waitForTimeout` is not banned, because one of them IS the thing under
+   * test: `programs-live-workout.spec.ts` backgrounds a tab for ten real
+   * seconds to prove the rest clock survives it. The rest are a guess about how
+   * long a screen takes, and a guess is either too short — in which case the
+   * test is flaky and the failure looks like a defect — or too long on every
+   * run for ever. So they are counted, per file, and the count may fall.
+   *
+   * SEEDED BY COUNTING, not by copying the plan's numbers, which said
+   * live-workout 5, history-progress 4 and dashboard-training-card 1. The real
+   * counts on 2026-09-23 were 4, 5 and 0.
+   */
+  const SLEEP_CEILING: Record<string, number> = {
+    'tests/e2e/programs-live-workout.spec.ts': 4,
+    'tests/e2e/programs-history-progress.spec.ts': 5,
+    // One, and it is waiting for a CSS hover transition to land before reading
+    // the computed colour — there is no event for "the transition finished".
+    'tests/e2e/programs-one-language.spec.ts': 1,
+  }
+
+  /** Every spec the `training` project runs, read off the config. */
+  function trainingSpecs(): string[] {
+    const config = fs.readFileSync(path.join(projectRoot, 'playwright.config.ts'), 'utf-8')
+    const block = config.match(/name: 'training',[\s\S]*?testMatch: \[([\s\S]*?)\]/)
+    if (!block) throw new Error("could not find the training project's testMatch")
+    return [...block[1].matchAll(/\/([a-zA-Z0-9/-]+)\\\.spec\\\.ts\//g)].map(
+      (m) => `tests/e2e/${m[1]}.spec.ts`
+    )
+  }
+
+  test('fixed sleeps in the training specs only go down', () => {
+    const over: string[] = []
+    for (const rel of trainingSpecs()) {
+      const full = path.join(projectRoot, rel)
+      if (!fs.existsSync(full)) continue
+      const n = (fs.readFileSync(full, 'utf-8').match(/waitForTimeout\(/g) ?? []).length
+      const ceiling = SLEEP_CEILING[rel] ?? 0
+      if (n !== ceiling) over.push(`${rel}: ${n} sleeps, ceiling ${ceiling}`)
+    }
+    expect(
+      over,
+      'A fixed sleep is a guess about how long a screen takes. Wait for the\n' +
+        'thing itself, and lower the ceiling here in the same sitting — an\n' +
+        'allowance with headroom protects nothing:\n' +
+        over.join('\n'),
+    ).toEqual([])
+  })
+
+  test('no training spec builds a calendar fact from the machine clock', () => {
+    /**
+     * The account's clock is the only thing that decides which day a workout
+     * was on, and a spec that asks the RUNNER what day it is disagrees with the
+     * app the moment CI runs in a different zone from the laptop. The account's
+     * answer comes from `/api/settings/time-preferences`, or from the control's
+     * own `max` attribute, which is what the past-workout dialog reads.
+     *
+     * NARROWED TO A BARE `new Date()`, which is the fault itself. An OFFSET —
+     * "twenty days ago", `new Date(Date.now() - n * 86_400_000)` — cannot be
+     * this fault: the seeds use it to land a workout somewhere inside an
+     * eight-week window, and being a day out either way is not a thing any
+     * assertion depends on. A first draft of this banned the idioms outright
+     * and named five uses, four of them harmless, which is how a rule gets
+     * turned off rather than obeyed.
+     */
+    const BANNED = /\bnew Date\(\)\s*\.\s*(?:toISOString\(\)\s*\.\s*(?:split|slice)|getDay|getDate|getMonth|toLocaleDateString)/
+    const offenders: string[] = []
+    for (const rel of trainingSpecs()) {
+      const full = path.join(projectRoot, rel)
+      if (!fs.existsSync(full)) continue
+      const code = fs
+        .readFileSync(full, 'utf-8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/[^\n]*/g, '')
+      if (BANNED.test(code)) offenders.push(`${rel}: a calendar fact from new Date()`)
+    }
+    expect(
+      offenders,
+      "These read the runner's clock for a calendar fact the account owns:\n" +
+        offenders.join('\n'),
+    ).toEqual([])
+  })
+
   test('sees the whole e2e suite, including subdirectories', () => {
     const seen = getAllE2EFiles().map((f) => path.relative(projectRoot, f))
 
