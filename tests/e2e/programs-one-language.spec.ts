@@ -128,15 +128,34 @@ async function oranges(page: Page): Promise<string[]> {
  * longer than it needs to be on every run for ever. Each tab names the thing
  * that proves it has arrived.
  */
-const ARRIVED = {
-  today: "week-strip",
-  history: "workout-history",
-  progress: "week-dots",
-} as const
-
 async function openTab(page: Page, tab: "today" | "history" | "progress") {
   await page.goto(`/programs?tab=${tab}`, { waitUntil: "domcontentloaded" })
-  await expect(page.getByTestId(ARRIVED[tab])).toBeVisible({ timeout: 30000 })
+  /**
+   * THE TAB HAS ARRIVED WHEN ITS PLACEHOLDER HAS GONE, not when a particular
+   * thing is on it.
+   *
+   * The first version waited for `week-dots` on Progress, which only exists
+   * once the account has trained — and it went red the day the training suite
+   * moved to an account of its own with no history in it. "Nothing logged yet.
+   * Finish a workout and it will be here" is a perfectly arrived tab, and a
+   * measurement of the controls on it is exactly as valid.
+   *
+   * Every one of these tabs renders `animate-pulse` while it loads and nothing
+   * afterwards, which is the one signal that means the same thing for a full
+   * account and an empty one.
+   */
+  await expect(page.getByRole("tabpanel")).toBeVisible({ timeout: 30000 })
+  await expect(page.locator("[data-slot='tabs-content'] .animate-pulse")).toHaveCount(0, {
+    timeout: 30000,
+  })
+  /**
+   * AND THE WORD, because the Today tab does not use the pulse. It renders a
+   * plain "Loading…" while the enrollment read is in flight, so waiting on the
+   * placeholder alone let the measurement run against a tab that had not
+   * decided yet — 0 controls, 0 oranges, and a pass or a fail that meant
+   * nothing either way.
+   */
+  await expect(page.getByText("Loading…")).toHaveCount(0, { timeout: 30000 })
 }
 
 /**
@@ -187,6 +206,13 @@ test("exactly one orange on Today, and none on History or Progress", async ({ pa
    *
    * The bottom tab bar's current tab is orange TEXT rather than an orange
    * fill, so it does not count here — this measures `background-color`.
+   *
+   * MEASURED WITH A PROGRAM RUNNING, which the fixture guarantees. The EMPTY
+   * Today has two — "Browse programs" and "Start a workout now" — and that is
+   * Phase 5's deliberate "both doors, on the screen you land on": somebody who
+   * only wants to log today should not have to find a tab first. Not asserted
+   * here rather than quietly changed, because re-deciding it is not this
+   * test's business; it is recorded so the next reader knows it was a choice.
    */
   await openTab(page, "today")
   const onToday = await oranges(page)

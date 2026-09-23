@@ -37,6 +37,7 @@
  */
 
 import { test, expect, type Page } from "@playwright/test"
+import { TRAINING_STATE } from "../../playwright.config"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 const TEMPLATES = `${LIFE_MASTERY}?step=templates`
@@ -148,7 +149,14 @@ test.describe("Life Mastery and the training database", () => {
      * The card is drawn from the enrollment list rather than from anything in
      * storage, so it must say exactly the same thing.
      */
-    const other = await browser.newContext({ storageState: "tests/e2e/.auth/user.json" })
+    /**
+    * THE SAME ACCOUNT ON ANOTHER DEVICE — which is the whole claim. This
+    * said `.auth/user.json` and passed only while the training projects
+    * shared that account; once they moved to their own it became a second
+    * browser signed in as a DIFFERENT PERSON, which proves nothing about
+    * what a phone and a laptop see.
+    */
+    const other = await browser.newContext({ storageState: TRAINING_STATE })
     const fresh = await other.newPage()
     try {
       await fresh.setViewportSize({ width: 1280, height: 1000 })

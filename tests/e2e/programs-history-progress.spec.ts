@@ -642,7 +642,8 @@ test("every control on History and Progress is thumb-sized", async ({ page }) =>
           // Only what is actually on screen: the other tab is rendered and
           // hidden so its state survives a switch.
           if (el.closest("[hidden]")) continue
-          if (box.height < 44) {
+          // Rounded: a float short of 44 by a hundred-thousandth is 44.
+          if (Math.round(box.height) < 44) {
             out.push(`${el.tagName}${el.getAttribute("data-testid") ?? ""} ${Math.round(box.height)}px`)
           }
         }

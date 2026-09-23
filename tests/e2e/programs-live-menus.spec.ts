@@ -78,7 +78,17 @@ test.describe("the live screen's menus", () => {
     // Every row a finger has to hit is at least 44px tall.
     for (const testId of ["lift-swap", "lift-move-down", "lift-add-warmup", "lift-history"]) {
       const box = await sheet.getByTestId(testId).boundingBox()
-      expect(box!.height, `${testId} is ${box!.height}px`).toBeGreaterThanOrEqual(44)
+      /**
+       * ROUNDED, because a box is measured in floats. `min-h-11` rendered as
+       * 43.99993896484375 px on 2026-09-23 — the same class, laid out at a
+       * different sub-pixel offset on a different account — and a rule that
+       * fails by six hundred-thousandths of a pixel is a rule that cries wolf.
+       * `Math.round` still fails a genuinely 43-px control.
+       */
+      expect(
+        Math.round(box!.height),
+        `${testId} is ${box!.height}px`
+      ).toBeGreaterThanOrEqual(44)
     }
   })
 
@@ -312,7 +322,11 @@ test.describe("the live screen's menus", () => {
       for (const el of document.querySelectorAll("button, a, input, [role=slider]")) {
         const box = el.getBoundingClientRect()
         if (box.width === 0 || box.height === 0) continue
-        if (box.height < 44) offenders.push(`${el.tagName}.${el.className}: ${Math.round(box.height)}px`)
+        // Rounded for the same reason as above: a float short of 44 by a
+        // hundred-thousandth is 44.
+        if (Math.round(box.height) < 44) {
+          offenders.push(`${el.tagName}.${el.className}: ${Math.round(box.height)}px`)
+        }
       }
       return offenders
     })

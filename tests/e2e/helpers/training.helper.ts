@@ -12,7 +12,32 @@
  * app would refuse is a fixture that tests nothing.
  */
 
-import { type Page } from "@playwright/test"
+import { test, type Page } from "@playwright/test"
+import { TRAINING_STATE } from "../../../playwright.config"
+
+/**
+ * THE GUARD THAT MAKES THE THIRD ACCOUNT WORTH HAVING.
+ *
+ * Everything below deletes every enrollment and every open workout on whatever
+ * account the page is signed in as. Until 2026-09-23 that was `TEST_USER` — the
+ * account the goals and session specs share, and the one `.claude/rules/ui.md`
+ * sends a person to for hand-checking — so `npm run test:e2e` took somebody's
+ * program away mid-walkthrough.
+ *
+ * A spec pasted into the wrong project now fails HERE, before it deletes
+ * anything, rather than on an assertion three minutes later with the damage
+ * already done.
+ */
+function refuseUnlessTrainingAccount(): void {
+  const state = test.info().project.use.storageState
+  if (state !== TRAINING_STATE) {
+    throw new Error(
+      `This helper wipes the account clean and may only run on the training account.\n` +
+        `Project "${test.info().project.name}" is signed in as ${String(state)}.\n` +
+        `Move the spec into a training* project, or stop deleting other people's data.`
+    )
+  }
+}
 
 /** A phone, because that is where a workout is logged. */
 export const PHONE = { width: 390, height: 844 }
@@ -25,6 +50,7 @@ export const PHONE = { width: 390, height: 844 }
  * ambiguous.
  */
 export async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Promise<void> {
+  refuseUnlessTrainingAccount()
   await page.evaluate(async (unitSystem) => {
     const live = await (await fetch("/api/workouts/live")).json()
     if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
@@ -66,6 +92,7 @@ export async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Prom
  * silently destroyed the fixture the rest of the suite is measured against.
  */
 export async function cleanUp(page: Page, since?: string): Promise<void> {
+  refuseUnlessTrainingAccount()
   await page.evaluate(async (from) => {
     const live = await (await fetch("/api/workouts/live")).json()
     if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })

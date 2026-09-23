@@ -376,8 +376,10 @@ test("a day row in the editor reads its whole name at 390px, behind one options 
   await expect(menus).toHaveCount(1)
   const box = await menus.first().boundingBox()
   expect(box, "premise: the options button must be measurable").toBeTruthy()
-  expect(box!.width).toBeGreaterThanOrEqual(44)
-  expect(box!.height).toBeGreaterThanOrEqual(44)
+  // Rounded: a box is measured in floats, and `size-11` has been seen at
+  // 43.99993896484375 px depending on where it lands on the sub-pixel grid.
+  expect(Math.round(box!.width)).toBeGreaterThanOrEqual(44)
+  expect(Math.round(box!.height)).toBeGreaterThanOrEqual(44)
 
   /**
    * AND THE ONE IRREVERSIBLE CONTROL IS STILL REACHABLE. Mounting an editor on

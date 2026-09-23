@@ -18,6 +18,7 @@
  */
 
 import { test, expect, type Page } from "@playwright/test"
+import { TRAINING_STATE } from "../../playwright.config"
 import { PHONE, cleanUp, resetAndEnroll } from "./helpers/training.helper"
 
 /**
@@ -648,7 +649,14 @@ test.describe("live workout", () => {
     await page.waitForURL("**/programs/live", { timeout: 20000 })
 
     // The other device: a second browser context on the same account.
-    const other = await browser.newContext({ storageState: "tests/e2e/.auth/user.json" })
+    /**
+    * THE SAME ACCOUNT ON ANOTHER DEVICE — which is the whole claim. This
+    * said `.auth/user.json` and passed only while the training projects
+    * shared that account; once they moved to their own it became a second
+    * browser signed in as a DIFFERENT PERSON, which proves nothing about
+    * what a phone and a laptop see.
+    */
+    const other = await browser.newContext({ storageState: TRAINING_STATE })
     const otherPage = await other.newPage()
     await otherPage.goto("/programs")
     await otherPage.evaluate(async () => {

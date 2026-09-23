@@ -19,6 +19,7 @@
  */
 
 import { test, expect, type Page } from "@playwright/test"
+import { TRAINING_STATE } from "../../playwright.config"
 
 test.describe.configure({ mode: "serial" })
 
@@ -138,7 +139,14 @@ test("when the door cannot be loaded the card says so and offers no Start", asyn
 })
 
 test.afterAll(async ({ browser }) => {
-  const page = await browser.newPage({ storageState: "tests/e2e/.auth/user.json" })
+  /**
+  * THE SAME ACCOUNT ON ANOTHER DEVICE — which is the whole claim. This
+  * said `.auth/user.json` and passed only while the training projects
+  * shared that account; once they moved to their own it became a second
+  * browser signed in as a DIFFERENT PERSON, which proves nothing about
+  * what a phone and a laptop see.
+  */
+  const page = await browser.newPage({ storageState: TRAINING_STATE })
   await reset(page, false)
   await page.close()
 })

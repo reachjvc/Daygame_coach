@@ -30,7 +30,7 @@ jobs:
         run: npx playwright install --with-deps chromium firefox webkit
 
       - name: Run E2E tests (Chromium)
-        run: npx playwright test --project=setup --project=setup-user-b --project=chromium --project=no-auth --project=security-multi-user --project='goals-*' --project='session-*' --project=training --project=training-iphone-safari --project=training-android --project=training-firefox --project=auth-destructive --project=integration --project=timetrack-sync --project=timetrack-sync-phone --project=toggl-webkit --project=toggl-firefox --project=toggl-iphone-safari --project=toggl-android --project=error-reporting
+        run: npx playwright test --project=setup --project=setup-user-b --project=training-setup --project=chromium --project=no-auth --project=security-multi-user --project='goals-*' --project='session-*' --project=training --project=training-iphone-safari --project=training-android --project=training-firefox --project=auth-destructive --project=integration --project=timetrack-sync --project=timetrack-sync-phone --project=toggl-webkit --project=toggl-firefox --project=toggl-iphone-safari --project=toggl-android --project=error-reporting
         env:
           CI: true
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -40,6 +40,8 @@ jobs:
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
           TEST_USER_B_EMAIL: ${{ secrets.TEST_USER_B_EMAIL }}
           TEST_USER_B_PASSWORD: ${{ secrets.TEST_USER_B_PASSWORD }}
+          # The training projects' own account. They delete every enrollment and
+          # every open workout on it, which is why it must not be TEST_USER's.
           TEST_USER_TRAINING_EMAIL: ${{ secrets.TEST_USER_TRAINING_EMAIL }}
           TEST_USER_TRAINING_PASSWORD: ${{ secrets.TEST_USER_TRAINING_PASSWORD }}
 
@@ -92,6 +94,8 @@ jobs:
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
           TEST_USER_B_EMAIL: ${{ secrets.TEST_USER_B_EMAIL }}
           TEST_USER_B_PASSWORD: ${{ secrets.TEST_USER_B_PASSWORD }}
+          # The training projects' own account. They delete every enrollment and
+          # every open workout on it, which is why it must not be TEST_USER's.
           TEST_USER_TRAINING_EMAIL: ${{ secrets.TEST_USER_TRAINING_EMAIL }}
           TEST_USER_TRAINING_PASSWORD: ${{ secrets.TEST_USER_TRAINING_PASSWORD }}
 
