@@ -17,6 +17,8 @@
 import { z } from "zod"
 import { MAX_DISTANCE_KM, MAX_WEIGHT_KG } from "@/src/shared/weight"
 import { CUSTOM_PROGRAM_ID } from "./data/customProgram"
+import { DISCIPLINES } from "./config"
+import type { Discipline } from "./types"
 
 const positiveInt = (max: number) => z.number().int().min(1).max(max)
 
@@ -432,8 +434,17 @@ export const FinishWorkoutSchema = z
 /** The parts of a draft a person can set. `source` is decided by the server. */
 const DraftBody = {
   name: z.string().trim().min(1).max(60),
+  /**
+   * FROM `DISCIPLINES`, NOT SPELLED OUT AGAIN.
+   *
+   * The seven ids were written here as a literal and in the Templates step as a
+   * hard-coded list of SIX — which is how Half Ironman, which the catalogue has
+   * and files under `ironman`, could not be reached from Life Mastery at all.
+   * A private list of a shared fact is a list that will eventually be missing
+   * one, and nothing tells you which.
+   */
   discipline: z
-    .enum(["strength", "bodybuilding", "calisthenics", "cardio", "flexibility", "triathlon", "ironman"])
+    .enum(Object.keys(DISCIPLINES) as [Discipline, ...Discipline[]])
     .optional(),
   unitSystem: z.enum(["kg", "lb"]).optional(),
   schedule: DraftScheduleSchema,
