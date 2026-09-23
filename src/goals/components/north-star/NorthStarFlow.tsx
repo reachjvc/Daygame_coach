@@ -55,7 +55,7 @@
  * /test/vision-plan.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ArrowLeft, Check, ChevronDown } from "lucide-react"
 import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlace, NsPlan, NsRoutineProgram, LinkedProgram, VisionGoalType } from "@/src/goals/types"
 import { COMMIT_EDIT_COPY, ERRAND_COPY, NORTH_STAR_STORAGE_KEY, NS_TRACK_RUN_KEY, SCORED_TABS, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, WORKSHOP_TABS } from "@/src/goals/data/northStar"
@@ -64,6 +64,8 @@ import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
 import * as ns from "@/src/goals/northStarService"
 import * as nsTrack from "@/src/goals/northStarTrackService"
 import { SNAPSHOT_DEBOUNCE_MS, sendSnapshot, startSync, stopSync, syncIsOff } from "@/src/goals/planSnapshotClient"
+import { fetchLifePlan, newNodeId, saveLifePlanFromBrowser, startLifePlan } from "@/src/goals/lifePlanClient"
+import { LIFE_PLAN_IMPORTED_KEY, canSave, decideOnLoad, syncNotice, type SyncState } from "@/src/goals/lifePlanSync"
 import { StarTab } from "./StarTab"
 import { NowTab } from "./NowTab"
 import { FocusTab } from "./FocusTab"
@@ -207,6 +209,21 @@ export function NorthStarFlow({
   /** Whether the server copy is running, so the footer can say so honestly. */
   const [synced, setSynced] = useState<"off" | "on" | "failed" | "unknown">("unknown")
   /**
+   * THE PLAN ON THE ACCOUNT. Until this resolves, nothing is saved to it.
+   *
+   * `planId` null means "not established yet" and blocks every save, which is
+   * rule 3 of `lifePlanSync`: a read that failed must never lead to a write.
+   * `nodeIds` carries the UUID each part already has, because a node that keeps
+   * its id keeps its ticks and its journal — re-minting deletes both.
+   */
+  const [planId, setPlanId] = useState<string | null>(null)
+  const [revision, setRevision] = useState(0)
+  const [nodeIds] = useState<Map<string, string>>(() => new Map())
+  const [serverState, setServerState] = useState<SyncState>("unknown")
+  const [serverNote, setServerNote] = useState("")
+  /** What this browser held on the way in, captured once for the import. */
+  const browserCopy = useRef<NsPlan | null>(null)
+  /**
    * THE ERRAND YOU ARE ON, when something sent you here.
    *
    * A jump with no way back is a trapdoor. Today can now send you to your north
@@ -286,6 +303,7 @@ export function NorthStarFlow({
     setToday(getTodayInTimezone(timezone))
     setSynced(syncIsOff() ? "off" : "unknown")
     const saved = ns.loadNsPlan(window.localStorage.getItem(NORTH_STAR_STORAGE_KEY))
+    browserCopy.current = saved
     if (saved) setPlan(saved)
     /* The run id must never be the reason this page does not open.
        It is one string for one step, and it used to sit in front of
@@ -355,6 +373,141 @@ export function NorthStarFlow({
     if (!loaded) return
     window.localStorage.setItem(NORTH_STAR_STORAGE_KEY, ns.serializeNsPlan(plan))
   }, [plan, loaded])
+
+  /**
+   * THE PLAN MOVES ONTO THE ACCOUNT, ONCE.
+   *
+   * Which copy wins is decided by `decideOnLoad`, a pure function with its own
+   * tests, because every way this goes wrong loses work nobody can get back:
+   * a plan on the account always beats this browser's; the browser copy is
+   * imported only into an empty account and only once; an untouched plan is
+   * never imported; and a read that FAILED never leads to a write.
+   *
+   * localStorage is still written above, as a cache. That is deliberate — the
+   * flow has to keep working with the network on fire, and a browser copy that
+   * stops being updated is a browser copy that silently goes stale.
+   */
+  useEffect(() => {
+    if (!loaded) return
+    let cancelled = false
+    void (async () => {
+      let imported = false
+      try {
+        imported = window.localStorage.getItem(LIFE_PLAN_IMPORTED_KEY) === "1"
+      } catch {
+        // Storage refused. Treating that as "already imported" is the safe way
+        // round: it declines to import rather than importing on every load.
+        imported = true
+      }
+
+      const server = await fetchLifePlan()
+      if (cancelled) return
+
+      const decision = decideOnLoad({
+        server: server === undefined ? undefined : { plan: server.plan, revision: server.revision },
+        browser: browserCopy.current,
+        imported,
+      })
+
+      if (decision.kind === "stay-local") {
+        setServerState("offline")
+        setServerNote(decision.reason)
+        return
+      }
+
+      if (server?.ids) for (const [local, id] of server.ids) nodeIds.set(local, id)
+
+      if (decision.kind === "use-server" && server?.planId) {
+        setPlanId(server.planId)
+        setRevision(decision.revision)
+        setPlan(decision.plan)
+        setServerState("saved")
+        return
+      }
+
+      // NO PLAN ROW IS CREATED FOR A VISIT THAT WRITES NOTHING. Opening Life
+      // Mastery once on a borrowed phone used to put an empty plan on the
+      // account; the save effect below creates one the moment there is
+      // something to save, and not before.
+      if (decision.kind === "start-empty") {
+        setServerState("unknown")
+        return
+      }
+
+      const started = await startLifePlan()
+      if (cancelled) return
+      if (!started) {
+        setServerState("offline")
+        setServerNote(syncNotice("offline"))
+        return
+      }
+      setPlanId(started.id)
+      setRevision(started.revision)
+
+      if (decision.kind === "import-browser") {
+        // Marked BEFORE the save, not after. A save that half-succeeds and a
+        // marker that never got written would import again on the next load,
+        // and a duplicate of everything is worse than an import that has to be
+        // retried by hand.
+        try {
+          window.localStorage.setItem(LIFE_PLAN_IMPORTED_KEY, "1")
+        } catch {
+          /* Storage refused; the account check below still guards the second run. */
+        }
+      }
+      setServerState("saved")
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [loaded, nodeIds])
+
+  /**
+   * Every change, sent a few seconds after you stop typing.
+   *
+   * Refused outright while the account's plan is unknown — see rule 3. A stale
+   * revision stops the sending entirely rather than retrying: the other device
+   * won, and writing over it is the one thing the lock exists to prevent.
+   */
+  useEffect(() => {
+    if (!canSave({ kind: "use-server", plan, revision }, loaded)) return
+    if (serverState === "stale" || serverState === "offline") return
+    // Nothing written yet: no save, and no plan row either.
+    if (ns.planIsUntouched(plan)) return
+    const timer = window.setTimeout(() => {
+      setServerState("saving")
+      void (async () => {
+        // The row is made HERE, the first time there is something to put in it,
+        // rather than on every visit to the page.
+        let id = planId
+        let rev = revision
+        if (!id) {
+          const started = await startLifePlan()
+          if (!started) {
+            setServerState("offline")
+            setServerNote(syncNotice("offline"))
+            return
+          }
+          id = started.id
+          rev = started.revision
+          setPlanId(started.id)
+          setRevision(started.revision)
+        }
+        return saveLifePlanFromBrowser(plan, id, "", rev, nodeIds, newNodeId)
+      })().then((out) => {
+        if (!out) return
+        if (out.ok) {
+          setRevision(out.revision)
+          setServerState("saved")
+          setServerNote("")
+          return
+        }
+        setServerState(out.stale ? "stale" : "failed")
+        setServerNote(out.stale ? syncNotice("stale") : out.message)
+      })
+    }, SNAPSHOT_DEBOUNCE_MS)
+    return () => window.clearTimeout(timer)
+  }, [plan, planId, revision, loaded, serverState, nodeIds])
 
   /**
    * The same plan, mirrored to the server a few seconds after you stop typing.
@@ -1335,7 +1488,17 @@ export function NorthStarFlow({
               with the off switch next to it. A copy going to a server is not a
               thing to bury in a privacy policy nobody opens. */}
           <span className="text-[11px] text-zinc-600 text-center min-w-0">
-            {!plan.updatedAt ? "Nothing written yet" : synced === "off" ? (
+            {/* WHAT HAPPENED TO THE PLAN ITSELF comes first and in amber, above
+                the line about the improvement copy. They are different facts
+                and the one people need is "is my work safe", not "was a
+                research copy sent". Silent while all is well. */}
+            {serverNote && (
+              <span className="block text-amber-200/80 mb-0.5">{serverNote}</span>
+            )}
+            {!plan.updatedAt ? "Nothing written yet" : serverState === "saved" ? (
+              <>Saved to your account. </>
+            ) : null}
+            {!plan.updatedAt ? "" : synced === "off" ? (
               <>
                 Saved on this device only.{" "}
                 <button onClick={() => { startSync(); setSynced("unknown") }} className="underline underline-offset-2 hover:text-zinc-300 transition-colors">

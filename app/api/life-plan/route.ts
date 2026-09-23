@@ -12,7 +12,6 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { ensureLifePlan, readLifePlan, saveLifePlan, StalePlanError } from "@/src/db/lifePlanRepo"
-
 export async function GET() {
   const auth = await requireAuth()
   if (!auth.success) return auth.response
@@ -36,12 +35,11 @@ export async function PUT(req: Request) {
   if (!body || typeof body !== "object" || typeof body.revision !== "number" || !body.plan) {
     return NextResponse.json({ error: "Send a plan and the revision you read" }, { status: 400 })
   }
-  // The owner comes from the session, never from the body — a plan claiming to
-  // belong to somebody else is not a plan this account may write.
-  const rows = { ...body.plan, user_id: auth.userId }
+  // The owner is stamped by the repo, from the session — never taken from
+  // the body, and never only at the top level.
 
   try {
-    const revision = await saveLifePlan(rows, body.revision)
+    const revision = await saveLifePlan(body.plan, body.revision, auth.userId)
     return NextResponse.json({ revision })
   } catch (error) {
     if (error instanceof StalePlanError) {

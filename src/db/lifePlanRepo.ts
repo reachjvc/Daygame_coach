@@ -24,6 +24,7 @@
 
 import { createServerSupabaseClient } from "./supabase"
 import { readAllRows } from "./paging"
+import { PLAN_ROW_KEYS } from "./lifePlanTypes"
 import type {
   AnswerRow,
   AreaRow,
@@ -126,12 +127,29 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
   if (!plan.data) return null
 
   const planId = plan.data.id as string
-  const all = <T>(table: string, on: "plan" | "node") =>
-    readAllRows<T>(table, (from, to) =>
-      on === "plan"
-        ? supabase.from(table).select("*").eq("plan_id", planId).order("id").range(from, to)
-        : supabase.from(table).select("*").eq("user_id", userId).order("id").range(from, to),
-    )
+  /**
+   * Read a table whole, a page at a time.
+   *
+   * `order` is explicit and never assumed to be `id`, because FOUR OF THESE
+   * TABLES HAVE NO `id` COLUMN — a link row's key is the pair it joins, so
+   * `life_plan_goal_feeds` is (goal_id, feeds_goal_id) and ordering it by `id`
+   * asks for a column that does not exist. That is a 500 on the whole read, and
+   * it is what happened the first time this route was driven in a browser.
+   *
+   * The ordering must also be UNIQUE, or paging is two reads of a moving table
+   * and a row that ties can land in both pages while another lands in neither.
+   */
+  const all = <T>(table: string, on: "plan" | "node", order: string[]) =>
+    readAllRows<T>(table, (from, to) => {
+      const col = on === "plan" ? "plan_id" : "user_id"
+      const val = on === "plan" ? planId : userId
+      // Written as one chain per case rather than built up in a variable, so
+      // the `.range()` is visible ON the chain — both to a reader and to the
+      // architecture test that counts reads with no upper bound.
+      return order.length === 2
+        ? supabase.from(table).select("*").eq(col, val).order(order[0]).order(order[1]).range(from, to)
+        : supabase.from(table).select("*").eq(col, val).order(order[0]).range(from, to)
+    })
 
   // The child tables have no `plan_id` of their own — they hang off a goal, a
   // routine or a step — so they are read by owner and then narrowed to this
@@ -144,26 +162,26 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
     checkpoints, obstacles, beliefs, habits,
     goal_feeds, goal_serves, routine_serves, step_serves,
   ] = await Promise.all([
-    all<NodeRow>("life_plan_nodes", "plan"),
-    all<NorthStarRow>("life_plan_north_stars", "plan"),
-    all<AreaRow>("life_plan_areas", "plan"),
-    all<GoalRow>("life_plan_goals", "plan"),
-    all<RoutineRow>("life_plan_routines", "plan"),
-    all<StepRow>("life_plan_routine_steps", "node"),
-    all<SplitDayRow>("life_plan_routine_split_days", "node"),
-    all<ExperienceRow>("life_plan_experiences", "plan"),
-    all<FieldRow>("life_plan_fields", "plan"),
-    all<SubStepRow>("life_plan_sub_steps", "plan"),
-    all<ValueRow>("life_plan_values", "plan"),
-    all<AnswerRow>("life_plan_answers", "plan"),
-    all<CheckpointRow>("life_plan_goal_checkpoints", "node"),
-    all<ObstacleRow>("life_plan_goal_obstacles", "node"),
-    all<BeliefRow>("life_plan_goal_beliefs", "node"),
-    all<HabitRow>("life_plan_goal_habits", "node"),
-    all<GoalFeedRow>("life_plan_goal_feeds", "node"),
-    all<GoalServeRow>("life_plan_goal_serves", "node"),
-    all<RoutineServeRow>("life_plan_routine_serves", "node"),
-    all<StepServeRow>("life_plan_step_serves", "node"),
+    all<NodeRow>("life_plan_nodes", "plan", ["id"]),
+    all<NorthStarRow>("life_plan_north_stars", "plan", ["id"]),
+    all<AreaRow>("life_plan_areas", "plan", ["id"]),
+    all<GoalRow>("life_plan_goals", "plan", ["id"]),
+    all<RoutineRow>("life_plan_routines", "plan", ["id"]),
+    all<StepRow>("life_plan_routine_steps", "node", ["id"]),
+    all<SplitDayRow>("life_plan_routine_split_days", "node", ["id"]),
+    all<ExperienceRow>("life_plan_experiences", "plan", ["id"]),
+    all<FieldRow>("life_plan_fields", "plan", ["id"]),
+    all<SubStepRow>("life_plan_sub_steps", "plan", ["id"]),
+    all<ValueRow>("life_plan_values", "plan", ["id"]),
+    all<AnswerRow>("life_plan_answers", "plan", ["id"]),
+    all<CheckpointRow>("life_plan_goal_checkpoints", "node", ["id"]),
+    all<ObstacleRow>("life_plan_goal_obstacles", "node", ["id"]),
+    all<BeliefRow>("life_plan_goal_beliefs", "node", ["id"]),
+    all<HabitRow>("life_plan_goal_habits", "node", ["id"]),
+    all<GoalFeedRow>("life_plan_goal_feeds", "node", ["goal_id", "feeds_goal_id"]),
+    all<GoalServeRow>("life_plan_goal_serves", "node", ["goal_id", "area_id"]),
+    all<RoutineServeRow>("life_plan_routine_serves", "node", ["routine_id", "area_id"]),
+    all<StepServeRow>("life_plan_step_serves", "node", ["step_id", "goal_id"]),
   ])
 
   const goalIds = new Set(goals.map((g) => g.id))
@@ -216,17 +234,32 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
  *
  * @throws StalePlanError when the stored revision has moved on.
  */
-export async function saveLifePlan(rows: PlanRows, expectedRevision: number): Promise<number> {
+export async function saveLifePlan(
+  rows: PlanRows,
+  expectedRevision: number,
+  userId: string,
+): Promise<number> {
   const supabase = await createServerSupabaseClient()
 
-  const payload = {
-    ...rows,
-    goals: rows.goals.map((g) => {
-      const copy = { ...g }
-      delete copy.user_goal_id
-      return copy
-    }),
+  // EVERY ROW CARRIES THE SIGNED-IN OWNER, stamped here from the session rather
+  // than trusted from whatever the browser sent. Row security would refuse a
+  // foreign one, but "the database will catch it" is not the same as not
+  // sending it — and the browser has no business knowing its own uuid for a
+  // save to work at all.
+  const payload: Record<string, unknown> = { ...rows, user_id: userId }
+  for (const key of PLAN_ROW_KEYS) {
+    const list = (rows as unknown as Record<string, unknown>)[key]
+    if (!Array.isArray(list)) continue
+    payload[key] = list.map((row) =>
+      row && typeof row === "object" ? { ...(row as Record<string, unknown>), user_id: userId } : row,
+    )
   }
+  // The link belongs to the push, never to the plan save.
+  payload.goals = rows.goals.map((g) => {
+    const copy: Record<string, unknown> = { ...g, user_id: userId }
+    delete copy.user_goal_id
+    return copy
+  })
 
   const { data, error } = await supabase.rpc("save_life_plan", {
     p_rows: payload,

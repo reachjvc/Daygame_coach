@@ -69,7 +69,7 @@ function rows(over: Partial<PlanRows> = {}): PlanRows {
 
 describe("saving the plan", () => {
   it("sends the revision it was given, so the lock can refuse a stale save", async () => {
-    await saveLifePlan(rows(), 7)
+    await saveLifePlan(rows(), 7, USER)
     expect(calls).toHaveLength(1)
     expect(calls[0].name).toBe("save_life_plan")
     expect(calls[0].args.p_expected_rev).toBe(7)
@@ -81,7 +81,7 @@ describe("saving the plan", () => {
       { id: "g-2", user_id: USER, user_goal_id: null, title: "Two" },
     ] as unknown as PlanRows["goals"]
 
-    await saveLifePlan(rows({ goals }), 0)
+    await saveLifePlan(rows({ goals }), 0, USER)
     const sent = (calls[0].args.p_rows as PlanRows).goals
 
     // The link belongs to the push. A device that has never pushed would
@@ -93,24 +93,39 @@ describe("saving the plan", () => {
 
   it("turns the revision lock into a typed refusal rather than a generic failure", async () => {
     rpcResult = () => ({ data: null, error: { code: "55000", message: "Plan revision is 4 but the save was built on 2" } })
-    await expect(saveLifePlan(rows(), 2)).rejects.toBeInstanceOf(StalePlanError)
+    await expect(saveLifePlan(rows(), 2, USER)).rejects.toBeInstanceOf(StalePlanError)
   })
 
   it("fails loudly when the save returns no revision", async () => {
     // A swallowed failure here looks exactly like a successful save until the
     // next reload, which is when the evening's work turns out to be gone.
     rpcResult = () => ({ data: null, error: null })
-    await expect(saveLifePlan(rows(), 0)).rejects.toThrow(/cannot be trusted to have run/)
+    await expect(saveLifePlan(rows(), 0, USER)).rejects.toThrow(/cannot be trusted to have run/)
   })
 
   it("passes a real database error on rather than reporting success", async () => {
     rpcResult = () => ({ data: null, error: { code: "23503", message: "violates foreign key" } })
-    await expect(saveLifePlan(rows(), 0)).rejects.toThrow(/violates foreign key/)
+    await expect(saveLifePlan(rows(), 0, USER)).rejects.toThrow(/violates foreign key/)
+  })
+
+  it("stamps the signed-in owner on every row, whatever the browser sent", async () => {
+    const goals = [{ id: "g-1", user_id: "someone-else", title: "One" }] as unknown as PlanRows["goals"]
+    const areas = [{ id: "a-1", user_id: "someone-else", label: "Health" }] as unknown as PlanRows["areas"]
+
+    await saveLifePlan(rows({ goals, areas, user_id: OTHER }), 0, USER)
+    const sent = calls[0].args.p_rows as Record<string, unknown>
+
+    // The owner is a fact about the session, never a claim in the body. Row
+    // security would refuse a foreign one, but not sending it beats relying on
+    // the database to catch it — and the browser does not know its own uuid.
+    expect(sent.user_id).toBe(USER)
+    expect((sent.goals as { user_id: string }[])[0].user_id).toBe(USER)
+    expect((sent.areas as { user_id: string }[])[0].user_id).toBe(USER)
   })
 
   it("hands back the new revision the function returned", async () => {
     rpcResult = () => ({ data: 12, error: null })
-    expect(await saveLifePlan(rows(), 11)).toBe(12)
+    expect(await saveLifePlan(rows(), 11, USER)).toBe(12)
   })
 })
 
