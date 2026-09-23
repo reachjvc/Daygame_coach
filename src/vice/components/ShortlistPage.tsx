@@ -37,7 +37,7 @@ export function ShortlistPage() {
         <BackLink
           fallback={QUIT_VICE}
           fallbackLabel="Quit a vice"
-          className="inline-flex items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors"
+          className="inline-flex min-h-11 items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors"
         />
 
         <div className="mt-6">

@@ -27,7 +27,7 @@ import { HelpDoor } from "./HelpDoor"
 import { AgainTool } from "./Again"
 import { VoicesDialog } from "./Voices"
 import { TripwireTool } from "./Tripwire"
-import { QuietButton, Why } from "./Ui"
+import { Why } from "./Ui"
 import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
 import { BackLink } from "@/components/BackLink"
 
@@ -104,7 +104,7 @@ export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
           <BackLink
             fallback={QUIT_VICE}
             fallbackLabel="Quit a vice"
-            className="inline-flex items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors"
+            className="inline-flex min-h-11 items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors"
           />
           {confirmReset ? (
             <span className="flex items-center gap-2 text-[11px]">

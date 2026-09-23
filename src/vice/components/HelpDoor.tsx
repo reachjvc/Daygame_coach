@@ -67,7 +67,7 @@ export function HelpDoor({ state, on, onClose }: { state: ViceState; on: ViceHan
               type="button"
               aria-pressed={locale === id}
               onClick={() => on.setHelpLocale(id)}
-              className={`text-[12px] px-3 py-1 rounded-full border transition-colors ${
+              className={`inline-flex min-h-11 items-center text-[12px] px-3.5 rounded-full border transition-colors ${
                 locale === id
                   ? "border-violet-400/50 bg-violet-500/15 text-violet-100"
                   : "border-white/10 text-zinc-400 hover:border-white/30 hover:text-zinc-200"

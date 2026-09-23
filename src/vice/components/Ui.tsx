@@ -360,6 +360,21 @@ export function LineList({ label, help, items, onChange, placeholder, seeds, max
   )
 }
 
+/**
+ * THE TWO BUTTONS, BOTH BIG ENOUGH TO HIT.
+ *
+ * Measured on an iPhone 14: the primary was 38px tall and the quiet one 18px,
+ * against a 44px minimum — and the quiet one is where "Add a run you already
+ * had", "Or start one now" and "Save a copy" live, so the smallest target on
+ * the screen was on the main path. `min-h-11` is 44px, the size the shared
+ * button in `components/ui` already moved to on touch.
+ *
+ * The quiet one pads horizontally and pulls the same amount back with a
+ * negative margin, so the hit area grows without the text moving — these sit
+ * inline beside other things and shifting them would rearrange every row in
+ * the module.
+ */
+
 /** The button that finishes a step. */
 export function PrimaryButton({ children, onClick, disabled }: { children: ReactNode; onClick: () => void; disabled?: boolean }) {
   return (
@@ -367,7 +382,7 @@ export function PrimaryButton({ children, onClick, disabled }: { children: React
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="text-sm font-medium px-4 py-2 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 disabled:opacity-40 disabled:hover:bg-violet-500/20 transition-colors"
+      className="inline-flex min-h-11 items-center text-sm font-medium px-4 py-2 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 disabled:opacity-40 disabled:hover:bg-violet-500/20 transition-colors"
     >
       {children}
     </button>
@@ -383,7 +398,7 @@ export function QuietButton({ children, onClick, tone = "plain" }: {
     <button
       type="button"
       onClick={onClick}
-      className={`text-[12px] transition-colors ${tone === "danger" ? "text-zinc-500 hover:text-rose-300" : "text-zinc-500 hover:text-zinc-200"}`}
+      className={`inline-flex min-h-11 items-center px-2 -mx-2 text-[12px] transition-colors ${tone === "danger" ? "text-zinc-500 hover:text-rose-300" : "text-zinc-500 hover:text-zinc-200"}`}
     >
       {children}
     </button>

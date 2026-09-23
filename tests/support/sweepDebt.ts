@@ -86,19 +86,43 @@ export const TAP_TARGET_DEBT: Record<string, number> = {
    * the "start over" control and the step chips a 44px minimum height without
    * making the pages a screen longer each.
    */
-  "/life-mastery/quit-vice": 7,
-  "/life-mastery/quit-vice/experiment": 7,
-  "/life-mastery/quit-vice/gives": 7,
-  "/life-mastery/quit-vice/learn": 2,
+  // 2026-09-23, THE DESIGN PASS THE NOTE ABOVE ASKS FOR, DONE. `PrimaryButton`
+  // and `QuietButton` in src/vice/components/Ui.tsx, both hub versions' rows and
+  // footers, the help door, the version chips, the Black Box's lanes, its vice
+  // switcher and its correction controls all went to a 44px minimum — and the
+  // back link with them, in this module's five call sites rather than in
+  // `components/BackLink`, which draws the same link on eighteen screens
+  // outside this slice.
+  //
+  // `/life-mastery/quit-vice`, `/old` and `/learn` measure ZERO and their
+  // entries are DELETED rather than set to 0, per this list's own rule: a page
+  // with no number must be clean, so deleting is what holds the gain.
+  //
+  // `/old` never had an entry. It became a route on 2026-09-20 when the Black
+  // Box took the front door, was never measured, and had been failing the phone
+  // sweep at 7 ever since — invisible because the sweep runs in no CI job.
+  //
+  // The six flow routes are lowered by ONE, not to the 5 they measure. Only the
+  // back link is provably there in every state; the rest of what was fixed on
+  // them may or may not be drawn depending on how far through the flow the
+  // saved state is, and per the `/line` note a budget under the high-water mark
+  // fails at random and then gets ignored. Lowering the rest needs a measure
+  // that is stable across flow states.
+  "/life-mastery/quit-vice/experiment": 6,
+  "/life-mastery/quit-vice/gives": 6,
   // 7, not the 4 it reports when run on its own. This flow draws different
   // numbers of controls depending on how far through it the saved state is, and
   // a budget below the high-water mark fails at random and gets ignored — the
-  // same lesson recorded for the plan page above.
-  "/life-mastery/quit-vice/line": 7,
-  "/life-mastery/quit-vice/map": 7,
-  "/life-mastery/quit-vice/shortlist": 14,
-  "/life-mastery/quit-vice/week": 7,
-  "/life-mastery/quit-vice/where": 7,
+  // same lesson recorded for the plan page above. Now 6: the back link is drawn
+  // in every one of those states, so exactly one of the seven is gone for good.
+  "/life-mastery/quit-vice/line": 6,
+  "/life-mastery/quit-vice/map": 6,
+  // 12: the ten item checkboxes are 16x16 and the two "do it here" links 47x17.
+  // They are the page's own controls, not the module's shared ones, so the
+  // shared fix did not reach them — only the back link did.
+  "/life-mastery/quit-vice/shortlist": 12,
+  "/life-mastery/quit-vice/week": 6,
+  "/life-mastery/quit-vice/where": 6,
 
   "/dashboard/inner-game": 8,
   "/dashboard/qa": 6,

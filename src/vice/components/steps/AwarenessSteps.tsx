@@ -11,7 +11,6 @@
  * built to replace.
  */
 
-import { useState } from "react"
 import Link from "next/link"
 import { AlertTriangle, ArrowRight } from "lucide-react"
 import type { ViceCriterionAnswer, ViceToolId } from "../../types"

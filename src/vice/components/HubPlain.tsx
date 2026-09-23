@@ -56,12 +56,12 @@ export function HubPlain({ state, on, openTool }: {
         })}
       </div>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-5">
+      <div className="flex flex-wrap items-center gap-x-4 mt-3">
         {PLAIN.footers.map((f) => (
           <button
             key={f.id}
             onClick={() => openTool(f.tool)}
-            className="text-[12px] text-zinc-500 hover:text-white underline underline-offset-2 decoration-white/20 transition-colors"
+            className="inline-flex min-h-11 items-center text-[12px] text-zinc-500 hover:text-white underline underline-offset-2 decoration-white/20 transition-colors"
           >
             {f.label}
           </button>
@@ -72,7 +72,7 @@ export function HubPlain({ state, on, openTool }: {
           get out of this page without reading anything first. */}
       <button
         onClick={() => openTool("help")}
-        className="mt-2 text-[12px] text-zinc-500 hover:text-white underline underline-offset-2 decoration-white/20 transition-colors"
+        className="mt-2 inline-flex min-h-11 items-center text-[12px] text-zinc-500 hover:text-white underline underline-offset-2 decoration-white/20 transition-colors"
       >
         {PLAIN.helpLink}
       </button>

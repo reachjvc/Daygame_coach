@@ -608,7 +608,7 @@ describe("the count", () => {
   })
 
   it("bands a substance count on the conventional thresholds", () => {
-    let state = drinking()
+    const state = drinking()
     expect(criteriaBand(state)?.label).toBe("under two")
 
     const ids = ["more", "cutdown", "time", "craving", "roles", "social"]

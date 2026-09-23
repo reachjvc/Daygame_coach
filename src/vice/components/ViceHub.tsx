@@ -68,7 +68,7 @@ export function ViceHub() {
         <BackLink
           fallback={LIFE_MASTERY}
           fallbackLabel="Life Mastery"
-          className="inline-flex items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors"
+          className="inline-flex min-h-11 items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors"
         />
 
         {/* Three front doors over one state. Everything below the switcher is
@@ -94,14 +94,14 @@ export function ViceHub() {
           <div className="grid gap-2 sm:grid-cols-2">
             <button
               onClick={() => setTool("urge")}
-              className="rounded-xl border border-violet-400/40 bg-violet-500/10 p-3.5 text-left hover:bg-violet-500/15 transition-colors"
+              className="min-h-11 rounded-xl border border-violet-400/40 bg-violet-500/10 p-3.5 text-left hover:bg-violet-500/15 transition-colors"
             >
               <span className="block text-[14px] font-medium text-violet-100">An urge, right now</span>
               <span className="block text-[11px] text-violet-200/60 mt-0.5 leading-snug">Ninety seconds. Nothing to set up.</span>
             </button>
             <button
               onClick={() => setTool("lapse")}
-              className="rounded-xl border border-white/10 bg-white/[0.02] p-3.5 text-left hover:border-white/25 transition-colors"
+              className="min-h-11 rounded-xl border border-white/10 bg-white/[0.02] p-3.5 text-left hover:border-white/25 transition-colors"
             >
               <span className="block text-[14px] font-medium text-zinc-100">I just did it</span>
               <span className="block text-[11px] text-zinc-500 mt-0.5 leading-snug">No counter to reset. There is not one.</span>
@@ -161,7 +161,7 @@ export function ViceHub() {
           </div>
           <button
             onClick={() => setTool("help")}
-            className="mt-2 text-[12px] text-zinc-500 hover:text-white underline underline-offset-2 decoration-white/20 transition-colors"
+            className="mt-2 inline-flex min-h-11 items-center text-[12px] text-zinc-500 hover:text-white underline underline-offset-2 decoration-white/20 transition-colors"
           >
             If this is past what a page can do — who to ring, and what treatment actually is
           </button>

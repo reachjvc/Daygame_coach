@@ -59,7 +59,7 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
                         <button
                           key={item.id}
                           onClick={() => openTool(item.tool as ViceToolId)}
-                          className="block w-full rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5 text-left text-[13.5px] text-zinc-200 hover:border-violet-400/40 transition-colors"
+                          className="block min-h-11 w-full rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5 text-left text-[13.5px] text-zinc-200 hover:border-violet-400/40 transition-colors"
                         >
                           {item.label}
                         </button>
@@ -70,7 +70,7 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
                         <Link
                           key={item.id}
                           href={item.href}
-                          className="block rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5 text-[13.5px] text-zinc-200 hover:border-violet-400/40 transition-colors"
+                          className="flex min-h-11 items-center rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5 text-[13.5px] text-zinc-200 hover:border-violet-400/40 transition-colors"
                         >
                           {item.label}
                         </Link>
@@ -81,7 +81,7 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
                         <Link
                           key={item.id}
                           href={viceStep(item.flow as ViceFlowId)}
-                          className="block rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5 text-[13.5px] text-zinc-200 hover:border-violet-400/40 transition-colors"
+                          className="flex min-h-11 items-center rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5 text-[13.5px] text-zinc-200 hover:border-violet-400/40 transition-colors"
                         >
                           {item.label}
                         </Link>
@@ -95,7 +95,7 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
                         <button
                           onClick={() => setShowFlows((v) => !v)}
                           aria-expanded={showFlows}
-                          className="block w-full rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5 text-left text-[13.5px] text-zinc-200 hover:border-violet-400/40 transition-colors"
+                          className="block min-h-11 w-full rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5 text-left text-[13.5px] text-zinc-200 hover:border-violet-400/40 transition-colors"
                         >
                           {item.label}
                         </button>
@@ -106,7 +106,7 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
                                 thought — and the shortest by a distance. */}
                             <Link
                               href={viceStep("shortlist")}
-                              className="block rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 hover:text-white hover:bg-white/[0.03] transition-colors"
+                              className="block min-h-11 rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 hover:text-white hover:bg-white/[0.03] transition-colors"
                             >
                               The short version
                               <span className="block text-[11px] text-zinc-500">
@@ -118,7 +118,7 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
                               <Link
                                 key={f.id}
                                 href={viceStep(f.id)}
-                                className="block rounded-lg px-2.5 py-2 text-[13px] text-zinc-300 hover:text-white hover:bg-white/[0.03] transition-colors"
+                                className="block min-h-11 rounded-lg px-2.5 py-2 text-[13px] text-zinc-300 hover:text-white hover:bg-white/[0.03] transition-colors"
                               >
                                 {f.label}
                                 <span className="block text-[11px] text-zinc-500">{f.forWho}</span>
@@ -138,7 +138,7 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
 
       <button
         onClick={() => openTool("help")}
-        className="mt-5 text-[12px] text-zinc-500 hover:text-white underline underline-offset-2 decoration-white/20 transition-colors"
+        className="mt-5 inline-flex min-h-11 items-center text-[12px] text-zinc-500 hover:text-white underline underline-offset-2 decoration-white/20 transition-colors"
       >
         {GUIDED.helpLink}
       </button>

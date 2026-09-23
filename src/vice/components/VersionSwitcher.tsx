@@ -22,7 +22,7 @@ export function VersionSwitcher({ version, onChange }: {
             aria-pressed={version === v.id}
             title={v.forWho}
             onClick={() => onChange(v.id)}
-            className={`text-[11.5px] px-2.5 py-1 rounded-full border transition-colors ${
+            className={`inline-flex min-h-11 items-center text-[11.5px] px-3 rounded-full border transition-colors ${
               version === v.id
                 ? "border-violet-400/50 bg-violet-500/15 text-violet-100"
                 : "border-white/10 text-zinc-500 hover:border-white/30 hover:text-zinc-300"
