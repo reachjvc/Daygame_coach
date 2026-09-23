@@ -63,6 +63,7 @@ import type {
   PrescribedExercise,
   PrescribedSet,
   ProgressionChange,
+  LiftRow,
   SessionPrescription,
   SetEntry,
   SetEntryProblem,
@@ -1845,6 +1846,148 @@ export function describeSets(exercise: PrescribedExercise, unitLabel: string): s
   }
   return (
     sets.map((s) => (bodyweight ? repsOf(s) : `${weightOf(s)} × ${repsOf(s)}`)).join(", ") + side
+  )
+}
+
+/**
+ * THE SLOT A SET OCCUPIES — one derivation, mirroring the database's.
+ *
+ * `uq_workout_sets_slot` is `(log_id, COALESCE(exercise_id, exercise),
+ * set_kind, set_number, COALESCE(side, ''))`. This is that expression in
+ * TypeScript, and it existed in three places: the offline queue keyed its
+ * retries by it, `completeSet` decided "correct this set" rather than "add a
+ * second one" by it, and the live screen matched a ticked set to its row by
+ * NUMBER alone — which is not the same rule, and is why a warm-up set 1 and a
+ * working set 1 fought over one row.
+ *
+ * Three copies of the uniqueness rule means a fourth caller getting it subtly
+ * wrong and writing a duplicate the index then refuses, mid-workout.
+ */
+export function setSlot(set: {
+  exerciseId: string | null
+  exercise: string
+  kind: string
+  setNumber: number
+  side?: string | null
+}): string {
+  return `${set.exerciseId ?? set.exercise}|${set.kind}|${set.setNumber}|${set.side ?? ""}`
+}
+
+/** Warm-ups first, then the working sets, then what came off the end. */
+const KIND_ORDER: Record<string, number> = {
+  warmup: 0,
+  working: 1,
+  amrap: 1,
+  backoff: 2,
+  drop: 3,
+}
+
+/** `W` for a warm-up, `D` for a drop set, the slot number otherwise. */
+export function setLabel(kind: string, setNumber: number): string {
+  if (kind === "warmup") return `W${setNumber}`
+  if (kind === "drop") return `D${setNumber}`
+  return String(setNumber)
+}
+
+/**
+ * THE ROWS OF ONE LIFT — SLOTS, NOT POSITIONS.
+ *
+ * The screen used to render "however many sets were prescribed" and find the
+ * set for each row with `setNumber === n && kind !== "warmup"`. Three things
+ * that breaks:
+ *
+ *  - a warm-up set 1 and a working set 1 are two different slots in the
+ *    database and had one row on screen, so ticking the warm-up made the
+ *    working row look done;
+ *  - re-tagging a ticked working set as a warm-up left the working slot
+ *    occupied on screen, so the program's fifth set had nowhere to go and the
+ *    finish sheet counted it as done;
+ *  - a set ticked into a slot nobody prescribed (a drop set, a set logged on
+ *    another device) had no row at all and was invisible.
+ *
+ * So the rows ARE the slots: every prescribed working slot, plus every set
+ * already ticked that no prescribed slot claims, plus whatever extra rows this
+ * phone has revealed. `local.kinds` re-tags an untouched row before it is
+ * ticked — the choice travels with the tick, and the moment it lands the set
+ * belongs to the slot it was tagged into and the prescribed row comes back
+ * empty.
+ */
+export function liftRows(
+  ex: Pick<PrescribedExercise, "exerciseId" | "sets">,
+  ticked: readonly LiveWorkoutSet[],
+  local: {
+    /** Extra working rows revealed by "+ Add a set". */
+    extra?: number
+    /** A row's chosen kind before it is ticked, keyed by the row's own slot. */
+    kinds?: Record<string, LiveWorkoutSet["kind"]>
+    /** Rows swiped away on this phone, keyed by slot. Never a ticked set. */
+    hidden?: readonly string[]
+  } = {}
+): LiftRow[] {
+  const hidden = new Set(local.hidden ?? [])
+  const rows: LiftRow[] = []
+  const claimed = new Set<string>()
+  const slotOf = (kind: string, setNumber: number, side: string | null = null) =>
+    setSlot({ exerciseId: ex.exerciseId, exercise: ex.exerciseId, kind, setNumber, side })
+
+  const prescribedCount = ex.sets.length + (local.extra ?? 0)
+  const last = ex.sets[ex.sets.length - 1]
+  for (let i = 0; i < prescribedCount; i++) {
+    const spec = ex.sets[i] ?? (last ? { ...last, setNumber: i + 1 } : null)
+    const setNumber = i + 1
+    const baseKind: LiveWorkoutSet["kind"] = spec?.amrap ? "amrap" : "working"
+    const rowSlot = slotOf(baseKind, setNumber)
+    if (hidden.has(rowSlot)) continue
+    // The kind this row will be written as: what you chose, else the
+    // prescription's own.
+    const kind = local.kinds?.[rowSlot] ?? baseKind
+    const filledSlot = slotOf(kind, setNumber)
+    const done = ticked.find((set) => setSlot(set) === filledSlot) ?? null
+    if (done) claimed.add(done.id)
+    rows.push({
+      slot: rowSlot,
+      kind,
+      setNumber,
+      side: null,
+      /**
+       * A ROW YOU HAVE RE-TAGGED HAS NO PRESCRIPTION ANY MORE. The program
+       * asked for 100 kg × 5 as a WORKING set; carrying that number into a
+       * warm-up or a drop set would be the app inventing a prescription
+       * nobody wrote — and 100 kg pre-filled in a warm-up box is the number
+       * you are least likely to want and most likely to tick by accident.
+       */
+      prescribed: kind === baseKind ? spec : null,
+      // Only a working row has a "last time" to show: there is no honest
+      // previous for a warm-up you decided to add today.
+      workingIndex: KIND_ORDER[kind] === 1 ? setNumber : null,
+      done,
+    })
+  }
+
+  /**
+   * EVERY SET THAT IS ALREADY A FACT GETS A ROW, even one no prescribed slot
+   * claims — a warm-up, a drop set, a set ticked on another device. It is in
+   * the database and in the totals; leaving it off the screen would be the
+   * screen disagreeing with the receipt.
+   */
+  for (const set of ticked) {
+    if (claimed.has(set.id)) continue
+    rows.push({
+      slot: setSlot(set),
+      kind: set.kind,
+      setNumber: set.setNumber,
+      side: set.side,
+      prescribed: null,
+      workingIndex: null,
+      done: set,
+    })
+  }
+
+  return rows.sort(
+    (a, b) =>
+      (KIND_ORDER[a.kind] ?? 9) - (KIND_ORDER[b.kind] ?? 9) ||
+      a.setNumber - b.setNumber ||
+      (a.side ?? "").localeCompare(b.side ?? "")
   )
 }
 

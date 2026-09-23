@@ -45,6 +45,14 @@ export interface QueuedSet {
   setNumber: number
   kind: LiveWorkoutSet["kind"]
   side: "left" | "right" | null
+  /**
+   * How hard it was, if it was said BEFORE the tick.
+   *
+   * On the queued set rather than patched afterwards, because a set ticked
+   * with no signal is written when the signal comes back — and a second
+   * request to add the effort would have nothing to attach it to until then.
+   */
+  rpe?: number | null
   /** Local time it was ticked, so the flush replays them in order. */
   at: number
 }
@@ -322,7 +330,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
               kind: item.kind,
               prescribedIndex: null,
               completedAt: new Date(item.at).toISOString(),
-              rpe: null,
+              rpe: item.rpe ?? null,
               side: item.side,
             },
           ].sort((a, b) => a.setNumber - b.setNumber),
@@ -400,6 +408,57 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
       }
     },
     [workout, applyServer]
+  )
+
+  /**
+   * CORRECT A SET THAT IS ALREADY WRITTEN — its kind, or what it cost.
+   *
+   * One request for both, because they are one PATCH on one row. Not queued
+   * offline: unlike a tick, nothing is lost by failing loudly here — the set
+   * itself is safe, and only the correction has to be made again.
+   */
+  const patchSet = useCallback(
+    async (setId: string, patch: { kind?: LiveWorkoutSet["kind"]; rpe?: number }) => {
+      if (!workout) return
+      /**
+       * An unconfirmed set has no row to patch. Its id is `pending:<slot>` and
+       * sending that asks Postgres to cast it to a UUID — which is how undoing
+       * an unsaved set used to 400 silently. The row's local choice is the one
+       * that travels with the tick; this is only for sets the server has.
+       */
+      if (setId.startsWith("pending:")) {
+        setError("That set has not reached the server yet — it will carry your change when it does.")
+        return
+      }
+      const seq = ++issued.current
+      try {
+        const res = await fetch(`/api/workouts/${workout.id}/sets/${setId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(patch),
+        })
+        if (res.ok) {
+          applyServer(seq, (await res.json()) as LiveWorkout)
+          setError(null)
+          return
+        }
+        // The server's own sentence: it names the set that is in the way.
+        const body = (await res.json().catch(() => null)) as { error?: string } | null
+        setError(body?.error ?? "That set could not be changed.")
+      } catch {
+        setError("Could not reach the server, so that set is unchanged.")
+      }
+    },
+    [workout, applyServer]
+  )
+
+  const retagSet = useCallback(
+    (setId: string, kind: LiveWorkoutSet["kind"]) => patchSet(setId, { kind }),
+    [patchSet]
+  )
+  const rateSet = useCallback(
+    (setId: string, rpe: number) => patchSet(setId, { rpe }),
+    [patchSet]
   )
 
   const adjust = useCallback(
@@ -636,6 +695,8 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     busy,
     tick,
     removeSet,
+    retagSet,
+    rateSet,
     adjust,
     finish,
     discard,

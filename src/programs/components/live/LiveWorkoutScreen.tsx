@@ -37,6 +37,7 @@ import { canBeUnweighted } from "../../data/exerciseLibrary"
 import { SetRow } from "./SetRow"
 import { RestBar } from "./RestBar"
 import { LiftMenu } from "./LiftMenu"
+import { SetMenu } from "./SetMenu"
 import type { MissRule } from "../../types"
 import { FinishSheet } from "./FinishSheet"
 import { AddLift } from "./AddLift"
@@ -52,9 +53,12 @@ import {
   enduranceMinutes,
   isStaleWorkout,
   fixedRowsToTick,
+  liftRows,
+  setLabel,
 } from "../../programsService"
 import { REST_SECONDS, UNIT_CONFIG } from "../../config"
 import type {
+  LiftRow,
   LiveWorkout,
   LiveWorkoutSet,
   PlateSetup,
@@ -120,13 +124,30 @@ export function LiveWorkoutScreen({
   const [finished, setFinished] = useState<LiveWorkout | null>(null)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   /**
-   * Extra set rows revealed by "+ one more set", per lift.
+   * Extra set rows revealed by "+ Add a set", per lift.
    *
    * Not stored anywhere: once a row is ticked it IS a set, and the row count is
    * derived from the sets on the workout. This only decides how many EMPTY rows
    * are showing, which nobody needs to survive a reload.
    */
   const [extraRows, setExtraRows] = useState<Record<string, number>>({})
+  /**
+   * WHICH SET'S MENU IS OPEN — the slot, not the number, because a warm-up
+   * set 1 and a working set 1 are two rows on one lift.
+   */
+  const [openSet, setOpenSet] = useState<string | null>(null)
+  /**
+   * What an untouched row has been told it is, and what it cost, before it is
+   * ticked. Keyed by the row's own slot.
+   *
+   * Held here rather than written anywhere: there is no row in the database to
+   * patch yet. It travels with the tick, and the entry is dropped once the set
+   * exists, so the empty row that comes back is a fresh row again.
+   */
+  const [rowKinds, setRowKinds] = useState<Record<string, LiveWorkoutSet["kind"]>>({})
+  const [rowEffort, setRowEffort] = useState<Record<string, number>>({})
+  /** Rows swiped away on this phone. Never a set that exists. */
+  const [hiddenRows, setHiddenRows] = useState<string[]>([])
 
   const workout = live.workout
   /** Working sets actually ticked — what a discard would throw away. */
@@ -265,29 +286,20 @@ export function LiveWorkoutScreen({
   }
 
   /**
-   * The set rows to show for a lift.
+   * The rows of one lift, which are SLOTS and not positions.
    *
-   * MORE THAN THE PLAN ASKED FOR IS STILL WHAT YOU DID. The screen rendered
-   * exactly the prescribed sets, so a sixth set had nowhere to go and a lift
-   * added on the day had no rows at all. The count is the prescription, widened
-   * to cover any set already ticked beyond it, plus whatever "+ one more set"
-   * has revealed.
+   * This used to render "as many rows as were prescribed" and find each row's
+   * set with `setNumber === n && kind !== "warmup"` — a different rule from
+   * the database's, which is why a warm-up set 1 marked the working row done
+   * and a set ticked into an unprescribed slot had no row at all. `liftRows`
+   * is that rule, and it is pure and tested.
    */
-  const rowsFor = (ex: PrescribedExercise) => {
-    const done = doneByLift.get(ex.exerciseId) ?? []
-    const highestTicked = done.reduce((n, s) => Math.max(n, s.setNumber), 0)
-    /**
-     * The two terms overlap, and adding them was wrong: with three prescribed
-     * sets and one extra revealed, ticking that fourth set made `highestTicked`
-     * 4 and produced a FIFTH empty row — and another one for every set after.
-     * The count is whichever is larger, never the sum.
-     */
-    const count = Math.max(ex.sets.length + (extraRows[ex.exerciseId] ?? 0), highestTicked)
-    const last = ex.sets[ex.sets.length - 1]
-    return Array.from({ length: count }, (_, i) =>
-      ex.sets[i] ?? { ...(last ?? { weight: 0, reps: 0 }), setNumber: i + 1 }
-    )
-  }
+  const rowsFor = (ex: PrescribedExercise): LiftRow[] =>
+    liftRows(ex, doneByLift.get(ex.exerciseId) ?? [], {
+      extra: extraRows[ex.exerciseId] ?? 0,
+      kinds: rowKinds,
+      hidden: hiddenRows,
+    })
 
   /** The last lift of a superset pair — the one the rest belongs after. */
   const isLastOfGroup = (ex: PrescribedExercise, i: number) => {
@@ -363,7 +375,6 @@ export function LiveWorkoutScreen({
         )}
 
         {exercises.map((ex, i) => {
-          const done = doneByLift.get(ex.exerciseId) ?? []
           const isSkipped = skipped.has(ex.exerciseId)
           const previous = lastTime[ex.exerciseId] ?? []
           /**
@@ -374,9 +385,17 @@ export function LiveWorkoutScreen({
            * reading "our suggestion".
            */
           const rest = restTargetFor(ex, workout?.adjustments)
+          const rows = rowsFor(ex)
+          /**
+           * The rows already know which slots are filled, so nothing is
+           * excluded by NUMBER here any more — that was the comparison that
+           * let a warm-up set 1 stand in for working set 1.
+           */
           const fixedToTick = fixedRowsToTick(
-            rowsFor(ex),
-            new Set(done.filter((s) => s.kind !== "warmup").map((s) => s.setNumber))
+            rows
+              .filter((row) => row.done === null && row.prescribed !== null)
+              .map((row) => ({ ...row.prescribed!, slot: row.slot, kind: row.kind })),
+            new Set<number>()
           )
 
           return (
@@ -450,10 +469,12 @@ export function LiveWorkoutScreen({
                   lifters use captions the row once at the top and leaves the
                   rows as numbers, which is what makes a column scannable.
                 */}
-                {!isSkipped && rowsFor(ex).length > 0 && (
-                  <div className="grid grid-cols-[1.75rem_4.5rem_1fr_1fr_2.75rem] items-center gap-2 px-1 pb-0.5 text-[11px] uppercase tracking-wider text-muted-foreground">
+                {!isSkipped && rows.length > 0 && (
+                  <div className="grid grid-cols-[2.75rem_4.5rem_1fr_1fr_2.75rem] items-center gap-2 px-1 pb-0.5 text-[11px] uppercase tracking-wider text-muted-foreground">
                     <span>Set</span>
-                    <span>Last</span>
+                    {/* PREVIOUS, the name every tracker lifters use gives it.
+                        "Last" was shorter than the column it captioned. */}
+                    <span>Previous</span>
                     <span>{unitLabel}</span>
                     <span>Reps</span>
                     <span aria-hidden />
@@ -461,83 +482,163 @@ export function LiveWorkoutScreen({
                 )}
 
                 {!isSkipped &&
-                  rowsFor(ex).map((set, index) => {
-                    const ticked = done.find((s) => s.setNumber === set.setNumber && s.kind !== "warmup")
+                  rows.map((row) => {
+                    const ticked = row.done ?? undefined
+                    const label = setLabel(row.kind, row.setNumber)
+                    /**
+                     * PREVIOUS BELONGS TO A WORKING SET. There is no honest
+                     * "last time" for a warm-up you decided to add today, and
+                     * printing the working set's numbers there would suggest
+                     * one.
+                     */
+                    const last =
+                      row.workingIndex === null
+                        ? null
+                        : (previous[row.workingIndex - 1] ??
+                          previous[previous.length - 1] ??
+                          null)
                     return (
-                      <SetRow
-                        key={set.setNumber}
-                        setNumber={set.setNumber}
-                        prescribed={{
-                          weight: set.weight,
-                          reps: set.reps,
-                          repRangeMax: set.repRangeMax,
-                          amrap: set.amrap,
-                        }}
-                        previous={previous[index] ?? previous[previous.length - 1] ?? null}
-                        done={ticked}
-                        /**
-                         * A set the server has not confirmed still carries the
-                         * optimistic id it was given on screen. Saying so on
-                         * the row itself matters more than the count at the
-                         * bottom: it names WHICH set is at risk.
-                         */
-                        unsaved={ticked?.id.startsWith("pending:")}
-                        unitLabel={unitLabel}
-                        repUnit={ex.repUnit ?? "reps"}
-                        bodyweight={ex.bodyweight}
-                        unweightedOk={ex.unweightedOk ?? canBeUnweighted(undefined, ex.name)}
-                        onTick={(weight, reps) => {
-                          const saving = live.tick({
-                            exerciseId: ex.exerciseId,
-                            exercise: ex.name,
-                            weight,
-                            reps,
-                            setNumber: set.setNumber,
-                            kind: set.amrap ? "amrap" : "working",
-                            side: null,
-                          })
+                      /*
+                        KEYED BY THE SLOT IT WRITES TO, kind included.
+                        Re-tagging a row changes where it will be written, so
+                        it is a different row — and the numbers in its boxes
+                        were prescribed for a working set. React only runs a
+                        row's initial state once, so without the kind in the
+                        key a row tagged as a warm-up kept 100 kg pre-filled.
+                      */
+                      <div key={`${row.slot}|${row.kind}`}>
+                        <SetRow
+                          setNumber={row.setNumber}
+                          kind={row.kind}
+                          prescribed={{
+                            weight: row.prescribed?.weight ?? 0,
+                            reps: row.prescribed?.reps ?? 0,
+                            repRangeMax: row.prescribed?.repRangeMax,
+                            amrap: row.prescribed?.amrap,
+                          }}
+                          previous={last}
+                          done={ticked}
                           /**
-                           * THE CLOCK STARTS ON THE TAP, not on the reply.
-                           * Waiting for the round trip starts it late on gym
-                           * wifi and, with no signal at all, not until the
-                           * request gives up — so the rest you actually took
-                           * is not the rest it counted.
-                           *
-                           * Only after the second lift of a superset pair.
+                           * A set the server has not confirmed still carries the
+                           * optimistic id it was given on screen. Saying so on
+                           * the row itself matters more than the count at the
+                           * bottom: it names WHICH set is at risk.
                            */
-                          /**
-                           * NO REST CLOCK ON A SESSION THAT ALREADY HAPPENED.
-                           * Ticking Tuesday's third set on Thursday must not
-                           * start a 90-second timer.
-                           */
-                          const startedAt = !past && isLastOfGroup(ex, i) ? Date.now() : null
-                          if (startedAt !== null) {
-                            // The hook owns the clock, and writes it to
-                            // storage — so a phone that locks and reloads
-                            // between sets comes back still counting.
-                            live.startRest(ex.exerciseId, rest.seconds, rest.ours)
-                          }
-                          void saving.then((outcome) => {
-                            if (startedAt === null || outcome !== "refused") return
+                          unsaved={ticked?.id.startsWith("pending:")}
+                          unitLabel={unitLabel}
+                          repUnit={ex.repUnit ?? "reps"}
+                          bodyweight={ex.bodyweight}
+                          unweightedOk={ex.unweightedOk ?? canBeUnweighted(undefined, ex.name)}
+                          onOpenMenu={() => setOpenSet(row.slot)}
+                          onTick={(weight, reps) => {
+                            const saving = live.tick({
+                              exerciseId: ex.exerciseId,
+                              exercise: ex.name,
+                              weight,
+                              reps,
+                              setNumber: row.setNumber,
+                              // The row's own kind: what the program asked for,
+                              // or what you told this row it was before ticking
+                              // it.
+                              kind: row.kind,
+                              side: row.side,
+                              // What it cost, if you said so before ticking.
+                              rpe: rowEffort[row.slot] ?? null,
+                            })
                             /**
-                             * Cleared only if it is still THIS set's clock.
+                             * THE CLOCK STARTS ON THE TAP, not on the reply.
+                             * Waiting for the round trip starts it late on gym
+                             * wifi and, with no signal at all, not until the
+                             * request gives up — so the rest you actually took
+                             * is not the rest it counted.
                              *
-                             * There is nothing to rest from after a refused
-                             * set — but clearing unconditionally took the wrong
-                             * one: tick set 1, tick set 2, and set 1's refusal
-                             * arrives second, wiping the rest you had just
-                             * started on set 2. The instant is the clock's
-                             * identity, so a late answer can only clear its own.
+                             * Only after the second lift of a superset pair.
                              */
-                            // Only if it is still THIS set's clock. The
-                            // comparison is inside the hook: out here, `live`
-                            // is a render old and would compare against the
-                            // state from before the clock started.
-                            live.dismissRestStartedAt(startedAt)
-                          })
-                        }}
-                        onUndo={ticked ? () => void live.removeSet(ticked.id) : undefined}
-                      />
+                            /**
+                             * NO REST CLOCK ON A SESSION THAT ALREADY HAPPENED.
+                             * Ticking Tuesday's third set on Thursday must not
+                             * start a 90-second timer.
+                             */
+                            const startedAt = !past && isLastOfGroup(ex, i) ? Date.now() : null
+                            if (startedAt !== null) {
+                              // The hook owns the clock, and writes it to
+                              // storage — so a phone that locks and reloads
+                              // between sets comes back still counting.
+                              live.startRest(ex.exerciseId, rest.seconds, rest.ours)
+                            }
+                            void saving.then((outcome) => {
+                              /**
+                               * THE ROW'S LOCAL CHOICES ARE SPENT. They were a
+                               * stand-in for a database row that now exists,
+                               * and the empty prescribed row that comes back in
+                               * their place must be a fresh row — not one still
+                               * insisting it is a warm-up.
+                               */
+                              if (outcome === "saved" || outcome === "queued") {
+                                setRowKinds((k) => {
+                                  if (k[row.slot] === undefined) return k
+                                  const next = { ...k }
+                                  delete next[row.slot]
+                                  return next
+                                })
+                                setRowEffort((r) => {
+                                  if (r[row.slot] === undefined) return r
+                                  const next = { ...r }
+                                  delete next[row.slot]
+                                  return next
+                                })
+                              }
+                              if (startedAt === null || outcome !== "refused") return
+                              /**
+                               * Cleared only if it is still THIS set's clock.
+                               *
+                               * There is nothing to rest from after a refused
+                               * set — but clearing unconditionally took the wrong
+                               * one: tick set 1, tick set 2, and set 1's refusal
+                               * arrives second, wiping the rest you had just
+                               * started on set 2. The instant is the clock's
+                               * identity, so a late answer can only clear its own.
+                               */
+                              // Only if it is still THIS set's clock. The
+                              // comparison is inside the hook: out here, `live`
+                              // is a render old and would compare against the
+                              // state from before the clock started.
+                              live.dismissRestStartedAt(startedAt)
+                            })
+                          }}
+                          onUndo={ticked ? () => void live.removeSet(ticked.id) : undefined}
+                        />
+
+                        {/* THE SET'S OWN MENU: what kind it was, what it cost,
+                            and taking it away. Three facts that had nowhere to
+                            live while the number was a caption. */}
+                        <SetMenu
+                          open={openSet === row.slot}
+                          onClose={() => setOpenSet(null)}
+                          label={`Set ${label}`}
+                          kind={row.kind}
+                          rpe={ticked?.rpe ?? rowEffort[row.slot] ?? null}
+                          ticked={Boolean(ticked)}
+                          onKind={(kind) => {
+                            if (kind === row.kind) return
+                            // A set that exists is re-tagged on the server, so
+                            // the correction survives the phone; an untouched
+                            // row has nothing to patch and carries its choice
+                            // to the tick.
+                            if (ticked) void live.retagSet(ticked.id, kind)
+                            else setRowKinds((k) => ({ ...k, [row.slot]: kind }))
+                          }}
+                          onRpe={(rpe) => {
+                            if (ticked) void live.rateSet(ticked.id, rpe)
+                            else setRowEffort((r) => ({ ...r, [row.slot]: rpe }))
+                          }}
+                          onDelete={() => {
+                            setOpenSet(null)
+                            if (ticked) void live.removeSet(ticked.id)
+                            else setHiddenRows((h) => [...h, row.slot])
+                          }}
+                        />
+                      </div>
                     )
                   })}
 
@@ -573,33 +674,25 @@ export function LiveWorkoutScreen({
                   </button>
                 )}
 
+                {/*
+                  ONE BUTTON, BECAUSE THE OTHER ONE HAS A BETTER DOOR NOW.
+                  "one fewer" existed only to take back a row this button had
+                  revealed, and it could not touch a row the program had asked
+                  for. The set menu's own Delete removes either, from the row
+                  you are actually looking at, which is where somebody reaches
+                  for it.
+                */}
                 {!isSkipped && (
-                  <div className="flex items-center gap-2 pt-0.5">
-                    <button
-                      type="button"
-                      data-testid={`add-set-${ex.exerciseId}`}
-                      onClick={() =>
-                        setExtraRows((r) => ({ ...r, [ex.exerciseId]: (r[ex.exerciseId] ?? 0) + 1 }))
-                      }
-                      className="min-h-11 rounded-md border border-dashed border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                    >
-                      + one more set
-                    </button>
-                    {(extraRows[ex.exerciseId] ?? 0) > 0 && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setExtraRows((r) => ({
-                            ...r,
-                            [ex.exerciseId]: Math.max(0, (r[ex.exerciseId] ?? 0) - 1),
-                          }))
-                        }
-                        className="min-h-11 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent"
-                      >
-                        one fewer
-                      </button>
-                    )}
-                  </div>
+                  <button
+                    type="button"
+                    data-testid={`add-set-${ex.exerciseId}`}
+                    onClick={() =>
+                      setExtraRows((r) => ({ ...r, [ex.exerciseId]: (r[ex.exerciseId] ?? 0) + 1 }))
+                    }
+                    className="min-h-11 w-full rounded-md border border-dashed border-border px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  >
+                    + Add a set
+                  </button>
                 )}
 
                 {!isSkipped && !ex.bodyweight && !addedIds.has(ex.exerciseId) && ex.sets[0]?.weight ? (

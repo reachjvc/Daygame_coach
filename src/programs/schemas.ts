@@ -321,6 +321,28 @@ export const CompleteSetSchema = z.object({
   rpe: z.number().int().min(1).max(10).nullable().optional(),
 })
 
+/**
+ * CHANGING A SET THAT IS ALREADY WRITTEN — its kind, or how hard it was.
+ *
+ * Both fields are optional and at least one has to be there: a PATCH with
+ * neither is a request that means nothing, and answering it 200 would say
+ * something was changed.
+ *
+ * RPE IS BOUNDED BY THE COLUMN, NOT BY THE SLIDER. `workout_sets.rpe` is a
+ * SMALLINT with `CHECK (rpe >= 1 AND rpe <= 10)`, and that is what a request
+ * may contain. The slider offers 6–10 because an RPE below 6 on a logged
+ * working set is not a distinction anybody makes — that is a choice about what
+ * to ask for, and it does not belong in the rule about what can be stored.
+ */
+export const UpdateSetSchema = z
+  .object({
+    kind: z.enum(["warmup", "working", "amrap", "backoff", "drop"]).optional(),
+    rpe: z.number().int("Effort is a whole number from 1 to 10.").min(1).max(10).nullable().optional(),
+  })
+  .refine((body) => body.kind !== undefined || body.rpe !== undefined, {
+    message: "Nothing to change on that set.",
+  })
+
 export const AdjustWorkoutSchema = z.object({
   /**
    * Fifteen seconds is not a rest and ten minutes is a different workout.

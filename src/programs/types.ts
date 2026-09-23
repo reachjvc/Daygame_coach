@@ -1337,3 +1337,25 @@ export interface LiftSessions {
     kind: string
   }>
 }
+
+/**
+ * ONE ROW OF ONE LIFT, on the screen you are standing in front of.
+ *
+ * A row is a SLOT — a kind, a number and a side — because that is what the
+ * database's uniqueness rule is. The screen used to treat a row as a position
+ * in a list and find its set by number alone, so a warm-up set 1 and a working
+ * set 1 shared one row and fought over it.
+ */
+export interface LiftRow {
+  /** The row's own identity: the slot it would write to if untouched. */
+  slot: string
+  kind: LiveWorkoutSet["kind"]
+  setNumber: number
+  side: "left" | "right" | null
+  /** What the program asks for here. Null for a set nobody prescribed. */
+  prescribed: PrescribedSet | null
+  /** Which working set this is, for the PREVIOUS column. Null for warm-ups. */
+  workingIndex: number | null
+  /** The set already ticked into this slot. */
+  done: LiveWorkoutSet | null
+}

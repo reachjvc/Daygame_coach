@@ -42,6 +42,7 @@ import {
   isSessionOf,
   loadStyleOf,
   pickLastSets,
+  setSlot,
   sessionTypeFor,
   toKg,
   fromKg,
@@ -464,16 +465,73 @@ export async function completeSet(
    * still cannot write one slot twice) and PostgREST's `onConflict` can only
    * name plain columns.
    */
-  const slot = (s: { exerciseId: string | null; exercise: string; kind: string; setNumber: number; side: string | null }) =>
-    `${s.exerciseId ?? s.exercise}|${s.kind}|${s.setNumber}|${s.side ?? ""}`
-  const key = slot({ exerciseId: set.exerciseId, exercise: set.exercise, kind, setNumber: set.setNumber, side })
-  const existing = live.sets.find((s) => slot(s) === key)
+  const key = setSlot({ exerciseId: set.exerciseId, exercise: set.exercise, kind, setNumber: set.setNumber, side })
+  const existing = live.sets.find((s) => setSlot(s) === key)
 
   const { error } = existing
     ? await supabase.from("workout_sets").update(row).eq("id", existing.id).eq("log_id", workoutId)
     : await supabase.from("workout_sets").insert({ ...row, log_id: workoutId })
   if (error) throw new Error(`Could not save that set: ${error.message}`)
   return (await getLiveWorkout(userId))!
+}
+
+/**
+ * RE-TAG A SET THAT IS ALREADY WRITTEN, or say how hard it was.
+ *
+ * A set gets logged as "working" because that is what the row it was ticked in
+ * was for, and then turns out to have been a warm-up, or a drop set taken off
+ * the end. Until now the only way to correct that was to delete the set and
+ * tick it again somewhere else — losing its time, and its place in the order.
+ *
+ * THE COLLISION IS CHECKED BEFORE THE WRITE, in a sentence.
+ * `uq_workout_sets_slot` means a lift can hold only one warm-up set 1; tagging
+ * a second one lands on Postgres's own complaint about a unique index, which
+ * is not a sentence anybody can act on. The one it gets instead names both
+ * sets and what to do about it.
+ */
+export async function updateSet(
+  userId: string,
+  workoutId: string,
+  setId: string,
+  patch: { kind?: LiveWorkoutSet["kind"]; rpe?: number | null }
+): Promise<LiveWorkout> {
+  const live = await requireLive(userId, workoutId)
+  const set = live.sets.find((s) => s.id === setId)
+  if (!set) throw new Error("That set is not part of this workout.")
+
+  const row: Record<string, unknown> = {}
+  if (patch.rpe !== undefined) row.rpe = patch.rpe
+  if (patch.kind !== undefined && patch.kind !== set.kind) {
+    const target = setSlot({ ...set, kind: patch.kind })
+    const clash = live.sets.find((s) => s.id !== setId && setSlot(s) === target)
+    if (clash) {
+      throw new Error(
+        `${set.exercise} already has a ${KIND_WORDS[patch.kind]} set ${set.setNumber} — delete one of them first.`
+      )
+    }
+    row.set_kind = patch.kind
+  }
+  // Nothing to change is not an error and not a write: the schema refuses an
+  // empty patch, and re-tagging a set as what it already is lands here.
+  if (Object.keys(row).length === 0) return live
+
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase
+    .from("workout_sets")
+    .update(row)
+    .eq("id", setId)
+    .eq("log_id", workoutId)
+  if (error) throw new Error(`Could not change that set: ${error.message}`)
+  return (await getLiveWorkout(userId))!
+}
+
+/** How a set kind reads in a sentence a person has to act on. */
+const KIND_WORDS: Record<string, string> = {
+  warmup: "warm-up",
+  working: "working",
+  amrap: "all-out",
+  backoff: "back-off",
+  drop: "drop",
 }
 
 /** Remove a set. Did three, not four. */

@@ -15,7 +15,7 @@
 import { useEffect, useState } from "react"
 import { Check } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { formatLoad, readSetEntry } from "../../programsService"
+import { formatLoad, readSetEntry, setLabel } from "../../programsService"
 import { SET_LIMITS, setLimitSentence } from "../../schemas"
 import type { LiveWorkoutSet } from "../../types"
 
@@ -41,6 +41,13 @@ export interface SetRowProps {
   unsaved?: boolean
   onTick: (weight: number, reps: number) => void
   onUndo?: () => void
+  /**
+   * Open this set's own menu — warm-up / working / drop set, effort, delete.
+   *
+   * The number was a `span`, so those three facts had nowhere to live and a
+   * mis-tagged set could only be fixed by deleting it.
+   */
+  onOpenMenu?: () => void
 }
 
 export function SetRow({
@@ -56,6 +63,7 @@ export function SetRow({
   unsaved,
   onTick,
   onUndo,
+  onOpenMenu,
 }: SetRowProps) {
   /**
    * REPS PRE-FILL FROM LAST TIME, NOT FROM THE FLOOR OF THE RANGE.
@@ -92,7 +100,7 @@ export function SetRow({
   }, [done])
 
   const ticked = Boolean(done)
-  const label = kind === "warmup" ? `W${setNumber}` : String(setNumber)
+  const label = setLabel(kind, setNumber)
   const range = prescribed.repRangeMax ? `${prescribed.reps}–${prescribed.repRangeMax}` : null
 
   /**
@@ -119,12 +127,39 @@ export function SetRow({
 
   return (
     <div
-      data-testid={`set-row-${setNumber}`}
-      className={`grid grid-cols-[1.75rem_4.5rem_1fr_1fr_2.75rem] items-center gap-2 rounded-md px-1 py-1 ${
+      /**
+        IDENTIFIED BY ITS SLOT, NOT BY ITS NUMBER. A warm-up set 1 and a
+        working set 1 are two rows on one lift, and `set-row-1` twice is two
+        elements that cannot be told apart — by a test or by a screen reader.
+        For a working set the label IS the number, so nothing outside changed.
+      */
+      data-testid={`set-row-${label}`}
+      className={`grid grid-cols-[2.75rem_4.5rem_1fr_1fr_2.75rem] items-center gap-2 rounded-md px-1 py-1 ${
         ticked ? "bg-emerald-500/10" : ""
       }`}
     >
-      <span className="text-xs tabular-nums text-muted-foreground">{label}</span>
+      {/*
+        THE NUMBER IS A BUTTON, 44px, not an 18px caption.
+        Behind it: what kind of set this was, how hard it was, and deleting it.
+        Those three facts had nowhere to live, so a warm-up logged as a working
+        set stayed one — dragging the lift's average down and counting towards
+        whether the program's session was finished.
+      */}
+      {onOpenMenu ? (
+        <button
+          type="button"
+          data-testid={`set-menu-${label}`}
+          aria-label={`Set ${label} type`}
+          onClick={onOpenMenu}
+          className="flex h-11 w-11 items-center justify-center rounded-md text-sm tabular-nums text-muted-foreground transition-colors hover:bg-accent"
+        >
+          {label}
+        </button>
+      ) : (
+        <span className="flex h-11 w-11 items-center justify-center text-sm tabular-nums text-muted-foreground">
+          {label}
+        </span>
+      )}
 
       {/*
         PREVIOUS IS A COLUMN, and it is tappable.
@@ -166,7 +201,7 @@ export function SetRow({
           min={0}
           max={SET_LIMITS.weightMax}
           step="any"
-          aria-label={`Weight for set ${setNumber} in ${unitLabel}`}
+          aria-label={`Weight for set ${label} in ${unitLabel}`}
           /**
            * "+kg" on a lift you can do unweighted, because an empty box there
            * means "nothing added" rather than "not filled in yet".
@@ -186,7 +221,7 @@ export function SetRow({
         min={0}
         max={SET_LIMITS.repsMax}
         step={1}
-        aria-label={`${repWord} for set ${setNumber}`}
+        aria-label={`${repWord} for set ${label}`}
         placeholder={prescribed.amrap ? "max" : (range ?? (prescribed.reps ? String(prescribed.reps) : "reps"))}
         className="h-11 w-full sm:h-9"
         value={reps}
@@ -195,8 +230,8 @@ export function SetRow({
 
       <button
         type="button"
-        data-testid={`tick-${setNumber}`}
-        aria-label={ticked ? `Undo set ${setNumber}` : `Save set ${setNumber}`}
+        data-testid={`tick-${label}`}
+        aria-label={ticked ? `Undo set ${label}` : `Save set ${label}`}
         aria-pressed={ticked}
         disabled={!ticked && problem !== null}
         onClick={() => (ticked && onUndo ? onUndo() : onTick(entry.weight, entry.reps))}
