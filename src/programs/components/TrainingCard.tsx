@@ -42,7 +42,7 @@ import { enrollmentName } from "../data/catalog"
 import { trainingCardState, weekdayNameIn } from "../programsService"
 import { startWorkoutRequest } from "../hooks/useLiveWorkout"
 import { useTrainingDoor } from "../hooks/useTrainingDoor"
-import { LIVE_WORKOUT, PROGRAMS, withFrom, workoutReceipt } from "@/src/shared/trainingRoutes"
+import { LIVE_WORKOUT, PROGRAMS, programSession, withFrom, workoutReceipt } from "@/src/shared/trainingRoutes"
 import { WEEKDAY_SHORT } from "../config"
 import { toZonedDate } from "@/src/shared/dateUtils"
 import type { AlsoRunning, TrainingCardState, TrainingDoorFacts } from "../types"
@@ -76,7 +76,12 @@ function AlsoLine({ also }: { also: AlsoRunning[] }) {
         {due.map((a, i) => (
           <span key={a.enrollmentId}>
             {i > 0 && ", "}
-            <Link href={PROGRAMS} className="hover:underline">
+            {/* And the OTHER program's own session, for the same reason. */}
+            <Link
+              href={programSession(a.enrollmentId)}
+              data-testid={`also-running-${a.enrollmentId}`}
+              className="hover:underline"
+            >
               {a.todayLabel} · {a.name}
             </Link>
           </span>
@@ -86,7 +91,19 @@ function AlsoLine({ also }: { also: AlsoRunning[] }) {
   }
   return (
     <p className="text-sm text-muted-foreground">
-      Also running: {also.map((a) => a.name).join(", ")}
+      Also running:{" "}
+      {also.map((a, i) => (
+        <span key={a.enrollmentId}>
+          {i > 0 && ", "}
+          <Link
+            href={programSession(a.enrollmentId)}
+            data-testid={`also-running-${a.enrollmentId}`}
+            className="hover:underline"
+          >
+            {a.name}
+          </Link>
+        </span>
+      ))}
     </p>
   )
 }
@@ -184,7 +201,7 @@ export function TrainingCard({ from, className }: { from: string; className?: st
     return (
       <Card className={cn("gap-0 py-0 border-amber-500/40", className)} data-testid="training-card">
         <div className="px-4 py-4 space-y-2">
-          <LabelRow name={null} />
+          <LabelRow name={null} enrollmentId={null} />
           <p
             className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400"
             data-testid="training-card-unavailable"
@@ -250,7 +267,10 @@ export function TrainingCard({ from, className }: { from: string; className?: st
     <Card className={cn("gap-0 py-0", border, className)} data-testid="training-card">
       <div className="px-4 py-4 space-y-2 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:space-y-0">
         <div className="min-w-0 space-y-1">
-          <LabelRow name={programName} />
+          <LabelRow
+            name={programName}
+            enrollmentId={state.kind !== "none" && "enrollmentId" in state ? state.enrollmentId : null}
+          />
           <p className="text-lg font-semibold leading-snug">{words.headline}</p>
           {words.context && <p className="text-sm text-muted-foreground truncate">{words.context}</p>}
           {words.second && <p className="text-sm text-muted-foreground">{words.second}</p>}
@@ -271,14 +291,21 @@ export function TrainingCard({ from, className }: { from: string; className?: st
   )
 }
 
-function LabelRow({ name }: { name: string | null }) {
+function LabelRow({ name, enrollmentId }: { name: string | null; enrollmentId: string | null }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
         <Dumbbell className="size-3.5" /> Training
       </span>
       {name && (
-        <Link href={PROGRAMS} className="truncate text-xs text-muted-foreground hover:underline">
+        /* THE PROGRAM IT NAMES, not the inventory. This went to `/programs`,
+           which with two running is a list asking you to pick the one the card
+           had just told you about. */
+        <Link
+          href={enrollmentId ? programSession(enrollmentId) : PROGRAMS}
+          data-testid="training-card-program"
+          className="truncate text-xs text-muted-foreground hover:underline"
+        >
           {name} ›
         </Link>
       )}

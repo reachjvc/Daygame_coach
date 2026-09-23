@@ -150,3 +150,68 @@ test.afterAll(async ({ browser }) => {
   await reset(page, false)
   await page.close()
 })
+
+test("the two doors name the same session and the same other program", async ({ page }) => {
+  /**
+   * THE WALK'S §2 DISAGREEMENT, from both ends at once.
+   *
+   * With more than one program running, Tracking showed one card — StrongLifts'
+   * session — while /programs showed an inventory, and nothing said the two
+   * were describing the same account. `chooseCardEnrollment` is now the one
+   * owner of "which program is the card about", but each surface was tested
+   * alone: no test opened both screens on one state and asked whether they
+   * agreed.
+   *
+   * Two DISCIPLINES on purpose. Starting a second program of the same kind
+   * pauses the first, so a second strength program would leave one running and
+   * prove nothing about two.
+   */
+  await reset(page, true)
+  const second = await page.evaluate(async () => {
+    const res = await fetch("/api/programs/enrollments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ programId: "couch-to-5k", level: "beginner", unitSystem: "kg" }),
+    })
+    return { status: res.status, body: await res.json().catch(() => null) }
+  })
+  expect(second.status, "premise: a second discipline must start alongside the first").toBe(201)
+
+  try {
+    await openTracking(page)
+    const card = page.getByTestId(CARD)
+    await expect(card).toBeVisible({ timeout: 30000 })
+
+    // Which program the card decided to be about, and which it names as the other.
+    const chosen = card.getByTestId("training-card-program")
+    await expect(chosen).toBeVisible()
+    const chosenHref = (await chosen.getAttribute("href")) ?? ""
+    const chosenId = new URL(chosenHref, "http://x").searchParams.get("program")
+    expect(chosenId, "the card names a program, so its link carries that program").toBeTruthy()
+
+    const other = card.locator('[data-testid^="also-running-"]').first()
+    await expect(other, "two programs running, so the card names the other one").toBeVisible()
+    const otherId = (await other.getAttribute("data-testid"))!.replace("also-running-", "")
+    expect(otherId).not.toBe(chosenId)
+
+    /**
+     * THE OTHER DOOR. `/programs` lists both, and the ids are the same two —
+     * this is the assertion that the two surfaces are reading one answer rather
+     * than each working it out.
+     */
+    await page.goto("/programs", { waitUntil: "networkidle" })
+    await expect(page.getByTestId(`running-${chosenId}`)).toBeVisible({ timeout: 30000 })
+    await expect(page.getByTestId(`running-${otherId}`)).toBeVisible()
+
+    /**
+     * AND THE DEEP LINK LANDS ON THE SESSION, not back on the inventory. The
+     * card's label row went to `/programs` full stop, so tapping the name of the
+     * program it had just told you about asked you to pick it again.
+     */
+    await page.goto(chosenHref, { waitUntil: "networkidle" })
+    await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 30000 })
+    await expect(page).toHaveURL(new RegExp(`program=${chosenId}`))
+  } finally {
+    await reset(page, false)
+  }
+})

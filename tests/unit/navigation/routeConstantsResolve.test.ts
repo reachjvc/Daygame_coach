@@ -69,7 +69,15 @@ describe("every route constant has something behind it", () => {
   })
 
   it.each(ROUTES)("%s exports %s -> %s", (file, name, path) => {
-    const dir = join(APP, path.replace(/^\/+|\/+$/g, ""))
+    /**
+     * THE PATH, WITHOUT THE QUERY. A constant may legitimately carry one —
+     * `programSession` is `/programs?program=<id>`, which is the Training page
+     * with a program named — and the question this test asks is whether the
+     * PAGE exists, not whether Next routes on a search parameter. Without this
+     * it looked for a directory called `programs?program=` and reported that
+     * the app serves nothing there, which is true and is not the point.
+     */
+    const dir = join(APP, path.split("?")[0].replace(/^\/+|\/+$/g, ""))
     expect(
       isServed(dir),
       `${file} exports ${name}, which points at "${path}", but ${dir.replace(process.cwd() + "/", "")} ` +
