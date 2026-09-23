@@ -728,6 +728,74 @@ describe('Architecture Compliance', () => {
      * the plan for the rest of the app, and `docs/plans/training-rebuild.md`
      * Phase 2 covers the training screens, which are done.
      */
+    test('the fill-in-afterwards forms do not come back', () => {
+      /**
+       * TWO FORMS THAT ASKED YOU TO WRITE UP A WORKOUT YOU HAD ALREADY DONE.
+       *
+       * "I did all of this — save it" wrote every prescribed row at its
+       * prescribed weight, which is a record of what the program ASKED for
+       * rather than of what happened; "Day (blank = today)" wrote a session
+       * with a 45-minute duration nobody had measured. Both were untested, both
+       * wrote to `workout_logs` behind the live screen's back, and between them
+       * they were the reason History could disagree with the program about the
+       * same session.
+       *
+       * They are deleted. What is left to prove is that a third one does not
+       * appear — which is not a thing a test of either file can say, because
+       * neither file exists. So this is a test about the app not having a
+       * second way to write a workout at all.
+       */
+      const gone = [
+        'src/programs/components/TodaySessionWidget.tsx',
+        'src/health/components/WorkoutLogger.tsx',
+        'src/programs/components/RestTimer.tsx',
+      ].filter((rel) => fs.existsSync(path.join(projectRoot, rel)))
+      expect(gone, `These were deleted and are back:\n${gone.join('\n')}`).toEqual([])
+
+      /** Comments blanked: the sentences describing the deleted button are not it. */
+      const sourceOf = (rel: string) =>
+        fs
+          .readFileSync(path.join(projectRoot, rel), 'utf-8')
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/\/\/[^\n]*/g, '')
+
+      const WORDS = [
+        'I did all of this',
+        'Did it exactly as shown',
+        'Day (blank = today)',
+        'duration_min: 45',
+      ]
+      const posting: string[] = []
+      const phrases: string[] = []
+      const walk = (dir: string) => {
+        for (const entry of fs.readdirSync(path.join(projectRoot, dir), { withFileTypes: true })) {
+          const rel = `${dir}/${entry.name}`
+          if (entry.isDirectory()) {
+            walk(rel)
+            continue
+          }
+          if (!/\.tsx?$/.test(entry.name)) continue
+          const src = sourceOf(rel)
+          for (const word of WORDS) if (src.includes(word)) phrases.push(`${rel}: "${word}"`)
+          /**
+           * `/api/health/workout` has exactly one writer, and it is not a
+           * component: the live screen's own path. A component POSTing there is
+           * a second way to write a workout, which is the thing itself.
+           */
+          if (/\.tsx$/.test(rel) && /fetch\([^)]*\/api\/health\/workout[\s\S]{0,200}?method:\s*["']POST["']/.test(src)) {
+            posting.push(rel)
+          }
+        }
+      }
+      for (const dir of ['src', 'app']) walk(dir)
+
+      expect(phrases, `The write-up form's own words are back:\n${phrases.join('\n')}`).toEqual([])
+      expect(
+        posting,
+        `These write a workout behind the live screen's back:\n${posting.join('\n')}`,
+      ).toEqual([])
+    })
+
     const COMPONENTS_THAT_FETCH_THEIR_OWN_DATA = new Set([
       // A WRITE, not a load. This rule exists because a screen that loads its
       // own data has to decide what to show when the read fails, and the cheap
