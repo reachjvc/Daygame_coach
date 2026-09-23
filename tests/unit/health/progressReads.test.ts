@@ -12,7 +12,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import * as fs from "fs"
 import * as path from "path"
-import { adherenceThisWeek, weeklyVolume, liftBests } from "@/src/health/healthService"
+import { adherenceThisWeek, weeklyVolume, liftBests, progressSnapshot } from "@/src/health/healthService"
 import type { WorkoutLogRow, WorkoutLogWithSets, WorkoutSetRow } from "@/src/health/types"
 
 /**
@@ -399,5 +399,77 @@ describe("what is still on the machine's clock", () => {
       .filter(([name, n]) => machineClockUses(found[name] ?? "") < n)
       .map(([name, n]) => `${name}: allowance ${n}, actual ${machineClockUses(found[name] ?? "")}`)
     expect(stale, `Fixed — lower these in ALLOWED:\n${stale.join("\n")}`).toEqual([])
+  })
+})
+
+/**
+ * ONE SNAPSHOT, AND "EMPTY" IS A FACT ABOUT THE ACCOUNT.
+ *
+ * The Progress tab used to download a year of workouts with every set attached
+ * and do this arithmetic in the browser, while the lift panel inside it
+ * downloaded three years of the same rows again. Two reads of one table for
+ * one screen, on a phone, after the screen had already painted — and the
+ * browser's clock deciding which week "this week" was.
+ *
+ * The distinction that matters here is the one a screen gets wrong: an account
+ * with a workout in it is NOT empty, even when every number it produces is
+ * zero. Telling somebody "nothing logged yet" the day after they trained is
+ * how a screen loses them.
+ */
+describe("progressSnapshot", () => {
+  const TZ = "Europe/Copenhagen"
+  const NOW = new Date("2026-08-19T12:00:00+02:00")
+
+  it("is empty only when there are no finished workouts", () => {
+    expect(progressSnapshot([], { timezone: TZ, now: NOW }).empty).toBe(true)
+
+    // One workout of warm-ups: every figure is zero and the account is not
+    // empty.
+    const warmupsOnly = progressSnapshot(
+      [log("2026-08-19", [{ set_kind: "warmup" }])],
+      { timezone: TZ, now: NOW }
+    )
+    expect(warmupsOnly.empty).toBe(false)
+    expect(warmupsOnly.weeks.at(-1)!.volumeKg).toBe(0)
+  })
+
+  it("carries the week, the bars, the bests and the lines in one object", () => {
+    const snapshot = progressSnapshot(
+      [log("2026-08-17", [{}, {}]), log("2026-08-19", [{}])],
+      { timezone: TZ, now: NOW }
+    )
+    expect(snapshot.timezone).toBe(TZ)
+    expect(snapshot.thisWeek.done).toBe(2)
+    expect(snapshot.thisWeek.days).toHaveLength(7)
+    expect(snapshot.weeks).toHaveLength(8)
+    expect(snapshot.bests[0]).toMatchObject({ exercise: "Squat", bestWeightKg: 100 })
+  })
+
+  it("does not decide how many sessions a week was supposed to be", () => {
+    // `planned` belongs to the running program, which this read knows nothing
+    // about. The tab has it as a prop; a second source for it is a second
+    // answer.
+    const snapshot = progressSnapshot([log("2026-08-19", [{}])], { timezone: TZ, now: NOW })
+    expect("planned" in snapshot.thisWeek).toBe(false)
+  })
+
+  it("reads the week in the account's zone, not the machine's", () => {
+    const realTZ = process.env.TZ
+    process.env.TZ = "Pacific/Kiritimati"
+    try {
+      // Sunday 23:30 in New York, which is Monday in Kiritimati.
+      const sundayNight = {
+        ...log("2026-08-19"),
+        logged_at: "2026-08-17T03:30:00Z",
+      } as WorkoutLogWithSets
+      const snapshot = progressSnapshot([sundayNight], {
+        timezone: "America/New_York",
+        now: new Date("2026-08-12T16:00:00Z"),
+      })
+      expect(snapshot.thisWeek.days[0].date).toBe("2026-08-10")
+      expect(snapshot.thisWeek.done).toBe(1)
+    } finally {
+      process.env.TZ = realTZ
+    }
   })
 })

@@ -20,9 +20,10 @@
  * rendering a zero.
  */
 
-import { lazy, Suspense, useCallback, useEffect, useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { adherenceThisWeek, weeklyVolume } from "@/src/health/healthService"
+import { lazy, Suspense } from "react"
+import { AlertTriangle } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useLoad } from "@/src/shared/useLoad"
 // `fromKg`, not the health slice's `convertWeight`: that one spells the unit
 // "lbs" and this slice spells it "lb". Two spellings of one unit is how a
 // number ends up converted twice or not at all.
@@ -30,8 +31,7 @@ import { describeLoggedSet, fromKg } from "../programsService"
 import { dateKeyLabel } from "@/src/shared/dateUtils"
 import { UNIT_CONFIG } from "../config"
 import type { UnitSystem } from "../types"
-import type { WorkoutLogWithSets } from "@/src/health/types"
-import type { LiftBest } from "@/src/health/healthService"
+import type { ProgressSnapshot } from "@/src/health/healthService"
 
 const LiftHistory = lazy(() => import("./LiftHistory").then((m) => ({ default: m.LiftHistory })))
 
@@ -53,80 +53,67 @@ interface Props {
 const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"]
 
 export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
-  const [logs, setLogs] = useState<WorkoutLogWithSets[] | null>(null)
-  const [state, setState] = useState<"loading" | "ready" | "failed">("loading")
   /**
-   * YOUR BESTS COME FROM THE SERVER NOW, and from all of your training rather
-   * than the 365 days this screen happens to have loaded. "Your bests" meant
-   * "your bests this year" — a different answer from the one the finish summary
-   * gave for the same set. Its own state, because a failed bests read must say
-   * so rather than render as "nothing to beat".
+   * ONE READ, ON THE SERVER, IN THE ACCOUNT'S CALENDAR.
+   *
+   * This tab used to download a year of workouts with every set attached and
+   * work out the week, the eight bars and the bests in the browser — and the
+   * lift panel inside it downloaded three years of the same rows again. Two
+   * reads of one table for one screen, on a phone, after it had already
+   * painted. It also meant the browser's clock decided which week "this week"
+   * was, which is the thing every other training screen has stopped doing.
+   *
+   * `useLoad` rather than a hand-written fetch, because the hand-written one
+   * here had the failure this app keeps fixing: a bad response became an empty
+   * list, and an empty list renders as "you have trained nothing in twelve
+   * months" — a statement about somebody's life with no grounds for it.
    */
-  const [bests, setBests] = useState<LiftBest[] | null>(null)
-  const [bestsState, setBestsState] = useState<"loading" | "ready" | "failed">("loading")
+  const loaded = useLoad<ProgressSnapshot>("/api/workouts/progress", (body) => {
+    const snapshot = body as ProgressSnapshot | null
+    if (!snapshot || !Array.isArray(snapshot.weeks)) throw new Error("unexpected shape")
+    return snapshot
+  })
 
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch("/api/health/workout?days=365&include=sets")
-      if (!res.ok) throw new Error(String(res.status))
-      const body = (await res.json()) as unknown
-      if (!Array.isArray(body)) throw new Error("unexpected shape")
-      setLogs(body as WorkoutLogWithSets[])
-      setState("ready")
-    } catch {
-      // NOT an empty year. "You have trained nothing in twelve months" is a
-      // statement about somebody's life, and a request that did not arrive is
-      // no grounds for making it.
-      setState("failed")
-    }
-  }, [])
-
-  const loadBests = useCallback(async () => {
-    setBestsState("loading")
-    try {
-      const res = await fetch("/api/health/workout/bests")
-      if (!res.ok) throw new Error(String(res.status))
-      const body = (await res.json()) as unknown
-      if (!Array.isArray(body)) throw new Error("unexpected shape")
-      setBests(body as LiftBest[])
-      setBestsState("ready")
-    } catch {
-      setBestsState("failed")
-    }
-  }, [])
-
-  useEffect(() => {
-    void load()
-    void loadBests()
-  }, [load, loadBests])
-
-  if (state === "failed") {
+  if (loaded.state === "failed") {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-between gap-3 p-4">
-          <p className="text-sm text-amber-600 dark:text-amber-400">
-            Your training history could not be loaded, so there is nothing to show yet. This is not
-            a statement about your training.
-          </p>
-          <button
-            type="button"
-            onClick={() => void load()}
-            className="min-h-11 shrink-0 rounded-md border border-amber-500/40 px-2.5 text-xs text-amber-600 transition-colors hover:bg-amber-500/10 dark:text-amber-400"
-          >
-            Try again
-          </button>
-        </CardContent>
-      </Card>
+      <div
+        data-testid="progress-unavailable"
+        className="flex items-center justify-between gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2"
+      >
+        <p className="flex items-start gap-2 text-sm text-amber-600 dark:text-amber-400">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+          Your training could not be loaded. This is not a statement about your training.
+        </p>
+        <Button size="sm" variant="outline" className="shrink-0" onClick={loaded.retry}>
+          Try again
+        </Button>
+      </div>
     )
   }
 
-  if (state === "loading" || !logs) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>
+  // A 92px placeholder, not a word: the tab keeps its height while it loads, so
+  // the screen does not jump under a thumb that is already moving.
+  if (loaded.state === "loading") {
+    return <div className="h-[92px] animate-pulse rounded-md bg-muted/40" aria-hidden />
   }
 
-  const now = new Date()
-  const week = adherenceThisWeek(logs, plannedPerWeek, now, timezone)
-  const volume = weeklyVolume(logs, now, 8, timezone)
+  const snapshot = loaded.data
+  /**
+   * EMPTY IS A FACT ABOUT THE ACCOUNT, not about the chart. An account with one
+   * workout of warm-ups has a chart of zeros and is not empty, and being told
+   * "nothing logged yet" the day after training is how a screen loses somebody.
+   */
+  if (snapshot.empty) {
+    return (
+      <p data-testid="progress-empty" className="text-sm text-muted-foreground">
+        Nothing logged yet. Finish a workout and it will be here.
+      </p>
+    )
+  }
+
+  const week = { ...snapshot.thisWeek, planned: Math.max(0, Math.round(plannedPerWeek)) }
+  const volume = snapshot.weeks
+  const bests = snapshot.bests
   const label = UNIT_CONFIG[unit].label
   /**
    * Grouped, because these run to five figures. "25293 kg" is a number you have
@@ -151,7 +138,7 @@ export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
                   title={d.date}
                   className={`h-7 w-full rounded ${
                     d.done
-                      ? "bg-emerald-500"
+                      ? "bg-primary"
                       : d.future
                         ? "border border-dashed border-border"
                         : "bg-muted"
@@ -259,31 +246,18 @@ export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
 
       <section className="space-y-2 border-t border-border/60 pt-4">
           <h3 className="text-sm font-medium">Your bests</h3>
-          {bestsState === "loading" && (
-            <p className="text-sm text-muted-foreground">Loading…</p>
-          )}
-          {/* A FAILED READ IS NOT AN EMPTY HISTORY. "Nothing to beat" to
-              somebody three years into training is a claim, not a blank. */}
-          {bestsState === "failed" && (
-            <div className="flex items-center justify-between gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 p-3">
-              <p className="text-sm text-amber-600 dark:text-amber-400">
-                Your bests could not be loaded. This is not a statement about your training.
-              </p>
-              <button
-                type="button"
-                onClick={() => void loadBests()}
-                className="min-h-11 shrink-0 rounded-md border border-amber-500/40 px-2.5 text-xs text-amber-600 transition-colors hover:bg-amber-500/10 dark:text-amber-400"
-              >
-                Try again
-              </button>
-            </div>
-          )}
-          {bestsState === "ready" && bests !== null && bests.length === 0 && (
+          {/*
+            NO SECOND LOADING STATE. The bests had their own fetch and their own
+            three states, so this block could say "could not be loaded" while
+            the chart above it was fine — two answers about one screen. They
+            come from the same snapshot now, and a failure is the tab's.
+          */}
+          {bests.length === 0 && (
             <p className="text-sm text-muted-foreground">
               No working sets logged yet, so there is nothing to beat.
             </p>
           )}
-          {bestsState === "ready" && bests !== null && bests.length > 0 && (
+          {bests.length > 0 && (
             <ul className="space-y-1.5" data-testid="lift-bests">
               {bests.slice(0, 8).map((b) => (
                 <li key={b.exercise} className="flex items-baseline justify-between gap-3 text-sm">
@@ -318,7 +292,10 @@ export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
       </section>
 
       <Suspense fallback={null}>
-        <LiftHistory unit={unit} timezone={timezone} />
+        {/* Its rows come from the same snapshot: this panel used to fetch
+            three years of sets for itself, on top of the year this tab had
+            already loaded. */}
+        <LiftHistory lifts={snapshot.lifts} unit={unit} timezone={timezone} />
       </Suspense>
     </div>
   )

@@ -192,9 +192,13 @@ export async function deleteSleepLog(userId: string, logId: string): Promise<voi
  */
 export const FINISHED_WORKOUTS_FILTER = "ended_at.not.is.null,started_at.is.null"
 
+/** Below every row there can be: what `days: "all"` compares against. */
+const EPOCH = "1970-01-01T00:00:00.000Z"
+
 export function finishedWorkouts<T extends { or: (f: string) => T }>(query: T): T {
   return query.or(FINISHED_WORKOUTS_FILTER)
 }
+
 
 /**
  * `createWorkoutLog` was here: one insert that wrote a finished workout and
@@ -208,11 +212,22 @@ export function finishedWorkouts<T extends { or: (f: string) => T }>(query: T): 
  */
 
 
-export async function getWorkoutLogs(userId: string, days: number = 90): Promise<WorkoutLogRow[]> {
+export async function getWorkoutLogs(
+  userId: string,
+  /**
+   * A window in days, or "all" for everything ever logged.
+   *
+   * `3650` was how screens asked for "all of it", which is a guess dressed as a
+   * number: it is wrong for anybody eleven years in, and it reads as a policy
+   * ("ten years") that nobody decided. "all" says what is meant and drops the
+   * filter entirely.
+   */
+  days: number | "all" = 90
+): Promise<WorkoutLogRow[]> {
   const supabase = await createServerSupabaseClient()
   const since = new Date()
-  since.setDate(since.getDate() - days)
-  // History screens ask for `days=3650`. Somebody who trains four times a week
+  if (days !== "all") since.setDate(since.getDate() - days)
+  // History screens ask for everything. Somebody who trains four times a week
   // passes a thousand workouts in five years, and the ones that fall off the
   // end are the recent ones nobody would think to look for.
   return await readAllRows<WorkoutLogRow>("workout logs", (from, to) =>
@@ -221,7 +236,17 @@ export async function getWorkoutLogs(userId: string, days: number = 90): Promise
         .from("workout_logs")
         .select("*")
         .eq("user_id", userId)
-        .gte("logged_at", since.toISOString())
+        /**
+         * "all" is a bound below every row rather than no bound at all.
+         *
+         * Dropping the filter would need a wrapper around the builder, and the
+         * paging guard in `tests/unit/architecture.test.ts` reads the CHAIN: a
+         * query built through a helper hides its own `.range()` from the
+         * detector, which then reports this as an unpaged read. (A neighbouring
+         * session hit the same wall the same day and fixed it the same way.)
+         * One whole chain, and `days` says what it means.
+         */
+        .gte("logged_at", days === "all" ? EPOCH : since.toISOString())
         .order("logged_at", { ascending: true })
         .order("created_at", { ascending: true })
         // Two workouts logged in the same second would otherwise be free to
@@ -249,7 +274,7 @@ const inWorkoutOrder = (a: WorkoutSetRow, b: WorkoutSetRow): number =>
 
 export async function getWorkoutLogsWithSets(
   userId: string,
-  days: number = 90
+  days: number | "all" = 90
 ): Promise<(WorkoutLogRow & { sets: WorkoutSetRow[] })[]> {
   const supabase = await createServerSupabaseClient()
   const logs = await getWorkoutLogs(userId, days)

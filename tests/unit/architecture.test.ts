@@ -765,7 +765,10 @@ describe('Architecture Compliance', () => {
       'src/programs/components/HistoryTab.tsx',
       'src/programs/components/PastPrograms.tsx',
       'src/programs/components/ProgramDetail.tsx',
-      'src/programs/components/ProgressTab.tsx',
+      // ProgressTab came off this list on 2026-09-23: it reads one snapshot
+      // from `/api/workouts/progress` through `useLoad`, and the panel inside
+      // it takes its rows as props instead of fetching three years of sets on
+      // top of the year the tab had already loaded.
       'src/programs/components/ProgressionView.tsx',
       'src/programs/components/SavedWeeks.tsx',
       'src/qa/components/QAPage.tsx',
@@ -1255,11 +1258,11 @@ describe('Architecture Compliance', () => {
       'src/programs/components/CustomProgramBuilder.tsx',
       'src/programs/components/EditActiveProgram.tsx',
       'src/programs/components/HistoryTab.tsx',
-      'src/programs/components/LiftHistory.tsx',
+      // LiftHistory came off on 2026-09-23: no `Card`, no second heading
+      // level, sections divided by a hairline like the rest of the tab.
       'src/programs/components/PastPrograms.tsx',
       'src/programs/components/ProgramEditor.tsx',
       'src/programs/components/ProgramsApp.tsx',
-      'src/programs/components/ProgressTab.tsx',
       'src/programs/components/ProgressionView.tsx',
       'src/programs/components/RunningPrograms.tsx',
       'src/programs/components/SavedWeeks.tsx',
@@ -1331,7 +1334,6 @@ describe('Architecture Compliance', () => {
         'src/programs/components/live/SetRow.tsx', // a set you ticked
         'src/programs/components/live/RestBar.tsx', // rest is over
         'src/programs/components/SessionNotices.tsx', // the program is complete
-        'src/programs/components/ProgressTab.tsx', // the trained-day dot
         'src/programs/components/WorkoutReceipt.tsx', // "new best" on the finish
         'src/goals/components/north-star/WorkoutPrograms.tsx', // "everything you logged is kept"
       ])
@@ -1686,7 +1688,10 @@ describe('Architecture Compliance', () => {
       // `toLocaleDateString` in the browser's zone, so a workout logged at
       // 00:30 on the 1st was no longer filed under the previous month.
       'components/HistoryTab.tsx': 3,
-      'components/LiftHistory.tsx': 2,
+      // Zero since the export became a link to `/api/workouts/export` and the
+      // Sparkline's dates are formatted in the account's zone (2026-09-23).
+      // Kept at 0 rather than deleted: this file draws dated lines.
+      'components/LiftHistory.tsx': 0,
       // Zero since both lists started printing the server's date-only string
       // instead of handing an instant to the browser (2026-09-20). Kept at 0
       // rather than deleted: these two are where "started 3 Feb" is printed.
@@ -1872,9 +1877,16 @@ describe('Architecture Compliance', () => {
      *   LiftHistory       the date in a downloaded file's name.
      */
     const BROWSER_CLOCK_DEBT: Record<string, number> = {
-      'ProgressTab.tsx': 1,
+      // Zero since Progress became one server-computed snapshot: "this week"
+      // is decided in the account's zone on the server, not from `new Date()`
+      // in the browser (2026-09-23). Kept at 0 rather than deleted: this file
+      // is where a week is drawn.
+      'ProgressTab.tsx': 0,
       'live/FinishSheet.tsx': 1,
-      'LiftHistory.tsx': 1,
+      // Zero since the CSV became a link to `/api/workouts/export`, which names
+      // the file on the server (2026-09-23). Kept at 0 rather than deleted:
+      // this file draws dated lines.
+      'LiftHistory.tsx': 0,
     }
 
     function readsPerFile(): Record<string, number> {

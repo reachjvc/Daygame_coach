@@ -1103,3 +1103,58 @@ export function workoutsByLocalDate(
   }
   return byDate
 }
+
+/**
+ * EVERYTHING THE PROGRESS TAB SHOWS, COMPUTED ONCE, ON THE SERVER.
+ *
+ * The tab used to download a year of workouts with every set attached, work
+ * out the week, the eight bars and the bests in the browser, and then the
+ * lift-history panel inside it downloaded THREE years of the same rows again.
+ * Two reads of the same table for one screen, both on a phone, both after the
+ * screen had already painted.
+ *
+ * It also meant the browser's clock decided which week "this week" was — the
+ * thing steps 3 and 4 have just taken away from every other screen.
+ *
+ * `empty` is a fact about the ACCOUNT, not about the chart. An account with one
+ * workout of warm-ups has a chart of zeros and is not empty, and telling
+ * somebody "nothing logged yet" the day after they trained is the kind of
+ * wrong that makes people stop trusting a screen.
+ */
+export interface ProgressSnapshot {
+  timezone: string
+  thisWeek: { done: number; days: WeekAdherence["days"] }
+  weeks: WeekVolume[]
+  bests: LiftBest[]
+  lifts: { exercise: string; points: LoadPoint[] }[]
+  empty: boolean
+}
+
+/** How many of each list is worth a phone screen. */
+const PROGRESS_SHOWN = 8
+
+export function progressSnapshot(
+  logs: WorkoutLogWithSets[],
+  opts: { timezone: string; now?: Date }
+): ProgressSnapshot {
+  const now = opts.now ?? new Date()
+  const { timezone } = opts
+  /**
+   * `planned` is not here: it belongs to the program that is running, which
+   * this read knows nothing about. The tab already has it as a prop, and a
+   * second source for it is a second answer.
+   */
+  const week = adherenceThisWeek(logs as unknown as WorkoutLogRow[], 0, now, timezone)
+  const flat = logs.flatMap((log) =>
+    (log.sets ?? []).map((set) => ({ ...set, logged_at: log.logged_at }))
+  )
+
+  return {
+    timezone,
+    thisWeek: { done: week.done, days: week.days },
+    weeks: weeklyVolume(logs, now, PROGRESS_SHOWN, timezone),
+    bests: liftBests(logs, timezone).slice(0, PROGRESS_SHOWN),
+    lifts: liftsWithHistory(flat, timezone).slice(0, PROGRESS_SHOWN),
+    empty: logs.length === 0,
+  }
+}
