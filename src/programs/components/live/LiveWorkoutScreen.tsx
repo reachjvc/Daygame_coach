@@ -21,7 +21,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { MoreHorizontal } from "lucide-react"
+import { MoreVertical } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -379,7 +379,7 @@ export function LiveWorkoutScreen({
                   </li>
                 ))}
               </ol>
-              <p className="pt-1 text-[11px] text-muted-foreground">
+              <p className="pt-1 text-xs text-muted-foreground">
                 Nothing to tick off here. Press Finish when you are done and say how long it took.
               </p>
             </CardContent>
@@ -434,7 +434,7 @@ export function LiveWorkoutScreen({
                   <div className="min-w-0">
                     <p className="flex items-center gap-2 font-medium">
                       {ex.supersetGroup && (
-                        <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[11px] uppercase tracking-wide text-primary">
+                        <span className="rounded bg-primary/15 px-1.5 py-0.5 text-xs uppercase tracking-wide text-primary">
                           {/* The number within the PAIR, not the position in
                               the day: the second pair read "B4"/"B5", which
                               reads as a set count or as a mistake. */}
@@ -470,7 +470,7 @@ export function LiveWorkoutScreen({
                     onClick={() => setOpenMenu(openMenu === ex.exerciseId ? null : ex.exerciseId)}
                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent"
                   >
-                    <MoreHorizontal className="size-5" />
+                    <MoreVertical className="size-5" />
                   </button>
                 </div>
 
@@ -779,7 +779,7 @@ export function LiveWorkoutScreen({
                 )}
 
                 {!isSkipped && !ex.bodyweight && !addedIds.has(ex.exerciseId) && ex.sets[0]?.weight ? (
-                  <p className="pt-1 text-[11px] text-muted-foreground">
+                  <p className="pt-1 text-xs text-muted-foreground">
                     Bar: {describePlates(platesFor(ex.sets[0].weight, unit, plates), unitLabel)}
                   </p>
                 ) : null}

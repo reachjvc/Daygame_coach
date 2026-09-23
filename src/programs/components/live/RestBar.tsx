@@ -152,7 +152,7 @@ export function RestBar({ startedAt, targetSeconds, ours, onDismiss, onExtend }:
           and the −30s/+30s buttons it had about sixty pixels on a phone, so it
           rendered as "resting — 3:00 is…" — the half that was cut off is the
           half that says the number is ours rather than the program author's. */}
-      <p className="mx-auto max-w-2xl truncate text-[11px] text-muted-foreground">
+      <p className="mx-auto max-w-2xl truncate text-xs text-muted-foreground">
         {done
           ? "Ready when you are"
           : ours

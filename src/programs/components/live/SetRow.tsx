@@ -285,7 +285,7 @@ export function SetRow({
             setReps(String(previous.reps))
           }}
           aria-label={`Use last time: ${formatLoad(previous.weight)} ${unitLabel} by ${previous.reps}`}
-          className="min-w-0 truncate text-left text-[11px] tabular-nums text-muted-foreground transition-colors hover:text-foreground"
+          className="min-w-0 truncate text-left text-xs tabular-nums text-muted-foreground transition-colors hover:text-foreground"
         >
           {formatLoad(previous.weight)}×{previous.reps}
         </button>
@@ -346,7 +346,7 @@ export function SetRow({
       </button>
 
       {boundsMessage && !ticked && (
-        <span className="col-span-5 text-[11px] text-amber-500">{boundsMessage}</span>
+        <span className="col-span-5 text-xs text-amber-500">{boundsMessage}</span>
       )}
 
       {saveMessage && (
