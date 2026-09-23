@@ -44,6 +44,7 @@ import {
   enrollmentName,
   type ProgramEnrollment,
 } from "@/src/programs/forLifeMastery"
+import { DONE } from "@/src/programs/forLifeMastery"
 import { withReturn } from "@/src/shared/returnTo"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 import type { NsRoutineProgram } from "@/src/goals/types"
@@ -162,7 +163,10 @@ export function TrainingProgramCard({
                 <p className="text-base font-semibold">That program is finished</p>
                 {/* Green is "done" everywhere else in this app, and a program
                     you finished is the one thing on this card that IS done. */}
-                <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                {/* Green is "finished" and this is the one thing on this card
+                    that IS finished — taken from `DONE` rather than typed, so
+                    it is the same green as a ticked set. */}
+                <p className={`text-xs ${DONE.text}`}>
                   Finished — everything you logged is kept.
                 </p>
               </>

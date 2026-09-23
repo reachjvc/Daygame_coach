@@ -454,7 +454,7 @@ export function FinishSheet({
               onClick={() => setIntensity(n)}
               aria-pressed={intensity === n}
               className={`min-h-11 w-11 border-r border-input text-sm tabular-nums transition-colors last:border-r-0 sm:min-h-9 ${
-                intensity === n ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-accent"
+                intensity === n ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted/50"
               }`}
             >
               {n}

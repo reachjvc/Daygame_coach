@@ -1248,33 +1248,15 @@ describe('Architecture Compliance', () => {
      * the last step of the rebuild deletes the list itself.
      */
     const TRAINING_STYLE_DEBT = new Set<string>([
-      'src/goals/components/north-star/WorkoutPrograms.tsx',
-      // EditActiveProgram came off on 2026-09-23: a `Card` from the app's own
-      // kit, `Input` in place of its 12.5-px boxes, and "Save changes" is the
-      // plain `Button` rather than the EMERALD one it used to be — green in
-      // this app is a set you ticked and a program you finished, and a save
-      // button wearing it took that meaning away from the ticks.
-      // HistoryTab came off on 2026-09-23: the app's `Select`, `Button` and
-      // `Link` throughout, no hand-rolled inputs, and the editor it used to
-      // hold is on the workout's own page.
-      // LiftHistory came off on 2026-09-23: no `Card`, no second heading
-      // level, sections divided by a hairline like the rest of the tab.
-      'src/programs/components/PastPrograms.tsx',
-      // ProgramEditor came off on 2026-09-23: a day row is its full name and
-      // ONE options button, the four 44-px icons are rows in a `BottomSheet`
-      // with words on them, the rename is a `Dialog` that can refuse a blank
-      // name out loud, and every box is the app's `Input` (16 px on a phone,
-      // so Safari stops zooming the page and never zooming back).
-      'src/programs/components/ProgramsApp.tsx',
-      'src/programs/components/ProgressionView.tsx',
-      'src/programs/components/SessionNotices.tsx',
-      'src/programs/components/TrainingScreen.tsx',
-      'src/programs/components/WeekStrip.tsx',
-      'src/programs/components/live/AddLift.tsx',
-      'src/programs/components/live/FinishSheet.tsx',
-      'src/programs/components/live/LiveWorkoutScreen.tsx',
-      'src/programs/components/live/RestBar.tsx',
-      'src/programs/components/live/SetRow.tsx',
+      /**
+       * EMPTY, and it reached empty on 2026-09-23.
+       *
+       * It was seeded by running the scanner rather than by typing filenames,
+       * and every name on it has either been rebuilt on the app's own kit or
+       * deleted with the screen it belonged to. It stays as an empty set
+       * because the two assertions below are the rule, and "the allowance is
+       * zero" is the strongest thing this file can say about it.
+       */
     ])
 
     test('no NEW training file speaks a second visual language', () => {
@@ -1336,6 +1318,10 @@ describe('Architecture Compliance', () => {
         'src/programs/components/SessionNotices.tsx', // the program is complete
         'src/programs/components/WorkoutReceipt.tsx', // "new best" on the finish
         'src/goals/components/north-star/WorkoutPrograms.tsx', // "everything you logged is kept"
+        // Both added on 2026-09-23, when they stopped typing emerald out and
+        // started reading it from `DONE` — which is the point of the constant.
+        'src/programs/components/WeekStrip.tsx', // a day you trained
+        'src/programs/components/live/LiveWorkoutScreen.tsx', // a set you ticked
       ])
 
       const offenders = trainingFiles()

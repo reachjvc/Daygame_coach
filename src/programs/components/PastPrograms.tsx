@@ -209,7 +209,7 @@ export function PastPrograms({
             <button
               type="button"
               onClick={() => void load()}
-              className="shrink-0 rounded-md border border-border px-2.5 py-1 text-xs transition-colors hover:bg-accent"
+              className="shrink-0 rounded-md border border-border px-2.5 py-1 text-xs transition-colors hover:bg-muted/50"
             >
               Try again
             </button>

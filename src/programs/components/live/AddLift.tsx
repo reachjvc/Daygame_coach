@@ -77,7 +77,7 @@ export function AddLift({ alreadyHere, onAdd, startOpen = false, onCancel }: Pro
         type="button"
         data-testid="add-lift"
         onClick={() => setOpen(true)}
-        className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-border text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-border text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
       >
         <Plus className="size-4" /> Add a lift
       </button>
@@ -95,7 +95,9 @@ export function AddLift({ alreadyHere, onAdd, startOpen = false, onCancel }: Pro
           placeholder="Which lift?"
           aria-label="Search for a lift to add"
           data-testid="add-lift-search"
-          className="h-11 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-sm sm:h-9"
+          // `text-base` on a phone: a box under 16px makes iOS Safari zoom the
+          // whole page on focus and it does not zoom back — mid-set, at a rack.
+          className="h-11 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-base sm:h-9 sm:text-sm"
         />
         <button
           type="button"
@@ -107,7 +109,7 @@ export function AddLift({ alreadyHere, onAdd, startOpen = false, onCancel }: Pro
             else setOpen(false)
           }}
           aria-label="Stop adding a lift"
-          className="flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent sm:size-9"
+          className="flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/50 sm:size-9"
         >
           <X className="size-4" />
         </button>
@@ -120,7 +122,7 @@ export function AddLift({ alreadyHere, onAdd, startOpen = false, onCancel }: Pro
               <button
                 type="button"
                 onClick={() => add(e.name, e.id)}
-                className="flex min-h-11 w-full items-center justify-between gap-2 rounded-md border border-border px-2.5 text-left text-sm transition-colors hover:bg-accent"
+                className="flex min-h-11 w-full items-center justify-between gap-2 rounded-md border border-border px-2.5 text-left text-sm transition-colors hover:bg-muted/50"
               >
                 <span className="truncate">{e.name}</span>
                 <span className="shrink-0 text-xs capitalize text-muted-foreground">{e.group}</span>
@@ -147,7 +149,7 @@ export function AddLift({ alreadyHere, onAdd, startOpen = false, onCancel }: Pro
           type="button"
           data-testid="add-lift-own"
           onClick={() => add(query.trim())}
-          className="flex min-h-11 w-full items-center gap-1.5 rounded-md border border-dashed border-border px-2.5 text-left text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="flex min-h-11 w-full items-center gap-1.5 rounded-md border border-dashed border-border px-2.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
         >
           <Plus className="size-4 shrink-0" />
           <span className="truncate">Add &ldquo;{query.trim()}&rdquo; as your own lift</span>

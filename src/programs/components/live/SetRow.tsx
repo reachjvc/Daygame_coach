@@ -23,6 +23,7 @@ import {
   SAVE_GIVEN_UP_MS,
   SAVE_QUIET_MS,
 } from "../../programsService"
+import { DONE } from "../trainingStyles"
 import { SET_LIMITS, setLimitSentence } from "../../schemas"
 import type { LiveWorkoutSet } from "../../types"
 
@@ -207,7 +208,7 @@ export function SetRow({
             setDragX(0)
             onDelete()
           }}
-          className="absolute inset-y-0 right-0 flex h-11 w-22 items-center justify-center rounded-md bg-destructive text-sm text-white"
+          className="absolute inset-y-0 right-0 flex h-11 w-22 items-center justify-center rounded-md bg-destructive text-sm text-destructive-foreground"
         >
           Delete
         </button>
@@ -236,7 +237,7 @@ export function SetRow({
         }}
         style={dragX !== 0 ? { transform: `translateX(${dragX}px)` } : undefined}
         className={`relative grid grid-cols-[2.75rem_4.5rem_1fr_1fr_2.75rem] items-center gap-2 rounded-md px-1 py-1 transition-transform ${
-          ticked ? "bg-emerald-500/10" : "bg-card"
+          ticked ? DONE.row : "bg-card"
         }`}
       >
       {/*
@@ -252,7 +253,7 @@ export function SetRow({
           data-testid={`set-menu-${label}`}
           aria-label={`Set ${label} type`}
           onClick={onOpenMenu}
-          className="flex h-11 w-11 items-center justify-center rounded-md text-sm tabular-nums text-muted-foreground transition-colors hover:bg-accent"
+          className="flex h-11 w-11 items-center justify-center rounded-md text-sm tabular-nums text-muted-foreground transition-colors hover:bg-muted/50"
         >
           {label}
         </button>
@@ -338,8 +339,8 @@ export function SetRow({
         onClick={() => (ticked && onUndo ? onUndo() : onTick(entry.weight, entry.reps))}
         className={`flex h-11 w-11 items-center justify-center rounded-md border transition-colors disabled:opacity-30 ${
           ticked
-            ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-500"
-            : "border-border hover:bg-accent"
+            ? DONE.tick
+            : "border-border hover:bg-muted/50"
         }`}
       >
         <Check className="size-5" />
@@ -370,7 +371,7 @@ export function SetRow({
             data-testid={`hover-delete-${label}`}
             aria-label={`Delete set ${label}`}
             onClick={onDelete}
-            className="absolute right-1 top-1 hidden h-11 w-11 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-accent group-hover:opacity-100 sm:flex"
+            className="absolute right-1 top-1 hidden h-11 w-11 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted/50 group-hover:opacity-100 sm:flex"
           >
             <Trash2 className="size-4" />
           </button>

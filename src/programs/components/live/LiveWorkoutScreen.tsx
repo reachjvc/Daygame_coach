@@ -33,6 +33,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { BackLink } from "@/components/BackLink"
+import { DONE, GRID_CAPTION, TRAINING_COLUMN } from "../trainingStyles"
 import { canBeUnweighted, libraryExercise } from "../../data/exerciseLibrary"
 import { SetRow } from "./SetRow"
 import { RestBar } from "./RestBar"
@@ -277,7 +278,7 @@ export function LiveWorkoutScreen({
    */
   if (finishing && shown) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-6">
+      <div className={`${TRAINING_COLUMN} py-6`}>
         <FinishSheet
           missRules={missRules}
           timezone={timezone}
@@ -330,7 +331,7 @@ export function LiveWorkoutScreen({
 
   if (!workout) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-10 text-center">
+      <div className={`${TRAINING_COLUMN} py-10 text-center`}>
         <p className="text-sm text-muted-foreground">This workout is finished.</p>
         <Button asChild className="mt-3">
           <Link href="/programs">Back to training</Link>
@@ -377,7 +378,7 @@ export function LiveWorkoutScreen({
         }}
       />
 
-      <div data-testid="live-column" className="mx-auto max-w-2xl space-y-3 px-4 py-3">
+      <div data-testid="live-column" className={`${TRAINING_COLUMN} space-y-3 py-3`}>
         {/*
           A COLUMN THAT COULD NOT BE READ SAYS SO.
           The read behind PREVIOUS used to discard its own error, so a database
@@ -438,8 +439,8 @@ export function LiveWorkoutScreen({
                         }}
                         className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-md border transition-colors ${
                           done
-                            ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-500"
-                            : "border-border hover:bg-accent"
+                            ? DONE.tick
+                            : "border-border hover:bg-muted/50"
                         }`}
                       >
                         <Check className="size-5" />
@@ -559,7 +560,7 @@ export function LiveWorkoutScreen({
                     type="button"
                     aria-label={`Options for ${ex.name}`}
                     onClick={() => setOpenMenu(openMenu === ex.exerciseId ? null : ex.exerciseId)}
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/50"
                   >
                     <MoreVertical className="size-5" />
                   </button>
@@ -618,7 +619,7 @@ export function LiveWorkoutScreen({
                   rows as numbers, which is what makes a column scannable.
                 */}
                 {!isSkipped && rows.length > 0 && (
-                  <div className="grid grid-cols-[2.75rem_4.5rem_1fr_1fr_2.75rem] items-center gap-2 px-1 pb-0.5 text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <div className={`grid grid-cols-[2.75rem_4.5rem_1fr_1fr_2.75rem] items-center gap-2 px-1 pb-0.5 ${GRID_CAPTION}`}>
                     <span>Set</span>
                     {/* PREVIOUS, the name every tracker lifters use gives it.
                         "Last" was shorter than the column it captioned. */}
@@ -841,7 +842,7 @@ export function LiveWorkoutScreen({
                         })
                       }
                     }}
-                    className="min-h-11 w-full rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    className="min-h-11 w-full rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
                   >
                     Did the {fixedToTick.length} fixed set{fixedToTick.length === 1 ? "" : "s"} as shown
                   </button>
@@ -862,7 +863,7 @@ export function LiveWorkoutScreen({
                     onClick={() =>
                       setExtraRows((r) => ({ ...r, [ex.exerciseId]: (r[ex.exerciseId] ?? 0) + 1 }))
                     }
-                    className="min-h-11 w-full rounded-md border border-dashed border-border px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    className="min-h-11 w-full rounded-md border border-dashed border-border px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
                   >
                     + Add a set
                   </button>
@@ -1005,7 +1006,7 @@ function Elapsed({
 
   return (
     <div className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-      <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-2">
+      <div className={`${TRAINING_COLUMN} flex items-center gap-3 py-2`}>
         {/* THE ONE WAY BACK, shared. Hand-rolling a link with a back arrow is
             how thirteen of them ended up disagreeing about where "back" was;
             `tests/unit/navigation/backNavigation.test.ts` fails on a new one. */}

@@ -63,6 +63,12 @@ export { ProgramRow } from "./components/ProgramRow"
  * the token was first written down.
  */
 export { CHIP_ON } from "./components/trainingStyles"
+/**
+ * GREEN MEANS DONE, and it lives in one file so it cannot come to mean
+ * anything else. The Templates card says a program is finished, which is the
+ * one thing on it that IS finished.
+ */
+export { DONE } from "./components/trainingStyles"
 
 export type { ProgramEnrollment } from "./types"
 export type { ProgramWeekDescription } from "./types"

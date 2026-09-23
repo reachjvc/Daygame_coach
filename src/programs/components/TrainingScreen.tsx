@@ -24,6 +24,7 @@ import { ProgramsApp } from "./ProgramsApp"
 import { BackLink } from "@/components/BackLink"
 import { MobileTabBar } from "@/components/MobileTabBar"
 import { Button } from "@/components/ui/button"
+import { TRAINING_COLUMN } from "./trainingStyles"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getProgram } from "../data/catalog"
 import { effectiveProgram, scheduleDaysOrNone } from "../customize"
@@ -190,10 +191,11 @@ export function TrainingScreen({
         one destination in the app that arrived somewhere with no bar, so the
         way back out disappeared the moment you used it.
 
-        `max-w-2xl` matches the live workout screen, so the column does not
-        shrink again on the way from here into the session.
+        The width comes from `TRAINING_COLUMN` rather than being typed here:
+        this screen and the live workout used to declare it separately, and
+        the column narrowed on the way from here into the session.
       */}
-      <div data-testid="training-screen" className="mx-auto max-w-2xl px-4 pb-tab-bar pt-4">
+      <div data-testid="training-screen" className={`${TRAINING_COLUMN} pb-tab-bar pt-4`}>
         <BackLink
           fallback="/dashboard"
           fallbackLabel="Dashboard"

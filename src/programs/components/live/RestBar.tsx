@@ -27,6 +27,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Timer, X } from "lucide-react"
+import { DONE, TRAINING_COLUMN } from "../trainingStyles"
 
 interface Props {
   /** When the last set was ticked. `null` hides the bar. */
@@ -106,18 +107,18 @@ export function RestBar({ startedAt, targetSeconds, ours, onDismiss, onExtend }:
       aria-live="polite"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-4 py-2 backdrop-blur pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="mx-auto flex max-w-2xl items-center gap-3">
-        <Timer className={`size-5 shrink-0 ${done ? "text-emerald-500" : "text-muted-foreground"}`} />
+      <div className={`${TRAINING_COLUMN} flex items-center gap-3 px-0`}>
+        <Timer className={`size-5 shrink-0 ${done ? DONE.text : "text-muted-foreground"}`} />
         <span
           data-testid="rest-remaining"
-          className={`shrink-0 text-lg font-medium tabular-nums ${done ? "text-emerald-500" : ""}`}
+          className={`shrink-0 text-lg font-medium tabular-nums ${done ? DONE.text : ""}`}
         >
           {mmss(remaining)}
         </span>
         <span className="min-w-0 flex-1">
           <span className="block h-1 overflow-hidden rounded-full bg-border">
             <span
-              className={`block h-full ${done ? "bg-emerald-500" : "bg-primary"}`}
+              className={`block h-full ${done ? DONE.dot : "bg-primary"}`}
               style={{ width: `${pct}%` }}
             />
           </span>
@@ -126,7 +127,7 @@ export function RestBar({ startedAt, targetSeconds, ours, onDismiss, onExtend }:
           type="button"
           onClick={() => onExtend(-30)}
           aria-label="Take thirty seconds off the rest"
-          className="h-11 shrink-0 rounded-md border border-border px-2 text-xs transition-colors hover:bg-accent"
+          className="h-11 shrink-0 rounded-md border border-border px-2 text-xs transition-colors hover:bg-muted/50"
         >
           −30s
         </button>
@@ -134,7 +135,7 @@ export function RestBar({ startedAt, targetSeconds, ours, onDismiss, onExtend }:
           type="button"
           onClick={() => onExtend(30)}
           aria-label="Add thirty seconds to the rest"
-          className="h-11 shrink-0 rounded-md border border-border px-2 text-xs transition-colors hover:bg-accent"
+          className="h-11 shrink-0 rounded-md border border-border px-2 text-xs transition-colors hover:bg-muted/50"
         >
           +30s
         </button>
@@ -142,7 +143,7 @@ export function RestBar({ startedAt, targetSeconds, ours, onDismiss, onExtend }:
           type="button"
           onClick={onDismiss}
           aria-label="Skip the rest"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/50"
         >
           <X className="size-5" />
         </button>
@@ -152,7 +153,7 @@ export function RestBar({ startedAt, targetSeconds, ours, onDismiss, onExtend }:
           and the −30s/+30s buttons it had about sixty pixels on a phone, so it
           rendered as "resting — 3:00 is…" — the half that was cut off is the
           half that says the number is ours rather than the program author's. */}
-      <p className="mx-auto max-w-2xl truncate text-xs text-muted-foreground">
+      <p className={`${TRAINING_COLUMN} truncate px-0 text-xs text-muted-foreground`}>
         {done
           ? "Ready when you are"
           : ours

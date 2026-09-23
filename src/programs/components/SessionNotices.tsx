@@ -9,6 +9,8 @@
  */
 
 import { useMemo } from "react"
+import { Button } from "@/components/ui/button"
+import { DONE } from "./trainingStyles"
 import { daysSinceLastSession, staleLifts, LAYOFF_DAYS } from "../programsService"
 import { UNIT_CONFIG } from "../config"
 import type { LoggedExercise, SessionPrescription, UnitSystem } from "../types"
@@ -53,36 +55,29 @@ export function SessionNotices({ prescription, logs, unit, onFinish }: Props) {
           reached, so a finished plan used to re-offer its final session for
           ever — congratulating somebody and then giving them nowhere to go. */}
       {prescription.isComplete && onFinish && (
-        <div
-          data-testid="program-complete"
-          className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-2 text-xs text-emerald-700 dark:text-emerald-400"
-        >
+        <div data-testid="program-complete" className={DONE.notice}>
           <p className="font-medium">You have finished this program. 🎉</p>
           <p className="mt-0.5">
             Everything you logged is kept either way — ending it moves it to the programs you have
             finished, and starting it again begins from week one.
           </p>
+          {/* `Button`, not two hand-rolled ones: these were `min-h-9` — 36 px,
+              eight under the floor — and the second hovered `bg-accent`, which
+              in this app is the sunset red, so "Run it again" flashed a warning
+              colour at you for wanting to run it again. */}
           <div className="mt-1.5 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => onFinish("archive")}
-              className="min-h-9 rounded-md border border-emerald-500/40 px-2 py-1 transition-colors hover:bg-emerald-500/15"
-            >
+            <Button size="sm" variant="outline" onClick={() => onFinish("archive")}>
               End it — I am done
-            </button>
-            <button
-              type="button"
-              onClick={() => onFinish("restart")}
-              className="min-h-9 rounded-md border border-border px-2 py-1 text-muted-foreground transition-colors hover:bg-accent"
-            >
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => onFinish("restart")}>
               Run it again
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {prescription.isFinalSession && !prescription.isComplete && (
-        <p className="text-xs text-emerald-600">
+        <p className={`text-xs ${DONE.text}`}>
           Final session — you will have graduated the program. 🎉
         </p>
       )}

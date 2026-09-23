@@ -16,6 +16,7 @@
  * one write lives in `DayAssignment`.
  */
 
+import { DONE } from "./trainingStyles"
 import type { WeekSoFar } from "../types"
 
 /** Monday-first, matching every other week in this app. */
@@ -59,7 +60,7 @@ export function WeekStrip({ week, labels, onPickDay }: Props) {
               aria-hidden
               className={`size-2 rounded-full ${
                 trained
-                  ? "bg-emerald-500"
+                  ? DONE.dot
                   : isToday
                     ? "ring-1 ring-primary"
                     : "bg-muted-foreground/30"
@@ -93,7 +94,9 @@ export function WeekStrip({ week, labels, onPickDay }: Props) {
             data-testid={`week-day-${weekday}`}
             data-today={isToday ? "1" : undefined}
             data-trained={trained ? "1" : undefined}
-            className={`${shared} transition-colors hover:bg-accent`}
+            // `bg-accent` in this app is the sunset red; a day you can tap
+            // should not flash a warning colour under your thumb.
+            className={`${shared} transition-colors hover:bg-muted/50`}
             aria-label={`${short}: ${what}. Tap to change.`}
           >
             {body}

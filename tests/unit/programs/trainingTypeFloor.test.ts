@@ -77,8 +77,9 @@ const OLD_LANGUAGE = /\bzinc-\d|\bsky-\d|text-\[(?:9|10|10\.5|11|11\.5)px\]/g
 const TYPE_FLOOR_ALLOWED: Record<string, number> = {
   "src/goals/components/north-star/BuildBoard.tsx": 91,
   "src/goals/components/north-star/RoutineCard.tsx": 102,
-  "src/programs/components/ProgressionView.tsx": 1,
-  "src/programs/components/live/LiveWorkoutScreen.tsx": 1,
+  // ProgressionView and LiveWorkoutScreen came off on 2026-09-23: the one
+  // caption row that is genuinely 11 px reads `GRID_CAPTION` now, so the only
+  // 11 px left in training is the constant that owns it.
   "src/programs/components/trainingStyles.ts": 1,
 }
 

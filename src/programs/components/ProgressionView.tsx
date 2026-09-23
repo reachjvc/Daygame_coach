@@ -184,7 +184,11 @@ export function ProgressionView({ logs, enrollment }: Props) {
                           ) : (
                             <>
                               {formatLoad(l.first)} → <span className="text-foreground font-medium">{formatLoad(l.latest)} {unitLabel}</span>
-                              <span className={`ml-1.5 text-xs ${moved > 0 ? "text-emerald-600" : "text-amber-600"}`}>
+                              {/* NO COLOUR ON THE DIRECTION. Green in this app means finished — a
+                                  ticked set, a rest that is over — and a screen that borrows it
+                                  for "went up" takes the meaning away from the ticks that need
+                                  it. The sign and the arrow already say which way. */}
+                              <span className="ml-1.5 text-xs text-muted-foreground">
                                 {moved > 0 ? "+" : ""}{formatLoad(moved)}
                               </span>
                             </>
@@ -234,7 +238,7 @@ export function ProgressionView({ logs, enrollment }: Props) {
                   {showAll ? "Show recent only" : `Show all ${logs.length}`}
                 </Button>
               )}
-              <p className="mt-1 text-[11px] text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Open one, correct it or delete it on the History tab.
               </p>
             </div>

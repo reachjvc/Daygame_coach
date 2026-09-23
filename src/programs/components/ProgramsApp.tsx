@@ -418,7 +418,7 @@ function ActiveProgram({
         <button
           type="button"
           onClick={() => void refresh()}
-          className="rounded-md border border-border px-2.5 py-1.5 text-xs transition-colors hover:bg-accent"
+          className="rounded-md border border-border px-2.5 py-1.5 text-xs transition-colors hover:bg-muted/50"
         >
           Try again
         </button>

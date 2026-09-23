@@ -73,18 +73,23 @@ describe("the live screen's type floor", () => {
     ).toEqual([])
   })
 
-  it("keeps 11 px for the caption row alone", () => {
-    const uses = filesUnder(LIVE_DIR).flatMap((file) => {
-      const hits = read(file).match(/text-\[11px\]/g) ?? []
-      return hits.map(() => path.relative(LIVE_DIR, file))
-    })
+  it("keeps 11 px for the caption row alone, wherever the caption lives", () => {
     /**
-     * Exactly one, in the file that draws SET · PREVIOUS · KG · REPS. If this
-     * rises, something else has been shrunk below `text-xs`; if it falls to
-     * zero the caption has moved and this test should follow it, not be
-     * deleted.
+     * THE CAPTION MOVED, AND THIS FOLLOWED IT — which is what the note here
+     * said to do if the count in `live/` ever reached zero.
+     *
+     * On 2026-09-23 `LiveWorkoutScreen` stopped typing the class and started
+     * reading `GRID_CAPTION` from `trainingStyles.ts`, so the whole slice's one
+     * legitimate 11 px is now in the constant that owns it, and there is no
+     * copy of it anywhere else. That is strictly better than one file being
+     * allowed to say it: a constant can be read by a second caller without a
+     * second chance to get the size wrong.
      */
-    expect(uses).toEqual(["LiveWorkoutScreen.tsx"])
+    const uses = filesUnder(PROGRAMS_DIR).flatMap((file) => {
+      const hits = read(file).match(/text-\[11px\]/g) ?? []
+      return hits.map(() => path.relative(PROGRAMS_DIR, file).replace(/\\/g, "/"))
+    })
+    expect(uses).toEqual(["components/trainingStyles.ts"])
   })
 })
 
