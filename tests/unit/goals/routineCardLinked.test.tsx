@@ -118,14 +118,53 @@ describe("the programs could not be read", () => {
   })
 })
 
+describe("a program that has ended", () => {
+  it("says so, and does not reopen the designer in the same breath", () => {
+    /**
+     * A SEPARATE STATE FROM "no program", and that is the whole point: `none`
+     * is a week nobody has ever tracked, and this is one that was tracked until
+     * a moment ago. Falling silently back to `none` meant a program somebody
+     * had trained for months simply stopped being mentioned, with the designer
+     * reopening underneath as though nothing had happened.
+     */
+    card({ state: "ended" })
+
+    const said = screen.getByTestId("training-week-ended").textContent ?? ""
+    expect(said).toMatch(/has ended/i)
+    // The reassurance that matters when a program stops.
+    expect(said).toMatch(/everything you logged is kept/i)
+
+    // The designer is not offered beside it; it comes back on the next load,
+    // when the notice has been seen.
+    expect(screen.queryByLabelText(/Name for training day/i)).toBeNull()
+    expect(weeklyStepper()).toHaveLength(0)
+  })
+
+  it("points at the page that can start the next one", () => {
+    card({ state: "ended" })
+    const link = screen.getByRole("link", { name: /Change on the Training page/i })
+    expect(decodeURIComponent(link.getAttribute("href") ?? "")).toContain("step=systems")
+  })
+})
+
 describe("no program at all", () => {
   it("leaves the week editable, because a hand-written week is a real thing", () => {
     card({ state: "none" })
 
     expect(screen.queryByTestId("training-week-linked")).toBeNull()
     expect(screen.queryByTestId("training-week-failed")).toBeNull()
-    // The designer is there to be typed into: day names, and the stepper.
-    expect(screen.getByLabelText(/Name for training day 1/i)).toBeTruthy()
+    /**
+     * The designer is there to be worked in: a row per day with its own
+     * options, and the stepper.
+     *
+     * NOT "an input per day" any more. The name was a box that was also the
+     * label, and every keystroke went through `renameSplitDay`, which trims —
+     * so the space in "Upper Body" was deleted as it was typed, and the only
+     * way to find out that a blank name is refused was to try it and watch
+     * nothing happen. The rename is a dialog behind the row's ⋮ now.
+     */
+    expect(screen.getAllByRole("button", { name: /^Options for / }).length).toBeGreaterThan(0)
+    expect(screen.queryByLabelText(/Name for training day/i)).toBeNull()
     expect(weeklyStepper().length).toBeGreaterThan(0)
   })
 })

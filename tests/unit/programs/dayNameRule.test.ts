@@ -87,21 +87,65 @@ describe("day names are trimmed on commit, never per keystroke", () => {
     ).toEqual([])
   })
 
-  test("the three day-name boxes all go through DraftInput", () => {
-    // Named rather than counted: if one of these is rewritten and quietly drops
-    // back to a raw input, the count would still be three.
-    const wired = [
+  /**
+   * THIS USED TO ASSERT THAT ALL THREE BOXES WERE A `DraftInput`, and that was
+   * a test of the MECHANISM rather than of the rule.
+   *
+   * On 2026-09-23 two of the three stopped being boxes at all: the rename moved
+   * behind a row's ⋮ into a dialog with a Save button, which satisfies the rule
+   * more strongly than `DraftInput` did — nothing is committed until Save, and
+   * a blank name is refused with something to READ rather than by the trim
+   * quietly doing nothing. The old assertion went red for a change that made
+   * the thing it was protecting better, which is what a proxy assertion does.
+   *
+   * So it asks the two questions that actually matter instead: the rename is
+   * still REACHABLE from each of these screens (a control nobody can find is
+   * the other way to pass "nothing renames per keystroke"), and no keystroke
+   * event of any name reaches it. `onChange` is the shape that was wrong and
+   * the test above owns it; `onInput` and `onKeyUp` are the two ways the same
+   * mistake would be made next.
+   */
+  test("each screen can still rename a day, and no keystroke event reaches the rename", () => {
+    const screens = [
       "src/programs/components/ProgramEditor.tsx",
       "src/programs/components/CustomProgramBuilder.tsx",
       "src/goals/components/north-star/RoutineCard.tsx",
     ]
-    const missing = wired.filter((rel) => {
+
+    /**
+     * The handler form too: `RoutineCard` never calls `renameSplitDay` — it
+     * calls `handlers.onRenameSplitDay`, and the flow above it calls the
+     * trimming function. Looking only for the direct call said the control had
+     * been lost when it had merely been passed down, which is a test failing
+     * for a spelling rather than for a fact.
+     */
+    const REACHES_A_RENAME = /\b(?:on)?(?:R|r)ename(?:Day|SplitDay)\s*\(/
+    const unreachable = screens.filter((rel) => {
       const src = fs.readFileSync(path.join(projectRoot, rel), "utf-8")
-      return !src.includes("DraftInput")
+      return !REACHES_A_RENAME.test(src)
     })
     expect(
-      missing,
-      "These rename a training day and no longer use DraftInput:\n" + missing.join("\n")
+      unreachable,
+      "These no longer rename a training day at all — the control was lost, not fixed:\n" +
+        unreachable.join("\n")
+    ).toEqual([])
+
+    const keystroke: string[] = []
+    for (const rel of screens) {
+      const code = fs
+        .readFileSync(path.join(projectRoot, rel), "utf-8")
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/\/\/[^\n]*/g, "")
+      for (const [block] of code.matchAll(/on(?:Input|KeyUp|KeyDown)=\{[\s\S]{0,200}?\}/g)) {
+        if (/\b(?:on)?(?:R|r)ename(?:Day|SplitDay)\s*\(/.test(block)) {
+          keystroke.push(`${rel} — renames inside a keystroke handler`)
+        }
+      }
+    }
+    expect(
+      keystroke,
+      "A rename reached from a keystroke makes a two-word day name untypeable:\n" +
+        keystroke.join("\n")
     ).toEqual([])
   })
 })

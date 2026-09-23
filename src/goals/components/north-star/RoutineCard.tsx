@@ -21,14 +21,24 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { AlertTriangle, Check, ChevronDown, Minus, Plus, X } from "lucide-react"
+import { AlertTriangle, Check, ChevronDown, Minus, MoreVertical, Plus, X } from "lucide-react"
+import { BottomSheet, SheetRow } from "@/components/BottomSheet"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import type { LinkedProgram, NsArea, NsRoutine } from "@/src/goals/types"
 import { NS_SPLITS, ROUTINES_INTRO, ROUTINE_BLUEPRINT_MAP, SERVES_COPY } from "@/src/goals/data/northStar"
 import { libraryStepsInStack, presetCost, routineCoverage, routineIsUntouched, routineMinutes, routineSummary, splitPreview } from "@/src/goals/northStarService"
 import { Peek } from "./Peek"
 import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
 import { withReturn } from "@/src/shared/returnTo"
-import { DraftInput } from "@/components/ui/draft-input"
 
 const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -162,7 +172,11 @@ export function RoutineCard({
     (linkedProgram.state === "linked" ||
       linkedProgram.state === "several" ||
       linkedProgram.state === "failed" ||
-      linkedProgram.state === "loading")
+      linkedProgram.state === "loading" ||
+      // `ended` too: the designer reopening in the same breath as "that program
+      // has ended" reads as the app shrugging. It comes back on the next load,
+      // when the notice has been seen.
+      linkedProgram.state === "ended")
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [draft, setDraft] = useState("")
   const [draftMinutes, setDraftMinutes] = useState(5)
@@ -300,19 +314,28 @@ export function RoutineCard({
             {!tracked && (
             <span className="ml-auto flex items-center gap-1.5">
               <span className="text-[11px] text-zinc-500">{sequence ? "runs" : "training days"}</span>
-              <button
+              {/* 20-px SQUARES UNTIL 2026-09-23, on a screen people use on a
+                  phone. `size="icon-sm"` is 44 px on a phone and 32 on a
+                  desktop, which is the app's own answer to the same question. */}
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => handlers.onDays(routine.id, Math.max(1, routine.daysPerWeek - 1))}
                 disabled={routine.daysPerWeek <= 1}
                 aria-label={`Fewer days for ${routine.label}`}
-                className="size-5 rounded border border-white/15 text-zinc-400 hover:bg-white/10 disabled:opacity-30 flex items-center justify-center"
-              ><Minus className="size-3" /></button>
-              <span className="text-[11px] text-zinc-300 tabular-nums w-12 text-center">{routine.daysPerWeek}×/wk</span>
-              <button
+              >
+                <Minus className="size-4" />
+              </Button>
+              <span className="w-12 text-center text-xs tabular-nums text-zinc-300">{routine.daysPerWeek}×/wk</span>
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => handlers.onDays(routine.id, Math.min(7, routine.daysPerWeek + 1))}
                 disabled={routine.daysPerWeek >= 7}
                 aria-label={`More days for ${routine.label}`}
-                className="size-5 rounded border border-white/15 text-zinc-400 hover:bg-white/10 disabled:opacity-30 flex items-center justify-center"
-              ><Plus className="size-3" /></button>
+              >
+                <Plus className="size-4" />
+              </Button>
             </span>
             )}
           </div>
@@ -630,6 +653,17 @@ function TrainingWeek({ linked }: { linked: LinkedProgram }) {
     )
   }
 
+  if (linked.state === "ended") {
+    return (
+      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3" data-testid="training-week-ended">
+        <p className="text-[12px] text-zinc-300">
+          The program that was tracking this week has ended. Everything you logged is kept.
+        </p>
+        <div className="mt-2">{change}</div>
+      </div>
+    )
+  }
+
   if (linked.state !== "linked") return null
 
   return (
@@ -645,117 +679,212 @@ function TrainingWeek({ linked }: { linked: LinkedProgram }) {
 
 function SplitDesigner({ routine, color, handlers }: { routine: NsRoutine; color: string; handlers: RoutineHandlers }) {
   const [picking, setPicking] = useState(false)
+  /** Which day's sheet is open. One value, because two open sheets is a state with no drawing. */
+  const [menu, setMenu] = useState<string | null>(null)
+  /** The rename dialog: the day, what is typed, and why it cannot be saved. */
+  const [naming, setNaming] = useState<{ id: string; value: string; problem: string | null } | null>(null)
   const preview = splitPreview(routine)
 
   if (routine.splitDays.length === 0) {
     return (
       <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Name your training days</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Name your training days</p>
         {picking ? (
-          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {NS_SPLITS.map((s) => (
-              <button
+              <Button
                 key={s.id}
-                onClick={() => { handlers.onApplySplit(routine.id, s.id); setPicking(false) }}
+                size="sm"
+                variant="outline"
                 title={`${s.days.join(" · ")} — ${s.perWeek}×/wk`}
-                className="text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-zinc-300 hover:bg-white/10 hover:border-white/30 transition-colors"
+                onClick={() => { handlers.onApplySplit(routine.id, s.id); setPicking(false) }}
               >
-                {s.label} <span className="text-zinc-500">×{s.perWeek}</span>
-              </button>
+                {s.label} ×{s.perWeek}
+              </Button>
             ))}
-            <button onClick={() => setPicking(false)} className="text-[10px] text-zinc-600 hover:text-zinc-400">cancel</button>
+            <Button size="sm" variant="ghost" onClick={() => setPicking(false)}>
+              Cancel
+            </Button>
           </div>
         ) : (
-          <button
-            onClick={() => setPicking(true)}
-            className="mt-1 text-[11.5px] text-zinc-400 hover:text-zinc-200 underline decoration-dotted underline-offset-2 transition-colors"
-          >
-            Pick a split. Push and pull, upper and lower, or your own
-          </button>
+          <Button size="sm" variant="outline" className="mt-1.5" onClick={() => setPicking(true)}>
+            Pick a split
+          </Button>
+        )}
+        {!picking && (
+          <p className="mt-1.5 text-sm text-zinc-400">
+            Push and pull, upper and lower, or your own.
+          </p>
         )}
       </div>
     )
   }
 
+  const day = naming ? routine.splitDays.find((d) => d.id === naming.id) : undefined
+
+  function saveName() {
+    if (!naming) return
+    const value = naming.value.trim()
+    /**
+     * THE REFUSAL IS READ, NOT SWALLOWED. `renameSplitDay` trims and ignores an
+     * empty name, so as a per-keystroke handler it did two things at once: it
+     * made "Upper Body" impossible to type — the space was deleted as it was
+     * typed — and it turned "you cannot call a day nothing" into silence. The
+     * trim stays underneath as the commit rule; this is where somebody is told.
+     */
+    if (!value) {
+      setNaming({ ...naming, problem: "A training day needs a name" })
+      return
+    }
+    handlers.onRenameSplitDay(routine.id, naming.id, value)
+    setNaming(null)
+  }
+
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3" data-testid="split-designer">
       <div className="flex items-center gap-2">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Training days, in order</p>
-        <button onClick={() => handlers.onClearSplit(routine.id)} className="ml-auto text-[10px] text-zinc-600 hover:text-rose-300 transition-colors">
-          remove split
-        </button>
+        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Training days, in order</p>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="ml-auto text-destructive"
+          onClick={() => handlers.onClearSplit(routine.id)}
+        >
+          Remove split
+        </Button>
       </div>
-      <ul className="mt-2 space-y-1">
+      <ul className="mt-2">
         {routine.splitDays.map((d, i) => (
-          <li key={d.id} className="group/day flex items-center gap-1.5">
+          <li key={d.id} className="flex min-h-11 items-center gap-2">
             <span
-              className="text-[10px] font-bold size-4.5 rounded-full flex items-center justify-center shrink-0 tabular-nums"
+              className="flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums"
               style={{ backgroundColor: `${color}26`, color }}
-            >{i + 1}</span>
-            {/* `renameSplitDay` trims and ignores empty, so as a per-keystroke
-                handler it made a two-word day name impossible to type. */}
-            <DraftInput
-              value={d.name}
-              onCommit={(name) => handlers.onRenameSplitDay(routine.id, d.id, name)}
-              aria-label={`Name for training day ${i + 1}`}
-              className="flex-1 min-w-0 h-auto rounded-none border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-[12.5px] text-zinc-200 shadow-none transition-colors hover:border-white/10 focus-visible:border-white/25 focus-visible:ring-0"
-            />
-            <span className="flex items-center gap-0.5 shrink-0">
-              <button
-                onClick={() => handlers.onMoveSplitDay(routine.id, i, -1)}
-                disabled={i === 0}
-                aria-label={`Move ${d.name} earlier`}
-                className="size-4.5 rounded border border-white/10 text-zinc-500 hover:bg-white/10 disabled:opacity-25 flex items-center justify-center"
-              ><ChevronDown className="size-3 rotate-180" /></button>
-              <button
-                onClick={() => handlers.onMoveSplitDay(routine.id, i, 1)}
-                disabled={i === routine.splitDays.length - 1}
-                aria-label={`Move ${d.name} later`}
-                className="size-4.5 rounded border border-white/10 text-zinc-500 hover:bg-white/10 disabled:opacity-25 flex items-center justify-center"
-              ><ChevronDown className="size-3" /></button>
-              <button
-                onClick={() => handlers.onRemoveSplitDay(routine.id, d.id)}
-                disabled={routine.splitDays.length <= 1}
-                aria-label={`Remove ${d.name}`}
-                className="size-4.5 rounded text-zinc-600 hover:text-rose-300 disabled:opacity-25 flex items-center justify-center transition-colors"
-              ><X className="size-3" /></button>
+            >
+              {i + 1}
             </span>
+            {/* A NAME, NOT A BOX. The box was the rename control AND the label,
+                so the only way to find out a blank name was refused was to try
+                it and watch nothing happen. */}
+            <span className="min-w-0 flex-1 text-sm font-medium text-zinc-200">{d.name}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={`Options for ${d.name}`}
+              data-testid={`split-day-menu-${d.id}`}
+              onClick={() => setMenu(d.id)}
+            >
+              <MoreVertical className="size-5" />
+            </Button>
+
+            <BottomSheet
+              open={menu === d.id}
+              onClose={() => setMenu(null)}
+              title={d.name}
+              testId="split-day-sheet"
+            >
+              <SheetRow
+                testId="split-day-rename"
+                onClick={() => {
+                  setMenu(null)
+                  setNaming({ id: d.id, value: d.name, problem: null })
+                }}
+              >
+                Rename
+              </SheetRow>
+              {/* Off and visible, not hidden: a sheet whose rows move around
+                  between openings is a sheet nobody can learn. */}
+              <SheetRow
+                testId="split-day-up"
+                disabled={i === 0}
+                onClick={() => { setMenu(null); handlers.onMoveSplitDay(routine.id, i, -1) }}
+              >
+                Move up
+              </SheetRow>
+              <SheetRow
+                testId="split-day-down"
+                disabled={i === routine.splitDays.length - 1}
+                onClick={() => { setMenu(null); handlers.onMoveSplitDay(routine.id, i, 1) }}
+              >
+                Move down
+              </SheetRow>
+              <SheetRow
+                testId="split-day-remove"
+                destructive
+                disabled={routine.splitDays.length <= 1}
+                onClick={() => { setMenu(null); handlers.onRemoveSplitDay(routine.id, d.id) }}
+              >
+                Remove this day
+              </SheetRow>
+            </BottomSheet>
           </li>
         ))}
       </ul>
       <button
+        type="button"
         onClick={() => handlers.onAddSplitDay(routine.id)}
-        className="mt-1.5 text-[11px] px-2 py-0.5 rounded-full border border-dashed border-white/20 text-zinc-500 hover:text-zinc-300 hover:border-white/30 transition-colors"
-      >+ day</button>
+        className="mt-1.5 min-h-11 w-full rounded-md border border-dashed border-white/20 text-sm text-zinc-400 transition-colors hover:border-white/30 hover:text-zinc-200"
+      >
+        + day
+      </button>
+
+      <Dialog open={naming !== null} onOpenChange={(next) => !next && setNaming(null)}>
+        <DialogContent data-testid="split-day-dialog">
+          <DialogHeader>
+            <DialogTitle>Rename {day?.name ?? "this day"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor={`split-name-${routine.id}`}>Name</Label>
+            <Input
+              id={`split-name-${routine.id}`}
+              autoFocus
+              value={naming?.value ?? ""}
+              placeholder="Upper Body, Legs, Conditioning…"
+              onChange={(e) =>
+                setNaming((was) => (was ? { ...was, value: e.target.value, problem: null } : was))
+              }
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  saveName()
+                }
+              }}
+            />
+            {naming?.problem && (
+              <p role="alert" className="text-sm text-destructive">
+                {naming.problem}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNaming(null)}>
+              Cancel
+            </Button>
+            <Button onClick={saveName} data-testid="split-name-save">
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {preview.length > 0 && (
-        <p className="text-[11px] text-zinc-400 mt-2">
+        <p className="mt-2 text-sm text-zinc-400">
           Your week:{" "}
           {preview.map((p, i) => (
             <span key={i}>
-              {i > 0 && <span className="text-zinc-600"> · </span>}
-              <span className="text-zinc-500">{WEEKDAY_SHORT[i]}</span> <span style={{ color }}>{p.dayName}</span>
+              {i > 0 && <span className="text-zinc-500"> · </span>}
+              <span className="text-zinc-400">{WEEKDAY_SHORT[i]}</span> <span style={{ color }}>{p.dayName}</span>
             </span>
           ))}
           {routine.daysPerWeek < routine.splitDays.length && (
-            <span className="text-zinc-600"> — only the first {routine.daysPerWeek} run each week. Raise the days to use them all.</span>
+            <span className="text-zinc-500"> — only the first {routine.daysPerWeek} run each week. Raise the days to use them all.</span>
           )}
-          {routine.daysPerWeek > routine.splitDays.length && <span className="text-zinc-600"> — the days repeat within the week.</span>}
+          {routine.daysPerWeek > routine.splitDays.length && <span className="text-zinc-500"> — the days repeat within the week.</span>}
         </p>
       )}
     </div>
   )
 }
 
-
-/**
- * The minutes on one step, editable in place.
- *
- * Held locally while it is being typed, because a controlled input wired
- * straight to the plan fights you the moment you clear it to type a new
- * number: "10" backspaced to "" becomes 0, which re-renders as "0" with the
- * cursor after it. It commits on every valid keystroke and tidies up on blur.
- */
 function StepMinutes({ minutes, title, onChange }: { minutes: number; title: string; onChange: (minutes: number) => void }) {
   const [draft, setDraft] = useState(String(minutes))
   const [editing, setEditing] = useState(false)

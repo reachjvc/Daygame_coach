@@ -1765,6 +1765,16 @@ export type LinkedProgram =
   | { state: "linked"; name: string; week: string }
   /** The referenced one is running AND so is at least one other. */
   | { state: "several"; count: number }
+  /**
+   * The program that was tracking this week is no longer running.
+   *
+   * A SEPARATE STATE FROM `none`, and that is the whole point: `none` is a week
+   * nobody has ever tracked, and this is one that was tracked until a moment
+   * ago. Falling silently back to `none` meant a program somebody had trained
+   * for months simply stopped being mentioned, with the designer reopening
+   * underneath as though nothing had happened.
+   */
+  | { state: "ended" }
 
 export interface NsRoutineProgram {
   /** The row in `program_enrollments` this week is tracked by. */

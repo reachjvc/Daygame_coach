@@ -196,6 +196,64 @@ describe("with more than one running", () => {
   })
 })
 
+/**
+ * LIFE MASTERY IS SOMEWHERE YOU COME BACK TO.
+ *
+ * `NorthStarFlow` writes the step to the address, but nothing built a link
+ * FROM it — so following one out of this card and pressing Back landed on the
+ * north star paragraph, whatever step you had been working on. The address is
+ * put on the link at the moment it is made, which is the one place that knows
+ * which step it is on.
+ */
+describe("every way out", () => {
+  const cases: Array<[string, Partial<Parameters<typeof TrainingProgramCard>[0]>, RegExp[]]> = [
+    ["nothing running", {}, [/Pick a program/i, /Build my own/i]],
+    [
+      "one running",
+      { read: { enrollments: [enrollment()], loading: false, error: null } },
+      [/Change program/i],
+    ],
+    [
+      "several running",
+      {
+        read: {
+          enrollments: [enrollment({ id: "a" }), enrollment({ id: "b" })],
+          loading: false,
+          error: null,
+        },
+      },
+      [/Manage programs/i],
+    ],
+    ["a program that ended", { ended: { enrollmentId: "old" } }, [/Choose what is next/i]],
+    [
+      "a failed read",
+      { read: { enrollments: [], loading: false, error: "nope" } },
+      [/Pick a program/i],
+    ],
+  ]
+
+  for (const [state, props, links] of cases) {
+    it(`carries the templates step back, with ${state}`, () => {
+      card(props)
+      for (const name of links) {
+        const href = screen.getByRole("link", { name }).getAttribute("href") ?? ""
+        expect(decodeURIComponent(href), `${String(name)} has no way back`).toContain(
+          "/life-mastery?step=templates"
+        )
+      }
+    })
+  }
+
+  it("does NOT put a return address on today's session — that is a destination", () => {
+    // "Today's session" is where you were going. Sending somebody back to a
+    // planning page from the screen they are about to train on is the wrong
+    // way round.
+    card({ read: { enrollments: [enrollment()], loading: false, error: null } })
+    const href = screen.getByRole("link", { name: /Today's session/i }).getAttribute("href") ?? ""
+    expect(href).not.toContain("from=")
+  })
+})
+
 describe("the card's own language", () => {
   it("speaks the app's tokens, at a size people can read, with no orange", () => {
     /**

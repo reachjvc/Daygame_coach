@@ -450,6 +450,9 @@ export function NorthStarFlow({
     if (programsError) return { state: "failed" }
     const referenced = plan.routines.find((r) => r.blueprintId === "workout")?.program?.enrollmentId
     const enrollment = referenced ? enrollments.find((e) => e.id === referenced) : undefined
+    // A reference dropped on THIS load, said once. The next load has no
+    // `endedProgram` and the week is the person's own again.
+    if (!enrollment && endedProgram) return { state: "ended" }
     if (!enrollment) return { state: "none" }
     if (enrollments.length > 1) return { state: "several", count: enrollments.length }
     const program = getProgram(enrollment.program_id)
@@ -460,7 +463,7 @@ export function NorthStarFlow({
       // day is what it says.
       week: program ? describeTrainingWeek(program, enrollment) : "",
     }
-  }, [plan, enrollments, programsLoading, programsError])
+  }, [plan, enrollments, programsLoading, programsError, endedProgram])
 
   /**
    * TODAY KEEPS UP WITH THE CLOCK.
