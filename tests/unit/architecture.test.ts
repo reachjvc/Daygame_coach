@@ -761,7 +761,6 @@ describe('Architecture Compliance', () => {
       'src/health/components/WeightTracker.tsx',
       'src/inner-game/components/InnerGamePage.tsx',
       'src/profile/components/InteractiveWorldMap.tsx',
-      'src/programs/components/CustomProgramBuilder.tsx',
       'src/programs/components/HistoryTab.tsx',
       'src/programs/components/PastPrograms.tsx',
       'src/programs/components/ProgramDetail.tsx',
@@ -842,10 +841,8 @@ describe('Architecture Compliance', () => {
       'src/goals/components/north-star/WeekGrid.tsx',
       // WorkoutPrograms came off on 2026-09-23: the 628-line second copy of
       // the training feature is a status card with no type under 12 px in it.
-      'src/programs/components/CustomProgramBuilder.tsx',
       // EditActiveProgram and ProgramEditor came off on 2026-09-23 — see the
       // note on TRAINING_STYLE_DEBT above.
-      'src/programs/components/ui.tsx',
     ])
 
     function unreadableText(): string[] {
@@ -938,9 +935,8 @@ describe('Architecture Compliance', () => {
      * allowlist below is the two places that still do it and the reason each is
      * safe; it may SHRINK and never grow.
      */
-    const BLANK_TO_NUMBER_ALLOWED = new Set([
+    const BLANK_TO_NUMBER_ALLOWED = new Set<string>([
       // Guarded by an explicit `weight.trim() !== ""` on the same line.
-      'src/programs/components/CustomProgramBuilder.tsx',
       // HistoryTab came off this list on 2026-09-23: the correction editor
       // moved to the workout's own page and now refuses to save a blank box
       // rather than sending `Number("") || 0` as a 0 kg set.
@@ -1253,7 +1249,6 @@ describe('Architecture Compliance', () => {
      */
     const TRAINING_STYLE_DEBT = new Set<string>([
       'src/goals/components/north-star/WorkoutPrograms.tsx',
-      'src/programs/components/CustomProgramBuilder.tsx',
       // EditActiveProgram came off on 2026-09-23: a `Card` from the app's own
       // kit, `Input` in place of its 12.5-px boxes, and "Save changes" is the
       // plain `Button` rather than the EMERALD one it used to be — green in
@@ -1280,7 +1275,6 @@ describe('Architecture Compliance', () => {
       'src/programs/components/live/LiveWorkoutScreen.tsx',
       'src/programs/components/live/RestBar.tsx',
       'src/programs/components/live/SetRow.tsx',
-      'src/programs/components/ui.tsx',
     ])
 
     test('no NEW training file speaks a second visual language', () => {
@@ -1689,7 +1683,6 @@ describe('Architecture Compliance', () => {
    */
   describe('No training screen reads the browser calendar', () => {
     const TRAINING_BROWSER_CLOCK_ALLOWED: Record<string, number> = {
-      'components/CustomProgramBuilder.tsx': 1,
       // 4 → 3 on 2026-09-23: the month grouping stopped being decided by
       // `toLocaleDateString` in the browser's zone, so a workout logged at
       // 00:30 on the 1st was no longer filed under the previous month.

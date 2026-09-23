@@ -14,6 +14,8 @@ import { StartLooseWorkout } from "./StartLooseWorkout"
 import { EditActiveProgram } from "./EditActiveProgram"
 import { WeekStrip } from "./WeekStrip"
 import { ProgramRow } from "./ProgramRow"
+import { BuildYourWeek } from "./BuildYourWeek"
+import { SavedWeeksSection } from "./SavedWeeksSection"
 import { TRAINING_CARD } from "./trainingStyles"
 import { ProgramSheet } from "./ProgramSheet"
 import { DayAssignment } from "./DayAssignment"
@@ -55,7 +57,7 @@ interface ProgramsAppProps {
   /** Today, decided on the server. See `trainingCardState`. */
   cardState?: TrainingCardState | null
   /** Which screen the address bar asked for, parsed on the server. */
-  where?: Pick<ProgramsLocation, "view" | "programId" | "catalogId">
+  where?: Pick<ProgramsLocation, "view" | "programId" | "catalogId" | "draftId">
   /**
    * A workout already open, if there is one.
    *
@@ -75,13 +77,14 @@ export function ProgramsApp({
   where,
 }: ProgramsAppProps = {}) {
   const router = useRouter()
-  const view = where ?? { view: "today" as const, programId: null, catalogId: null }
+  const view = where ?? { view: "today" as const, programId: null, catalogId: null, draftId: null }
 
   /** Move to another screen by changing the address. */
   function goTo(next: {
-    view: "today" | "programs" | "detail" | "edit"
+    view: "today" | "programs" | "detail" | "edit" | "build"
     program?: string | null
     catalog?: string | null
+    draft?: string | null
   }) {
     const url = new URL(window.location.href)
     const q = url.searchParams
@@ -90,6 +93,7 @@ export function ProgramsApp({
     for (const [key, value] of [
       ["program", next.program],
       ["catalog", next.catalog],
+      ["draft", next.draft],
     ] as const) {
       if (value) q.set(key, value)
       else q.delete(key)
@@ -155,6 +159,30 @@ export function ProgramsApp({
           ← My programs
         </Button>
         <ProgramCatalog onSelect={(programId) => goTo({ view: "detail", catalog: programId })} />
+        {/* THE SECOND DOOR, BESIDE THE FIRST. "Build my own" was inside Life
+            Mastery, behind a mode switch, on a step most people never opened —
+            so the catalogue read as the only way to have a program. */}
+        <Button variant="outline" className="w-full" onClick={() => goTo({ view: "build" })}>
+          Build your own week
+        </Button>
+      </div>
+    )
+  }
+
+  if (view.view === "build") {
+    return (
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" onClick={() => goTo({ view: "today" })}>
+          ← My programs
+        </Button>
+        <BuildYourWeek
+          enrollments={enrollments}
+          draftId={view.draftId}
+          onStarted={(enrollmentId) => {
+            refresh()
+            goTo({ view: "today", program: enrollmentId })
+          }}
+        />
       </div>
     )
   }
@@ -304,6 +332,18 @@ export function ProgramsApp({
           been archived, and who therefore had no active program, could not see
           it anywhere. That is the whole of "it still doesn't load the one I
           custom made a long time ago". */}
+      {/* SAVED WEEKS, WHERE THE PROGRAMS ARE. They were listed inside Life
+          Mastery's builder — a screen that has gone — with a 32-px delete
+          square, no Start at all, and `/api/programs/drafts/[id]/start` had
+          never had a caller on any screen. */}
+      <SavedWeeksSection
+        onOpen={(id) => goTo({ view: "build", draft: id })}
+        onStarted={(enrollmentId) => {
+          refresh()
+          goTo({ view: "today", program: enrollmentId })
+        }}
+      />
+
       <PastPrograms initial={initialPast} onResumed={refresh} />
     </div>
   )

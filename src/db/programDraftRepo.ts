@@ -20,20 +20,10 @@ import { createServerSupabaseClient } from "./supabase"
 import { enrollInProgram } from "./programRepo"
 import { CustomScheduleSchema } from "@/src/programs/schemas"
 import { CUSTOM_PROGRAM_ID } from "@/src/programs/data/customProgram"
-import type { Discipline, ProgramSchedule, UnitSystem } from "@/src/programs/types"
-
-export interface ProgramDraft {
-  id: string
-  name: string
-  discipline: Discipline
-  unitSystem: UnitSystem
-  schedule: ProgramSchedule
-  workingWeights: Record<string, number>
-  source: "built" | "catalog" | "saved_workout"
-  sourceProgramId: string | null
-  createdAt: string
-  updatedAt: string
-}
+// `ProgramDraft` is the slice's own shape and lives with the slice's types;
+// `DraftRow` below — the column names — stays where the columns are.
+import type { Discipline, ProgramDraft, ProgramSchedule, UnitSystem } from "@/src/programs/types"
+export type { ProgramDraft }
 
 interface DraftRow {
   id: string

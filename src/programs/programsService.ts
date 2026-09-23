@@ -3040,7 +3040,7 @@ export function parseProgramsLocation(
   running: readonly { id: string }[]
 ): ProgramsLocation {
   const tabs = ["today", "history", "progress"] as const
-  const views = ["today", "programs", "detail", "edit"] as const
+  const views = ["today", "programs", "detail", "edit", "build"] as const
 
   const asked = params.get("tab")
   const tab = (tabs as readonly string[]).includes(asked ?? "")
@@ -3064,6 +3064,7 @@ export function parseProgramsLocation(
     programId,
     catalogId: view === "detail" ? params.get("catalog") : null,
     enrollmentId: view === "edit" ? params.get("enrollment") : null,
+    draftId: view === "build" ? params.get("draft") : null,
     // Checked for the open-redirect tricks a `?from=` can carry.
     from: readReturn(params.get("from")),
     notice,

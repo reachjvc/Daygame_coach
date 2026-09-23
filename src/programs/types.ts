@@ -488,13 +488,15 @@ export type ReplayEvent =
  */
 export interface ProgramsLocation {
   tab: "today" | "history" | "progress"
-  view: "today" | "programs" | "detail" | "edit"
+  view: "today" | "programs" | "detail" | "edit" | "build"
   /** A RUNNING enrollment's id, or null — see `notice`. */
   programId: string | null
   /** A catalogue program, for `view=detail`. */
   catalogId: string | null
   /** An enrollment being edited, for `view=edit`. */
   enrollmentId: string | null
+  /** A saved week to load into the box, for `view=build`. */
+  draftId: string | null
   /** Where Back goes, already checked for open-redirect tricks. */
   from: string | null
   /** Something the URL asked for that is no longer true, said in one line. */
@@ -1069,6 +1071,72 @@ export interface ProgramSelection {
  * Here rather than beside the function because the architecture rule holds the
  * slice's types in one file, and it is read by three screens.
  */
+/**
+ * A TRAINING WEEK SOMEBODY SAVED, as the app understands it.
+ *
+ * Here rather than in `src/db/programDraftRepo.ts` because it is the slice's
+ * own shape: the repo maps a row onto it, the hook hands it to a screen, and
+ * two of those three are not the database. The repo's `DraftRow` — the column
+ * names — stays where the columns are.
+ */
+export interface ProgramDraft {
+  id: string
+  name: string
+  discipline: Discipline
+  unitSystem: UnitSystem
+  schedule: ProgramSchedule
+  workingWeights: Record<string, number>
+  source: "built" | "catalog" | "saved_workout"
+  sourceProgramId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+// ============================================================================
+// Saved weeks — what the drafts hook takes and answers with
+//
+// Here rather than beside the hook because the architecture rule holds a
+// slice's types in one file, and another session's run of the suite caught the
+// same thing on `programWeekService` this afternoon.
+// ============================================================================
+
+/** What a write answers with: the row on success, a sentence on failure. */
+export type DraftResult<T> = { ok: true; value: T } | { ok: false; error: string }
+
+/** The body both the create and the update take. */
+export interface DraftWrite {
+  name?: string
+  unitSystem?: "kg" | "lb"
+  schedule?: ProgramSchedule
+  workingWeights?: Record<string, number>
+}
+
+/**
+ * What a program can be started with — the same fields the enrolment route
+ * takes, because starting a written week IS enrolling in one.
+ */
+export interface StartWrite {
+  programId: string
+  level: "beginner" | "intermediate" | "advanced"
+  unitSystem: "kg" | "lb"
+  workingWeights?: Record<string, number>
+  customSchedule?: ProgramSchedule
+  label: string
+}
+
+export interface DraftsState {
+  drafts: ProgramDraft[]
+  loading: boolean
+  /** Null while the list is trusted. A failed read is NOT an empty list. */
+  error: string | null
+  refresh: () => Promise<void>
+  startCustomWeek: (body: StartWrite) => Promise<DraftResult<{ enrollment: { id: string } }>>
+  saveDraft: (body: DraftWrite) => Promise<DraftResult<ProgramDraft>>
+  updateDraft: (id: string, body: DraftWrite) => Promise<DraftResult<ProgramDraft>>
+  startDraft: (id: string) => Promise<DraftResult<{ enrollment: { id: string } }>>
+  deleteDraft: (id: string) => Promise<DraftResult<{ ok: true }>>
+}
+
 export interface ProgramWeekDescription {
   /** What to call it — the person's own name for a week they wrote. */
   name: string

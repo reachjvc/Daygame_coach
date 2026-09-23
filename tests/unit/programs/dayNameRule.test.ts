@@ -108,7 +108,6 @@ describe("day names are trimmed on commit, never per keystroke", () => {
   test("each screen can still rename a day, and no keystroke event reaches the rename", () => {
     const screens = [
       "src/programs/components/ProgramEditor.tsx",
-      "src/programs/components/CustomProgramBuilder.tsx",
       "src/goals/components/north-star/RoutineCard.tsx",
     ]
 

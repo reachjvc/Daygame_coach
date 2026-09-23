@@ -77,11 +77,9 @@ const OLD_LANGUAGE = /\bzinc-\d|\bsky-\d|text-\[(?:9|10|10\.5|11|11\.5)px\]/g
 const TYPE_FLOOR_ALLOWED: Record<string, number> = {
   "src/goals/components/north-star/BuildBoard.tsx": 91,
   "src/goals/components/north-star/RoutineCard.tsx": 102,
-  "src/programs/components/CustomProgramBuilder.tsx": 106,
   "src/programs/components/ProgressionView.tsx": 1,
   "src/programs/components/live/LiveWorkoutScreen.tsx": 1,
   "src/programs/components/trainingStyles.ts": 1,
-  "src/programs/components/ui.tsx": 35,
 }
 
 const found = (): Record<string, number> => {
@@ -124,6 +122,39 @@ describe("no training screen speaks the old visual language", () => {
         "and remove the entry entirely when it reaches zero:\n" +
         wrong.join("\n")
     ).toEqual([])
+  })
+})
+
+describe("the blue-grey kit is gone, not repainted", () => {
+  test("src/programs/components/ui.tsx does not exist and nothing imports it", () => {
+    /**
+     * `TYPE`, `IconButton`, `Segmented`, `Field`, `Stepper`, `Panel`, `Action`
+     * and `GroupLabel` — a whole second component library for one slice, with
+     * its own type scale and its own greys. Four screens imported it and each
+     * of them looked like a different app from the one around it.
+     *
+     * Deleted rather than repainted: a repainted kit is still a second answer
+     * to "what does a button look like", and the answer is `components/ui`.
+     */
+    expect(
+      fs.existsSync(path.join(projectRoot, "src/programs/components/ui.tsx")),
+      "the kit is back — the app's kit is components/ui"
+    ).toBe(false)
+
+    const importers: string[] = []
+    const walk = (dir: string) => {
+      for (const entry of fs.readdirSync(path.join(projectRoot, dir), { withFileTypes: true })) {
+        const rel = `${dir}/${entry.name}`
+        if (entry.isDirectory()) walk(rel)
+        else if (/\.tsx?$/.test(entry.name)) {
+          const src = fs.readFileSync(path.join(projectRoot, rel), "utf-8")
+          if (/from\s+["'](?:\.\/ui|@\/src\/programs\/components\/ui)["']/.test(src)) importers.push(rel)
+        }
+      }
+    }
+    for (const dir of ["src", "app"]) walk(dir)
+
+    expect(importers, "These still import the deleted kit:\n" + importers.join("\n")).toEqual([])
   })
 })
 

@@ -67,6 +67,36 @@ export function effectiveProgram(
   return { ...program, schedule: customSchedule }
 }
 
+/**
+ * IS THIS THE SAME WEEK, STRUCTURALLY?
+ *
+ * Day labels and lift names, in order. WEIGHTS ARE IGNORED, and that is the
+ * whole reason this exists rather than a text or a deep comparison: the moment
+ * a written week is started, the engine begins moving its weights, so a
+ * comparison that included them would stop matching after the first session —
+ * and the screen would offer to start a second copy of the program somebody is
+ * already running, which silently pauses the first.
+ *
+ * Case and surrounding space are ignored for the same reason a lift's identity
+ * is: "bench press" and "Bench Press" are one lift everywhere else in this app.
+ */
+export function sameWeek(a: ProgramSchedule, b: ProgramSchedule): boolean {
+  const shape = (s: ProgramSchedule): string | null => {
+    const days = scheduleDaysOrNone(s)
+    if (days.length === 0) return null
+    return days
+      .map((d) => `${norm(d.label)}:${d.exercises.map((e) => norm(e.name)).join(",")}`)
+      .join("|")
+  }
+  const left = shape(a)
+  const right = shape(b)
+  // An empty week matches nothing, not even another empty one: "you are already
+  // running this" about two blank weeks would be nonsense.
+  return left !== null && left === right
+}
+
+const norm = (text: string): string => text.trim().toLowerCase().replace(/\s+/g, " ")
+
 /** A deep, independent copy of the program's schedule — the copy-on-write snapshot. */
 export function materializeSchedule(program: ProgramDefinition): ProgramSchedule {
   if (!isCustomizable(program)) {

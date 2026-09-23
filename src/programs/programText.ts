@@ -41,6 +41,20 @@ import { EXERCISE_LIBRARY, freeLiftEntry, patternForName, customLiftId } from ".
 import { freshId } from "./customize"
 import { buildExercise } from "./builder"
 
+/**
+ * Where a week being written is kept between visits, in THIS browser.
+ *
+ * Deliberately not on the account: it is an unsent draft of a sentence somebody
+ * is halfway through typing, the same class as a message not yet sent, and
+ * putting that on an account is worse rather than better. Saving it as a week —
+ * which IS on the account — is a separate, deliberate act.
+ *
+ * It lives beside the parser rather than inside a screen because two screens
+ * have now read it: the builder that wrote it, and the written box that
+ * converts what the builder left behind.
+ */
+export const BUILDER_STORAGE_KEY = "custom-program-v1"
+
 export interface ParsedProblem {
   /** 1-based line number in the text the user typed. */
   line: number

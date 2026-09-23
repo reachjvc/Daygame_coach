@@ -41,16 +41,15 @@ const read = (file: string) => fs.readFileSync(file, "utf-8")
 /**
  * Screens that still carry 10 px type, and are not this phase's to rebuild.
  * The list may SHRINK and never grow — that is what stops the floor leaking
- * back onto the screens that have been fixed. `CustomProgramBuilder` is
- * deleted by a later decision in the same plan; the other three are their own
- * phases' work.
+ * back onto the screens that have been fixed.
+ *
+ * IT IS EMPTY, and on 2026-09-23 it reached empty: `ProgramEditor` and
+ * `RunningPrograms` were rebuilt, and `CustomProgramBuilder` and `ui.tsx` were
+ * deleted with the tap-to-build builder. It stays rather than being removed —
+ * the two assertions below are the rule, and "the allowance is zero" is the
+ * strongest thing this file can say.
  */
-const TINY_TYPE_DEBT = new Set([
-  "components/CustomProgramBuilder.tsx",
-  // ProgramEditor came off on 2026-09-23 when it was rebuilt on the app's own
-  // kit: its seven 10-px hints are sheet rows and `text-sm` sentences now.
-  "components/ui.tsx",
-])
+const TINY_TYPE_DEBT = new Set<string>([])
 
 const tinyTypeFiles = (): string[] =>
   filesUnder(PROGRAMS_DIR)
