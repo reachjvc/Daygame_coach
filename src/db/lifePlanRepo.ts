@@ -108,6 +108,27 @@ export async function ensureLifePlan(userId: string): Promise<{ id: string; revi
 }
 
 /**
+ * Which plan is this person's, without reading the plan.
+ *
+ * The day route needs the id and nothing else, and `readLifePlan` below reads
+ * twenty tables to get it. Null means the account has no plan — which the day
+ * route answers with an empty record rather than by creating one, because a
+ * GET must not write.
+ *
+ * Here rather than in `lifePlanDayRepo` so that `life_plans` keeps one owner.
+ */
+export async function findLifePlanId(userId: string): Promise<string | null> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("life_plans")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle()
+  if (error) throw new Error(`Failed to find your plan: ${error.message}`)
+  return (data as { id: string } | null)?.id ?? null
+}
+
+/**
  * Everything the plan is made of, or null when the account has no plan yet.
  *
  * Null is a real answer and the caller must handle it — a new account starts

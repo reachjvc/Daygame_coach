@@ -25,7 +25,18 @@ export interface RpcCall {
 
 class FakeQuery {
   private filters: ((r: Row) => boolean)[] = []
-  private mode: "select" | "update" | "upsert" | "insert" = "select"
+  private mode: "select" | "update" | "upsert" | "insert" | "delete" = "select"
+  /** The columns `onConflict` named, when the caller gave one. */
+  private conflict: string[] | null = null
+  /**
+   * Whether `.select()` was chained.
+   *
+   * The real client hands an upsert's rows back ONLY when it is asked to:
+   * `.upsert(row)` resolves `data: null`, `.upsert(row).select()` resolves the
+   * row. A fake that always returns the row lets a caller read one it would
+   * never have been given.
+   */
+  private selected = false
   private payload: Row | Row[] = {}
   private one = false
   private headCount = false
@@ -42,6 +53,7 @@ class FakeQuery {
 
   select(_cols?: string, opts?: { count?: string; head?: boolean }) {
     if (opts?.head) this.headCount = true
+    this.selected = true
     return this
   }
   update(values: Row) {
@@ -54,9 +66,25 @@ class FakeQuery {
     this.payload = values
     return this
   }
-  upsert(rows: Row[]) {
+  /** Removes every row the filters match, as `DELETE ... WHERE` does. */
+  delete() {
+    this.mode = "delete"
+    return this
+  }
+  /**
+   * `upsert(rows, { onConflict })`, with the conflict target honoured.
+   *
+   * One object or many, because the real client takes either. And the target
+   * matters: a repo that upserts into four tables in one call chain has four
+   * different identities, and a fake with one global `upsertKey` would have to
+   * guess from the row's shape. Guessing is how a fake starts passing tests the
+   * database would fail — so when `onConflict` is given it is used verbatim,
+   * and `upsertKey` stays the fallback for callers that do not pass one.
+   */
+  upsert(rows: Row | Row[], opts?: { onConflict?: string }) {
     this.mode = "upsert"
-    this.payload = rows
+    this.payload = Array.isArray(rows) ? rows : [rows]
+    this.conflict = opts?.onConflict?.split(",").map((c) => c.trim()) ?? null
     return this
   }
   eq(col: string, val: unknown) {
@@ -208,12 +236,29 @@ class FakeQuery {
     const keyOf = this.options.upsertKey ?? ((r: Row) => String(r.id))
 
     if (this.mode === "upsert") {
+      const identity = this.conflict
+        ? (r: Row) => this.conflict!.map((c) => String(r[c])).join("\u0000")
+        : keyOf
+      const written: Row[] = []
       for (const row of this.payload as Row[]) {
         const table = this.rows()
-        const at = table.findIndex((r) => keyOf(r) === keyOf(row))
-        if (at >= 0) table[at] = { ...row }
+        const at = table.findIndex((r) => identity(r) === identity(row))
+        // An upsert UPDATES the columns it carries and leaves the rest alone,
+        // which is the behaviour the day route leans on: a patch with no note
+        // must not blank a note another device wrote.
+        if (at >= 0) table[at] = { ...table[at], ...row }
         else table.push({ ...row })
+        written.push(table[at >= 0 ? at : table.length - 1])
       }
+      if (!this.selected) return resolve({ data: null, error: null })
+      const data = this.one ? { ...written[0] } : written.map((r) => ({ ...r }))
+      return resolve({ data, error: null })
+    }
+
+    if (this.mode === "delete") {
+      const doomed = new Set(this.matched())
+      const table = this.rows()
+      for (let i = table.length - 1; i >= 0; i -= 1) if (doomed.has(table[i])) table.splice(i, 1)
       return resolve({ data: null, error: null })
     }
 

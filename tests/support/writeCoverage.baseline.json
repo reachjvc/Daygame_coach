@@ -43,6 +43,7 @@
   "src/db/lifeAnswerRepo.ts:addLifeAnswer": "unasserted",
   "src/db/lifeChapterRepo.ts:deleteChapter": "unasserted",
   "src/db/lifeChapterRepo.ts:openChapter": "mentioned",
+  "src/db/lifePlanDayRepo.ts:saveDay": "asserted",
   "src/db/lifePlanRepo.ts:ensureLifePlan": "asserted",
   "src/db/lifePlanRepo.ts:linkPlanGoal": "asserted",
   "src/db/lifePlanRepo.ts:saveLifePlan": "asserted",

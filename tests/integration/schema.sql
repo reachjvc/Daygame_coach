@@ -1436,6 +1436,7 @@ COMMENT ON COLUMN program_enrollments.replay_events IS
 --   supabase/migrations/20260922100000_life_plan_tables.sql
 --   supabase/migrations/20260922110000_save_life_plan.sql
 --   supabase/migrations/20260923130000_season_focus_is_any_node.sql
+--   supabase/migrations/20260923140000_day_journal_keeps_its_words.sql
 --
 -- ONE TEST-CONTAINER ADAPTATION, the same one the beta tables above make and
 -- for the same reason: there is no `auth.users` in this container, so every
@@ -2151,20 +2152,33 @@ CREATE TABLE IF NOT EXISTS life_plan_day_ticks (
     REFERENCES life_plan_nodes (id, user_id) ON DELETE CASCADE
 );
 
--- What you wrote that day, keyed by the field or routine step that asked. The
--- key is a node id, but a question can also be a step's `asks`, so both land
--- here under one shape — one journal, two ways for a question to get into it.
+-- What you wrote that day, keyed by the PLAN'S OWN id for whatever asked — a
+-- field (`f3`) or a routine step (`s7`) — and deliberately NOT a foreign key.
+-- That is what lets an answer outlive the question: `save_life_plan` deletes
+-- every node no longer in the plan, and a diary entry must not go with it.
+-- `asked` is the question's words on the day it was answered, which is a
+-- different fact from the question's words now.
+-- Mirrored from 20260923140000_day_journal_keeps_its_words.sql, which ALTERs
+-- the earlier shape rather than dropping it.
 CREATE TABLE IF NOT EXISTS life_plan_day_journal (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL,
   day_id UUID NOT NULL,
-  node_id UUID NOT NULL,
-  body TEXT NOT NULL DEFAULT '' CHECK (char_length(body) <= 100000),
-  PRIMARY KEY (day_id, node_id),
+  local_id TEXT NOT NULL,
+  asked TEXT NOT NULL DEFAULT '',
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT life_plan_day_journal_local_shape CHECK (
+    char_length(local_id) BETWEEN 1 AND 80
+    AND local_id ~ '^[A-Za-z0-9_:.-]+$'),
+  CONSTRAINT life_plan_day_journal_asked_len CHECK (char_length(asked) <= 500),
   CONSTRAINT life_plan_day_journal_day_fk FOREIGN KEY (day_id, user_id)
     REFERENCES life_plan_days (id, user_id) ON DELETE CASCADE,
-  CONSTRAINT life_plan_day_journal_node_fk FOREIGN KEY (node_id, user_id)
-    REFERENCES life_plan_nodes (id, user_id) ON DELETE CASCADE
+  CONSTRAINT life_plan_day_journal_key UNIQUE (day_id, local_id)
 );
+CREATE INDEX IF NOT EXISTS idx_life_plan_day_journal_question
+  ON life_plan_day_journal(user_id, local_id);
 
 
 -- ============================================================================
@@ -2347,7 +2361,8 @@ END $$;
 -- IT NEVER DELETES AND REINSERTS THE NODES, and that is the whole safety
 -- design rather than an optimisation.
 --
--- `life_plan_day_ticks` and `life_plan_day_journal` point at nodes and cascade.
+-- `life_plan_day_ticks` points at nodes and cascades; `life_plan_day_journal`
+-- deliberately does not, so an answer outlives the question that asked for it.
 -- A save that dropped every node and wrote them back with fresh UUIDs would
 -- therefore delete every tick and every journal entry the person had ever
 -- written, silently, on an ordinary edit to an unrelated step. So a node that
