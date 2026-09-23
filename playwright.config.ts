@@ -368,6 +368,20 @@ export default defineConfig({
       },
     },
 
+    // Writes the day half on the same shared account, so it queues behind the
+    // other goals files rather than racing them. It opens a SECOND context of
+    // its own inside the test — that is the point of it — so it must not also
+    // be racing a third.
+    {
+      name: 'goals-4',
+      testMatch: /life-mastery-day-persists\.spec\.ts/,
+      dependencies: ['goals-3'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
+    },
+
     // === Session-creating tests (chained to run ONE file at a time) ===
     // These files create/end sessions via UI for the same user. Since only one session
     // can be active at a time, they MUST NOT run in parallel. Each project contains
