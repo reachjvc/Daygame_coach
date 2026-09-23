@@ -177,6 +177,9 @@ is false for the whole day half on both branches.
 
 ## The nine things that do not reach your account
 
+*One of them — the training week, number 5 — was closed on 2026-09-23 by the
+training rebuild. It is struck through rather than removed.*
+
 1. **The day half** — ratings, ticks, the day note, journal answers. Eleven write
    surfaces across six screens, all eleven ending in browser storage.
 2. **Your one thing for the season, whenever it is a goal** — which the code says
@@ -188,10 +191,24 @@ is false for the whole day half on both branches.
 4. **The one thing's why, cost, identity and values.** They have a table, an API
    and a rule of their own — and nothing writes them. The flow keeps them
    somewhere else entirely. Two homes for one fact and the designed one is dead.
-5. **Your designed training week, your units, your working weights, and every
-   lift you invent** on the Systems step. Draft 1 said this was fine and that was
-   wrong: pressing *Start* creates an enrolment on your account, but everything
-   you typed to get there stays in the browser.
+5. ~~**Your designed training week, your units, your working weights, and every
+   lift you invent** on the Systems step.~~ **CLOSED 2026-09-23, by the training
+   rebuild rather than by me.** `BuildYourOwn.tsx` and the 1,221-line
+   `CustomProgramBuilder.tsx` are both deleted — I checked, neither file exists —
+   and the week, the units and the typed weights now reach the account through
+   the enrolment. Draft 1 of this plan said this was fine, which was wrong; draft
+   2 said it was broken, which was right at the time; it is now fixed, and the
+   line stays here struck through rather than deleted so the record of all three
+   is readable.
+
+   One piece stays in the browser on purpose and I agree with it: the autosave of
+   the sentence somebody is halfway through typing (`custom-program-v1`, now just
+   `{text, unit}`, cleared the moment Start is pressed). That is an unsent draft,
+   the same class as a half-typed message, and putting it on an account would be
+   worse rather than better. `custom-lifts-v1` is gone entirely — a lift's
+   identity never depended on it, because `customLiftId` derives the id from the
+   name itself.
+
 6. **"Start over" does not reach your account at all**, so the plan you threw away
    comes back on the next reload.
 7. **The dashboard's season band has been wrong since Phase 1 landed** — it reads
@@ -407,6 +424,26 @@ what is uncovered is the wiring between them. Named rather than quietly skipped.
 **The merge gate stands:** this branch does not reach `main` before M0 is in it.
 
 ### M1 — Your day is on your account
+
+**IN PROGRESS. The plumbing is built and committed (`c5bd595d`), the migration is
+APPLIED, and nothing calls it yet.**
+
+**Both blockers cleared the same afternoon.** The peer's parked migration moved
+out of `supabase/migrations/` so mine could go alone, and Phase 8 finished. The
+migration is APPLIED: the live table is `id` + `local_id` + `asked`, keyed
+`UNIQUE (day_id, local_id)`, with no node link — checked by reading
+`pg_constraint`, not by trusting the push. Its four row-level-security policies
+survived, which was the whole argument for altering the table rather than
+dropping it, and `npm run audit:rls` is clean across 85 tables.
+
+Built so far: `life_plan_day_journal`'s new shape (migration, by ALTER),
+`lifePlanDayTypes`, `lifePlanDayRepo` (paged reads, one write), the pure
+`lifePlanDayService`, `/api/life-plan/day`, and `lifePlanDayClient` with its
+one catch-up retry. 34 tests behind them.
+
+Still to do: the one-time import of the day half already in the browser, the save
+gate learning the other three day maps, `mergeDayRecord` becoming a real read,
+and Check 1.
 
 **You can:** tick your morning routine on your phone and see it on your laptop.
 Write a journal line in one browser, read it in another. Clear your browsing data
