@@ -189,3 +189,92 @@ export function recordToPatches(record: DayRecord): DayPatch[] {
     return patch
   })
 }
+
+/**
+ * WHAT CHANGED BETWEEN TWO DAY RECORDS, as one patch per day that moved.
+ *
+ * The flow does not know which day a keystroke belonged to — every day mutator
+ * goes through one `setPlan`, and the day maps come out the other side whole.
+ * So the change is found by comparing, the same way the plan save compares a
+ * fingerprint rather than trusting an effect to have fired for the right reason.
+ *
+ * **A REMOVAL IS A CHANGE, and it has to be said out loud.** The route's rule is
+ * that absent is not null: a patch that simply omits a rating leaves the stored
+ * one alone. So a rating taken away becomes an explicit `null`, a tick taken
+ * back becomes `false`, and an emptied answer becomes `""`. Diffing without
+ * this would make "I cleared that" indistinguishable from "I did not mention
+ * it" — and the cell would quietly come back on the next device.
+ */
+export function patchesBetween(before: DayRecord, after: DayRecord): DayPatch[] {
+  const dates = new Set([
+    ...Object.keys(before.daily), ...Object.keys(after.daily),
+    ...Object.keys(before.logged), ...Object.keys(after.logged),
+    ...Object.keys(before.notes), ...Object.keys(after.notes),
+    ...Object.keys(before.journal), ...Object.keys(after.journal),
+  ])
+
+  const patches: DayPatch[] = []
+  for (const date of [...dates].sort()) {
+    const patch: DayPatch = { date }
+    let moved = false
+
+    const noteWas = before.notes[date] ?? ""
+    const noteNow = after.notes[date] ?? ""
+    if (noteWas !== noteNow) {
+      patch.note = noteNow
+      moved = true
+    }
+
+    const ratingsWas = before.daily[date] ?? {}
+    const ratingsNow = after.daily[date] ?? {}
+    const ratings: Record<string, number | null> = {}
+    for (const id of new Set([...Object.keys(ratingsWas), ...Object.keys(ratingsNow)])) {
+      const now = ratingsNow[id]
+      if (ratingsWas[id] === now) continue
+      ratings[id] = now === undefined ? null : now
+    }
+    if (Object.keys(ratings).length > 0) {
+      patch.ratings = ratings
+      moved = true
+    }
+
+    const tickedWas = new Set(before.logged[date] ?? [])
+    const tickedNow = new Set(after.logged[date] ?? [])
+    const ticks: Record<string, boolean> = {}
+    for (const id of new Set([...tickedWas, ...tickedNow])) {
+      if (tickedWas.has(id) === tickedNow.has(id)) continue
+      ticks[id] = tickedNow.has(id)
+    }
+    if (Object.keys(ticks).length > 0) {
+      patch.ticks = ticks
+      moved = true
+    }
+
+    const wroteWas = before.journal[date] ?? {}
+    const wroteNow = after.journal[date] ?? {}
+    const journal: Record<string, string> = {}
+    for (const id of new Set([...Object.keys(wroteWas), ...Object.keys(wroteNow)])) {
+      const now = wroteNow[id] ?? ""
+      if ((wroteWas[id] ?? "") === now) continue
+      journal[id] = now
+    }
+    if (Object.keys(journal).length > 0) {
+      patch.journal = journal
+      moved = true
+    }
+
+    if (moved) patches.push(patch)
+  }
+  return patches
+}
+
+/** The day half of a plan, as the record this module works in. */
+export function recordOf(plan: {
+  daily: DayRecord["daily"]
+  logged: DayRecord["logged"]
+  notes: DayRecord["notes"]
+  journal: DayRecord["journal"]
+}): DayRecord {
+  return { daily: plan.daily, logged: plan.logged, notes: plan.notes, journal: plan.journal }
+}
+

@@ -66,6 +66,8 @@ import * as nsTrack from "@/src/goals/northStarTrackService"
 import { SNAPSHOT_DEBOUNCE_MS, sendSnapshot, startSync, stopSync, syncIsOff } from "@/src/goals/planSnapshotClient"
 import { fetchLifePlan, newNodeId, saveLifePlanFromBrowser, startLifePlan } from "@/src/goals/lifePlanClient"
 import { LIFE_PLAN_IMPORTED_KEY, canSave, decideOnLoad, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
+import { fetchDayRecord, saveDayCatchingUp } from "@/src/goals/lifePlanDayClient"
+import { patchesBetween, recordIsEmpty, recordOf, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
 import { reconcileProgramReference } from "@/src/goals/programReferenceService"
 import { StarTab } from "./StarTab"
 import { NowTab } from "./NowTab"
@@ -260,6 +262,18 @@ export function NorthStarFlow({
    * hold. Consumed on the next successful save.
    */
   const clearOnce = useRef(false)
+  /**
+   * THE DAY HALF AS THE ACCOUNT HOLDS IT.
+   *
+   * Null until the account's days have been read, and the day save refuses to
+   * run while it is — a diff against "nothing" would read every tick already on
+   * the account as brand new and send the lot back.
+   *
+   * It is a record rather than a flag because the save works by COMPARING: the
+   * flow's day mutators all come out of one `setPlan`, so which day moved can
+   * only be found by looking at what the account last accepted.
+   */
+  const accountDays = useRef<DayRecord | null>(null)
   /** What this browser held on the way in, captured once for the import. */
   const browserCopy = useRef<NsPlan | null>(null)
   /**
@@ -515,6 +529,41 @@ export function NorthStarFlow({
   }, [plan, loaded])
 
   /**
+   * THE DAY HALF MOVES ONTO THE ACCOUNT, ONCE.
+   *
+   * Same shape as the plan's own import and for the same reason: the account is
+   * the durable copy, but everything anybody has ticked so far is in a browser,
+   * and the milestone called "your day is on your account" must not be the
+   * thing that deletes it.
+   *
+   * Three guards, each one a way this goes wrong:
+   * - a FAILED read (`undefined`) sends nothing. It is not "the account has no
+   *   days", and treating it as one would push this browser's year over an
+   *   account that already had its own.
+   * - an account that already HAS days is left alone. Merging two devices'
+   *   histories is a different feature and this is not it.
+   * - a browser with nothing to send does nothing, so opening the page on a
+   *   borrowed phone cannot write an empty day half anywhere.
+   *
+   * Nothing is recorded to say the import ran. It is finished when the account
+   * has the days, which is a fact on the account rather than a promise in this
+   * browser — the same correction the plan's own marker needed today.
+   */
+  const importDaysOnce = useCallback(async (onAccount: DayRecord | undefined, inBrowser: DayRecord) => {
+    if (!onAccount || !recordIsEmpty(onAccount) || recordIsEmpty(inBrowser)) return
+    for (const patch of recordToPatches(inBrowser)) {
+      const out = await saveDayCatchingUp(patch, async () => false)
+      if (!out.ok) {
+        // Loud, and it stops: half an import retried on the next load is better
+        // than a loop that never finishes and never says so.
+        setServerNote("Some of your earlier days could not be saved yet. They are still on this device.")
+        return
+      }
+    }
+    accountDays.current = inBrowser
+  }, [])
+
+  /**
    * THE PLAN MOVES ONTO THE ACCOUNT, ONCE.
    *
    * Which copy wins is decided by `decideOnLoad`, a pure function with its own
@@ -543,7 +592,7 @@ export function NorthStarFlow({
         /* Storage refused; nothing reads the key either way. */
       }
 
-      const server = await fetchLifePlan()
+      const [server, days] = await Promise.all([fetchLifePlan(), fetchDayRecord()])
       if (cancelled) return
 
       const decision = decideOnLoad({
@@ -563,12 +612,29 @@ export function NorthStarFlow({
       if (decision.kind === "use-server" && server?.planId) {
         setPlanId(server.planId)
         setRevision(decision.revision)
-        setPlan(decision.plan)
+        /**
+         * THE ACCOUNT'S DAYS WIN, once there are any.
+         *
+         * `decision.plan` arrives carrying THIS BROWSER's day half, put back by
+         * `mergeDayRecord` — which was right while the day tables had no route
+         * and is wrong the moment they do. So when the account has days, they
+         * replace it; when the account has none, the browser's stay and the
+         * import below sends them.
+         *
+         * `days === undefined` is a FAILED READ, not an empty one, and it must
+         * not be treated as "the account has no days": that would import a
+         * year of this browser's ticks over an account that already had them.
+         */
+        const known = days && !recordIsEmpty(days)
+        const withDays = known ? { ...decision.plan, ...days } : decision.plan
+        setPlan(withDays)
         // This IS what the server holds, so the save effect has nothing to
         // send. Without this the first thing the flow does after loading a
         // plan is PUT it straight back.
-        lastSent.current = sendableFingerprint(decision.plan)
+        lastSent.current = sendableFingerprint(withDays)
+        if (days) accountDays.current = known ? days : { daily: {}, logged: {}, notes: {}, journal: {} }
         setServerState("saved")
+        void importDaysOnce(days, recordOf(decision.plan))
         return
       }
 
@@ -664,6 +730,75 @@ export function NorthStarFlow({
     }, SNAPSHOT_DEBOUNCE_MS)
     return () => window.clearTimeout(timer)
   }, [plan, planId, revision, loaded, serverState, nodeIds, decision])
+
+  /**
+   * Save the plan RIGHT NOW, and say whether it landed.
+   *
+   * The debounced effect above is the normal path. This is the one the day
+   * route asks for: a tick on a routine step added four seconds ago names an id
+   * the account has not got yet, and the cure is to send the plan first rather
+   * than to refuse the tick. Returns a boolean because the caller has to decide
+   * whether to retry, and an exception there would lose the tick.
+   */
+  const savePlanNow = useCallback(async (): Promise<boolean> => {
+    let id = planId
+    let rev = revision
+    if (!id) {
+      const started = await startLifePlan()
+      if (!started) return false
+      id = started.id
+      rev = started.revision
+      setPlanId(started.id)
+      setRevision(started.revision)
+    }
+    const out = await saveLifePlanFromBrowser(plan, id, "", rev, nodeIds, newNodeId)
+    if (!out.ok) return false
+    lastSent.current = sendableFingerprint(plan)
+    setRevision(out.revision)
+    return true
+  }, [plan, planId, revision, nodeIds])
+
+  /**
+   * YOUR DAY, SENT A FEW SECONDS AFTER YOU CHANGE IT.
+   *
+   * Its own effect and its own route, never the whole-plan save: a plan is
+   * replaced and a day is appended to, and one keystroke in the plan must not
+   * be able to wipe a year of journal. That is the rule the whole 25-table
+   * design exists for.
+   *
+   * It compares rather than trusting the effect to have fired for the right
+   * reason — every day mutator comes out of one `setPlan`, so which day moved
+   * is only knowable by looking. `patchesBetween` says removals out loud, so
+   * clearing a rating reaches the account as a clear rather than as silence.
+   *
+   * Refused while `accountDays` is null, which means the account's days have
+   * not been read: a diff against nothing would read every tick already stored
+   * as new and send the whole history back.
+   */
+  useEffect(() => {
+    if (!loaded || accountDays.current === null) return
+    if (serverState === "offline") return
+    const after = recordOf(plan)
+    const patches = patchesBetween(accountDays.current, after)
+    if (patches.length === 0) return
+
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        for (const patch of patches) {
+          const out = await saveDayCatchingUp(patch, savePlanNow)
+          if (!out.ok) {
+            setServerNote(out.planBehind ? syncNotice("failed") : out.message)
+            return
+          }
+        }
+        // Recorded only when every day in the batch landed, so a failure is
+        // retried on the next change rather than remembered as saved.
+        accountDays.current = after
+        setServerNote("")
+      })()
+    }, SNAPSHOT_DEBOUNCE_MS)
+    return () => window.clearTimeout(timer)
+  }, [plan, loaded, serverState, savePlanNow])
 
   /**
    * The same plan, mirrored to the server a few seconds after you stop typing.

@@ -16,6 +16,7 @@ import {
   isCalendarDay,
   recordIsEmpty,
   recordToPatches,
+  patchesBetween,
   unknownIds,
   whyNotWritable,
 } from "@/src/goals/lifePlanDayService"
@@ -183,3 +184,62 @@ describe("sending a browser's whole record to the account once", () => {
     expect(Object.keys(patch).sort()).toEqual(["date", "note"])
   })
 })
+
+describe("what changed between two days, as patches", () => {
+  const empty = { daily: {}, logged: {}, notes: {}, journal: {} }
+
+  it("says nothing when nothing moved", () => {
+    const record = { daily: { [TODAY]: { lm_health: 7 } }, logged: {}, notes: {}, journal: {} }
+    expect(patchesBetween(record, record)).toEqual([])
+  })
+
+  it("carries a new rating, a new tick and a new line", () => {
+    const after = {
+      daily: { [TODAY]: { lm_health: 7 } },
+      logged: { [TODAY]: ["s5"] },
+      notes: { [TODAY]: "a good day" },
+      journal: { [TODAY]: { s5: "coffee" } },
+    }
+    expect(patchesBetween(empty, after)).toEqual([
+      { date: TODAY, note: "a good day", ratings: { lm_health: 7 }, ticks: { s5: true }, journal: { s5: "coffee" } },
+    ])
+  })
+
+  /**
+   * THE HALF A DIFF FORGETS, and the reason this is not `Object.keys` twice.
+   *
+   * The route's rule is that absent is not null: a patch that omits a rating
+   * leaves the stored one alone. So a REMOVAL has to be said out loud, or
+   * "I cleared that" and "I did not mention it" become the same request and
+   * the cell comes back on the next device.
+   */
+  it("says a removal out loud rather than omitting it", () => {
+    const before = {
+      daily: { [TODAY]: { lm_health: 7 } },
+      logged: { [TODAY]: ["s5"] },
+      notes: { [TODAY]: "a good day" },
+      journal: { [TODAY]: { s5: "coffee" } },
+    }
+    expect(patchesBetween(before, empty)).toEqual([
+      { date: TODAY, note: "", ratings: { lm_health: null }, ticks: { s5: false }, journal: { s5: "" } },
+    ])
+  })
+
+  it("mentions only the cell that moved, not the whole day", () => {
+    const before = { daily: { [TODAY]: { lm_health: 7, lm_money: 4 } }, logged: {}, notes: {}, journal: {} }
+    const after = { daily: { [TODAY]: { lm_health: 9, lm_money: 4 } }, logged: {}, notes: {}, journal: {} }
+    expect(patchesBetween(before, after)).toEqual([{ date: TODAY, ratings: { lm_health: 9 } }])
+  })
+
+  it("makes one patch per day, in date order, when several moved", () => {
+    const after = { daily: {}, logged: { "2026-09-21": ["s1"], [TODAY]: ["s5"] }, notes: {}, journal: {} }
+    expect(patchesBetween(empty, after).map((p) => p.date)).toEqual(["2026-09-21", TODAY])
+  })
+
+  it("does not confuse a re-ordered tick list with a change", () => {
+    const before = { daily: {}, logged: { [TODAY]: ["s5", "s6"] }, notes: {}, journal: {} }
+    const after = { daily: {}, logged: { [TODAY]: ["s6", "s5"] }, notes: {}, journal: {} }
+    expect(patchesBetween(before, after)).toEqual([])
+  })
+})
+

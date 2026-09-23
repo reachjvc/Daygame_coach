@@ -30,7 +30,7 @@
 import { cleanup, render, act } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { NorthStarFlow } from "@/src/goals/components/north-star/NorthStarFlow"
-import { emptyNsPlan, serializeNsPlan, setNorthStar } from "@/src/goals/northStarService"
+import { addCustomStep, emptyNsPlan, serializeNsPlan, setNorthStar } from "@/src/goals/northStarService"
 import { NORTH_STAR_STORAGE_KEY } from "@/src/goals/data/northStar"
 import { planToRows } from "@/src/goals/lifePlanMapper"
 
@@ -72,7 +72,13 @@ function installFetch() {
     const method = init?.method ?? "GET"
     calls.push({ method, url })
 
-    if (url.startsWith("/api/life-plan")) {
+    // The day route FIRST, because `/api/life-plan/day` also starts with
+    // `/api/life-plan` and matching by prefix would answer it with a plan.
+    if (url === "/api/life-plan/day") {
+      if (method === "PUT") return new Response(JSON.stringify({ savedAt: "2026-09-23" }), { status: 200 })
+      return new Response(JSON.stringify({ daily: {}, logged: {}, notes: {}, journal: {} }), { status: 200 })
+    }
+    if (url === "/api/life-plan") {
       if (method === "PUT") {
         revision += 1
         return new Response(JSON.stringify({ revision }), { status: 200 })
@@ -85,7 +91,35 @@ function installFetch() {
   }))
 }
 
-const planPuts = () => calls.filter((c) => c.method === "PUT" && c.url.startsWith("/api/life-plan")).length
+/**
+ * Plan saves ONLY.
+ *
+ * Matched exactly rather than by prefix: `/api/life-plan/day` shares the
+ * prefix, and counting a day write as a plan write made this file's own
+ * assertion — that a tick costs no plan save — pass for the wrong reason and
+ * then fail for the wrong reason the moment the day route existed.
+ */
+/**
+ * A plan with a tick that SURVIVES being loaded.
+ *
+ * The id has to be a real step's. `normalizeNsPlan` prunes `plan.logged` to ids
+ * the plan actually carries, so a made-up `"s1"` is dropped on load and a test
+ * built on one asserts nothing while looking like it asserts something — which
+ * is what the first draft of this file did.
+ */
+function planWithARealTick() {
+  const base = setNorthStar(emptyNsPlan(), "I run my own company and I am free.")
+  const withStep = addCustomStep(base, base.routines[0].id, "Cold shower", 5, 7)
+  const stepId = withStep.routines[0].steps[0].id
+  return {
+    plan: { ...withStep, logged: { "2026-09-23": [stepId] }, notes: { "2026-09-23": "a good day" } },
+    stepId,
+  }
+}
+
+const planPuts = () => calls.filter((c) => c.method === "PUT" && c.url === "/api/life-plan").length
+/** Day saves, which a tick SHOULD cost exactly one of. */
+const dayPuts = () => calls.filter((c) => c.method === "PUT" && c.url === "/api/life-plan/day").length
 
 /**
  * Let simulated time pass IN SLICES, flushing promises between each.
@@ -155,13 +189,7 @@ describe("a day-half change never costs a plan save", () => {
    * a plan whose only difference is a tick produces no request.
    */
   it("a plan differing only by a tick is not sent", async () => {
-    const ticked = {
-      ...setNorthStar(emptyNsPlan(), "I run my own company and I am free."),
-      logged: { "2026-09-23": ["s1"] },
-      notes: { "2026-09-23": "a good day" },
-      journal: { "2026-09-23": { f1: "three gratitudes" } },
-    }
-    window.localStorage.setItem(NORTH_STAR_STORAGE_KEY, serializeNsPlan(ticked))
+    window.localStorage.setItem(NORTH_STAR_STORAGE_KEY, serializeNsPlan(planWithARealTick().plan))
 
     render(<NorthStarFlow backHref="/dashboard" backLabel="Dashboard" timezone="Europe/Copenhagen" />)
     await passTime(60_000)
@@ -170,5 +198,21 @@ describe("a day-half change never costs a plan save", () => {
       planPuts(),
       "the day half has its own route; the whole-plan save must not move for it",
     ).toBe(0)
+  })
+
+  it("but it DOES reach the account, by its own route", async () => {
+    window.localStorage.setItem(NORTH_STAR_STORAGE_KEY, serializeNsPlan(planWithARealTick().plan))
+
+    render(<NorthStarFlow backHref="/dashboard" backLabel="Dashboard" timezone="Europe/Copenhagen" />)
+    await passTime(30_000)
+
+    expect(dayPuts(), "a tick in the browser is sent to the day route").toBeGreaterThan(0)
+  })
+
+  it("sends the day nothing at all when there is nothing to send", async () => {
+    render(<NorthStarFlow backHref="/dashboard" backLabel="Dashboard" timezone="Europe/Copenhagen" />)
+    await passTime(60_000)
+
+    expect(dayPuts(), "an idle tab must not write days either").toBe(0)
   })
 })
