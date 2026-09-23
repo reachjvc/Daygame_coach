@@ -2036,6 +2036,46 @@ export function liftRows(
 }
 
 /**
+ * HOW A TICKED SET IS DOING, in the only terms worth telling somebody.
+ *
+ * The row rendered "not saved yet — waiting for signal" the moment a set's id
+ * started with `pending:` — which is the instant the ✓ is tapped, before the
+ * request has even left. So every tick on a perfectly good connection flashed
+ * an alarm for one frame (seen in the walkthrough), and the alarm that meant
+ * something looked exactly like the one that did not.
+ *
+ * Four states, and only the last two are worth a person's attention:
+ *
+ *   saved     the server has it. Nothing to say.
+ *   pending   on the wire, under a second and a half. Say NOTHING — this is
+ *             what a normal tick looks like and it needs no commentary.
+ *   saving    on the wire longer than that. "Saving…", because silence now
+ *             reads as a tick that did not take.
+ *   queued    the write failed, or has been out for ten seconds with no
+ *             answer. Named as not saved, with what happens next.
+ *
+ * Never the other way round: a row that has said "not saved" keeps saying it
+ * until the server acks. A marker that clears itself on a timer is a marker
+ * that lies exactly when it matters.
+ */
+export function saveStateFor(
+  set: { pendingSince: number | null; queued: boolean },
+  now: number
+): "saved" | "pending" | "saving" | "queued" {
+  if (set.queued) return "queued"
+  if (set.pendingSince === null) return "saved"
+  const waited = now - set.pendingSince
+  if (waited >= SAVE_GIVEN_UP_MS) return "queued"
+  if (waited >= SAVE_QUIET_MS) return "saving"
+  return "pending"
+}
+
+/** Under this, a tick says nothing at all: it is simply what saving looks like. */
+export const SAVE_QUIET_MS = 1_500
+/** Past this with no answer, it is treated as lost rather than slow. */
+export const SAVE_GIVEN_UP_MS = 10_000
+
+/**
  * THE ORDER YOU ACTUALLY DID THEM IN.
  *
  * `adjustments.order` was written by nothing and read by nothing: the type

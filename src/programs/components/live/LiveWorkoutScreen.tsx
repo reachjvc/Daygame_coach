@@ -56,6 +56,7 @@ import {
   fixedRowsToTick,
   liftRows,
   setLabel,
+  setSlot,
   applyLiftOrder,
   moveLift,
 } from "../../programsService"
@@ -576,12 +577,27 @@ export function LiveWorkoutScreen({
                           previous={last}
                           done={ticked}
                           /**
-                           * A set the server has not confirmed still carries the
-                           * optimistic id it was given on screen. Saying so on
-                           * the row itself matters more than the count at the
-                           * bottom: it names WHICH set is at risk.
+                           * WHEN it was ticked, and whether its write has
+                           * given up — not just "unconfirmed".
+                           *
+                           * The row used to be handed `unsaved: id starts with
+                           * "pending:"`, which is true from the instant the ✓
+                           * is tapped, so every set on a good connection
+                           * flashed "not saved" for a frame. The moment lets
+                           * the row stay quiet for the second and a half that
+                           * a normal save takes.
                            */
-                          unsaved={ticked?.id.startsWith("pending:")}
+                          pendingSince={
+                            ticked?.id.startsWith("pending:") && ticked.completedAt
+                              ? Date.parse(ticked.completedAt)
+                              : null
+                          }
+                          /**
+                           * Asked of the SET's slot, not the row's. They are
+                           * the same until a row is re-tagged, and then the
+                           * queue knows the set by where it will be written.
+                           */
+                          queued={Boolean(ticked) && live.queuedSlots.includes(setSlot(ticked!))}
                           unitLabel={unitLabel}
                           repUnit={ex.repUnit ?? "reps"}
                           bodyweight={ex.bodyweight}
@@ -664,6 +680,16 @@ export function LiveWorkoutScreen({
                             })
                           }}
                           onUndo={ticked ? () => void live.removeSet(ticked.id) : undefined}
+                          /**
+                           * THE THIRD DOOR TO ONE ACTION. The swipe and the
+                           * hover button on the row, and the set menu's own
+                           * row, all call this — a swipe alone is
+                           * undiscoverable and a desktop cannot make one.
+                           */
+                          onDelete={() => {
+                            if (ticked) void live.removeSet(ticked.id)
+                            else setHiddenRows((h) => [...h, row.slot])
+                          }}
                         />
 
                         {/* THE SET'S OWN MENU: what kind it was, what it cost,

@@ -689,6 +689,15 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     dismissRestStartedAt,
     /** Sets whose write FAILED and is waiting for signal. Shown to the person. */
     unsaved: queue.length,
+    /**
+     * WHICH slots those are, not just how many.
+     *
+     * The count is the footer's; a row needs to know whether IT is the one
+     * waiting. Without this the screen guessed from the optimistic id — which
+     * is set the instant the ✓ is tapped, so every tick flashed "not saved"
+     * for one frame on a perfectly good connection.
+     */
+    queuedSlots: queue.map(slotOf),
     /** Sets whose write is on the wire right now. Finishing waits for these. */
     saving,
     error,

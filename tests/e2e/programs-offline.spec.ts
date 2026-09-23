@@ -54,8 +54,14 @@ test("sets ticked with no connection are kept and sent when it comes back", asyn
   // The ✓ goes down anyway. Waiting for a round trip at a rack is not an option.
   await expect(page.getByTestId("tick-1").first()).toHaveAttribute("aria-pressed", "true")
   await expect(page.getByTestId("tick-2").first()).toHaveAttribute("aria-pressed", "true")
-  // And the screen says the sets are not saved yet, rather than implying they are.
-  await expect(page.getByText(/not saved yet/i).first()).toBeVisible({ timeout: 20000 })
+  /**
+   * And the ROW says so, not just the footer's count — it names which set is
+   * at risk, and it says what happens next. The old wording ("not saved yet —
+   * waiting for signal") was rendered from the instant of the tap, so this
+   * assertion passed on a perfect connection too; the marker now waits for a
+   * write to actually be in trouble, which is what makes it worth asserting.
+   */
+  await expect(page.getByText(/Not saved — no signal/i).first()).toBeVisible({ timeout: 20000 })
 
   // --- and comes back ---
   await context.setOffline(false)

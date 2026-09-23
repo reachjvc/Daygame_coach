@@ -151,9 +151,16 @@ describe("the rest clock", () => {
     expect(screen.getByTestId("rest-bar")).toBeTruthy()
 
     reply.resolve({} as Response)
-    // The set was done. It is waiting for signal, not refused, so the rest the
-    // person is actually taking keeps counting.
-    await waitFor(() => expect(screen.getByText(/waiting for signal/i)).toBeTruthy())
+    /**
+     * The set was done. It is waiting for signal, not refused, so the rest the
+     * person is actually taking keeps counting.
+     *
+     * The wording is the queued one — "Not saved — no signal. It will retry."
+     * A set still on the wire says nothing for its first second and a half,
+     * which is why this asserts on the state a FAILED write reaches and not on
+     * the mere presence of an amber line.
+     */
+    await waitFor(() => expect(screen.getByText(/Not saved — no signal/i)).toBeTruthy())
     expect(screen.getByTestId("rest-bar")).toBeTruthy()
   })
 

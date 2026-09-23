@@ -13,9 +13,16 @@
  */
 
 import { useEffect, useState } from "react"
-import { Check } from "lucide-react"
+import { Check, Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { formatLoad, readSetEntry, setLabel } from "../../programsService"
+import {
+  formatLoad,
+  readSetEntry,
+  saveStateFor,
+  setLabel,
+  SAVE_GIVEN_UP_MS,
+  SAVE_QUIET_MS,
+} from "../../programsService"
 import { SET_LIMITS, setLimitSentence } from "../../schemas"
 import type { LiveWorkoutSet } from "../../types"
 
@@ -37,8 +44,14 @@ export interface SetRowProps {
    */
   unweightedOk?: boolean
   kind?: LiveWorkoutSet["kind"]
-  /** Not yet reached the server. Shown, never hidden. */
-  unsaved?: boolean
+  /**
+   * When this set was ticked, if the server has not confirmed it yet — null
+   * once it has. A moment, not a boolean, because "on the wire" and "on the
+   * wire for ten seconds" are different things to say.
+   */
+  pendingSince?: number | null
+  /** Its write failed and is waiting for signal. */
+  queued?: boolean
   onTick: (weight: number, reps: number) => void
   onUndo?: () => void
   /**
@@ -48,6 +61,14 @@ export interface SetRowProps {
    * mis-tagged set could only be fixed by deleting it.
    */
   onOpenMenu?: () => void
+  /**
+   * Take this row away — the set if it exists, the empty row if it does not.
+   *
+   * Offered three ways (swipe, hover, the set menu) because a swipe alone is
+   * undiscoverable and a hover does not exist on the phone this screen is
+   * designed for.
+   */
+  onDelete?: () => void
 }
 
 export function SetRow({
@@ -60,10 +81,12 @@ export function SetRow({
   bodyweight,
   unweightedOk,
   kind = "working",
-  unsaved,
+  pendingSince = null,
+  queued = false,
   onTick,
   onUndo,
   onOpenMenu,
+  onDelete,
 }: SetRowProps) {
   /**
    * REPS PRE-FILL FROM LAST TIME, NOT FROM THE FLOOR OF THE RANGE.
@@ -112,6 +135,49 @@ export function SetRow({
    * also hands back the two numbers to send, so there is no second conversion
    * left on this side for the zero to come back through.
    */
+  /**
+   * A CLOCK THAT ONLY RUNS WHILE A SET IS UNCONFIRMED.
+   *
+   * The marker's wording depends on how long the write has been out, so
+   * something has to re-render the row at a second and a half and again at
+   * ten seconds. An interval per row, always running, on a screen with twenty
+   * rows and an hour of use is not that something: this schedules exactly the
+   * two moments it needs, and only while there is a pending set to describe.
+   */
+  const [, setNow] = useState(0)
+  useEffect(() => {
+    if (pendingSince === null || queued) return
+    const waited = Date.now() - pendingSince
+    const next = waited < SAVE_QUIET_MS ? SAVE_QUIET_MS - waited : SAVE_GIVEN_UP_MS - waited
+    if (next <= 0) return
+    const timer = setTimeout(() => setNow(Date.now()), next)
+    return () => clearTimeout(timer)
+  }, [pendingSince, queued])
+
+  const saveState = saveStateFor({ pendingSince, queued }, Date.now())
+  /**
+   * NOTHING FOR A NORMAL TICK. The row used to shout "not saved yet" the
+   * instant the ✓ was tapped — before the request had left — so every set on a
+   * good connection flashed an alarm, and the alarm that meant something
+   * looked exactly like the one that did not.
+   */
+  const saveMessage =
+    saveState === "saving"
+      ? "Saving…"
+      : saveState === "queued"
+        ? "Not saved — no signal. It will retry."
+        : null
+
+  /**
+   * SWIPED AWAY, ON A PHONE. Tracked as a plain offset rather than through a
+   * gesture library: one row, one axis, and the threshold is the whole rule.
+   * A drag that stops short snaps back, because a row that half-deletes itself
+   * is worse than one that does not move.
+   */
+  const [dragX, setDragX] = useState(0)
+  const [startX, setStartX] = useState<number | null>(null)
+  const revealed = dragX <= -SWIPE_REVEAL_PX
+
   const entry = readSetEntry({ weight, reps, bodyweight, unweightedOk })
   const { problem } = entry
   const repWord = repUnit === "sec" ? "Seconds" : "Reps"
@@ -126,18 +192,53 @@ export function SetRow({
       : null
 
   return (
-    <div
-      /**
-        IDENTIFIED BY ITS SLOT, NOT BY ITS NUMBER. A warm-up set 1 and a
-        working set 1 are two rows on one lift, and `set-row-1` twice is two
-        elements that cannot be told apart — by a test or by a screen reader.
-        For a working set the label IS the number, so nothing outside changed.
-      */
-      data-testid={`set-row-${label}`}
-      className={`grid grid-cols-[2.75rem_4.5rem_1fr_1fr_2.75rem] items-center gap-2 rounded-md px-1 py-1 ${
-        ticked ? "bg-emerald-500/10" : ""
-      }`}
-    >
+    <div className="group relative">
+      {/*
+        THE DELETE ZONE A SWIPE REVEALS. Under the row, uncovered as the row
+        slides left, so the gesture shows what it is about to do rather than
+        doing it on release.
+      */}
+      {onDelete && revealed && (
+        <button
+          type="button"
+          data-testid={`swipe-delete-${label}`}
+          aria-label={`Delete set ${label}`}
+          onClick={() => {
+            setDragX(0)
+            onDelete()
+          }}
+          className="absolute inset-y-0 right-0 flex h-11 w-22 items-center justify-center rounded-md bg-destructive text-sm text-white"
+        >
+          Delete
+        </button>
+      )}
+
+      <div
+        /**
+          IDENTIFIED BY ITS SLOT, NOT BY ITS NUMBER. A warm-up set 1 and a
+          working set 1 are two rows on one lift, and `set-row-1` twice is two
+          elements that cannot be told apart — by a test or by a screen reader.
+          For a working set the label IS the number, so nothing outside changed.
+        */
+        data-testid={`set-row-${label}`}
+        onTouchStart={(e) => setStartX(e.touches[0]?.clientX ?? null)}
+        onTouchMove={(e) => {
+          if (startX === null) return
+          const dx = (e.touches[0]?.clientX ?? startX) - startX
+          // Left only, and never further than the zone it reveals.
+          setDragX(Math.max(-SWIPE_MAX_PX, Math.min(0, dx)))
+        }}
+        onTouchEnd={() => {
+          setStartX(null)
+          // Short of the threshold it snaps back: a row that half-deletes
+          // itself is worse than one that does not move.
+          setDragX((x) => (x <= -SWIPE_REVEAL_PX ? -SWIPE_MAX_PX : 0))
+        }}
+        style={dragX !== 0 ? { transform: `translateX(${dragX}px)` } : undefined}
+        className={`relative grid grid-cols-[2.75rem_4.5rem_1fr_1fr_2.75rem] items-center gap-2 rounded-md px-1 py-1 transition-transform ${
+          ticked ? "bg-emerald-500/10" : "bg-card"
+        }`}
+      >
       {/*
         THE NUMBER IS A BUTTON, 44px, not an 18px caption.
         Behind it: what kind of set this was, how hard it was, and deleting it.
@@ -248,9 +349,38 @@ export function SetRow({
         <span className="col-span-5 text-[11px] text-amber-500">{boundsMessage}</span>
       )}
 
-      {unsaved && (
-        <span className="col-span-5 text-[11px] text-amber-500">not saved yet — waiting for signal</span>
+      {saveMessage && (
+        <span
+          data-testid={`set-save-state-${label}`}
+          className={`col-span-5 text-xs ${saveState === "queued" ? "text-amber-500" : "text-muted-foreground"}`}
+        >
+          {saveMessage}
+        </span>
       )}
+
+        {/*
+          AND A BUTTON, FOR EVERY DEVICE WITHOUT A FINGER. A swipe is
+          undiscoverable and a desktop cannot perform one at all; this sits at
+          the row's edge and appears on hover. Both doors, and the set menu's
+          own row, call the same thing.
+        */}
+        {onDelete && (
+          <button
+            type="button"
+            data-testid={`hover-delete-${label}`}
+            aria-label={`Delete set ${label}`}
+            onClick={onDelete}
+            className="absolute right-1 top-1 hidden h-11 w-11 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-accent group-hover:opacity-100 sm:flex"
+          >
+            <Trash2 className="size-4" />
+          </button>
+        )}
+      </div>
     </div>
   )
 }
+
+/** Past this, the row is offering to delete itself. Short of it, it snaps back. */
+const SWIPE_REVEAL_PX = 88
+/** As far as the row slides: the width of the zone it uncovers. */
+const SWIPE_MAX_PX = 88
