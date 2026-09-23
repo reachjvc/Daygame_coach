@@ -103,6 +103,22 @@ test.describe("every page", () => {
       await page.goto(route, { timeout: NAV_TIMEOUT })
       await settle(page)
 
+      /**
+       * THE PAGE THAT ACTUALLY DREW, which is not always the one asked for.
+       *
+       * Some routes are redirects. `/dashboard/goals/plan` has been one since
+       * 2026-09-09 and lands on `/life-mastery`, so this sweep measured Life
+       * Mastery's controls and then looked the budget up under the key it
+       * STARTED from — finding nothing, defaulting to zero, and reporting 106
+       * undersized targets on a page that draws none of them.
+       *
+       * Keying on where it landed is the fix rather than giving the redirect
+       * its own copy of the number: two entries for one page's debt drift the
+       * moment either is lowered, and the one nobody is looking at is the one
+       * that goes stale. A budget belongs to the page that draws the controls.
+       */
+      const drawn = new URL(page.url()).pathname
+
       const text = await page.evaluate(() => document.body.innerText)
       const words = text.trim().split(/\s+/).filter(Boolean).length
       if (words < 5) {
@@ -213,7 +229,7 @@ test.describe("every page", () => {
         // measurements agree removes the artifact without softening the
         // threshold: a genuinely undersized control fails both times.
         let small = await measureSmallTargets()
-        const allowed = TAP_TARGET_DEBT[route] ?? 0
+        const allowed = TAP_TARGET_DEBT[drawn] ?? 0
 
         if (small.length > allowed) {
           await page.reload({ timeout: NAV_TIMEOUT })
@@ -226,7 +242,7 @@ test.describe("every page", () => {
             route,
             rule: "tap-targets",
             detail:
-              `${small.length} target(s) under ${MIN_TAP_TARGET_PX}px, was ${allowed}: ` +
+              `${small.length} target(s) under ${MIN_TAP_TARGET_PX}px on ${drawn}, was ${allowed}: ` +
               `${small.slice(0, 4).join("; ")}. Fix them, or if this page genuinely ` +
               `improved, lower its number in TAP_TARGET_DEBT (tests/support/sweepDebt.ts).`,
           })
