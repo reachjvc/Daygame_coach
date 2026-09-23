@@ -36,6 +36,7 @@ import { BackLink } from "@/components/BackLink"
 import { canBeUnweighted } from "../../data/exerciseLibrary"
 import { SetRow } from "./SetRow"
 import { RestBar } from "./RestBar"
+import { LiftMenu } from "./LiftMenu"
 import type { MissRule } from "../../types"
 import { FinishSheet } from "./FinishSheet"
 import { AddLift } from "./AddLift"
@@ -44,6 +45,7 @@ import {
   describeSets,
   restTargetFor,
   groupOrdinal,
+  addedLiftId,
   unfinishedLifts,
   describePlates,
   platesFor,
@@ -133,8 +135,30 @@ export function LiveWorkoutScreen({
    */
   const added = (live.workout ?? finished)?.adjustments.added ?? []
   const addedIds = new Set(added.map((a) => a.exerciseId))
+  /**
+   * THE RACK WAS TAKEN, SO YOU DID SOMETHING ELSE.
+   *
+   * A swap replaces the lift on screen: the new name, and a new id so the
+   * sets you tick belong to what you actually did rather than to the lift you
+   * could not get on. The old id keeps whatever was already ticked under it —
+   * two sets of squats before the rack went is a fact, and a swap must not
+   * quietly relabel them as front squats.
+   */
+  const swapped = (live.workout ?? finished)?.adjustments.swapped ?? {}
+  const swapFor = (ex: PrescribedExercise): PrescribedExercise => {
+    const to = swapped[ex.exerciseId]
+    if (!to) return ex
+    return {
+      ...ex,
+      exerciseId: addedLiftId(to.name),
+      name: to.name,
+      unweightedOk: canBeUnweighted(to.libraryId, to.name),
+      note: `swapped for ${ex.name}`,
+    }
+  }
+
   const exercises: PrescribedExercise[] = [
-    ...(prescription?.exercises ?? []),
+    ...(prescription?.exercises ?? []).map(swapFor),
     ...added.map((a) => ({
       exerciseId: a.exerciseId,
       name: a.name,
@@ -383,31 +407,21 @@ export function LiveWorkoutScreen({
                   </button>
                 </div>
 
-                {openMenu === ex.exerciseId && (
-                  <div className="flex flex-wrap gap-2 border-t pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const now = workout.adjustments.skipped ?? []
-                        void live.adjust({
-                          skipped: isSkipped ? now.filter((id) => id !== ex.exerciseId) : [...now, ex.exerciseId],
-                        })
-                        setOpenMenu(null)
-                      }}
-                      className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-accent"
-                    >
-                      {isSkipped ? "I did do this one" : "Skip this one"}
-                    </button>
-                    <span className="self-center text-xs text-muted-foreground">
-                      {/* Three states, not two: your own number, the
-                          program's, and ours. Saying "our suggestion" over
-                          the author's instruction was the fault. */}
-                      Rest {Math.floor(rest.seconds / 60)}:
-                      {String(rest.seconds % 60).padStart(2, "0")}
-                      {rest.edited ? ", your own" : rest.ours ? " (our suggestion)" : ""}
-                    </span>
-                  </div>
-                )}
+                {/* EVERY OPTION FOR THIS LIFT, in the app's own sheet.
+                    It was one 26px "Skip this one" chip and a read-only rest
+                    line — so the two things that actually happen in a gym,
+                    the rack being taken and a lift needing longer today, had
+                    no answer at all. */}
+                <LiftMenu
+                  open={openMenu === ex.exerciseId}
+                  onClose={() => setOpenMenu(null)}
+                  exercise={ex}
+                  adjustments={workout.adjustments}
+                  alreadyHere={exercises.map((e) => e.name)}
+                  wasAdded={addedIds.has(ex.exerciseId)}
+                  skipped={isSkipped}
+                  onAdjust={(patch) => void live.adjust(patch)}
+                />
 
                 {/*
                   THE COLUMNS ARE NAMED ONCE.

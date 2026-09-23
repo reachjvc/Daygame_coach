@@ -63,6 +63,9 @@ export const UTILITY_ICONS = new Set([
 // ---------------------------------------------------------------------------
 export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   Activity: ["health tracking panel header", "mobility/yoga metric tiles"],
+  // One action in two places: putting a different lift in this one's place.
+  // Approved by the owner 2026-09-23 for the mid-workout use.
+  ArrowLeftRight: ["swap an exercise while editing a program", "swap a lift mid-workout"],
   Award: ["achievements", "milestone badges"],
   Ban: ["vices/elimination life area"],
   Beaker: ["test pages (dev only)"],

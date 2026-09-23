@@ -17,6 +17,7 @@
 
 import { useState } from "react"
 import { Plus, Search, X } from "lucide-react"
+import { addedLiftId } from "../../programsService"
 import { searchLibrary } from "../../data/exerciseLibrary"
 import type { LibraryExercise } from "../../types"
 
@@ -26,14 +27,6 @@ interface Props {
   onAdd: (entry: { exerciseId: string; name: string; libraryId?: string }) => void
 }
 
-/** A stable id for a lift added on the day, derived from its name. */
-export function addedLiftId(name: string): string {
-  const slug = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-  return `added_${slug || "lift"}`
-}
 
 export function AddLift({ alreadyHere, onAdd }: Props) {
   const [open, setOpen] = useState(false)

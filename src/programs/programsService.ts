@@ -673,6 +673,22 @@ export function groupOrdinal(
   return n
 }
 
+/** A stable id for a lift added on the day, derived from its name. */
+export function addedLiftId(name: string): string {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+  return `added_${slug || "lift"}`
+}
+
+/**
+ * Moved here from `AddLift` so there is ONE derivation of an on-the-day
+ * lift's id. Swapping a lift needs the same id the add path produces — two
+ * copies of this rule would mean a swapped lift's sets landing under an id
+ * nothing else recognises.
+ */
+
 /** Epley 1RM estimate: w · (1 + reps/30). reps=1 → w. (Epley 1985.) */
 export function estimateOneRepMax(weight: number, reps: number): number {
   if (reps <= 1) return weight
