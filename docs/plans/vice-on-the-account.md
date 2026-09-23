@@ -94,8 +94,18 @@ These are what I am asking you to approve. Everything else — how many tables,
 how many files, how many phases — is an output and is not your decision.
 
 **Rule 1 — The browser stays the working copy; the account becomes the durable
-one.** The page opens, reads and files with no network, exactly as it does now.
+one.** The page reads and files with no network, exactly as it does now.
 Syncing happens behind that.
+
+> **Corrected after building it.** This rule said the page "opens, reads and
+> files with no network". The *opens* is false and was never true: the route is
+> server-rendered with no service worker, so reloading offline fails outright
+> with `ERR_INTERNET_DISCONNECTED`. What holds is that an already-open tab keeps
+> working — filing a close call with the signal cut leaves the record intact,
+> the page says "Offline. 1 change is waiting on this device", and the change
+> goes up by itself when signal returns, with nothing clicked. Proved in
+> `blackbox.spec.ts`. Making the page itself openable offline is a service
+> worker for this route, which is real work and is not done.
 *If this is wrong:* the one moment the tool exists for — eleven at night, on a
 phone, possibly on no signal — is the moment it shows a spinner. A tool that
 needs a network at that moment is not the tool.

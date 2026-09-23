@@ -1,16 +1,54 @@
 #!/bin/sh
 
-# Type errors may only go down. See scripts/typecheck-ratchet.mjs.
+# THIS WARNS. IT DOES NOT BLOCK. Here is why, because the previous version
+# blocked and the reasoning against it is specific rather than a preference.
 #
-# This checks the WORKING TREE, not the commits being pushed — uncommitted work
-# counts, committed work you have since changed does not. Stashing to fix that is
-# forbidden here (a second agent shares this checkout), so this is a fast local
-# warning and CI is the gate: .github/workflows/ci.yml runs the same script on
-# the pushed commit.
-echo "🔎 Type-check ratchet (working tree)..."
-node scripts/typecheck-ratchet.mjs || exit 1
+# A push publishes COMMITS. These two scripts measure the WORKING TREE. Those
+# are different things, and on 2026-09-23 they disagreed completely: a push of
+# 115 committed, verified commits was refused because of an unused import in
+# `src/programs/components/BuildYourWeek.tsx` — a file that was UNTRACKED, had
+# never been committed, and was not in the push at all. It was another agent's
+# half-written screen, open at that moment in the checkout all of us share.
+#
+# The version this replaces already knew: its own comment read "this is a fast
+# local warning and CI is the gate". But blocking the push is exactly what stops
+# CI — the thing it calls the gate — from ever running. That day it held up the
+# first CI run this branch had ever had, across 115 commits, over one unused
+# variable in a file nobody was pushing.
+#
+# Three agents share this working tree. Any one of them mid-save makes the tree
+# an unreliable description of anyone's commits, and stashing to get a clean
+# read is forbidden here for the same reason.
+#
+# So: still measured, still printed, never fatal.
+#
+# WHAT STILL BLOCKS, and should: `.husky/pre-commit` runs the ratchets at commit
+# time, where the working tree genuinely is roughly what is being committed, and
+# `.github/workflows/ci.yml` runs the same two scripts against the PUSHED
+# COMMIT, which is the exact measurement and the real gate.
 
-# Lint errors may only go down. Same bargain, same caveat: this measures the
-# working tree and CI measures the pushed commit. See scripts/lint-ratchet.mjs.
-echo "🔎 Lint ratchet (working tree)..."
-node scripts/lint-ratchet.mjs || exit 1
+echo "🔎 Ratchets (working tree — advisory; CI measures the pushed commit)"
+
+failed=""
+node scripts/typecheck-ratchet.mjs || failed="yes"
+node scripts/lint-ratchet.mjs || failed="yes"
+
+if [ -n "$failed" ]; then
+  cat >&2 <<'MSG'
+
+⚠️  A ratchet is unhappy with the WORKING TREE. Pushing anyway.
+
+    This may be somebody else's uncommitted work, or your own — the tree does
+    not distinguish, and in this checkout it is often not yours. Check whether
+    the file named above is even in your commits:
+
+        git status --porcelain <file>     # ?? means untracked, so not pushed
+        git log --oneline -1 -- <file>    # empty means never committed
+
+    CI runs the same two scripts against the pushed commit and WILL block on a
+    real regression: .github/workflows/ci.yml
+
+MSG
+fi
+
+exit 0

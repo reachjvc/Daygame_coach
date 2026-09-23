@@ -553,6 +553,47 @@ test.describe("the Black Box", () => {
     await context.close()
   })
 
+  test("a close call filed with no signal arrives when the signal does", async ({ page, context, browser }) => {
+    // THE ONE MOMENT THIS TOOL EXISTS FOR is eleven at night, on a phone, and a
+    // phone at eleven at night is exactly where there is no signal. Everything
+    // else in this file proves the sync works when the network does; this is
+    // the case where it does not, and it is the case the page was designed
+    // around — the browser copy is the working copy precisely so that filing
+    // never waits for a request.
+    await seed(page, liveRun())
+
+    await context.setOffline(true)
+    await page.getByRole("button", { name: "File a report" }).click()
+    await page.getByRole("textbox", { name: /What was the thought/i }).fill("filed with no signal")
+    await page.getByRole("button", { name: "File it" }).click()
+
+    // Filed, kept, and the run is untouched. The page says what is true without
+    // ever claiming the work was lost.
+    await expect(page.getByRole("heading", { name: "This run", exact: true })).toBeVisible()
+    await expect(page.getByText(/Offline\./)).toBeVisible({ timeout: 20000 })
+    await expect(page.getByText(/1 change is waiting on this device/)).toBeVisible()
+    await expect(page.getByText(/Saved to your account/)).toHaveCount(0)
+
+    // NOT TESTED HERE, BECAUSE IT IS NOT TRUE: reloading with the network down
+    // fails with ERR_INTERNET_DISCONNECTED. This route is server-rendered and
+    // has no service worker, so the page cannot be OPENED offline at all — only
+    // used offline once it is already open. The record is safe on the device
+    // either way; the limitation is the page, not the data. Said out loud
+    // because the design rule this file is built on claims the page "opens and
+    // files with no network", and only the second half of that is true.
+
+    // Signal comes back. Nothing is clicked: the `online` event does it.
+    await context.setOffline(false)
+    await expect(page.getByText(/Saved to your account/)).toBeVisible({ timeout: 30000 })
+
+    // And it really left the device, rather than the line merely changing.
+    const { context: other, fresh } = await secondDevice(page, browser)
+    await fresh.getByRole("button", { name: /having a thought/i }).click()
+    await fresh.getByRole("button", { name: /I felt fine/i }).first().click()
+    await expect(fresh.getByRole("dialog").getByText("filed with no signal")).toBeVisible({ timeout: 20000 })
+    await other.close()
+  })
+
   test("the same days twice off one thing is still refused, and says so", async ({ page }) => {
     await seed(page, {
       version: 1,

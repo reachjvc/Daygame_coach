@@ -1,17 +1,17 @@
 # daygame-coach
 
-Next.js + TypeScript + Supabase. Feature slices in `src/<slice>/`, routes in `app/`,
+Next.js + TypeScript + Supabase. Slices in `src/<slice>/`, routes in `app/`,
 pipeline in `scripts/training-data/`.
 
 **A subscription web app that helps a man get better with women, which grew a
 life-improvement half around it.** **Nobody has ever paid and nothing is in front
-of users**: there is no Stripe webhook and no code writes `has_purchased`, so
-checkout cannot grant access. Price every recommendation for that stage.
+of users**: no Stripe webhook, and no code writes `has_purchased`, so checkout
+cannot grant access. Price every recommendation for that stage.
 
 ## The five rules
 
-The end-of-turn checklist is `docs/known-failures.md`, and a hook hands you that
-file whenever a turn changed something — so it is not repeated here.
+The end-of-turn checklist is `docs/known-failures.md`; a hook hands it to you
+whenever a turn changed something, so it is not repeated here.
 
 1. **Check the thing itself, never a stand-in.** Read output in full, the way the
    user will — never from a doc, a comment or a summary of it.
@@ -26,10 +26,9 @@ file whenever a turn changed something — so it is not repeated here.
 
 ## Never, and ask first
 
-Stray screenshots, sweeping git adds, stashing, and unwrapped writes to live data
-are refused by `.claude/hooks/never.py`, which also asks first about auth,
-payments, migrations, access control and icon reuse. These are the ones no hook
-can catch:
+`.claude/hooks/never.py` refuses stray screenshots, sweeping git adds, stashing
+and unwrapped writes to live data, and asks first about auth, payments,
+migrations, access control and icon reuse. The ones no hook can catch:
 
 - Never add a silent fallback; scripts fail loudly or ask the user.
 - Never delete code you can't explain the purpose of.
@@ -40,16 +39,19 @@ can catch:
 ## Read before you act
 
 Before saying what the app does, read `docs/product/map.md` — having code is not
-being reachable. Before proposing work, read `docs/product/vision.md`.
+being reachable. Before proposing work, `docs/product/vision.md`.
 
 Architecture is enforced by `tests/unit/architecture.test.ts`; run it rather than
 memorising it. A cited `docs/` path not on disk is expected: 482 were deleted
-2026-09-09, and the name is what finds it in `git log --diff-filter=D -- <path>`.
+2026-09-09; `git log --diff-filter=D -- <path>` finds it.
 
 ## Commands
 
 `npm run dev` (localhost:3000) and `npm run test:e2e`. A Stop hook runs `npm test`
 for you and blocks on a failure.
+
+**Commit and push your own work without being asked.** Stage named paths —
+this checkout is shared.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
