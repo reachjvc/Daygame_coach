@@ -15,12 +15,9 @@
 import { useEffect, useState } from "react"
 import { Check } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { typedNumber } from "@/src/shared/typedNumber"
-import { MAX_WEIGHT_KG } from "@/src/shared/weight"
+import { readSetEntry } from "../../programsService"
+import { SET_LIMITS, setLimitSentence } from "../../schemas"
 import type { LiveWorkoutSet } from "../../types"
-
-/** Nobody does a thousand reps, and nothing on a bar is 1,000 kg. */
-const MAX_REPS = 1000
 
 export interface SetRowProps {
   setNumber: number
@@ -99,40 +96,26 @@ export function SetRow({
   const range = prescribed.repRangeMax ? `${prescribed.reps}–${prescribed.repRangeMax}` : null
 
   /**
-   * BLANK IS NOT ZERO, and this row is where that is decided.
+   * WHETHER THE ✓ MAY FIRE IS NOT THIS ROW'S DECISION.
    *
-   * `Number("")` is 0, so an empty weight box on a bench press used to save the
-   * set as 0 kg. The server accepts 0 because 0 is legitimate — a pull-up with
-   * nothing added really is zero — so nothing downstream could ever tell
-   * "unweighted" from "forgot to type it", and the zero hid inside every volume
-   * total and every personal best.
-   *
-   * So: a weight is REQUIRED unless the lift is one you can do with nothing
-   * added, or has no weight box at all.
+   * It was, and it was wrong twice over: `Number("")` sent an empty weight box
+   * as 0 kg, and the bounds were spelled out here with the server's numbers
+   * copied by hand. Both rules now live in one place — `readSetEntry` — which
+   * also hands back the two numbers to send, so there is no second conversion
+   * left on this side for the zero to come back through.
    */
-  const typedWeight = typedNumber(weight)
-  const typedReps = typedNumber(reps)
-  const weightRequired = !bodyweight && !unweightedOk
-  const weightForTick = bodyweight ? 0 : (typedWeight ?? 0)
-
+  const entry = readSetEntry({ weight, reps, bodyweight, unweightedOk })
+  const { problem } = entry
+  const repWord = repUnit === "sec" ? "Seconds" : "Reps"
   /**
-   * A NUMBER OUTSIDE THE BOUNDS IS REFUSED HERE, BY NAME.
-   *
-   * The server bounds it too (`CompleteSetSchema`), but its 400 arrives after
-   * the tick has gone green and the rest clock has started. The limit is the
-   * same number in whichever unit the box is showing, so this is never looser
-   * than the server.
+   * A number the database cannot hold is named. An empty box is not: the
+   * placeholder already says which number is missing, and an amber sentence on
+   * every untouched row is noise.
    */
-  const outOfBounds =
-    (typedWeight !== null && (typedWeight < 0 || typedWeight > MAX_WEIGHT_KG)) ||
-    (typedReps !== null && (typedReps < 0 || typedReps > MAX_REPS))
   const boundsMessage =
-    typedWeight !== null && (typedWeight < 0 || typedWeight > MAX_WEIGHT_KG)
-      ? `Weight has to be between 0 and ${MAX_WEIGHT_KG} ${unitLabel}.`
-      : `${repUnit === "sec" ? "Seconds" : "Reps"} have to be between 0 and ${MAX_REPS}.`
-
-  const canTick =
-    typedReps !== null && !outOfBounds && (!weightRequired || typedWeight !== null)
+    problem?.reason === "out-of-range"
+      ? setLimitSentence(problem.field, { unitLabel, repWord })
+      : null
 
   return (
     <div
@@ -175,7 +158,7 @@ export function SetRow({
           type="number"
           inputMode="decimal"
           min={0}
-          max={MAX_WEIGHT_KG}
+          max={SET_LIMITS.weightMax}
           step="any"
           aria-label={`Weight for set ${setNumber} in ${unitLabel}`}
           /**
@@ -195,9 +178,9 @@ export function SetRow({
         type="number"
         inputMode="numeric"
         min={0}
-        max={MAX_REPS}
+        max={SET_LIMITS.repsMax}
         step={1}
-        aria-label={`${repUnit === "sec" ? "Seconds" : "Reps"} for set ${setNumber}`}
+        aria-label={`${repWord} for set ${setNumber}`}
         placeholder={prescribed.amrap ? "max" : (range ?? (prescribed.reps ? String(prescribed.reps) : "reps"))}
         className="h-11 w-full sm:h-9"
         value={reps}
@@ -209,8 +192,8 @@ export function SetRow({
         data-testid={`tick-${setNumber}`}
         aria-label={ticked ? `Undo set ${setNumber}` : `Save set ${setNumber}`}
         aria-pressed={ticked}
-        disabled={!ticked && !canTick}
-        onClick={() => (ticked && onUndo ? onUndo() : onTick(weightForTick, typedReps ?? 0))}
+        disabled={!ticked && problem !== null}
+        onClick={() => (ticked && onUndo ? onUndo() : onTick(entry.weight, entry.reps))}
         className={`flex h-11 w-11 items-center justify-center rounded-md border transition-colors disabled:opacity-30 ${
           ticked
             ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-500"
@@ -220,7 +203,7 @@ export function SetRow({
         <Check className="size-5" />
       </button>
 
-      {outOfBounds && !ticked && (
+      {boundsMessage && !ticked && (
         <span className="col-span-5 text-[11px] text-amber-500">{boundsMessage}</span>
       )}
 

@@ -24,6 +24,12 @@ import { libraryByName } from "./data/exerciseLibrary"
 import { CUSTOM_PROGRAM_ID } from "./data/customProgram"
 import { enrollmentName } from "./data/catalog"
 import { readReturn } from "@/src/shared/returnTo"
+import { typedNumber } from "@/src/shared/typedNumber"
+/**
+ * The wire bounds, imported rather than restated: the row's refusal and the
+ * server's must be the same numbers or the row is a decoration.
+ */
+import { SET_LIMITS } from "./schemas"
 import type {
   AlsoRunning,
   TrainingDoorFacts,
@@ -58,6 +64,8 @@ import type {
   PrescribedSet,
   ProgressionChange,
   SessionPrescription,
+  SetEntry,
+  SetEntryProblem,
   UnitSystem,
 } from "./types"
 import { clampCursorDay, effectiveProgram, scheduleDays, scheduleDaysOrNone } from "./customize"
@@ -671,6 +679,67 @@ export function groupOrdinal(
   let n = 0
   for (let i = 0; i <= index; i++) if (exercises[i]?.supersetGroup === group) n++
   return n
+}
+
+/**
+ * A SET ENTRY, READ ONCE — the one rule for whether the ✓ may fire.
+ *
+ * BLANK IS NOT ZERO, and this is where that is decided. `Number("")` is 0, so
+ * an empty weight box on a bench press saved the set as 0 kg. The server
+ * accepts 0 because 0 is legitimate — a pull-up with nothing added really is
+ * zero — so nothing downstream could ever tell "unweighted" from "forgot to
+ * type it", and the zero then hid inside every volume total and every personal
+ * best.
+ *
+ * The conversion lives here WITH the check, rather than being two lines at the
+ * call site, because the call site is where the 0 came from: a caller that
+ * asks "is this ok?" and then does its own `Number(weight)` is one edit away
+ * from the original bug. The row renders; it decides nothing.
+ *
+ * The bounds are the SERVER's bounds (`SET_LIMITS`), so this is never looser
+ * than the request it is about to make. It is checked here as well because the
+ * server's 400 arrives after the tick has gone green and the rest clock has
+ * started.
+ */
+export function readSetEntry(entry: {
+  weight: string
+  reps: string
+  /** No weight box at all — a plank, a bodyweight squat. 0 is the truth. */
+  bodyweight?: boolean
+  /** Has a weight box, and an empty one means "just me": a pull-up, a dip. */
+  unweightedOk?: boolean
+}): SetEntry {
+  const weight = typedNumber(entry.weight)
+  const reps = typedNumber(entry.reps)
+  const weightRequired = !entry.bodyweight && !entry.unweightedOk
+
+  /**
+   * A NUMBER THAT CANNOT BE STORED IS NAMED FIRST, even when the other box is
+   * still empty. A missing number needs no sentence — the box is visibly empty
+   * — but 5000 looks like a good answer until something names the ceiling, and
+   * greying the ✓ out without saying why is how people conclude it is broken.
+   */
+  const outOfRange = (n: number | null, max: number, whole: boolean) =>
+    n !== null && (n < 0 || n > max || (whole && !Number.isInteger(n)))
+
+  let problem: SetEntryProblem | null = null
+  if (!entry.bodyweight && outOfRange(weight, SET_LIMITS.weightMax, false)) {
+    problem = { field: "weight", reason: "out-of-range" }
+  } else if (outOfRange(reps, SET_LIMITS.repsMax, true)) {
+    problem = { field: "reps", reason: "out-of-range" }
+  } else if (weightRequired && weight === null) {
+    problem = { field: "weight", reason: "missing" }
+  } else if (reps === null) {
+    problem = { field: "reps", reason: "missing" }
+  }
+
+  return {
+    problem,
+    // `?? 0` is reachable only on a lift that can be done with nothing added,
+    // where it is a fact and not a stand-in for a number nobody typed.
+    weight: entry.bodyweight ? 0 : (weight ?? 0),
+    reps: reps ?? 0,
+  }
 }
 
 /** A stable id for a lift added on the day, derived from its name. */

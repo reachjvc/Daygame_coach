@@ -15,6 +15,7 @@ import { describe, it, expect, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { SetRow } from "@/src/programs/components/live/SetRow"
+import { SET_LIMITS } from "@/src/programs/schemas"
 
 const base = {
   setNumber: 1,
@@ -93,6 +94,36 @@ describe("ticking a set", () => {
     await user.type(screen.getByLabelText(/reps for set 1/i), "5")
     expect(screen.getByTestId("tick-1")).toBeDisabled()
     expect(screen.getByText(/between 0 and 999.99 kg/i)).toBeTruthy()
+  })
+
+  it("the boxes carry exactly the numbers the server enforces", () => {
+    // The row used to spell its own `MAX_REPS = 1000` and nothing tied it to
+    // `CompleteSetSchema`. A box whose max is looser than the column is a tick
+    // that goes green and a 400 that arrives afterwards.
+    render(<SetRow {...base} onTick={vi.fn()} />)
+    const weight = screen.getByLabelText(/weight for set 1/i)
+    expect(weight.getAttribute("max")).toBe(String(SET_LIMITS.weightMax))
+    expect(weight.getAttribute("min")).toBe("0")
+    const reps = screen.getByLabelText(/reps for set 1/i)
+    expect(reps.getAttribute("max")).toBe(String(SET_LIMITS.repsMax))
+    expect(reps.getAttribute("min")).toBe("0")
+  })
+
+  it("names the refusal in the unit the box is labelled in", async () => {
+    const user = userEvent.setup()
+    render(<SetRow {...base} unitLabel="lb" onTick={vi.fn()} />)
+    await user.type(screen.getByLabelText(/weight for set 1 in lb/i), "5000")
+    expect(screen.getByText(`Weight must be between 0 and ${SET_LIMITS.weightMax} lb.`)).toBeTruthy()
+  })
+
+  it("names seconds rather than reps on a lift held for time", async () => {
+    const user = userEvent.setup()
+    render(<SetRow {...base} bodyweight repUnit="sec" onTick={vi.fn()} />)
+    await user.type(screen.getByLabelText(/seconds for set 1/i), "1001")
+    expect(
+      screen.getByText(`Seconds must be a whole number between 0 and ${SET_LIMITS.repsMax}.`)
+    ).toBeTruthy()
+    expect(screen.getByTestId("tick-1")).toBeDisabled()
   })
 
   it("a set already ticked can still be undone", async () => {

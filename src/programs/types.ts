@@ -1288,3 +1288,31 @@ export interface TrainingDoorFacts {
     sets: number | null
   }>
 }
+
+/**
+ * WHY A SET CANNOT BE TICKED YET — the field, and whether it is empty or
+ * impossible.
+ *
+ * Two different refusals, and the row treats them differently: an empty box is
+ * its own message (the placeholder already says "weight"), while a number the
+ * database cannot hold needs the sentence, because 5000 looks like a perfectly
+ * good answer until something names the ceiling.
+ */
+export interface SetEntryProblem {
+  field: "weight" | "reps"
+  reason: "missing" | "out-of-range"
+}
+
+/**
+ * A set entry, read once: what is wrong with it, and the two numbers it sends.
+ *
+ * The conversion is part of the rule and not a separate step at the call site,
+ * because the call site is where `Number("")` turned an empty weight box into a
+ * set saved as 0 kg — indistinguishable, ever after, from a pull-up genuinely
+ * done with nothing added.
+ */
+export interface SetEntry {
+  problem: SetEntryProblem | null
+  weight: number
+  reps: number
+}

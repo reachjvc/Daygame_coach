@@ -252,13 +252,69 @@ export const StartWorkoutSchema = z.object({
   startedAt: z.string().datetime().optional(),
 })
 
+/**
+ * WHAT A SET MAY CONTAIN — the numbers, in one object, and the sentence for
+ * each of them.
+ *
+ * The bounds were written twice, in the two places that have to agree: here,
+ * and on the ✓ of the row. `SetRow` carried its own `MAX_REPS = 1000` and no
+ * bound at all on the set number, so the row and the server were one edit away
+ * from disagreeing — and a disagreement here does not show up until a 400
+ * arrives, after the tick has gone green and the rest clock has started.
+ *
+ * The SENTENCE is shared for the same reason. "Could not save that set" named
+ * no field, so the row could only guess at its own wording; it now shows the
+ * server's own sentence, in the unit the box is labelled in, before the request
+ * goes out at all.
+ */
+export const SET_LIMITS = {
+  /** `workout_sets.weight_kg` is `NUMERIC(5,2)`; 1000 overflows it. */
+  weightMax: MAX_WEIGHT_KG,
+  /** Nobody does a thousand reps, and nothing holds a plank for a thousand seconds. */
+  repsMax: 1000,
+  /** Fifty sets of one lift is not a workout, it is a typo or a loop. */
+  setMax: 50,
+} as const
+
+/**
+ * The refusal, in words, from the numbers above.
+ *
+ * `unitLabel` and `repWord` are the row's: the box is labelled "lb" or
+ * "Seconds" and the sentence under it must use the same word, while the server
+ * — which stores kilograms and reps — has no unit to name.
+ */
+export function setLimitSentence(
+  field: "weight" | "reps" | "setNumber",
+  labels: { unitLabel?: string; repWord?: string } = {}
+): string {
+  if (field === "weight") {
+    const unit = labels.unitLabel ? ` ${labels.unitLabel}` : ""
+    return `Weight must be between 0 and ${SET_LIMITS.weightMax}${unit}.`
+  }
+  if (field === "reps") {
+    return `${labels.repWord ?? "Reps"} must be a whole number between 0 and ${SET_LIMITS.repsMax}.`
+  }
+  return `A set number must be a whole number between 1 and ${SET_LIMITS.setMax}.`
+}
+
 export const CompleteSetSchema = z.object({
   exerciseId: z.string().min(1).max(80).nullable(),
   exercise: z.string().min(1).max(120),
-  weight: z.number().min(0).max(MAX_WEIGHT_KG),
+  weight: z
+    .number()
+    .min(0, setLimitSentence("weight"))
+    .max(SET_LIMITS.weightMax, setLimitSentence("weight")),
   // 0 = attempted and failed. A set not attempted has no row.
-  reps: z.number().int().min(0).max(1000),
-  setNumber: z.number().int().min(1).max(50),
+  reps: z
+    .number()
+    .int(setLimitSentence("reps"))
+    .min(0, setLimitSentence("reps"))
+    .max(SET_LIMITS.repsMax, setLimitSentence("reps")),
+  setNumber: z
+    .number()
+    .int(setLimitSentence("setNumber"))
+    .min(1, setLimitSentence("setNumber"))
+    .max(SET_LIMITS.setMax, setLimitSentence("setNumber")),
   kind: z.enum(["warmup", "working", "amrap", "backoff", "drop"]).optional(),
   prescribedIndex: z.number().int().min(0).max(50).nullable().optional(),
   side: z.enum(["left", "right"]).nullable().optional(),
