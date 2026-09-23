@@ -120,8 +120,16 @@ describe("the rest clock", () => {
       json: async () => ({ error: "Weight has to be between 0 and 999.99." }),
     } as unknown as Response)
 
-    // And it goes away, because there is nothing to rest from.
-    await waitFor(() => expect(screen.queryByTestId("rest-bar")).toBeNull())
+    /**
+     * And it goes away, because there is nothing to rest from.
+     *
+     * The wait is longer than the one-second default on purpose: the
+     * dismissal now goes through a functional state update AND a localStorage
+     * write (the clock survives a reload), and under a loaded full-suite run
+     * that chain has been seen to take longer than a second. The behaviour is
+     * right either way; a second is simply not a safe deadline for it.
+     */
+    await waitFor(() => expect(screen.queryByTestId("rest-bar")).toBeNull(), { timeout: 5000 })
   })
 
   it("stays when the set is merely queued", async () => {

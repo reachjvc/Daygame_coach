@@ -548,7 +548,7 @@ export function LiveWorkoutScreen({
                       onClick={() =>
                         setExtraRows((r) => ({ ...r, [ex.exerciseId]: (r[ex.exerciseId] ?? 0) + 1 }))
                       }
-                      className="min-h-9 rounded-md border border-dashed border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      className="min-h-11 rounded-md border border-dashed border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                     >
                       + one more set
                     </button>
@@ -561,7 +561,7 @@ export function LiveWorkoutScreen({
                             [ex.exerciseId]: Math.max(0, (r[ex.exerciseId] ?? 0) - 1),
                           }))
                         }
-                        className="min-h-9 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent"
+                        className="min-h-11 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent"
                       >
                         one fewer
                       </button>
@@ -710,7 +710,11 @@ function Elapsed({
         {/* THE ONE WAY BACK, shared. Hand-rolling a link with a back arrow is
             how thirteen of them ended up disagreeing about where "back" was;
             `tests/unit/navigation/backNavigation.test.ts` fails on a new one. */}
-        <BackLink fallback="/programs" fallbackLabel="Training" className="shrink-0 text-xs" />
+        <BackLink
+          fallback="/programs"
+          fallbackLabel="Training"
+          className="inline-flex min-h-11 shrink-0 items-center text-xs"
+        />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium">
             {dayLabel ?? "Workout"}

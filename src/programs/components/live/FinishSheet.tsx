@@ -16,7 +16,7 @@
  */
 
 import { useState } from "react"
-import { Award, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { instantToWallClock, wallClockToInstant } from "@/src/shared/dateUtils"
@@ -27,6 +27,7 @@ import {
   missWording,
 } from "../../programsService"
 import { Textarea } from "@/components/ui/textarea"
+import { ReceiptBody } from "../WorkoutReceipt"
 import type { LiveWorkout, WorkoutSummary } from "../../types"
 import type { MissRule } from "../../types"
 
@@ -194,85 +195,12 @@ export function FinishSheet({
       <div data-testid="workout-summary" className="space-y-4">
         <h2 className="text-lg font-semibold">Done.</h2>
 
-        {/* SAVED, AND NOTHING ELSE IS KNOWN. The reply was lost, the server has
-            confirmed the workout did close, and the totals could not be read
-            back. "0 sets, 0 kg lifted" after an hour of training would be a
-            claim about the person that is not true, so every number is withheld
-            instead. */}
-        {summary.unavailable && (
-          <p
-            data-testid="summary-unavailable"
-            className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-2 text-xs text-amber-600 dark:text-amber-400"
-          >
-            Saved, but the totals could not be worked out.
-          </p>
-        )}
-
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <Stat label="minutes" value={summary.unavailable ? "—" : summary.durationMin} />
-          <Stat label="sets" value={summary.unavailable ? "—" : summary.sets} />
-          <Stat
-            label={`${summary.unit} lifted`}
-            value={summary.unavailable ? "—" : Math.round(summary.volume)}
-          />
-        </div>
-
-        {/* A RECORD CANNOT BE CLAIMED, OR RULED OUT, AGAINST A HISTORY NOBODY
-            COULD READ. Saying nothing here would read as "you beat nothing
-            today", which is a claim, and one the app has no grounds for. */}
-        {summary.recordsUnavailable && (
-          <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-2 text-xs text-amber-600 dark:text-amber-400">
-            Your past workouts could not be read just now, so this one has not been checked against
-            your bests. The workout itself is saved.
-          </p>
-        )}
-
-        {summary.personalRecords.length > 0 && (
-          <div className="rounded-md border border-emerald-500/40 bg-emerald-500/10 p-3">
-            <p className="flex items-center gap-1.5 text-sm font-medium text-emerald-500">
-              <Award className="size-4" /> New best
-            </p>
-            <ul className="mt-1 space-y-0.5 text-sm">
-              {summary.personalRecords.map((pr) => (
-                <li key={`${pr.exercise}-${pr.weight_kg}-${pr.reps}`}>
-                  {pr.exercise} {pr.weight} {summary.unit} × {pr.reps}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* A LIFT YOU HAD NEVER DONE HAS NOTHING TO BEAT. Every set used to be
-            announced as a personal best against an empty history, which made
-            "New best" mean nothing on the first session. A first is named as a
-            first — true, and still worth seeing. */}
-        {summary.firstTimeLifts.length > 0 && (
-          <p data-testid="first-time-lifts" className="text-sm text-muted-foreground">
-            First time logged: {summary.firstTimeLifts.join(", ")}
-          </p>
-        )}
-
-        {/* NOT KEPT IS NOT NOTHING. A workout finished before the receipt was
-            stored on the row has no record of what the program did next, and
-            saying nothing here would read as "nothing changed". */}
-        {summary.changesUnavailable && (
-          <p className="text-sm text-muted-foreground">
-            What changed for next time was not kept for this workout.
-          </p>
-        )}
-
-        {!summary.changesUnavailable && summary.changes.length > 0 && (
-          <div>
-            <p className="text-sm font-medium">Next time</p>
-            <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">
-              {summary.changes.map((c) => (
-                <li key={c.exerciseId}>
-                  <span className="text-foreground">{c.name}:</span> {c.reason}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {/* THE SAME RECEIPT THE PAGE SHOWS. This drew its own version of the
+            figures, the bests and what the program does next — and the two
+            had already drifted: this one knew about a lost reply and the page
+            did not, the page named the day and this one did not. A receipt is
+            a record, so there is one of it. */}
+        <ReceiptBody summary={summary} />
 
         <Button className="w-full" onClick={onCancel}>
           Back to training
@@ -551,11 +479,7 @@ export function FinishSheet({
 }
 
 /** `value` takes a string so an unknown total can read "—" rather than 0. */
-function Stat({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div>
-      <div className="text-2xl font-bold tabular-nums">{value}</div>
-      <div className="text-xs text-muted-foreground">{label}</div>
-    </div>
-  )
-}
+/**
+ * `Stat` lived here. It is `Figure` inside `ReceiptBody` now — the finish
+ * sheet and the receipt page were drawing the same three numbers two ways.
+ */

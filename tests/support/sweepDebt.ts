@@ -123,11 +123,10 @@ export const TAP_TARGET_DEBT: Record<string, number> = {
   // (one pixel short, from a four-pixel gap), the history toggle at 36px and
   // "Show all" at 16px.
   //
-  // /programs/live still owes and keeps its entry. Raising it to the real
-  // measurement would make the suite green and make this guard a description
-  // of whatever happened, which is the one thing it must never be. The
-  // failure is the message.
-  "/programs/live": 3,
+  // /programs/live is GONE from this table too, as of 2026-09-23. Measured at
+  // 390px with a workout open it had four: the back link at 32px tall and the
+  // three "+ one more set" buttons at 36px. Both maps are empty of training
+  // pages now, which is what "a page with no number must be clean" means.
 }
 
 /**
@@ -145,7 +144,7 @@ export const TAP_TARGET_DEBT: Record<string, number> = {
  * states, applied honestly instead of by hand.
  */
 export const TRAINING_DEBT_CEILING: Record<string, number> = {
-  // "/programs" was here. Deleted rather than lowered, which is what this
-  // comment block asks for: a page with no number must be clean.
-  "/programs/live": 3,
+  // "/programs" and "/programs/live" were both here. Deleted rather than
+  // lowered, which is what this comment block asks for: a page with no number
+  // must be clean. The rebuild has now made both so.
 }

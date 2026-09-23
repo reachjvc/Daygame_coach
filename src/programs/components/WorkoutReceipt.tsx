@@ -20,6 +20,100 @@ import { weekdayNameIn } from "../programsService"
 import { PROGRAMS } from "@/src/shared/trainingRoutes"
 import type { WorkoutSummary } from "../types"
 
+/**
+ * THE FIGURES AND THE LISTS — the same ones, wherever they are shown.
+ *
+ * The finish sheet drew its own version of this and the receipt page drew
+ * another: two renderings of one workout, and they had already drifted (the
+ * sheet knew about a lost reply, the page did not; the page named the day,
+ * the sheet did not). A receipt is a record, so there is one of it.
+ */
+export function ReceiptBody({ summary }: { summary: WorkoutSummary }) {
+  const unitLabel = UNIT_CONFIG[summary.unit].label
+
+  return (
+    <div className="space-y-3">
+      {/* SAVED, AND NOTHING ELSE IS KNOWN. The reply was lost, the server has
+          confirmed the workout did close, and the totals could not be read
+          back. "0 sets, 0 kg lifted" after an hour of training would be a
+          claim about the person that is not true, so every number is withheld
+          instead. */}
+      {summary.unavailable && (
+        <p
+          data-testid="summary-unavailable"
+          className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-2 text-xs text-amber-600 dark:text-amber-400"
+        >
+          Saved, but the totals could not be worked out.
+        </p>
+      )}
+
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <Figure label="Minutes" value={summary.unavailable ? null : summary.durationMin} />
+        <Figure label="Sets" value={summary.unavailable ? null : summary.sets} />
+        <Figure
+          label={`Volume (${unitLabel})`}
+          value={summary.unavailable ? null : Math.round(summary.volume)}
+        />
+      </div>
+
+      {summary.recordsUnavailable ? (
+        // NOT "you beat nothing". The history could not be read, and those
+        // are different things to be told.
+        <p className="text-sm text-muted-foreground" data-testid="records-unavailable">
+          Your best lifts were not checked for this workout.
+        </p>
+      ) : (
+        <>
+          {summary.personalRecords.length > 0 && (
+            <div>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                Personal bests
+              </p>
+              <ul className="mt-1 space-y-0.5 text-sm">
+                {summary.personalRecords.map((pr) => (
+                  <li key={`${pr.exercise}-${pr.reps}`} className="flex justify-between gap-3">
+                    <span className="min-w-0 truncate">{pr.exercise}</span>
+                    <span className="shrink-0 tabular-nums text-muted-foreground">
+                      {pr.weight} {unitLabel} × {pr.reps}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* A FIRST IS NOT A RECORD. With no history every set used to be
+              announced as a personal best, so the very first set an account
+              ever logged came back as "New best". */}
+          {summary.firstTimeLifts.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              First time logged: {summary.firstTimeLifts.join(", ")}
+            </p>
+          )}
+        </>
+      )}
+
+      {summary.changesUnavailable ? (
+        <p className="text-sm text-muted-foreground" data-testid="changes-unavailable">
+          What the program did next was not kept for this workout.
+        </p>
+      ) : summary.changes.length > 0 ? (
+        <div>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Next time</p>
+          <ul className="mt-1 space-y-0.5 text-sm">
+            {summary.changes.map((c) => (
+              <li key={c.exerciseId} className="flex justify-between gap-3">
+                <span className="min-w-0 truncate">{c.name}</span>
+                <span className="shrink-0 text-muted-foreground">{c.reason}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export function WorkoutReceipt({
   summary,
   timezone,
@@ -28,7 +122,6 @@ export function WorkoutReceipt({
   /** The account's zone — the only clock allowed to name a day here. */
   timezone: string
 }) {
-  const unitLabel = UNIT_CONFIG[summary.unit].label
   const day = summary.startedAt ? weekdayNameIn(summary.startedAt, timezone) : null
 
   return (
@@ -51,67 +144,8 @@ export function WorkoutReceipt({
         </h1>
 
         <Card className={TRAINING_CARD} data-testid="workout-receipt">
-          <CardContent className={`${TRAINING_CARD_BODY} space-y-3`}>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <Figure label="Minutes" value={summary.durationMin} />
-              <Figure label="Sets" value={summary.sets} />
-              <Figure label={`Volume (${unitLabel})`} value={Math.round(summary.volume)} />
-            </div>
-
-            {summary.recordsUnavailable ? (
-              // NOT "you beat nothing". The history could not be read, and
-              // those are different things to be told.
-              <p className="text-sm text-muted-foreground" data-testid="records-unavailable">
-                Your best lifts were not checked for this workout.
-              </p>
-            ) : (
-              <>
-                {summary.personalRecords.length > 0 && (
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                      Personal bests
-                    </p>
-                    <ul className="mt-1 space-y-0.5 text-sm">
-                      {summary.personalRecords.map((pr) => (
-                        <li key={`${pr.exercise}-${pr.reps}`} className="flex justify-between gap-3">
-                          <span className="min-w-0 truncate">{pr.exercise}</span>
-                          <span className="shrink-0 tabular-nums text-muted-foreground">
-                            {pr.weight} {unitLabel} × {pr.reps}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* A FIRST IS NOT A RECORD. With no history every set used to
-                    be announced as a personal best, so the very first set an
-                    account ever logged came back as "New best". */}
-                {summary.firstTimeLifts.length > 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    First time logged: {summary.firstTimeLifts.join(", ")}
-                  </p>
-                )}
-              </>
-            )}
-
-            {summary.changesUnavailable ? (
-              <p className="text-sm text-muted-foreground" data-testid="changes-unavailable">
-                What the program did next was not kept for this workout.
-              </p>
-            ) : summary.changes.length > 0 ? (
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Next time</p>
-                <ul className="mt-1 space-y-0.5 text-sm">
-                  {summary.changes.map((c) => (
-                    <li key={c.exerciseId} className="flex justify-between gap-3">
-                      <span className="min-w-0 truncate">{c.name}</span>
-                      <span className="shrink-0 text-muted-foreground">{c.reason}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
+          <CardContent className={TRAINING_CARD_BODY}>
+            <ReceiptBody summary={summary} />
           </CardContent>
         </Card>
       </div>
