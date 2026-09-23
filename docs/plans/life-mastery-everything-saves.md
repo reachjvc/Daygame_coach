@@ -441,9 +441,40 @@ Built so far: `life_plan_day_journal`'s new shape (migration, by ALTER),
 `lifePlanDayService`, `/api/life-plan/day`, and `lifePlanDayClient` with its
 one catch-up retry. 34 tests behind them.
 
-Still to do: the one-time import of the day half already in the browser, the save
-gate learning the other three day maps, `mergeDayRecord` becoming a real read,
-and Check 1.
+**WIRED 2026-09-23 (`b3b845b2`).** The four day maps now reach the account
+through their own route, the browser's existing days are imported once, and the
+account's days replace the browser's the moment there are any. 5,883 tests green.
+
+Two design notes worth carrying, because both were found the hard way:
+
+- **The day half is sent by comparing, not by trusting an effect.** Every day
+  mutator comes out of one `setPlan`, so which day moved is only knowable by
+  looking at what the account last accepted. And the half a diff forgets is the
+  important half: a removal has to be said out loud, or "I cleared that" and "I
+  did not mention it" become the same request and the cell comes back on the
+  next device.
+- **Nothing records that the import ran.** It is finished when the account has
+  the days — a fact on the account rather than a promise in a browser. That is
+  the same correction the plan's own marker needed in M0, applied before it
+  could be made twice.
+
+**The save gate was NOT changed, and the reason is worth writing down**, because
+this plan asked for it. The gap it named — "a day-only user gets no plan row, so
+their ticks have nowhere to go" — is closed by the day route calling
+`ensureLifePlan` itself. Changing `planIsUntouched` as well would have been a
+second answer to a question already answered, and it would have widened what
+reaches `plan_snapshots` (M5) on the way. The cure for a gap can be worse than
+the gap.
+
+**Still to do before M1 can be called finished:**
+- **Check 1**, the round-trip integration test against a real Postgres. Not
+  written. It needs the integration container, and the memory note says not to
+  run that suite while another session is using the shared connection file.
+- **The browser proof**: a tick in one context appearing in another, and a
+  structural plan change from the first not destroying the second's tick. The
+  route is mounted and auth-gated on `localhost:3000` (401, not 404), which is a
+  smoke check and not the acceptance.
+- **Check 5**, the same at phone width.
 
 **You can:** tick your morning routine on your phone and see it on your laptop.
 Write a journal line in one browser, read it in another. Clear your browsing data
