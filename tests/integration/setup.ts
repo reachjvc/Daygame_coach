@@ -207,6 +207,12 @@ export async function truncateAllTables(): Promise<void> {
     // sets before it.
     await client.query(`
       TRUNCATE TABLE
+        life_plan_day_journal,
+        life_plan_day_ticks,
+        life_plan_day_ratings,
+        life_plan_days,
+        life_plan_nodes,
+        life_plans,
         workout_sets,
         workout_logs,
         program_enrollments,
