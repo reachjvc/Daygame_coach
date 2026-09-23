@@ -17,7 +17,9 @@ import { BackLink } from "@/components/BackLink"
 import { UNIT_CONFIG } from "../config"
 import { TRAINING_COLUMN, TRAINING_CARD, TRAINING_CARD_BODY } from "./trainingStyles"
 import { describeLoggedSet, weekdayNameIn } from "../programsService"
+import { collapseSets } from "@/src/health/healthService"
 import { PROGRAMS } from "@/src/shared/trainingRoutes"
+import type { ReactNode } from "react"
 import type { WorkoutSummary } from "../types"
 
 /**
@@ -68,6 +70,55 @@ export function ReceiptBody({ summary }: { summary: WorkoutSummary }) {
           value={summary.unavailable ? null : Math.round(summary.volume)}
         />
       </div>
+
+      {/*
+        WHAT THE SESSION WAS, set by set.
+        The receipt carried the totals and what the program does next, and not
+        the sets — survivable while the History row unfolded the session in
+        place, and a hole the moment that row became a link to this page.
+        Identical sets are said once, so the set that DIFFERED is the one that
+        stands out; a warm-up is marked, because a five-set session where one
+        was a warm-up reads wrong otherwise.
+      */}
+      {(summary.loggedSets ?? []).length > 0 && (
+        <div data-testid="receipt-sets">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">What you did</p>
+          <ul className="mt-1 space-y-0.5 text-sm">
+            {Object.entries(
+              (summary.loggedSets ?? []).reduce<Record<string, typeof summary.loggedSets>>(
+                (byLift, set) => {
+                  byLift[set.exercise] = [...(byLift[set.exercise] ?? []), set]
+                  return byLift
+                },
+                {}
+              )
+            ).map(([exercise, sets]) => (
+              <li key={exercise} className="flex items-baseline justify-between gap-3">
+                <span className="min-w-0 truncate">{exercise}</span>
+                <span className="shrink-0 tabular-nums text-muted-foreground">
+                  {collapseSets(
+                    (sets ?? []).map((set) => ({
+                      exercise,
+                      weight: set.weightKg,
+                      reps: set.reps,
+                      kind: set.kind,
+                      setNumber: set.setNumber,
+                    }))
+                  )
+                    .map(
+                      (run) =>
+                        `${describeLoggedSet(
+                          { exercise, weightKg: run.weight, reps: run.reps, count: run.count },
+                          summary.unit
+                        )}${run.kind === "warmup" ? " (W)" : ""}`
+                    )
+                    .join(" · ")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {summary.recordsUnavailable ? (
         // NOT "you beat nothing". The history could not be read, and those
@@ -137,10 +188,20 @@ export function ReceiptBody({ summary }: { summary: WorkoutSummary }) {
 export function WorkoutReceipt({
   summary,
   timezone,
+  actions,
 }: {
   summary: WorkoutSummary
   /** The account's zone — the only clock allowed to name a day here. */
   timezone: string
+  /**
+   * Correct this / Delete, for a receipt somebody has come back to.
+   *
+   * Passed in rather than rendered here, because the live screen shows this
+   * same receipt the moment a workout is saved — and offering to correct a
+   * workout you finished four seconds ago, on the screen you finished it on,
+   * is a control in the wrong place.
+   */
+  actions?: ReactNode
 }) {
   const day = summary.startedAt ? weekdayNameIn(summary.startedAt, timezone) : null
 
@@ -166,6 +227,7 @@ export function WorkoutReceipt({
         <Card className={TRAINING_CARD} data-testid="workout-receipt">
           <CardContent className={TRAINING_CARD_BODY}>
             <ReceiptBody summary={summary} />
+            {actions}
           </CardContent>
         </Card>
       </div>

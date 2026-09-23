@@ -868,6 +868,30 @@ export interface StoredSet {
 export interface WorkoutSummary {
   workoutId: string
   /**
+   * WHAT YOU ACTUALLY DID, set by set — the receipt's own record.
+   *
+   * It carried the totals and what the program would do next, and not the
+   * sets. That was survivable while History expanded a row into the session in
+   * place; the moment a row became a link to this page, the sets had nowhere
+   * left to be seen at all. The kilograms are the stored fact and the label is
+   * worked out from them, for the same reason the personal bests are.
+   */
+  loggedSets?: Array<{
+    exercise: string
+    weightKg: number
+    reps: number
+    setNumber: number
+    kind: string
+  }>
+  /**
+   * The program this belonged to, or null for a loose workout.
+   *
+   * The receipt needs it to say what a correction or a delete COSTS: on a
+   * program session both recalculate the weights it prescribed from there on,
+   * and that is the part of the question worth asking.
+   */
+  enrollmentId?: string | null
+  /**
    * When it started, as an instant.
    *
    * The finish sheet never needed it — you had just done the workout. A
@@ -1408,4 +1432,43 @@ export interface KeepableChanges {
   oneOffs: Array<{ name: string; why: string }>
   /** Whether there is anything at all to keep — the switch is not shown otherwise. */
   any: boolean
+}
+
+/**
+ * A set while it is being corrected: weight and reps are TEXT until saved.
+ *
+ * Text because an empty box is a state a number cannot hold — `Number("")` is
+ * 0, and a 0 kg squat is indistinguishable from a pull-up done with nothing
+ * added. The editor refuses to save a blank rather than inventing the zero.
+ */
+export interface EditableSet {
+  exercise: string
+  exerciseId: string | null
+  weight: string
+  reps: string
+  setNumber: number
+  kind: LiveWorkoutSet["kind"]
+  /** Carried untouched so a correction does not silently delete them. */
+  side: "left" | "right" | null
+  notes: string | null
+  /** The per-exercise note, carried so a correction does not delete it. */
+  exerciseNotes: string | null
+  rpe: number | null
+}
+
+/**
+ * One set as a correction sends it: already converted to kilograms, in the one
+ * place that knows what unit the box was labelled in.
+ */
+export interface CorrectedSet {
+  exercise: string
+  exerciseId: string | null
+  weightKg: number
+  reps: number
+  setNumber: number
+  kind: LiveWorkoutSet["kind"]
+  side: "left" | "right" | null
+  notes: string | null
+  exerciseNotes: string | null
+  rpe: number | null
 }

@@ -18,6 +18,7 @@ import { requireAuth } from "@/src/db/auth"
 import { summaryFor } from "@/src/db/workoutRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { WorkoutReceipt } from "@/src/programs/components/WorkoutReceipt"
+import { WorkoutActions } from "@/src/programs/components/WorkoutActions"
 
 export default async function WorkoutReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth()
@@ -36,5 +37,36 @@ export default async function WorkoutReceiptPage({ params }: { params: Promise<{
 
   const timezone = await getUserTimezone(auth.userId)
 
-  return <WorkoutReceipt summary={summary} timezone={timezone} />
+  /**
+   * CORRECT THIS AND DELETE LIVE HERE NOW, not in the History list.
+   *
+   * A destructive control does not belong beside the row you tap to open a
+   * workout — and the editor needed every set of every workout in that list to
+   * open one, which is the read that outgrew the database's response limit and
+   * left each session quietly missing its later sets.
+   */
+  return (
+    <WorkoutReceipt
+      summary={summary}
+      timezone={timezone}
+      actions={
+        <WorkoutActions
+          workoutId={summary.workoutId}
+          unit={summary.unit}
+          onProgram={Boolean(summary.enrollmentId)}
+          setCount={summary.sets}
+          day={
+            summary.startedAt
+              ? new Date(summary.startedAt).toLocaleDateString([], {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                  timeZone: timezone,
+                })
+              : "this workout"
+          }
+        />
+      }
+    />
+  )
 }

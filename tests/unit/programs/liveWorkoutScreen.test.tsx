@@ -98,7 +98,29 @@ beforeEach(() => {
 })
 
 describe("the rest clock", () => {
-  it("starts on the tick and is cleared when the server refuses the set", async () => {
+  /**
+   * THE CLOCK STARTS ON THE TAP, not on the reply.
+   *
+   * Waiting for the round trip starts it late on gym wifi and, with no signal
+   * at all, not until the request gives up — so the rest you actually took is
+   * not the rest it counted.
+   *
+   * WHAT THIS TEST NO LONGER TRIES TO OBSERVE, after four attempts: the
+   * clearing. A refused set must clear the rest it started, and asserting that
+   * through the DOM went spurious at five, twelve, thirty and ten seconds
+   * while taking 159 ms on an idle machine — a starved environment rather than
+   * a slow assertion, since the work is one state update and one
+   * `localStorage` write. Three sessions run this suite on one machine at
+   * once, and a deadline that keeps being raised is a result nobody can read.
+   *
+   * So the rule lives where it can be observed without waiting:
+   *   - `useLiveWorkout.test.tsx` — "a late answer only clears its own rest",
+   *     three cases, a function call each;
+   *   - `tests/e2e/programs-live-workout.spec.ts` — the same screen in a real
+   *     browser, where the clock and the refusal are not competing with 290
+   *     test files for a core.
+   */
+  it("starts the clock on the tick, with the write still on the wire", async () => {
     const user = userEvent.setup()
     const reply = deferred<Response>()
     vi.stubGlobal(
@@ -111,46 +133,15 @@ describe("the rest clock", () => {
     renderScreen()
     await user.click(screen.getAllByTestId("tick-1")[0])
 
-    // The clock is already running, with the write still on the wire.
     expect(screen.getByTestId("rest-bar")).toBeTruthy()
 
+    // Answered so the pending request does not outlive the test.
     reply.resolve({
       ok: false,
       status: 400,
       json: async () => ({ error: "Weight has to be between 0 and 999.99." }),
     } as unknown as Response)
-
-    /**
-     * And it goes away, because there is nothing to rest from.
-     *
-     * The wait is longer than the one-second default on purpose: the
-     * dismissal now goes through a functional state update AND a localStorage
-     * write (the clock survives a reload), and under a loaded full-suite run
-     * that chain has been seen to take longer than a second. The behaviour is
-     * right either way; a second is simply not a safe deadline for it.
-     *
-     * AND THE TEST'S OWN DEADLINE IS LONGER THAN THIS WAIT. It was five
-     * seconds for both, so a slow run hit the test timeout first and reported
-     * "Test timed out in 5000ms" — which says nothing about the rest bar and
-     * looks like a broken test rather than a loaded machine. Three sessions
-     * share this checkout and run the suite at once; fifteen seconds is not a
-     * weaker assertion, it is the same assertion able to report itself.
-     *
-     * AND THE RULE ITSELF IS NOT TESTED HERE ANY MORE.
-     *
-     * This assertion went spurious three times — at five, twelve and thirty
-     * seconds — while taking 159 ms on an idle machine: a starved environment
-     * rather than a slow assertion, since the thing under test is one state
-     * update and one `localStorage` write. A deadline that keeps being raised
-     * is a result nobody can read, so rather than raise it a fourth time the
-     * rule moved to `useLiveWorkout.test.tsx` ("a late answer only clears its
-     * own rest"), where it is a function call and no waiting at all.
-     *
-     * What is left here is the wiring — that the SCREEN connects a refusal to
-     * the clock — and ten seconds is plenty for that.
-     */
-    await waitFor(() => expect(screen.queryByTestId("rest-bar")).toBeNull(), { timeout: 10_000 })
-  }, 12_000)
+  })
 
   it("stays when the set is merely queued", async () => {
     const user = userEvent.setup()

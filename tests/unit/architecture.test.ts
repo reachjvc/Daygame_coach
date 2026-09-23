@@ -943,9 +943,9 @@ describe('Architecture Compliance', () => {
     const BLANK_TO_NUMBER_ALLOWED = new Set([
       // Guarded by an explicit `weight.trim() !== ""` on the same line.
       'src/programs/components/CustomProgramBuilder.tsx',
-      // A correction screen reading back numbers the server already stored;
-      // Phase 7 rebuilds it (history-progress-07).
-      'src/programs/components/HistoryTab.tsx',
+      // HistoryTab came off this list on 2026-09-23: the correction editor
+      // moved to the workout's own page and now refuses to save a blank box
+      // rather than sending `Number("") || 0` as a 0 kg set.
     ])
 
     function blankToNumberOffenders(): string[] {
@@ -1257,7 +1257,9 @@ describe('Architecture Compliance', () => {
       'src/goals/components/north-star/WorkoutPrograms.tsx',
       'src/programs/components/CustomProgramBuilder.tsx',
       'src/programs/components/EditActiveProgram.tsx',
-      'src/programs/components/HistoryTab.tsx',
+      // HistoryTab came off on 2026-09-23: the app's `Select`, `Button` and
+      // `Link` throughout, no hand-rolled inputs, and the editor it used to
+      // hold is on the workout's own page.
       // LiftHistory came off on 2026-09-23: no `Card`, no second heading
       // level, sections divided by a hairline like the rest of the tab.
       'src/programs/components/PastPrograms.tsx',
@@ -1687,7 +1689,11 @@ describe('Architecture Compliance', () => {
       // 4 → 3 on 2026-09-23: the month grouping stopped being decided by
       // `toLocaleDateString` in the browser's zone, so a workout logged at
       // 00:30 on the 1st was no longer filed under the previous month.
-      'components/HistoryTab.tsx': 3,
+      // Zero since the list became month pages from the server, dated with
+      // `toLocaleDateString(…, { timeZone })` and grouped by the key the server
+      // decided (2026-09-23). Kept at 0 rather than deleted: this file prints
+      // dates.
+      'components/HistoryTab.tsx': 0,
       // Zero since the export became a link to `/api/workouts/export` and the
       // Sparkline's dates are formatted in the account's zone (2026-09-23).
       // Kept at 0 rather than deleted: this file draws dated lines.

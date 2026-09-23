@@ -266,7 +266,7 @@ export async function getWorkoutLogs(
  * clicked to edit is not the row you get. Warm-ups first, then the order they
  * were actually done in, and `id` last so the answer is never arbitrary.
  */
-const inWorkoutOrder = (a: WorkoutSetRow, b: WorkoutSetRow): number =>
+export const inWorkoutOrder = (a: WorkoutSetRow, b: WorkoutSetRow): number =>
   a.set_number - b.set_number ||
   Number(a.set_kind !== "warmup") - Number(b.set_kind !== "warmup") ||
   (a.completed_at ?? "").localeCompare(b.completed_at ?? "") ||

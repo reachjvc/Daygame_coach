@@ -16,12 +16,19 @@ export async function GET(request: Request) {
   try {
     const params = new URL(request.url).searchParams
     const timezone = await getUserTimezone(auth.userId)
+    const lift = params.get("lift")
     const page = await readHistoryMonths(auth.userId, {
       timezone,
       before: params.get("before") ?? undefined,
-      lift: params.get("lift") ?? undefined,
+      lift: lift ?? undefined,
     })
-    return NextResponse.json({ timezone, ...page })
+    /**
+     * THE PAGE SAYS WHICH FILTER IT IS, so the screen can tell its own header
+     * apart from its rows. The filter is client state and changes the instant
+     * it is tapped; the rows arrive a moment later, and for that moment the
+     * header read "of Squat" over every lift in the month.
+     */
+    return NextResponse.json({ timezone, lift: lift ?? null, ...page })
   } catch (e) {
     // A 500, never an empty page: "no workouts" and "the read failed" look
     // identical once both are an empty list, and one is a claim about

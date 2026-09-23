@@ -1,72 +1,68 @@
 "use client"
 
 /**
- * Everything you have done, newest first, and what was in it.
+ * EVERY WORKOUT YOU HAVE EVER LOGGED, a month at a time.
  *
- * WHAT WAS MISSING. Every set has been recorded for months and there was no
- * screen that would show them back to you. The nearest thing was a list of
- * dates with a delete button — you could remove a workout you did not recognise
- * but you could not look at it first.
+ * WHAT THIS REPLACES. The list asked the server for `days=365` and paged that
+ * array in the browser. A workout from two years ago was not further down the
+ * list — it had never been read, and nothing on the screen knew the
+ * difference. "Show more" then ran out of rows and disappeared, which is the
+ * same gesture as "that is everything" and was not.
  *
- * Each row says the day, the lifts, and the top working set of each, because
- * "Squat 100×5 · Bench 80×5" is what tells you which session it was. Tapping
- * one opens every set, with warm-ups marked and skips named.
+ * Worse, every row carried every set of every workout, because the row
+ * expanded into an editor. That is the read which outgrew the database's
+ * 1,000-row response limit: each workout came back missing its later sets, and
+ * saving the list you were shown would have deleted them for real. The editor
+ * lives on the workout's own page now (`/programs/workout/[id]`), which asks
+ * for one workout.
+ *
+ * THE MONTH IS THE UNIT because the month is what this draws: a header, and
+ * under it what the month came to. A page that ended mid-month would make that
+ * total a lie — "September: 4 sessions" with the fifth on the next page.
  */
 
-import { useCallback, useEffect, useState } from "react"
-import { ChevronDown, ChevronRight, Loader2, Pencil, Trash2, X } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState } from "react"
+import Link from "next/link"
+import { AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { collapseSets, describeSessionRow, isWorkingSet, workingVolumeKg } from "@/src/health/healthService"
-import { describeLoggedSet, fromKg, toKg } from "../programsService"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { useLoad } from "@/src/shared/useLoad"
+import { isWorkingSet, workingVolumeKg } from "@/src/health/healthService"
+import { describeLoggedSet, fromKg } from "../programsService"
+import { dateKeyLabel } from "@/src/shared/dateUtils"
 import { UNIT_CONFIG } from "../config"
-import { dateKeyLabel, getTodayInTimezone } from "@/src/shared/dateUtils"
+import { workoutReceipt } from "@/src/shared/trainingRoutes"
 import { LogPastWorkoutDialog } from "./LogPastWorkoutDialog"
 import type { ProgramEnrollment, UnitSystem } from "../types"
-import type { WorkoutLogWithSets, WorkoutSetRow } from "@/src/health/types"
+import type { WorkoutLogRow, WorkoutSetRow } from "@/src/health/types"
 
 const DAY = { weekday: "short", day: "numeric", month: "short" } as const
 
-/** How many workouts are on screen before you ask for more. */
-const PAGE = 20
-
-/**
- * What to call one row of the editor out loud.
- *
- * A warm-up and the first working set are BOTH "set 1" — that is how a workout
- * is numbered — so naming a row by its number alone gives two rows the same
- * name. A screen reader then reads the same thing twice and neither can be told
- * from the other, and anything looking for a field by name gets whichever came
- * first. The kind is what separates them, so the kind is in the name.
- */
-const setLabel = (set: { exercise: string; setNumber: number; kind: WorkoutSetRow["set_kind"] }): string =>
-  set.kind === "working"
-    ? `${set.exercise} set ${set.setNumber}`
-    : `${set.exercise} ${set.kind} set ${set.setNumber}`
-
-/** A set while it is being corrected. Weight and reps are text until saved. */
-interface EditableSet {
-  exercise: string
-  exerciseId: string | null
-  weight: string
-  reps: string
-  setNumber: number
-  kind: WorkoutSetRow["set_kind"]
-  /** Carried untouched so a correction does not silently delete them. */
-  side: "left" | "right" | null
-  notes: string | null
-  /** The per-exercise note, carried so a correction does not delete it. */
-  exerciseNotes: string | null
-  rpe: number | null
+/** One month of the list, as the server hands it over. */
+interface HistoryMonth {
+  monthKey: string
+  monthStart: string
+  logs: (WorkoutLogRow & { sets: WorkoutSetRow[] })[]
 }
+
+interface HistoryPage {
+  timezone: string
+  /** The filter these months were read under, so the screen can tell. */
+  lift: string | null
+  months: HistoryMonth[]
+  /** The instant to ask below for the next page, or null at the beginning. */
+  nextBefore: string | null
+}
+
+/** Every lift named anywhere in what has been loaded, for the filter. */
+const liftsIn = (months: HistoryMonth[]): string[] =>
+  [...new Set(months.flatMap((m) => m.logs.flatMap((l) => (l.sets ?? []).map((s) => s.exercise))))].sort()
 
 export function HistoryTab({
   unit,
@@ -80,255 +76,98 @@ export function HistoryTab({
   /** The account's zone. Without it a past session lands on the wrong day. */
   timezone?: string
 }) {
-  const [logs, setLogs] = useState<WorkoutLogWithSets[] | null>(null)
-  const [state, setState] = useState<"loading" | "ready" | "failed">("loading")
-  const [open, setOpen] = useState<Set<string>>(new Set())
-  const [error, setError] = useState<string | null>(null)
-  /** The workout a delete is being confirmed for. */
-  const [confirming, setConfirming] = useState<WorkoutLogWithSets | null>(null)
-  /** The workout being corrected, and the rows as they are being edited. */
-  const [editing, setEditing] = useState<string | null>(null)
-  const [draft, setDraft] = useState<EditableSet[]>([])
-  const [saving, setSaving] = useState(false)
-  /** The workout whose sets are being read, so the button is not a dead tap. */
-  const [opening, setOpening] = useState<string | null>(null)
-  /**
-   * HOW MUCH OF A YEAR IS ON THE SCREEN AT ONCE.
-   *
-   * Measured before this: 141 workouts rendered as 141 identical cards in a
-   * single 17,291-pixel page. Reaching June was twenty screens of thumb, with no
-   * months, no filter and nothing to aim at. Every tracker lifters use shows the
-   * newest and loads more as you reach the end.
-   */
-  const [shown, setShown] = useState(PAGE)
-  /** One lift, across the whole history — the filter these apps actually ship. */
   const [lift, setLift] = useState<string>("")
+  /** Pages fetched after the first, appended in order. */
+  const [older, setOlder] = useState<HistoryMonth[]>([])
+  const [olderBefore, setOlderBefore] = useState<string | null | undefined>(undefined)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [moreFailed, setMoreFailed] = useState(false)
 
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch("/api/health/workout?days=365&include=sets")
-      if (!res.ok) throw new Error(String(res.status))
-      const body = (await res.json()) as unknown
-      if (!Array.isArray(body)) throw new Error("unexpected shape")
-      // Newest first is the order somebody looks for a workout in.
-      setLogs(
-        (body as WorkoutLogWithSets[])
-          .slice()
-          .sort((a, b) => b.logged_at.localeCompare(a.logged_at))
-      )
-      setState("ready")
-    } catch {
-      // An empty list would say "you have never trained", which a dropped
-      // request is no grounds for.
-      setState("failed")
+  /**
+   * Page one, from the server. Changing the lift refetches it, because the
+   * filter has to cover ALL of the history rather than the part that happens
+   * to be loaded.
+   */
+  const loaded = useLoad<HistoryPage>(
+    `/api/workouts/history${lift ? `?lift=${encodeURIComponent(lift)}` : ""}`,
+    (body) => {
+      const page = body as HistoryPage | null
+      if (!page || !Array.isArray(page.months)) throw new Error("unexpected shape")
+      return page
     }
-  }, [])
-
-  useEffect(() => {
-    void load()
-  }, [load])
+  )
 
   const label = UNIT_CONFIG[unit].label
-  const show = (kg: number) => Math.round(fromKg(kg, unit) * 10) / 10
-  /**
-   * Totals are whole units with a separator. A month came to "30,833.3 kg" —
-   * six digits reporting a thirty-tonne total to a tenth of a kilo, which claims
-   * a precision the data does not have and reads as one long number.
-   */
   const showTotal = (kg: number) => Math.round(fromKg(kg, unit)).toLocaleString()
 
-  async function remove(log: WorkoutLogWithSets) {
-    setConfirming(null)
-    setError(null)
-    try {
-      const res = await fetch(`/api/health/workout?id=${log.id}`, { method: "DELETE" })
-      if (!res.ok) {
-        setError("That workout could not be deleted.")
-        return
-      }
-      await load()
-    } catch {
-      setError("Could not reach the server, so nothing was deleted.")
-    }
+  if (loaded.state === "failed") {
+    return (
+      <div
+        data-testid="history-unavailable"
+        className="flex items-center justify-between gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2"
+      >
+        <p className="flex items-start gap-2 text-sm text-amber-600 dark:text-amber-400">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+          Your workouts could not be loaded. This does not mean there are none.
+        </p>
+        <Button size="sm" variant="outline" className="shrink-0" onClick={loaded.retry}>
+          Try again
+        </Button>
+      </div>
+    )
+  }
+
+  // A placeholder the height of the list's first rows, so the tab does not
+  // jump under a thumb that is already moving.
+  if (loaded.state === "loading") {
+    return <div className="h-[92px] animate-pulse rounded-md bg-muted/40" aria-hidden />
   }
 
   /**
-   * Open the editor on this workout's sets, read fresh from the server.
+   * THE ROWS AND THE HEADER ARE NEVER FROM DIFFERENT FILTERS.
    *
-   * NOT `log.sets`. Saving replaces the workout with exactly the rows shown
-   * here, so a list that arrived short does not display wrong — it DELETES.
-   * That is not hypothetical: the list this screen loads is a year of training
-   * at a time, it outgrew what the database returns in one response, and every
-   * workout was quietly missing its later sets. Asking for one workout cannot
-   * outgrow anything, and a failed request refuses to open the editor instead
-   * of offering a shorter list that looks complete.
+   * `useLoad` keeps the previous answer on screen while a new URL is in
+   * flight, which is right for a flicker and wrong here: the filter is client
+   * state and flips the moment it is tapped, so for that moment the header
+   * read "8,000 kg of Squat" over a month of every lift. Found by a browser
+   * test, which is the only place it could be found.
    */
-  async function startEditing(log: WorkoutLogWithSets, toShown: (kg: number) => number) {
-    setError(null)
-    setOpening(log.id)
-    let sets: WorkoutSetRow[]
+  if ((loaded.data.lift ?? "") !== lift) {
+    return <div className="h-[92px] animate-pulse rounded-md bg-muted/40" aria-hidden />
+  }
+
+  const months = [...loaded.data.months, ...older]
+  const zone = timezone ?? loaded.data.timezone
+  // `undefined` means nothing has been paged yet, so the first page's answer
+  // stands; `null` means the server has looked and there is nothing older.
+  const nextBefore = olderBefore === undefined ? loaded.data.nextBefore : olderBefore
+  const lifts = liftsIn(months)
+
+  async function loadOlder() {
+    if (!nextBefore) return
+    setLoadingMore(true)
+    setMoreFailed(false)
     try {
-      const res = await fetch(`/api/workouts/${log.id}`)
+      const url = `/api/workouts/history?before=${encodeURIComponent(nextBefore)}${
+        lift ? `&lift=${encodeURIComponent(lift)}` : ""
+      }`
+      const res = await fetch(url)
       if (!res.ok) throw new Error(String(res.status))
-      const body = (await res.json()) as unknown
-      if (!Array.isArray(body)) throw new Error("unexpected shape")
-      sets = body as WorkoutSetRow[]
+      const page = (await res.json()) as HistoryPage
+      if (!Array.isArray(page.months)) throw new Error("unexpected shape")
+      setOlder((current) => [...current, ...page.months])
+      setOlderBefore(page.nextBefore)
     } catch {
-      setError("That workout could not be loaded, so it cannot be corrected right now.")
-      return
+      // NOT the end of the list. A failed second page that quietly stopped
+      // offering "older" would read as "that is everything".
+      setMoreFailed(true)
     } finally {
-      setOpening(null)
+      setLoadingMore(false)
     }
-    setEditing(log.id)
-    setDraft(
-      sets.map((set) => ({
-        exercise: set.exercise,
-        exerciseId: set.exercise_id,
-        weight: String(toShown(set.weight_kg)),
-        reps: String(set.reps),
-        setNumber: set.set_number,
-        kind: set.set_kind,
-        side: set.side,
-        notes: set.notes,
-        exerciseNotes: set.exercise_notes,
-        rpe: set.rpe,
-      }))
-    )
-  }
-
-  async function save(log: WorkoutLogWithSets) {
-    setSaving(true)
-    setError(null)
-    try {
-      const res = await fetch(`/api/workouts/${log.id}/revise`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sets: draft.map((set) => ({
-            exercise: set.exercise,
-            exerciseId: set.exerciseId,
-            // Converted HERE, from the unit this screen actually displayed, so
-            // the server never has to work out what the number meant.
-            weightKg: Math.round(toKg(Number(set.weight) || 0, unit) * 100) / 100,
-            reps: Number(set.reps) || 0,
-            setNumber: set.setNumber,
-            kind: set.kind,
-            side: set.side,
-            notes: set.notes,
-            exerciseNotes: set.exerciseNotes,
-            rpe: set.rpe,
-          })),
-        }),
-      })
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null
-        setError(body?.error ?? "That correction could not be saved.")
-        return
-      }
-      setEditing(null)
-      await load()
-    } catch {
-      setError("Could not reach the server, so nothing was changed.")
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  if (state === "failed") {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-between gap-3 p-4">
-          <p className="text-sm text-amber-600 dark:text-amber-400">
-            Your workouts could not be loaded. This does not mean there are none.
-          </p>
-          <button
-            type="button"
-            onClick={() => void load()}
-            className="min-h-11 shrink-0 rounded-md border border-amber-500/40 px-2.5 text-xs text-amber-600 transition-colors hover:bg-amber-500/10 dark:text-amber-400"
-          >
-            Try again
-          </button>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (state === "loading" || !logs) return <p className="text-sm text-muted-foreground">Loading…</p>
-
-  if (logs.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Nothing logged in the last year. Finish a workout and it will be here.
-      </p>
-    )
-  }
-
-  /** Every lift that appears anywhere in the history, for the filter. */
-  const lifts = [...new Set(logs.flatMap((l) => (l.sets ?? []).map((x) => x.exercise)))].sort()
-  const matching = lift ? logs.filter((l) => (l.sets ?? []).some((x) => x.exercise === lift)) : logs
-  const visible = matching.slice(0, shown)
-
-  /**
-   * WHICH MONTH A ROW BELONGS TO — decided in the ACCOUNT's zone, and labelled
-   * from that decision rather than from a second one.
-   *
-   * This grouped rows by `toLocaleDateString` in the BROWSER's zone, so a
-   * workout logged at 00:30 on the 1st of June in Copenhagen was filed under
-   * May for a phone still set to London — and the month header and the totals
-   * under it came from that same wrong key. The key is the calendar fact; the
-   * label is only how it is printed.
-   */
-  const monthKeyOf = (at: string) =>
-    getTodayInTimezone(timezone ?? "UTC", new Date(at)).slice(0, 7)
-  const monthLabel = (key: string) => dateKeyLabel(key, { month: "long", year: "numeric" })
-  const monthKey = monthKeyOf
-
-  const monthTotals = new Map<string, { sessions: number; volumeKg: number }>()
-  for (const l of matching) {
-    const k = monthKey(l.logged_at)
-    const t = monthTotals.get(k) ?? { sessions: 0, volumeKg: 0 }
-    t.sessions += 1
-    // The one rule, not a fourth copy of it: warm-ups out, timed lifts out,
-    // because seconds are stored in the reps column and multiply as wrong.
-    t.volumeKg += workingVolumeKg(l.sets ?? [])
-    monthTotals.set(k, t)
   }
 
   return (
-    <div data-testid="workout-history">
-      <Dialog open={confirming !== null} onOpenChange={(v) => !v && setConfirming(null)}>
-        <DialogContent>
-          {confirming && (
-            <>
-              <DialogHeader>
-                <DialogTitle>
-                  Delete the workout from{" "}
-                  {new Date(confirming.logged_at).toLocaleDateString(undefined, DAY)}?
-                </DialogTitle>
-                {/* NAMES WHAT GOES. A workout's sets are the thing lifters say
-                    they fear losing, and unlike removing a finished PROGRAM —
-                    where they survive — this really does take them. */}
-                <DialogDescription>
-                  {(confirming.sets ?? []).length > 0
-                    ? `Its ${(confirming.sets ?? []).length} sets go with it. This cannot be undone.`
-                    : "Everything in it goes with it. This cannot be undone."}
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button
-                  variant="destructive"
-                  data-testid="confirm-delete-workout"
-                  onClick={() => void remove(confirming)}
-                >
-                  Delete it
-                </Button>
-              </DialogFooter>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-      {error && <p className="text-xs text-destructive">{error}</p>}
-
+    <div data-testid="workout-history" className="space-y-2">
       {/* THE ONE WAY IN FOR A SESSION YOU ALREADY DID. History is where you
           notice one is missing, so it is where the way to add it belongs.
           Absent without a time zone rather than guessing the browser's: a
@@ -343,339 +182,169 @@ export function HistoryTab({
         </div>
       )}
 
-      {lifts.length > 1 && (
+      {(lifts.length > 1 || lift) && (
         <div className="flex items-center gap-2">
-          <label htmlFor="history-lift" className="text-xs text-muted-foreground">
-            Lift
-          </label>
-          <select
-            id="history-lift"
-            data-testid="history-lift-filter"
-            value={lift}
-            onChange={(e) => {
-              setLift(e.target.value)
-              setShown(PAGE)
+          <span className="text-xs text-muted-foreground">Lift</span>
+          <Select
+            value={lift || "all"}
+            onValueChange={(value) => {
+              // Page one again, from the server: the filter covers all of the
+              // history, not the months this browser happens to hold.
+              setLift(value === "all" ? "" : value)
+              setOlder([])
+              setOlderBefore(undefined)
+              setMoreFailed(false)
             }}
-            className="min-h-11 flex-1 rounded-md border border-border bg-background px-2 text-xs sm:min-h-0 sm:py-1"
           >
-            <option value="">All lifts</option>
-            {lifts.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="h-11 flex-1" data-testid="history-lift-filter">
+              <SelectValue placeholder="All lifts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All lifts</SelectItem>
+              {/* The current filter stays selectable even when the loaded
+                  pages no longer mention it. */}
+              {[...new Set(lift ? [lift, ...lifts] : lifts)].map((name) => (
+                <SelectItem key={name} value={name}>
+                  {name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       )}
 
-      {visible.map((log, i) => {
-        const month = monthKey(log.logged_at)
-        const newMonth = i === 0 || monthKey(visible[i - 1].logged_at) !== month
-        const totals = monthTotals.get(month)
-        const isOpen = open.has(log.id)
-        /**
-         * The top working set of each lift, in the LIFTER'S unit.
-         *
-         * `summarizeWorkoutSets` already builds a line like this, but it bakes
-         * kilograms into the string, so a pounds lifter would read their own
-         * history in the wrong numbers.
-         */
-        const summary = Object.values(
-          (log.sets ?? [])
-            .filter(isWorkingSet)
-            .reduce<Record<string, { exercise: string; weightKg: number; reps: number }>>(
-              (top, set) => {
-                const cur = top[set.exercise]
-                if (
-                  !cur ||
-                  set.weight_kg > cur.weightKg ||
-                  (set.weight_kg === cur.weightKg && set.reps > cur.reps)
-                ) {
-                  top[set.exercise] = { exercise: set.exercise, weightKg: set.weight_kg, reps: set.reps }
-                }
-                return top
-              },
-              {}
-            )
-        )
-        const working = (log.sets ?? []).filter(isWorkingSet)
-        const volume = workingVolumeKg(log.sets ?? [])
+      {months.length === 0 && (
+        <p className="text-sm text-muted-foreground" data-testid="history-empty">
+          {lift
+            ? `Nothing logged for ${lift} yet.`
+            : "Nothing logged yet. Finish a workout and it will be here."}
+        </p>
+      )}
 
+      {months.map((month) => {
+        /**
+         * The month's own total, from the month's own sets — which the server
+         * has already narrowed to the filtered lift, so "of Squat" means it.
+         */
+        const volume = month.logs.reduce((total, log) => total + workingVolumeKg(log.sets ?? []), 0)
         return (
-          <div key={log.id}>
-            {/* THE MONTH, once, with what it came to. A sticky header is what
-                makes a long scroll navigable instead of endless — you can see
-                where you are without counting cards. */}
-            {newMonth && (
-              <div className="sticky top-0 z-10 -mx-1 flex items-baseline justify-between gap-2 bg-background/95 px-1 py-1.5 backdrop-blur">
-                <h3 className="text-sm font-semibold">{monthLabel(month)}</h3>
-                {totals && (
-                  <span className="text-xs tabular-nums text-muted-foreground">
-                    {totals.sessions} {totals.sessions === 1 ? "session" : "sessions"} ·{" "}
-                    {showTotal(totals.volumeKg)} {label}
-                  </span>
-                )}
-              </div>
-            )}
-          {/*
-            A LIST ROW IS NOT AN OBJECT.
-            Every workout was a Card — 16px of the card's own padding plus 12px
-            of content padding, so a 110px slab carried about 54px of text and
-            five workouts filled a phone. `Card` already has vertical padding and
-            every call site added more on top; that double padding is the whole
-            reason these screens felt airy and said little. A hairline between
-            rows does the same job in half the height.
-          */}
-          <div className="border-b border-border/60 py-2.5">
-              <div className="flex items-start gap-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setOpen((cur) => {
-                      const next = new Set(cur)
-                      if (next.has(log.id)) next.delete(log.id)
-                      else next.add(log.id)
-                      return next
-                    })
-                  }
-                  aria-expanded={isOpen}
-                  data-testid={`history-row-${log.id}`}
-                  /**
-                   * A ROW IS 56 px, not 36. It is the biggest target on this
-                   * screen and the one thing a person comes here to tap — and
-                   * it measured 36 px at 390 px, which is under the floor
-                   * every other control in the app is held to.
-                   */
-                  className="flex min-h-14 min-w-0 flex-1 items-start gap-2 py-1 text-left"
-                >
-                  {isOpen ? (
-                    <ChevronDown className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                  ) : (
-                    <ChevronRight className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                  )}
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-baseline justify-between gap-3">
-                      <span className="text-sm font-medium">
-                        {new Date(log.logged_at).toLocaleDateString(undefined, DAY)}
+          <div key={month.monthKey}>
+            {/* THE MONTH, once, with what it came to. Sticky, which is what
+                makes a long scroll navigable instead of endless. */}
+            <div className="sticky top-0 z-10 -mx-1 flex items-baseline justify-between gap-2 bg-background/95 px-1 py-1.5 backdrop-blur">
+              <h3 className="text-sm font-medium">
+                {dateKeyLabel(month.monthKey, { month: "long", year: "numeric" })}
+              </h3>
+              <span className="text-xs tabular-nums text-muted-foreground">
+                {month.logs.length} {month.logs.length === 1 ? "session" : "sessions"} ·{" "}
+                {showTotal(volume)} {label}
+                {lift ? ` of ${lift}` : ""}
+              </span>
+            </div>
+
+            <ul className="divide-y divide-border/60">
+              {month.logs.map((log) => {
+                /** The top working set of each lift, in the LIFTER'S unit. */
+                const tops = Object.values(
+                  (log.sets ?? [])
+                    .filter(isWorkingSet)
+                    .reduce<Record<string, { exercise: string; weightKg: number; reps: number }>>(
+                      (top, set) => {
+                        const cur = top[set.exercise]
+                        if (
+                          !cur ||
+                          set.weight_kg > cur.weightKg ||
+                          (set.weight_kg === cur.weightKg && set.reps > cur.reps)
+                        ) {
+                          top[set.exercise] = {
+                            exercise: set.exercise,
+                            weightKg: set.weight_kg,
+                            reps: set.reps,
+                          }
+                        }
+                        return top
+                      },
+                      {}
+                    )
+                )
+                const working = (log.sets ?? []).filter(isWorkingSet)
+
+                return (
+                  <li key={log.id}>
+                    {/*
+                      A ROW IS A LINK TO THE WORKOUT, not an expander.
+                      Tapping it used to unfold the session in place, which is
+                      why the list had to carry every set of every workout. The
+                      page it goes to asks for one.
+                    */}
+                    <Link
+                      href={workoutReceipt(log.id)}
+                      data-testid={`history-row-${log.id}`}
+                      className="flex min-h-14 items-start justify-between gap-3 py-2 text-left"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm">
+                          {new Date(log.logged_at).toLocaleDateString([], {
+                            ...DAY,
+                            timeZone: zone,
+                          })}
+                        </span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {tops.length > 0
+                            ? tops
+                                .map((top) => `${top.exercise} ${describeLoggedSet(top, unit)}`)
+                                .join(" · ")
+                            : "No sets recorded"}
+                        </span>
                       </span>
-                      {/* The numbers form a right-hand column you can scan down,
-                          rather than a third line under the lifts. */}
-                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground/70">
+                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
                         {log.duration_min} min
                         {working.length > 0
-                          ? ` · ${working.length} ${working.length === 1 ? "set" : "sets"} · ${showTotal(volume)} ${label}`
+                          ? ` · ${working.length} ${working.length === 1 ? "set" : "sets"}`
                           : ""}
                       </span>
-                    </span>
-                    {/* The lifts and their top set: what tells you which
-                        session this was, rather than just when it happened. */}
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {summary.length > 0
-                        ? summary
-                            // "Pull-up 0×12" was what this printed. A pull-up
-                            // has nothing loaded on it, and 0 is not a fact
-                            // about it — one function says what a set was.
-                            .map((e) => `${e.exercise} ${describeLoggedSet(e, unit)}`)
-                            .join(" · ")
-                                        : describeSessionRow(log)}
-                    </span>
-                  </span>
-                </button>
-                {/* NO BIN ON THE ROW. It sat one thumb-width from the control you
-                    tap to open a workout, on all 141 of them. Every tracker
-                    lifters use puts the destructive action inside the workout,
-                    where you can see what you are about to destroy. */}
-              </div>
-
-              {isOpen && editing === log.id ? (
-                <div className="mt-2 space-y-2 border-t pt-2" data-testid={`history-edit-${log.id}`}>
-                  {/* SAY WHAT CORRECTING THIS COSTS, BEFORE IT IS SAVED. The
-                      weights of every session after this one were decided by
-                      what this one said, so changing it changes them. */}
-                  {log.enrollment_id && (
-                    <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-xs text-amber-600 dark:text-amber-400">
-                      This session belongs to a program. Saving a change here recalculates the
-                      weights it prescribed from here on.
-                    </p>
-                  )}
-                  {draft.map((set, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <span className="w-24 shrink-0 truncate text-xs">{set.exercise}</span>
-                      <span className="w-4 shrink-0 text-xs tabular-nums text-muted-foreground">
-                        {set.setNumber}
-                      </span>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        aria-label={`Weight for ${setLabel(set)}`}
-                        value={set.weight}
-                        onChange={(e) =>
-                          setDraft((d) => d.map((x, j) => (j === i ? { ...x, weight: e.target.value } : x)))
-                        }
-                        className="h-9 w-16 rounded-md border border-input bg-background px-1.5 text-sm"
-                      />
-                      <span className="shrink-0 text-xs text-muted-foreground">{label} ×</span>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        aria-label={`Reps for ${setLabel(set)}`}
-                        value={set.reps}
-                        onChange={(e) =>
-                          setDraft((d) => d.map((x, j) => (j === i ? { ...x, reps: e.target.value } : x)))
-                        }
-                        className="h-9 w-14 rounded-md border border-input bg-background px-1.5 text-sm"
-                      />
-                      {set.kind !== "working" && (
-                        <span className="shrink-0 text-xs uppercase text-muted-foreground">
-                          {set.kind}
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setDraft((d) => d.filter((_, j) => j !== i))}
-                        aria-label={`Remove ${setLabel(set)}`}
-                        className="ml-auto flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"
-                      >
-                        <X className="size-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                  {draft.length === 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Every set removed. Saving leaves the workout with nothing in it.
-                    </p>
-                  )}
-                  <div className="flex items-center gap-2 pt-1">
-                    <button
-                      type="button"
-                      data-testid={`history-save-${log.id}`}
-                      disabled={saving}
-                      onClick={() => void save(log)}
-                      className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-primary/50 bg-primary/10 px-2.5 text-xs text-primary transition-colors hover:bg-primary/20 disabled:opacity-50"
-                    >
-                      {saving && <Loader2 className="size-3 animate-spin" />}
-                      Save the correction
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditing(null)}
-                      className="min-h-11 rounded-md px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent"
-                    >
-                      Leave it as it was
-                    </button>
-                  </div>
-                </div>
-              ) : isOpen ? (
-                <div className="mt-2 space-y-2 border-t pt-2" data-testid={`history-detail-${log.id}`}>
-                  {(log.sets ?? []).length === 0 ? (
-                    /* A RUN HAS NO SETS, AND THAT IS NOT A FAILURE. This said
-                       "No sets were recorded for this one" over every run,
-                       class and mobility session — which reads as something
-                       having gone wrong with a session that went fine. */
-                    <p className="text-xs text-muted-foreground">
-                      {log.session_type === "weights"
-                        ? "No sets were recorded for this one."
-                        : describeSessionRow(log)}
-                    </p>
-                  ) : (
-                    Object.entries(
-                      (log.sets ?? []).reduce<Record<string, typeof log.sets>>((byLift, s) => {
-                        ;(byLift[s.exercise] ??= []).push(s)
-                        return byLift
-                      }, {})
-                    ).map(([exercise, sets]) => (
-                      <div key={exercise}>
-                        <p className="text-xs font-medium">{exercise}</p>
-                        {/* IDENTICAL SETS, SAID ONCE. Five rows reading
-                            "1  20 kg × 5" one under another is a spreadsheet:
-                            five lines to say one thing, and the set you MISSED
-                            looked exactly like its neighbours. Collapsed, the
-                            exception is the only thing that stands out. */}
-                        <ul className="mt-0.5 space-y-0.5">
-                          {/* The database's own column names, mapped once:
-                              `collapseSets` compares numbers and knows nothing
-                              about units or about Postgres. */}
-                          {collapseSets(
-                            (sets ?? []).map((s) => ({
-                              exercise: s.exercise,
-                              weight: s.weight_kg,
-                              reps: s.reps,
-                              kind: s.set_kind,
-                              setNumber: s.set_number,
-                            }))
-                          ).map((run, ri) => (
-                            <li
-                              key={`${run.exercise}-${run.setNumbers[0]}-${ri}`}
-                              className="flex items-baseline gap-2 text-xs text-muted-foreground"
-                            >
-                              <span className="w-8 shrink-0 tabular-nums">
-                                {run.count > 1 ? `${run.count} ×` : run.setNumbers[0]}
-                              </span>
-                              <span className="tabular-nums">
-                                {describeLoggedSet(
-                                  { exercise: run.exercise, weightKg: run.weight, reps: run.reps },
-                                  unit
-                                )}
-                              </span>
-                              {/* A warm-up is not a working set, and a screen
-                                  that hides the difference makes the volume
-                                  totals look wrong to whoever did them. */}
-                              {run.kind !== "working" && (
-                                <span className="text-xs uppercase tracking-wide opacity-70">
-                                  {run.kind}
-                                </span>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))
-                  )}
-                  {log.notes && <p className="text-xs italic text-muted-foreground">{log.notes}</p>}
-                  {(log.sets ?? []).length > 0 && (
-                    <button
-                      type="button"
-                      data-testid={`history-edit-open-${log.id}`}
-                      onClick={() => void startEditing(log, show)}
-                      disabled={opening === log.id}
-                      className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
-                    >
-                      {opening === log.id ? (
-                        <Loader2 className="size-3 animate-spin" />
-                      ) : (
-                        <Pencil className="size-3" />
-                      )}{" "}
-                      Correct this
-                    </button>
-                  )}
-                  {/* The destructive one, inside the workout you can see, rather
-                      than on the row you tap to open it. */}
-                  <button
-                    type="button"
-                    onClick={() => setConfirming(log)}
-                    aria-label={`Delete the workout from ${new Date(log.logged_at).toLocaleDateString(undefined, DAY)}`}
-                    data-testid={`history-delete-${log.id}`}
-                    className="ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-md px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"
-                  >
-                    <Trash2 className="size-3" /> Delete
-                  </button>
-                </div>
-              ) : null}
-          </div>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
           </div>
         )
       })}
 
-      {/* More as you reach the end, rather than all of it at once. */}
-      {matching.length > visible.length && (
-        <button
-          type="button"
-          data-testid="history-load-more"
-          onClick={() => setShown((n) => n + PAGE)}
-          className="min-h-11 w-full rounded-md border border-border text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      {moreFailed && (
+        <div
+          data-testid="history-more-unavailable"
+          className="flex items-center justify-between gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2"
         >
-          Show more — {matching.length - visible.length} older
-        </button>
+          <p className="text-xs text-amber-600 dark:text-amber-400">
+            Could not load older workouts. There are more — this is not the beginning.
+          </p>
+          <Button size="sm" variant="outline" className="shrink-0" onClick={() => void loadOlder()}>
+            Try again
+          </Button>
+        </div>
+      )}
+
+      {nextBefore && !moreFailed && (
+        <Button
+          variant="outline"
+          className="min-h-11 w-full"
+          disabled={loadingMore}
+          onClick={() => void loadOlder()}
+          data-testid="history-load-more"
+        >
+          {loadingMore ? "Loading…" : "Show more — older"}
+        </Button>
+      )}
+
+      {!nextBefore && months.length > 0 && (
+        <p className="text-sm text-muted-foreground" data-testid="history-end">
+          {/* A FACT THE SERVER CHECKED. The old list simply stopped offering
+              "more" when its array ran out, which is the same gesture for
+              "that is everything" and "I only fetched a year". */}
+          That is everything.
+        </p>
       )}
     </div>
   )

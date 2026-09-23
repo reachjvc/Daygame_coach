@@ -48,19 +48,32 @@ test("shows what each workout was, and what the weeks added up to", async ({ pag
   expect(histText, "the top WORKING set, not the warm-up").toContain("120")
   await page.screenshot({ path: ".playwright-mcp/p4-history.png" })
 
-  // Open the SEEDED one and see every set, warm-up marked.
+  /**
+   * OPEN THE SEEDED ONE — which is now a LINK to the workout's own page.
+   *
+   * The row used to unfold the session in place, which is why the list had to
+   * carry every set of every workout: the read that outgrew the database's
+   * response limit and left each session missing its later sets. The page it
+   * goes to asks for one workout.
+   */
   await page
     .getByTestId("workout-history")
-    .getByRole("button", { name: /ZZHist/ })
+    .getByRole("link", { name: /ZZHist/ })
     .first()
     .click()
-  await page.waitForTimeout(800)
-  const detail = await page.getByTestId("workout-history").innerText()
-  // Case-insensitive: the label is uppercased by the stylesheet, and innerText
-  // returns what is rendered rather than what is in the markup.
-  expect(detail, "a warm-up is marked, so the volume total makes sense").toMatch(/warmup/i)
+  await page.waitForURL("**/programs/workout/**", { timeout: 20000 })
+  await expect(page.getByTestId("receipt-sets")).toBeVisible({ timeout: 20000 })
+  const detail = await page.getByTestId("workout-receipt").innerText()
+  expect(detail, "a warm-up is marked, so the volume total makes sense").toMatch(/\(W\)/)
   expect(detail, "and the working set is there in full").toContain("120")
   await page.screenshot({ path: ".playwright-mcp/p4-history-open.png" })
+
+  // And the two things you can do to it are here rather than on the row.
+  await expect(page.getByTestId("workout-correct")).toBeVisible()
+  await expect(page.getByTestId("workout-delete")).toBeVisible()
+
+  await page.goBack({ waitUntil: "networkidle" })
+  await openTab(page, "history")
 
   await openTab(page, "progress")
   await expect(page.getByTestId("week-dots")).toBeVisible({ timeout: 20000 })
@@ -112,13 +125,24 @@ const id = await seedFinishedWorkout(page, {
 
 await page.reload({ waitUntil: "networkidle" })
 await openTab(page, "history")
-await page.getByTestId("workout-history").getByRole("button", { name: /ZZEdit/ }).first().click()
-await page.getByTestId(`history-edit-open-${id}`).click()
+/**
+ * THE EDITOR IS ON THE WORKOUT'S OWN PAGE NOW.
+ *
+ * It was an expander inside this list, which is why the list carried every set
+ * of every workout — the read that outgrew the database's response limit, so
+ * each session came back missing its later sets and saving the list you were
+ * shown would have deleted them. The row is a link; the page asks for one
+ * workout.
+ */
+await page.getByTestId("workout-history").getByRole("link", { name: /ZZEdit/ }).first().click()
+await page.waitForURL("**/programs/workout/**", { timeout: 20000 })
+await page.getByTestId("workout-correct").click()
+await expect(page.getByTestId("workout-correction")).toBeVisible({ timeout: 20000 })
 
 // Fix a typo and drop the set that never happened.
 await page.getByLabel("Weight for ZZEdit Press set 1").fill("110")
 await page.getByLabel("Remove ZZEdit Press set 2").click()
-await page.getByTestId(`history-save-${id}`).click()
+await page.getByTestId("correction-save").click()
 await page.waitForTimeout(2500)
 
 const after = await page.evaluate(async (logId) => {
@@ -218,20 +242,21 @@ test("correcting a program session moves the weights it prescribed", async ({ pa
   // By id, not by lift name: an account with a year of training in it has many
   // workouts containing a squat, and the first one is not this one.
   await page.getByTestId(`history-row-${seeded.workoutId}`).click()
-  await page.getByTestId(`history-edit-open-${seeded.workoutId}`).click()
+  await page.waitForURL("**/programs/workout/**", { timeout: 20000 })
+  await page.getByTestId("workout-correct").click()
+  const editor = page.getByTestId("workout-correction")
+  await expect(editor).toBeVisible({ timeout: 20000 })
   // The warm-up must be here to edit — it used to be deleted by a correction.
-  await expect(page.getByTestId(`history-edit-${seeded.workoutId}`)).toContainText(/warmup/i)
+  await expect(editor).toContainText(/warmup/i)
   /**
    * EVERY SET IS HERE TO EDIT. On an account with a year of training the list
    * read came back capped at 1,000 rows, so this workout arrived with its first
    * two sets and nothing else — and saving would have deleted the rest. The
    * editor reads the workout on its own now; this counts what it got.
    */
-  await expect(
-    page.getByTestId(`history-edit-${seeded.workoutId}`).getByLabel(/^Reps for /)
-  ).toHaveCount(seeded.setCount)
+  await expect(editor.getByLabel(/^Reps for /)).toHaveCount(seeded.setCount)
   await page.getByLabel(`Reps for ${seeded.liftName} set 5`).fill("1")
-  await page.getByTestId(`history-save-${seeded.workoutId}`).click()
+  await page.getByTestId("correction-save").click()
   await page.waitForTimeout(3000)
 
   const after = await page.evaluate(async (ids) => {
@@ -337,7 +362,14 @@ test("deleting a program session moves the weights back down", async ({ page }) 
    * the click opened the dialog, nothing confirmed it, and the assertion
    * "the workout should be gone" failed. Both have been red since that commit.
    */
-  await page.getByTestId(`history-delete-${seeded.workoutId}`).click()
+  /**
+   * DELETE LIVES ON THE WORKOUT'S PAGE NOW, not on the row.
+   *
+   * A destructive control does not belong beside the one you tap a hundred and
+   * forty times to open a session.
+   */
+  await page.waitForURL("**/programs/workout/**", { timeout: 20000 })
+  await page.getByTestId("workout-delete").click()
   await page.getByTestId("confirm-delete-workout").click()
   await page.waitForTimeout(3000)
 
@@ -512,8 +544,9 @@ test("deleting a session on a program edited after it started moves the weights 
   await page.reload({ waitUntil: "networkidle" })
   await openTab(page, "history")
   await page.getByTestId(`history-row-${seeded.lastWorkoutId}`).click()
-  // The app's own dialog, as above.
-  await page.getByTestId(`history-delete-${seeded.lastWorkoutId}`).click()
+  // The app's own dialog, on the workout's own page, as above.
+  await page.waitForURL("**/programs/workout/**", { timeout: 20000 })
+  await page.getByTestId("workout-delete").click()
   await page.getByTestId("confirm-delete-workout").click()
   await page.waitForTimeout(3000)
 
@@ -614,5 +647,135 @@ test("every control on History and Progress is thumb-sized", async ({ page }) =>
   } finally {
     await deleteWorkoutsNamed(page, "ZZTap Squat").catch(() => {})
     void seeded
+  }
+})
+
+/**
+ * HISTORY IS THE WHOLE HISTORY, and it says when it has reached the beginning.
+ *
+ * The list asked for `days=365` and paged that array in the browser, so a
+ * workout from fourteen months ago had never been read — and "Show more"
+ * disappearing when the array ran out is the same gesture as "that is
+ * everything". Both of those are claims about somebody's training, made by a
+ * screen that had not looked.
+ */
+test("History pages back past a year and says when it has reached the beginning", async ({ page }) => {
+  test.setTimeout(240000)
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.goto("/programs")
+  await deleteWorkoutsNamed(page, "ZZOld")
+
+  // Fourteen months back, relative to today so it holds in any month.
+  const longAgo = new Date()
+  longAgo.setMonth(longAgo.getMonth() - 14)
+  const seeded = await seedFinishedWorkout(page, {
+    startedAt: longAgo.toISOString(),
+    sets: [{ exercise: "ZZOld Squat", weightKg: 100, reps: 5, setNumber: 1 }],
+  })
+
+  try {
+    await page.reload({ waitUntil: "networkidle" })
+    await openTab(page, "history")
+    await expect(page.getByTestId("workout-history")).toBeVisible({ timeout: 20000 })
+
+    /**
+     * Page back until the server says there is nothing older, capped so a
+     * broken "more" cannot spin here for ever.
+     *
+     * The end condition is checked FIRST and the button is waited for as
+     * ENABLED. Clicking it while it reads "Loading…" queues a click on a
+     * disabled element — and when that load turns out to be the last page the
+     * button unmounts, leaving Playwright retrying a click on an element that
+     * will never come back. That is a four-minute timeout that looks like the
+     * app hanging and is the test.
+     */
+    for (let press = 0; press < 40; press++) {
+      if (await page.getByTestId("history-end").isVisible()) break
+      const more = page.getByTestId("history-load-more")
+      if ((await more.count()) === 0) break
+      // It may vanish between the count and the click — that IS the end of the
+      // list arriving, and the loop's own condition catches it next time round.
+      await more.click({ timeout: 30000 }).catch(() => {})
+      await page.waitForTimeout(300)
+    }
+
+    await expect(page.getByTestId("history-end")).toBeVisible({ timeout: 20000 })
+    await expect(page.getByTestId(`history-row-${seeded}`)).toBeVisible()
+  } finally {
+    await deleteWorkoutsNamed(page, "ZZOld").catch(() => {})
+  }
+})
+
+/**
+ * A FILTERED MONTH TOTALS THAT LIFT ALONE.
+ *
+ * The filter used to narrow the ROWS in the browser while the month header
+ * kept totalling every lift in them — so "8,000 kg" under a header that said
+ * you were looking at squats included the bench press in the same session.
+ */
+test("History filtered to one lift totals only that lift", async ({ page }) => {
+  test.setTimeout(240000)
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.goto("/programs")
+  await deleteWorkoutsNamed(page, "ZZFilter")
+
+  await seedFinishedWorkout(page, {
+    sets: [
+      // 120 × 5 = 600 of squat, 90 × 5 = 450 of bench. The squat total is 600.
+      { exercise: "ZZFilter Squat", weightKg: 120, reps: 5, setNumber: 1 },
+      { exercise: "ZZFilter Bench", weightKg: 90, reps: 5, setNumber: 1 },
+    ],
+  })
+
+  try {
+    await page.reload({ waitUntil: "networkidle" })
+    await openTab(page, "history")
+    await expect(page.getByTestId("workout-history")).toBeVisible({ timeout: 20000 })
+
+    await page.getByTestId("history-lift-filter").click()
+    await page.getByRole("option", { name: "ZZFilter Squat" }).click()
+    await expect(page.getByTestId("workout-history")).toContainText("of ZZFilter Squat", {
+      timeout: 20000,
+    })
+
+    const history = await page.getByTestId("workout-history").innerText()
+    expect(history, "the squat's own total").toContain("600")
+    expect(history, "and not the session's, which includes the bench").not.toContain("1,050")
+    expect(history, "no row mentions a lift the filter excludes").not.toContain("ZZFilter Bench")
+  } finally {
+    await deleteWorkoutsNamed(page, "ZZFilter").catch(() => {})
+  }
+})
+
+/** A pull-up has nothing loaded on it, so the reps are the achievement. */
+test("a bodyweight set reads as reps in History", async ({ page }) => {
+  test.setTimeout(240000)
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.goto("/programs")
+  await deleteWorkoutsNamed(page, "ZZBody")
+
+  await seedFinishedWorkout(page, {
+    sets: [{ exercise: "ZZBody Pull-up", weightKg: 0, reps: 12, setNumber: 1 }],
+  })
+
+  try {
+    await page.reload({ waitUntil: "networkidle" })
+    await openTab(page, "history")
+    await expect(page.getByTestId("workout-history")).toBeVisible({ timeout: 20000 })
+    /**
+     * SCOPED TO THE PULL-UP'S OWN ROW. My first version asserted against the
+     * whole tab with `/0\s*(kg|×)/`, which matches the "0 kg" inside
+     * "120 kg × 5" — it failed on a squat two rows down and told me nothing
+     * about the pull-up.
+     */
+    const row = await page
+      .getByTestId("workout-history")
+      .getByText(/ZZBody Pull-up/)
+      .first()
+      .innerText()
+    expect(row).toContain("12 reps")
+    expect(row, "not a zero the app put there").not.toContain("0 kg")
+  } finally {
+    await deleteWorkoutsNamed(page, "ZZBody").catch(() => {})
   }
 })

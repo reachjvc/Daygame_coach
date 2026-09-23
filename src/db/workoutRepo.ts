@@ -32,7 +32,7 @@ import {
   updateEnrollmentSchedule,
 } from "./programRepo"
 import { ProgramRefused } from "@/src/programs/errors"
-import { personalBestBaseline } from "./healthRepo"
+import { inWorkoutOrder, personalBestBaseline } from "./healthRepo"
 import { getUserTimezone } from "./settingsRepo"
 import { toDateISO, toZonedDate } from "@/src/shared/dateUtils"
 import { detectPersonalRecords, firstTimeLifts, workingVolumeKg } from "@/src/health/healthService"
@@ -642,9 +642,25 @@ export async function summaryFor(userId: string, workoutId: string): Promise<Wor
 
   return {
     workoutId,
+    // What a correction or a delete would cost: a program session recalculates
+    // the weights it prescribed, and the receipt says so before asking.
+    enrollmentId: row.enrollment_id,
     startedAt: row.started_at ?? undefined,
     durationMin: Math.min(599, Math.max(1, row.duration_min ?? derived)),
     sets: working.length,
+    /**
+     * Every set, in the order they were done, so the receipt can show what the
+     * session WAS. Warm-ups included and marked as such: a session of five
+     * sets where one was a warm-up reads wrong if the warm-up is simply
+     * missing.
+     */
+    loggedSets: [...sets].sort(inWorkoutOrder).map((set) => ({
+      exercise: set.exercise,
+      weightKg: set.weight_kg,
+      reps: set.reps,
+      setNumber: set.set_number,
+      kind: set.set_kind ?? "working",
+    })),
     volumeKg: round2(volumeKg),
     volume: round2(fromKg(volumeKg, unit)),
     unit,
