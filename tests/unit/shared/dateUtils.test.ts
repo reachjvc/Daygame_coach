@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
-import { getTodayInTimezone, getNowInTimezone, periodStartFor, periodStartInTimezone } from "@/src/shared/dateUtils"
+import { dateKeyLabel, getTodayInTimezone, getNowInTimezone, periodStartFor, periodStartInTimezone } from "@/src/shared/dateUtils"
 
 describe("getTodayInTimezone", () => {
   afterEach(() => {
@@ -156,5 +156,50 @@ describe("periodStartFor", () => {
 
     expect(periodStartInTimezone("weekly", "Pacific/Auckland")).toBe("2026-08-31")
     expect(periodStartInTimezone("weekly", "UTC")).toBe("2026-08-24")
+  })
+})
+
+/**
+ * A DATE KEY IS ALREADY A CALENDAR FACT. Printing it must not consult a second
+ * calendar.
+ *
+ * `new Date("2026-06-01")` is UTC midnight, which west of UTC is the evening of
+ * 31 May. So a chart bar labelled from a week key read "May" in New York and
+ * "Jun" in Copenhagen for the same week, and a History month header could name
+ * the month before the one it was heading — a date that changes depending on
+ * where the reader is standing, for a fact the server has already decided.
+ */
+describe("dateKeyLabel", () => {
+  const originalTZ = process.env.TZ
+  afterEach(() => {
+    process.env.TZ = originalTZ
+  })
+
+  it.each(["UTC", "America/New_York", "Pacific/Auckland", "Europe/Berlin", "Pacific/Kiritimati"])(
+    "labels the 1st of June as June (TZ=%s)",
+    (tz) => {
+      process.env.TZ = tz
+      expect(dateKeyLabel("2026-06-01", { month: "short" }, "en-GB")).toBe("Jun")
+      expect(dateKeyLabel("2026-06-01", { month: "long", year: "numeric" }, "en-GB")).toBe("June 2026")
+    }
+  )
+
+  it.each(["UTC", "America/New_York", "Pacific/Auckland"])(
+    "labels a month key with no day at all (TZ=%s)",
+    (tz) => {
+      process.env.TZ = tz
+      // History groups by "YYYY-MM"; the 1st is implied.
+      expect(dateKeyLabel("2026-01", { month: "long", year: "numeric" }, "en-GB")).toBe("January 2026")
+    }
+  )
+
+  it("keeps the last day of a month in that month", () => {
+    process.env.TZ = "Pacific/Auckland"
+    expect(dateKeyLabel("2026-05-31", { month: "short" }, "en-GB")).toBe("May")
+  })
+
+  it("hands back anything it cannot read, rather than inventing a date", () => {
+    expect(dateKeyLabel("", { month: "short" })).toBe("")
+    expect(dateKeyLabel("not-a-date", { month: "short" })).toBe("not-a-date")
   })
 })

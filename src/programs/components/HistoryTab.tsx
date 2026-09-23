@@ -28,6 +28,7 @@ import {
 import { collapseSets, describeSessionRow, isWorkingSet, workingVolumeKg } from "@/src/health/healthService"
 import { describeLoggedSet, fromKg, toKg } from "../programsService"
 import { UNIT_CONFIG } from "../config"
+import { dateKeyLabel, getTodayInTimezone } from "@/src/shared/dateUtils"
 import { LogPastWorkoutDialog } from "./LogPastWorkoutDialog"
 import type { ProgramEnrollment, UnitSystem } from "../types"
 import type { WorkoutLogWithSets, WorkoutSetRow } from "@/src/health/types"
@@ -267,8 +268,21 @@ export function HistoryTab({
   const matching = lift ? logs.filter((l) => (l.sets ?? []).some((x) => x.exercise === lift)) : logs
   const visible = matching.slice(0, shown)
 
-  /** Which month a row belongs to, and the month's own totals. */
-  const monthKey = (at: string) => new Date(at).toLocaleDateString(undefined, { month: "long", year: "numeric" })
+  /**
+   * WHICH MONTH A ROW BELONGS TO — decided in the ACCOUNT's zone, and labelled
+   * from that decision rather than from a second one.
+   *
+   * This grouped rows by `toLocaleDateString` in the BROWSER's zone, so a
+   * workout logged at 00:30 on the 1st of June in Copenhagen was filed under
+   * May for a phone still set to London — and the month header and the totals
+   * under it came from that same wrong key. The key is the calendar fact; the
+   * label is only how it is printed.
+   */
+  const monthKeyOf = (at: string) =>
+    getTodayInTimezone(timezone ?? "UTC", new Date(at)).slice(0, 7)
+  const monthLabel = (key: string) => dateKeyLabel(key, { month: "long", year: "numeric" })
+  const monthKey = monthKeyOf
+
   const monthTotals = new Map<string, { sessions: number; volumeKg: number }>()
   for (const l of matching) {
     const k = monthKey(l.logged_at)
@@ -394,7 +408,7 @@ export function HistoryTab({
                 where you are without counting cards. */}
             {newMonth && (
               <div className="sticky top-0 z-10 -mx-1 flex items-baseline justify-between gap-2 bg-background/95 px-1 py-1.5 backdrop-blur">
-                <h3 className="text-[12.5px] font-semibold">{month}</h3>
+                <h3 className="text-[12.5px] font-semibold">{monthLabel(month)}</h3>
                 {totals && (
                   <span className="text-[11px] tabular-nums text-muted-foreground">
                     {totals.sessions} {totals.sessions === 1 ? "session" : "sessions"} ·{" "}

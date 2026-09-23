@@ -27,6 +27,7 @@ import { adherenceThisWeek, weeklyVolume } from "@/src/health/healthService"
 // "lbs" and this slice spells it "lb". Two spellings of one unit is how a
 // number ends up converted twice or not at all.
 import { describeLoggedSet, fromKg } from "../programsService"
+import { dateKeyLabel } from "@/src/shared/dateUtils"
 import { UNIT_CONFIG } from "../config"
 import type { UnitSystem } from "../types"
 import type { WorkoutLogWithSets } from "@/src/health/types"
@@ -225,11 +226,17 @@ export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
                 </div>
                 <div className="mt-1 flex gap-1.5">
                   {volume.map((v, i) => {
-                    const d = new Date(v.weekStart)
+                    /**
+                     * THE KEY IS THE DATE; the browser's zone gets no vote.
+                     * `new Date("2026-06-01")` is UTC midnight, which west of
+                     * UTC is the evening of 31 May — so this row read "May" in
+                     * New York and "Jun" in Copenhagen for the same week, and
+                     * the month was decided by `getMonth()` on that same
+                     * shifted Date.
+                     */
                     // The month, printed once when it changes, so the row reads
                     // as a date rather than eight loose integers.
-                    const prev = i > 0 ? new Date(volume[i - 1].weekStart) : null
-                    const newMonth = !prev || prev.getMonth() !== d.getMonth()
+                    const newMonth = i === 0 || volume[i - 1].weekStart.slice(0, 7) !== v.weekStart.slice(0, 7)
                     return (
                       <span
                         key={v.weekStart}
@@ -238,7 +245,7 @@ export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
                         {v.weekStart.slice(8)}
                         {newMonth && (
                           <span className="block">
-                            {d.toLocaleDateString(undefined, { month: "short" })}
+                            {dateKeyLabel(v.weekStart, { month: "short" })}
                           </span>
                         )}
                       </span>

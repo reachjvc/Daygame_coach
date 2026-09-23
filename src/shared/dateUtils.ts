@@ -377,3 +377,27 @@ export function wallClockToInstant(dateTimeLocal: string, timezone: string): str
   const [date, time = "00:00"] = dateTimeLocal.split("T")
   return localTimeInstant(date, time, timezone)
 }
+
+/**
+ * A DATE KEY, LABELLED AS ITSELF — in any timezone the reader happens to be in.
+ *
+ * `new Date("2026-06-01")` is UTC midnight, which west of UTC is the evening of
+ * 31 May. So a bar labelled from a week key read "May" in New York and "Jun" in
+ * Copenhagen for the same week, and a month header could name the month before
+ * the one it was heading.
+ *
+ * The key is already a calendar fact — the server computed it in the account's
+ * zone — so the only job here is to print it without a second zone getting a
+ * vote. Parsed as UTC fields and formatted in UTC: the instant is fictional and
+ * never leaves this function.
+ */
+export function dateKeyLabel(
+  key: string,
+  opts: Intl.DateTimeFormatOptions,
+  locale?: string
+): string {
+  const [year, month, day] = key.split("-").map(Number)
+  if (!year || !month) return key
+  const utc = new Date(Date.UTC(year, month - 1, day || 1))
+  return utc.toLocaleDateString(locale, { ...opts, timeZone: "UTC" })
+}

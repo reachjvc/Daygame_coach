@@ -1682,14 +1682,22 @@ describe('Architecture Compliance', () => {
   describe('No training screen reads the browser calendar', () => {
     const TRAINING_BROWSER_CLOCK_ALLOWED: Record<string, number> = {
       'components/CustomProgramBuilder.tsx': 1,
-      'components/HistoryTab.tsx': 4,
+      // 4 → 3 on 2026-09-23: the month grouping stopped being decided by
+      // `toLocaleDateString` in the browser's zone, so a workout logged at
+      // 00:30 on the 1st was no longer filed under the previous month.
+      'components/HistoryTab.tsx': 3,
       'components/LiftHistory.tsx': 2,
       // Zero since both lists started printing the server's date-only string
       // instead of handing an instant to the browser (2026-09-20). Kept at 0
       // rather than deleted: these two are where "started 3 Feb" is printed.
       'components/PastPrograms.tsx': 0,
       'components/ProgramsApp.tsx': 0,
-      'components/ProgressTab.tsx': 1,
+      // Zero since the weekly chart's month labels came off the date KEY
+      // rather than off `new Date(weekStart)` — UTC midnight, which west of
+      // UTC is the previous month (2026-09-23). Kept at 0 rather than deleted:
+      // this file draws dated bars, so a new `new Date()` here is the thing to
+      // catch.
+      'components/ProgressTab.tsx': 0,
       'components/ProgressionView.tsx': 3,
       'components/RunningPrograms.tsx': 2,
       // Zero since the card stopped naming a stale workout's day itself
