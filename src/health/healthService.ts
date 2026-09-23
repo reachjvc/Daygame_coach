@@ -936,7 +936,15 @@ export function liftBests(logs: WorkoutLogWithSets[], timezone: string): LiftBes
 export interface CollapsedSet {
   /** How many sets in the run — 4 means "4 × 100 kg × 5". */
   count: number
-  weightKg: number
+  /**
+   * IN WHATEVER UNIT IT ARRIVED IN. This was `weightKg`, and the field name
+   * was a claim the function cannot make: it compares numbers for equality and
+   * never converts anything. The live screen's lift history passes weights
+   * already converted to the reader's unit, and a caller mapping those into a
+   * field called `weight_kg` is how a pounds number ends up somewhere that
+   * treats it as kilograms.
+   */
+  weight: number
   reps: number
   kind: string
   exercise: string
@@ -958,30 +966,30 @@ export interface CollapsedSet {
  * miss, and merging them would hide the order things happened in.
  */
 export function collapseSets(
-  sets: Array<{ exercise: string; weight_kg: number; reps: number; set_kind?: string | null; set_number: number }>
+  sets: Array<{ exercise: string; weight: number; reps: number; kind?: string | null; setNumber: number }>
 ): CollapsedSet[] {
   const out: CollapsedSet[] = []
   for (const s of sets) {
     const last = out[out.length - 1]
-    const kind = s.set_kind ?? "working"
+    const kind = s.kind ?? "working"
     if (
       last &&
       last.exercise === s.exercise &&
-      last.weightKg === s.weight_kg &&
+      last.weight === s.weight &&
       last.reps === s.reps &&
       last.kind === kind
     ) {
       last.count += 1
-      last.setNumbers.push(s.set_number)
+      last.setNumbers.push(s.setNumber)
       continue
     }
     out.push({
       count: 1,
-      weightKg: s.weight_kg,
+      weight: s.weight,
       reps: s.reps,
       kind,
       exercise: s.exercise,
-      setNumbers: [s.set_number],
+      setNumbers: [s.setNumber],
     })
   }
   return out

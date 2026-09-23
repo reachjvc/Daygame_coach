@@ -1918,6 +1918,8 @@ export function liftRows(
   local: {
     /** Extra working rows revealed by "+ Add a set". */
     extra?: number
+    /** Warm-up rows revealed by the lift menu, with nothing pre-filled. */
+    warmups?: number
     /** A row's chosen kind before it is ticked, keyed by the row's own slot. */
     kinds?: Record<string, LiveWorkoutSet["kind"]>
     /** Rows swiped away on this phone, keyed by slot. Never a ticked set. */
@@ -1927,8 +1929,44 @@ export function liftRows(
   const hidden = new Set(local.hidden ?? [])
   const rows: LiftRow[] = []
   const claimed = new Set<string>()
+  /** Slots a row is already writing to, so two rows cannot fight over one. */
+  const taken = new Set<string>()
   const slotOf = (kind: string, setNumber: number, side: string | null = null) =>
     setSlot({ exerciseId: ex.exerciseId, exercise: ex.exerciseId, kind, setNumber, side })
+
+  /** The first number in `kind` nothing is using yet. */
+  const nextFree = (kind: string) => {
+    let n = 1
+    while (taken.has(slotOf(kind, n)) || ticked.some((set) => setSlot(set) === slotOf(kind, n))) n++
+    return n
+  }
+
+  const push = (row: LiftRow) => {
+    taken.add(slotOf(row.kind, row.setNumber, row.side))
+    if (row.done) claimed.add(row.done.id)
+    rows.push(row)
+  }
+
+  /**
+   * WARM-UPS FIRST, AND THEY PRE-FILL NOTHING.
+   *
+   * A warm-up row revealed from the lift menu starts with both boxes empty:
+   * "50 % of set 1" would be a number nobody prescribed, and the working
+   * weight pre-filled in a warm-up box is the number you least want there and
+   * the easiest to tick by accident.
+   */
+  /**
+   * Only as many as were asked for. A warm-up already ticked comes through as
+   * a row of its own at the end of this function, so a session reloaded with a
+   * ticked W2 and no W1 shows W2 — and does not invent an empty W1 to fill the
+   * gap, which is a row nobody asked for and a slot nobody used.
+   */
+  for (let n = 1; n <= (local.warmups ?? 0); n++) {
+    const slot = slotOf("warmup", n)
+    const done = ticked.find((set) => setSlot(set) === slot) ?? null
+    if (!done && hidden.has(slot)) continue
+    push({ slot, kind: "warmup", setNumber: n, side: null, prescribed: null, workingIndex: null, done })
+  }
 
   const prescribedCount = ex.sets.length + (local.extra ?? 0)
   const last = ex.sets[ex.sets.length - 1]
@@ -1937,24 +1975,30 @@ export function liftRows(
     const setNumber = i + 1
     const baseKind: LiveWorkoutSet["kind"] = spec?.amrap ? "amrap" : "working"
     const rowSlot = slotOf(baseKind, setNumber)
-    if (hidden.has(rowSlot)) continue
     // The kind this row will be written as: what you chose, else the
     // prescription's own.
     const kind = local.kinds?.[rowSlot] ?? baseKind
-    const filledSlot = slotOf(kind, setNumber)
+    /**
+     * A re-tagged row takes the next free number in the kind it moved to. It
+     * kept its own number before, which is how tagging working set 1 as a
+     * warm-up collided with the warm-up row already revealed above it — two
+     * rows writing `warmup|1`, and the second tick correcting the first set
+     * instead of adding one.
+     */
+    const number = kind === baseKind ? setNumber : nextFree(kind)
+    const filledSlot = slotOf(kind, number)
     const done = ticked.find((set) => setSlot(set) === filledSlot) ?? null
-    if (done) claimed.add(done.id)
-    rows.push({
+    if (!done && hidden.has(rowSlot)) continue
+    push({
       slot: rowSlot,
       kind,
-      setNumber,
+      setNumber: number,
       side: null,
       /**
        * A ROW YOU HAVE RE-TAGGED HAS NO PRESCRIPTION ANY MORE. The program
        * asked for 100 kg × 5 as a WORKING set; carrying that number into a
        * warm-up or a drop set would be the app inventing a prescription
-       * nobody wrote — and 100 kg pre-filled in a warm-up box is the number
-       * you are least likely to want and most likely to tick by accident.
+       * nobody wrote.
        */
       prescribed: kind === baseKind ? spec : null,
       // Only a working row has a "last time" to show: there is no honest
@@ -1966,13 +2010,13 @@ export function liftRows(
 
   /**
    * EVERY SET THAT IS ALREADY A FACT GETS A ROW, even one no prescribed slot
-   * claims — a warm-up, a drop set, a set ticked on another device. It is in
-   * the database and in the totals; leaving it off the screen would be the
-   * screen disagreeing with the receipt.
+   * claims — a drop set, a set ticked on another device. It is in the database
+   * and in the totals; leaving it off the screen would be the screen
+   * disagreeing with the receipt.
    */
   for (const set of ticked) {
     if (claimed.has(set.id)) continue
-    rows.push({
+    push({
       slot: setSlot(set),
       kind: set.kind,
       setNumber: set.setNumber,
@@ -1989,6 +2033,54 @@ export function liftRows(
       a.setNumber - b.setNumber ||
       (a.side ?? "").localeCompare(b.side ?? "")
   )
+}
+
+/**
+ * THE ORDER YOU ACTUALLY DID THEM IN.
+ *
+ * `adjustments.order` was written by nothing and read by nothing: the type
+ * carried the field, the schema accepted it, and the screen drew the
+ * program's order regardless. Moving a lift is the answer to a busy rack that
+ * does NOT change what you did — you did the same lifts, in a different
+ * order — and the record should say so.
+ *
+ * Anything the order does not mention keeps its place relative to what it
+ * does: a list written before a lift was added must not make that lift vanish.
+ */
+export function applyLiftOrder<T extends { exerciseId: string }>(
+  exercises: readonly T[],
+  order: readonly string[] | undefined
+): T[] {
+  if (!order || order.length === 0) return [...exercises]
+  const rank = new Map(order.map((id, i) => [id, i]))
+  return [...exercises]
+    .map((ex, i) => ({ ex, i }))
+    .sort((a, b) => {
+      const ra = rank.get(a.ex.exerciseId)
+      const rb = rank.get(b.ex.exerciseId)
+      // Unmentioned lifts keep their own relative order, after the named ones
+      // they were behind — the list is a rearrangement, not a filter.
+      if (ra === undefined && rb === undefined) return a.i - b.i
+      if (ra === undefined) return 1
+      if (rb === undefined) return -1
+      return ra - rb
+    })
+    .map((w) => w.ex)
+}
+
+/** The order with one lift moved one place. Returns the whole list. */
+export function moveLift(
+  exercises: readonly { exerciseId: string }[],
+  exerciseId: string,
+  delta: -1 | 1
+): string[] {
+  const ids = exercises.map((ex) => ex.exerciseId)
+  const at = ids.indexOf(exerciseId)
+  const to = at + delta
+  if (at === -1 || to < 0 || to >= ids.length) return ids
+  const next = [...ids]
+  ;[next[at], next[to]] = [next[to], next[at]]
+  return next
 }
 
 /**

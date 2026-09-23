@@ -21,9 +21,19 @@ const squat: PrescribedExercise = {
   restSec: 180,
 } as PrescribedExercise
 
-function menu(over: { adjustments?: WorkoutAdjustments; wasAdded?: boolean; skipped?: boolean } = {}) {
+function menu(
+  over: {
+    adjustments?: WorkoutAdjustments
+    wasAdded?: boolean
+    skipped?: boolean
+    position?: { index: number; count: number }
+  } = {}
+) {
   const onAdjust = vi.fn()
   const onClose = vi.fn()
+  const onAddWarmup = vi.fn()
+  const onMove = vi.fn()
+  const onHistory = vi.fn()
   render(
     <LiftMenu
       open
@@ -33,10 +43,14 @@ function menu(over: { adjustments?: WorkoutAdjustments; wasAdded?: boolean; skip
       alreadyHere={["Squat", "Bench Press"]}
       wasAdded={over.wasAdded ?? false}
       skipped={over.skipped ?? false}
+      position={over.position ?? { index: 1, count: 3 }}
       onAdjust={onAdjust}
+      onAddWarmup={onAddWarmup}
+      onMove={onMove}
+      onHistory={onHistory}
     />
   )
-  return { onAdjust, onClose }
+  return { onAdjust, onClose, onAddWarmup, onMove, onHistory }
 }
 
 afterEach(() => vi.restoreAllMocks())
@@ -134,5 +148,52 @@ describe("swapping a lift", () => {
     await user.click(screen.getByTestId("lift-swap"))
     // One list of what this app knows a lift is, not a second that drifts.
     expect(screen.getByTestId("add-lift")).toBeTruthy()
+  })
+})
+
+/**
+ * THE THREE ROWS THAT WERE IN THE DESIGN AND NOT IN THE SHEET.
+ *
+ * "Swap this lift" answers a busy rack by doing something else. The other
+ * answer is coming back to it later, and there was no row for that at all —
+ * `adjustments.order` was written by nothing and read by nothing, so a session
+ * done in a different order was recorded in the program's order.
+ */
+describe("moving, warming up, and looking back", () => {
+  it("moves one place, and the caller is handed the whole order", async () => {
+    const user = userEvent.setup()
+    const { onMove, onClose } = menu()
+    await user.click(screen.getByTestId("lift-move-up"))
+    expect(onMove).toHaveBeenCalledWith(-1)
+    // And the sheet closes, so the result is visible behind it.
+    expect(onClose).toHaveBeenCalled()
+  })
+
+  it("is off at the ends rather than being a button that does nothing", () => {
+    const first = menu({ position: { index: 0, count: 3 } })
+    expect(screen.getByTestId("lift-move-up")).toBeDisabled()
+    expect(screen.getByTestId("lift-move-down")).not.toBeDisabled()
+    expect(first.onMove).not.toHaveBeenCalled()
+  })
+
+  it("is off at the bottom too", () => {
+    menu({ position: { index: 2, count: 3 } })
+    expect(screen.getByTestId("lift-move-down")).toBeDisabled()
+  })
+
+  it("adds a warm-up row", async () => {
+    const user = userEvent.setup()
+    const { onAddWarmup } = menu()
+    await user.click(screen.getByTestId("lift-add-warmup"))
+    expect(onAddWarmup).toHaveBeenCalled()
+  })
+
+  it("opens the lift's last times, named after the lift", async () => {
+    const user = userEvent.setup()
+    const { onHistory } = menu()
+    const row = screen.getByTestId("lift-history")
+    expect(row.textContent).toBe("Last times for Squat")
+    await user.click(row)
+    expect(onHistory).toHaveBeenCalled()
   })
 })

@@ -38,6 +38,7 @@ import { SetRow } from "./SetRow"
 import { RestBar } from "./RestBar"
 import { LiftMenu } from "./LiftMenu"
 import { SetMenu } from "./SetMenu"
+import { LiftHistorySheet } from "./LiftHistorySheet"
 import type { MissRule } from "../../types"
 import { FinishSheet } from "./FinishSheet"
 import { AddLift } from "./AddLift"
@@ -55,6 +56,8 @@ import {
   fixedRowsToTick,
   liftRows,
   setLabel,
+  applyLiftOrder,
+  moveLift,
 } from "../../programsService"
 import { REST_SECONDS, UNIT_CONFIG } from "../../config"
 import type {
@@ -148,6 +151,10 @@ export function LiveWorkoutScreen({
   const [rowEffort, setRowEffort] = useState<Record<string, number>>({})
   /** Rows swiped away on this phone. Never a set that exists. */
   const [hiddenRows, setHiddenRows] = useState<string[]>([])
+  /** Warm-up rows revealed from the lift menu, per lift. */
+  const [warmupRows, setWarmupRows] = useState<Record<string, number>>({})
+  /** Which lift's last-five-sessions sheet is open. */
+  const [openHistory, setOpenHistory] = useState<string | null>(null)
 
   const workout = live.workout
   /** Working sets actually ticked — what a discard would throw away. */
@@ -185,7 +192,16 @@ export function LiveWorkoutScreen({
     }
   }
 
-  const exercises: PrescribedExercise[] = [
+  /**
+   * THE ORDER YOU DID THEM IN, if you moved anything.
+   *
+   * `adjustments.order` has existed since the type was written and was read by
+   * nothing: the screen drew the program's order whatever the workout said, so
+   * a session done in a different order was recorded in the wrong one. Applied
+   * after the swap and the additions so a moved lift, a swapped lift and a
+   * lift added on the day are all in the list being ordered.
+   */
+  const exercises: PrescribedExercise[] = applyLiftOrder([
     ...(prescription?.exercises ?? []).map(swapFor),
     ...added.map((a) => ({
       exerciseId: a.exerciseId,
@@ -200,7 +216,7 @@ export function LiveWorkoutScreen({
        */
       unweightedOk: canBeUnweighted(a.libraryId, a.name),
     })) as PrescribedExercise[],
-  ]
+  ], (live.workout ?? finished)?.adjustments.order)
 
   /**
    * The workout the screen is describing. `live.workout` goes null the moment a
@@ -297,6 +313,7 @@ export function LiveWorkoutScreen({
   const rowsFor = (ex: PrescribedExercise): LiftRow[] =>
     liftRows(ex, doneByLift.get(ex.exerciseId) ?? [], {
       extra: extraRows[ex.exerciseId] ?? 0,
+      warmups: warmupRows[ex.exerciseId] ?? 0,
       kinds: rowKinds,
       hidden: hiddenRows,
     })
@@ -424,7 +441,18 @@ export function LiveWorkoutScreen({
                           {groupOrdinal(exercises, i)}
                         </span>
                       )}
-                      <span className="truncate">{ex.name}</span>
+                      {/* THE NAME IS THE DOOR TO ITS HISTORY. It was a
+                          `span`, so the only way to see what you did last time
+                          was one cell of the PREVIOUS column with no date on
+                          it. */}
+                      <button
+                        type="button"
+                        data-testid={`lift-name-${ex.exerciseId}`}
+                        onClick={() => setOpenHistory(ex.exerciseId)}
+                        className="min-h-11 min-w-0 truncate text-left text-base font-semibold"
+                      >
+                        {ex.name}
+                      </button>
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {/* A lift nobody prescribed has no prescription to
@@ -458,8 +486,37 @@ export function LiveWorkoutScreen({
                   alreadyHere={exercises.map((e) => e.name)}
                   wasAdded={addedIds.has(ex.exerciseId)}
                   skipped={isSkipped}
+                  position={{ index: i, count: exercises.length }}
                   onAdjust={(patch) => void live.adjust(patch)}
+                  onAddWarmup={() =>
+                    setWarmupRows((r) => ({ ...r, [ex.exerciseId]: (r[ex.exerciseId] ?? 0) + 1 }))
+                  }
+                  /**
+                   * The WHOLE order, from the list on screen. Building it at
+                   * the call site from one id is how one lift's move comes to
+                   * wipe another's — the same reason the rest map is written
+                   * whole.
+                   */
+                  onMove={(delta) => void live.adjust({ order: moveLift(exercises, ex.exerciseId, delta) })}
+                  onHistory={() => setOpenHistory(ex.exerciseId)}
                 />
+
+                {/*
+                  MOUNTED ONLY WHILE IT IS OPEN, because it reads a hundred
+                  workouts. `useLoad` fires on mount, and one of these per lift
+                  would be six of those reads on a page somebody opened to tick
+                  a set.
+                */}
+                {openHistory === ex.exerciseId && (
+                  <LiftHistorySheet
+                    open
+                    onClose={() => setOpenHistory(null)}
+                    name={ex.name}
+                    unit={unit}
+                    unitLabel={unitLabel}
+                    timezone={timezone}
+                  />
+                )}
 
                 {/*
                   THE COLUMNS ARE NAMED ONCE.

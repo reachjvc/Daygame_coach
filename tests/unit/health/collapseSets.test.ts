@@ -4,8 +4,13 @@
 import { describe, it, expect } from "vitest"
 import { collapseSets } from "@/src/health/healthService"
 
+/**
+ * `weight`, not `weight_kg`: this function compares numbers and converts
+ * nothing, and the live screen's lift history hands it weights already in the
+ * reader's own unit.
+ */
 const set = (n: number, weight: number, reps: number, kind = "working") => ({
-  exercise: "Squat", weight_kg: weight, reps, set_kind: kind, set_number: n,
+  exercise: "Squat", weight, reps, kind, setNumber: n,
 })
 
 describe("collapseSets", () => {
@@ -34,6 +39,7 @@ describe("collapseSets", () => {
     const out = collapseSets([set(1, 60, 5, "warmup"), set(1, 60, 5, "working")])
     expect(out).toHaveLength(2)
     expect(out[0].kind).toBe("warmup")
+    expect(out[0].weight).toBe(60)
   })
 
   it("returns nothing for nothing", () => {

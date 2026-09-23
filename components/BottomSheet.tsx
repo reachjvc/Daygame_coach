@@ -69,6 +69,7 @@ export function SheetRow({
   type = "button",
   icon: Icon,
   destructive = false,
+  disabled = false,
   testId,
   children,
 }: {
@@ -83,6 +84,12 @@ export function SheetRow({
   onClick?: () => void
   /** `submit` for a row inside a form, e.g. Log Out. */
   type?: "button" | "submit"
+  /**
+   * Off, and visibly so. A row that does nothing when tapped — "Move up" on
+   * the first lift — reads as a broken app, and hiding it instead makes the
+   * sheet's rows move around between openings.
+   */
+  disabled?: boolean
   icon?: LucideIcon
   /** Paints the row red. For the one row that takes something away. */
   destructive?: boolean
@@ -93,6 +100,7 @@ export function SheetRow({
   const className = cn(
     "flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors hover:bg-muted",
     destructive ? "text-destructive" : "text-foreground",
+    disabled && "opacity-40 hover:bg-transparent",
   )
   const icon = Icon ? (
     <Icon className={cn("size-5", destructive ? "text-destructive" : "text-muted-foreground")} />
@@ -108,7 +116,13 @@ export function SheetRow({
   }
 
   return (
-    <button type={type} onClick={onClick} className={className} data-testid={testId}>
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={className}
+      data-testid={testId}
+    >
       {icon}
       <span>{children}</span>
     </button>

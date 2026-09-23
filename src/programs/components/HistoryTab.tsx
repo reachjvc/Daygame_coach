@@ -567,7 +567,18 @@ export function HistoryTab({
                             looked exactly like its neighbours. Collapsed, the
                             exception is the only thing that stands out. */}
                         <ul className="mt-0.5 space-y-0.5">
-                          {collapseSets(sets ?? []).map((run, ri) => (
+                          {/* The database's own column names, mapped once:
+                              `collapseSets` compares numbers and knows nothing
+                              about units or about Postgres. */}
+                          {collapseSets(
+                            (sets ?? []).map((s) => ({
+                              exercise: s.exercise,
+                              weight: s.weight_kg,
+                              reps: s.reps,
+                              kind: s.set_kind,
+                              setNumber: s.set_number,
+                            }))
+                          ).map((run, ri) => (
                             <li
                               key={`${run.exercise}-${run.setNumbers[0]}-${ri}`}
                               className="flex items-baseline gap-2 text-xs text-muted-foreground"
@@ -576,7 +587,7 @@ export function HistoryTab({
                                 {run.count > 1 ? `${run.count} ×` : run.setNumbers[0]}
                               </span>
                               <span className="tabular-nums">
-                                {show(run.weightKg)} {label} × {run.reps}
+                                {show(run.weight)} {label} × {run.reps}
                               </span>
                               {/* A warm-up is not a working set, and a screen
                                   that hides the difference makes the volume

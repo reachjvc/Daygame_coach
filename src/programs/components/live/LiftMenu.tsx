@@ -33,7 +33,18 @@ interface Props {
   /** Whether this lift was added on the day rather than prescribed. */
   wasAdded: boolean
   skipped: boolean
+  /**
+   * Where this lift sits on the screen, so Move up and Move down can be
+   * DISABLED at the ends rather than being buttons that do nothing.
+   */
+  position: { index: number; count: number }
   onAdjust: (patch: Partial<WorkoutAdjustments>) => void
+  /** Reveal one more warm-up row on this lift, with nothing pre-filled. */
+  onAddWarmup: () => void
+  /** Move it one place, which is recorded on the workout. */
+  onMove: (delta: -1 | 1) => void
+  /** Open this lift's last five sessions. */
+  onHistory: () => void
 }
 
 const clock = (seconds: number) =>
@@ -47,7 +58,11 @@ export function LiftMenu({
   alreadyHere,
   wasAdded,
   skipped,
+  position,
   onAdjust,
+  onAddWarmup,
+  onMove,
+  onHistory,
 }: Props) {
   const [swapping, setSwapping] = useState(false)
   const target = restTargetFor(exercise, adjustments)
@@ -103,6 +118,55 @@ export function LiftMenu({
             Swap this lift
           </SheetRow>
 
+          {/*
+            MOVING A LIFT IS NOT SKIPPING IT.
+            The rack being busy has two answers and the menu had neither: do
+            something else (swap), or come back to it (move). `adjustments.order`
+            has existed all along and was written by nothing and read by
+            nothing — the screen drew the program's order regardless, so a
+            session done in a different order was recorded in the wrong one.
+
+            Rows, not a drag handle: a drag inside a scrolling sheet on a phone,
+            with a bar in your hands, is a target you cannot hit.
+          */}
+          {/* NO ICON ON THE NEW ROWS. `History` would have been a second file
+              using it, which the icon registry governs and only the owner may
+              approve; the design spec says this sheet carries no icons but
+              Trash2 anyway. */}
+          <SheetRow
+            testId="lift-move-up"
+            disabled={position.index === 0}
+            onClick={() => {
+              onMove(-1)
+              close()
+            }}
+          >
+            Move up
+          </SheetRow>
+          <SheetRow
+            testId="lift-move-down"
+            disabled={position.index >= position.count - 1}
+            onClick={() => {
+              onMove(1)
+              close()
+            }}
+          >
+            Move down
+          </SheetRow>
+
+          {/* NOTHING PRE-FILLED. "50 % of set 1" would be a number nobody
+              prescribed, and the working weight in a warm-up box is the one
+              you least want and most easily tick by accident. */}
+          <SheetRow
+            testId="lift-add-warmup"
+            onClick={() => {
+              onAddWarmup()
+              close()
+            }}
+          >
+            Add a warm-up set
+          </SheetRow>
+
           {/* REST, EDITABLE. It was a read-only line. The rack being busy and
               a lift needing longer today are the two things that actually
               happen, and neither had an answer. */}
@@ -143,6 +207,19 @@ export function LiftMenu({
               </Button>
             </span>
           </div>
+
+          {/* WHAT YOU DID LAST TIME, all of it — the question a lifter asks
+              between sets, which the PREVIOUS column can only answer one cell
+              at a time. */}
+          <SheetRow
+            testId="lift-history"
+            onClick={() => {
+              onHistory()
+              close()
+            }}
+          >
+            Last times for {exercise.name}
+          </SheetRow>
 
           <SheetRow
             icon={SkipForward}

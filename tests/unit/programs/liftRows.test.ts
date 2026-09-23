@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { liftRows, setLabel, setSlot } from "@/src/programs/programsService"
+import { applyLiftOrder, liftRows, moveLift, setLabel, setSlot } from "@/src/programs/programsService"
 import type { LiveWorkoutSet, PrescribedSet } from "@/src/programs/types"
 
 /** A prescribed set, in full — `amrap` and `weightKg` are not optional. */
@@ -177,5 +177,84 @@ describe("liftRows", () => {
     ])
     expect(rows).toHaveLength(2)
     expect(rows[1].done?.reps).toBe(9)
+  })
+})
+
+describe("warm-up rows", () => {
+  it("reveals as many as asked for, above the working sets, pre-filling nothing", () => {
+    const rows = liftRows(squat, [], { warmups: 2 })
+    expect(rows.map((r) => setLabel(r.kind, r.setNumber))).toEqual(["W1", "W2", "1", "2", "3"])
+    // "50 % of set 1" would be a number nobody prescribed.
+    expect(rows[0].prescribed).toBeNull()
+  })
+
+  it("does not draw a second W1 for a warm-up already ticked", () => {
+    const rows = liftRows(squat, [ticked({ setNumber: 1, kind: "warmup" })], { warmups: 1 })
+    expect(rows.filter((r) => r.kind === "warmup")).toHaveLength(1)
+    expect(rows[0].done?.kind).toBe("warmup")
+  })
+
+  it("keeps a ticked warm-up on screen even with none revealed", () => {
+    const rows = liftRows(squat, [ticked({ setNumber: 2, kind: "warmup" })])
+    // W2 exists because a set exists at W2. A phantom W1 is not invented to
+    // fill the gap: nothing was logged there.
+    expect(rows.map((r) => setLabel(r.kind, r.setNumber))).toEqual(["W2", "1", "2", "3"])
+  })
+
+  it("a row tagged as a warm-up takes the next free warm-up number", () => {
+    // W1 is revealed and set 1 is then tagged as a warm-up too. Both writing
+    // `warmup|1` would mean the second tick CORRECTING the first set instead
+    // of adding one.
+    const rows = liftRows(squat, [], { warmups: 1, kinds: { "squat|working|1|": "warmup" } })
+    expect(rows.map((r) => setLabel(r.kind, r.setNumber))).toEqual(["W1", "W2", "2", "3"])
+  })
+
+  it("a row tagged as a warm-up skips a number a ticked set already holds", () => {
+    const rows = liftRows(squat, [ticked({ setNumber: 1, kind: "warmup" })], {
+      kinds: { "squat|working|2|": "warmup" },
+    })
+    expect(rows.map((r) => setLabel(r.kind, r.setNumber))).toEqual(["W1", "W2", "1", "3"])
+  })
+})
+
+describe("the order you did them in", () => {
+  const lifts = [{ exerciseId: "squat" }, { exerciseId: "bench" }, { exerciseId: "row" }]
+
+  it("draws the program's order when nothing was moved", () => {
+    expect(applyLiftOrder(lifts, undefined).map((l) => l.exerciseId)).toEqual(["squat", "bench", "row"])
+    expect(applyLiftOrder(lifts, []).map((l) => l.exerciseId)).toEqual(["squat", "bench", "row"])
+  })
+
+  it("draws the order that was recorded", () => {
+    expect(applyLiftOrder(lifts, ["bench", "squat", "row"]).map((l) => l.exerciseId)).toEqual([
+      "bench",
+      "squat",
+      "row",
+    ])
+  })
+
+  it("does not lose a lift the order has never heard of", () => {
+    // An order written before a lift was added on the day must not make that
+    // lift vanish off the screen it was added to.
+    const withAdded = [...lifts, { exerciseId: "added_curl" }]
+    expect(applyLiftOrder(withAdded, ["row", "squat", "bench"]).map((l) => l.exerciseId)).toEqual([
+      "row",
+      "squat",
+      "bench",
+      "added_curl",
+    ])
+  })
+
+  it("moves one lift one place, and refuses to move it off either end", () => {
+    expect(moveLift(lifts, "bench", -1)).toEqual(["bench", "squat", "row"])
+    expect(moveLift(lifts, "bench", 1)).toEqual(["squat", "row", "bench"])
+    expect(moveLift(lifts, "squat", -1)).toEqual(["squat", "bench", "row"])
+    expect(moveLift(lifts, "row", 1)).toEqual(["squat", "bench", "row"])
+  })
+
+  it("returns the whole list, because the order is stored whole", () => {
+    // Building the list at the call site is how one lift's move comes to wipe
+    // another's — the same reason `withRest` returns the whole map.
+    expect(moveLift(lifts, "squat", 1)).toHaveLength(3)
   })
 })
