@@ -100,9 +100,13 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   season, values & identity, commit, track, today, journal, everything. It keeps
   the plan in the browser's own storage, but **more than the Track step writes
   to the database**: the one-thing box and the season band read and write
-  `life_answers`, the Today tab increments goals, and the workout card creates a
-  program enrollment. The comment on `app/life-mastery/page.tsx` claiming twelve
-  of thirteen steps touch no API is wrong. The rest is lab work behind `/test` — nine goal-screen generations
+  `life_answers` and the Today tab increments goals. The comment on
+  `app/life-mastery/page.tsx` claiming twelve of thirteen steps touch no API is
+  wrong. **Nothing in Life Mastery starts or ends a program any more** — this
+  entry said "the workout card creates a program enrollment" until 2026-09-23,
+  when the Templates step's catalogue, picker, editor and builder were deleted.
+  It is one status card now, drawn from the enrollment list, and picking,
+  changing, ending and building all happen on `/programs`. The rest is lab work behind `/test` — nine goal-screen generations
   (`goalsv2` to `goalsv9`, then `goalsv11`; there is no v10), `new-goals/`,
   `setup/`. One trap: the Vision Plan **Lab screen**
   is test-only, but `visionPlanService` behind it is live and Life Mastery calls
@@ -129,11 +133,18 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   the foot of the Black Box links to it. Read the memory note before touching
   any of it: no streak counter, no pros-and-cons list, and rulers that compare
   only downwards are each a deliberate research finding, not an oversight.
-- `programs/` — the gym. Hand-encoded strength programs, a custom program
-  builder, and a live workout screen you use set by set at the rack. The engine
-  handles four kinds of progression: load, endurance, skill tier and hold range.
-  The comment at the top of `programs/types.ts` still says only load is built.
-  That comment is stale; `programsService.ts` implements all four.
+- `programs/` — the gym, at `/programs`, with History and Progress as its other
+  two tabs. Thirteen hand-encoded programs, a live workout screen you use set by
+  set at the rack, a receipt for every finished session at
+  `/programs/workout/<id>`, and a written box at `?view=build` where a week you
+  design yourself is typed out rather than tapped together. The engine handles
+  four kinds of progression: load, endurance, skill tier and hold range. The
+  comment at the top of `programs/types.ts` still says only load is built. That
+  comment is stale; `programsService.ts` implements all four.
+  The **tap-to-build builder** this entry used to name was deleted on
+  2026-09-23 with the blue-grey component kit it was written in; saved weeks
+  moved from inside Life Mastery to rows under the running programs, where they
+  can finally be started.
 - `timetrack/` — a Toggl Track clone, at `/dashboard/time`. Nineteen tables of
   its own: workspaces, projects, tags, reports, alerts, webhooks. Ids are made
   on the device so two offline devices cannot collide.
