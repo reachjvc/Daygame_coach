@@ -142,12 +142,20 @@ describe("skipping and removing", () => {
 })
 
 describe("swapping a lift", () => {
-  it("opens the same search that adding a lift uses", async () => {
+  it("opens the same search that adding a lift uses, already open", async () => {
     const user = userEvent.setup()
     menu()
     await user.click(screen.getByTestId("lift-swap"))
-    // One list of what this app knows a lift is, not a second that drifts.
-    expect(screen.getByTestId("add-lift")).toBeTruthy()
+    /**
+     * The SEARCH, not the button that opens it. Tapping "Swap this lift" used
+     * to reveal `add-lift` — the search's own closed state, reading "Add a
+     * lift" inside a sheet whose heading already said what was happening. Two
+     * taps to reach a box that should have been focused, labelled as the wrong
+     * action. Found by the browser spec timing out on a box that was not
+     * there.
+     */
+    expect(screen.getByTestId("add-lift-search")).toBeTruthy()
+    expect(screen.queryByTestId("add-lift")).toBeNull()
   })
 })
 

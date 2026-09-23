@@ -102,6 +102,10 @@ interface Props {
   previousUnavailable?: boolean
 }
 
+/** "3:30" — the same shape the menu and the rest bar show. */
+const restClock = (seconds: number) =>
+  `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`
+
 export function LiveWorkoutScreen({
   initial,
   prescription,
@@ -496,6 +500,14 @@ export function LiveWorkoutScreen({
             */
             <div
               key={ex.exerciseId}
+              /**
+                NAMED, so a test can ask about ONE lift's rows. Three lifts on a
+                StrongLifts day each have a "set 1", and an assertion that does
+                not say which one resolves to three elements — which is a test
+                that cannot tell "the squat's row came back" from "some row
+                somewhere exists".
+              */
+              data-testid={`lift-${ex.exerciseId}`}
               className={`rounded-lg border border-border bg-card px-3 py-2.5 ${isSkipped ? "opacity-60" : ""}`}
             >
               <div className="space-y-1">
@@ -529,6 +541,16 @@ export function LiveWorkoutScreen({
                           describe. It read "3 × 0 reps @ 0 kg", which is a plan
                           the app invented and then printed back. */}
                       {addedIds.has(ex.exerciseId) ? "added on the day" : describeSets(ex, unitLabel)}
+                      {/*
+                        THE REST IS ON THE CARD NOW THAT IT IS EDITABLE. It was
+                        a read-only line saying "Rest 3 min (our suggestion)",
+                        which was removed with the old markup — and then the
+                        number had nowhere to be seen at all without opening
+                        the menu, so an edited rest was invisible on the screen
+                        that had just been told about it. Same function as the
+                        menu and the clock: one answer, three places.
+                      */}
+                      {` · rest ${restClock(rest.seconds)}`}
                       {ex.note ? ` · ${ex.note}` : ""}
                       {isSkipped ? " · skipped" : ""}
                     </p>

@@ -427,7 +427,13 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
        * that travels with the tick; this is only for sets the server has.
        */
       if (setId.startsWith("pending:")) {
-        setError("That set has not reached the server yet — it will carry your change when it does.")
+        /**
+         * NOT "it will carry your change", which is what this used to say and
+         * was not true: the queued write replays the set as it was ticked, so
+         * nothing would have carried anything. It is a second or two on a good
+         * connection, and the person can see the row saying so.
+         */
+        setError("That set is still saving — change it in a moment.")
         return
       }
       const seq = ++issued.current

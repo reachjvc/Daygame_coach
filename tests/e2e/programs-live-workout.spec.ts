@@ -18,33 +18,15 @@
  */
 
 import { test, expect, type Page } from "@playwright/test"
-
-/** A phone, because that is where a workout is logged. */
-const PHONE = { width: 390, height: 844 }
+import { PHONE, cleanUp, resetAndEnroll } from "./helpers/training.helper"
 
 /**
- * One program, no workout open, no history. Run in the page so it goes through
- * the real routes with the real session rather than around them.
+ * The phone size and the two account-cleaning helpers now live in
+ * `helpers/training.helper.ts`: the menus spec needs exactly the same pair,
+ * and two copies of "clean the account" is two chances to clean it
+ * differently — which shows up as the NEXT spec failing for a reason that has
+ * nothing to do with its own code.
  */
-async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Promise<void> {
-  await page.evaluate(async (unitSystem) => {
-    const live = await (await fetch("/api/workouts/live")).json()
-    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
-    for (const e of await (await fetch("/api/programs/enrollments")).json()) {
-      const detail = await (await fetch(`/api/programs/enrollments/${e.id}`)).json()
-      for (const l of detail.logs ?? []) {
-        await fetch(`/api/programs/enrollments/${e.id}/log/${l.id}`, { method: "DELETE" })
-      }
-      await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
-      await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
-    }
-    await fetch("/api/programs/enrollments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ programId: "stronglifts-5x5", level: "beginner", unitSystem }),
-    })
-  }, unit)
-}
 
 /**
  * A lift this account has provably never done, by construction.
@@ -77,21 +59,6 @@ async function addOwnLift(page: Page, name: string): Promise<void> {
   await expect(page.getByText(name, { exact: false }).first()).toBeVisible({ timeout: 20000 })
 }
 
-async function cleanUp(page: Page): Promise<void> {
-  await page.evaluate(async () => {
-    const live = await (await fetch("/api/workouts/live")).json()
-    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
-    for (const e of await (await fetch("/api/programs/enrollments")).json()) {
-      const detail = await (await fetch(`/api/programs/enrollments/${e.id}`)).json()
-      for (const l of detail.logs ?? []) {
-        await fetch(`/api/programs/enrollments/${e.id}/log/${l.id}`, { method: "DELETE" })
-      }
-      await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
-      await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
-    }
-  })
-}
-
 /**
  * ONE AT A TIME, ON PURPOSE.
  *
@@ -103,16 +70,30 @@ async function cleanUp(page: Page): Promise<void> {
  */
 test.describe.configure({ mode: "serial" })
 
+/**
+ * When the running test began, a minute of slack back.
+ *
+ * Everything the account gained after this instant is this test's own, because
+ * the `training` project runs one worker on one account — which is what lets
+ * the cleanup remove a FINISHED workout without going anywhere near the seeded
+ * training year.
+ */
+let startedAt = new Date().toISOString()
+
 test.describe("live workout", () => {
   test.beforeEach(async ({ page }) => {
     test.setTimeout(180000)
+    startedAt = new Date(Date.now() - 60_000).toISOString()
     await page.setViewportSize(PHONE)
     await page.goto("/programs")
     await resetAndEnroll(page)
   })
 
   test.afterEach(async ({ page }) => {
-    await cleanUp(page).catch(() => {})
+    // `startedAt` scopes the cleanup to the workouts THIS test opened. Without
+    // it a finished workout dated today stays on the account, and the Tracking
+    // card's `done` state then offers no Start to the test after this one.
+    await cleanUp(page, startedAt).catch(() => {})
   })
 
   test("a set is saved when it is ticked, and is still ticked after a reload", async ({ page }) => {
@@ -219,7 +200,15 @@ test.describe("live workout", () => {
     await expect(summary).toBeVisible({ timeout: 20000 })
     await expect(summary).toContainText(/minutes/i)
     await expect(summary).toContainText(/sets/i)
-    await expect(summary).toContainText(/kg lifted/i)
+    /**
+     * "Volume (kg)", not "kg lifted". The finish sheet stopped drawing its own
+     * figures when the receipt became one component shared with
+     * /programs/workout/[id] (Phase 6 step 19) — and this assertion was left
+     * on the old wording, so this file has been red since that commit. The
+     * browser suite is not in the pre-commit hook, which is how it stayed
+     * red quietly.
+     */
+    await expect(summary).toContainText(/Volume \(kg\)/i)
     // And what the program will ask for next time, per lift.
     await expect(summary).toContainText(/next time/i)
 
@@ -244,12 +233,25 @@ test.describe("live workout", () => {
      * NOW THERE IS A HISTORY, so a heavier set the next session IS a best — and
      * once, not once per set.
      */
+    /**
+     * THROUGH THE DOOR THAT EXISTS, which is not Start any more.
+     *
+     * Having trained today, the card offers "See today's workout" and NO Start
+     * — deliberately: "offering one on a day somebody has finished invites a
+     * second workout for the same session" (`TodayCard`, the `done` state).
+     * This half of the test asserted the removed button and had been failing
+     * silently since that decision landed; the browser suite is not in the
+     * pre-commit hook.
+     *
+     * A second session on one day is a loose workout, which is both the door
+     * the app offers and what a person doing two sessions actually has.
+     */
     await page.goto("/programs")
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
-    await page.getByTestId("start-workout").click()
+    await expect(page.getByTestId("see-todays-workout")).toBeVisible({ timeout: 20000 })
+    await page.getByTestId("start-loose-workout").first().click()
     await page.waitForURL("**/programs/live", { timeout: 20000 })
-    await expect(page.getByTestId("set-row-1").first()).toBeVisible({ timeout: 20000 })
     // The same name again. A lift added on the day lives on the workout, not on
     // the program, so the second session has to add it back — and because the
     // name is the same, the first session's sets are the history it beats.
@@ -271,7 +273,12 @@ test.describe("live workout", () => {
 
     const second = page.getByTestId("workout-summary")
     await expect(second).toBeVisible({ timeout: 20000 })
-    await expect(second).toContainText(/new best/i)
+    /**
+     * "Personal bests", which is what the shared receipt calls the section.
+     * The finish sheet said "New best" while it drew its own figures; one
+     * receipt means one wording, and this assertion was left on the old one.
+     */
+    await expect(second).toContainText(/personal bests/i)
     const best = second.getByRole("listitem").filter({ hasText: new RegExp(String(heavier)) })
     await expect(best).toHaveCount(1)
     await expect(best).toContainText(lift)
@@ -414,7 +421,9 @@ test.describe("live workout", () => {
   expect(afterReload, "and still after a reload").toBe("225")
   expect(storedKg, "stored as kilograms").toBeCloseTo(102.06, 1)
   expect(summary, "the summary must not say kg").not.toMatch(/\bkg\b/)
-  expect(summary).toMatch(/lb lifted/)
+  // "Volume (lb)" — the shared receipt's own label. The finish sheet said
+  // "lb lifted" while it drew its own figures; one receipt, one wording.
+  expect(summary).toMatch(/Volume \(lb\)/)
   expect(summary, "1125 lb of volume, in pounds").toMatch(/1125|1,125/)
   })
 
@@ -583,8 +592,30 @@ test.describe("live workout", () => {
     await expect(page.getByTestId("workout-summary")).toBeVisible({ timeout: 30000 })
     await page.unroute("**/finish")
 
-    // And the next Start is not blocked by the key this workout used.
+    /**
+     * AND THE KEY THIS WORKOUT USED IS SPENT AND GONE.
+     *
+     * That is the mechanism the test is about: the retry key is minted in the
+     * browser and was never cleared, so it outlived the workout it opened and
+     * every later Start was refused by a unique index.
+     *
+     * It used to prove this by pressing Start again — which the card no longer
+     * offers on a day you have finished a session (`TodayCard`'s `done` state,
+     * deliberately: "offering one on a day somebody has finished invites a
+     * second workout for the same session"). So the key is read where it
+     * lives, and the Start is proved to come back by removing today's workout
+     * — which is what tomorrow does anyway.
+     */
+    const keysAfter = await page.evaluate(() =>
+      JSON.parse(window.localStorage.getItem("live-workout-start-key-v1") ?? "{}")
+    )
+    expect(Object.keys(keysAfter as Record<string, string>)).toHaveLength(0)
+
     await page.goto("/programs")
+    await page.evaluate(async () => {
+      const logs = (await (await fetch("/api/health/workout?days=1")).json()) as { id: string }[]
+      for (const l of logs) await fetch(`/api/health/workout?id=${l.id}`, { method: "DELETE" })
+    })
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
     await page.getByTestId("start-workout").click()
@@ -621,8 +652,18 @@ test.describe("live workout", () => {
     })
     await other.close()
 
-    // Back on this device, with the used-up key still in its localStorage.
+    /**
+     * Back on this device, with the used-up key still in its localStorage —
+     * and today's session now finished, which the card answers with "See
+     * today's workout" rather than a Start. Removing that workout is what
+     * tomorrow does; the point of the test is the KEY, which this browser
+     * still holds either way.
+     */
     await page.goto("/programs")
+    await page.evaluate(async () => {
+      const logs = (await (await fetch("/api/health/workout?days=1")).json()) as { id: string }[]
+      for (const l of logs) await fetch(`/api/health/workout?id=${l.id}`, { method: "DELETE" })
+    })
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
     await page.getByTestId("start-workout").click()

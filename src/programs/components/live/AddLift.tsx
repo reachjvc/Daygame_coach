@@ -25,11 +25,23 @@ interface Props {
   /** Lifts already on this screen, so the same one is not offered twice. */
   alreadyHere: string[]
   onAdd: (entry: { exerciseId: string; name: string; libraryId?: string }) => void
+  /**
+   * ALREADY OPEN, for the lift menu's "Swap this lift".
+   *
+   * Tapping "Swap this lift" used to reveal a button reading "Add a lift" —
+   * the search's own closed state, inside a sheet whose heading already said
+   * what was happening. Two taps to reach a box that should have been focused
+   * already, labelled as the wrong action. When the sheet IS the search, the
+   * search is open.
+   */
+  startOpen?: boolean
+  /** Where the X goes when the search is the sheet's whole content. */
+  onCancel?: () => void
 }
 
 
-export function AddLift({ alreadyHere, onAdd }: Props) {
-  const [open, setOpen] = useState(false)
+export function AddLift({ alreadyHere, onAdd, startOpen = false, onCancel }: Props) {
+  const [open, setOpen] = useState(startOpen)
   const [query, setQuery] = useState("")
 
   const here = new Set(alreadyHere.map((n) => n.toLowerCase()))
@@ -88,8 +100,11 @@ export function AddLift({ alreadyHere, onAdd }: Props) {
         <button
           type="button"
           onClick={() => {
-            setOpen(false)
             setQuery("")
+            // Back to the menu when this search IS the sheet; back to the
+            // "Add a lift" button when it is the row on the screen.
+            if (onCancel) onCancel()
+            else setOpen(false)
           }}
           aria-label="Stop adding a lift"
           className="flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent sm:size-9"

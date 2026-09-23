@@ -135,8 +135,15 @@ describe("the rest clock", () => {
      * looks like a broken test rather than a loaded machine. Three sessions
      * share this checkout and run the suite at once; fifteen seconds is not a
      * weaker assertion, it is the same assertion able to report itself.
+     *
+     * Both numbers were raised again after a full-suite run with three
+     * sessions on one machine missed the five-second wait as well. The
+     * behaviour under test is a state update and a `localStorage` write; the
+     * only thing a longer deadline gives up is how quickly a REAL regression
+     * is reported, and a spurious failure that blocks every commit in the
+     * checkout costs more than that.
      */
-    await waitFor(() => expect(screen.queryByTestId("rest-bar")).toBeNull(), { timeout: 5000 })
+    await waitFor(() => expect(screen.queryByTestId("rest-bar")).toBeNull(), { timeout: 12_000 })
   }, 15_000)
 
   it("stays when the set is merely queued", async () => {

@@ -99,6 +99,8 @@ export function LiftMenu({
           {/* The same search as adding a lift: one list of what this app knows
               a lift is, rather than a second one that drifts from it. */}
           <AddLift
+            startOpen
+            onCancel={() => setSwapping(false)}
             alreadyHere={alreadyHere}
             onAdd={(entry) => {
               onAdjust({

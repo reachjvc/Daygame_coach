@@ -51,6 +51,7 @@ export default defineConfig({
         // Training tests run in their own project: they share one account and
         // each wipes it clean, so in parallel they delete each other's data.
         /programs-live-workout\.spec\.ts/,
+        /programs-live-menus\.spec\.ts/,
         /programs-drafts\.spec\.ts/,
         /programs-history-progress\.spec\.ts/,
         /life-mastery-saved-weeks\.spec\.ts/,
@@ -142,6 +143,10 @@ export default defineConfig({
       name: 'training',
       testMatch: [
         /programs-live-workout\.spec\.ts/,
+        // The same screen's menus. A second file because both wipe the one
+        // training account clean, so they cannot run beside each other — and
+        // because a broken menu should not report itself as a broken tick.
+        /programs-live-menus\.spec\.ts/,
         /programs-drafts\.spec\.ts/,
         /programs-history-progress\.spec\.ts/,
         /life-mastery-saved-weeks\.spec\.ts/,
