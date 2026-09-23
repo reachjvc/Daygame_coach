@@ -55,13 +55,23 @@ async function cleanUp(page: Page): Promise<void> {
   })
 }
 
-/** Start a catalogue program the way a person does: on the Training page. */
-async function startStrongLifts(page: Page): Promise<void> {
+/**
+ * Start a catalogue program the way a person does: on the Training page.
+ *
+ * WAITS FOR `?program=`, NOT FOR `/programs`. `ProgramDetail` only sets that
+ * parameter once the enrolment POST has come back, and we are already on
+ * `/programs` when the button is pressed — so `waitForURL(/\/programs/)` was
+ * true before the request had left, and a test that navigated away next raced
+ * its own fixture. It passed for days and then did not.
+ */
+async function startFromCatalogue(page: Page, name: RegExp): Promise<void> {
   await page.goto("/programs?view=programs", { waitUntil: "networkidle" })
-  await page.getByRole("button", { name: /StrongLifts/i }).first().click()
+  await page.getByRole("button", { name }).first().click()
   await page.getByTestId("start-program").click()
-  await page.waitForURL(/\/programs/, { timeout: 30000 })
+  await page.waitForURL(/[?&]program=/, { timeout: 30000 })
 }
+
+const startStrongLifts = (page: Page) => startFromCatalogue(page, /StrongLifts/i)
 
 /** The Templates step's card, once the enrollment read has landed. */
 async function openTemplates(page: Page) {
@@ -173,10 +183,7 @@ test.describe("Life Mastery and the training database", () => {
   }) => {
     await startStrongLifts(page)
     // A second discipline, so the first is not paused by starting it.
-    await page.goto("/programs?view=programs", { waitUntil: "networkidle" })
-    await page.getByRole("button", { name: /Couch to 5K/i }).first().click()
-    await page.getByTestId("start-program").click()
-    await page.waitForURL(/\/programs/, { timeout: 30000 })
+    await startFromCatalogue(page, /Couch to 5K/i)
 
     const card = await openTemplates(page)
     await expect(card).toContainText("2 programs running")

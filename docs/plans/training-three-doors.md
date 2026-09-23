@@ -1,8 +1,32 @@
 # Training, from three doors — plan
 
-**Status:** walked 2026-09-14, drafted and attacked 2026-09-17, not started. Follows `training-rebuild.md` (2026-09-09), whose ten
-phases were executed on branch `training-rebuild` between 2026-09-09 and 2026-09-11. This plan is
-what is still wrong after that work, found by using the feature rather than reading about it.
+**Status: all eleven phases executed, 2026-09-17 to 2026-09-23, on branch
+`training-rebuild`.** Walked 2026-09-14, drafted and attacked 2026-09-17.
+Follows `training-rebuild.md` (2026-09-09), whose ten phases ran between
+2026-09-09 and 2026-09-11. This plan is what was still wrong after that work,
+found by using the feature rather than reading about it.
+
+**What is still owed, and both are the owner's:**
+
+1. `supabase/pending-owner-approval/20260923150000_delete_and_revise_program_workout.sql`
+   — its two `GRANT EXECUTE` lines are a permission change. Nothing calls the
+   two functions, so applying it changes nothing on its own and not applying it
+   breaks nothing; Phase 7's step 7 finishes when it is approved and
+   `deleteWorkoutLog`/`reviseWorkout` are pointed at the RPCs.
+2. Repository secrets `TEST_USER_TRAINING_EMAIL` and `TEST_USER_TRAINING_PASSWORD`.
+   Phase 10 step 5 moved the four browser training projects onto their own
+   account; until the secrets exist the CI training jobs fail at login with the
+   variable names in the message.
+
+**Where the executor departed from the text, all argued in the commit messages:**
+the plan's 132.5 lb conversion (`roundToLoadable`'s barbell path gives 130), its
+`file:line` type-floor allowlist (line numbers go stale; a per-file count does
+not), `cursor.sessionCount` as a session count (it counts skips), adopting
+nothing with two programs running (the Systems card then draws nothing at all),
+`NsRoutineProgram` growing three fields (Phase 2 narrowed it to an id on
+purpose), and rule (c) of Phase 9 step 13 (`dayNameRule.test.ts` already owns
+it). Two of the plan's own numbers were wrong when measured: the sleep ceilings
+(5/4/1 against a real 4/5/0) and that conversion.
 
 **Approved 2026-09-17 — "allow everything".** Every recommendation in this document is taken:
 the 8 blockers, the 27 questions below, and the 68 open questions inside the phases. The executor
