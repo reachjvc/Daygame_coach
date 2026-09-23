@@ -23,8 +23,23 @@ test("shows what each workout was, and what the weeks added up to", async ({ pag
   await page.setViewportSize({ width: 390, height: 900 })
   await page.goto("/programs")
   // Seed a couple of real workouts so both tabs have something to show.
+  /**
+   * RELATIVE TO TODAY, NOT THREE DATES IN SEPTEMBER 2026.
+   *
+   * The seed was `2026-09-01`, `-03` and `-05`, which worked on the day it was
+   * written and had an expiry date nobody had noticed: Progress charts the last
+   * EIGHT WEEKS, so from November those three workouts fall off the end of it
+   * and this test starts failing for a reason that has nothing to do with the
+   * code. A seed that ages out is a test with a fuse in it.
+   *
+   * Twenty, eighteen and sixteen days back: comfortably inside the eight weeks,
+   * and far enough from today that they cannot collide with a workout another
+   * test seeded for "now".
+   */
+  const daysAgo = (n: number) =>
+    new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10)
   const made: string[] = []
-  for (const d of ["2026-09-01", "2026-09-03", "2026-09-05"]) {
+  for (const d of [daysAgo(20), daysAgo(18), daysAgo(16)]) {
     made.push(
       await seedFinishedWorkout(page, {
         startedAt: `${d}T10:00:00.000Z`,
@@ -596,8 +611,11 @@ test("every control on History and Progress is thumb-sized", async ({ page }) =>
   await page.setViewportSize({ width: 390, height: 900 })
   await page.goto("/programs")
 
+  // Relative for the same reason as the seed at the top of this file: a fixed
+  // date in September 2026 falls off Progress's eight-week window in November,
+  // and the failure would read as "the tab has no controls".
   const seeded = await seedFinishedWorkout(page, {
-    startedAt: "2026-09-02T10:00:00.000Z",
+    startedAt: `${new Date(Date.now() - 19 * 86_400_000).toISOString().slice(0, 10)}T10:00:00.000Z`,
     sets: [{ exercise: "ZZTap Squat", weightKg: 100, reps: 5, setNumber: 1 }],
   })
 
