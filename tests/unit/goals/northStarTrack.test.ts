@@ -10,7 +10,7 @@
 
 import { describe, it, expect } from "vitest"
 import { addArea, addDailyField, addExperiences, addGoal, addCustomStep, addPractice, addSubStep, inferStepDestination, updateStep, dailyFieldsFor, dailyRating, dayNote, emptyNsPlan, journalEntry, journalHistory, linkGoal, loadNsPlan, moveDailyField, moveSubStep, placeStep, removeDailyField, removeSubStep, renameDailyField, renameSubStep, serializeNsPlan, setAnswer, setAreaReview, setDailyFieldKind, setDailyFieldSource, setDailyRating, setDayNote, setJournalEntry, setNorthStar, setValues, subStepProgress, subStepsFor, toggleExperienceDone, updateGoal, updateRoutine } from "@/src/goals/northStarService"
-import { REVIEW_PROMPTS, STAR_ANCHOR, STAR_PROMPTS, TAB_ORDER } from "@/src/goals/data/northStar"
+import { JOURNAL_COPY, REVIEW_PROMPTS, STAR_ANCHOR, STAR_PROMPTS, TAB_ORDER } from "@/src/goals/data/northStar"
 import {
   activityPerWeek,
   areaSlug,
@@ -20,6 +20,7 @@ import {
   readSource,
   readSources,
   groupLogged,
+  journalArchive,
   groupSummary,
   standingItems,
   trackGroups,
@@ -674,14 +675,27 @@ describe("the text fields you hang off your own goals", () => {
     expect(journalEntry(renamed, MONDAY, fieldId)).toBe("Openers land better slower")
   })
 
-  it("takes the answers with it when the field itself is deleted", () => {
+  it("KEEPS the answers when the field itself is deleted, and the archive labels them", () => {
+    // Reversed 2026-09-23. This asserted the opposite — that deleting a
+    // question deleted months of writing under it — on the argument that an
+    // orphan "is unreadable and uneditable". `journalArchive` reads it fine and
+    // says so out loud, which is what this now checks: the promise on the
+    // screen and the behaviour in the service have to be the same promise.
     const { plan, fieldId } = seedField()
     const written = setJournalEntry(plan, MONDAY, fieldId, "Openers land better slower")
     const gone = removeDailyField(written, fieldId)
+
     expect(gone.fields).toEqual([])
-    // Not orphaned: an entry keyed to a field nothing can name is unreadable
-    // and uneditable, so keeping it keeps nothing.
-    expect(gone.journal).toEqual({})
+    expect(journalEntry(gone, MONDAY, fieldId)).toBe("Openers land better slower")
+
+    const day = journalArchive(gone, MONDAY).find((d) => d.date === MONDAY)
+    expect(day?.entries).toEqual([
+      { id: fieldId, question: JOURNAL_COPY.gone, text: "Openers land better slower", missing: true },
+    ])
+
+    // Closed, not erased: nothing new can be written under a question that is gone.
+    expect(journalEntry(setJournalEntry(gone, MONDAY, fieldId, "later thought"), MONDAY, fieldId))
+      .toBe("Openers land better slower")
   })
 
   it("moves a field between a goal and the day itself", () => {
@@ -723,11 +737,32 @@ describe("the text fields you hang off your own goals", () => {
     expect(journalEntry(reloaded, MONDAY, fieldId)).toBe("Openers land better slower")
   })
 
-  it("drops an answer whose field did not survive the load", () => {
+  it("keeps an answer whose field did not survive the load", () => {
     const { plan, fieldId } = seedField()
     const raw = JSON.parse(serializeNsPlan(setJournalEntry(plan, MONDAY, fieldId, "text")))
     raw.fields = []
-    expect(loadNsPlan(JSON.stringify(raw))!.journal).toEqual({})
+    expect(loadNsPlan(JSON.stringify(raw))!.journal).toEqual({ [MONDAY]: { [fieldId]: "text" } })
+  })
+
+  /**
+   * THE ONE THAT SHIPPED, and the reason the prune is gone entirely.
+   *
+   * A routine step whose own words ask a question is the other kind of asker —
+   * `journalQuestionIds` admits it and `setJournalEntry` accepts the write —
+   * but it was never in `fields`, so the loader dropped every answer under it
+   * on the very next page open. Silently: a missing entry reads as a day
+   * somebody wrote nothing.
+   */
+  it("keeps an answer written under a routine step's own question, across a reload", () => {
+    const seeded = addCustomStep(emptyNsPlan(), emptyNsPlan().routines[0].id, "Write three gratitudes", 5, 7)
+    const routineId = seeded.routines[0].id
+    const stepId = seeded.routines[0].steps[0].id
+    const asking = updateStep(seeded, routineId, stepId, { asks: "What are you grateful for?" })
+    const written = setJournalEntry(asking, MONDAY, stepId, "coffee, the walk, the quiet")
+    expect(journalEntry(written, MONDAY, stepId)).toBe("coffee, the walk, the quiet")
+
+    const reloaded = loadNsPlan(serializeNsPlan(written))!
+    expect(journalEntry(reloaded, MONDAY, stepId)).toBe("coffee, the walk, the quiet")
   })
 
   it("loads a plan saved before any of this existed", () => {

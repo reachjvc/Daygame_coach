@@ -56,4 +56,5 @@ above only destroyed data because the correction screen edited the year-long
 list it happened to be showing. Anything that replaces rows wholesale reads its
 own subject, and refuses to open when that read fails.
 
-**A swallowed `console.error` looks exactly like a successful save.** When the user reports "it won't save", `supabase db query --linked` is the ground truth.
+**A swallowed `console.error` looks like a successful save.** When the user
+reports "it won't save", `npx supabase db query --linked` is the ground truth.

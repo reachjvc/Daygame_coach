@@ -1435,6 +1435,7 @@ COMMENT ON COLUMN program_enrollments.replay_events IS
 -- the moment it was written. Mirrored from:
 --   supabase/migrations/20260922100000_life_plan_tables.sql
 --   supabase/migrations/20260922110000_save_life_plan.sql
+--   supabase/migrations/20260923130000_season_focus_is_any_node.sql
 --
 -- ONE TEST-CONTAINER ADAPTATION, the same one the beta tables above make and
 -- for the same reason: there is no `auth.users` in this container, so every
@@ -2171,11 +2172,16 @@ CREATE TABLE IF NOT EXISTS life_plan_day_journal (
 --
 -- Added after the areas table exists, because it points into it.
 -- ============================================================================
+-- Any node, not only an area: the focus is usually a GOAL. And the column list
+-- on SET NULL, because a two-column key with a bare SET NULL nulls `user_id`
+-- too and `user_id` is NOT NULL, so the parent delete aborted the whole save.
+-- See supabase/migrations/20260923130000_season_focus_is_any_node.sql.
 DO $$ BEGIN
   ALTER TABLE life_plans
     ADD CONSTRAINT life_plans_season_focus_fk
     FOREIGN KEY (season_focus_id, user_id)
-    REFERENCES life_plan_areas (id, user_id) ON DELETE SET NULL;
+    REFERENCES life_plan_nodes (id, user_id)
+    ON DELETE SET NULL (season_focus_id);
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 

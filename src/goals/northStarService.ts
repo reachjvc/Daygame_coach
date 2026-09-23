@@ -861,17 +861,36 @@ export function normalizeNsPlan(parsed: unknown): NsPlan | null {
     }
   }
 
-  // Answers to fields that still exist. A field the user deleted took its
-  // answers with it deliberately, so a stale entry here is a leftover, not a
-  // record: it can never be shown and never be edited.
-  const fieldIds = new Set(fields.map((f) => f.id))
+  /**
+   * EVERY ANSWER IS KEPT. Nothing here decides a diary entry is stale.
+   *
+   * This used to keep only entries whose key was still in `fields`, on the
+   * argument that an answer to a deleted question "can never be shown and never
+   * be edited". Both halves were wrong, and it cost writing on every page load:
+   *
+   * - **It can be shown.** `journalArchive` looks each key up and falls back to
+   *   `JOURNAL_COPY.gone` with `missing: true` — it is built to render exactly
+   *   this and had simply never been handed one.
+   * - **`fields` was never the whole set of askers.** A routine step whose own
+   *   words ask for words is the other one: `journalQuestionIds` admits both and
+   *   `setJournalEntry` accepts a write for either. So answering the seeded
+   *   "Write three gratitudes" put the text under a STEP's id, which was in
+   *   neither `fields` nor this set, and the next load dropped it. Silently —
+   *   and a missing entry looks exactly like a day somebody wrote nothing.
+   *   Measured on 2026-09-23: `{"2026-09-23":{"s5":"…"}}` in, `{}` out.
+   *
+   * Sixty lines up, `loggableIds` already argues this for ticks, in a comment
+   * saying the prune "would throw every one of those ticks away on the next
+   * reload". A tick is a checkbox; this is somebody's diary. The rule now: what
+   * was written in words is kept, and the screen says when its question is gone.
+   */
   const journal: Record<string, Record<string, string>> = {}
   if (obj.journal && typeof obj.journal === "object") {
     for (const [date, v] of Object.entries(obj.journal as Record<string, unknown>)) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !v || typeof v !== "object") continue
       const row: Record<string, string> = {}
       for (const [fieldId, text] of Object.entries(v as Record<string, unknown>)) {
-        if (fieldIds.has(fieldId) && typeof text === "string" && text.trim()) row[fieldId] = text
+        if (typeof text === "string" && text.trim()) row[fieldId] = text
       }
       if (Object.keys(row).length > 0) journal[date] = row
     }
@@ -3156,20 +3175,23 @@ export function moveDailyField(plan: NsPlan, id: string, targetId: string | null
 }
 
 /**
- * Delete a field AND everything written under it.
+ * Stop asking the question. KEEP EVERYTHING WRITTEN UNDER IT.
  *
- * The answers go with it rather than being left keyed to an id nothing can
- * name: an orphan entry can never be shown or edited again, so keeping it is
- * not keeping anything. The button that calls this says so out loud.
+ * This deleted the answers until 2026-09-23, on the argument that "an orphan
+ * entry can never be shown or edited again, so keeping it is not keeping
+ * anything". It can be shown: `journalArchive` already renders an entry whose
+ * question is gone, under `JOURNAL_COPY.gone` and flagged `missing`, and says
+ * in its own comment that dropping those would be "deleting somebody's diary to
+ * make a join easier". The docstring here and that comment could not both be
+ * true; this one was the one nobody had checked against the screen.
+ *
+ * So the field goes and the writing stays. `journalQuestionIds` no longer admits
+ * the id, so nothing new can be written under it — a closed question, not an
+ * erased one.
  */
 export function removeDailyField(plan: NsPlan, id: string, now = nowIso()): NsPlan {
   if (!plan.fields.some((f) => f.id === id)) return plan
-  const journal: Record<string, Record<string, string>> = {}
-  for (const [date, row] of Object.entries(plan.journal)) {
-    const kept = Object.fromEntries(Object.entries(row).filter(([fieldId]) => fieldId !== id))
-    if (Object.keys(kept).length > 0) journal[date] = kept
-  }
-  return touch({ ...plan, fields: plan.fields.filter((f) => f.id !== id), journal }, now)
+  return touch({ ...plan, fields: plan.fields.filter((f) => f.id !== id) }, now)
 }
 
 /**
@@ -4940,6 +4962,25 @@ export function libraryStepsInStack(routine: NsRoutine): Set<string> {
 export function practiceIsOn(plan: NsPlan, blueprintId: string, libraryStepId: string): boolean {
   const routine = plan.routines.find((r) => r.blueprintId === blueprintId)
   return !!routine && routineHasLibraryStep(routine, libraryStepId)
+}
+
+/**
+ * THE ID A TICK GOES UNDER, given the library entry somebody pressed.
+ *
+ * A library entry's name (`star`, `incantations`) and the id of the step the
+ * plan minted for it are two different things — that separation is what Phase 0
+ * existed to create, because `stretch` could otherwise be both a morning step
+ * and a night step. Everything that TICKS must go through here.
+ *
+ * Without it, Recap's "start this practice" ticked the library's name: nothing
+ * in the plan carried that id, so `plan.logged` gained a line no row could ever
+ * match and the box the person had just pressed drew itself unticked on the
+ * very next render. Under the day tables it would be worse than a wrong
+ * checkbox — a tick with no node to point at.
+ */
+export function stepIdForLibraryStep(plan: NsPlan, blueprintId: string, libraryStepId: string): string | null {
+  const routine = plan.routines.find((r) => r.blueprintId === blueprintId)
+  return routine?.steps.find((s) => s.libraryStepId === libraryStepId)?.id ?? null
 }
 
 /**

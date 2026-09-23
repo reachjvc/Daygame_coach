@@ -65,7 +65,7 @@ import * as ns from "@/src/goals/northStarService"
 import * as nsTrack from "@/src/goals/northStarTrackService"
 import { SNAPSHOT_DEBOUNCE_MS, sendSnapshot, startSync, stopSync, syncIsOff } from "@/src/goals/planSnapshotClient"
 import { fetchLifePlan, newNodeId, saveLifePlanFromBrowser, startLifePlan } from "@/src/goals/lifePlanClient"
-import { LIFE_PLAN_IMPORTED_KEY, canSave, decideOnLoad, syncNotice, type SyncState } from "@/src/goals/lifePlanSync"
+import { LIFE_PLAN_IMPORTED_KEY, canSave, decideOnLoad, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
 import { StarTab } from "./StarTab"
 import { NowTab } from "./NowTab"
 import { FocusTab } from "./FocusTab"
@@ -221,6 +221,44 @@ export function NorthStarFlow({
   const [nodeIds] = useState<Map<string, string>>(() => new Map())
   const [serverState, setServerState] = useState<SyncState>("unknown")
   const [serverNote, setServerNote] = useState("")
+  /**
+   * Whether this browser refused to store the plan.
+   *
+   * Its own state rather than folded into `serverNote`, because it is a
+   * different fact with a different cure: the account may be saving perfectly
+   * while the local cache is dead, and the person needs to know that closing
+   * the tab now loses whatever the last save did not carry.
+   */
+  const [storageRefused, setStorageRefused] = useState(false)
+  /**
+   * The decision `lifePlanSync` actually made, kept so `canSave` is asked about
+   * it rather than about one invented at the call site.
+   *
+   * It was invented at the call site until 2026-09-23: the save effect built
+   * `{ kind: "use-server", plan, revision }` fresh every render and handed THAT
+   * to `canSave`, so the guard could never answer "stay-local" and the rule it
+   * exists to enforce — a read that failed never leads to a write — was carried
+   * instead by a separate `serverState` check a line below. Two statements of
+   * one rule, one of them tested and dead.
+   */
+  const [decision, setDecision] = useState<SyncDecision | null>(null)
+  /**
+   * The rows last accepted by the server, as text.
+   *
+   * The save effect compares against this before sending. Without it the effect
+   * is its own trigger: `revision` and `serverState` are in its dependency list
+   * and its own success handler writes both, so every completed save re-armed
+   * the timer and the flow PUT the whole plan every four seconds forever, on a
+   * tab nobody had typed into — bumping the revision each time, which is what
+   * made any second device permanently stale.
+   */
+  const lastSent = useRef<string | null>(null)
+  /**
+   * One empty save is allowed through, because somebody pressed "clear
+   * everything" and an empty plan is exactly what they asked the account to
+   * hold. Consumed on the next successful save.
+   */
+  const clearOnce = useRef(false)
   /** What this browser held on the way in, captured once for the import. */
   const browserCopy = useRef<NsPlan | null>(null)
   /**
@@ -347,7 +385,27 @@ export function NorthStarFlow({
     // Returns the same object when nothing changed, so this does not write to
     // storage on every mount.
     setPlan((p) => ns.reconcileProgramReference(p, enrollments))
-  }, [loaded, programsLoading, programsError, enrollments])
+    /**
+     * `plan` IS A DEPENDENCY, and leaving it out lost the adoption.
+     *
+     * Two effects own `plan`, and the load order decided the answer. This one
+     * ran the moment the enrollment list arrived; the account's plan arrives
+     * from a SEPARATE request and lands as a wholesale `setPlan(decision.plan)`
+     * at the end of an async load — which threw the reference away, and with
+     * `plan` out of the list nothing ever re-adopted. So starting a program on
+     * your phone and opening the laptop left the Systems step saying nothing
+     * was linked, for as long as the tab stayed open: the exact scenario
+     * `tests/e2e/life-mastery-program-link.spec.ts` was written to catch. It
+     * caught it the day the shared test account acquired a plan row — before
+     * that the load had nothing to overwrite with, and the bug was invisible.
+     *
+     * It terminates because `reconcileProgramReference` returns the SAME object
+     * when nothing changed, so the re-run after an adoption is a no-op and
+     * React bails out of the render. Both of its writing paths settle in one
+     * step: an adoption leaves the reference referenced, and a detach leaves
+     * nothing referenced.
+     */
+  }, [loaded, programsLoading, programsError, enrollments, plan])
 
   /** The five states the Systems step can be in about its training week. */
   const linkedProgram = useMemo((): LinkedProgram => {
@@ -367,11 +425,53 @@ export function NorthStarFlow({
     }
   }, [plan, enrollments, programsLoading, programsError])
 
-  // Saving before the load has finished would write the empty plan over the
-  // saved one on every refresh.
+  /**
+   * TODAY KEEPS UP WITH THE CLOCK.
+   *
+   * It used to be read once, in the mount effect, and never again — so a tab
+   * left open across midnight went on ticking yesterday. This flow is the one
+   * people leave open: it is where the morning routine gets ticked off.
+   *
+   * Polled rather than timed to the exact boundary because a sleeping laptop
+   * does not fire a timer set eleven hours ago, and `visibilitychange` catches
+   * the case that matters most — picking the phone up the next morning.
+   */
   useEffect(() => {
     if (!loaded) return
-    window.localStorage.setItem(NORTH_STAR_STORAGE_KEY, ns.serializeNsPlan(plan))
+    const check = () => setToday((was) => {
+      const now = getTodayInTimezone(timezone)
+      return now === was ? was : now
+    })
+    const timer = window.setInterval(check, 60_000)
+    document.addEventListener("visibilitychange", check)
+    window.addEventListener("focus", check)
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener("visibilitychange", check)
+      window.removeEventListener("focus", check)
+    }
+  }, [loaded, timezone])
+
+  /**
+   * The browser's copy, rewritten on every change.
+   *
+   * Guarded before the load finishes, or a refresh writes the empty plan over
+   * the saved one. Guarded against storage REFUSING too — a private window, a
+   * full quota, blocked site data — because this is a bare `setItem` inside an
+   * effect, and the throw takes the render down with it. The sibling write a
+   * few lines away has been wrapped for exactly that reason since it was
+   * written; this one never was.
+   */
+  useEffect(() => {
+    if (!loaded) return
+    try {
+      window.localStorage.setItem(NORTH_STAR_STORAGE_KEY, ns.serializeNsPlan(plan))
+      setStorageRefused(false)
+    } catch {
+      // Said out loud rather than swallowed: with no storage and no account
+      // this plan lives in React state and dies with the tab.
+      setStorageRefused(true)
+    }
   }, [plan, loaded])
 
   /**
@@ -391,13 +491,16 @@ export function NorthStarFlow({
     if (!loaded) return
     let cancelled = false
     void (async () => {
-      let imported = false
+      // The old import marker is cleared rather than read. It recorded that an
+      // import had run, and it was written four seconds BEFORE the upload it
+      // was recording — so an interrupted first visit left "done" beside an
+      // empty plan row, and the next load wrote that empty row over the real
+      // plan. `lifePlanSync` now asks the row's own revision instead. Clearing
+      // it means no later version of this file can find it and believe it.
       try {
-        imported = window.localStorage.getItem(LIFE_PLAN_IMPORTED_KEY) === "1"
+        window.localStorage.removeItem(LIFE_PLAN_IMPORTED_KEY)
       } catch {
-        // Storage refused. Treating that as "already imported" is the safe way
-        // round: it declines to import rather than importing on every load.
-        imported = true
+        /* Storage refused; nothing reads the key either way. */
       }
 
       const server = await fetchLifePlan()
@@ -406,8 +509,8 @@ export function NorthStarFlow({
       const decision = decideOnLoad({
         server: server === undefined ? undefined : { plan: server.plan, revision: server.revision },
         browser: browserCopy.current,
-        imported,
       })
+      setDecision(decision)
 
       if (decision.kind === "stay-local") {
         setServerState("offline")
@@ -421,6 +524,10 @@ export function NorthStarFlow({
         setPlanId(server.planId)
         setRevision(decision.revision)
         setPlan(decision.plan)
+        // This IS what the server holds, so the save effect has nothing to
+        // send. Without this the first thing the flow does after loading a
+        // plan is PUT it straight back.
+        lastSent.current = sendableFingerprint(decision.plan)
         setServerState("saved")
         return
       }
@@ -444,17 +551,11 @@ export function NorthStarFlow({
       setPlanId(started.id)
       setRevision(started.revision)
 
-      if (decision.kind === "import-browser") {
-        // Marked BEFORE the save, not after. A save that half-succeeds and a
-        // marker that never got written would import again on the next load,
-        // and a duplicate of everything is worse than an import that has to be
-        // retried by hand.
-        try {
-          window.localStorage.setItem(LIFE_PLAN_IMPORTED_KEY, "1")
-        } catch {
-          /* Storage refused; the account check below still guards the second run. */
-        }
-      }
+      // NOTHING IS RECORDED HERE. The import is finished when the save lands
+      // and the row's revision moves off 0, which is a fact on the account
+      // rather than a promise in this browser. An interrupted import therefore
+      // simply happens again on the next visit, which is the correct outcome
+      // and the one the marker made impossible.
       setServerState("saved")
     })()
     return () => {
@@ -470,10 +571,21 @@ export function NorthStarFlow({
    * won, and writing over it is the one thing the lock exists to prevent.
    */
   useEffect(() => {
-    if (!canSave({ kind: "use-server", plan, revision }, loaded)) return
+    // The REAL decision, not one built here. See `decision` above.
+    if (!canSave(decision, loaded)) return
     if (serverState === "stale" || serverState === "offline") return
-    // Nothing written yet: no save, and no plan row either.
-    if (ns.planIsUntouched(plan)) return
+    // One save at a time. Without this the "saving" state change re-enters this
+    // effect and arms a second timer while the first request is still open.
+    if (serverState === "saving") return
+    // Nothing written yet: no save, and no plan row either — unless this IS the
+    // clear, in which case an empty plan is the thing to send.
+    if (ns.planIsUntouched(plan) && !clearOnce.current) return
+    // Nothing the save SENDS has changed since the server took it. A tick, a
+    // day note and a journal line all make a new plan object and none of them
+    // travels in this request; sending it anyway moved the revision and made
+    // the other device stale for nothing.
+    const fingerprint = sendableFingerprint(plan)
+    if (fingerprint === lastSent.current) return
     const timer = window.setTimeout(() => {
       setServerState("saving")
       void (async () => {
@@ -497,6 +609,10 @@ export function NorthStarFlow({
       })().then((out) => {
         if (!out) return
         if (out.ok) {
+          // Recorded only on success, so a failed save is retried rather than
+          // remembered as sent.
+          lastSent.current = fingerprint
+          clearOnce.current = false
           setRevision(out.revision)
           setServerState("saved")
           setServerNote("")
@@ -507,7 +623,7 @@ export function NorthStarFlow({
       })
     }, SNAPSHOT_DEBOUNCE_MS)
     return () => window.clearTimeout(timer)
-  }, [plan, planId, revision, loaded, serverState, nodeIds])
+  }, [plan, planId, revision, loaded, serverState, nodeIds, decision])
 
   /**
    * The same plan, mirrored to the server a few seconds after you stop typing.
@@ -697,12 +813,18 @@ export function NorthStarFlow({
      */
     onTickPractice: (stepId: string) =>
       setPlan((p) => nsTrack.toggleStepLogged(p, today ?? ns.todayISO(), stepId)),
-    onTrackPractice: (blueprintId: string, stepId: string) =>
+    onTrackPractice: (blueprintId: string, libraryStepId: string) =>
       setPlan((p) => {
-        const tracked = ns.trackPractice(p, blueprintId, stepId)
+        const tracked = ns.trackPractice(p, blueprintId, libraryStepId)
         // Unchanged means the library moved under us; ticking a step that is
         // not there would write a log line nothing can ever show.
         if (tracked === p) return p
+        // THE STEP'S OWN ID, NOT THE LIBRARY'S. `trackPractice` mints a counter
+        // id for the new step and parks the library's name in `libraryStepId`;
+        // ticking the name wrote a log line no row could match, so the box just
+        // pressed drew itself unticked.
+        const stepId = ns.stepIdForLibraryStep(tracked, blueprintId, libraryStepId)
+        if (!stepId) return tracked
         return nsTrack.stepLogged(tracked, today ?? ns.todayISO(), stepId)
           ? tracked
           : nsTrack.toggleStepLogged(tracked, today ?? ns.todayISO(), stepId)
@@ -892,6 +1014,17 @@ export function NorthStarFlow({
   }
 
   const reset = () => {
+    /**
+     * CLEARING REACHES THE ACCOUNT, and until 2026-09-23 it did not.
+     *
+     * `emptyNsPlan()` is `planIsUntouched`, which is the save effect's "nothing
+     * to send" guard — so pressing this cleared the browser, sent nothing, and
+     * the next load read the untouched plan back off the account and restored
+     * the whole thing. The plan somebody deliberately threw away came back.
+     *
+     * One permitted empty save, consumed by the next run of the effect.
+     */
+    clearOnce.current = true
     setPlan(ns.emptyNsPlan())
     /* A NEW RUN, because the id counter starts again at g1.
        Without this the next plan's first goal would carry the tag of the
@@ -962,7 +1095,12 @@ export function NorthStarFlow({
               <button onClick={resetGoals} className="text-amber-200 hover:text-amber-100">
                 the goals and the season, keep my 10s
               </button>
-              <button onClick={reset} className="text-rose-300 hover:text-rose-200">everything</button>
+              {/* "everything" has always included the day half — every rating,
+                  every tick, every day note and the whole journal — and never
+                  said so. It is the part that cannot be rewritten from memory. */}
+              <button onClick={reset} className="text-rose-300 hover:text-rose-200">
+                everything, including my journal and every day I have tracked
+              </button>
               <button onClick={() => setConfirmReset(false)} className="text-zinc-500 hover:text-zinc-300">nothing, close this</button>
             </span>
           ) : (
@@ -975,7 +1113,11 @@ export function NorthStarFlow({
         <header className="mb-6">
           <h1 className="text-2xl font-semibold">Life Mastery</h1>
           <p className="text-sm text-zinc-400 mt-1">
-            Your north star, the areas under it, the goals that get you there, and an honest look at where you are. Everything saves as you type.
+            {/* "Everything saves as you type" was here until 2026-09-23 and was
+                false for the whole day half — ratings, ticks, the day note and
+                every journal answer live in this browser only. It goes back
+                when the day route lands and makes it true. */}
+            Your north star, the areas under it, the goals that get you there, and an honest look at where you are.
           </p>
         </header>
 
@@ -1494,6 +1636,11 @@ export function NorthStarFlow({
                 research copy sent". Silent while all is well. */}
             {serverNote && (
               <span className="block text-amber-200/80 mb-0.5">{serverNote}</span>
+            )}
+            {storageRefused && (
+              <span className="block text-amber-200/80 mb-0.5">
+                This browser will not let the page store anything. Your work is only in this tab.
+              </span>
             )}
             {!plan.updatedAt ? "Nothing written yet" : serverState === "saved" ? (
               <>Saved to your account. </>

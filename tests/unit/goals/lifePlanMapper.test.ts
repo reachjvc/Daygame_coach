@@ -382,3 +382,38 @@ function stripKey<T extends object, K extends keyof T>(obj: T, key: K): T {
 function localOf(rows: { nodes: { id: string; local_id: string }[] }, uuid: string): string {
   return rows.nodes.find((n) => n.id === uuid)?.local_id ?? ""
 }
+
+/**
+ * THE ONE THING FOR THIS SEASON, when it is a goal — which the type says is the
+ * usual case.
+ *
+ * `planToRows` resolved this through the AREA map until 2026-09-23, so a goal
+ * focus became NULL on the way out and the Focus step's whole answer was lost
+ * on the next device. It never errored: NULL is a legal "not picked yet".
+ */
+describe("the season focus survives whatever kind of thing it is", () => {
+  const roundTrip = (plan: NsPlan): NsPlan => rowsToPlan(planToRows(plan, context()))!
+
+  it("keeps a focus that is a GOAL", () => {
+    const base = emptyNsPlan()
+    let plan = addGoal(base, base.areas[0].id, "Run a half marathon")
+    const goalId = plan.goals[0].id
+    plan = { ...plan, seasonFocusId: goalId }
+
+    const rows = planToRows(plan, context())
+    expect(rows.season_focus_id, "a goal focus must reach the column").not.toBeNull()
+    expect(roundTrip(plan).seasonFocusId).toBe(goalId)
+  })
+
+  it("keeps a focus that is an AREA", () => {
+    const base = emptyNsPlan()
+    const areaId = base.areas[0].id
+    const plan = { ...base, seasonFocusId: areaId, northStar: "something written" }
+    expect(roundTrip(plan).seasonFocusId).toBe(areaId)
+  })
+
+  it("keeps null as null", () => {
+    expect(roundTrip({ ...emptyNsPlan(), northStar: "written" }).seasonFocusId).toBeNull()
+  })
+})
+

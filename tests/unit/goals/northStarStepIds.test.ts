@@ -34,6 +34,9 @@ import {
   journalEntry,
   toggleRoutineStep,
   routineHasLibraryStep,
+  stepIdForLibraryStep,
+  trackPractice,
+  practiceIsOn,
 } from "@/src/goals/northStarService"
 import { stepLogged, toggleStepLogged } from "@/src/goals/northStarTrackService"
 import type { NsPlan } from "@/src/goals/types"
@@ -264,5 +267,47 @@ describe("the repair leaves the rest of the plan consistent", () => {
     const after = loaded.goals[0].checkpoints
     expect(after.map((c) => c.id)).toHaveLength(new Set(after.map((c) => c.id)).size)
     expect(after.every((c) => c.id.startsWith("m"))).toBe(true)
+  })
+})
+
+/**
+ * THE OTHER HALF OF PHASE 0, MISSED UNTIL 2026-09-23.
+ *
+ * Phase 0 separated a library entry's name from the id of the step the plan
+ * mints for it, and fixed the ten places that ASKED "is this library entry in
+ * this routine". It did not fix the one place that TICKS. Recap's "start this
+ * practice" passed the library name straight into the day's log, so the log
+ * gained a line no row could match and the box just pressed drew itself
+ * unticked on the next render.
+ */
+describe("a tick goes under the step's own id, never the library's name", () => {
+  const PRACTICE = { blueprint: "morning", library: "star" }
+
+  it("resolves the library entry to the step the plan actually minted", () => {
+    const started = trackPractice(emptyNsPlan(), PRACTICE.blueprint, PRACTICE.library)
+    expect(practiceIsOn(started, PRACTICE.blueprint, PRACTICE.library)).toBe(true)
+
+    const stepId = stepIdForLibraryStep(started, PRACTICE.blueprint, PRACTICE.library)
+    expect(stepId).toBeTruthy()
+    // A counter id, not the library's name. This is the whole point.
+    expect(stepId).not.toBe(PRACTICE.library)
+  })
+
+  it("the tick it writes is the one the row reads back", () => {
+    const started = trackPractice(emptyNsPlan(), PRACTICE.blueprint, PRACTICE.library)
+    const stepId = stepIdForLibraryStep(started, PRACTICE.blueprint, PRACTICE.library)!
+
+    const ticked = toggleStepLogged(started, "2026-09-23", stepId)
+    expect(stepLogged(ticked, "2026-09-23", stepId)).toBe(true)
+
+    // What the bug did: tick the library's name instead. The row stays unticked
+    // and the log holds an id nothing in the plan carries.
+    const wrong = toggleStepLogged(started, "2026-09-23", PRACTICE.library)
+    expect(stepLogged(wrong, "2026-09-23", stepId)).toBe(false)
+    expect(wrong.routines.flatMap((r) => r.steps).some((st) => st.id === PRACTICE.library)).toBe(false)
+  })
+
+  it("answers null when the practice is not running, so a caller cannot tick nothing", () => {
+    expect(stepIdForLibraryStep(emptyNsPlan(), PRACTICE.blueprint, PRACTICE.library)).toBeNull()
   })
 })

@@ -425,7 +425,23 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
     user_id: userId,
     version: plan.version ?? 1,
     seq: plan.seq ?? 0,
-    season_focus_id: plan.seasonFocusId ? areaId.get(plan.seasonFocusId) ?? null : null,
+    /**
+     * THE ONE THING FOR THIS SEASON, whatever kind of thing it is.
+     *
+     * Looked up in `nodes`, not in `areaId`. It was `areaId.get(...)` until
+     * 2026-09-23, which silently resolved to null for a focus that is a GOAL —
+     * and `NsGoal`'s own type comment says a goal is the usual case ("Usually a
+     * goal, occasionally an area with nothing written under it yet"). So the
+     * one field the whole Focus step exists to set was dropped by the save for
+     * most people, and came back null on the next device: the season band lost
+     * its heading and the step's ring fell from done back to started.
+     *
+     * The column's foreign key had to move with it — see
+     * `20260923130000_season_focus_is_any_node.sql`.
+     */
+    season_focus_id: plan.seasonFocusId
+      ? nodes.find((n) => n.local_id === plan.seasonFocusId)?.id ?? null
+      : null,
     nodes,
     north_stars,
     areas,
