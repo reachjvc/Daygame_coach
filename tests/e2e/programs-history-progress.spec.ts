@@ -327,8 +327,18 @@ test("deleting a program session moves the weights back down", async ({ page }) 
   // Delete lives inside the workout now, not on the row — a destructive control
   // does not belong beside the one you tap 141 times.
   await page.getByTestId(`history-row-${seeded.workoutId}`).click()
-  page.once("dialog", (d) => void d.accept())
+  /**
+   * THE APP'S OWN DIALOG, not the browser's.
+   *
+   * These two tests registered a `page.once("dialog")` handler and clicked
+   * delete — which was right while this was a `window.confirm`. It became a
+   * themed `Dialog` on 2026-09-22 ("the last three browser confirm() boxes in
+   * training") and the handler then waited for a native box that never comes:
+   * the click opened the dialog, nothing confirmed it, and the assertion
+   * "the workout should be gone" failed. Both have been red since that commit.
+   */
   await page.getByTestId(`history-delete-${seeded.workoutId}`).click()
+  await page.getByTestId("confirm-delete-workout").click()
   await page.waitForTimeout(3000)
 
   const after = await page.evaluate(async (ids) => {
@@ -502,8 +512,9 @@ test("deleting a session on a program edited after it started moves the weights 
   await page.reload({ waitUntil: "networkidle" })
   await openTab(page, "history")
   await page.getByTestId(`history-row-${seeded.lastWorkoutId}`).click()
-  page.once("dialog", (d) => void d.accept())
+  // The app's own dialog, as above.
   await page.getByTestId(`history-delete-${seeded.lastWorkoutId}`).click()
+  await page.getByTestId("confirm-delete-workout").click()
   await page.waitForTimeout(3000)
 
   const after = await page.evaluate(async (ids) => {
