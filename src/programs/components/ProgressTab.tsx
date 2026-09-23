@@ -26,7 +26,7 @@ import { adherenceThisWeek, weeklyVolume } from "@/src/health/healthService"
 // `fromKg`, not the health slice's `convertWeight`: that one spells the unit
 // "lbs" and this slice spells it "lb". Two spellings of one unit is how a
 // number ends up converted twice or not at all.
-import { fromKg } from "../programsService"
+import { describeLoggedSet, fromKg } from "../programsService"
 import { UNIT_CONFIG } from "../config"
 import type { UnitSystem } from "../types"
 import type { WorkoutLogWithSets } from "@/src/health/types"
@@ -273,13 +273,22 @@ export function ProgressTab({ plannedPerWeek, unit }: Props) {
                 <li key={b.exercise} className="flex items-baseline justify-between gap-3 text-sm">
                   <span className="min-w-0 truncate">{b.exercise}</span>
                   {/* A pull-up has no weight on it, so "0 kg × 12 · est. max 0"
-                      is not a fact about anything. Reps are the achievement. */}
+                      is not a fact about anything. Reps are the achievement.
+                      The wording is `describeLoggedSet`'s, shared with History
+                      and the receipt — this had its own copy of the rule, so
+                      the three screens could disagree about one set. */}
                   <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
                     {b.bodyweight ? (
-                      `${b.bestWeightReps} reps`
+                      describeLoggedSet(
+                        { exercise: b.exercise, weightKg: 0, reps: b.bestWeightReps },
+                        unit
+                      )
                     ) : (
                       <>
-                        {show(b.bestWeightKg)} {label} × {b.bestWeightReps}
+                        {describeLoggedSet(
+                          { exercise: b.exercise, weightKg: b.bestWeightKg, reps: b.bestWeightReps },
+                          unit
+                        )}
                         <span className="opacity-60"> · est. max {show(b.bestEstimatedMaxKg)}</span>
                       </>
                     )}

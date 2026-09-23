@@ -605,7 +605,6 @@ export function LiveWorkoutScreen({
                     onClose={() => setOpenHistory(null)}
                     name={ex.name}
                     unit={unit}
-                    unitLabel={unitLabel}
                     timezone={timezone}
                   />
                 )}

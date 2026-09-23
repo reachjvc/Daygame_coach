@@ -79,7 +79,17 @@ describe("what was beaten, and what was not checked", () => {
         })}
       />
     )
-    expect(screen.getByText(/220 lb × 5/)).toBeTruthy()
+    /**
+     * 220.5, from the stored 100 kg, rounded the way a bar can be loaded.
+     *
+     * This used to print the summary's own `weight` field raw — which the
+     * server computes as `round2(fromKg(...))`, so a real receipt read
+     * "220.46 lb × 5". The fixture's hand-rounded 220 hid that. The row now
+     * goes through `describeLoggedSet`, the one wording shared with History
+     * and Progress, which converts from the kilograms and rounds to the
+     * finest a bar is adjustable to.
+     */
+    expect(screen.getByText(/220.5 lb × 5/)).toBeTruthy()
   })
 })
 

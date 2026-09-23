@@ -8,7 +8,7 @@
 import { periodStartFor, previousPeriodStart, isStreakCurrent, middayInstant, localTimeInstant, getTodayInTimezone, toDateISO, toZonedDate } from "@/src/shared/dateUtils"
 import { weeklyStreakRun } from "@/src/shared/streakRuns"
 import { estimateOneRepMax } from "@/src/programs/programsService"
-import { isTimedLift, libraryByName } from "@/src/programs/data/exerciseLibrary"
+import { isTimedLift } from "@/src/programs/data/exerciseLibrary"
 import type { LoadPoint } from "@/src/programs/types"
 import { fromKg, toKg } from "@/src/shared/weight"
 import type {

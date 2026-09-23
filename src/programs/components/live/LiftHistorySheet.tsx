@@ -23,7 +23,7 @@
 import { useLoad } from "@/src/shared/useLoad"
 import { collapseSets } from "@/src/health/healthService"
 import { BottomSheet } from "@/components/BottomSheet"
-import { formatLoad } from "../../programsService"
+import { describeLoggedSet, toKg } from "../../programsService"
 import type { LiftSessions, UnitSystem } from "../../types"
 
 interface Props {
@@ -32,8 +32,12 @@ interface Props {
   /** The lift as this screen knows it — the name is what the reader sees. */
   name: string
   libraryId?: string | null
+  /**
+   * The unit alone is enough now: `describeLoggedSet` owns the label, so a
+   * `unitLabel` prop beside it was a second way to say the same thing — and
+   * the way for the two to disagree.
+   */
   unit: UnitSystem
-  unitLabel: string
   /** The ACCOUNT's zone: a session's date is a calendar fact, not an instant. */
   timezone: string
 }
@@ -69,7 +73,6 @@ export function LiftHistorySheet({
   name,
   libraryId,
   unit,
-  unitLabel,
   timezone,
 }: Props) {
   /**
@@ -85,6 +88,17 @@ export function LiftHistorySheet({
     if (!parsed || !Array.isArray(parsed.sessions)) throw new Error("unexpected shape")
     return parsed.sessions
   })
+
+  /**
+   * ONE WORDING FOR A SET, shared with History, Progress and the receipt — so
+   * a dip with nothing added reads "12 reps" here too rather than "0 kg × 12".
+   *
+   * The weights arrive already converted into the reader's unit (the route did
+   * it), and the rule converts FROM kilograms, so they go back through `toKg`
+   * first. One place does that, here, rather than each row.
+   */
+  const asSet = (weight: number, reps: number, count?: number) =>
+    describeLoggedSet({ exercise: name, weightKg: toKg(weight, unit), reps, count, libraryId }, unit)
 
   return (
     <BottomSheet open={open} onClose={onClose} title={`Last times for ${name}`} testId="lift-history-sheet">
@@ -132,12 +146,7 @@ export function LiftHistorySheet({
                     setNumber: set.setNumber,
                   }))
                 )
-                  .map(
-                    (run) =>
-                      `${run.count > 1 ? `${run.count} × ` : ""}${formatLoad(run.weight)} ${unitLabel} × ${run.reps}${
-                        run.kind === "warmup" ? " (W)" : ""
-                      }`
-                  )
+                  .map((run) => `${asSet(run.weight, run.reps, run.count)}${run.kind === "warmup" ? " (W)" : ""}`)
                   .join(" · ")}
               </span>
             </div>
@@ -146,7 +155,7 @@ export function LiftHistorySheet({
             const best = bestOf(loaded.data)
             return best ? (
               <p className="px-3 pb-1 text-xs text-muted-foreground" data-testid="lift-history-best">
-                Best: {formatLoad(best.weight)} {unitLabel} × {best.reps}
+                Best: {asSet(best.weight, best.reps)}
               </p>
             ) : null
           })()}

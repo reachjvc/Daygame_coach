@@ -18,9 +18,10 @@ import {
   LOAD_TOLERANCE,
   PLATES,
   REST_SECONDS,
+  UNIT_CONFIG,
   WEEKDAY_SHORT,
 } from "./config"
-import { libraryByName } from "./data/exerciseLibrary"
+import { isTimedLift, libraryByName } from "./data/exerciseLibrary"
 import { CUSTOM_PROGRAM_ID } from "./data/customProgram"
 import { enrollmentName } from "./data/catalog"
 import { readReturn } from "@/src/shared/returnTo"
@@ -2208,6 +2209,47 @@ export function moveLift(
   const next = [...ids]
   ;[next[at], next[to]] = [next[to], next[at]]
   return next
+}
+
+/**
+ * WHAT A LOGGED SET SAYS IT WAS — one sentence, three shapes of lift.
+ *
+ * Three screens formatted this themselves and all three got the same case
+ * wrong. A pull-up is stored as 0 kg, so History printed "Pull-up 0×12", the
+ * expanded row printed "0 kg × 12", and Progress had its own branch for it —
+ * which means the fix for one of them was never the fix for the others.
+ *
+ * "0 kg" is not a fact about a pull-up. Nothing was loaded, and the reps ARE
+ * the achievement:
+ *
+ *   loaded       "100 kg × 5"   ·  "3 × 100 kg × 5" when a run is collapsed
+ *   bodyweight   "12 reps"      ·  weight 0 and not a timed lift
+ *   timed        "40 kg × 30 s" ·  "60 s" when nothing is loaded
+ *
+ * The unit is the reader's, converted here, because the other half of that bug
+ * was a kilogram number printed under a "lb" label.
+ */
+export function describeLoggedSet(
+  set: {
+    exercise?: string
+    weightKg: number
+    reps: number
+    /** A run of identical sets, from `collapseSets`. */
+    count?: number
+    libraryId?: string | null
+  },
+  unit: UnitSystem
+): string {
+  const prefix = (set.count ?? 1) > 1 ? `${set.count} × ` : ""
+  const label = UNIT_CONFIG[unit].label
+  const load = `${formatLoad(fromKg(set.weightKg, unit))} ${label}`
+  const timed = isTimedLift({ exercise: set.exercise ?? "", library_id: set.libraryId ?? null })
+
+  if (timed) return set.weightKg === 0 ? `${prefix}${set.reps} s` : `${prefix}${load} × ${set.reps} s`
+  // Nothing loaded, and the lift is not held for time: the reps are the whole
+  // of it. "0 kg × 12" is the app printing a zero it invented.
+  if (set.weightKg === 0) return `${prefix}${set.reps} reps`
+  return `${prefix}${load} × ${set.reps}`
 }
 
 /**

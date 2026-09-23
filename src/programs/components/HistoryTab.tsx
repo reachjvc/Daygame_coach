@@ -26,7 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { collapseSets, describeSessionRow, isWorkingSet, workingVolumeKg } from "@/src/health/healthService"
-import { fromKg, toKg } from "../programsService"
+import { describeLoggedSet, fromKg, toKg } from "../programsService"
 import { UNIT_CONFIG } from "../config"
 import { LogPastWorkoutDialog } from "./LogPastWorkoutDialog"
 import type { ProgramEnrollment, UnitSystem } from "../types"
@@ -452,7 +452,10 @@ export function HistoryTab({
                     <span className="block truncate text-xs text-muted-foreground">
                       {summary.length > 0
                         ? summary
-                            .map((e) => `${e.exercise} ${show(e.weightKg)}×${e.reps}`)
+                            // "Pull-up 0×12" was what this printed. A pull-up
+                            // has nothing loaded on it, and 0 is not a fact
+                            // about it — one function says what a set was.
+                            .map((e) => `${e.exercise} ${describeLoggedSet(e, unit)}`)
                             .join(" · ")
                                         : describeSessionRow(log)}
                     </span>
@@ -589,7 +592,10 @@ export function HistoryTab({
                                 {run.count > 1 ? `${run.count} ×` : run.setNumbers[0]}
                               </span>
                               <span className="tabular-nums">
-                                {show(run.weight)} {label} × {run.reps}
+                                {describeLoggedSet(
+                                  { exercise: run.exercise, weightKg: run.weight, reps: run.reps },
+                                  unit
+                                )}
                               </span>
                               {/* A warm-up is not a working set, and a screen
                                   that hides the difference makes the volume

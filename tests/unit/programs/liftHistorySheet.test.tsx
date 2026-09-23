@@ -23,7 +23,6 @@ const sheet = (over: Partial<React.ComponentProps<typeof LiftHistorySheet>> = {}
       onClose={vi.fn()}
       name="Squat"
       unit="kg"
-      unitLabel="kg"
       timezone="Europe/Copenhagen"
       {...over}
     />
@@ -157,7 +156,7 @@ describe("the lift history sheet", () => {
         return { ok: true, status: 200, json: async () => ({ unit: "lb", sessions: [] }) } as unknown as Response
       })
     )
-    sheet({ name: "Bench Press", libraryId: "lib_bench_press", unit: "lb", unitLabel: "lb" })
+    sheet({ name: "Bench Press", libraryId: "lib_bench_press", unit: "lb" })
     await waitFor(() => expect(urls.length).toBe(1))
     expect(urls[0]).toBe(
       "/api/workouts/lifts?exercise=Bench%20Press&libraryId=lib_bench_press&unit=lb"

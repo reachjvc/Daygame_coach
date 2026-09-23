@@ -1,7 +1,7 @@
 {
   "_comment": "Lint errors that already existed, by file and rule. May only shrink. Regenerate with: node scripts/lint-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
   "_format": "eslint-findings-v1",
-  "total": 338,
+  "total": 335,
   "files": {
     "app/api/goals/[id]/route.ts": {
       "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1
@@ -475,12 +475,6 @@
       "@typescript-eslint/no-unused-vars: 'APPROACH_OUTCOMES' is defined but never used.": 1,
       "@typescript-eslint/no-unused-vars: 'SET_TYPES' is defined but never used.": 1
     },
-    "src/vice/components/ViceFlow.tsx": {
-      "@typescript-eslint/no-unused-vars: 'QuietButton' is defined but never used.": 1
-    },
-    "src/vice/components/steps/AwarenessSteps.tsx": {
-      "@typescript-eslint/no-unused-vars: 'useState' is defined but never used.": 1
-    },
     "tests/e2e/articles.spec.ts": {
       "@typescript-eslint/no-unused-vars: 'ACTION_TIMEOUT' is assigned a value but never used.": 1
     },
@@ -573,9 +567,6 @@
     },
     "tests/unit/tracking/schemas.test.ts": {
       "@typescript-eslint/no-unused-vars: '_' is assigned a value but never used.": 4
-    },
-    "tests/unit/vice/viceService.test.ts": {
-      "prefer-const: 'state' is never reassigned. Use 'const' instead.": 1
     }
   }
 }

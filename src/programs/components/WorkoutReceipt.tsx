@@ -16,7 +16,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { BackLink } from "@/components/BackLink"
 import { UNIT_CONFIG } from "../config"
 import { TRAINING_COLUMN, TRAINING_CARD, TRAINING_CARD_BODY } from "./trainingStyles"
-import { weekdayNameIn } from "../programsService"
+import { describeLoggedSet, weekdayNameIn } from "../programsService"
 import { PROGRAMS } from "@/src/shared/trainingRoutes"
 import type { WorkoutSummary } from "../types"
 
@@ -87,7 +87,14 @@ export function ReceiptBody({ summary }: { summary: WorkoutSummary }) {
                   <li key={`${pr.exercise}-${pr.reps}`} className="flex justify-between gap-3">
                     <span className="min-w-0 truncate">{pr.exercise}</span>
                     <span className="shrink-0 tabular-nums text-muted-foreground">
-                      {pr.weight} {unitLabel} × {pr.reps}
+                      {/* One wording for a set, shared with History and
+                          Progress: a pull-up best reads "12 reps" rather than
+                          "0 kg × 12". The kilogram figure is passed because
+                          that is what the rule converts from. */}
+                      {describeLoggedSet(
+                        { exercise: pr.exercise, weightKg: pr.weight_kg, reps: pr.reps },
+                        summary.unit
+                      )}
                     </span>
                   </li>
                 ))}
