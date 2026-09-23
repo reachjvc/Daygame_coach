@@ -97,12 +97,19 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   live part is Life Mastery: `northStarService` plus the `north-star/`
   components, a fourteen-step flow at `/life-mastery` — north star, your 10s,
   the one thing, where to start, templates, systems, experiences, focus &
-  season, values & identity, commit, track, today, journal, everything. It keeps
-  the plan in the browser's own storage, but **more than the Track step writes
-  to the database**: the one-thing box and the season band read and write
-  `life_answers` and the Today tab increments goals. The comment on
-  `app/life-mastery/page.tsx` claiming twelve of thirteen steps touch no API is
-  wrong. **Nothing in Life Mastery starts or ends a program any more** — this
+  season, values & identity, commit, track, today, journal, everything.
+  **Since 2026-09-23 the plan lives on the ACCOUNT, and so does the day half** —
+  the north star, areas, goals, routines and values in twenty-one `life_plan_*`
+  tables, and every rating, tick, day note and journal answer in the four day
+  tables through `/api/life-plan/day`. `decideOnLoad` (`lifePlanSync.ts`) prefers
+  the account; the browser copy is a cache that keeps the page working offline
+  and is imported once into an account that holds nothing written. This entry
+  said the opposite — "it keeps the plan in the browser's own storage" — until
+  that landed. Two other crossings that are NOT part of that: the one-thing box
+  reads and writes `life_answers`, and the Today tab increments counted goals.
+  The season band does neither; this entry credited it with `life_answers` and
+  was simply wrong, which a sweep caught on 2026-09-23 — it takes a plan as
+  props and fetches nothing. **Nothing in Life Mastery starts or ends a program any more** — this
   entry said "the workout card creates a program enrollment" until 2026-09-23,
   when the Templates step's catalogue, picker, editor and builder were deleted.
   It is one status card now, drawn from the enrollment list, and picking,
@@ -218,5 +225,13 @@ the truthful record of what exists.
   the gym.
 - **Leaving Vercel and Supabase** — decided 2026-09-17. Read the memory note
   before any hosting, database or auth work.
-- **Life Mastery persistence** — planned, nothing built; the plan still lives
-  only in the browser.
+- **Life Mastery persistence** — the plan and the day half are both on the
+  account as of 2026-09-23 (`docs/plans/life-mastery-everything-saves.md`, M0
+  and M1). What is left there is the dashboard, which still reports "0 of N done
+  today" because it reads a plan whose tick list is empty by construction, and
+  retiring the unauthenticated `/api/plan-snapshots` mirror.
+- **None of it is deployed.** `app/life-mastery/` exists on `training-rebuild`
+  and on no other branch; `daygame-coach.vercel.app/life-mastery` is a 404 and
+  always has been. The owner uses it at `localhost:3000`, which serves this
+  branch — so `next dev` means an edit to `src/` reaches them the moment it is
+  saved. Ask localhost before calling anything unreachable.
