@@ -8,7 +8,7 @@
 import { periodStartFor, previousPeriodStart, isStreakCurrent, middayInstant, localTimeInstant, getTodayInTimezone, toDateISO, toZonedDate } from "@/src/shared/dateUtils"
 import { weeklyStreakRun } from "@/src/shared/streakRuns"
 import { estimateOneRepMax } from "@/src/programs/programsService"
-import { libraryByName } from "@/src/programs/data/exerciseLibrary"
+import { isTimedLift, libraryByName } from "@/src/programs/data/exerciseLibrary"
 import type { LoadPoint } from "@/src/programs/types"
 import { fromKg, toKg } from "@/src/shared/weight"
 import type {
@@ -803,8 +803,45 @@ export function adherenceThisWeek(
  * Asked of the library by name, because the stored set does not say: the number
  * lives in `reps` whichever it is.
  */
-function isTimedLift(exercise: string): boolean {
-  return libraryByName(exercise)?.timed === true
+
+
+/**
+ * WHAT ONE SET MOVED — the one multiplication in this codebase.
+ *
+ * Four places did it themselves: the History month total, each History row's
+ * summary, the weekly chart and the finish summary. Three of the four excluded
+ * warm-ups; exactly one excluded TIMED lifts, and the chart's comment claimed
+ * the finish summary did too. So a 3 × 30 s farmer's carry at 40 kg was worth
+ * 3,600 kg on the finish screen — outranking a 5 × 5 squat at 100 kg — and
+ * nothing on the chart, for the same session.
+ *
+ * Seconds are stored in the same column as reps, which is why this cannot be
+ * left to the caller: the number looks exactly like reps and multiplies
+ * exactly as wrong.
+ */
+export function setVolumeKg(set: {
+  weight_kg: number
+  reps: number
+  set_kind?: string | null
+  exercise: string
+  library_id?: string | null
+}): number {
+  if (!isWorkingSet(set)) return 0
+  if (isTimedLift(set)) return 0
+  return set.weight_kg * set.reps
+}
+
+/** The same rule over a session, a month or a week. */
+export function workingVolumeKg(
+  sets: readonly {
+    weight_kg: number
+    reps: number
+    set_kind?: string | null
+    exercise: string
+    library_id?: string | null
+  }[]
+): number {
+  return sets.reduce((total, set) => total + setVolumeKg(set), 0)
 }
 
 export interface WeekVolume {
@@ -841,8 +878,18 @@ export function weeklyVolume(
     if (week < startKey) continue
     const bucket = byWeek.get(week) ?? { volumeKg: 0, sets: 0 }
     for (const set of log.sets ?? []) {
-      if (!isWorkingSet(set) || isTimedLift(set.exercise)) continue
-      bucket.volumeKg += set.weight_kg * set.reps
+      // ONE RULE, and it is not written out here: `setVolumeKg` decides what a
+      // set moved, so the chart cannot disagree with the History total or with
+      // the number on the finish screen.
+      if (!isWorkingSet(set)) continue
+      bucket.volumeKg += setVolumeKg(set)
+      /**
+       * A TIMED SET IS STILL A SET. It used to be skipped entirely, so a
+       * session of carries and planks counted as no work at all on the chart
+       * — while the finish screen counted every working set including those.
+       * Two numbers for one fact. It moves no WEIGHT, which is what the bar
+       * measures, and it counts as the set it was.
+       */
       bucket.sets += 1
     }
     byWeek.set(week, bucket)
@@ -898,7 +945,7 @@ export function liftBests(logs: WorkoutLogWithSets[], timezone: string): LiftBes
       const key = set.exercise.trim().toLowerCase()
       // A timed hold has seconds in `reps`; estimating a one-rep max from
       // "30" would announce a max nobody has ever lifted.
-      if (isTimedLift(set.exercise)) continue
+      if (isTimedLift(set)) continue
       const estimate = cappedEstimate(set.weight_kg, set.reps)
       const cur = best.get(key)
       if (!cur) {

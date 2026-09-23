@@ -607,3 +607,20 @@ export function libraryByName(name: string): LibraryExercise | undefined {
   const aliased = NAME_ALIASES[norm]
   return aliased ? EXERCISE_LIBRARY.find((e) => e.pattern === aliased && e.compound) : undefined
 }
+
+/**
+ * IS THIS LIFT MEASURED IN SECONDS? — one answer, asked by both slices.
+ *
+ * It lived in `healthService` as a private `isTimedLift(name)` that only asked
+ * `libraryByName`, so a stored set carrying `library_id` was matched by its
+ * free-text name or not at all — and the library is where the flag is. Two
+ * copies of "which lifts are timed" is how a farmer's carry counts as 3,600 kg
+ * on one screen and as nothing on the next.
+ *
+ * The id first, the name second, for the same reason `setMatchesLift` does:
+ * rows written before that column existed have only their name.
+ */
+export function isTimedLift(set: { exercise: string; library_id?: string | null }): boolean {
+  const byId = set.library_id ? LIBRARY_BY_ID.get(set.library_id) : undefined
+  return (byId ?? libraryByName(set.exercise))?.timed === true
+}

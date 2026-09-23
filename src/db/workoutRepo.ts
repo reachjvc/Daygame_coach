@@ -35,7 +35,7 @@ import { ProgramRefused } from "@/src/programs/errors"
 import { personalBestBaseline } from "./healthRepo"
 import { getUserTimezone } from "./settingsRepo"
 import { toDateISO, toZonedDate } from "@/src/shared/dateUtils"
-import { detectPersonalRecords, firstTimeLifts } from "@/src/health/healthService"
+import { detectPersonalRecords, firstTimeLifts, workingVolumeKg } from "@/src/health/healthService"
 import {
   applyLog,
   computePrescription,
@@ -628,7 +628,14 @@ export async function summaryFor(userId: string, workoutId: string): Promise<Wor
 
   const unit = await unitFor(userId, row.enrollment_id)
   const working = sets.filter((x) => x.set_kind !== "warmup" && x.set_kind !== "drop")
-  const volumeKg = working.reduce((total, x) => total + x.weight_kg * x.reps, 0)
+  /**
+   * ONE RULE FOR WEIGHT MOVED, and this is the call site the comment above it
+   * used to lie about. It multiplied `weight_kg × reps` over every working set,
+   * timed lifts included — and seconds live in the `reps` column, so a
+   * 3 × 30 s farmer's carry at 40 kg was 3,600 kg on this screen and nothing
+   * on the weekly chart, for the same session.
+   */
+  const volumeKg = workingVolumeKg(sets)
   const started = row.started_at ? new Date(row.started_at).getTime() : null
   const derived = started ? Math.round((new Date(row.ended_at).getTime() - started) / 60000) : 1
   const records = row.personal_records

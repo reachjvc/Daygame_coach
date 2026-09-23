@@ -25,7 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { collapseSets, describeSessionRow, isWorkingSet } from "@/src/health/healthService"
+import { collapseSets, describeSessionRow, isWorkingSet, workingVolumeKg } from "@/src/health/healthService"
 import { fromKg, toKg } from "../programsService"
 import { UNIT_CONFIG } from "../config"
 import { LogPastWorkoutDialog } from "./LogPastWorkoutDialog"
@@ -274,7 +274,9 @@ export function HistoryTab({
     const k = monthKey(l.logged_at)
     const t = monthTotals.get(k) ?? { sessions: 0, volumeKg: 0 }
     t.sessions += 1
-    t.volumeKg += (l.sets ?? []).filter(isWorkingSet).reduce((sum, x) => sum + x.weight_kg * x.reps, 0)
+    // The one rule, not a fourth copy of it: warm-ups out, timed lifts out,
+    // because seconds are stored in the reps column and multiply as wrong.
+    t.volumeKg += workingVolumeKg(l.sets ?? [])
     monthTotals.set(k, t)
   }
 
@@ -383,7 +385,7 @@ export function HistoryTab({
             )
         )
         const working = (log.sets ?? []).filter(isWorkingSet)
-        const volume = working.reduce((t, s) => t + s.weight_kg * s.reps, 0)
+        const volume = workingVolumeKg(log.sets ?? [])
 
         return (
           <div key={log.id}>

@@ -184,7 +184,14 @@ describe("work that is not weight times reps", () => {
       2
     )
     expect(weeks.at(-1)!.volumeKg, "only the squat counts").toBe(500)
-    expect(weeks.at(-1)!.sets).toBe(1)
+    /**
+     * BUT THE PLANK IS STILL A SET. It used to be skipped entirely, so a
+     * session of carries and holds counted as no work at all on the chart —
+     * while the finish screen counted every working set including those. Two
+     * numbers for one fact. It moves no WEIGHT, which is what the bar
+     * measures, and it counts as the set it was.
+     */
+    expect(weeks.at(-1)!.sets, "the plank happened").toBe(2)
   })
 
   it("does not put a timed hold in your bests as a one-rep max", () => {
