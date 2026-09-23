@@ -174,7 +174,21 @@ test.describe("every page", () => {
             // their box; holding them to 44px would mean padding prose.
             const inProse = el.tagName === "A" && /P|LI|SPAN/.test(el.parentElement?.tagName ?? "")
             if (inProse) continue
-            if (box.width < min || box.height < min) {
+            // ROUNDED, BECAUSE A LAYOUT ENGINE DOES NOT RETURN WHOLE PIXELS.
+            //
+            // `min-h-11` IS 44px, and `getBoundingClientRect` returns it as
+            // 43.99993896484375 when the element happens to land on a different
+            // sub-pixel offset — measured in the training suite on 2026-09-23,
+            // where the same class passed on one account and failed on another
+            // purely because the content above it was a different height.
+            //
+            // Every control on the three quit-vice routes now sits at EXACTLY
+            // 44 with their debt entries deleted, so those pages have no
+            // headroom at all: without this, any content change anywhere above
+            // a button turns a passing route red over six hundred-thousandths
+            // of a pixel. A genuinely 43px control still fails, which is the
+            // rule this is protecting rather than relaxing.
+            if (Math.round(box.width) < min || Math.round(box.height) < min) {
               out.push(
                 `${el.tagName.toLowerCase()}"${(el.textContent ?? "").trim().slice(0, 20)}" ` +
                   `${Math.round(box.width)}x${Math.round(box.height)}`,
