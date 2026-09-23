@@ -74,7 +74,7 @@ export function LiftHistory({ unit, timezone }: { unit: UnitSystem; timezone: st
 
   if (loaded.state === "failed") {
     return (
-      <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[11.5px] text-amber-600 dark:text-amber-400" data-testid="lift-history-failed">
+      <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400" data-testid="lift-history-failed">
         Your lifts over time could not be loaded.{" "}
         <button type="button" onClick={loaded.retry} className="underline" data-testid="lift-history-retry">
           Try again
@@ -109,7 +109,7 @@ export function LiftHistory({ unit, timezone }: { unit: UnitSystem; timezone: st
             a.click()
             URL.revokeObjectURL(url)
           }}
-          className="shrink-0 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent"
+          className="min-h-11 shrink-0 rounded-md border border-border px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent"
         >
           Export CSV
         </button>

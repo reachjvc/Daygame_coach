@@ -111,7 +111,7 @@ export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
           <button
             type="button"
             onClick={() => void load()}
-            className="shrink-0 rounded-md border border-amber-500/40 px-2.5 py-1 text-xs text-amber-600 transition-colors hover:bg-amber-500/10 dark:text-amber-400"
+            className="min-h-11 shrink-0 rounded-md border border-amber-500/40 px-2.5 text-xs text-amber-600 transition-colors hover:bg-amber-500/10 dark:text-amber-400"
           >
             Try again
           </button>
@@ -157,7 +157,7 @@ export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
                         : "bg-muted"
                   }`}
                 />
-                <span className="text-[11px] text-muted-foreground">{WEEKDAYS[i]}</span>
+                <span className="text-xs text-muted-foreground">{WEEKDAYS[i]}</span>
               </div>
             ))}
           </div>
@@ -183,7 +183,7 @@ export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
       <section className="space-y-2 border-t border-border/60 pt-4">
           <div className="flex items-baseline justify-between gap-2">
             <h3 className="text-sm font-medium">Weight moved, per week</h3>
-            <span className="text-[11px] text-muted-foreground">working sets only</span>
+            <span className="text-xs text-muted-foreground">working sets only</span>
           </div>
           {volume.every((v) => v.volumeKg === 0) ? (
             <p className="text-sm text-muted-foreground">Nothing logged in the last eight weeks.</p>
@@ -193,7 +193,7 @@ export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
                   them. Two ticks is enough to read a bar off and does not crowd
                   a 390px screen. */}
               <div
-                className="flex w-14 shrink-0 flex-col justify-between py-0 text-right text-[11px] tabular-nums text-muted-foreground"
+                className="flex w-14 shrink-0 flex-col justify-between py-0 text-right text-xs tabular-nums text-muted-foreground"
                 style={{ height: "72px" }}
                 aria-hidden
               >
@@ -240,7 +240,7 @@ export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
                     return (
                       <span
                         key={v.weekStart}
-                        className="flex-1 text-center text-[11px] tabular-nums leading-tight text-muted-foreground"
+                        className="flex-1 text-center text-xs tabular-nums leading-tight text-muted-foreground"
                       >
                         {v.weekStart.slice(8)}
                         {newMonth && (
@@ -272,7 +272,7 @@ export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
               <button
                 type="button"
                 onClick={() => void loadBests()}
-                className="shrink-0 rounded-md border border-amber-500/40 px-2.5 py-1 text-xs text-amber-600 transition-colors hover:bg-amber-500/10 dark:text-amber-400"
+                className="min-h-11 shrink-0 rounded-md border border-amber-500/40 px-2.5 text-xs text-amber-600 transition-colors hover:bg-amber-500/10 dark:text-amber-400"
               >
                 Try again
               </button>

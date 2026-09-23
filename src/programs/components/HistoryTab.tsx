@@ -244,7 +244,7 @@ export function HistoryTab({
           <button
             type="button"
             onClick={() => void load()}
-            className="shrink-0 rounded-md border border-amber-500/40 px-2.5 py-1 text-xs text-amber-600 transition-colors hover:bg-amber-500/10 dark:text-amber-400"
+            className="min-h-11 shrink-0 rounded-md border border-amber-500/40 px-2.5 text-xs text-amber-600 transition-colors hover:bg-amber-500/10 dark:text-amber-400"
           >
             Try again
           </button>
@@ -345,7 +345,7 @@ export function HistoryTab({
 
       {lifts.length > 1 && (
         <div className="flex items-center gap-2">
-          <label htmlFor="history-lift" className="text-[11px] text-muted-foreground">
+          <label htmlFor="history-lift" className="text-xs text-muted-foreground">
             Lift
           </label>
           <select
@@ -356,7 +356,7 @@ export function HistoryTab({
               setLift(e.target.value)
               setShown(PAGE)
             }}
-            className="min-h-11 flex-1 rounded-md border border-border bg-background px-2 text-[12px] sm:min-h-0 sm:py-1"
+            className="min-h-11 flex-1 rounded-md border border-border bg-background px-2 text-xs sm:min-h-0 sm:py-1"
           >
             <option value="">All lifts</option>
             {lifts.map((name) => (
@@ -408,9 +408,9 @@ export function HistoryTab({
                 where you are without counting cards. */}
             {newMonth && (
               <div className="sticky top-0 z-10 -mx-1 flex items-baseline justify-between gap-2 bg-background/95 px-1 py-1.5 backdrop-blur">
-                <h3 className="text-[12.5px] font-semibold">{monthLabel(month)}</h3>
+                <h3 className="text-sm font-semibold">{monthLabel(month)}</h3>
                 {totals && (
-                  <span className="text-[11px] tabular-nums text-muted-foreground">
+                  <span className="text-xs tabular-nums text-muted-foreground">
                     {totals.sessions} {totals.sessions === 1 ? "session" : "sessions"} ·{" "}
                     {showTotal(totals.volumeKg)} {label}
                   </span>
@@ -440,7 +440,13 @@ export function HistoryTab({
                   }
                   aria-expanded={isOpen}
                   data-testid={`history-row-${log.id}`}
-                  className="flex min-w-0 flex-1 items-start gap-2 text-left"
+                  /**
+                   * A ROW IS 56 px, not 36. It is the biggest target on this
+                   * screen and the one thing a person comes here to tap — and
+                   * it measured 36 px at 390 px, which is under the floor
+                   * every other control in the app is held to.
+                   */
+                  className="flex min-h-14 min-w-0 flex-1 items-start gap-2 py-1 text-left"
                 >
                   {isOpen ? (
                     <ChevronDown className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
@@ -454,7 +460,7 @@ export function HistoryTab({
                       </span>
                       {/* The numbers form a right-hand column you can scan down,
                           rather than a third line under the lifts. */}
-                      <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground/70">
+                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground/70">
                         {log.duration_min} min
                         {working.length > 0
                           ? ` · ${working.length} ${working.length === 1 ? "set" : "sets"} · ${showTotal(volume)} ${label}`
@@ -487,7 +493,7 @@ export function HistoryTab({
                       weights of every session after this one were decided by
                       what this one said, so changing it changes them. */}
                   {log.enrollment_id && (
-                    <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-600 dark:text-amber-400">
+                    <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-xs text-amber-600 dark:text-amber-400">
                       This session belongs to a program. Saving a change here recalculates the
                       weights it prescribed from here on.
                     </p>
@@ -520,7 +526,7 @@ export function HistoryTab({
                         className="h-9 w-14 rounded-md border border-input bg-background px-1.5 text-sm"
                       />
                       {set.kind !== "working" && (
-                        <span className="shrink-0 text-[11px] uppercase text-muted-foreground">
+                        <span className="shrink-0 text-xs uppercase text-muted-foreground">
                           {set.kind}
                         </span>
                       )}
@@ -528,7 +534,7 @@ export function HistoryTab({
                         type="button"
                         onClick={() => setDraft((d) => d.filter((_, j) => j !== i))}
                         aria-label={`Remove ${setLabel(set)}`}
-                        className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"
+                        className="ml-auto flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"
                       >
                         <X className="size-3.5" />
                       </button>
@@ -545,7 +551,7 @@ export function HistoryTab({
                       data-testid={`history-save-${log.id}`}
                       disabled={saving}
                       onClick={() => void save(log)}
-                      className="inline-flex min-h-9 items-center gap-1.5 rounded-md border border-primary/50 bg-primary/10 px-2.5 text-xs text-primary transition-colors hover:bg-primary/20 disabled:opacity-50"
+                      className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-primary/50 bg-primary/10 px-2.5 text-xs text-primary transition-colors hover:bg-primary/20 disabled:opacity-50"
                     >
                       {saving && <Loader2 className="size-3 animate-spin" />}
                       Save the correction
@@ -553,7 +559,7 @@ export function HistoryTab({
                     <button
                       type="button"
                       onClick={() => setEditing(null)}
-                      className="min-h-9 rounded-md px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent"
+                      className="min-h-11 rounded-md px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent"
                     >
                       Leave it as it was
                     </button>
@@ -615,7 +621,7 @@ export function HistoryTab({
                                   that hides the difference makes the volume
                                   totals look wrong to whoever did them. */}
                               {run.kind !== "working" && (
-                                <span className="text-[11px] uppercase tracking-wide opacity-70">
+                                <span className="text-xs uppercase tracking-wide opacity-70">
                                   {run.kind}
                                 </span>
                               )}
@@ -632,7 +638,7 @@ export function HistoryTab({
                       data-testid={`history-edit-open-${log.id}`}
                       onClick={() => void startEditing(log, show)}
                       disabled={opening === log.id}
-                      className="inline-flex min-h-9 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+                      className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
                     >
                       {opening === log.id ? (
                         <Loader2 className="size-3 animate-spin" />
@@ -649,7 +655,7 @@ export function HistoryTab({
                     onClick={() => setConfirming(log)}
                     aria-label={`Delete the workout from ${new Date(log.logged_at).toLocaleDateString(undefined, DAY)}`}
                     data-testid={`history-delete-${log.id}`}
-                    className="ml-2 inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"
+                    className="ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-md px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"
                   >
                     <Trash2 className="size-3" /> Delete
                   </button>
@@ -666,7 +672,7 @@ export function HistoryTab({
           type="button"
           data-testid="history-load-more"
           onClick={() => setShown((n) => n + PAGE)}
-          className="min-h-11 w-full rounded-md border border-border text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="min-h-11 w-full rounded-md border border-border text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
           Show more — {matching.length - visible.length} older
         </button>

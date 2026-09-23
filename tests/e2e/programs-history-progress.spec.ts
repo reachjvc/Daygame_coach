@@ -535,3 +535,73 @@ test("deleting a session on a program edited after it started moves the weights 
     await fetch(`/api/programs/enrollments/${ids.enrollmentId}?permanent=1`, { method: "DELETE" })
   }, seeded)
 })
+
+/**
+ * EVERY CONTROL ON THESE TWO TABS IS THUMB-SIZED, MEASURED AT 390 px.
+ *
+ * The route sweep visits `/programs` and finds it clean — but History and
+ * Progress are TABS, and their controls are not in the page until somebody
+ * opens them. So the sweep has never seen the filter, the month toggles, the
+ * per-set delete or the export button, and "/programs owes nothing" was a
+ * statement about the Today tab.
+ *
+ * A class list is not a measurement; this reads the rendered boxes.
+ */
+test("every control on History and Progress is thumb-sized", async ({ page }) => {
+  test.setTimeout(240000)
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.goto("/programs")
+
+  const seeded = await seedFinishedWorkout(page, {
+    startedAt: "2026-09-02T10:00:00.000Z",
+    sets: [{ exercise: "ZZTap Squat", weightKg: 100, reps: 5, setNumber: 1 }],
+  })
+
+  try {
+    for (const tab of ["history", "progress"] as const) {
+      await openTab(page, tab)
+      /**
+       * WAIT FOR THE TAB'S OWN CONTENT. Both tabs are lazy, and the first
+       * version of this test measured the Suspense fallback — nine chrome
+       * controls, no tab content, and a pass that meant nothing. It only
+       * showed up because I planted a 32px control and the test did not
+       * notice.
+       */
+      await expect(
+        page.getByTestId(tab === "history" ? "workout-history" : "week-dots")
+      ).toBeVisible({ timeout: 30000 })
+
+      /** Everything a finger is meant to hit, on the tab that is showing. */
+      const tooSmall = await page.evaluate(() => {
+        const out: string[] = []
+        for (const el of document.querySelectorAll("button, a[href], [role=combobox], select, input")) {
+          const box = el.getBoundingClientRect()
+          if (box.width === 0 || box.height === 0) continue
+          // Only what is actually on screen: the other tab is rendered and
+          // hidden so its state survives a switch.
+          if (el.closest("[hidden]")) continue
+          if (box.height < 44) {
+            out.push(`${el.tagName}${el.getAttribute("data-testid") ?? ""} ${Math.round(box.height)}px`)
+          }
+        }
+        return out
+      })
+      expect(tooSmall, `${tab}: ${tooSmall.join(", ")}`).toEqual([])
+
+      const tooSmallText = await page.evaluate(() => {
+        const out: string[] = []
+        for (const el of document.querySelectorAll("*")) {
+          if (el.closest("[hidden]")) continue
+          if (!el.textContent?.trim() || el.children.length > 0) continue
+          const size = parseFloat(getComputedStyle(el).fontSize)
+          if (size < 12) out.push(`${el.tagName} ${size}px: ${el.textContent.trim().slice(0, 20)}`)
+        }
+        return out
+      })
+      expect(tooSmallText, `${tab}: ${tooSmallText.join(", ")}`).toEqual([])
+    }
+  } finally {
+    await deleteWorkoutsNamed(page, "ZZTap Squat").catch(() => {})
+    void seeded
+  }
+})
