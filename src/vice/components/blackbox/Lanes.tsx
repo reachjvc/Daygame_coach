@@ -105,24 +105,33 @@ export function Lanes({ record, today, viceLabel, selectedId, onSelect }: {
           Each bar is a run. Each dot underneath is a night you nearly went and didn&rsquo;t.
         </p>
 
+        {/* Each lane is 44px tall, not 34: tapping a bar is how a run is read
+            back AND how it is corrected, so it has to be a real tap target on a
+            phone. Everything inside is positioned from the top of the row, so
+            the offsets below all moved by the same 5px to stay centred. */}
         <div ref={wrapRef} className="relative mt-3">
           {geometry.map(({ lane, left, width, flip, dots }) => {
             const family = lane.ending ? familyFor(lane.ending) : null
             const accent = family?.accent ?? false
+            const place: "after" | "before" | "inside" = !flip
+              ? "after"
+              : left >= 100 - flipAfter
+                ? "before"
+                : "inside"
             return (
               <button
                 key={lane.attempt.id}
                 type="button"
                 aria-pressed={selectedId === lane.attempt.id}
                 onClick={() => onSelect(lane.attempt.id)}
-                className={`relative block h-[34px] w-full rounded-md text-left transition-colors ${
+                className={`relative block h-11 w-full rounded-md text-left transition-colors ${
                   selectedId === lane.attempt.id ? "bg-white/[0.05]" : "hover:bg-white/[0.025]"
                 }`}
               >
-                <div className="absolute inset-x-0 top-[11px] h-2 rounded-full bg-white/[0.04]" />
+                <div className="absolute inset-x-0 top-[16px] h-2 rounded-full bg-white/[0.04]" />
 
                 <div
-                  className="absolute top-2 h-3.5 rounded"
+                  className="absolute top-[13px] h-3.5 rounded"
                   style={{
                     left: `${left}%`,
                     width: `${width}%`,
@@ -144,24 +153,38 @@ export function Lanes({ record, today, viceLabel, selectedId, onSelect }: {
                 {dots.map((at, i) => (
                   <div
                     key={i}
-                    className="absolute top-6 h-[3px] w-[3px] rounded-full bg-blue-200"
+                    className="absolute top-[29px] h-[3px] w-[3px] rounded-full bg-blue-200"
                     style={{ left: `${at}%` }}
                   />
                 ))}
 
                 {!lane.live && (
                   <div
-                    className="absolute top-[10px] h-2.5 w-2.5 rounded-full border-2 border-zinc-950"
+                    className="absolute top-[15px] h-2.5 w-2.5 rounded-full border-2 border-zinc-950"
                     style={{ left: `calc(${left + width}% - 5px)`, background: accent ? ACCENT : NEUTRAL }}
                   />
                 )}
 
+                {/* THREE PLACES, BECAUSE TWO WERE NOT ENOUGH.
+                    The label went after the bar, or before it once the bar
+                    ended past the measured threshold. Neither fits a bar that
+                    spans nearly the whole chart — which is what ONE long run
+                    looks like, the commonest record there is — so "207 days ·
+                    still going" was anchored past the left edge and the reader
+                    got "l going". When neither gutter fits it sits on the bar,
+                    on a dark chip so 11.5px text is not read off a blue field
+                    at 3.7:1. `100 - flipAfter` IS the measured label width as a
+                    percentage; the threshold is defined from it. */}
                 <div
-                  className="absolute top-[7px] whitespace-nowrap text-[11.5px] text-zinc-400"
+                  className={`absolute top-[12px] whitespace-nowrap text-[11.5px] text-zinc-400 ${
+                    place === "inside" ? "rounded bg-zinc-950/80 px-1.5" : ""
+                  }`}
                   style={
-                    flip
-                      ? { right: `calc(${100 - left}% + 14px)`, textAlign: "right" }
-                      : { left: `calc(${left + width}% + 14px)` }
+                    place === "after"
+                      ? { left: `calc(${left + width}% + 14px)` }
+                      : place === "before"
+                        ? { right: `calc(${100 - left}% + 14px)`, textAlign: "right" }
+                        : { right: `calc(${100 - (left + width)}% + 6px)`, textAlign: "right" }
                   }
                 >
                   <b className="font-semibold text-zinc-100">{days(lane.days)}</b>
@@ -198,11 +221,26 @@ export function Lanes({ record, today, viceLabel, selectedId, onSelect }: {
           })}
         </div>
 
+        {/* THE KEY DESCRIBES THIS CHART, NOT THE CHART IN GENERAL.
+            It was four hard-coded entries, always all four. A record with one
+            live run and no close calls was handed a key for a close-call dot
+            that is not drawn and for two endings that are not drawn either —
+            and the grey entry read "Ended: something else", which is the
+            LITERAL LABEL of a real ending family, so a run that ended "Just one
+            won't matter" was keyed under the name of a different ending. Grey
+            means every ending but one; it now says so in words that are not
+            already taken. */}
         <div className="mt-3.5 flex flex-wrap gap-x-4 gap-y-2 text-[11.5px] text-zinc-400">
           <Key colour={CLEAN} shape="bar" label={`Without ${thing}`} />
-          <Key colour="#bfdbfe" shape="dot" label="Close call" />
-          <Key colour={ACCENT} shape="dot" label={`Ended: "I felt fine"`} />
-          <Key colour={NEUTRAL} shape="dot" label="Ended: something else" />
+          {lanes.some((l) => l.closeCallDays.length > 0) && (
+            <Key colour="#bfdbfe" shape="dot" label="Close call" />
+          )}
+          {lanes.some((l) => l.ending !== null && familyFor(l.ending).accent) && (
+            <Key colour={ACCENT} shape="dot" label={`Ended: "I felt fine"`} />
+          )}
+          {lanes.some((l) => l.ending !== null && !familyFor(l.ending).accent) && (
+            <Key colour={NEUTRAL} shape="dot" label="Ended some other way — named on the bar" />
+          )}
         </div>
       </div>
     </div>

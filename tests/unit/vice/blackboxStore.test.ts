@@ -11,6 +11,7 @@ import {
   parseRecord,
   recordPastRun,
   serializeRecord,
+  newId,
   startAttempt,
   todayInBrowser,
 } from "@/src/vice/blackbox/blackboxStore"
@@ -20,6 +21,7 @@ function started() {
   return startAttempt(emptyRecord(), {
     viceId: "smoking", label: "Cigarettes", startedOn: "2026-08-16",
     startedBy: "Read my own record", structure: ["Told my brother"], acknowledgedRisk: false,
+    today: "2026-09-20",
   })
 }
 
@@ -163,9 +165,28 @@ describe("faults found in review", () => {
     const before = emptyRecord()
     const after = startAttempt(before, {
       viceId: "nicotine", label: "Cigarettes", startedOn: "16/08/2026",
-      startedBy: "", structure: [], acknowledgedRisk: false,
+      startedBy: "", structure: [], acknowledgedRisk: false, today: "2026-09-20",
     })
     expect(after.attempts).toHaveLength(0)
+  })
+
+  it("mints a UUID even with no crypto.randomUUID, because the column is UUID", () => {
+    // The fallback used to return `bb-<base36>-<random>`, which was fine while
+    // the record never left the browser. Once it syncs, every insert carrying
+    // one is rejected by the database — so a browser without
+    // `crypto.randomUUID` (it needs a secure context, so plain http on a phone
+    // on the local network) would write happily to its own storage and silently
+    // never reach the account.
+    const real = globalThis.crypto
+    try {
+      Object.defineProperty(globalThis, "crypto", { value: {}, configurable: true })
+      const ids = Array.from({ length: 50 }, () => newId())
+      const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+      for (const id of ids) expect(id, id).toMatch(uuid)
+      expect(new Set(ids).size, "ids collided").toBe(ids.length)
+    } finally {
+      Object.defineProperty(globalThis, "crypto", { value: real, configurable: true })
+    }
   })
 
   it("accepts only real calendar days", () => {

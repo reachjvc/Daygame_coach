@@ -25,6 +25,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import type { ViceEndingId } from "../../types"
 import { Chip, Field, Line, Panel, PrimaryButton, QuietButton, Scale } from "../Ui"
 import { ENDING_FAMILIES, FACTOR_SEEDS } from "../../data/blackbox"
+import { isCalendarDay } from "../../blackbox/blackboxStore"
 
 export interface ReportDraft {
   wentThrough: boolean
@@ -35,18 +36,44 @@ export interface ReportDraft {
   where: string
   factors: string[]
   didInstead: string
+  /** The calendar day it happened on, which is not always the day it is filed. */
+  on: string
 }
 
 export function ReportForm({
   initial,
+  today,
+  runStartedOn,
+  lastFiledOn,
   onFile,
   onClose,
 }: {
   initial: { wentThrough: boolean; ending: ViceEndingId; thought?: string }
+  today: string
+  /** The run this is filed against. Nothing can have happened before it began. */
+  runStartedOn: string
+  /**
+   * The last day anything was already filed against this run.
+   *
+   * A lapse ends the run, so it cannot be dated before a close call the run
+   * already holds — that would leave the record saying you nearly went during
+   * a run that had already ended.
+   */
+  lastFiledOn: string
   onFile: (draft: ReportDraft) => void
   onClose: () => void
 }) {
   const [wentThrough, setWentThrough] = useState(initial.wentThrough)
+  /**
+   * WHEN, not just what.
+   *
+   * Almost nobody files at the moment it happens — they file the next morning,
+   * which is the one time of day somebody is willing to write any of this down.
+   * With no field here the run was dated by the moment of FILING, so a run that
+   * ended on Friday night went on the chart a day longer than it lasted, for
+   * good. Defaults to today because that is still the common case.
+   */
+  const [on, setOn] = useState(today)
   const [ending, setEnding] = useState<ViceEndingId>(initial.ending)
   const [thought, setThought] = useState(initial.thought ?? "")
   // Starts unset, so `null` — "they did not say" — is a state a person can
@@ -60,6 +87,17 @@ export function ReportForm({
 
   const toggle = (item: string) =>
     setFactors((f) => (f.includes(item) ? f.filter((x) => x !== item) : [...f, item]))
+
+  /** Exactly what is standing between this form and being filed. */
+  const blockedBecause: string | null = !isCalendarDay(on)
+    ? "Pick the day this happened."
+    : on < runStartedOn
+      ? `This run only started on ${runStartedOn}, so nothing in it can be older than that.`
+      : on > today
+        ? "That day has not happened yet."
+        : wentThrough && on < lastFiledOn
+          ? `Something is already filed on ${lastFiledOn} against this run, and a run cannot end before what it holds. Tap that run on the chart to remove it first.`
+          : null
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
@@ -110,6 +148,24 @@ export function ReportForm({
             </p>
           </Panel>
         )}
+
+        <div>
+          <label className="block text-[12px] text-zinc-400" htmlFor="rf-on">
+            Which day was this?
+          </label>
+          <p className="mt-0.5 text-[11.5px] text-zinc-500">
+            The night it happened, not the morning you are writing it down.
+          </p>
+          <input
+            id="rf-on"
+            type="date"
+            value={on}
+            min={wentThrough && lastFiledOn > runStartedOn ? lastFiledOn : runStartedOn}
+            max={today}
+            onChange={(e) => setOn(e.target.value)}
+            className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[14px] text-zinc-100 outline-none focus:border-white/30"
+          />
+        </div>
 
         <Field
           label="What was the thought, in your own words?"
@@ -181,11 +237,19 @@ export function ReportForm({
           />
         )}
 
+        {/* A disabled button must say why — the same rule the remembered-run
+            form keeps, in the one place where a dead button at eleven at night
+            would be read as the app refusing the report rather than the date. */}
+        {blockedBecause && (
+          <p className="mt-2 text-[12px] text-amber-200/85">{blockedBecause}</p>
+        )}
+
         <div className="mt-3 flex items-center justify-between">
           <QuietButton onClick={onClose}>Cancel</QuietButton>
           <PrimaryButton
+            disabled={blockedBecause !== null}
             onClick={() =>
-              onFile({ wentThrough, thought, ending, closeness, withWhom, where, factors, didInstead })
+              onFile({ wentThrough, thought, ending, closeness, withWhom, where, factors, didInstead, on })
             }
           >
             File it

@@ -20,26 +20,26 @@ function record(): BlackBoxRecord {
   let r = emptyRecord()
   // Two long runs that both ended on "I felt fine", and one short one that
   // ended on a bad week — the shape the whole tool exists to make visible.
-  r = startAttempt(r, { viceId: "smoking", label: "Cigarettes", startedOn: "2025-02-10", startedBy: "New year", structure: ["Told my brother"], acknowledgedRisk: false })
+  r = startAttempt(r, { viceId: "smoking", label: "Cigarettes", startedOn: "2025-02-10", startedBy: "New year", structure: ["Told my brother"], acknowledgedRisk: false, today: TODAY })
   r = fileReport(r, {
     attemptId: r.attempts[0].id, at: "2025-05-09T20:00:00.000Z", wentThrough: true,
     thought: "88 days in, one at the weekend is fine", ending: "fine", closeness: 9,
     withWhom: "Alone", where: "Home", factors: ["A good stretch beforehand", "On my own"], didInstead: "",
   })
-  r = startAttempt(r, { viceId: "smoking", label: "Cigarettes", startedOn: "2025-08-18", startedBy: "Cough", structure: [], acknowledgedRisk: false })
+  r = startAttempt(r, { viceId: "smoking", label: "Cigarettes", startedOn: "2025-08-18", startedBy: "Cough", structure: [], acknowledgedRisk: false, today: TODAY })
   r = fileReport(r, {
     attemptId: r.attempts[1].id, at: "2025-09-10T19:00:00.000Z", wentThrough: true,
     thought: "Work fell apart", ending: "stress", closeness: 10,
     withWhom: "Colleagues", where: "Office", factors: ["Stressed about work"], didInstead: "",
   })
-  r = startAttempt(r, { viceId: "smoking", label: "Cigarettes", startedOn: "2026-06-03", startedBy: "Money", structure: ["Threw out everything"], acknowledgedRisk: false })
+  r = startAttempt(r, { viceId: "smoking", label: "Cigarettes", startedOn: "2026-06-03", startedBy: "Money", structure: ["Threw out everything"], acknowledgedRisk: false, today: TODAY })
   r = fileReport(r, {
     attemptId: r.attempts[2].id, at: "2026-07-14T21:00:00.000Z", wentThrough: true,
     thought: "I've clearly got this under control now", ending: "fine", closeness: 8,
     withWhom: "Friends", where: "Pub", factors: ["A good stretch beforehand", "Drinking"], didInstead: "",
   })
   // The live run, with two close calls survived.
-  r = startAttempt(r, { viceId: "smoking", label: "Cigarettes", startedOn: "2026-08-16", startedBy: "Read my own record", structure: ["Told my brother", "A rule for the first drink"], acknowledgedRisk: false })
+  r = startAttempt(r, { viceId: "smoking", label: "Cigarettes", startedOn: "2026-08-16", startedBy: "Read my own record", structure: ["Told my brother", "A rule for the first drink"], acknowledgedRisk: false, today: TODAY })
   r = fileReport(r, {
     attemptId: r.attempts[3].id, at: "2026-09-02T22:10:00.000Z", wentThrough: false,
     thought: "Maybe I could just moderate", ending: "fine", closeness: 7,
@@ -61,12 +61,12 @@ describe("daysBetween and runDays", () => {
   })
 
   it("a run that started and ended the same day is 1 day, never 0", () => {
-    const a = { id: "x", viceId: "v", label: "l", startedOn: "2026-05-01", startedBy: "", structure: [], endedOn: "2026-05-01", endedByReportId: null }
+    const a = { id: "x", viceId: "v", label: "l", startedOn: "2026-05-01", startedBy: "", structure: [], endedOn: "2026-05-01", endedByReportId: null, updatedAt: "2026-05-01T12:00:00.000Z", deletedAt: null }
     expect(runDays(a, TODAY)).toBe(1)
   })
 
   it("a live run counts up to and including today", () => {
-    const a = { id: "x", viceId: "v", label: "l", startedOn: "2026-09-18", startedBy: "", structure: [], endedOn: null, endedByReportId: null }
+    const a = { id: "x", viceId: "v", label: "l", startedOn: "2026-09-18", startedBy: "", structure: [], endedOn: null, endedByReportId: null, updatedAt: "2026-09-18T12:00:00.000Z", deletedAt: null }
     expect(runDays(a, TODAY)).toBe(3)
   })
 
@@ -152,7 +152,7 @@ describe("chart geometry", () => {
 
   it("gives the shortest run a visible width", () => {
     let r = emptyRecord()
-    r = startAttempt(r, { viceId: "v", label: "l", startedOn: "2026-09-19", startedBy: "", structure: [], acknowledgedRisk: false })
+    r = startAttempt(r, { viceId: "v", label: "l", startedOn: "2026-09-19", startedBy: "", structure: [], acknowledgedRisk: false, today: TODAY })
     const span = chartSpan(r, TODAY)!
     const [g] = laneGeometry(runLanes(r, TODAY), span, TODAY)
     expect(g.width).toBeGreaterThanOrEqual(1.1)

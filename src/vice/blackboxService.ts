@@ -38,9 +38,87 @@ export function daysBetween(fromISO: string, toISO: string): number {
   return Math.round((at(toISO) - at(fromISO)) / 86400000)
 }
 
-/** The run still going, or null. There is at most one. */
+/** The run still going, or null. There is at most one per vice. */
 export function currentAttempt(record: BlackBoxRecord): ViceAttempt | null {
   return record.attempts.find((a) => a.endedOn === null) ?? null
+}
+
+// ---------------------------------------------------------------- one vice
+
+/**
+ * ONE RECORD, SEVERAL THINGS BEING QUIT — AND THE SCREEN SHOWS ONE AT A TIME.
+ *
+ * `ViceAttempt.viceId` has carried the vice since day one, and every read in
+ * this file used to ignore it. Everything above answered for the whole record
+ * and every screen named it with `viceLabelOf`, which is the MOST RECENT run's
+ * vice — so a record holding a 100-day run off smoking and a live one off porn
+ * rendered "Lit is time without porn" over both bars, added them into "Across
+ * every run: 215 days", and ranked the smoking run's ending in a cost list
+ * headed by the other vice. Nothing on the screen said they were different
+ * things, including the per-run detail.
+ *
+ * The fix is a filter rather than a second record: attempts of one vice, plus
+ * only the reports filed against them. Every function above then answers for
+ * that vice without knowing the concept exists, which is why `stats`,
+ * `runLanes`, `thoughtCosts`, `answerFor` and `chartSpan` are untouched.
+ */
+export function forVice(record: BlackBoxRecord, viceId: string | null): BlackBoxRecord {
+  // TOMBSTONES ARE DROPPED HERE, FOR EVERY SCREEN AT ONCE.
+  //
+  // A removal is a row with `deletedAt` set, not a gap, so that a device which
+  // was offline when it happened learns about it rather than helpfully putting
+  // the row back. That is right for the record and wrong for every number on
+  // the page: a removed run left in would still be drawn, still counted in
+  // "Across every run", and still ranked in the cost list.
+  //
+  // One place decides it, and it is this one, because `forVice` is what the
+  // page computes everything from. `vicesOn` below is the only other read of
+  // the raw record and filters the same way; `tests/unit/vice/` asserts that no
+  // read surface returns a removed row.
+  const attempts = record.attempts.filter(
+    (a) => a.deletedAt === null && (viceId === null || a.viceId === viceId),
+  )
+  const ids = new Set(attempts.map((a) => a.id))
+  return {
+    ...record,
+    attempts,
+    reports: record.reports.filter((r) => r.deletedAt === null && ids.has(r.attemptId)),
+  }
+}
+
+/** One vice on this record, and what it holds. */
+export interface ViceOnRecord {
+  viceId: string
+  /** The person's own catalogue words for it, from its most recent run. */
+  label: string
+  runs: number
+  /** Whether a run off this one is still going. */
+  live: boolean
+  /** The most recent start, which is what the list is ordered by. */
+  lastStartedOn: string
+}
+
+/**
+ * Which things this record is about, most recently started first.
+ *
+ * The label is taken from the newest run rather than the oldest, so renaming a
+ * custom vice on the next run renames it everywhere rather than leaving the
+ * switcher on a name the person has stopped using.
+ */
+export function vicesOn(record: BlackBoxRecord): ViceOnRecord[] {
+  const by = new Map<string, ViceOnRecord>()
+  const alive = record.attempts.filter((a) => a.deletedAt === null)
+  for (const a of [...alive].sort((x, y) => x.startedOn.localeCompare(y.startedOn))) {
+    const seen = by.get(a.viceId)
+    by.set(a.viceId, {
+      viceId: a.viceId,
+      label: a.label,
+      runs: (seen?.runs ?? 0) + 1,
+      live: (seen?.live ?? false) || a.endedOn === null,
+      lastStartedOn: a.startedOn,
+    })
+  }
+  return [...by.values()].sort((a, b) => b.lastStartedOn.localeCompare(a.lastStartedOn))
 }
 
 /**

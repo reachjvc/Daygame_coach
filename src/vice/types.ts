@@ -497,6 +497,31 @@ export interface ViceAttempt {
   endedOn: string | null
   /** The report that ended it, or null while it is still alive. */
   endedByReportId: string | null
+  /** When this row last changed. See `SyncStamps` below. */
+  updatedAt: string
+  /** When it was removed, or null. A removal is a row, never a gap. */
+  deletedAt: string | null
+}
+
+/**
+ * THE TWO BOOKKEEPING FIELDS, AND WHY THEY ARE UTC WHEN NOTHING ELSE HERE IS.
+ *
+ * Every other moment in this record is the person's own wall clock with no
+ * timezone on it, deliberately: `at` on a report answers "which night was this",
+ * and a report filed at 23:30 in Berlin must not become tomorrow. That is right
+ * for a day and wrong for these two.
+ *
+ * `updatedAt` and `deletedAt` are not days. They exist to answer "which of these
+ * two versions of the same row is newer", asked across devices that may be in
+ * different places. Local wall-clock text sorts correctly within ONE person's
+ * own browser and stops being comparable the moment a second device is in a
+ * different zone — a phone in Berlin would appear an hour ahead of a laptop in
+ * London for every row, forever. So these two are true UTC instants, ending in
+ * `Z`, and `nowUtc()` in the store is the only thing that makes them.
+ */
+export interface SyncStamps {
+  updatedAt: string
+  deletedAt: string | null
 }
 
 /**
@@ -545,6 +570,10 @@ export interface ViceReport {
   factors: string[]
   /** What they did instead. Only meaningful on a close call. */
   didInstead: string
+  /** When this row last changed. UTC — see `SyncStamps`. */
+  updatedAt: string
+  /** When it was removed, or null. A removal is a row, never a gap. */
+  deletedAt: string | null
 }
 
 /** The whole record. Two flat lists; everything else is derived at read time. */

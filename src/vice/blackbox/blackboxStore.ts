@@ -64,6 +64,45 @@ export function nowInBrowser(at: Date = new Date()): string {
   return `${toDateISO(at)}T${p(at.getHours())}:${p(at.getMinutes())}:${p(at.getSeconds())}`
 }
 
+/**
+ * A true UTC instant, for the two sync fields and nothing else.
+ *
+ * `nowInBrowser` above is deliberately NOT this: a report's `at` is the
+ * person's own night and must not shift zones. `updatedAt` and `deletedAt` are
+ * the opposite question — which of two versions of a row is newer, asked across
+ * devices — and local wall-clock text stops being comparable the moment a phone
+ * and a laptop are in different places. See `SyncStamps` in types.ts.
+ */
+let lastStamp = ""
+
+export function nowUtc(at: Date = new Date()): string {
+  // MONOTONIC, BECAUSE A TIE PICKS THE STALE COPY.
+  //
+  // `toISOString` has millisecond precision, and two writes in the same
+  // millisecond are ordinary: starting a run and ending it in a test, or any
+  // two actions on a fast machine. The merge keeps the copy it already holds
+  // when stamps are equal — it has to, or an unsent local edit would lose to
+  // the server's older answer — so two rows stamped alike means the SECOND one
+  // silently loses on the other device.
+  //
+  // Found by a test that merged a lapse onto a second device and got back a run
+  // still going with the report that ended it sitting underneath.
+  //
+  // The rule this keeps: a row's stamp is always strictly greater than the
+  // stamp of the version it was derived from. Within one device that is exact.
+  // Across two devices an identical millisecond is a genuine simultaneous edit
+  // by one person in two places, which does not happen.
+  const now = at.toISOString()
+  const stamp = now > lastStamp ? now : new Date(Date.parse(lastStamp) + 1).toISOString()
+  lastStamp = stamp
+  return stamp
+}
+
+/** Only for tests, which need each case to start from a known clock. */
+export function resetStampClock(): void {
+  lastStamp = ""
+}
+
 /** A calendar day, or nothing. Anything else is refused rather than stored. */
 export function isCalendarDay(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
@@ -77,7 +116,24 @@ export function newId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID()
   }
-  return `bb-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+  // UUID-SHAPED, BECAUSE THE COLUMN IS `UUID` AND THE DATABASE REFUSES
+  // ANYTHING ELSE.
+  //
+  // This fallback used to return `bb-<base36>-<random>`, which was fine for
+  // years of a record that never left the browser and is now the difference
+  // between syncing and not: every insert carrying one is rejected, so a
+  // browser without `crypto.randomUUID` would write happily to its own storage
+  // and silently never reach the account. `randomUUID` needs a secure context,
+  // so plain http on a phone on the local network is exactly where this bites.
+  //
+  // v4-shaped rather than random text for the same reason: the shape is what
+  // the column accepts. `Math.random` is not a cryptographic source and does
+  // not need to be — these ids identify rows within one person's own record,
+  // and nothing is secured by their unpredictability.
+  const hex = (n: number) =>
+    Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join("")
+  const variant = "89ab"[Math.floor(Math.random() * 4)]
+  return `${hex(8)}-${hex(4)}-4${hex(3)}-${variant}${hex(3)}-${hex(12)}`
 }
 
 /**
@@ -95,9 +151,33 @@ export function parseRecord(raw: string | null): BlackBoxRecord {
     if (!parsed || typeof parsed !== "object") return emptyRecord()
     const attempts = Array.isArray(parsed.attempts) ? (parsed.attempts as ViceAttempt[]) : []
     const reports = Array.isArray(parsed.reports) ? (parsed.reports as ViceReport[]) : []
-    return { version: 1, attempts, reports }
+    return { version: 1, attempts: attempts.map(stamped), reports: reports.map(stamped) }
   } catch {
     return emptyRecord()
+  }
+}
+
+/**
+ * A row read back, with the two sync fields guaranteed present.
+ *
+ * Rows written before this existed have neither. They are not invalid and they
+ * are not old — they are somebody's four years — so they are filled in on read
+ * rather than refused. `updatedAt` falls back to the row's own moment where it
+ * has one, so a record imported onto a second device does not arrive claiming
+ * every run changed at once; `startedOn` is a day and midday is the convention
+ * this file already uses for a day with no clock time.
+ */
+function stamped<T extends { updatedAt?: string; deletedAt?: string | null }>(row: T): T {
+  if (typeof row.updatedAt === "string" && row.updatedAt !== "") {
+    return row.deletedAt === undefined ? { ...row, deletedAt: null } : row
+  }
+  const own = row as { at?: string; startedOn?: string }
+  const moment = own.at ?? (own.startedOn ? `${own.startedOn}T12:00:00` : null)
+  const parsed = moment ? Date.parse(`${moment}Z`) : Number.NaN
+  return {
+    ...row,
+    updatedAt: Number.isNaN(parsed) ? new Date(0).toISOString() : new Date(parsed).toISOString(),
+    deletedAt: row.deletedAt ?? null,
   }
 }
 
@@ -138,6 +218,8 @@ export function startAttempt(
     structure: string[]
     /** Whether they confirmed reading the withdrawal note. Only read for a vice that carries one. */
     acknowledgedRisk: boolean
+    /** The person's own today, so "still going" has an end to be measured against. */
+    today: string
   },
 ): BlackBoxRecord {
   // THE SAFETY GATE, AT THE LAYER THAT CANNOT BE SKIPPED.
@@ -152,6 +234,13 @@ export function startAttempt(
   // width and total downstream became NaN — persisted, so reloading did not
   // clear it. The screen also validates; this is the one that cannot be skipped.
   if (!isCalendarDay(input.startedOn)) return record
+  // THE SAME OVERLAP RULE THE REMEMBERED-RUN FORM KEEPS. It was on that form
+  // only, so the identical double-count was reachable from this one: a run
+  // backdated into a run already on the record, or a second live run off a vice
+  // that already has one, both went straight in and both counted their shared
+  // days twice in "Across every run". A live run covers every day up to today,
+  // which is what the stretch is measured against.
+  if (overlapsExisting(record, input.startedOn, input.today, input.viceId)) return record
 
   const attempt: ViceAttempt = {
     id: newId(),
@@ -162,8 +251,23 @@ export function startAttempt(
     structure: input.structure,
     endedOn: null,
     endedByReportId: null,
+    updatedAt: nowUtc(),
+    deletedAt: null,
   }
   return { ...record, attempts: [...record.attempts, attempt] }
+}
+
+/**
+ * The last day anything was filed against a run, or its own start.
+ *
+ * Exported so the form and the store ask one question rather than each deciding
+ * what "already on the record" means.
+ */
+export function latestReportDay(record: BlackBoxRecord, attemptId: string): string {
+  const start = living(record.attempts).find((a) => a.id === attemptId)?.startedOn ?? ""
+  return living(record.reports)
+    .filter((r) => r.attemptId === attemptId)
+    .reduce((latest, r) => (r.at.slice(0, 10) > latest ? r.at.slice(0, 10) : latest), start)
 }
 
 /**
@@ -213,13 +317,14 @@ export function recordPastRun(
   // A run cannot end before it started. Accepting it would draw a bar with a
   // negative width and a negative day count into the lifetime total.
   if (input.endedOn < input.startedOn) return record
-  // Nor can two runs cover the same day. "Across every run" is a sum of run
-  // lengths, so an overlap counts those days twice: a 16-day run entered
-  // inside a live 31-day one took the headline total to 47 days for a stretch
-  // in which 31 days had passed. The screen refuses it too; this is the guard
-  // that cannot be skipped.
-  if (overlapsExisting(record, input.startedOn, input.endedOn)) return record
+  // Nor can two runs OFF THE SAME VICE cover the same day. "Across every run"
+  // is a sum of run lengths, so an overlap counts those days twice: a 16-day
+  // run entered inside a live 31-day one took the headline total to 47 days
+  // for a stretch in which 31 days had passed. The screen refuses it too; this
+  // is the guard that cannot be skipped.
+  if (overlapsExisting(record, input.startedOn, input.endedOn, input.viceId)) return record
 
+  const stamp = nowUtc()
   const report: ViceReport = {
     id: newId(),
     attemptId: "",
@@ -232,6 +337,8 @@ export function recordPastRun(
     where: "",
     factors: [],
     didInstead: "",
+    updatedAt: stamp,
+    deletedAt: null,
   }
   const attempt: ViceAttempt = {
     id: newId(),
@@ -242,6 +349,8 @@ export function recordPastRun(
     structure: input.structure,
     endedOn: input.endedOn,
     endedByReportId: report.id,
+    updatedAt: stamp,
+    deletedAt: null,
   }
   return {
     ...record,
@@ -251,16 +360,29 @@ export function recordPastRun(
 }
 
 /**
- * Does this stretch of days touch a run that is already on the record?
+ * Does this stretch of days touch a run OFF THE SAME VICE already on the record?
  *
  * Inclusive on both ends, matching `runDays`: a run that ended on the 5th and
  * one that started on the 5th share a day, and that day would be counted twice
- * in the lifetime total. A live run is treated as running up to `endedOn` of
- * the stretch being added, because "still going" covers every day since it
- * started.
+ * in the lifetime total.
+ *
+ * PER VICE, because the total it protects is per vice. Without the vice this
+ * refused the most ordinary thing a person does — stopping two things over the
+ * same months — and it refused it silently at the store as well as on the
+ * screen, so "Add it" simply did nothing. Quitting smoking in March and porn in
+ * March are not the same days counted twice; they are two records.
+ *
+ * A live run is treated as running up to `endedOn` of the stretch being added,
+ * because "still going" covers every day since it started.
  */
-export function overlapsExisting(record: BlackBoxRecord, startedOn: string, endedOn: string): boolean {
-  return record.attempts.some((a) => {
+export function overlapsExisting(
+  record: BlackBoxRecord,
+  startedOn: string,
+  endedOn: string,
+  viceId: string,
+): boolean {
+  return living(record.attempts).some((a) => {
+    if (a.viceId !== viceId) return false
     const aEnd = a.endedOn ?? endedOn
     return a.startedOn <= endedOn && startedOn <= aEnd
   })
@@ -272,6 +394,14 @@ export function overlapsExisting(record: BlackBoxRecord, startedOn: string, ende
  * When `wentThrough` is true the run it belongs to ends, dated by the report —
  * which is why an ending is never entered separately. A run's ending IS a
  * report, so the two can never disagree about why it ended.
+ *
+ * `at` USED TO BE THE MOMENT OF FILING AND NOTHING ELSE, and the form had no
+ * way to say otherwise. Almost nobody files at the moment: they file the next
+ * morning. So a run that ended on Friday night was recorded as ending on
+ * Saturday, one day longer than it was, permanently and with no way to correct
+ * it — in the one number the whole screen is built on. The form now asks which
+ * day, and this refuses a day before the run it is filed against, because a
+ * report predating its own run would give the run a negative length.
  */
 export function fileReport(
   record: BlackBoxRecord,
@@ -288,17 +418,125 @@ export function fileReport(
     didInstead: string
   },
 ): BlackBoxRecord {
-  const report: ViceReport = { id: newId(), ...input }
+  if (!isCalendarDay(input.at.slice(0, 10))) return record
+  const against = living(record.attempts).find((a) => a.id === input.attemptId)
+  if (!against || input.at.slice(0, 10) < against.startedOn) return record
+  // A LAPSE ENDS THE RUN, SO IT CANNOT PREDATE WHAT THE RUN ALREADY HOLDS.
+  // Dating one before a close call already filed against the same run leaves
+  // the record saying you nearly went on the 5th during a run that ended on
+  // the 2nd — and the chart hides it, because `laneGeometry` clamps a dot that
+  // falls outside its bar back onto the end of it. The close call is the thing
+  // to remove first, which the run's own panel now allows.
+  if (input.wentThrough && input.at.slice(0, 10) < latestReportDay(record, input.attemptId)) {
+    return record
+  }
+
+  const stamp = nowUtc()
+  const report: ViceReport = { id: newId(), ...input, updatedAt: stamp, deletedAt: null }
   const reports = [...record.reports, report]
   if (!input.wentThrough) return { ...record, reports }
 
   const endedOn = input.at.slice(0, 10)
+  // THE RUN CHANGED TOO, SO THE RUN'S STAMP MOVES TOO. A lapse writes one new
+  // row and edits one existing one, and the edit is the half a sync would miss:
+  // another device would take the new report, keep its own copy of the attempt,
+  // and show a run still going with the report that ended it sitting under it.
   const attempts = record.attempts.map((a) =>
     a.id === input.attemptId && a.endedOn === null
-      ? { ...a, endedOn, endedByReportId: report.id }
+      ? { ...a, endedOn, endedByReportId: report.id, updatedAt: stamp }
       : a,
   )
   return { ...record, attempts, reports }
+}
+
+// ---------------------------------------------------------------- corrections
+
+/**
+ * TAKING SOMETHING BACK.
+ *
+ * Until these existed the record was append-only in the strongest sense: there
+ * was no delete, no edit and no undo anywhere in the module. One tap on "I did
+ * it" followed by "File it" ended a 207-day run for good, and the whole control
+ * surface left on the page afterwards was the door, the bar, "Start a run",
+ * "Add a run you already had" and the export. A run entered from memory with a
+ * mistyped year was equally permanent, and it went on blocking every
+ * overlapping run entered after it.
+ *
+ * That is not austerity, it is a record nobody can trust. The rule the module
+ * actually keeps — the one from the research — is that **a lapse never
+ * subtracts anything**, and no counter here resets on a lapse whether or not a
+ * mistake can be undone. Confusing "your days are never taken away from you"
+ * with "you may never correct what you typed" is how a log stops being written
+ * in.
+ *
+ * Both are surgical and neither cascades further than it must: removing a
+ * report that ended a run brings the run back alive, and removing a run takes
+ * the reports filed against it with it, because a report against a run that no
+ * longer exists would be counted by `thoughtCosts` and drawn nowhere.
+ */
+
+/**
+ * Whether removing this report would leave two runs alive off one vice.
+ *
+ * Removing the report that ended a run revives that run. If a later run off the
+ * same vice has since been started and is still going, reviving would produce
+ * two live runs covering the same days — which `overlapsExisting` refuses on
+ * the way in, so it must be refused on the way back too. Exported so the screen
+ * can say WHY the control is not offered rather than taking a tap that does
+ * nothing.
+ */
+export function revivalClashes(record: BlackBoxRecord, reportId: string): boolean {
+  const ended = living(record.attempts).find((a) => a.endedByReportId === reportId)
+  if (!ended) return false
+  return living(record.attempts).some(
+    (a) => a.id !== ended.id && a.viceId === ended.viceId && a.endedOn === null,
+  )
+}
+
+/**
+ * Remove one report.
+ *
+ * If it is the one that ended a run, the run goes back to being alive — the
+ * ending and the report are the same fact, so removing one and leaving the
+ * other would be a run that ended for no recorded reason.
+ */
+export function removeReport(record: BlackBoxRecord, reportId: string): BlackBoxRecord {
+  if (!living(record.reports).some((r) => r.id === reportId)) return record
+  if (revivalClashes(record, reportId)) return record
+  const stamp = nowUtc()
+  return {
+    ...record,
+    attempts: record.attempts.map((a) =>
+      a.endedByReportId === reportId
+        ? { ...a, endedOn: null, endedByReportId: null, updatedAt: stamp }
+        : a,
+    ),
+    reports: record.reports.map((r) =>
+      r.id === reportId ? { ...r, deletedAt: stamp, updatedAt: stamp } : r,
+    ),
+  }
+}
+
+/** Remove one run, and every report filed against it. */
+export function removeAttempt(record: BlackBoxRecord, attemptId: string): BlackBoxRecord {
+  if (!living(record.attempts).some((a) => a.id === attemptId)) return record
+  const stamp = nowUtc()
+  return {
+    ...record,
+    attempts: record.attempts.map((a) =>
+      a.id === attemptId ? { ...a, deletedAt: stamp, updatedAt: stamp } : a,
+    ),
+    reports: record.reports.map((r) =>
+      r.attemptId === attemptId && r.deletedAt === null
+        ? { ...r, deletedAt: stamp, updatedAt: stamp }
+        : r,
+    ),
+  }
+}
+
+/** The rows that still exist. A tombstone is a row, and it is not one of them. */
+export function living<T extends { deletedAt: string | null }>(rows: T[]): T[] {
+  return rows.filter((r) => r.deletedAt === null)
 }
 
 // ---------------------------------------------------------------- portability
@@ -330,6 +568,18 @@ export function importRecord(raw: string): BlackBoxRecord | null {
     if (!Array.isArray(parsed.attempts) || !Array.isArray(parsed.reports)) return null
     if (!parsed.attempts.every(isAttempt)) return null
     if (!parsed.reports.every(isReport)) return null
+    // AND EVERY REPORT MUST BELONG TO A RUN THAT IS IN THE FILE.
+    // Reads are filtered to the vice on screen by way of the attempt a report
+    // is filed against, so an orphan is not merely wrong — it is invisible,
+    // on a screen whose whole claim is that it shows you your own record. It
+    // bounces the file rather than dropping the rows quietly.
+    const runs = new Set(parsed.attempts.map((a) => a.id))
+    if (!parsed.reports.every((r) => runs.has(r.attemptId))) return null
+    // The same for an ending that names a report the file does not carry.
+    const rows = new Set(parsed.reports.map((r) => r.id))
+    if (!parsed.attempts.every((a) => a.endedByReportId === null || rows.has(a.endedByReportId))) {
+      return null
+    }
     return { version: 1, attempts: parsed.attempts, reports: parsed.reports }
   } catch {
     return null

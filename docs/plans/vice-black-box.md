@@ -265,6 +265,20 @@ company", with no way to answer it.
 
 ## Item 9 — should this be deployable from the start?
 
+> **SUPERSEDED 2026-09-23. The answer is now yes.** The owner read the finished
+> tool and said: "so if its browser, it is wrong." The plan that replaces this
+> section is `docs/plans/vice-on-the-account.md`, which keeps everything below
+> about the *shape* of the record — that part was right and is the reason the
+> move is a week rather than a rescue — and overturns only the conclusion.
+>
+> What changed, in one line: the project is adding 25 Supabase tables this week
+> for Life Mastery, so "do not add the 35th foreign key" was overtaken; and the
+> platform move this section deferred to is still at step 0 six weeks on, so
+> deferring to it parks a multi-year record in a browser cache indefinitely.
+>
+> The section is left standing rather than rewritten, because its reasoning was
+> not careless and the next person deserves to see what was weighed.
+
 **No, and the reason is not speed.**
 
 You decided on 2026-09-17 to leave Supabase for a managed platform with Postgres

@@ -16,6 +16,17 @@
  * Read order on the page is deliberate: the door first, because the one moment
  * this has to work is the moment somebody opens it mid-thought; then the three
  * numbers; then the picture; then what each thought has cost.
+ *
+ * ONE VICE AT A TIME. The record holds runs off several things — `viceId` has
+ * been on every attempt since day one — and every read here used to ignore it,
+ * so a record with a smoking run and a porn run drew both on one chart under
+ * one caption and added them into one total. Everything below the switcher is
+ * computed from `view`, the record filtered to the vice on screen.
+ *
+ * AND EVERY MISTAKE CAN BE TAKEN BACK. There was no undo, edit or delete
+ * anywhere in this module: one tap on "I did it" ended a 207-day run for good.
+ * A record you cannot correct is a record you stop writing in the first time it
+ * is wrong, which is the one failure this tool cannot survive.
  */
 
 import { useState } from "react"
@@ -23,12 +34,26 @@ import Link from "next/link"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { BlackBoxRecord, ViceEndingId } from "../../types"
 import { useBlackBox } from "../../blackbox/useBlackBox"
-import { exportRecord, fileReport, importRecord, nowInBrowser, recordPastRun, startAttempt } from "../../blackbox/blackboxStore"
-import { currentAttempt, latestAttempt, runLanes, stats, thoughtCosts, viceLabelOf } from "../../blackboxService"
+import { useBlackBoxView } from "../../blackbox/useBlackBoxView"
+import { useBlackBoxSync } from "../../blackbox/useBlackBoxSync"
+import { syncNotice } from "../../blackbox/viceSyncService"
+import {
+  exportRecord,
+  fileReport,
+  importRecord,
+  latestReportDay,
+  nowInBrowser,
+  recordPastRun,
+  removeAttempt,
+  removeReport,
+  revivalClashes,
+  startAttempt,
+} from "../../blackbox/blackboxStore"
+import { currentAttempt, forVice, runLanes, stats, thoughtCosts, vicesOn } from "../../blackboxService"
 import { familyFor } from "../../data/blackbox"
 import { LIFE_MASTERY, viceStep } from "@/src/shared/lifeMasteryRoutes"
 import { BackLink } from "@/components/BackLink"
-import { Empty, PrimaryButton, QuietButton, Stat } from "../Ui"
+import { PrimaryButton, QuietButton, Stat } from "../Ui"
 import { days } from "./days"
 import { Lanes } from "./Lanes"
 import { AttemptStart } from "./AttemptStart"
@@ -46,36 +71,82 @@ type Dialog =
 
 export function BlackBoxPage() {
   const { record, update, ready, today } = useBlackBox()
+  // The account. The page never waits for it: everything below renders from
+  // the browser copy, and this only reports what is happening behind that.
+  const sync = useBlackBoxSync({ record, update, ready })
   const [dialog, setDialog] = useState<Dialog>({ kind: "none" })
   const [notice, setNotice] = useState("")
   const [openRun, setOpenRun] = useState<string | null>(null)
+  /**
+   * The vice on screen. Whatever was last looked at, falling back to the run
+   * started most recently — and only to that on a browser with nothing
+   * remembered, or one whose record no longer holds what was remembered.
+   */
+  const { viewing, remember } = useBlackBoxView()
+  /**
+   * The report filed a moment ago, so it can be taken straight back.
+   *
+   * The mis-tap this exists for is specific: "I didn't do it" and "I did it"
+   * are a two-up grid, one thumb-width apart, read at eleven at night, and the
+   * right-hand one ends the run. Correcting it later from the run's own panel
+   * works, but an undo has to be where the mistake was made.
+   */
+  const [justFiled, setJustFiled] = useState<{ id: string; wentThrough: boolean } | null>(null)
 
-  const live = currentAttempt(record)
-  // One owner for "what is this record about", so the header, the chart's
-  // caption and the remembered-run form cannot name three different things.
-  const viceLabel = viceLabelOf(record)
-  const latest = latestAttempt(record)
-  const summary = stats(record, today)
-  const costs = thoughtCosts(record, today)
+  const vices = vicesOn(record)
+  const remembered = vices.find((v) => v.viceId === viewing)?.viceId ?? null
+  const viceId = remembered ?? vices[0]?.viceId ?? null
+  const current = vices.find((v) => v.viceId === viceId) ?? null
+  // One owner for "what is this screen about", so the header, the chart's
+  // caption and the two forms cannot name three different things.
+  const viceLabel = current?.label ?? null
+
+  /** Everything below is answered for the vice on screen, and only that one. */
+  const view = forVice(record, viceId)
+  const live = currentAttempt(view)
+  const summary = stats(view, today)
+  const costs = thoughtCosts(view, today)
   const worst = costs[0]
+
+  /** Show a vice, and keep showing it next time the page is opened. */
+  function showVice(next: string) {
+    remember(next)
+    setOpenRun(null)
+  }
 
   function file(draft: ReportDraft) {
     if (!live) return
-    update((r) =>
-      fileReport(r, {
-        attemptId: live.id,
-        at: nowInBrowser(),
-        wentThrough: draft.wentThrough,
-        thought: draft.thought,
-        ending: draft.ending,
-        closeness: draft.closeness,
-        withWhom: draft.withWhom,
-        where: draft.where,
-        factors: draft.factors,
-        didInstead: draft.didInstead,
-      }),
-    )
+    // The day they named, at the moment they named it when that day is today,
+    // and at midday otherwise — the convention `recordPastRun` already uses
+    // for a day nobody remembers a clock time for.
+    const at = draft.on === today ? nowInBrowser() : `${draft.on}T12:00:00`
+    // Built from the record in hand rather than inside the updater: the id of
+    // the row just written is needed for the undo, and a state setter must not
+    // run inside another state setter's callback.
+    const next = fileReport(record, {
+      attemptId: live.id,
+      at,
+      wentThrough: draft.wentThrough,
+      thought: draft.thought,
+      ending: draft.ending,
+      closeness: draft.closeness,
+      withWhom: draft.withWhom,
+      where: draft.where,
+      factors: draft.factors,
+      didInstead: draft.didInstead,
+    })
+    const added = next.reports.find((row) => !record.reports.some((old) => old.id === row.id))
+    update(() => next)
+    setJustFiled(added ? { id: added.id, wentThrough: draft.wentThrough } : null)
+    setNotice("")
     setDialog({ kind: "none" })
+  }
+
+  /** Take back whatever was just filed. A lapse undone brings its run back. */
+  function undoJustFiled() {
+    if (!justFiled) return
+    update((r) => removeReport(r, justFiled.id))
+    setJustFiled(null)
   }
 
   function download() {
@@ -116,11 +187,26 @@ export function BlackBoxPage() {
     // that the browser record has been read. Without it the dead-control
     // sweep could not wait for this page, so when the front door became the
     // Black Box the sweep timed out here and covered neither module.
-    <div className="mx-auto max-w-3xl px-4 pb-24 pt-7" data-hydrated={ready ? "true" : undefined}>
+    // `data-sync` is the same kind of seam as `data-hydrated` beside it: the
+    // account's answer arrives about 700ms after load, and without a way to
+    // wait for it every test in `blackbox.spec.ts` was racing the network and
+    // passing because it won. It carries the real state, so it cannot drift
+    // from what the page is actually doing.
+    <div
+      className="mx-auto max-w-3xl px-4 pb-24 pt-7"
+      data-hydrated={ready ? "true" : undefined}
+      data-sync={sync.state}
+      // How many rows are waiting to go up. `data-sync` alone is not enough to
+      // wait on: for the instant between an action and the effect that notices
+      // it, the state is still whatever the LAST completed sync left, so a test
+      // can match a stale "synced" and carry on before the change has even been
+      // queued. "Synced AND nothing pending" is the true condition.
+      data-pending={sync.pending}
+    >
       <BackLink
         fallback={LIFE_MASTERY}
         fallbackLabel="Life Mastery"
-        className="mb-5 inline-flex items-center gap-1.5 text-[12px] text-zinc-500 transition-colors hover:text-white"
+        className="mb-3 inline-flex min-h-11 items-center gap-1.5 text-[12px] text-zinc-500 transition-colors hover:text-white"
       />
 
       <header>
@@ -131,6 +217,51 @@ export function BlackBoxPage() {
             : "Every run you have had, and every night you nearly went."}
         </p>
       </header>
+
+      {/* ---------------------------------------------- which one
+          Only once there is more than one thing on the record. A switcher over
+          a single vice is a control with one possible answer, and this page is
+          already dense. */}
+      {ready && vices.length > 1 && (
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {vices.map((v) => (
+            <button
+              key={v.viceId}
+              type="button"
+              aria-pressed={v.viceId === viceId}
+              // Spelled out, because the count sits in its own element with a
+              // margin and no space between them: read aloud, and matched by
+              // name in a test, the label was "Smoking or vaping1 run".
+              aria-label={`${v.label}, ${v.runs} ${v.runs === 1 ? "run" : "runs"}`}
+              onClick={() => showVice(v.viceId)}
+              className={`inline-flex min-h-11 items-center rounded-full border px-3.5 text-[12.5px] transition-colors ${
+                v.viceId === viceId
+                  ? "border-white/30 bg-white/10 text-zinc-100"
+                  : "border-white/10 bg-white/[0.02] text-zinc-400 hover:border-white/25"
+              }`}
+            >
+              {v.label}
+              <span className="ml-1.5 text-zinc-500">
+                {v.runs} {v.runs === 1 ? "run" : "runs"}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ---------------------------------------------- just filed
+          The undo for the mis-tap, at the top because after a lapse the run
+          section it was pressed in has already turned into "No run going". */}
+      {justFiled && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5">
+          <p className="text-[12.5px] text-zinc-300">
+            {justFiled.wentThrough
+              ? "Filed, and the run is closed on that day."
+              : "Close call filed. The run carries on."}
+          </p>
+          <QuietButton onClick={undoJustFiled}>Undo that</QuietButton>
+        </div>
+      )}
 
       {/* ---------------------------------------------- the door
           Shown whether or not a run is going. It used to require a live run,
@@ -144,7 +275,7 @@ export function BlackBoxPage() {
           page whose loudest element leads nowhere teaches you to ignore it —
           which is fatal for the one control that has to work mid-thought. It
           appears with the first report. */}
-      {ready && record.reports.length > 0 && (
+      {ready && view.reports.length > 0 && (
         <button
           type="button"
           onClick={() => setDialog({ kind: "thought" })}
@@ -183,7 +314,7 @@ export function BlackBoxPage() {
         ) : (
           <div className="mt-3">
             <Lanes
-              record={record}
+              record={view}
               today={today}
               viceLabel={viceLabel}
               selectedId={openRun}
@@ -196,7 +327,24 @@ export function BlackBoxPage() {
                 collected and then displayed nowhere, so the most interesting
                 comparison in the record (what the long runs had that the short
                 ones did not) was invisible. Tap a bar. */}
-            <RunDetail record={record} today={today} openRun={openRun} />
+            <RunDetail
+              record={view}
+              today={today}
+              openRun={openRun}
+              onRemoveReport={(id) => {
+                update((r) => removeReport(r, id))
+                // The undo strip names a report by id. Removing that same
+                // report from this panel would leave the strip offering to
+                // undo a row that is already gone.
+                if (justFiled?.id === id) setJustFiled(null)
+              }}
+              onRemoveRun={(id) => {
+                update((r) => removeAttempt(r, id))
+                setOpenRun(null)
+                setJustFiled(null)
+              }}
+              canRemoveReport={(id) => !revivalClashes(record, id)}
+            />
           </div>
         )}
       </section>
@@ -221,20 +369,31 @@ export function BlackBoxPage() {
                     <span className={`text-[13.5px] ${accent ? "font-medium text-orange-300" : "text-zinc-200"}`}>
                       {row.label}
                     </span>
+                    {/* A thought that has never won has cost nothing, and
+                        "0 days clean" next to a bar of no width reads as a
+                        broken stat rather than as the good news it is. */}
                     <span className="whitespace-nowrap text-[12px] text-zinc-400">
-                      {days(row.daysEnded)} clean
+                      {row.runsEnded > 0 ? `${days(row.daysEnded)} clean` : "cost you nothing yet"}
                     </span>
                   </div>
-                  <div
-                    className="mt-1.5 h-2 rounded-full"
-                    style={{
-                      width: `${Math.max(width, row.daysEnded > 0 ? 4 : 2)}%`,
-                      background: accent ? "#d95926" : "#52525b",
-                      opacity: accent ? 1 : 0.55,
-                    }}
-                  />
+                  {/* No bar at all for a thought that has ended nothing. A 2%
+                      stub is a mark on a length scale saying "a little", and
+                      the true answer is none — it drew an orange pip under a
+                      row whose own figure said it had cost nothing. */}
+                  {row.daysEnded > 0 && (
+                    <div
+                      className="mt-1.5 h-2 rounded-full"
+                      style={{
+                        width: `${Math.max(width, 4)}%`,
+                        background: accent ? "#d95926" : "#52525b",
+                        opacity: accent ? 1 : 0.55,
+                      }}
+                    />
+                  )}
                   <p className="mt-1.5 text-[11.5px] text-zinc-500">
-                    ended {row.runsEnded} {row.runsEnded === 1 ? "run" : "runs"}
+                    {row.runsEnded > 0
+                      ? `ended ${row.runsEnded} ${row.runsEnded === 1 ? "run" : "runs"}`
+                      : "has never ended a run"}
                     {row.survived > 0 ? ` · survived ${row.survived}` : ""}
                     {row.ownWords ? ` · “${row.ownWords}”` : ""}
                   </p>
@@ -320,15 +479,23 @@ export function BlackBoxPage() {
       </section>
 
       {/* ---------------------------------------------- keeping it */}
-      {summary.runs > 0 && (
+      {ready && record.attempts.length > 0 && (
       <section className="mt-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
         <h2 className="text-[11.5px] font-semibold uppercase tracking-[0.06em] text-zinc-500">
           Your copy
         </h2>
         <p className="mt-1.5 text-[12.5px] leading-relaxed text-zinc-400">
-          This record lives on this device only. Save a copy you can keep, and load it back on
-          another one.
+          This record is on your account, so it is on your other devices too. Save a copy you can
+          keep as well — it is the one thing no outage can take.
         </p>
+        {/* ONE LINE, AND NEVER ABOVE THE DOOR.
+            What the account is doing is worth knowing and is never the reason
+            somebody opened this page. It says what is true, including when
+            that is "not saved", and it never claims work was lost — because it
+            never is: an unsent row is still on this device and still unsent. */}
+        {syncNotice(sync.state, sync.pending) && (
+          <p className="mt-1.5 text-[12px] text-zinc-500">{syncNotice(sync.state, sync.pending)}</p>
+        )}
         <div className="mt-3 flex flex-wrap items-center gap-4">
           <QuietButton onClick={download}>Save a copy</QuietButton>
           <label className="cursor-pointer text-[12px] text-zinc-500 transition-colors hover:text-zinc-200">
@@ -359,7 +526,7 @@ export function BlackBoxPage() {
 
       {dialog.kind === "thought" && (
         <ThoughtDoor
-          record={record}
+          record={view}
           today={today}
           hasLiveRun={live !== null}
           onClose={() => setDialog({ kind: "none" })}
@@ -371,9 +538,14 @@ export function BlackBoxPage() {
       {dialog.kind === "start" && (
         <AttemptStart
           today={today}
+          record={record}
+          initialViceId={viceId}
           onClose={() => setDialog({ kind: "none" })}
           onStart={(input) => {
-            update((r) => startAttempt(r, input))
+            update((r) => startAttempt(r, { ...input, today }))
+            // Follow the run that was just started, which may be off a vice
+            // the screen was not showing.
+            showVice(input.viceId)
             setDialog({ kind: "none" })
           }}
         />
@@ -383,11 +555,12 @@ export function BlackBoxPage() {
         <PastRun
           today={today}
           record={record}
-          viceId={latest?.viceId ?? null}
-          label={latest?.label ?? null}
+          viceId={viceId}
+          label={viceLabel}
           onClose={() => setDialog({ kind: "none" })}
           onAdd={(input) => {
             update((r) => recordPastRun(r, input))
+            showVice(input.viceId)
             setDialog({ kind: "none" })
           }}
         />
@@ -442,6 +615,9 @@ export function BlackBoxPage() {
       {dialog.kind === "report" && (
         <ReportForm
           initial={{ wentThrough: dialog.wentThrough, ending: dialog.ending }}
+          today={today}
+          runStartedOn={live?.startedOn ?? today}
+          lastFiledOn={live ? latestReportDay(record, live.id) : today}
           onClose={() => setDialog({ kind: "none" })}
           onFile={file}
         />
@@ -451,22 +627,36 @@ export function BlackBoxPage() {
 }
 
 /**
- * One run, read back.
+ * One run, read back — and the one place a run can be corrected.
  *
  * Deliberately shows the empty cases as empty — a run with no structure says so
  * in words, because "nothing in place" next to a four-day bar and "told someone,
  * changed the route" next to an eighty-nine-day one is the comparison the whole
  * record exists to make. Filling the gap with a plausible default would erase it.
+ *
+ * CORRECTION LIVES HERE, beside the row it changes, rather than in a settings
+ * screen or an edit mode. Every report filed against the run is listed with the
+ * words that were written, so removing one is a matter of reading it and saying
+ * no — not of remembering which of three close calls last Tuesday was the
+ * mistyped one. Both controls confirm in place, and the confirm says what
+ * actually leaves, because the only backup this record has is "Save a copy".
  */
-function RunDetail({ record, today, openRun }: {
+function RunDetail({ record, today, openRun, onRemoveReport, onRemoveRun, canRemoveReport }: {
   record: BlackBoxRecord
   today: string
   openRun: string | null
+  onRemoveReport: (reportId: string) => void
+  onRemoveRun: (attemptId: string) => void
+  /** False when removing it would revive a run beside one already alive. */
+  canRemoveReport: (reportId: string) => boolean
 }) {
+  const [confirming, setConfirming] = useState<string | null>(null)
+
   if (!openRun) {
     return (
       <p className="mt-3 text-[11.5px] text-zinc-500">
-        Tap a bar to see what started that run, what you had in place, and what ended it.
+        Tap a bar to see what started that run, what you had in place and what ended it. Anything
+        you filed by mistake can be put right there.
       </p>
     )
   }
@@ -474,13 +664,16 @@ function RunDetail({ record, today, openRun }: {
   if (!lane) return null
   const a = lane.attempt
   const ending = record.reports.find((r) => r.id === a.endedByReportId) ?? null
+  const filed = record.reports
+    .filter((r) => r.attemptId === a.id)
+    .sort((x, y) => y.at.localeCompare(x.at))
 
   return (
     <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-3.5">
       <p className="text-[13px] font-medium text-zinc-100">
         {days(lane.days)}
         <span className="font-normal text-zinc-400">
-          {" · "}{a.startedOn}{a.endedOn ? ` to ${a.endedOn}` : " — still going"}
+          {" \u00b7 "}{a.startedOn}{a.endedOn ? ` to ${a.endedOn}` : " \u2014 still going"}
         </span>
       </p>
 
@@ -501,7 +694,7 @@ function RunDetail({ record, today, openRun }: {
           <dt className="text-zinc-500">How it ended</dt>
           <dd className="text-zinc-200">
             {ending
-              ? <>{familyFor(ending.ending).label}{ending.thought.trim() ? ` — “${ending.thought.trim()}”` : ""}</>
+              ? <>{familyFor(ending.ending).label}{ending.thought.trim() ? ` \u2014 \u201c${ending.thought.trim()}\u201d` : ""}</>
               : <span className="text-zinc-500">It has not</span>}
           </dd>
         </div>
@@ -510,6 +703,97 @@ function RunDetail({ record, today, openRun }: {
           <dd className="text-zinc-200">{lane.closeCallDays.length}</dd>
         </div>
       </dl>
+
+      {filed.length > 0 && (
+        <div className="mt-3.5 border-t border-white/10 pt-3">
+          <p className="text-[11.5px] text-zinc-500">
+            Filed against this run. Remove one you wrote by mistake.
+          </p>
+          <ul className="mt-2 space-y-2">
+            {filed.map((r) => {
+              const endsIt = r.id === a.endedByReportId
+              const allowed = canRemoveReport(r.id)
+              return (
+                <li key={r.id} className="flex items-start justify-between gap-3">
+                  <span className="text-[12px] leading-snug text-zinc-300">
+                    {r.at.slice(0, 10)}{" \u00b7 "}
+                    {r.wentThrough ? "went through with it" : "did not"}
+                    {r.thought.trim() ? ` \u2014 \u201c${r.thought.trim()}\u201d` : ""}
+                  </span>
+                  {confirming === r.id ? (
+                    <span className="flex shrink-0 items-center gap-2 text-[11.5px]">
+                      <button
+                        type="button"
+                        onClick={() => { setConfirming(null); onRemoveReport(r.id) }}
+                        className="inline-flex min-h-11 items-center px-2 -mx-2 text-rose-300 hover:text-rose-200"
+                      >
+                        remove{endsIt ? " and reopen" : ""}?
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirming(null)}
+                        className="inline-flex min-h-11 items-center px-2 -mx-2 text-zinc-500 hover:text-zinc-300"
+                      >
+                        keep
+                      </button>
+                    </span>
+                  ) : allowed ? (
+                    <button
+                      type="button"
+                      onClick={() => setConfirming(r.id)}
+                      aria-label={`Remove the report filed on ${r.at.slice(0, 10)}`}
+                      className="inline-flex min-h-11 shrink-0 items-center px-2 -mx-2 text-[11.5px] text-zinc-500 transition-colors hover:text-rose-300"
+                    >
+                      remove
+                    </button>
+                  ) : (
+                    // Never a control that does nothing: removing this one would
+                    // reopen its run beside a run off the same thing that is
+                    // still going, and two live runs would count the same days
+                    // twice. The later run is the one to deal with first.
+                    <span className="shrink-0 text-[11.5px] text-zinc-500">
+                      end the newer run first
+                    </span>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
+
+      <div className="mt-3.5 border-t border-white/10 pt-3">
+        {confirming === a.id ? (
+          <p className="text-[12px] text-zinc-300">
+            This takes {days(lane.days)} and {filed.length}{" "}
+            {filed.length === 1 ? "report" : "reports"} off your record for good.{" "}
+            <button
+              type="button"
+              onClick={() => { setConfirming(null); onRemoveRun(a.id) }}
+              className="inline-flex min-h-11 items-center px-2 -mx-2 text-rose-300 underline underline-offset-2 hover:text-rose-200"
+            >
+              Remove it
+            </button>
+            {" or "}
+            <button
+              type="button"
+              onClick={() => setConfirming(null)}
+              className="inline-flex min-h-11 items-center px-2 -mx-2 text-zinc-400 underline underline-offset-2 hover:text-zinc-200"
+            >
+              keep it
+            </button>
+            .
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirming(a.id)}
+            className="inline-flex min-h-11 items-center px-2 -mx-2 text-[11.5px] text-zinc-500 transition-colors hover:text-rose-300"
+          >
+            Remove this whole run
+          </button>
+        )}
+      </div>
     </div>
   )
 }

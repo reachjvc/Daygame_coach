@@ -18,18 +18,25 @@
 
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import type { BlackBoxRecord } from "../../types"
 import { Chip, Field, Panel, PrimaryButton, QuietButton } from "../Ui"
 import { STRUCTURE_SEEDS } from "../../data/blackbox"
 import { SAFETY } from "../../data/copy"
 import { VICES } from "../../data/vices"
-import { isCalendarDay } from "../../blackbox/blackboxStore"
+import { isCalendarDay, overlapsExisting } from "../../blackbox/blackboxStore"
 
 export function AttemptStart({
   today,
+  record,
+  initialViceId,
   onStart,
   onClose,
 }: {
   today: string
+  /** Every run already on the record, so a new one cannot cover days it holds. */
+  record: BlackBoxRecord
+  /** The vice the screen is showing, pre-selected. */
+  initialViceId: string | null
   onStart: (input: {
     viceId: string
     label: string
@@ -40,7 +47,7 @@ export function AttemptStart({
   }) => void
   onClose: () => void
 }) {
-  const [viceId, setViceId] = useState("nicotine")
+  const [viceId, setViceId] = useState(initialViceId ?? "nicotine")
   const [startedOn, setStartedOn] = useState(today)
   const [startedBy, setStartedBy] = useState("")
   const [structure, setStructure] = useState<string[]>([])
@@ -48,7 +55,17 @@ export function AttemptStart({
 
   const vice = VICES.find((v) => v.id === viceId) ?? VICES[0]
   const validDate = isCalendarDay(startedOn)
-  const blocked = (vice.medicalRisk && !acknowledged) || !validDate
+  // A new run is alive, so it covers every day from its start to today.
+  const clashes = validDate && overlapsExisting(record, startedOn, today, viceId)
+
+  /** Exactly what is standing between this form and starting the run. */
+  const blockedBecause: string | null = !validDate
+    ? "That is not a date this can read. Pick one from the calendar."
+    : clashes
+      ? `A run off ${vice.label.toLowerCase()} already covers those days. End that one first, or start this one later.`
+      : vice.medicalRisk && !acknowledged
+        ? "Confirm you have read the note above before a date goes in."
+        : null
 
   const toggle = (item: string) =>
     setStructure((s) => (s.includes(item) ? s.filter((x) => x !== item) : [...s, item]))
@@ -107,11 +124,6 @@ export function AttemptStart({
             onChange={(e) => setStartedOn(e.target.value)}
             className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[14px] text-zinc-100 outline-none focus:border-white/30"
           />
-          {!validDate && (
-            <p className="mt-1 text-[11.5px] text-amber-200/80">
-              That is not a date this can read. Pick one from the calendar.
-            </p>
-          )}
         </div>
 
         <Field
@@ -135,20 +147,23 @@ export function AttemptStart({
           </div>
         </div>
 
+        {/* One place decides why the button is off, and it is never off in
+            silence — including for the overlap rule, which used to be enforced
+            at the store with nothing on screen, so "Start the run" simply did
+            nothing and the dialog stayed open. */}
+        {blockedBecause && (
+          <p className="mt-2 text-[12px] text-amber-200/85">{blockedBecause}</p>
+        )}
+
         <div className="mt-3 flex items-center justify-between">
           <QuietButton onClick={onClose}>Cancel</QuietButton>
           <PrimaryButton
-            disabled={blocked}
+            disabled={blockedBecause !== null}
             onClick={() => onStart({ viceId, label: vice.label, startedOn, startedBy, structure, acknowledgedRisk: acknowledged })}
           >
             Start the run
           </PrimaryButton>
         </div>
-        {vice.medicalRisk && !acknowledged && (
-          <p className="text-[11.5px] text-amber-200/80">
-            Confirm you have read the note above before a date goes in.
-          </p>
-        )}
       </DialogContent>
     </Dialog>
   )

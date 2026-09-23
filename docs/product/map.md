@@ -112,7 +112,16 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   one calendar chart, close calls filed on the same form as lapses (one
   `wentThrough` flag apart), and a door that answers a "maybe I could moderate"
   thought with your own record of it. Its own storage key `vice-blackbox-v1`,
-  which neither reads nor writes the old `quit-vice-v1`.
+  which neither reads nor writes the old `quit-vice-v1` — **and since 2026-09-23
+  the record is also on the account**, in `vice_attempts` and `vice_reports`
+  (`src/db/viceRepo.ts`, `app/api/black-box/route.ts`). The browser copy stays
+  the working copy so the page opens and files with no network; the account is
+  the durable one, and two devices merge row by row rather than one refusing the
+  other. A deletion is a row with `deleted_at`, never a gap. It shows **one vice
+  at a time** — the record holds runs off several and every read filters to the one
+  on screen — and **anything filed can be taken back**: an undo beside the
+  report just filed, and per-report and per-run removal inside a run's own
+  panel.
   **The whole previous module is intact at `/life-mastery/quit-vice/old`** and
   nothing was deleted — six flows over one stored state (where, gives, map,
   experiment, line, week), a `learn` teaching spine, a `shortlist` page, and

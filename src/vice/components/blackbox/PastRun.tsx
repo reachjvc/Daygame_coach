@@ -36,15 +36,18 @@ export function PastRun({
   /** Every run already on the record, so a new one cannot cover the same days. */
   record: BlackBoxRecord
   /**
-   * The vice every other run on this record is about, or null when there is no
-   * run yet to inherit from — in which case the form ASKS.
+   * The vice the screen is currently showing, pre-selected here — or null on a
+   * record with nothing to pre-select from.
    *
-   * It used to take a non-null pair and the caller passed "nicotine" /
-   * "Smoking or vaping" whenever no run was live. On an empty record — the one
-   * state where this form is the primary action — every run somebody entered
-   * from four years of memory was filed as smoking, and the chart then titled
-   * itself with it. That is precisely the plausible default this component's
-   * own rule says it never supplies.
+   * IT IS A DEFAULT, NEVER AN ASSUMPTION. Two earlier versions got this wrong
+   * in opposite directions. The first took a non-null pair and the caller
+   * passed "nicotine" / "Smoking or vaping" whenever no run was live, so on an
+   * empty record every run entered from four years of memory was filed as
+   * smoking. The second asked only when the record was empty and inherited
+   * silently ever after, which made a second vice unenterable from this form at
+   * all: the chips were the one place the record could learn you had also
+   * stopped drinking. The chips are always on screen now, with the current one
+   * already lit.
    */
   viceId: string | null
   label: string | null
@@ -66,22 +69,40 @@ export function PastRun({
   const [thought, setThought] = useState("")
   const [startedBy, setStartedBy] = useState("")
   const [structure, setStructure] = useState<string[]>([])
-  // Null until they pick, so nothing is pre-selected and "Add it" stays off.
-  const [pickedId, setPickedId] = useState<string | null>(null)
+  // Seeded with whatever the screen is showing, and null only on a record that
+  // has nothing to seed from — where "Add it" stays off until they pick.
+  const [pickedId, setPickedId] = useState<string | null>(viceId)
 
-  const asks = viceId === null
-  const chosenId = asks ? pickedId : viceId
-  const chosenLabel = asks ? (VICES.find((v) => v.id === pickedId)?.label ?? null) : label
+  const chosenId = pickedId
+  const chosenLabel =
+    pickedId === null
+      ? null
+      : pickedId === viceId && label !== null
+        ? label
+        : (VICES.find((v) => v.id === pickedId)?.label ?? null)
 
   const toggle = (item: string) =>
     setStructure((v) => (v.includes(item) ? v.filter((x) => x !== item) : [...v, item]))
 
   const datesValid = isCalendarDay(startedOn) && isCalendarDay(endedOn)
   const ordered = datesValid && endedOn >= startedOn
-  // Said before "Add it" is pressed. A run that covers days another run
-  // already covers would be counted twice in "Across every run".
-  const clashes = ordered && overlapsExisting(record, startedOn, endedOn)
+  // Said before "Add it" is pressed. A run that covers days another run off the
+  // SAME vice covers would be counted twice in "Across every run"; two
+  // different things quit over the same months are two records, not a clash.
+  const clashes = ordered && chosenId !== null && overlapsExisting(record, startedOn, endedOn, chosenId)
   const length = ordered ? daysBetween(startedOn, endedOn) + 1 : null
+
+  /** Exactly what is standing between this form and being submitted. */
+  const blockedBecause: string | null =
+    chosenId === null || chosenLabel === null
+      ? "Pick what you were stopping, at the top."
+      : !datesValid
+        ? "Both dates are needed — when the run started and when it ended."
+        : !ordered
+          ? "That run ends before it starts. Check the two dates."
+          : clashes
+            ? `Those dates overlap a run off ${chosenLabel.toLowerCase()} you have already recorded.`
+            : null
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
@@ -95,19 +116,16 @@ export function PastRun({
           never got round to entering.
         </p>
 
-        {/* Only on a record with nothing to inherit from. Once one run exists,
-            asking again on every remembered run would be a question with one
-            possible answer. */}
-        {asks && (
-          <div>
-            <p className="text-[12px] text-zinc-400">What was this run off?</p>
-            <div className="mt-1.5 flex flex-wrap gap-1.5">
-              {VICES.filter((v) => v.id !== "custom").map((v) => (
-                <Chip key={v.id} label={v.label} on={pickedId === v.id} onClick={() => setPickedId(v.id)} />
-              ))}
-            </div>
+        {/* Always asked, with the current one already lit. It is the only place
+            the record can learn about a second thing you stopped. */}
+        <div>
+          <p className="text-[12px] text-zinc-400">What were you stopping?</p>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {VICES.filter((v) => v.id !== "custom").map((v) => (
+              <Chip key={v.id} label={v.label} on={pickedId === v.id} onClick={() => setPickedId(v.id)} />
+            ))}
           </div>
-        )}
+        </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
@@ -134,11 +152,9 @@ export function PastRun({
           </div>
         </div>
 
-        {datesValid && !ordered && (
-          <p className="text-[11.5px] text-amber-200/80">
-            That run ends before it starts. Check the two dates.
-          </p>
-        )}
+        {/* The "ends before it starts" note used to live here as well as in
+            blockedBecause below, so the same sentence rendered twice. One
+            place decides why the form is blocked. */}
         {clashes && (
           <p className="text-[11.5px] text-amber-200/80">
             Those days are already covered by another run on your record. Two runs over the same
@@ -210,10 +226,20 @@ export function PastRun({
           rows={2}
         />
 
+        {/* A DISABLED BUTTON MUST SAY WHY.
+            This form had three separate ways to be unsubmittable and showed a
+            reason for only one of them, so a first user filled in both dates,
+            read "that is 89 days", chose an ending, and then met a dead button
+            with nothing on screen explaining it. The primary action on the
+            empty page led to a form that could not be completed. */}
+        {blockedBecause && (
+          <p className="mt-2 text-[12px] text-amber-200/85">{blockedBecause}</p>
+        )}
+
         <div className="mt-3 flex items-center justify-between">
           <QuietButton onClick={onClose}>Cancel</QuietButton>
           <PrimaryButton
-            disabled={!ordered || clashes || chosenId === null || chosenLabel === null}
+            disabled={blockedBecause !== null}
             onClick={() => {
               // The button is disabled without a vice; this is the guard that
               // cannot be skipped, so a run is never filed against nothing.

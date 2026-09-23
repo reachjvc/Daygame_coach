@@ -50,6 +50,8 @@ function attempt(over: Partial<ViceAttempt> = {}): ViceAttempt {
     structure: [],
     endedOn: "2025-10-28",
     endedByReportId: "end",
+    updatedAt: "2025-10-28T12:00:00.000Z",
+    deletedAt: null,
     ...over,
   }
 }
@@ -67,6 +69,8 @@ function report(over: Partial<ViceReport> = {}): ViceReport {
     where: "",
     factors: [],
     didInstead: "",
+    updatedAt: "2025-01-02T21:00:00.000Z",
+    deletedAt: null,
     ...over,
   }
 }
@@ -285,7 +289,7 @@ describe("the withdrawal gate, which is the one thing here that can hurt somebod
   const start = (viceId: string, acknowledgedRisk: boolean) =>
     startAttempt(
       { version: 1, attempts: [], reports: [] },
-      { viceId, label: "x", startedOn: "2026-09-01", startedBy: "", structure: [], acknowledgedRisk },
+      { viceId, label: "x", startedOn: "2026-09-01", startedBy: "", structure: [], acknowledgedRisk, today: "2026-09-20" },
     )
 
   it("refuses to start a run off alcohol until the note is acknowledged", () => {
