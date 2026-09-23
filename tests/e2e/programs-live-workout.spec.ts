@@ -279,7 +279,16 @@ test.describe("live workout", () => {
      * receipt means one wording, and this assertion was left on the old one.
      */
     await expect(second).toContainText(/personal bests/i)
-    const best = second.getByRole("listitem").filter({ hasText: new RegExp(String(heavier)) })
+    /**
+     * Scoped to the BESTS list. The receipt lists what you did as well now, so
+     * the weight appears twice on the page — "once, not once per set" is a
+     * claim about the bests, and asserting it against the whole summary made
+     * it a claim about the page.
+     */
+    const best = second
+      .getByTestId("receipt-bests")
+      .getByRole("listitem")
+      .filter({ hasText: new RegExp(String(heavier)) })
     await expect(best).toHaveCount(1)
     await expect(best).toContainText(lift)
     await expect(second, "the squat is not new any more").not.toContainText(/first time logged/i)

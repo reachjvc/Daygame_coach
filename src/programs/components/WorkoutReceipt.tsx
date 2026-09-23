@@ -133,7 +133,7 @@ export function ReceiptBody({ summary }: { summary: WorkoutSummary }) {
               <p className="text-xs uppercase tracking-wide text-muted-foreground">
                 Personal bests
               </p>
-              <ul className="mt-1 space-y-0.5 text-sm">
+              <ul className="mt-1 space-y-0.5 text-sm" data-testid="receipt-bests">
                 {summary.personalRecords.map((pr) => (
                   <li key={`${pr.exercise}-${pr.reps}`} className="flex justify-between gap-3">
                     <span className="min-w-0 truncate">{pr.exercise}</span>
