@@ -5,6 +5,14 @@ import dotenv from 'dotenv'
 dotenv.config({ path: '.env' })
 dotenv.config({ path: '.env.local', override: true })
 
+/**
+ * WHERE THE TRAINING ACCOUNT'S SESSION LIVES.
+ *
+ * Named once so the config and the wipe helper cannot disagree about which
+ * account the destructive helper is allowed to run against.
+ */
+export const TRAINING_STATE = 'tests/e2e/.auth/training.json'
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -28,6 +36,17 @@ export default defineConfig({
     {
       name: 'setup-user-b',
       testMatch: /auth-user-b\.setup\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    /**
+     * THE TRAINING SUITE'S OWN LOGIN. The four training projects wipe their
+     * account clean on every run; until 2026-09-23 that account was `setup`'s,
+     * which the goals and session specs share and which `.claude/rules/ui.md`
+     * sends a person to for hand-checking.
+     */
+    {
+      name: 'training-setup',
+      testMatch: /auth-training\.setup\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
 
@@ -159,8 +178,8 @@ export default defineConfig({
       ],
       fullyParallel: false,
       workers: 1,
-      dependencies: ['setup'],
-      use: { ...devices['Desktop Chrome'], storageState: 'tests/e2e/.auth/user.json' },
+      dependencies: ['training-setup'],
+      use: { ...devices['Desktop Chrome'], storageState: TRAINING_STATE },
     },
 
     // === Time tracker: does it really reach the account? ===
@@ -243,7 +262,7 @@ export default defineConfig({
       fullyParallel: false,
       workers: 1,
       dependencies: ['training'],
-      use: { ...devices['iPhone 14'], storageState: 'tests/e2e/.auth/user.json' },
+      use: { ...devices['iPhone 14'], storageState: TRAINING_STATE },
     },
     {
       name: 'training-android',
@@ -255,7 +274,7 @@ export default defineConfig({
       fullyParallel: false,
       workers: 1,
       dependencies: ['training-iphone-safari'],
-      use: { ...devices['Pixel 7'], storageState: 'tests/e2e/.auth/user.json' },
+      use: { ...devices['Pixel 7'], storageState: TRAINING_STATE },
     },
     {
       name: 'training-firefox',
@@ -267,7 +286,7 @@ export default defineConfig({
       fullyParallel: false,
       workers: 1,
       dependencies: ['training-android'],
-      use: { ...devices['Desktop Firefox'], viewport: { width: 390, height: 844 }, storageState: 'tests/e2e/.auth/user.json' },
+      use: { ...devices['Desktop Firefox'], viewport: { width: 390, height: 844 }, storageState: TRAINING_STATE },
     },
 
     // === Auth on phones and other engines ===
@@ -368,14 +387,25 @@ export default defineConfig({
       },
     },
 
-    // Writes the day half on the same shared account, so it queues behind the
-    // other goals files rather than racing them. It opens a SECOND context of
-    // its own inside the test — that is the point of it — so it must not also
-    // be racing a third.
+    /**
+     * The day half's acceptance, and it depends on `setup` ALONE on purpose.
+     *
+     * It was chained behind `goals-3` for tidiness, which cost it the one thing
+     * it is for: Playwright SKIPS a project whose dependency failed, `goals-1`
+     * is currently red, and a skipped spec reports as a green run. The trap
+     * this plan already records — a spec that runs nowhere — reached for it
+     * through the back door.
+     *
+     * Safe to run beside the goals files: its day writes use dates in 2019 that
+     * nothing else in the suite touches, and its single whole-plan PUT already
+     * accepts a 409, which is what a concurrent plan save from another spec
+     * looks like. If anything, a plan being saved underneath it while a day is
+     * written is a harder version of the thing it is proving.
+     */
     {
       name: 'goals-4',
       testMatch: /life-mastery-day-persists\.spec\.ts/,
-      dependencies: ['goals-3'],
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/e2e/.auth/user.json',
