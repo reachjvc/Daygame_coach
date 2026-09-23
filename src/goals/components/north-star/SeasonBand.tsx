@@ -13,20 +13,25 @@
  * and it said nothing about either. So they go at the top of it, with the way
  * into today's list beside them.
  *
- * **It reads the plan where the plan lives.** The flow is localStorage-first
- * and every step but Track touches no API, so this band is a client component
- * that loads the same key the flow saves to. That has one honest consequence:
- * on a different browser there is no plan to show, and the band says "build
- * your plan" rather than pretending the account has none.
+ * **BOTH HALVES ARE HANDED IN, from the server page.** It used to read the plan
+ * out of THIS BROWSER'S localStorage, which had one honest consequence the
+ * comment here admitted to: on a different browser there was no plan to show
+ * and the band said "build your plan" — to somebody who had written one. That
+ * was the most visible symptom of the plan living in a browser, on the page
+ * people open daily, and Phase 1 is what makes it fixable: the plan is on the
+ * account now, so the page reads it there and passes it down.
  *
- * **It renders nothing until the plan has loaded.** A server-rendered "no plan
- * yet" that flips to somebody's one thing a tick later is a page that lies for
- * one frame, and this is the first thing on it.
+ * Nothing is fetched or read from storage here any more, which is also why this
+ * file came OFF the architecture test's allowlist of components that fetch —
+ * and that list only ever shrinks.
+ *
+ * It still renders nothing until both halves are in hand. A "no plan yet" that
+ * flips to somebody's one thing a tick later is a page that lies for one frame,
+ * and this is the first thing on it.
  *
  * Additive by design: nothing else on the dashboard moves or changes behaviour.
  */
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
 /* ArrowRight only. `Telescope` is the Life Mastery mark on the test index and
    would fit here, but it is not in `iconRoles.ts` and putting one icon in two
@@ -34,8 +39,8 @@ import Link from "next/link"
    rather than registering an icon nobody asked to register. */
 import { ArrowRight } from "lucide-react"
 import type { NsPlan } from "@/src/goals/types"
-import { NORTH_STAR_STORAGE_KEY, SEASON_BAND_COPY } from "@/src/goals/data/northStar"
-import { loadNsPlan, planIsUntouched, todayISO } from "@/src/goals/northStarService"
+import { SEASON_BAND_COPY } from "@/src/goals/data/northStar"
+import { planIsUntouched, todayISO } from "@/src/goals/northStarService"
 import { oneThingCountdown, oneThingPrompt, oneThingStage, type OneThing } from "@/src/goals/oneThingService"
 import { todayItems, todayProgress } from "@/src/goals/northStarTrackService"
 import { withReturn } from "@/src/shared/returnTo"
@@ -56,42 +61,31 @@ const HERE = "/dashboard/tracking"
    it by hand, as did the step, so the contract lived in three places and none of
    them was the one the server used. */
 
-export function SeasonBand() {
-  const [plan, setPlan] = useState<NsPlan | null>(null)
-  const [loaded, setLoaded] = useState(false)
+export function SeasonBand({ plan, oneThing, ready = true }: {
+  /** The plan on the account, or null when it has none. Read by the page. */
+  plan: NsPlan | null
   /**
    * THE ONE THING COMES FROM THE DATABASE, NOT FROM THE PLAN.
    *
    * This line used to read `plan.seasonFocusId` — the goal you star on the
    * Focus step — while the One Thing step wrote a sentence somewhere else
    * entirely. So writing your one thing changed nothing here, which is the bug
-   * that started all of this. It now reads the newest row on your account and
-   * holds no copy of it.
+   * that started all of this. It reads the newest row on the account and holds
+   * no copy of it.
    */
-  const [oneThing, setOneThing] = useState<OneThing | null>(null)
-
+  oneThing: OneThing | null
   /**
-   * BOTH BEFORE DECIDING WHAT TO DRAW.
+   * Whether both halves are actually in hand.
    *
-   * The plan is read from this browser and the one thing from the account, and
-   * they arrive at different times. Deciding on the plan alone drew the "build
-   * your plan" invitation for a moment — or permanently, on a browser with no
-   * local plan at all, which is exactly the person this change was made for:
-   * a saved one thing, a new phone, and a header that showed neither.
+   * BOTH BEFORE DECIDING WHAT TO DRAW. Deciding on the plan alone drew the
+   * "build your plan" invitation for a moment — or permanently, for the person
+   * this was made for: a saved one thing, a new phone, and a header showing
+   * neither. False while the page could not read them, so the band draws
+   * nothing rather than an invitation somebody has already accepted.
    */
-  const [fetched, setFetched] = useState(false)
-
-  useEffect(() => {
-    setPlan(loadNsPlan(window.localStorage.getItem(NORTH_STAR_STORAGE_KEY)))
-    setLoaded(true)
-    fetch("/api/life-answers?key=one_thing")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setOneThing(d?.current ?? null))
-      .catch(() => setOneThing(null))
-      .finally(() => setFetched(true))
-  }, [])
-
-  if (!loaded || !fetched) return null
+  ready?: boolean
+}) {
+  if (!ready) return null
 
   /* An UNTOUCHED plan counts as no plan. Merely opening the flow writes one to
      localStorage, so "is there a key" would put "Nothing named yet / No areas

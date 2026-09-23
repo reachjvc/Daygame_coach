@@ -747,7 +747,6 @@ describe('Architecture Compliance', () => {
       'src/goals/components/new-goals/LabGoalEditor.tsx',
       'src/goals/components/new-goals/NewGoalsFlow.tsx',
       'src/goals/components/north-star/OneThingBox.tsx',
-      'src/goals/components/north-star/SeasonBand.tsx',
       'src/goals/components/north-star/TodayTab.tsx',
       'src/goals/components/north-star/TrackTab.tsx',
       'src/goals/components/north-star/WorkoutPrograms.tsx',

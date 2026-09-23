@@ -8,6 +8,8 @@ import { MobileTabBar } from "@/components/MobileTabBar"
 import Link from "next/link"
 import { QuickAddModal } from "./QuickAddModal"
 import { SeasonBand } from "@/src/goals/components/north-star/SeasonBand"
+import type { NsPlan } from "@/src/goals/types"
+import type { OneThing } from "@/src/goals/oneThingService"
 import type { DashboardLayoutResponse } from "../types"
 import { TRACKING } from "@/src/shared/trainingRoutes"
 import { TrainingCard } from "@/src/programs/components/TrainingCard"
@@ -42,7 +44,14 @@ const AchievementsModal = lazy(() =>
  * says there and what it says here cannot drift apart.
  */
 
-export function ProgressDashboard({ initialDashboard }: { initialDashboard?: DashboardLayoutResponse }) {
+export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThing = null, seasonReady = false }: {
+  initialDashboard?: DashboardLayoutResponse
+  /** The Life Mastery plan, read on the server. Passed straight to the band. */
+  seasonPlan?: NsPlan | null
+  oneThing?: OneThing | null
+  /** False when the page could not read them, so the band draws nothing. */
+  seasonReady?: boolean
+}) {
   const { state, deleteSession, deleteFieldReport, refresh } = useTrackingStats()
   const [achievementsOpen, setAchievementsOpen] = useState(false)
   const [quickAddOpen, setQuickAddOpen] = useState(false)
@@ -76,10 +85,11 @@ export function ProgressDashboard({ initialDashboard }: { initialDashboard?: Das
       </div>
 
       {/* THE ONE THING AND THIS SEASON, above everything.
-          The two decisions the plan hangs off, on the page opened daily. It
-          reads the Life Mastery plan out of localStorage and adds nothing to
-          the load: no fetch, and it renders nothing until the plan is read. */}
-      <SeasonBand />
+          The two decisions the plan hangs off, on the page opened daily. Both
+          halves are read on the SERVER and handed down: this band used to read
+          the plan out of localStorage, so on a second device it told somebody
+          who had written a plan to go and build one. */}
+      <SeasonBand plan={seasonPlan} oneThing={oneThing} ready={seasonReady} />
 
       {/*
         TODAY'S TRAINING, ABOVE THE THINGS YOU READ.

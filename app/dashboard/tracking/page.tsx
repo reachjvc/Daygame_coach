@@ -1,7 +1,12 @@
 import { requireAuth } from "@/src/db/auth"
 import { getDashboardLayout } from "@/src/tracking/dashboardService"
 import { ProgressDashboard } from "@/src/tracking/components/ProgressDashboard"
+import { readLifePlan } from "@/src/db/lifePlanRepo"
+import { rowsToPlan } from "@/src/goals/lifePlanMapper"
+import { readOneThing } from "@/src/goals/oneThingServer"
 import type { DashboardLayoutResponse } from "@/src/tracking/types"
+import type { NsPlan } from "@/src/goals/types"
+import type { OneThing } from "@/src/goals/oneThingService"
 
 /**
  * The stat tiles are resolved here, on the server, and handed to the client
@@ -15,18 +20,50 @@ import type { DashboardLayoutResponse } from "@/src/tracking/types"
  *
  * A failure to resolve them is not a failure to render the page — the rest of
  * the dashboard is independent, so the client falls back to fetching.
+ *
+ * THE SEASON BAND'S TWO HALVES ARE READ HERE TOO, and that is the point of
+ * Phase 1 arriving on this page. The band used to read the plan out of the
+ * browser it happened to be open in, so on a second device it greeted somebody
+ * who had written a whole plan with "build your plan". The plan is on the
+ * account now, so it is read from there.
+ *
+ * `seasonReady` is false when either read failed. The band then draws NOTHING
+ * rather than the invitation — an invitation shown because a query broke is the
+ * same lie in a different costume.
  */
 export default async function TrackingPage() {
   const auth = await requireAuth()
 
   let initialDashboard: DashboardLayoutResponse | undefined
+  let seasonPlan: NsPlan | null = null
+  let oneThing: OneThing | null = null
+  let seasonReady = false
+
   if (auth.success) {
     try {
       initialDashboard = await getDashboardLayout(auth.userId)
     } catch (error) {
       console.error("Failed to pre-render dashboard tiles:", error)
     }
+    try {
+      const [stored, thing] = await Promise.all([
+        readLifePlan(auth.userId),
+        readOneThing(auth.userId),
+      ])
+      seasonPlan = stored ? rowsToPlan(stored.rows) : null
+      oneThing = thing.current
+      seasonReady = true
+    } catch (error) {
+      console.error("Failed to read the season band's plan:", error)
+    }
   }
 
-  return <ProgressDashboard initialDashboard={initialDashboard} />
+  return (
+    <ProgressDashboard
+      initialDashboard={initialDashboard}
+      seasonPlan={seasonPlan}
+      oneThing={oneThing}
+      seasonReady={seasonReady}
+    />
+  )
 }
