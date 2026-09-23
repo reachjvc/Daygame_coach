@@ -379,6 +379,31 @@ export function wallClockToInstant(dateTimeLocal: string, timezone: string): str
 }
 
 /**
+ * WHOLE CALENDAR DAYS BETWEEN TWO DATE KEYS, and nothing else.
+ *
+ * "Fourteen days since you started" is a question about a calendar, not about
+ * elapsed time, and the two give different answers twice a year and every time
+ * the reader is in a different zone from the account. The subtraction that was
+ * being done instead — `(Date.now() - new Date(started_at)) / 86_400_000` —
+ * measures neither: it is elapsed milliseconds on the machine's clock, so a
+ * program started at 23:00 was thirteen days old for an hour of its fifteenth
+ * day, and which day that was depended on where the phone was.
+ *
+ * Both keys are already calendar facts in one zone, so the only job here is to
+ * count between them without a second zone getting a vote. Parsed as UTC
+ * fields, subtracted, and the fictional instants never leave this function.
+ * Negative when `to` is earlier than `from`.
+ */
+export function daysBetweenDateKeys(from: string, to: string): number {
+  const at = (key: string): number => {
+    const [year, month, day] = key.split("-").map(Number)
+    if (!year || !month || !day) throw new Error(`Not a YYYY-MM-DD date key: "${key}"`)
+    return Date.UTC(year, month - 1, day)
+  }
+  return Math.round((at(to) - at(from)) / 86_400_000)
+}
+
+/**
  * A DATE KEY, LABELLED AS ITSELF — in any timezone the reader happens to be in.
  *
  * `new Date("2026-06-01")` is UTC midnight, which west of UTC is the evening of
