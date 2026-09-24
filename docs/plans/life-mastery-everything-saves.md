@@ -479,19 +479,21 @@ of being written — `480cd2ba` and `92825523` landed the same evening.**
   Files list against `ls` is how this reads as done; only opening the file
   contradicts it. Nothing anywhere asserts that a real plan plus a year of days
   survives write-then-read field for field.
-- **The browser proof** — `tests/e2e/life-mastery-day-persists.spec.ts` exists,
-  is registered in the `goals-4` project, and **tests neither half of what this
-  bullet asks.** All four of its writes send a `note`; the words `ticks` and
-  `logged` appear in no payload, so the tick never crosses. Its survival test
-  GETs `/api/life-plan` and PUTs the identical body back, which is not a
-  structural change and fires no cascade — and `if (body.plan)` means that on an
-  account with no plan row it skips the save entirely and passes having asserted
-  only that a note it just wrote came back.
-- **Check 5**, the same at phone width. **No phone project runs that spec** — it
-  is picked up by `chromium` and `goals-4`, both Desktop Chrome. Worth saying
-  before somebody adds it to a phone project to close the box: the spec never
-  touches the DOM, so running it at 390px would prove nothing. Check 5's intent
-  ("tick it on your phone") needs a spec that drives the tick control.
+- ~~**The browser proof**~~ **DONE 2026-09-24 (`66d9788b`).** It existed and
+  tested neither half: all four writes sent a `note`, so the tick never crossed,
+  and the survival test PUT an identical plan back, which upserts by node id and
+  fires no cascade. It now ticks a routine step read from the account's own plan
+  and crosses it to a second context, and the plan save adds a sub-step node and
+  asserts the node set actually moved. Both proved by putting the defect back.
+  A third fault surfaced while proving the first: **day rows outlive the run**,
+  so removing the tick left the test green on last week's row — both tests clear
+  the cell and assert it is clear before writing.
+- **Check 5**, the same at phone width. **Still open, and deliberately not
+  closed the cheap way.** No phone project runs that spec — `chromium` and
+  `goals-4` are both Desktop Chrome — and adding it to one would mark the box
+  green while proving nothing, because the spec never touches the DOM. Check 5's
+  intent ("tick it on your phone") needs a spec that drives the tick CONTROL at
+  390px, which is a different test from this one.
 
 **You can:** tick your morning routine on your phone and see it on your laptop.
 Write a journal line in one browser, read it in another. Clear your browsing data
