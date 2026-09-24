@@ -28,7 +28,7 @@ import { AgainTool } from "./Again"
 import { VoicesDialog } from "./Voices"
 import { TripwireTool } from "./Tripwire"
 import { Why } from "./Ui"
-import { QUIT_VICE_OLD } from "@/src/shared/lifeMasteryRoutes"
+import { QUIT_VICE_ARCHIVE } from "@/app/test/archive/quit-vice/routes"
 import { BackLink } from "@/components/BackLink"
 
 export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
@@ -112,7 +112,7 @@ export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
               screen, for four days. Same fix in `LearnPage` and
               `ShortlistPage`, which are the other two entrances. */}
           <BackLink
-            fallback={QUIT_VICE_OLD}
+            fallback={QUIT_VICE_ARCHIVE}
             fallbackLabel="Quit a vice"
             className="inline-flex min-h-11 items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors"
           />

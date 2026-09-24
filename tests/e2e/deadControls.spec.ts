@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test"
-import { QUIT_VICE, QUIT_VICE_OLD, viceStep } from "@/src/shared/lifeMasteryRoutes"
+import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { QUIT_VICE_ARCHIVE, viceArchiveStep } from "@/app/test/archive/quit-vice/routes"
 
 /**
  * Dead-control sweep.
@@ -25,10 +26,10 @@ import { QUIT_VICE, QUIT_VICE_OLD, viceStep } from "@/src/shared/lifeMasteryRout
  * constant that used to sit here is gone: it meant BOTH "the hub page" and
  * "the prefix the steps hang off", and only the first of those moved — so the
  * step URLs stayed right while every visit to the hub landed elsewhere. Steps
- * are built with `viceStep` now, which is the one thing that knows where they
+ * are built with `viceArchiveStep` now, which is the one thing that knows where they
  * live.
  */
-const OLD_HUB = QUIT_VICE_OLD
+const OLD_HUB = QUIT_VICE_ARCHIVE
 /** The Black Box, which is what the front door serves now. */
 const BLACK_BOX = QUIT_VICE
 const FLOWS = ["where", "gives", "map", "experiment", "line", "week"] as const
@@ -130,7 +131,7 @@ test("no dead controls on the hub, in any version", async ({ page }) => {
 
 test("no dead controls in the nine modules", async ({ page }) => {
   test.setTimeout(120000)
-  await page.goto(viceStep("learn"), { waitUntil: "domcontentloaded" })
+  await page.goto(viceArchiveStep("learn"), { waitUntil: "domcontentloaded" })
   await settled(page)
   const faults = await sweep(page, "learn")
   expect(faults, `dead controls:\n  ${faults.join("\n  ")}`).toEqual([])
@@ -138,7 +139,7 @@ test("no dead controls in the nine modules", async ({ page }) => {
 
 test("no dead controls on the short version", async ({ page }) => {
   test.setTimeout(120000)
-  await page.goto(viceStep("shortlist"), { waitUntil: "domcontentloaded" })
+  await page.goto(viceArchiveStep("shortlist"), { waitUntil: "domcontentloaded" })
   await settled(page)
   const faults = await sweep(page, "shortlist")
   expect(faults, `dead controls:\n  ${faults.join("\n  ")}`).toEqual([])
@@ -147,7 +148,7 @@ test("no dead controls on the short version", async ({ page }) => {
 for (const flow of FLOWS) {
   test(`no dead controls in ${flow}`, async ({ page }) => {
     test.setTimeout(180000)
-    await page.goto(viceStep(flow), { waitUntil: "domcontentloaded" })
+    await page.goto(viceArchiveStep(flow), { waitUntil: "domcontentloaded" })
     await page.evaluate(() => localStorage.setItem("quit-vice-version", "full"))
     await settled(page)
     const faults = await sweep(page, flow)

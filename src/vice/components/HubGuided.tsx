@@ -16,7 +16,7 @@ import { ChevronDown } from "lucide-react"
 import type { ViceFlowId, ViceToolId } from "../types"
 import { GUIDED } from "../data/plain"
 import { VICE_FLOWS } from "../data/flows"
-import { viceStep } from "@/src/shared/lifeMasteryRoutes"
+import { viceArchiveStep } from "@/app/test/archive/quit-vice/routes"
 
 
 
@@ -80,7 +80,7 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
                       return (
                         <Link
                           key={item.id}
-                          href={viceStep(item.flow as ViceFlowId)}
+                          href={viceArchiveStep(item.flow as ViceFlowId)}
                           className="flex min-h-11 items-center rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5 text-[13.5px] text-zinc-200 hover:border-violet-400/40 transition-colors"
                         >
                           {item.label}
@@ -105,7 +105,7 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
                                 evidence ranking rather than from one school of
                                 thought — and the shortest by a distance. */}
                             <Link
-                              href={viceStep("shortlist")}
+                              href={viceArchiveStep("shortlist")}
                               className="block min-h-11 rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 hover:text-white hover:bg-white/[0.03] transition-colors"
                             >
                               The short version
@@ -117,7 +117,7 @@ export function HubGuided({ openTool }: { openTool: (t: ViceToolId) => void }) {
                             {CHANGE_FLOWS.map((f) => (
                               <Link
                                 key={f.id}
-                                href={viceStep(f.id)}
+                                href={viceArchiveStep(f.id)}
                                 className="block min-h-11 rounded-lg px-2.5 py-2 text-[13px] text-zinc-300 hover:text-white hover:bg-white/[0.03] transition-colors"
                               >
                                 {f.label}

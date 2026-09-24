@@ -105,7 +105,70 @@ days and the orange one 84. I think the accent is right and the ranking is right
 and they fight each other on screen. You are the one who knows which reading you
 want.
 
-## The one decision this plan turns on
+## M2 — DONE, 2026-09-24. RETIRED TO THE ARCHIVE, NOT DELETED.
+
+The owner answered road A with a condition: *"You can retire anything you feel
+isnt useful, but keep it in the test archives so i can access it later, and see
+if youve destroyed something useful."*
+
+**Where it went.** The nine routes under `/life-mastery/quit-vice/` are gone;
+the module is at `/test/archive/quit-vice`, listed on the `/test` dashboard
+beside the archived goals hub, which is the precedent. Same components, same six
+flows, seven tools, teaching spine and shortlist, **still reading the same
+`quit-vice-v1` key in the browser** — so anything the owner ever typed into
+those screens is still readable, which is why the export question answered
+itself. `tests/e2e/quit-vice.spec.ts` followed it: 61 tests, and they are what
+keeps "retired, not deleted" true rather than a sentence in a commit message.
+The footer line on the Black Box that pointed at it is gone, which was the last
+thing between that page and concept item 8.
+
+**WHAT WAS DESTROYED — the audit the owner asked for.** Checked against the
+code, not the plan's own claims.
+
+*Not lost, because the Black Box already does it:* the crisis help door and its
+helplines (M3 mounted it on the front page); the lapse debrief, which is the
+`ReportForm`, generalised so a close call is filed on the same form; the
+medical-withdrawal gate in `AttemptStart`; "what got it going and what kept it
+underway", which are `startedBy` and `structure[]` on a run; "what ended it",
+which is the report the run ends on; and "what was different the time it
+worked", which the whole chart answers from the person's own record rather than
+from other people's.
+
+*Genuinely lost from the live product, both with citations behind them:*
+
+1. **The urge tool.** Four responses, reordered by context, teaching "play the
+   tape forward" — 10 mentions in the corpus against 4 for urge surfing, which
+   has a large failure literature and which a practitioner says to avoid in
+   cue-rich rooms. The Black Box's door answers "maybe I could moderate"; it has
+   no answer for "I have an urge right now".
+2. **Other people's accounts.** 381 testimonials and 196 techniques from the
+   15-source corpus. **The Black Box reads none of the corpus** — verified by
+   grep, not assumed. Reading others' stories was a recovery community's
+   most-valued feature at 80.8%.
+
+*Lost and no loss, by the owner's own item 7 rule that taste goes:* the six
+flows, the three copy versions, the nine-module learn spine, the ten-item
+shortlist, the hub grouping and the word budget.
+
+**A side effect worth naming rather than claiming as a win.** The 48 controls
+under 44px lived on seven of those routes, and their `TAP_TARGET_DEBT` entries
+are deleted because `appRoutes.ts` excludes `app/test/**` from the sweep. **They
+were not fixed.** They are no longer in the product and no longer measured,
+which is a different thing, and `sweepDebt.test.ts` caught the stale entries the
+moment the routes went — the allowlist rule working.
+
+**The debt this leaves, which a guard found and I did not.** The archived
+components are still in `src/vice/components/`, and `architecture.test.ts`
+failed the first version of this for a good reason: its rule "nothing links to
+the archived surfaces" exists because a link from production into the archive
+must be removed again the day the archive goes, and a path constant is a link.
+The address now lives in `app/test/archive/quit-vice/routes.ts`, beside the
+pages, and the components import it — which is backwards but sound. Moving the
+twenty-odd archive-only components out of `src/` is the honest arrangement and
+is **not done**: it risks the 61 tests that are the only thing keeping the
+owner's access promise true, and that is not a promise to break in a hurry.
+
+## The one decision this plan turns on — ANSWERED
 
 **Your concept item 7 says "what is there now is more or less useless", and the
 Black Box plan already dropped the six flows, the three copy versions, the learn

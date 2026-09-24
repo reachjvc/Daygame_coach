@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test"
-import { QUIT_VICE, viceStep } from "@/src/shared/lifeMasteryRoutes"
+import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { QUIT_VICE_ARCHIVE } from "@/app/test/archive/quit-vice/routes"
 
 /**
  * The Black Box, end to end.
@@ -147,13 +148,23 @@ test.describe("the Black Box", () => {
   test("clicking Vices lands on it, not on the old hub", async ({ page }) => {
     await seed(page, null)
     await expect(page.getByRole("heading", { name: "Black Box", level: 1 })).toBeVisible()
-    // The old module is reachable, but only by the one line at the foot.
-    await expect(page.getByRole("link", { name: /the flows, tools and reading/i })).toBeVisible()
+    // AND THE OLD MODULE IS NOT REACHABLE FROM HERE AT ALL. One line at the
+    // foot used to point at it, and it was the last thing between this page and
+    // the owner's concept item 8 — "Clicking Vices shows the new work in
+    // isolation. I should not have to click around old work to reach it." The
+    // module was retired to the test archive on 2026-09-24.
+    await expect(page.getByRole("link", { name: /the flows, tools and reading/i })).toHaveCount(0)
   })
 
-  test("the old module still works at its own address", async ({ page }) => {
-    await page.goto(viceStep("old"))
+  test("the retired module still works, at its archived address", async ({ page }) => {
+    // RETIRED, NOT DELETED, and this is what makes that claim true rather than
+    // a sentence in a commit message. The owner's condition for retiring it was
+    // "keep it in the test archives so i can access it later", and it reads the
+    // same `quit-vice-v1` key it always did — so anything ever typed into those
+    // screens is still there. If this test goes, that promise is unguarded.
+    await page.goto(QUIT_VICE_ARCHIVE)
     await expect(page.locator('[data-hydrated="true"]')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByRole("heading", { name: "Quitting something" })).toBeVisible()
   })
 
   test("a run can be started, and it shows up as days", async ({ page }) => {

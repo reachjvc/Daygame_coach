@@ -108,21 +108,22 @@ export const TAP_TARGET_DEBT: Record<string, number> = {
   // saved state is, and per the `/line` note a budget under the high-water mark
   // fails at random and then gets ignored. Lowering the rest needs a measure
   // that is stable across flow states.
-  "/life-mastery/quit-vice/experiment": 6,
-  "/life-mastery/quit-vice/gives": 6,
-  // 7, not the 4 it reports when run on its own. This flow draws different
-  // numbers of controls depending on how far through it the saved state is, and
-  // a budget below the high-water mark fails at random and gets ignored — the
-  // same lesson recorded for the plan page above. Now 6: the back link is drawn
-  // in every one of those states, so exactly one of the seven is gone for good.
-  "/life-mastery/quit-vice/line": 6,
-  "/life-mastery/quit-vice/map": 6,
-  // 12: the ten item checkboxes are 16x16 and the two "do it here" links 47x17.
-  // They are the page's own controls, not the module's shared ones, so the
-  // shared fix did not reach them — only the back link did.
-  "/life-mastery/quit-vice/shortlist": 12,
-  "/life-mastery/quit-vice/week": 6,
-  "/life-mastery/quit-vice/where": 6,
+  /* THE SEVEN QUIT-A-VICE FLOW ROUTES ARE GONE FROM THIS LIST, 2026-09-24.
+     Between them they carried 48 controls under 44px — 6 each on `experiment`,
+     `gives`, `line`, `map`, `week` and `where`, and 12 on `shortlist`, whose ten
+     item checkboxes were 16x16.
+
+     THEY WERE NOT FIXED. The owner retired the module to
+     `/test/archive/quit-vice`, and `tests/support/appRoutes.ts` excludes
+     `app/test/**` from the sweep on purpose — prototypes, deliberately
+     unfinished. So those controls are no longer in the product and no longer
+     measured, which is a different thing from being big enough, and the plan
+     says so rather than counting them as done.
+
+     Deleted rather than set to 0, per this list's own rule: a page with no
+     number must be clean, and an entry naming a route that no longer exists is
+     a free pass waiting for the violation to come back at that address.
+     `sweepDebt.test.ts` is what caught them the moment the routes went. */
 
   "/dashboard/inner-game": 8,
   "/dashboard/qa": 6,

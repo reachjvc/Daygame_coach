@@ -21,7 +21,7 @@ import * as lifeMasteryRoutes from "@/src/shared/lifeMasteryRoutes"
  * only its literal prefix is checked — `workoutReceipt(x)` gives
  * `/programs/workout/<sentinel>`, so the assertion is that `app/programs/workout/`
  * exists. Deliberately not stricter: checking the segment itself would mean
- * knowing which values are legal (`viceStep` takes step ids, not any string),
+ * knowing which values are legal (`viceArchiveStep` takes step ids, not any string),
  * and that is an allowlist, which is the kind of test people switch off. The
  * weaker check still catches the failure that actually happened, because that
  * directory did not exist at all.

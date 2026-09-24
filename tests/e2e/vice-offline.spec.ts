@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test"
-import { QUIT_VICE, QUIT_VICE_OLD } from "@/src/shared/lifeMasteryRoutes"
+import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { QUIT_VICE_ARCHIVE } from "@/app/test/archive/quit-vice/routes"
 
 /**
  * OPENING THE BLACK BOX WITH NO CONNECTION.
@@ -177,12 +178,16 @@ test("the Black Box opens with no connection, and its record is there", async ({
   }
 })
 
-test("no other page of the module is served offline, including the old hub", async ({ page, context }) => {
-  // `SHELL_PATHS` is deliberately short, and `/life-mastery/quit-vice/old`
-  // starts with the Black Box's own path — a membership test written with
-  // `startsWith` would quietly adopt all nine of the old module's routes.
-  // `tests/unit/shared/serviceWorker.test.ts` proves the worker's rule; this
-  // proves it end to end, where the URLs are real.
+test("no other page is served offline, including the archived module", async ({ page, context }) => {
+  // `SHELL_PATHS` is deliberately short. This was written when the old module
+  // sat at `/life-mastery/quit-vice/old`, one character of `startsWith` away
+  // from the worker adopting all nine of its routes; it was retired to
+  // `/test/archive/quit-vice` on 2026-09-24, so that exact collision is gone
+  // and the unit test keeps the rule honest with a synthetic path instead.
+  // Kept anyway, pointed at the archive: the question "does the worker serve
+  // something it was never told to" is the one rule 2 exists for, and the day
+  // somebody adds a real route under the Black Box's path it is this that
+  // notices.
   await neverWriteToTheAccount(page)
   await page.goto(QUIT_VICE)
   await landed(page)
@@ -194,10 +199,10 @@ test("no other page of the module is served offline, including the old hub", asy
   await context.setOffline(true)
   try {
     const reached = await page
-      .goto(QUIT_VICE_OLD, { timeout: 20000 })
+      .goto(QUIT_VICE_ARCHIVE, { timeout: 20000 })
       .then(() => true)
       .catch(() => false)
-    expect(reached, "the old hub was served offline; SHELL_PATHS should not match it").toBe(false)
+    expect(reached, "the archived module was served offline; SHELL_PATHS should not match it").toBe(false)
   } finally {
     await context.setOffline(false)
   }

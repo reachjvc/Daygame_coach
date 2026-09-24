@@ -40,21 +40,27 @@ export const LIFE_MASTERY = "/life-mastery"
 export const QUIT_VICE = `${LIFE_MASTERY}/quit-vice`
 
 /**
- * The module the Black Box replaced, intact at its own address.
+ * THE RETIRED MODULE'S ADDRESS IS NOT HERE, AND THAT IS ON PURPOSE.
  *
- * Six flows, a teaching spine, a shortlist and seven tools, all still running
- * off `quit-vice-v1` — which the Black Box neither reads nor writes. Nothing
- * links here but one line at the foot of the Black Box.
+ * The six flows, the teaching spine, the shortlist and the seven tools were
+ * retired to the test archive on 2026-09-24, on the owner's instruction to
+ * keep them reachable. Their address lives with them, in the `routes.ts` beside
+ * those pages — deliberately not spelled out here, because the rule below
+ * greps for the literal and it is right to.
  *
- * This constant did not exist until 2026-09-24, which is why the specs pointed
- * at `QUIT_VICE`: there was no name to point at. Whether these screens survive
- * at all is an open question in `docs/plans/vice-finished.md`; until it is
- * answered, they have an address and the address has a name.
+ * It was here for about an hour and `tests/unit/architecture.test.ts` failed
+ * it, correctly: "nothing links to the archived surfaces" exists because a link
+ * from production into the archive has to be removed again the day the archive
+ * goes, and a path constant is a link. Nothing under `QUIT_VICE` but the Black
+ * Box now.
  */
-export const QUIT_VICE_OLD = `${QUIT_VICE}/old`
 
 /**
- * One step of the vice module — `learn`, `shortlist`, `map`, `where`, `gives`,
- * `week`, `line`, `experiment`. Each is a folder under `app/life-mastery/quit-vice/`.
+ * `viceStep` IS GONE, 2026-09-24. Every step it built — the six flows, `learn`
+ * and `shortlist` — moved to the test archive with the module, so the only
+ * thing under `QUIT_VICE` now is the Black Box itself. Use
+ * `viceArchiveStep` for the archived screens. Removing it rather than leaving
+ * it pointing at addresses that 404 is the same lesson as `QUIT_VICE` changing
+ * meaning: a name that still resolves but no longer means what it says is worse
+ * than no name, because nothing breaks at the compiler.
  */
-export const viceStep = (step: string): string => `${QUIT_VICE}/${step}`

@@ -16,7 +16,7 @@
 import Link from "next/link"
 import type { ViceHandlers, ViceState, ViceToolId } from "../types"
 import { PLAIN } from "../data/plain"
-import { viceStep } from "@/src/shared/lifeMasteryRoutes"
+import { viceArchiveStep } from "@/app/test/archive/quit-vice/routes"
 
 export function HubPlain({ state, on, openTool }: {
   state: ViceState
@@ -45,7 +45,7 @@ export function HubPlain({ state, on, openTool }: {
           // problem" opened the reading library instead of the flow that
           // actually answers it.
           return "flow" in a && a.flow ? (
-            <Link key={a.id} href={viceStep(a.flow)} className={cls}>
+            <Link key={a.id} href={viceArchiveStep(a.flow)} className={cls}>
               {inner}
             </Link>
           ) : (

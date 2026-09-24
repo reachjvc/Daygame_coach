@@ -51,7 +51,8 @@ import * as fs from "fs"
 import * as path from "path"
 import { TAB_ROUTES } from "@/components/navTabs"
 import { isRedirectShim } from "@/tests/support/appRoutes"
-import { LIFE_MASTERY, QUIT_VICE, viceStep } from "@/src/shared/lifeMasteryRoutes"
+import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { QUIT_VICE_ARCHIVE, viceArchiveStep } from "@/app/test/archive/quit-vice/routes"
 
 const root = path.resolve(__dirname, "../../..")
 
@@ -167,7 +168,7 @@ function linksIn(files: Iterable<string>): Set<string> {
   }
 
   /**
-   * `viceStep(flow.id)` — a link whose destination is decided by data.
+   * `viceArchiveStep(flow.id)` — a link whose destination is decided by data.
    *
    * The vice hub draws a row per flow out of `modules.ts` and `plain.ts`, so
    * which of the nine steps it points at is a fact about the data, not about
@@ -179,16 +180,16 @@ function linksIn(files: Iterable<string>): Set<string> {
    * at, which is the one thing this file is for.
    */
   if (sources.some((src) => DYNAMIC_VICE_STEP.test(src))) {
-    for (const id of viceFlowIds()) out.add(viceStep(id))
+    for (const id of viceFlowIds()) out.add(viceArchiveStep(id))
   }
   return out
 }
 
-/** `viceStep(` with anything that is not a plain string in it. */
-const DYNAMIC_VICE_STEP = /viceStep\(\s*(?!["'`])/
+/** `viceArchiveStep(` with anything that is not a plain string in it. */
+const DYNAMIC_VICE_STEP = /viceArchiveStep\(\s*(?!["'`])/
 
 /**
- * The flow ids a dynamic `viceStep(...)` can produce, read from the type that
+ * The flow ids a dynamic `viceArchiveStep(...)` can produce, read from the type that
  * defines them. Add a flow and this picks it up; delete one and it stops
  * claiming a route that no longer exists. A hand-kept copy of the list here
  * would be a second place to forget.
@@ -217,10 +218,13 @@ function viceFlowIds(): string[] {
 function symbolicLinksIn(src: string): string[] {
   const found: string[] = []
   const pattern =
-    /(?:href=|[A-Za-z]*[Hh]ref\s*:\s*|\.push\(|\.replace\(|\bredirect\()\s*\{?\s*(LIFE_MASTERY\b|QUIT_VICE\b|viceStep\(\s*["'`]([\w-]+)["'`]\s*\))/g
+    /(?:href=|[A-Za-z]*[Hh]ref\s*:\s*|\.push\(|\.replace\(|\bredirect\()\s*\{?\s*(LIFE_MASTERY\b|QUIT_VICE_ARCHIVE\b|QUIT_VICE\b|viceArchiveStep\(\s*["'`]([\w-]+)["'`]\s*\))/g
   for (const m of src.matchAll(pattern)) {
-    if (m[2]) found.push(viceStep(m[2]))
+    if (m[2]) found.push(viceArchiveStep(m[2]))
     else if (m[1] === "LIFE_MASTERY") found.push(LIFE_MASTERY)
+    // Before QUIT_VICE, because it is a prefix of the archive constant's name
+    // and an alternation takes the first branch that matches.
+    else if (m[1] === "QUIT_VICE_ARCHIVE") found.push(QUIT_VICE_ARCHIVE)
     else if (m[1] === "QUIT_VICE") found.push(QUIT_VICE)
   }
   return found

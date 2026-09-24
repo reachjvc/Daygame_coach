@@ -31,7 +31,8 @@ import { HubGuided } from "./HubGuided"
 import { VersionSwitcher } from "./VersionSwitcher"
 import { useViceVersion } from "../hooks/useViceVersion"
 import { Panel, Stat } from "./Ui"
-import { LIFE_MASTERY, viceStep } from "@/src/shared/lifeMasteryRoutes"
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { viceArchiveStep } from "@/app/test/archive/quit-vice/routes"
 import { BackLink } from "@/components/BackLink"
 
 /**
@@ -111,7 +112,7 @@ export function ViceHub() {
 
         <section className="mb-7">
           <Link
-            href={viceStep("learn")}
+            href={viceArchiveStep("learn")}
             className="block rounded-2xl border border-sky-400/25 bg-sky-500/[0.05] p-4 hover:border-sky-400/50 transition-colors"
           >
             <span className="block text-[15px] font-semibold text-sky-50">Nine things worth understanding</span>
@@ -205,7 +206,7 @@ export function ViceHub() {
             {OPEN_FLOWS.map((flow) => (
               <Link
                 key={flow.id}
-                href={viceStep(flow.id)}
+                href={viceArchiveStep(flow.id)}
                 className="block rounded-2xl border border-sky-400/25 bg-sky-500/[0.05] p-4 hover:border-sky-400/50 hover:bg-sky-500/[0.08] transition-colors group"
               >
                 <div className="flex items-baseline gap-3">
@@ -221,7 +222,7 @@ export function ViceHub() {
 
         <section>
           <Link
-            href={viceStep("shortlist")}
+            href={viceArchiveStep("shortlist")}
             className="mb-3 block rounded-2xl border border-emerald-400/25 bg-emerald-500/[0.05] p-4 hover:border-emerald-400/50 transition-colors"
           >
             <span className="block text-[15px] font-semibold text-emerald-50">The short version</span>
@@ -235,7 +236,7 @@ export function ViceHub() {
             {CHANGE_FLOWS.map((flow) => (
               <Link
                 key={flow.id}
-                href={viceStep(flow.id)}
+                href={viceArchiveStep(flow.id)}
                 className="block rounded-2xl border border-white/10 bg-white/[0.03] p-4 hover:border-violet-400/40 hover:bg-violet-500/[0.05] transition-colors group"
               >
                 <div className="flex items-baseline gap-3">

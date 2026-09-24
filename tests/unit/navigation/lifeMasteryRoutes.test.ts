@@ -17,7 +17,8 @@
 import { describe, it, expect } from "vitest"
 import * as fs from "fs"
 import * as path from "path"
-import { LIFE_MASTERY, QUIT_VICE, QUIT_VICE_OLD, viceStep } from "../../../src/shared/lifeMasteryRoutes"
+import { LIFE_MASTERY, QUIT_VICE } from "../../../src/shared/lifeMasteryRoutes"
+import { QUIT_VICE_ARCHIVE, viceArchiveStep } from "../../../app/test/archive/quit-vice/routes"
 
 const root = path.resolve(__dirname, "../../..")
 
@@ -65,7 +66,7 @@ describe("Life Mastery's address", () => {
     expect(
       offenders,
       `These write Life Mastery's path out as text. Import LIFE_MASTERY, QUIT_VICE\n` +
-        `or viceStep from src/shared/lifeMasteryRoutes instead, so the next move\n` +
+        `or viceArchiveStep from src/shared/lifeMasteryRoutes instead, so the next\n` +
         `stays a two-line change:\n${offenders.join("\n")}`
     ).toEqual([])
   })
@@ -75,7 +76,7 @@ describe("Life Mastery's address", () => {
     // amount of importing it correctly will save you from.
     expect(fs.existsSync(path.join(root, "app", LIFE_MASTERY.slice(1), "page.tsx"))).toBe(true)
     expect(fs.existsSync(path.join(root, "app", QUIT_VICE.slice(1), "page.tsx"))).toBe(true)
-    expect(fs.existsSync(path.join(root, "app", QUIT_VICE_OLD.slice(1), "page.tsx"))).toBe(true)
+    expect(fs.existsSync(path.join(root, "app", QUIT_VICE_ARCHIVE.slice(1), "page.tsx"))).toBe(true)
   })
 
   /**
@@ -93,14 +94,22 @@ describe("Life Mastery's address", () => {
    * the same string as the first — by moving a page and reusing a name again —
    * every test that distinguishes them starts passing for the wrong reason.
    */
-  it("keeps the Black Box and the old hub at two different addresses", () => {
-    expect(QUIT_VICE_OLD).not.toBe(QUIT_VICE)
-    expect(QUIT_VICE_OLD.startsWith(`${QUIT_VICE}/`)).toBe(true)
+  it("keeps the Black Box and the retired module at two different addresses", () => {
+    expect(QUIT_VICE_ARCHIVE).not.toBe(QUIT_VICE)
+    // AND NO LONGER UNDER IT. This asserted `startsWith(`${QUIT_VICE}/`)` while
+    // the module sat at `/life-mastery/quit-vice/old`; on 2026-09-24 it was
+    // retired into `/test/archive/`, which is the stronger arrangement and the
+    // one worth pinning. Nothing but the Black Box lives under `QUIT_VICE` now,
+    // which is what lets `public/sw.js` name that path without a prefix match
+    // adopting nine more routes, and what stops one constant meaning two places
+    // ever again.
+    expect(QUIT_VICE_ARCHIVE.startsWith(`${QUIT_VICE}/`)).toBe(false)
+    expect(QUIT_VICE_ARCHIVE.startsWith("/test/")).toBe(true)
 
-    // And they are genuinely two pages, not one file served twice: the hub's
-    // page must not be a re-export of the front door's.
+    // And they are genuinely two pages, not one file served twice: the retired
+    // hub's page must not be a re-export of the front door's.
     const front = fs.readFileSync(path.join(root, "app", QUIT_VICE.slice(1), "page.tsx"), "utf-8")
-    const old = fs.readFileSync(path.join(root, "app", QUIT_VICE_OLD.slice(1), "page.tsx"), "utf-8")
+    const old = fs.readFileSync(path.join(root, "app", QUIT_VICE_ARCHIVE.slice(1), "page.tsx"), "utf-8")
     expect(code(front)).toContain("BlackBoxPage")
     expect(code(old)).toContain("ViceHub")
   })
@@ -113,7 +122,7 @@ describe("Life Mastery's address", () => {
     expect(ids.length).toBeGreaterThan(3)
 
     const missing = ids.filter(
-      (id) => !fs.existsSync(path.join(root, "app", viceStep(id).slice(1), "page.tsx"))
+      (id) => !fs.existsSync(path.join(root, "app", viceArchiveStep(id).slice(1), "page.tsx"))
     )
     expect(
       missing,
@@ -160,7 +169,7 @@ describe("Life Mastery's address", () => {
     // And it must be the front door, never the old hub: the hub is nine routes
     // of browser-only state with no reason to be reachable offline, and
     // `SHELL_PATHS` is deliberately short.
-    expect(worker.includes(`"${QUIT_VICE_OLD}"`)).toBe(false)
+    expect(worker.includes(`"${QUIT_VICE_ARCHIVE}"`)).toBe(false)
   })
 
   it("keeps the old address working", () => {

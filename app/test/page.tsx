@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ArrowLeft, Beaker, BookOpen, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard, Waves, Archive, Aperture, Type } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { QUIT_VICE_ARCHIVE } from "./archive/quit-vice/routes"
 
 const testPages = [
   {
@@ -209,10 +210,21 @@ const testPages = [
     icon: Clapperboard,
   },
   {
-    // Moved with Life Mastery, whose routine card links into it.
-    name: "Quitting a vice — now live at /life-mastery/quit-vice",
+    // The live one. The Black Box, reachable from Life Mastery's Vices routine
+    // and from "Your plan" in the navigation's More sheet.
+    name: "Quitting a vice — the Black Box, live at /life-mastery/quit-vice",
     href: QUIT_VICE,
-    description: "Four flows built on four positions the research disagrees about: watch it first (expected vs actual payoff), a negotiated bounded experiment with a daily task, one unconditional line, or pure environment design — plus an urge tool, a lapse debrief and a card that work with no setup. No streak counter anywhere, on purpose",
+    description: "Every run you have had on one calendar chart, close calls filed on the same form as lapses, and a door that answers a 'maybe I could moderate' thought with your own record of it. On your account, on every device, and it opens with no connection. No streak counter anywhere, on purpose",
+    icon: Waves,
+  },
+  {
+    // RETIRED HERE 2026-09-24, on the owner's instruction: "You can retire
+    // anything you feel isnt useful, but keep it in the test archives so i can
+    // access it later." Listed because a laboratory page nobody can find is
+    // deleted with extra steps.
+    name: "Quitting a vice — the retired module (six flows, seven tools)",
+    href: QUIT_VICE_ARCHIVE,
+    description: "The whole module as it was before the Black Box: four change-flows on four positions the research disagrees about, two that ask no commitment, a nine-module teaching spine, a ten-item shortlist, and seven tools. STILL WORKING and still reading the same quit-vice-v1 key in this browser, so anything ever typed into it is still here. Two things in it have citations and no home on the Black Box yet: the urge tool's four responses, and 381 other people's accounts",
     icon: Waves,
   },
   {
@@ -263,6 +275,8 @@ const ARCHIVED_HREFS = new Set<string>([
   // The onboarding and the hub Life Mastery replaced in the product
   "/test/archive/goal-setup",
   "/test/archive/goals-hub",
+  // The quit-a-vice module the Black Box replaced
+  "/test/archive/quit-vice",
   // Pieces of those flows, explored on their own
   "/test/values-curation",
   "/test/curve-customization",

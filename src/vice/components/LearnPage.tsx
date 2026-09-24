@@ -18,7 +18,7 @@ import { VoicesDialog } from "./Voices"
 import { TripwireTool } from "./Tripwire"
 import { AgainTool } from "./Again"
 import { QuietButton } from "./Ui"
-import { QUIT_VICE_OLD } from "@/src/shared/lifeMasteryRoutes"
+import { QUIT_VICE_ARCHIVE } from "@/app/test/archive/quit-vice/routes"
 import { BackLink } from "@/components/BackLink"
 
 export function LearnPage() {
@@ -34,7 +34,7 @@ export function LearnPage() {
     <div className="min-h-screen bg-zinc-950 text-white" data-hydrated={loaded ? "true" : undefined}>
       <div className="max-w-3xl mx-auto px-6 py-10 pb-24">
         <BackLink
-          fallback={QUIT_VICE_OLD}
+          fallback={QUIT_VICE_ARCHIVE}
           fallbackLabel="Quit a vice"
           className="inline-flex min-h-11 items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors"
         />

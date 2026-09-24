@@ -151,20 +151,24 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   on screen — and **anything filed can be taken back**: an undo beside the
   report just filed, and per-report and per-run removal inside a run's own
   panel.
-  **The whole previous module is intact at `/life-mastery/quit-vice/old`** and
-  nothing was deleted — six flows over one stored state (where, gives, map,
-  experiment, line, week), a `learn` teaching spine, a `shortlist` page, and
-  seven tools; counts from `ViceFlowId` and `ViceToolId`. Only that one line at
-  the foot of the Black Box links to it, and **until 2026-09-24 it was a one-way
-  door** — `BackLink`'s fallback on all nine of its screens was `QUIT_VICE`, so
-  backing out of any of them landed on the Black Box rather than the hub you
-  came from. `QUIT_VICE_OLD` exists now; there was no constant for that address
-  at all, which is also why 22 browser tests drove the wrong page for four days.
-  Read the memory note before touching
-  any of it: no streak counter, no pros-and-cons list, and rulers that compare
-  only downwards are each a deliberate research finding, not an oversight.
-  **Whether these nine screens survive at all is an open decision for the
-  owner** — `docs/plans/vice-finished.md`, M2.
+  **The previous module is RETIRED to `/test/archive/quit-vice`** as of
+  2026-09-24, on the owner's instruction — "keep it in the test archives so i
+  can access it later". Not deleted: same components, same six flows, seven
+  tools, teaching spine and shortlist, still reading the same browser key
+  `quit-vice-v1`, so anything ever typed into it is still readable. Listed on
+  the `/test` dashboard; `/test/*` 404s in production by design, so it is a
+  localhost surface the day anything deploys. `tests/e2e/quit-vice.spec.ts`
+  follows it and is what keeps "retired, not deleted" true. Nothing under
+  `/life-mastery/quit-vice/` but the Black Box now, and the footer line that
+  pointed at it is gone — concept item 8.
+  **TWO THINGS WENT WITH IT THAT HAVE CITATIONS AND NO HOME ON THE BLACK BOX:**
+  the urge tool's four responses (the corpus teaches "play the tape forward",
+  10 mentions against 4 for urge surfing, which has a large failure
+  literature), and **other people's accounts** — 381 testimonials and 196
+  techniques, where reading others' stories was a recovery community's
+  most-valued feature at 80.8%. The Black Box reads none of the corpus. Its
+  research verdicts are otherwise intact: no streak counter, no pros-and-cons
+  list, rulers that compare only downwards.
 - `programs/` — the gym, at `/programs`, with History and Progress as its other
   two tabs. Thirteen hand-encoded programs, a live workout screen you use set by
   set at the rack, a receipt for every finished session at

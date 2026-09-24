@@ -30,7 +30,6 @@
  */
 
 import { useState } from "react"
-import Link from "next/link"
 import type { BlackBoxRecord, ViceEndingId } from "../../types"
 import { useBlackBox } from "../../blackbox/useBlackBox"
 import { useBlackBoxView } from "../../blackbox/useBlackBoxView"
@@ -52,7 +51,7 @@ import {
 import { currentAttempt, forVice, runLanes, stats, thoughtCosts, vicesOn } from "../../blackboxService"
 import { mergeRecords } from "../../blackbox/viceSyncService"
 import { familyFor } from "../../data/blackbox"
-import { LIFE_MASTERY, viceStep } from "@/src/shared/lifeMasteryRoutes"
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 import { BackLink } from "@/components/BackLink"
 import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { HelpDoor } from "../HelpDoor"
@@ -640,13 +639,16 @@ export function BlackBoxPage() {
       </div>
       </div>
 
-      <p className="mt-6 text-[11.5px] text-zinc-500">
-        The older quit-a-vice screens are still here:{" "}
-        <Link href={viceStep("old")} className="text-zinc-400 underline underline-offset-2 hover:text-zinc-200">
-          the flows, tools and reading
-        </Link>
-        .
-      </p>
+      {/* NO LINK TO THE OLD SCREENS ANY MORE.
+          One line used to sit here pointing at `/life-mastery/quit-vice/old`,
+          and it was the last thing standing between this page and the owner's
+          concept item 8: "Clicking Vices shows the new work in isolation. I
+          should not have to click around old work to reach it." The module was
+          retired to the test archive on 2026-09-24 and is reachable from the
+          `/test` dashboard, which is where a laboratory belongs. Its address is
+          deliberately not written here: `architecture.test.ts` forbids
+          production naming an archive path, because that is a link somebody has
+          to remove again the day the archive goes. */}
 
       {/* NO `ready` GUARD, unlike every dialog below it.
           The others read or write the record and must wait for it. This one
