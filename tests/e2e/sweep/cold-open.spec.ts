@@ -58,10 +58,30 @@
  * `npm run dev` locally, where every route compiles on first request, and that
  * run had three browsers pulling 28 addresses through the compiler at once.
  * Under `CI` the same config builds and serves production, where nothing
- * compiles mid-hydration — so this cannot be the same condition there. That is
- * a reason to watch it, not a verdict: one observation, and dev-only is a
- * hypothesis nobody has proved. If it returns, it is real, and the thing to
- * capture is the full message with its component stack.
+ * compiles mid-hydration — so this cannot be the same condition there.
+ *
+ * THE COLD COMPILER WAS THEN SAMPLED, and is clean. `daygame-coach-9f` built
+ * the experiment in a throwaway worktree on its own port, so the shared dev
+ * server was never disturbed: build directory wiped, then all eleven Life
+ * Mastery and vice routes pulled through the compiler by three engines at once
+ * with nothing precompiled — 33 loads — plus 15 more where the first request
+ * ever made to `/learn` was three concurrent ones, each round after touching a
+ * file in its tree, `BackLink.tsx` among them. **48 cold loads, 0 hydration
+ * messages.** That round matters most: touching `BackLink` forces the subtree
+ * that is the only structural candidate to recompile, so it is evidence
+ * against the leading hypothesis rather than for it.
+ *
+ * WHERE THAT LEAVES IT: one failure in roughly 740 loads, across three
+ * engines, empty and populated storage, with and without a `?from=` return
+ * address, warm and cold. The cold hypothesis is not dead — 48 loads against a
+ * fault seen once is a weak instrument and nobody should read it as a
+ * refutation — but "nobody has tried the cold path" is no longer true of it.
+ *
+ * So: a reason to watch, not a verdict. If it returns it is real, and the
+ * message is captured whole now (see `coldOpen.ts`, which used to keep only
+ * the first 200 characters and threw the component stack away). The stack
+ * either names `BackLink` or it does not, and one occurrence then settles what
+ * 740 loads could not.
  */
 
 import { test, expect } from "@playwright/test"
