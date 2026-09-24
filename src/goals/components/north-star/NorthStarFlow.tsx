@@ -63,7 +63,7 @@ import type { RoutineNeed } from "@/src/goals/data/northStarBuild"
 import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
 import * as ns from "@/src/goals/northStarService"
 import * as nsTrack from "@/src/goals/northStarTrackService"
-import { fetchLifePlan, newNodeId, saveLifePlanFromBrowser, startLifePlan } from "@/src/goals/lifePlanClient"
+import { archiveCountedGoal, fetchLifePlan, newNodeId, saveLifePlanFromBrowser, startLifePlan } from "@/src/goals/lifePlanClient"
 import { LIFE_PLAN_IMPORTED_KEY, SAVE_DEBOUNCE_MS, canSave, decideOnLoad, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
 import { fetchDayRecord, saveDayCatchingUp } from "@/src/goals/lifePlanDayClient"
 import { NO_TRAINING_TICKS, stepTick, stepTickedByHand, trainingTicks } from "@/src/goals/dayTicks"
@@ -927,11 +927,77 @@ export function NorthStarFlow({
     onClearSplit: (id: string) => setPlan((p) => ns.clearSplit(p, id)),
   }), [])
 
+  /**
+   * REMOVING A PLAN GOAL, IN ONE PLACE, AND ASKING ABOUT ITS COUNTED TWIN.
+   *
+   * Five call sites each wrote `setPlan((p) => ns.removeGoal(p, goalId))`, so
+   * "what deleting a goal means" was stated five times and could be changed in
+   * four of them. It means one thing now.
+   *
+   * THE THING IT HAS TO ASK. A pushed plan goal has a row in `user_goals` that
+   * counts, streaks and resets on its own. Removing the plan goal used to leave
+   * that row running with nothing behind it and take the link with it on the
+   * next save — an orphan still counting towards a plan that no longer holds
+   * it, and no way back to it from here. So when a link exists the removal
+   * stops and asks; with no link there is nothing to ask about and it goes.
+   *
+   * Archiving rather than deleting, and only on request: the counted row may
+   * carry weeks of history, and "I took it out of my plan" is not "throw the
+   * record away". `pushedGoalIds` already drops a link whose row is gone, so a
+   * goal archived here is offered again if it is ever re-pushed.
+   */
+  const [removing, setRemoving] = useState<{ goalId: string; countedId: string; title: string } | null>(null)
+  const [removeError, setRemoveError] = useState<string | null>(null)
+
+  /**
+   * THE LATEST LINKS AND TITLES, FOR A HANDLER THAT MUST NOT CHANGE IDENTITY.
+   *
+   * Every handler bundle in this file is a `useMemo` with `[]` deps, on purpose:
+   * they are handed to screens that would re-render on every keystroke
+   * otherwise. A `useCallback` that closes over `goalLinks` would be captured
+   * once by those bundles and would then see the links as they were on the
+   * FIRST render — empty — so the question below would never be asked and the
+   * counted goal would be orphaned exactly as before. Read through refs, which
+   * event handlers see after commit.
+   */
+  const linksRef = useRef<Record<string, string>>({})
+  const goalTitlesRef = useRef<NsGoal[]>([])
+  useEffect(() => { linksRef.current = goalLinks }, [goalLinks])
+  useEffect(() => { goalTitlesRef.current = plan.goals }, [plan.goals])
+
+  const removePlanGoal = useCallback((goalId: string) => {
+    const decision = nsTrack.removalOf(goalId, linksRef.current)
+    if (decision.kind === "remove") {
+      setPlan((p) => ns.removeGoal(p, goalId))
+      return
+    }
+    setRemoveError(null)
+    setRemoving({
+      goalId,
+      countedId: decision.countedId,
+      title: goalTitlesRef.current.find((g) => g.id === goalId)?.title ?? "this goal",
+    })
+  }, [])
+
+  /** Take it out of the plan, and archive the counted row too if asked. */
+  const finishRemoval = useCallback(async (alsoArchive: boolean) => {
+    if (!removing) return
+    /* A FAILED ARCHIVE REMOVES NOTHING. Doing both halves independently is how
+       somebody ends up with the plan goal gone, the counted one still running,
+       and no link left to find it by. */
+    if (alsoArchive && !(await archiveCountedGoal(removing.countedId))) {
+      setRemoveError("That goal could not be archived on your goals page, so nothing was removed. Try again in a moment.")
+      return
+    }
+    setPlan((p) => ns.removeGoal(p, removing.goalId))
+    setRemoving(null)
+  }, [removing])
+
   const goalHandlers = useMemo(() => ({
     onUpdate: (id: string, patch: Partial<Omit<NsGoal, "id">>) => setPlan((p) => ns.updateGoal(p, id, patch)),
     onUpdateGoal: (id: string, patch: { title: string }) => setPlan((p) => ns.updateGoal(p, id, patch)),
     onSetType: (id: string, type: VisionGoalType) => setPlan((p) => ns.setGoalType(p, id, type)),
-    onRemove: (id: string) => setPlan((p) => ns.removeGoal(p, id)),
+    onRemove: removePlanGoal,
     onLadder: (id: string, ladder: MilestoneLadderConfig) => setPlan((p) => ns.setLadder(p, id, ladder)),
     onRamp: (id: string, steps: HabitRampStep[] | null) => setPlan((p) => ns.setRamp(p, id, steps)),
     onLink: (fromId: string, toId: string) => setPlan((p) => ns.linkGoal(p, fromId, toId)),
@@ -970,7 +1036,7 @@ export function NorthStarFlow({
    * place and that place is a tab of its own.
    */
   const focusHandlers = useMemo(() => ({
-    onRemoveGoal: (goalId: string) => setPlan((p) => ns.removeGoal(p, goalId)),
+    onRemoveGoal: removePlanGoal,
     onOpenRoutine: (routineId: string) => { setPlanAreaId(null); setOpenRoutineId(routineId); setTab("systems") },
     onToggleArea: (areaId: string) => setPlan((p) => ns.toggleSeasonArea(p, areaId)),
     onAddArea: (label: string) => setPlan((p) => ns.addArea(p, label)),
@@ -1118,7 +1184,7 @@ export function NorthStarFlow({
     onAddRequirement: (title: string, areaId: string | undefined, type: VisionGoalType) =>
       setPlan((p) => ns.addOneThingRequirement(p, title, areaId, type)),
     onMarkServes: (goalId: string, on: boolean) => setPlan((p) => ns.markServesOneThing(p, goalId, on)),
-    onRemoveGoal: (goalId: string) => setPlan((p) => ns.removeGoal(p, goalId)),
+    onRemoveGoal: removePlanGoal,
     onGoToTab: (t: NorthStarTabId) => setTab(t),
     onToggleOneThingArea: (areaId: string) => setPlan((p) => ns.toggleOneThingArea(p, areaId)),
   }), [])
@@ -1199,7 +1265,7 @@ export function NorthStarFlow({
     onApplyNeed: (need: RoutineNeed) => setPlan((p) => ns.applyRoutineNeed(p, need)),
     onTogglePractice: (blueprintId: string, stepId: string, on: boolean) =>
       setPlan((p) => (on ? ns.addPractice(p, blueprintId, stepId) : ns.removePractice(p, blueprintId, stepId))),
-    onRemoveGoal: (goalId: string) => setPlan((p) => ns.removeGoal(p, goalId)),
+    onRemoveGoal: removePlanGoal,
     onRemoveTemplate: (areaId: string, templateId: string) => setPlan((p) => ns.removeTemplateGoals(p, areaId, templateId)),
     onLadder: (goalId: string, ladder: MilestoneLadderConfig) => setPlan((p) => ns.setLadder(p, goalId, ladder)),
     onProgression: (goalId: string, rungs: string[]) => setPlan((p) => ns.setProgression(p, goalId, rungs)),
@@ -1412,6 +1478,51 @@ export function NorthStarFlow({
         </nav>
 
         {ribbon && !areaDialogOpen && !goalDialogOpen && <div className="mb-5">{ribbon}</div>}
+
+        {/* THE COUNTED TWIN, ASKED ABOUT RATHER THAN ORPHANED.
+            A pushed plan goal has a row on the goals page that counts, streaks
+            and resets on its own. Removing it here used to leave that row
+            running with nothing behind it, and take the link with it on the
+            next save — so there was no way back to it from the plan. */}
+        {removing && (
+          <div
+            role="alertdialog"
+            aria-label="This goal is also counted on your goals page"
+            className="mb-5 rounded-xl border border-amber-400/30 bg-amber-500/[0.06] px-4 py-3"
+            data-testid="remove-linked-goal"
+          >
+            <p className="text-[12.5px] text-zinc-200">
+              <span className="font-medium">{removing.title}</span> is also counted on your goals page.
+            </p>
+            <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed max-w-prose">
+              Taking it out of the plan does not stop it counting. Archive it there too, or leave it
+              running on its own — its history is kept either way.
+            </p>
+            {removeError && (
+              <p className="text-[11.5px] text-amber-200/90 mt-2" role="alert">{removeError}</p>
+            )}
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              <button
+                onClick={() => void finishRemoval(true)}
+                className="text-[12px] px-3 py-1.5 rounded-full border border-rose-400/40 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20 transition-colors"
+              >
+                Remove it and archive the counted goal
+              </button>
+              <button
+                onClick={() => void finishRemoval(false)}
+                className="text-[12px] px-3 py-1.5 rounded-full border border-white/15 text-zinc-200 hover:bg-white/5 transition-colors"
+              >
+                Remove it, keep it counting
+              </button>
+              <button
+                onClick={() => { setRemoving(null); setRemoveError(null) }}
+                className="text-[12px] px-3 py-1.5 rounded-full text-zinc-400 hover:text-zinc-200 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         {!loaded || !today ? (
           <p className="text-sm text-zinc-500">Opening your plan…</p>
@@ -1694,7 +1805,7 @@ export function NorthStarFlow({
                   onOpenGoal={(goal) => { setPlanAreaId(goal.areaId); setNowGoalId(goal.id); setTab(ns.isMilestone(goal) ? "milestones" : "systems") }}
                   onSetPriority={goalHandlers.onSetPriority}
                   onMovePriority={goalHandlers.onMovePriority}
-                  onRemoveGoal={(goalId) => setPlan((p) => ns.removeGoal(p, goalId))}
+                  onRemoveGoal={removePlanGoal}
                   onOpenRoutine={(routineId) => { setPlanAreaId(null); setOpenRoutineId(routineId); setTab("systems") }}
                   emptyHint={COMMIT_EDIT_COPY.empty}
                 />
@@ -1743,7 +1854,7 @@ export function NorthStarFlow({
                   onOpenGoal={(goal) => { setPlanAreaId(goal.areaId); setNowGoalId(goal.id); setTab(ns.isMilestone(goal) ? "milestones" : "systems") }}
                   onSetPriority={goalHandlers.onSetPriority}
                   onMovePriority={goalHandlers.onMovePriority}
-                  onRemoveGoal={(goalId) => setPlan((p) => ns.removeGoal(p, goalId))}
+                  onRemoveGoal={removePlanGoal}
                   onOpenRoutine={(routineId) => { setPlanAreaId(null); setOpenRoutineId(routineId); setTab("systems") }}
                   emptyHint={COMMIT_EDIT_COPY.empty}
                 />

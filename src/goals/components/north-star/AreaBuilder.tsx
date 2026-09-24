@@ -25,6 +25,7 @@
 
 import { useState } from "react"
 import { Check, ChevronDown, Plus, X } from "lucide-react"
+import { ConfirmRemove } from "./ConfirmRemove"
 import type { NsGoal, NsPlan } from "@/src/goals/types"
 import { GOAL_DATE_PRESETS } from "@/src/goals/data/northStar"
 import { BUILDER_COPY, OTHER_HALF_COPY, SYSTEM_BUILDER_COPY, WANT_EXAMPLES } from "@/src/goals/data/northStarStart"
@@ -535,7 +536,7 @@ function AchievementRow({ plan, goal, today, open, onToggle, handlers }: {
       </span>
         {/* Removing one was the thing there was no way to do: the row had a
             chevron and nothing else, so a goal added by accident stayed. */}
-        <RemoveAchievement title={goal.title} onRemove={() => handlers.onRemoveGoal(goal.id)} />
+        <ConfirmRemove title={goal.title} onRemove={() => handlers.onRemoveGoal(goal.id)} className="mr-2" />
       </div>
 
       {/* The same thing, twice. Named rather than merged: which of the two the
@@ -544,12 +545,15 @@ function AchievementRow({ plan, goal, today, open, onToggle, handlers }: {
       {echoes.length > 0 && (
         <p className="px-3 pb-2 -mt-1 text-[10.5px] text-amber-200/80 leading-relaxed">
           {BUILDER_COPY.echo(echoes.join(", "))}{" "}
-          <button
-            onClick={() => handlers.onRemoveGoal(goal.id)}
-            className="text-amber-100 underline decoration-dotted underline-offset-2 hover:text-white transition-colors"
-          >
-            {BUILDER_COPY.echoDrop}
-          </button>
+          {/* A SECOND DELETE DOOR FOR THE SAME GOAL, and it used to take one
+              click. Offered as a tidy-up when a goal duplicates a routine step,
+              which is exactly when somebody is skimming. */}
+          <ConfirmRemove
+            variant="link"
+            label={BUILDER_COPY.echoDrop}
+            title={goal.title}
+            onRemove={() => handlers.onRemoveGoal(goal.id)}
+          />
         </p>
       )}
 
@@ -1161,27 +1165,6 @@ function DriverCount({ goal, handlers }: { goal: NsGoal; handlers: GuideHandlers
 
 
 /** Remove one achievement, visible at rest and confirmed once. */
-function RemoveAchievement({ title, onRemove }: { title: string; onRemove: () => void }) {
-  const [confirming, setConfirming] = useState(false)
-  if (!confirming) {
-    return (
-      <button
-        onClick={() => setConfirming(true)}
-        aria-label={`Remove ${title}`}
-        title={`Remove ${title}`}
-        className="shrink-0 mr-2 text-zinc-600 hover:text-rose-300 transition-colors"
-      ><X className="size-3.5" /></button>
-    )
-  }
-  return (
-    <span className="shrink-0 mr-2 inline-flex items-center gap-1.5 text-[10.5px]">
-      <button onClick={onRemove} className="text-rose-300 hover:text-rose-200 transition-colors">delete</button>
-      <button onClick={() => setConfirming(false)} className="text-zinc-500 hover:text-zinc-300 transition-colors">keep</button>
-    </span>
-  )
-}
-
-
 /**
  * `WrittenRungs` lived here: a textarea for "5 pull-ups → 10 → muscle-up",
  * behind an "or write the steps yourself" link. It is gone because

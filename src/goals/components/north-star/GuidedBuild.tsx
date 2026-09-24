@@ -29,7 +29,8 @@
  */
 
 import { useState } from "react"
-import { Check, Plus, X } from "lucide-react"
+import { Check, Plus } from "lucide-react"
+import { ConfirmRemove } from "./ConfirmRemove"
 import type { MilestoneLadderConfig, NsArea, NsGoal, NsPlan, VisionGoalType } from "@/src/goals/types"
 import { GOAL_DATE_PRESETS } from "@/src/goals/data/northStar"
 import { GUIDE_COPY, GUIDE_QUESTIONS, type GuideQuestionId } from "@/src/goals/data/northStarGuide"
@@ -337,11 +338,10 @@ function WriteStep({ plan, today, handlers, onNext }: { plan: NsPlan; today: str
                   {goal.ladder.start} → {goal.ladder.target} {goal.unit}
                 </span>
               )}
-              <button
-                onClick={() => handlers.onRemoveGoal(goal.id)}
-                aria-label={`Remove ${goal.title}`}
-                className="shrink-0 text-zinc-700 hover:text-rose-300 transition-colors"
-              ><X className="size-3" /></button>
+              {/* IT DELETED ON ONE CLICK, in the screen somebody moves fastest
+                  through. The other four delete surfaces all ask; this one and
+                  the echo link in AreaBuilder did not. */}
+              <ConfirmRemove title={goal.title} onRemove={() => handlers.onRemoveGoal(goal.id)} />
             </li>
           ))}
         </ul>

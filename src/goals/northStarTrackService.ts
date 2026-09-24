@@ -430,6 +430,27 @@ export function pushedRealIds(
  */
 export const NO_PUSHED_GOALS: ReadonlyMap<string, string> = new Map()
 
+/**
+ * WHAT REMOVING A PLAN GOAL MEANS — straight out, or a question first.
+ *
+ * A pushed plan goal has a row in `user_goals` that counts, streaks and resets
+ * on its own. Taking the goal out of the plan used to remove the plan half and
+ * leave that row running with nothing behind it, and the link went with it on
+ * the next whole-plan save — so a goal you deleted kept counting and there was
+ * no way back to it from here.
+ *
+ * Here rather than in the component because it is a rule, not a rendering:
+ * six delete surfaces asked it six different ways, and a rule stated in a
+ * `useCallback` can only be tested by rendering the screen around it.
+ */
+export function removalOf(
+  goalId: string,
+  links: Readonly<Record<string, string>>
+): { kind: "remove" } | { kind: "ask"; countedId: string } {
+  const countedId = links[goalId]
+  return countedId ? { kind: "ask", countedId } : { kind: "remove" }
+}
+
 export function pushedGoalIds(
   runId: string,
   rows: ReadonlyArray<{ id: string; template_id?: string | null }>,

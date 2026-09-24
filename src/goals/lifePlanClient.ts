@@ -169,3 +169,26 @@ export async function saveGoalLinks(links: Record<string, string | null>): Promi
   }
 }
 
+
+/**
+ * ARCHIVE A COUNTED GOAL, asked for when its plan goal is removed.
+ *
+ * Here rather than in the flow because a screen that fetches has to decide what
+ * to show when the request fails, and `NorthStarFlow` is not on the
+ * architecture test's list of screens allowed to — a list that only shrinks.
+ * The boolean is the whole contract: the caller removes the plan goal only on
+ * true, because doing the two halves independently is how somebody ends up with
+ * the plan goal gone, the counted one still running, and no link left to find
+ * it by.
+ *
+ * ARCHIVE, never `?permanent=true`. The row may carry weeks of history, and "I
+ * took it out of my plan" is not "throw the record away".
+ */
+export async function archiveCountedGoal(goalId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`/api/goals/${goalId}`, { method: "DELETE" })
+    return res.ok
+  } catch {
+    return false
+  }
+}
