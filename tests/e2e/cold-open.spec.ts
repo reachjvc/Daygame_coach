@@ -23,7 +23,8 @@
  * starts.
  */
 
-import { test, expect, type Page } from "@playwright/test"
+import { test } from "@playwright/test"
+import { openCold, expectNoHydrationFailure, expectNoNestedControls } from "./helpers/coldOpen"
 
 /**
  * The addresses from `docs/product/map.md`, minus the ones this sweep must not
@@ -89,79 +90,17 @@ const ROUTES = [
  */
 const MAY_NEST = new Set(["/dashboard/tracking", "/dashboard/tracking/history"])
 
-interface ColdOpen {
-  landedOn: string
-  hydrationErrors: string[]
-  nested: string[]
-}
-
-async function openCold(page: Page, route: string): Promise<ColdOpen> {
-  const hydrationErrors: string[] = []
-
-  const remember = (text: string) => {
-    // React says "hydration" in the message itself, and says it both as a
-    // thrown error and as a console error depending on the build.
-    if (/hydrat/i.test(text)) hydrationErrors.push(text.split("\n")[0].slice(0, 200))
-  }
-  page.on("pageerror", (error) => remember(error.message))
-  page.on("console", (message) => {
-    if (message.type() === "error") remember(message.text())
-  })
-
-  await page.goto(route, { waitUntil: "networkidle" })
-  // Hydration happens after the document lands, so the listeners need a beat
-  // with nothing else going on. Without this the sweep reads every page as
-  // clean, which is the failure mode that makes a guard like this worthless.
-  await page.waitForTimeout(1500)
-
-  const nested = await page.$$eval("button button, a button, button a, a a", (elements) =>
-    elements
-      // The Next dev overlay lives in a shadow root and has its own nested
-      // controls. `getRootNode()` is what tells them apart: only nodes in the
-      // main document are the app's.
-      .filter((element) => element.getRootNode() === document)
-      .map((element) => {
-        const outer = element.parentElement?.closest("button, a")
-        const label = (element.textContent ?? "").trim().slice(0, 30)
-        return `<${element.tagName.toLowerCase()}> "${label}" inside <${outer?.tagName.toLowerCase()}>`
-      })
-  )
-
-  return {
-    landedOn: new URL(page.url()).pathname,
-    hydrationErrors,
-    nested: [...new Set(nested)],
-  }
-}
-
 for (const route of ROUTES) {
   test(`opens clean: ${route}`, async ({ page }) => {
     const result = await openCold(page, route)
 
-    /**
-     * A hydration failure means React discarded a tree the server had already
-     * sent and rebuilt it on the client. Whatever it had printed was wrong, and
-     * anything the person had already touched in it is gone. There is no
-     * allowance for this and no route exempt from it.
-     */
-    expect(
-      result.hydrationErrors,
-      `${route} failed hydration (landed on ${result.landedOn}). React discarded ` +
-        `server-rendered markup and rebuilt it, so whatever it showed first was ` +
-        `wrong:\n${result.hydrationErrors.join("\n")}`
-    ).toEqual([])
+    expectNoHydrationFailure(route, result)
 
+    // Checked against where it LANDED as well as where it was sent, so a route
+    // that redirects onto an allowed one is not reported for its destination's
+    // debt.
     if (!MAY_NEST.has(result.landedOn) && !MAY_NEST.has(route)) {
-      expect(
-        result.nested,
-        `${route} renders a control inside another control. A <button> inside a ` +
-          `<button> breaks hydration outright — the parser closes the outer one, ` +
-          `so the server and the browser disagree. Inside an <a> it is invalid ` +
-          `HTML and two controls where the page means one. Use \`asChild\` so the ` +
-          `link IS the button, and check any component that renders a ` +
-          `caller-supplied element inside its own control:\n` +
-          result.nested.join("\n")
-      ).toEqual([])
+      expectNoNestedControls(route, result)
     }
   })
 }
