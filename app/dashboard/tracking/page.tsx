@@ -2,6 +2,10 @@ import { requireAuth } from "@/src/db/auth"
 import { getDashboardLayout } from "@/src/tracking/dashboardService"
 import { ProgressDashboard } from "@/src/tracking/components/ProgressDashboard"
 import { readLifePlan } from "@/src/db/lifePlanRepo"
+import { readDayRows, readNodeIds } from "@/src/db/lifePlanDayRepo"
+import { dayRowsToRecord } from "@/src/goals/lifePlanDayService"
+import { getUserTimezone } from "@/src/db/settingsRepo"
+import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import { rowsToPlan } from "@/src/goals/lifePlanMapper"
 import { readOneThing } from "@/src/goals/oneThingServer"
 import type { DashboardLayoutResponse } from "@/src/tracking/types"
@@ -38,6 +42,8 @@ export default async function TrackingPage() {
   let seasonPlan: NsPlan | null = null
   let oneThing: OneThing | null = null
   let seasonReady = false
+  /** The ACCOUNT's calendar day, so the band and the flow agree what today is. */
+  let today: string | null = null
 
   if (auth.success) {
     try {
@@ -46,11 +52,35 @@ export default async function TrackingPage() {
       console.error("Failed to pre-render dashboard tiles:", error)
     }
     try {
-      const [stored, thing] = await Promise.all([
+      const [stored, thing, timezone] = await Promise.all([
         readLifePlan(auth.userId),
         readOneThing(auth.userId),
+        getUserTimezone(auth.userId),
       ])
+      today = getTodayInTimezone(timezone)
       seasonPlan = stored ? rowsToPlan(stored.rows) : null
+
+      /**
+       * THE DAY HALF, WITHOUT WHICH THIS BAND COUNTS TO ZERO FOREVER.
+       *
+       * `rowsToPlan` returns `logged` empty by construction — the day tables are
+       * not part of the whole-plan read, deliberately, because a plan is
+       * replaced and a day is appended to. This page then asked that empty map
+       * how much had been done today and was told nothing, every day, for
+       * everyone: "0 of 5 done today" an hour after ticking all five.
+       *
+       * So the days are read here, by the same route's repo, and merged in.
+       */
+      if (stored && seasonPlan) {
+        const planId = stored.rows.plan_id
+        const [dayRows, ids] = await Promise.all([
+          readDayRows(auth.userId, planId),
+          readNodeIds(auth.userId, planId),
+        ])
+        const localIdFor = new Map([...ids].map(([local, id]) => [id, local]))
+        seasonPlan = { ...seasonPlan, ...dayRowsToRecord(dayRows, localIdFor) }
+      }
+
       oneThing = thing.current
       seasonReady = true
     } catch (error) {
@@ -64,6 +94,7 @@ export default async function TrackingPage() {
       seasonPlan={seasonPlan}
       oneThing={oneThing}
       seasonReady={seasonReady}
+      today={today}
     />
   )
 }

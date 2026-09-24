@@ -61,7 +61,7 @@ const HERE = "/dashboard/tracking"
    it by hand, as did the step, so the contract lived in three places and none of
    them was the one the server used. */
 
-export function SeasonBand({ plan, oneThing, ready = true }: {
+export function SeasonBand({ plan, oneThing, ready = true, today: accountToday = null }: {
   /** The plan on the account, or null when it has none. Read by the page. */
   plan: NsPlan | null
   /**
@@ -74,6 +74,13 @@ export function SeasonBand({ plan, oneThing, ready = true }: {
    * no copy of it.
    */
   oneThing: OneThing | null
+  /**
+   * The ACCOUNT's calendar day, resolved on the server from its timezone.
+   *
+   * Null when that read failed, and the browser's day is used instead — see
+   * where it is consumed.
+   */
+  today?: string | null
   /**
    * Whether both halves are actually in hand.
    *
@@ -117,7 +124,19 @@ export function SeasonBand({ plan, oneThing, ready = true }: {
   const areas = (plan?.seasonAreaIds ?? [])
     .map((id) => plan?.areas.find((a) => a.id === id))
     .filter((a): a is NonNullable<typeof a> => !!a)
-  const today = todayISO()
+  /**
+   * THE ACCOUNT'S DAY, handed down from the server.
+   *
+   * This read `todayISO()` — the BROWSER's clock — while everything that writes
+   * a tick uses the account's. A phone in another zone therefore counted a
+   * different day's progress than the one the person had just ticked, and the
+   * two screens disagreed with no way to tell which was right.
+   *
+   * The fallback is the browser's day rather than nothing, because a band that
+   * vanishes when a settings read fails is worse than one that is a day out for
+   * a traveller — and `ready` already covers the case where the plan is unknown.
+   */
+  const today = accountToday ?? todayISO()
   const stage = oneThingStage(oneThing)
   const prompt = oneThingPrompt(oneThing)
   /* Routine steps only, and that is why no goals are fetched: their ticks are

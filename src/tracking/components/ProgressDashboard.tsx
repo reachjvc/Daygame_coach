@@ -44,13 +44,15 @@ const AchievementsModal = lazy(() =>
  * says there and what it says here cannot drift apart.
  */
 
-export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThing = null, seasonReady = false }: {
+export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThing = null, seasonReady = false, today = null }: {
   initialDashboard?: DashboardLayoutResponse
   /** The Life Mastery plan, read on the server. Passed straight to the band. */
   seasonPlan?: NsPlan | null
   oneThing?: OneThing | null
   /** False when the page could not read them, so the band draws nothing. */
   seasonReady?: boolean
+  /** The ACCOUNT's calendar day, read on the server. Null when it could not be. */
+  today?: string | null
 }) {
   const { state, deleteSession, deleteFieldReport, refresh } = useTrackingStats()
   const [achievementsOpen, setAchievementsOpen] = useState(false)
@@ -89,7 +91,7 @@ export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThin
           halves are read on the SERVER and handed down: this band used to read
           the plan out of localStorage, so on a second device it told somebody
           who had written a plan to go and build one. */}
-      <SeasonBand plan={seasonPlan} oneThing={oneThing} ready={seasonReady} />
+      <SeasonBand plan={seasonPlan} oneThing={oneThing} ready={seasonReady} today={today} />
 
       {/*
         TODAY'S TRAINING, ABOVE THE THINGS YOU READ.
