@@ -37,10 +37,32 @@ export interface ColdOpen {
 export async function openCold(page: Page, route: string): Promise<ColdOpen> {
   const hydrationErrors: string[] = []
 
+  /**
+   * THE WHOLE MESSAGE, NOT ITS FIRST LINE.
+   *
+   * This kept `split("\n")[0].slice(0, 200)`, which is the headline and nothing
+   * else — and the headline is the one part of a React hydration error that
+   * says nothing useful. What identifies the fault is underneath it: the
+   * component stack naming the element, and the `+`/`-` pair showing the two
+   * renderings. That is what turned the Settings clock from a mystery into a
+   * one-line fix in twenty minutes.
+   *
+   * It matters here because of a live case. `/life-mastery/quit-vice/learn`
+   * failed once on 2026-09-24 and has not been reproduced in 252 loads between
+   * two sessions across four conditions. `daygame-coach-9f` has narrowed it by
+   * reading the code — at hydration time that page is three nodes, so the only
+   * structural candidate is `BackLink`'s `Suspense fallback={null}` — but
+   * narrowing is not naming. If it fires again, the stack settles it in one
+   * reading, and truncating to 200 characters would have thrown that away and
+   * left us waiting for a third occurrence.
+   *
+   * 8000 characters because a component stack for a deep tree runs long, and a
+   * capped stack is a stack that stops just before the line you need.
+   */
   const remember = (text: string) => {
     // React says "hydration" in the message itself, as a thrown error or as a
     // console error depending on the build.
-    if (/hydrat/i.test(text)) hydrationErrors.push(text.split("\n")[0].slice(0, 200))
+    if (/hydrat/i.test(text)) hydrationErrors.push(text.slice(0, 8000))
   }
   page.on("pageerror", (error) => remember(error.message))
   page.on("console", (message) => {
