@@ -55,6 +55,8 @@ import { familyFor } from "../../data/blackbox"
 import { LIFE_MASTERY, viceStep } from "@/src/shared/lifeMasteryRoutes"
 import { BackLink } from "@/components/BackLink"
 import { OfflineShell } from "@/src/shared/components/OfflineShell"
+import { HelpDoor } from "../HelpDoor"
+import { useHelpLocale } from "../../blackbox/useHelpLocale"
 import { PrimaryButton, QuietButton, Stat } from "../Ui"
 import { days } from "./days"
 import { Lanes } from "./Lanes"
@@ -65,6 +67,7 @@ import { PastRun } from "./PastRun"
 
 type Dialog =
   | { kind: "none" }
+  | { kind: "help" }
   | { kind: "thought" }
   | { kind: "start" }
   | { kind: "past" }
@@ -84,6 +87,8 @@ export function BlackBoxPage() {
    * remembered, or one whose record no longer holds what was remembered.
    */
   const { viewing, remember } = useBlackBoxView()
+  /** Which country's numbers the help door shows. Its own key; see the hook. */
+  const help = useHelpLocale()
   /**
    * The report filed a moment ago, so it can be taken straight back.
    *
@@ -230,11 +235,40 @@ export function BlackBoxPage() {
           Production builds only; in development it is a no-op by design. */}
       <OfflineShell />
 
-      <BackLink
-        fallback={LIFE_MASTERY}
-        fallbackLabel="Life Mastery"
-        className="mb-3 inline-flex min-h-11 items-center gap-1.5 text-[12px] text-zinc-500 transition-colors hover:text-white"
-      />
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <BackLink
+          fallback={LIFE_MASTERY}
+          fallbackLabel="Life Mastery"
+          className="inline-flex min-h-11 items-center gap-1.5 text-[12px] text-zinc-500 transition-colors hover:text-white"
+        />
+        {/* THE WAY OUT OF THE MODULE, ON THE MODULE'S FRONT DOOR.
+            This existed and was reachable in one tap from nine screens nobody
+            lands on, and in NO taps from the one screen somebody opens
+            mid-thought: `/life-mastery/quit-vice/old` and its flows had it, and
+            this page — the front door since 2026-09-20 — had no route to a
+            crisis number at all. You had to find the footer link to the older
+            screens first.
+            Up here rather than at the foot, and outside every conditional, so
+            it is on screen with an empty record too. Not made louder than that
+            on purpose: the thought door below is what this page is for, and a
+            help button competing with it at the top of the read order would be
+            a different page. `HelpDoor` leads with the crisis block
+            unconditionally once it is open.
+            NO ICON, DELIBERATELY. `LifeBuoy` would have been the obvious one
+            and it is already on the door's own title — but putting it here too
+            makes it an icon in two files, which `iconRoles.ts` requires the
+            owner to approve by name, and the registry says so at the top. The
+            old module's four help entrances are text-only `QuietButton`s
+            reading exactly this sentence, so matching them is both the cheaper
+            answer and the consistent one. */}
+        <button
+          type="button"
+          onClick={() => setDialog({ kind: "help" })}
+          className="inline-flex min-h-11 items-center gap-1.5 text-[12px] text-zinc-500 underline decoration-zinc-700 underline-offset-2 transition-colors hover:text-white"
+        >
+          if this is past what a page can do
+        </button>
+      </div>
 
       <header>
         <h1 className="text-[19px] font-semibold tracking-tight text-white">Black Box</h1>
@@ -551,6 +585,23 @@ export function BlackBoxPage() {
         </Link>
         .
       </p>
+
+      {/* NO `ready` GUARD, unlike every dialog below it.
+          The others read or write the record and must wait for it. This one
+          needs a country and a vice id, and the country comes from its own key
+          — so it opens and shows a crisis number with an empty record, on a
+          first visit, and in a private window where storage is blocked. The one
+          dialog here that must never be gated on anything is this one.
+          `onPlan` is not passed: the call plan needs a list to live in and this
+          page's record is runs and reports. See `HelpDoorProps`. */}
+      {dialog.kind === "help" && (
+        <HelpDoor
+          viceId={viceId}
+          locale={help.locale}
+          onLocale={help.remember}
+          onClose={() => setDialog({ kind: "none" })}
+        />
+      )}
 
       {dialog.kind === "thought" && (
         <ThoughtDoor

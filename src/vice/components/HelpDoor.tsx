@@ -20,7 +20,7 @@
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { LifeBuoy } from "lucide-react"
-import type { HelpLocale, ViceHandlers, ViceState } from "../types"
+import type { HelpLocale } from "../types"
 import { HELP, SERVICES, VERIFIED } from "../data/help"
 import { IFTHEN } from "../data/copy"
 import { planProblem } from "../viceService"
@@ -28,8 +28,38 @@ import { Panel, PrimaryButton, QuietButton, Why } from "./Ui"
 
 const LOCALES: HelpLocale[] = ["uk", "us", "other"]
 
-export function HelpDoor({ state, on, onClose }: { state: ViceState; on: ViceHandlers; onClose: () => void }) {
-  const locale = state.helpLocale
+/**
+ * FOUR INPUTS, NOT A STATE BAG, because this door has to hang on two different
+ * front doors now.
+ *
+ * It used to take the old module's whole `ViceState` and `ViceHandlers` and
+ * reach into four fields of them. That made it unmountable on the Black Box,
+ * which has no `ViceState` and never will — so the one screen somebody opens
+ * mid-thought had no route to a crisis number at all, while this component sat
+ * one tap from nine screens nobody lands on. It also meant that if the old
+ * module is retired (`docs/plans/vice-finished.md`, M2) this door would be
+ * deleted with the state shape it happened to be written against, and the
+ * helplines are the one part of that module nobody would argue is taste.
+ *
+ * `onPlan` is OPTIONAL and the difference is deliberate. The bottom of this
+ * screen writes a "when X, I will call Y" commitment, because an intention
+ * with no when is not a plan. The old flows have a list to keep that in; the
+ * Black Box's record is runs and reports and must not be bent into holding
+ * something else. So where there is nowhere to keep it, that section is not
+ * drawn — rather than drawn and silently discarded, which is worse than absent.
+ */
+export interface HelpDoorProps {
+  /** Which vice, so a service that is specific to one is only offered for it. */
+  viceId: string | null
+  /** Which country's numbers. Null until asked; nothing below renders without it. */
+  locale: HelpLocale | null
+  onLocale: (locale: HelpLocale) => void
+  /** Where a call plan goes. Omitted where there is nowhere to keep one. */
+  onPlan?: (when: string, then: string) => void
+  onClose: () => void
+}
+
+export function HelpDoor({ viceId, locale, onLocale, onPlan, onClose }: HelpDoorProps) {
   const region = locale ? SERVICES[locale] : null
   const [when, setWhen] = useState("")
   const [then, setThen] = useState("")
@@ -42,7 +72,7 @@ export function HelpDoor({ state, on, onClose }: { state: ViceState; on: ViceHan
   const canAdd = when.trim().length > 0 && then.trim().length > 0 && !problem
 
   const relevant = (region?.items ?? []).filter(
-    (service) => !service.forVice || (state.viceId !== null && service.forVice.includes(state.viceId)),
+    (service) => !service.forVice || (viceId !== null && service.forVice.includes(viceId)),
   )
   const crisis = relevant.filter((s) => s.crisis)
   const rest = relevant.filter((s) => !s.crisis)
@@ -66,7 +96,7 @@ export function HelpDoor({ state, on, onClose }: { state: ViceState; on: ViceHan
               key={id}
               type="button"
               aria-pressed={locale === id}
-              onClick={() => on.setHelpLocale(id)}
+              onClick={() => onLocale(id)}
               className={`inline-flex min-h-11 items-center text-[12px] px-3.5 rounded-full border transition-colors ${
                 locale === id
                   ? "border-violet-400/50 bg-violet-500/15 text-violet-100"
@@ -153,7 +183,12 @@ export function HelpDoor({ state, on, onClose }: { state: ViceState; on: ViceHan
               </ul>
             </details>
 
-            {/* The only thing on the screen that asks for anything. */}
+            {/* The only thing on the screen that asks for anything — and the
+                only thing here that needs somewhere to keep an answer, so it is
+                drawn only where there is one. See `onPlan` above: a form whose
+                submit silently discards what was typed is worse than no form,
+                and `deadControls.spec.ts` would be right to fail it. */}
+            {onPlan && (
             <Panel tone="live" className="mt-1">
               <p className="text-[13.5px] font-medium text-violet-100">{HELP.plan.title}</p>
               <p className="text-[12px] text-violet-200/70 mt-0.5 leading-relaxed">{HELP.plan.blurb}</p>
@@ -184,13 +219,14 @@ export function HelpDoor({ state, on, onClose }: { state: ViceState; on: ViceHan
                 <div className="mt-3">
                   <PrimaryButton
                     disabled={!canAdd}
-                    onClick={() => { on.addPlan(when.trim(), then.trim()); setAdded(true) }}
+                    onClick={() => { onPlan?.(when.trim(), then.trim()); setAdded(true) }}
                   >
                     Add it to my plans
                   </PrimaryButton>
                 </div>
               )}
             </Panel>
+            )}
 
             <Why label="what this page can and cannot do"><p>{HELP.ceiling}</p></Why>
             <p className="text-[11px] text-zinc-700 leading-relaxed">

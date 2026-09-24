@@ -306,7 +306,7 @@ export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
       )}
       {tool === "lapse" && loaded && <LapseTool state={state} on={on} onClose={() => setTool("none")} />}
       {tool === "card" && loaded && <CardTool state={state} on={on} onClose={() => setTool("none")} />}
-      {tool === "help" && loaded && <HelpDoor state={state} on={on} onClose={() => setTool("none")} />}
+      {tool === "help" && loaded && <HelpDoor viceId={state.viceId} locale={state.helpLocale} onLocale={on.setHelpLocale} onPlan={on.addPlan} onClose={() => setTool("none")} />}
       {tool === "again" && loaded && <AgainTool state={state} on={on} onClose={() => setTool("none")} />}
       {tool === "voices" && loaded && <VoicesDialog viceId={state.viceId} onClose={() => setTool("none")} />}
       {tool === "tripwire" && loaded && <TripwireTool state={state} on={on} onClose={() => setTool("none")} />}
