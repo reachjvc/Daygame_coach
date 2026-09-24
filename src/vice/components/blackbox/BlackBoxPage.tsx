@@ -54,6 +54,7 @@ import { mergeRecords } from "../../blackbox/viceSyncService"
 import { familyFor } from "../../data/blackbox"
 import { LIFE_MASTERY, viceStep } from "@/src/shared/lifeMasteryRoutes"
 import { BackLink } from "@/components/BackLink"
+import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { PrimaryButton, QuietButton, Stat } from "../Ui"
 import { days } from "./days"
 import { Lanes } from "./Lanes"
@@ -218,6 +219,17 @@ export function BlackBoxPage() {
       // queued. "Synced AND nothing pending" is the true condition.
       data-pending={sync.pending}
     >
+      {/* THE PAGE HAS TO BE OPENABLE WITH NO SIGNAL, not merely survivable.
+          Everything below already runs from the browser copy and queues its
+          writes, so once this is on screen the network can die and nothing is
+          lost. Opening it cold with no connection was a different story: the
+          document itself had to be fetched, so you got the browser's error
+          page — at the one moment this tool was designed for. This registers
+          the worker that keeps the page; `SHELL_PATHS` in `public/sw.js` is
+          where this address is listed, and the worker is what does the work.
+          Production builds only; in development it is a no-op by design. */}
+      <OfflineShell />
+
       <BackLink
         fallback={LIFE_MASTERY}
         fallbackLabel="Life Mastery"

@@ -14,9 +14,22 @@
  */
 
 import { test, expect, type Page } from "@playwright/test"
-import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { LIFE_MASTERY, QUIT_VICE, QUIT_VICE_OLD, viceStep } from "@/src/shared/lifeMasteryRoutes"
 
-const HUB = QUIT_VICE
+/**
+ * THE HUB IS A PAGE. IT IS NOT THE PREFIX THE STEPS HANG OFF.
+ *
+ * `const HUB = QUIT_VICE` did both jobs, and on 2026-09-20 only one of them
+ * stopped being true: the six flows, `learn` and `shortlist` are still under
+ * `/life-mastery/quit-vice/`, but the hub PAGE moved to `/old` and that address
+ * became the Black Box. So every `${HUB}/<step>` here stayed correct while
+ * every visit to `HUB` itself silently landed on a different page — 22 of these
+ * tests red for four days, in a CI job nobody was reading.
+ *
+ * There is no `HUB` constant any more, deliberately. A step is built with
+ * `viceStep`, which is the one thing that knows where steps live, and the hub
+ * page is named for the page it is.
+ */
 const STORAGE_KEY = "quit-vice-v1"
 const FLOWS = ["where", "gives", "map", "experiment", "line", "week"] as const
 
@@ -27,7 +40,7 @@ const FLOWS = ["where", "gives", "map", "experiment", "line", "week"] as const
  * attached its handlers, and a click sent in that window is silently dropped —
  * which shows up later as a dialog that "never opened".
  */
-async function fresh(page: Page, path: string = HUB) {
+async function fresh(page: Page, path: string = QUIT_VICE_OLD) {
   await page.goto(path, { waitUntil: "domcontentloaded" })
   await page.evaluate((key) => window.localStorage.removeItem(key), STORAGE_KEY)
   // Pin the hub to "Everything" for the bulk of the suite. The default is the
@@ -207,7 +220,7 @@ test.describe("every flow", () => {
   for (const flow of FLOWS) {
     test(`${flow} renders every step without an error or an empty screen`, async ({ page }) => {
       const errors = watchConsole(page)
-      await fresh(page, `${HUB}/${flow}`)
+      await fresh(page, viceStep(flow))
 
       const rail = page.getByRole("navigation", { name: "Steps" })
       // Open the collapsed rail to enumerate; index 0 is the toggle itself.
@@ -236,7 +249,7 @@ test.describe("every flow", () => {
 
 test.describe("the safety gate", () => {
   test("holds the date for alcohol until the warning is read, and opens after", async ({ page }) => {
-    await fresh(page, `${HUB}/experiment`)
+    await fresh(page, viceStep("experiment"))
 
     await goStep(page, "What is the experiment about?")
     await page.getByRole("button", { name: /^Drinking/ }).click()
@@ -260,7 +273,7 @@ test.describe("the safety gate", () => {
   })
 
   test("does not gate a vice with no withdrawal risk", async ({ page }) => {
-    await fresh(page, `${HUB}/experiment`)
+    await fresh(page, viceStep("experiment"))
 
     await goStep(page, "What is the experiment about?")
     await page.getByRole("button", { name: /^Scrolling/ }).click()
@@ -273,7 +286,7 @@ test.describe("the safety gate", () => {
   })
 
   test("clears a stale answer when the vice changes", async ({ page }) => {
-    await fresh(page, `${HUB}/experiment`)
+    await fresh(page, viceStep("experiment"))
 
     await goStep(page, "What is the experiment about?")
     await page.getByRole("button", { name: /^Scrolling/ }).click()
@@ -291,7 +304,7 @@ test.describe("the safety gate", () => {
 
 test.describe("the length picker", () => {
   test("opens at thirty and comes down only when asked", async ({ page }) => {
-    await fresh(page, `${HUB}/experiment`)
+    await fresh(page, viceStep("experiment"))
     await goStep(page, "How long")
 
     await expect(page.getByRole("button", { name: "30 days" })).toBeVisible()
@@ -306,7 +319,7 @@ test.describe("the length picker", () => {
   })
 
   test("offers today first", async ({ page }) => {
-    await fresh(page, `${HUB}/experiment`)
+    await fresh(page, viceStep("experiment"))
     await goStep(page, "How long")
     await page.getByRole("button", { name: "30 days" }).click()
     await expect(page.getByRole("button", { name: /^Today/ })).toBeVisible()
@@ -315,7 +328,7 @@ test.describe("the length picker", () => {
 
 test.describe("the if-then builder", () => {
   test("refuses a plan phrased as what you will not do, and says why", async ({ page }) => {
-    await fresh(page, `${HUB}/week`)
+    await fresh(page, viceStep("week"))
     await goStep(page, "One plan per situation")
 
     await page.getByLabel("When…").fill("someone offers me one")
@@ -326,7 +339,7 @@ test.describe("the if-then builder", () => {
   })
 
   test("accepts a plan that names an action and stores it", async ({ page }) => {
-    await fresh(page, `${HUB}/week`)
+    await fresh(page, viceStep("week"))
     await goStep(page, "One plan per situation")
 
     await page.getByLabel("When…").fill("it gets to six and I walk in")
@@ -344,7 +357,7 @@ test.describe("the if-then builder", () => {
 
 test.describe("state", () => {
   test("survives a reload", async ({ page }) => {
-    await fresh(page, `${HUB}/line`)
+    await fresh(page, viceStep("line"))
     await goStep(page, "What is the line about?")
     await page.getByRole("button", { name: /^Betting/ }).click()
 
@@ -355,20 +368,20 @@ test.describe("state", () => {
   })
 
   test("is shared across all four flows", async ({ page }) => {
-    await fresh(page, `${HUB}/experiment`)
+    await fresh(page, viceStep("experiment"))
     await goStep(page, "The card")
     await page.getByRole("textbox", { name: /Add to Three reasons/ }).fill("Saturday mornings back")
     await page.getByRole("button", { name: /Add to Three reasons/ }).click()
 
     // Same card, opened from a different flow entirely.
-    await page.goto(`${HUB}/week`, { waitUntil: "domcontentloaded" })
+    await page.goto(viceStep("week"), { waitUntil: "domcontentloaded" })
     await settled(page)
     await page.getByRole("button", { name: /My card/ }).click()
     await expect(page.getByRole("dialog").getByText("Saturday mornings back")).toBeVisible()
   })
 
   test("start over clears everything, and is confirmed first", async ({ page }) => {
-    await fresh(page, `${HUB}/line`)
+    await fresh(page, viceStep("line"))
     await goStep(page, "What is the line about?")
     await page.getByRole("button", { name: /^Betting/ }).click()
 
@@ -411,12 +424,17 @@ test.describe("reachability", () => {
     await link.click()
 
     await expect(page).toHaveURL(new RegExp(`${QUIT_VICE}$`))
-    await expect(page.getByRole("heading", { name: "Quitting something" })).toBeVisible()
+    // THE BLACK BOX, not the hub. This assertion said "Quitting something"
+    // until 2026-09-24 and had been failing since the front door changed on
+    // 2026-09-20 — the routine card was never the thing that broke. Where the
+    // card LANDS is the Black Box's own claim and `blackbox.spec.ts` asserts it;
+    // what this test is for is that the card still reaches the module at all.
+    await expect(page.getByRole("heading", { name: "Black Box" })).toBeVisible()
   })
 
   test("every flow links back to the hub", async ({ page }) => {
     for (const flow of FLOWS) {
-      await page.goto(`${HUB}/${flow}`, { waitUntil: "domcontentloaded" })
+      await page.goto(viceStep(flow), { waitUntil: "domcontentloaded" })
       await settled(page)
       // The shared BackLink names where it goes ("Quit a vice") rather than
       // saying "Back", so this asks for the control, not the wording.
@@ -430,7 +448,7 @@ test.describe("the rulers", () => {
   test("lets zero be answered, and asks the question written for it", async ({ page }) => {
     // An unanswered slider parks on zero, so without an explicit commit the one
     // answer with its own follow-up is the one answer nobody can give.
-    await fresh(page, `${HUB}/experiment`)
+    await fresh(page, viceStep("experiment"))
     await goStep(page, "Two numbers")
 
     const importance = page.getByRole("slider", { name: /How important is it/ })
@@ -441,7 +459,7 @@ test.describe("the rulers", () => {
   })
 
   test("asks about a lower number, never a higher one", async ({ page }) => {
-    await fresh(page, `${HUB}/experiment`)
+    await fresh(page, viceStep("experiment"))
     await goStep(page, "Two numbers")
 
     const importance = page.getByRole("slider", { name: /How important is it/ })
@@ -468,7 +486,7 @@ test.describe("finding out where it actually is", () => {
 
   test("counts the eleven for a substance and never hands out a label", async ({ page }) => {
     const errors = watchConsole(page)
-    await fresh(page, `${HUB}/where`)
+    await fresh(page, viceStep("where"))
     await pick(page, "Drinking")
     await goStep(page, "The count")
 
@@ -492,7 +510,7 @@ test.describe("finding out where it actually is", () => {
   })
 
   test("shows no number at all until a prediction has been written", async ({ page }) => {
-    await fresh(page, `${HUB}/where`)
+    await fresh(page, viceStep("where"))
     await pick(page, "Drinking")
     await goStep(page, "The count")
     await page.getByRole("listitem").first().getByRole("button", { name: "Yes", exact: true }).click()
@@ -505,7 +523,7 @@ test.describe("finding out where it actually is", () => {
   })
 
   test("gives a behaviour the shorter set, no tolerance, and no severity band", async ({ page }) => {
-    await fresh(page, `${HUB}/where`)
+    await fresh(page, viceStep("where"))
     await pick(page, "Porn")
     await goStep(page, "The count")
 
@@ -535,7 +553,7 @@ test.describe("finding out where it actually is", () => {
   })
 
   test("flags the physical item for a substance, before any date is set", async ({ page }) => {
-    await fresh(page, `${HUB}/where`)
+    await fresh(page, viceStep("where"))
     await pick(page, "Drinking")
     await goStep(page, "The count")
     await page.getByRole("listitem").nth(10).getByRole("button", { name: "Yes", exact: true }).click()
@@ -551,7 +569,7 @@ test.describe("finding out where it actually is", () => {
 test.describe("the help door", () => {
   test("is one tap from every flow and leads with the crisis block", async ({ page }) => {
     for (const flow of FLOWS) {
-      await page.goto(`${HUB}/${flow}`, { waitUntil: "domcontentloaded" })
+      await page.goto(viceStep(flow), { waitUntil: "domcontentloaded" })
       await settled(page)
       await page.getByRole("button", { name: "Need more than this" }).click()
       await expect(page.getByRole("dialog").getByRole("heading", { name: "Past what a page can do" })).toBeVisible()
@@ -621,7 +639,7 @@ test.describe("what it gives you", () => {
 
   test("only carries beliefs rated four or higher into the check", async ({ page }) => {
     const errors = watchConsole(page)
-    await fresh(page, `${HUB}/gives`)
+    await fresh(page, viceStep("gives"))
     await pick(page, "Drinking")
 
     await goStep(page, "What it gives you")
@@ -638,7 +656,7 @@ test.describe("what it gives you", () => {
   })
 
   test("never totals the good half against the costly half", async ({ page }) => {
-    await fresh(page, `${HUB}/gives`)
+    await fresh(page, viceStep("gives"))
     await pick(page, "Drinking")
     await goStep(page, "What you are for")
     await page.getByRole("button", { name: "Being fit", exact: true }).click()
@@ -653,7 +671,7 @@ test.describe("what it gives you", () => {
   })
 
   test("caps the top three and drops a value that gets unpicked", async ({ page }) => {
-    await fresh(page, `${HUB}/gives`)
+    await fresh(page, viceStep("gives"))
     await pick(page, "Drinking")
     await goStep(page, "What you are for")
 
@@ -673,7 +691,7 @@ test.describe("what it gives you", () => {
   })
 
   test("puts a future cue into the urge tool and onto the card", async ({ page }) => {
-    await fresh(page, `${HUB}/gives`)
+    await fresh(page, viceStep("gives"))
     await pick(page, "Drinking")
     await goStep(page, "Two versions of later")
 
@@ -697,7 +715,7 @@ test.describe("what it gives you", () => {
   })
 
   test("warns before a goodbye letter when no line has been drawn", async ({ page }) => {
-    await fresh(page, `${HUB}/gives`)
+    await fresh(page, viceStep("gives"))
     await pick(page, "Drinking")
     await goStep(page, "The letter")
 
@@ -792,7 +810,7 @@ test.describe("the urge response is a choice, not one answer", () => {
 
 test.describe("the refusal line names the right thing", () => {
   test("does not tell a gambling user about drinking", async ({ page }) => {
-    await fresh(page, `${HUB}/where`)
+    await fresh(page, viceStep("where"))
     await goStep(page, "What are we looking at?")
     await page.getByRole("button", { name: /^Betting/ }).click()
 
@@ -864,7 +882,7 @@ test.describe("the version switcher", () => {
   })
 
   test("opens the acute door by default, so an urge is one tap away", async ({ page }) => {
-    await page.goto(HUB, { waitUntil: "domcontentloaded" })
+    await page.goto(QUIT_VICE_OLD, { waitUntil: "domcontentloaded" })
     await page.evaluate(() => {
       window.localStorage.removeItem("quit-vice-v1")
       window.localStorage.setItem("quit-vice-version", "guided")
@@ -959,7 +977,7 @@ test.describe("the hub groups sensibly", () => {
 test.describe("the short version", () => {
   test("is reachable, ranked, and honest about the count", async ({ page }) => {
     const errors = watchConsole(page)
-    await page.goto(`${HUB}/shortlist`, { waitUntil: "domcontentloaded" })
+    await page.goto(viceStep("shortlist"), { waitUntil: "domcontentloaded" })
     await settled(page)
 
     await expect(page.getByRole("heading", { name: "The short version" })).toBeVisible()
@@ -976,7 +994,7 @@ test.describe("the short version", () => {
   })
 
   test("ticks persist and the count follows", async ({ page }) => {
-    await page.goto(`${HUB}/shortlist`, { waitUntil: "domcontentloaded" })
+    await page.goto(viceStep("shortlist"), { waitUntil: "domcontentloaded" })
     await page.evaluate(() => window.localStorage.removeItem("quit-vice-v1"))
     await page.reload({ waitUntil: "domcontentloaded" })
     await settled(page)
@@ -990,7 +1008,7 @@ test.describe("the short version", () => {
   })
 
   test("marks the constraints that need another person", async ({ page }) => {
-    await page.goto(`${HUB}/shortlist`, { waitUntil: "domcontentloaded" })
+    await page.goto(viceStep("shortlist"), { waitUntil: "domcontentloaded" })
     await settled(page)
     // A constraint you can revoke alone is not a constraint — the clearest
     // cross-behaviour finding in the corpus, marked per item.
@@ -1010,7 +1028,7 @@ test.describe("the short version", () => {
 test.describe("nine things worth understanding", () => {
   test("lists all nine and opens one into idea, exercise and an account", async ({ page }) => {
     const errors = watchConsole(page)
-    await page.goto(`${HUB}/learn`, { waitUntil: "domcontentloaded" })
+    await page.goto(viceStep("learn"), { waitUntil: "domcontentloaded" })
     await settled(page)
 
     await expect(page.getByRole("heading", { name: "Nine things worth understanding" })).toBeVisible()
@@ -1028,7 +1046,7 @@ test.describe("nine things worth understanding", () => {
   })
 
   test("runs the exercise from inside the module", async ({ page }) => {
-    await page.goto(`${HUB}/learn`, { waitUntil: "domcontentloaded" })
+    await page.goto(viceStep("learn"), { waitUntil: "domcontentloaded" })
     await settled(page)
     await page.getByRole("button", { name: /The dangerous week is the good one/ }).click()
     await page.getByRole("button", { name: /Write the tripwire/ }).click()
@@ -1036,7 +1054,7 @@ test.describe("nine things worth understanding", () => {
   })
 
   test("tracks reading without turning it into a score", async ({ page }) => {
-    await page.goto(`${HUB}/learn`, { waitUntil: "domcontentloaded" })
+    await page.goto(viceStep("learn"), { waitUntil: "domcontentloaded" })
     await page.evaluate(() => window.localStorage.removeItem("quit-vice-v1"))
     await page.reload({ waitUntil: "domcontentloaded" })
     await settled(page)
@@ -1053,7 +1071,7 @@ test.describe("nine things worth understanding", () => {
   })
 
   test("says there is no reason to be here daily", async ({ page }) => {
-    await page.goto(`${HUB}/learn`, { waitUntil: "domcontentloaded" })
+    await page.goto(viceStep("learn"), { waitUntil: "domcontentloaded" })
     await settled(page)
     // The opposite of a retention-optimised product, and what the evidence says.
     await expect(page.getByText(/no daily module/)).toBeVisible()

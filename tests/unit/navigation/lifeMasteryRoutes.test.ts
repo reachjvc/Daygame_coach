@@ -17,7 +17,7 @@
 import { describe, it, expect } from "vitest"
 import * as fs from "fs"
 import * as path from "path"
-import { LIFE_MASTERY, QUIT_VICE, viceStep } from "../../../src/shared/lifeMasteryRoutes"
+import { LIFE_MASTERY, QUIT_VICE, QUIT_VICE_OLD, viceStep } from "../../../src/shared/lifeMasteryRoutes"
 
 const root = path.resolve(__dirname, "../../..")
 
@@ -75,6 +75,34 @@ describe("Life Mastery's address", () => {
     // amount of importing it correctly will save you from.
     expect(fs.existsSync(path.join(root, "app", LIFE_MASTERY.slice(1), "page.tsx"))).toBe(true)
     expect(fs.existsSync(path.join(root, "app", QUIT_VICE.slice(1), "page.tsx"))).toBe(true)
+    expect(fs.existsSync(path.join(root, "app", QUIT_VICE_OLD.slice(1), "page.tsx"))).toBe(true)
+  })
+
+  /**
+   * TWO PAGES, TWO NAMES, AND THEY MAY NEVER COLLAPSE INTO ONE.
+   *
+   * On 2026-09-20 `/life-mastery/quit-vice` stopped being the old hub and became
+   * the Black Box. The name `QUIT_VICE` was left pointing at the address, so it
+   * silently changed meaning, and the two browser specs that said
+   * `HUB = QUIT_VICE` went on compiling while driving the wrong page — 22 tests
+   * red for four days, in a CI job nobody was reading.
+   *
+   * There was no constant for the hub's new address, which is why there was
+   * nothing to repoint them at. This test is the guard for the shape of that
+   * mistake, not for the instance: the day somebody defines the second name as
+   * the same string as the first — by moving a page and reusing a name again —
+   * every test that distinguishes them starts passing for the wrong reason.
+   */
+  it("keeps the Black Box and the old hub at two different addresses", () => {
+    expect(QUIT_VICE_OLD).not.toBe(QUIT_VICE)
+    expect(QUIT_VICE_OLD.startsWith(`${QUIT_VICE}/`)).toBe(true)
+
+    // And they are genuinely two pages, not one file served twice: the hub's
+    // page must not be a re-export of the front door's.
+    const front = fs.readFileSync(path.join(root, "app", QUIT_VICE.slice(1), "page.tsx"), "utf-8")
+    const old = fs.readFileSync(path.join(root, "app", QUIT_VICE_OLD.slice(1), "page.tsx"), "utf-8")
+    expect(code(front)).toContain("BlackBoxPage")
+    expect(code(old)).toContain("ViceHub")
   })
 
   it("has a page for every vice step the flows can reach", () => {
@@ -109,6 +137,30 @@ describe("Life Mastery's address", () => {
     ).toBe(true)
     // And the check inside, which is what actually turns anyone away.
     expect(proxy).toMatch(/pathname\.startsWith\(LIFE_MASTERY\)/)
+  })
+
+  it("is named by the service worker, which cannot import the constant", () => {
+    /**
+     * `public/sw.js` is a classic worker script served from the site root. It
+     * cannot import from `src/`, so the one page of Life Mastery that is kept
+     * for offline use is written out as a literal there — the same situation as
+     * `proxy.ts`'s matcher above, and the same failure mode: rename the folder,
+     * change the constant, and the worker goes on warming and answering an
+     * address that 404s. Nobody would see it, because the symptom is only that
+     * the page stops opening without a connection, which is the one condition
+     * nobody tests by accident.
+     */
+    const worker = fs.readFileSync(path.join(root, "public/sw.js"), "utf-8")
+    expect(
+      worker.includes(`"${QUIT_VICE}"`),
+      `public/sw.js's SHELL_PATHS does not name ${QUIT_VICE}, so the Black Box\n` +
+        `would no longer open without a connection. Update the list there.`
+    ).toBe(true)
+
+    // And it must be the front door, never the old hub: the hub is nine routes
+    // of browser-only state with no reason to be reachable offline, and
+    // `SHELL_PATHS` is deliberately short.
+    expect(worker.includes(`"${QUIT_VICE_OLD}"`)).toBe(false)
   })
 
   it("keeps the old address working", () => {

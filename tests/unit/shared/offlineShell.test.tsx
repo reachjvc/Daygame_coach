@@ -10,7 +10,7 @@
 import { cleanup, render, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vitest"
 
-import { OfflineShell } from "@/src/timetrack/components/OfflineShell"
+import { OfflineShell } from "@/src/shared/components/OfflineShell"
 
 afterEach(() => {
   cleanup()

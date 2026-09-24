@@ -27,7 +27,7 @@ import {
 } from "../icons"
 import { useTimetrackSync, type SyncStatus } from "../hooks/useTimetrackSync"
 import { ImportOfferBanner } from "./ImportOfferBanner"
-import { OfflineShell } from "./OfflineShell"
+import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { ErrorBoundary } from "@/src/shared/components/ErrorBoundary"
 import { useTimetrack } from "../hooks/useTimetrack"
 import { defaultReportConfig, decodeReportConfig } from "../reportsService"

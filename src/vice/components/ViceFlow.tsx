@@ -28,7 +28,7 @@ import { AgainTool } from "./Again"
 import { VoicesDialog } from "./Voices"
 import { TripwireTool } from "./Tripwire"
 import { Why } from "./Ui"
-import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { QUIT_VICE_OLD } from "@/src/shared/lifeMasteryRoutes"
 import { BackLink } from "@/components/BackLink"
 
 export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
@@ -101,8 +101,18 @@ export function ViceFlow({ flowId }: { flowId: ViceFlowId }) {
     <div className="min-h-screen bg-zinc-950 text-white" data-hydrated={loaded ? "true" : undefined}>
       <div className="max-w-3xl mx-auto px-6 py-10 pb-32">
         <div className="flex items-center justify-between gap-3 mb-6">
+          {/* BACK GOES TO THE HUB THIS FLOW BELONGS TO, NOT TO THE FRONT DOOR.
+              `BackLink` prefers the `?from=` the entrance passed and falls back
+              to this when there is none — and no caller in this module passes
+              one, so the fallback is what every single visitor gets. It was
+              `QUIT_VICE`, which stopped being the hub on 2026-09-20 and became
+              the Black Box: tapping back out of any of the nine screens here
+              landed you on a different module, with the hub you came from now
+              two taps away behind a footer link. A one-way door, on every
+              screen, for four days. Same fix in `LearnPage` and
+              `ShortlistPage`, which are the other two entrances. */}
           <BackLink
-            fallback={QUIT_VICE}
+            fallback={QUIT_VICE_OLD}
             fallbackLabel="Quit a vice"
             className="inline-flex min-h-11 items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors"
           />

@@ -1,11 +1,11 @@
 /**
- * The app shell, kept so the time tracker can open with no connection.
+ * The app shells, kept so a page you need offline can be OPENED offline.
  *
- * WHY: the tracker already works offline once it is on screen — the workspace
+ * WHY: these pages already work offline once they are on screen — their state
  * lives in this browser and changes queue up until there is signal. But opening
- * it cold with no connection showed the browser's error page, because the page
- * itself had to be fetched. For something you open on a train, that is the
- * difference between an app and a bookmark.
+ * one cold with no connection showed the browser's error page, because the page
+ * itself had to be fetched. For something you open on a train, or at eleven at
+ * night on no signal, that is the difference between an app and a bookmark.
  *
  * This file is served from the site root, so once installed it sits in front of
  * EVERY page on the site, not just the tracker. Five rules follow from that.
@@ -14,12 +14,18 @@
  *    never a shortcut when it works. A worker that serves cached JavaScript
  *    first is how an app gets stuck on a version from three weeks ago.
  *
- * 2. ONLY THE TRACKER PAGE IS EVER STORED, AND ONLY EVER ANSWERED AT ITS OWN
+ * 2. ONLY A NAMED PAGE IS EVER STORED, AND ONLY EVER ANSWERED AT ITS OWN
  *    ADDRESS. The first version stored every page it saw and, when any page
  *    failed to load, handed back the tracker's page under that page's address —
  *    so /dashboard/settings could come up as the time tracker, or as a
  *    days-old copy of itself. Every other page is left entirely to the browser:
  *    not stored, not answered from here.
+ *
+ *    THE LIST IS SHORT ON PURPOSE AND IS NOT A CONVENIENCE. A page earns a
+ *    place here by being one somebody opens at the exact moment they have no
+ *    connection — a timer started on a train, a vice record opened at eleven at
+ *    night. "It would be nice if this worked offline too" is how the list grows
+ *    back into "every page it saw", which is the fault this rule exists for.
  *
  * 3. THE SHELL IS STORED WITH ITS SCRIPTS OR NOT AT ALL. Caching the HTML alone
  *    was a trap: after a deploy the stored page named chunk files that had been
@@ -53,10 +59,34 @@
  */
 
 const VERSION = new URL(self.location.href).searchParams.get("v") || "unversioned"
-const CACHE = "timetrack-shell-" + VERSION
+// Named for what it holds: the app's offline shells, not one feature's.
+const CACHE = "app-shell-" + VERSION
 
-/** The one page this worker may store and answer. */
-const SHELL_PATH = "/dashboard/time"
+/**
+ * The pages this worker may store and answer. Nothing else, ever.
+ *
+ * WRITTEN OUT BY HAND, because a worker is a classic script served from the
+ * site root: it cannot import `src/shared/lifeMasteryRoutes.ts`, the same
+ * reason `proxy.ts`'s matcher is a literal. So the address can move out from
+ * under this file silently. `tests/unit/navigation/lifeMasteryRoutes.test.ts`
+ * is what stops that — it fails when this list no longer names the address the
+ * constant claims, exactly as it already does for the proxy.
+ */
+const SHELL_PATHS = [
+  // Started on a train, in a basement, on the underground.
+  "/dashboard/time",
+  // The Black Box. Its whole design premise is the moment somebody opens it
+  // mid-thought, which is not a moment that waits for signal — and until
+  // 2026-09-24 opening it without a connection showed the browser's error page
+  // while the page itself was perfectly capable of running from localStorage.
+  "/life-mastery/quit-vice",
+]
+
+/** Is this one of them? */
+function isShell(pathname) {
+  return SHELL_PATHS.includes(pathname)
+}
+
 /** Fetched flat, because none of them is a page and none of them is personal. */
 const SHELL_EXTRAS = ["/manifest.webmanifest", "/icon-192.png", "/icon-512.png"]
 
@@ -67,7 +97,7 @@ function isAsset(request, url) {
 }
 
 /**
- * Store the tracker page and everything it needs to draw itself.
+ * Store one shell page and everything it needs to draw itself.
  *
  * `redirect: "manual"` is what keeps a signed-out copy out of the store: the
  * proxy answers with a 307 to the login page, which arrives here as an opaque
@@ -76,12 +106,12 @@ function isAsset(request, url) {
  * tracker's address — which Chrome then refuses to use for a navigation, so the
  * offline launch it exists for shows the browser's error page instead.
  */
-async function warmShell(cache) {
-  const response = await fetch(SHELL_PATH, { redirect: "manual" })
+async function warmShell(cache, path) {
+  const response = await fetch(path, { redirect: "manual" })
   if (!response.ok) return
 
   const html = await response.clone().text()
-  await cache.put(SHELL_PATH, response)
+  await cache.put(path, response)
 
   // The page names its own scripts and stylesheets. Storing the HTML without
   // them leaves an offline launch drawing markup that never wakes up.
@@ -95,7 +125,12 @@ self.addEventListener("install", (event) => {
     caches
       .open(CACHE)
       // one failed URL must not fail the whole install, or the app has no shell
-      .then((cache) => Promise.allSettled([warmShell(cache), ...SHELL_EXTRAS.map((url) => cache.add(url))]))
+      .then((cache) =>
+        Promise.allSettled([
+          ...SHELL_PATHS.map((path) => warmShell(cache, path)),
+          ...SHELL_EXTRAS.map((url) => cache.add(url)),
+        ]),
+      )
       .then(() => self.skipWaiting()),
   )
 })
@@ -110,17 +145,20 @@ self.addEventListener("activate", (event) => {
 })
 
 /**
- * The tracker, saying "I am on screen for whoever is signed in now".
+ * A shell page, saying "I am on screen for whoever is signed in now".
  *
- * Sent by OfflineShell on every mount. It is what makes rule 4 hold in practice:
- * signing in and out happen as client-side transitions, so the worker sees no
+ * Sent by OfflineShell on every mount, from whichever shell page mounted it. It
+ * is what makes rule 4 hold in practice: signing in and out happen as
+ * client-side transitions, so the worker sees no
  * navigation to /auth/ on the ordinary path and the URL rule alone would almost
  * never fire. This re-stores the shell for the person actually using it, and
  * re-fills the store after an expiry-driven clear.
  */
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "warm-shell") {
-    event.waitUntil(caches.open(CACHE).then(warmShell))
+    event.waitUntil(
+      caches.open(CACHE).then((cache) => Promise.allSettled(SHELL_PATHS.map((path) => warmShell(cache, path)))),
+    )
   }
 })
 
@@ -144,8 +182,8 @@ self.addEventListener("fetch", (event) => {
     return
   }
 
-  // Every page except the tracker is the browser's business alone.
-  if (isPage && url.pathname !== SHELL_PATH) return
+  // Every page except the named shells is the browser's business alone.
+  if (isPage && !isShell(url.pathname)) return
 
   const storable = isPage || isAsset(request, url)
 

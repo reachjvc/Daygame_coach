@@ -19,6 +19,16 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
 const ORIGIN = "https://app.test"
 const SHELL = "/dashboard/time"
+/**
+ * The second shell, added 2026-09-24.
+ *
+ * The worker kept exactly one page until then, and rule 2 ("only a named page
+ * is stored, and only at its own address") was untestable against the failure
+ * it was written for while there was only one name: a list of one cannot hand
+ * back the wrong member. These tests exist because the second entry is what
+ * makes that fault reachable again.
+ */
+const VICE = "/life-mastery/quit-vice"
 
 type Listener = (event: unknown) => void
 
@@ -68,6 +78,9 @@ async function loadWorker(version: string | null): Promise<Harness> {
     const url = String(typeof input === "string" ? input : (input as { url: string }).url)
     if (url.includes(SHELL)) {
       return new Response('<html><script src="/_next/static/chunks/main.js"></script></html>', { status: 200 })
+    }
+    if (url.includes(VICE)) {
+      return new Response('<html><script src="/_next/static/chunks/vice.js"></script></html>', { status: 200 })
     }
     return new Response("ok", { status: 200 })
   })
@@ -131,21 +144,21 @@ afterEach(() => {
 describe("rule 4 — one store per build", () => {
   test("the store is named after the build id in the registration URL", async () => {
     const h = await installed("abc1234")
-    expect([...h.store.keys()]).toEqual(["timetrack-shell-abc1234"])
+    expect([...h.store.keys()]).toEqual(["app-shell-abc1234"])
   })
 
   test("a registration with no build id is named as such, never blank", async () => {
     const h = await installed(null as unknown as string)
-    expect([...h.store.keys()]).toEqual(["timetrack-shell-unversioned"])
+    expect([...h.store.keys()]).toEqual(["app-shell-unversioned"])
   })
 
   test("activating a new build throws the previous build's store away", async () => {
     const h = await loadWorker("build2")
-    h.store.set("timetrack-shell-build1", new Map())
+    h.store.set("app-shell-build1", new Map())
     h.store.set("somebody-elses-cache", new Map())
     await dispatch(h, "install", {})
     await dispatch(h, "activate", {})
-    expect([...h.store.keys()]).toEqual(["timetrack-shell-build2"])
+    expect([...h.store.keys()]).toEqual(["app-shell-build2"])
     expect(h.claim).toHaveBeenCalled()
   })
 })
@@ -176,7 +189,7 @@ describe("rule 2 — only the tracker page is stored, only at its own address", 
   test("a failed load of another page is NOT answered with the tracker", async () => {
     // The original defect, verbatim: settings failing to load came up as the tracker.
     const h = await installed()
-    h.store.get("timetrack-shell-build1")!.set(ORIGIN + "/dashboard/time", new Response("<html>tracker</html>"))
+    h.store.get("app-shell-build1")!.set(ORIGIN + "/dashboard/time", new Response("<html>tracker</html>"))
     h.fetchMock.mockRejectedValueOnce(new TypeError("Failed to fetch"))
     const { respondedAtAll } = await dispatch(h, "fetch", { request: page("/preferences") })
     expect(respondedAtAll).toBe(false)
@@ -184,11 +197,81 @@ describe("rule 2 — only the tracker page is stored, only at its own address", 
 
   test("the tracker is stored only when the network answered — a 500 is passed through, not stored", async () => {
     const h = await installed()
-    h.store.get("timetrack-shell-build1")!.clear()
+    h.store.get("app-shell-build1")!.clear()
     h.fetchMock.mockResolvedValueOnce(new Response("boom", { status: 500 }))
     const { response } = await dispatch(h, "fetch", { request: page("/dashboard/time") })
     expect((response as Response).status).toBe(500)
-    expect(h.store.get("timetrack-shell-build1")!.size).toBe(0)
+    expect(h.store.get("app-shell-build1")!.size).toBe(0)
+  })
+})
+
+/**
+ * TWO SHELLS, AND NEITHER MAY EVER BE HANDED BACK AS THE OTHER.
+ *
+ * Rule 2 was written after the first version answered `/dashboard/settings`
+ * with the tracker's HTML. With one shell path that fault could only be tested
+ * against pages the worker ignores entirely; with two, the worker holds two
+ * documents that are both legitimately storable and both legitimately
+ * answerable, and confusing them is one `includes` away. These tests are for
+ * the second entry specifically — they did not and could not exist before it.
+ */
+describe("rule 2, with more than one shell", () => {
+  test("the Black Box is warmed on install, with its own scripts", async () => {
+    const h = await installed()
+    const stored = [...h.store.get("app-shell-build1")!.keys()]
+    expect(stored).toContain(ORIGIN + VICE)
+    expect(stored).toContain(ORIGIN + "/_next/static/chunks/vice.js")
+    // And the tracker did not lose its place to it.
+    expect(stored).toContain(ORIGIN + SHELL)
+    expect(stored).toContain(ORIGIN + "/_next/static/chunks/main.js")
+  })
+
+  test("the Black Box is answered from the store when the network fails", async () => {
+    const h = await installed()
+    h.fetchMock.mockResolvedValueOnce(new Response("<html>black box</html>", { status: 200 }))
+    await dispatch(h, "fetch", { request: page(VICE) })
+
+    h.fetchMock.mockRejectedValueOnce(new TypeError("Failed to fetch"))
+    const { response } = await dispatch(h, "fetch", { request: page(VICE) })
+    expect(response).toBeInstanceOf(Response)
+    expect(await (response as Response).text()).toBe("<html>black box</html>")
+  })
+
+  test("a failed tracker load is never answered with the Black Box, or the other way round", async () => {
+    // The original defect, now in the shape it can take with two shells: both
+    // are in the store, so `caches.match` WILL find something for either — the
+    // guard that keeps them apart is that each is stored under its own URL.
+    const h = await installed()
+    h.fetchMock.mockResolvedValueOnce(new Response("<html>black box</html>", { status: 200 }))
+    await dispatch(h, "fetch", { request: page(VICE) })
+    h.fetchMock.mockResolvedValueOnce(new Response("<html>tracker</html>", { status: 200 }))
+    await dispatch(h, "fetch", { request: page(SHELL) })
+
+    h.fetchMock.mockRejectedValueOnce(new TypeError("Failed to fetch"))
+    const tracker = await dispatch(h, "fetch", { request: page(SHELL) })
+    expect(await (tracker.response as Response).text()).toBe("<html>tracker</html>")
+
+    h.fetchMock.mockRejectedValueOnce(new TypeError("Failed to fetch"))
+    const vice = await dispatch(h, "fetch", { request: page(VICE) })
+    expect(await (vice.response as Response).text()).toBe("<html>black box</html>")
+  })
+
+  test("a page under the Black Box's own address is still not a shell", async () => {
+    // `/life-mastery/quit-vice/old` starts with the shell's path. A membership
+    // test that used `startsWith` would store and answer all nine of the old
+    // module's routes, which is rule 2 coming apart by one character.
+    const h = await installed()
+    h.store.get("app-shell-build1")!.clear()
+    const { respondedAtAll } = await dispatch(h, "fetch", { request: page(`${VICE}/old`) })
+    expect(respondedAtAll).toBe(false)
+    expect(h.fetchMock).not.toHaveBeenCalled()
+  })
+
+  test("signing in empties the store, so neither shell outlives the person who warmed it", async () => {
+    const h = await installed()
+    h.store.get("app-shell-build1")!.set(ORIGIN + VICE, new Response("<html>theirs</html>"))
+    await dispatch(h, "fetch", { request: page("/auth/login") })
+    expect(h.store.has("app-shell-build1")).toBe(false)
   })
 })
 
@@ -198,7 +281,7 @@ describe("rule 3 — the shell is stored with its scripts or not at all", () => 
     // went out with the previous build's cache, so the offline launch drew the
     // timer and nothing worked.
     const h = await installed()
-    const stored = [...h.store.get("timetrack-shell-build1")!.keys()]
+    const stored = [...h.store.get("app-shell-build1")!.keys()]
     expect(stored).toContain(ORIGIN + "/dashboard/time")
     expect(stored).toContain(ORIGIN + "/_next/static/chunks/main.js")
   })
@@ -229,46 +312,46 @@ describe("rule 3 — the shell is stored with its scripts or not at all", () => 
     })
     await dispatch(h, "install", {})
     await dispatch(h, "activate", {})
-    const stored = [...(h.store.get("timetrack-shell-build1")?.keys() ?? [])]
+    const stored = [...(h.store.get("app-shell-build1")?.keys() ?? [])]
     expect(stored).not.toContain(ORIGIN + "/dashboard/time")
   })
 
   test("the tracker's warm-shell message re-fills a store that was emptied", async () => {
     const h = await installed()
     await dispatch(h, "fetch", { request: page("/auth/login") })
-    expect(h.store.has("timetrack-shell-build1")).toBe(false)
+    expect(h.store.has("app-shell-build1")).toBe(false)
 
     await dispatch(h, "message", { data: { type: "warm-shell" } })
-    const stored = [...(h.store.get("timetrack-shell-build1")?.keys() ?? [])]
+    const stored = [...(h.store.get("app-shell-build1")?.keys() ?? [])]
     expect(stored).toContain(ORIGIN + "/dashboard/time")
     expect(stored).toContain(ORIGIN + "/_next/static/chunks/main.js")
   })
 
   test("a message that is not warm-shell does nothing", async () => {
     const h = await installed()
-    h.store.get("timetrack-shell-build1")!.clear()
+    h.store.get("app-shell-build1")!.clear()
     await dispatch(h, "message", { data: { type: "something-else" } })
-    expect(h.store.get("timetrack-shell-build1")!.size).toBe(0)
+    expect(h.store.get("app-shell-build1")!.size).toBe(0)
   })
 })
 
 describe("rule 4 — nothing signed-in outlives a sign-in", () => {
   test("a request for the tracker that came back as the login page is not stored as the tracker", async () => {
     const h = await installed()
-    h.store.get("timetrack-shell-build1")!.clear()
+    h.store.get("app-shell-build1")!.clear()
     const login = new Response("<html>login</html>", { status: 200 })
     Object.defineProperty(login, "redirected", { value: true })
     h.fetchMock.mockResolvedValueOnce(login)
     await dispatch(h, "fetch", { request: page("/dashboard/time") })
-    expect(h.store.get("timetrack-shell-build1")!.size).toBe(0)
+    expect(h.store.get("app-shell-build1")!.size).toBe(0)
   })
 
   test("reaching the login page empties the store", async () => {
     const h = await installed()
-    h.store.get("timetrack-shell-build1")!.set(ORIGIN + "/dashboard/time", new Response("<html>tracker for user A</html>"))
+    h.store.get("app-shell-build1")!.set(ORIGIN + "/dashboard/time", new Response("<html>tracker for user A</html>"))
     const { respondedAtAll } = await dispatch(h, "fetch", { request: page("/auth/login") })
     expect(respondedAtAll).toBe(false)
-    expect(h.store.has("timetrack-shell-build1")).toBe(false)
+    expect(h.store.has("app-shell-build1")).toBe(false)
   })
 })
 
@@ -277,7 +360,7 @@ describe("assets and the API", () => {
     const h = await installed()
     h.fetchMock.mockResolvedValueOnce(new Response("js", { status: 200 }))
     await dispatch(h, "fetch", { request: asset("/_next/static/chunks/main.js") })
-    expect(h.store.get("timetrack-shell-build1")!.has(ORIGIN + "/_next/static/chunks/main.js")).toBe(true)
+    expect(h.store.get("app-shell-build1")!.has(ORIGIN + "/_next/static/chunks/main.js")).toBe(true)
   })
 
   test("nothing under /api is touched", async () => {

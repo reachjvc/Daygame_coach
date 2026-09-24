@@ -10,7 +10,8 @@
  * because `globals.css` named the MONO metric fallback (`size-adjust: 134.59%`)
  * in the SANS stack instead of the sans one (`104.76%`).
  *
- * The cleanup existed, in `OfflineShell` — which only the time tracker mounts.
+ * The cleanup existed, in `OfflineShell` — which only pages needing offline
+ * support mount (the time tracker, and since 2026-09-24 the Black Box).
  * So it ran on two pages and nowhere else. Reproduced in a browser on
  * 2026-09-07: register a worker, reload /dashboard, still controlled.
  */
@@ -32,7 +33,7 @@ function stub({ registrations = 1, controlled = true }: { registrations?: number
   const cacheDelete = vi.fn().mockResolvedValue(true)
   const reload = vi.fn()
   vi.stubGlobal("navigator", { serviceWorker: { getRegistrations, controller: controlled ? {} : null } })
-  vi.stubGlobal("caches", { keys: vi.fn().mockResolvedValue(["timetrack-shell-v1", "other"]), delete: cacheDelete })
+  vi.stubGlobal("caches", { keys: vi.fn().mockResolvedValue(["app-shell-v1", "other"]), delete: cacheDelete })
   vi.stubGlobal("location", { reload })
   sessionStorage.clear()
   return { unregister, getRegistrations, cacheDelete, reload }
@@ -51,7 +52,7 @@ describe("stale worker cleanup", () => {
     const { cacheDelete } = stub()
     render(<StaleWorkerCleanup />)
     // A stale stylesheet in Cache Storage outlives the worker that put it there.
-    await waitFor(() => expect(cacheDelete).toHaveBeenCalledWith("timetrack-shell-v1"))
+    await waitFor(() => expect(cacheDelete).toHaveBeenCalledWith("app-shell-v1"))
     expect(cacheDelete).toHaveBeenCalledWith("other")
   })
 
