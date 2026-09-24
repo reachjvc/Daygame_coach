@@ -183,8 +183,29 @@ export default defineConfig({
     // These start workouts, save training weeks and delete workouts on the ONE
     // test account. Run beside each other they remove each other's rows
     // mid-assertion, so they get a project of their own with a single worker.
-    // Each file is already `describe.configure({ mode: "serial" })`; this is
-    // what stops the FILES running at the same time as each other.
+    //
+    // `fullyParallel: false` and `workers: 1` below are what stop them racing —
+    // files AND tests, one at a time, in declaration order. An earlier version
+    // of this comment credited `describe.configure({ mode: "serial" })` in each
+    // file with "stopping the FILES running at the same time as each other",
+    // which is not what serial mode does: it is per-describe, and a worker limit
+    // is the only thing that serialises files.
+    //
+    // What serial mode DOES do in these files is skip every remaining test once
+    // one fails, and that has a cost worth knowing: on 2026-09-24 another
+    // session proved it hides a fault failing half its runs — `blackbox.spec.ts`
+    // aborted after its first failure every time, 4 to 21 tests "did not run",
+    // so each run reported one data point about one test and five different
+    // tests took the blame over six runs. A suite that cannot fail twice in one
+    // run cannot show you a 1-in-2 fault.
+    //
+    // It stays regardless, and not because of the isolation this project already
+    // provides. It stays because that isolation is one `testIgnore` entry away
+    // from gone: `chromium` matches every `*.spec.ts` and excludes these by
+    // name, in this file, which two other sessions edit. Serial is what protects
+    // a training spec that ever loses its exclusion. Lost samples are a
+    // diagnosis problem; parallel workers on ONE account are corruption that
+    // reads as a product bug. `tests/unit/e2e-isolation.test.ts` enforces it.
     {
       name: 'training',
       testMatch: [

@@ -21,6 +21,36 @@
 import { test, expect, type Page } from "@playwright/test"
 import { TRAINING_STATE } from "../../playwright.config"
 
+/**
+ * SERIAL, AND THE COST OF IT IS KNOWN AND ACCEPTED — which is worth writing
+ * down, because the cost is real and somebody will meet it.
+ *
+ * What serial mode costs: it skips every remaining test in this file the moment
+ * one fails. On 2026-09-24 another session proved what that hides —
+ * `blackbox.spec.ts` aborted after its first failure in every bad run, 4 to 21
+ * tests "did not run", so each run gave one data point about one test, and a
+ * fault failing HALF its runs looked like five different broken tests over six
+ * runs while the code was blamed and exonerated in turn. A file that cannot
+ * fail twice in one run cannot show you a 1-in-2 fault. Measured here too: with
+ * a failure planted in the first test, dropping serial gives "1 failed, 6
+ * passed" where serial gives "1 failed, 6 did not run".
+ *
+ * Why it stays anyway. Dropping it looked safe — the `training` project sets
+ * `fullyParallel: false` and `workers: 1`, so nothing here runs beside anything
+ * else, and every test below opens with its own `reset()`. But this file is kept
+ * out of the parallel `chromium` project by one `testIgnore` entry in
+ * `playwright.config.ts`, a shared file that was swept into another session's
+ * commit twice in one day. Without serial, the only thing standing between
+ * these six tests and running concurrently against ONE training account is that
+ * entry. Losing samples on a failure is a diagnosis problem; six workers
+ * deleting each other's enrollments mid-assertion is a corruption problem that
+ * looks like a product bug.
+ *
+ * `tests/unit/e2e-isolation.test.ts` enforces this, and it caught the change
+ * that removed it. The guard was right and the reasoning above was incomplete:
+ * it weighed what serial does inside this project and not what protects the
+ * file if its project assignment ever changes.
+ */
 test.describe.configure({ mode: "serial" })
 
 const CARD = "training-card"
