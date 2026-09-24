@@ -101,11 +101,15 @@ export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageP
                   </p>
                 </div>
               </div>
-              <Link href="/dashboard">
-                <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/80 whitespace-nowrap">
-                  Preview Dashboard
-                </Button>
-              </Link>
+              {/* `asChild`, so the link IS the button — a <button> inside an
+                  <a> is invalid HTML and two nested controls to a reader. */}
+              <Button
+                size="lg"
+                className="bg-accent text-accent-foreground hover:bg-accent/80 whitespace-nowrap"
+                asChild
+              >
+                <Link href="/dashboard">Preview Dashboard</Link>
+              </Button>
             </div>
           </Card>
         </div>

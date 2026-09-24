@@ -2552,14 +2552,27 @@ describe('Architecture Compliance', () => {
     }
 
     /**
-     * Fourteen, all of them predating this rule. `src/settings` is at zero
-     * because that is the file this rule was found from — the other nine
-     * belong to slices with another session in them.
+     * Fourteen when this rule was written, ten now.
+     *
+     * `src/settings` went first, being where the rule was found. Home and
+     * Scenarios followed the same night: nobody had those files open, so the
+     * only argument for holding them — not changing what a control IS in files
+     * another session is editing — did not apply. The ten that remain are the
+     * tracking screens, and `daygame-coach-0a` and I agreed to leave them for
+     * the wording-and-UX pass those screens are already due, rather than
+     * changing ten DOM nodes across seven files for a fault that does not
+     * break hydration.
      */
     const NESTED_CONTROL_DEBT: Record<string, number> = {
       'app/dashboard/tracking/history/page.tsx': 1,
-      'src/home/components/HomePage.tsx': 1,
-      'src/scenarios/components/ScenariosHub.tsx': 3,
+      // Zero since both buttons became `<Button asChild>` (2026-09-24). Kept at
+      // 0 rather than deleted: this is the front page, every link on it is a
+      // call to action, and `<Link><Button>` is the obvious way to write one.
+      'src/home/components/HomePage.tsx': 0,
+      // Zero since the three sign-up and pricing buttons became
+      // `<Button asChild>` (2026-09-24). `w-full` moved onto the button with
+      // them, because that is what renders the anchor now.
+      'src/scenarios/components/ScenariosHub.tsx': 0,
       'src/tracking/components/ProgressDashboard.tsx': 1,
       'src/tracking/components/SessionDetailPage.tsx': 2,
       'src/tracking/components/SessionTrackerPage.tsx': 1,

@@ -201,16 +201,17 @@ export function ScenariosHub({
                   : "Sign up to start practising this scenario and track your progress. Get personalised feedback and improve your social skills."}
               </p>
               <div className="flex flex-col gap-3">
-                <Link href={previewReason === "not-subscribed" ? "/#pricing" : "/auth/sign-up"} className="w-full">
-                  <Button className="w-full">
+                {/* `asChild`, so each link IS its button. A <button> inside an
+                    <a> is invalid HTML, and `w-full` moves onto the button
+                    because that is what renders the anchor now. */}
+                <Button className="w-full" asChild>
+                  <Link href={previewReason === "not-subscribed" ? "/#pricing" : "/auth/sign-up"}>
                     {previewReason === "not-subscribed" ? "See pricing" : "Get Started Free"}
-                  </Button>
-                </Link>
-                <Link href="/auth/login" className="w-full">
-                  <Button variant="outline" className="w-full">
-                    Already have an account? Login
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/auth/login">Already have an account? Login</Link>
+                </Button>
               </div>
             </div>
           </div>
@@ -437,11 +438,9 @@ export function ScenariosHub({
           <p className="text-muted-foreground mb-6">
             Sign up to unlock all scenarios and start improving your conversation skills today.
           </p>
-          <Link href="/auth/sign-up">
-            <Button size="lg">
-              Get Started Free
-            </Button>
-          </Link>
+          <Button size="lg" asChild>
+            <Link href="/auth/sign-up">Get Started Free</Link>
+          </Button>
         </div>
       )}
 
