@@ -17,8 +17,12 @@
 import { test, expect, type Page } from "@playwright/test"
 import { openTab } from "./helpers/trainingTabs"
 import { seedFinishedWorkout } from "./helpers/seedWorkout"
+import { guardTrainingAccount } from "./helpers/training.helper"
 
 test.describe.configure({ mode: "serial" })
+/** Refuses to run as anybody but the training account — see the helper. */
+guardTrainingAccount()
+
 
 /**
  * Nothing running, nothing open, one StrongLifts enrollment started NOW.

@@ -13,8 +13,12 @@
  */
 
 import { test, expect } from "@playwright/test"
+import { guardTrainingAccount } from "./helpers/training.helper"
 
 test.describe.configure({ mode: "serial" })
+/** Refuses to run as anybody but the training account — see the helper. */
+guardTrainingAccount()
+
 
 test("sets ticked with no connection are kept and sent when it comes back", async ({
   page,

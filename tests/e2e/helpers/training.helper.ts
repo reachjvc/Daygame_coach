@@ -39,6 +39,34 @@ function refuseUnlessTrainingAccount(): void {
   }
 }
 
+/**
+ * THE SAME GUARD, FOR A FILE THAT DELETES ROWS ITSELF.
+ *
+ * `resetAndEnroll` and `cleanUp` check the account before they touch anything,
+ * which protects the specs that go through them — and on 2026-09-24 that turned
+ * out to be a minority. Ten spec files run their own `fetch(…, { method:
+ * "DELETE" })` loops inside `page.evaluate`, `programs-history-progress` alone
+ * seventeen of them, and not one of those calls passes through a function that
+ * could refuse. Their only protection was being listed in a training project's
+ * `testMatch`.
+ *
+ * That is one line in `playwright.config.ts`, a file two other sessions edit
+ * and which was swept into someone else's commit twice in a single day. Nothing
+ * was ever wrong with the assignment; the problem is that a spec which deletes
+ * every enrollment on whatever account it is handed should not be relying on a
+ * config entry to be pointed at the right one. Until 2026-09-23 it was pointed
+ * at `TEST_USER`, and `npm run test:e2e` took somebody's program away
+ * mid-walkthrough.
+ *
+ * So: one call at the top of any spec that deletes training rows, and every
+ * test in that file then fails before its body runs if the project is signed in
+ * as anybody else. `tests/unit/trainingSpecsGuarded.test.ts` fails when the next
+ * such spec forgets.
+ */
+export function guardTrainingAccount(): void {
+  test.beforeEach(() => refuseUnlessTrainingAccount())
+}
+
 /** A phone, because that is where a workout is logged. */
 export const PHONE = { width: 390, height: 844 }
 

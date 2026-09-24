@@ -23,8 +23,12 @@
 
 import { test, expect } from "@playwright/test"
 import { seedFinishedWorkout, deleteWorkoutsNamed } from "./helpers/seedWorkout"
+import { guardTrainingAccount } from "./helpers/training.helper"
 
 test.describe.configure({ mode: "serial" })
+/** Refuses to run as anybody but the training account — see the helper. */
+guardTrainingAccount()
+
 
 test("a warm-up set stays a warm-up, and the working set is what counts", async ({ page }) => {
   test.setTimeout(180000)

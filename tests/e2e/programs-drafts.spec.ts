@@ -18,6 +18,7 @@
  */
 
 import { test, expect } from "@playwright/test"
+import { guardTrainingAccount } from "./helpers/training.helper"
 
 /**
  * One at a time: these share the one test account, and each cleans it out. Run
@@ -25,6 +26,9 @@ import { test, expect } from "@playwright/test"
  * nothing to do with the code.
  */
 test.describe.configure({ mode: "serial" })
+/** Refuses to run as anybody but the training account — see the helper. */
+guardTrainingAccount()
+
 
 test("a saved week survives a rename, refuses to start half-built, and starts under its own name", async ({ page }) => {
   test.setTimeout(180000)

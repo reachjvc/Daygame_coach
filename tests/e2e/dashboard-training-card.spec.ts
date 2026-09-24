@@ -20,6 +20,7 @@
 
 import { test, expect, type Page } from "@playwright/test"
 import { TRAINING_STATE } from "../../playwright.config"
+import { guardTrainingAccount } from "./helpers/training.helper"
 
 /**
  * SERIAL, AND THE COST OF IT IS KNOWN AND ACCEPTED — which is worth writing
@@ -52,6 +53,9 @@ import { TRAINING_STATE } from "../../playwright.config"
  * file if its project assignment ever changes.
  */
 test.describe.configure({ mode: "serial" })
+/** Refuses to run as anybody but the training account — see the helper. */
+guardTrainingAccount()
+
 
 const CARD = "training-card"
 

@@ -20,6 +20,10 @@
 
 import { test, expect } from "@playwright/test"
 import { openTab } from "../helpers/trainingTabs"
+import { guardTrainingAccount } from "../helpers/training.helper"
+/** Refuses to run as anybody but the training account — see the helper. */
+guardTrainingAccount()
+
 
 /**
  * A ceiling that the WORST realistic case has to pass, not the best.

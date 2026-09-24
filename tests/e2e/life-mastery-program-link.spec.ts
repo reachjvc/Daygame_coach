@@ -39,6 +39,10 @@
 import { test, expect, type Page } from "@playwright/test"
 import { TRAINING_STATE } from "../../playwright.config"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { guardTrainingAccount } from "./helpers/training.helper"
+/** Refuses to run as anybody but the training account — see the helper. */
+guardTrainingAccount()
+
 
 const TEMPLATES = `${LIFE_MASTERY}?step=templates`
 

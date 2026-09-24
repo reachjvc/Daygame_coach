@@ -14,10 +14,13 @@
  */
 
 import { test, expect, type Page } from "@playwright/test"
-import { PHONE, cleanUp } from "./helpers/training.helper"
+import { PHONE, cleanUp, guardTrainingAccount } from "./helpers/training.helper"
 
 test.use({ viewport: PHONE })
 test.describe.configure({ mode: "serial" })
+/** Refuses to run as anybody but the training account — see the helper. */
+guardTrainingAccount()
+
 
 const WEEK = "Push\nBench Press 3x8 @60\n\nPull\nBarbell Row 3x8 @50"
 

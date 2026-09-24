@@ -19,7 +19,7 @@
 
 import { test, expect, type Page } from "@playwright/test"
 import { TRAINING_STATE } from "../../playwright.config"
-import { PHONE, cleanUp, resetAndEnroll } from "./helpers/training.helper"
+import { PHONE, cleanUp, resetAndEnroll, guardTrainingAccount } from "./helpers/training.helper"
 
 /**
  * The phone size and the two account-cleaning helpers now live in
@@ -70,6 +70,9 @@ async function addOwnLift(page: Page, name: string): Promise<void> {
  * the suite, so the file has to say so itself.
  */
 test.describe.configure({ mode: "serial" })
+/** Refuses to run as anybody but the training account — see the helper. */
+guardTrainingAccount()
+
 
 /**
  * When the running test began, a minute of slack back.

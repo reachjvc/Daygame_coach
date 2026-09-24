@@ -15,8 +15,12 @@
 import { test, expect } from "@playwright/test"
 import { openTab } from "./helpers/trainingTabs"
 import { seedFinishedWorkout, deleteWorkoutsNamed } from "./helpers/seedWorkout"
+import { guardTrainingAccount } from "./helpers/training.helper"
 
 test.describe.configure({ mode: "serial" })
+/** Refuses to run as anybody but the training account — see the helper. */
+guardTrainingAccount()
+
 
 test("shows what each workout was, and what the weeks added up to", async ({ page }) => {
   test.setTimeout(240000)
