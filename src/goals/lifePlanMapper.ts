@@ -442,6 +442,9 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
     season_focus_id: plan.seasonFocusId
       ? nodes.find((n) => n.local_id === plan.seasonFocusId)?.id ?? null
       : null,
+    /* Carried so the shape is whole, and ignored by the server, which owns this
+       column. See the field's own note in `lifePlanTypes.ts`. */
+    updated_at: plan.updatedAt ?? "",
     nodes,
     north_stars,
     areas,
@@ -666,7 +669,10 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
       .sort((a, b) => a.position - b.position)
       .map((s): NsSubStep => ({ id: id(s.id), targetId: id(s.target_id), title: s.title })),
     seq: rows.seq,
-    updatedAt: null,
+    /* THE ACCOUNT'S STAMP, not null. This was null, and the footer reads it —
+       so a plan loaded on a second device printed "Nothing written yet" under
+       a plan somebody had spent an evening writing. */
+    updatedAt: rows.updated_at,
     // Phase 2's, and empty until then. `mergeDayRecord` puts the browser's copy
     // back so the first sign-in on a second device does not read as a wipe.
     daily: {},

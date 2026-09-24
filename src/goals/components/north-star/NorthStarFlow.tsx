@@ -695,6 +695,15 @@ export function NorthStarFlow({
    * revision stops the sending entirely rather than retrying: the other device
    * won, and writing over it is the one thing the lock exists to prevent.
    */
+  /**
+   * WHAT THE SAVE WOULD SEND, computed once per change of the plan.
+   *
+   * The debounced effect reads it to decide whether to send at all, and the
+   * footer reads it to decide what to claim. One expression, because those two
+   * answering differently is exactly the lie `unsent` exists to end.
+   */
+  const fingerprint = useMemo(() => sendableFingerprint(plan), [plan])
+
   useEffect(() => {
     // The REAL decision, not one built here. See `decision` above.
     if (!canSave(decision, loaded)) return
@@ -709,7 +718,6 @@ export function NorthStarFlow({
     // day note and a journal line all make a new plan object and none of them
     // travels in this request; sending it anyway moved the revision and made
     // the other device stale for nothing.
-    const fingerprint = sendableFingerprint(plan)
     if (fingerprint === lastSent.current) return
     const timer = window.setTimeout(() => {
       setServerState("saving")
@@ -749,6 +757,23 @@ export function NorthStarFlow({
     }, SAVE_DEBOUNCE_MS)
     return () => window.clearTimeout(timer)
   }, [plan, planId, revision, loaded, serverState, nodeIds, decision])
+
+  /**
+   * IS THERE WORK THE ACCOUNT HAS NOT ACCEPTED?
+   *
+   * The footer said "Saved to your account." for the whole four-second debounce
+   * window and for as long as the request was in flight, because `serverState`
+   * only became "saving" inside the timeout callback. So the sentence that
+   * exists to answer "is my work safe" said yes at precisely the moments it was
+   * not — and closing the tab in that window is how the plan this whole
+   * milestone protects gets lost.
+   *
+   * It cannot be fixed by setting "saving" earlier: `serverState` is in the
+   * save effect's own dependencies and guards it, so flipping it in the effect
+   * body would clear the timer it had just armed and nothing would ever save.
+   * Derived instead, from the fact itself — the stamp the server last accepted.
+   */
+  const unsent = loaded && fingerprint !== lastSent.current
 
   /**
    * Save the plan RIGHT NOW, and say whether it landed.
@@ -1876,9 +1901,12 @@ export function NorthStarFlow({
                 journal included, going to an unauthenticated table keyed by a
                 random browser id. What is left says the one thing that is now
                 true and is worth saying: where the work is. */}
-            {!plan.updatedAt
+            {/* `unsent` is the whole correction: during the debounce and while
+                the request is open, this browser has the work and the account
+                does not, and "Saved on this device." is what that is. */}
+            {!plan.updatedAt && !unsent
               ? "Nothing written yet"
-              : serverState === "saved"
+              : serverState === "saved" && !unsent
                 ? "Saved to your account."
                 : "Saved on this device."}
           </span>

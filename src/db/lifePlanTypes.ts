@@ -307,6 +307,21 @@ export interface PlanRows {
   version: number
   seq: number
   season_focus_id: string | null
+  /**
+   * WHEN THE ACCOUNT LAST ACCEPTED A SAVE. **Meaningful on the way OUT only.**
+   *
+   * Carried because the flow's footer reads `plan.updatedAt` to decide between
+   * "Saved to your account" and "Nothing written yet", and the mapper had no
+   * stamp to give it — so a plan read back on a NEW PHONE described itself as
+   * never written, at the exact moment this work exists to be trusted.
+   *
+   * `PlanRows` is one shape used in two directions, which is why this needs
+   * saying: the DATABASE owns this column and `save_life_plan` sets it, so what
+   * `planToRows` puts here on the way IN is never read by anything. It is
+   * required rather than optional so that the read direction — the one that
+   * matters — cannot quietly forget it the way the mapper did.
+   */
+  updated_at: string
   nodes: NodeRow[]
   north_stars: NorthStarRow[]
   areas: AreaRow[]

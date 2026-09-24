@@ -141,7 +141,7 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
 
   const plan = await supabase
     .from("life_plans")
-    .select("id, revision, version, seq, season_focus_id")
+    .select("id, revision, version, seq, season_focus_id, updated_at")
     .eq("user_id", userId)
     .maybeSingle()
   if (plan.error) throw new Error(`Failed to read the plan: ${plan.error.message}`)
@@ -221,6 +221,7 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
       version: plan.data.version as number,
       seq: plan.data.seq as number,
       season_focus_id: (plan.data.season_focus_id as string | null) ?? null,
+      updated_at: plan.data.updated_at as string,
       nodes,
       north_stars,
       areas,

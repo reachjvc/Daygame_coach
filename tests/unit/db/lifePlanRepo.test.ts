@@ -59,6 +59,7 @@ function rows(over: Partial<PlanRows> = {}): PlanRows {
     version: 1,
     seq: 3,
     season_focus_id: null,
+    updated_at: "2026-09-24T06:00:00.000Z",
     nodes: [], north_stars: [], areas: [], goals: [], checkpoints: [], obstacles: [],
     beliefs: [], habits: [], goal_feeds: [], goal_serves: [], routines: [],
     routine_serves: [], steps: [], split_days: [], step_serves: [], experiences: [],
