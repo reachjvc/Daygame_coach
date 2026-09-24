@@ -1,4 +1,4 @@
-import { LayoutDashboard, BarChart3, Dumbbell, Swords, HelpCircle, BookOpen, Settings, Timer } from "lucide-react"
+import { LayoutDashboard, BarChart3, Dumbbell, Swords, HelpCircle, BookOpen, Settings, Timer, ScrollText } from "lucide-react"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 /**
@@ -10,6 +10,16 @@ import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
  * needs no back control, and the guard would otherwise need that judgement
  * typed into it by hand and kept in step by memory.
  */
+/**
+ * What Life Mastery is called, in one place.
+ *
+ * `ROUTE_LABELS` below and the "More" row above both name it, and a back link
+ * reading "Your plan" next to a menu row reading "Life Mastery" is two names
+ * for one page. Declared here because `MORE_ITEMS` is above `ROUTE_LABELS` and
+ * a const cannot be read before it is defined.
+ */
+const ROUTE_LABELS_LIFE_MASTERY = "Your plan"
+
 export const TABS = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", exact: true },
   // NO GOALS TAB. The hub is archived at /test/archive/goals-hub and the
@@ -36,6 +46,32 @@ export const TABS = [
 
 /** The Lair was a second goals surface. Deleted outright on 2026-09-09. */
 export const MORE_ITEMS = [
+  /**
+   * LIFE MASTERY, REACHABLE WITHOUT TYPING AN ADDRESS.
+   *
+   * Until 2026-09-24 the only ways in were typing `/life-mastery`, the `/test`
+   * dashboard (which 404s in production), and the Vices routine card INSIDE
+   * Life Mastery — which you had to already be on. So the plan, and the whole
+   * vice module under it, were in the product and not in the navigation.
+   *
+   * IN THE SHEET, NOT AS A SIXTH TAB, and that is a judgement rather than a
+   * constraint. The bar is five things somebody does several times a week; a
+   * fourteen-step plan for your life is not one of them, and a sixth tab on a
+   * 390px screen costs every other tab its label. The sheet is one tap.
+   *
+   * It is FIRST here because the other three are reference and settings and
+   * this is a place you go to work. `ROUTE_LABELS` already called it "Your
+   * plan" before anything linked to it; that name is kept rather than
+   * re-invented, so the back links that already say it and this row agree.
+   *
+   * `ScrollText` is used nowhere else in the app, deliberately: every icon that
+   * fits — Compass, Target, Flag, Milestone — is already registered in
+   * `src/shared/iconRoles.ts` with roles of its own, and widening one of those
+   * roles needs the owner's approval by name. An unused icon needs no registry
+   * entry at all, which is the cheaper answer to a question nobody needed to be
+   * asked.
+   */
+  { label: ROUTE_LABELS_LIFE_MASTERY, icon: ScrollText, href: LIFE_MASTERY },
   { label: "Ask Coach", icon: HelpCircle, href: "/dashboard/qa" },
   { label: "Articles", icon: BookOpen, href: "/dashboard/articles" },
   { label: "Settings", icon: Settings, href: "/dashboard/settings" },
@@ -83,6 +119,6 @@ export const TAB_ROUTES: string[] = [...TABS, ...MORE_ITEMS].map((t) => t.href)
 export const ROUTE_LABELS: Record<string, string> = {
   ...Object.fromEntries([...TABS, ...MORE_ITEMS].map((t) => [t.href, t.label])),
   "/dashboard/tracking/history": "History",
-  [LIFE_MASTERY]: "Your plan",
+  [LIFE_MASTERY]: ROUTE_LABELS_LIFE_MASTERY,
   "/programs": "Training",
 }

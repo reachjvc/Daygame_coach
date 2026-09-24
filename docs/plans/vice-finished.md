@@ -257,12 +257,34 @@ when it was first written down; it is 38 days since the last check.
 cannot rot silently again; the door reachable in one tap from the front page in
 every state, including an empty record.
 
-**M4 — It is part of the app.** Life Mastery — and therefore this — is reachable
-only by typing the address today. It joins the navigation. The vice module itself
-stays exactly where it is, inside Life Mastery, because your item 8 asks for it
-in isolation and it has that.
-*Acceptance:* a signed-in user can reach the Black Box from the navigation
-without typing a URL; the existing route-reachability test covers it.
+**M4 — DONE ON A PHONE, BLOCKED ON DESKTOP BY ONE DECISION.** Life Mastery is
+in the "More" sheet as "Your plan", first row, and verified in a browser at
+390px: More → Your plan → `/life-mastery`, 366×44px target. The vice module
+stays inside it, because item 8 asks for it in isolation and it has that.
+
+**Desktop is still address-only, and the reason is worth reading.**
+`MobileTabBar` is `sm:hidden`, so that row does not exist above 640px. The
+desktop equivalent is `components/AppHeader.tsx`, and adding one line to it
+works — I wrote it, it typechecked, and then `architecture.test.ts` failed
+exactly where my own comment predicted: an icon in two files must be registered
+in `src/shared/iconRoles.ts`, and that file's header says registering one needs
+the owner's approval by name. So the change is **reverted rather than forced**,
+and it is one line plus an icon decision away.
+
+What it was, so redoing it is mechanical: a `navItems.push` beside the Dashboard
+and Ask Coach entries, `href: LIFE_MASTERY`, `label: "Your plan"`, icon
+`ScrollText`, `testId: "header-life-mastery-link"`, guarded by
+`currentPage !== "life-mastery"` — which also needs `"life-mastery"` adding to
+the `CurrentPage` union, or the comparison is a type error.
+
+**A second limit, stated because it is not mine to fix.** `AppHeader` is
+mounted on four pages (`/dashboard/qa`, `/dashboard/inner-game`,
+`/dashboard/articles` and one archived test page); every other desktop page
+draws its own. So even with the icon approved, desktop reachability would cover
+four pages, not the app. What desktop navigation *is* for this product is a
+whole-app question and answering it inside a vice plan would be the wrong place.
+*Acceptance, met:* a signed-in user on a phone reaches Life Mastery from the
+navigation without typing a URL. *Not met:* the same on a desktop.
 
 **M5 — It behaves the same on Safari and Firefox.** Part of this arrived from
 elsewhere on 2026-09-24 and should not be rebuilt: `tests/e2e/cold-open.spec.ts`
