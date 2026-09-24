@@ -45,12 +45,23 @@ assuming anything is in the product.
 The navigation is the honest map, and it lives in `components/navTabs.ts`.
 
 Bottom tab bar: **Dashboard · Training · Tracking · Scenarios · Time**, plus a
-"More" sheet holding **Ask Coach · Articles · Settings**.
+"More" sheet holding **Your plan · Ask Coach · Articles · Settings**.
 
-Not in the navigation at all: **Life Mastery** (`/life-mastery`), reachable only
-by typing the address, and the **quit-a-vice** module inside it. There is
-deliberately no Goals tab — the old goals hub is archived and the app is being
-consolidated onto one surface.
+**"Your plan" is Life Mastery, and it has only been in the navigation since
+2026-09-24.** Before that this line said "not in the navigation at all,
+reachable only by typing the address", which was true of it and of the
+**quit-a-vice** module inside it for as long as both existed.
+
+**ON A PHONE ONLY, AND THAT IS NOT PEDANTRY.** `MobileTabBar` is `sm:hidden`,
+so above 640px that sheet does not exist and Life Mastery is still address-only.
+The desktop equivalent, `components/AppHeader.tsx`, is blocked on one decision
+the owner has to make — an icon in two files needs registering in
+`src/shared/iconRoles.ts` and that file requires approval by name. And
+`AppHeader` is itself mounted on four pages, so even after a yes this is four
+pages rather than the app. See `docs/plans/vice-finished.md`, M4.
+
+There is deliberately no Goals tab — the old goals hub is archived and the app
+is being consolidated onto one surface.
 
 **Every address in the product**, so nothing is a surprise: `/` sales page,
 `/auth/*` sign-up, login and password reset, `/dashboard` and everything under
