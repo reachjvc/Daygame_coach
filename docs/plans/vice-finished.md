@@ -303,12 +303,50 @@ ids are accepted, and that the browser copy survives a reload under Safari's
 storage rules.
 *Acceptance:* the two cross-browser projects run it in CI and pass.
 
-**M6 — It looks good in a hand and on a desk.** The desktop layout stops being a
-stretched phone: the chart gets the width, and the three numbers stop wrapping
-two-then-one. The 320px label crowding goes. Then you look at it and say whether
-the orange bar reads right.
-*Acceptance:* screenshots at 1280, 430, 390 and 320px, put in front of you; the
-phone sweep and the overflow sweep still clean on all three engines.
+**M6 — MOSTLY DONE. It looks good on a desk now; one narrow-phone defect is
+left and I am not going to pretend otherwise.**
+
+*Done, measured at five widths with a seeded four-run record:* the desktop is no
+longer a stretched phone. Everything used to sit in one 736px column on a 1280px
+screen with ~550px of dead space beside it, running about 1794px tall, so reading
+your own record meant scrolling past the picture to reach what it cost you. It
+is now two columns — the chart and the current run on the left, what each thought
+cost and your copy on the right — and **1194px tall**, which fits a laptop screen
+and a bit. No horizontal overflow at 1512, 1280, 834, 390 or 320px.
+
+*Two alignment faults found by looking, not by reasoning.* The first split left
+the chart's column ending 450px short of the other, so the dead space had moved
+rather than gone — fixed by putting "This run" under the picture it describes,
+which also moves it on a phone and is the one part of M6 that is not purely
+layout. The second: the head of the page was centred at `max-w-3xl` while the
+grid ran the full `max-w-6xl`, so the header and the three numbers started 256px
+from the left and the chart card started at 80px. Two left edges on one page,
+worst on an empty record. Both are in the code with the reason.
+
+*The three numbers* were `grid-cols-2`, so the third sat alone beside an empty
+cell — three numbers drawn as two and a hole. Three across at every width now,
+with the value a size smaller below 640px.
+
+**STILL OPEN, and it is a real defect: the lane label overflows the card at
+320px.** On a 320px screen the chart is ~256px wide and a label like
+"287 days · something went wrong" is ~190px, so when it lands on a bar that
+starts a third of the way in there is nowhere for it to go — it runs past the
+left edge of the card. `Lanes.tsx` measures a flip threshold from the chart
+width (`min(190, width * 0.45)`), and at 256px that assumes labels are 115px
+when they are 190px. Raising the estimate does not fix it: there is genuinely no
+room for a 190px label beside a bar in a 256px chart. **The fix is to stack the
+label above its bar below `sm`**, which means the 44px lane becoming two rows and
+the dot offsets moving with it — a deliberate change to `Lanes.tsx` rather than a
+tweak, and I would rather do it as its own piece than rush it into a layout pass.
+There is no horizontal page scroll, so nothing is unreachable; the text is
+clipped at the card edge. 390px and up are clean.
+
+*And one thing for your eyes, unchanged from the top of this plan:* whether the
+orange bar reading as "the big one" while the number above says otherwise is
+right.
+*Acceptance:* screenshots at 1512, 1280, 834, 390 and 320px taken and put in
+front of you; both vice browser suites and the unit suite green; the phone and
+WebKit sweeps unchanged.
 
 ## Where this plan stops
 

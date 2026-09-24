@@ -435,7 +435,14 @@ export function CheckRow({ label, note, on, onClick }: { label: string; note?: s
 export function Stat({ value, caption, tone = "plain" }: { value: string; caption: string; tone?: "plain" | "good" }) {
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5">
-      <p className={`text-xl tabular-nums ${tone === "good" ? "text-emerald-200" : "text-zinc-100"}`}>{value}</p>
+      {/* A SIZE DOWN ON THE NARROWEST PHONES. These sit three across in the
+          Black Box, so at 320px each tile is about 89px wide. At 20px a value
+          like "287 days" wrapped AND crowded its own tile; at 18px it still
+          wraps to two lines at that width — checked, not assumed — but it
+          wraps identically in all three, so the row stays even, which was the
+          actual defect. Above 640px there is room for the larger size the
+          number deserves. */}
+      <p className={`text-lg tabular-nums sm:text-xl ${tone === "good" ? "text-emerald-200" : "text-zinc-100"}`}>{value}</p>
       <p className="text-[11px] text-zinc-500 mt-0.5 leading-snug">{caption}</p>
     </div>
   )

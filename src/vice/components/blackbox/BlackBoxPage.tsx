@@ -214,7 +214,11 @@ export function BlackBoxPage() {
     // passing because it won. It carries the real state, so it cannot drift
     // from what the page is actually doing.
     <div
-      className="mx-auto max-w-3xl px-4 pb-24 pt-7"
+      // WIDER ONLY ON A DESKTOP, and the reading column does not widen with it.
+      // Everything above the grid below stays inside `max-w-3xl` so prose keeps
+      // a readable measure; `lg:max-w-6xl` exists for the two columns and for
+      // nothing else.
+      className="mx-auto max-w-3xl px-4 pb-24 pt-7 lg:max-w-6xl"
       data-hydrated={ready ? "true" : undefined}
       data-sync={sync.state}
       // How many rows are waiting to go up. `data-sync` alone is not enough to
@@ -235,6 +239,19 @@ export function BlackBoxPage() {
           Production builds only; in development it is a no-op by design. */}
       <OfflineShell />
 
+      {/* The head of the page: the back row, the header, the door and the three
+          numbers, all above the two columns.
+
+          IT SPANS THE SAME WIDTH AS THE GRID, and the first attempt did not —
+          it was centred at `max-w-3xl` while the grid below ran the full
+          `max-w-6xl`, so on a desktop the header and the stat tiles started
+          256px from the left and the chart card started at 80px. Two left edges
+          on one page, which reads as a mistake before you can say what it is,
+          and it was worst on an empty record where the only panel below sat
+          alone and unaligned under a centred title. The prose that motivated
+          the narrow measure is one subtitle line; the banner and the three
+          numbers are better wide. */}
+      <div>
       <div className="mb-3 flex items-center justify-between gap-3">
         <BackLink
           fallback={LIFE_MASTERY}
@@ -354,7 +371,12 @@ export function BlackBoxPage() {
 
       {/* ---------------------------------------------- the numbers */}
       {ready && summary.runs > 0 && (
-        <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+        /* THREE ACROSS AT EVERY WIDTH. Two columns left the third tile alone
+           on a second row beside an empty cell — three numbers drawn as two
+           plus a hole, which reads as something missing rather than as three
+           numbers. The value steps down a size on the narrowest phones so
+           "287 days" still fits a third of 320px. */
+        <div className="mt-4 grid grid-cols-3 gap-2.5">
           <Stat value={days(summary.longestDays)} caption="Longest run" />
           <Stat value={days(summary.totalCleanDays)} caption="Across every run" />
           <Stat
@@ -364,6 +386,30 @@ export function BlackBoxPage() {
         </div>
       )}
 
+      </div>
+
+      {/* ------------------------------------------------------- the two halves
+          ONE COLUMN ON A PHONE, TWO ON A DESKTOP, AND THE DOM ORDER IS THE
+          PHONE ORDER. The read order this page was designed around — door, then
+          the numbers, then the picture, then what each thought cost — is above
+          and inside this in exactly that sequence, so the grid collapsing
+          changes nothing about what you meet first.
+
+          WHY IT IS WORTH DOING AT ALL. On a 1280px screen every section sat in
+          one 736px column with about 550px of dead space beside it and the page
+          running to roughly 1800px tall, so reading your own record meant
+          scrolling past the picture to reach what it cost you. That is the half
+          of vision item 12 — "it works on a phone and in a browser" — that
+          nobody had done: the phone half was finished and the browser was
+          showing a phone. Item 5 asks for progress a person can look at and be
+          pleased with, and you cannot look at what is below the fold.
+
+          The picture takes the wider column because it is the thing with a time
+          axis; everything in the right-hand rail is a list and reads fine
+          narrow. `items-start` so the shorter column does not stretch its
+          panels to match the taller one. */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-start lg:gap-5">
+      <div className="min-w-0">
       {/* ---------------------------------------------- the picture */}
       {(!ready || summary.runs > 0) && (
       <section className="mt-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
@@ -411,61 +457,18 @@ export function BlackBoxPage() {
       </section>
       )}
 
-      {/* ---------------------------------------------- what it cost */}
-      {costs.length > 0 && (
-        <section className="mt-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-          <h2 className="text-[11.5px] font-semibold uppercase tracking-[0.06em] text-zinc-500">
-            What each thought has cost you
-          </h2>
-          <p className="mt-1 text-[12.5px] text-zinc-400">
-            Ranked by the clean time it ended, not by how often you have had it.
-          </p>
-          <div className="mt-3">
-            {costs.map((row) => {
-              const accent = familyFor(row.ending).accent
-              const width = worst && worst.daysEnded > 0 ? (row.daysEnded / worst.daysEnded) * 100 : 0
-              return (
-                <div key={row.ending} className="border-b border-white/10 py-3 last:border-b-0">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className={`text-[13.5px] ${accent ? "font-medium text-orange-300" : "text-zinc-200"}`}>
-                      {row.label}
-                    </span>
-                    {/* A thought that has never won has cost nothing, and
-                        "0 days clean" next to a bar of no width reads as a
-                        broken stat rather than as the good news it is. */}
-                    <span className="whitespace-nowrap text-[12px] text-zinc-400">
-                      {row.runsEnded > 0 ? `${days(row.daysEnded)} clean` : "cost you nothing yet"}
-                    </span>
-                  </div>
-                  {/* No bar at all for a thought that has ended nothing. A 2%
-                      stub is a mark on a length scale saying "a little", and
-                      the true answer is none — it drew an orange pip under a
-                      row whose own figure said it had cost nothing. */}
-                  {row.daysEnded > 0 && (
-                    <div
-                      className="mt-1.5 h-2 rounded-full"
-                      style={{
-                        width: `${Math.max(width, 4)}%`,
-                        background: accent ? "#d95926" : "#52525b",
-                        opacity: accent ? 1 : 0.55,
-                      }}
-                    />
-                  )}
-                  <p className="mt-1.5 text-[11.5px] text-zinc-500">
-                    {row.runsEnded > 0
-                      ? `ended ${row.runsEnded} ${row.runsEnded === 1 ? "run" : "runs"}`
-                      : "has never ended a run"}
-                    {row.survived > 0 ? ` · survived ${row.survived}` : ""}
-                    {row.ownWords ? ` · “${row.ownWords}”` : ""}
-                  </p>
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* ---------------------------------------------- the run itself */}
+      {/* ---------------------------------------------- the run itself
+          UNDER THE PICTURE, which also moves it on a phone — so this is a
+          deliberate change to the read order rather than a desktop-only
+          arrangement, and it is the one thing in M6 that is not purely layout.
+          Two reasons. On a desktop the first split left the chart's column
+          ending 450px short of the other one, so the dead space had moved
+          rather than gone; this is the section that balances them. And on a
+          phone it puts "what you put in place" and the File a report button
+          directly beneath the chart that drew the run they belong to, instead
+          of below a ranking of thoughts. The door and the three numbers are
+          still what you meet first, which is the part of the read order that
+          was load-bearing. */}
       <section className="mt-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
         {live ? (
           <>
@@ -539,6 +542,63 @@ export function BlackBoxPage() {
         )}
       </section>
 
+      </div>
+
+      <div className="min-w-0">
+      {/* ---------------------------------------------- what it cost */}
+      {costs.length > 0 && (
+        <section className="mt-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+          <h2 className="text-[11.5px] font-semibold uppercase tracking-[0.06em] text-zinc-500">
+            What each thought has cost you
+          </h2>
+          <p className="mt-1 text-[12.5px] text-zinc-400">
+            Ranked by the clean time it ended, not by how often you have had it.
+          </p>
+          <div className="mt-3">
+            {costs.map((row) => {
+              const accent = familyFor(row.ending).accent
+              const width = worst && worst.daysEnded > 0 ? (row.daysEnded / worst.daysEnded) * 100 : 0
+              return (
+                <div key={row.ending} className="border-b border-white/10 py-3 last:border-b-0">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className={`text-[13.5px] ${accent ? "font-medium text-orange-300" : "text-zinc-200"}`}>
+                      {row.label}
+                    </span>
+                    {/* A thought that has never won has cost nothing, and
+                        "0 days clean" next to a bar of no width reads as a
+                        broken stat rather than as the good news it is. */}
+                    <span className="whitespace-nowrap text-[12px] text-zinc-400">
+                      {row.runsEnded > 0 ? `${days(row.daysEnded)} clean` : "cost you nothing yet"}
+                    </span>
+                  </div>
+                  {/* No bar at all for a thought that has ended nothing. A 2%
+                      stub is a mark on a length scale saying "a little", and
+                      the true answer is none — it drew an orange pip under a
+                      row whose own figure said it had cost nothing. */}
+                  {row.daysEnded > 0 && (
+                    <div
+                      className="mt-1.5 h-2 rounded-full"
+                      style={{
+                        width: `${Math.max(width, 4)}%`,
+                        background: accent ? "#d95926" : "#52525b",
+                        opacity: accent ? 1 : 0.55,
+                      }}
+                    />
+                  )}
+                  <p className="mt-1.5 text-[11.5px] text-zinc-500">
+                    {row.runsEnded > 0
+                      ? `ended ${row.runsEnded} ${row.runsEnded === 1 ? "run" : "runs"}`
+                      : "has never ended a run"}
+                    {row.survived > 0 ? ` · survived ${row.survived}` : ""}
+                    {row.ownWords ? ` · “${row.ownWords}”` : ""}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
       {/* ---------------------------------------------- keeping it */}
       {ready && record.attempts.length > 0 && (
       <section className="mt-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
@@ -577,6 +637,8 @@ export function BlackBoxPage() {
         {notice && <p className="mt-2 text-[11.5px] text-zinc-400">{notice}</p>}
       </section>
       )}
+      </div>
+      </div>
 
       <p className="mt-6 text-[11.5px] text-zinc-500">
         The older quit-a-vice screens are still here:{" "}
