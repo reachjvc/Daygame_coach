@@ -24,6 +24,8 @@ import { LEVEL_LABELS } from "../config"
 import type { ProgramEnrollment } from "../types"
 import { restartProgram, deletePastProgram } from "../programActions"
 import { Button } from "@/components/ui/button"
+import { BottomSheet, SheetRow } from "@/components/BottomSheet"
+import { MoreVertical } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -79,6 +81,8 @@ export function PastPrograms({
   const [deletingId, setDeletingId] = useState<string | null>(null)
   /** The program a delete is being confirmed for. */
   const [confirming, setConfirming] = useState<ProgramEnrollment | null>(null)
+  /** Which finished program's sheet is open. */
+  const [menuFor, setMenuFor] = useState<ProgramEnrollment | null>(null)
   /** What a restart displaced, said on the page rather than in an alert box. */
   const [displacedNote, setDisplacedNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -240,6 +244,42 @@ export function PastPrograms({
           {displacedNote}
         </p>
       )}
+      {/*
+        THE TWO THINGS YOU CAN DO TO A FINISHED PROGRAM, as words.
+        Restarting a year of training and removing it are both worth reading
+        before tapping, which a 100-px-wide row could not give them.
+      */}
+      {menuFor && (
+        <BottomSheet
+          open
+          onClose={() => setMenuFor(null)}
+          title={enrollmentName(menuFor)}
+          testId="past-program-sheet"
+        >
+          <SheetRow
+            testId="resume-program"
+            onClick={() => {
+              const target = menuFor
+              setMenuFor(null)
+              void resume(target, enrollmentName(target))
+            }}
+          >
+            Start it again
+          </SheetRow>
+          <SheetRow
+            testId="delete-past-program"
+            destructive
+            onClick={() => {
+              const target = menuFor
+              setMenuFor(null)
+              setConfirming(target)
+            }}
+          >
+            Remove it from this list
+          </SheetRow>
+        </BottomSheet>
+      )}
+
       <Dialog open={confirming !== null} onOpenChange={(v) => !v && setConfirming(null)}>
         <DialogContent>
           {confirming && (
@@ -306,38 +346,25 @@ export function PastPrograms({
                     {n === 0 && " · never trained"}
                   </>
                 }
+                /*
+                  ONE OPTIONS BUTTON, NOT TWO WORDED ONES.
+                  "Start again" and "Delete" beside the name left it about
+                  100 px on a 390-px screen: "StrongLifts …", with "Beginner ·
+                  starte…" under it. That is walk-07 again — the one thing the
+                  row exists to say is the thing that gets clipped — and it is
+                  what the rest of this slice already solved with a sheet.
+                */
                 right={
-                  <span className="flex items-center gap-1">
-                    {/* Both are real buttons at 44px, and `stopPropagation`
-                        keeps them from also firing the row's restart. */}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="min-h-11"
-                      disabled={resumingId === e.id}
-                      data-testid="resume-program"
-                      onClick={(ev) => {
-                        ev.stopPropagation()
-                        void resume(e, name)
-                      }}
-                    >
-                      {resumingId === e.id ? "Starting…" : "Start again"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="min-h-11 text-muted-foreground hover:text-destructive"
-                      disabled={deletingId === e.id}
-                      aria-label={`Remove ${name} from your finished programs`}
-                      data-testid="delete-past-program"
-                      onClick={(ev) => {
-                        ev.stopPropagation()
-                        setConfirming(e)
-                      }}
-                    >
-                      {deletingId === e.id ? "Deleting…" : "Delete"}
-                    </Button>
-                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Options for ${name}`}
+                    data-testid={`past-menu-${e.id}`}
+                    disabled={resumingId === e.id || deletingId === e.id}
+                    onClick={() => setMenuFor(e)}
+                  >
+                    <MoreVertical className="size-5" />
+                  </Button>
                 }
               />
             )

@@ -75,6 +75,7 @@ export default defineConfig({
         /programs-history-progress\.spec\.ts/,
         // Measures the rendered boxes on the shared account's program.
         /programs-one-language\.spec\.ts/,
+        /programs-build-week\.spec\.ts/,
         // Starts programs on the shared account, so it belongs beside the rest.
         /life-mastery-program-link\.spec\.ts/,
         /health-past-workout\.spec\.ts/,
@@ -170,6 +171,7 @@ export default defineConfig({
         /programs-drafts\.spec\.ts/,
         /programs-history-progress\.spec\.ts/,
         /programs-one-language\.spec\.ts/,
+        /programs-build-week\.spec\.ts/,
         /life-mastery-program-link\.spec\.ts/,
         /health-past-workout\.spec\.ts/,
         /dashboard-training-card\.spec\.ts/,

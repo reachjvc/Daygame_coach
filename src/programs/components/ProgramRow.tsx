@@ -39,7 +39,17 @@ export function ProgramRow({
   href?: string
   /** Given when the row does something instead. */
   onClick?: () => void
-  /** A badge, a word, or a "⋮" button, shown before the chevron. */
+  /**
+   * A badge, a word, or real controls — shown beside the row, NOT inside it.
+   *
+   * This used to be rendered within the row's own `<button>`/`<Link>`, and the
+   * comment here said "a ⋮ button", which invited exactly what happened: a
+   * `<button>` inside a `<button>` is invalid HTML, so React's server and
+   * client trees disagreed and the whole subtree was thrown away and re-rendered
+   * — a hydration failure on the Training tab for anybody with a finished
+   * program. Found by walking the page cold, not by any test: every test asked
+   * for "the" control and got one.
+   */
   right?: ReactNode
   testId?: string
   className?: string
@@ -61,22 +71,48 @@ export function ProgramRow({
         <span className="block truncate font-medium">{name}</span>
         {meta && <span className="block truncate text-xs text-muted-foreground">{meta}</span>}
       </span>
-      {right && <span className="shrink-0">{right}</span>}
       <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
     </>
   )
 
-  if (href) {
-    return (
-      <Link href={href} className={rowClass} data-testid={testId}>
-        {body}
-      </Link>
-    )
-  }
-
-  return (
-    <button type="button" onClick={onClick} className={rowClass} data-testid={testId}>
+  /**
+   * The row's own control. When there is a `right` slot it becomes a flex child
+   * rather than the whole row, so whatever is in that slot is its SIBLING.
+   *
+   * A row with no slot is byte-identical to what it was before, which is what
+   * keeps the four lists that do not use one exactly as they were.
+   */
+  const control = href ? (
+    <Link
+      href={href}
+      /* `min-w-0` because a flex child's default `min-width: auto` will not let
+         it shrink below its content — without it the name refused to truncate
+         and pushed the buttons in the slot off the side of the card. */
+      className={cn(rowClass, right && "min-w-0 w-auto flex-1 pr-0")}
+      data-testid={testId}
+    >
+      {body}
+    </Link>
+  ) : (
+    <button
+      type="button"
+      onClick={onClick}
+      /* `min-w-0` because a flex child's default `min-width: auto` will not let
+         it shrink below its content — without it the name refused to truncate
+         and pushed the buttons in the slot off the side of the card. */
+      className={cn(rowClass, right && "min-w-0 w-auto flex-1 pr-0")}
+      data-testid={testId}
+    >
       {body}
     </button>
+  )
+
+  if (!right) return control
+
+  return (
+    <div className={cn("flex w-full items-center gap-1 pr-4", className)}>
+      {control}
+      <span className="shrink-0">{right}</span>
+    </div>
   )
 }

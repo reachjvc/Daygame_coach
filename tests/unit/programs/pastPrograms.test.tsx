@@ -55,18 +55,42 @@ function held() {
   )
 }
 
-describe("the two buttons on a finished program", () => {
+/**
+ * THE TWO ACTIONS MOVED BEHIND THE ROW'S ⋮ on 2026-09-24.
+ *
+ * "Start again" and "Delete" beside the name left it about 100 px on a 390-px
+ * screen — "StrongLifts …", with "Beginner · starte…" under it — which is the
+ * clipping this whole phase existed to remove. They were also real `<button>`s
+ * INSIDE the row's own `<button>`, which is invalid HTML and was causing a
+ * hydration failure on the Training tab for anybody with a finished program.
+ *
+ * Every assertion below is unchanged except for opening the sheet first: what
+ * the actions do, and what they must not say while the other is running, is the
+ * same behaviour reached a different way.
+ */
+async function openMenu(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: /^Options for / }))
+}
+
+describe("the two actions on a finished program", () => {
   it("restarting never says it is deleting", async () => {
     const user = userEvent.setup()
     held()
     render(<PastPrograms initial={[past()]} />)
 
+    await openMenu(user)
     await user.click(screen.getByTestId("resume-program"))
 
-    await waitFor(() => expect(screen.getByTestId("resume-program").textContent).toBe("Starting…"))
-    // The whole point: the OTHER button must not have changed.
+    /**
+     * The pending state is on the ROW now, not on the word: the sheet closes
+     * when a row is tapped, so "Starting…" has nowhere to live. The options
+     * button going disabled is what says the row is busy, and the whole point
+     * survives — nothing anywhere says "deleting".
+     */
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /^Options for / })).toBeDisabled()
+    )
     expect(screen.queryByText(/deleting/i)).toBeNull()
-    expect(screen.getByTestId("delete-past-program")).toBeTruthy()
   })
 
   it("asks before removing, and says the sessions survive", async () => {
@@ -75,6 +99,7 @@ describe("the two buttons on a finished program", () => {
     vi.stubGlobal("fetch", fetchMock)
     render(<PastPrograms initial={[past()]} />)
 
+    await openMenu(user)
     await user.click(screen.getByTestId("delete-past-program"))
 
     expect(screen.getByText(/47 logged sessions stay in your history/i)).toBeTruthy()
@@ -88,6 +113,7 @@ describe("the two buttons on a finished program", () => {
     vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, status: 200, json: async () => [] })))
     render(<PastPrograms initial={[past({ sessionsLogged: 1 })]} />)
 
+    await openMenu(user)
     await user.click(screen.getByTestId("delete-past-program"))
     expect(screen.getByText(/1 logged session stays in your history/i)).toBeTruthy()
   })
@@ -97,6 +123,7 @@ describe("the two buttons on a finished program", () => {
     vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, status: 200, json: async () => [] })))
     render(<PastPrograms initial={[past({ sessionsLogged: 0 })]} />)
 
+    await openMenu(user)
     await user.click(screen.getByTestId("delete-past-program"))
     expect(screen.getByText(/no logged sessions/i)).toBeTruthy()
   })

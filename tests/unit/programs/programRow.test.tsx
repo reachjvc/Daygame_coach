@@ -64,4 +64,50 @@ describe('One row shape for every program list', () => {
     const row = screen.getByTestId('bare')
     expect(row.textContent).toBe('Couch to 5K')
   })
+
+  /**
+   * A CONTROL IN THE `right` SLOT IS A SIBLING OF THE ROW, NEVER A CHILD.
+   *
+   * It used to be rendered inside the row's own `<button>`/`<Link>`, and this
+   * prop's doc comment said "a ⋮ button" — which invited exactly what happened.
+   * A `<button>` inside a `<button>` is invalid HTML, so React's server and
+   * client trees disagreed and the whole subtree was discarded and re-rendered:
+   * a hydration failure on the Training tab for anybody with a finished
+   * program, live for weeks.
+   *
+   * NO TEST COULD SEE IT. Every one asked for "the" control by test id and got
+   * one; the nesting only shows if you ask the DOM about ancestry, or open the
+   * page cold in a browser and read the console. So it is asked here directly.
+   */
+  test('an interactive right slot is not nested inside the row control', () => {
+    const { container } = render(
+      <ProgramRow
+        name="StrongLifts 5x5"
+        testId="with-actions"
+        onClick={() => {}}
+        right={<button type="button">Start again</button>}
+      />
+    )
+
+    expect(
+      container.querySelectorAll('button button, a button, button a'),
+      'a control inside a control is invalid HTML and fails hydration',
+    ).toHaveLength(0)
+    // And the slot is still there, next to the row rather than gone.
+    expect(screen.getByRole('button', { name: 'Start again' })).toBeTruthy()
+    expect(screen.getByTestId('with-actions')).toBeTruthy()
+  })
+
+  test('a link row with an interactive slot does not nest either', () => {
+    // The `href` branch had the same shape: a button inside an anchor.
+    const { container } = render(
+      <ProgramRow
+        name="StrongLifts 5x5"
+        testId="with-link"
+        href="/programs?program=e1"
+        right={<button type="button">Options</button>}
+      />
+    )
+    expect(container.querySelectorAll('a button, button a')).toHaveLength(0)
+  })
 })
