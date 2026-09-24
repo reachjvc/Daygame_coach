@@ -23,8 +23,16 @@ every check I ran, including two devices merging and a close call filed with no
 signal. The unfinished part is everything around it:
 
 - **22 of 61 browser tests for the old half are failing right now**, and have
-  been since the addresses moved on 2026-09-20. Nobody noticed because the
-  end-of-turn test hook runs the unit tests, not the browser ones.
+  been since the addresses moved on 2026-09-20 — which means **CI has gone red
+  on every push to this branch for four days.** The gate is not missing; its
+  result is unread. `e2e.yml` runs on every push to every branch and runs this
+  suite; the hooks that run locally (`npm test`, `.husky/pre-commit`) are
+  vitest-only and cannot see it; and no session in this checkout has the `gh`
+  CLI, so the only person who can read that result is you, opening GitHub. That
+  is worth fixing independently of this plan, and it is the reason nobody caught
+  it. A second consequence: while these 22 are red the whole chromium job is red,
+  so a genuinely new failure arrives inside an already-red job and reads as more
+  of the same.
 - **The module cannot be opened without a connection** — the one moment it was
   designed for. Once it is on screen it works offline perfectly. Opening it
   offline shows the browser's error page.
@@ -148,14 +156,25 @@ Four rules. Approve these, not the milestone count.
 
 Each one is a state of the app you can open and judge.
 
-**M0 — The red tests go green or go away.** Point the old half's browser tests at
-the address the old half actually lives at, and watch what that exposes. This is
-first because it is the only way to know whether those 22 failures are hiding
-real faults or are purely the wrong URL. On road A most of this file is deleted at
-M2 instead — but not before it has been run once at the right address, because
+**M0 — The red tests go green or go away, and the address that has no name gets
+one.** The specs did not drift off a constant — **there was never a constant to
+point them at.** `src/shared/lifeMasteryRoutes.ts` defines `LIFE_MASTERY`,
+`QUIT_VICE` and `viceStep`, and nothing for `/life-mastery/quit-vice/old`. The
+2026-09-20 move gave an existing name a new meaning instead of adding a name, so
+two different pages are both spelled `QUIT_VICE` and a test cannot tell them
+apart. Fixing the specs with a string literal reproduces this at the next move;
+the address owner gets the second address, and then the specs point at it. This
+is first because it is the only way to know whether those 22 failures hide real
+faults or are purely the wrong page. On road A most of this file is deleted at M2
+instead — but not before it has been run once at the right address, because
 deleting a red test is how a real fault gets deleted with it.
 *Acceptance:* `npx playwright test tests/e2e/quit-vice.spec.ts` is green, or every
-remaining failure is a named fault with a line in this plan.
+remaining failure is a named fault with a line in this plan; no test names either
+vice address as a literal.
+*Note on renaming `QUIT_VICE` itself:* a reader of that name today gets the Black
+Box, so it arguably wants renaming — but `viceStep` builds off it and the blast
+radius is real. Under road A there is only one vice address at M2 and the question
+dissolves; under road B it needs answering. Do not rename it at M0.
 
 **M1 — It opens with no connection.** The Black Box joins the time tracker as a
 page the service worker keeps. `public/sw.js` learns a *set* of shell paths
@@ -316,13 +335,17 @@ That is what M2 builds, not a "reading" page.
 
 ## Files
 
-**M0 — repoint the old tests**
-- `tests/e2e/quit-vice.spec.ts` — `const HUB = QUIT_VICE` → `` `${QUIT_VICE}/old` ``.
+**M0 — the missing address, then the tests**
+- `src/shared/lifeMasteryRoutes.ts` — add `QUIT_VICE_OLD`, with the comment
+  saying why two names exist and which page each is. This is the fix; the two
+  below are its consequences.
+- `tests/e2e/quit-vice.spec.ts` — `const HUB = QUIT_VICE` → `QUIT_VICE_OLD`.
   Also line 414 asserts the heading "Quitting something" after clicking the Life
   Mastery routine link, which now lands on the Black Box: that assertion belongs
   to the Black Box's own spec and should assert "Black Box" here.
-- `tests/e2e/deadControls.spec.ts` — `BLACK_BOX` and `HUB` are both `QUIT_VICE`;
-  `HUB` must be `` `${QUIT_VICE}/old` ``.
+- `tests/e2e/deadControls.spec.ts` — lines 28 and 30 alias two different pages to
+  one address (`BLACK_BOX` and `HUB` are both `QUIT_VICE`); `HUB` becomes
+  `QUIT_VICE_OLD`.
 
 **M1 — offline**
 - `public/sw.js` — `SHELL_PATH` → `SHELL_PATHS = ["/dashboard/time", QUIT_VICE]`;
@@ -372,10 +395,12 @@ That is what M2 builds, not a "reading" page.
 
 ## Constraints that will bite
 
-- **The Stop hook runs `npm test`, which is vitest only.** Every milestone here
-  has to run its Playwright project by hand, or it will be reported green on the
-  strength of the wrong suite. That is exactly how the 22 failures survived four
-  days.
+- **The Stop hook and `.husky/pre-commit` run `npm test`, which is vitest only.**
+  Every milestone here has to run its Playwright project by hand, or it will be
+  reported green on the strength of the wrong suite. CI *does* run the browser
+  suite on every push — that is not the gap. The gap is that its result reaches
+  nobody in this loop, which is how the 22 failures survived four days of red
+  builds.
 - **Before writing "green": `npm run lint:ratchet`, then
   `node scripts/typecheck-ratchet.mjs`, then `npm test`, in that order.** CI runs
   the ratchets before a single test.
