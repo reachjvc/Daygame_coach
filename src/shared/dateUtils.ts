@@ -373,6 +373,45 @@ export function wallClockNow(timezone: string, now: Date = new Date()): string {
   return instantToWallClock(now.toISOString(), timezone)
 }
 
+/**
+ * The NAME of a zone — "Central European Summer Time" — and nothing else.
+ *
+ * It exists because of a hydration failure on Settings that no rule could see.
+ * That card printed the zone with
+ * `new Date().toLocaleString("en-US", { timeZone, timeZoneName: "long" }).split(", ").pop()`,
+ * and the last comma-separated chunk of that string is not the zone name — it
+ * is `"5:36:44 AM Central European Summer Time"`, the wall clock TO THE SECOND.
+ * The server rendered `:44`, the browser hydrated at `:45`, the text did not
+ * match and React threw the tree away and rebuilt it. Measured on 1 of 6 cold
+ * loads locally, where the gap between the two renders is milliseconds; the
+ * longer that gap, the likelier the second has ticked.
+ *
+ * WHY THE EXISTING RULE MISSED IT. `architecture.test.ts` bans a training
+ * screen from reading the browser clock, and exempts any `toLocale*` call that
+ * pins a `timeZone`. This call pinned one. Pinning a zone answers "whose
+ * calendar" and says nothing about "does this text still say the same thing a
+ * second from now" — two different properties, and only the first had an owner.
+ *
+ * This formats no time fields at all, so there is no second to tick. The zone
+ * name still depends on the instant (summer time and standard time have
+ * different names), so it takes one.
+ */
+export function timeZoneLongName(timezone: string, at: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    timeZoneName: "long",
+  }).formatToParts(at)
+  const name = parts.find((part) => part.type === "timeZoneName")?.value
+  /**
+   * Not a fallback — a contract breach. `timeZoneName: "long"` always emits
+   * that part, so an absent one means the platform's Intl does not behave as
+   * this function is built on, and a zone label quietly reading "" on the one
+   * screen that explains goal reset timing is worse than a stack trace.
+   */
+  if (!name) throw new Error(`Intl gave no timeZoneName for: ${timezone}`)
+  return name
+}
+
 export function wallClockToInstant(dateTimeLocal: string, timezone: string): string {
   const [date, time = "00:00"] = dateTimeLocal.split("T")
   return localTimeInstant(date, time, timezone)

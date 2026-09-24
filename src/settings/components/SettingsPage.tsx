@@ -47,6 +47,7 @@ import { ComingSoon } from "@/src/shared/components/ComingSoon"
 import { VOICE_LANGUAGES, DEFAULT_VOICE_LANGUAGE, getVoiceLanguageLabel } from "@/src/tracking/config"
 import { TrainingSettingsCard } from "./TrainingSettingsCard"
 import type { TrainingSettings } from "@/src/programs/trainingSettings"
+import { timeZoneLongName } from "@/src/shared/dateUtils"
 
 interface SettingsPageClientProps extends SettingsPageProps {
   /** What this account trains with — see TrainingSettingsCard. */
@@ -284,9 +285,15 @@ export function SettingsPage({
                   <div>
                     <Label className="text-muted-foreground">Member Since</Label>
                     <p className="mt-1 font-medium">
+                      {/* IN THE ACCOUNT'S ZONE. With no `timeZone` this was the
+                          server's zone during SSR and the browser's after, so an
+                          account created 31 August 23:30 UTC read "August" on
+                          the server and "September" in Copenhagen — a hydration
+                          mismatch on the way in, and the wrong month after. */}
                       {new Date(profile.created_at).toLocaleDateString("en-US", {
                         month: "long",
                         year: "numeric",
+                        timeZone: currentTimezone,
                       })}
                     </p>
                   </div>
@@ -381,11 +388,11 @@ export function SettingsPage({
                   />
                 </div>
                 <div className="pt-2">
-                  <Link href="/preferences">
-                    <Button variant="outline" size="sm">
-                      Edit Preferences
-                    </Button>
-                  </Link>
+                  {/* `asChild`, so the LINK *is* the button. A <button> inside
+                      an <a> is invalid HTML and reads as two nested controls. */}
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/preferences">Edit Preferences</Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -406,8 +413,15 @@ export function SettingsPage({
                   <div className="flex-1">
                     <Label className="text-muted-foreground">Current Timezone</Label>
                     <p className="mt-1 font-medium">{currentTimezone.replace(/_/g, " ")}</p>
+                    {/* THE NAME OF THE ZONE, not the time in it. This printed
+                        `.split(", ").pop()` of a full `toLocaleString`, and the
+                        last comma-separated chunk of that is the wall clock to
+                        the second: the server rendered 5:36:44, the browser
+                        hydrated at 5:36:45, React binned the tree and rebuilt
+                        it, and whoever read the line got a clock that was
+                        already wrong and would never tick. */}
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {new Date().toLocaleString("en-US", { timeZone: currentTimezone, timeZoneName: "long" }).split(", ").pop()}
+                      {timeZoneLongName(currentTimezone)}
                     </p>
                   </div>
                   <Button
@@ -858,9 +872,9 @@ export function SettingsPage({
                     You don't have an active subscription. Subscribe to unlock unlimited
                     practice scenarios.
                   </p>
-                  <Link href="/">
-                    <Button>View Plans</Button>
-                  </Link>
+                  <Button asChild>
+                    <Link href="/">View Plans</Link>
+                  </Button>
                 </CardContent>
               </Card>
             )}

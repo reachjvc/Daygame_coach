@@ -2257,4 +2257,229 @@ describe('Architecture Compliance', () => {
     })
   })
 
+  /**
+   * NOTHING RENDERED MAY CHANGE BETWEEN THE SERVER RENDER AND HYDRATION.
+   *
+   * Found by opening every live route cold and reading the console, 2026-09-24.
+   * `/dashboard/settings` threw a hydration failure on 1 of 6 cold loads, and
+   * React named the text:
+   *
+   *     + 5:36:45 AM Central European Summer Time
+   *     - 5:36:44 AM Central European Summer Time
+   *
+   * One second apart. The zone label was built from
+   * `new Date().toLocaleString(…, { timeZoneName: "long" }).split(", ").pop()`,
+   * and the last comma-separated chunk of that string is the wall clock, not
+   * the zone name. The server rendered one second, the browser hydrated in the
+   * next, the text did not match, and React discarded that tree and rebuilt it.
+   * The person reading it saw a clock that was wrong on arrival and never
+   * ticked.
+   *
+   * WHY THE RULES ABOVE MISSED IT, which is the reason this one exists
+   * separately rather than widening theirs. Both browser-clock rules ask "whose
+   * calendar is this?" and so exempt any `toLocale*` call that pins a
+   * `timeZone`. This call pinned one. Pinning a zone says nothing about whether
+   * the text still reads the same a second later — two different properties,
+   * and the second had no owner anywhere in this suite.
+   *
+   * It is also scoped wider than they are: they cover training screens, and
+   * this failure was on Settings. Every client component hydrates, so every
+   * client component is in scope.
+   *
+   * NOT IN SCOPE, on purpose: `<button>` nested inside `<button>`, which is the
+   * other way this app has produced a hydration failure (the Training tab, four
+   * commits ago). The parser auto-closes the outer one, so server and client
+   * disagree — but it arrives through a rendered prop, not a literal, and no
+   * regex over the source can see it. Only opening the page finds that one.
+   */
+  describe('Nothing rendered changes between the server render and hydration', () => {
+    /**
+     * Two shapes, both of which make the server and the browser print
+     * different text for the same component:
+     *
+     *   new Date().toLocaleString / .toLocaleTimeString   a clock, which ticks
+     *   Date.now().toLocaleString                          a number, which grows
+     *   new Date().toLocaleDateString(undefined | )        the DEVICE's locale,
+     *                                                      which the server
+     *                                                      cannot know
+     */
+    const HYDRATION_UNSAFE =
+      /new Date\(\s*\)\s*\.toLocale(String|TimeString)\b|Date\.now\(\s*\)\s*\.toLocale|new Date\(\s*\)\s*\.toLocaleDateString\(\s*(undefined|\))/g
+
+    /** Comments blanked: an explanation of the bug is not the bug. */
+    function clientComponentCode(): Map<string, string> {
+      const out = new Map<string, string>()
+      for (const dir of ['src', 'app', 'components']) {
+        for (const file of getAllFiles(path.join(projectRoot, dir), /\.tsx$/)) {
+          const raw = fs.readFileSync(file, 'utf-8')
+          const code = raw
+            .replace(/\/\*[\s\S]*?\*\//g, '')
+            .replace(/\/\/[^\n]*/g, '')
+          // Server components render once and never hydrate, so none of this
+          // can bite them.
+          if (!/^\s*['"]use client['"]/m.test(code)) continue
+          out.set(path.relative(projectRoot, file).replace(/\\/g, '/'), code)
+        }
+      }
+      return out
+    }
+
+    /**
+     * The two that are left, and why each is still here rather than fixed.
+     *
+     * Both are in another session's files as this is written (`src/goals` and
+     * `src/tracking`), and both were reported to their owners rather than
+     * edited underneath them.
+     */
+    const HYDRATION_DEBT: Record<string, number> = {
+      // `toLocaleString("en-US", { timeZone, timeZoneName: "short" })`, then
+      // `.split(" ").pop()`. That pops "GMT+2" — the zone alone, no clock — so
+      // it is safe TODAY, and safe by accident: the safety is a property of
+      // splitting on spaces, and changing the format string to "long" would
+      // silently start printing the time. `timeZoneLongName` in
+      // `src/shared/dateUtils.ts` is the version that cannot.
+      'src/goals/components/GoalTimeSettingsDialog.tsx': 1,
+      // `toLocaleDateString(undefined, { weekday, month, day })` — the heading
+      // of the daily review. No clock, so it cannot tick, but `undefined` is
+      // the device's locale and the server has no way to match it: rendered on
+      // a UTC server for a Danish browser it is "Thursday, September 24"
+      // against "torsdag 24. september", which is a mismatch on every load.
+      'src/tracking/components/DailyReviewPage.tsx': 1,
+    }
+
+    /**
+     * Scanned once for both tests. Two walks of `src`, `app` and `components`
+     * to answer the same question is the kind of waste that pushes a
+     * neighbouring test with a five-second budget over it.
+     */
+    let scanned: Record<string, number> | null = null
+    function unsafeReads(): Record<string, number> {
+      if (scanned) return scanned
+      const found: Record<string, number> = {}
+      for (const [rel, code] of clientComponentCode()) {
+        const hits = code.match(HYDRATION_UNSAFE)
+        if (hits) found[rel] = hits.length
+      }
+      scanned = found
+      return found
+    }
+
+    test('no client component prints a clock, a growing number or the device locale', () => {
+      const found = unsafeReads()
+      const over = Object.entries(found)
+        .filter(([rel, n]) => n > (HYDRATION_DEBT[rel] ?? 0))
+        .map(([rel, n]) => `${rel}: ${n} (allowed ${HYDRATION_DEBT[rel] ?? 0})`)
+
+      expect(
+        over,
+        'This text will differ between the server render and hydration, so React\n' +
+          'will throw the tree away and rebuild it — and whatever it printed was\n' +
+          'already stale. For a zone label use `timeZoneLongName`; for a date use\n' +
+          '`toLocaleDateString(…, { timeZone })` with the ACCOUNT\'s zone and an\n' +
+          'explicit locale; for "now" take the instant from the server:\n' +
+          over.join('\n'),
+      ).toEqual([])
+    })
+
+    test('the hydration-debt allowance only shrinks', () => {
+      const found = unsafeReads()
+      const stale = Object.entries(HYDRATION_DEBT)
+        .filter(([rel, allowed]) => (found[rel] ?? 0) < allowed)
+        .map(([rel, allowed]) => `${rel}: allowed ${allowed}, actually ${found[rel] ?? 0}`)
+
+      expect(
+        stale,
+        'These are fixed or gone — lower them in HYDRATION_DEBT. An allowance with\n' +
+          'headroom is a free pass waiting for the bug to come back:\n' +
+          stale.join('\n'),
+      ).toEqual([])
+    })
+  })
+
+  /**
+   * NO CONTROL INSIDE ANOTHER CONTROL.
+   *
+   * `<Link><Button>…</Button></Link>` puts a `<button>` inside an `<a>`. That is
+   * invalid HTML, and a screen reader is handed two nested controls where the
+   * page means one. Unlike a button inside a button it does NOT break
+   * hydration — measured on 2026-09-24, nine of these on `/dashboard/tracking`
+   * with zero hydration errors — so this is a correctness and accessibility
+   * rule, not a crash rule, and the fourteen that exist are held where they are
+   * rather than changed in one sweep across three slices nobody is testing
+   * tonight.
+   *
+   * The fix is `asChild`, which makes the link BE the button:
+   *
+   *     <Button asChild><Link href="/x">Label</Link></Button>
+   */
+  describe('No control is nested inside another control', () => {
+    const LINK_WRAPPING_BUTTON = /<Link\b[^>]*>\s*(?:\{[^{}]*\}\s*)?<Button\b/g
+
+    /** Scanned once for both tests, for the same reason as above. */
+    let scanned: Record<string, number> | null = null
+    function nestedControls(): Record<string, number> {
+      if (scanned) return scanned
+      const found: Record<string, number> = {}
+      for (const dir of ['src', 'app', 'components']) {
+        for (const file of getAllFiles(path.join(projectRoot, dir), /\.tsx$/)) {
+          const code = fs
+            .readFileSync(file, 'utf-8')
+            .replace(/\/\*[\s\S]*?\*\//g, '')
+            .replace(/\/\/[^\n]*/g, '')
+          const hits = code.match(LINK_WRAPPING_BUTTON)
+          if (hits) {
+            found[path.relative(projectRoot, file).replace(/\\/g, '/')] = hits.length
+          }
+        }
+      }
+      scanned = found
+      return found
+    }
+
+    /**
+     * Fourteen, all of them predating this rule. `src/settings` is at zero
+     * because that is the file this rule was found from — the other nine
+     * belong to slices with another session in them.
+     */
+    const NESTED_CONTROL_DEBT: Record<string, number> = {
+      'app/dashboard/tracking/history/page.tsx': 1,
+      'src/home/components/HomePage.tsx': 1,
+      'src/scenarios/components/ScenariosHub.tsx': 3,
+      'src/tracking/components/ProgressDashboard.tsx': 1,
+      'src/tracking/components/SessionDetailPage.tsx': 2,
+      'src/tracking/components/SessionTrackerPage.tsx': 1,
+      'src/tracking/components/dashboard/DailyReviewCard.tsx': 1,
+      'src/tracking/components/dashboard/RecentSessionsCard.tsx': 3,
+      'src/tracking/components/dashboard/WeeklyReviewsCard.tsx': 1,
+    }
+
+    test('no NEW button inside an anchor', () => {
+      const found = nestedControls()
+      const over = Object.entries(found)
+        .filter(([rel, n]) => n > (NESTED_CONTROL_DEBT[rel] ?? 0))
+        .map(([rel, n]) => `${rel}: ${n} (allowed ${NESTED_CONTROL_DEBT[rel] ?? 0})`)
+
+      expect(
+        over,
+        'A <button> inside an <a> is invalid HTML and two nested controls to a\n' +
+          'screen reader. Use `asChild` so the link IS the button:\n' +
+          '  <Button asChild><Link href="/x">Label</Link></Button>\n' +
+          over.join('\n'),
+      ).toEqual([])
+    })
+
+    test('the nested-control allowance only shrinks', () => {
+      const found = nestedControls()
+      const stale = Object.entries(NESTED_CONTROL_DEBT)
+        .filter(([rel, allowed]) => (found[rel] ?? 0) < allowed)
+        .map(([rel, allowed]) => `${rel}: allowed ${allowed}, actually ${found[rel] ?? 0}`)
+
+      expect(
+        stale,
+        'These are fixed or gone — lower them in NESTED_CONTROL_DEBT:\n' +
+          stale.join('\n'),
+      ).toEqual([])
+    })
+  })
+
 })

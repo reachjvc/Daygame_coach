@@ -1,5 +1,46 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
-import { dateKeyLabel, getTodayInTimezone, getNowInTimezone, periodStartFor, periodStartInTimezone } from "@/src/shared/dateUtils"
+import { dateKeyLabel, getTodayInTimezone, getNowInTimezone, periodStartFor, periodStartInTimezone, timeZoneLongName } from "@/src/shared/dateUtils"
+
+describe("timeZoneLongName", () => {
+  /**
+   * THE PROPERTY THE SETTINGS BUG VIOLATED, asserted directly.
+   *
+   * That card printed the zone as
+   * `new Date().toLocaleString(…, { timeZoneName: "long" }).split(", ").pop()`,
+   * whose last chunk is "5:36:44 AM Central European Summer Time" — the wall
+   * clock. The server rendered `:44`, the browser hydrated at `:45`, and React
+   * threw the tree away. Two instants a second apart must read the same, or
+   * this function cannot be put in rendered markup.
+   */
+  it("says the same thing one second later", () => {
+    const at = new Date("2026-09-24T05:36:44Z")
+    const aSecondLater = new Date(at.getTime() + 1000)
+    for (const tz of ["Europe/Copenhagen", "America/New_York", "Pacific/Auckland", "UTC"]) {
+      expect(timeZoneLongName(tz, at)).toBe(timeZoneLongName(tz, aSecondLater))
+    }
+  })
+
+  it("is the name of the zone and nothing else", () => {
+    const at = new Date("2026-09-24T05:36:44Z")
+    expect(timeZoneLongName("Europe/Copenhagen", at)).toBe("Central European Summer Time")
+    // No date, no clock, no comma — the three things the old expression carried.
+    expect(timeZoneLongName("Europe/Copenhagen", at)).not.toMatch(/\d|:|,/)
+  })
+
+  it("still tells summer time from standard time", () => {
+    // It takes an instant BECAUSE of this: the same zone has two names a year.
+    expect(timeZoneLongName("Europe/Copenhagen", new Date("2026-01-15T12:00:00Z")))
+      .toBe("Central European Standard Time")
+  })
+
+  it("refuses a zone it cannot read, rather than labelling the screen blank", () => {
+    // Intl's own RangeError, deliberately not caught: a zone label that quietly
+    // reads "" on the one screen explaining goal reset timing is worse than a
+    // stack trace. The message is asserted so this stays a statement about
+    // WHICH failure, not just that something threw.
+    expect(() => timeZoneLongName("Not/AZone")).toThrow(/[Ii]nvalid time zone/)
+  })
+})
 
 describe("getTodayInTimezone", () => {
   afterEach(() => {
