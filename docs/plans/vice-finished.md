@@ -320,7 +320,15 @@ when it was first written down; it is 38 days since the last check.
 cannot rot silently again; the door reachable in one tap from the front page in
 every state, including an empty record.
 
-**M4 — DONE ON A PHONE, BLOCKED ON DESKTOP BY ONE DECISION.** Life Mastery is
+**M4 — DONE, PHONE AND DESKTOP.** The owner approved the icon on 2026-09-24, so
+the desktop half is restored: `AppHeader` carries a "Your plan" link with
+`ScrollText`, registered in `iconRoles.ts` with the single role "your plan
+(Life Mastery) in the navigation". Verified at 1280px — the More sheet is
+correctly hidden and the header link lands on `/life-mastery`. The limit still
+stands and is not a decision anybody has taken: `AppHeader` is mounted on four
+pages, so desktop reachability is those four, not the app.
+
+*As it stood before the approval:* Life Mastery is
 in the "More" sheet as "Your plan", first row, and verified in a browser at
 390px: More → Your plan → `/life-mastery`, 366×44px target. The vice module
 stays inside it, because item 8 asks for it in isolation and it has that.

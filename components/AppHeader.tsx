@@ -1,12 +1,31 @@
 import Link from "next/link"
-import { Beaker, BookOpen, HelpCircle, LayoutDashboard, LogOut, Settings } from "lucide-react"
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { Beaker, BookOpen, HelpCircle, LayoutDashboard, LogOut, Settings, ScrollText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/app/actions/auth"
 import { MobileNav, type MobileNavItem } from "@/components/MobileNav"
 
 // "goals" was a page type here until the goals hub was archived; nothing
 // identifies as it any more.
-type CurrentPage = "home" | "dashboard" | "settings" | "qa" | "inner-game" | "scenarios" | "articles" | "other"
+/**
+ * The pages this header can be on, so it can hide the link to wherever you
+ * already are. `"life-mastery"` is in the list although no page passes it yet:
+ * this header is mounted on four pages and Life Mastery is not one of them, so
+ * the guard below is defensive. Without the member the comparison is a type
+ * error, and the two ways to silence that are to delete the guard — which
+ * leaves a link to the current page the day somebody mounts this there — or to
+ * say out loud that it is a page this header could serve. This is the second.
+ */
+type CurrentPage =
+  | "home"
+  | "dashboard"
+  | "settings"
+  | "qa"
+  | "inner-game"
+  | "scenarios"
+  | "articles"
+  | "life-mastery"
+  | "other"
 
 interface AppHeaderProps {
   /** Current page identifier - used to hide redundant navigation links */
@@ -57,6 +76,37 @@ export function AppHeader({
         variant: "ghost",
         className: "text-foreground hover:text-primary",
         testId: "header-dashboard-link",
+      })
+    }
+    /**
+     * YOUR PLAN, SO IT IS REACHABLE ON A DESKTOP TOO.
+     *
+     * `MobileTabBar`'s "More" sheet is `sm:hidden`, so the entry added there on
+     * 2026-09-24 only exists below 640px. Without this line Life Mastery — and
+     * the whole vice module under it — is reachable on a desktop only by typing
+     * the address, which is where it had been since it was built.
+     *
+     * This landed a few hours after the sheet row did: it needs `ScrollText` in
+     * two files, `src/shared/iconRoles.ts` requires an entry for any icon used
+     * in more than one, and that file says an entry needs the owner's approval
+     * by name. So it was written, reverted, and restored when they gave it.
+     *
+     * HONEST LIMIT, STATED RATHER THAN PAPERED OVER: this header is mounted on
+     * four pages — `/dashboard/qa`, `/dashboard/inner-game`,
+     * `/dashboard/articles` and one archived test page — so this makes the plan
+     * reachable from those four and no others. Every other desktop page draws
+     * its own header. What desktop navigation is for this product is a
+     * whole-app question; see `docs/plans/vice-finished.md`, M4.
+     */
+    if (currentPage !== "life-mastery") {
+      navItems.push({
+        type: "link",
+        href: LIFE_MASTERY,
+        label: "Your plan",
+        icon: <ScrollText className="size-4 mr-2" />,
+        variant: "ghost",
+        className: "text-foreground hover:text-primary",
+        testId: "header-life-mastery-link",
       })
     }
     // NO LAIR LINK. The Lair was a second goals surface, and the app is being

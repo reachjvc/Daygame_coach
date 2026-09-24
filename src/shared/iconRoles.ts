@@ -125,6 +125,21 @@ export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   Puzzle: ["custom/miscellaneous life area"],
   Rocket: ["onboarding", "start a business objective icon"],
   Scaling: ["body transformation objective icon"],
+  /**
+   * ONE ROLE, AND THE OWNER APPROVED IT BY NAME ON 2026-09-24.
+   *
+   * Life Mastery is "Your plan" in the navigation, and it needed an icon in two
+   * files — the "More" sheet in `components/navTabs.ts` and the desktop header.
+   * Two files is what makes an entry here necessary, and this file's own header
+   * says an entry needs explicit approval, so the desktop half sat reverted
+   * until it was given.
+   *
+   * `ScrollText` rather than Compass, Target, Flag or Milestone: every one of
+   * those is already registered with roles of its own, and widening one of
+   * those is a bigger claim than adding an unused icon with a single narrow
+   * role. A written plan is what the thing is.
+   */
+  ScrollText: ["your plan (Life Mastery) in the navigation"],
   Shield: ["streak freezes", "defensive/protection theme", "scenario catalog"],
   Sprout: ["personal growth life area", "garden view growth stages"],
   Sparkles: ["AI/magic features", "sparkle decoration"],
