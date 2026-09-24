@@ -96,6 +96,18 @@ export function DailyReviewPage({ userId }: DailyReviewPageProps) {
   const [formValues, setFormValues] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  /**
+   * The date under the heading, empty until the browser has drawn it once.
+   *
+   * See the comment beside where it is rendered: the server cannot know the
+   * reader's locale, so anything it puts here is something to disagree with.
+   */
+  const [today, setToday] = useState("")
+
+  useEffect(() => {
+    setToday(new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }))
+  }, [])
+
   const [yesterdayTomorrow, setYesterdayTomorrow] = useState<string | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
   const [customFields, setCustomFields] = useState<{ id: string; label: string }[]>([])
@@ -199,9 +211,27 @@ export function DailyReviewPage({ userId }: DailyReviewPageProps) {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Daily Reflection</h1>
-            <p className="text-sm text-muted-foreground">
-              {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
-            </p>
+            {/*
+              THE DATE IS DRAWN AFTER MOUNT, and it is not a style choice.
+
+              `toLocaleDateString(undefined, …)` asks for the DEVICE's locale,
+              which the server has no way to match: rendered on a UTC server for
+              a Danish browser it is "Thursday, September 24" against "torsdag
+              24. september", so React discards this subtree and re-renders it on
+              every load. It cannot be reproduced on this machine, because the
+              dev server and the browser share one locale and one zone — which is
+              exactly why it survived. Found by sweeping the live routes cold.
+
+              Rendering nothing on the server means there is nothing to disagree
+              with. The heading holds its own space, so this does not move.
+
+              WHAT IS STILL OPEN, named rather than quietly decided: this is the
+              DEVICE's day, not the account's, so somebody travelling sees their
+              phone's date above a review the account keys to its own. Fixing it
+              properly needs the account's timezone down here, and no client
+              component in this slice has it yet. It is one line the day it does.
+            */}
+            <p className="text-sm text-muted-foreground min-h-5">{today}</p>
           </div>
         </div>
       </div>

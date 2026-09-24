@@ -2340,10 +2340,18 @@ describe('Architecture Compliance', () => {
       // `src/shared/dateUtils.ts` is the version that cannot.
       'src/goals/components/GoalTimeSettingsDialog.tsx': 1,
       // `toLocaleDateString(undefined, { weekday, month, day })` — the heading
-      // of the daily review. No clock, so it cannot tick, but `undefined` is
-      // the device's locale and the server has no way to match it: rendered on
-      // a UTC server for a Danish browser it is "Thursday, September 24"
-      // against "torsdag 24. september", which is a mismatch on every load.
+      // of the daily review. `undefined` is the device's locale and the server
+      // has no way to match it: on a UTC server for a Danish browser that is
+      // "Thursday, September 24" against "torsdag 24. september".
+      //
+      // FIXED 2026-09-24 and still counted, which needs saying or the next
+      // reader fixes it twice. The call now runs in a mount effect, so the
+      // server renders nothing and there is nothing to disagree with. This scan
+      // is textual and cannot see the difference between a call in render and
+      // the same call in an effect — so the entry stays at 1 to keep the scan
+      // quiet, and this comment is the only thing that knows why.
+      //
+      // The entry may only be removed by deleting the call, not by moving it.
       'src/tracking/components/DailyReviewPage.tsx': 1,
     }
 
