@@ -16,7 +16,12 @@
  */
 
 import { test } from "@playwright/test"
-import { openCold, expectNoHydrationFailure, expectNoNestedControls } from "./helpers/coldOpen"
+import {
+  openCold,
+  expectPageExists,
+  expectNoHydrationFailure,
+  expectNoNestedControls,
+} from "./helpers/coldOpen"
 
 /**
  * Everything reachable without an account, from `docs/product/map.md`: the
@@ -38,6 +43,7 @@ for (const route of PUBLIC_ROUTES) {
   test(`opens clean for a stranger: ${route}`, async ({ page }) => {
     const result = await openCold(page, route)
 
+    expectPageExists(route, result)
     expectNoHydrationFailure(route, result)
 
     /**

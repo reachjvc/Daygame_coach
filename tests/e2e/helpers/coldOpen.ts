@@ -17,6 +17,18 @@ import { expect, type Page } from "@playwright/test"
 export interface ColdOpen {
   /** Where the browser ended up, which is not always where it was sent. */
   landedOn: string
+  /**
+   * The status of the document that was finally served, after any redirect.
+   *
+   * Here because without it this sweep reports pages that do not exist as
+   * healthy. Measured 2026-09-24: a made-up address under `/life-mastery`
+   * answers 404, and a 404 page has no hydration error and no nested control,
+   * so both of the questions below pass on it. A route list that outlives a
+   * deleted page would then go on reporting it clean forever — which is the
+   * same fault that had `quit-vice.spec.ts` driving the wrong page for four
+   * days, and it does not get to happen twice in one night.
+   */
+  status: number
   hydrationErrors: string[]
   /** One line per distinct control-inside-a-control, deduplicated. */
   nested: string[]
@@ -35,7 +47,13 @@ export async function openCold(page: Page, route: string): Promise<ColdOpen> {
     if (message.type() === "error") remember(message.text())
   })
 
-  await page.goto(route, { waitUntil: "networkidle" })
+  const response = await page.goto(route, { waitUntil: "networkidle" })
+  /**
+   * Not a fallback — `goto` returns null only when no navigation happened at
+   * all, and a sweep that cannot say what the server answered must say so
+   * rather than assume 200.
+   */
+  if (!response) throw new Error(`No navigation response for ${route}`)
   /**
    * Hydration happens AFTER the document lands, so the listeners need a beat
    * with nothing else going on. Without this every page reads as clean, which
@@ -58,9 +76,26 @@ export async function openCold(page: Page, route: string): Promise<ColdOpen> {
 
   return {
     landedOn: new URL(page.url()).pathname,
+    status: response.status(),
     hydrationErrors,
     nested: [...new Set(nested)],
   }
+}
+
+/**
+ * THE PAGE HAS TO EXIST BEFORE ANYTHING ELSE IS WORTH ASKING.
+ *
+ * Asserted first in every test, because a 404 answers "no" to both other
+ * questions and would otherwise read as a pass.
+ */
+export function expectPageExists(route: string, result: ColdOpen): void {
+  expect(
+    result.status,
+    `${route} answered ${result.status} (landed on ${result.landedOn}). Either the ` +
+      `page is gone and this route list has outlived it, or the route is real and ` +
+      `broken. A 404 has no hydration error and no nested control, so the rest of ` +
+      `this test would pass on it and report a missing page as a healthy one.`
+  ).toBeLessThan(400)
 }
 
 /**

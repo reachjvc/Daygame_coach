@@ -21,52 +21,127 @@
  * nothing — every route here is a read, and `?autostart=true` must never be
  * appended to the session route, because that parameter is how a workout
  * starts.
+ *
+ * WHAT ONE LOAD PER ROUTE CAN AND CANNOT SETTLE, because this file would
+ * otherwise be read as proving more than it does.
+ *
+ * A STRUCTURAL mismatch — the wrong tag inside the wrong tag — happens on every
+ * load, so one load finds it and this sweep is the right owner. A TIMING one
+ * does not. The Settings bug that started all of this rendered the clock to the
+ * second and only failed when the second ticked between the server's render and
+ * the browser's: measured at 1 cold load in 6, so a single pass reads it as
+ * clean five times out of six. Absence is the one result a single sample cannot
+ * establish.
+ *
+ * Loading every route six times to fix that would cost six times the runtime to
+ * make an intermittent test slightly less intermittent, which is the wrong
+ * trade. The timing class has a DETERMINISTIC owner instead: the rule in
+ * `tests/unit/architecture.test.ts` that fails when a client component formats
+ * `new Date()` into render position at all. It cannot be flaky because it never
+ * opens a browser.
+ *
+ * So: static analysis owns "could this text differ", this file owns "did
+ * anything actually nest or disagree". Neither owns the other, and a hydration
+ * failure caught HERE is a bonus rather than the design.
  */
 
-import { test } from "@playwright/test"
-import { openCold, expectNoHydrationFailure, expectNoNestedControls } from "./helpers/coldOpen"
+import * as fs from "fs"
+import * as path from "path"
+import { test, expect } from "@playwright/test"
+import {
+  openCold,
+  expectPageExists,
+  expectNoHydrationFailure,
+  expectNoNestedControls,
+} from "./helpers/coldOpen"
 
 /**
- * The addresses from `docs/product/map.md`, minus the ones this sweep must not
- * or cannot open:
+ * READ OFF `app/`, NOT TYPED OUT — and that is the whole design of this list.
  *
- *   /auth/*, /                signed OUT flows; this project is signed in
- *   /programs/live            its whole purpose is an open workout, and a
- *                             sweep that has to create one is not a read
- *   /admin/ai-usage           behind an admin gate
- *   /redirect, /dashboard/goals/plan
- *                             redirect shims with no page of their own
+ * The first version was a hand-written array of 28 addresses. It was written the
+ * same night `tests/e2e/quit-vice.spec.ts` was found to have been driving the
+ * wrong page for four days, because ITS hand-written constant had outlived a
+ * route move. Writing the same shape immediately afterwards would have been
+ * remarkable.
+ *
+ * Two ways a typed list rots, and this file would have had both:
+ *
+ *   a page is DELETED  — the sweep keeps asking for an address that now 404s,
+ *                        and a 404 has no hydration error and no nested
+ *                        control, so it reports a missing page as a healthy
+ *                        one. `expectPageExists` closes that half; deriving the
+ *                        list means the question stops being asked at all.
+ *   a page is ADDED    — nobody edits this file, and the new screen is simply
+ *                        never swept. Nothing anywhere would say so.
+ *
+ * Neither can happen now: `app/` is the only place a Next route comes from, so
+ * a page that exists is swept and a page that does not is not asked for. There
+ * is one session in this checkout planning to delete nine of these addresses
+ * this week, and this file needs no edit when they do.
  */
-const ROUTES = [
-  "/dashboard",
-  "/dashboard/articles",
-  "/dashboard/inner-game",
-  "/dashboard/qa",
-  "/dashboard/scenarios",
-  "/dashboard/settings",
-  "/dashboard/time",
-  "/dashboard/tracking",
-  "/dashboard/tracking/daily",
-  "/dashboard/tracking/history",
-  "/dashboard/tracking/report",
-  "/dashboard/tracking/review",
-  "/dashboard/tracking/session",
-  "/life-mastery",
-  "/life-mastery/quit-vice",
-  "/life-mastery/quit-vice/experiment",
-  "/life-mastery/quit-vice/gives",
-  "/life-mastery/quit-vice/learn",
-  "/life-mastery/quit-vice/line",
-  "/life-mastery/quit-vice/map",
-  "/life-mastery/quit-vice/old",
-  "/life-mastery/quit-vice/shortlist",
-  "/life-mastery/quit-vice/week",
-  "/life-mastery/quit-vice/where",
-  "/preferences",
-  "/preferences/archetypes",
-  "/programs",
-  "/qa",
-]
+const APP_DIR = path.resolve(__dirname, "../../app")
+
+/**
+ * Not swept, each for a reason that is about the route and not about
+ * convenience. Every one of these is asserted to still exist below: an
+ * exclusion whose page is gone is a line that silences a sweep for a route that
+ * could come back at that address.
+ */
+const NOT_SWEPT: Record<string, string> = {
+  "/": "the sales page, signed OUT — cold-open-signed-out.spec.ts owns it",
+  "/auth/login": "signed-out flow, owned by cold-open-signed-out.spec.ts",
+  "/auth/sign-up": "signed-out flow, owned by cold-open-signed-out.spec.ts",
+  "/auth/sign-up-success": "signed-out flow, owned by cold-open-signed-out.spec.ts",
+  "/auth/forgot-password": "signed-out flow, owned by cold-open-signed-out.spec.ts",
+  "/auth/reset-password": "signed-out flow, owned by cold-open-signed-out.spec.ts",
+  "/admin/ai-usage": "behind an admin key this account does not have",
+  "/programs/live":
+    "its whole purpose is an open workout. A sweep that has to start one is not a read, " +
+    "and this account is shared",
+  "/redirect": "a redirect shim with no page of its own",
+  "/dashboard/goals/plan": "a redirect shim with no page of its own",
+}
+
+/** Every `page.tsx` under `app/`, as the address Next serves it at. */
+function routesOnDisk(): string[] {
+  const found: string[] = []
+  const walk = (dir: string) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name)
+      if (entry.isDirectory()) {
+        // `/api` is not a page, `/test` 404s in production by design, and a
+        // `[param]` segment needs a real id this sweep has no way to invent.
+        if (entry.name === "api" || entry.name === "test" || entry.name.startsWith("[")) continue
+        walk(full)
+      } else if (entry.name === "page.tsx") {
+        const url = "/" + path.relative(APP_DIR, dir).split(path.sep).join("/")
+        found.push(url === "/." ? "/" : url)
+      }
+    }
+  }
+  walk(APP_DIR)
+  return found.sort()
+}
+
+const ON_DISK = routesOnDisk()
+const ROUTES = ON_DISK.filter((route) => !(route in NOT_SWEPT))
+
+test("the sweep covers every page in app/, and every exclusion still exists", () => {
+  /**
+   * A broken walk would return nothing and every route test below would simply
+   * not exist — a suite that passes by asking nothing, which is the one outcome
+   * no count can catch after the fact.
+   */
+  expect(ON_DISK.length, "routesOnDisk() found no pages, so the walk is broken").toBeGreaterThan(20)
+
+  const gone = Object.keys(NOT_SWEPT).filter((route) => !ON_DISK.includes(route))
+  expect(
+    gone,
+    "These are excluded from the sweep but no longer exist in app/. Remove them: " +
+      "an exclusion for a deleted page silences this sweep for whatever is built " +
+      `at that address next:\n${gone.join("\n")}`
+  ).toEqual([])
+})
 
 /**
  * The routes that render a control inside another control, and may.
@@ -94,6 +169,7 @@ for (const route of ROUTES) {
   test(`opens clean: ${route}`, async ({ page }) => {
     const result = await openCold(page, route)
 
+    expectPageExists(route, result)
     expectNoHydrationFailure(route, result)
 
     // Checked against where it LANDED as well as where it was sent, so a route
