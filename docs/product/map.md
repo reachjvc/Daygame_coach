@@ -240,10 +240,13 @@ the truthful record of what exists.
 - **Leaving Vercel and Supabase** — decided 2026-09-17. Read the memory note
   before any hosting, database or auth work.
 - **Life Mastery persistence** — the plan and the day half are both on the
-  account as of 2026-09-23 (`docs/plans/life-mastery-everything-saves.md`, M0
-  and M1). What is left there is the dashboard, which still reports "0 of N done
-  today" because it reads a plan whose tick list is empty by construction, and
-  retiring the unauthenticated `/api/plan-snapshots` mirror.
+  account as of 2026-09-23, and the dashboard tells the truth as of 2026-09-24
+  (`docs/plans/life-mastery-everything-saves.md`, M0–M2 built, M5 done). The
+  unauthenticated `/api/plan-snapshots` mirror is gone and its table is dropped.
+  What is left: M3's second half — a second device recognises your pushed goals
+  but cannot count against them, because the goals hub under the Track step
+  prunes by a code minted in one browser — plus M4, and M1's round-trip
+  integration test, which was never written.
 - **None of it is deployed.** `app/life-mastery/` exists on `training-rebuild`
   and on no other branch; `daygame-coach.vercel.app/life-mastery` is a 404 and
   always has been. The owner uses it at `localhost:3000`, which serves this

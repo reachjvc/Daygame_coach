@@ -466,15 +466,32 @@ second answer to a question already answered, and it would have widened what
 reaches `plan_snapshots` (M5) on the way. The cure for a gap can be worse than
 the gap.
 
-**Still to do before M1 can be called finished:**
-- **Check 1**, the round-trip integration test against a real Postgres. Not
-  written. It needs the integration container, and the memory note says not to
-  run that suite while another session is using the shared connection file.
-- **The browser proof**: a tick in one context appearing in another, and a
-  structural plan change from the first not destroying the second's tick. The
-  route is mounted and auth-gated on `localhost:3000` (401, not 404), which is a
-  smoke check and not the acceptance.
-- **Check 5**, the same at phone width.
+**Still to do before M1 can be called finished. Re-checked 2026-09-24 by
+reading the files rather than this list, which had gone stale within four hours
+of being written — `480cd2ba` and `92825523` landed the same evening.**
+
+- **Check 1**, the round-trip integration test against a real Postgres. **Still
+  not written, and the file the Files list promises
+  (`lifePlanRoundTrip.integration.test.ts`) does not exist.** What DOES exist is
+  `tests/integration/db/lifePlanDay.integration.test.ts`, and its own header
+  says in as many words that it is not this: it asserts schema constraints
+  through `pg`, while `lifePlanRepo` talks through supabase-js. Matching the
+  Files list against `ls` is how this reads as done; only opening the file
+  contradicts it. Nothing anywhere asserts that a real plan plus a year of days
+  survives write-then-read field for field.
+- **The browser proof** — `tests/e2e/life-mastery-day-persists.spec.ts` exists,
+  is registered in the `goals-4` project, and **tests neither half of what this
+  bullet asks.** All four of its writes send a `note`; the words `ticks` and
+  `logged` appear in no payload, so the tick never crosses. Its survival test
+  GETs `/api/life-plan` and PUTs the identical body back, which is not a
+  structural change and fires no cascade — and `if (body.plan)` means that on an
+  account with no plan row it skips the save entirely and passes having asserted
+  only that a note it just wrote came back.
+- **Check 5**, the same at phone width. **No phone project runs that spec** — it
+  is picked up by `chromium` and `goals-4`, both Desktop Chrome. Worth saying
+  before somebody adds it to a phone project to close the box: the spec never
+  touches the DOM, so running it at 390px would prove nothing. Check 5's intent
+  ("tick it on your phone") needs a spec that drives the tick control.
 
 **You can:** tick your morning routine on your phone and see it on your laptop.
 Write a journal line in one browser, read it in another. Clear your browsing data
@@ -528,6 +545,22 @@ one day saved writes one day and does not move the plan's revision.
 
 ### M2 — The dashboard tells the truth
 
+**BUILT 2026-09-24**, in two commits: `4634d6d1` (the day read and the account's
+today) and `9559674c` (one owner for "done today"), plus `75fe617d` for the
+footer. Driven in a browser on the real account: with one strength step placed on
+today and one finished weights session, the band reads "1 of 1 done today", the
+schedule says "from your training log", and the Today tab says "1 of 1 done" —
+and the band read "0 of 1" ten minutes earlier, before that session existed, so
+it can tell 1 from 0.
+
+**Bullet 3 was bigger than it was written.** "Three surfaces disagree" was five,
+and underneath them the feature was dead for everybody signed in: the derived
+ticks were an OPTIONAL prop and `TrackTab` passed them on its `checking` and
+signed-OUT branches and forgot them on the signed-IN one. The test named after
+`TrackTab` rendered `TrackSchedule` directly with a hand-built map, so no test
+could see it. `src/goals/dayTicks.ts` owns the rule now and every argument that
+carries the log is required.
+
 **You can:** tick five things in the morning and see "5 of 5 done today" on the
 page you actually open.
 
@@ -544,6 +577,11 @@ page you actually open.
 
 ### M3 — Your pushed goals are recognised on any device
 
+**BULLET 1 ONLY, `48fa55b1`.** `user_goal_id` is written at push time and read by
+the Track step, so a second device no longer offers you fifty duplicates. **The
+other two bullets are not built, and the milestone's headline is only half true
+until they are** — see the re-check below the bullets.
+
 **You can:** push from the laptop, open the phone, and see them as pushed rather
 than be offered fifty duplicates.
 
@@ -555,6 +593,27 @@ than be offered fifty duplicates.
   and the database allows exactly one per person.
 - Deleting a plan goal offers to archive its counted goal, never deletes silently.
 
+**Re-checked 2026-09-24, and what is left is more than the two bullets say.** The
+run code is still minted on load and re-minted by "start over"
+(`NorthStarFlow.tsx:374-377`, `:1209-1210`), still written into every pushed
+row's `template_id`, and still read for identity as `pushedGoalIds`' second
+branch. Its consequence on a second device: the Track step's checkbox list
+correctly reads "tracked" and will not duplicate — that half works — but **the
+goals hub rendered directly beneath it comes back EMPTY, and the Today step's
+driver rows show no progress bar and no "+1"**, because both gate on
+`item.goalId`, which is null when the tag's run does not match. So the second
+device recognises the goals and still cannot count against them. Retiring the run
+needs a scope mechanism that takes a set of `user_goal_id`s rather than a string
+prefix, because `GoalsHubContent` prunes by `templatePrefix` and there is no
+per-account stable prefix today.
+
+And the delete half is worse than "does not offer": there are **six** delete call
+sites for a plan goal and **two of them have no confirm at all** —
+`GuidedBuild.tsx:340-345` and the `echoDrop` link at `AreaBuilder.tsx:546-552`,
+while `GoalCard`, `GoalOverview` and `AreaBuilder`'s main path each carry their
+own copy of the same two-click confirm. One owner for "are you sure", not four
+copies and two holes.
+
 ### M4 — One home for the one thing's supports
 
 Two homes exist for one fact and the designed one is dead. **Recommendation: keep
@@ -565,7 +624,29 @@ decision about whether a support belongs to the sentence or to you. Yours, not m
 
 ### M5 — Your private journal stops being copied to a table nobody owns
 
-**Destructive. Gated — blocker 2.**
+**DONE, BOTH STEPS, 2026-09-24 (`98880faa`).** Further along than this section
+describes: the route was not gated behind a sign-in, it was DELETED outright,
+along with `app/api/admin/plan-snapshots`, `planSnapshotRepo.ts`,
+`planSnapshotClient.ts` and the mirror call in the flow. And the destructive half
+ran too — `20260924100000_drop_plan_snapshots.sql` is applied to the live
+database and `to_regclass('public.plan_snapshots')` is now NULL. The rows were
+exported first, to `~/life-mastery-plan-snapshots-2026-09-24.json`, **outside the
+repository** as this plan insisted: 120 rows, `user_id` null on every one, the
+owner's among them at revision 356.
+
+**Two things it leaves, and one is a security matter.**
+
+1. **The export file is mode 0644 — world-readable — and it is now the ONLY copy
+   of those 120 plans.** The table it came from is gone. Every row is free text
+   about somebody's body, money, relationships and drinking. `chmod 600` is the
+   whole fix and it has not been done, because the file is in the owner's home
+   directory rather than this repository.
+2. **`main` still carries all six plan-snapshot files**, 182 commits behind. The
+   unauthenticated POST route therefore still exists on the deployed branch; its
+   writes now fail with a 500 because the table is gone rather than because the
+   route was removed. It goes when this branch merges.
+
+**Originally: destructive, gated — blocker 2.**
 
 `/api/plan-snapshots` takes a copy of anybody's whole plan — journal and day notes
 included — **with no sign-in**, and writes it with the key that ignores every rule
@@ -602,6 +683,11 @@ the credential that ignores every security rule in it. That is the part that sho
 be closed today rather than scheduled.
 
 ## Blockers
+
+**Both blockers were answered and both are closed — 2026-09-24.** M0 and M1 are
+built and the day half is on the account; M5's export ran and the table is
+dropped. They are left below as written, because the record of what was asked
+matters more than a tidy list.
 
 **1. M0 and M1 change what is stored in your browser. Go ahead?**
 *Attempted — I can write it; for a plan held only in a browser it is not
