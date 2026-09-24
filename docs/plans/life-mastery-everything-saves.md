@@ -579,10 +579,21 @@ page you actually open.
 
 ### M3 — Your pushed goals are recognised on any device
 
-**BULLET 1 ONLY, `48fa55b1`.** `user_goal_id` is written at push time and read by
-the Track step, so a second device no longer offers you fifty duplicates. **The
-other two bullets are not built, and the milestone's headline is only half true
-until they are** — see the re-check below the bullets.
+**BUILT, all three bullets.** `48fa55b1` (the link), `aa0f5188` (the two
+surfaces a second device lost) and `d93082d9` (the delete).
+
+What `aa0f5188` fixed was worse than the bullet said: the link stopped the
+duplication, and the two surfaces underneath still resolved through the
+browser-minted run, so a second device showed an EMPTY goals hub under a step
+that had just said those goals were tracked, and drivers with no counter and no
+"+1". Both ask `pushedGoalIds` now. `pruneTreeByTemplatePrefix` is
+`pruneTreeToIds`, because a prefix cannot answer this on another device and an
+id can.
+
+The run code is still WRITTEN into every tag — the goals screen groups by its
+prefix — and still read as a fallback for rows pushed before links existed. It
+is no longer read for identity anywhere a second device depends on, which is
+what the bullet was asking for.
 
 **You can:** push from the laptop, open the phone, and see them as pushed rather
 than be offered fifty duplicates.
@@ -595,26 +606,21 @@ than be offered fifty duplicates.
   and the database allows exactly one per person.
 - Deleting a plan goal offers to archive its counted goal, never deletes silently.
 
-**Re-checked 2026-09-24, and what is left is more than the two bullets say.** The
-run code is still minted on load and re-minted by "start over"
-(`NorthStarFlow.tsx:374-377`, `:1209-1210`), still written into every pushed
-row's `template_id`, and still read for identity as `pushedGoalIds`' second
-branch. Its consequence on a second device: the Track step's checkbox list
-correctly reads "tracked" and will not duplicate — that half works — but **the
-goals hub rendered directly beneath it comes back EMPTY, and the Today step's
-driver rows show no progress bar and no "+1"**, because both gate on
-`item.goalId`, which is null when the tag's run does not match. So the second
-device recognises the goals and still cannot count against them. Retiring the run
-needs a scope mechanism that takes a set of `user_goal_id`s rather than a string
-prefix, because `GoalsHubContent` prunes by `templatePrefix` and there is no
-per-account stable prefix today.
+**The delete half was worse than "does not offer", and is closed.** There were
+**six** delete call sites and **two had no confirm at all** — `GuidedBuild`'s row
+and `AreaBuilder`'s `echoDrop` link — while three others each carried their own
+copy of the same two-click dance. One `ConfirmRemove` now, and one `removalOf`
+deciding what deleting means.
 
-And the delete half is worse than "does not offer": there are **six** delete call
-sites for a plan goal and **two of them have no confirm at all** —
-`GuidedBuild.tsx:340-345` and the `echoDrop` link at `AreaBuilder.tsx:546-552`,
-while `GoalCard`, `GoalOverview` and `AreaBuilder`'s main path each carry their
-own copy of the same two-click confirm. One owner for "are you sure", not four
-copies and two holes.
+**What is not verified, and it is the same gap as M3's first half:** the wiring
+between the rule and the screen. The confirm is driven with real clicks and the
+rule is tested directly, both proved by removal, but nothing mounts the flow,
+lets the links arrive and then deletes — and the browser cannot supply it
+either, because this account's plan holds no goals, so no Remove control is on
+screen to press. The trap it would catch is real and was hit during the build:
+the flow's handler bundles are `useMemo`s with `[]` deps, so a callback closing
+over `goalLinks` sees them as they were on the first render — empty — and the
+question would never be asked. It reads through refs for that reason.
 
 ### M4 — One home for the one thing's supports
 
