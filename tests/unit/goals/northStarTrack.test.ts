@@ -21,6 +21,7 @@ import {
   readSources,
   groupLogged,
   journalArchive,
+  pushedGoalIds,
   groupSummary,
   standingItems,
   trackGroups,
@@ -1444,5 +1445,53 @@ describe("choosing the days a step runs on", () => {
     // The rate the days left behind is kept — it is the last thing anybody said.
     expect(step.daysPerWeek).toBe(1)
     expect(todayItems(cleared, TUESDAY, [], RUN).find((i) => i.activity.id === stepId)!.when).toBe("anyDay")
+  })
+})
+
+/**
+ * THE SECOND DEVICE, and the fifty duplicates it used to make.
+ *
+ * A pushed goal was recognised by its TAG — `ns:<run>:<goal>` — where `<run>`
+ * is a code minted in one browser's localStorage. Open the plan anywhere else
+ * and the run differs, so every goal already on the account read as never
+ * pushed, the Track step offered them all, and pressing push made a second copy
+ * of all fifty. Both copies then counted separately.
+ */
+describe("which plan goals are already counted goals", () => {
+  const RUN = "abc12345"
+  const OTHER_RUN = "zzz99999"
+  const rows = [
+    { id: "row-1", template_id: `ns:${RUN}:g1` },
+    { id: "row-2", template_id: `ns:${RUN}:g2` },
+  ]
+
+  it("recognises them by the tag on the browser that pushed them", () => {
+    expect([...pushedGoalIds(RUN, rows)].sort()).toEqual([["g1", "row-1"], ["g2", "row-2"]])
+  })
+
+  it("recognised NOTHING on a second device before the link existed", () => {
+    // The bug, kept as a test so the fix below has something to be better than.
+    expect(pushedGoalIds(OTHER_RUN, rows).size).toBe(0)
+  })
+
+  it("recognises them on a second device FROM THE ACCOUNT'S LINKS", () => {
+    const links = { g1: "row-1", g2: "row-2" }
+    expect([...pushedGoalIds(OTHER_RUN, rows, links)].sort()).toEqual([["g1", "row-1"], ["g2", "row-2"]])
+  })
+
+  it("drops a link whose counted goal is gone, so the goal can be pushed again", () => {
+    // Archived or deleted by hand. Hiding it because a stale pointer exists is
+    // how somebody ends up unable to re-push a goal they removed themselves.
+    const links = { g1: "row-1", g2: "row-deleted" }
+    const found = pushedGoalIds(OTHER_RUN, rows, links)
+    expect(found.get("g1")).toBe("row-1")
+    expect(found.has("g2")).toBe(false)
+  })
+
+  it("still reads the tag for rows pushed before links existed", () => {
+    // Mixed: g1 has a link, g2 only the old tag, on the browser that pushed it.
+    const found = pushedGoalIds(RUN, rows, { g1: "row-1" })
+    expect(found.get("g1")).toBe("row-1")
+    expect(found.get("g2")).toBe("row-2")
   })
 })

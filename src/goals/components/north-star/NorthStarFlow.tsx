@@ -271,6 +271,15 @@ export function NorthStarFlow({
    * only be found by looking at what the account last accepted.
    */
   const accountDays = useRef<DayRecord | null>(null)
+  /**
+   * WHICH COUNTED GOAL EACH PLAN GOAL BECAME, as the ACCOUNT knows it.
+   *
+   * Keyed by the plan's own ids. This is what makes a second device recognise
+   * goals it did not push itself: the tag carries a run code minted in one
+   * browser, so reading identity out of it meant every goal looked new
+   * somewhere else and pushing again duplicated all fifty.
+   */
+  const [goalLinks, setGoalLinks] = useState<Record<string, string>>({})
   /** What this browser held on the way in, captured once for the import. */
   const browserCopy = useRef<NsPlan | null>(null)
   /**
@@ -604,6 +613,17 @@ export function NorthStarFlow({
       }
 
       if (server?.ids) for (const [local, id] of server.ids) nodeIds.set(local, id)
+
+      // The account's links, turned back into the ids this flow talks in.
+      if (server?.goalLinks && server.ids) {
+        const localOf = new Map([...server.ids].map(([local, id]) => [id, local]))
+        const byLocal: Record<string, string> = {}
+        for (const [uuid, userGoalId] of Object.entries(server.goalLinks)) {
+          const local = localOf.get(uuid)
+          if (local && userGoalId) byLocal[local] = userGoalId
+        }
+        setGoalLinks(byLocal)
+      }
 
       if (decision.kind === "use-server" && server?.planId) {
         setPlanId(server.planId)
@@ -1619,6 +1639,7 @@ export function NorthStarFlow({
             <TrackTab
               plan={plan}
               runId={runId}
+              goalLinks={goalLinks}
               today={today ?? ns.todayISO()}
               timezone={timezone}
               /* The SAME tick the Today step writes. The schedule shows

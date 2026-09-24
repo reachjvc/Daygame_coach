@@ -146,3 +146,26 @@ export async function saveLifePlanFromBrowser(
     return { ok: false, stale: false, message: "The last change could not be saved." }
   }
 }
+
+/**
+ * Record which counted goal each plan goal became.
+ *
+ * Sent after a push, keyed by the plan's own ids. Failure is reported rather
+ * than thrown: the goals themselves are already on the account by this point,
+ * and losing the LINK costs a duplicate on the next device — bad, but not worth
+ * throwing away a push that succeeded.
+ */
+export async function saveGoalLinks(links: Record<string, string | null>): Promise<boolean> {
+  if (Object.keys(links).length === 0) return true
+  try {
+    const res = await fetch("/api/life-plan/goal-link", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ links }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+

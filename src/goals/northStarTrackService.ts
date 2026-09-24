@@ -396,6 +396,41 @@ export function pushedRealIds(
   return map
 }
 
+/**
+ * WHICH PLAN GOALS ARE ALREADY COUNTED GOALS — on ANY device.
+ *
+ * Two sources, and the order is the whole point.
+ *
+ * 1. **The account's links.** `life_plan_goals.user_goal_id`, written by the
+ *    push. Authoritative, and the same answer everywhere.
+ * 2. **The tag**, `ns:<run>:<goal>`, where `<run>` is a code minted in ONE
+ *    browser's localStorage. Read only as a fallback, for rows pushed before
+ *    links existed: on the browser that pushed them the run still matches, so
+ *    they are recognised rather than offered a second time.
+ *
+ * Until 2026-09-24 only (2) existed, which meant a second device could not
+ * recognise a single pushed goal and offering to push again made a duplicate of
+ * every one. Fifty goals, silently, with both copies counting separately.
+ *
+ * A link pointing at a row that is no longer in the list — archived, deleted —
+ * is dropped rather than trusted. A goal whose counted row is gone should be
+ * offered again; hiding it because a stale pointer exists is how somebody ends
+ * up unable to re-push a goal they deleted by hand.
+ */
+export function pushedGoalIds(
+  runId: string,
+  rows: ReadonlyArray<{ id: string; template_id?: string | null }>,
+  links: Record<string, string> = {},
+): Map<string, string> {
+  const live = new Set(rows.map((r) => r.id))
+  const map = new Map<string, string>()
+  for (const [localId, userGoalId] of Object.entries(links)) {
+    if (live.has(userGoalId)) map.set(localId, userGoalId)
+  }
+  for (const [localId, id] of pushedRealIds(runId, rows)) if (!map.has(localId)) map.set(localId, id)
+  return map
+}
+
 // ============================================================================
 // The schedule: what you will actually be doing, week by week and day by day
 // ============================================================================

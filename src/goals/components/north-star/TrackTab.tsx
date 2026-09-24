@@ -33,7 +33,8 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { Loader2, Check } from "lucide-react"
 import type { NsPlan, NsTrackRow } from "@/src/goals/types"
-import { buildTrackInserts, pushedRealIds, trackRows, trackTemplateId } from "@/src/goals/northStarTrackService"
+import { buildTrackInserts, pushedGoalIds, pushedRealIds, trackRows, trackTemplateId } from "@/src/goals/northStarTrackService"
+import { saveGoalLinks } from "@/src/goals/lifePlanClient"
 import { TRACK_COPY } from "@/src/goals/data/northStar"
 import { GoalsHubContent } from "@/src/goals/components/GoalsHubContent"
 import { TrackSchedule } from "./TrackSchedule"
@@ -55,12 +56,20 @@ interface HubGoal {
 export function TrackTab({
   plan,
   runId,
+  goalLinks = {},
   today,
   timezone,
   onToggleStep,
 }: {
   plan: NsPlan
   runId: string
+  /**
+   * WHICH COUNTED GOAL EACH PLAN GOAL BECAME, as the account knows it.
+   *
+   * Keyed by the plan's own ids. Empty on a browser that has not loaded the
+   * account's plan yet, which falls back to the tag — see `pushed` below.
+   */
+  goalLinks?: Record<string, string>
   today: string
   /**
    * The ACCOUNT's zone, so a finished workout is filed on the day it happened
@@ -176,7 +185,8 @@ export function TrackTab({
     [runId]
   )
 
-  const pushed = useMemo(() => pushedRealIds(runId, hubGoals), [runId, hubGoals])
+  // One place owns "is this already over there" — see `pushedGoalIds`.
+  const pushed = useMemo(() => pushedGoalIds(runId, hubGoals, goalLinks), [runId, hubGoals, goalLinks])
   const rows = useMemo(() => trackRows(plan, runId, pushed), [plan, runId, pushed])
   const fresh = useMemo(() => rows.filter((r) => !r.pushed), [rows])
 
@@ -236,6 +246,23 @@ export function TrackTab({
         remaining = remaining.filter((id) => !sent.has(id))
         count += batch.length
       }
+
+      /**
+       * THE LINK, RECORDED ON THE ACCOUNT.
+       *
+       * `realIds` is already exactly the map this needs — plan goal to counted
+       * goal — built from what came back. Until 2026-09-24 it was thrown away
+       * at the end of this function and the join was left to the goal's TAG,
+       * which carries a run code minted in THIS browser's localStorage. On a
+       * second device the run differs, every pushed goal reads as never pushed,
+       * and pressing push makes a second copy of all fifty.
+       *
+       * Not awaited for correctness of the push: the goals are already on the
+       * account. A failure here costs a duplicate on another device, which is
+       * recoverable; failing the push over it would not be.
+       */
+      const linked = await saveGoalLinks(Object.fromEntries(realIds))
+      if (!linked) setError("Your goals were pushed, but this device could not record which ones. Pushing again from another device may duplicate them.")
 
       setPushedThisTime(count)
       setSelected(null)
