@@ -14,6 +14,7 @@
 import { describe, test, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
+import * as ts from 'typescript'
 import { UTILITY_ICONS, SEMANTIC_ICON_ROLES, CUSTOM_ICON_COMPONENTS, CONTEXT_LOCKED_ICONS } from '../../src/shared/iconRoles'
 
 const projectRoot = path.resolve(__dirname, '../..')
@@ -2325,11 +2326,75 @@ describe('Architecture Compliance', () => {
     }
 
     /**
-     * The two that are left, and why each is still here rather than fixed.
+     * POSITION, NOT SPELLING — and the reason this is an AST and not a regex.
+     *
+     * The first version of this rule counted the text. `daygame-coach-0a` then
+     * fixed `DailyReviewPage` by moving the call into a mount effect, where the
+     * server renders nothing and there is nothing to disagree with — the right
+     * fix — and the scan still counted it, because the symbol had not moved.
+     * That is worse than a miss: the allowlist entry stayed at 1, describing a
+     * hazard that was gone, and the only-shrinks companion could not see the
+     * difference either. The free pass would have covered somebody moving the
+     * call back into render years later, which is the exact drift both halves
+     * exist to stop. A text scan grandfathers the SYMBOL; the hazard is the
+     * POSITION, and the two come apart the moment anybody fixes one.
+     *
+     * So: the regex above stays, as a cheap prefilter over every client
+     * component, and only the handful of files it hits get parsed. An effect
+     * runs after mount, on the client, alone — nothing it does can disagree
+     * with the server. Everything else counts, including event handlers, which
+     * are also safe: over-counting costs an allowlist line and a conversation,
+     * under-counting costs a hydration failure nobody can see.
+     */
+    function unsafeInRenderPosition(rel: string, code: string): number {
+      const source = ts.createSourceFile(rel, code, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+      let count = 0
+
+      const isEffectCall = (node: ts.Node): boolean =>
+        ts.isCallExpression(node) &&
+        ts.isIdentifier(node.expression) &&
+        (node.expression.text === 'useEffect' || node.expression.text === 'useLayoutEffect')
+
+      const insideAnEffect = (node: ts.Node): boolean => {
+        for (let p: ts.Node | undefined = node.parent; p; p = p.parent) {
+          if (isEffectCall(p)) return true
+        }
+        return false
+      }
+
+      /**
+       * ONE COUNT PER OCCURRENCE IN THE TEXT, located in the tree.
+       *
+       * Counting matching call NODES instead triple-counted
+       * `new Date().toLocaleString(…).split(" ").pop()`: `.pop()`, `.split()`
+       * and `.toLocaleString()` are three nested calls and all three contain
+       * the matching text. The occurrences are what the allowlist numbers have
+       * always meant, so they stay the unit; the tree is only asked where each
+       * one sits.
+       */
+      const deepestNodeAt = (position: number): ts.Node => {
+        let found: ts.Node = source
+        const descend = (node: ts.Node): void => {
+          if (position < node.getStart(source) || position >= node.getEnd()) return
+          found = node
+          ts.forEachChild(node, descend)
+        }
+        ts.forEachChild(source, descend)
+        return found
+      }
+
+      for (const match of code.matchAll(HYDRATION_UNSAFE)) {
+        if (!insideAnEffect(deepestNodeAt(match.index))) count++
+      }
+      return count
+    }
+
+    /**
+     * What is left, and why each entry is here rather than fixed.
      *
      * Both are in another session's files as this is written (`src/goals` and
      * `src/tracking`), and both were reported to their owners rather than
-     * edited underneath them.
+     * edited underneath them. One came back fixed the same night.
      */
     const HYDRATION_DEBT: Record<string, number> = {
       // `toLocaleString("en-US", { timeZone, timeZoneName: "short" })`, then
@@ -2344,15 +2409,20 @@ describe('Architecture Compliance', () => {
       // has no way to match it: on a UTC server for a Danish browser that is
       // "Thursday, September 24" against "torsdag 24. september".
       //
-      // FIXED 2026-09-24 and still counted, which needs saying or the next
-      // reader fixes it twice. The call now runs in a mount effect, so the
-      // server renders nothing and there is nothing to disagree with. This scan
-      // is textual and cannot see the difference between a call in render and
-      // the same call in an effect — so the entry stays at 1 to keep the scan
-      // quiet, and this comment is the only thing that knows why.
+      // Zero since the call moved into a mount effect (2026-09-24): the server
+      // renders nothing, so there is nothing to disagree with. Kept at 0 rather
+      // than deleted because the call is still in the file, and this entry is
+      // where the next reader finds out that its POSITION is what makes it
+      // safe — move it back into render and this goes red.
       //
-      // The entry may only be removed by deleting the call, not by moving it.
-      'src/tracking/components/DailyReviewPage.tsx': 1,
+      // The scan read 1 here until it learned to tell render from an effect. An
+      // earlier comment in this slot said the entry had to stay at 1 because a
+      // text scan could not see the difference. That was true of the scan, not
+      // of the rule, so the scan was changed rather than the number written
+      // down: an allowlist that cannot see a fix cannot see a regression past
+      // it either. Still the device's day, by a deliberate decision recorded at
+      // the call — the account's zone is not available in that client tree.
+      'src/tracking/components/DailyReviewPage.tsx': 0,
     }
 
     /**
@@ -2365,8 +2435,10 @@ describe('Architecture Compliance', () => {
       if (scanned) return scanned
       const found: Record<string, number> = {}
       for (const [rel, code] of clientComponentCode()) {
-        const hits = code.match(HYDRATION_UNSAFE)
-        if (hits) found[rel] = hits.length
+        // Cheap text prefilter over everything; the AST only for what it hits.
+        if (!code.match(HYDRATION_UNSAFE)) continue
+        const inRender = unsafeInRenderPosition(rel, code)
+        if (inRender > 0) found[rel] = inRender
       }
       scanned = found
       return found
@@ -2387,6 +2459,41 @@ describe('Architecture Compliance', () => {
           'explicit locale; for "now" take the instant from the server:\n' +
           over.join('\n'),
       ).toEqual([])
+    })
+
+    /**
+     * THE INSTRUMENT, MEASURED — because a scan that cannot tell a fix from a
+     * regression is worse than no scan, and the only way to know which this one
+     * is, is to hand it both and check.
+     *
+     * The two snippets differ ONLY in where the call sits. Same component, same
+     * call, same text: one in render, one in a mount effect. Anything that
+     * scores them the same is measuring spelling.
+     */
+    test('it tells a call in render from the same call in an effect', () => {
+      const inRender = `"use client"
+        export function Heading() {
+          return <h1>{new Date().toLocaleTimeString()}</h1>
+        }`
+      const inEffect = `"use client"
+        export function Heading() {
+          const [t, setT] = useState("")
+          useEffect(() => {
+            setT(new Date().toLocaleTimeString())
+          }, [])
+          return <h1>{t}</h1>
+        }`
+
+      expect(unsafeInRenderPosition('probe.tsx', inRender)).toBe(1)
+      expect(unsafeInRenderPosition('probe.tsx', inEffect)).toBe(0)
+
+      // And one occurrence is one, however many calls are chained onto it.
+      // Counting matching call NODES scored this 3.
+      const chained = `"use client"
+        export function Zone({ tz }: { tz: string }) {
+          return <p>{new Date().toLocaleString("en-US", { timeZone: tz }).split(" ").pop()}</p>
+        }`
+      expect(unsafeInRenderPosition('probe.tsx', chained)).toBe(1)
     })
 
     test('the hydration-debt allowance only shrinks', () => {
