@@ -411,7 +411,37 @@ right.
 front of you; both vice browser suites and the unit suite green; the phone and
 WebKit sweeps unchanged.
 
-## M7 — THE ONE I FOUND BY ACCIDENT, AND IT IS THE MOST IMPORTANT THING LEFT
+## M7 — DONE, 2026-09-24. THE RACE IS NAMED, FIXED AND PROVED BY CONSTRUCTION.
+
+**The cause, exactly.** `seed()` tombstoned the account as soon as
+`data-hydrated` went up — which means "the browser copy has been read" and says
+nothing about the account. At that moment the page's load sync is in flight:
+it fetches the account, merges, and pushes back **including the rows it just
+merged in**, because the watermark is not advanced past them. Those rows carry
+their original `updatedAt`. So two writers race on one account, and in the
+losing order the re-push upserts every row back with `deleted_at` null — the
+tombstones are undone, the previous test's data merges into the next test about
+700ms after its reload, and whichever assertion is running then is the one that
+fails.
+
+**The fix is one line:** `await settled(page)` before the tombstones, so nothing
+is in flight when they land.
+
+**Proved by making the race happen rather than by running it until it went
+quiet.** `tests/e2e/blackbox-seed-race.spec.ts` plants a row, then holds every
+push back 2.5s so the losing order is guaranteed instead of likely. Without the
+wait it fails naming the survivor — "Left by an earlier test" — live on the
+account again. With it, clean. Both directions run.
+
+**Before: five failures in six full runs**, at `:159`, `:184`, `:159`, `:508`
+and `:426`, on two versions of the product code. **After: 25/25, three runs in
+a row.**
+
+That matters beyond this file: `mode: "serial"` meant one failure aborted 4 to
+21 tests, so CI has been calling this suite red or green at random for as long
+as it has existed, next to the four days of genuine red from M0.
+
+## M7 as it was written, before it was done
 
 **`tests/e2e/blackbox.spec.ts` fails about half of its full runs, at a different
 test every time, and has done so all along.** I found it because M6 touched the

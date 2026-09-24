@@ -30,6 +30,34 @@ async function seed(page: Page, record: unknown | null) {
   // Hydrated first, so the page has read its own storage before we replace it.
   await page.locator('[data-hydrated="true"]').waitFor({ timeout: 20000 })
 
+  // AND SETTLED, BEFORE THE TOMBSTONES GO UP. THIS LINE IS THE FIX FOR A FAULT
+  // THAT MADE THIS FILE FAIL ROUGHLY HALF ITS FULL RUNS, AT A DIFFERENT TEST
+  // EACH TIME, FOR AS LONG AS IT HAS EXISTED.
+  //
+  // `data-hydrated` means the BROWSER copy has been read. It says nothing about
+  // the account, and the load sync is in flight at this moment: it fetches the
+  // account, merges, and then pushes — including, deliberately, the very rows
+  // it just merged IN, because the watermark is not advanced past them
+  // (`useBlackBoxSync` calls that "a known, deliberate redundancy" and it is
+  // the cheaper wrong for the page). Those rows go up carrying their ORIGINAL
+  // `updatedAt`.
+  //
+  // So without this wait there are two writers racing on one account: the
+  // page's redundant re-push, and the tombstone PUT below. Land them in that
+  // order and all is well. Land them the other way and the re-push upserts
+  // every row back with `deleted_at` null — **the tombstones are undone**, the
+  // account still holds the previous test's data, it merges into the page about
+  // 700ms after the reload, and whichever assertion is running at that instant
+  // is the one that fails. A different victim every run, invisible in
+  // isolation, and `mode: "serial"` then aborts everything after it.
+  //
+  // Six full runs before this line: five failed, at `:159`, `:184`, `:159`,
+  // `:508` and `:426`, on two different versions of the product code. Proved by
+  // making the race happen on purpose rather than by running it until it went
+  // quiet — see `tests/e2e/blackbox-seed-race.spec.ts`, which delays the push
+  // so the losing order is guaranteed.
+  await settled(page)
+
   await page.evaluate(async (r) => {
     const put = (rows: unknown) =>
       fetch("/api/black-box", {
