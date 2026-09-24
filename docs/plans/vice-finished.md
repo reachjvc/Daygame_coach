@@ -266,9 +266,11 @@ without typing a URL; the existing route-reachability test covers it.
 
 **M5 — It behaves the same on Safari and Firefox.** Part of this arrived from
 elsewhere on 2026-09-24 and should not be rebuilt: `tests/e2e/cold-open.spec.ts`
-opens all eleven Life Mastery and vice addresses cold, asserts zero hydration
-errors and no nested controls on each, and runs in `chromium` in 23 seconds —
-all eleven clean. That is the whole of the hand-sweep this milestone was going
+opens every Life Mastery and vice address cold — walked off `app/`, so it covers
+whatever exists on the day it runs — asserts the page is not a 404 and then that
+it has zero hydration errors and no nested controls, and runs in `chromium` in
+about 23 seconds. All eleven were clean. That is the whole of the hand-sweep this
+milestone was going
 to do for render faults, so M5 is now only the part that sweep cannot see:
 behaviour. A `vice-cross.spec.ts` under
 `tests/e2e/cross-browser/` walks the one real path — start a run, have the
@@ -431,11 +433,17 @@ That is what M2 builds, not a "reading" page.
   `tests/e2e/{quit-vice,deadControls}.spec.ts`, `tests/support/sweepDebt.ts`
   (delete the seven flow-route entries — deleted, not set to 0, per that file's
   own rule), `tests/unit/navigation/{routeReachability,lifeMasteryRoutes}.test.ts`.
-- **`tests/e2e/cold-open.spec.ts` is another session's and names all nine of
-  these routes by hand** (lines 54–64, added 2026-09-24). Deleting them without
-  shrinking that list turns a clean sweep into nine 404s. It is not my file:
-  message `daygame-coach-70` before touching it. Its list is also the reason M2
-  cannot be done by deleting folders and running the vice tests alone.
+- **`tests/e2e/cold-open.spec.ts` needs nothing from M2, as of `ac317641`.** It
+  named these nine routes by hand for about an hour; raising that as a blocker
+  made its author check what the sweep would do with a deleted route, and the
+  answer was that **a 404 under `/life-mastery` has no hydration error and no
+  nested control, so both of its assertions passed on it** — nine deleted pages
+  would have been reported as healthy indefinitely, green the whole time. The
+  list is now walked off `app/` and `expectPageExists` runs first in every test.
+  Verified here rather than taken on report: no `/life-mastery` literal is left
+  in the file, it reads the tree with `readdirSync`, and the status check is at
+  line 172. So M2 deletes folders and the sweep follows, with no message and no
+  edit to somebody else's file.
 - `src/shared/lifeMasteryRoutes.ts` — `QUIT_VICE_OLD` and `viceStep` both lose
   their callers with the routes. Delete them in the same commit, or
   `lifeMasteryRoutes.test.ts` asserts a page that is gone.
