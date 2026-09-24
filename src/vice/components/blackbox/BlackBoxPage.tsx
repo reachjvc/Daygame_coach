@@ -31,7 +31,6 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { BlackBoxRecord, ViceEndingId } from "../../types"
 import { useBlackBox } from "../../blackbox/useBlackBox"
 import { useBlackBoxView } from "../../blackbox/useBlackBoxView"
@@ -42,6 +41,7 @@ import {
   fileReport,
   importRecord,
   latestReportDay,
+  living,
   nowInBrowser,
   recordPastRun,
   removeAttempt,
@@ -50,6 +50,7 @@ import {
   startAttempt,
 } from "../../blackbox/blackboxStore"
 import { currentAttempt, forVice, runLanes, stats, thoughtCosts, vicesOn } from "../../blackboxService"
+import { mergeRecords } from "../../blackbox/viceSyncService"
 import { familyFor } from "../../data/blackbox"
 import { LIFE_MASTERY, viceStep } from "@/src/shared/lifeMasteryRoutes"
 import { BackLink } from "@/components/BackLink"
@@ -67,7 +68,6 @@ type Dialog =
   | { kind: "start" }
   | { kind: "past" }
   | { kind: "report"; ending: ViceEndingId; wentThrough: boolean }
-  | { kind: "confirmImport"; incoming: BlackBoxRecord }
 
 export function BlackBoxPage() {
   const { record, update, ready, today } = useBlackBox()
@@ -167,17 +167,32 @@ export function BlackBoxPage() {
         setNotice("That file was not a Black Box record, so nothing was changed.")
         return
       }
-      // Loading REPLACES, it does not merge — and the thing being replaced is
-      // the years this tool exists to accumulate. It used to overwrite on the
-      // file-picker's change event, with no undo anywhere in the module, so
-      // picking yesterday's export by mistake ended the record. Asked in the
-      // app's own words, and it says what is on each side.
-      if (record.attempts.length > 0) {
-        setDialog({ kind: "confirmImport", incoming: parsed })
-        return
-      }
-      update(() => parsed)
-      setNotice(`Loaded ${parsed.attempts.length} runs and ${parsed.reports.length} reports.`)
+      // LOADING A COPY MERGES. It used to replace, and the confirm dialog that
+      // guarded the replace is gone with it — deleted deliberately, because the
+      // danger it was protecting against no longer exists.
+      //
+      // Replace made sense while this record lived in one browser and a file
+      // was the only way to move it to another. Now the account does that, and
+      // replace had quietly stopped working: the rows it removed came back on
+      // the next load, because the account still had them. The dialog promised
+      // "everything on this device is swapped for what is in the file, and
+      // there is no way back" — and by then neither half was true. It did not
+      // replace, and it was not irreversible.
+      //
+      // A union is the same rule the rest of the sync follows, and it cannot
+      // lose a row. It also does the right thing in the case people actually
+      // load a copy for: rows in the file this record has never seen are added,
+      // and anything deleted since the file was written stays deleted, because
+      // the deletion is a row with a newer stamp and it wins.
+      const before = living(record.attempts).length + living(record.reports).length
+      const merged = mergeRecords(record, parsed)
+      const added = living(merged.attempts).length + living(merged.reports).length - before
+      update(() => merged)
+      setNotice(
+        added > 0
+          ? `Added ${added} ${added === 1 ? "row" : "rows"} from that file. Nothing was removed.`
+          : "Everything in that file was already on your record. Nothing changed.",
+      )
     }
     reader.readAsText(file)
   }
@@ -486,7 +501,8 @@ export function BlackBoxPage() {
         </h2>
         <p className="mt-1.5 text-[12.5px] leading-relaxed text-zinc-400">
           This record is on your account, so it is on your other devices too. Save a copy you can
-          keep as well — it is the one thing no outage can take.
+          keep as well — it is the one thing no outage can take. Loading one adds whatever it holds
+          that you do not; it never removes anything.
         </p>
         {/* ONE LINE, AND NEVER ABOVE THE DOOR.
             What the account is doing is worth knowing and is never the reason
@@ -564,52 +580,6 @@ export function BlackBoxPage() {
             setDialog({ kind: "none" })
           }}
         />
-      )}
-
-      {dialog.kind === "confirmImport" && (
-        <Dialog open onOpenChange={(open) => { if (!open) setDialog({ kind: "none" }) }}>
-          <DialogContent className="sm:max-w-md bg-zinc-950 border-white/10 text-white">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-white">
-                This replaces what is here
-              </DialogTitle>
-            </DialogHeader>
-            <p className="text-[13px] leading-relaxed text-zinc-300">
-              Loading a copy does not merge. Everything on this device is swapped for what is in
-              the file, and there is no way back to it afterwards.
-            </p>
-            <dl className="mt-3 space-y-1.5 text-[12.5px]">
-              <div className="flex justify-between gap-4">
-                <dt className="text-zinc-400">On this device now</dt>
-                <dd className="text-zinc-200">
-                  {record.attempts.length} runs, {record.reports.length} reports
-                </dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-zinc-400">In the file</dt>
-                <dd className="text-zinc-200">
-                  {dialog.incoming.attempts.length} runs, {dialog.incoming.reports.length} reports
-                </dd>
-              </div>
-            </dl>
-            <p className="mt-3 text-[12px] text-zinc-500">
-              If you are not sure, save a copy of this one first.
-            </p>
-            <div className="mt-3 flex items-center justify-between">
-              <QuietButton onClick={() => setDialog({ kind: "none" })}>Keep what is here</QuietButton>
-              <PrimaryButton
-                onClick={() => {
-                  const incoming = dialog.incoming
-                  update(() => incoming)
-                  setNotice(`Loaded ${incoming.attempts.length} runs and ${incoming.reports.length} reports.`)
-                  setDialog({ kind: "none" })
-                }}
-              >
-                Replace it
-              </PrimaryButton>
-            </div>
-          </DialogContent>
-        </Dialog>
       )}
 
       {dialog.kind === "report" && (

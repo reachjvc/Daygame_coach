@@ -594,6 +594,50 @@ test.describe("the Black Box", () => {
     await other.close()
   })
 
+  test("a saved copy loaded back adds what is missing and removes nothing", async ({ page }) => {
+    // THIS PATH HAD NO TEST AT ALL, which is how it broke without anyone
+    // noticing. "Load a copy" replaced the record while it lived in one
+    // browser; once it synced, the rows it removed came back on the next load
+    // because the account still had them — and the confirm dialog was promising
+    // "everything on this device is swapped for what is in the file, and there
+    // is no way back" while doing neither of those things.
+    await seed(page, null)
+
+    // A record with one run, saved to a file.
+    await page.getByRole("button", { name: "Add a run you already had" }).click()
+    await page.getByRole("button", { name: "Smoking or vaping", exact: true }).click()
+    await page.locator("#pr-from").fill("2024-01-02")
+    await page.locator("#pr-to").fill("2024-03-31")
+    await page.getByRole("button", { name: /Just one won't matter/ }).click()
+    await page.getByRole("button", { name: "Add it" }).click()
+    await settled(page)
+
+    const download = page.waitForEvent("download")
+    await page.getByRole("button", { name: "Save a copy" }).click()
+    const copy = await (await download).path()
+
+    // A second run, which the file knows nothing about.
+    await page.getByRole("button", { name: /Add a run you already had/i }).click()
+    await page.locator("#pr-from").fill("2025-01-02")
+    await page.locator("#pr-to").fill("2025-02-01")
+    await page.getByRole("button", { name: /Something went badly wrong/ }).click()
+    await page.getByRole("button", { name: "Add it" }).click()
+    await expect(page.getByText("31 days").first()).toBeVisible()
+    await settled(page)
+
+    // Load the older file back. The run it does not contain must survive.
+    await page.setInputFiles('input[type="file"]', copy)
+    await expect(page.getByText(/already on your record|Added \d+ rows? from that file/)).toBeVisible({ timeout: 20000 })
+    await expect(page.getByText("90 days").first()).toBeVisible()
+    await expect(page.getByText("31 days").first()).toBeVisible()
+
+    // And it still survives the account's answer, which is where it went wrong.
+    await page.reload()
+    await settled(page)
+    await expect(page.getByText("90 days").first()).toBeVisible()
+    await expect(page.getByText("31 days").first()).toBeVisible()
+  })
+
   test("the same days twice off one thing is still refused, and says so", async ({ page }) => {
     await seed(page, {
       version: 1,

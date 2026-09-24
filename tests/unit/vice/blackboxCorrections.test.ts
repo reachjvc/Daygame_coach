@@ -44,6 +44,7 @@ import {
   thoughtCosts,
   vicesOn,
 } from "@/src/vice/blackboxService"
+import { mergeRecords } from "@/src/vice/blackbox/viceSyncService"
 import type { BlackBoxRecord } from "@/src/vice/types"
 
 const TODAY = "2026-09-20"
@@ -374,6 +375,72 @@ describe("a loaded file has to hang together, not merely parse", () => {
       startedBy: "", structure: [], ending: "justone", thought: "x",
     })
     expect(importRecord(exportRecord(r))).toEqual(r)
+  })
+})
+
+describe("loading a copy adds, and never takes away", () => {
+  /**
+   * IT USED TO REPLACE, AND REPLACE HAD QUIETLY STOPPED WORKING.
+   *
+   * While the record lived in one browser, a file was the only way to move it
+   * to another, so "load a copy" swapped the lot and a confirm dialog guarded
+   * the danger. Once the record synced, the rows it removed came back on the
+   * next load — the account still had them — so the dialog was promising
+   * "everything on this device is swapped for what is in the file, and there is
+   * no way back" while doing neither. Found by driving it after the sync
+   * landed, not by reading it.
+   *
+   * A union is the same rule the rest of the sync follows and cannot lose a
+   * row. These pin the two cases that matter.
+   */
+  it("keeps what this record has and the file does not", () => {
+    const mine = recordPastRun(emptyRecord(), {
+      viceId: "nicotine", label: "Smoking or vaping",
+      startedOn: "2025-01-01", endedOn: "2025-02-01",
+      startedBy: "", structure: [], ending: "fine", thought: "",
+    })
+    const file = recordPastRun(emptyRecord(), {
+      viceId: "nicotine", label: "Smoking or vaping",
+      startedOn: "2024-01-01", endedOn: "2024-02-01",
+      startedBy: "", structure: [], ending: "justone", thought: "",
+    })
+    const merged = mergeRecords(mine, file)
+    expect(living(merged.attempts).map((a) => a.startedOn).sort()).toEqual(["2024-01-01", "2025-01-01"])
+  })
+
+  it("does not resurrect something deleted since the file was written", () => {
+    // The case that makes a union safe rather than merely generous. The file
+    // holds the run alive; the record holds it deleted, with a later stamp.
+    let mine = recordPastRun(emptyRecord(), {
+      viceId: "nicotine", label: "Smoking or vaping",
+      startedOn: "2025-01-01", endedOn: "2025-02-01",
+      startedBy: "", structure: [], ending: "fine", thought: "",
+    })
+    const file = mine
+    mine = removeAttempt(mine, mine.attempts[0].id)
+    const merged = mergeRecords(mine, file)
+    expect(living(merged.attempts)).toEqual([])
+  })
+
+  it("changes nothing when the file holds only what is already here", () => {
+    const mine = recordPastRun(emptyRecord(), {
+      viceId: "nicotine", label: "Smoking or vaping",
+      startedOn: "2025-01-01", endedOn: "2025-02-01",
+      startedBy: "", structure: [], ending: "fine", thought: "",
+    })
+    const merged = mergeRecords(mine, mine)
+    expect(living(merged.attempts)).toHaveLength(1)
+    expect(living(merged.reports)).toHaveLength(1)
+  })
+
+  it("round-trips through the file format the app actually writes", () => {
+    const mine = recordPastRun(liveRun(), {
+      viceId: "porn", label: "Porn", startedOn: "2025-01-01", endedOn: "2025-02-01",
+      startedBy: "", structure: [], ending: "justone", thought: "x",
+    })
+    const fromFile = importRecord(exportRecord(mine))
+    expect(fromFile).not.toBeNull()
+    expect(mergeRecords(mine, fromFile as BlackBoxRecord)).toEqual(mine)
   })
 })
 

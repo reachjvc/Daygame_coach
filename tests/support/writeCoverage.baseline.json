@@ -48,8 +48,6 @@
   "src/db/lifePlanRepo.ts:linkPlanGoal": "asserted",
   "src/db/lifePlanRepo.ts:saveLifePlan": "asserted",
   "src/db/metricsRepo.ts:resolveMetricValues": "mentioned",
-  "src/db/planSnapshotRepo.ts:deletePlanSnapshot": "unasserted",
-  "src/db/planSnapshotRepo.ts:savePlanSnapshot": "unasserted",
   "src/db/profilesRepo.ts:updateProfile": "mentioned",
   "src/db/profilesRepo.ts:updateUserProgress": "unasserted",
   "src/db/programDraftRepo.ts:createDraft": "unasserted",
