@@ -291,6 +291,99 @@ test.describe("the Black Box", () => {
     }
   })
 
+  test("the thought door shows somebody else's account, and never above your own record", async ({
+    page,
+  }) => {
+    /**
+     * The 381-quote corpus came back into the product on 2026-09-24. It went to
+     * the archive with the retired module, and reading other people's accounts
+     * was a recovery community's most-valued feature at 80.8% — which makes it
+     * the hardest thing in there to call taste. This page read none of it.
+     *
+     * ORDER IS THE ASSERTION, not merely presence. The person's own record is
+     * what answers them; a stranger's sentence above it would be this page
+     * telling them about somebody else at the moment they asked about
+     * themselves.
+     */
+    await seed(page, liveRun([{
+      id: "bbbb0000-0000-4000-8000-0000000000f1",
+      attemptId: "aaaaaaaa-0000-4000-8000-000000000001",
+      at: "2026-02-01T22:00:00",
+      wentThrough: false,
+      thought: "It has been three months, I am fine now",
+      ending: "fine",
+      closeness: 8,
+      withWhom: "alone",
+      where: "home",
+      factors: ["good week"],
+      didInstead: "went to bed",
+    }]))
+    await page.getByRole("button", { name: /having a thought/i }).click()
+    const door = page.getByRole("dialog")
+    await door.getByRole("button", { name: /I felt fine/i }).click()
+
+    const text = await door.innerText()
+    const mine = text.search(/This thought has ended|You have had this thought/)
+    const theirs = text.indexOf("Somebody else, at the same point")
+    expect(mine, "the door is not showing my own record at all").toBeGreaterThan(-1)
+    expect(theirs, "no account from anybody else — the corpus is unread again").toBeGreaterThan(-1)
+    expect(theirs, "somebody else's account is above my own record").toBeGreaterThan(mine)
+  })
+
+  test("an urge is answered with four responses, watching last in a cue-rich room", async ({
+    page,
+  }) => {
+    /**
+     * The other thing the retirement cost, and the whole reason it is back:
+     * the door above answers "maybe I could moderate", and this page had no
+     * answer at all for "I have an urge right now".
+     *
+     * WATCHING LAST IS THE CITED PART. Urge surfing is nearly absent from the
+     * largest peer community — four mentions against ten for playing the tape
+     * forward — people report it extending the urge, and a practitioner says
+     * that in a cue-rich room the skilful move is to direct attention away. So
+     * a cue-rich answer reorders the list. It is never REMOVED: people credit
+     * it, and dropping it would be the app deciding for them.
+     */
+    await seed(page, liveRun())
+    await page.getByRole("button", { name: /An urge, right now/i }).click()
+    const urge = page.getByRole("dialog")
+
+    // The room first, because the answer changes the order below it.
+    await expect(urge.getByText(/Where are you right now/i)).toBeVisible()
+    await urge.getByRole("button", { name: /Near it, or with people who are using/i }).click()
+    await expect(urge.getByText(/moving your attention away works better/i)).toBeVisible()
+
+    const labels = (await urge.locator("button[aria-pressed]").allInnerTexts()).map(
+      (t) => t.split("\n")[0],
+    )
+    expect(labels.length, "the four responses are not all there").toBe(4)
+    expect(labels[labels.length - 1], "watching is not last in a cue-rich room").toMatch(/Watch it/i)
+    // And it is still offered, rather than filtered out.
+    expect(labels.some((l) => /Watch it/i.test(l))).toBe(true)
+
+    // Every response carries why it is on the list. A response with no basis is
+    // indistinguishable from one somebody invented.
+    await expect(urge.getByText(/the one with a trial behind it/i)).toBeVisible()
+
+    await urge.getByRole("button", { name: /Play the tape forward/i }).click()
+    const wrote = "It ends the way it did in March, and tomorrow is wrecked."
+    await urge.locator("textarea").first().fill(wrote)
+    await urge.getByRole("button", { name: /Come back to this/i }).click()
+
+    // AN URGE THAT PASSED IS A CLOSE CALL, so it ends on the same form as
+    // everything else rather than in a second place holding the same fact —
+    // and it carries what was written instead of asking again.
+    await urge.getByRole("button", { name: /^It passed$/ }).click()
+    const form = page.getByRole("dialog")
+    await expect(form.getByRole("heading", { name: "File a report" })).toBeVisible()
+    await expect(form.getByRole("button", { name: /I didn/ })).toHaveAttribute("aria-pressed", "true")
+    const carried = await form.locator("textarea").evaluateAll((els) =>
+      els.map((e) => (e as HTMLTextAreaElement).value).filter(Boolean),
+    )
+    expect(carried, "what was written in the urge path was thrown away").toContain(wrote)
+  })
+
   test("the retired module still works, at its archived address", async ({ page }) => {
     // RETIRED, NOT DELETED, and this is what makes that claim true rather than
     // a sentence in a commit message. The owner's condition for retiring it was

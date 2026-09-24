@@ -62,6 +62,7 @@ import { Lanes } from "./Lanes"
 import { AttemptStart } from "./AttemptStart"
 import { ReportForm, type ReportDraft } from "./ReportForm"
 import { ThoughtDoor } from "./ThoughtDoor"
+import { UrgeNow } from "./UrgeNow"
 import { PastRun } from "./PastRun"
 
 type Dialog =
@@ -70,7 +71,8 @@ type Dialog =
   | { kind: "thought" }
   | { kind: "start" }
   | { kind: "past" }
-  | { kind: "report"; ending: ViceEndingId; wentThrough: boolean }
+  | { kind: "urge" }
+  | { kind: "report"; ending: ViceEndingId; wentThrough: boolean; didInstead?: string }
 
 export function BlackBoxPage() {
   const { record, update, ready, today } = useBlackBox()
@@ -365,6 +367,40 @@ export function BlackBoxPage() {
             </span>
           </span>
           <span aria-hidden className="text-[18px] text-orange-300">&rarr;</span>
+        </button>
+      )}
+
+      {/* ---------------------------------------------- an urge, right now
+          A SECOND DOOR, FOR THE OTHER MOMENT, AND DELIBERATELY QUIETER.
+
+          The door above is reflective: a thought, with time to read your own
+          record back. This one is acute — the question is not what you believe
+          but what you do in the next ten minutes — and until 2026-09-24 this
+          page had no answer for it at all. That lived in the retired module and
+          went to the archive with it.
+
+          NOT HIDDEN BEHIND A RECORD, unlike the thought door. That one needs
+          something filed before it can say anything; this one offers four
+          responses that have citations behind them and need nothing from you,
+          so it is here on a first visit — which is exactly when somebody has an
+          urge and nothing written down.
+
+          Quieter than the door above on purpose: the loud thing on this page is
+          the one that answers you with your own record, and two competing
+          banners is the hub design the Black Box replaced. */}
+      {ready && (
+        <button
+          type="button"
+          onClick={() => setDialog({ kind: "urge" })}
+          className="mt-2.5 flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-left transition-colors hover:border-white/25"
+        >
+          <span>
+            <span className="block text-[13.5px] text-zinc-100">An urge, right now</span>
+            <span className="mt-0.5 block text-[11.5px] text-zinc-500">
+              Four things people actually do, and somewhere to put what happened
+            </span>
+          </span>
+          <span aria-hidden className="text-[15px] text-zinc-500">&rarr;</span>
         </button>
       )}
 
@@ -667,11 +703,28 @@ export function BlackBoxPage() {
         />
       )}
 
+      {/* AN URGE, RIGHT NOW. The acute moment, as against the thought door's
+          reflective one. It ends by handing its outcome to the report form —
+          an urge that passed is a close call and one that did not is a lapse,
+          which this page has filed on one form since it was built. */}
+      {dialog.kind === "urge" && (
+        <UrgeNow
+          viceId={viceId}
+          rotate={view.reports.length}
+          hasLiveRun={live !== null}
+          onFile={({ wentThrough, didInstead }) =>
+            setDialog({ kind: "report", ending: "justone", wentThrough, didInstead })
+          }
+          onClose={() => setDialog({ kind: "none" })}
+        />
+      )}
+
       {dialog.kind === "thought" && (
         <ThoughtDoor
           record={view}
           today={today}
           hasLiveRun={live !== null}
+          viceId={viceId}
           onClose={() => setDialog({ kind: "none" })}
           onStartRun={() => setDialog({ kind: "start" })}
           onFileReport={(ending, wentThrough) => setDialog({ kind: "report", ending, wentThrough })}
@@ -711,7 +764,7 @@ export function BlackBoxPage() {
 
       {dialog.kind === "report" && (
         <ReportForm
-          initial={{ wentThrough: dialog.wentThrough, ending: dialog.ending }}
+          initial={{ wentThrough: dialog.wentThrough, ending: dialog.ending, didInstead: dialog.didInstead }}
           today={today}
           runStartedOn={live?.startedOn ?? today}
           lastFiledOn={live ? latestReportDay(record, live.id) : today}

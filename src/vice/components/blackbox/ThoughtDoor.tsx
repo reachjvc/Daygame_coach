@@ -27,12 +27,14 @@ import type { BlackBoxRecord, ViceEndingId } from "../../types"
 import { answerFor } from "../../blackboxService"
 import { ENDING_FAMILIES, familyFor } from "../../data/blackbox"
 import { Empty, Panel, PrimaryButton, QuietButton } from "../Ui"
+import { OneVoice } from "../Voices"
 import { days } from "./days"
 
 export function ThoughtDoor({
   record,
   today,
   hasLiveRun,
+  viceId,
   onFileReport,
   onStartRun,
   onClose,
@@ -41,6 +43,8 @@ export function ThoughtDoor({
   today: string
   /** Filing needs a run to file against; reading never does. */
   hasLiveRun: boolean
+  /** Which vice, so an account about another one is not offered as yours. */
+  viceId: string | null
   onFileReport: (ending: ViceEndingId, wentThrough: boolean) => void
   onStartRun: () => void
   onClose: () => void
@@ -142,6 +146,36 @@ export function ThoughtDoor({
                 </div>
               </div>
             )}
+
+            {/* SOMEBODY ELSE, AFTER YOUR OWN RECORD AND NEVER BEFORE IT.
+                The 381-quote corpus came back into the product on 2026-09-24:
+                it went to the archive with the old module, and reading other
+                people's accounts was a recovery community's most-valued feature
+                at 80.8%, which makes it the one thing in there hardest to call
+                taste. This page read NONE of it until now.
+
+                ONE ACCOUNT, IN PLACE, NOT A LIBRARY. The same research says a
+                library only serves somebody already browsing, and that
+                engagement volume predicts nothing good — proportion of recovery
+                focus carries an odds ratio of 5.00 for a use episode. So it is
+                one quote at the moment the thought arrives, under the person's
+                own record, which is the thing that answers them first.
+
+                `goodStretch`, because that is what this door IS. The corpus's
+                strongest finding is that the hazard is the good stretch rather
+                than the bad night — "now I can finally moderate" at day four,
+                at ten days, at two months, at a year, at nine years — and that
+                sentence is what the person just picked off the list.
+
+                Rotated by how many reports are on the record rather than at
+                random: a quote that changes on every render is unreadable, and
+                one that never changes is stale by March. */}
+            <OneVoice
+              stage="goodStretch"
+              viceId={viceId}
+              rotate={record.reports.length}
+              heading="Somebody else, at the same point"
+            />
 
             <div className="mt-2 grid gap-2">
               {hasLiveRun ? (

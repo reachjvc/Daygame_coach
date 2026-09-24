@@ -48,7 +48,12 @@ export function ReportForm({
   onFile,
   onClose,
 }: {
-  initial: { wentThrough: boolean; ending: ViceEndingId; thought?: string }
+  /**
+   * `didInstead` is prefilled when the urge path hands over: the person has
+   * already written what they were going to do instead, and asking again would
+   * be the form throwing their answer away and pretending it did not.
+   */
+  initial: { wentThrough: boolean; ending: ViceEndingId; thought?: string; didInstead?: string }
   today: string
   /** The run this is filed against. Nothing can have happened before it began. */
   runStartedOn: string
@@ -83,7 +88,7 @@ export function ReportForm({
   const [withWhom, setWithWhom] = useState("")
   const [where, setWhere] = useState("")
   const [factors, setFactors] = useState<string[]>([])
-  const [didInstead, setDidInstead] = useState("")
+  const [didInstead, setDidInstead] = useState(initial.didInstead ?? "")
 
   const toggle = (item: string) =>
     setFactors((f) => (f.includes(item) ? f.filter((x) => x !== item) : [...f, item]))

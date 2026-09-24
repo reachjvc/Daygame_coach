@@ -134,6 +134,26 @@ which is the report the run ends on; and "what was different the time it
 worked", which the whole chart answers from the person's own record rather than
 from other people's.
 
+> **BOTH WERE BUILT BACK ON 2026-09-24**, on the owner's "sure". The audit
+> below is left in its original words because it is what the decision was made
+> on. What landed: **the urge path** is `UrgeNow` on the Black Box — the four
+> cited responses, the cue-rich steer, and an outcome that ends on the report
+> form, because an urge that passed IS a close call and this page has filed
+> both on one form since it was built. The six-stage choreography did not come
+> back; item 7's rule says the responses are the citation and the stages are
+> taste. **Other people's accounts** are in the thought door, one account under
+> your own record and never above it, rotated by report count — not a library,
+> because the same research says a library only serves somebody already
+> browsing and that engagement volume predicts nothing good.
+>
+> Both guarded, and both guards proved by planting the fault: remove the
+> account and the door test names it; drop what the urge path wrote and the
+> handoff test names it. A third planted fault exposed that the cue-rich
+> *reordering* was dead code — `RESPOND.options` already ends with watching, so
+> the sort never moved anything, and the test written to prove it passed with
+> the sort deleted. The sort is gone and `tests/unit/vice/urgeResponses.test.ts`
+> asserts the order on the data that actually holds it.
+
 *Genuinely lost from the live product, both with citations behind them:*
 
 1. **The urge tool.** Four responses, reordered by context, teaching "play the
