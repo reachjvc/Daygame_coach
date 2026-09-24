@@ -348,6 +348,53 @@ right.
 front of you; both vice browser suites and the unit suite green; the phone and
 WebKit sweeps unchanged.
 
+## M7 — THE ONE I FOUND BY ACCIDENT, AND IT IS THE MOST IMPORTANT THING LEFT
+
+**`tests/e2e/blackbox.spec.ts` fails about half of its full runs, at a different
+test every time, and has done so all along.** I found it because M6 touched the
+page and I would not report green without re-running; two runs failed and my
+change was the obvious suspect.
+
+**It is not my change, and that was checked rather than argued.** Six full runs:
+
+| Code | Result |
+| --- | --- |
+| with M6 | failed at `:159 a run can be started` |
+| with M6 | failed at `:184 the door answers honestly` |
+| with M6 | **25 of 25 passed** |
+| with M6 | failed at `:159` again |
+| **without M6**, worktree at `a123349d`, own port | failed at `:508 a run removed on one device` |
+| **without M6**, same | failed at `:426 a second tab does not wipe the first` |
+
+Five different tests across six runs, on two versions of the code, and `:159`
+passes 6 times out of 6 in isolation. Same code green once means the code is not
+the cause; the pre-M6 baseline failing twice means M6 is not either.
+
+**Why it has been invisible.** The file is `test.describe.configure({ mode:
+"serial" })`, so the first failure aborts the rest — between 4 and 21 tests "did
+not run" in every bad run. A single run therefore yields one data point about one
+test, which is far too weak an instrument to see a 1-in-2 fault, and nobody had
+reason to run it repeatedly. **It also means CI has been reporting this suite as
+red or green essentially at random**, alongside the four days of genuine red
+from M0.
+
+**The likely cause, precisely enough to test.** `seed()` empties the account by
+reading its rows and writing tombstones over them, then sets `localStorage` and
+reloads. Nothing makes it wait for the PREVIOUS test's push to have landed —
+`useBlackBoxSync` debounces writes by 1200ms, and the account's answer arrives
+about 700ms after a load, both documented in the code. So a push from the test
+before can land after `seed`'s tombstone read, survive it, and merge into the
+page mid-assertion. That would produce exactly this: a different victim each
+run, timing-dependent, invisible in isolation.
+
+*What it needs:* `seed()` to wait for "synced and nothing pending" before it
+reads the account, and probably for the file to stop being serial once the
+fixture is sound. Each fix proved the way the rest of this module's are — by
+making the race happen on purpose, not by running it until it goes quiet.
+
+*Why it is not done here:* it is a fixture investigation, not a layout pass, and
+folding it into M6's commit would have buried it. It is the next thing I would do.
+
 ## Where this plan stops
 
 **The vice record does not feed the rest of the app, and this plan does not make
