@@ -43,43 +43,61 @@
  * So: static analysis owns "could this text differ", this file owns "did
  * anything actually nest or disagree". Neither owns the other, and a hydration
  * failure caught HERE is a bonus rather than the design.
+ *
+ * ONE OCCURRENCE THIS FILE HAS SEEN AND COULD NOT EXPLAIN, recorded so the next
+ * person neither panics nor shrugs. On 2026-09-24
+ * `/life-mastery/quit-vice/learn` failed with "the server rendered HTML didn't
+ * match the client" in one full three-project run, and has not been seen since:
+ * not in 24 dedicated runs of that route across all three engines, and not in
+ * two further full sweeps. `useHelpLocale` and `LearnPage` were read for the
+ * usual causes — a locale or timezone guess, `Math.random`, a `new Date`, a
+ * `localStorage` read during render — and have none; that hook deliberately
+ * starts at `null` and reads storage in an effect.
+ *
+ * What was unusual was the run, not the page: `webServer` below is
+ * `npm run dev` locally, where every route compiles on first request, and that
+ * run had three browsers pulling 28 addresses through the compiler at once.
+ * Under `CI` the same config builds and serves production, where nothing
+ * compiles mid-hydration — so this cannot be the same condition there. That is
+ * a reason to watch it, not a verdict: one observation, and dev-only is a
+ * hypothesis nobody has proved. If it returns, it is real, and the thing to
+ * capture is the full message with its component stack.
  */
 
-import * as fs from "fs"
-import * as path from "path"
 import { test, expect } from "@playwright/test"
+import { staticRoutes } from "../../support/appRoutes"
 import {
   openCold,
   expectPageExists,
   expectNoHydrationFailure,
   expectNoNestedControls,
-} from "./helpers/coldOpen"
+} from "../helpers/coldOpen"
 
 /**
- * READ OFF `app/`, NOT TYPED OUT — and that is the whole design of this list.
+ * THE ROUTE LIST HAS ONE OWNER, AND IT IS NOT THIS FILE.
  *
- * The first version was a hand-written array of 28 addresses. It was written the
- * same night `tests/e2e/quit-vice.spec.ts` was found to have been driving the
- * wrong page for four days, because ITS hand-written constant had outlived a
- * route move. Writing the same shape immediately afterwards would have been
- * remarkable.
+ * `staticRoutes()` in `tests/support/appRoutes.ts` walks `app/`, skips `api`
+ * and `app/test`, and drops `[id]` routes a browser cannot open without an id.
+ * `route-sweep.spec.ts` beside this file has used it since 2026-09-07.
  *
- * Two ways a typed list rots, and this file would have had both:
+ * WRITTEN DOWN BECAUSE I GOT IT WRONG FIRST, TWICE OVER. The first version of
+ * this sweep hand-typed 28 addresses — on the night `quit-vice.spec.ts` was
+ * found to have been driving the wrong page for four days because ITS
+ * hand-typed constant had outlived a route move. I then replaced the list with
+ * a walk of `app/` I wrote myself, and a ratchet of my own asserting the walk
+ * found something, both of which already existed in `appRoutes.ts` and in
+ * `route-sweep.spec.ts`'s "the sweep actually covers the app". So "what are
+ * this app's addresses" briefly had two owners, and the second one was written
+ * by someone congratulating himself for not typing a list.
  *
- *   a page is DELETED  — the sweep keeps asking for an address that now 404s,
- *                        and a 404 has no hydration error and no nested
- *                        control, so it reports a missing page as a healthy
- *                        one. `expectPageExists` closes that half; deriving the
- *                        list means the question stops being asked at all.
- *   a page is ADDED    — nobody edits this file, and the new screen is simply
- *                        never swept. Nothing anywhere would say so.
- *
- * Neither can happen now: `app/` is the only place a Next route comes from, so
- * a page that exists is swept and a page that does not is not asked for. There
- * is one session in this checkout planning to delete nine of these addresses
- * this week, and this file needs no edit when they do.
+ * WHY THIS IS STILL A SEPARATE FILE from `route-sweep.spec.ts`, which also
+ * opens every page on every device. That sweep asks whether a page is USABLE —
+ * overflow, scroll traps, tap targets, junk parameters — and carries a debt
+ * file of known offenders per route. These two questions are different in kind:
+ * a hydration failure is not a degree of unusable, it is the server's markup
+ * being thrown away, and it has no per-route debt because no route may have
+ * any. Merging them would mean one red route hiding the other class entirely.
  */
-const APP_DIR = path.resolve(__dirname, "../../app")
 
 /**
  * Not swept, each for a reason that is about the route and not about
@@ -102,44 +120,25 @@ const NOT_SWEPT: Record<string, string> = {
   "/dashboard/goals/plan": "a redirect shim with no page of its own",
 }
 
-/** Every `page.tsx` under `app/`, as the address Next serves it at. */
-function routesOnDisk(): string[] {
-  const found: string[] = []
-  const walk = (dir: string) => {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name)
-      if (entry.isDirectory()) {
-        // `/api` is not a page, `/test` 404s in production by design, and a
-        // `[param]` segment needs a real id this sweep has no way to invent.
-        if (entry.name === "api" || entry.name === "test" || entry.name.startsWith("[")) continue
-        walk(full)
-      } else if (entry.name === "page.tsx") {
-        const url = "/" + path.relative(APP_DIR, dir).split(path.sep).join("/")
-        found.push(url === "/." ? "/" : url)
-      }
-    }
-  }
-  walk(APP_DIR)
-  return found.sort()
-}
-
-const ON_DISK = routesOnDisk()
+const ON_DISK = staticRoutes().map((r) => r.route)
 const ROUTES = ON_DISK.filter((route) => !(route in NOT_SWEPT))
 
-test("the sweep covers every page in app/, and every exclusion still exists", () => {
+test("every exclusion from this sweep still exists", () => {
   /**
-   * A broken walk would return nothing and every route test below would simply
-   * not exist — a suite that passes by asking nothing, which is the one outcome
-   * no count can catch after the fact.
+   * "The walk found nothing" is asserted by `route-sweep.spec.ts`'s "the sweep
+   * actually covers the app", which runs in these same three projects off the
+   * same `staticRoutes()`. One owner, so it is not re-asserted here.
+   *
+   * This is the half that is this file's own: an exclusion whose page has gone
+   * is a line that silences a sweep for whatever gets built at that address
+   * next, and nothing else would ever mention it.
    */
-  expect(ON_DISK.length, "routesOnDisk() found no pages, so the walk is broken").toBeGreaterThan(20)
-
   const gone = Object.keys(NOT_SWEPT).filter((route) => !ON_DISK.includes(route))
   expect(
     gone,
-    "These are excluded from the sweep but no longer exist in app/. Remove them: " +
-      "an exclusion for a deleted page silences this sweep for whatever is built " +
-      `at that address next:\n${gone.join("\n")}`
+    "These are excluded from the cold-open sweep but no longer exist in app/. " +
+      "Remove them — an exclusion for a deleted page silences this sweep for " +
+      `whatever is built at that address next:\n${gone.join("\n")}`
   ).toEqual([])
 })
 

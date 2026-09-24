@@ -15,7 +15,8 @@
  * `signup-flow.spec.ts`, which owns the writes.
  */
 
-import { test } from "@playwright/test"
+import { test, expect } from "@playwright/test"
+import { staticRoutes } from "../support/appRoutes"
 import {
   openCold,
   expectPageExists,
@@ -24,20 +25,33 @@ import {
 } from "./helpers/coldOpen"
 
 /**
- * Everything reachable without an account, from `docs/product/map.md`: the
- * sales page and the whole auth flow. `/auth/reset-password` is included
- * deliberately — it is opened from an emailed link, usually without the token
- * this sweep has, and the version a stranger lands on is exactly the version
- * nobody looks at.
+ * DERIVED, for the same reason the signed-in half is: so a new auth page is
+ * swept the day it is written and a deleted one stops being asked for, with
+ * nobody remembering either. `staticRoutes()` in `tests/support/appRoutes.ts`
+ * is the one owner of what this app's addresses are.
+ *
+ * Everything reachable without an account is `/` and `/auth/*`. Nothing else
+ * is public: `proxy.ts` sends every other address to the login page.
+ * `/auth/reset-password` is in here deliberately — it is opened from an emailed
+ * link, usually without the token this sweep has, and the version a stranger
+ * lands on is exactly the version nobody looks at.
  */
-const PUBLIC_ROUTES = [
-  "/",
-  "/auth/login",
-  "/auth/sign-up",
-  "/auth/sign-up-success",
-  "/auth/forgot-password",
-  "/auth/reset-password",
-]
+const PUBLIC_ROUTES = staticRoutes()
+  .map((r) => r.route)
+  .filter((route) => route === "/" || route.startsWith("/auth/"))
+
+test("the public sweep found the public pages", () => {
+  /**
+   * A derived list that derives nothing generates no tests and passes by asking
+   * nothing. There are six public addresses as of 2026-09-24; the floor is set
+   * below that so adding one is not a failure, while the walk breaking is.
+   */
+  expect(
+    PUBLIC_ROUTES.length,
+    `Only ${PUBLIC_ROUTES.length} public routes came back from staticRoutes(), so ` +
+      `either the walk is broken or the sales page and the auth flow have moved.`
+  ).toBeGreaterThanOrEqual(5)
+})
 
 for (const route of PUBLIC_ROUTES) {
   test(`opens clean for a stranger: ${route}`, async ({ page }) => {

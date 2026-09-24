@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { LogPastWorkoutDialog, choicesFor } from "@/src/programs/components/LogPastWorkoutDialog"
 import type { ProgramEnrollment } from "@/src/programs/types"
@@ -54,6 +54,25 @@ function enrollment(over: Partial<ProgramEnrollment> = {}): ProgramEnrollment {
   } as ProgramEnrollment
 }
 
+/**
+ * A SERVER THAT IS DELIBERATELY NOT INSTANT.
+ *
+ * A stub that answers inside the same tick as the click is why three
+ * assertions in this file used to pass: `await user.click()` waits for React's
+ * queue, the reply happened to land in that window, and the state was there by
+ * the time `expect` ran. That is a coincidence, and on 2026-09-24 it stopped
+ * holding — a full-suite run with three vitest suites competing for the
+ * machine failed "shows a refusal and lets you try again" for another session,
+ * and it passed alone seconds later.
+ *
+ * So the coincidence is removed rather than relied on: every reply here arrives
+ * a real tick late, which is what a server does. A synchronous assertion on
+ * anything that only exists AFTER the reply now fails on every run instead of
+ * one run in fifty — which is the whole point, because the flake was never the
+ * problem. The assertion was, and the flake was the only thing saying so.
+ */
+const REPLY_DELAY_MS = 25
+
 /** What the POST body was, for the one request the dialog is allowed to make. */
 function captureStart(status = 201, body: unknown = { id: "w1" }) {
   const sent: Array<Record<string, unknown>> = []
@@ -61,6 +80,7 @@ function captureStart(status = 201, body: unknown = { id: "w1" }) {
     "fetch",
     vi.fn(async (_url: string, init?: RequestInit) => {
       sent.push(JSON.parse(String(init?.body)))
+      await new Promise((resolve) => setTimeout(resolve, REPLY_DELAY_MS))
       return { ok: status < 400, status, json: async () => body } as unknown as Response
     })
   )
@@ -128,7 +148,16 @@ describe("opening one", () => {
     expect(sent[0].enrollmentId).toBe("e1")
     // 18:00 Copenhagen is 16:00Z. In Auckland it would be 06:00Z.
     expect(sent[0].startedAt).toBe("2026-09-15T16:00:00.000Z")
-    expect(push).toHaveBeenCalledWith("/programs/live")
+    /**
+     * WAITED FOR, NOT ASSUMED. The navigation happens after the POST resolves,
+     * and `await user.click()` only waits for React's own queue — not for a
+     * server. Asserted synchronously this passed because the stubbed `fetch`
+     * happened to resolve inside that window, which is a coincidence and not a
+     * property: `daygame-coach-0a` had it fail in a full-suite run with three
+     * vitest suites competing for the machine. Proved by making the stub answer
+     * 25ms later, which fails the synchronous form every time.
+     */
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/programs/live"))
   })
 
   it("goes through the one start helper, so a clientKey is sent", async () => {
@@ -175,7 +204,15 @@ describe("opening one", () => {
     await user.click(screen.getByRole("button", { name: "Workout A" }))
     await user.click(screen.getByTestId("open-past-workout"))
 
-    expect(screen.getByRole("alert").textContent).toContain("That program is not yours.")
+    /**
+     * `findByRole` rather than `getByRole`, and FIRST — which fixes a second
+     * fault in the same three lines. `expect(push).not.toHaveBeenCalled()`
+     * asserted before the reply landed passes whether or not the dialog
+     * navigates, because nothing has happened yet either way. Waiting for the
+     * refusal to be on screen first means the request has resolved by the time
+     * the navigation is denied, so that line now says something.
+     */
+    expect((await screen.findByRole("alert")).textContent).toContain("That program is not yours.")
     expect(push).not.toHaveBeenCalled()
     expect((screen.getByTestId("open-past-workout") as HTMLButtonElement).disabled).toBe(false)
   })
@@ -192,7 +229,7 @@ describe("opening one", () => {
 
     // Not "nothing was started" — that is a guess, and the wrong one exactly
     // when the signal drops.
-    expect(screen.getByRole("alert").textContent).toMatch(/could not reach the server/i)
+    expect((await screen.findByRole("alert")).textContent).toMatch(/could not reach the server/i)
     expect(push).not.toHaveBeenCalled()
   })
 
