@@ -26,9 +26,10 @@ export async function POST(request: Request) {
     // Amend unless told otherwise: rewording is the common act, and the one that
     // must never move a date.
     const act: OneThingAct = isAct(body.act) ? body.act : "amend"
-    if (body.key !== "one_thing" && act !== "amend") {
-      return err("A support is amended, never started on its own — it belongs to the one thing", 400)
-    }
+    /* THE SUPPORT BRANCH IS GONE WITH THE SUPPORTS. It refused "start" and
+       "extend" for the four support keys, which `isKey` no longer admits — the
+       why, the cost, the identity and the values live in the plan. Leaving a
+       guard for a key that cannot arrive reads like a rule somebody relies on. */
 
     const out = await writeOneThing(auth.userId, body.key, act, body.body, body.dueOn)
     if (!out.ok) return err(out.reason, 400)

@@ -17,9 +17,27 @@ import type { LifeChapterRow } from "@/src/db/lifeChapterRepo"
 /** How long a one thing runs when nobody says otherwise. */
 export const DEFAULT_HORIZON_DAYS = 90
 
-/** The four answers that live inside the one thing's chapter and start again with it. */
-export const SUPPORT_KEYS = ["one_why", "one_cost", "one_identity", "one_values"] as const
-export type SupportKey = (typeof SUPPORT_KEYS)[number]
+/**
+ * THE SUPPORTS USED TO LIVE HERE, AND THEY NEVER ACTUALLY DID.
+ *
+ * The why, the cost, the identity and the values had `answer_key` values of
+ * their own in `life_answers`, a rule in this file for carrying them across an
+ * extension, and a branch in `/api/life-answers` — and **nothing ever wrote
+ * one**. Counted on the live database on 2026-09-24, before removing any of it:
+ * 522 rows, every one `one_thing`, and none under the other four.
+ *
+ * They live in the plan, where the rest of the plan's writing lives:
+ * `plan.answers["start:one-why"]` and its three siblings, written by the One
+ * Thing step and on the account since Phase 1. Two homes for one fact, and the
+ * designed one was the dead one.
+ *
+ * **One consequence, and it is a real change rather than a tidy-up.** The rule
+ * removed below blanked the supports when somebody started a genuinely NEW one
+ * thing, and carried them across when they merely extended a deadline. The plan
+ * has no chapters to hang them off, so they simply persist: start a new one
+ * thing and last season's why is still underneath it, to be rewritten. That is
+ * the owner's choice between the two homes, not an oversight.
+ */
 
 export interface OneThing {
   /** The version's own id — the particular wording. */
@@ -47,8 +65,6 @@ export interface OneThing {
   wordings: number
   /** True when this chapter continued an earlier one because a deadline moved. */
   extended: boolean
-  /** The supports, newest wording of each, empty string where nothing is written. */
-  supports: Record<SupportKey, string>
 }
 
 /**
@@ -81,7 +97,7 @@ export function defaultDueOn(timezone: string, horizonDays = DEFAULT_HORIZON_DAY
 }
 
 /**
- * ONE CHAPTER, READ BACK: its newest wording, its dates, and its supports.
+ * ONE CHAPTER, READ BACK: its newest wording and its dates.
  *
  * `rows` is every version the person has, newest first. The chapter picks out
  * its own; nothing is looked up twice and nothing is cached.
@@ -96,7 +112,6 @@ function toOneThing(chapter: LifeChapterRow, rows: LifeAnswerRow[], today: strin
   const sentences = mine.filter((r) => r.answer_key === "one_thing")
   if (sentences.length === 0) return null
 
-  const newest = (key: string) => mine.find((r) => r.answer_key === key)?.body ?? ""
   const daysLeft = daysBetween(today, chapter.due_on)
 
   return {
@@ -110,9 +125,6 @@ function toOneThing(chapter: LifeChapterRow, rows: LifeAnswerRow[], today: strin
     lapsed: daysLeft < 0,
     wordings: sentences.length,
     extended: chapter.continues_id != null,
-    supports: Object.fromEntries(
-      SUPPORT_KEYS.map((k) => [k, newest(k)]),
-    ) as Record<SupportKey, string>,
   }
 }
 
@@ -382,18 +394,14 @@ export async function applyOneThingWrite(
     throw e
   }
 
-  /* AN EXTENSION KEEPS THE ANSWERS THAT ARE STILL TRUE.
-     Moving a deadline opens a new chapter, and without this the why, the cost,
-     the identity and the values would all be blank underneath an unchanged
-     sentence — somebody would look at their own page and think three weeks of
-     writing had been thrown away because they added a fortnight to a date.
-     A fresh start does NOT carry them: that is the difference between the two. */
-  if (write.continuesId && current) {
-    for (const key of SUPPORT_KEYS) {
-      const text = current.supports[key]
-      if (text.trim()) await writers.addAnswer(key, text, chapter.id)
-    }
-  }
+  /* THE ANSWERS THAT ARE STILL TRUE ARE NOT COPIED HERE, BECAUSE THEY ARE NOT
+     HERE. This used to walk the supports and re-write them under the new
+     chapter, so that extending a deadline did not leave the why, the cost, the
+     identity and the values blank under an unchanged sentence. It protected a
+     real thing, in the wrong place: the supports live in the plan, which has no
+     chapters, so moving a deadline never touched them and this loop had nothing
+     to copy. `tests/unit/goals/oneThingSupports.test.ts` asserts the outcome
+     that rule existed for, against the home they are actually in. */
 
   return { id: row.id, chapterId: chapter.id }
 }

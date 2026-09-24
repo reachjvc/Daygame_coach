@@ -79,7 +79,6 @@ const one = (over: Partial<OneThing> = {}): OneThing => ({
   id: "r", chapterId: "ch-1", body: "Quit weed",
   answeredAt: "2026-08-01T09:00:00Z", startedOn: "2026-08-01", dueOn: "2026-12-08",
   daysLeft: 97, lapsed: false, wordings: 1, extended: false,
-  supports: { one_why: "", one_cost: "", one_identity: "", one_values: "" },
   ...over,
 })
 
@@ -517,41 +516,16 @@ describe("AT12 — what actually gets written", () => {
   })
 
   /**
-   * THE ONE THAT WOULD HAVE SHIPPED BROKEN. Moving a deadline opens a new
-   * chapter; without carrying the supports across, somebody who added a
-   * fortnight to a date would find the why, the cost, the identity and the
-   * values all blank underneath an unchanged sentence, and reasonably conclude
-   * the app had thrown three weeks of writing away.
+   * THE TWO SUPPORT TESTS THAT USED TO SIT HERE ARE IN
+   * `oneThingSupports.test.ts`, ASSERTED AGAINST THE HOME THE SUPPORTS ARE IN.
+   *
+   * They asserted that extending a deadline carried the why, the cost, the
+   * identity and the values across to the new chapter, and that a fresh start
+   * left them behind. Both described this table, and nothing had ever written a
+   * support row into it — 522 rows on the live database, every one `one_thing`.
+   * The behaviour they protected is real and is kept; the place they protected
+   * it was not.
    */
-  it("carries the supports across when a deadline is extended", async () => {
-    const w = writers()
-    const current = one({
-      supports: { one_why: "Because I want my head back", one_cost: "Another year gone", one_identity: "", one_values: "Clarity" },
-    })
-    await applyOneThingWrite(
-      { kind: "open", startedOn: "2026-08-01", dueOn: "2027-01-01", continuesId: "ch-1", body: "Quit weed" },
-      current, w,
-    )
-    expect(w.calls[0]).toEqual({ what: "chapter", args: ["2026-08-01", "2027-01-01", "ch-1"] })
-    expect(w.calls.map((c) => c.args[0])).toEqual(["2026-08-01", "one_thing", "one_why", "one_cost", "one_values"])
-    // The blank one is not carried: an empty answer is not an answer.
-    expect(w.calls.map((c) => c.args[0])).not.toContain("one_identity")
-  })
-
-  /**
-   * AND A FRESH START DOES NOT CARRY THEM. That is the difference between the
-   * two acts: a new commitment deserves its own reasons, and inheriting the old
-   * ones would put last season's why under this season's sentence.
-   */
-  it("leaves the supports behind when a genuinely new one is started", async () => {
-    const w = writers()
-    const current = one({ supports: { one_why: "Old reason", one_cost: "", one_identity: "", one_values: "" } })
-    await applyOneThingWrite(
-      { kind: "open", startedOn: "2026-09-02", dueOn: "2027-01-01", continuesId: null, body: "Bench 100 kg" },
-      current, w,
-    )
-    expect(w.calls.map((c) => c.args[0])).toEqual(["2026-09-02", "one_thing"])
-  })
 
   /**
    * A CHAPTER WITH NO SENTENCE IN IT IS INVISIBLE AND UNDELETABLE.

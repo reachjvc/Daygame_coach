@@ -32,7 +32,6 @@ const one = (over: Partial<OneThing> = {}): OneThing => ({
   lapsed: false,
   wordings: 1,
   extended: false,
-  supports: { one_why: "", one_cost: "", one_identity: "", one_values: "" },
   ...over,
 })
 

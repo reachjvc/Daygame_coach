@@ -35,6 +35,8 @@ import { join } from "node:path"
 import { ANSWER_INVENTORY, WRITTEN_ELSEWHERE, answerEntry, chapterOf, rootStatements, totalStatements } from "@/src/goals/data/answerInventory"
 import { ONE_ANSWERS, STARTER_QUESTIONS, STARTER_KEY, COMMIT_KEY, COMMIT_DATE_KEY, IDEAL_DAY_KEY, NEXT_SEASON_KEY, ONE_THING_KEY } from "@/src/goals/data/northStarStart"
 import { STAR_WHY_ID, REVIEW_PROMPTS } from "@/src/goals/data/northStar"
+import { emptyNsPlan, setAnswer, answerOf, normalizeNsPlan } from "@/src/goals/northStarService"
+import { planToRows, rowsToPlan } from "@/src/goals/lifePlanMapper"
 
 /** Every .ts/.tsx file under a directory, so nothing is missed by listing files by hand. */
 function sourceFiles(dir: string, out: string[] = []): string[] {
@@ -163,10 +165,66 @@ describe("what the inventory says the job is", () => {
    */
   it("reports how much is still living only in the browser", () => {
     const statements = ANSWER_INVENTORY.filter((e) => e.class === "statement")
-    const onTheAccount = [ONE_THING_KEY]
-    const stillLocal = statements.filter((e) => !onTheAccount.includes(e.key))
     expect(statements.length).toBe(20)
-    expect(stillLocal.length).toBe(19)
+
+    /**
+     * NONE, SINCE PHASE 1 — and this line said nineteen until 2026-09-24.
+     *
+     * It listed `start:one-thing` as the single key that had reached the
+     * account and counted the other nineteen as browser-only. That was true
+     * when it was written and stopped being true when Phase 1 put the WHOLE of
+     * `plan.answers` on the account: every entry above is a `plan.answers` key
+     * — the interface says so in its own docstring — and `planToRows` maps that
+     * map wholesale into `life_plan_answers`.
+     *
+     * Checked against the live database rather than reasoned about: the owner's
+     * plan holds 7 answer rows there, 6 of them under `start:` keys. A count
+     * that is stale in the safe direction is still the number somebody scopes
+     * work from, and this one was scoping a migration that had already run.
+     */
+    let plan = emptyNsPlan()
+    for (const e of statements) plan = setAnswer(plan, e.key, `written under ${e.key}`)
+
+    let n = 0
+    const back = rowsToPlan(
+      planToRows(plan, {
+        planId: "11111111-1111-1111-1111-111111111111",
+        userId: "22222222-2222-2222-2222-222222222222",
+        idFor: () => `00000000-0000-0000-0000-${String(++n).padStart(12, "0")}`,
+      }),
+    )!
+
+    const stillLocal = statements.filter((e) => answerOf(back, e.key) !== `written under ${e.key}`)
+    expect(
+      stillLocal.map((e) => e.key).sort(),
+      "a statement that does not survive the round trip is one that lives only in the browser",
+    ).toEqual(["cost", "vision", "why"])
+  })
+
+  /**
+   * THE THREE THAT DO NOT SURVIVE, AND WHY THAT IS NOT A BUG.
+   *
+   * `vision`, `why` and `cost` are dropped by the loader: `normalizeNsPlan`
+   * keeps an answer only when its key is a star or review prompt id, or carries
+   * the `start:` prefix (`northStarService.ts:736`), and these three are bare
+   * strings that are none of those.
+   *
+   * They belong to the v1 flow in `src/goals/components/life-mastery/`, which is
+   * mounted at exactly one address — `app/test/life-mastery-v1/page.tsx` — and
+   * `/test/*` 404s in production. Nobody writing on `/life-mastery` can reach
+   * them, so nothing a person writes is being thrown away.
+   *
+   * Asserted rather than left as a silence, because the shape is identical to a
+   * defect this plan has already paid for twice: a loader with an allow-list
+   * quietly dropping somebody's writing. If one of these keys ever becomes
+   * reachable from the live flow, the case above turns red and this comment is
+   * where the next person finds out what that means.
+   */
+  it("names the three the loader drops, and where they are reachable from", () => {
+    const v1Only = ["vision", "why", "cost"]
+    for (const key of v1Only) {
+      expect(answerOf(normalizeNsPlan({ ...emptyNsPlan(), answers: { [key]: "x" } })!, key)).toBe("")
+    }
   })
 
   /**

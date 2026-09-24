@@ -10,13 +10,20 @@
 import { createServerSupabaseClient } from "./supabase"
 
 /**
- * The keys this table accepts. Mirrors the CHECK constraint in the migration.
+ * The keys this table accepts. ONE, and the sentence is it.
  *
- * The four after the first are the one thing's SUPPORTS. They are not separate
- * statements: the why, the cost, the identity and the values are about the
- * current one thing, so they live in its chapter and start again when it does.
+ * It listed four more — the one thing's why, cost, identity and values — on the
+ * theory that they belong to its chapter and start again when it does. Nothing
+ * ever wrote one: counted on the live database on 2026-09-24, 522 rows, every
+ * one `one_thing`. They live in the plan, beside the rest of the plan's
+ * writing, and `oneThingService` says why at length.
+ *
+ * **The database's CHECK still permits the other four.** Narrowing it is a
+ * migration, and this repo does not write one without the owner asking for it;
+ * the constraint being wider than this list costs nothing, because the only way
+ * in is `/api/life-answers`, which validates against this list first.
  */
-export const LIFE_ANSWER_KEYS = ["one_thing", "one_why", "one_cost", "one_identity", "one_values"] as const
+export const LIFE_ANSWER_KEYS = ["one_thing"] as const
 export type LifeAnswerKey = (typeof LIFE_ANSWER_KEYS)[number]
 
 export interface LifeAnswerRow {
