@@ -618,6 +618,17 @@ copies and two holes.
 
 ### M4 — One home for the one thing's supports
 
+**BUILT 2026-09-24 (`e7832067`).** The dead home is gone from the code: the four
+`answer_key` values, the API branch and the carry-across rule. Counted on the
+live database first — 522 rows, every one `one_thing`, none under the other four
+— so it deleted no writing. The database's CHECK still permits the four keys;
+the owner declined the migration and it costs nothing, because the only way in
+validates against `LIFE_ANSWER_KEYS` first (driven: `one_why` answers 400).
+
+**The change of behaviour, stated because it is real:** a genuinely new one thing
+no longer blanks the supports. There is no chapter in the plan to restart them
+against, so last season's why sits under this season's sentence until rewritten.
+
 Two homes exist for one fact and the designed one is dead. **Recommendation: keep
 the flow's home** — the plan's answers, which do save — and retire the four unused
 keys, because the supports are plan writing and the plan is where the rest lives.
