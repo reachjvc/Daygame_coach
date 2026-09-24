@@ -82,11 +82,30 @@ export function buildGoalTree(goals: GoalWithProgress[]): GoalTreeNode[] {
  * than deleted with it, so a plan goal hanging off a goal made by hand still
  * appears instead of vanishing with its parent.
  */
-export function pruneTreeByTemplatePrefix(tree: GoalTreeNode[], prefix: string): GoalTreeNode[] {
+/**
+ * NARROW A GOAL TREE TO A NAMED SET OF ROWS.
+ *
+ * This took a `template_id` PREFIX until 2026-09-24, and the prefix was
+ * `ns:<run>:` — where `<run>` is a code minted in ONE browser's localStorage.
+ * Open the plan on a second device and the run differs, so the prefix matched
+ * nothing and the goals hub embedded under the Track step rendered EMPTY: the
+ * step above it correctly said "tracked" while the list below it showed you
+ * none of them.
+ *
+ * Ids are the fix because they are the same fact everywhere. The caller already
+ * has them — `pushedGoalIds` answers "which plan goals are counted goals" from
+ * the account's links first and the tag only as a fallback — so scoping by ids
+ * is scoping by the one owner of that question rather than by a second, weaker
+ * copy of it.
+ *
+ * A kept node keeps its children; a dropped one hands its children up, so a
+ * child that IS in the set survives a parent that is not.
+ */
+export function pruneTreeToIds(tree: GoalTreeNode[], ids: ReadonlySet<string>): GoalTreeNode[] {
   const walk = (nodes: GoalTreeNode[]): GoalTreeNode[] =>
     nodes.flatMap((node) => {
       const children = walk(node.children)
-      if (node.template_id?.startsWith(prefix)) return [{ ...node, children }]
+      if (ids.has(node.id)) return [{ ...node, children }]
       return children
     })
   return walk(tree)

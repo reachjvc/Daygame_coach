@@ -21,7 +21,7 @@ import { TreeOfLifeView } from "./tree-of-life"
 import { ViewSwitcher } from "./views/ViewSwitcher"
 import { ActionToast } from "./ActionToast"
 import { FireStreakBadge } from "@/src/tracking/components/FireStreakBadge"
-import { flattenTree, getCelebrationTier, generateDirtyDogInserts, buildMilestoneCelebrationData, pruneTreeByTemplatePrefix } from "../goalsService"
+import { flattenTree, getCelebrationTier, generateDirtyDogInserts, buildMilestoneCelebrationData, pruneTreeToIds } from "../goalsService"
 import type { GoalWithProgress, GoalTreeNode, GoalViewMode, CelebrationTier, MilestoneCelebrationData } from "../types"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
@@ -36,7 +36,12 @@ function getInitialView(): GoalViewMode {
 }
 
 /**
- * `scope` narrows the hub to one template namespace.
+ * `scope` narrows the hub to a named set of goal rows.
+ *
+ * It narrowed by `template_id` PREFIX until 2026-09-24, and the prefix carried a
+ * code minted in one browser's localStorage — so on a second device it matched
+ * nothing and this list rendered empty underneath a step that had just said
+ * those goals were tracked. Ids are the same fact on every device.
  *
  * Used by the North Star track step, which embeds this component under its own
  * list: without it the step answers "here is every goal on your account" when
@@ -53,7 +58,7 @@ export function GoalsHubContent({
   scope,
 }: {
   setupPath?: string
-  scope?: { templatePrefix: string; title: string; subtitle: string }
+  scope?: { goalIds: readonly string[]; title: string; subtitle: string }
 } = {}) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -105,7 +110,7 @@ export function GoalsHubContent({
       if (!response.ok) throw new Error("Failed to fetch goals")
       const data = await response.json()
       const all: GoalTreeNode[] = Array.isArray(data) ? data : []
-      const treeData = scope ? pruneTreeByTemplatePrefix(all, scope.templatePrefix) : all
+      const treeData = scope ? pruneTreeToIds(all, new Set(scope.goalIds)) : all
       setTree(treeData)
       setGoals(flattenTree(treeData))
       setError(null)
@@ -114,7 +119,10 @@ export function GoalsHubContent({
     } finally {
       setIsLoading(false)
     }
-  }, [scope?.templatePrefix])
+    /* Keyed on the ids themselves, joined, rather than on the array's identity:
+       the caller rebuilds it whenever the push map changes, and an identity
+       dependency would put this fetch in a loop. */
+  }, [scope?.goalIds.join(",")])
 
 
   useEffect(() => {

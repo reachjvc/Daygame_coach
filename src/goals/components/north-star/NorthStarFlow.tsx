@@ -1554,6 +1554,7 @@ export function NorthStarFlow({
               plan={plan}
               today={today ?? ns.todayISO()}
               runId={runId}
+              goalLinks={goalLinks}
               onToggleStep={(stepId) => setPlan((p) => nsTrack.toggleStepLogged(p, today ?? ns.todayISO(), stepId))}
               /* The experience's own store, the same one the Experiences step
                  writes — a thing you wanted to have done is ticked once, and

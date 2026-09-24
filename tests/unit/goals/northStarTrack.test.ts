@@ -41,8 +41,10 @@ import {
   weekStartISO,
 } from "@/src/goals/northStarTrackService"
 import { NO_TRAINING_TICKS, stepTickedByHand } from "@/src/goals/dayTicks"
+import { flattenTree } from "@/src/goals/goalsService"
+import { NO_PUSHED_GOALS } from "@/src/goals/northStarTrackService"
 import type { NsGoal, NsPlan } from "@/src/goals/types"
-import { getOrphanedGoalIds, pruneTreeByTemplatePrefix } from "@/src/goals/goalsService"
+import { getOrphanedGoalIds, pruneTreeToIds } from "@/src/goals/goalsService"
 import type { GoalWithProgress } from "@/src/goals/types"
 
 const RUN = "run1234"
@@ -323,19 +325,38 @@ describe("the hub embedded under the step shows THIS plan, not the account", () 
       node("other-run", trackTemplateId("otherrun", "g1")),
       node("catalogue", "daygame_approaches_10"),
     ]
-    const kept = pruneTreeByTemplatePrefix(tree, trackTemplateId(RUN, ""))
+    const kept = pruneTreeToIds(tree, new Set(pushedGoalIds(RUN, flattenTree(tree)).values()))
     expect(kept.map((n) => n.id)).toEqual(["mine"])
   })
 
   it("promotes a plan goal hanging off a goal made by hand instead of losing it with the parent", () => {
     const tree = [node("hand", null, [node("mine", trackTemplateId(RUN, "g2"))])]
-    const kept = pruneTreeByTemplatePrefix(tree, trackTemplateId(RUN, ""))
+    const kept = pruneTreeToIds(tree, new Set(pushedGoalIds(RUN, flattenTree(tree)).values()))
     expect(kept.map((n) => n.id)).toEqual(["mine"])
+  })
+
+  /**
+   * THE SECOND DEVICE, AND THE REASON THIS TAKES IDS RATHER THAN A PREFIX.
+   *
+   * It narrowed by the `ns:<run>:` prefix, and the run is minted in ONE
+   * browser's localStorage. So on any other device the prefix matched nothing
+   * and this list rendered EMPTY — underneath a step that had, correctly, just
+   * said those goals were tracked. Recognised and invisible.
+   */
+  it("shows the same goals on a device that did not push them", () => {
+    const tree = [node("mine", trackTemplateId(RUN, "g1"))]
+    const links = { g1: "mine" }
+
+    const viaTagOnly = pruneTreeToIds(tree, new Set(pushedGoalIds("a-different-run", flattenTree(tree)).values()))
+    expect(viaTagOnly.map((n) => n.id), "this is the empty hub the owner would have seen").toEqual([])
+
+    const viaLinks = pruneTreeToIds(tree, new Set(pushedGoalIds("a-different-run", flattenTree(tree), links).values()))
+    expect(viaLinks.map((n) => n.id)).toEqual(["mine"])
   })
 
   it("keeps a plan goal's own children under it", () => {
     const tree = [node("parent", trackTemplateId(RUN, "g1"), [node("child", trackTemplateId(RUN, "g2"))])]
-    const kept = pruneTreeByTemplatePrefix(tree, trackTemplateId(RUN, ""))
+    const kept = pruneTreeToIds(tree, new Set(pushedGoalIds(RUN, flattenTree(tree)).values()))
     expect(kept).toHaveLength(1)
     expect(kept[0].children.map((c) => c.id)).toEqual(["child"])
   })
@@ -472,7 +493,7 @@ describe("today: what you actually did", () => {
 
   it("puts what is on today first, and keeps the rest inputtable", () => {
     const { plan, stepId } = seedDay()
-    const items = todayItems(plan, MONDAY, [], RUN, NO_TRAINING_TICKS)
+    const items = todayItems(plan, MONDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS)
     expect(items[0].activity.id).toBe(stepId)
     expect(items[0].when).toBe("today")
     // A driver names no day, so today is as good a day as any: doing your
@@ -482,7 +503,7 @@ describe("today: what you actually did", () => {
 
   it("does not put a step on a day it is not on", () => {
     const { plan, stepId } = seedDay()
-    const item = todayItems(plan, TUESDAY, [], RUN, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!
+    const item = todayItems(plan, TUESDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!
     expect(item.when).toBe("otherDay")
   })
 
@@ -498,7 +519,7 @@ describe("today: what you actually did", () => {
     const routine = seed.routines[2]
     const weekly = addCustomStep(seed, routine.id, "Weekly review", 30, 1)
     const daily = addCustomStep(weekly, routine.id, "One most important task", 90, 7)
-    const items = todayItems(daily, MONDAY, [], RUN, NO_TRAINING_TICKS)
+    const items = todayItems(daily, MONDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS)
 
     expect(items.find((i) => i.activity.title === "Weekly review")!.when).toBe("anyDay")
     // Seven days a week is every day, this one included, even unplaced.
@@ -509,7 +530,7 @@ describe("today: what you actually did", () => {
     const seed = emptyNsPlan()
     const routine = seed.routines[2]
     const plan = addCustomStep(addCustomStep(seed, routine.id, "Weekly review", 30, 1), routine.id, "One most important task", 90, 7)
-    expect(todayProgress(todayItems(plan, MONDAY, [], RUN, NO_TRAINING_TICKS))).toEqual({ done: 0, total: 1 })
+    expect(todayProgress(todayItems(plan, MONDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS))).toEqual({ done: 0, total: 1 })
   })
 
   describe("how often it runs, said on the row", () => {
@@ -583,15 +604,39 @@ describe("today: what you actually did", () => {
   it("hands a driver its real goal and this week's count, once it has been pushed", () => {
     const { plan, driverId } = seedDay()
     const hub = [{ id: "uuid-a", template_id: trackTemplateId(RUN, driverId), current_value: 12, target_value: 20 }]
-    const item = todayItems(plan, MONDAY, hub, RUN, NO_TRAINING_TICKS).find((i) => i.activity.id === driverId)!
+    const item = todayItems(plan, MONDAY, hub, pushedGoalIds(RUN, hub), NO_TRAINING_TICKS).find((i) => i.activity.id === driverId)!
     expect(item.goalId).toBe("uuid-a")
     expect(item.current).toBe(12)
     expect(item.target).toBe(20)
   })
 
+  /**
+   * THE SECOND DEVICE, which is what the map is for.
+   *
+   * Same rows, same plan, a DIFFERENT run code — because the run is minted in
+   * one browser's localStorage. Resolved through the account's links this is
+   * the same goal; resolved through the tag, as this screen used to, it is no
+   * goal at all: no progress bar under the driver and no "+1" beside it, on a
+   * goal the Track step above had just called tracked.
+   */
+  it("hands a driver its real goal on a device that did not push it", () => {
+    const { plan, driverId } = seedDay()
+    const hub = [{ id: "uuid-a", template_id: trackTemplateId(RUN, driverId), current_value: 12, target_value: 20 }]
+    const links = { [driverId]: "uuid-a" }
+
+    const viaTagOnly = todayItems(plan, MONDAY, hub, pushedGoalIds("a-different-run", hub), NO_TRAINING_TICKS)
+      .find((i) => i.activity.id === driverId)!
+    expect(viaTagOnly.goalId, "the tag alone cannot answer this on another device").toBeNull()
+
+    const viaLinks = todayItems(plan, MONDAY, hub, pushedGoalIds("a-different-run", hub, links), NO_TRAINING_TICKS)
+      .find((i) => i.activity.id === driverId)!
+    expect(viaLinks.goalId, "the account's link answers it everywhere").toBe("uuid-a")
+    expect(viaLinks.current).toBe(12)
+  })
+
   it("gives an unpushed driver NO local tally to disagree with the real one later", () => {
     const { plan, driverId } = seedDay()
-    const item = todayItems(plan, MONDAY, [], RUN, NO_TRAINING_TICKS).find((i) => i.activity.id === driverId)!
+    const item = todayItems(plan, MONDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS).find((i) => i.activity.id === driverId)!
     expect(item.goalId).toBeNull()
     expect(item.current).toBeNull()
   })
@@ -599,9 +644,9 @@ describe("today: what you actually did", () => {
   it("counts only today's own steps as the day's list", () => {
     const { plan, stepId } = seedDay()
     // A driver has a weekly count, not a tick, so it is not part of "3 of 4".
-    expect(todayProgress(todayItems(plan, MONDAY, [], RUN, NO_TRAINING_TICKS))).toEqual({ done: 0, total: 1 })
+    expect(todayProgress(todayItems(plan, MONDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS))).toEqual({ done: 0, total: 1 })
     const ticked = toggleStepLogged(plan, MONDAY, stepId)
-    expect(todayProgress(todayItems(ticked, MONDAY, [], RUN, NO_TRAINING_TICKS))).toEqual({ done: 1, total: 1 })
+    expect(todayProgress(todayItems(ticked, MONDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS))).toEqual({ done: 1, total: 1 })
   })
 
   it("leaves a plan saved before any of this existed alone", () => {
@@ -1418,13 +1463,13 @@ describe("choosing the days a step runs on", () => {
 
   it("is any day until days are picked, and that day's own business after", () => {
     const { plan, routineId, stepId } = seedRate()
-    const before = todayItems(plan, TUESDAY, [], RUN, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!
+    const before = todayItems(plan, TUESDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!
     expect(before.when).toBe("anyDay")
 
     // Tuesday and Saturday.
     const placed = placeStep(plan, routineId, stepId, [1, 5], null)
-    expect(todayItems(placed, TUESDAY, [], RUN, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("today")
-    expect(todayItems(placed, MONDAY, [], RUN, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("otherDay")
+    expect(todayItems(placed, TUESDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("today")
+    expect(todayItems(placed, MONDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("otherDay")
   })
 
   it("keeps the rate honest with the days that were picked", () => {
@@ -1444,7 +1489,7 @@ describe("choosing the days a step runs on", () => {
     expect(step.days).toEqual([])
     // The rate the days left behind is kept — it is the last thing anybody said.
     expect(step.daysPerWeek).toBe(1)
-    expect(todayItems(cleared, TUESDAY, [], RUN, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("anyDay")
+    expect(todayItems(cleared, TUESDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("anyDay")
   })
 })
 

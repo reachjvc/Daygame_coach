@@ -35,7 +35,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { ArrowRight, Check, ChevronDown, ChevronUp, Loader2, Minus, Plus, Trash2 } from "lucide-react"
 import type { NorthStarTabId, NsDailyField, NsFieldKind, NsPlan, NsSubStep } from "@/src/goals/types"
 import { GOES_TO_COPY, TODAY_COPY } from "@/src/goals/data/northStar"
-import { cadenceLabel, destination, destinations, fieldTargets, groupLogged, groupSummary, readSource, readSources, standingItems, todayItems, todayProgress, trackGroups, type TodayItem } from "@/src/goals/northStarTrackService"
+import { cadenceLabel, destination, destinations, fieldTargets, groupLogged, groupSummary, pushedGoalIds, readSource, readSources, standingItems, todayItems, todayProgress, trackGroups, type TodayItem } from "@/src/goals/northStarTrackService"
 import { stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
 import { dailyFieldsFor, dailyRating, formatTargetDate, journalEntry, journalHistory, subStepProgress, subStepsFor } from "@/src/goals/northStarService"
 import { ScoreRow } from "./ScoreRow"
@@ -639,6 +639,7 @@ export function TodayTab({
   plan,
   today,
   runId,
+  goalLinks,
   ticks,
   onToggleStep,
   onToggleExperience,
@@ -667,6 +668,20 @@ export function TodayTab({
   plan: NsPlan
   today: string
   runId: string
+  /**
+   * WHICH COUNTED GOAL EACH PLAN GOAL BECAME, as the account knows it.
+   *
+   * Without it this screen resolved a driver's goal through the `ns:<run>:`
+   * tag alone, so on any device that did not do the pushing every driver came
+   * back with no goal at all: no progress bar, no "+1", on goals the Track step
+   * had just called tracked.
+   *
+   * REQUIRED, and deliberately. An optional one is how the same defect reached
+   * the Track step's schedule: the caller that mattered forgot it and every
+   * test still passed. Hand in `{}` to mean "this device has not read the
+   * account's links yet", which is a different thing from "there are none".
+   */
+  goalLinks: Record<string, string>
   /**
    * What the training log ticks, built once by the flow.
    *
@@ -764,6 +779,10 @@ export function TodayTab({
   goalsPromise?: Promise<HubGoal[] | null> | null
 }) {
   const [hubGoals, setHubGoals] = useState<HubGoal[] | null>(null)
+  /* THE one answer to "which plan goals are counted goals", the same function
+     the Track step asks. Links first, the tag only as a fallback for rows
+     pushed before links existed. */
+  const pushed = useMemo(() => pushedGoalIds(runId, hubGoals ?? [], goalLinks), [runId, hubGoals, goalLinks])
   const [signedOut, setSignedOut] = useState(false)
   /** The driver currently being counted, so its buttons can say so. */
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -833,8 +852,8 @@ export function TodayTab({
   }, [load, goalsPromise])
 
   const items = useMemo(
-    () => todayItems(plan, today, hubGoals ?? [], runId, ticks),
-    [plan, today, hubGoals, runId, ticks]
+    () => todayItems(plan, today, hubGoals ?? [], pushed, ticks),
+    [plan, today, hubGoals, pushed, ticks]
   )
   const progress = useMemo(() => todayProgress(items), [items])
   /**

@@ -420,6 +420,16 @@ export function pushedRealIds(
  * offered again; hiding it because a stale pointer exists is how somebody ends
  * up unable to re-push a goal they deleted by hand.
  */
+/**
+ * NO GOALS WERE FETCHED HERE — which is not "none are pushed".
+ *
+ * Handed in by a screen that counts routine steps and never asks the account
+ * for goals. A literal `new Map()` at each call site would read as the same
+ * thing and would be a new object every render, which is how a memo turns into
+ * a refetch loop.
+ */
+export const NO_PUSHED_GOALS: ReadonlyMap<string, string> = new Map()
+
 export function pushedGoalIds(
   runId: string,
   rows: ReadonlyArray<{ id: string; template_id?: string | null }>,
@@ -968,12 +978,23 @@ export function todayItems(
   plan: NsPlan,
   date: string,
   hubGoals: ReadonlyArray<{ id: string; template_id?: string | null; current_value?: number; target_value?: number }>,
-  runId: string,
+  /**
+   * WHICH PLAN GOALS ARE COUNTED GOALS — the map, not the run code.
+   *
+   * This took a `runId` and resolved the link itself with `pushedRealIds`,
+   * which reads the `ns:<run>:<goal>` tag. The run is minted in ONE browser's
+   * localStorage, so on a second device every driver resolved to null: no
+   * progress bar under it and no "+1" beside it, on goals the Track step above
+   * had just correctly called tracked. `pushedGoalIds` is the one owner of this
+   * question and reads the account's links first, so it is handed in whole
+   * rather than re-derived here from the weaker half of it.
+   */
+  pushed: ReadonlyMap<string, string>,
   ticks: TrainingTicks
 ): TodayItem[] {
   const [y, m, d] = date.split("-").map(Number)
   const weekday = (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7
-  const real = pushedRealIds(runId, hubGoals)
+  const real = pushed
   const byId = new Map(hubGoals.map((g) => [g.id, g]))
 
   const items = trackActivities(plan).map((activity) => {

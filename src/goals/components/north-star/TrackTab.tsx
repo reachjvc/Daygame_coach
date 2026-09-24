@@ -33,7 +33,7 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { Loader2, Check } from "lucide-react"
 import type { NsPlan, NsTrackRow } from "@/src/goals/types"
-import { buildTrackInserts, pushedGoalIds, pushedRealIds, trackRows, trackTemplateId } from "@/src/goals/northStarTrackService"
+import { buildTrackInserts, pushedGoalIds, pushedRealIds, trackRows } from "@/src/goals/northStarTrackService"
 import { saveGoalLinks } from "@/src/goals/lifePlanClient"
 import { TRACK_COPY } from "@/src/goals/data/northStar"
 import { GoalsHubContent } from "@/src/goals/components/GoalsHubContent"
@@ -133,18 +133,25 @@ export function TrackTab({
    * Memoised because it is a prop the hub's fetch depends on; a fresh object
    * every render would put it in a refetch loop.
    */
+  // One place owns "is this already over there" — see `pushedGoalIds`.
+  const pushed = useMemo(() => pushedGoalIds(runId, hubGoals, goalLinks), [runId, hubGoals, goalLinks])
+
+  /**
+   * The hub below shows THE ROWS THIS PLAN PUSHED, by id.
+   *
+   * It narrowed by the `ns:<run>:` tag prefix, and the run is minted in one
+   * browser — so on a second device this list was EMPTY underneath a step that
+   * had just said those goals were tracked. The ids come from `pushedGoalIds`,
+   * which reads the account's links, so every device sees the same list.
+   */
   const hubScope = useMemo(
     () => ({
-      // Every goal this step pushed, and nothing else: the run is in the tag.
-      templatePrefix: trackTemplateId(runId, ""),
+      goalIds: [...pushed.values()],
       title: TRACK_COPY.hubTitle,
       subtitle: TRACK_COPY.hubHelp,
     }),
-    [runId]
+    [pushed]
   )
-
-  // One place owns "is this already over there" — see `pushedGoalIds`.
-  const pushed = useMemo(() => pushedGoalIds(runId, hubGoals, goalLinks), [runId, hubGoals, goalLinks])
   const rows = useMemo(() => trackRows(plan, runId, pushed), [plan, runId, pushed])
   const fresh = useMemo(() => rows.filter((r) => !r.pushed), [rows])
 
