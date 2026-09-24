@@ -82,6 +82,15 @@ import { mergeDayRecord } from "./lifePlanMapper"
  */
 export const LIFE_PLAN_IMPORTED_KEY = "life-plan-imported-v1"
 
+/**
+ * How long after you stop typing the flow saves.
+ *
+ * It lived in `planSnapshotClient` until that file was deleted on 2026-09-24,
+ * which made a research mirror the owner of the timing for the two saves that
+ * actually keep your work. It belongs here, next to the rules those saves obey.
+ */
+export const SAVE_DEBOUNCE_MS = 4000
+
 /** What the flow should do once both copies are in hand. */
 export type SyncDecision =
   /** The account has a plan. Use it; it is the truth. */

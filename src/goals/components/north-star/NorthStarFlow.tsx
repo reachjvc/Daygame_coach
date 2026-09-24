@@ -63,9 +63,8 @@ import type { RoutineNeed } from "@/src/goals/data/northStarBuild"
 import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
 import * as ns from "@/src/goals/northStarService"
 import * as nsTrack from "@/src/goals/northStarTrackService"
-import { SNAPSHOT_DEBOUNCE_MS, sendSnapshot, startSync, stopSync, syncIsOff } from "@/src/goals/planSnapshotClient"
 import { fetchLifePlan, newNodeId, saveLifePlanFromBrowser, startLifePlan } from "@/src/goals/lifePlanClient"
-import { LIFE_PLAN_IMPORTED_KEY, canSave, decideOnLoad, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
+import { LIFE_PLAN_IMPORTED_KEY, SAVE_DEBOUNCE_MS, canSave, decideOnLoad, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
 import { fetchDayRecord, saveDayCatchingUp } from "@/src/goals/lifePlanDayClient"
 import { patchesBetween, recordIsEmpty, recordOf, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
 import { reconcileProgramReference } from "@/src/goals/programReferenceService"
@@ -209,8 +208,6 @@ export function NorthStarFlow({
   // Read once, on the client. Rendering "today" from the server would hydrate
   // with yesterday's date for anyone west of the server.
   const [today, setToday] = useState<string | null>(null)
-  /** Whether the server copy is running, so the footer can say so honestly. */
-  const [synced, setSynced] = useState<"off" | "on" | "failed" | "unknown">("unknown")
   /**
    * THE PLAN ON THE ACCOUNT. Until this resolves, nothing is saved to it.
    *
@@ -354,7 +351,6 @@ export function NorthStarFlow({
      * explains why today is not computed during render.
      */
     setToday(getTodayInTimezone(timezone))
-    setSynced(syncIsOff() ? "off" : "unknown")
     const saved = ns.loadNsPlan(window.localStorage.getItem(NORTH_STAR_STORAGE_KEY))
     browserCopy.current = saved
     if (saved) setPlan(saved)
@@ -727,7 +723,7 @@ export function NorthStarFlow({
         setServerState(out.stale ? "stale" : "failed")
         setServerNote(out.stale ? syncNotice("stale") : out.message)
       })
-    }, SNAPSHOT_DEBOUNCE_MS)
+    }, SAVE_DEBOUNCE_MS)
     return () => window.clearTimeout(timer)
   }, [plan, planId, revision, loaded, serverState, nodeIds, decision])
 
@@ -796,25 +792,9 @@ export function NorthStarFlow({
         accountDays.current = after
         setServerNote("")
       })()
-    }, SNAPSHOT_DEBOUNCE_MS)
+    }, SAVE_DEBOUNCE_MS)
     return () => window.clearTimeout(timer)
   }, [plan, loaded, serverState, savePlanNow])
-
-  /**
-   * The same plan, mirrored to the server a few seconds after you stop typing.
-   *
-   * localStorage stays the source of truth — this page has to work with the
-   * network on fire — so this is a copy, debounced, and silent about failure.
-   * An untouched plan is never sent, so a browser that opened the page and left
-   * again never appears in the table at all.
-   */
-  useEffect(() => {
-    if (!loaded || !today || ns.planIsUntouched(plan) || syncIsOff()) return
-    const timer = window.setTimeout(() => {
-      void sendSnapshot(ns.serializeNsPlan(plan), ns.planAsText(plan, today)).then((ok) => setSynced(ok ? "on" : "failed"))
-    }, SNAPSHOT_DEBOUNCE_MS)
-    return () => window.clearTimeout(timer)
-  }, [plan, loaded, today])
 
   /**
    * THE ONE THING, READ ONCE FOR THE WHOLE FLOW.
@@ -1823,32 +1803,17 @@ export function NorthStarFlow({
                 This browser will not let the page store anything. Your work is only in this tab.
               </span>
             )}
-            {!plan.updatedAt ? "Nothing written yet" : serverState === "saved" ? (
-              <>Saved to your account. </>
-            ) : null}
-            {!plan.updatedAt ? "" : synced === "off" ? (
-              <>
-                Saved on this device only.{" "}
-                <button onClick={() => { startSync(); setSynced("unknown") }} className="underline underline-offset-2 hover:text-zinc-300 transition-colors">
-                  help improve this page
-                </button>
-              </>
-            ) : (
-              <>
-                {/* Three states, and they must not be muddled. A copy that
-                    failed to send has not been sent, and offering to "delete
-                    the copy" then points at something that is not there. */}
-                Saved on this device
-                {synced === "on" && ", and a copy sent so this page can be improved"}
-                {synced === "failed" && ", but the copy could not be sent"}.{" "}
-                <button
-                  onClick={() => { void stopSync(); setSynced("off") }}
-                  className="underline underline-offset-2 hover:text-zinc-300 transition-colors"
-                >
-                  {synced === "on" ? "stop sending, delete the copy" : "do not send a copy"}
-                </button>
-              </>
-            )}
+            {/* THE MIRROR IS GONE, and with it the line offering to stop it.
+                Until 2026-09-24 this said "a copy sent so this page can be
+                improved", with a button to delete that copy — a whole plan,
+                journal included, going to an unauthenticated table keyed by a
+                random browser id. What is left says the one thing that is now
+                true and is worth saying: where the work is. */}
+            {!plan.updatedAt
+              ? "Nothing written yet"
+              : serverState === "saved"
+                ? "Saved to your account."
+                : "Saved on this device."}
           </span>
           {tabIndex < TAB_ORDER.length - 1 ? (
             <button

@@ -22,8 +22,6 @@ export const INTENTIONAL: Record<string, string> = {
     "RLS on, no policies: readable only by service role and the claim_beta_slot() function.",
   waitlist_emails:
     "RLS on, no policies: inserted server-side via service role only.",
-  plan_snapshots:
-    "RLS on, no policies: written by the admin client in planSnapshotRepo. Unauthenticated by design, keyed by a browser-generated id.",
   values: "Reference data. Public read is intended; the app reads this table.",
   core_values:
     "RLS on, no policies: no code reads it. Near-duplicate of `values`. Server-only until consolidated.",

@@ -3,7 +3,8 @@
  *
  * A module rather than a hook or a component: `NorthStarFlow` is not on the
  * architecture test's fetch allowlist, and that allowlist only ever shrinks.
- * The existing `planSnapshotClient` next door works the same way.
+ * `lifePlanDayClient` next door works the same way. (`planSnapshotClient` did
+ * too, and was deleted on 2026-09-24 with the mirror it served.)
  *
  * WHAT THIS FILE NEVER DOES IS GUESS. A read that fails returns `undefined` —
  * which is not `null`, and the difference is the whole safety design: `null`
