@@ -264,7 +264,13 @@ in isolation and it has that.
 *Acceptance:* a signed-in user can reach the Black Box from the navigation
 without typing a URL; the existing route-reachability test covers it.
 
-**M5 — It behaves the same on Safari and Firefox.** A `vice-cross.spec.ts` under
+**M5 — It behaves the same on Safari and Firefox.** Part of this arrived from
+elsewhere on 2026-09-24 and should not be rebuilt: `tests/e2e/cold-open.spec.ts`
+opens all eleven Life Mastery and vice addresses cold, asserts zero hydration
+errors and no nested controls on each, and runs in `chromium` in 23 seconds —
+all eleven clean. That is the whole of the hand-sweep this milestone was going
+to do for render faults, so M5 is now only the part that sweep cannot see:
+behaviour. A `vice-cross.spec.ts` under
 `tests/e2e/cross-browser/` walks the one real path — start a run, have the
 thought, be answered, file the close call, correct it — in Firefox and WebKit. It
 asserts the three things that actually differ between engines here: that a
@@ -425,6 +431,14 @@ That is what M2 builds, not a "reading" page.
   `tests/e2e/{quit-vice,deadControls}.spec.ts`, `tests/support/sweepDebt.ts`
   (delete the seven flow-route entries — deleted, not set to 0, per that file's
   own rule), `tests/unit/navigation/{routeReachability,lifeMasteryRoutes}.test.ts`.
+- **`tests/e2e/cold-open.spec.ts` is another session's and names all nine of
+  these routes by hand** (lines 54–64, added 2026-09-24). Deleting them without
+  shrinking that list turns a clean sweep into nine 404s. It is not my file:
+  message `daygame-coach-70` before touching it. Its list is also the reason M2
+  cannot be done by deleting folders and running the vice tests alone.
+- `src/shared/lifeMasteryRoutes.ts` — `QUIT_VICE_OLD` and `viceStep` both lose
+  their callers with the routes. Delete them in the same commit, or
+  `lifeMasteryRoutes.test.ts` asserts a page that is gone.
 
 **M3 — the safety door**
 - `src/vice/data/help.ts` — re-verify every number, move `VERIFIED` forward.
