@@ -20,12 +20,21 @@ their keep), **16–17** (Life Mastery operational, wording and UX pass) and **3
 **The Black Box is in good shape. The module around it is not.** The front door
 you land on at `/life-mastery/quit-vice` is genuinely well built — it survived
 every check I ran, including two devices merging and a close call filed with no
-signal. The unfinished part is everything around it:
+signal. The unfinished part is everything around it.
 
-- **22 of 61 browser tests for the old half are failing right now**, and have
-  been since the addresses moved on 2026-09-20 — which means **CI has gone red
-  on every push to this branch for four days.** The gate is not missing; its
-  result is unread. `e2e.yml` runs on every push to every branch and runs this
+> **STATE OF THIS SECTION, 2026-09-24.** The first three bullets below are now
+> FIXED — M0 and M1 are built, verified and pushed; see "Built so far" further
+> down for what that took and what it found. They are left here in their
+> original words rather than quietly edited, because the argument the rest of
+> this plan makes rests on what the module was actually like, and a plan that
+> silently rewrites its own findings is a plan you cannot check. **Still true
+> and still open: the helplines, the tap targets, the desktop layout, and the
+> decision about the old screens.**
+
+- ~~**22 of 61 browser tests for the old half are failing right now**~~ **FIXED
+  (M0) — 61 of 61 green.** They had been red since the addresses moved on
+  2026-09-20 — which means **CI went red on every push to this branch for four
+  days.** The gate was not missing; its result was unread. `e2e.yml` runs on every push to every branch and runs this
   suite; the hooks that run locally (`npm test`, `.husky/pre-commit`) are
   vitest-only and cannot see it; and no session in this checkout has the `gh`
   CLI, so the only person who can read that result is you, opening GitHub. That
@@ -33,14 +42,17 @@ signal. The unfinished part is everything around it:
   it. A second consequence: while these 22 are red the whole chromium job is red,
   so a genuinely new failure arrives inside an already-red job and reads as more
   of the same.
-- **The module cannot be opened without a connection** — the one moment it was
-  designed for. Once it is on screen it works offline perfectly. Opening it
-  offline shows the browser's error page.
-- **The crisis helpline numbers were last checked 38 days ago**, and the page
-  someone opens mid-thought has no route to them at all.
-- **The old half is a one-way door**: every one of its nine sub-pages sends you
-  "back" to the Black Box, not to the hub you came from.
-- **48 controls on seven of its pages are too small to tap on a phone.**
+- ~~**The module cannot be opened without a connection**~~ **FIXED (M1), and
+  verified against a production build.** It was the one moment the tool was
+  designed for: on screen it worked offline perfectly, and opening it offline
+  showed the browser's error page.
+- **STILL OPEN. The crisis helpline numbers were last checked 38 days ago**, and
+  the page someone opens mid-thought has no route to them at all (M3).
+- ~~**The old half is a one-way door**~~ **FIXED (M0).** Every one of its nine
+  sub-pages sent you "back" to the Black Box, not to the hub you came from. This
+  was the one real fault hiding behind the wrong test addresses.
+- **STILL OPEN. 48 controls on seven of its pages are too small to tap on a
+  phone** — and whether those pages survive at all is your decision (M2).
 
 ## What I actually checked, and how
 
@@ -152,11 +164,51 @@ Four rules. Approve these, not the milestone count.
    that were invisible to a green suite. *If this rule is wrong:* the same class
    of fault comes back and we find out from you, again.
 
+## Built so far — M0 and M1, 2026-09-24
+
+Both are in, pushed, and verified. What that took and what it found:
+
+**M0 is green: 61 of 61, from 39 of 61.** The repoint exposed exactly one real
+fault hiding behind the wrong address, which is the entire reason this milestone
+runs before anything is deleted. `BackLink`'s fallback on all nine of the old
+module's screens was `QUIT_VICE`, and nothing passes `?from=`, so the fallback is
+what every visitor got: backing out of any of them landed on the Black Box with
+the hub you came from two taps away behind a footer link. Fixed in the three
+components that draw it; the test that asserts it passes now instead of failing.
+`deadControls` and `blackbox` still green at 35.
+
+The root cause was below the specs. `HUB` meant two things — "the hub page" and
+"the prefix the steps hang off" — and only the first moved, so `${HUB}/<step>`
+stayed correct while every visit to `HUB` itself went somewhere else. It is split
+rather than repointed: steps come from `viceStep`, the page is named for the page.
+There is no `HUB` left in either spec to mean both again.
+
+**M1 is in, and verified against a real production build.** The claim is easy to
+get wrong, so here is what was actually measured rather than reasoned: 22 entries
+in the worker's store, all 16 of the page's `/_next/` resources among them, and an
+offline reload coming up **hydrated, with the record on screen** — not merely
+drawing cached HTML that never wakes up, which is the failure rule 3 exists for
+and which the first version of the test would have missed.
+
+Two things worth recording because they nearly went the other way. The test's
+first run failed on the record being absent, and the tempting read was "the
+chunks are not cached"; the real cause was the test writing to `localStorage` in
+the ~700ms before the account's answer lands and is written back through the same
+writer — the test was racing exactly the way `blackbox.spec.ts` warns about. And
+the five new worker tests were each proved by planting the fault back: a
+`startsWith` membership test adopts all nine of the old module's routes, and
+warming only the first shell path leaves the Black Box unstored. Each failed
+exactly one test.
+
+Verification ran on a second port against a separate build directory, so the
+owner's `npm run dev` on 3000 was never touched. `playwright.config.ts` now takes
+`PW_BASE_URL` so that is repeatable rather than a one-off.
+
 ## The milestones
 
 Each one is a state of the app you can open and judge.
 
-**M0 — The red tests go green or go away, and the address that has no name gets
+**M0 — DONE. The red tests go green, and the address that has no name gets
 one.** The specs did not drift off a constant — **there was never a constant to
 point them at.** `src/shared/lifeMasteryRoutes.ts` defines `LIFE_MASTERY`,
 `QUIT_VICE` and `viceStep`, and nothing for `/life-mastery/quit-vice/old`. The
@@ -176,7 +228,7 @@ Box, so it arguably wants renaming — but `viceStep` builds off it and the blas
 radius is real. Under road A there is only one vice address at M2 and the question
 dissolves; under road B it needs answering. Do not rename it at M0.
 
-**M1 — It opens with no connection.** The Black Box joins the time tracker as a
+**M1 — DONE. It opens with no connection.** The Black Box joins the time tracker as a
 page the service worker keeps. `public/sw.js` learns a *set* of shell paths
 instead of one, with its five existing rules unchanged — network first, each path
 answered only at its own address, stored with its own scripts or not at all,
@@ -264,13 +316,13 @@ cause is certainly the address. Whether a *real* fault is hiding behind it can
 only be settled by repointing them and running again, which is M0.
 
 **2. Can the offline shell be extended without breaking the time tracker?**
-*Attempted:* read `public/sw.js` and `OfflineShell.tsx` in full; confirmed in a
-browser that no worker is registered in development (0 registrations, no
-controller) so a dev-mode test cannot prove production behaviour. *Result:*
-**partial.** The change is a one-path constant becoming a set, and the worker's
-rule 2 already answers each stored page only at its own address. It needs a
-production build to verify, and `npm run build` freezes this machine — the memory
-note says `--webpack` works. Needs one production build run.
+*Attempted:* built and ran it. *Result:* **done.** `npm run build` already runs
+webpack under a memory cap, so it finished normally. `next.config.mjs` already
+supports `NEXT_DIST_DIR`, put there by somebody for this exact case — "a
+verification server on another port while `npm run dev` keeps going" — so the
+build went to `.next-verify` and the server to port 3100, and the owner's dev
+server on 3000 was never interrupted. The tracker's own shell is still warmed
+alongside the Black Box's, asserted by name. `.next-verify` was deleted after.
 
 **3. Can I write to the account to check the two-device path myself?**
 *Attempted:* yes, and it was refused — writing to the shared test account is

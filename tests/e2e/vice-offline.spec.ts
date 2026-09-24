@@ -38,11 +38,50 @@ import { QUIT_VICE, QUIT_VICE_OLD } from "@/src/shared/lifeMasteryRoutes"
  *     NEXT_DIST_DIR=.next-verify npm run build
  *     NEXT_DIST_DIR=.next-verify npx next start -p 3100
  *     PW_BASE_URL=http://localhost:3100 npx playwright test tests/e2e/vice-offline.spec.ts --project=chromium
+ *
+ * Verified that way on 2026-09-24: 22 entries in the store, all 16 of the
+ * page's `/_next/` resources among them, and an offline reload coming up
+ * hydrated with the record on screen.
  */
 
 test.describe.configure({ mode: "serial" })
 
 type Page = import("@playwright/test").Page
+
+/**
+ * Land on the Black Box with the worker installed and the account's answer in.
+ *
+ * BOTH WAITS MATTER, AND THE SECOND ONE IS THE SUBTLE ONE. `data-hydrated` goes
+ * up when the browser copy has been read, but the account's rows arrive about
+ * 700ms later and are written back through the same single writer. A
+ * `localStorage.setItem` in that window is silently overwritten by the merge
+ * that follows — which is exactly how the first version of this test lost its
+ * own seeded record and reported an empty page offline. `blackbox.spec.ts`
+ * records the same 700ms and the same lesson.
+ */
+async function landed(page: Page) {
+  await page.locator('[data-hydrated="true"]').waitFor({ timeout: 30000 })
+  await page
+    .locator('[data-sync="synced"], [data-sync="offline"], [data-sync="failed"]')
+    .waitFor({ timeout: 30000 })
+}
+
+/**
+ * Answer every upload in the browser, so this file never writes to the account.
+ *
+ * What it is about is opening with no network; the account's round trip is
+ * `blackbox.spec.ts`'s job and is covered there. Three sessions share this
+ * checkout and this test user, and a spec that leaves rows behind is a spec
+ * that makes somebody else's run flaky.
+ */
+async function neverWriteToTheAccount(page: Page) {
+  await page.route("**/api/black-box**", async (route) => {
+    if (route.request().method() === "PUT") {
+      return route.fulfill({ status: 200, contentType: "application/json", body: '{"written":0}' })
+    }
+    return route.continue()
+  })
+}
 
 /** Is a service worker actually in charge of this page? */
 async function workerIsControlling(page: Page): Promise<boolean> {
@@ -77,8 +116,9 @@ async function shellIsStored(page: Page, path: string): Promise<boolean> {
 }
 
 test("the Black Box opens with no connection, and its record is there", async ({ page, context }) => {
+  await neverWriteToTheAccount(page)
   await page.goto(QUIT_VICE)
-  await page.locator('[data-hydrated="true"]').waitFor({ timeout: 30000 })
+  await landed(page)
 
   const controlled = await workerIsControlling(page)
   test.skip(
@@ -115,7 +155,7 @@ test("the Black Box opens with no connection, and its record is there", async ({
     )
   })
   await page.reload()
-  await page.locator('[data-hydrated="true"]').waitFor({ timeout: 30000 })
+  await landed(page)
 
   expect(await shellIsStored(page, QUIT_VICE), "the worker never stored the Black Box's page").toBe(true)
 
@@ -125,8 +165,12 @@ test("the Black Box opens with no connection, and its record is there", async ({
   try {
     await page.reload({ timeout: 30000 })
     await expect(page.getByRole("heading", { name: "Black Box" })).toBeVisible()
-    // And it came back with the record, not an empty shell: localStorage is
-    // untouched by any of this, which is the half that already worked.
+    // AND IT WOKE UP. The heading is in the server-rendered HTML, so it is
+    // visible whether or not React ever ran — which makes it exactly the wrong
+    // thing to stop at. A cached document whose chunks were not also cached
+    // draws the page and does nothing, which is rule 3 in `public/sw.js`.
+    await page.locator('[data-hydrated="true"]').waitFor({ timeout: 30000 })
+    // And it came back with the record, not an empty shell.
     await expect(page.getByText("Drinking", { exact: false }).first()).toBeVisible()
   } finally {
     await context.setOffline(false)
@@ -139,8 +183,9 @@ test("no other page of the module is served offline, including the old hub", asy
   // `startsWith` would quietly adopt all nine of the old module's routes.
   // `tests/unit/shared/serviceWorker.test.ts` proves the worker's rule; this
   // proves it end to end, where the URLs are real.
+  await neverWriteToTheAccount(page)
   await page.goto(QUIT_VICE)
-  await page.locator('[data-hydrated="true"]').waitFor({ timeout: 30000 })
+  await landed(page)
 
   const controlled = await workerIsControlling(page)
   test.skip(!controlled, "No service worker under `npm run dev` — see the header of this file.")

@@ -13,6 +13,23 @@ dotenv.config({ path: '.env.local', override: true })
  */
 export const TRAINING_STATE = 'tests/e2e/.auth/training.json'
 
+/**
+ * WHERE THE APP UNDER TEST IS.
+ *
+ * Overridable because some things cannot be tested against `npm run dev` at
+ * all. The service worker is the case that forced this: `OfflineShell`
+ * registers only in a production build, by design, so "can this page be opened
+ * with no connection" is untestable on the dev server — and a test that went
+ * green there would be asserting nothing. A production build on another port
+ * (`NEXT_DIST_DIR=.next-verify npx next start -p 3100`) can now be driven
+ * without disturbing `npm run dev` on 3000, which the owner and two other
+ * sessions are using.
+ *
+ * `webServer.url` follows it, so Playwright checks the server it is actually
+ * pointed at rather than starting a second one.
+ */
+const BASE_URL = process.env.PW_BASE_URL ?? 'http://localhost:3000'
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -22,7 +39,7 @@ export default defineConfig({
   reporter: 'html',
   timeout: 60000,
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: BASE_URL,
     trace: 'on-first-retry',
     headless: true,
   },
@@ -105,6 +122,10 @@ export default defineConfig({
         // which lists them explicitly. Before the smoke pattern was anchored
         // they were swept up by it into five browser projects at once.
         /variant-[a-z0-9-]*smoke\.spec\.ts/,
+        // The signed-OUT half of the cold-open sweep. It asserts what a
+        // stranger sees on the sales page and in the auth flow, so a session
+        // would render a different app and prove nothing about either.
+        /cold-open-signed-out\.spec\.ts/,
       ],
       dependencies: ['setup'],
       use: {
@@ -141,6 +162,10 @@ export default defineConfig({
         // logged-OUT visitor sees, so it must not inherit the signed-in state.
         /password-reset\.spec\.ts/,
         /security-auth\.spec\.ts/,
+        // Opens the sales page and the whole auth flow cold and reads the
+        // console. The only pages a person can reach without an account, so the
+        // only ones where a hydration failure can be shown to a stranger.
+        /cold-open-signed-out\.spec\.ts/,
       ],
       use: { ...devices['Desktop Chrome'] },
     },
@@ -604,7 +629,7 @@ export default defineConfig({
   ],
   webServer: {
     command: process.env.CI ? 'npm run build && npm start' : 'npm run dev',
-    url: 'http://localhost:3000',
+    url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120000, // Allow more time for build in CI
   },
