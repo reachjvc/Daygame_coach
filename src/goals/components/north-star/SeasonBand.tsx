@@ -43,6 +43,7 @@ import { SEASON_BAND_COPY } from "@/src/goals/data/northStar"
 import { planIsUntouched, todayISO } from "@/src/goals/northStarService"
 import { oneThingCountdown, oneThingPrompt, oneThingStage, type OneThing } from "@/src/goals/oneThingService"
 import { todayItems, todayProgress } from "@/src/goals/northStarTrackService"
+import type { TrainingTicks } from "@/src/goals/dayTicks"
 import { withReturn } from "@/src/shared/returnTo"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
@@ -61,7 +62,7 @@ const HERE = "/dashboard/tracking"
    it by hand, as did the step, so the contract lived in three places and none of
    them was the one the server used. */
 
-export function SeasonBand({ plan, oneThing, ready = true, today: accountToday = null }: {
+export function SeasonBand({ plan, oneThing, ready = true, today: accountToday = null, ticks }: {
   /** The plan on the account, or null when it has none. Read by the page. */
   plan: NsPlan | null
   /**
@@ -74,6 +75,16 @@ export function SeasonBand({ plan, oneThing, ready = true, today: accountToday =
    * no copy of it.
    */
   oneThing: OneThing | null
+  /**
+   * WHAT THE TRAINING LOG TICKS, resolved on the server beside the plan.
+   *
+   * This band is the first thing on the page the owner opens daily, and it
+   * counted hand ticks only — so a morning whose gym session the schedule had
+   * already struck through still read "0 of 2 done today" here. Handed in
+   * rather than fetched, because this file came OFF the architecture test's
+   * list of components that load their own data and that list only shrinks.
+   */
+  ticks: TrainingTicks
   /**
    * The ACCOUNT's calendar day, resolved on the server from its timezone.
    *
@@ -142,7 +153,7 @@ export function SeasonBand({ plan, oneThing, ready = true, today: accountToday =
   /* Routine steps only, and that is why no goals are fetched: their ticks are
      on the plan. A driver's count lives in `user_goals` and belongs to the row
      that can increment it, not to a summary band. */
-  const progress = plan ? todayProgress(todayItems(plan, today, [], "")) : { done: 0, total: 0 }
+  const progress = plan ? todayProgress(todayItems(plan, today, [], "", ticks)) : { done: 0, total: 0 }
 
   return (
     <section className="mb-6 rounded-xl border border-border bg-card p-4 sm:p-5" data-testid="season-band">

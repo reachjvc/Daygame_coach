@@ -66,6 +66,9 @@ import * as nsTrack from "@/src/goals/northStarTrackService"
 import { fetchLifePlan, newNodeId, saveLifePlanFromBrowser, startLifePlan } from "@/src/goals/lifePlanClient"
 import { LIFE_PLAN_IMPORTED_KEY, SAVE_DEBOUNCE_MS, canSave, decideOnLoad, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
 import { fetchDayRecord, saveDayCatchingUp } from "@/src/goals/lifePlanDayClient"
+import { NO_TRAINING_TICKS, stepTick, stepTickedByHand, trainingTicks } from "@/src/goals/dayTicks"
+import { useLoad } from "@/src/shared/useLoad"
+import type { SessionType } from "@/src/health/types"
 import { patchesBetween, recordIsEmpty, recordOf, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
 import { reconcileProgramReference } from "@/src/goals/programReferenceService"
 import { StarTab } from "./StarTab"
@@ -1000,11 +1003,50 @@ export function NorthStarFlow({
         // pressed drew itself unticked.
         const stepId = ns.stepIdForLibraryStep(tracked, blueprintId, libraryStepId)
         if (!stepId) return tracked
-        return nsTrack.stepLogged(tracked, today ?? ns.todayISO(), stepId)
+        // BY HAND, because this decides whether to WRITE. A tick the training
+        // log derived is not in `plan.logged`, so asking the merged question
+        // here would skip the write and leave nothing behind when the log
+        // moves on.
+        return stepTickedByHand(tracked, today ?? ns.todayISO(), stepId)
           ? tracked
           : nsTrack.toggleStepLogged(tracked, today ?? ns.todayISO(), stepId)
       }),
   }), [today])
+
+  /**
+   * WHAT YOU ACTUALLY DID, from the training log — READ ONCE, FOR EVERY TAB.
+   *
+   * The ticks on a step like "Strength session" lived only in the plan, so a
+   * week with three finished gym sessions showed zero against it until
+   * somebody ticked it by hand: two records of one workout, kept apart and
+   * free to disagree, with the ignored one being the record of what actually
+   * happened.
+   *
+   * It is read HERE rather than inside the Track tab, where it used to live,
+   * because four surfaces answer "is this done today" and only one of them
+   * could see it from there. One read, one answer, handed down.
+   *
+   * Nine days rather than seven: the grid shows eight columns and the server
+   * cuts the history by ITS day, so a person far enough east or west needs the
+   * extra one to have their whole week.
+   */
+  const workouts = useLoad<Array<{ logged_at: string; session_type: SessionType }>>(
+    "/api/health/workout?days=9",
+    (body) => (Array.isArray(body) ? (body as Array<{ logged_at: string; session_type: SessionType }>) : [])
+  )
+
+  /**
+   * A FAILED READ IS NOT AN UNTRAINED WEEK.
+   *
+   * `NO_TRAINING_TICKS` while the log is loading or refused, and the schedule
+   * says so on screen — a silent empty log would draw somebody's trained week
+   * as a blank one, which is the "plausible number when the computation
+   * failed" shape this project keeps paying for.
+   */
+  const ticks = useMemo(
+    () => (workouts.state === "ready" ? trainingTicks(plan, workouts.data, timezone) : NO_TRAINING_TICKS),
+    [workouts, plan, timezone]
+  )
 
   /** The two halves of one area, and the move between them. */
   const openAreaGoals = useCallback((areaId: string) => {
@@ -1238,7 +1280,7 @@ export function NorthStarFlow({
   const ribbon = errand ? (
     <ErrandRibbon
       label={errand.label}
-      done={errand.tickId ? nsTrack.stepLogged(plan, today ?? ns.todayISO(), errand.tickId) : null}
+      done={errand.tickId ? stepTick(plan, today ?? ns.todayISO(), errand.tickId, ticks).done : null}
       onTick={() => {
         const id = errand.tickId
         if (id) setPlan((p) => nsTrack.toggleStepLogged(p, today ?? ns.todayISO(), id))
@@ -1482,6 +1524,7 @@ export function NorthStarFlow({
              date, with a tick against each line. */
           runId ? (
             <TodayTab
+              ticks={ticks}
               goalsPromise={goalsPromise}
               plan={plan}
               today={today ?? ns.todayISO()}
@@ -1609,6 +1652,7 @@ export function NorthStarFlow({
           <RecapTab
             plan={plan}
             today={today}
+            ticks={ticks}
             handlers={recapHandlers}
             valuesHandlers={valuesHandlers}
             onOpenArea={(areaId) => setNowAreaId(areaId)}
@@ -1641,7 +1685,9 @@ export function NorthStarFlow({
               runId={runId}
               goalLinks={goalLinks}
               today={today ?? ns.todayISO()}
-              timezone={timezone}
+              ticks={ticks}
+              logUnavailable={workouts.state === "failed"}
+              onRetryLog={workouts.state === "failed" ? workouts.retry : undefined}
               /* The SAME tick the Today step writes. The schedule shows
                  today's morning routine here too, and two screens showing one
                  routine must not keep two answers to "did you read it". */

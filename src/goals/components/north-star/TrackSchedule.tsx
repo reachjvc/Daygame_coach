@@ -45,10 +45,10 @@ import { AlertTriangle, CalendarDays, Check, ChevronDown, Rows3, TrendingUp } fr
 import type { NsPlan } from "@/src/goals/types"
 import { WEEK_DAYS } from "@/src/goals/data/northStarStart"
 import { SCHEDULE_COPY } from "@/src/goals/data/northStar"
+import { stepTick, type TrainingTicks } from "@/src/goals/dayTicks"
 import {
   groupLogged,
   groupSummary,
-  stepLogged,
   trackDays,
   trackGroups,
   trackWeeks,
@@ -91,7 +91,7 @@ export function TrackSchedule({
   plan,
   today,
   onToggleStep,
-  derivedTicks,
+  ticks,
   logUnavailable = false,
   onRetryLog,
 }: {
@@ -100,13 +100,18 @@ export function TrackSchedule({
   /** Ticking a step off today. Absent when this is rendered read-only. */
   onToggleStep?: (stepId: string) => void
   /**
-   * Date → the step ids that day's FINISHED workouts already tick.
+   * What the training log ticks — REQUIRED, and that is the point.
+   *
+   * It was optional, and the one caller that mattered forgot it: the signed-in
+   * branch of `TrackTab` rendered this with no log at all, so the merge below
+   * ran only while the person was signed OUT or during the flicker before auth
+   * resolved. Pass `NO_TRAINING_TICKS` to mean "no log here", deliberately.
    *
    * Derived at render and never written into `plan.logged`: the workout is the
    * record, and copying it into a second store is what let the two disagree in
    * the first place.
    */
-  derivedTicks?: Map<string, Set<string>>
+  ticks: TrainingTicks
   /** The training log could not be read — so the ticks below are hand-ticked only. */
   logUnavailable?: boolean
   onRetryLog?: () => void
@@ -349,7 +354,7 @@ export function TrackSchedule({
                       // other six are there to be read, and six open stacks is
                       // the flat list this grouping exists to replace.
                       const open = isOpen(key, day.isToday)
-                      const logged = groupLogged(plan, day.dateISO, group)
+                      const logged = groupLogged(plan, day.dateISO, group, ticks)
                       const allDone = day.isToday && logged.total > 0 && logged.done === logged.total
                       return (
                         <li key={group.id}>
@@ -378,11 +383,11 @@ export function TrackSchedule({
                           {open && (
                             <ul className="pl-5 mt-0.5 space-y-0.5">
                               {group.activities.map((activity) => {
-                                const hand = stepLogged(plan, day.dateISO, activity.id)
                                 // A finished workout IS the tick. Derived at
-                                // render, never written into the plan.
-                                const fromLog = derivedTicks?.get(day.dateISO)?.has(activity.id) ?? false
-                                const done = hand || fromLog
+                                // render, never written into the plan. The
+                                // header two lines above now counts the same
+                                // way, which it did not before.
+                                const { done, fromLog } = stepTick(plan, day.dateISO, activity.id, ticks)
                                 /* A TICK IS A RECORD, so it is only offered on
                                    today. Thursday's steps are shown on Thursday
                                    and nowhere else; a checkbox on them invites a

@@ -111,6 +111,9 @@ import type {
 } from "@/src/goals/types"
 /** A value, not a type: the loader checks a saved kind against it. */
 import { NS_FIELD_KINDS, NO_ACCOUNT } from "@/src/goals/types"
+/* "Is this step done today" has ONE owner. `dayTicks` is a leaf so that both
+   this file and `northStarTrackService` can reach it without closing a cycle. */
+import { stepTick, stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
 
 // ------------------------------------------------------------------ helpers
 
@@ -3281,8 +3284,10 @@ export function subStepsFor(plan: NsPlan, targetId: string): NsSubStep[] {
 /** How much of one thing's list is ticked off on a day. */
 export function subStepProgress(plan: NsPlan, date: string, targetId: string): { done: number; total: number } {
   const list = subStepsFor(plan, targetId)
-  const ticked = plan.logged[date] ?? []
-  return { done: list.filter((u) => ticked.includes(u.id)).length, total: list.length }
+  /* By hand, and only by hand. A sub-step under one thing is a line somebody
+     wrote; no finished workout ticks one, so this asks the narrow question
+     rather than taking a training log it would always ignore. */
+  return { done: list.filter((u) => stepTickedByHand(plan, date, u.id)).length, total: list.length }
 }
 
 /** What one area was rated on one day, or null when it was not. */
@@ -3816,7 +3821,8 @@ function libraryStep(blueprintId: string, stepId: string) {
 export function practiceState(
   plan: NsPlan,
   key: keyof typeof RECAP_PRACTICES,
-  date = todayISO()
+  date: string,
+  ticks: TrainingTicks
 ): { running: NsPractice[]; offer: NsPracticeOffer | null } {
   const spec = RECAP_PRACTICES[key]
   // The candidates name LIBRARY entries, so they are matched against the step's
@@ -3834,7 +3840,10 @@ export function practiceState(
         title: step.title,
         routineId: routine.id,
         routineLabel: routine.label,
-        doneToday: (plan.logged[date] ?? []).includes(step.id),
+        // Through the one owner. This was a hand-inlined copy of `stepLogged`'s
+        // body — a fifth answer to "is this done today", and the only one that
+        // could not even be found by grepping for the function's name.
+        doneToday: stepTick(plan, date, step.id, ticks).done,
       })
     }
   }

@@ -38,7 +38,8 @@ import {
   trackPractice,
   practiceIsOn,
 } from "@/src/goals/northStarService"
-import { stepLogged, toggleStepLogged } from "@/src/goals/northStarTrackService"
+import { toggleStepLogged } from "@/src/goals/northStarTrackService"
+import { stepTickedByHand } from "@/src/goals/dayTicks"
 import type { NsPlan } from "@/src/goals/types"
 
 const NOW = "2026-09-18T08:00:00.000Z"
@@ -194,7 +195,7 @@ describe("the repair never costs anybody what they wrote", () => {
     const stillThere = after.routines[0].steps.find((s) => s.libraryStepId === "gratitude")!
     expect(stillThere.id).toBe(gratitude.id)
     expect(journalEntry(after, DAY, stillThere.id)).toBe("Coffee, the sea, my brother.")
-    expect(stepLogged(after, DAY, stillThere.id)).toBe(true)
+    expect(stepTickedByHand(after, DAY, stillThere.id)).toBe(true)
   })
 
   it("keeps a tick when a plan holding a duplicate is loaded", () => {
@@ -210,7 +211,7 @@ describe("the repair never costs anybody what they wrote", () => {
     // rows had one id. That tick survives, on the row that kept the id.
     raw.logged = { [DAY]: ["stretch"] }
     const loaded = loadNsPlan(JSON.stringify(raw))!
-    expect(stepLogged(loaded, DAY, "stretch")).toBe(true)
+    expect(stepTickedByHand(loaded, DAY, "stretch")).toBe(true)
     expect(loaded.routines.flatMap((r) => r.steps).some((s) => s.id === "stretch")).toBe(true)
   })
 })
@@ -298,12 +299,12 @@ describe("a tick goes under the step's own id, never the library's name", () => 
     const stepId = stepIdForLibraryStep(started, PRACTICE.blueprint, PRACTICE.library)!
 
     const ticked = toggleStepLogged(started, "2026-09-23", stepId)
-    expect(stepLogged(ticked, "2026-09-23", stepId)).toBe(true)
+    expect(stepTickedByHand(ticked, "2026-09-23", stepId)).toBe(true)
 
     // What the bug did: tick the library's name instead. The row stays unticked
     // and the log holds an id nothing in the plan carries.
     const wrong = toggleStepLogged(started, "2026-09-23", PRACTICE.library)
-    expect(stepLogged(wrong, "2026-09-23", stepId)).toBe(false)
+    expect(stepTickedByHand(wrong, "2026-09-23", stepId)).toBe(false)
     expect(wrong.routines.flatMap((r) => r.steps).some((st) => st.id === PRACTICE.library)).toBe(false)
   })
 

@@ -59,6 +59,7 @@ import {
   seasonFocus,
   valuesDiff,
 } from "@/src/goals/northStarService"
+import type { TrainingTicks } from "@/src/goals/dayTicks"
 import { AreaWheel } from "./AreaWheel"
 import { ValuesWork, type ValuesHandlers } from "./ValuesWork"
 
@@ -215,17 +216,19 @@ function Answer({
 function PracticeRow({
   plan,
   today,
+  ticks,
   practiceKey,
   onTick,
   onTrack,
 }: {
   plan: NsPlan
   today: string
+  ticks: TrainingTicks
   practiceKey: keyof typeof RECAP_PRACTICES
   onTick: (stepId: string) => void
   onTrack: (blueprintId: string, stepId: string) => void
 }) {
-  const { running, offer } = practiceState(plan, practiceKey, today)
+  const { running, offer } = practiceState(plan, practiceKey, today, ticks)
 
   if (running.length === 0) {
     if (!offer) return null
@@ -333,6 +336,7 @@ function AreaCard({ area, plan, today, onOpen }: { area: NsArea; plan: NsPlan; t
 export function RecapTab({
   plan,
   today,
+  ticks,
   handlers,
   valuesHandlers,
   onOpenArea,
@@ -343,6 +347,14 @@ export function RecapTab({
 }: {
   plan: NsPlan
   today: string
+  /**
+   * What the training log ticks, built once by the flow.
+   *
+   * A practice row's "done today" was a hand-inlined copy of the tick rule —
+   * the fifth answer to the question, and the only one that could not be found
+   * by grepping for the function's name.
+   */
+  ticks: TrainingTicks
   handlers: RecapHandlers
   valuesHandlers: ValuesHandlers
   /** Opens the area's own dialog, where the rest of its boxes are. */
@@ -453,6 +465,7 @@ export function RecapTab({
         <PracticeRow
           plan={plan}
           today={today}
+          ticks={ticks}
           practiceKey="star"
           onTick={handlers.onTickPractice}
           onTrack={handlers.onTrackPractice}
@@ -561,8 +574,8 @@ export function RecapTab({
         </div>
 
         {/* Two practices, because they are two things you say out loud. */}
-        <PracticeRow plan={plan} today={today} practiceKey="identity" onTick={handlers.onTickPractice} onTrack={handlers.onTrackPractice} />
-        <PracticeRow plan={plan} today={today} practiceKey="affirmations" onTick={handlers.onTickPractice} onTrack={handlers.onTrackPractice} />
+        <PracticeRow plan={plan} today={today} ticks={ticks} practiceKey="identity" onTick={handlers.onTickPractice} onTrack={handlers.onTrackPractice} />
+        <PracticeRow plan={plan} today={today} ticks={ticks} practiceKey="affirmations" onTick={handlers.onTickPractice} onTrack={handlers.onTrackPractice} />
       </Block>
 
       {/* The values, in order, with the list they replaced under them. */}
@@ -781,7 +794,7 @@ export function RecapTab({
       <section id={RECAP_DRIVING_ANCHOR} className="scroll-mt-24 rounded-2xl border border-violet-400/20 bg-violet-500/[0.04] px-5 py-4">
         <h2 className="text-sm font-semibold text-violet-100">{RECAP_COPY.wholeTitle}</h2>
         <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{RECAP_COPY.wholeHelp}</p>
-        <PracticeRow plan={plan} today={today} practiceKey="whole" onTick={handlers.onTickPractice} onTrack={handlers.onTrackPractice} />
+        <PracticeRow plan={plan} today={today} ticks={ticks} practiceKey="whole" onTick={handlers.onTickPractice} onTrack={handlers.onTrackPractice} />
       </section>
     </div>
   )

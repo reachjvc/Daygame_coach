@@ -10,6 +10,7 @@ import { QuickAddModal } from "./QuickAddModal"
 import { SeasonBand } from "@/src/goals/components/north-star/SeasonBand"
 import type { NsPlan } from "@/src/goals/types"
 import type { OneThing } from "@/src/goals/oneThingService"
+import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
 import type { DashboardLayoutResponse } from "../types"
 import { TRACKING } from "@/src/shared/trainingRoutes"
 import { TrainingCard } from "@/src/programs/components/TrainingCard"
@@ -44,7 +45,7 @@ const AchievementsModal = lazy(() =>
  * says there and what it says here cannot drift apart.
  */
 
-export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThing = null, seasonReady = false, today = null }: {
+export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThing = null, seasonReady = false, today = null, seasonTicks = NO_TRAINING_TICKS }: {
   initialDashboard?: DashboardLayoutResponse
   /** The Life Mastery plan, read on the server. Passed straight to the band. */
   seasonPlan?: NsPlan | null
@@ -53,6 +54,14 @@ export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThin
   seasonReady?: boolean
   /** The ACCOUNT's calendar day, read on the server. Null when it could not be. */
   today?: string | null
+  /**
+   * What the training log ticks, read on the server beside the plan.
+   *
+   * Defaults to "no log in hand" rather than to an empty object typed by hand,
+   * so a caller that omits it is saying the same thing every other caller says
+   * with those words — and `seasonReady` already covers a read that failed.
+   */
+  seasonTicks?: TrainingTicks
 }) {
   const { state, deleteSession, deleteFieldReport, refresh } = useTrackingStats()
   const [achievementsOpen, setAchievementsOpen] = useState(false)
@@ -91,7 +100,7 @@ export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThin
           halves are read on the SERVER and handed down: this band used to read
           the plan out of localStorage, so on a second device it told somebody
           who had written a plan to go and build one. */}
-      <SeasonBand plan={seasonPlan} oneThing={oneThing} ready={seasonReady} today={today} />
+      <SeasonBand plan={seasonPlan} oneThing={oneThing} ready={seasonReady} today={today} ticks={seasonTicks} />
 
       {/*
         TODAY'S TRAINING, ABOVE THE THINGS YOU READ.

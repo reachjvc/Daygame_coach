@@ -18,6 +18,7 @@ import { render, screen } from "@testing-library/react"
 import { TrackSchedule } from "@/src/goals/components/north-star/TrackSchedule"
 import { addRoutine, emptyNsPlan, toggleRoutineStep, updateStep } from "@/src/goals/northStarService"
 import type { NsPlan } from "@/src/goals/types"
+import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
@@ -49,11 +50,18 @@ function planWithTraining(): { plan: NsPlan; strengthStepId: string } {
 }
 
 /**
- * The derived map speaks the PLAN's step ids, not the library's.
+ * The tick map speaks the PLAN's step ids, not the library's.
  * `STEP_FOR_SESSION_TYPE` answers "strength", which is the same on everybody's
- * plan; the step carrying it has an id of its own that is not. TrackTab does
- * this translation, so the fixture does it too rather than testing a map the
- * real caller never produces.
+ * plan; the step carrying it has an id of its own that is not. `trainingTicks`
+ * does this translation, so the fixture does it too rather than testing a map
+ * the real caller never produces.
+ *
+ * WHAT THIS FILE CANNOT SEE, stated because it stayed invisible for weeks: it
+ * renders `TrackSchedule` directly and hands it a map built here. It therefore
+ * could not tell that `TrackTab` — the only thing that renders this on a real
+ * screen — passed no map at all on its signed-in branch, so the whole feature
+ * was dead for everybody signed in. `doneTodayOneOwner.test.tsx` is the test
+ * that can see that, and it renders the real caller.
  */
 
 function schedule(over: {
@@ -64,15 +72,15 @@ function schedule(over: {
 } = {}) {
   const onToggleStep = vi.fn()
   const { plan, strengthStepId } = planWithTraining()
-  const derivedTicks = new Map<string, Set<string>>(
-    (over.trainedOn ?? []).map((date) => [date, new Set([strengthStepId])])
+  const ticks: TrainingTicks = Object.fromEntries(
+    (over.trainedOn ?? []).map((date) => [date, [strengthStepId]])
   )
   render(
     <TrackSchedule
       plan={plan}
       today={TODAY}
       onToggleStep={onToggleStep}
-      derivedTicks={over.trainedOn ? derivedTicks : undefined}
+      ticks={over.trainedOn ? ticks : NO_TRAINING_TICKS}
       logUnavailable={over.logUnavailable}
       onRetryLog={over.onRetryLog}
     />
@@ -111,6 +119,31 @@ describe("a finished workout ticks its step", () => {
   it("shows nothing of the sort when no log was supplied at all", () => {
     schedule()
     expect(screen.queryByText(/from your training log/i)).toBeNull()
+  })
+})
+
+/**
+ * THE HEADER AND THE ROW UNDER IT, which used to disagree by construction.
+ *
+ * `groupLogged` counted hand ticks; the row two lines below it counted hand
+ * ticks OR the training log. So a morning with a finished session in it drew a
+ * struck-through row under a header that read `0/1`. Same card, same group,
+ * two answers — and the one on top was the one a person reads first.
+ */
+describe("the group header counts the same way the row under it does", () => {
+  it("a session the row struck through is a session the header counted", () => {
+    schedule({ trainedOn: [TODAY] })
+
+    expect(
+      screen.queryByText("0/1"),
+      "the header said nothing was done above a row it had just struck through",
+    ).toBeNull()
+    expect(screen.getByLabelText("All done"), "one of one, from the log alone").toBeTruthy()
+  })
+
+  it("and still counts zero on a day nothing was trained or ticked", () => {
+    schedule({ trainedOn: ["2026-09-01"] })
+    expect(screen.getByText("0/1")).toBeTruthy()
   })
 })
 

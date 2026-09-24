@@ -7,6 +7,8 @@ import { dayRowsToRecord } from "@/src/goals/lifePlanDayService"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import { rowsToPlan } from "@/src/goals/lifePlanMapper"
+import { getWorkoutLogs } from "@/src/db/healthRepo"
+import { NO_TRAINING_TICKS, trainingTicks, type TrainingTicks } from "@/src/goals/dayTicks"
 import { readOneThing } from "@/src/goals/oneThingServer"
 import type { DashboardLayoutResponse } from "@/src/tracking/types"
 import type { NsPlan } from "@/src/goals/types"
@@ -44,6 +46,15 @@ export default async function TrackingPage() {
   let seasonReady = false
   /** The ACCOUNT's calendar day, so the band and the flow agree what today is. */
   let today: string | null = null
+  /**
+   * WHAT THE TRAINING LOG TICKS, resolved here beside the plan.
+   *
+   * The band counted hand ticks only, so a morning whose finished gym session
+   * the Life Mastery schedule had already struck through still read
+   * "0 of 2 done today" at the top of this page. It is read on the server
+   * because the band does not fetch — see its own comment.
+   */
+  let seasonTicks: TrainingTicks = NO_TRAINING_TICKS
 
   if (auth.success) {
     try {
@@ -81,6 +92,15 @@ export default async function TrackingPage() {
         seasonPlan = { ...seasonPlan, ...dayRowsToRecord(dayRows, localIdFor) }
       }
 
+      /* Nine days rather than seven, for the same reason the flow reads nine:
+         the cut is made by the server's day, so somebody far enough east or
+         west needs the extra one to have their whole week. A failed read is
+         caught below and leaves `seasonTicks` empty with `seasonReady` false,
+         so the band draws nothing rather than an untrained week. */
+      if (seasonPlan) {
+        seasonTicks = trainingTicks(seasonPlan, await getWorkoutLogs(auth.userId, 9), timezone)
+      }
+
       oneThing = thing.current
       seasonReady = true
     } catch (error) {
@@ -95,6 +115,7 @@ export default async function TrackingPage() {
       oneThing={oneThing}
       seasonReady={seasonReady}
       today={today}
+      seasonTicks={seasonTicks}
     />
   )
 }

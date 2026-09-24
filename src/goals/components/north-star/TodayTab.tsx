@@ -35,7 +35,8 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { ArrowRight, Check, ChevronDown, ChevronUp, Loader2, Minus, Plus, Trash2 } from "lucide-react"
 import type { NorthStarTabId, NsDailyField, NsFieldKind, NsPlan, NsSubStep } from "@/src/goals/types"
 import { GOES_TO_COPY, TODAY_COPY } from "@/src/goals/data/northStar"
-import { cadenceLabel, destination, destinations, fieldTargets, groupLogged, groupSummary, readSource, readSources, standingItems, stepLogged, todayItems, todayProgress, trackGroups, type TodayItem } from "@/src/goals/northStarTrackService"
+import { cadenceLabel, destination, destinations, fieldTargets, groupLogged, groupSummary, readSource, readSources, standingItems, todayItems, todayProgress, trackGroups, type TodayItem } from "@/src/goals/northStarTrackService"
+import { stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
 import { dailyFieldsFor, dailyRating, formatTargetDate, journalEntry, journalHistory, subStepProgress, subStepsFor } from "@/src/goals/northStarService"
 import { ScoreRow } from "./ScoreRow"
 import { SENTENCE_HINT } from "./SentenceBox"
@@ -638,6 +639,7 @@ export function TodayTab({
   plan,
   today,
   runId,
+  ticks,
   onToggleStep,
   onToggleExperience,
   onRate,
@@ -665,6 +667,14 @@ export function TodayTab({
   plan: NsPlan
   today: string
   runId: string
+  /**
+   * What the training log ticks, built once by the flow.
+   *
+   * This screen's "N of M done" counted hand ticks only, so a morning with a
+   * finished gym session in it read as a morning with nothing done — while the
+   * Track tab's schedule, two tabs away, struck the same row through.
+   */
+  ticks: TrainingTicks
   onToggleStep: (stepId: string) => void
   /** Ticking one of the things you wanted to have done. */
   onToggleExperience: (id: string) => void
@@ -823,8 +833,8 @@ export function TodayTab({
   }, [load, goalsPromise])
 
   const items = useMemo(
-    () => todayItems(plan, today, hubGoals ?? [], runId),
-    [plan, today, hubGoals, runId]
+    () => todayItems(plan, today, hubGoals ?? [], runId, ticks),
+    [plan, today, hubGoals, runId, ticks]
   )
   const progress = useMemo(() => todayProgress(items), [items])
   /**
@@ -879,7 +889,10 @@ export function TodayTab({
         key={field.id}
         field={field}
         source={destination(plan, field.readSourceId)}
-        done={stepLogged(plan, today, field.id)}
+        /* By hand. A daily field is a question you wrote; no finished workout
+           ticks one, so this asks the narrow question rather than a merged one
+           whose other half can never be true here. */
+        done={stepTickedByHand(plan, today, field.id)}
         onToggle={() => onToggleStep(field.id)}
         onOpen={() => onOpenField(field.id)}
       />
@@ -951,7 +964,8 @@ export function TodayTab({
         targetId={targetId}
         title={title}
         subs={subStepsFor(plan, targetId)}
-        isDone={(id) => stepLogged(plan, today, id)}
+        /* By hand, for the same reason as the daily fields above. */
+        isDone={(id) => stepTickedByHand(plan, today, id)}
         onToggle={onToggleStep}
         onAdd={(text) => onAddSubStep(targetId, text)}
         onRename={onRenameSubStep}
@@ -1195,7 +1209,7 @@ export function TodayTab({
         {groups.map((group) => {
           const key = `${keyPrefix}:${group.id}`
           const open = isOpen(key, openByDefault || hasField(group.activities.map((a) => a.id)))
-          const logged = groupLogged(plan, today, group)
+          const logged = groupLogged(plan, today, group, ticks)
           const allDone = logged.total > 0 && logged.done === logged.total
           return (
             <li key={group.id}>

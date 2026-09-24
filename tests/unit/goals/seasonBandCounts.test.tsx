@@ -24,6 +24,7 @@
 
 import { render, cleanup } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
+import { NO_TRAINING_TICKS } from "@/src/goals/dayTicks"
 import { SeasonBand } from "@/src/goals/components/north-star/SeasonBand"
 import { addCustomStep, emptyNsPlan, setNorthStar } from "@/src/goals/northStarService"
 import type { NsPlan } from "@/src/goals/types"
@@ -48,13 +49,13 @@ afterEach(cleanup)
 describe("the band counts what is actually on the account", () => {
   it("counts a tick that IS there", () => {
     const { plan } = planWithOneStep(true)
-    render(<SeasonBand plan={plan} oneThing={null} ready today={TODAY} />)
+    render(<SeasonBand plan={plan} oneThing={null} ready ticks={NO_TRAINING_TICKS} today={TODAY} />)
     expect(band(), "a ticked step must be counted").toMatch(/1 of 1/)
   })
 
   it("counts zero when nothing is ticked, which is a different fact", () => {
     const { plan } = planWithOneStep(false)
-    render(<SeasonBand plan={plan} oneThing={null} ready today={TODAY} />)
+    render(<SeasonBand plan={plan} oneThing={null} ready ticks={NO_TRAINING_TICKS} today={TODAY} />)
     expect(band()).toMatch(/0 of 1/)
   })
 
@@ -65,7 +66,7 @@ describe("the band counts what is actually on the account", () => {
   it("said 0 of 1 for a plan that HAD the tick, when the day half was dropped", () => {
     const { plan } = planWithOneStep(true)
     const asTheReadUsedToHandItOver = { ...plan, logged: {} }
-    render(<SeasonBand plan={asTheReadUsedToHandItOver} oneThing={null} ready today={TODAY} />)
+    render(<SeasonBand plan={asTheReadUsedToHandItOver} oneThing={null} ready ticks={NO_TRAINING_TICKS} today={TODAY} />)
     expect(
       band(),
       "this is what the dashboard showed every day: the tick exists and the band cannot see it",
@@ -78,11 +79,11 @@ describe("whose day the band is counting", () => {
     // Ticked on the account's day. A browser an hour ahead would ask about
     // tomorrow and find nothing.
     const { plan } = planWithOneStep(true, TODAY)
-    render(<SeasonBand plan={plan} oneThing={null} ready today={TODAY} />)
+    render(<SeasonBand plan={plan} oneThing={null} ready ticks={NO_TRAINING_TICKS} today={TODAY} />)
     expect(band()).toMatch(/1 of 1/)
 
     cleanup()
-    render(<SeasonBand plan={plan} oneThing={null} ready today="2026-09-25" />)
+    render(<SeasonBand plan={plan} oneThing={null} ready ticks={NO_TRAINING_TICKS} today="2026-09-25" />)
     expect(band(), "a different day is a different count, and that is correct").toMatch(/0 of 1/)
   })
 })

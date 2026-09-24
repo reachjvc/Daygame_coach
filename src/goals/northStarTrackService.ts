@@ -43,6 +43,9 @@ import { CADENCE_COPY, TODAY_COPY, JOURNAL_ALL_ID, JOURNAL_COPY, JOURNAL_PREFIX,
 import { WEEK_DAYS } from "@/src/goals/data/northStarStart"
 import { NON_REGISTRY_TEMPLATE_PREFIXES } from "@/src/goals/data/templateNamespaces"
 import { periodStartFor } from "@/src/shared/dateUtils"
+/* "Is this step done today" has ONE owner, and it is not this file — see
+   `dayTicks.ts` for why it is a leaf both services can import. */
+import { stepTick, type TrainingTicks } from "@/src/goals/dayTicks"
 
 /**
  * Every row this module has ever been responsible for starts with this.
@@ -824,10 +827,20 @@ export function groupSummary(group: TrackGroup): string {
  *
  * Steps only: a driver has a count, not a tick, and counting it here would
  * make a group of five read "0 of 6" forever.
+ *
+ * `ticks` is required rather than optional, and that is the fix. This counted
+ * hand ticks while the rows folded underneath it counted hand ticks OR the
+ * training log, so the header said `0/2` above two struck-through lines. An
+ * optional argument would have left the same hole open for the next caller.
  */
-export function groupLogged(plan: NsPlan, date: string, group: TrackGroup): { done: number; total: number } {
+export function groupLogged(
+  plan: NsPlan,
+  date: string,
+  group: TrackGroup,
+  ticks: TrainingTicks
+): { done: number; total: number } {
   const steps = group.activities.filter((a) => a.kind === "routine")
-  return { done: steps.filter((a) => stepLogged(plan, date, a.id)).length, total: steps.length }
+  return { done: steps.filter((a) => stepTick(plan, date, a.id, ticks).done).length, total: steps.length }
 }
 
 // ============================================================================
@@ -851,6 +864,11 @@ export interface TodayItem {
   activity: TrackActivity
   /** Steps: ticked today. Drivers: never — a driver has a count, not a tick. */
   done: boolean
+  /**
+   * Steps: the tick came from a finished workout, so it cannot be un-ticked.
+   * Drivers: always false.
+   */
+  fromLog: boolean
   /** Drivers only: the real goal's uuid, once it has been pushed. */
   goalId: string | null
   /** Drivers only: where the count stands this period, from the hub. */
@@ -920,12 +938,6 @@ export function cadenceLabel(activity: TrackActivity): string {
   if (days.length <= 3) return days.map((d) => WEEK_DAYS[d]).join(" · ")
   return timesAWeek(days.length)
 }
-
-/** Whether a routine step has been ticked on a given day. */
-export function stepLogged(plan: NsPlan, date: string, stepId: string): boolean {
-  return (plan.logged[date] ?? []).includes(stepId)
-}
-
 /**
  * Tick a step for a day, or untick it.
  *
@@ -956,7 +968,8 @@ export function todayItems(
   plan: NsPlan,
   date: string,
   hubGoals: ReadonlyArray<{ id: string; template_id?: string | null; current_value?: number; target_value?: number }>,
-  runId: string
+  runId: string,
+  ticks: TrainingTicks
 ): TodayItem[] {
   const [y, m, d] = date.split("-").map(Number)
   const weekday = (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7
@@ -966,13 +979,15 @@ export function todayItems(
   const items = trackActivities(plan).map((activity) => {
     const when = todayWhen(activity, weekday)
     if (activity.kind === "routine") {
-      return { activity, done: stepLogged(plan, date, activity.id), goalId: null, current: null, target: null, when }
+      const tick = stepTick(plan, date, activity.id, ticks)
+      return { activity, done: tick.done, fromLog: tick.fromLog, goalId: null, current: null, target: null, when }
     }
     const goalId = real.get(activity.id) ?? null
     const row = goalId ? byId.get(goalId) : undefined
     return {
       activity,
       done: false,
+      fromLog: false,
       goalId,
       current: row?.current_value ?? null,
       target: row?.target_value ?? null,

@@ -39,7 +39,8 @@ import {
   toggleRoutineStep,
   trackPractice,
 } from "@/src/goals/northStarService"
-import { stepLogged, toggleStepLogged } from "@/src/goals/northStarTrackService"
+import { toggleStepLogged } from "@/src/goals/northStarTrackService"
+import { NO_TRAINING_TICKS, stepTickedByHand } from "@/src/goals/dayTicks"
 import type { NsPlan } from "@/src/goals/types"
 
 afterEach(cleanup)
@@ -105,6 +106,7 @@ function show(plan: NsPlan, over: Partial<RecapHandlers> = {}, oneThing: string 
     <RecapTab
       plan={plan}
       today={TODAY}
+      ticks={NO_TRAINING_TICKS}
       handlers={h}
       valuesHandlers={NO_VALUES_HANDLERS}
       onOpenArea={vi.fn()}
@@ -281,7 +283,7 @@ describe("ticking a practice off from the page you read it on", () => {
   }
 
   it("offers to start tracking when nothing in the plan runs it", () => {
-    const { running, offer } = practiceState(fullPlan(), "star", TODAY)
+    const { running, offer } = practiceState(fullPlan(), "star", TODAY, NO_TRAINING_TICKS)
     expect(running).toEqual([])
     // The morning stack is one of the four every plan starts with, so this is
     // one step turned on rather than a new routine imposed on somebody.
@@ -290,7 +292,7 @@ describe("ticking a practice off from the page you read it on", () => {
 
   it("never offers a second copy of something already running", () => {
     const plan = planTracking()
-    const { running, offer } = practiceState(plan, "star", TODAY)
+    const { running, offer } = practiceState(plan, "star", TODAY, NO_TRAINING_TICKS)
     // `stepId` on a running practice is the plan's step, not the library entry
     // — it is what the tick and the journal are keyed by.
     expect(running.map((p) => p.stepId)).toEqual([plantedId(plan, "star")])
@@ -310,7 +312,7 @@ describe("ticking a practice off from the page you read it on", () => {
           : r
       ),
     }
-    const { running, offer } = practiceState(withOwn, "star", TODAY)
+    const { running, offer } = practiceState(withOwn, "star", TODAY, NO_TRAINING_TICKS)
     expect(running.map((p) => p.title)).toEqual(["Read my north star before bed"])
     expect(offer).toBeNull()
   })
@@ -320,10 +322,10 @@ describe("ticking a practice off from the page you read it on", () => {
     // would say it was read here and not read there.
     const plan = planTracking()
     const starStep = plantedId(plan, "star")
-    expect(stepLogged(plan, TODAY, starStep)).toBe(false)
+    expect(stepTickedByHand(plan, TODAY, starStep)).toBe(false)
     const ticked = toggleStepLogged(plan, TODAY, starStep)
-    expect(stepLogged(ticked, TODAY, starStep)).toBe(true)
-    expect(practiceState(ticked, "star", TODAY).running[0].doneToday).toBe(true)
+    expect(stepTickedByHand(ticked, TODAY, starStep)).toBe(true)
+    expect(practiceState(ticked, "star", TODAY, NO_TRAINING_TICKS).running[0].doneToday).toBe(true)
   })
 
   it("renders the tick under the north star, and presses it", () => {
@@ -357,10 +359,10 @@ describe("ticking a practice off from the page you read it on", () => {
 
     // The identity lines live only in the manifestation stack, which no plan
     // starts with, so that one really does have to create a routine.
-    const identity = practiceState(plan, "identity", TODAY).offer!
+    const identity = practiceState(plan, "identity", TODAY, NO_TRAINING_TICKS).offer!
     expect(identity).toMatchObject({ blueprintId: "manifestation", addsRoutine: true })
     const withStack = trackPractice(plan, identity.blueprintId, identity.stepId, NOW)
     expect(withStack.routines).toHaveLength(plan.routines.length + 1)
-    expect(practiceState(withStack, "identity", TODAY).running).toHaveLength(1)
+    expect(practiceState(withStack, "identity", TODAY, NO_TRAINING_TICKS).running).toHaveLength(1)
   })
 })

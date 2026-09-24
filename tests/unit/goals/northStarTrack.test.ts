@@ -36,11 +36,11 @@ import {
   trackWeeks,
   todayItems,
   todayProgress,
-  stepLogged,
   toggleStepLogged,
   unscheduledActivities,
   weekStartISO,
 } from "@/src/goals/northStarTrackService"
+import { NO_TRAINING_TICKS, stepTickedByHand } from "@/src/goals/dayTicks"
 import type { NsGoal, NsPlan } from "@/src/goals/types"
 import { getOrphanedGoalIds, pruneTreeByTemplatePrefix } from "@/src/goals/goalsService"
 import type { GoalWithProgress } from "@/src/goals/types"
@@ -472,7 +472,7 @@ describe("today: what you actually did", () => {
 
   it("puts what is on today first, and keeps the rest inputtable", () => {
     const { plan, stepId } = seedDay()
-    const items = todayItems(plan, MONDAY, [], RUN)
+    const items = todayItems(plan, MONDAY, [], RUN, NO_TRAINING_TICKS)
     expect(items[0].activity.id).toBe(stepId)
     expect(items[0].when).toBe("today")
     // A driver names no day, so today is as good a day as any: doing your
@@ -482,7 +482,7 @@ describe("today: what you actually did", () => {
 
   it("does not put a step on a day it is not on", () => {
     const { plan, stepId } = seedDay()
-    const item = todayItems(plan, TUESDAY, [], RUN).find((i) => i.activity.id === stepId)!
+    const item = todayItems(plan, TUESDAY, [], RUN, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!
     expect(item.when).toBe("otherDay")
   })
 
@@ -498,7 +498,7 @@ describe("today: what you actually did", () => {
     const routine = seed.routines[2]
     const weekly = addCustomStep(seed, routine.id, "Weekly review", 30, 1)
     const daily = addCustomStep(weekly, routine.id, "One most important task", 90, 7)
-    const items = todayItems(daily, MONDAY, [], RUN)
+    const items = todayItems(daily, MONDAY, [], RUN, NO_TRAINING_TICKS)
 
     expect(items.find((i) => i.activity.title === "Weekly review")!.when).toBe("anyDay")
     // Seven days a week is every day, this one included, even unplaced.
@@ -509,7 +509,7 @@ describe("today: what you actually did", () => {
     const seed = emptyNsPlan()
     const routine = seed.routines[2]
     const plan = addCustomStep(addCustomStep(seed, routine.id, "Weekly review", 30, 1), routine.id, "One most important task", 90, 7)
-    expect(todayProgress(todayItems(plan, MONDAY, [], RUN))).toEqual({ done: 0, total: 1 })
+    expect(todayProgress(todayItems(plan, MONDAY, [], RUN, NO_TRAINING_TICKS))).toEqual({ done: 0, total: 1 })
   })
 
   describe("how often it runs, said on the row", () => {
@@ -548,12 +548,12 @@ describe("today: what you actually did", () => {
 
   it("remembers the tick, and takes it back", () => {
     const { plan, stepId } = seedDay()
-    expect(stepLogged(plan, MONDAY, stepId)).toBe(false)
+    expect(stepTickedByHand(plan, MONDAY, stepId)).toBe(false)
     const ticked = toggleStepLogged(plan, MONDAY, stepId)
-    expect(stepLogged(ticked, MONDAY, stepId)).toBe(true)
+    expect(stepTickedByHand(ticked, MONDAY, stepId)).toBe(true)
     // …and only on that day.
-    expect(stepLogged(ticked, TUESDAY, stepId)).toBe(false)
-    expect(stepLogged(toggleStepLogged(ticked, MONDAY, stepId), MONDAY, stepId)).toBe(false)
+    expect(stepTickedByHand(ticked, TUESDAY, stepId)).toBe(false)
+    expect(stepTickedByHand(toggleStepLogged(ticked, MONDAY, stepId), MONDAY, stepId)).toBe(false)
   })
 
   it("SURVIVES A RELOAD — the tick, the rating and the note are all on the plan", () => {
@@ -566,7 +566,7 @@ describe("today: what you actually did", () => {
       "Slept badly, went anyway."
     )
     const reloaded = loadNsPlan(serializeNsPlan(written))!
-    expect(stepLogged(reloaded, MONDAY, stepId)).toBe(true)
+    expect(stepTickedByHand(reloaded, MONDAY, stepId)).toBe(true)
     expect(dailyRating(reloaded, MONDAY, "lm_health")).toBe(7)
     expect(dayNote(reloaded, MONDAY)).toBe("Slept badly, went anyway.")
   })
@@ -577,13 +577,13 @@ describe("today: what you actually did", () => {
     const raw = JSON.parse(serializeNsPlan(ticked))
     raw.routines = raw.routines.map((r: { steps: { id: string }[] }) => ({ ...r, steps: r.steps.filter((st) => st.id !== stepId) }))
     const reloaded = loadNsPlan(JSON.stringify(raw))!
-    expect(stepLogged(reloaded, MONDAY, stepId)).toBe(false)
+    expect(stepTickedByHand(reloaded, MONDAY, stepId)).toBe(false)
   })
 
   it("hands a driver its real goal and this week's count, once it has been pushed", () => {
     const { plan, driverId } = seedDay()
     const hub = [{ id: "uuid-a", template_id: trackTemplateId(RUN, driverId), current_value: 12, target_value: 20 }]
-    const item = todayItems(plan, MONDAY, hub, RUN).find((i) => i.activity.id === driverId)!
+    const item = todayItems(plan, MONDAY, hub, RUN, NO_TRAINING_TICKS).find((i) => i.activity.id === driverId)!
     expect(item.goalId).toBe("uuid-a")
     expect(item.current).toBe(12)
     expect(item.target).toBe(20)
@@ -591,7 +591,7 @@ describe("today: what you actually did", () => {
 
   it("gives an unpushed driver NO local tally to disagree with the real one later", () => {
     const { plan, driverId } = seedDay()
-    const item = todayItems(plan, MONDAY, [], RUN).find((i) => i.activity.id === driverId)!
+    const item = todayItems(plan, MONDAY, [], RUN, NO_TRAINING_TICKS).find((i) => i.activity.id === driverId)!
     expect(item.goalId).toBeNull()
     expect(item.current).toBeNull()
   })
@@ -599,9 +599,9 @@ describe("today: what you actually did", () => {
   it("counts only today's own steps as the day's list", () => {
     const { plan, stepId } = seedDay()
     // A driver has a weekly count, not a tick, so it is not part of "3 of 4".
-    expect(todayProgress(todayItems(plan, MONDAY, [], RUN))).toEqual({ done: 0, total: 1 })
+    expect(todayProgress(todayItems(plan, MONDAY, [], RUN, NO_TRAINING_TICKS))).toEqual({ done: 0, total: 1 })
     const ticked = toggleStepLogged(plan, MONDAY, stepId)
-    expect(todayProgress(todayItems(ticked, MONDAY, [], RUN))).toEqual({ done: 1, total: 1 })
+    expect(todayProgress(todayItems(ticked, MONDAY, [], RUN, NO_TRAINING_TICKS))).toEqual({ done: 1, total: 1 })
   })
 
   it("leaves a plan saved before any of this existed alone", () => {
@@ -975,9 +975,9 @@ describe("a field that takes you to the thing instead of quoting it", () => {
     const plan = addDailyField(emptyNsPlan(), null, "Read my north star")
     const fieldId = plan.fields[0].id
     const ticked = toggleStepLogged(setDailyFieldKind(plan, fieldId, "go"), MONDAY, fieldId)
-    expect(stepLogged(ticked, MONDAY, fieldId)).toBe(true)
+    expect(stepTickedByHand(ticked, MONDAY, fieldId)).toBe(true)
     expect(ticked.logged[MONDAY]).toContain(fieldId)
-    expect(stepLogged(loadNsPlan(serializeNsPlan(ticked))!, MONDAY, fieldId)).toBe(true)
+    expect(stepTickedByHand(loadNsPlan(serializeNsPlan(ticked))!, MONDAY, fieldId)).toBe(true)
   })
 
   it("flips between quoting and going without losing what it points at", () => {
@@ -1155,7 +1155,7 @@ describe("the sub-steps under a bigger weekly thing", () => {
     const { plan, targetId } = seedContent()
     const first = subStepsFor(plan, targetId)[0]
     const ticked = toggleStepLogged(plan, MONDAY, first.id)
-    expect(stepLogged(ticked, MONDAY, first.id)).toBe(true)
+    expect(stepTickedByHand(ticked, MONDAY, first.id)).toBe(true)
     expect(subStepProgress(ticked, MONDAY, targetId)).toEqual({ done: 1, total: 3 })
     // One store for "what got done today", so a sub-step and a step cannot
     // come to disagree about what a tick means.
@@ -1329,8 +1329,8 @@ describe("the schedule, grouped by what things belong to", () => {
       const ticked = toggleStepLogged(b.plan, DAY, a.stepId)
 
       const group = trackGroups(trackActivities(ticked))[0]
-      expect(groupLogged(ticked, DAY, group)).toEqual({ done: 1, total: 2 })
-      expect(groupLogged(ticked, "2026-08-18", group)).toEqual({ done: 0, total: 2 })
+      expect(groupLogged(ticked, DAY, group, NO_TRAINING_TICKS)).toEqual({ done: 1, total: 2 })
+      expect(groupLogged(ticked, "2026-08-18", group, NO_TRAINING_TICKS)).toEqual({ done: 0, total: 2 })
     })
 
     /** A driver has a count, not a tick; counted here it would never fill. */
@@ -1338,7 +1338,7 @@ describe("the schedule, grouped by what things belong to", () => {
       const a = step(emptyNsPlan(), 0, "Read your north star")
       const withDriver = withGoal(a.plan, "lm_relationship", "Approaches", "habit_ramp")
       const groups = trackGroups(trackActivities(withDriver.plan))
-      expect(groupLogged(withDriver.plan, DAY, groups[1])).toEqual({ done: 0, total: 0 })
+      expect(groupLogged(withDriver.plan, DAY, groups[1], NO_TRAINING_TICKS)).toEqual({ done: 0, total: 0 })
     })
   })
 })
@@ -1418,13 +1418,13 @@ describe("choosing the days a step runs on", () => {
 
   it("is any day until days are picked, and that day's own business after", () => {
     const { plan, routineId, stepId } = seedRate()
-    const before = todayItems(plan, TUESDAY, [], RUN).find((i) => i.activity.id === stepId)!
+    const before = todayItems(plan, TUESDAY, [], RUN, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!
     expect(before.when).toBe("anyDay")
 
     // Tuesday and Saturday.
     const placed = placeStep(plan, routineId, stepId, [1, 5], null)
-    expect(todayItems(placed, TUESDAY, [], RUN).find((i) => i.activity.id === stepId)!.when).toBe("today")
-    expect(todayItems(placed, MONDAY, [], RUN).find((i) => i.activity.id === stepId)!.when).toBe("otherDay")
+    expect(todayItems(placed, TUESDAY, [], RUN, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("today")
+    expect(todayItems(placed, MONDAY, [], RUN, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("otherDay")
   })
 
   it("keeps the rate honest with the days that were picked", () => {
@@ -1444,7 +1444,7 @@ describe("choosing the days a step runs on", () => {
     expect(step.days).toEqual([])
     // The rate the days left behind is kept — it is the last thing anybody said.
     expect(step.daysPerWeek).toBe(1)
-    expect(todayItems(cleared, TUESDAY, [], RUN).find((i) => i.activity.id === stepId)!.when).toBe("anyDay")
+    expect(todayItems(cleared, TUESDAY, [], RUN, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("anyDay")
   })
 })
 
