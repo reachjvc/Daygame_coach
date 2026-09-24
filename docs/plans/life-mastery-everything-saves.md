@@ -470,15 +470,25 @@ the gap.
 reading the files rather than this list, which had gone stale within four hours
 of being written — `480cd2ba` and `92825523` landed the same evening.**
 
-- **Check 1**, the round-trip integration test against a real Postgres. **Still
-  not written, and the file the Files list promises
-  (`lifePlanRoundTrip.integration.test.ts`) does not exist.** What DOES exist is
-  `tests/integration/db/lifePlanDay.integration.test.ts`, and its own header
-  says in as many words that it is not this: it asserts schema constraints
-  through `pg`, while `lifePlanRepo` talks through supabase-js. Matching the
-  Files list against `ls` is how this reads as done; only opening the file
-  contradicts it. Nothing anywhere asserts that a real plan plus a year of days
-  survives write-then-read field for field.
+- ~~**Check 1**~~ **MOSTLY DONE 2026-09-24 (`ca53876a`).**
+  `lifePlanRoundTrip.integration.test.ts` exists now, and the middle of it is a
+  real Postgres: the write is `save_life_plan` itself with the same JSONB the
+  repo sends, not a hand-written INSERT that would agree with itself. Plus the
+  two things the mapper cannot carry — a save on a stale revision refused rather
+  than merged, and node ids surviving a re-save, which the whole day half hangs
+  off by foreign key.
+
+  **It found that three of the twenty tables were being round-tripped over
+  nothing.** `life_plan_answers` was empty because the shared fixture's keys
+  (`star_why`, `star_who`, `one_thing`) are pruned by the loader before the
+  mapper sees them; `split_days` and `step_serves` had never had a row. The
+  in-memory round trip had been green over all three since the day it was
+  written. A coverage assertion now runs BEFORE the round trip is trusted.
+
+  **What is still missing, against the check as worded.** "Your plan and 400
+  days" — this is the plan half only. The day tables have their own integration
+  file and their own e2e, so the specific gap is a year of days going in and
+  coming back field for field.
 - ~~**The browser proof**~~ **DONE 2026-09-24 (`66d9788b`).** It existed and
   tested neither half: all four writes sent a `note`, so the tick never crossed,
   and the survival test PUT an identical plan back, which upserts by node id and
