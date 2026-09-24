@@ -52,6 +52,35 @@ export function Lanes({ record, today, viceLabel, selectedId, onSelect }: {
   const span = chartSpan(record, today)
   const wrapRef = useRef<HTMLDivElement>(null)
   const [flipAfter, setFlipAfter] = useState(62)
+  /**
+   * BELOW THIS MUCH CHART, NO LABEL FITS BESIDE A BAR AT ALL.
+   *
+   * A label reads "287 days · something went wrong" — about 190px at 11.5px.
+   * At a 320px viewport this chart gets ~256px, so a bar starting a third of
+   * the way in leaves nowhere for one: the three placements below (after the
+   * bar, before it, on it) all resolve to something that runs past the card's
+   * left edge, and it did. Raising the width guess does not help, because the
+   * room genuinely is not there.
+   *
+   * So under 300px of chart the label stops competing with the bar and goes
+   * ABOVE it, on its own line, and the lane grows to hold both. 300 rather than
+   * 326 on purpose: a 390px phone measures ~326px here and its labels fit
+   * beside the bars today, checked in the browser, so that layout is left
+   * exactly as it was.
+   */
+  const [chartWidth, setChartWidth] = useState(0)
+  const stacked = chartWidth > 0 && chartWidth < 300
+  /**
+   * Where the bar's top edge sits inside the lane.
+   *
+   * 13px normally, which centres a 14px bar in a 44px row. 33px when the label
+   * is stacked above it, which leaves the label its own line and still centres
+   * the bar in what is left of a 64px row. ONE constant, used by the track, the
+   * bar, the close-call dots and the end dot, because four offsets that have to
+   * agree are four chances for the dots to end up on a different line from the
+   * bar they hang off.
+   */
+  const rowTop = stacked ? 33 : 13
 
   /**
    * The flip threshold is measured, not assumed.
@@ -64,7 +93,10 @@ export function Lanes({ record, today, viceLabel, selectedId, onSelect }: {
   useEffect(() => {
     const measure = () => {
       const width = wrapRef.current?.clientWidth ?? 0
-      if (width > 0) setFlipAfter(100 - (Math.min(190, width * 0.45) / width) * 100)
+      if (width > 0) {
+        setChartWidth(width)
+        setFlipAfter(100 - (Math.min(190, width * 0.45) / width) * 100)
+      }
     }
     measure()
     window.addEventListener("resize", measure)
@@ -108,7 +140,13 @@ export function Lanes({ record, today, viceLabel, selectedId, onSelect }: {
         {/* Each lane is 44px tall, not 34: tapping a bar is how a run is read
             back AND how it is corrected, so it has to be a real tap target on a
             phone. Everything inside is positioned from the top of the row, so
-            the offsets below all moved by the same 5px to stay centred. */}
+            the offsets below all moved by the same 5px to stay centred.
+
+            On a narrow chart (`stacked`) the lane is 64px instead, because the
+            label is on its own line above the bar and both have to fit. One
+            offset constant, `rowTop`, rather than two sets of classes: two
+            copies of "where the bar sits" is how the dots end up on a different
+            line from the bar they belong to. */}
         <div ref={wrapRef} className="relative mt-3">
           {geometry.map(({ lane, left, width, flip, dots }) => {
             const family = lane.ending ? familyFor(lane.ending) : null
@@ -124,15 +162,18 @@ export function Lanes({ record, today, viceLabel, selectedId, onSelect }: {
                 type="button"
                 aria-pressed={selectedId === lane.attempt.id}
                 onClick={() => onSelect(lane.attempt.id)}
-                className={`relative block h-11 w-full rounded-md text-left transition-colors ${
+                className={`relative block w-full rounded-md text-left transition-colors ${
+                  stacked ? "h-16" : "h-11"
+                } ${
                   selectedId === lane.attempt.id ? "bg-white/[0.05]" : "hover:bg-white/[0.025]"
                 }`}
               >
-                <div className="absolute inset-x-0 top-[16px] h-2 rounded-full bg-white/[0.04]" />
+                <div className="absolute inset-x-0 h-2 rounded-full bg-white/[0.04]" style={{ top: rowTop + 3 }} />
 
                 <div
-                  className="absolute top-[13px] h-3.5 rounded"
+                  className="absolute h-3.5 rounded"
                   style={{
+                    top: rowTop,
                     left: `${left}%`,
                     width: `${width}%`,
                     background: lane.live
@@ -153,19 +194,27 @@ export function Lanes({ record, today, viceLabel, selectedId, onSelect }: {
                 {dots.map((at, i) => (
                   <div
                     key={i}
-                    className="absolute top-[29px] h-[3px] w-[3px] rounded-full bg-blue-200"
-                    style={{ left: `${at}%` }}
+                    className="absolute h-[3px] w-[3px] rounded-full bg-blue-200"
+                    style={{ top: rowTop + 16, left: `${at}%` }}
                   />
                 ))}
 
                 {!lane.live && (
                   <div
-                    className="absolute top-[15px] h-2.5 w-2.5 rounded-full border-2 border-zinc-950"
-                    style={{ left: `calc(${left + width}% - 5px)`, background: accent ? ACCENT : NEUTRAL }}
+                    className="absolute h-2.5 w-2.5 rounded-full border-2 border-zinc-950"
+                    style={{ top: rowTop + 2, left: `calc(${left + width}% - 5px)`, background: accent ? ACCENT : NEUTRAL }}
                   />
                 )}
 
-                {/* THREE PLACES, BECAUSE TWO WERE NOT ENOUGH.
+                {/* FOUR PLACES NOW, AND THE FOURTH IS ITS OWN LINE.
+
+                    On a chart under 300px wide none of the three below fits:
+                    a ~190px label cannot sit after, before, or on a bar inside
+                    ~256px of chart, and at a 320px viewport it ran past the
+                    card's left edge. So it goes above, left-aligned, full
+                    width, with no chip — nothing is behind it to read it off.
+
+                    THREE PLACES, BECAUSE TWO WERE NOT ENOUGH.
                     The label went after the bar, or before it once the bar
                     ended past the measured threshold. Neither fits a bar that
                     spans nearly the whole chart — which is what ONE long run
@@ -176,15 +225,17 @@ export function Lanes({ record, today, viceLabel, selectedId, onSelect }: {
                     at 3.7:1. `100 - flipAfter` IS the measured label width as a
                     percentage; the threshold is defined from it. */}
                 <div
-                  className={`absolute top-[12px] whitespace-nowrap text-[11.5px] text-zinc-400 ${
-                    place === "inside" ? "rounded bg-zinc-950/80 px-1.5" : ""
-                  }`}
+                  className={`absolute text-[11.5px] text-zinc-400 ${
+                    stacked ? "left-0 right-0 top-[8px] truncate" : "whitespace-nowrap top-[12px]"
+                  } ${!stacked && place === "inside" ? "rounded bg-zinc-950/80 px-1.5" : ""}`}
                   style={
-                    place === "after"
-                      ? { left: `calc(${left + width}% + 14px)` }
-                      : place === "before"
-                        ? { right: `calc(${100 - left}% + 14px)`, textAlign: "right" }
-                        : { right: `calc(${100 - (left + width)}% + 6px)`, textAlign: "right" }
+                    stacked
+                      ? undefined
+                      : place === "after"
+                        ? { left: `calc(${left + width}% + 14px)` }
+                        : place === "before"
+                          ? { right: `calc(${100 - left}% + 14px)`, textAlign: "right" }
+                          : { right: `calc(${100 - (left + width)}% + 6px)`, textAlign: "right" }
                   }
                 >
                   <b className="font-semibold text-zinc-100">{days(lane.days)}</b>

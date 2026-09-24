@@ -184,6 +184,113 @@ test.describe("the Black Box", () => {
     await expect(page.getByRole("link", { name: /the flows, tools and reading/i })).toHaveCount(0)
   })
 
+  test("no lane label escapes the chart's card, at 320px or anywhere else", async ({ page }) => {
+    /**
+     * A label reads "287 days · something went wrong" — about 190px at 11.5px.
+     * At a 320px viewport this chart gets ~256px, and a bar starting a third of
+     * the way in leaves nowhere for one, so the label ran OUT OF THE CARD:
+     * measured at left = -4 against a card starting at 16, twenty pixels
+     * outside. Below 300px of chart the label now takes its own line above the
+     * bar and the lane grows to 64px to hold both.
+     *
+     * MEASURED AGAINST THE CARD, NOT THE VIEWPORT, which is why nothing caught
+     * it for as long as it existed: there was no horizontal page scroll the
+     * whole time. The overflow sweep asks the right question about the wrong
+     * box.
+     *
+     * The first version of this check filtered on `children.length > 1` and so
+     * skipped the very element it was looking for — the label is a div holding
+     * `<b>287 days</b> · <span>reason</span>`, which has two element children.
+     * It reported clean with the fix disabled. "Contains no further div" is the
+     * honest test for the innermost element carrying that text, and this one
+     * was proved by disabling the fix and watching it name the escapee.
+     */
+    /**
+     * FOUR RUNS ACROSS TWO AND A HALF YEARS, AND THE SHAPE MATTERS.
+     *
+     * My first version of this used two runs and PASSED with the fix disabled —
+     * a guard that guards nothing. The escape needs a bar that starts about a
+     * third of the way along and ends before the right edge, because that is
+     * the case where the label cannot go after it (no room to the right of a
+     * bar that is not at the end), cannot go before it (not enough room to the
+     * left either), and so is drawn ON it extending leftwards — past the card.
+     * Two runs put the first bar across most of the chart and never produce it.
+     *
+     * So this is the record that does: a long third run sitting in the middle
+     * of a span opened by a short one in early 2024. Proved by disabling the
+     * fix and watching this name the escapee.
+     */
+    const fourRunsOverYears = {
+      version: 1,
+      attempts: [
+        ["aaaaaaaa-0000-4000-8000-00000000000a", "2024-01-02", "2024-02-18"],
+        ["aaaaaaaa-0000-4000-8000-00000000000b", "2024-06-10", "2024-09-01"],
+        ["aaaaaaaa-0000-4000-8000-00000000000c", "2025-02-01", "2025-11-14"],
+        ["aaaaaaaa-0000-4000-8000-00000000000d", "2026-01-05", null],
+      ].map(([id, startedOn, endedOn], i) => ({
+        id,
+        viceId: "nicotine",
+        label: "Smoking or vaping",
+        startedOn,
+        startedBy: "Read my own record",
+        structure: [],
+        endedOn,
+        // The report that ended it, which is where the label's REASON comes
+        // from — and the reason is most of the label's width.
+        endedByReportId: endedOn === null ? null : `bbbbbbbb-0000-4000-8000-00000000000${i}`,
+      })),
+      /**
+       * EACH ENDED RUN NEEDS ITS REPORT, or this guard cannot fail.
+       *
+       * A lane label is "<days> · <reason>", and the reason is read off the
+       * report that ended the run. My second version of this record had no
+       * reports, so every label was just "287 days · " — short enough to fit
+       * anywhere, and the test passed with the fix disabled for the second
+       * time. "something went wrong" is the `stress` family's wording and it is
+       * what makes the label ~190px, which is the whole problem.
+       */
+      reports: [0, 1, 2].map((i) => ({
+        id: `bbbbbbbb-0000-4000-8000-00000000000${i}`,
+        attemptId: `aaaaaaaa-0000-4000-8000-00000000000${"abc"[i]}`,
+        at: `${["2024-02-18", "2024-09-01", "2025-11-14"][i]}T22:00:00`,
+        wentThrough: true,
+        thought: "Work has been brutal, I have earned it",
+        ending: "stress",
+        closeness: 7,
+        withWhom: "colleagues",
+        where: "a bar after work",
+        factors: ["stress"],
+        didInstead: "",
+      })),
+    }
+
+    for (const width of [320, 390, 1280]) {
+      await page.setViewportSize({ width, height: 900 })
+      await seed(page, fourRunsOverYears)
+
+      const escaping = await page.evaluate(() => {
+        const card = [...document.querySelectorAll("section")].find((el) =>
+          /Each bar is a run/.test(el.textContent || ""),
+        )
+        if (!card) return ["no chart card on the page"]
+        const box = card.getBoundingClientRect()
+        const out: string[] = []
+        for (const el of card.querySelectorAll("*")) {
+          const text = (el.textContent || "").trim()
+          if (!/^\d+ days · /.test(text) || el.querySelector("div")) continue
+          const r = el.getBoundingClientRect()
+          if (r.width === 0) continue
+          if (r.left < box.left - 1 || r.right > box.right + 1) {
+            out.push(`"${text}" spans ${Math.round(r.left)}..${Math.round(r.right)} in a card of ${Math.round(box.left)}..${Math.round(box.right)}`)
+          }
+        }
+        return out
+      })
+
+      expect(escaping, `at ${width}px, a lane label is drawn outside the chart's card`).toEqual([])
+    }
+  })
+
   test("the retired module still works, at its archived address", async ({ page }) => {
     // RETIRED, NOT DELETED, and this is what makes that claim true rather than
     // a sentence in a commit message. The owner's condition for retiring it was

@@ -390,8 +390,29 @@ worst on an empty record. Both are in the code with the reason.
 cell — three numbers drawn as two and a hole. Three across at every width now,
 with the value a size smaller below 640px.
 
-**STILL OPEN, and it is a real defect: the lane label overflows the card at
-320px.** On a 320px screen the chart is ~256px wide and a label like
+**FIXED 2026-09-24 — the lane label no longer overflows the card at 320px.**
+Below 300px of chart the label takes its own line above its bar and the lane
+grows from 44px to 64px to hold both; 390px and up are untouched, because their
+labels fit beside the bars and that layout was already checked. One `rowTop`
+constant places the track, the bar, the close-call dots and the end dot, so four
+offsets that must agree cannot drift.
+
+Guarded by "no lane label escapes the chart's card" in `blackbox.spec.ts`, which
+measures every label's box against the CARD's box at 320, 390 and 1280px —
+against the card, because the page never had horizontal scroll while this was
+happening, so the overflow sweep was asking the right question about the wrong
+box.
+
+**THREE VERSIONS OF THAT GUARD PASSED WHILE GUARDING NOTHING**, which is worth
+more than the fix. It filtered on `children.length > 1` and so skipped the one
+element it was looking for; then its record had two runs, which never produces a
+bar starting a third of the way along; then its record had no reports, so every
+label was "287 days · " with no reason and short enough to fit anywhere. Each
+time it went green with the fix disabled. It now fails naming the escapee and
+its coordinates — `"287 days · something went wrong" spans -4..200 in a card of
+16..304` — and that was checked in both directions.
+
+*The original entry, for the record:* On a 320px screen the chart is ~256px wide and a label like
 "287 days · something went wrong" is ~190px, so when it lands on a bar that
 starts a third of the way in there is nowhere for it to go — it runs past the
 left edge of the card. `Lanes.tsx` measures a flip threshold from the chart
@@ -411,7 +432,7 @@ right.
 front of you; both vice browser suites and the unit suite green; the phone and
 WebKit sweeps unchanged.
 
-## M7 — DONE, 2026-09-24. THE RACE IS NAMED, FIXED AND PROVED BY CONSTRUCTION.
+## M7 — THE DOMINANT RACE IS FIXED AND PROVED. A SMALLER ONE REMAINS.
 
 **The cause, exactly.** `seed()` tombstoned the account as soon as
 `data-hydrated` went up — which means "the browser copy has been read" and says
@@ -434,8 +455,22 @@ wait it fails naming the survivor — "Left by an earlier test" — live on the
 account again. With it, clean. Both directions run.
 
 **Before: five failures in six full runs**, at `:159`, `:184`, `:159`, `:508`
-and `:426`, on two versions of the product code. **After: 25/25, three runs in
-a row.**
+and `:426`, on two versions of the product code. **After: 25/25 three runs
+running, then — with the 320px guard added, 26 tests — one failure and two more
+clean. Five of six green, against one of six before.**
+
+**SO IT IS NOT ZERO, AND SAYING "FIXED" WOULD BE THE SAME MISTAKE THIS WHOLE
+INVESTIGATION IS ABOUT.** The one post-fix failure was `:606 a record entered
+here is on the account, and on the next device` — the test that opens a genuine
+second browser context. It found "Longest run" on the second device but not
+"90 days", which means *some other run's rows were live on the account when
+that device read it*: a residual leak of the same family, from a path the
+`seed()` wait does not cover. Running that test immediately after the new guard
+passes, so it is not a simple interaction between those two.
+
+One failure in six is a far weaker signal than five in six and needs its own
+sitting with the same method — make it happen on purpose, do not run it until it
+goes quiet. Left open deliberately rather than closed on a good streak.
 
 That matters beyond this file: `mode: "serial"` meant one failure aborted 4 to
 21 tests, so CI has been calling this suite red or green at random for as long
