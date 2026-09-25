@@ -190,6 +190,54 @@ describe("the timer bar, while a timer is running", () => {
   })
 })
 
+describe("a refused edit", () => {
+  /**
+   * Found by reading the fix back rather than by running it: the create-then-
+   * select path hands `edit` a state that already contains the new project, so
+   * an early return on violation dropped the project as well as the selection.
+   */
+  test("keeps a project that was just created, even though the selection is refused", async () => {
+    const needsATask = baseState({
+      entries: [],
+      workspace: {
+        ...baseState().workspace,
+        requiredFields: { project: false, task: true, tag: false, description: false },
+      },
+    })
+    /**
+     * The timer has to be RUNNING and VALID for this path to exist, so it
+     * starts on a real task. Picking a different project then clears the task,
+     * which is what the workspace refuses — and the refusal is what used to
+     * take the new project with it.
+     *
+     * The first version of this test started the timer with no task at all.
+     * `startTimer` validates too, so nothing started, `applyDraftPatch` took
+     * its no-timer branch, and the test passed by never reaching the code it
+     * was written for — with and without the fix.
+     */
+    const started = startTimer(needsATask, { ...blankDraft, projectId: "30", taskId: "40" }, NOW_ISO)
+    expect(started.violations, "the fixture never started a timer").toEqual([])
+    const latest = { current: started.state }
+    render(
+      <StrictMode>
+        <TimerBarHarness latest={latest} />
+      </StrictMode>,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Project" }))
+    fireEvent.change(await screen.findByPlaceholderText(/Search or add a project/), {
+      target: { value: "Writing" },
+    })
+    fireEvent.click(await screen.findByRole("button", { name: /Create/ }))
+
+    await waitFor(() =>
+      expect(latest.current.projects.map((p) => p.name), "the new project went with the refusal").toContain("Writing"),
+    )
+    // the selection itself was refused, so the entry keeps the task it had
+    expect(runningEntry(latest.current)!.taskId).toBe("40")
+  })
+})
+
 // ---------------------------------------------------------------------------
 // The detail sheet
 // ---------------------------------------------------------------------------

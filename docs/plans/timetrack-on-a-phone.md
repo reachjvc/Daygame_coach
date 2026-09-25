@@ -6,6 +6,47 @@ inferred, except the two items marked **suspect**.
 
 ---
 
+## BUILT, 2026-09-25
+
+All five milestones. The owner approved the five rules and answered the four
+open questions "all yes"; what that decided is recorded under each question
+below. Commits `115f34e0` (M1), `dba3ffc5` (M2), `bffa2f5a` (M3+M5), `2e25e8ba`
+(M4).
+
+**Verification.** Unit: 6042 passing, three consecutive clean runs. Browser: the
+16-test iPhone 14 / WebKit phone suite, the Pixel 7 suite and the desktop Safari
+suite, 48 tests, all green. Every claim in "What is actually wrong" below was
+reproduced in a browser before the fix and re-checked after it.
+
+**Three things found while building that this plan did not predict:**
+
+1. **A third copy of the dead-link bug.** Reports' "Share link" had the same
+   hard-coded `/test/toggl` path as "Copy start link". Grepping the class found
+   it; the plan had named only one.
+2. **The More sheet was drawn underneath the tracker's own bottom bar.** I
+   introduced it. `BottomSheet` is `z-50`, which clears the app's tab bar at
+   `z-40` and nothing else, while the tracker draws its navigation at
+   `z-[9500]`. `elementFromPoint` over the bottom row returned the nav: on
+   screen, looked right, could not be tapped — the same failure the tracker's
+   own panels already carry a comment about. Fixed in the shared component, so
+   the next caller with high-z chrome is covered.
+3. **A refused edit could delete a project you had just made.** Found by reading
+   the fix back, not by running it: the create-then-select path hands `edit` a
+   state that already holds the new project, and the early return on violation
+   dropped it. Reachable with a workspace that requires a task.
+
+**And one test that passed by doing nothing.** The first version of the test for
+(3) started its timer with no task in a workspace that required one, so
+`startTimer` refused, no timer ran, and the test passed identically with and
+without the fix. Caught by checking that it failed against the old code — which
+is the only reason it is now a test rather than a decoration.
+
+**Left undone, deliberately:** the horizontal axis of panel placement still
+measures the layout viewport. Only a pinch-zoom moves it, and that could not be
+tested here.
+
+---
+
 # The human half
 
 ## The headline
@@ -197,40 +238,54 @@ idle seconds.
 
 Each attempted at least once; result recorded.
 
-1. **Reproducing the keyboard behaviour on a real phone** — *partial.* Shrinking
+1. **Reproducing the keyboard behaviour on a real phone** — *STILL OPEN, and the
+   one thing worth the owner's thirty seconds.* Both suspects were fixed blind
+   on the owner's instruction, and both are strictly better on every engine, so
+   nothing is riding on the answer — but neither has been seen working on a real
+   iPhone. *Original note:* Shrinking
    the layout viewport to 390×420 in Chromium did **not** close an open picker,
    so Android's shrink-on-keyboard is probably safe. iOS Safari's keyboard and
    its synthetic-mouse-event rules cannot be emulated here at all. **Needs the
    owner on their actual phone**, or an accepted risk. The
    `toggl-iphone-safari` / `toggl-android` Playwright projects would still not
    have a real soft keyboard.
-2. **Watching `/dashboard/time` open while signed in** — *not possible from
+2. **Watching `/dashboard/time` open while signed in** — *closed, not needed.*
+   The owner answered that the signed-out shell is enough; the only untested
+   difference is the server swapping the workspace after first paint, which is
+   plain in `useTimetrackSync`. *Original note:* not possible from
    here.* Reading `tests/e2e/.auth/user.json` was refused by the sandbox
    (credential materialisation). Verified the signed-out shell at `/test/toggl`,
    which is the same component, and read the signed-in step out of
    `useTimetrackSync`. **Needs either the owner's confirmation or permission to
    use the e2e auth state.**
 3. **Whether entries already in the owner's account carry the `/test/toggl`
-   stamp** — *not attempted*; it needs a read of the owner's rows. **Needs the
-   owner, or approval for a read-only query.**
+   stamp** — *moot.* The owner chose to leave history alone, so the answer does
+   not change anything. New entries are stamped `daygame-coach`.
+
+4. **One unit run in ~six failed two tests that four other runs did not** —
+   *unresolved, reported rather than explained.* It happened while the lint and
+   typecheck ratchets were running against the same checkout, and the reporter
+   output did not name them. Three consecutive clean runs since. Recorded here
+   rather than called a flake with confidence I do not have.
 
 ## Open questions
 
 Each with a recommendation.
 
-1. **Six sections on a phone, or five?** → *Five.* Timer, Calendar, Reports,
+1. **Six sections on a phone, or five?** → **Five. Built.** Timer, Calendar, Reports,
    Projects, More (Manage + Settings). Buys 78px per tab and 12px labels,
    matching the app's own bar. Manage is Clients/Tags/Team — two thirds of it is
    for teams that do not exist here.
-2. **The `/test/toggl` stamp on entries already saved.** → *Leave history
-   alone; change only new entries.* It is a cosmetic provenance string, and
+2. **The `/test/toggl` stamp on entries already saved.** → **Left alone. Built.** It is a cosmetic provenance string, and
    rewriting stored rows is in the owner's always-ask set for a reason.
-3. **Description: commit on every keystroke, or on a pause?** → *400ms pause,
-   plus blur and Stop.* Every keystroke would push a sync row per character.
-4. **Does `/test/toggl` stay?** → *Yes.* It is the signed-out lab the phone
+3. **Description: commit on every keystroke, or on a pause?** → **400ms pause,
+   plus blur and unmount. Built** — unmount rather than Stop, because unmount is
+   what makes closing the detail sheet safe, and tapping Stop blurs the field
+   first anyway. Every keystroke would push a sync row per character.
+4. **Does `/test/toggl` stay?** → **Yes. Kept.** It is the signed-out lab the phone
    suite runs against, and the suite depends on getting an empty workspace.
-5. **M3's two suspects: fix blind, or wait for the owner's phone?** → *Fix
-   blind.* `pointerdown` and `visualViewport` are strictly better on every
+5. **M3's two suspects: fix blind, or wait for the owner's phone?** → **Fixed
+   blind.** `pointerdown` and `visualViewport` are strictly better on every
    engine and cost nothing if the suspicion was wrong.
 
 ---

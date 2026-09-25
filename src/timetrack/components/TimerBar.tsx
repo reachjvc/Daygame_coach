@@ -93,6 +93,16 @@ export function TimerBar({
     }
     const result = applyDraftPatch(baseState, latestDraft.current, patch, new Date().toISOString())
     if (result.violations.length > 0) {
+      /**
+       * A refused patch must not take a just-created project or tag down with
+       * it. `baseState` already holds one when this came from the picker's
+       * "Create" button, and returning without it would delete something the
+       * user made while telling them about something else. Reachable: a
+       * workspace that requires a task, a timer running, a new project created
+       * from the picker — the selection is refused for having no task, and the
+       * project would have vanished.
+       */
+      if (result.state !== latestState.current) setState(() => result.state)
       pushToast(result.violations[0].message, "error")
       return
     }
