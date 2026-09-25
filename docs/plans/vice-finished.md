@@ -1189,3 +1189,42 @@ trusting.
   `1-800-697-3738` spells MY-RESET, adopted 2026-01-29, with 1-800-522-4700 as
   the still-answering fallback exactly as the note claims. The numbers were
   well researched; it was the link and the hours that had rotted.
+
+## M8a — THE FIX PUT THE FAULT BACK, AND A PEER SESSION IS WHY IT WAS FOUND
+
+Same evening, after `9e44a158` was pushed. The peer working on Life Mastery hit
+the identical trap in their own slice and named the shape rather than the
+instance: *"if the Black Box has an 'is there anything here' predicate with more
+than one caller, it is worth checking which question each caller is actually
+asking."* It did, and I had got it wrong.
+
+**The banner added in M8 item 4 was gated on `record.attempts.length === 0`.**
+That counts tombstones — a deletion is a row here, deliberately — so a browser
+whose only run had been deleted did **not** get the banner. Meanwhile the
+heading directly below it said "Start with what already happened", because every
+read in the module asks `living()`. Two predicates for one question, disagreeing
+on exactly one record, and the loud half lost.
+
+*Driven rather than reasoned:* tombstone-only record, stubbed 401, browser
+online. The warning survived only as **12px grey text at y=679**, 415px below a
+heading at y=264 that invites you to start typing your history in. That is the
+same outcome as the fault M8 was written to fix, reached by a different route —
+and it is the peer's fault shape exactly: theirs was gated behind a font size
+and a scroll position, mine behind a predicate that counts things the person
+does not have. Theirs was `planIsUntouched` counting SEEDED areas; mine was
+`attempts.length` counting deleted ones.
+
+**`holdsNothingWritten` is the one owner now**, and it is deliberately NOT
+`recordIsEmpty`. That one counts rows and is right to: "was the account empty
+before this load" must not treat an account full of tombstones as a new one.
+These are two questions, and the test asserts they **disagree** on the deleted
+record — because if they ever agree everywhere, one is unnecessary, and a caller
+picking the wrong one fails nothing.
+
+After: warning at **y=264, amber, above the heading at y=383**. Proved by
+planting the row-counting predicate back and watching both new cases fail.
+
+*And the test itself was wrong first:* it called `liveRun()` twice and removed
+an id belonging to the other copy, so nothing was removed and it failed for a
+reason unrelated to the rule. Recorded because that is a fixture building its
+own subject twice, which is the same family as everything else in this file.

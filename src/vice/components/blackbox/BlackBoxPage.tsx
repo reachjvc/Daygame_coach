@@ -39,6 +39,7 @@ import {
   exportRecord,
   fileReport,
   importRecord,
+  holdsNothingWritten,
   latestReportDay,
   living,
   nowInBrowser,
@@ -109,6 +110,13 @@ export function BlackBoxPage() {
   // One owner for "what is this screen about", so the header, the chart's
   // caption and the two forms cannot name three different things.
   const viceLabel = current?.label ?? null
+
+  /**
+   * Whether this browser holds anything the person wrote — `living()`, so a
+   * record of nothing but deleted runs counts as nothing, which is what the
+   * headings below already say. See `holdsNothingWritten`.
+   */
+  const nothingWritten = holdsNothingWritten(record)
 
   /** Everything below is answered for the vice on screen, and only that one. */
   const view = forVice(record, viceId)
@@ -551,7 +559,7 @@ export function BlackBoxPage() {
                 `fetchBlackBox` returns `undefined` rather than `null` for
                 precisely this reason, and `decideOnLoad` has carried the right
                 sentence all along. It was thrown away by a render condition. */}
-            {record.attempts.length === 0 && syncNotice(sync.state, sync.pending) && (
+            {nothingWritten && syncNotice(sync.state, sync.pending) && (
               <p className="mb-3 rounded-xl border border-amber-400/30 bg-amber-500/[0.07] px-3.5 py-3 text-[12.5px] leading-relaxed text-amber-100/90">
                 {syncNotice(sync.state, sync.pending)}
               </p>
@@ -677,7 +685,7 @@ export function BlackBoxPage() {
           Your copy
         </h2>
         <p className="mt-1.5 text-[12.5px] leading-relaxed text-zinc-400">
-          {record.attempts.length > 0 ? (
+          {!nothingWritten ? (
             <>
               This record is on your account, so it is on your other devices too. Save a copy you
               can keep as well — it is the one thing no outage can take. Loading one adds whatever
@@ -699,11 +707,11 @@ export function BlackBoxPage() {
             On an empty record the same sentence is already up beside "Start
             with what already happened", where it decides whether somebody
             retypes years of history — so it is not repeated down here. */}
-        {record.attempts.length > 0 && syncNotice(sync.state, sync.pending) && (
+        {!nothingWritten && syncNotice(sync.state, sync.pending) && (
           <p className="mt-1.5 text-[12px] text-zinc-500">{syncNotice(sync.state, sync.pending)}</p>
         )}
         <div className="mt-3 flex flex-wrap items-center gap-4">
-          {record.attempts.length > 0 && <QuietButton onClick={download}>Save a copy</QuietButton>}
+          {!nothingWritten && <QuietButton onClick={download}>Save a copy</QuietButton>}
           {/* A BUTTON THAT OPENS THE PICKER, NOT A LABEL WRAPPED ROUND IT.
               This was a `<label>` holding a `display:none` input: `tabIndex`
               -1, no role, a 0×0 box. Measured on 2026-09-25 — the Tab order

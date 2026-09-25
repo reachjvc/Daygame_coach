@@ -561,6 +561,34 @@ export function living<T extends { deletedAt: string | null }>(rows: T[]): T[] {
   return rows.filter((r) => r.deletedAt === null)
 }
 
+/**
+ * Does this browser hold nothing the person wrote?
+ *
+ * NOT THE SAME QUESTION AS `recordIsEmpty` IN `viceSyncService`, and the
+ * difference is a tombstone. That one asks "does this record carry any ROWS",
+ * which is the right question for "was the account empty before this load" —
+ * a deletion is a row, and an account holding only tombstones is not a new one.
+ * This asks "is there anything ON SCREEN", which is what every read in the
+ * module answers through `living()`.
+ *
+ * THEY DISAGREE ON A RECORD WHOSE RUNS HAVE ALL BEEN DELETED, and that gap put
+ * the same fault back the day it was fixed. The banner that tells somebody
+ * their account could not be reached was gated on `record.attempts.length === 0`
+ * — tombstones included — so a browser holding one deleted run got no banner,
+ * while the page above it said "Start with what already happened" because the
+ * heading asks `living()`. Two predicates for one question, disagreeing, and
+ * the loud half lost. Measured: the warning survived only as 12px grey text
+ * 415px further down.
+ *
+ * A peer session hit the identical trap in the Life Mastery plan on the same
+ * day — `planIsUntouched` counted SEEDED areas, so it answered false for a
+ * browser holding nothing of the person's. If a predicate like this grows a
+ * second caller, check which question that caller is actually asking.
+ */
+export function holdsNothingWritten(record: BlackBoxRecord): boolean {
+  return living(record.attempts).length === 0 && living(record.reports).length === 0
+}
+
 // ---------------------------------------------------------------- portability
 
 /**

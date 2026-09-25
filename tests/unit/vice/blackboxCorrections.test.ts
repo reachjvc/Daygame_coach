@@ -29,6 +29,7 @@ import {
   overlapsExisting,
   recordPastRun,
   living,
+  holdsNothingWritten,
   removeAttempt,
   removeReport,
   revivalClashes,
@@ -44,7 +45,7 @@ import {
   thoughtCosts,
   vicesOn,
 } from "@/src/vice/blackboxService"
-import { mergeRecords } from "@/src/vice/blackbox/viceSyncService"
+import { mergeRecords, recordIsEmpty } from "@/src/vice/blackbox/viceSyncService"
 import type { BlackBoxRecord } from "@/src/vice/types"
 
 const TODAY = "2026-09-20"
@@ -251,6 +252,57 @@ describe("a mis-tap can be taken back", () => {
     })
     expect(revivalClashes(r, endedBy)).toBe(false)
     expect(currentAttempt(forVice(removeReport(r, endedBy), "nicotine"))).not.toBeNull()
+  })
+})
+
+describe("\"is there anything here\" is one question with one answer", () => {
+  /**
+   * TWO PREDICATES FOR ONE QUESTION IS HOW THE FIXED FAULT CAME BACK THE SAME
+   * DAY IT WAS FIXED.
+   *
+   * `recordIsEmpty` in `viceSyncService` counts ROWS, tombstones included, and
+   * is right to: "was the account empty before this load" must not treat an
+   * account full of deletions as a new one. `holdsNothingWritten` counts what
+   * `living()` returns, which is what every read in the module draws.
+   *
+   * They disagree on exactly one record — one whose runs have all been deleted
+   * — and the banner telling somebody their account could not be reached was
+   * gated on the row count. So a browser holding one deleted run got no
+   * banner, while the heading directly below it said "Start with what already
+   * happened", because the heading asks `living()`. Driven: the warning
+   * survived only as 12px grey text 415px further down the page.
+   */
+  it("a record of nothing but tombstones holds nothing written", () => {
+    const r = liveRun()
+    expect(holdsNothingWritten(r)).toBe(false)
+
+    const cleared = removeAttempt(r, r.attempts[0].id)
+    // The rows are still there — that is the whole tombstone design.
+    expect(cleared.attempts.length).toBeGreaterThan(0)
+    expect(cleared.reports.length).toBeGreaterThan(0)
+    // And there is nothing on screen.
+    expect(living(cleared.attempts)).toHaveLength(0)
+    expect(living(cleared.reports)).toHaveLength(0)
+    expect(holdsNothingWritten(cleared)).toBe(true)
+  })
+
+  it("and it disagrees with recordIsEmpty on exactly that record, which is the point", () => {
+    // If these two ever agree everywhere, one of them is unnecessary — and if
+    // a caller picks the wrong one, nothing fails. This is what names the gap.
+    // ONE record, built once. The first version of this called `liveRun()`
+    // twice and removed an id that belonged to the other copy, so nothing was
+    // removed and the assertion failed for a reason that had nothing to do
+    // with the rule under test.
+    const started = liveRun()
+    const cleared = removeAttempt(started, started.attempts[0].id)
+    const trulyEmpty = emptyRecord()
+
+    expect(recordIsEmpty(trulyEmpty)).toBe(true)
+    expect(holdsNothingWritten(trulyEmpty)).toBe(true)
+
+    // The account still holds rows; the screen still shows nothing.
+    expect(recordIsEmpty(cleared)).toBe(false)
+    expect(holdsNothingWritten(cleared)).toBe(true)
   })
 })
 
