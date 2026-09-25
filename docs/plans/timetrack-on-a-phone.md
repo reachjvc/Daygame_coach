@@ -78,6 +78,34 @@ sheet.
 Verified: 18 phone tests on iPhone 14/WebKit, 34 on Pixel 7 and desktop Safari,
 6054 unit, ratchets unchanged.
 
+## A SILENT LOSS, 2026-09-26 — commit `1253cbe9`
+
+Found with a thumb rather than by reading, while testing something else. Aiming
+at an entry row on a phone I hit **"Continue this entry"** — 8px from the row's
+own tap area, 4px from the entry menu. Starting a timer stops the running one,
+which is Toggl's rule and the right one, so that mis-tap **ended the thing I was
+timing, in silence**. No toast, no undo, no confirmation. It surfaces days later
+as a total that is wrong, which is the worst shape a loss can take in a time
+tracker.
+
+`startTimer` already knew: it called `stopTimer` and threw away the entry that
+came back. That one place is where it is fixed. Every route that starts a timer
+now says what it displaced, and the three that a thumb can trigger offer Undo.
+
+**Five routes start a timer, and all five were checked** rather than the one I
+tripped over — Start/favorite/shortcut/continue-last, the row's Continue, a
+calendar event, a `?start=1` link, and the idle prompt's restart, which stays
+silent because it displaces the entry it is trimming and has a toast already.
+
+**A comment of mine was wrong and the grep caught it.** The first draft claimed
+every route came through two actions in `useTimetrack`. Three do not. The comment
+now names them, because a comment that lies about coverage is worse than none.
+
+The undo is deliberately not a snapshot-and-restore of the workspace: a pull from
+another device can land inside the seconds a toast is up, and this slice has
+already had a bug where replacing state with an older copy sent deletions for
+rows that were never gone.
+
 ---
 
 # The human half
