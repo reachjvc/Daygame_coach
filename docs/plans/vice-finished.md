@@ -848,3 +848,344 @@ hide a real fault, and M2 deletes most of that file. M1 is before M2 because it
 is the requirement the module currently fails outright and it touches nothing
 M2 removes. M3 after M2 because the door moves in M2 and is re-dated in M3. M5
 before M6 so the look is judged on the engines it has to look right on.
+
+---
+
+# M8 — WHAT DRIVING THE FRONT DOOR FOUND, 2026-09-25
+
+**This section exists because the plan above was wrong about where the work
+was.** Its headline says *"The Black Box is in good shape. The module around it
+is not"*, and everything from M2 onward acted on that: the module around it was
+retired, and the Black Box was polished — desktop, 320px labels, cross-browser,
+a seed race. Nobody drove the Black Box itself end to end afterwards.
+
+I did, at 390px and 1280px, signed in, with the account stubbed so nothing
+reached the shared database. **344 unit tests and 19 files are green against
+every fault below.** None of them is a regression from the milestones above;
+most have been there since the page was built.
+
+## The four that matter
+
+**1. The report form tells you the opposite of what the page does.** Under
+"File it", in the module's own words:
+
+> *Filed reports are kept on this device. Nothing is sent anywhere.*
+
+Four hundred pixels up the same page: *"This record is on your account, so it is
+on your other devices too."* The form wins, because it is the sentence you read
+at the moment you decide whether to type the truth into it.
+
+It is not a wording slip. Every field on that form is uploaded —
+`blackBoxRows.ts` maps `thought`, `with_whom`, `where_at`, `factors` and
+`did_instead` onto columns, so the sentence your head actually used, who you
+were with and where you were all travel. **The line was TRUE when it was written
+on 2026-09-22** (`10769688`) and was made false the next day by `b5af2bbe`,
+which put the record on the account. Nothing failed. The copy lint reads that
+file and checks its voice, never its truth.
+
+This is the one item on this list that is not a bug report. A promise about
+where the most sensitive data in the app goes is on the owner's always-ask
+list, and it has been wrong in the product for three days.
+
+**2. A person with years of record, on a new device, is shown the first-run
+screen and invited to type it all in again.** Empty browser, account read fails
+— an expired session is enough — and the page renders:
+
+> *START WITH WHAT ALREADY HAPPENED* · *Put in the attempts you have already
+> had, roughly…*
+
+No notice, no error, nothing. Driven and confirmed with a stubbed 401 and
+`navigator.onLine === true`.
+
+**The whole stack is careful about this and the last line throws it away.**
+`blackBoxClient` returns `undefined` rather than `null` specifically so a failed
+read cannot read as an empty account — its header calls collapsing the two "how
+one flaky request turns into an emptied record". `decideOnLoad` honours it and
+even carries the right sentence: *"Your record could not be reached. You can
+keep working; nothing is being saved."* Then `BlackBoxPage` gates the whole
+"Your copy" section — the sync notice with it — behind
+`record.attempts.length > 0`. The one state where the distinction decides
+whether somebody retypes four years is the one state that says nothing.
+
+**3. The page's own advice walks you into the corruption it refuses to let you
+cause.** Removing the report that ended a run is offered, except when another
+run off the same vice is still going, where the screen says *"end the newer run
+first"*. Follow that instruction exactly:
+
+    BEFORE  a1 2024-01-02→2024-04-15 · a2 2024-06-01→2025-03-15 · a3 2025-05-01→2025-06-10
+    AFTER   a1 2024-01-02→STILL LIVE · a2 …unchanged… · a3 …unchanged…
+
+    Longest run        998 days      ← contains two recorded relapses
+    Across every run  1327 days      ← ~330 days counted twice
+
+`revivalClashes` only looks for another run with `endedOn === null`. It never
+asks whether the revived run's new span — start to today — covers days that
+*ended* runs already hold, which is exactly what `overlapsExisting` refuses on
+the way in. Same guard, one direction only.
+
+For a tool whose entire claim is that your own record answers you honestly when
+you think you could moderate, a fabricated 998-day streak is the worst number
+it could produce.
+
+**4. The crisis door's NHS link is dead.** `410 Gone`, checked with curl and
+again with a fetch:
+`nhs.uk/service-search/other-services/Alcohol%20addiction/LocationSearch/1805`.
+It is shown to UK drinkers as *"Free drug and alcohol services near you."*
+Live replacement: `nhs.uk/nhs-services/find-alcohol-addiction-support-services/`.
+
+## M3's blocker is cleared: the helplines ARE checked now
+
+The plan recorded *"not possible from here — checking a helpline means reaching
+the outside world, which needs the network tools this session does not have."*
+**This session has them.** Every number was checked against the provider's own
+page or an NHS page, not against a search snippet.
+
+| Entry | Verdict |
+| --- | --- |
+| Samaritans 116 123 | Correct — samaritans.org itself |
+| NHS 111 | Correct, site 200 |
+| Drinkline 0300 123 1110 | Number correct. **Hours wrong by omission — see below** |
+| FRANK 0300 123 6600 | Correct, and genuinely 24/7 as the note claims |
+| GamCare 0808 8020 133 | Correct, 24/7 |
+| SAMHSA 1-800-662-4357 | Correct (= 1-800-662-HELP) |
+| 988 Lifeline, call and text | Correct |
+| NCPG 1-800-697-3738 | **Correct, and well researched** — it spells MY-RESET, adopted 2026-01-29; the fallback 1-800-522-4700 does still answer, as the note says |
+| NHS services finder URL | **410 GONE** |
+
+**Drinkline is not a night line.** NHS's own alcohol-support page: *"Call 0300
+123 1110 (weekdays 9am to 8pm, weekends 11am to 4pm)."* The module prints no
+hours, in a list where Samaritans says *"Any time of day or night"* and FRANK
+says *"around the clock"* — so the silence reads as "this one too". It carries
+`forVice: ["alcohol"]`, so it is shown specifically to the drinker, and this
+module's stated design moment is eleven at night. On a Tuesday at eleven it does
+not answer.
+
+**And `helpFreshness.test.ts` cannot see any of this — which it says itself.**
+It asserts `VERIFIED` is under 90 days old, and its own header states that
+reaching each service "is work no test and no agent without network access can
+do". That is honest, and it is still the gap: moving the date passes it, and a
+number that stopped answering and a URL returning 410 both pass it. The test was
+right about its limit and the repo read the limit as covered.
+
+## The rest, found the same way
+
+- **"Offline" is what the page says for every failed read.** Stubbed 500 and
+  stubbed 401, `navigator.onLine === true` in both: *"Offline. 13 changes are
+  waiting on this device and nothing has been lost."* The push path gets this
+  right (`navigator.onLine ? "failed" : "offline"`); the load path is hardcoded.
+  An expired session is the common case, and the person is sent to check their
+  wifi while nothing will ever save.
+- **"Load a copy" cannot be reached by keyboard, and is absent where it is
+  needed.** It is a `<label>` with `tabIndex -1` wrapping a `display:none`
+  input: measured 0×0, skipped by focus, no role. And it lives inside the
+  section gated on `attempts.length > 0` — so on a cleared browser or a new
+  phone, the one screen a backup exists for is the one screen that does not
+  offer to load one.
+- **19 of the 22 controls in "Start a run" are under 44px on a phone**, the
+  close control at 32×32 and the vice chips at 32 high. The report form and the
+  thought door are the same. `TAP_TARGET_DEBT` records this route at **zero**,
+  honestly: `route-sweep.spec.ts` navigates, settles and measures — it never
+  opens a dialog, and on this page every control that matters is in one.
+- **71 of 376 testimonials carry `vices: []`, and the filter reads that as "fits
+  every vice"** (`testimonialsFor`: `t.vices.length === 0 || …`). Seven are from
+  r/OpiatesRecovery and one from r/stopsmoking. Driving the urge door as a
+  drinker served `06-152`, an opiates post, under the heading *"Somebody else,
+  in the same spot"*. This is the 2026-08-20 corpus finding again — *"vice
+  assigned by source file, not per entry"* — the 23 entries were re-filed then
+  and the rule that makes untagged mean universal was left in place.
+- **Raw ISO dates are shown to the reader** in at least four places:
+  `Started 2025-09-20`, `105 days · 2024-01-02 to 2024-04-15`, the thought
+  door's history rows, and the remove control's `aria-label`. Everything else on
+  the page speaks in days and months.
+- **The crisis door's accessible name is `if this is past what a page can do`** —
+  lowercase, no verb, 12px. `awareness.ts` already holds the capitalised label
+  for the same door. A screen reader gets the fragment.
+- *"This thought has ended **1 run**, holding 105 days **between them**."*
+  The noun is pluralised and the pronoun is not.
+- The testimonial `source` links measure **34×14**.
+
+## The guards, and what each one actually checks
+
+The owner's question was whether the tests written here catch anything. Eight
+were named in this plan already. These are the ones this pass found, each
+checked by reading what it asserts rather than by trusting its name:
+
+| Guard | Believes it checks | Actually checks |
+| --- | --- | --- |
+| `TAP_TARGET_DEBT` + `route-sweep` | every control on the page | the five on screen before a dialog opens |
+| `deadControls.spec.ts` | "every enabled control" | `querySelectorAll("button")` — not links, not inputs, not the `<label>` that restores your record |
+| `viceSyncService.test.ts` | the sync messages | **three** tests bless the word "Offline"; none asks whether it is true |
+| `blackboxCorrections.test.ts` | undo is safe | revival vs a *live* run, and vs a *different vice*. Never a newer *ended* run off the same vice — the same blind spot the code has |
+| `viceCopyLint` + `viceComponentCopy` | the module's voice | banned phrasings. A false statement in perfect voice passes |
+| `researchIsShipped.test.ts` | the corpus reaches the product | how MUCH of it does. Not whether it reaches the right person |
+| `helpFreshness.test.ts` | the numbers are current | that a date string was edited within 90 days |
+
+The pattern is one thing, not seven: **every guard checks the shape of the
+thing, and none of them checks the claim.** A tap-target rule that measures the
+landing state, a dead-control rule that measures buttons, a copy lint that
+measures phrasing, a freshness rule that measures a date. Each is true about
+what it measures and each reads, on a green run, as coverage of something wider.
+
+## Order, and what needs the owner
+
+1. The report form's promise (**owner's call on the wording — it is a storage claim**)
+2. `revivalClashes` — the overlap back door, with the test that plants it
+3. The empty-record silence, and "Offline" for a 401
+4. The NHS 410 and Drinkline's hours, and `VERIFIED` moved because it was
+   actually checked this time
+5. "Load a copy": a real control, and present on an empty record
+6. Tap targets inside the dialogs, and a guard that opens them
+7. The 71 untagged testimonials (**needs a research pass, not a code change**)
+
+## M8 — BUILT, 2026-09-25
+
+Every fix below was proved by planting the fault back and watching the named
+guard fail. Where a fix was verified in a browser, it was verified the same way
+the fault was found — by driving it, not by re-reading the diff.
+
+**1. The report form's promise is true again.** It now says *"Saved to your
+account, so this is on your other devices too. Nothing here is shared with
+anyone else."* The second sentence is checked, not assumed: RLS on
+`vice_attempts` and `vice_reports` scopes all four verbs to `auth.uid()`.
+
+`tests/unit/vice/storageClaimIsTrue.test.ts` is the guard. It bans local-only
+claims in the four screens that collect a synced row, and **asserts the module
+still syncs**, so the day the account is removed it fails and sends the next
+person back to the copy rather than forbidding a sentence that has become true
+again. Scoped to four files on purpose: the help door's *"not stored anywhere
+but this browser"* is TRUE of the country you pick, and a blanket word-ban
+would have deleted an honest sentence.
+
+*Its own first version was the same mistake in miniature.* It read the file
+including comments, so it failed on the comment that quotes the old line for the
+next reader. It reads rendered copy now.
+
+**2. `revivalClashes` refuses the overlap.** It asked only whether another run
+was still live; it now also refuses when the revived run's span would cover days
+an *ended* run holds. No `today` parameter was needed — both runs extend to
+today, so "was still running on or after the day this one started" is exactly
+overlap. Two tests: the walk that produced the 998-day streak, and one asserting
+the guard did **not** become "never undo an ending" — two runs that genuinely
+share no day still undo cleanly.
+
+**3. "Offline" is only said when the browser is offline.** New state
+`unreachable`, set by the load path with the same `navigator.onLine` question
+the push path already asked. Driven: 500 and 401 with the browser online now
+read *"Your account could not be reached, so this may not be your whole record.
+Nothing here has been changed or sent, and signing in again is usually what
+fixes it."*; genuinely offline still reads *"Offline. 13 changes are waiting…"*.
+
+**4. The empty record is no longer silent.** The sync notice was gated behind
+`record.attempts.length > 0`. It now renders on an empty record too, in amber,
+directly above *"Start with what already happened"* — so the person whose four
+years failed to load is told so before being invited to retype them.
+
+**5. "Load a copy" is a real button, and it is there when you need it.** It was
+a `<label>` with `tabIndex -1` round a `display:none` input. It is a
+`QuietButton` that opens the picker; confirmed in the Tab order at 85×44. And
+the whole "Your copy" section renders on an empty record now — verified by
+restoring a four-run backup into a cleared browser, which was impossible before
+because the control did not exist until you had already typed something in.
+
+**6. The helplines are checked, the dead link is replaced, and Drinkline states
+its hours.** `VERIFIED` moved to 2026-09-25 because a check actually happened.
+`scripts/check-helplines.mjs` does the mechanical half.
+
+*It reports three outcomes, not two, and that was not the first version.* The
+first called `gamcare.org.uk` and `samhsa.gov` dead; both are live behind a bot
+wall that answers 403 to anything but a real browser, curl included. **A checker
+that cries wolf twice in ten gets muted, and then the real 410 goes past
+unread** — which is the failure it was written about. Gone is 404/410 and fails
+the run; blocked and flaky are *"could not be checked from here"* and do not.
+Proved both ways: the old NHS url exits 1 naming it GONE, the current set exits
+0. It says on every run that it cannot ring a phone.
+
+**7. Tap targets, from 19-of-22 to 0-of-22.** `Chip` is 44px (it is how this
+module asks every question worth asking), and the date inputs, the closeness
+slider, the two text inputs, the testimonial `source` link and the help door's
+URL link with it.
+
+`tests/e2e/vice-dialog-targets.spec.ts` opens all five doors at 390px and
+measures what the browser drew. It exists because the route-sweep cannot: it
+measures the landing state, and on this page that is five controls. Seven tests.
+
+*It found a fault of its own, which is the only reason to trust it.* The last
+case asserts no door can be dismissed only by the 32×32 shared close — and the
+**thought door's first screen had no other way out at all**. The loudest control
+on the page, opened mid-thought, and the only exit was a 32px ×. It has a
+worded Close now.
+
+*And it got the exemption wrong first.* It identified the shared close by the
+string "Close", and the dismissal just added says "Close" too — so the exemption
+ate the control it was looking for and reported the door as still broken. Keyed
+on `data-slot="dialog-close"` now. **An exemption keyed on copy grows every time
+somebody picks the same word.**
+
+**8. Four spec waiters would have hung on the new state.** `blackbox`,
+`blackbox-seed-race`, `vice-offline` and `vice-cross` each held their own list
+of which states mean "finished" — `synced`, `offline`, `failed`. Adding
+`unreachable` would have made every one of them wait forty seconds and report a
+timeout instead of the thing under test. `isSettled` owns it, the page publishes
+`data-sync-settled`, and a unit test walks `SYNC_STATES` so a state added later
+cannot fall outside the classification. `SyncState` is now derived from that
+array rather than written twice — the "never tells somebody their work is gone"
+test walked a hand-copied list and would not have checked the new state.
+
+**9. The copy lint told an address from a sentence.** The replacement NHS path
+contains the word "addiction", and the lint walks `SERVICES[].contact`, which is
+documented as "Phone, text instruction, or a URL". The diagnosis rule is
+load-bearing — Grubbs, N=66,994 — so it was not softened; the lint skips
+address-shaped contacts only, and a second case asserts the exemption stays
+narrow by naming the strings on both sides. Proved: a diagnosis word planted in
+a prose contact still fails it. **Caught by a peer session reading the tree, not
+by me — I edited `help.ts` after the last suite run and did not re-run it.**
+
+### Still open, and deliberately not done here
+
+- **The 71 untagged testimonials.** `vices: []` reads as "fits every vice", and
+  seven of them are from r/OpiatesRecovery. Re-tagging 71 quotes is a research
+  pass against the corpus, not a code change, and doing it by guessing from the
+  subreddit name is exactly the error the 2026-08-20 QA found. **It needs its
+  own sitting.** The narrower alternative — treat `vices: []` as "untagged, show
+  to nobody" — is one line and would silently remove 71 quotes from rotation,
+  which is a content decision, not a bug fix.
+- **The shared 32×32 dialog close**, on every dialog in the app. Out of scope
+  for a vice plan; every door here has a worded way out, and that is now tested.
+- **Raw ISO dates shown to the reader** — `Started 2025-09-20`, `105 days ·
+  2024-01-02 to 2024-04-15`, the thought door's history rows, and the remove
+  control's `aria-label`. Cheap to change and not obviously mine to choose:
+  "30 Aug" and "four weeks ago" read very differently at eleven at night, and
+  this module's voice is the owner's.
+- **The crisis door's accessible name** is still `if this is past what a page
+  can do`. `awareness.ts` holds `This is past what a page can do` for the same
+  door. One is a fragment a screen reader reads out of context; the other is the
+  sentence. Which one appears on screen is a voice decision.
+- **`revivalClashes` is per-vice and so is the overlap rule.** Two runs off
+  different things over the same months are two records, deliberately. Nothing
+  here changed that.
+
+### What did NOT turn out to be wrong
+
+Recorded because a list of faults with no negatives is a list somebody stops
+trusting.
+
+- **The peer session's `5e437b32` shape does not exist here.** Their Life
+  Mastery day half was tappable before the account's read landed and the read
+  then replaced it wholesale, so a tick inside that window was silently
+  discarded. The same window exists on this page by construction. Tested by
+  holding the GET back 1800ms and filing a close call at t+509ms: **the report
+  survived in the browser copy and was pushed.** `latest.current` is assigned
+  every render rather than captured at load start, and the merge is a row-level
+  union rather than a whole-record take, so the window is safe by design and not
+  by luck.
+- **The medical-withdrawal gate works and explains itself.** Picking Drinking
+  disables "Start the run" and says why, in the one place that decides.
+- **The desktop layout is genuinely good.** Two columns at 1280px, 1160px tall,
+  no horizontal overflow, both columns ending level.
+- **The vice switcher is correct.** Two vices on one record give per-vice runs,
+  per-vice stats, and the thought door correctly hidden for the one with no
+  reports.
+- **Every helpline NUMBER was right**, including the US gambling line, where
+  `1-800-697-3738` spells MY-RESET, adopted 2026-01-29, with 1-800-522-4700 as
+  the still-answering fallback exactly as the note claims. The numbers were
+  well researched; it was the link and the hours that had rotted.

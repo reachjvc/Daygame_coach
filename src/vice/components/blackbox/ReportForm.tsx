@@ -168,7 +168,7 @@ export function ReportForm({
             min={wentThrough && lastFiledOn > runStartedOn ? lastFiledOn : runStartedOn}
             max={today}
             onChange={(e) => setOn(e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[14px] text-zinc-100 outline-none focus:border-white/30"
+            className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.03] min-h-11 px-3 py-2 text-[14px] text-zinc-100 outline-none focus:border-white/30"
           />
         </div>
 
@@ -260,8 +260,17 @@ export function ReportForm({
             File it
           </PrimaryButton>
         </div>
+        {/* WHAT THIS SAYS HAS TO MATCH WHERE THE DATA GOES, AND FOR THREE DAYS
+            IT DID NOT. Until 2026-09-22 this read "kept on this device.
+            Nothing is sent anywhere", which was true when it was written and
+            was made false the next day by the account landing — every field on
+            this form is a column in `vice_reports`, the thought in your own
+            words included. Nothing failed: the copy lint reads this file and
+            checks its voice, not its truth. If the storage changes again, this
+            sentence changes in the same commit. */}
         <p className="text-[11.5px] text-zinc-500">
-          Filed reports are kept on this device. Nothing is sent anywhere.
+          Saved to your account, so this is on your other devices too. Nothing here is shared with
+          anyone else.
         </p>
       </DialogContent>
     </Dialog>

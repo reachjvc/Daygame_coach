@@ -158,7 +158,7 @@ export function HelpDoor({ viceId, locale, onLocale, onPlan, onClose }: HelpDoor
                           href={service.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                          className="inline-flex min-h-11 items-center break-all text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors"
                         >
                           {service.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
                         </a>

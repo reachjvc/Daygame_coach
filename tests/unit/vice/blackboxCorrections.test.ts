@@ -154,6 +154,89 @@ describe("a mis-tap can be taken back", () => {
     expect(removeReport(r, endedBy)).toEqual(r)
   })
 
+  it("refuses an undo that would run the revived attempt straight through an ENDED one", () => {
+    /**
+     * THE BACK DOOR THE TWO TESTS AROUND THIS ONE LEFT OPEN.
+     *
+     * Both of them ask about a run that is still GOING, and so did the guard:
+     * it looked for `endedOn === null` and nothing else. So the screen's own
+     * advice — "end the newer run first" — was followable, and following it
+     * produced the one state this module refuses everywhere else.
+     *
+     * Driven in a browser on 2026-09-25 with a real four-run record. End the
+     * live run, undo the oldest ending, and the oldest run goes live again
+     * covering every day since it started — straight across two runs that
+     * ended inside that span. "Longest run" read 998 days and contained two
+     * recorded relapses; "Across every run" counted about 330 days twice.
+     *
+     * The order below is exactly that sequence, which is why it is written as
+     * a walk rather than as a hand-built record: a fixture could assert the
+     * fixed behaviour while the route a person takes stayed open.
+     */
+    let r = liveRun()
+    // The first run ends in May.
+    r = fileReport(r, {
+      attemptId: r.attempts[0].id, at: "2026-05-10T20:00:00", wentThrough: true,
+      thought: "x", ending: "fine", closeness: null,
+      withWhom: "", where: "", factors: [], didInstead: "",
+    })
+    const firstEnding = r.attempts[0].endedByReportId as string
+
+    // A second run off the same thing runs June to July and also ends.
+    r = startAttempt(r, {
+      viceId: "nicotine", label: "Smoking or vaping", startedOn: "2026-06-01",
+      startedBy: "", structure: [], acknowledgedRisk: false, today: TODAY,
+    })
+    r = fileReport(r, {
+      attemptId: r.attempts[1].id, at: "2026-07-15T20:00:00", wentThrough: true,
+      thought: "y", ending: "justone", closeness: null,
+      withWhom: "", where: "", factors: [], didInstead: "",
+    })
+
+    // NOTHING IS LIVE NOW. That is precisely the state "end the newer run
+    // first" tells somebody to reach, and the old guard said yes here.
+    expect(currentAttempt(forVice(r, "nicotine"))).toBeNull()
+    expect(revivalClashes(r, firstEnding)).toBe(true)
+    expect(removeReport(r, firstEnding)).toEqual(r)
+
+    // And the reason, stated as the arithmetic rather than as the rule: the
+    // revived run would start in March and be live, so it would cover the
+    // whole of the June-to-July run.
+    const revived = r.attempts[0]
+    const later = r.attempts[1]
+    expect(later.endedOn).not.toBeNull()
+    expect(later.endedOn! >= revived.startedOn).toBe(true)
+  })
+
+  it("still allows the undo when the earlier run ended before the other one started", () => {
+    // The guard must not become "never undo an ending". Two runs that genuinely
+    // do not share a day are the ordinary case, and reviving the LATER of them
+    // touches nothing the earlier one holds.
+    let r = startAttempt(emptyRecord(), {
+      viceId: "nicotine", label: "Smoking or vaping", startedOn: "2026-01-01",
+      startedBy: "", structure: [], acknowledgedRisk: false, today: TODAY,
+    })
+    r = fileReport(r, {
+      attemptId: r.attempts[0].id, at: "2026-02-01T20:00:00", wentThrough: true,
+      thought: "x", ending: "fine", closeness: null,
+      withWhom: "", where: "", factors: [], didInstead: "",
+    })
+    r = startAttempt(r, {
+      viceId: "nicotine", label: "Smoking or vaping", startedOn: "2026-06-01",
+      startedBy: "", structure: [], acknowledgedRisk: false, today: TODAY,
+    })
+    r = fileReport(r, {
+      attemptId: r.attempts[1].id, at: "2026-07-01T20:00:00", wentThrough: true,
+      thought: "y", ending: "justone", closeness: null,
+      withWhom: "", where: "", factors: [], didInstead: "",
+    })
+    // Undoing the LATER ending revives a run starting in June; the earlier run
+    // ended in February, so they share no day.
+    const laterEnding = r.attempts[1].endedByReportId as string
+    expect(revivalClashes(r, laterEnding)).toBe(false)
+    expect(currentAttempt(forVice(removeReport(r, laterEnding), "nicotine"))).not.toBeNull()
+  })
+
   it("allows the undo once the newer run is off a different thing", () => {
     let r = liveRun()
     r = fileReport(r, {

@@ -214,7 +214,54 @@ export function canPush(decision: SyncDecision | null): boolean {
   return decision !== null && decision.kind !== "offline"
 }
 
-export type SyncState = "unknown" | "synced" | "syncing" | "failed" | "offline" | "local"
+/**
+ * `unreachable` IS NOT `offline`, AND SAYING "OFFLINE" FOR BOTH SENT PEOPLE TO
+ * CHECK THEIR WIFI WHILE THEIR SESSION HAD EXPIRED.
+ *
+ * Driven on 2026-09-25: a stubbed 500 and a stubbed 401, with
+ * `navigator.onLine === true` in both, produced "Offline. 13 changes are
+ * waiting on this device and nothing has been lost." The push path had this
+ * right all along — `navigator.onLine ? "failed" : "offline"` — and the load
+ * path was hardcoded. An expired session is the ordinary case, and "offline" is
+ * the one diagnosis that makes somebody wait instead of signing in again.
+ */
+/**
+ * ONE LIST, AND THE TYPE IS DERIVED FROM IT.
+ *
+ * `syncNotice`'s test walks every state asserting none of them ever tells
+ * somebody their work is gone. It walked a hand-written array, so adding a
+ * state left the new one unchecked while the test stayed green — a guard
+ * quietly covering less than its name, which is the fault this whole module
+ * spent 2026-09-25 cataloguing. Iterating this makes that impossible.
+ */
+export const SYNC_STATES = [
+  "unknown",
+  "synced",
+  "syncing",
+  "failed",
+  "offline",
+  "unreachable",
+  "local",
+] as const
+
+export type SyncState = (typeof SYNC_STATES)[number]
+
+/**
+ * WHETHER THE SYNC HAS FINISHED DOING ANYTHING, for the tests that must wait.
+ *
+ * Four e2e helpers used to wait on `[data-sync="synced"], [data-sync="offline"],
+ * [data-sync="failed"]` — a hand-written list of terminal states, in four
+ * files. Adding `unreachable` on 2026-09-25 would have made every one of them
+ * hang for forty seconds on a failed read and report a timeout instead of the
+ * thing they were testing. One owner, and `SYNC_STATES` below is walked by a
+ * test so a state added later cannot be left unclassified.
+ *
+ * `unknown` is the state before anything has happened and `syncing` is a
+ * request in flight. Everything else is somewhere to stop.
+ */
+export function isSettled(state: SyncState): boolean {
+  return state !== "unknown" && state !== "syncing"
+}
 
 /** What the person is told, in the app's own words. Empty when all is well. */
 export function syncNotice(state: SyncState, pending: number): string {
@@ -229,6 +276,12 @@ export function syncNotice(state: SyncState, pending: number): string {
         : "Offline. This is still your record; it will save when you are back."
     case "failed":
       return "That could not be saved to your account. It is still here on this device, and saving will be tried again."
+    // READ, not write, and the difference decides what somebody does next. The
+    // record on screen is whatever this browser holds, which may be nothing at
+    // all on a device that has never seen it — so this must never read as
+    // "you have no runs".
+    case "unreachable":
+      return "Your account could not be reached, so this may not be your whole record. Nothing here has been changed or sent, and signing in again is usually what fixes it."
     case "local":
       return "Working on this device only."
     default:

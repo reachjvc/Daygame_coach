@@ -14,7 +14,9 @@ import {
   mergeRecords,
   mergeRows,
   pendingSince,
+  isSettled,
   recordIsEmpty,
+  SYNC_STATES,
   syncNotice,
   watermark,
 } from "@/src/vice/blackbox/viceSyncService"
@@ -266,6 +268,37 @@ describe("what the person is told", () => {
     expect(syncNotice("unknown", 0)).toBe("")
   })
 
+  it("classifies every state as settled or not, so no spec can wait forever on a new one", () => {
+    // Four e2e helpers each held their own list of "finished" states. Adding
+    // `unreachable` would have hung all four for forty seconds on a failed read
+    // and reported a timeout instead of the thing under test. `isSettled` is
+    // the one owner now, and this walks SYNC_STATES so a state added later
+    // cannot quietly fall outside it.
+    const moving = SYNC_STATES.filter((s) => !isSettled(s))
+    const stopped = SYNC_STATES.filter((s) => isSettled(s))
+    expect(moving).toEqual(["unknown", "syncing"])
+    // Everything else is somewhere a test may stop, and there is at least one
+    // of each kind — a classifier that answered the same for all of them would
+    // be useless in exactly the way that passes.
+    expect(stopped.length).toBeGreaterThan(0)
+    expect(moving.length + stopped.length).toBe(SYNC_STATES.length)
+    for (const state of ["synced", "offline", "unreachable", "failed", "local"] as const) {
+      expect(isSettled(state), `${state} must be a state a test can stop on`).toBe(true)
+    }
+  })
+
+  it("says the account could not be reached, and does NOT say offline, when it is not", () => {
+    // Driven 2026-09-25: a stubbed 500 and a stubbed 401 with
+    // `navigator.onLine === true` both produced "Offline. 13 changes are
+    // waiting…". An expired session is the common case and "offline" is the
+    // one diagnosis that makes somebody wait rather than sign in again.
+    const said = syncNotice("unreachable", 3)
+    expect(said).toMatch(/could not be reached/i)
+    expect(said).not.toMatch(/offline/i)
+    // And it must never read as "you have no runs" on a device holding none.
+    expect(said).toMatch(/may not be your whole record/i)
+  })
+
   it("counts what is waiting when offline", () => {
     expect(syncNotice("offline", 1)).toContain("1 change is waiting")
     expect(syncNotice("offline", 3)).toContain("3 changes are waiting")
@@ -277,7 +310,10 @@ describe("what the person is told", () => {
     // earlier version of this test banned the word and failed on the
     // reassurance, which would have pushed the copy towards vagueness.
     const claims = /(work|changes?|record|it) (was|were|is|are|has been|have been) (lost|gone|deleted|discarded)/i
-    for (const state of ["unknown", "synced", "syncing", "failed", "offline", "local"] as const) {
+    // SYNC_STATES, not a copy of it. This array was written out by hand and a
+    // state added later would simply not have been checked — green, and one
+    // short. See the comment on SYNC_STATES.
+    for (const state of SYNC_STATES) {
       for (const n of [0, 1, 3]) {
         expect(syncNotice(state, n), `${state}/${n}`).not.toMatch(claims)
       }

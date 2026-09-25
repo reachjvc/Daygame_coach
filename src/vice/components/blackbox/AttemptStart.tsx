@@ -122,7 +122,7 @@ export function AttemptStart({
             value={startedOn}
             max={today}
             onChange={(e) => setStartedOn(e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[14px] text-zinc-100 outline-none focus:border-white/30"
+            className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.03] min-h-11 px-3 py-2 text-[14px] text-zinc-100 outline-none focus:border-white/30"
           />
         </div>
 

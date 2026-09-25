@@ -117,6 +117,29 @@ function lintAll(where: string, text: string, { prose }: { prose: boolean }) {
 const prose = (where: string, text: string) => lintAll(where, text, { prose: true })
 const label = (where: string, text: string) => lintAll(where, text, { prose: false })
 
+/**
+ * A web address rather than something somebody reads.
+ *
+ * `HelpService.contact` is documented as "Phone, text instruction, or a URL",
+ * so it is a genuinely mixed field, and the URLs in it belong to the NHS and
+ * to SAMHSA rather than to us. On 2026-09-25 the dead NHS link was replaced
+ * with `nhs.uk/find-alcohol-addiction-support-services` and this lint went red
+ * on the word "addiction" — inside a path segment the NHS chose.
+ *
+ * The diagnosis rule is one of the load-bearing ones here: never call porn or
+ * internet use an addiction, because CSBD is an impulse-control disorder and
+ * Grubbs's moral-incongruence work (N=66,994) says the label harms a large
+ * share of the people who apply it to themselves. Softening the word list to
+ * accommodate a hostname would trade that for a URL. Telling an address from a
+ * sentence costs nothing and keeps the rule whole.
+ *
+ * Deliberately narrow: one token, no spaces, with a dotted host in it. Every
+ * prose contact on that list — "The surgery you are registered with", "Whoever
+ * you saw last", "Call or text 988" — has a space and is still linted, and the
+ * case below asserts that rather than trusting this comment.
+ */
+const isWebAddress = (text: string) => /^\S+$/.test(text) && /[a-z0-9-]+\.[a-z]{2,}(\/|$)/i.test(text)
+
 describe("quit-a-vice copy lint", () => {
   it("finds zero violations across every user-facing string", () => {
     // --- the black box
@@ -416,7 +439,10 @@ describe("quit-a-vice copy lint", () => {
       label(`SERVICES.${region.label}`, region.label)
       for (const service of region.items) {
         label(`SERVICES.${service.name}.name`, service.name)
-        label(`SERVICES.${service.name}.contact`, service.contact)
+        // An address is not copy. See `isWebAddress`.
+        if (!isWebAddress(service.contact)) {
+          label(`SERVICES.${service.name}.contact`, service.contact)
+        }
         prose(`SERVICES.${service.name}.note`, service.note)
       }
     }
@@ -425,6 +451,29 @@ describe("quit-a-vice copy lint", () => {
       violations,
       `Copy violations:\n${violations.map((v) => `  [${v.rule}] ${v.where}\n    ${v.text}`).join("\n")}`,
     ).toHaveLength(0)
+  })
+
+  it("the address exemption stays narrow, and does not swallow the prose contacts", () => {
+    // WITHOUT THIS, `isWebAddress` IS ONE LOOSENED REGEX AWAY FROM TURNING THE
+    // WHOLE `contact` FIELD OFF, silently and while green — which is the shape
+    // of fault this module spent 2026-09-25 cataloguing. So: the exemption must
+    // actually exempt something, and it must still be checking the sentences.
+    const contacts = Object.values(SERVICES).flatMap((r) => r.items.map((i) => i.contact))
+    const addresses = contacts.filter(isWebAddress)
+    const sentences = contacts.filter((c) => !isWebAddress(c))
+
+    expect(addresses.length, "no contact is address-shaped — the exemption is dead code").toBeGreaterThan(0)
+    expect(sentences.length, "every contact was exempted — the rule is off").toBeGreaterThan(addresses.length)
+
+    // The specific strings, named, because "greater than zero" would pass on
+    // the wrong split.
+    expect(addresses).toContain("nhs.uk/find-alcohol-addiction-support-services")
+    expect(sentences).toContain("The surgery you are registered with")
+    expect(sentences).toContain("Call or text 988")
+    // A phone number has spaces and is not an address by this rule.
+    expect(isWebAddress("0300 123 1110")).toBe(false)
+    // And a bare sentence containing a full stop must not read as a host.
+    expect(isWebAddress("Whoever you saw last")).toBe(false)
   })
 })
 

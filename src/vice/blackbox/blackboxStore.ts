@@ -489,7 +489,29 @@ export function revivalClashes(record: BlackBoxRecord, reportId: string): boolea
   const ended = living(record.attempts).find((a) => a.endedByReportId === reportId)
   if (!ended) return false
   return living(record.attempts).some(
-    (a) => a.id !== ended.id && a.viceId === ended.viceId && a.endedOn === null,
+    (a) =>
+      a.id !== ended.id &&
+      a.viceId === ended.viceId &&
+      // AN ENDED RUN COUNTS TOO, AND LEAVING IT OUT WAS A BACK DOOR INTO THE
+      // ONE STATE THIS MODULE REFUSES.
+      //
+      // This used to ask only whether another run was still LIVE. So the screen
+      // said "end the newer run first", which is followable — and following it
+      // produced exactly what `overlapsExisting` exists to prevent: end the live
+      // run, undo the older ending, and the older run goes live again covering
+      // every day since it started, straight across two runs that ended inside
+      // that span. Driven on 2026-09-25 with a real four-run record: "Longest
+      // run" became 998 days containing two recorded relapses, and "Across every
+      // run" counted about 330 days twice. A fabricated streak is the worst
+      // number this tool can produce, and it took three taps.
+      //
+      // No `today` is needed to see it. The revived run goes live, so it covers
+      // its start through today, and every other run ends at today or earlier —
+      // so "overlaps" is just "was still running on or after the day this one
+      // started". A live run (no end date) always is; an ended one is whenever
+      // it ended on or after that day. Same day at each edge counts, because
+      // that day would be counted twice, which is `overlapsExisting`'s own rule.
+      (a.endedOn === null || a.endedOn >= ended.startedOn),
   )
 }
 

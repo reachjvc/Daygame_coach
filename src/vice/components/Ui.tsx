@@ -113,7 +113,7 @@ export function Line({ label, value, onChange, placeholder, maxLength }: {
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         maxLength={maxLength}
-        className="w-full rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-[13px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-violet-400/40 transition-colors"
+        className="min-h-11 w-full rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-[13px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-violet-400/40 transition-colors"
       />
     </div>
   )
@@ -163,7 +163,9 @@ export function Scale({ label, help, value, onChange, lowAnchor, highAnchor, max
           onChange={(e) => onChange(Number(e.target.value))}
           onPointerUp={commit}
           onKeyUp={commit}
-          className="flex-1 accent-violet-400"
+          // MEASURED 16 HIGH, which is a thumb-width target you aim at with a
+          // fingertip. The track stays thin; the control's box does not.
+          className="min-h-11 flex-1 accent-violet-400"
         />
         <span className={`w-8 text-right text-lg tabular-nums ${value === undefined ? "text-zinc-500" : "text-violet-200"}`}>
           {value === undefined ? "–" : value}
@@ -178,14 +180,25 @@ export function Scale({ label, help, value, onChange, lowAnchor, highAnchor, max
   )
 }
 
-/** A one-tap option that can be on or off. */
+/**
+ * A one-tap option that can be on or off.
+ *
+ * `min-h-11` IS 44px AND IT IS LOAD-BEARING. This was `py-1.5`, which measured
+ * 32 high on a phone — and a chip is how this module asks every question worth
+ * asking: which thing you are stopping, what you had in place, what else was
+ * going on, and the confirm on the withdrawal warning. Measured at 390px on
+ * 2026-09-25: 19 of the 22 controls in "Start a run" were under the minimum,
+ * and the tap-target sweep recorded this route at ZERO debt, honestly — it
+ * navigates, settles and measures, and never opens a dialog. On this page every
+ * control that matters is inside one.
+ */
 export function Chip({ label, on, onClick }: { label: string; on: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={on}
-      className={`text-[12px] px-2.5 py-1.5 rounded-full border transition-colors ${
+      className={`inline-flex min-h-11 items-center text-[12px] px-3 py-1.5 rounded-full border transition-colors ${
         on
           ? "border-violet-400/50 bg-violet-500/20 text-violet-100"
           : "border-white/10 bg-white/[0.02] text-zinc-400 hover:border-white/30 hover:text-zinc-200"

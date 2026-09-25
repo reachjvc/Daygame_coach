@@ -149,7 +149,12 @@ export function useBlackBoxSync({
       decision.current = made
 
       if (made.kind === "offline") {
-        setState("offline")
+        // THE SAME QUESTION THE PUSH PATH ALREADY ASKS. `decideOnLoad` says
+        // "the read did not come back" and cannot know why; only the browser
+        // knows whether it has a network. Reporting both as "offline" told
+        // somebody with an expired session to wait for signal that was never
+        // the problem.
+        setState(navigator.onLine ? "unreachable" : "offline")
         return
       }
 

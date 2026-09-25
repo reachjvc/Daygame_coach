@@ -63,7 +63,7 @@ type Page = import("@playwright/test").Page
 async function landed(page: Page) {
   await page.locator('[data-hydrated="true"]').waitFor({ timeout: 30000 })
   await page
-    .locator('[data-sync="synced"], [data-sync="offline"], [data-sync="failed"]')
+    .locator('[data-sync-settled="true"]')
     .waitFor({ timeout: 30000 })
 }
 

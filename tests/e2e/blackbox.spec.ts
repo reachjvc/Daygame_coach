@@ -154,7 +154,7 @@ async function settled(page: Page) {
   // lets an assertion run before the change has been queued, let alone sent.
   // That is what made the cross-device delete test fail intermittently while
   // the propagation it was testing worked perfectly.
-  await page.locator('[data-sync="synced"][data-pending="0"], [data-sync="offline"], [data-sync="failed"]')
+  await page.locator('[data-sync="synced"][data-pending="0"], [data-sync-settled="true"]:not([data-sync="synced"])')
     .waitFor({ timeout: 20000 })
 }
 

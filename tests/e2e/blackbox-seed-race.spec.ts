@@ -91,7 +91,7 @@ test("a push already in flight cannot resurrect the rows the fixture just buried
   await page.goto(QUIT_VICE)
   await page.locator('[data-hydrated="true"]').waitFor({ timeout: 20000 })
   await page
-    .locator('[data-sync="synced"][data-pending="0"], [data-sync="offline"], [data-sync="failed"]')
+    .locator('[data-sync="synced"][data-pending="0"], [data-sync-settled="true"]:not([data-sync="synced"])')
     .waitFor({ timeout: 40000 })
 
   await page.evaluate(async () => {

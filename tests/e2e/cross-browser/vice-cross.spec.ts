@@ -61,7 +61,7 @@ const NIGHT = "2026-02-14"
 async function landed(page: Page) {
   await page.locator('[data-hydrated="true"]').waitFor({ timeout: 40000 })
   await page
-    .locator('[data-sync="synced"], [data-sync="offline"], [data-sync="failed"]')
+    .locator('[data-sync-settled="true"]')
     .waitFor({ timeout: 40000 })
 }
 

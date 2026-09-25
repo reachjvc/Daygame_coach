@@ -46,7 +46,10 @@ function Attribution({ t }: { t: Testimonial }) {
         href={t.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="underline underline-offset-2 decoration-white/20 hover:text-zinc-400 transition-colors"
+        // 34x14 before this. It is the one control that answers "is this quote
+        // real", which is the whole basis of the module's claim to have read
+        // anything — and it was a fourteen-pixel target on a phone.
+        className="inline-flex min-h-11 items-center px-2 -mx-2 underline underline-offset-2 decoration-white/20 hover:text-zinc-400 transition-colors"
       >
         source
       </a>

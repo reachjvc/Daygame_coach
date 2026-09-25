@@ -80,6 +80,17 @@ export function ThoughtDoor({
                 </button>
               ))}
             </div>
+            {/* A WAY OUT WITH A WORD ON IT, because until 2026-09-25 this stage
+                had none: the only dismissal was the 32×32 × that
+                `components/ui/dialog.tsx` draws in every dialog in the app.
+                This is the loudest control on the page and it is opened
+                mid-thought — "none of these is it, put it away" has to be as
+                easy to hit as the thing that opened it. Found by
+                `vice-dialog-targets.spec.ts`, which asserts no door is
+                dismissable only by the small shared button. */}
+            <div className="mt-1 flex justify-end">
+              <QuietButton onClick={onClose}>Close</QuietButton>
+            </div>
           </>
         )}
 

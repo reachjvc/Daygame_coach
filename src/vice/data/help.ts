@@ -32,7 +32,7 @@
 import type { HelpLocale } from "../types"
 
 /** When the numbers below were last checked against the providers' own pages. */
-export const VERIFIED = "2026-08-17"
+export const VERIFIED = "2026-09-25"
 
 // ---------------------------------------------------------------- services
 
@@ -76,7 +76,14 @@ export const SERVICES: Record<HelpLocale, { label: string; emergency: string; it
       {
         name: "Drinkline",
         contact: "0300 123 1110",
-        note: "The national alcohol line. Free, and you can ring about somebody else's drinking too.",
+        // THE HOURS ARE PART OF THE NUMBER HERE, and leaving them out was a
+        // wrong answer by omission. Samaritans above says "any time of day or
+        // night" and FRANK says "around the clock", so silence in this slot
+        // reads as "this one too" — and this module's stated design moment is
+        // eleven at night, and this entry is the one shown to the drinker.
+        // NHS's own alcohol-support page, checked 2026-09-25: "weekdays 9am to
+        // 8pm, weekends 11am to 4pm".
+        note: "The national alcohol line, weekdays 9am to 8pm and weekends 11am to 4pm. Free, and you can ring about somebody else's drinking too. Outside those hours, Samaritans above answers at any time.",
         forVice: ["alcohol"],
       },
       {
@@ -95,9 +102,14 @@ export const SERVICES: Record<HelpLocale, { label: string; emergency: string; it
       },
       {
         name: "NHS local services finder",
-        contact: "nhs.uk/service-search",
+        contact: "nhs.uk/find-alcohol-addiction-support-services",
         note: "Free drug and alcohol services near you. Self-referral, so a GP letter is not a prerequisite.",
-        url: "https://www.nhs.uk/service-search/other-services/Alcohol%20addiction/LocationSearch/1805",
+        // WAS `service-search/other-services/Alcohol%20addiction/LocationSearch/1805`,
+        // which returned **410 Gone** when it was finally fetched on 2026-09-25 —
+        // an explicit "this is permanently no longer here", shown to somebody
+        // looking for treatment. `helpFreshness.test.ts` could not see it and
+        // says so itself; `scripts/check-helplines.mjs` is what sees it now.
+        url: "https://www.nhs.uk/nhs-services/find-alcohol-addiction-support-services/",
       },
     ],
   },

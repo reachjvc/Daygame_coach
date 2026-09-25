@@ -29,12 +29,12 @@
  * is wrong, which is the one failure this tool cannot survive.
  */
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import type { BlackBoxRecord, ViceEndingId } from "../../types"
 import { useBlackBox } from "../../blackbox/useBlackBox"
 import { useBlackBoxView } from "../../blackbox/useBlackBoxView"
 import { useBlackBoxSync } from "../../blackbox/useBlackBoxSync"
-import { syncNotice } from "../../blackbox/viceSyncService"
+import { isSettled, syncNotice } from "../../blackbox/viceSyncService"
 import {
   exportRecord,
   fileReport,
@@ -99,6 +99,8 @@ export function BlackBoxPage() {
    * works, but an undo has to be where the mistake was made.
    */
   const [justFiled, setJustFiled] = useState<{ id: string; wentThrough: boolean } | null>(null)
+  /** The hidden picker behind "Load a copy", which is a real button. */
+  const fileInput = useRef<HTMLInputElement | null>(null)
 
   const vices = vicesOn(record)
   const remembered = vices.find((v) => v.viceId === viewing)?.viceId ?? null
@@ -222,6 +224,10 @@ export function BlackBoxPage() {
       className="mx-auto max-w-3xl px-4 pb-24 pt-7 lg:max-w-6xl"
       data-hydrated={ready ? "true" : undefined}
       data-sync={sync.state}
+      // ONE ATTRIBUTE FOR "HAS THE SYNC STOPPED MOVING", because four spec
+      // files were each holding their own list of which states count as
+      // finished, and a fifth state added here would have hung all four.
+      data-sync-settled={isSettled(sync.state) ? "true" : "false"}
       // How many rows are waiting to go up. `data-sync` alone is not enough to
       // wait on: for the instant between an action and the effect that notices
       // it, the state is still whatever the LAST completed sync left, so a test
@@ -530,6 +536,26 @@ export function BlackBoxPage() {
           </>
         ) : (
           <>
+            {/* WHAT THE ACCOUNT IS DOING, ON THE ONE SCREEN THAT USED TO SAY
+                NOTHING AT ALL.
+                
+                The notice below lives in "Your copy", which is gated on
+                `record.attempts.length > 0` — so on an empty record it did not
+                render, and an empty record is exactly when it decides whether
+                somebody retypes four years. Driven on 2026-09-25 with a stubbed
+                401 and a cleared browser: the page offered "Put in the attempts
+                you have already had" to a person whose whole history was sitting
+                on an account it had failed to read, and said nothing.
+                
+                The stack below this is scrupulous about the distinction —
+                `fetchBlackBox` returns `undefined` rather than `null` for
+                precisely this reason, and `decideOnLoad` has carried the right
+                sentence all along. It was thrown away by a render condition. */}
+            {record.attempts.length === 0 && syncNotice(sync.state, sync.pending) && (
+              <p className="mb-3 rounded-xl border border-amber-400/30 bg-amber-500/[0.07] px-3.5 py-3 text-[12.5px] leading-relaxed text-amber-100/90">
+                {syncNotice(sync.state, sync.pending)}
+              </p>
+            )}
             <h2 className="text-[11.5px] font-semibold uppercase tracking-[0.06em] text-zinc-500">
               {summary.runs === 0 ? "Start with what already happened" : "No run going"}
             </h2>
@@ -634,40 +660,71 @@ export function BlackBoxPage() {
         </section>
       )}
 
-      {/* ---------------------------------------------- keeping it */}
-      {ready && record.attempts.length > 0 && (
+      {/* ---------------------------------------------- keeping it
+
+          IT RENDERS ON AN EMPTY RECORD NOW, AND THE REASON IS THE WHOLE POINT
+          OF THE SECTION. This was gated on `record.attempts.length > 0`, so a
+          cleared browser, a new phone or a reinstalled app — every situation a
+          backup exists for — was the one screen that did not offer to load
+          one. You had to invent a run first to reveal the control, which meant
+          polluting the record you were about to merge into.
+
+          "Save a copy" still needs something to save, so it is the half that
+          comes and goes. */}
+      {ready && (
       <section className="mt-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
         <h2 className="text-[11.5px] font-semibold uppercase tracking-[0.06em] text-zinc-500">
           Your copy
         </h2>
         <p className="mt-1.5 text-[12.5px] leading-relaxed text-zinc-400">
-          This record is on your account, so it is on your other devices too. Save a copy you can
-          keep as well — it is the one thing no outage can take. Loading one adds whatever it holds
-          that you do not; it never removes anything.
+          {record.attempts.length > 0 ? (
+            <>
+              This record is on your account, so it is on your other devices too. Save a copy you
+              can keep as well — it is the one thing no outage can take. Loading one adds whatever
+              it holds that you do not; it never removes anything.
+            </>
+          ) : (
+            <>
+              Nothing here yet. If you have a copy of this record saved from another device, load it
+              — it adds whatever it holds and never removes anything.
+            </>
+          )}
         </p>
         {/* ONE LINE, AND NEVER ABOVE THE DOOR.
             What the account is doing is worth knowing and is never the reason
             somebody opened this page. It says what is true, including when
             that is "not saved", and it never claims work was lost — because it
-            never is: an unsent row is still on this device and still unsent. */}
-        {syncNotice(sync.state, sync.pending) && (
+            never is: an unsent row is still on this device and still unsent.
+
+            On an empty record the same sentence is already up beside "Start
+            with what already happened", where it decides whether somebody
+            retypes years of history — so it is not repeated down here. */}
+        {record.attempts.length > 0 && syncNotice(sync.state, sync.pending) && (
           <p className="mt-1.5 text-[12px] text-zinc-500">{syncNotice(sync.state, sync.pending)}</p>
         )}
         <div className="mt-3 flex flex-wrap items-center gap-4">
-          <QuietButton onClick={download}>Save a copy</QuietButton>
-          <label className="cursor-pointer text-[12px] text-zinc-500 transition-colors hover:text-zinc-200">
-            Load a copy
-            <input
-              type="file"
-              accept="application/json,.json"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0]
-                if (f) upload(f)
-                e.target.value = ""
-              }}
-            />
-          </label>
+          {record.attempts.length > 0 && <QuietButton onClick={download}>Save a copy</QuietButton>}
+          {/* A BUTTON THAT OPENS THE PICKER, NOT A LABEL WRAPPED ROUND IT.
+              This was a `<label>` holding a `display:none` input: `tabIndex`
+              -1, no role, a 0×0 box. Measured on 2026-09-25 — the Tab order
+              on this page went straight past it, so the only way to restore
+              your own record was a mouse or a thumb, and a screen reader was
+              read a bare run of text. The input still does the work; it is
+              just no longer the thing a person is expected to find. */}
+          <QuietButton onClick={() => fileInput.current?.click()}>Load a copy</QuietButton>
+          <input
+            ref={fileInput}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            tabIndex={-1}
+            aria-hidden
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) upload(f)
+              e.target.value = ""
+            }}
+          />
         </div>
         {notice && <p className="mt-2 text-[11.5px] text-zinc-400">{notice}</p>}
       </section>
