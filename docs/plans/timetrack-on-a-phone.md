@@ -45,6 +45,39 @@ is the only reason it is now a test rather than a decoration.
 measures the layout viewport. Only a pinch-zoom moves it, and that could not be
 tested here.
 
+## THE SWEEP, 2026-09-26 — commit `b8efb024`
+
+The plan fixed the phone bugs it named. This went after the class behind them:
+every control that exists at desktop width and not on a phone, checked one at a
+time in a browser rather than inferred from a class name.
+
+**One real dead end.** A favourite could not be removed on a phone — its `×` was
+`hidden … sm:flex`, and the only other route is the timer bar's star, which acts
+on the draft and so works only while the draft still matches that favourite
+exactly. It was a permanent tile whose only behaviour is starting a timer.
+Removal is now reachable, 44px, and undoable.
+
+**Everything else in that grep had a phone counterpart** and was left alone: the
+Reports filter wall has its sheet, Manage's member table a card list, Projects a
+card list, the period arrows are re-rendered in the phone controls, and the
+shortcut overlay is keyboard-only by nature.
+
+**Five controls under this slice's own 44px floor**, none of which looked wrong:
+the favourite tile (40px), the sync badge (27px — the control that says "Tap to
+try again"), the Reports metrics picker (36px), the day-header "Select" (43×36,
+one pixel under on width), and every Settings toggle (44×24, because the button
+*was* the track; it now draws the track inside a 44px target and still looks
+like a switch).
+
+**Two of those I found by hand; three the new guard found.** That is the point of
+it. `no visible control on any screen is too small to tap` walks all six screens
+with an entry row present, and caught the `Select` and the toggle that my manual
+pass had missed — I had no rows on screen at the time and had not opened the
+sheet.
+
+Verified: 18 phone tests on iPhone 14/WebKit, 34 on Pixel 7 and desktop Safari,
+6054 unit, ratchets unchanged.
+
 ---
 
 # The human half
