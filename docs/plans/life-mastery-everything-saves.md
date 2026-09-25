@@ -498,12 +498,23 @@ of being written — `480cd2ba` and `92825523` landed the same evening.**
   A third fault surfaced while proving the first: **day rows outlive the run**,
   so removing the tick left the test green on last week's row — both tests clear
   the cell and assert it is clear before writing.
-- **Check 5**, the same at phone width. **Still open, and deliberately not
-  closed the cheap way.** No phone project runs that spec — `chromium` and
-  `goals-4` are both Desktop Chrome — and adding it to one would mark the box
-  green while proving nothing, because the spec never touches the DOM. Check 5's
-  intent ("tick it on your phone") needs a spec that drives the tick CONTROL at
-  390px, which is a different test from this one.
+- ~~**Check 5**~~ **DONE 2026-09-25 (`5e437b32`), and it found a real bug on its
+  first run.** Closed with a new spec that puts a thumb on the control at iPhone
+  14 width, not by adding the HTTP-only cross-device spec to a phone project —
+  that would have marked the box green while proving nothing.
+
+  **The defect: a tap made while the day half was still loading was silently
+  undone.** The flow draws the browser's copy first, so the screen is tickable
+  before the account's read lands, and the read then replaced the day half
+  wholesale. Untick in that window and the control answered, flipped back about
+  a second later, and nothing was ever sent — the account kept the tick and the
+  next load brought it back. The same window lost a rating, a day note and a
+  journal line. `keepEditsMadeWhileLoading` puts the account's copy underneath
+  and the person's edits back on top, cell by cell.
+
+  Also fixed a flake either spec could have lost: the cross-device spec chose
+  its step with a bare `.find()` over an unordered read, so it sometimes drove
+  the same step the phone spec taps, from two projects at once.
 
 **You can:** tick your morning routine on your phone and see it on your laptop.
 Write a journal line in one browser, read it in another. Clear your browsing data
