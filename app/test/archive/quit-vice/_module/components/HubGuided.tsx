@@ -13,10 +13,10 @@
 import { useState } from "react"
 import Link from "next/link"
 import { ChevronDown } from "lucide-react"
-import type { ViceFlowId, ViceToolId } from "../types"
+import type { ViceFlowId, ViceToolId } from "@/src/vice/types"
 import { GUIDED } from "../data/plain"
-import { VICE_FLOWS } from "../data/flows"
-import { viceArchiveStep } from "@/app/test/archive/quit-vice/routes"
+import { VICE_FLOWS } from "@/src/vice/data/flows"
+import { viceArchiveStep } from "../../routes"
 
 
 

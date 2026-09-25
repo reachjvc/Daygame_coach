@@ -14,11 +14,11 @@
 
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import type { ViceHandlers, ViceState } from "../types"
-import { IFTHEN, TRIPWIRE } from "../data/copy"
-import { planProblem, plansOfKind } from "../viceService"
-import { Chip, Empty, PrimaryButton, QuietButton, Why } from "./Ui"
-import { OneVoice, TechniqueHints } from "./Voices"
+import type { ViceHandlers, ViceState } from "@/src/vice/types"
+import { IFTHEN, TRIPWIRE } from "@/src/vice/data/copy"
+import { planProblem, plansOfKind } from "@/src/vice/viceService"
+import { Chip, Empty, PrimaryButton, QuietButton, Why } from "@/src/vice/components/Ui"
+import { OneVoice, TechniqueHints } from "@/src/vice/components/Voices"
 
 export function TripwireTool({ state, on, onClose }: {
   state: ViceState

@@ -27,9 +27,9 @@
  *   somebody who reads only that line has still got the useful part.
  */
 
-import type { ViceToolId } from "../types"
-import type { TestimonialStage } from "./testimonials"
-import { viceArchiveStep } from "@/app/test/archive/quit-vice/routes"
+import type { ViceToolId } from "@/src/vice/types"
+import type { TestimonialStage } from "@/src/vice/data/testimonials"
+import { viceArchiveStep } from "../../routes"
 
 export interface ViceModule {
   id: string

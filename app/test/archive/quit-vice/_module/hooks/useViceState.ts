@@ -12,8 +12,8 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import type { ViceCard, ViceEpisode, ViceFlowId, ViceHandlers, ViceState, ViceUsage, ViceVoice } from "../types"
-import * as vice from "../viceService"
+import type { ViceCard, ViceEpisode, ViceFlowId, ViceHandlers, ViceState, ViceUsage, ViceVoice } from "@/src/vice/types"
+import * as vice from "@/src/vice/viceService"
 
 export function useViceState(flowId: ViceFlowId | null) {
   const [state, setState] = useState<ViceState>(vice.emptyViceState)

@@ -15,7 +15,7 @@
 
 import { describe, it, expect } from "vitest"
 import { VICE_FLOWS } from "@/src/vice/data/flows"
-import { PLAIN, GUIDED } from "@/src/vice/data/plain"
+import { PLAIN, GUIDED } from "@/app/test/archive/quit-vice/_module/data/plain"
 import { RESPOND, TRIPWIRE, URGE } from "@/src/vice/data/copy"
 
 const words = (s: string) => s.trim().split(/\s+/).filter(Boolean).length

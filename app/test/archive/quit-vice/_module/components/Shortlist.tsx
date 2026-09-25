@@ -14,9 +14,9 @@
  * whether the plan rested on structure or on self-trust.
  */
 
-import type { ViceHandlers, ViceState, ViceToolId } from "../types"
+import type { ViceHandlers, ViceState, ViceToolId } from "@/src/vice/types"
 import { SHORTLIST, SHORTLIST_COPY } from "../data/shortlist"
-import { Why } from "./Ui"
+import { Why } from "@/src/vice/components/Ui"
 
 /** Items that route to an existing tool rather than to the world. */
 const TOOL_FOR: Record<string, ViceToolId> = {

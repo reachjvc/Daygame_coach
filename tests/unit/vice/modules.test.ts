@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { MODULES, MODULES_COPY } from "@/src/vice/data/modules"
+import { MODULES, MODULES_COPY } from "@/app/test/archive/quit-vice/_module/data/modules"
 import { LANGUAGE_RULES } from "@/src/vice/data/copy"
 import { TESTIMONIALS } from "@/src/vice/data/testimonials"
 

@@ -12,12 +12,12 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Check, ChevronDown } from "lucide-react"
-import type { ViceHandlers, ViceState } from "../types"
+import type { ViceHandlers, ViceState } from "@/src/vice/types"
 import { MODULES, MODULES_COPY } from "../data/modules"
-import { OneVoice } from "./Voices"
-import { Why } from "./Ui"
+import { OneVoice } from "@/src/vice/components/Voices"
+import { Why } from "@/src/vice/components/Ui"
 import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
-import { viceArchiveStep } from "@/app/test/archive/quit-vice/routes"
+import { viceArchiveStep } from "../../routes"
 
 export function Modules({ state, on }: { state: ViceState; on: ViceHandlers }) {
   const [open, setOpen] = useState<string | null>(null)

@@ -177,16 +177,35 @@ were not fixed.** They are no longer in the product and no longer measured,
 which is a different thing, and `sweepDebt.test.ts` caught the stale entries the
 moment the routes went — the allowlist rule working.
 
-**The debt this leaves, which a guard found and I did not.** The archived
-components are still in `src/vice/components/`, and `architecture.test.ts`
-failed the first version of this for a good reason: its rule "nothing links to
-the archived surfaces" exists because a link from production into the archive
-must be removed again the day the archive goes, and a path constant is a link.
-The address now lives in `app/test/archive/quit-vice/routes.ts`, beside the
-pages, and the components import it — which is backwards but sound. Moving the
-twenty-odd archive-only components out of `src/` is the honest arrangement and
-is **not done**: it risks the 61 tests that are the only thing keeping the
-owner's access promise true, and that is not a promise to break in a hurry.
+**The debt a guard found — PAID 2026-09-25.** `architecture.test.ts` failed the
+first version of this for a good reason: "nothing links to the archived
+surfaces" exists because a link from production into the archive must be removed
+again the day the archive goes, and a path constant is a link. The address moved
+beside the pages; the components stayed in `src/` and imported it, which was
+backwards and recorded as such.
+
+**Twenty-four files moved to `app/test/archive/quit-vice/_module/`.** Which
+twenty-four was **computed, not listed**: a script walks the import graph from
+the live page and everything unreachable is archive-only. A hand-written split
+is a second copy of the dependency graph and drifts on the first new import. The
+result now reads `31 of 31` — every file left in the slice is reachable from the
+Black Box, no orphans — and **`src/` no longer names the archive anywhere.**
+Deleting the archive for real is one folder.
+
+*It cost two guards their reach, which is the part worth recording.* Both
+`viceComponentCopy` and `researchIsShipped` scan `src/vice/components` from
+disk, so after the move they would have kept passing while reading twelve fewer
+components — a lint quietly checking less than its name. Both take two roots
+now, and `researchIsShipped` asserts it HAS two, so the day the archive is
+really deleted that entry fails rather than becoming a free pass. Proved by
+planting cheerleading copy in a moved component and watching the lint name the
+archive path.
+
+*And one of its assertions had moved with the product:* "puts something in front
+of a first-time user mid-urge" read the retired `Tools.tsx`. That was the right
+file to ask until 2026-09-24 and the wrong one after — the live answer is
+`UrgeNow`. Asking the archive whether the PRODUCT does something is the shape of
+every stale check here.
 
 ## The one decision this plan turns on — ANSWERED
 

@@ -1,28 +1,27 @@
 "use client"
 
 /**
- * The shortlist on its own page, with the module's chrome around it.
+ * The nine modules on their own page.
  *
- * Deliberately not a flow: it has no steps, no rail and no progress. The four
- * change-flows are wizards because each walks a particular argument; this one
- * has no argument to walk, it is a list of things the evidence ranks, and
- * wrapping it in a twelve-step shell would misrepresent what it is.
+ * Not a flow and not a wizard. A person can open any module, do its exercise
+ * and leave, which is the opposite of the twelve-step shell the change-flows
+ * use — those walk one argument each, and this walks none.
  */
 
 import { useMemo, useState } from "react"
-import type { ViceHandlers, ViceToolId } from "../types"
+import type { ViceHandlers, ViceToolId } from "@/src/vice/types"
 import { useViceState } from "../hooks/useViceState"
-import { Shortlist } from "./Shortlist"
+import { Modules } from "./Modules"
 import { CardTool, LapseTool, UrgeTool } from "./Tools"
-import { HelpDoor } from "./HelpDoor"
-import { VoicesDialog } from "./Voices"
+import { HelpDoor } from "@/src/vice/components/HelpDoor"
+import { VoicesDialog } from "@/src/vice/components/Voices"
 import { TripwireTool } from "./Tripwire"
 import { AgainTool } from "./Again"
-import { QuietButton } from "./Ui"
-import { QUIT_VICE_ARCHIVE } from "@/app/test/archive/quit-vice/routes"
+import { QuietButton } from "@/src/vice/components/Ui"
+import { QUIT_VICE_ARCHIVE } from "../../routes"
 import { BackLink } from "@/components/BackLink"
 
-export function ShortlistPage() {
+export function LearnPage() {
   const { state, loaded, handlers } = useViceState(null)
   const [tool, setTool] = useState<ViceToolId | "none">("none")
 
@@ -41,7 +40,7 @@ export function ShortlistPage() {
         />
 
         <div className="mt-6">
-          {loaded ? <Shortlist state={state} on={on} /> : <p className="text-sm text-zinc-500">Opening…</p>}
+          {loaded ? <Modules state={state} on={on} /> : <p className="text-sm text-zinc-500">Opening…</p>}
         </div>
 
         <div className="mt-8">

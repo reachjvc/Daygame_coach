@@ -14,9 +14,9 @@
  */
 
 import Link from "next/link"
-import type { ViceHandlers, ViceState, ViceToolId } from "../types"
+import type { ViceHandlers, ViceState, ViceToolId } from "@/src/vice/types"
 import { PLAIN } from "../data/plain"
-import { viceArchiveStep } from "@/app/test/archive/quit-vice/routes"
+import { viceArchiveStep } from "../../routes"
 
 export function HubPlain({ state, on, openTool }: {
   state: ViceState

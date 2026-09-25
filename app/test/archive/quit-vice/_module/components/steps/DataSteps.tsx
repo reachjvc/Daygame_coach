@@ -12,9 +12,9 @@
 
 import { useState } from "react"
 import { X } from "lucide-react"
-import type { ViceEpisode } from "../../types"
-import { MISSIONS } from "../../data/flows"
-import { URGE } from "../../data/copy"
+import type { ViceEpisode } from "@/src/vice/types"
+import { MISSIONS } from "@/src/vice/data/flows"
+import { URGE } from "@/src/vice/data/copy"
 import {
   availableMissions,
   dangerWindow,
@@ -26,8 +26,8 @@ import {
   urgeSummary,
   votesCast,
   WINDOW_MIN_EPISODES,
-} from "../../viceService"
-import { CheckRow, Empty, Field, Panel, PrimaryButton, QuietButton, Scale, Stat, StepHeader } from "../Ui"
+} from "@/src/vice/viceService"
+import { CheckRow, Empty, Field, Panel, PrimaryButton, QuietButton, Scale, Stat, StepHeader } from "@/src/vice/components/Ui"
 import type { StepProps } from "./BasicSteps"
 
 // ---------------------------------------------------------------- charts

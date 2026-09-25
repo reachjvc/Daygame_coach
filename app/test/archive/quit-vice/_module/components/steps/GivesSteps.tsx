@@ -11,7 +11,7 @@
  */
 
 import { useState } from "react"
-import type { ViceBelief } from "../../data/gives"
+import type { ViceBelief } from "@/src/vice/data/gives"
 import {
   BELIEFS,
   BELIEF_TEST,
@@ -21,9 +21,9 @@ import {
   VALUES,
   VALUES_STEP,
   beliefsFor,
-} from "../../data/gives"
-import { BELIEF_LIVE_AT, beliefTally, futureCues, liveBeliefs, payoffSummary } from "../../viceService"
-import { Chip, Empty, Field, Panel, PrimaryButton, Scale, StepHeader, Why } from "../Ui"
+} from "@/src/vice/data/gives"
+import { BELIEF_LIVE_AT, beliefTally, futureCues, liveBeliefs, payoffSummary } from "@/src/vice/viceService"
+import { Chip, Empty, Field, Panel, PrimaryButton, Scale, StepHeader, Why } from "@/src/vice/components/Ui"
 import type { StepProps } from "./BasicSteps"
 
 // --------------------------------------------------------------- beliefs

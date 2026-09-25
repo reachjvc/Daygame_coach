@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { AGAIN, DIFFERENCES, ENDINGS } from "@/src/vice/data/again"
+import { AGAIN, DIFFERENCES, ENDINGS } from "@/app/test/archive/quit-vice/_module/data/again"
 import { LANGUAGE_RULES } from "@/src/vice/data/copy"
 
 describe("the endings drive the advice", () => {

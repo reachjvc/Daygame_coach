@@ -16,12 +16,12 @@
 
 import { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import type { ViceEpisode, ViceHandlers, ViceState } from "../types"
-import { BODY_PLACES, BODY_TEXTURES } from "../data/vices"
-import { FEELINGS, LAPSE, PERMISSION_THOUGHTS, RESPOND, URGE } from "../data/copy"
-import { cueForUrge, emptyEpisode, futureCues, refusalLadder, urgeSummary } from "../viceService"
-import { Chip, ChipBank, Empty, Field, LineList, Panel, PrimaryButton, QuietButton, Scale, Why } from "./Ui"
-import { OneVoice, TechniqueHints } from "./Voices"
+import type { ViceEpisode, ViceHandlers, ViceState } from "@/src/vice/types"
+import { BODY_PLACES, BODY_TEXTURES } from "@/src/vice/data/vices"
+import { FEELINGS, LAPSE, PERMISSION_THOUGHTS, RESPOND, URGE } from "@/src/vice/data/copy"
+import { cueForUrge, emptyEpisode, futureCues, refusalLadder, urgeSummary } from "@/src/vice/viceService"
+import { Chip, ChipBank, Empty, Field, LineList, Panel, PrimaryButton, QuietButton, Scale, Why } from "@/src/vice/components/Ui"
+import { OneVoice, TechniqueHints } from "@/src/vice/components/Voices"
 
 // ---------------------------------------------------------------- urge
 

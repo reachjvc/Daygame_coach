@@ -8,12 +8,12 @@
 
 import { useState } from "react"
 import { AlertTriangle, X } from "lucide-react"
-import type { ViceState } from "../../types"
-import { BINDING, IFTHEN, LAPSE, PERMISSION_THOUGHTS, REBUTTAL_METHOD, REFUSAL, VOICE } from "../../data/copy"
-import { LENGTH_OFFERS } from "../../data/flows"
-import { dateIsBlocked, planProblem, refusalLadder, startDateOptions } from "../../viceService"
-import { SAFETY } from "../../data/copy"
-import { ChipBank, Empty, Field, Line, LineList, Panel, PrimaryButton, QuietButton, StepHeader, Why } from "../Ui"
+import type { ViceState } from "@/src/vice/types"
+import { BINDING, IFTHEN, LAPSE, PERMISSION_THOUGHTS, REBUTTAL_METHOD, REFUSAL, VOICE } from "@/src/vice/data/copy"
+import { LENGTH_OFFERS } from "@/src/vice/data/flows"
+import { dateIsBlocked, planProblem, refusalLadder, startDateOptions } from "@/src/vice/viceService"
+import { SAFETY } from "@/src/vice/data/copy"
+import { ChipBank, Empty, Field, Line, LineList, Panel, PrimaryButton, QuietButton, StepHeader, Why } from "@/src/vice/components/Ui"
 import type { StepProps } from "./BasicSteps"
 
 // ------------------------------------------------------------- negotiate

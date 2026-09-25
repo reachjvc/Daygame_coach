@@ -9,14 +9,14 @@
 import { describe, it, expect } from "vitest"
 import fs from "node:fs"
 import path from "node:path"
-import { SHORTLIST, SHORTLIST_COPY } from "@/src/vice/data/shortlist"
+import { SHORTLIST, SHORTLIST_COPY } from "@/app/test/archive/quit-vice/_module/data/shortlist"
 import { LANGUAGE_RULES } from "@/src/vice/data/copy"
 
 describe("the order matches the numbers on screen", () => {
   it("renders sorted by recurrence, since the copy claims that order", () => {
     // The component sorts rather than trusting the array, because an item with
     // nine sources shown below one with eight makes the stated claim false.
-    const src = fs.readFileSync(path.join(process.cwd(), "src/vice/components/Shortlist.tsx"), "utf8")
+    const src = fs.readFileSync(path.join(process.cwd(), "app/test/archive/quit-vice/_module/components/Shortlist.tsx"), "utf8")
     expect(src).toMatch(/sort\(\(a, b\) => b\.recurrence - a\.recurrence\)/)
   })
 

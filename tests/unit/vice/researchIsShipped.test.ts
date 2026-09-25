@@ -169,7 +169,20 @@ describe("the techniques people credit exist as product data", () => {
  * assert that a user can actually get to the material.
  */
 describe("a user can actually reach the research", () => {
-  const componentDir = path.join(process.cwd(), "src/vice/components")
+  /**
+   * BOTH HALVES OF THE MODULE, because it lives in two places now.
+   *
+   * The live Black Box is under `src/vice/components`; the retired module's
+   * archive-only components moved to `app/test/archive/quit-vice/_module` on
+   * 2026-09-25. This asks "can a user actually reach the research", and the
+   * answer has to count both — a scan rooted at the first alone would have kept
+   * passing while reading twelve fewer components, which is a guard quietly
+   * checking less than its name says.
+   */
+  const componentDirs = [
+    path.join(process.cwd(), "src/vice/components"),
+    path.join(process.cwd(), "app/test/archive/quit-vice/_module/components"),
+  ].filter((dir) => fs.existsSync(dir))
 
   function allComponentSource(): string {
     const walk = (dir: string): string[] =>
@@ -177,8 +190,18 @@ describe("a user can actually reach the research", () => {
         const p = path.join(dir, e.name)
         return e.isDirectory() ? walk(p) : p.endsWith(".tsx") ? [p] : []
       })
-    return walk(componentDir).map((f) => fs.readFileSync(f, "utf8")).join("\n")
+    return componentDirs
+      .flatMap(walk)
+      .map((f) => fs.readFileSync(f, "utf8"))
+      .join("\n")
   }
+
+  it("is looking at both halves of the module, not one", () => {
+    // A scan of one root passes identically to a scan of two. This is what
+    // tells them apart, and it fails the day the archive is really deleted —
+    // at which point the second entry should go, not be left as a free pass.
+    expect(componentDirs.length, "one of the two component roots is missing").toBe(2)
+  })
 
   it("renders the testimonials somewhere", () => {
     const src = allComponentSource()
@@ -206,7 +229,25 @@ describe("a user can actually reach the research", () => {
     // The concrete regression: a brand-new visitor used to get a bare
     // ninety-second countdown, because every other surface needed them to have
     // written something first.
-    const tools = fs.readFileSync(path.join(componentDir, "Tools.tsx"), "utf8")
-    expect(tools, "the urge tool has no zero-setup content in it").toMatch(/OneVoice/)
+    //
+    // THE SUBJECT MOVED WITH THE PRODUCT. This read the retired module's
+    // `Tools.tsx`, which was the right file to ask until 2026-09-24 and the
+    // wrong one after: the live answer to "an urge, right now" is `UrgeNow` on
+    // the Black Box. Asking the archive whether the PRODUCT does something is
+    // the shape of every stale check in this repo, so it asks the live one —
+    // and the archived one too, because it is still reachable.
+    const live = fs.readFileSync(
+      path.join(process.cwd(), "src/vice/components/blackbox/UrgeNow.tsx"),
+      "utf8",
+    )
+    expect(live, "the live urge path has no zero-setup content in it").toMatch(/OneVoice/)
+
+    const archived = path.join(componentDirs[1] ?? "", "Tools.tsx")
+    if (fs.existsSync(archived)) {
+      expect(
+        fs.readFileSync(archived, "utf8"),
+        "the archived urge tool lost its zero-setup content",
+      ).toMatch(/OneVoice/)
+    }
   })
 })

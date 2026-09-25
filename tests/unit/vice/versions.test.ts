@@ -15,9 +15,9 @@
 import { describe, it, expect } from "vitest"
 import fs from "node:fs"
 import path from "node:path"
-import { DEFAULT_VERSION, VERSION_KEY, VICE_VERSIONS, isVersionId } from "@/src/vice/data/versions"
+import { DEFAULT_VERSION, VERSION_KEY, VICE_VERSIONS, isVersionId } from "@/app/test/archive/quit-vice/_module/data/versions"
 import { VICE_STORAGE_KEY } from "@/src/vice/viceService"
-import { GUIDED, PLAIN } from "@/src/vice/data/plain"
+import { GUIDED, PLAIN } from "@/app/test/archive/quit-vice/_module/data/plain"
 
 describe("switching version cannot cost anybody their work", () => {
   it("keeps the version in its own key, away from the vice state", () => {
@@ -105,7 +105,7 @@ describe("every version reaches the things a person can need", () => {
 })
 
 describe("the hub renders all three and nothing else", () => {
-  const hub = fs.readFileSync(path.join(process.cwd(), "src/vice/components/ViceHub.tsx"), "utf8")
+  const hub = fs.readFileSync(path.join(process.cwd(), "app/test/archive/quit-vice/_module/components/ViceHub.tsx"), "utf8")
 
   it("branches on every declared version", () => {
     for (const v of VICE_VERSIONS) {
@@ -188,7 +188,7 @@ describe("every version reaches what a person in trouble needs", () => {
 })
 
 describe("the tools are a path, not a menu of dead ends", () => {
-  const tools = fs.readFileSync(path.join(process.cwd(), "src/vice/components/Tools.tsx"), "utf8")
+  const tools = fs.readFileSync(path.join(process.cwd(), "app/test/archive/quit-vice/_module/components/Tools.tsx"), "utf8")
 
   it("hands off from the lapse debrief rather than ending at close", () => {
     // Before this, the only link between any two tools in the whole module was

@@ -21,11 +21,24 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { readFileSync, readdirSync } from "node:fs"
+import { existsSync, readFileSync, readdirSync } from "node:fs"
 import path from "node:path"
 import { LANGUAGE_RULES } from "@/src/vice/data/copy"
 
-const ROOT = path.join(process.cwd(), "src/vice/components")
+/**
+ * TWO ROOTS, BECAUSE THE MODULE LIVES IN TWO PLACES NOW.
+ *
+ * The live Black Box is in `src/vice/components`. The retired module's twenty-
+ * four archive-only files moved to `app/test/archive/quit-vice/_module` on
+ * 2026-09-25, and a lint rooted at the first alone would have gone on passing
+ * while covering twelve fewer components — silently, which is the failure this
+ * whole module keeps having. The archived copy's voice is still the owner's
+ * and it is still reachable, so it is still linted.
+ */
+const ROOTS = [
+  path.join(process.cwd(), "src/vice/components"),
+  path.join(process.cwd(), "app/test/archive/quit-vice/_module/components"),
+].filter((dir) => existsSync(dir))
 
 /** Every component in the module, the new front door first. */
 function componentFiles(): string[] {
@@ -37,7 +50,7 @@ function componentFiles(): string[] {
       else if (entry.name.endsWith(".tsx")) out.push(full)
     }
   }
-  walk(ROOT)
+  for (const root of ROOTS) walk(root)
   return out.sort()
 }
 
@@ -170,7 +183,7 @@ describe("the copy a person reads on screen obeys the module's own rules", () =>
   it("reads the Black Box's own screens, which had no lint at all until now", () => {
     for (const file of ["blackbox/BlackBoxPage.tsx", "blackbox/ReportForm.tsx", "blackbox/PastRun.tsx"]) {
       expect(
-        userFacingStrings(readFileSync(path.join(ROOT, file), "utf8")).length,
+        userFacingStrings(readFileSync(path.join(ROOTS[0], file), "utf8")).length,
         `${file} contributed no copy to the lint`,
       ).toBeGreaterThan(5)
     }

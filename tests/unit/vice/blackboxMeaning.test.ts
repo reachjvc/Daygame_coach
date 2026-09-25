@@ -9,7 +9,7 @@
 
 import { describe, it, expect } from "vitest"
 import { ENDING_FAMILIES, familyFor } from "@/src/vice/data/blackbox"
-import { ENDINGS } from "@/src/vice/data/again"
+import { ENDINGS } from "@/app/test/archive/quit-vice/_module/data/again"
 import { emptyRecord, fileReport, startAttempt } from "@/src/vice/blackbox/blackboxStore"
 import { stats, thoughtCosts } from "@/src/vice/blackboxService"
 

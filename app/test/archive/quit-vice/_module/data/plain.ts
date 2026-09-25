@@ -25,7 +25,7 @@
  * because they are possessions rather than moments.
  */
 
-import { viceArchiveStep } from "@/app/test/archive/quit-vice/routes"
+import { viceArchiveStep } from "../../routes"
 export const PLAIN: {
   question: string
   answers: Array<{

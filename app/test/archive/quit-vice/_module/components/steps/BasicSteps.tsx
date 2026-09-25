@@ -7,11 +7,11 @@
 
 import { useState } from "react"
 import { AlertTriangle } from "lucide-react"
-import type { ViceHandlers, ViceState, ViceStep } from "../../types"
-import { VICES } from "../../data/vices"
-import { CONFIDENCE_RULER, IMPORTANCE_RULER, RULER_NOTE, SAFETY } from "../../data/copy"
-import { rulerFollowUp, rulerNudge } from "../../viceService"
-import { ChipBank, Field, Line, Panel, PrimaryButton, Scale, StepHeader, Why } from "../Ui"
+import type { ViceHandlers, ViceState, ViceStep } from "@/src/vice/types"
+import { VICES } from "@/src/vice/data/vices"
+import { CONFIDENCE_RULER, IMPORTANCE_RULER, RULER_NOTE, SAFETY } from "@/src/vice/data/copy"
+import { rulerFollowUp, rulerNudge } from "@/src/vice/viceService"
+import { ChipBank, Field, Line, Panel, PrimaryButton, Scale, StepHeader, Why } from "@/src/vice/components/Ui"
 
 export interface StepProps {
   step: ViceStep

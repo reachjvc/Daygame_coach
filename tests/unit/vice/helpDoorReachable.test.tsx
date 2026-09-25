@@ -147,10 +147,10 @@ const ROOT = path.resolve(__dirname, "../../..")
 
 /** Every surface that mounts the door, and whether it must offer a call plan. */
 const CALL_SITES: Array<{ file: string; needsPlan: boolean; why: string }> = [
-  { file: "src/vice/components/ViceHub.tsx", needsPlan: true, why: "the old hub has a plan list" },
-  { file: "src/vice/components/ViceFlow.tsx", needsPlan: true, why: "every flow has a plan list" },
-  { file: "src/vice/components/LearnPage.tsx", needsPlan: true, why: "shares the old module's state" },
-  { file: "src/vice/components/ShortlistPage.tsx", needsPlan: true, why: "shares the old module's state" },
+  { file: "app/test/archive/quit-vice/_module/components/ViceHub.tsx", needsPlan: true, why: "the old hub has a plan list" },
+  { file: "app/test/archive/quit-vice/_module/components/ViceFlow.tsx", needsPlan: true, why: "every flow has a plan list" },
+  { file: "app/test/archive/quit-vice/_module/components/LearnPage.tsx", needsPlan: true, why: "shares the old module's state" },
+  { file: "app/test/archive/quit-vice/_module/components/ShortlistPage.tsx", needsPlan: true, why: "shares the old module's state" },
   {
     file: "src/vice/components/blackbox/BlackBoxPage.tsx",
     needsPlan: false,
@@ -170,7 +170,11 @@ describe("every surface that mounts the help door passes the right things", () =
         }
       }
     }
+    // BOTH HALVES. The retired module's components moved out of `src` on
+    // 2026-09-25; a walk of `src` alone would have gone on passing while four
+    // of the five call sites became invisible to it.
     walk(path.join(ROOT, "src"))
+    walk(path.join(ROOT, "app/test/archive/quit-vice/_module"))
     expect(found.sort(), "a surface mounts HelpDoor and is not listed in CALL_SITES").toEqual(
       CALL_SITES.map((c) => c.file).sort(),
     )

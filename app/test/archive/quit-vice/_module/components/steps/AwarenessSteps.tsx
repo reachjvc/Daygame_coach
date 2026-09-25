@@ -13,8 +13,8 @@
 
 import Link from "next/link"
 import { AlertTriangle, ArrowRight } from "lucide-react"
-import type { ViceCriterionAnswer, ViceToolId } from "../../types"
-import { COUNT, DOORS, FEEDBACK, INCONGRUENCE, TRAJECTORY, USAGE, criteriaFor } from "../../data/awareness"
+import type { ViceCriterionAnswer, ViceToolId } from "@/src/vice/types"
+import { COUNT, DOORS, FEEDBACK, INCONGRUENCE, TRAJECTORY, USAGE, criteriaFor } from "@/src/vice/data/awareness"
 import {
   criteriaBand,
   criteriaTally,
@@ -22,11 +22,11 @@ import {
   guessGap,
   usageIsEmpty,
   usageTotals,
-} from "../../viceService"
-import { Field, Panel, PrimaryButton, StepHeader, Why } from "../Ui"
+} from "@/src/vice/viceService"
+import { Field, Panel, PrimaryButton, StepHeader, Why } from "@/src/vice/components/Ui"
 import type { StepProps } from "./BasicSteps"
 import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
-import { viceArchiveStep } from "@/app/test/archive/quit-vice/routes"
+import { viceArchiveStep } from "../../../routes"
 
 // ---------------------------------------------------------------- count
 

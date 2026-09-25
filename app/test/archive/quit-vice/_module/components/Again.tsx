@@ -14,10 +14,10 @@
 
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import type { ViceHandlers, ViceState } from "../types"
+import type { ViceHandlers, ViceState } from "@/src/vice/types"
 import { AGAIN, DIFFERENCES, ENDINGS } from "../data/again"
-import { Chip, Field, Panel, PrimaryButton, QuietButton, Why } from "./Ui"
-import { OneVoice, TechniqueHints } from "./Voices"
+import { Chip, Field, Panel, PrimaryButton, QuietButton, Why } from "@/src/vice/components/Ui"
+import { OneVoice, TechniqueHints } from "@/src/vice/components/Voices"
 
 const COUNTS = ["1", "2–3", "4–10", "more than I can count"]
 
