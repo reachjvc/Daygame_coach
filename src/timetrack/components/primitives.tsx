@@ -30,6 +30,14 @@ export const touchRow = "min-h-11 sm:min-h-0 sm:py-1.5"
  * `extra` is for a panel that lives outside the wrapper in the DOM — a
  * portalled popover. Without it, clicking inside your own panel counts as a
  * click outside and closes it.
+ *
+ * POINTERDOWN, NOT MOUSEDOWN. iOS Safari only synthesises mouse events for
+ * taps on elements it considers interactive — a link, a button, anything with
+ * a click handler or `cursor: pointer`. Tapping the page background, a heading
+ * or an entry's text is none of those, so `mousedown` never arrived and the
+ * open menu simply stayed open. `pointerdown` is dispatched for every tap on
+ * every engine, and fires at the same point in the sequence, so nothing else
+ * about the behaviour changes.
  */
 export function useClickOutside<T extends HTMLElement>(
   onOutside: () => void,
@@ -40,7 +48,7 @@ export function useClickOutside<T extends HTMLElement>(
   const latest = useRef(onOutside)
   latest.current = onOutside
   useEffect(() => {
-    const handler = (event: MouseEvent) => {
+    const handler = (event: PointerEvent) => {
       const target = event.target as Node
       if (!ref.current) return
       if (ref.current.contains(target)) return
@@ -50,10 +58,10 @@ export function useClickOutside<T extends HTMLElement>(
     const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape") latest.current()
     }
-    document.addEventListener("mousedown", handler)
+    document.addEventListener("pointerdown", handler)
     document.addEventListener("keydown", escape)
     return () => {
-      document.removeEventListener("mousedown", handler)
+      document.removeEventListener("pointerdown", handler)
       document.removeEventListener("keydown", escape)
     }
   }, [extra])
@@ -89,6 +97,32 @@ function bottomInset(): number {
   const raw = getComputedStyle(document.documentElement).getPropertyValue("--panel-bottom-inset")
   const value = Number.parseFloat(raw)
   return Number.isFinite(value) ? value : 0
+}
+
+/**
+ * The band of the screen a panel may actually occupy, in the coordinates
+ * `getBoundingClientRect` speaks — which are the LAYOUT viewport's.
+ *
+ * Those two are not the same thing once the on-screen keyboard is up. On iOS
+ * the layout viewport does not shrink at all: `clientHeight` still reports the
+ * whole phone, so a panel placed "below the trigger, with room to spare" was
+ * placed into space the keyboard was already covering. The visual viewport is
+ * the part you can see, and it is the only thing that knows.
+ *
+ * The tracker's own bottom bar is subtracted as well, but only where it is
+ * visible: when the keyboard covers it, its height is not space to reclaim
+ * from twice.
+ *
+ * Horizontal is deliberately left on the layout viewport. The only thing that
+ * moves it is a pinch-zoom, which would need `offsetLeft` handling in the
+ * clamp below, and is not a case this was able to be tested against.
+ */
+function usableBand(): { top: number; bottom: number } {
+  const layoutBottom = document.documentElement.clientHeight
+  const visual = typeof window === "undefined" ? null : window.visualViewport
+  const top = visual ? visual.offsetTop : 0
+  const visibleBottom = visual ? visual.offsetTop + visual.height : layoutBottom
+  return { top, bottom: Math.min(visibleBottom, layoutBottom - bottomInset()) }
 }
 
 export type PanelPosition = {
@@ -145,16 +179,17 @@ export function usePanelPosition(
     // clientWidth/Height, not innerWidth/Height: those include the scrollbar,
     // and a right-aligned panel would sit partly underneath it
     const viewportWidth = document.documentElement.clientWidth
-    // the usable bottom, not the window's: fixed chrome sits below it
-    const viewportHeight = document.documentElement.clientHeight - bottomInset()
+    // the band that is on screen, not the window's: fixed chrome sits below it
+    // and the on-screen keyboard sits below that
+    const band = usableBand()
 
     const width = matchAnchorWidth ? rect.width : panel.getBoundingClientRect().width
     const wanted = align === "right" ? rect.right - width : rect.left
     const furthestLeft = Math.max(PANEL_MARGIN, viewportWidth - PANEL_MARGIN - width)
     const left = Math.min(Math.max(PANEL_MARGIN, wanted), furthestLeft)
 
-    const below = viewportHeight - rect.bottom - PANEL_GAP - PANEL_MARGIN
-    const above = rect.top - PANEL_GAP - PANEL_MARGIN
+    const below = band.bottom - rect.bottom - PANEL_GAP - PANEL_MARGIN
+    const above = rect.top - band.top - PANEL_GAP - PANEL_MARGIN
     const base = { left, anchorWidth: rect.width }
 
     // Prefer below; flip up when below is too cramped. When neither side has
@@ -170,7 +205,11 @@ export function usePanelPosition(
               bottom: document.documentElement.clientHeight - rect.top + PANEL_GAP,
               maxHeight: above,
             }
-          : { ...base, top: PANEL_MARGIN, maxHeight: Math.max(0, viewportHeight - PANEL_MARGIN * 2) }
+          : {
+              ...base,
+              top: band.top + PANEL_MARGIN,
+              maxHeight: Math.max(0, band.bottom - band.top - PANEL_MARGIN * 2),
+            }
     setPosition((previous) => (samePosition(previous, next) ? previous : next))
   }, [align, anchorRef, matchAnchorWidth, panelRef])
 
@@ -184,6 +223,11 @@ export function usePanelPosition(
     window.addEventListener("resize", reposition)
     // capture: a scroll inside any ancestor moves the trigger too
     window.addEventListener("scroll", reposition, true)
+    // The on-screen keyboard opening is neither of those on iOS: the layout
+    // viewport never changes, so `resize` never fires. It is a visual-viewport
+    // event, and the panel has to move rather than be left under the keyboard.
+    window.visualViewport?.addEventListener("resize", reposition)
+    window.visualViewport?.addEventListener("scroll", reposition)
 
     // A panel that has left its trigger behind points at nothing. Scrolled out
     // of the window, out of the modal body, out of a table's scroller — an
@@ -204,6 +248,8 @@ export function usePanelPosition(
     return () => {
       window.removeEventListener("resize", reposition)
       window.removeEventListener("scroll", reposition, true)
+      window.visualViewport?.removeEventListener("resize", reposition)
+      window.visualViewport?.removeEventListener("scroll", reposition)
       watcher?.disconnect()
     }
   }, [anchorRef, open, place])

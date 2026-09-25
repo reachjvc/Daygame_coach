@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { MIN_SPLIT_SECONDS } from "../config"
 import { useDebouncedCommit } from "../hooks/useDebouncedCommit"
+import { useIsMobile } from "../hooks/useIsMobile"
 import {
   IconDelete,
   IconDuplicate,
@@ -69,6 +70,18 @@ interface EntryListProps {
 }
 
 export function EntryList({ state, setState, nowSec, pushToast, onEditEntry }: EntryListProps) {
+  /**
+   * ONE ROW LAYOUT, NOT BOTH.
+   *
+   * Every row used to render its phone layout AND its pointer-device grid, one
+   * of them hidden by a `sm:` variant — and the hidden one is the expensive
+   * half, because it carries a project picker, a tag picker and a billable
+   * toggle per row. Measured at 390px: 38 of a row's 56 nodes were the half
+   * nobody could see. That is a phone's scrolling and memory spent on a layout
+   * it will never show, and, while a timer runs, React work repeated every
+   * second.
+   */
+  const isMobile = useIsMobile()
   const [selected, setSelected] = useState<Id[]>([])
   // Checkboxes are noise on a phone until you actually want to bulk-edit
   const [selectionMode, setSelectionMode] = useState(false)
@@ -186,6 +199,7 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry }: E
                 onDelete={removeEntries}
                 pushToast={pushToast}
                 onEditEntry={onEditEntry}
+                isMobile={isMobile}
               />
             ))}
           </ul>
@@ -220,6 +234,7 @@ function EntryRowView({
   onDelete,
   pushToast,
   onEditEntry,
+  isMobile,
 }: {
   row: EntryRow
   state: TimetrackState
@@ -231,6 +246,7 @@ function EntryRowView({
   expanded: boolean
   onToggleExpand: () => void
   onDelete: (ids: Id[]) => void
+  isMobile: boolean
   pushToast: (text: string, tone?: "info" | "error", undo?: () => void) => void
   onEditEntry: (entry: TimeEntry) => void
 }) {
@@ -254,6 +270,7 @@ function EntryRowView({
         expanded={expanded}
         onToggleExpand={onToggleExpand}
         onEditEntry={onEditEntry}
+        isMobile={isMobile}
       />
       {row.grouped && expanded && (
         <ul className="divide-y divide-border border-t border-border bg-secondary/20">
@@ -270,6 +287,7 @@ function EntryRowView({
                 onDelete={() => onDelete([entry.id])}
                 pushToast={pushToast}
                 onEditEntry={onEditEntry}
+                isMobile={isMobile}
                 nested
               />
             </li>
@@ -318,6 +336,7 @@ function EntryFields({
   expanded,
   onToggleExpand,
   onEditEntry,
+  isMobile,
   nested,
 }: {
   entry: TimeEntry
@@ -333,6 +352,8 @@ function EntryFields({
   expanded?: boolean
   onToggleExpand?: () => void
   onEditEntry: (entry: TimeEntry) => void
+  /** which of the two layouts to build — see the note in `EntryList` */
+  isMobile: boolean
   nested?: boolean
 }) {
   const seconds = row ? row.totalSeconds : entrySeconds(entry, nowSec)
@@ -427,10 +448,9 @@ function EntryFields({
     />
   )
 
-  return (
-    <>
-      {/* --- phones: two compact lines; the row itself opens the detail sheet --- */}
-      <div className={cn("flex items-center gap-1 px-3 py-2 sm:hidden", nested && "pl-7", running && "bg-primary/5")}>
+  /** phones: two compact lines; the row itself opens the detail sheet */
+  const phoneRow = (
+    <div className={cn("flex items-center gap-1 px-3 py-2 sm:hidden", nested && "pl-7", running && "bg-primary/5")}>
         {selectionMode && (
           <label className="flex size-11 shrink-0 items-center justify-center">
             <input type="checkbox" checked={checked} onChange={onCheck} aria-label="Select time entry" className="size-5" />
@@ -487,18 +507,20 @@ function EntryFields({
             )}
           </div>
         </div>
-        {continueButton}
-        {menu}
-      </div>
+      {continueButton}
+      {menu}
+    </div>
+  )
 
-      {/* --- pointer devices: the full inline-editable row --- */}
-      <div
-        className={cn(
-          "hidden items-center gap-2 px-3 py-2 sm:grid",
-          selectionMode ? ROW_GRID.selecting : ROW_GRID.plain,
-          running && "bg-primary/5",
-        )}
-      >
+  /** pointer devices: the full inline-editable row */
+  const pointerRow = (
+    <div
+      className={cn(
+        "hidden items-center gap-2 px-3 py-2 sm:grid",
+        selectionMode ? ROW_GRID.selecting : ROW_GRID.plain,
+        running && "bg-primary/5",
+      )}
+    >
         {selectionMode && <input type="checkbox" checked={checked} onChange={onCheck} aria-label="Select time entry" />}
 
         {row?.grouped ? (
@@ -608,13 +630,19 @@ function EntryFields({
           className="w-full rounded bg-transparent text-right text-sm tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60 disabled:opacity-100"
         />
 
-        <div className="flex items-center justify-end">
-          {continueButton}
-          {menu}
-        </div>
+      <div className="flex items-center justify-end">
+        {continueButton}
+        {menu}
       </div>
-    </>
+    </div>
   )
+
+  /**
+   * ONE of the two, never both. The `sm:` variants stay on each so the layout
+   * is still right through a resize, in the frame before the media-query
+   * listener has reported it.
+   */
+  return isMobile ? phoneRow : pointerRow
 }
 
 /** Per-entry action menu, shared by the phone and pointer layouts */

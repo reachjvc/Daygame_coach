@@ -18,6 +18,7 @@ import {
   IconBreak,
   IconCalendar,
   IconClose,
+  IconMenu,
   IconProjects,
   IconReports,
   IconSettings,
@@ -25,6 +26,7 @@ import {
   IconTimer,
   IconUndo,
 } from "../icons"
+import { BottomSheet, SheetRow } from "@/components/BottomSheet"
 import { useTimetrackSync, type SyncStatus } from "../hooks/useTimetrackSync"
 import { ImportOfferBanner } from "./ImportOfferBanner"
 import { OfflineShell } from "@/src/shared/components/OfflineShell"
@@ -51,14 +53,33 @@ import { Dropdown, Modal, touchTarget } from "./primitives"
 
 type Screen = "timer" | "calendar" | "reports" | "projects" | "manage" | "settings"
 
-const NAV: { id: Screen; label: string; icon: typeof IconTimer }[] = [
+type NavItem = { id: Screen; label: string; icon: typeof IconTimer }
+
+/**
+ * FOUR IN THE BAR ON A PHONE, NOT SIX.
+ *
+ * Six of these at 390px is 65px each with a 10px label — and the app's own tab
+ * bar sets 12px as its floor on purpose, having measured that 11px was a pixel
+ * under the smallest text this product is willing to show. The two that leave
+ * are the two you visit least: Manage is clients, tags and a team that does not
+ * exist here, and Settings is somewhere you go once. They are one tap away in
+ * the sheet, which is the same trade the app's own bar makes with "More".
+ *
+ * A pointer device keeps all six as tabs; the room is there.
+ */
+const PHONE_TABS: NavItem[] = [
   { id: "timer", label: "Timer", icon: IconTimer },
   { id: "calendar", label: "Calendar", icon: IconCalendar },
   { id: "reports", label: "Reports", icon: IconReports },
   { id: "projects", label: "Projects", icon: IconProjects },
+]
+
+const MORE_SECTIONS: NavItem[] = [
   { id: "manage", label: "Manage", icon: IconTeam },
   { id: "settings", label: "Settings", icon: IconSettings },
 ]
+
+const NAV: NavItem[] = [...PHONE_TABS, ...MORE_SECTIONS]
 
 /** One idle choice: what happens to the minutes, then what happens to the timer */
 function IdleChoice({
@@ -125,7 +146,13 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
       observer.disconnect()
       root.style.setProperty("--panel-bottom-inset", "0px")
     }
-  })
+    // [] MATTERS HERE. Without it this ran after EVERY render, and the clock
+    // re-renders this shell once a second — so an idle page tore down and
+    // rebuilt a ResizeObserver eight times in six seconds, measured. The
+    // observer is what keeps the variable current when the bar's height
+    // changes, so the bar does not need to be a dependency: the ref is stable
+    // and the observer reports the rest.
+  }, [])
 
   const [screen, setScreen] = useState<Screen>("timer")
   const [manageTab, setManageTab] = useState<ManageTab>("clients")
@@ -133,6 +160,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
   const [draft, setDraft] = useState<EntryDraft>(emptyDraft)
   const [mode, setMode] = useState<TimerMode>("timer")
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
   const [detailEntry, setDetailEntry] = useState<TimeEntry | null>(null)
   const [focusProjectId, setFocusProjectId] = useState<Id | null>(null)
   const [reportConfig, setReportConfig] = useState<ReportConfig | null>(null)
@@ -243,8 +271,15 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
 
       <header className="sticky top-0 z-[9500] border-b border-border bg-card/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
-          <Link href={backHref} className="-ml-1 flex h-9 shrink-0 items-center px-1 text-xs text-muted-foreground hover:text-foreground">
-            ← <span className="hidden sm:inline">{backLabel}</span>
+          {/* The only way out of the tracker on a phone, and it used to be a
+              bare 20x36px arrow with its label hidden below `sm` — under the
+              44px this slice's own `touchTarget` sets as the floor, on the one
+              control somebody needs when they are trying to leave. */}
+          <Link
+            href={backHref}
+            className="-ml-1 flex min-h-11 shrink-0 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:bg-secondary/60 hover:text-foreground sm:min-h-0 sm:h-9"
+          >
+            ← <span>{backLabel}</span>
           </Link>
           <h1 className="truncate text-sm font-semibold">{state.workspace.name}</h1>
           <span className="hidden rounded bg-secondary px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground sm:inline">
@@ -474,7 +509,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
         className="fixed inset-x-0 bottom-0 z-[9500] flex border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
         aria-label="Sections"
       >
-        {NAV.map((item) => {
+        {PHONE_TABS.map((item) => {
           const Icon = item.icon
           const active = screen === item.id
           return (
@@ -487,7 +522,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
               }}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium",
+                "flex min-h-11 flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium",
                 active ? "text-primary" : "text-muted-foreground",
               )}
             >
@@ -496,7 +531,35 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
             </button>
           )
         })}
+        <button
+          type="button"
+          onClick={() => setMoreOpen(true)}
+          aria-current={MORE_SECTIONS.some((item) => item.id === screen) ? "page" : undefined}
+          className={cn(
+            "flex min-h-11 flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium",
+            MORE_SECTIONS.some((item) => item.id === screen) ? "text-primary" : "text-muted-foreground",
+          )}
+        >
+          <IconMenu className="size-5" />
+          More
+        </button>
       </nav>
+
+      <BottomSheet open={moreOpen} onClose={() => setMoreOpen(false)} title="More">
+        {MORE_SECTIONS.map((item) => (
+          <SheetRow
+            key={item.id}
+            icon={item.icon}
+            onClick={() => {
+              setScreen(item.id)
+              setFocusProjectId(null)
+              setMoreOpen(false)
+            }}
+          >
+            {item.label}
+          </SheetRow>
+        ))}
+      </BottomSheet>
 
       {/* shortcut overlay */}
       {shortcutsOpen && (

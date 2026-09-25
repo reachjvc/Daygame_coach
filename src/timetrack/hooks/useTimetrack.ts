@@ -48,6 +48,13 @@ export interface IdlePrompt {
 
 export type PomodoroPhase = "idle" | "work" | "break"
 
+/**
+ * How often the clock ticks with no timer running. Fast enough that a minute
+ * boundary — which is what alerts and reminders turn on — is never more than
+ * ten seconds late, and slow enough to stop being a re-render loop.
+ */
+const IDLE_TICK_MS = 10_000
+
 interface LoadResult {
   state: TimetrackState
   /** Set when saved data was discarded, so the user is told rather than silently reset */
@@ -164,11 +171,24 @@ export function useTimetrack() {
     }
   }, [])
 
-  // --- one-second clock ---------------------------------------------------
+  const running = state ? runningEntry(state) : null
+
+  /**
+   * --- the clock -----------------------------------------------------------
+   *
+   * Every tick re-renders the whole tracker, because `nowSec` is threaded from
+   * here into every screen. That is the price of a timer you can watch, and it
+   * is worth paying WHILE ONE IS RUNNING. With nothing running there is no
+   * second-hand anywhere on the screen, and the only things that still need the
+   * time are the project alerts and the tracking reminder, both of which work
+   * in minutes. So an idle page rebuilt the entire tracker sixty times a minute
+   * to change nothing at all.
+   */
   useEffect(() => {
-    const timer = window.setInterval(() => setNowSec(Math.floor(Date.now() / 1000)), 1000)
+    const everyMs = running ? 1000 : IDLE_TICK_MS
+    const timer = window.setInterval(() => setNowSec(Math.floor(Date.now() / 1000)), everyMs)
     return () => window.clearInterval(timer)
-  }, [])
+  }, [running !== null]) // deps intentionally narrow: the rate, not the entry
 
   const setState = useCallback((updater: (current: TimetrackState) => TimetrackState) => {
     setStateRaw((current) => (current ? updater(current) : current))
@@ -273,7 +293,6 @@ export function useTimetrack() {
     }
   }, [pushToast])
 
-  const running = state ? runningEntry(state) : null
   const runningSeconds = running ? entrySeconds(running, nowSec) : 0
 
   // --- document title mirrors the running timer, like Toggl ---------------
