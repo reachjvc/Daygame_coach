@@ -179,6 +179,99 @@ export function projectLabel(state: TimetrackState, entry: TimeEntry): string | 
   return task ? `${project.name} · ${task.name}` : project.name
 }
 
+/**
+ * When each project was last tracked against.
+ *
+ * A picker ordered by the alphabet asks you to know where your own project
+ * sits in a list. Ordered by when you last used it, the one you want is
+ * usually the first one — which is the whole job on a phone, where the list is
+ * behind a tap and under a keyboard.
+ */
+export function projectLastUsed(state: TimetrackState): Map<Id, IsoDateTime> {
+  const last = new Map<Id, IsoDateTime>()
+  for (const entry of state.entries) {
+    if (entry.serverDeletedAt || entry.projectId === null) continue
+    const seen = last.get(entry.projectId)
+    if (!seen || entry.start > seen) last.set(entry.projectId, entry.start)
+  }
+  return last
+}
+
+/**
+ * Does this project answer to what was typed?
+ *
+ * Its own name, the name of any live task under it, or the client it belongs
+ * to — because "the Acme one" and "the one with the review task" are both how
+ * a person looks for a project, and neither used to find anything.
+ */
+export function projectMatches(state: TimetrackState, project: Project, query: string): boolean {
+  const text = query.trim().toLowerCase()
+  if (!text) return true
+  if (project.name.toLowerCase().includes(text)) return true
+  const client = clientById(state, project.clientId)
+  if (client && client.name.toLowerCase().includes(text)) return true
+  return state.tasks.some(
+    (task) => task.projectId === project.id && task.active && task.name.toLowerCase().includes(text),
+  )
+}
+
+/**
+ * THE ONE ANSWER to "which projects does this text mean, and in what order".
+ *
+ * Both places that offer projects read it — the picker and the description
+ * field's autocomplete — so the two can never disagree about what `wri` finds.
+ * Never-used projects keep their alphabetical order behind the used ones,
+ * rather than being ranked by an id or a creation date nobody can see.
+ */
+export function searchProjects(state: TimetrackState, query: string, limit?: number): Project[] {
+  const lastUsed = projectLastUsed(state)
+  const found = state.projects
+    .filter((project) => project.active && !project.template && projectMatches(state, project, query))
+    .sort((a, b) => {
+      const usedA = lastUsed.get(a.id)
+      const usedB = lastUsed.get(b.id)
+      if (usedA && usedB) return usedA === usedB ? a.name.localeCompare(b.name) : usedA < usedB ? 1 : -1
+      if (usedA) return -1
+      if (usedB) return 1
+      return a.name.localeCompare(b.name)
+    })
+  return limit === undefined ? found : found.slice(0, limit)
+}
+
+/** So a project called "C++ (v2)" is looked for, not compiled */
+function escapeForRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+/**
+ * Which projects a plain description could mean — the list offered while you
+ * type in "What are you working on?", with no `@` involved.
+ *
+ * Two ways a description points at a project, and both are things people
+ * actually type:
+ *
+ *   "wri"              you are reaching for the name   → the name contains it
+ *   "writing the plan" you already said the name       → the text contains it
+ *
+ * The second is matched on whole words only. A substring test would offer the
+ * project "Art" to somebody typing "start", and a suggestion panel over the
+ * entry list has to earn its place every time it appears. Short names are held
+ * to the first rule alone for the same reason.
+ */
+export function projectsForDescription(state: TimetrackState, text: string, limit = 4): Project[] {
+  const typed = text.trim().toLowerCase()
+  if (typed.length < 2) return []
+  return searchProjects(state, "")
+    .filter((project) => {
+      const name = project.name.toLowerCase()
+      if (name.includes(typed)) return true
+      if (name.length < 3) return false
+      const whole = new RegExp(`(?:^|[^\\p{L}\\p{N}])${escapeForRegExp(name)}(?:[^\\p{L}\\p{N}]|$)`, "u")
+      return whole.test(typed)
+    })
+    .slice(0, limit)
+}
+
 export function draftOf(entry: TimeEntry): EntryDraft {
   return {
     description: entry.description,

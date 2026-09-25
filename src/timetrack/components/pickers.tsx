@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { IconAdd, IconDown, IconMoney, IconTag } from "../icons"
-import { activeToken, removeToken } from "../timetrackService"
+import { activeToken, clientById, projectsForDescription, removeToken, searchProjects } from "../timetrackService"
 import type { Id, TimetrackState } from "../types"
 import {
   CheckOption,
@@ -59,20 +59,17 @@ export function ProjectPicker({
   const project = state.projects.find((p) => p.id === projectId) ?? null
   const task = state.tasks.find((t) => t.id === taskId) ?? null
 
-  const grouped = useMemo(() => {
-    const text = query.trim().toLowerCase()
-    const visible = state.projects.filter(
-      (p) => p.active && !p.template && (!text || p.name.toLowerCase().includes(text)),
-    )
-    const byClient = new Map<string, typeof visible>()
-    for (const candidate of visible) {
-      const clientName = state.clients.find((c) => c.id === candidate.clientId)?.name ?? "No client"
-      const bucket = byClient.get(clientName)
-      if (bucket) bucket.push(candidate)
-      else byClient.set(clientName, [candidate])
-    }
-    return [...byClient.entries()].sort((a, b) => a[0].localeCompare(b[0]))
-  }, [state.projects, state.clients, query])
+  /**
+   * ONE FLAT LIST, MOST RECENTLY USED FIRST.
+   *
+   * It used to be grouped under client headings in alphabetical order, which
+   * asked you to know where your own project sat in someone else's ordering —
+   * and spent a line of a phone screen on a heading reading "No client", which
+   * is what every project here has. The client is still shown, on the row it
+   * belongs to. Matching and ordering both come from `searchProjects`, so this
+   * list and the description field's autocomplete cannot disagree.
+   */
+  const visible = useMemo(() => searchProjects(state, query), [state, query])
 
   return (
     <Dropdown
@@ -108,6 +105,9 @@ export function ProjectPicker({
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
+              // "add" stays the headline: creating is the primary act here, and
+              // matching a task or a client name is forgiveness, not a feature
+              // to advertise in eleven characters of placeholder.
               placeholder="Search or add a project…"
               className="h-8"
             />
@@ -124,53 +124,48 @@ export function ProjectPicker({
               <ColorDot color={null} />
               No project
             </button>
-            {grouped.map(([clientName, projects]) => (
-              <div key={clientName}>
-                <p className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  {clientName}
-                </p>
-                {projects.map((candidate) => {
-                  const tasks = state.tasks.filter((t) => t.projectId === candidate.id && t.active)
-                  return (
-                    <div key={candidate.id}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onChange(candidate.id, null)
-                          close()
-                        }}
-                        className={cn(
-                          "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-secondary/60",
-                          touchRow,
-                          candidate.id === projectId && !taskId && "text-primary",
-                        )}
-                      >
-                        <ColorDot color={candidate.color} />
-                        <span className="flex-1 truncate">{candidate.name}</span>
-                        {candidate.billable && <IconMoney className="size-3 text-muted-foreground" />}
-                      </button>
-                      {tasks.map((candidateTask) => (
-                        <button
-                          key={candidateTask.id}
-                          type="button"
-                          onClick={() => {
-                            onChange(candidate.id, candidateTask.id)
-                            close()
-                          }}
-                          className={cn(
-                            "flex w-full items-center gap-2 pl-9 pr-3 py-1 text-left text-xs text-muted-foreground hover:bg-secondary/60",
-                            candidateTask.id === taskId && "text-primary",
-                          )}
-                        >
-                          <span className="flex-1 truncate">{candidateTask.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )
-                })}
-              </div>
-            ))}
-            {grouped.length === 0 && (
+            {visible.map((candidate) => {
+              const tasks = state.tasks.filter((t) => t.projectId === candidate.id && t.active)
+              const client = clientById(state, candidate.clientId)
+              return (
+                <div key={candidate.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChange(candidate.id, null)
+                      close()
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-secondary/60",
+                      touchRow,
+                      candidate.id === projectId && !taskId && "text-primary",
+                    )}
+                  >
+                    <ColorDot color={candidate.color} />
+                    <span className="flex-1 truncate">{candidate.name}</span>
+                    {client && <span className="shrink-0 truncate text-xs text-muted-foreground">{client.name}</span>}
+                    {candidate.billable && <IconMoney className="size-3 text-muted-foreground" />}
+                  </button>
+                  {tasks.map((candidateTask) => (
+                    <button
+                      key={candidateTask.id}
+                      type="button"
+                      onClick={() => {
+                        onChange(candidate.id, candidateTask.id)
+                        close()
+                      }}
+                      className={cn(
+                        "flex w-full items-center gap-2 pl-9 pr-3 py-1 text-left text-xs text-muted-foreground hover:bg-secondary/60",
+                        candidateTask.id === taskId && "text-primary",
+                      )}
+                    >
+                      <span className="flex-1 truncate">{candidateTask.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )
+            })}
+            {visible.length === 0 && (
               <p className="px-3 py-3 text-xs text-muted-foreground">
                 {state.projects.length === 0 ? "No projects yet — type a name to add one" : `No project matches “${query}”`}
               </p>
@@ -342,6 +337,7 @@ export function BillableToggle({
 export function DescriptionField({
   state,
   value,
+  projectId = null,
   onChange,
   onPickProject,
   onPickTag,
@@ -353,6 +349,8 @@ export function DescriptionField({
 }: {
   state: TimetrackState
   value: string
+  /** what is already chosen — plain text stops proposing projects once one is */
+  projectId?: Id | null
   onChange: (value: string) => void
   onPickProject: (projectId: Id, taskId: Id | null) => void
   onPickTag: (tagId: Id) => void
@@ -371,24 +369,44 @@ export function DescriptionField({
   // createPortal needs document, which does not exist during server rendering
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
+  /**
+   * PLAIN TEXT FINDS A PROJECT TOO, not only `@`.
+   *
+   * `@` was the only way in, and on a phone that is a switch to the symbol
+   * layer and back for the most-used field in the app. Worse, the only place
+   * the convention was written down is the keyboard-shortcut overlay, whose
+   * button is `hidden sm:inline-flex` — so at phone width nothing on the screen
+   * said the feature existed. Typing the project's name is what somebody does
+   * without being told, so that is what now works.
+   *
+   * Deliberately narrow, because this panel sits over the entry list: only
+   * while no project has been chosen, only from two characters, and not again
+   * after Escape until the text changes. `projectsForDescription` holds the
+   * rest of the restraint.
+   */
+  const dismissed = useRef<string | null>(null)
+  const looseQuery = token || projectId !== null || dismissed.current === value ? "" : value.trim()
+  const loose = looseQuery.length >= 2
+
   const suggestions = useMemo(() => {
-    if (!token) return []
-    const query = token.query.toLowerCase()
-    if (token.kind === "project") {
-      return state.projects
-        .filter((p) => p.active && !p.template && p.name.toLowerCase().includes(query))
-        .slice(0, 6)
-        .map((p) => ({ id: p.id, label: p.name, color: p.color }))
+    if (loose) {
+      return projectsForDescription(state, looseQuery).map((p) => ({ id: p.id, label: p.name, color: p.color }))
     }
+    if (!token) return []
+    if (token.kind === "project") {
+      return searchProjects(state, token.query, 6).map((p) => ({ id: p.id, label: p.name, color: p.color }))
+    }
+    const query = token.query.toLowerCase()
     return state.tags
       .filter((t) => t.name.toLowerCase().includes(query))
       .slice(0, 6)
       .map((t) => ({ id: t.id, label: t.name, color: null }))
-  }, [token, state.projects, state.tags])
+  }, [loose, looseQuery, token, state])
 
   // gated on exactly what renders the panel: measuring while it is absent
   // would leave it hidden for good, since nothing would re-measure
-  const suggestionsOpen = token !== null && suggestions.length > 0 && mounted
+  const suggestionsOpen = (token !== null || loose) && suggestions.length > 0 && mounted
+  const offeringTags = token?.kind === "tag"
   const suggestionPosition = usePanelPosition(wrapperRef, panelRef, suggestionsOpen, {
     onDetached: () => setToken(null),
   })
@@ -403,11 +421,23 @@ export function DescriptionField({
   const syncToken = (text: string, caret: number) => {
     const found = activeToken(text, caret)
     setToken(found)
-    setHighlight(0)
+    // A typed `@` means you asked for the list, so the first row is already
+    // chosen. Plain text means you were writing, so nothing is chosen yet.
+    setHighlight(found ? 0 : -1)
   }
 
   const choose = (id: Id) => {
-    if (!token) return
+    if (!token) {
+      // Plain text: the words are the description somebody meant to write, so
+      // they stay. Only the project is set. (`@wri` is a command, and its text
+      // is removed; "writing" is not.)
+      if (!loose) return
+      onPickProject(id, null)
+      dismissed.current = value
+      setHighlight(-1)
+      inputRef.current?.focus()
+      return
+    }
     const cleaned = removeToken(value, token)
     onChange(cleaned)
     if (token.kind === "project") onPickProject(id, null)
@@ -417,7 +447,7 @@ export function DescriptionField({
   }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (token && suggestions.length > 0) {
+    if (suggestionsOpen) {
       if (event.key === "ArrowDown") {
         event.preventDefault()
         setHighlight((h) => (h + 1) % suggestions.length)
@@ -428,13 +458,29 @@ export function DescriptionField({
         setHighlight((h) => (h - 1 + suggestions.length) % suggestions.length)
         return
       }
-      if (event.key === "Enter" || event.key === "Tab") {
+      if (event.key === "Escape") {
         event.preventDefault()
-        choose(suggestions[highlight].id)
+        if (token) setToken(null)
+        else dismissed.current = value
+        setHighlight(-1)
         return
       }
-      if (event.key === "Escape") {
-        setToken(null)
+      /**
+       * `@wri` is a command you are in the middle of typing, so Enter completes
+       * it. A plain description is not, so Enter keeps meaning "start" until
+       * you have arrowed into the list on purpose — otherwise the key that
+       * starts your timer would quietly start meaning something else the
+       * moment a project happened to match what you were writing.
+       */
+      const picking = token !== null || highlight >= 0
+      if (picking && (event.key === "Enter" || event.key === "Tab")) {
+        event.preventDefault()
+        choose(suggestions[Math.max(0, highlight)].id)
+        return
+      }
+      if (event.key === "Tab") {
+        event.preventDefault()
+        choose(suggestions[0].id)
         return
       }
     }
@@ -470,8 +516,7 @@ export function DescriptionField({
           className="fixed z-[9650] w-72 max-w-[calc(100vw-1.5rem)] overflow-y-auto overflow-x-hidden rounded-md border border-border bg-card shadow-xl"
         >
           <p className="border-b border-border px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-            {token.kind === "project" ? "Projects" : "Tags"} · {token.kind === "project" ? "@" : "#"}
-            {token.query}
+            {offeringTags ? <>Tags · #{token?.query}</> : token ? <>Projects · @{token.query}</> : <>Set project to</>}
           </p>
           {suggestions.map((suggestion, index) => (
             <button
@@ -484,10 +529,16 @@ export function DescriptionField({
                 index === highlight ? "bg-secondary" : "hover:bg-secondary/60",
               )}
             >
-              {token.kind === "project" ? <ColorDot color={suggestion.color} /> : <IconTag className="size-3" />}
+              {offeringTags ? <IconTag className="size-3" /> : <ColorDot color={suggestion.color} />}
               <span className="truncate">{suggestion.label}</span>
             </button>
           ))}
+          {/* The one place the `@` and `#` grammar is written down where a
+              phone can read it. The shortcut overlay that used to be its only
+              home is `hidden sm:inline-flex`. */}
+          <p className="border-t border-border px-3 py-1.5 text-[10px] text-muted-foreground">
+            <span className="font-medium">@</span> a project · <span className="font-medium">#</span> a tag
+          </p>
         </div>,
         document.body,
       )}

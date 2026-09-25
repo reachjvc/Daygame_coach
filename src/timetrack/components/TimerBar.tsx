@@ -193,6 +193,7 @@ export function TimerBar({
         <DescriptionField
           state={state}
           value={draft.description}
+          projectId={draft.projectId}
           onChange={(description) => {
             // shown at once, stored on a pause: see `commitDescription`
             setDraft({ ...latestDraft.current, description })
