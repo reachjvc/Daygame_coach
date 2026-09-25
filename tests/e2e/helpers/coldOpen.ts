@@ -77,12 +77,38 @@ export async function openCold(page: Page, route: string): Promise<ColdOpen> {
    */
   if (!response) throw new Error(`No navigation response for ${route}`)
   /**
-   * Hydration happens AFTER the document lands, so the listeners need a beat
-   * with nothing else going on. Without this every page reads as clean, which
-   * is the failure that makes a guard like this worse than none: it reports
-   * silence as health.
+   * WAIT FOR HYDRATION TO HAVE HAPPENED, rather than for a length of time.
+   *
+   * This was `waitForTimeout(1500)` — a guess that hydration would be finished
+   * by then. That is the same "it passed because the timing happened to work"
+   * shape this file's own sibling tests were fixed for on 2026-09-24, and here
+   * it was worse than a flake: hydration landing late means the listeners are
+   * read before React has complained, so the page reports CLEAN. A guard whose
+   * failure mode is silence is the one kind that must not be timing-based.
+   *
+   * React attaches `__reactFiber$…` to every DOM node it owns, so the presence
+   * of one is proof that hydration ran on this document rather than an estimate
+   * that it probably did. Two things follow, and the second is the point:
+   *
+   *   - a slow page is waited for properly instead of being declared healthy
+   *   - a page that NEVER hydrates now fails here, loudly, on a 20s timeout,
+   *     where the old sleep would have called it clean and moved on
+   *
+   * The short settle afterwards is for the console event to reach the listener
+   * once the error has been raised; the long, uncertain part is no longer
+   * guesswork.
    */
-  await page.waitForTimeout(1500)
+  await page.waitForFunction(
+    () => {
+      for (const el of document.querySelectorAll("body *")) {
+        for (const key in el) if (key.startsWith("__reactFiber")) return true
+      }
+      return false
+    },
+    undefined,
+    { timeout: 20000 }
+  )
+  await page.waitForTimeout(400)
 
   const nested = await page.$$eval("button button, a button, button a, a a", (elements) =>
     elements

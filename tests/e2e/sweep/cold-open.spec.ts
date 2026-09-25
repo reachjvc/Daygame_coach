@@ -124,6 +124,20 @@ import {
  * convenience. Every one of these is asserted to still exist below: an
  * exclusion whose page is gone is a line that silences a sweep for a route that
  * could come back at that address.
+ *
+ * TWO MORE ARE MISSING AND ARE NOT IN THIS LIST, which is worth saying out loud
+ * because nothing else would ever mention them. `staticRoutes()` drops routes
+ * with a `[param]` segment, since a browser cannot open one without a real id,
+ * so these two product pages are outside this sweep entirely:
+ *
+ *     /dashboard/tracking/session/[id]
+ *     /programs/workout/[id]
+ *
+ * A workout receipt and a session detail are both pages people land on from a
+ * link, and neither has ever been opened cold by anything. Closing that needs a
+ * fixture that creates a row and sweeps its id — which means writing, so it does
+ * not belong in a read-only sweep. `programs-past-workout.spec.ts` drives the
+ * receipt as part of its flow, so it is not unvisited, only unswept.
  */
 const NOT_SWEPT: Record<string, string> = {
   "/": "the sales page, signed OUT — cold-open-signed-out.spec.ts owns it",
