@@ -536,8 +536,16 @@ export const SCHEDULE_COPY = {
 
 export const TRACK_COPY = {
   title: "Start tracking these",
+  /* IT SAID "Everything up to here saved on this device only" UNTIL 2026-09-25,
+     to somebody signed in, on the one step whose whole job is explaining what
+     reaches the account. Phase 1 put the plan there and M1 put the day half
+     there, and this sentence was left behind — true when it was written,
+     falsified by a commit in another file, and caught by nothing, because the
+     copy lint reads this file every run and checks voice rather than truth.
+     What the step is actually for is narrower and still worth saying: the plan
+     being saved and a goal being COUNTED are two different things. */
   help:
-    "Everything up to here saved on this device only. Tick the goals you actually want to count from now on and they become real goals on your account — the same ones the goals page counts, streaks and resets each week. Nothing is sent until you press the button, and pressing it again later picks up whatever is new without touching what is already running.",
+    "Your plan is already on your account. This is a different thing: tick the goals you actually want counted from now on and they become real goals on the goals page — counted, streaked and reset each week. Nothing is pushed until you press the button, and pressing it again later picks up whatever is new without touching what is already running.",
   empty: "No goals in the plan yet. Write some on Experiences or Systems and they will show up here.",
   allTracked: "Everything in the plan is being tracked.",
   hubTitle: "This plan, running",

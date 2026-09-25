@@ -65,8 +65,17 @@ function serverPlanRows() {
   })
 }
 
-function installFetch() {
+/**
+ * `accountDays` is what `/api/life-plan/day` answers a GET with.
+ *
+ * Empty by default, which is the branch every test here took until 2026-09-25:
+ * the account has no days, so the browser's stay and the import sends them. The
+ * OTHER branch — the account HAS days, so they replace the browser's — had no
+ * test at all, and it is the branch the load's merge lives in.
+ */
+function installFetch(accountDays?: { daily: object; logged: object; notes: object; journal: object }) {
   const rows = serverPlanRows()
+  const days = accountDays ?? { daily: {}, logged: {}, notes: {}, journal: {} }
   vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === "string" ? input : input.toString()
     const method = init?.method ?? "GET"
@@ -76,7 +85,7 @@ function installFetch() {
     // `/api/life-plan` and matching by prefix would answer it with a plan.
     if (url === "/api/life-plan/day") {
       if (method === "PUT") return new Response(JSON.stringify({ savedAt: "2026-09-23" }), { status: 200 })
-      return new Response(JSON.stringify({ daily: {}, logged: {}, notes: {}, journal: {} }), { status: 200 })
+      return new Response(JSON.stringify(days), { status: 200 })
     }
     if (url === "/api/life-plan") {
       if (method === "PUT") {
@@ -214,5 +223,44 @@ describe("a day-half change never costs a plan save", () => {
     await passTime(60_000)
 
     expect(dayPuts(), "an idle tab must not write days either").toBe(0)
+  })
+})
+
+
+/**
+ * THE OTHER LOAD BRANCH: THE ACCOUNT ALREADY HAS DAYS.
+ *
+ * Every test above answers the day route with four empty maps, so they all take
+ * the branch where the browser's days stay and the import sends them. The branch
+ * where the account's days arrive and REPLACE the browser's had no test, and it
+ * is where the load's merge lives — the merge added because a tap made while
+ * that read was in flight used to be silently undone.
+ *
+ * Two things have to be true on a cold load nobody touched: the account's days
+ * are what the screen gets, and NOTHING is sent. A load that writes its own
+ * plan back is the defect this whole file exists to prevent, and it would be
+ * just as wrong for the day half.
+ */
+describe("when the account already has days", () => {
+  it("takes them, and sends nothing at all", async () => {
+    const { plan, stepId } = planWithARealTick()
+    window.localStorage.setItem(NORTH_STAR_STORAGE_KEY, serializeNsPlan(plan))
+
+    // The account's copy: the SAME step, ticked on a different day, plus a note
+    // this browser has never seen.
+    vi.unstubAllGlobals()
+    calls = []
+    installFetch({
+      daily: {},
+      logged: { "2026-09-20": [stepId] },
+      notes: { "2026-09-20": "the account's own line" },
+      journal: {},
+    })
+
+    render(<NorthStarFlow />)
+    await passTime(30_000)
+
+    expect(dayPuts(), "a cold load must not write the day half back").toBe(0)
+    expect(planPuts(), "nor the plan half").toBe(0)
   })
 })
