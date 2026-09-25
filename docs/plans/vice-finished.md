@@ -616,6 +616,22 @@ making the race happen on purpose, not by running it until it goes quiet.
 *Why it is not done here:* it is a fixture investigation, not a layout pass, and
 folding it into M6's commit would have buried it. It is the next thing I would do.
 
+## The seven words you asked for, answered one at a time
+
+*"It must look good, function well, and be built the way a senior programmer
+would build it, which means it works across browsers, works as part of the app,
+works across devices, and survives being offline."*
+
+| Your word | Where it stands |
+| --- | --- |
+| **Looks good** | Desktop rebuilt (M6); 320px label fixed; three numbers even. The one judgement left is yours — the orange bar |
+| **Functions well** | 28 Black Box tests, 71 archive tests, 5,989 unit tests. The suite that reported red-or-green at random for as long as it existed no longer does (M7) |
+| **Across browsers** | Firefox and WebKit, five tests, proved by planting this module's real historical bug (M5). Before 2026-09-25 every behavioural test ran on Chromium alone |
+| **Part of the app** | In the phone navigation and the desktop header (M4). Limit: that header is on four pages |
+| **Across devices** | Two devices merge row by row; deletions travel; proved by two real browser contexts |
+| **Offline** | It OPENS with no connection, verified against a production build, not only survives losing one (M1) |
+| **Senior-programmer quality** | The honest measure is not the code but what was checked: every fix in this plan was proved by planting the fault back, and **eight guards were found green while checking nothing** — five of them mine |
+
 ## Where this plan stops
 
 **The vice record does not feed the rest of the app, and this plan does not make
@@ -633,11 +649,11 @@ thing after M6, not part of it. Say the word and it gets its own plan.
 | 1 | Yes | Relapses repeat; show the times I quit and the reasons | Built and on the account; verified with a seeded four-run record and two devices merging |
 | 2 | Yes | Close calls, from aviation safety | Built; one form, `wentThrough` the only difference; five close calls drew correctly on the chart |
 | 3 | Yes | The important periods understood | `startedBy` and `structure` render on the run panel; verified on screen |
-| 4 | Partly | Read at the moment the thought arrives | The door works and answers from your own record — but the page cannot be OPENED at that moment without a connection (M1), and has no route to a helpline (M3) |
+| 4 | Yes | Read at the moment the thought arrives | The door answers from your own record; the page now OPENS with no connection (M1, verified against a production build), the crisis numbers are one tap from it (M3), and there is an answer for the acute moment too — `UrgeNow`, which the page had none of before |
 | 5 | Yes | Both, in combination | One record, one page, one chart carrying both |
-| 6 | Behaviour | It has to look genuinely good | The phone is close; the desktop is a stretched phone (M6). No plan answers this — you looking at it does |
-| 7 | Behaviour | What is there now is more or less useless | This is the decision above. Road A applies your rule — citation survives, opinion goes; road B keeps it all |
-| 8 | Partly | Clicking Vices shows the new work in isolation | True today except for the footer line to `/old`, which M2 removes; and "clicking Vices" still requires typing the Life Mastery address (M4) |
+| 6 | Behaviour | It has to look genuinely good | Desktop is two columns and 1194px instead of one 736px strip and ~1794px (M6); the three numbers no longer wrap two-and-a-hole; the 320px lane label no longer falls out of its card. **Still no plan can answer this — you looking at it does**, and the one thing I flagged for your eyes is unchanged: the orange bar is the second row while the number above says the grey one cost more |
+| 7 | Yes | What is there now is more or less useless | You chose retirement with the archive condition on 2026-09-24. Your rule applied literally: the two things with citations came back to the Black Box — the urge responses and other people's accounts — and the six flows, three copy versions, learn spine, shortlist and hub grouping went to `/test/archive/quit-vice`, still working off the same browser key |
+| 8 | Yes | Clicking Vices shows the new work in isolation | The footer line to the old screens is gone (M2) and nothing on the page reaches them. Life Mastery is in the phone navigation and the desktop header (M4), so getting there no longer means typing an address — with one limit stated rather than hidden: that header is mounted on four pages |
 | 9 | Yes | It does not have to write to the website yet | Overturned by you on 2026-09-23 and already built; M1 is the other half of that answer — deployable means it works when the network does not |
 
 ## Manual blockers
