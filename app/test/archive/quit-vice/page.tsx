@@ -39,7 +39,7 @@
  * localhost surface.
  */
 
-import { ViceHub } from "@/src/vice/components/ViceHub"
+import { ViceHub } from "./_module/components/ViceHub"
 
 export default function ArchivedQuitVicePage() {
   return <ViceHub />
