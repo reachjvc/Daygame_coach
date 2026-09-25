@@ -272,7 +272,7 @@ describe("entry detail sheet times", () => {
     )
   }
 
-  test("shows the entry at the time the list shows, and saving leaves it there", async () => {
+  test("shows the entry at the time the list shows, and leaving the field alone changes nothing", async () => {
     const initial = freshState({ entries: [entry(1, "2026-08-10", "12:00", "13:30", { projectId: null, tagIds: [] })] })
     const latest = { current: initial }
     render(
@@ -284,10 +284,13 @@ describe("entry detail sheet times", () => {
     const startInput = document.querySelectorAll<HTMLInputElement>('input[type="datetime-local"]')[0]
     expect(startInput.value).toBe("2026-08-10T12:00")
 
-    const before = latest.current.entries[0].start
-    fireEvent.click(screen.getByRole("button", { name: /Save times/i }))
+    // A datetime-local value has no seconds, so a round trip through it never
+    // equals the stored timestamp. Blurring an untouched field must still file
+    // nothing, or every visit to this sheet would rewrite the entry.
+    const before = latest.current.entries[0]
+    fireEvent.blur(startInput)
     await waitFor(() => {
-      expect(latest.current.entries[0].start).toBe(before)
+      expect(latest.current.entries[0]).toBe(before)
     })
   })
 
@@ -302,7 +305,7 @@ describe("entry detail sheet times", () => {
 
     const startInput = document.querySelectorAll<HTMLInputElement>('input[type="datetime-local"]')[0]
     fireEvent.change(startInput, { target: { value: "2026-08-10T09:15" } })
-    fireEvent.click(screen.getByRole("button", { name: /Save times/i }))
+    fireEvent.blur(startInput)
 
     await waitFor(() => {
       const saved = new Date(latest.current.entries[0].start)

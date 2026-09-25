@@ -392,6 +392,45 @@ export function updateEntry(
   return { state: next, violations: [] }
 }
 
+/**
+ * ONE PLACE DECIDES WHAT AN EDIT IN THE TIMER BAR DOES.
+ *
+ * The bar is one form with two possible targets: the draft for the entry you
+ * are about to start, and the entry that is already running. Before this
+ * existed, every control wrote to the draft and NOTHING ever wrote the draft
+ * back onto a running entry — so a description typed, a project picked, a tag
+ * added or billable flipped AFTER pressing Start was shown back to you in the
+ * bar and then discarded. Verified in a browser, all four fields, all four
+ * lost; the draft was read exactly once, at Start, and the saved entry read
+ * "(no description) · No project". The duration box was the only control in
+ * the bar that reached the entry, because it was the only one that had been
+ * given its own commit path.
+ *
+ * On a pointer device the entry list has an inline-editable row that repairs
+ * the damage afterwards. That row is `hidden sm:grid`, so on a phone there was
+ * no repair and no signal anything had been lost.
+ *
+ * Which target a control writes to is not a decision each control gets to
+ * make. Every one of them comes through here, so the next field added to the
+ * bar cannot reintroduce this by forgetting.
+ */
+export function applyDraftPatch(
+  state: TimetrackState,
+  draft: EntryDraft,
+  patch: Partial<EntryDraft>,
+  nowIso: IsoDateTime,
+): { state: TimetrackState; draft: EntryDraft; violations: SaveViolation[] } {
+  const running = runningEntry(state)
+  if (!running) return { state, draft: { ...draft, ...patch }, violations: [] }
+
+  const result = updateEntry(state, running.id, patch, nowIso)
+  // A refused edit must not leave the bar showing something the entry does not
+  // have. Showing an edit that was not kept is the exact failure this function
+  // exists to end, so the draft only moves when the entry did.
+  if (result.violations.length > 0) return { state, draft, violations: result.violations }
+  return { state: result.state, draft: { ...draft, ...patch }, violations: [] }
+}
+
 /** Change a running entry's elapsed time by moving its start (what Toggl does) */
 export function setRunningElapsed(
   state: TimetrackState,

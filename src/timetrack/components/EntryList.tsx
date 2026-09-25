@@ -6,12 +6,13 @@
  * split, favorite, copy start link, delete) and multi-select bulk edit.
  */
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { MIN_SPLIT_SECONDS } from "../config"
+import { useDebouncedCommit } from "../hooks/useDebouncedCommit"
 import {
   IconDelete,
   IconDuplicate,
@@ -835,32 +836,80 @@ export function EntryDetailModalBody({
   const [stop, setStop] = useState(entry.stop ? toLocalInputValue(entry.stop) : "")
   const nowIso = () => new Date().toISOString()
 
-  const save = () => {
+  const latestState = useRef(state)
+  latestState.current = state
+
+  /**
+   * ON THIS SHEET, AN EDIT IS SAVED WHEN IT IS MADE.
+   *
+   * It used to be half and half: the project, tag and billable controls
+   * committed as you touched them, while the description and the times waited
+   * behind a button labelled "Save times". So a description typed here and a
+   * sheet closed the way a phone closes one — the X — lost the description with
+   * no warning, and the button's name never suggested it had anything to do
+   * with the field above it. Reproduced before this was changed.
+   *
+   * There is no button now. Text lands on a pause and on the way out (see
+   * `useDebouncedCommit`, which also flushes when this sheet unmounts); the
+   * times land when you leave the field.
+   */
+  const commit = (patch: Parameters<typeof updateEntry>[2]): boolean => {
+    const result = updateEntry(latestState.current, entry.id, patch, nowIso())
+    if (result.violations.length > 0) {
+      pushToast(result.violations[0].message, "error")
+      return false
+    }
+    setState(() => result.state)
+    return true
+  }
+
+  const commitDescription = useDebouncedCommit<string>((value) => {
+    commit({ description: value })
+  })
+
+  /**
+   * Compared as the strings in the boxes, not as instants: the datetime-local
+   * value has no seconds, so a round trip through it never equals the stored
+   * timestamp and every blur would file an edit nobody made.
+   */
+  const commitTimes = () => {
+    const storedStart = toLocalInputValue(entry.start)
+    const storedStop = entry.stop ? toLocalInputValue(entry.stop) : ""
+    if (start === storedStart && stop === storedStop) return
+
     const startIso = fromLocalInputValue(start)
     if (!startIso) {
       pushToast("Enter a start date and time", "error")
+      setStart(storedStart)
       return
     }
     const stopIso = stop ? fromLocalInputValue(stop) : null
     if (stop && !stopIso) {
       pushToast("Enter a valid end date and time", "error")
+      setStop(storedStop)
       return
     }
     if (stopIso && new Date(stopIso) <= new Date(startIso)) {
       pushToast("End must be after start", "error")
       return
     }
-    const result = updateEntry(state, entry.id, { description, start: startIso, stop: stopIso }, nowIso())
-    if (result.violations.length > 0) {
-      pushToast(result.violations[0].message, "error")
-      return
+    if (!commit({ start: startIso, stop: stopIso })) {
+      setStart(storedStart)
+      setStop(storedStop)
     }
-    setState(() => result.state)
   }
 
   return (
     <div className="space-y-3">
-      <Input value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Description" />
+      <Input
+        value={description}
+        onChange={(event) => {
+          setDescription(event.target.value)
+          commitDescription.schedule(event.target.value)
+        }}
+        onBlur={commitDescription.flush}
+        placeholder="Description"
+      />
       <div className="flex flex-wrap gap-2">
         <ProjectPicker
           state={state}
@@ -883,11 +932,11 @@ export function EntryDetailModalBody({
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <label className="space-y-1 text-xs text-muted-foreground">
           Start
-          <Input type="datetime-local" value={start} onChange={(event) => setStart(event.target.value)} />
+          <Input type="datetime-local" value={start} onChange={(event) => setStart(event.target.value)} onBlur={commitTimes} />
         </label>
         <label className="space-y-1 text-xs text-muted-foreground">
           End
-          <Input type="datetime-local" value={stop} onChange={(event) => setStop(event.target.value)} disabled={isRunning(entry)} />
+          <Input type="datetime-local" value={stop} onChange={(event) => setStop(event.target.value)} onBlur={commitTimes} disabled={isRunning(entry)} />
         </label>
       </div>
       <label className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -934,11 +983,6 @@ export function EntryDetailModalBody({
               )
             })}
         </div>
-      </div>
-      <div className="flex justify-end">
-        <Button size="sm" onClick={save}>
-          Save times
-        </Button>
       </div>
       <p className="text-[11px] text-muted-foreground">
         Created with {entry.createdWith}

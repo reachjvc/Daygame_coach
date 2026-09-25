@@ -6,7 +6,7 @@
  * favorites strip and the autotracker suggestion.
  */
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,16 +20,19 @@ import {
 } from "../timetrackFormatService"
 import {
   applyAutotracker,
+  applyDraftPatch,
   createManualEntry,
   createTag,
   createProject,
   entrySeconds,
   findFavorite,
   matchAutotracker,
+  runningEntry,
   setRunningElapsed,
   toggleFavorite,
 } from "../timetrackService"
 import type { EntryDraft, Id, TimetrackState } from "../types"
+import { useDebouncedCommit } from "../hooks/useDebouncedCommit"
 import { BillableToggle, DescriptionField, ProjectPicker, TagPicker } from "./pickers"
 import { ColorDot, touchTarget } from "./primitives"
 
@@ -63,6 +66,64 @@ export function TimerBar({
   onStop,
   pushToast,
 }: TimerBarProps) {
+  /**
+   * The freshest state and draft, for the description commit that runs on a
+   * timer: by the time it fires, the props this render closed over are old.
+   */
+  const latestState = useRef(state)
+  latestState.current = state
+  const latestDraft = useRef(draft)
+  latestDraft.current = draft
+  const latestMode = useRef(mode)
+  latestMode.current = mode
+
+  /**
+   * EVERY CONTROL IN THIS BAR GOES THROUGH HERE. See `applyDraftPatch` for what
+   * it is protecting against: the bar used to write only to the draft, so
+   * anything entered after pressing Start was shown back to you and thrown
+   * away. Nothing below may call `setDraft` directly.
+   */
+  const edit = (patch: Partial<EntryDraft>, baseState: TimetrackState = latestState.current) => {
+    // Manual mode is a form for an entry that does not exist yet. It never
+    // reaches into a timer that happens to be running at the same moment.
+    if (latestMode.current === "manual") {
+      if (baseState !== latestState.current) setState(() => baseState)
+      setDraft({ ...latestDraft.current, ...patch })
+      return
+    }
+    const result = applyDraftPatch(baseState, latestDraft.current, patch, new Date().toISOString())
+    if (result.violations.length > 0) {
+      pushToast(result.violations[0].message, "error")
+      return
+    }
+    if (result.state !== latestState.current) setState(() => result.state)
+    setDraft(result.draft)
+  }
+
+  /**
+   * The description is the one field that must not commit per keystroke — one
+   * commit clones the workspace, writes it to this browser, tells the other
+   * tabs and queues a sync row. It lands on a pause, on blur, and on unmount.
+   *
+   * It carries the entry it was typed into. Press Continue on some other entry
+   * within the pause and the running entry is no longer the one you were
+   * describing; writing it there would put your words on the wrong row.
+   */
+  const commitDescription = useDebouncedCommit<{ entryId: Id | null; description: string }>(
+    ({ entryId, description }) => {
+      const current = latestState.current
+      // Nothing running, or manual mode: the draft is already the only record
+      if (entryId === null || latestMode.current === "manual") return
+      if ((runningEntry(current)?.id ?? null) !== entryId) return
+      const result = applyDraftPatch(current, latestDraft.current, { description }, new Date().toISOString())
+      if (result.violations.length > 0) {
+        pushToast(result.violations[0].message, "error")
+        return
+      }
+      if (result.state !== current) setState(() => result.state)
+    },
+  )
+
   const [durationInput, setDurationInput] = useState("")
   const [manualStart, setManualStart] = useState("09:00")
   const [manualStop, setManualStop] = useState("10:00")
@@ -110,21 +171,20 @@ export function TimerBar({
       return
     }
     setState(() => result.state)
-    setDraft({ ...draft, description: "" })
+    edit({ description: "" }, result.state)
   }
 
-  // The draft lives in local state, so these create the entity and select it
-  // here rather than handing an id back to the picker.
+  // The picker hands back a name, not an id, so these create the thing and
+  // select it. Both halves land as one state update, because a draft or an
+  // entry pointing at a project that does not exist yet is a broken row.
   const handleCreateProject = (name: string) => {
-    const result = createProject(state, { name }, new Date().toISOString())
-    setState(() => result.state)
-    setDraft({ ...draft, projectId: result.id, taskId: null })
+    const created = createProject(latestState.current, { name }, new Date().toISOString())
+    edit({ projectId: created.id, taskId: null }, created.state)
   }
 
   const handleCreateTag = (name: string) => {
-    const result = createTag(state, name, new Date().toISOString())
-    setState(() => result.state)
-    setDraft({ ...draft, tagIds: [...new Set([...draft.tagIds, result.id])] })
+    const created = createTag(latestState.current, name, new Date().toISOString())
+    edit({ tagIds: [...new Set([...latestDraft.current.tagIds, created.id])] }, created.state)
   }
 
   return (
@@ -133,10 +193,20 @@ export function TimerBar({
         <DescriptionField
           state={state}
           value={draft.description}
-          onChange={(description) => setDraft({ ...draft, description })}
-          onPickProject={(projectId, taskId) => setDraft({ ...draft, projectId, taskId })}
-          onPickTag={(tagId) => setDraft({ ...draft, tagIds: [...new Set([...draft.tagIds, tagId])] })}
-          onSubmit={mode === "timer" ? onStart : addManualEntry}
+          onChange={(description) => {
+            // shown at once, stored on a pause: see `commitDescription`
+            setDraft({ ...latestDraft.current, description })
+            commitDescription.schedule({ entryId: running?.id ?? null, description })
+          }}
+          onBlur={commitDescription.flush}
+          onPickProject={(projectId, taskId) => edit({ projectId, taskId })}
+          onPickTag={(tagId) => edit({ tagIds: [...new Set([...latestDraft.current.tagIds, tagId])] })}
+          onSubmit={() => {
+            // whatever is half-typed belongs to the entry before it is acted on
+            commitDescription.flush()
+            if (mode === "timer") onStart()
+            else addManualEntry()
+          }}
         />
 
         <div className="flex flex-wrap items-center gap-1">
@@ -144,16 +214,16 @@ export function TimerBar({
             state={state}
             projectId={draft.projectId}
             taskId={draft.taskId}
-            onChange={(projectId, taskId) => setDraft({ ...draft, projectId, taskId })}
+            onChange={(projectId, taskId) => edit({ projectId, taskId })}
             onCreateProject={handleCreateProject}
           />
           <TagPicker
             state={state}
             tagIds={draft.tagIds}
-            onChange={(tagIds) => setDraft({ ...draft, tagIds })}
+            onChange={(tagIds) => edit({ tagIds })}
             onCreateTag={handleCreateTag}
           />
-          <BillableToggle billable={draft.billable} onChange={(billable) => setDraft({ ...draft, billable })} />
+          <BillableToggle billable={draft.billable} onChange={(billable) => edit({ billable })} />
 
           {mode === "manual" ? (
             <div className="flex w-full flex-wrap items-center gap-1 sm:w-auto">
@@ -242,7 +312,7 @@ export function TimerBar({
           </span>
           {suggestionProject && <ColorDot color={suggestionProject.color} />}
           <span>{suggestionProject?.name ?? "no project"}</span>
-          <Button size="sm" variant="ghost" className="h-6 px-2" onClick={() => setDraft(applyAutotracker(draft, suggestion))}>
+          <Button size="sm" variant="ghost" className="h-6 px-2" onClick={() => edit(applyAutotracker(draft, suggestion))}>
             Apply
           </Button>
         </div>

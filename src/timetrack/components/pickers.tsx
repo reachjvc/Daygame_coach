@@ -346,6 +346,7 @@ export function DescriptionField({
   onPickProject,
   onPickTag,
   onSubmit,
+  onBlur,
   placeholder = "What are you working on?",
   className,
   autoFocus,
@@ -356,6 +357,8 @@ export function DescriptionField({
   onPickProject: (projectId: Id, taskId: Id | null) => void
   onPickTag: (tagId: Id) => void
   onSubmit?: () => void
+  /** A half-typed description belongs to the entry before focus leaves the field */
+  onBlur?: () => void
   placeholder?: string
   className?: string
   autoFocus?: boolean
@@ -454,6 +457,7 @@ export function DescriptionField({
         }}
         onKeyUp={(event) => syncToken(value, event.currentTarget.selectionStart ?? value.length)}
         onKeyDown={handleKeyDown}
+        onBlur={onBlur}
         // text-base on a phone, not text-sm: iOS Safari zooms the whole page when
         // you tap a field under 16px, and this is the most-tapped field in the app
         className="h-11 w-full bg-transparent text-base outline-none placeholder:text-muted-foreground sm:h-10 sm:text-sm"
