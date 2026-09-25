@@ -82,18 +82,32 @@ describe("specs that delete training rows refuse the wrong account", () => {
     ).toEqual([])
   })
 
-  test("the scan still finds the specs it is about", () => {
-    /**
-     * A regex that stops matching would leave this file asserting that an empty
-     * list is empty — green, and protecting nothing. Ten files qualified when
-     * this was written; the floor is under that so adding one is not a failure,
-     * while the scan breaking is.
-     */
-    const found = files.filter(({ code }) => deletesTrainingRows(code)).length
+  /**
+   * THE INSTRUMENT, NOT THE POPULATION.
+   *
+   * This asserted that at least eight spec files still LOOK destructive, to
+   * catch a regex that had stopped matching and left the test above asserting
+   * that an empty list is empty. Right worry, wrong floor — and wrong in the
+   * worst direction: converting those ten specs to `resetAndEnroll`/`cleanUp`,
+   * which is the outcome this whole file argues for, drops the count to zero
+   * and turns a good change red. A guard that fails when its own goal is
+   * reached teaches people to delete the guard.
+   *
+   * What needs asserting is that the predicate still recognises the shape, and
+   * that is answerable without reference to how many real files match.
+   */
+  test("the scan recognises a destructive spec and ignores a harmless one", () => {
+    const deletesAWorkout = 'await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })'
+    const deletesAnEnrollment = 'await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })'
+    const readsOnly = 'const live = await (await fetch("/api/workouts/live")).json()'
+    const deletesSomethingElse = 'await fetch(`/api/goals/${id}`, { method: "DELETE" })'
+
+    expect(deletesTrainingRows(deletesAWorkout), "a workout DELETE is the shape").toBe(true)
+    expect(deletesTrainingRows(deletesAnEnrollment), "an enrollment DELETE is the shape").toBe(true)
+    expect(deletesTrainingRows(readsOnly), "reading the live workout is not").toBe(false)
     expect(
-      found,
-      `Only ${found} specs look like they delete training rows, so the scan has ` +
-        `stopped recognising them and this file is now checking nothing.`
-    ).toBeGreaterThanOrEqual(8)
+      deletesTrainingRows(deletesSomethingElse),
+      "deleting a goal is somebody else's account rule, not this one"
+    ).toBe(false)
   })
 })

@@ -163,7 +163,30 @@ test.describe.serial("training on a phone", () => {
       for (const e of await (await fetch("/api/programs/enrollments?past=1")).json()) {
         await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
       }
-      await fetch("/api/programs/enrollments", {
+      /**
+       * `label` IS REQUIRED, AND THIS TEST NEVER SENT ONE.
+       *
+       * `schemas.ts` refuses a `custom` enrollment without a non-empty label —
+       * "Give this week a name before starting it." So this POST answered 400
+       * and no self-built program was ever created here. The assertion below
+       * then passed on any run where some EARLIER test had left a `custom`
+       * enrollment on the shared account for the StrongLifts POST to archive,
+       * and failed on the runs where it had not.
+       *
+       * Found on 2026-09-25 by running `training-iphone-safari`, which covers
+       * 85 tests against the desktop project's 67 — a different set of files,
+       * so a different set of leftovers, so no `custom` row to inherit. The
+       * failure was correct and the green was the lie: the test named "a
+       * program you built yourself survives" was not building one.
+       *
+       * It also took two other files down with it. Failing here left a
+       * finished workout on the account, and `resetAndEnroll` clears the OPEN
+       * workout and this enrollment's logs but not a finished workout from an
+       * earlier file — so `programs-live-workout` and `programs-offline` both
+       * met the card's `done` state and waited 3 and 4 minutes for a Start
+       * button the product had deliberately taken away.
+       */
+      const created = await fetch("/api/programs/enrollments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -171,8 +194,13 @@ test.describe.serial("training on a phone", () => {
           level: "intermediate",
           unitSystem: "kg",
           workingWeights: { custom_placeholder: 60 },
+          label: "My own week",
         }),
       })
+      if (!created.ok) {
+        // Loudly, and here: a silent 400 is what made this test lie for weeks.
+        throw new Error(`the self-built program could not be created: ${created.status} ${await created.text()}`)
+      }
       // The step that used to lose it.
       await fetch("/api/programs/enrollments", {
         method: "POST",
