@@ -119,6 +119,42 @@ export async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Prom
  * earlier version of this cleanup deleted the account's whole history and
  * silently destroyed the fixture the rest of the suite is measured against.
  */
+/**
+ * IF YOU ARE HERE BECAUSE A TEST WAITED MINUTES FOR `start-workout`, READ THIS.
+ *
+ * The symptom: `today-card` is visible, the program and its lifts are on
+ * screen, and `getByTestId("start-workout")` never appears, so the test times
+ * out after 180 or 240 seconds on a click. The card is in its `done` state and
+ * is showing "See today's workout" instead — correctly, because a workout
+ * finished TODAY is still on the account. `resetAndEnroll` above does not clear
+ * that: it clears the open workout and the current enrollment's logs, and a
+ * finished workout from an EARLIER FILE is neither.
+ *
+ * The tell that separates it from a product bug, visible in the saved snapshot:
+ * the card says "See today's workout" while its own History underneath says
+ * "Nothing logged yet". "Done today" is decided from the account's workouts;
+ * that History is scoped to the current enrollment, which the reset just
+ * created. Two true statements that read as a contradiction.
+ *
+ * Which files can cause it, measured 2026-09-25: six of the eleven in the
+ * training projects have no `afterEach` at all — `mobile/mobile-training`,
+ * `programs-offline`, `programs-past-workout`, `programs-history-progress`,
+ * `programs-drafts`, `health-past-workout`. Any of them that finishes a workout
+ * leaves it for whatever file runs next. It surfaced through
+ * `mobile-training.spec.ts:153` failing on WebKit and taking two later files
+ * down with it, each spending minutes on a button that had been deliberately
+ * removed.
+ *
+ * NOT FIXED, deliberately, and this is what it would take. Adding
+ * `cleanUp(page, since)` to those six is not a sweep: `since` filters on
+ * `started_at`, so it does not touch the deliberately PAST-dated workouts that
+ * `programs-past-workout` and `health-past-workout` create on purpose — which
+ * is the property that makes it safe there, and the one that needs checking
+ * per file rather than assumed. Verifying it means the full 18-minute training
+ * project, and an earlier attempt at widening this cleanup deleted the
+ * account's whole history and destroyed the fixture the suite is measured
+ * against. So: a real piece of work, not a line.
+ */
 export async function cleanUp(page: Page, since?: string): Promise<void> {
   refuseUnlessTrainingAccount()
   await page.evaluate(async (from) => {
