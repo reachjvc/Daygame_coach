@@ -69,7 +69,7 @@ import { fetchDayRecord, saveDayCatchingUp } from "@/src/goals/lifePlanDayClient
 import { NO_TRAINING_TICKS, stepTick, stepTickedByHand, trainingTicks } from "@/src/goals/dayTicks"
 import { useLoad } from "@/src/shared/useLoad"
 import type { SessionType } from "@/src/health/types"
-import { patchesBetween, recordIsEmpty, recordOf, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
+import { keepEditsMadeWhileLoading, patchesBetween, recordIsEmpty, recordOf, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
 import { reconcileProgramReference } from "@/src/goals/programReferenceService"
 import { StarTab } from "./StarTab"
 import { NowTab } from "./NowTab"
@@ -645,12 +645,32 @@ export function NorthStarFlow({
          * year of this browser's ticks over an account that already had them.
          */
         const known = days && !recordIsEmpty(days)
-        const withDays = known ? { ...decision.plan, ...days } : decision.plan
-        setPlan(withDays)
+        /**
+         * WHAT THE PERSON DID WHILE THIS READ WAS IN FLIGHT IS NOT DISCARDED.
+         *
+         * This was `setPlan({ ...decision.plan, ...days })` — the account's day
+         * half over the top, wholesale. The page is tickable before the read
+         * lands, by design, so a tap in that window was answered on screen and
+         * then silently undone about a second later, with nothing sent. Proved
+         * at phone width: unticked at t+0, ticked again at t+1s, zero requests,
+         * and the tick still on the account.
+         *
+         * `keepEditsMadeWhileLoading` puts the account's copy underneath and
+         * their edits back on top, cell by cell — never map by map, or this
+         * browser would delete days another device wrote that it has never
+         * seen. The save effect's diff then says the removal out loud.
+         */
+        const atLoad = recordOf(decision.plan)
+        const base = known ? days! : atLoad
+        setPlan((current) => ({
+          ...decision.plan,
+          ...keepEditsMadeWhileLoading(base, atLoad, recordOf(current)),
+        }))
         // This IS what the server holds, so the save effect has nothing to
         // send. Without this the first thing the flow does after loading a
-        // plan is PUT it straight back.
-        lastSent.current = sendableFingerprint(withDays)
+        // plan is PUT it straight back. The day half is not in this
+        // fingerprint, so the merge above cannot affect it.
+        lastSent.current = sendableFingerprint(decision.plan)
         if (days) accountDays.current = known ? days : { daily: {}, logged: {}, notes: {}, journal: {} }
         setServerState("saved")
         void importDaysOnce(days, recordOf(decision.plan))

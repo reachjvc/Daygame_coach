@@ -526,6 +526,15 @@ export default defineConfig({
         /mobile\/mobile-tracking\.spec\.ts/,
         /mobile\/mobile-scenarios\.spec\.ts/,
         /mobile\/mobile-toggl\.spec\.ts/,
+        /mobile\/mobile-life-mastery-day\.spec\.ts/,
+        /*
+         * NOT mobile-life-mastery-day.spec.ts in `mobile-pixel`, for the same
+         * reason as the training spec below: it ticks and unticks ONE step on
+         * the one shared test account, `fullyParallel` is on, and two phone
+         * projects doing that at the same time race each other into a false
+         * failure. Check 5 wants a thumb on the control, which one phone
+         * answers; it does not want the same account driven twice at once.
+         */
         /*
          * NOT mobile-training.spec.ts. It shares the one test account with the
          * `training` project, which runs in the OTHER CI job — and the two jobs

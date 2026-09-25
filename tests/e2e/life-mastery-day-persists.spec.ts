@@ -81,7 +81,20 @@ async function aTickableStep(page: Page): Promise<string> {
   const res = await page.request.get("/api/life-plan")
   expect(res.status(), "the plan route answers a signed-in read").toBe(200)
   const body = (await res.json()) as { plan: { nodes: Array<{ kind: string; local_id: string }> } | null }
-  const step = body.plan?.nodes.find((n) => n.kind === "routine_step")
+  /**
+   * THE FIRST BY LOCAL ID, NOT THE FIRST POSTGRES HAPPENED TO RETURN.
+   *
+   * This was a bare `.find()` over an unordered read, so which step it picked
+   * changed between runs — and when it picked the one
+   * `mobile/mobile-life-mastery-day.spec.ts` taps, the two specs ticked and
+   * unticked one step on one account from two projects at once and failed each
+   * other. A nondeterministic fixture choice is a flake whichever spec loses.
+   * Sorted, this takes the lowest id and the phone spec takes the one placed on
+   * today, so the two cannot collide.
+   */
+  const step = [...(body.plan?.nodes ?? [])]
+    .filter((n) => n.kind === "routine_step")
+    .sort((a, b) => a.local_id.localeCompare(b.local_id))[0]
   expect(
     step,
     "this account's plan has no routine step, so no tick can be sent and this " +

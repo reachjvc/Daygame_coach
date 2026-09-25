@@ -205,6 +205,95 @@ export function recordToPatches(record: DayRecord): DayPatch[] {
  * this would make "I cleared that" indistinguishable from "I did not mention
  * it" — and the cell would quietly come back on the next device.
  */
+/**
+ * THE ACCOUNT'S DAYS ARRIVED WHILE SOMEBODY WAS USING THE SCREEN.
+ *
+ * The load reads the plan and the day half, and the page is tickable before
+ * that read lands — it draws the browser's own copy first, which is the whole
+ * point of keeping one. So there is a window, about a second on a fast laptop
+ * and much longer on a phone, in which a tap lands on a screen whose data is
+ * about to be replaced.
+ *
+ * It WAS replaced, wholesale: `setPlan(withDays)` overwrote the day half with
+ * the account's. Untick something in that window and the box answered the tap,
+ * then flipped back a second later, and **nothing was ever sent** — the account
+ * kept the tick and the next load brought it back. Driven at phone width and
+ * watched: screen unticked at t+0, ticked again at t+1s, zero requests. The
+ * same window loses a tick, a rating, a day note and a journal line, and none
+ * of them says anything on screen.
+ *
+ * So the account's copy is the base and the person's edits are re-applied ON
+ * TOP, cell by cell rather than map by map: taking their whole day half instead
+ * would delete days another device had written that this browser has never
+ * seen. `patchesBetween` then sees the difference and says it out loud, which is
+ * how the removal finally reaches the account.
+ *
+ * `atLoad` is what this browser held when the read began; `now` is what it holds
+ * after the person touched it. A cell that differs between those two is theirs.
+ */
+export function keepEditsMadeWhileLoading(
+  account: DayRecord,
+  atLoad: DayRecord,
+  now: DayRecord,
+): DayRecord {
+  const merged: DayRecord = {
+    daily: { ...account.daily },
+    logged: { ...account.logged },
+    notes: { ...account.notes },
+    journal: { ...account.journal },
+  }
+
+  const dates = new Set([
+    ...Object.keys(atLoad.daily), ...Object.keys(now.daily),
+    ...Object.keys(atLoad.logged), ...Object.keys(now.logged),
+    ...Object.keys(atLoad.notes), ...Object.keys(now.notes),
+    ...Object.keys(atLoad.journal), ...Object.keys(now.journal),
+  ])
+
+  for (const date of dates) {
+    if ((atLoad.notes[date] ?? "") !== (now.notes[date] ?? "")) {
+      const text = now.notes[date] ?? ""
+      if (text) merged.notes[date] = text
+      else delete merged.notes[date]
+    }
+
+    // Ratings and journal answers are keyed per cell, so only the cells that
+    // moved are carried across — a rating cleared in the window is a deletion
+    // and has to survive as one.
+    for (const [map, from, to] of [
+      ["daily", atLoad.daily[date] ?? {}, now.daily[date] ?? {}],
+      ["journal", atLoad.journal[date] ?? {}, now.journal[date] ?? {}],
+    ] as const) {
+      const ids = new Set([...Object.keys(from), ...Object.keys(to)])
+      for (const id of ids) {
+        if (from[id as keyof typeof from] === to[id as keyof typeof to]) continue
+        const row = { ...((merged[map] as Record<string, Record<string, never>>)[date] ?? {}) }
+        const value = to[id as keyof typeof to]
+        if (value === undefined) delete row[id]
+        else row[id] = value as never
+        if (Object.keys(row).length > 0) (merged[map] as Record<string, unknown>)[date] = row
+        else delete (merged[map] as Record<string, unknown>)[date]
+      }
+    }
+
+    // A tick is a membership, so the two directions are computed rather than the
+    // list being taken whole: this browser must not remove a tick another device
+    // made on the same day and this one has never seen.
+    const was = new Set(atLoad.logged[date] ?? [])
+    const is = new Set(now.logged[date] ?? [])
+    const added = [...is].filter((id) => !was.has(id))
+    const removed = [...was].filter((id) => !is.has(id))
+    if (added.length > 0 || removed.length > 0) {
+      const keep = (merged.logged[date] ?? []).filter((id) => !removed.includes(id))
+      const next = [...new Set([...keep, ...added])]
+      if (next.length > 0) merged.logged[date] = next
+      else delete merged.logged[date]
+    }
+  }
+
+  return merged
+}
+
 export function patchesBetween(before: DayRecord, after: DayRecord): DayPatch[] {
   const dates = new Set([
     ...Object.keys(before.daily), ...Object.keys(after.daily),
