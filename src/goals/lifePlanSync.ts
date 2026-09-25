@@ -215,6 +215,29 @@ export function canSave(decision: SyncDecision | null, loaded: boolean): boolean
   return decision.kind !== "stay-local"
 }
 
+/**
+ * THE ONE CASE WHERE A LINE IN THE FOOTER IS NOT ENOUGH.
+ *
+ * A failed read plus a browser holding nothing is the only combination where
+ * this page shows a FIRST RUN to somebody who may have years on their account.
+ * Every step is empty, every prompt invites them to begin, and the sentence
+ * saying why sits in 11px at the bottom edge of the fold on a page four
+ * thousand pixels long — measured, at desktop and at iPhone 14 width. Scroll
+ * once and it is gone.
+ *
+ * What that costs, if they believe the page: they retype what they already
+ * have. And it is not even kept — `canSave` refuses to save while the flow is on
+ * the local copy, correctly, because this browser does not know what it would
+ * be overwriting. So the work goes nowhere and the account's real plan replaces
+ * it on the next load that succeeds.
+ *
+ * Which is why this is said at the top rather than the foot. The distinction it
+ * carries is the one the whole sync design turns on: **could not be read is not
+ * empty.**
+ */
+export const NOTHING_TO_SHOW =
+  "This is not your plan — it could not be reached, so there is nothing to show. If you have written one it is still on your account. Nothing you write here will be saved while this says so, so reload rather than starting again."
+
 /** What the person is told, in the app's own words. Empty when all is well. */
 export function syncNotice(state: SyncState): string {
   switch (state) {

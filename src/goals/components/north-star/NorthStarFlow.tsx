@@ -64,7 +64,7 @@ import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
 import * as ns from "@/src/goals/northStarService"
 import * as nsTrack from "@/src/goals/northStarTrackService"
 import { archiveCountedGoal, fetchLifePlan, newNodeId, saveLifePlanFromBrowser, startLifePlan } from "@/src/goals/lifePlanClient"
-import { LIFE_PLAN_IMPORTED_KEY, SAVE_DEBOUNCE_MS, canSave, decideOnLoad, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
+import { LIFE_PLAN_IMPORTED_KEY, NOTHING_TO_SHOW, SAVE_DEBOUNCE_MS, canSave, decideOnLoad, planHasNothingWritten, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
 import { fetchDayRecord, saveDayCatchingUp } from "@/src/goals/lifePlanDayClient"
 import { NO_TRAINING_TICKS, stepTick, stepTickedByHand, trainingTicks } from "@/src/goals/dayTicks"
 import { useLoad } from "@/src/shared/useLoad"
@@ -1441,12 +1441,44 @@ export function NorthStarFlow({
           <h1 className="text-2xl font-semibold">Life Mastery</h1>
           <p className="text-sm text-zinc-400 mt-1">
             {/* "Everything saves as you type" was here until 2026-09-23 and was
-                false for the whole day half — ratings, ticks, the day note and
-                every journal answer live in this browser only. It goes back
-                when the day route lands and makes it true. */}
+                false for the whole day half. The day route landed in M1 and the
+                line was NOT put back, deliberately: it is true only signed in
+                and only while the account can be reached, and a promise with
+                two conditions on it is the shape that goes stale in a file
+                nobody edits when the storage changes. Three of those were found
+                across three slices on 2026-09-25. What the page says instead is
+                nothing — and the banner below says the one thing that matters
+                on the day it is false. */}
             Your north star, the areas under it, the goals that get you there, and an honest look at where you are.
           </p>
         </header>
+
+        {/* COULD NOT BE READ IS NOT EMPTY, said where somebody is looking.
+            Only for the one combination that is actually misleading: the read
+            failed AND this browser holds nothing, so every step below is blank
+            and reads as a first run. A failed SAVE is a different thing — the
+            work is on screen, and the footer line is the right size for it. */}
+        {/* `planHasNothingWritten`, NOT `planIsUntouched`. The latter also counts
+            the plan's SEEDED areas, routines and day maps, so it answers false
+            for a browser that holds nothing of the person's at all — which is
+            exactly the state this banner is for, and why the first version of
+            it never appeared. The same distinction is the one the import gate
+            got wrong and was corrected for on 2026-09-23. */}
+        {decision?.kind === "stay-local" && planHasNothingWritten(plan) && (
+          <div
+            role="alert"
+            className="mb-5 rounded-xl border border-amber-400/40 bg-amber-500/[0.08] px-4 py-3"
+            data-testid="plan-unreachable"
+          >
+            <p className="text-[12.5px] text-amber-100 leading-relaxed max-w-prose">{NOTHING_TO_SHOW}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-2.5 text-[12px] px-3 py-1.5 rounded-full border border-amber-300/40 text-amber-100 hover:bg-amber-500/15 transition-colors"
+            >
+              Try again
+            </button>
+          </div>
+        )}
 
         {/* The rail. Every tab is reachable at any time. */}
         <nav className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 mb-8" aria-label="Sections">
