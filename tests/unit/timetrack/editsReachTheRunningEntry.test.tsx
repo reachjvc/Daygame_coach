@@ -26,7 +26,7 @@ import { afterEach, describe, expect, test } from "vitest"
 import { EntryDetailModalBody } from "@/src/timetrack/components/EntryList"
 import { TimerBar } from "@/src/timetrack/components/TimerBar"
 import { epochSeconds } from "@/src/timetrack/timetrackFormatService"
-import { applyDraftPatch, runningEntry, startTimer } from "@/src/timetrack/timetrackService"
+import { applyDraftPatch, runningEntry, startTimer, undoDisplacement } from "@/src/timetrack/timetrackService"
 import type { EntryDraft, TimetrackState } from "@/src/timetrack/types"
 
 import { NOW_ISO, baseState } from "./helpers"
@@ -235,6 +235,52 @@ describe("a refused edit", () => {
     )
     // the selection itself was refused, so the entry keeps the task it had
     expect(runningEntry(latest.current)!.taskId).toBe("40")
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Starting a timer ends the one before it, and that has to be sayable
+// ---------------------------------------------------------------------------
+
+describe("a timer that displaces another", () => {
+  test("startTimer reports what it stopped, instead of dropping it", () => {
+    const running = startTimer(baseState({ entries: [] }), { ...blankDraft, description: "the afternoon" }, NOW_ISO).state
+    const next = startTimer(running, { ...blankDraft, description: "something else" }, "2026-08-10T13:00:00.000Z")
+
+    expect(next.displaced?.description).toBe("the afternoon")
+  })
+
+  test("nothing was running, so nothing was displaced", () => {
+    const result = startTimer(baseState({ entries: [] }), blankDraft, NOW_ISO)
+    expect(result.displaced).toBeNull()
+  })
+
+  test("a refused start displaces nothing — it never stopped anything", () => {
+    const strict = baseState({
+      entries: [],
+      workspace: { ...baseState().workspace, requiredFields: { project: true, task: false, tag: false, description: false } },
+    })
+    const running = startTimer(strict, { ...blankDraft, projectId: "30" }, NOW_ISO).state
+    const refused = startTimer(running, blankDraft, "2026-08-10T13:00:00.000Z")
+
+    expect(refused.violations.length).toBeGreaterThan(0)
+    expect(refused.displaced).toBeNull()
+    expect(runningEntry(refused.state)!.projectId).toBe("30")
+  })
+
+  test("undo throws away the new entry and sets the old one running again", () => {
+    const running = startTimer(baseState({ entries: [] }), { ...blankDraft, description: "the afternoon" }, NOW_ISO)
+    const displacedBy = startTimer(running.state, { ...blankDraft, description: "a mis-tap" }, "2026-08-10T13:00:00.000Z")
+
+    const back = undoDisplacement(
+      displacedBy.state,
+      displacedBy.entry.id,
+      displacedBy.displaced!.id,
+      "2026-08-10T13:00:05.000Z",
+    )
+
+    expect(back.entries).toHaveLength(1)
+    expect(runningEntry(back)?.description).toBe("the afternoon")
   })
 })
 

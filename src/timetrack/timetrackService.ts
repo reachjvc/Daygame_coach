@@ -352,17 +352,31 @@ export function canEditEntry(state: TimetrackState, entry: TimeEntry): boolean {
 // Timer actions
 // ---------------------------------------------------------------------------
 
+/**
+ * `displaced` is the timer this one ended, and it is returned because it used to
+ * be thrown away right here.
+ *
+ * Starting a timer stops the running one — Toggl's rule, and the right one. But
+ * on a phone the row's "Continue" button sits 8px from the row's own tap area
+ * and 4px from the entry menu, so the tap that ends the afternoon you are timing
+ * is one a thumb makes by accident. It happened to me while testing something
+ * else. Nothing was shown, nothing could be undone, and the loss surfaces as a
+ * wrong total days later.
+ *
+ * So the fact is reported, and the callers that can speak say so.
+ */
 export function startTimer(
   state: TimetrackState,
   draft: EntryDraft,
   nowIso: IsoDateTime,
-): { state: TimetrackState; entry: TimeEntry; violations: SaveViolation[] } {
+): { state: TimetrackState; entry: TimeEntry; violations: SaveViolation[]; displaced: TimeEntry | null } {
   const violations = validateEntry(state, { ...draft, start: nowIso })
   if (violations.length > 0) {
-    return { state, entry: state.entries[0], violations }
+    return { state, entry: state.entries[0], violations, displaced: null }
   }
 
-  let next = stopTimer(state, nowIso).state
+  const ended = stopTimer(state, nowIso)
+  let next = ended.state
   const withId = takeId(next)
   next = withId.state
   const self = selfMember(next)
@@ -389,7 +403,7 @@ export function startTimer(
 
   next = { ...next, entries: [entry, ...next.entries] }
   next = queueWebhook(next, "time_entry.created", entry, nowIso)
-  return { state: next, entry, violations: [] }
+  return { state: next, entry, violations: [], displaced: ended.stopped }
 }
 
 export function stopTimer(
@@ -415,11 +429,16 @@ export function continueEntry(
   state: TimetrackState,
   entryId: Id,
   nowIso: IsoDateTime,
-): { state: TimetrackState; violations: SaveViolation[] } {
+): { state: TimetrackState; violations: SaveViolation[]; started: TimeEntry | null; displaced: TimeEntry | null } {
   const source = state.entries.find((e) => e.id === entryId)
-  if (!source) return { state, violations: [] }
+  if (!source) return { state, violations: [], started: null, displaced: null }
   const result = startTimer(state, draftOf(source), nowIso)
-  return { state: result.state, violations: result.violations }
+  return {
+    state: result.state,
+    violations: result.violations,
+    started: result.violations.length > 0 ? null : result.entry,
+    displaced: result.displaced,
+  }
 }
 
 export function createManualEntry(
@@ -619,6 +638,28 @@ export function deleteEntries(
   let next = { ...state, entries: state.entries.filter((e) => !entryIds.includes(e.id)) }
   for (const entry of removed) next = queueWebhook(next, "time_entry.deleted", entry, nowIso)
   return { state: next, removed }
+}
+
+/**
+ * Put back the timer a new one displaced: throw away the entry that was just
+ * started, and re-open the one it stopped.
+ *
+ * Deliberately NOT a snapshot-and-restore of the whole workspace. Something else
+ * can land inside the seconds a toast is on screen — a pull from another device
+ * most of all — and this slice has already had a bug where replacing the whole
+ * state with an older copy sent deletions for rows that were never gone. This
+ * touches the two entries it is about and nothing else.
+ */
+export function undoDisplacement(
+  state: TimetrackState,
+  startedId: Id,
+  displacedId: Id,
+  nowIso: IsoDateTime,
+): TimetrackState {
+  const withoutStarted = deleteEntries(state, [startedId], nowIso).state
+  // `updateEntry` recomputes duration from a null stop, which is what makes it
+  // running again rather than a zero-length entry
+  return updateEntry(withoutStarted, displacedId, { stop: null }, nowIso).state
 }
 
 /** Undo support for the delete toast */

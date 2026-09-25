@@ -52,6 +52,7 @@ import {
   setEntryDuration,
   splitEntry,
   startLinkFor,
+  undoDisplacement,
   tagNames,
   toggleFavorite,
   updateEntry,
@@ -425,8 +426,21 @@ function EntryFields({
       type="button"
       onClick={() => {
         const result = continueEntry(state, entry.id, nowIso())
-        if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
-        else setState(() => result.state)
+        if (result.violations.length > 0) {
+          pushToast(result.violations[0].message, "error")
+          return
+        }
+        setState(() => result.state)
+        // This button is 8px from the row's own tap area. If the tap ended a
+        // timer that was running, say which one and offer it back.
+        const { displaced, started } = result
+        if (displaced && started) {
+          pushToast(
+            `Stopped “${displaced.description.trim() || "(no description)"}” and started “${entry.description.trim() || "(no description)"}”`,
+            "info",
+            () => setState((current) => undoDisplacement(current, started.id, displaced.id, nowIso())),
+          )
+        }
       }}
       title="Continue this entry (C)"
       aria-label="Continue this entry"

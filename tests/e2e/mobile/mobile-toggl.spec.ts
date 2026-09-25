@@ -284,6 +284,39 @@ test.describe('time tracker on a phone', () => {
     expect(await stored(STORAGE_KEY), 'undo did not put it back').toBe(1)
   })
 
+  /**
+   * "Continue" sits 8px from the row's own tap area and 4px from the entry
+   * menu. Hitting it while a timer runs ends that timer — the right rule, but it
+   * used to happen in silence, and a timer that stopped without being mentioned
+   * surfaces days later as a total that is wrong. I did this to myself with a
+   * thumb while testing something else.
+   */
+  test('a tap that stops the timer you were running says so, and can be undone', async ({ page }) => {
+    await openFreshSandbox(page)
+    await trackEntry(page, 'old work')
+
+    await page.getByPlaceholder('What are you working on?').fill('what I am doing now')
+    await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
+    await page.waitForTimeout(800)
+
+    const running = () =>
+      page.evaluate((key) => {
+        const state = JSON.parse(window.localStorage.getItem(key)!)
+        return state.entries.find((e: { duration: number }) => e.duration < 0)?.description ?? null
+      }, STORAGE_KEY)
+    expect(await running()).toBe('what I am doing now')
+
+    await page.getByRole('button', { name: 'Continue this entry' }).last().click()
+    await page.waitForTimeout(600)
+
+    expect(await running(), 'the running timer was not displaced').toBe('old work')
+    await expect(page.getByText(/Stopped .* and started /)).toBeVisible()
+
+    await page.getByRole('button', { name: /Undo/ }).click()
+    await page.waitForTimeout(700)
+    expect(await running(), 'undo did not put the timer back').toBe('what I am doing now')
+  })
+
   test('primary controls are large enough to tap', async ({ page }) => {
     await openFreshSandbox(page)
 

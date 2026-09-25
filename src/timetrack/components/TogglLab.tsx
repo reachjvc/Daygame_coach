@@ -231,7 +231,16 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
     setDraft(linkDraft)
     const started = startTimer(state, linkDraft, new Date().toISOString())
     if (started.violations.length > 0) pushToast(started.violations[0].message, "error")
-    else setState(() => started.state)
+    else {
+      setState(() => started.state)
+      // a link that quietly ends the timer you had running is the worst version
+      // of this, because you did not even press anything in this app
+      if (started.displaced) {
+        pushToast(
+          `This link stopped “${started.displaced.description.trim() || "(no description)"}”, which was running`,
+        )
+      }
+    }
     window.history.replaceState({}, "", window.location.pathname)
   }, [state !== null]) // deps intentionally narrow: see comment above
 

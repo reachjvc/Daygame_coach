@@ -42,6 +42,7 @@ import {
   isRunning,
   liveEntries,
   startTimer,
+  undoDisplacement,
   updateEntry,
 } from "../timetrackService"
 import type { CalendarEvent, EntryDraft, Id, TimeEntry, TimetrackState } from "../types"
@@ -72,7 +73,8 @@ export function CalendarView({
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
   nowSec: number
-  pushToast: (text: string, tone?: "info" | "error") => void
+  /** the third argument is an Undo; see the displaced-timer toast below */
+  pushToast: (text: string, tone?: "info" | "error", undo?: () => void) => void
   onEditEntry: (entry: TimeEntry) => void
   onOpenIntegrations: () => void
 }) {
@@ -393,8 +395,20 @@ export function CalendarView({
                           calendarName={calendar?.name ?? "Calendar"}
                           onStart={(draft) => {
                             const result = startTimer(state, draft, nowIso())
-                            if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
-                            else setState(() => result.state)
+                            if (result.violations.length > 0) {
+                              pushToast(result.violations[0].message, "error")
+                              return
+                            }
+                            setState(() => result.state)
+                            // starting here ends whatever was running; say so
+                            if (result.displaced) {
+                              const { displaced, entry } = result
+                              pushToast(
+                                `Stopped “${displaced.description.trim() || "(no description)"}” and started “${entry.description.trim() || "(no description)"}”`,
+                                "info",
+                                () => setState((current) => undoDisplacement(current, entry.id, displaced.id, nowIso())),
+                              )
+                            }
                           }}
                           onCopy={(draft) => {
                             const result = createManualEntry(

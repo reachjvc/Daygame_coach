@@ -26,6 +26,7 @@ import {
   runningEntry,
   startTimer,
   stopTimer,
+  undoDisplacement,
   updateEntry,
 } from "../timetrackService"
 import type { EntryDraft, Id, TimeEntry, TimetrackState } from "../types"
@@ -508,6 +509,33 @@ export function useTimetrack() {
     }
   }, [state?.user.showTimelineRecorder, setState])
 
+  /**
+   * Starting a timer stops the one before it. That is the right rule and it is
+   * Toggl's, but it has to be said out loud: on a phone the taps that do it sit
+   * next to taps that do something else, and a timer that stopped without being
+   * mentioned shows up days later as a total that is wrong.
+   *
+   * The Start button, a favorite, a keyboard shortcut and "continue last" all
+   * come through the two actions below. THREE ROUTES DO NOT, and each says it
+   * where it lives, because each has something different to say: the entry
+   * row's Continue (`EntryList`), an event on the calendar (`CalendarView`),
+   * and a `?start=1` link (`TogglLab`), which is the worst of them because you
+   * did not press anything in this app at all.
+   *
+   * The idle prompt's restart is deliberately silent: it displaces the entry it
+   * is in the middle of trimming, and already has a toast of its own.
+   */
+  const announceDisplacement = useCallback(
+    (displaced: TimeEntry | null, started: TimeEntry | null) => {
+      if (!displaced || !started) return
+      const name = (entry: TimeEntry) => entry.description.trim() || "(no description)"
+      pushToast(`Stopped “${name(displaced)}” and started “${name(started)}”`, "info", () =>
+        setState((current) => undoDisplacement(current, started.id, displaced.id, new Date().toISOString())),
+      )
+    },
+    [pushToast, setState],
+  )
+
   // --- convenience actions -------------------------------------------------
   const actions = useMemo(
     () => ({
@@ -519,6 +547,7 @@ export function useTimetrack() {
           return
         }
         setState(() => result.state)
+        announceDisplacement(result.displaced, result.entry)
       },
       stop() {
         const nowIso = new Date().toISOString()
@@ -541,6 +570,7 @@ export function useTimetrack() {
           return
         }
         setState(() => result.state)
+        announceDisplacement(result.displaced, result.started)
       },
       resetWorkspace() {
         setStateRaw(createEmptyWorkspace(new Date().toISOString()))
@@ -550,7 +580,7 @@ export function useTimetrack() {
         setStateRaw(next)
       },
     }),
-    [pushToast, setState, state],
+    [announceDisplacement, pushToast, setState, state],
   )
 
   const requestNotificationPermission = useCallback(async () => {
