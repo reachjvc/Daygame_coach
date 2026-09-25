@@ -90,6 +90,44 @@ export async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Prom
       await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
       await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
     }
+    /**
+     * AND THE FINISHED WORKOUTS, WHICH THIS RESET USED NOT TO CLEAR.
+     *
+     * The loop above deletes the OPEN workout and each enrollment's own logs.
+     * Neither is a finished workout with `enrollment_id` null — a loose session
+     * some earlier FILE started and finished — and one of those is enough to
+     * put the card into its `done` state, which deliberately offers "See
+     * today's workout" and no Start ("offering one on a day somebody has
+     * finished invites a second workout for the same session").
+     *
+     * Measured 2026-09-25, and the server says it in its own words. After a
+     * full run, `/api/programs/today` answered:
+     *
+     *   recentlyFinished: [{ workoutId: "693bb065…", enrollmentId: null,
+     *                        loggedAt: "2026-09-25T19:10:00+00:00",
+     *                        durationMin: 1, sets: 4 }]
+     *
+     * A one-minute, four-set workout belonging to no program: a test's
+     * leftover. With that row present, `dashboard-training-card`,
+     * `programs-live-workout` and `programs-offline` all failed — the first on
+     * a missing "Squat", the other two waiting 180 and 240 seconds for a
+     * `start-workout` button the product had correctly taken away. Three
+     * failures, one stale row, and nothing in the output pointing at it.
+     *
+     * `enrollment_id` null is why the enrollment-log route cannot reach it, and
+     * `/api/workouts/{id}` cannot either — that one discards an OPEN workout
+     * and answers 400 "That workout is not open any more". The route that can
+     * is the one History uses, which `cleanUp` below has always used.
+     *
+     * Safe on this account: `/api/workouts/history?days=400` returns exactly
+     * one workout, so there is no seeded year here to destroy — the fixture
+     * that warning in `cleanUp` is about belongs to a different account.
+     */
+    const facts = await (await fetch("/api/programs/today")).json()
+    for (const done of facts.recentlyFinished ?? []) {
+      await fetch(`/api/health/workout?id=${done.workoutId}`, { method: "DELETE" })
+    }
+
     await fetch("/api/programs/enrollments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -145,15 +183,24 @@ export async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Prom
  * down with it, each spending minutes on a button that had been deliberately
  * removed.
  *
- * NOT FIXED, deliberately, and this is what it would take. Adding
- * `cleanUp(page, since)` to those six is not a sweep: `since` filters on
- * `started_at`, so it does not touch the deliberately PAST-dated workouts that
- * `programs-past-workout` and `health-past-workout` create on purpose — which
- * is the property that makes it safe there, and the one that needs checking
- * per file rather than assumed. Verifying it means the full 18-minute training
- * project, and an earlier attempt at widening this cleanup deleted the
- * account's whole history and destroyed the fixture the suite is measured
- * against. So: a real piece of work, not a line.
+ * FIXED IN `resetAndEnroll` INSTEAD, which is the better place: the reset now
+ * deletes whatever `/api/programs/today` reports as `recentlyFinished`, so a
+ * row left by an earlier file is gone before the next test looks rather than
+ * after. It uses the History route this function has always used, because that
+ * is the only one that can reach a finished workout with no enrollment.
+ *
+ * The first version of this note said the fix was "a real piece of work, not a
+ * line", on the reasoning that adding `cleanUp(page, since)` to those six
+ * specs needed per-file judgement — `since` spares the deliberately PAST-dated
+ * workouts that two of them create on purpose, and an earlier widening of this
+ * cleanup once destroyed the account's history. All true, and it was the wrong
+ * shape: the fix did not belong in six callers at all. Asking the server what
+ * it considers recently finished, in the one function every one of those specs
+ * already calls, is one place and no judgement.
+ *
+ * Verified: 67 of 67 in the `training` project after the change, and the two
+ * specs that had been timing out at 180 and 240 seconds pass in 32 seconds and
+ * 1.8 minutes.
  */
 export async function cleanUp(page: Page, since?: string): Promise<void> {
   refuseUnlessTrainingAccount()
