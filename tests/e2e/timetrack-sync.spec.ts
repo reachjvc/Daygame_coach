@@ -36,7 +36,7 @@ async function openEmptyBrowser(page: Page) {
     [STORAGE_KEY, PENDING_KEY],
   )
   await page.reload({ waitUntil: 'domcontentloaded' })
-  await page.getByRole('heading', { name: 'My Workspace' }).waitFor({ timeout: 30000 })
+  await page.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 30000 })
   await page.waitForTimeout(1500)
 }
 
@@ -88,7 +88,7 @@ test.describe('time is kept on the server, not just in one browser', () => {
      * again. Asserting the badge reaches "Saved" is the cheapest way to notice.
      */
     await page.goto('/dashboard/time', { waitUntil: 'domcontentloaded' })
-    await page.getByRole('heading', { name: 'My Workspace' }).waitFor({ timeout: 30000 })
+    await page.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 30000 })
 
     const stop = page.locator('main').getByRole('button', { name: 'Stop timer' })
     if (await stop.isVisible().catch(() => false)) {

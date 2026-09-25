@@ -16,8 +16,24 @@ export const STATE_VERSION = 3
 export const PENDING_KEY = "toggl-clone:pending"
 /** How far through the server's history this device has read */
 export const SYNC_CURSOR_KEY = "toggl-clone:cursor"
-/** Toggl requires a `created_with` on every entry (toggl) */
-export const CREATED_WITH = "daygame-coach /test/toggl"
+/**
+ * Which section you were last on.
+ *
+ * Its own key, not part of the workspace: it is about this device, it must not
+ * travel to your other devices through sync, and a section name is not
+ * something a workspace diff should ever have to reason about.
+ */
+export const SCREEN_KEY = "toggl-clone:screen"
+/**
+ * Toggl requires a `created_with` on every entry (toggl).
+ *
+ * It named `/test/toggl` until this was changed, which meant every entry the
+ * owner had ever tracked was stamped with the address of a lab page — in the
+ * database, and shown back to them in the entry detail sheet. Entries already
+ * saved keep the old string: it is a provenance note, and rewriting stored
+ * rows to tidy a label is not a trade worth making.
+ */
+export const CREATED_WITH = "daygame-coach"
 /**
  * This page used to seed sample entries carrying this tag. Nothing generates
  * them any more; the constant remains so a browser that still has them stored

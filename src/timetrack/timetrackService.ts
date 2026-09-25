@@ -1350,15 +1350,24 @@ export function deleteWebhook(state: TimetrackState, id: Id): TimetrackState {
   return { ...state, webhooks: state.webhooks.filter((h) => h.id !== id) }
 }
 
-/** Deep link that starts a prefilled entry — Toggl's "Copy start link" */
-export function startLinkFor(entry: TimeEntry, origin: string): string {
+/**
+ * Deep link that starts a prefilled entry — Toggl's "Copy start link".
+ *
+ * `path` is where the tracker is being used from, because these components are
+ * mounted twice: at `/dashboard/time`, which is the product, and at
+ * `/test/toggl`, which is the lab. It was hard-coded to the lab, so every link
+ * this ever produced pointed at a page that 404s in production
+ * (`app/test/layout.tsx` calls `notFound()` there) — a "copy link" that hands
+ * somebody a dead address.
+ */
+export function startLinkFor(entry: TimeEntry, origin: string, path = "/dashboard/time"): string {
   const params = new URLSearchParams()
   if (entry.description) params.set("description", entry.description)
   if (entry.projectId !== null) params.set("project", String(entry.projectId))
   if (entry.taskId !== null) params.set("task", String(entry.taskId))
   if (entry.tagIds.length) params.set("tags", entry.tagIds.join(","))
   if (entry.billable) params.set("billable", "1")
-  return `${origin}/test/toggl?start=1&${params.toString()}`
+  return `${origin}${path}?start=1&${params.toString()}`
 }
 
 export function draftFromStartLink(state: TimetrackState, params: URLSearchParams): EntryDraft {

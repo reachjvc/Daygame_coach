@@ -49,7 +49,7 @@ async function openFreshSandbox(page: Page) {
   await page.goto(PAGE, { waitUntil: 'domcontentloaded' })
   await page.evaluate((key) => window.localStorage.removeItem(key), STORAGE_KEY)
   await page.reload({ waitUntil: 'domcontentloaded' })
-  await page.getByRole('heading', { name: 'My Workspace' }).waitFor({ timeout: 20000 })
+  await page.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 20000 })
   await page.waitForTimeout(600)
 }
 
@@ -136,7 +136,7 @@ test.describe('Toggl-style time tracker', () => {
     }, STORAGE_KEY)
 
     await page.reload({ waitUntil: 'domcontentloaded' })
-    await page.getByRole('heading', { name: 'My Workspace' }).waitFor()
+    await page.getByRole('heading', { name: 'Time', exact: true }).waitFor()
     await page.waitForTimeout(900)
 
     const state = await readState(page)
@@ -384,7 +384,7 @@ test.describe('Toggl-style time tracker', () => {
       window.localStorage.setItem(key, JSON.stringify(state))
     }, STORAGE_KEY)
     await page.reload({ waitUntil: 'domcontentloaded' })
-    await page.getByRole('heading', { name: 'My Workspace' }).waitFor()
+    await page.getByRole('heading', { name: 'Time', exact: true }).waitFor()
     await page.waitForTimeout(600)
 
     // pretend the tab is in the background before tracking starts: time spent
@@ -485,7 +485,7 @@ test.describe('Toggl-style time tracker', () => {
     // had done in the meantime.
     const second = await context.newPage()
     await second.goto(PAGE, { waitUntil: 'domcontentloaded' })
-    await second.getByRole('heading', { name: 'My Workspace' }).waitFor({ timeout: 20000 })
+    await second.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 20000 })
     await second.waitForTimeout(800)
     await expect(second.locator('main input[value="from tab A"]').first()).toBeVisible()
 
@@ -505,7 +505,7 @@ test.describe('Toggl-style time tracker', () => {
     await page.waitForTimeout(700)
 
     await page.reload({ waitUntil: 'domcontentloaded' })
-    await page.getByRole('heading', { name: 'My Workspace' }).waitFor()
+    await page.getByRole('heading', { name: 'Time', exact: true }).waitFor()
     await page.waitForTimeout(800)
     await expect(page.locator('main input[value="Persisted entry"]').first()).toBeVisible()
 

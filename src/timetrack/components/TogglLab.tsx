@@ -1,7 +1,10 @@
 "use client"
 
 /**
- * Shell for the time-tracking sandbox at /test/toggl.
+ * Shell for the time tracker. Mounted twice: at /dashboard/time, which is the
+ * product, and at /test/toggl, which is the signed-out lab the phone suite runs
+ * against. Nothing in here may name either address — see `startLinkFor`.
+ *
  * Owns navigation, the shared entry draft, keyboard shortcuts, toasts,
  * the alert center, the idle prompt and the entry-detail modal.
  */
@@ -11,7 +14,7 @@ import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { SHORTCUTS } from "../config"
+import { SCREEN_KEY, SHORTCUTS } from "../config"
 import {
   IconAlert,
   IconBell,
@@ -80,6 +83,28 @@ const MORE_SECTIONS: NavItem[] = [
 ]
 
 const NAV: NavItem[] = [...PHONE_TABS, ...MORE_SECTIONS]
+
+const SCREENS = new Set<string>(NAV.map((item) => item.id))
+
+/**
+ * The section you were last on, so opening the tracker puts you back where you
+ * were instead of on Timer every time.
+ *
+ * Reading during the initialiser is safe: this shell renders its loading state
+ * until client state exists, so the section never reaches the DOM before
+ * hydration and there is nothing to mismatch.
+ */
+function rememberedScreen(): Screen {
+  if (typeof window === "undefined") return "timer"
+  try {
+    const saved = window.localStorage.getItem(SCREEN_KEY)
+    return saved && SCREENS.has(saved) ? (saved as Screen) : "timer"
+  } catch {
+    // Storage blocked. Not worth a word to the user: the cost is opening on
+    // Timer, which is where it opened before any of this existed.
+    return "timer"
+  }
+}
 
 /** One idle choice: what happens to the minutes, then what happens to the timer */
 function IdleChoice({
@@ -154,7 +179,15 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
     // and the observer reports the rest.
   }, [])
 
-  const [screen, setScreen] = useState<Screen>("timer")
+  const [screen, setScreen] = useState<Screen>(rememberedScreen)
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SCREEN_KEY, screen)
+    } catch {
+      // see `rememberedScreen`
+    }
+  }, [screen])
   const [manageTab, setManageTab] = useState<ManageTab>("clients")
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("profile")
   const [draft, setDraft] = useState<EntryDraft>(emptyDraft)
@@ -255,9 +288,31 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
   const unreadAlerts = useMemo(() => state?.alerts.filter((a) => !a.read) ?? [], [state?.alerts])
 
   if (!state || !reportConfig) {
+    /**
+     * The app's own chrome, not a bare centred line on an empty page.
+     *
+     * This is the first thing anybody sees on the way in, and for the second
+     * it lasted it looked like a different site: no header, no way back, and
+     * then the whole page arriving at once underneath it. The header here is
+     * the real one, so nothing jumps when the workspace lands.
+     */
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
-        Loading your time tracker…
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-[9500] border-b border-border bg-card/95 backdrop-blur">
+          <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
+            <Link
+              href={backHref}
+              className="-ml-1 flex min-h-11 shrink items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:bg-secondary/60 hover:text-foreground sm:min-h-0 sm:h-9"
+            >
+              <span className="shrink-0">←</span>
+              <span className="max-w-[112px] truncate">{backLabel}</span>
+            </Link>
+            <h1 className="shrink-0 text-sm font-semibold">Time</h1>
+          </div>
+        </header>
+        <main className="mx-auto max-w-6xl px-3 pt-6 sm:px-4">
+          <p className="text-sm text-muted-foreground">Loading your time…</p>
+        </main>
       </div>
     )
   }
@@ -277,14 +332,19 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
               control somebody needs when they are trying to leave. */}
           <Link
             href={backHref}
-            className="-ml-1 flex min-h-11 shrink-0 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:bg-secondary/60 hover:text-foreground sm:min-h-0 sm:h-9"
+            className="-ml-1 flex min-h-11 shrink items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:bg-secondary/60 hover:text-foreground sm:min-h-0 sm:h-9"
           >
-            ← <span>{backLabel}</span>
+            {/* the arrow always survives; the word gives way first, because a
+                header that overflows takes the sync state off the screen with it */}
+            <span className="shrink-0">←</span>
+            <span className="max-w-[112px] truncate">{backLabel}</span>
           </Link>
-          <h1 className="truncate text-sm font-semibold">{state.workspace.name}</h1>
-          <span className="hidden rounded bg-secondary px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground sm:inline">
-            Toggl-style time tracker
-          </span>
+          {/* The page you tapped "Time" to reach says so. It used to be headed
+              with the workspace's name and a badge reading "Toggl-style time
+              tracker" — the name of the thing it was copied from, on the
+              product. The workspace name is the subtitle it always was. */}
+          <h1 className="shrink-0 text-sm font-semibold">Time</h1>
+          <span className="hidden truncate text-xs text-muted-foreground sm:inline">{state.workspace.name}</span>
 
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <SyncBadge status={sync.status} pending={sync.pendingCount} onRetry={sync.syncNow} />

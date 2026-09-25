@@ -1232,7 +1232,11 @@ function SavedTab({
             size="sm"
             variant="ghost"
             onClick={() => {
-              const link = `${window.location.origin}/test/toggl?report=${encodeReportConfig(saved.config)}`
+              // The same bug "Copy start link" had: hard-coded to the lab page,
+              // which 404s in production, so every link this ever produced was
+              // dead. These components are mounted at two addresses; the one
+              // being used is the only one that can be right.
+              const link = `${window.location.origin}${window.location.pathname}?report=${encodeReportConfig(saved.config)}`
               navigator.clipboard?.writeText(link)
               pushToast("Share link copied — it opens this report with the same settings")
             }}

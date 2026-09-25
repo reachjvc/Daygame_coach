@@ -382,6 +382,22 @@ describe("manual entries and start links", () => {
     expect(params.get("task")).toBe("40")
     expect(params.get("billable")).toBe("1")
   })
+
+  /**
+   * Only the query string was ever asserted, which is how the link spent its
+   * whole life pointing at `/test/toggl` — a page that calls `notFound()` in
+   * production. "Copy start link" handed out a dead address.
+   */
+  test("start link points at the tracker's real address, not the lab page", () => {
+    const e = entry(1, "2026-08-09", "09:00", "10:00")
+    expect(startLinkFor(e, "https://app.test")).toContain("https://app.test/dashboard/time?start=1")
+    expect(startLinkFor(e, "https://app.test")).not.toContain("/test/")
+  })
+
+  test("start link uses the address it was opened from, so the lab links to the lab", () => {
+    const e = entry(1, "2026-08-09", "09:00", "10:00")
+    expect(startLinkFor(e, "https://app.test", "/test/toggl")).toContain("https://app.test/test/toggl?start=1")
+  })
 })
 
 describe("forgotten timer", () => {

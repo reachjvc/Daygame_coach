@@ -298,7 +298,9 @@ export function useTimetrack() {
   // --- document title mirrors the running timer, like Toggl ---------------
   useEffect(() => {
     if (typeof document === "undefined") return
-    const base = "Time tracker · /test/toggl"
+    // What the tab says when nothing is tracking. It named a lab page, on a
+    // tab somebody has open all day.
+    const base = "Time"
     if (!running) {
       document.title = base
       return

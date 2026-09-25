@@ -174,7 +174,24 @@ export function BottomSheet({
 
   return (
     <div
-      className="fixed inset-0 z-50"
+      /**
+       * ABOVE EVERY BAR IN THE APP, not just the one this was written for.
+       *
+       * `z-50` cleared the app's own tab bar (`z-40`) and nothing else. The
+       * time tracker draws its own bottom navigation at `z-[9500]` — a private
+       * scale it invented so its portalled panels clear its sticky header — so
+       * a sheet opened there was drawn UNDERNEATH it: the last row was on
+       * screen, looked normal, and the tap landed on the navigation instead.
+       * Measured, not guessed: `elementFromPoint` over the bottom row returned
+       * the nav.
+       *
+       * That is the same failure the tracker's own panels already carry a
+       * comment about, and a modal is the one thing that must be above page
+       * chrome whatever the chrome thinks it is worth. 9600 is the tracker's
+       * modal layer: over every bar, under the toasts that report what just
+       * happened.
+       */
+      className="fixed inset-0 z-[9600]"
       role="dialog"
       aria-modal="true"
       aria-label={title}

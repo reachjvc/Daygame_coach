@@ -714,7 +714,8 @@ function EntryMenu({
               icon={<IconLink className="size-3.5" />}
               label="Copy start link"
               onClick={() => {
-                const link = startLinkFor(entry, window.location.origin)
+                // the address this tracker is actually open at, not a guess
+                const link = startLinkFor(entry, window.location.origin, window.location.pathname)
                 navigator.clipboard?.writeText(link)
                 pushToast("Start link copied to clipboard")
                 close()

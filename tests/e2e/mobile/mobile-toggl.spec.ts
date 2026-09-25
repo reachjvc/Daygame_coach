@@ -15,7 +15,7 @@ async function openFreshSandbox(page: Page) {
   await page.goto(PAGE, { waitUntil: 'domcontentloaded' })
   await page.evaluate((key) => window.localStorage.removeItem(key), STORAGE_KEY)
   await page.reload({ waitUntil: 'domcontentloaded' })
-  await page.getByRole('heading', { name: 'My Workspace' }).waitFor({ timeout: 20000 })
+  await page.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 20000 })
   await page.waitForTimeout(800)
 }
 
@@ -27,11 +27,24 @@ async function openFreshSandbox(page: Page) {
 const tab = (page: Page, name: string) =>
   page.getByRole('navigation').getByRole('button', { name, exact: true })
 
+/** The two sections that live behind "More" on a phone, not in the bar */
+const BEHIND_MORE = ['Manage', 'Settings']
+
 async function goTo(page: Page, name: string) {
   await page.evaluate(() => window.scrollTo(0, 0))
   // dispatchEvent, not click(): in `next dev` the dev-tools badge sits in a
   // bottom corner and covers part of the bar. That overlay does not exist in a
   // production build, and the bar's own hit-test is asserted separately.
+  if (BEHIND_MORE.includes(name)) {
+    await tab(page, 'More').dispatchEvent('click')
+    await page.waitForTimeout(400)
+    // a real click here on purpose: the sheet's rows have to be tappable, and
+    // Playwright refuses a click on an element something else is covering.
+    // The sheet was drawn under this very bar the first time it was wired up.
+    await page.getByRole('dialog').getByRole('button', { name, exact: true }).click()
+    await page.waitForTimeout(700)
+    return
+  }
   await tab(page, name).dispatchEvent('click')
   await page.waitForTimeout(700)
 }
@@ -216,5 +229,160 @@ test.describe('time tracker on a phone', () => {
       expect(box!.height).toBeGreaterThanOrEqual(44)
       expect(box!.width).toBeGreaterThanOrEqual(44)
     }
+  })
+
+  /**
+   * THE BUG THE WHOLE PLAN WAS WRITTEN FOR.
+   *
+   * The bar wrote to the draft and nothing wrote the draft onto the entry that
+   * was already running, so everything entered after pressing Start was shown
+   * back to you and then discarded. On a phone there was no repair: the
+   * inline-editable row that saves you on a desktop is `hidden sm:grid`.
+   */
+  test('what you fill in after pressing Start is what gets saved', async ({ page }) => {
+    await openFreshSandbox(page)
+    const bar = page.locator('main > div').first()
+
+    // a project to reach for later
+    await bar.getByRole('button', { name: 'Project', exact: true }).click()
+    await page.getByPlaceholder(/Search or add a project/).fill('Writing')
+    await page.getByRole('button', { name: /Create/ }).click()
+    await page.waitForTimeout(400)
+    await bar.getByRole('button', { name: 'Writing', exact: true }).click()
+    await page.getByRole('button', { name: 'No project', exact: true }).click()
+    await page.waitForTimeout(400)
+
+    // start FIRST, fill in AFTER — the order this app is used in
+    await bar.getByRole('button', { name: 'Start timer' }).click()
+    await page.waitForTimeout(700)
+
+    await page.getByPlaceholder('What are you working on?').fill('morning pages')
+    await page.waitForTimeout(800) // past the commit pause
+
+    await bar.getByRole('button', { name: 'Project', exact: true }).click()
+    await page.getByPlaceholder(/Search or add a project/).fill('wri')
+    await page.waitForTimeout(300)
+    await page.getByRole('button', { name: 'Writing', exact: true }).last().click()
+    await page.waitForTimeout(400)
+
+    await bar.getByRole('button', { name: 'Non-billable' }).click()
+    await page.waitForTimeout(400)
+
+    await bar.getByRole('button', { name: 'Stop timer' }).click()
+    await page.waitForTimeout(700)
+
+    const saved = await page.evaluate((key) => {
+      const state = JSON.parse(window.localStorage.getItem(key)!)
+      const entry = [...state.entries].sort((a, b) => b.start.localeCompare(a.start))[0]
+      return {
+        description: entry.description,
+        project: state.projects.find((p: { id: string }) => p.id === entry.projectId)?.name ?? null,
+        billable: entry.billable,
+      }
+    }, STORAGE_KEY)
+
+    expect(saved.description, 'the description was thrown away').toBe('morning pages')
+    expect(saved.project, 'the project was thrown away').toBe('Writing')
+    expect(saved.billable, 'billable was thrown away').toBe(true)
+  })
+
+  test('typing a project name in the description box offers the project', async ({ page }) => {
+    await openFreshSandbox(page)
+    const bar = page.locator('main > div').first()
+
+    await bar.getByRole('button', { name: 'Project', exact: true }).click()
+    await page.getByPlaceholder(/Search or add a project/).fill('Writing')
+    await page.getByRole('button', { name: /Create/ }).click()
+    await page.waitForTimeout(400)
+    await bar.getByRole('button', { name: 'Writing', exact: true }).click()
+    await page.getByRole('button', { name: 'No project', exact: true }).click()
+    await page.waitForTimeout(400)
+
+    // no `@` typed: the grammar was invisible at this width, so plain text has
+    // to work on its own
+    await page.getByPlaceholder('What are you working on?').fill('wri')
+    await page.waitForTimeout(500)
+
+    const panel = page.locator('[data-dropdown-panel]')
+    await expect(panel).toBeVisible()
+    await expect(panel.getByRole('button', { name: 'Writing' })).toBeVisible()
+
+    await panel.getByRole('button', { name: 'Writing' }).click()
+    await page.waitForTimeout(400)
+    // the words are the description somebody meant to write; only the project is set
+    await expect(page.getByPlaceholder('What are you working on?')).toHaveValue('wri')
+    await expect(bar.getByRole('button', { name: 'Writing', exact: true })).toBeVisible()
+  })
+
+  test('the section bar is five items with readable labels, and the way out says where it goes', async ({ page }) => {
+    await openFreshSandbox(page)
+
+    const tabs = page.locator('nav[aria-label="Sections"] button')
+    await expect(tabs).toHaveCount(5)
+    for (let i = 0; i < 5; i++) {
+      const size = await tabs.nth(i).evaluate((el) => parseFloat(getComputedStyle(el).fontSize))
+      // the app's own tab bar set 12px as its floor, deliberately
+      expect(size, 'a section label is below the app-wide 12px floor').toBeGreaterThanOrEqual(12)
+    }
+
+    const back = page.locator('header a').first()
+    const box = await back.boundingBox()
+    expect(box!.height, 'the only way out of the tracker is under 44px').toBeGreaterThanOrEqual(44)
+    expect((await back.innerText()).trim(), 'the way out is an unlabelled arrow').not.toBe('←')
+  })
+
+  test('the sections behind More can actually be tapped', async ({ page }) => {
+    await openFreshSandbox(page)
+    // goTo uses a real click for these, which Playwright refuses if anything
+    // covers them — the sheet was drawn under the nav bar the first time
+    await goTo(page, 'Settings')
+    await expect(page.locator('main')).toContainText(/Profile|Workspace|Automation/)
+    await goTo(page, 'Manage')
+    await expect(page.locator('main')).toContainText(/Clients|Tags|Team/)
+  })
+
+  test('it opens where you left it, and the tab does not name a lab page', async ({ page }) => {
+    await openFreshSandbox(page)
+    await goTo(page, 'Reports')
+
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await page.getByRole('heading', { name: 'Time' }).waitFor({ timeout: 20000 })
+    await page.waitForTimeout(800)
+
+    const current = page.locator('nav[aria-label="Sections"] button[aria-current="page"]')
+    await expect(current).toHaveText('Reports')
+    expect(await page.title()).not.toContain('/test/')
+  })
+
+  test('an idle page does no work: observers are not rebuilt as the clock ticks', async ({ page }) => {
+    await openFreshSandbox(page)
+
+    // The shell's bottom-bar effect had no dependency array, so it rebuilt a
+    // ResizeObserver after every render — against a one-second clock. Measured
+    // at eight in six idle seconds before this was fixed.
+    await page.evaluate(() => {
+      const w = window as unknown as { __observersBuilt: number }
+      w.__observersBuilt = 0
+      const Real = window.ResizeObserver
+      window.ResizeObserver = class extends Real {
+        constructor(callback: ResizeObserverCallback) {
+          super(callback)
+          w.__observersBuilt++
+        }
+      }
+    })
+
+    // GROWTH is the assertion, not the absolute count. A count of zero passes
+    // in Chromium and fails on WebKit, which builds exactly one of its own
+    // after load — engine internals this test has no business policing. What
+    // the bug actually was is "one more every render", and that is what two
+    // samples across four idle seconds catch.
+    const count = () => page.evaluate(() => (window as unknown as { __observersBuilt: number }).__observersBuilt)
+    await page.waitForTimeout(1500)
+    const settled = await count()
+    await page.waitForTimeout(4000)
+    const later = await count()
+
+    expect(later - settled, 'the idle page is still rebuilding observers as it ticks').toBe(0)
   })
 })

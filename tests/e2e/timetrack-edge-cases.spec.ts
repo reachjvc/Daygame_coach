@@ -30,7 +30,7 @@ async function openFresh(page: Page) {
     [STORAGE_KEY, PENDING_KEY],
   )
   await page.reload({ waitUntil: 'domcontentloaded' })
-  await page.getByRole('heading', { name: 'My Workspace' }).waitFor({ timeout: 30000 })
+  await page.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 30000 })
   await page.waitForTimeout(1500)
 
   // the account is shared between these tests, so a timer left running by an
