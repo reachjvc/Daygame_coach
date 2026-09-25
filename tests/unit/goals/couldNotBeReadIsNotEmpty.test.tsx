@@ -26,6 +26,8 @@
 
 import { describe, it, expect } from "vitest"
 import { NOTHING_TO_SHOW, decideOnLoad, canSave, planHasNothingWritten } from "@/src/goals/lifePlanSync"
+import { recordIsEmpty, recordOf } from "@/src/goals/lifePlanDayService"
+import type { NsPlan } from "@/src/goals/types"
 import { addGoal, emptyNsPlan, setNorthStar } from "@/src/goals/northStarService"
 
 describe("a read that failed is not an account with nothing in it", () => {
@@ -45,20 +47,38 @@ describe("a read that failed is not an account with nothing in it", () => {
 })
 
 /**
- * WHICH GATE DECIDES "THIS BROWSER HOLDS NOTHING", and it is not the obvious one.
+ * WHICH GATE DECIDES "THERE IS NOTHING TO SHOW" — and it is neither of the two
+ * predicates that nearly mean it.
  *
- * The banner's first version asked `planIsUntouched` and never appeared. That
- * function also counts the plan's SEEDED areas, routines and day maps, so it
- * answers false for a browser holding nothing of the person's at all — which is
- * precisely the state the banner exists for. The same distinction is the one
- * the import gate got wrong and was corrected for on 2026-09-23.
+ * **Correcting `adebd402`, which stated a cause I had not verified.** That commit
+ * said the banner's first version never appeared because `planIsUntouched`
+ * counts the plan's SEEDED areas and routines as evidence. That is false, and a
+ * probe says so: `planIsUntouched(emptyNsPlan())` is `true`, seeded areas and
+ * all. The real reason is narrower — it also asks `areasTouched`, which inspects
+ * the ROUTINES, and a plan that has been through this browser's own storage
+ * round trip no longer matches the seed. Nothing to do with the person.
+ *
+ * And `planHasNothingWritten` alone is wrong in the other direction: it does not
+ * look at the day half at all, so it answers true for somebody whose browser
+ * holds a rating or a day note — who would then be told there is nothing to
+ * show while looking at their own writing.
+ *
+ * So the gate is the claim, assembled from the two functions that each own half
+ * of it: nothing written AND no day half. Asserted below as a DISAGREEMENT,
+ * because that is what makes both halves necessary — if they ever answered the
+ * same everywhere, one would be redundant and a caller picking either would
+ * fail nothing. (That framing is the vice session's, from the same shape on the
+ * Black Box.)
  */
 describe("the gate that decides whether there is anything to show", () => {
+  const withARating = (): NsPlan => ({ ...emptyNsPlan(), daily: { "2026-09-25": { lm_health: 7 } } })
+
   it("says a fresh plan holds nothing written, seeded areas and all", () => {
     const fresh = emptyNsPlan()
 
-    expect(fresh.areas.length, "it IS seeded, which is what made the other gate wrong").toBeGreaterThan(0)
-    expect(planHasNothingWritten(fresh), "seeded is not written").toBe(true)
+    expect(fresh.areas.length, "it IS seeded").toBeGreaterThan(0)
+    expect(planHasNothingWritten(fresh)).toBe(true)
+    expect(recordIsEmpty(recordOf(fresh)), "and no day half").toBe(true)
   })
 
   it("and says a plan with one sentence in it does not", () => {
@@ -68,6 +88,30 @@ describe("the gate that decides whether there is anything to show", () => {
   it("nor one with a single goal", () => {
     const plan = emptyNsPlan()
     expect(planHasNothingWritten(addGoal(plan, plan.areas[0].id, "Run a half marathon"))).toBe(false)
+  })
+
+  /**
+   * THE DISAGREEMENT THAT MAKES BOTH HALVES NECESSARY. A browser whose only
+   * content is a day rating has nothing WRITTEN and does have something to SHOW.
+   * One predicate cannot answer that, which is why the banner asks both.
+   */
+  it("disagrees on a browser holding only a day rating, which is the point", () => {
+    const plan = withARating()
+
+    expect(planHasNothingWritten(plan), "the plan half is untouched").toBe(true)
+    expect(recordIsEmpty(recordOf(plan)), "and yet there is something on screen").toBe(false)
+  })
+
+  it("so the banner's own condition is false for that browser", () => {
+    const plan = withARating()
+    const shows = planHasNothingWritten(plan) && recordIsEmpty(recordOf(plan))
+
+    expect(shows, "it must not claim nothing to show to somebody reading their own rating").toBe(false)
+  })
+
+  it("and true only when both halves are empty", () => {
+    const fresh = emptyNsPlan()
+    expect(planHasNothingWritten(fresh) && recordIsEmpty(recordOf(fresh))).toBe(true)
   })
 })
 

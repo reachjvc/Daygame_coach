@@ -1458,13 +1458,20 @@ export function NorthStarFlow({
             failed AND this browser holds nothing, so every step below is blank
             and reads as a first run. A failed SAVE is a different thing — the
             work is on screen, and the footer line is the right size for it. */}
-        {/* `planHasNothingWritten`, NOT `planIsUntouched`. The latter also counts
-            the plan's SEEDED areas, routines and day maps, so it answers false
-            for a browser that holds nothing of the person's at all — which is
-            exactly the state this banner is for, and why the first version of
-            it never appeared. The same distinction is the one the import gate
-            got wrong and was corrected for on 2026-09-23. */}
-        {decision?.kind === "stay-local" && planHasNothingWritten(plan) && (
+        {/* THE GATE SAYS WHAT THE SENTENCE SAYS, rather than borrowing a
+            predicate that nearly means it.
+            `planIsUntouched` was the first try and the banner never appeared:
+            it also asks `areasTouched`, which inspects the ROUTINES, and a plan
+            that has been through this browser's own storage round trip no
+            longer matches the seed — nothing to do with the person. And
+            `planHasNothingWritten` alone is too loose in the other direction:
+            it ignores the day half, so it would claim "nothing to show" to
+            somebody looking at their own ratings.
+            "Nothing to show" is the claim, so the gate is nothing written AND
+            no day half, from the two functions that each own one of those. */}
+        {decision?.kind === "stay-local" &&
+          planHasNothingWritten(plan) &&
+          recordIsEmpty(recordOf(plan)) && (
           <div
             role="alert"
             className="mb-5 rounded-xl border border-amber-400/40 bg-amber-500/[0.08] px-4 py-3"

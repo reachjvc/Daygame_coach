@@ -29,7 +29,7 @@
 import { useMemo, useState } from "react"
 import { ChevronDown, Plus, Trash2 } from "lucide-react"
 import type { NsPlan } from "@/src/goals/types"
-import { JOURNAL_COPY, JOURNAL_PROMPTS, JOURNAL_SETS, TODAY_COPY } from "@/src/goals/data/northStar"
+import { DAY_NOTE_SAVED, JOURNAL_COPY, JOURNAL_PROMPTS, JOURNAL_SETS, TODAY_COPY } from "@/src/goals/data/northStar"
 import { journalArchive, journalQuestions, journalSetAnchor, journalTotals } from "@/src/goals/northStarTrackService"
 import { formatTargetDate, journalEntry, journalHistory } from "@/src/goals/northStarService"
 import { SENTENCE_HINT } from "./SentenceBox"
@@ -204,6 +204,10 @@ export function JournalTab({
             placeholder={JOURNAL_COPY.notePlaceholder}
             className="w-full mt-2 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-[12.5px] text-zinc-200 placeholder:text-zinc-600 focus:border-white/30 focus:outline-none resize-y"
           />
+          {/* The same sentence Today draws under the same box. It said nothing
+              here, so how this field saves — and the one way it can lose a
+              sentence — depended on which screen you happened to write it on. */}
+          <p className="text-[11px] text-zinc-500 mt-1">{DAY_NOTE_SAVED}</p>
         </div>
       </section>
 

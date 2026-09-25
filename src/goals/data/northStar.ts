@@ -125,7 +125,10 @@ export const TODAY_COPY = {
     "Rate each area on how it actually felt today, 0 to 10. Same scale as the wheel and the same store, so this is what the rolling average on Your 10s is made of. Skip any of them; click a number again to clear it.",
   noteLabel: "Anything worth remembering about today",
   notePlaceholder: "What happened, what got in the way, what you would do again.",
-  noteSaved: "Saves when you click away.",
+  /* `noteSaved` moved out to `DAY_NOTE_SAVED`, below: the Journal screen draws
+     this same box, writing the same `plan.notes` entry, and a sentence about
+     how a field saves belongs to the field rather than to one of the two
+     screens that shows it. */
   /* YOUR OWN QUESTIONS, in your own words. The plan counts and rates; none of
      that holds "one key learning of today", and that line is the one most
      people already keep by hand — usually against the thing that taught it
@@ -387,6 +390,28 @@ export const JOURNAL_ALL_ID = "journal:all"
  * `plan.journal` and the archive reads it back, which is the same pair the
  * Today rows already use.
  */
+/**
+ * HOW THE DAY NOTE SAVES — ONE SENTENCE, BOTH SCREENS THAT DRAW IT.
+ *
+ * Today and Journal draw the same box, writing the same `plan.notes` entry, so
+ * two copies of this would be two answers to one question and the drifted one
+ * would be the one somebody read. Journal had no sentence at all.
+ *
+ * THE SECOND CLAUSE IS A KNOWN LIMIT, SAID OUT LOUD. Every other cell of the day
+ * half is safe on two devices — two phones ticking different steps both win,
+ * because a tick is a membership and the diff carries each one separately. Free
+ * text is the exception: the note is one field and the save is an upsert, so
+ * the second device's sentence replaces the first's. Confirmed against a real
+ * Postgres rather than reasoned about.
+ *
+ * The alternatives were keeping both and showing you the pair, or locking a day
+ * to one device, and both cost more than they are worth for one person with a
+ * phone and a laptop. So the behaviour stands and the page admits it, which is
+ * the whole of the plan's recommendation on this.
+ */
+export const DAY_NOTE_SAVED =
+  "Saves when you click away. If you write it on two devices at once, the last one is kept."
+
 export const JOURNAL_COPY = {
   tab: "Journal",
   title: "Your journal",

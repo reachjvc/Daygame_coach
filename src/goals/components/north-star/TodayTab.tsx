@@ -34,7 +34,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { ArrowRight, Check, ChevronDown, ChevronUp, Loader2, Minus, Plus, Trash2 } from "lucide-react"
 import type { NorthStarTabId, NsDailyField, NsFieldKind, NsPlan, NsSubStep } from "@/src/goals/types"
-import { GOES_TO_COPY, TODAY_COPY } from "@/src/goals/data/northStar"
+import { DAY_NOTE_SAVED, GOES_TO_COPY, TODAY_COPY } from "@/src/goals/data/northStar"
 import { cadenceLabel, destination, destinations, fieldTargets, groupLogged, groupSummary, pushedGoalIds, readSource, readSources, standingItems, todayItems, todayProgress, trackGroups, type TodayItem } from "@/src/goals/northStarTrackService"
 import { stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
 import { dailyFieldsFor, dailyRating, formatTargetDate, journalEntry, journalHistory, subStepProgress, subStepsFor } from "@/src/goals/northStarService"
@@ -1453,7 +1453,7 @@ export function TodayTab({
             placeholder={TODAY_COPY.notePlaceholder}
             className="w-full rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-[12.5px] text-zinc-200 placeholder:text-zinc-600 focus:border-white/30 focus:outline-none resize-y"
           />
-          <p className="text-[10.5px] text-zinc-600 mt-1">{TODAY_COPY.noteSaved}</p>
+          <p className="text-[10.5px] text-zinc-600 mt-1">{DAY_NOTE_SAVED}</p>
         </div>
         {/* THE FIELDS HUNG OFF THE DAY ITSELF rather than off one thing in the
             plan. "One key learning of today" is usually one of these; the ones

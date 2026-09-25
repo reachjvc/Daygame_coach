@@ -193,3 +193,67 @@ describe("the shapes the day half refuses", () => {
     }
   })
 })
+
+
+/**
+ * THE ONE PLACE TWO DEVICES CAN LOSE WRITING, AND THE SCREEN NOW SAYS SO.
+ *
+ * Every other cell of the day half survives two devices: two phones ticking
+ * different steps both win, because a tick is a membership and the diff carries
+ * each one separately. Free text is the exception — the note is one field and
+ * the save is an upsert, so the second device's sentence replaces the first's
+ * with no warning.
+ *
+ * That was left as the plan's open question and the recommendation was to accept
+ * it and say so on screen, which `DAY_NOTE_SAVED` now does on both screens that
+ * draw the box. **A sentence on screen that claims a behaviour has to be checked
+ * against the behaviour**, or it is one more promise in a file that never
+ * changes when the storage does — which is the failure three slices hit on
+ * 2026-09-25. So the claim is pinned here, against a real Postgres.
+ */
+describe("what two devices do to one day", () => {
+  beforeEach(async () => {
+    await truncateAllTables()
+  })
+
+  test("the last note saved is the one kept, which is what the screen promises", async () => {
+    const userId = await createTestUser()
+    const { planId } = await seed(userId)
+    const db = await getClient()
+
+    const write = (note: string) =>
+      db.query(
+        `INSERT INTO life_plan_days (user_id, plan_id, on_date, note) VALUES ($1, $2, $3, $4)
+         ON CONFLICT (plan_id, on_date) DO UPDATE SET note = EXCLUDED.note`,
+        [userId, planId, DAY, note])
+
+    await write("written on the phone")
+    await write("written on the laptop")
+
+    const left = await db.query(`SELECT note FROM life_plan_days WHERE plan_id = $1 AND on_date = $2`, [planId, DAY])
+    expect(left.rows, "one row, not two — the day is the key").toHaveLength(1)
+    expect(left.rows[0].note, "the second device wins, and the copy says so").toBe("written on the laptop")
+  })
+
+  /**
+   * AND THE PROMISE IS NARROW, which is the half that makes it worth printing.
+   * If ticks lost each other the same way, the sentence would be understating a
+   * much bigger problem and pointing at the wrong field.
+   */
+  test("but two devices ticking different steps both win", async () => {
+    const userId = await createTestUser()
+    const { dayId, stepId, areaId } = await seed(userId)
+    const db = await getClient()
+
+    // Two different nodes ticked on the same day, as two devices would.
+    for (const node of [stepId, areaId]) {
+      await db.query(
+        `INSERT INTO life_plan_day_ticks (user_id, day_id, node_id) VALUES ($1, $2, $3)
+         ON CONFLICT (day_id, node_id) DO NOTHING`,
+        [userId, dayId, node])
+    }
+
+    const ticks = await db.query(`SELECT node_id FROM life_plan_day_ticks WHERE day_id = $1`, [dayId])
+    expect(ticks.rows, "neither device's tick replaced the other's").toHaveLength(2)
+  })
+})
