@@ -396,7 +396,37 @@ whole-app question and answering it inside a vice plan would be the wrong place.
 *Acceptance, met:* a signed-in user on a phone reaches Life Mastery from the
 navigation without typing a URL. *Not met:* the same on a desktop.
 
-**M5 — It behaves the same on Safari and Firefox.** Part of this arrived from
+**M5 — DONE, 2026-09-25.** `tests/e2e/cross-browser/vice-cross.spec.ts`, five
+tests on Firefox and WebKit. Until it existed **every behavioural test of this
+module ran on Chromium and nothing else** — the sweeps cover three engines for
+render, and a page can draw perfectly on Safari and still lose the night
+somebody filed.
+
+It asks the three questions that genuinely differ between engines rather than
+copying the chromium suite: whether a filed night is the night read back (`at`
+is a wall clock with no zone, and the failure is silent and a day wide),
+whether the engine can mint an id the `UUID` column would take (this module has
+already lost rows to an id its database refused), and whether the browser copy
+survives a reload — WebKit has the tightest storage rules of the three and the
+whole page renders from that copy. Plus the lane labels, which are positioned
+from a measured width and are exactly the thing that is right on one engine and
+a few pixels wrong on another.
+
+*Proved, not assumed:* planting this module's real historical bug — a report
+dated by the moment of FILING rather than the night chosen — fails it on both
+engines naming the day it moved.
+
+*It is isolated from the account, and the first version was not.* Clearing
+`localStorage` empties the browser copy while the account still holds whatever
+the chromium suite last left there, which merges back about 700ms later — so
+the empty state never appeared and the tests could not find their own buttons.
+A fixture that depends on another project's leftovers is not a fixture. Both
+verbs are stubbed now, and "can this engine reach the account" is asked once on
+its own against the real endpoint, as a status rather than rows. It also must
+not write: two more projects writing to the shared account beside the chromium
+suite is exactly the race M7 spent a day removing.
+
+*The part that arrived from elsewhere and should not be rebuilt:* part of this
 elsewhere on 2026-09-24 and should not be rebuilt: `tests/e2e/cold-open.spec.ts`
 opens every Life Mastery and vice address cold — walked off `app/`, so it covers
 whatever exists on the day it runs — asserts the page is not a 404 and then that
