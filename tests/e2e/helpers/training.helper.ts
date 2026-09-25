@@ -123,9 +123,39 @@ export async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Prom
      * one workout, so there is no seeded year here to destroy — the fixture
      * that warning in `cleanUp` is about belongs to a different account.
      */
-    const facts = await (await fetch("/api/programs/today")).json()
-    for (const done of facts.recentlyFinished ?? []) {
-      await fetch(`/api/health/workout?id=${done.workoutId}`, { method: "DELETE" })
+    /**
+     * LOUDLY, BOTH WAYS — because the whole point of this block is that a row
+     * left behind costs three minutes and names nothing.
+     *
+     * `recentlyFinished ?? []` and an unchecked DELETE were the first version,
+     * and both fail soft in exactly the way that brings the original symptom
+     * back with the cause hidden behind a fix that looks like it ran: if the
+     * key ever stops being returned, the reset quietly stops clearing; if a
+     * delete is refused, the loop moves on and the row survives. Either way the
+     * next test waits out a 180-second timeout for a Start button, which is
+     * where this started.
+     */
+    const todayRes = await fetch("/api/programs/today")
+    if (!todayRes.ok) {
+      throw new Error(`reset could not read /api/programs/today: ${todayRes.status}`)
+    }
+    const facts = await todayRes.json()
+    if (!Array.isArray(facts.recentlyFinished)) {
+      throw new Error(
+        "reset expected `recentlyFinished` from /api/programs/today and got " +
+          `${JSON.stringify(Object.keys(facts))}. Without it this reset cannot clear a ` +
+          "finished workout, and the card will sit in its `done` state with no Start button."
+      )
+    }
+    for (const done of facts.recentlyFinished) {
+      const del = await fetch(`/api/health/workout?id=${done.workoutId}`, { method: "DELETE" })
+      if (!del.ok) {
+        throw new Error(
+          `reset could not delete the finished workout ${done.workoutId}: ` +
+            `${del.status} ${await del.text()}. It will remove the Start button for every ` +
+            "test after this one."
+        )
+      }
     }
 
     await fetch("/api/programs/enrollments", {
