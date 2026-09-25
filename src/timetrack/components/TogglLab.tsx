@@ -492,7 +492,16 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
               onStart={(favoriteDraft) => startTracking(favoriteDraft)}
               onRemove={(id) => {
                 const favorite = state.favorites.find((f) => f.id === id)
-                if (favorite) setState((current) => toggleFavorite(current, favorite.draft, new Date().toISOString()))
+                if (!favorite) return
+                setState((current) => toggleFavorite(current, favorite.draft, new Date().toISOString()))
+                // The control sits beside the one that starts a timer, on a
+                // strip you scroll with a thumb. An undo costs a line and makes
+                // the mis-tap free.
+                pushToast(
+                  `Removed “${favorite.draft.description.trim() || "(no description)"}” from favorites`,
+                  "info",
+                  () => setState((current) => toggleFavorite(current, favorite.draft, new Date().toISOString())),
+                )
               }}
             />
             <EntryList
@@ -786,7 +795,10 @@ function SyncBadge({
       // sentence explaining what it means for the person's work
       aria-label={`${label[status]}. ${title[status]}`}
       className={cn(
-        "flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 text-[11px]",
+        // 27px tall until this was changed, on a control whose whole point is
+        // being tappable in the one state that matters: "Not saved. Tap to try
+        // again." The header has 57px to give, so this costs nothing.
+        "flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] sm:min-h-0",
         tone,
         settled && "border-transparent sm:border-border",
       )}

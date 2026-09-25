@@ -172,7 +172,9 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry }: E
                   setSelectionMode((on) => !on)
                   if (selectionMode) setSelected([])
                 }}
-                className="min-h-9 px-1 text-xs text-muted-foreground hover:text-foreground"
+                // 43x36 measured on an iPhone: one pixel under on width, which
+                // is the same near-miss the app's tab bar carries a note about
+                className="min-h-11 min-w-11 px-2 text-xs text-muted-foreground hover:text-foreground sm:min-h-9 sm:min-w-0 sm:px-1"
               >
                 {selectionMode ? "Done" : "Select"}
               </button>

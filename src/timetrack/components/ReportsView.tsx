@@ -622,7 +622,7 @@ function SummaryTab({
           align="right"
           width="w-56"
           trigger={() => (
-            <span className="flex h-9 items-center gap-1 rounded-md border border-border px-2 text-xs text-muted-foreground sm:h-7">
+            <span className="flex h-11 items-center gap-1 rounded-md border border-border px-2 text-xs text-muted-foreground sm:h-7">
               Metrics ({config.summaryMetrics.length}/{MAX_SUMMARY_METRICS})
               <IconDown className="size-3" />
             </span>

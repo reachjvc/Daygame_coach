@@ -356,7 +356,9 @@ export function FavoritesBar({
             key={favorite.id}
             className="group flex shrink-0 items-center gap-2 rounded-full border border-border bg-card py-1.5 pl-2 pr-1 text-xs sm:py-1"
           >
-            <button type="button" onClick={() => onStart(favorite.draft)} className="flex min-h-10 items-center gap-1.5 sm:min-h-0">
+            {/* 40px, on the control whose job is starting a timer one-handed.
+                The slice's floor is 44. */}
+            <button type="button" onClick={() => onStart(favorite.draft)} className="flex min-h-11 items-center gap-1.5 sm:min-h-0">
               {index < 9 && (
                 <span className="rounded bg-secondary px-1 text-[10px] tabular-nums text-muted-foreground">{index + 1}</span>
               )}
@@ -364,11 +366,29 @@ export function FavoritesBar({
               <span className="max-w-[180px] truncate">{favorite.draft.description || "(no description)"}</span>
               <IconStart className="size-3 text-primary" />
             </button>
+            {/*
+              * A FAVORITE YOU CAN GET RID OF ON A PHONE.
+              *
+              * This was `hidden … sm:flex`, so below 640px it did not exist —
+              * and the only other way to un-favorite something is the star in
+              * the timer bar, which acts on the draft and so only works while
+              * the draft still matches that favorite exactly. Move on to
+              * anything else and the favorite was permanent: a tile you cannot
+              * remove, whose whole behaviour is starting a timer when tapped.
+              *
+              * Revealed on hover with a pointer, where that keeps the strip
+              * quiet; always there on a phone, where there is no hover and
+              * hiding a control behind one is hiding it for good. Sized by the
+              * slice's own rule rather than the 20px it was.
+              */}
             <button
               type="button"
               onClick={() => onRemove(favorite.id)}
-              className="hidden size-5 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100 sm:flex"
-              aria-label="Remove favorite"
+              className={cn(
+                touchTarget,
+                "rounded-full text-muted-foreground transition-opacity hover:text-foreground sm:opacity-0 sm:group-hover:opacity-100",
+              )}
+              aria-label={`Remove “${favorite.draft.description.trim() || "(no description)"}” from favorites`}
             >
               ×
             </button>

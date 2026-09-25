@@ -215,6 +215,75 @@ test.describe('time tracker on a phone', () => {
     }
   })
 
+  /**
+   * THE CLASS GUARD, not a spot check.
+   *
+   * The slice sets its own floor — `touchTarget` is 44px on a phone, 32 with a
+   * mouse — and then three controls quietly sat under it: the favourites tile at
+   * 40px, the sync badge at 27px on the one control whose whole point is being
+   * tappable when it says "Not saved. Tap to try again", and the Reports metrics
+   * picker at 36px. Each was found by measuring, none by looking.
+   *
+   * Every visible button on every screen, so the next one that lands short is
+   * caught by the sweep rather than by somebody's thumb. Buttons with no box are
+   * skipped: a layout the other viewport owns is not this test's business.
+   */
+  test('no visible control on any screen is too small to tap', async ({ page }) => {
+    await openFreshSandbox(page)
+    await trackEntry(page, 'a row to measure')
+
+    const tooSmall = () =>
+      page.evaluate(() => {
+        const found: { label: string; w: number; h: number }[] = []
+        for (const button of document.querySelectorAll('button')) {
+          const box = button.getBoundingClientRect()
+          if (!box.width || !box.height) continue
+          if (getComputedStyle(button).visibility === 'hidden') continue
+          if (box.height >= 44 && box.width >= 44) continue
+          found.push({
+            label: (button.getAttribute('aria-label') ?? button.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 50),
+            w: Math.round(box.width),
+            h: Math.round(box.height),
+          })
+        }
+        return found
+      })
+
+    for (const screen of ['Timer', 'Calendar', 'Reports', 'Projects', 'Manage', 'Settings']) {
+      if (screen !== 'Timer') await goTo(page, screen)
+      const found = await tooSmall()
+      expect(found, `${screen} has controls under 44px: ${JSON.stringify(found)}`).toEqual([])
+    }
+  })
+
+  /**
+   * A favourite used to be permanent on a phone. Its × was `hidden … sm:flex`,
+   * and the only other way to un-favourite something is the star in the timer
+   * bar, which acts on the draft — so it only works while the draft still
+   * matches that favourite exactly. Move on to anything else and you were left
+   * with a tile you could not remove whose only behaviour is starting a timer.
+   */
+  test('a favourite can be removed on a phone, and putting it back is one tap', async ({ page }) => {
+    await openFreshSandbox(page)
+
+    await page.getByPlaceholder('What are you working on?').fill('a favourite')
+    await page.locator('main').getByRole('button', { name: 'Toggle favorite' }).click()
+    await page.waitForTimeout(500)
+
+    const stored = (key: string) =>
+      page.evaluate((k) => JSON.parse(window.localStorage.getItem(k)!).favorites.length, key)
+    expect(await stored(STORAGE_KEY)).toBe(1)
+
+    // a real click, which Playwright refuses on a hidden or covered element
+    await page.getByRole('button', { name: /Remove .* from favorites/ }).click()
+    await page.waitForTimeout(500)
+    expect(await stored(STORAGE_KEY)).toBe(0)
+
+    await page.getByRole('button', { name: /Undo/ }).click()
+    await page.waitForTimeout(500)
+    expect(await stored(STORAGE_KEY), 'undo did not put it back').toBe(1)
+  })
+
   test('primary controls are large enough to tap', async ({ page }) => {
     await openFreshSandbox(page)
 

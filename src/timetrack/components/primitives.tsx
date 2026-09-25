@@ -519,23 +519,35 @@ export function ToggleRow({
         <p className="text-sm">{label}</p>
         {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       </div>
+      {/*
+        * THE TARGET IS 44px; THE SWITCH STILL LOOKS LIKE A SWITCH.
+        *
+        * The button used to BE the track — 44 wide but 24 tall, so every toggle
+        * in Settings was a control you had to aim at vertically. Making the
+        * track 44px tall would just be a fat pill, so the button is the target
+        * and the track is drawn inside it.
+        */}
       <button
         type="button"
         role="switch"
         aria-checked={checked}
         aria-label={label}
         onClick={() => onChange(!checked)}
-        className={cn(
-          "relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors sm:h-5 sm:w-9",
-          checked ? "bg-primary" : "bg-border",
-        )}
+        className="flex size-11 shrink-0 items-center justify-center sm:mt-0.5 sm:h-5 sm:w-9"
       >
         <span
           className={cn(
-            "absolute top-0.5 size-5 rounded-full bg-background transition-transform sm:size-4",
-            checked ? "translate-x-[22px] sm:translate-x-[18px]" : "translate-x-0.5",
+            "relative block h-6 w-11 rounded-full transition-colors sm:h-5 sm:w-9",
+            checked ? "bg-primary" : "bg-border",
           )}
-        />
+        >
+          <span
+            className={cn(
+              "absolute top-0.5 size-5 rounded-full bg-background transition-transform sm:size-4",
+              checked ? "translate-x-[22px] sm:translate-x-[18px]" : "translate-x-0.5",
+            )}
+          />
+        </span>
       </button>
     </div>
   )
