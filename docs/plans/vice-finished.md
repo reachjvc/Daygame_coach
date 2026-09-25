@@ -500,6 +500,22 @@ One failure in six is a far weaker signal than five in six and needs its own
 sitting with the same method — make it happen on purpose, do not run it until it
 goes quiet. Left open deliberately rather than closed on a good streak.
 
+**SAT WITH IT ON 2026-09-25 AND COULD NOT SUMMON IT.** Ten full runs since the
+`seed()` fix: nine clean, one failure. That is roughly one in ten rather than
+one in six, and four deliberate attempts to reproduce it produced 28/28 every
+time. I am not calling it fixed — running something until it goes quiet is the
+exact move this plan says not to make, and the difference between "gone" and
+"got luckier" is invisible from a streak.
+
+What changed instead is that **the next occurrence will name its own cause.**
+`:606` failed with "90 days not found", which is the symptom; the cause, if the
+hypothesis is right, is that a run this test never created is live on the
+account, so "Longest run" is somebody else's number. The test now asks the
+account what it holds at the moment the screen is wrong and fails with the live
+rows printed and the two readings spelled out — a previous test's rows surviving
+`seed()`, or a genuine sync failure. That is this module's own lesson: ask the
+database what it holds at the moment the screen claims saved.
+
 That matters beyond this file: `mode: "serial"` meant one failure aborted 4 to
 21 tests, so CI has been calling this suite red or green at random for as long
 as it has existed, next to the four days of genuine red from M0.

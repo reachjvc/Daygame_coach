@@ -740,7 +740,45 @@ test.describe("the Black Box", () => {
     await fresh.locator('[data-sync]:not([data-sync="unknown"])').waitFor({ timeout: 20000 })
 
     await expect(fresh.getByText("Longest run")).toBeVisible({ timeout: 20000 })
-    await expect(fresh.getByText("90 days").first()).toBeVisible()
+
+    /**
+     * WHEN THIS FAILS, SAY WHAT THE ACCOUNT ACTUALLY HELD.
+     *
+     * It failed about one run in six and the message was "90 days not found",
+     * which is the symptom and says nothing about the cause. The cause is
+     * always the same shape — a run this test did not put there is live on the
+     * account, so "Longest run" is somebody else's number — and the only way to
+     * tell that from a genuine sync failure is to ask the account at the moment
+     * the screen is wrong. This module's own history says it in as many words:
+     * ask the database what it holds at the moment the screen claims saved.
+     */
+    const found = await fresh.getByText("90 days").first().isVisible().catch(() => false)
+    if (!found) {
+      const held = await fresh.evaluate(async () => {
+        const got = await fetch("/api/black-box").then((r) => r.json()).catch(() => null)
+        const rows = got?.rows as
+          | { attempts: { id: string; started_on: string; ended_on: string | null; deleted_at: string | null; updated_at: string }[] }
+          | undefined
+        return (rows?.attempts ?? []).map((a) => ({
+          id: a.id.slice(0, 8),
+          from: a.started_on?.slice(0, 10),
+          to: a.ended_on?.slice(0, 10) ?? "live",
+          deleted: a.deleted_at !== null,
+          updated: a.updated_at,
+        }))
+      })
+      const live = held.filter((a) => !a.deleted)
+      const shown = await fresh.locator("[data-sync]").innerText().catch(() => "")
+      throw new Error(
+        `The second device did not show the 90-day run.\n` +
+          `LIVE rows on the account right now (${live.length}):\n` +
+          `${JSON.stringify(live, null, 2)}\n` +
+          `Tombstoned: ${held.length - live.length}. If any live row is not the ` +
+          `2024-01-02..2024-03-31 one this test created, a previous test's rows ` +
+          `survived seed()'s tombstones and this is that race, not a sync failure.\n` +
+          `Screen said: ${shown.slice(0, 200)}`,
+      )
+    }
     await other.close()
   })
 
