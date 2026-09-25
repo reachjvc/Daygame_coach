@@ -26,6 +26,8 @@
 import { describe, test, expect, beforeEach } from "vitest"
 import { getClient, truncateAllTables, createTestUser } from "../setup"
 import { planToRows, rowsToPlan } from "@/src/goals/lifePlanMapper"
+import { dayRowsToRecord, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
+import type { DayRows } from "@/src/db/lifePlanDayTypes"
 import { fullPlan, withoutDays } from "@/tests/support/fullLifePlan"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 
@@ -209,5 +211,152 @@ describe("a plan that goes through a real Postgres comes back the same plan", ()
 
     expect(first.length, "the fixture has nodes, or this passes on an empty table").toBeGreaterThan(5)
     expect(second, "a re-mint here takes every tick and every journal line with it").toEqual(first)
+  })
+})
+
+
+/**
+ * A YEAR OF DAYS, which is the other half of Check 1's wording.
+ *
+ * The plan half above drives `save_life_plan`, the real write. **The day half
+ * cannot be driven the same way and this is the honest limitation of this
+ * block:** `saveDay` is a set of supabase-js upserts rather than a database
+ * function, so there is nothing in Postgres to call. The upserts below mirror
+ * it — same tables, same conflict targets — and a mirror is a second copy of
+ * the write that can drift from the first. What it therefore proves is narrower
+ * than the plan half, and worth stating rather than implying:
+ *
+ *   - the SCHEMA accepts a real year: 365 days, 4,380 ratings, 1,095 ticks and
+ *     730 journal answers, with every constraint, unique key and length cap in
+ *     force. Nothing here is a fixture small enough to pass by accident.
+ *   - `dayRowsToRecord` rebuilds the exact four maps from rows that came out of
+ *     Postgres rather than out of a literal.
+ *   - and the day rows and the plan rows coexist, which is the relationship the
+ *     whole 25-table design exists to keep safe.
+ *
+ * What it does NOT prove is the paging in `readDayRows`, which lives in the
+ * supabase-js layer above: at this volume the ratings table alone is past a
+ * default page, and only a real PostgREST read can say whether the second page
+ * arrives. That gap is `readDayRows`'s, not the schema's, and it is still open.
+ */
+const YEAR_FROM = "2025-01-01"
+const DAYS_IN_A_YEAR = 365
+
+/** Dates walked as plain strings, so no clock and no timezone is involved. */
+function everyDay(from: string, n: number): string[] {
+  const [y, m, d] = from.split("-").map(Number)
+  const out: string[] = []
+  for (let i = 0; i < n; i += 1) {
+    const at = new Date(Date.UTC(y, m - 1, d + i))
+    out.push(at.toISOString().slice(0, 10))
+  }
+  return out
+}
+
+describe("a year of days goes in and comes back the same year", () => {
+  beforeEach(async () => {
+    await truncateAllTables()
+  })
+
+  test("365 days of ratings, ticks, notes and journal survive the schema", async () => {
+    const userId = await createTestUser()
+    const db = await getClient()
+    const planId = (await db.query(
+      `INSERT INTO life_plans (user_id) VALUES ($1) RETURNING id`, [userId])).rows[0].id as string
+
+    // The plan first, because every day row points into it.
+    const plan = fullPlan()
+    const rows = planToRows(plan, context(planId, userId))
+    await db.query(`SELECT set_config('test.uid', $1, true)`, [userId])
+    await db.query(`SELECT save_life_plan($1::jsonb, $2)`, [JSON.stringify(rows), 0])
+
+    const localIds = await db.query(
+      `SELECT local_id, id, kind FROM life_plan_nodes WHERE plan_id = $1`, [planId])
+    const idFor = new Map<string, string>(localIds.rows.map((r) => [r.local_id, r.id]))
+    const areas = localIds.rows.filter((r) => r.kind === "area").map((r) => r.local_id)
+    const steps = localIds.rows.filter((r) => r.kind === "routine_step").map((r) => r.local_id)
+    expect(areas.length, "twelve areas, or the rating volume below is not real").toBe(12)
+    expect(steps.length, "the fixture's steps, or the ticks below are not real").toBeGreaterThan(2)
+
+    /* A real year rather than a token one: every area rated every day, every
+       step ticked every day, a line about the day, and two journal answers. */
+    const record: DayRecord = { daily: {}, logged: {}, notes: {}, journal: {} }
+    for (const [i, date] of everyDay(YEAR_FROM, DAYS_IN_A_YEAR).entries()) {
+      record.daily[date] = Object.fromEntries(areas.map((a, j) => [a, (i + j) % 11]))
+      record.logged[date] = [...steps]
+      record.notes[date] = `Day ${i + 1}: what actually happened.`
+      record.journal[date] = { [steps[0]]: `Grateful for day ${i + 1}.`, [steps[1]]: `Tomorrow: day ${i + 2}.` }
+    }
+
+    /* `recordToPatches` is the real function the client sends through. The SQL
+       under it mirrors `saveDay`; see this block's header for why that is a
+       weaker claim than the plan half's. */
+    for (const patch of recordToPatches(record)) {
+      const day = await db.query(
+        `INSERT INTO life_plan_days (user_id, plan_id, on_date, note) VALUES ($1, $2, $3, $4)
+         ON CONFLICT (plan_id, on_date) DO UPDATE SET note = EXCLUDED.note RETURNING id`,
+        [userId, planId, patch.date, patch.note ?? ""])
+      const dayId = day.rows[0].id as string
+
+      for (const [local, rating] of Object.entries(patch.ratings ?? {})) {
+        await db.query(
+          `INSERT INTO life_plan_day_ratings (user_id, day_id, area_id, rating) VALUES ($1, $2, $3, $4)
+           ON CONFLICT (day_id, area_id) DO UPDATE SET rating = EXCLUDED.rating`,
+          [userId, dayId, idFor.get(local), rating])
+      }
+      for (const local of Object.keys(patch.ticks ?? {})) {
+        await db.query(
+          `INSERT INTO life_plan_day_ticks (user_id, day_id, node_id) VALUES ($1, $2, $3)
+           ON CONFLICT (day_id, node_id) DO NOTHING`,
+          [userId, dayId, idFor.get(local)])
+      }
+      for (const [local, body] of Object.entries(patch.journal ?? {})) {
+        await db.query(
+          `INSERT INTO life_plan_day_journal (user_id, day_id, local_id, asked, body) VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT (day_id, local_id) DO UPDATE SET body = EXCLUDED.body, asked = EXCLUDED.asked`,
+          [userId, dayId, local, "What are you grateful for?", body])
+      }
+    }
+
+    // The volume is asserted, not assumed: a year that quietly wrote 3 days
+    // would pass every comparison below.
+    const counts = await db.query(
+      `SELECT (SELECT count(*) FROM life_plan_days WHERE plan_id = $1) AS days,
+              (SELECT count(*) FROM life_plan_day_ratings WHERE user_id = $2) AS ratings,
+              (SELECT count(*) FROM life_plan_day_ticks WHERE user_id = $2) AS ticks,
+              (SELECT count(*) FROM life_plan_day_journal WHERE user_id = $2) AS journal`,
+      [planId, userId])
+    expect(Number(counts.rows[0].days)).toBe(DAYS_IN_A_YEAR)
+    expect(Number(counts.rows[0].ratings)).toBe(DAYS_IN_A_YEAR * 12)
+    expect(Number(counts.rows[0].journal)).toBe(DAYS_IN_A_YEAR * 2)
+
+    /* Read back in the SAME order the repo orders by, because `dayRowsToRecord`
+       walks the arrays and a different order is a different answer for
+       `logged`. */
+    const jsonRows = async (sql: string, params: unknown[]) =>
+      (await db.query(sql, params)).rows.map((r) => r.row)
+    const back: DayRows = {
+      days: await jsonRows(
+        `SELECT to_jsonb(t) AS row FROM life_plan_days t WHERE plan_id = $1 ORDER BY on_date, id`, [planId]) as DayRows["days"],
+      ratings: await jsonRows(
+        `SELECT to_jsonb(t) AS row FROM life_plan_day_ratings t WHERE user_id = $1 ORDER BY day_id, area_id`, [userId]) as DayRows["ratings"],
+      ticks: await jsonRows(
+        `SELECT to_jsonb(t) AS row FROM life_plan_day_ticks t WHERE user_id = $1 ORDER BY day_id, node_id`, [userId]) as DayRows["ticks"],
+      journal: await jsonRows(
+        `SELECT to_jsonb(t) AS row FROM life_plan_day_journal t WHERE user_id = $1 ORDER BY day_id, local_id`, [userId]) as DayRows["journal"],
+    }
+
+    const localIdFor = new Map([...idFor].map(([local, id]) => [id, local]))
+    const got = dayRowsToRecord(back, localIdFor)
+
+    expect(got.notes, "every line about a day").toEqual(record.notes)
+    expect(got.daily, "every rating on every area on every day").toEqual(record.daily)
+    expect(got.journal, "every journal answer, under the question it answered").toEqual(record.journal)
+    /* `logged` comes back in the order the rows were read, so it is compared as
+       a set per day — the plan treats it as one and `stepTickedByHand` asks
+       `includes`. */
+    for (const date of Object.keys(record.logged)) {
+      expect([...(got.logged[date] ?? [])].sort(), `the ticks on ${date}`).toEqual([...record.logged[date]].sort())
+    }
   })
 })
