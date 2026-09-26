@@ -154,12 +154,29 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   /**
-   * The rest clock, restored from storage on the first render.
+   * The rest clock, restored from storage AFTER MOUNT — never during render.
    *
-   * Lazily, so a reload has its countdown on the first paint rather than
-   * flashing an empty bar and filling it in.
+   * It used to be a lazy `useState(() => readRest(...))`, "so a reload has its
+   * countdown on the first paint". That is not a thing a server render can do:
+   * `localStorage` does not exist there, so the server printed no rest bar and
+   * the browser's first render printed one, and React threw the whole live
+   * screen away and rebuilt it. Caught by opening the page on 2026-09-26 —
+   * tick a set, reload while the clock is running — with the component stack
+   * naming `RestBar` and a `+` beside the element only the client had.
+   *
+   * It is the reload this feature exists for, too: the clock is stored because
+   * a phone locks itself mid-rest and Safari reloads the tab when you come
+   * back. So the one path that most wanted the clock was the one that broke the
+   * screen.
+   *
+   * The cost of the effect is that the bar appears a frame after hydration
+   * instead of in the server's HTML. The countdown is unaffected — it is
+   * measured from a stored instant, not counted up from mount.
    */
-  const [rest, setRestState] = useState<RestClock | null>(() => readRest(initial?.id ?? null))
+  const [rest, setRestState] = useState<RestClock | null>(null)
+  useEffect(() => {
+    setRestState(readRest(initial?.id ?? null))
+  }, [initial?.id])
   const flushing = useRef(false)
   /**
    * Writes on the wire right now. The ref is the truth, because `finish` has to

@@ -53,8 +53,19 @@ function fakeSupabase(opts: FakeOptions) {
 
   const table = (name: string) => {
     let payload: Record<string, unknown> | null = null
+    /**
+     * WHICH read this is. The repo makes two against `workout_logs` and they
+     * are not interchangeable: the live read takes `*, workout_sets(*)` and
+     * filters on `ended_at IS NULL`, and the question asked after a refusal
+     * takes `ended_at` alone with no such filter. A fake that answered both the
+     * same way modelled a DELETED workout while calling itself a finished one.
+     */
+    let selected = ""
     const chain: Record<string, unknown> = {
-      select: () => chain,
+      select: (cols?: string) => {
+        selected = cols ?? ""
+        return chain
+      },
       update: (row: Record<string, unknown>) => {
         payload = row
         return chain
@@ -78,8 +89,15 @@ function fakeSupabase(opts: FakeOptions) {
     function resolveRead() {
       if (name === "profiles") return Promise.resolve({ data: { weight_unit: "kg" }, error: null })
       if (name !== "workout_logs") return Promise.resolve({ data: null, error: null })
-      // A finished workout is not an error: there is simply no open row.
-      if (opts.open === false) return Promise.resolve({ data: null, error: null })
+      // A finished workout is not an error: there is simply no open row. The
+      // row itself is still there, with an end time on it, which is how the
+      // repo tells "finished" from "thrown away".
+      if (opts.open === false) {
+        return Promise.resolve({
+          data: selected === "ended_at" ? { ended_at: "2026-09-18T08:30:00Z" } : null,
+          error: null,
+        })
+      }
       return Promise.resolve({
         data: {
           id: WORKOUT,
@@ -170,10 +188,12 @@ describe("updateSet", () => {
     expect(fake.updates).toEqual([])
   })
 
-  test("is refused once the workout is finished", async () => {
+  test("is refused once the workout is finished, and says it was finished", async () => {
+    // "Finished somewhere else" and "thrown away somewhere else" are different
+    // news, and this used to assert the one sentence that covered neither.
     const { repo } = await repoWith({ sets: [setRow()], open: false })
     await expect(repo.updateSet(USER, WORKOUT, "s1", { kind: "warmup" })).rejects.toThrow(
-      /not open any more/i
+      /already finished somewhere else/i
     )
   })
 

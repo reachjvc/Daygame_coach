@@ -236,7 +236,24 @@ export function SetRow({
           setDragX((x) => (x <= -SWIPE_REVEAL_PX ? -SWIPE_MAX_PX : 0))
         }}
         style={dragX !== 0 ? { transform: `translateX(${dragX}px)` } : undefined}
-        className={`relative grid grid-cols-[2.75rem_4.5rem_1fr_1fr_2.75rem] items-center gap-2 rounded-md px-1 py-1 transition-transform ${
+        /**
+         * A SIXTH COLUMN FROM `sm:` UP, WHEN THERE IS A DELETE BUTTON.
+         *
+         * It used to have no column: it was `absolute right-1 top-1`, 44px, at
+         * the row's right edge — which is exactly where the ✓ is, because the ✓
+         * is the last grid column and also 44px. `hidden sm:flex` meant it was
+         * display:none on a phone and display:flex on anything wider, and
+         * `opacity-0` hides a thing from the eye but not from the pointer.
+         *
+         * So on every screen 640px and over, the ✓ could not be clicked. The
+         * click landed on Delete. Found on 2026-09-26 by opening the live
+         * screen in a 1280px window and pressing the tick, which no test had
+         * ever done: `PHONE` is 390px and every spec on this screen calls
+         * `setViewportSize(PHONE)` first.
+         */
+        className={`relative grid grid-cols-[2.75rem_4.5rem_1fr_1fr_2.75rem] ${
+          onDelete ? "sm:grid-cols-[2.75rem_4.5rem_1fr_1fr_2.75rem_2.75rem]" : ""
+        } items-center gap-2 rounded-md px-1 py-1 transition-transform ${
           ticked ? DONE.row : "bg-card"
         }`}
       >
@@ -347,13 +364,13 @@ export function SetRow({
       </button>
 
       {boundsMessage && !ticked && (
-        <span className="col-span-5 text-xs text-amber-500">{boundsMessage}</span>
+        <span className={`col-span-5 ${onDelete ? "sm:col-span-6" : ""} text-xs text-amber-500`}>{boundsMessage}</span>
       )}
 
       {saveMessage && (
         <span
           data-testid={`set-save-state-${label}`}
-          className={`col-span-5 text-xs ${saveState === "queued" ? "text-amber-500" : "text-muted-foreground"}`}
+          className={`col-span-5 ${onDelete ? "sm:col-span-6" : ""} text-xs ${saveState === "queued" ? "text-amber-500" : "text-muted-foreground"}`}
         >
           {saveMessage}
         </span>
@@ -364,6 +381,11 @@ export function SetRow({
           undiscoverable and a desktop cannot perform one at all; this sits at
           the row's edge and appears on hover. Both doors, and the set menu's
           own row, call the same thing.
+
+          IN THE GRID, NOT OVER IT. It was `absolute right-1 top-1`, which put
+          it on top of the ✓ on every screen from 640px up — and `opacity-0`
+          hides a thing from the eye, not from the pointer, so the ✓ took no
+          clicks there at all. It has its own column now; see the grid above.
         */}
         {onDelete && (
           <button

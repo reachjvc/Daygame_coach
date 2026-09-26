@@ -88,6 +88,7 @@ export default defineConfig({
         // each wipes it clean, so in parallel they delete each other's data.
         /programs-live-workout\.spec\.ts/,
         /programs-live-menus\.spec\.ts/,
+        /programs-live-desktop\.spec\.ts/,
         /programs-drafts\.spec\.ts/,
         /programs-history-progress\.spec\.ts/,
         // Measures the rendered boxes on the shared account's program.
@@ -214,6 +215,12 @@ export default defineConfig({
         // training account clean, so they cannot run beside each other — and
         // because a broken menu should not report itself as a broken tick.
         /programs-live-menus\.spec\.ts/,
+        // The same screen in a WINDOW. Every other file here starts with
+        // `setViewportSize(PHONE)`, which is right — a workout is logged on a
+        // phone — and meant that until 2026-09-26 nothing had ever pressed the
+        // ✓ at a width where `sm:` applies, where a delete button sat on top of
+        // it and took the click.
+        /programs-live-desktop\.spec\.ts/,
         /programs-drafts\.spec\.ts/,
         /programs-history-progress\.spec\.ts/,
         /programs-one-language\.spec\.ts/,

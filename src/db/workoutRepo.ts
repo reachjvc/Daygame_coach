@@ -406,13 +406,28 @@ export async function getLiveWorkout(userId: string): Promise<LiveWorkout | null
   return toLive(row, await unitFor(userId, row.enrollment_id))
 }
 
-/** The workout must be this person's, and must still be running. */
+/**
+ * The workout must be this person's, and must still be running.
+ *
+ * AND WHEN IT IS NOT, THIS IS THE COMMON CASE, not the race below it. The check
+ * happens before every write, so a workout discarded or finished on another
+ * device is usually noticed HERE — the write-time refusal only fires in the
+ * fraction of a second between this read and that write.
+ *
+ * It therefore has to answer with the same class, or the screen clears itself
+ * for the rare case and keeps drawing a dead workout for the ordinary one. It
+ * threw a bare `Error` until 2026-09-26, so it did exactly that: the phone
+ * printed "That set could not be removed" and stayed, set after set.
+ */
 async function requireLive(userId: string, workoutId: string): Promise<LiveWorkout> {
   const live = await getLiveWorkout(userId)
-  if (!live || live.id !== workoutId) {
-    throw new Error("That workout is not open any more — reload to see where it got to.")
-  }
-  return live
+  if (live && live.id === workoutId) return live
+  // Which of the two, asked rather than assumed — "finished on the laptop" and
+  // "thrown away on the laptop" are not the same news.
+  const fate = await fateOf(userId, workoutId)
+  if (fate === "gone") throw new WorkoutGone("discarded")
+  if (fate === "finished") throw new WorkoutGone("finished")
+  throw new Error("That workout is not open any more — reload to see where it got to.")
 }
 
 /**
