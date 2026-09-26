@@ -310,8 +310,38 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
           )
         }
         const adoptedState = settled.state
-        awaitingState.current = adoptedState
-        replaceState(adoptedState)
+
+        /**
+         * IF THE SERVER HAS NOTHING YOU DO NOT ALREADY HAVE, DO NOT REDRAW.
+         *
+         * This used to replace the whole workspace unconditionally, which is the
+         * common case done the expensive way: the usual outcome of opening the
+         * tracker is that this device is already up to date. The replacement
+         * swapped every object in the state, so every screen re-rendered and the
+         * entry list was rebuilt from scratch — after first paint, so what you
+         * were looking at flickered and settled a beat later. On a phone over
+         * mobile data that beat is long enough to see, and it is the plainest
+         * reading of "something weird with how it opens".
+         *
+         * Compared with `diffRows`, which is this slice's own definition of
+         * whether two workspaces differ, rather than a new one invented here.
+         * When there IS a difference the old path runs untouched: the server
+         * wins, because that is the rule the rest of this file is built on.
+         */
+        const localRows = stateToRows(latestState.current ?? state, userId.current)
+        const adoptedRows = stateToRows(adoptedState, userId.current)
+        const nothingNew =
+          diffRows(localRows, adoptedRows, new Date().toISOString()).count === 0
+
+        if (nothingNew) {
+          // The baseline is the round-tripped rows, not `body.rows`, for the same
+          // reason the change-watcher below uses them: a mapping quirk must not
+          // read as a local change on the very next tick.
+          serverRows.current = adoptedRows
+        } else {
+          awaitingState.current = adoptedState
+          replaceState(adoptedState)
+        }
         adopted.current = true
 
         if (sinceOpening.count > 0) {

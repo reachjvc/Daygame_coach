@@ -230,7 +230,27 @@ test.describe('time tracker on a phone', () => {
    */
   test('no visible control on any screen is too small to tap', async ({ page }) => {
     await openFreshSandbox(page)
+
+    /**
+     * THE STATES A ROW CAN BE IN, not just the plain one.
+     *
+     * The first version of this tracked a single entry, so it never saw the
+     * group-expand chip — which only exists on a grouped row and was 28px wide,
+     * on the only control that reaches the other entries in a group. A sweep
+     * that only visits the default state is a sweep with a blind spot, and this
+     * is the one it had.
+     */
     await trackEntry(page, 'a row to measure')
+    await trackEntry(page, 'a row to measure') // identical: the two collapse into a group
+
+    const expand = page.getByRole('button', { name: /Expand group/ })
+    await expect(expand, 'the fixture did not produce a grouped row').toBeVisible()
+    await expand.click()
+    await page.waitForTimeout(400)
+
+    // selection mode adds a checkbox column to every row
+    await page.locator('main').getByRole('button', { name: 'Select', exact: true }).first().click()
+    await page.waitForTimeout(400)
 
     const tooSmall = () =>
       page.evaluate(() => {

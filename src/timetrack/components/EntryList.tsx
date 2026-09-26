@@ -466,7 +466,7 @@ function EntryFields({
 
   /** phones: two compact lines; the row itself opens the detail sheet */
   const phoneRow = (
-    <div className={cn("flex items-center gap-1 px-3 py-2 sm:hidden", nested && "pl-7", running && "bg-primary/5")}>
+    <div className={cn("flex items-center gap-1 px-3 py-2 sm:hidden", nested && "pl-11", running && "bg-primary/5")}>
         {selectionMode && (
           <label className="flex size-11 shrink-0 items-center justify-center">
             <input type="checkbox" checked={checked} onChange={onCheck} aria-label="Select time entry" className="size-5" />
@@ -475,22 +475,27 @@ function EntryFields({
 
         {/* its own control, not part of the tappable row: tapping the row opens
             the lead entry's sheet, which left the other entries in a group
-            unreachable on a phone. The 28px column is what `pl-7` indents the
-            expanded children by, so both line up. */}
+            unreachable on a phone. Its column is what `pl-11` indents the
+            expanded children by, so both line up — change one and change both.
+
+            It was `w-7`: 28px wide, on the only control that opens the other
+            entries in a group. Under the 44px this slice sets as its floor, and
+            missed by the sweep for a reason worth knowing: the chip only exists
+            on a GROUPED row, and the sweep was tracking a single entry. */}
         {row?.grouped ? (
           <button
             type="button"
             onClick={onToggleExpand}
             aria-label={expanded ? "Collapse group" : "Expand group"}
             aria-expanded={expanded}
-            className="flex h-11 w-7 shrink-0 items-center justify-center"
+            className="flex size-11 shrink-0 items-center justify-center"
           >
             <span className="flex size-6 items-center justify-center rounded bg-primary/15 text-[11px] font-semibold text-primary">
               {row.entries.length}
             </span>
           </button>
         ) : (
-          !nested && state.user.groupSimilarEntries && <span className="w-7 shrink-0" />
+          !nested && state.user.groupSimilarEntries && <span className="w-11 shrink-0" />
         )}
 
         <div

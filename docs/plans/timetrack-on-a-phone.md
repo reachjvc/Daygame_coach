@@ -136,6 +136,58 @@ Two specs also needed updating for the five-tab bar: `"Not now" is not a one-way
 door` reached Settings through the bar, and the cross-device test hard-coded
 `user.json` instead of reading its own project's account.
 
+## THE LAST TWO, 2026-09-26
+
+The two things named as not-done at the end of the sweep are done.
+
+**Opening no longer redraws the workspace when there is nothing new.** Adoption
+replaced the whole state unconditionally, which is the common case handled the
+expensive way — the usual outcome of opening the tracker is that this device is
+already up to date. Every object in the state was swapped, so every screen
+re-rendered and the entry list was rebuilt *after* first paint, which is the
+settle you could see. It now compares with `diffRows` — this slice's own
+definition of whether two workspaces differ, not a new one — and skips the
+replacement when the answer is nothing. When there IS a difference the old path
+runs untouched: the server wins, which is the rule the rest of that file is
+built on.
+
+**`useTimetrackSync` had no direct test**, which is worth stating plainly: it is
+the most dangerous code in the slice, its comments record two bugs that reached
+real data, and the sync tests next door only cover the pure rules in
+`syncService`. It now has five, driving the hook with a stubbed server:
+`replaceState` is not called when nothing differs, is called when something does,
+nothing is queued for upload by a device already in step, and — the bug its own
+comment records — a timer started while the response is still in the air survives
+the answer.
+
+That last test took two attempts, and the first one passed while proving nothing.
+It created the timer in the same state the hook first saw, which makes it part of
+what the browser held when the page *opened*, and for that the server's copy is
+deliberately the winner. The real sequence needs the response held open while the
+timer is started, which is what it does now.
+
+**The group-expand chip was 28px** — the only control that reaches the other
+entries in a group — and the sweep had missed it, because the chip exists only on
+a grouped row and the sweep was tracking a single entry. The sweep now walks a
+grouped row, an expanded one and selection mode, and fails on the 28px chip when
+it is put back. The nested indent moved with it; they are the same column.
+
+**A test of mine was racy and my own change exposed it.** The product-route test
+measured the back control's box straight after the heading appeared.
+`boundingBox()` does not auto-wait — it returns null the instant the node it
+resolved is replaced — and the header re-renders when the sync status badge
+appears. The page in the failure snapshot was perfectly correct. It waits for the
+tracker to settle before measuring anything now, and the previously racy suite ran
+green three times in a row.
+
+**One Firefox run failed and I cannot say which test.** It aborted a serial
+describe at 8 of 17; the passing re-run wiped the artifact before I read it. Four
+consecutive clean Firefox runs since, 17 each. Recorded as unidentified rather
+than dismissed.
+
+Final state: 6070 unit, 19 on iPhone 14 and Pixel 7, 17 on desktop Safari and
+Firefox, 12 on each signed-in project, ratchets unchanged.
+
 ---
 
 # The human half

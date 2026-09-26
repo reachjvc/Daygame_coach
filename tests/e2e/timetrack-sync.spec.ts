@@ -125,6 +125,15 @@ test.describe('time is kept on the server, not just in one browser', () => {
     await page.goto('/dashboard/time', { waitUntil: 'domcontentloaded' })
     await page.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 30000 })
 
+    /**
+     * SETTLED FIRST, THEN MEASURED. The header re-renders when the sync
+     * resolves — the status badge appears — and `boundingBox()` does not
+     * auto-wait: it returns null the instant the node it resolved is gone. The
+     * first version of this measured straight after the heading and failed
+     * exactly there, with the page in the snapshot looking perfectly correct.
+     */
+    await expect(page.getByText('Saved', { exact: true })).toBeVisible({ timeout: 20000 })
+
     // the browser tab, which used to inherit the root's marketing title
     await expect.poll(() => page.title(), { timeout: 10000 }).toBe('Time')
 
@@ -132,8 +141,9 @@ test.describe('time is kept on the server, not just in one browser', () => {
     const back = page.locator('header a').first()
     await expect(back).toHaveAttribute('href', '/dashboard')
     await expect(back).toContainText('Dashboard')
-    const box = await back.boundingBox()
-    expect(box!.height).toBeGreaterThanOrEqual(36)
+    await expect
+      .poll(async () => (await back.boundingBox())?.height ?? 0, { timeout: 10000 })
+      .toBeGreaterThanOrEqual(36)
 
     // ONE bottom bar. The tracker draws its own six sections and the app's tab
     // bar is deliberately not mounted here; two stacked bars on a phone would
