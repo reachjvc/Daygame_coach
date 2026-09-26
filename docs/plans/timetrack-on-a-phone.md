@@ -106,6 +106,36 @@ another device can land inside the seconds a toast is up, and this slice has
 already had a bug where replacing state with an older copy sent deletions for
 rows that were never gone.
 
+## THE PRODUCT ROUTE, CHECKED AT LAST, 2026-09-26 — commit `42a55af9`
+
+Blocker 2 above is closed, and not the way it was written. Every browser test in
+this slice but one runs against `/test/toggl`; the same components, so everything
+that *differs* between the lab and the product was unverified — which is exactly
+where the "feels unfinished" complaints lived. I still cannot open
+`/dashboard/time` myself, so the assertions went where the session already is:
+the signed-in suite now checks, on the real route, that the tab says "Time", the
+way out points at `/dashboard` and says "Dashboard", there is exactly **one**
+bottom bar, and nothing visible admits to being a test page. Four inferences of
+mine are now facts that run in CI.
+
+**A hazard I caused and then diagnosed.** `timetrack-sync` and
+`timetrack-sync-phone` cannot run in one invocation locally. CI pins
+`workers: 1`; local runs do not, and together they fail two or three tests that
+**move between runs** — session expiry, deletion merge — none of which has
+anything to do with the race. That misdirection cost two rounds before I noticed
+it was mine.
+
+**Giving the phone project its own account did not fix it**, which is worth
+recording because it looked like the obvious answer. The failures survived, so the
+contention is the single `next dev` process both suites drive, not the rows they
+write. The account stays shared; the hazard is documented in
+`playwright.config.ts` where somebody is standing when they hit it, with the two
+commands to run instead.
+
+Two specs also needed updating for the five-tab bar: `"Not now" is not a one-way
+door` reached Settings through the bar, and the cross-device test hard-coded
+`user.json` instead of reading its own project's account.
+
 ---
 
 # The human half
@@ -310,7 +340,11 @@ Each attempted at least once; result recorded.
    owner on their actual phone**, or an accepted risk. The
    `toggl-iphone-safari` / `toggl-android` Playwright projects would still not
    have a real soft keyboard.
-2. **Watching `/dashboard/time` open while signed in** — *closed, not needed.*
+2. **Watching `/dashboard/time` open while signed in** — **CLOSED 2026-09-26, by
+   test rather than by eye.** The signed-in suite now asserts the product
+   route's own chrome; see the section above. *Original note (kept, because the
+   reasoning for closing it was wrong — the route's chrome DID need checking,
+   just not by me watching it):* closed, not needed.
    The owner answered that the signed-out shell is enough; the only untested
    difference is the server swapping the workspace after first paint, which is
    plain in `useTimetrackSync`. *Original note:* not possible from
