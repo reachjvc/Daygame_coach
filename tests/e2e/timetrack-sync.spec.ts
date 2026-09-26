@@ -126,13 +126,34 @@ test.describe('time is kept on the server, not just in one browser', () => {
     await page.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 30000 })
 
     /**
-     * SETTLED FIRST, THEN MEASURED. The header re-renders when the sync
-     * resolves — the status badge appears — and `boundingBox()` does not
-     * auto-wait: it returns null the instant the node it resolved is gone. The
-     * first version of this measured straight after the heading and failed
-     * exactly there, with the page in the snapshot looking perfectly correct.
+     * SETTLE, THEN STOP ANYTHING RUNNING, THEN MEASURE — in that order, and the
+     * order is the whole lesson of three failed versions of this test.
+     *
+     * This suite shares one account, and the tab title is the running clock
+     * while a timer is going. Version one asserted the title was "Time" and
+     * passed for a day, then failed with "5:38:36 · tracked on the real page" —
+     * a timer some other run had left going. Version two stopped the timer
+     * first, and still failed: a timer running on the ACCOUNT is only on screen
+     * once the server has answered, so there was nothing to stop yet.
+     *
+     * A test that depends on ambient shared state passes on whatever state it
+     * happens to find.
      */
     await expect(page.getByText('Saved', { exact: true })).toBeVisible({ timeout: 20000 })
+
+    for (const stop of [
+      // which of these exists depends where the tracker reopened: "Stop timer"
+      // is the timer card's button, "Stop the running timer" is the header pill
+      // on every other screen
+      page.locator('main').getByRole('button', { name: 'Stop timer' }),
+      page.locator('header').getByRole('button', { name: 'Stop the running timer' }),
+    ]) {
+      if (await stop.isVisible().catch(() => false)) {
+        await stop.click()
+        await page.waitForTimeout(1200)
+        break
+      }
+    }
 
     // the browser tab, which used to inherit the root's marketing title
     await expect.poll(() => page.title(), { timeout: 10000 }).toBe('Time')

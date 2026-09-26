@@ -323,7 +323,7 @@ export function TimerBar({
           </span>
           {suggestionProject && <ColorDot color={suggestionProject.color} />}
           <span>{suggestionProject?.name ?? "no project"}</span>
-          <Button size="sm" variant="ghost" className="h-6 px-2" onClick={() => edit(applyAutotracker(draft, suggestion))}>
+          <Button size="sm" variant="ghost" className="h-11 px-2 sm:h-6" onClick={() => edit(applyAutotracker(draft, suggestion))}>
             Apply
           </Button>
         </div>

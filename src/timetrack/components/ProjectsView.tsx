@@ -407,9 +407,19 @@ function ProjectDialog({
                 type="button"
                 onClick={() => setDraft({ ...draft, color })}
                 aria-label={`Color ${color}`}
-                className={cn("size-6 rounded-full border-2", draft.color === color ? "border-foreground" : "border-transparent")}
-                style={{ backgroundColor: color }}
-              />
+                /* The swatch stays 24px; the button around it is 44. Fifteen of
+                   these at 44px would be a 660px palette, and a 24px circle is
+                   the right picture — it was just also the whole target. */
+                className="flex size-11 items-center justify-center rounded-full sm:size-6"
+              >
+                <span
+                  className={cn(
+                    "block size-6 rounded-full border-2",
+                    draft.color === color ? "border-foreground" : "border-transparent",
+                  )}
+                  style={{ backgroundColor: color }}
+                />
+              </button>
             ))}
           </div>
         </Field>

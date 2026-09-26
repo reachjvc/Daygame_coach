@@ -556,7 +556,9 @@ function EntryFields({
           <button
             type="button"
             onClick={onToggleExpand}
-            className="flex size-6 items-center justify-center rounded bg-primary/15 text-[11px] font-semibold text-primary"
+            /* `size-11` never applies: this row is `hidden sm:grid`. Stated
+               anyway so the source scan needs no entry excusing it. */
+            className="flex size-11 items-center justify-center rounded bg-primary/15 text-[11px] font-semibold text-primary sm:size-6"
             aria-label={expanded ? "Collapse group" : "Expand group"}
           >
             {row.entries.length}
@@ -859,17 +861,17 @@ function BulkEditBar({
         onChange={(projectId, taskId) => apply({ projectId, taskId })}
       />
       <TagPicker state={state} tagIds={[]} onChange={(tagIds) => apply({ addTagIds: tagIds })} />
-      <Button size="sm" variant="ghost" className="h-7" onClick={() => apply({ billable: true })}>
+      <Button size="sm" variant="ghost" className="h-11 sm:h-7" onClick={() => apply({ billable: true })}>
         Mark billable
       </Button>
-      <Button size="sm" variant="ghost" className="h-7" onClick={() => apply({ billable: false })}>
+      <Button size="sm" variant="ghost" className="h-11 sm:h-7" onClick={() => apply({ billable: false })}>
         Mark non-billable
       </Button>
       <div className="ml-auto flex items-center gap-2">
-        <Button size="sm" variant="destructive" className="h-7" onClick={onDelete}>
+        <Button size="sm" variant="destructive" className="h-11 sm:h-7" onClick={onDelete}>
           <IconDelete className="size-3.5" /> Delete
         </Button>
-        <Button size="sm" variant="ghost" className="h-7" onClick={onClear}>
+        <Button size="sm" variant="ghost" className="h-11 sm:h-7" onClick={onClear}>
           Clear
         </Button>
       </div>

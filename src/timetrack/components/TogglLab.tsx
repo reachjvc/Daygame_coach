@@ -730,7 +730,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-7"
+                className="h-11 sm:h-7"
                 onClick={() => {
                   toast.undo?.()
                   dismissToast(toast.id)

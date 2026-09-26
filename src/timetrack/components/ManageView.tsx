@@ -130,7 +130,7 @@ function ClientsPanel({
                 <Input
                   value={client.name}
                   onChange={(event) => setState((current) => updateClient(current, client.id, { name: event.target.value }))}
-                  className={cn("h-9 w-full sm:h-8 sm:w-[220px]", client.archived && "opacity-60")}
+                  className={cn("h-11 w-full sm:h-8 sm:w-[220px]", client.archived && "opacity-60")}
                 />
                 <span className="text-xs text-muted-foreground">
                   {projectIds.length} project{projectIds.length === 1 ? "" : "s"} · {formatDuration(tracked, state.user.durationFormat)} tracked

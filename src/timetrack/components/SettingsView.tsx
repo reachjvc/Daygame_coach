@@ -538,7 +538,7 @@ function AutomationPanel({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-7"
+                    className="h-11 sm:h-7"
                     disabled={block.converted}
                     onClick={() => {
                       const result = createManualEntry(
