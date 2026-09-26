@@ -10,8 +10,8 @@ cannot grant access. Price every recommendation for that stage.
 
 ## The five rules
 
-The end-of-turn checklist is `docs/known-failures.md`; a hook hands it to you
-whenever a turn changed something, so it is not repeated here.
+End-of-turn checklist: `docs/known-failures.md`, handed to you by a hook
+whenever a turn changed something.
 
 1. **Check the thing itself, never a stand-in.** Read output in full, the way the
    user will — never from a doc, a comment or a summary of it.
@@ -50,8 +50,8 @@ memorising it. A cited `docs/` path not on disk is expected: 482 were deleted
 `npm run dev` (localhost:3000) and `npm run test:e2e`. A Stop hook runs `npm test`
 for you and blocks on a failure.
 
-**Commit and push your own work without being asked.** Stage named paths —
-this checkout is shared.
+**Commit and push your own work without being asked.** `git commit --only <paths>`
+— a bare commit takes a peer's staged work too.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
