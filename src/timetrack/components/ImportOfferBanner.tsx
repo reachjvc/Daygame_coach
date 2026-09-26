@@ -117,7 +117,7 @@ export function ImportOfferBanner({
                 <ul>
                   {items.map((item) => (
                     <li key={item.id}>
-                      <label className="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-secondary/30">
+                      <label className="flex min-h-11 cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-secondary/30 sm:min-h-0">
                         <input
                           type="checkbox"
                           className="size-4 shrink-0"

@@ -343,6 +343,19 @@ test.describe('time tracker on a phone', () => {
     await page.waitForTimeout(500)
     const manual = await tooSmall(TAPPABLE)
     expect(manual, `manual mode has controls under 44px: ${JSON.stringify(manual)}`).toEqual([])
+
+    /**
+     * AND THE MODALS, which are screens this never opened. Looking at the entry
+     * sheet by eye found a 16px-tall checkbox row and a sync badge that had
+     * become 24px wide — neither on any screen the loop above visits, because a
+     * sheet is a state you have to enter, not a place you navigate to.
+     */
+    await page.locator('main').getByRole('button', { name: 'Toggle timer or manual mode' }).click()
+    await page.waitForTimeout(400)
+    await page.locator('main li div[role="button"]').first().click()
+    await expect(page.getByText('Time entry details')).toBeVisible()
+    const sheet = await tooSmall(TAPPABLE)
+    expect(sheet, `the entry sheet has controls under 44px: ${JSON.stringify(sheet)}`).toEqual([])
   })
 
   /**

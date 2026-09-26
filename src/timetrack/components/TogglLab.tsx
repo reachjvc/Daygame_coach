@@ -800,7 +800,7 @@ function SyncBadge({
    * something (still sending, no connection, signed out, not saved) keeps its
    * words at every width, because that is the moment the words matter.
    */
-  const settled = status === "synced"
+  const settled = status === "synced" || status === "local-only"
 
   return (
     <button
@@ -814,7 +814,9 @@ function SyncBadge({
         // 27px tall until this was changed, on a control whose whole point is
         // being tappable in the one state that matters: "Not saved. Tap to try
         // again." The header has 57px to give, so this costs nothing.
-        "flex min-h-11 min-w-0 shrink items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] sm:min-h-0",
+        // min-w-11 as well as min-h-11: in its settled state this is a bare dot,
+        // and a dot you can still tap to retry is 24px wide without it
+        "flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-full border px-2 py-1 text-[11px] sm:min-h-0 sm:min-w-0",
         tone,
         settled && "border-transparent sm:border-border",
       )}
@@ -831,7 +833,11 @@ function SyncBadge({
       />
       {/* the word is always there for a screen reader; on a phone only the
           states that need attention spend space on it */}
-      <span className={cn("truncate", settled && "sr-only sm:not-sr-only")}>{label[status]}</span>
+      {/* No `truncate`. A badge cut to "This d…" tells you less than its dot
+          does, and this is the control whose whole job is saying where your work
+          is. When space runs out it is the BACK LABEL that gives way — see the
+          header, which is `min-w-0` for exactly that. */}
+      <span className={cn(settled && "sr-only sm:not-sr-only")}>{label[status]}</span>
     </button>
   )
 }

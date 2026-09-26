@@ -419,7 +419,7 @@ function FilterControls({
         >
           {() => (
             <div className="space-y-2 p-3 text-sm">
-              <label className="flex items-center gap-2">
+              <label className="flex min-h-11 items-center gap-2 sm:min-h-0">
                 <input
                   type="checkbox"
                   checked={config.rounding.enabled}

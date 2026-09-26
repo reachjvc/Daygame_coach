@@ -999,7 +999,8 @@ export function EntryDetailModalBody({
           <Input type="datetime-local" value={stop} onChange={(event) => setStop(event.target.value)} onBlur={commitTimes} disabled={isRunning(entry)} />
         </label>
       </div>
-      <label className="flex items-center gap-2 text-xs text-muted-foreground">
+      {/* the box stays 16px; the label is the target, as everywhere else here */}
+      <label className="flex min-h-11 items-center gap-2 text-xs text-muted-foreground sm:min-h-0">
         <input
           type="checkbox"
           checked={entry.duronly}

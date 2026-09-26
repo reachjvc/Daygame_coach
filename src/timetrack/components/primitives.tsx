@@ -541,10 +541,19 @@ export function ToggleRow({
             checked ? "bg-primary" : "bg-border",
           )}
         >
+          {/*
+            * `left-0.5` is load-bearing. Without an explicit `left`, an absolutely
+            * positioned box sits at its STATIC position — and a <button> inherits
+            * `text-align: center` from the user-agent sheet, which puts that
+            * static position at the centre of the track. The offsets here were
+            * written for a static position of zero, so the knob rendered 22px
+            * out: hanging off the right edge when on, and sitting at the right
+            * when OFF, which reads as on. Pinning `left` removes the dependence.
+            */}
           <span
             className={cn(
-              "absolute top-0.5 size-5 rounded-full bg-background transition-transform sm:size-4",
-              checked ? "translate-x-[22px] sm:translate-x-[18px]" : "translate-x-0.5",
+              "absolute left-0.5 top-0.5 size-5 rounded-full bg-background transition-transform sm:size-4",
+              checked ? "translate-x-[20px] sm:translate-x-[16px]" : "translate-x-0",
             )}
           />
         </span>
