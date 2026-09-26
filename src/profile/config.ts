@@ -81,6 +81,17 @@ export function hasDatingPreferences(
         preferred_region?: string | null
         archetype?: string | null
         dating_foreigners?: boolean | null
+        /**
+         * Accepted and deliberately not consulted.
+         *
+         * It is a real column on `profiles` (20260101000000_create_profiles.sql)
+         * and callers pass the whole row, so leaving it out of this shape made
+         * TypeScript reject a genuine profile for carrying a field this function
+         * simply ignores. `tests/unit/profile/onboardingPrefill.test.ts` asserts
+         * that ignoring is the behaviour — "ignores user_is_foreign entirely" —
+         * so declaring it here is what makes the type agree with the test.
+         */
+        user_is_foreign?: boolean | null
       }
     | null
     | undefined
