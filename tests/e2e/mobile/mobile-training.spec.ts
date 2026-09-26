@@ -20,9 +20,74 @@
 
 import { test, expect } from "@playwright/test"
 import { openTab } from "../helpers/trainingTabs"
-import { guardTrainingAccount } from "../helpers/training.helper"
+import { cleanUp, guardTrainingAccount } from "../helpers/training.helper"
+import { TRAINING_STATE } from "../../../playwright.config"
 /** Refuses to run as anybody but the training account — see the helper. */
 guardTrainingAccount()
+
+/**
+ * THIS FILE FINISHES A WORKOUT AND USED TO LEAVE IT THERE.
+ *
+ * "a session records what you actually did" ticks four of five prescribed sets
+ * and finishes, which writes a one-minute, four-set workout dated today. This
+ * file had no `afterEach`, no `afterAll` and no `cleanUp` call, so that row
+ * stayed on the shared training account — and one finished workout dated today
+ * puts the card into its `done` state, which correctly offers "See today's
+ * workout" and no Start.
+ *
+ * Measured 2026-09-26, and the card said it in its own words:
+ *
+ *   " TrainingTrained todayWorkout · 1 min · 4 setsNext is Workout A…"
+ *
+ * where `dashboard-training-card` was waiting for "Squat". Four failures in one
+ * run from that single row: the card naming nothing, two specs timing out at 60
+ * and 180 seconds on a `start-workout` button the product had deliberately
+ * removed, and a weight field on a live screen that never opened.
+ *
+ * `resetAndEnroll` learned to clear this earlier the same day, which fixed the
+ * specs that call it — and `dashboard-training-card` and `programs-past-workout`
+ * use their own inline resets and never did. Patching every reader is the wrong
+ * end. The file that creates the row removes it.
+ *
+ * `afterAll` rather than `afterEach` deliberately: these five tests run serially
+ * and clearing the account between them would take state out from under the one
+ * that follows. The instant is captured at module load, so `cleanUp` removes
+ * what this FILE started and cannot touch the account's older history.
+ */
+const fileStarted = new Date(Date.now() - 60_000).toISOString()
+
+test.afterAll(async ({ browser }) => {
+  /**
+   * `baseURL` PASSED EXPLICITLY, AND THE PAGE NAVIGATED BEFORE CLEANING.
+   *
+   * `browser.newPage()` builds its own context and does not inherit the
+   * project's options, and `cleanUp` works by calling the app's own routes with
+   * relative paths from inside the page. On a fresh page that has never
+   * navigated, the origin those paths resolve against does not exist, and the
+   * first version of this hook died with
+   * `TypeError: URL is not valid or contains user credentials` — which it then
+   * swallowed, so the only visible symptom was a live workout left behind.
+   */
+  const page = await browser.newPage({
+    storageState: TRAINING_STATE,
+    baseURL: test.info().project.use.baseURL,
+  })
+  await page.goto("/programs", { waitUntil: "networkidle" })
+  /**
+   * ALLOWED TO FAIL, BUT NOT ALLOWED TO FAIL SILENTLY.
+   *
+   * A file that has already failed must not also report a cleanup error on top
+   * of the reason it failed — so this does not throw. But the first version
+   * swallowed the reason entirely with `.catch(() => {})`, and that is the
+   * exact silent-failure shape this whole session has been removing: the run
+   * that followed left a live workout behind and nothing said whether the
+   * cleanup had run, errored, or never been reached.
+   */
+  await cleanUp(page, fileStarted).catch((e: unknown) => {
+    console.error(`[mobile-training] cleanUp failed: ${(e as Error).message}`)
+  })
+  await page.close()
+})
 
 
 /**
