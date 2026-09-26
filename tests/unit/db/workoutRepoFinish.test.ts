@@ -272,11 +272,22 @@ describe("finishing a workout", () => {
     )
   })
 
-  test("a workout that is gone says so, rather than reporting it as unfinished", async () => {
+  test("a workout that is gone says so, and carries the code the screen acts on", async () => {
+    /**
+     * DISCARD ON THE LAPTOP, PRESS SAVE ON THE PHONE — the commonest two-device
+     * sequence there is, and the one this used to get wrong. It threw a bare
+     * `Error`, which carries no `code`, so the phone kept the finish sheet open
+     * over a workout that no longer exists and invited a Save that could only
+     * fail again. This read runs before `requireLive`, so every `workout_gone`
+     * branch downstream of it was unreachable on this path.
+     */
+    const { errorBody } = await import("@/src/programs/errors")
     const { repo } = await repoWith({ row: null })
-    await expect(repo.finishWorkout(USER, WORKOUT, { intensity: 4 })).rejects.toThrow(
-      "That workout no longer exists."
-    )
+    const thrown = await repo.finishWorkout(USER, WORKOUT, { intensity: 4 }).catch((e: unknown) => e)
+    expect(errorBody(thrown)).toEqual({
+      error: "This workout was thrown away somewhere else, so that change was not saved.",
+      code: "workout_gone",
+    })
   })
 
   test("the summary read afterwards is the same object finishWorkout returned", async () => {

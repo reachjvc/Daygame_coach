@@ -30,7 +30,7 @@ const USER = "u1"
 const WORKOUT = "w1"
 
 /** What the workout row looks like on the second question. */
-type Fate = "gone" | "finished" | "open"
+type Fate = "gone" | "finished" | "open" | "written-up" | "unreadable"
 
 const liveRow = {
   id: WORKOUT,
@@ -98,11 +98,24 @@ function fakeSupabase(opts: { writeError: { code?: string; message: string } | n
       if (name === "profiles") return Promise.resolve({ data: { weight_unit: "kg" }, error: null })
       if (name !== "workout_logs") return Promise.resolve({ data: null, error: null })
 
-      // The second question: is it gone, finished, or still open?
-      if (selected === "ended_at") {
+      // The second question: is it gone, finished, or still open? It asks for
+      // BOTH lifecycle columns, because a session written up afterwards has no
+      // end time and is not open — see src/db/workoutLifecycle.ts.
+      if (selected === "started_at, ended_at") {
+        if (opts.fate === "unreadable") {
+          return Promise.resolve({ data: null, error: { code: "08006", message: "connection failure" } })
+        }
         if (opts.fate === "gone") return Promise.resolve({ data: null, error: null })
+        if (opts.fate === "written-up") {
+          // No start and no end: a session typed in afterwards. Allowed by
+          // `workout_logs_lifecycle`, and NOT open.
+          return Promise.resolve({ data: { started_at: null, ended_at: null }, error: null })
+        }
         return Promise.resolve({
-          data: { ended_at: opts.fate === "finished" ? "2026-09-26T19:00:00Z" : null },
+          data: {
+            started_at: "2026-09-26T18:00:00Z",
+            ended_at: opts.fate === "finished" ? "2026-09-26T19:00:00Z" : null,
+          },
           error: null,
         })
       }
@@ -205,12 +218,42 @@ describe("a set written into a workout that is no longer there", () => {
     expect((thrown as Error).message).not.toMatch(/connection failure/)
   })
 
+  test("a session written up afterwards is not 'open', so it is not told to tap again", async () => {
+    /**
+     * `workout_logs_lifecycle` allows a third shape: no start and no end, which
+     * is a session typed in later. `fateOf` read `ended_at === null` and called
+     * it open — so a failed write against one answered "Tap it again", retry
+     * advice for a workout nobody can tick into. Three functions already knew
+     * better; this one was written the same day and did not.
+     */
+    const { repo } = await repoWith({ writeError: RLS, fate: "written-up" })
+    const thrown = await repo.completeSet(USER, WORKOUT, aSet).catch((e: Error) => e)
+    expect((thrown as Error).message).not.toMatch(/Tap it again/i)
+    expect((thrown as Error).message).toMatch(/already finished somewhere else/i)
+  })
+
+  test("a question that could not be asked is not answered as a 'no'", async () => {
+    /**
+     * The fourth state, and the reason it exists. When the follow-up read
+     * fails, "gone" would be a fabrication and the caller's "Tap it again"
+     * would be retry advice about a workout that may not be there. It was
+     * collapsed into the `open` branch until a review pointed out that
+     * `unknown` and `open` were indistinguishable at every call site.
+     */
+    const { repo } = await repoWith({ writeError: RLS, fate: "unreadable" })
+    const thrown = await repo.completeSet(USER, WORKOUT, aSet).catch((e: Error) => e)
+    const said = (thrown as Error).message
+    expect(said).toMatch(/could not reach the server/i)
+    expect(said, "it must not claim the workout is gone").not.toMatch(/thrown away|finished/i)
+    expect(said, "nor tell them to retry into a workout that may not exist").not.toMatch(/Tap it again/i)
+  })
+
   test("the second question is actually asked — the verdict is read, not assumed", async () => {
     const { repo, fake } = await repoWith({ writeError: RLS, fate: "gone" })
     await repo.completeSet(USER, WORKOUT, aSet).catch(() => null)
     expect(
       fake.selects,
       "without this read the answer is a guess about which of three states the workout is in"
-    ).toContain("workout_logs:ended_at")
+    ).toContain("workout_logs:started_at, ended_at")
   })
 })

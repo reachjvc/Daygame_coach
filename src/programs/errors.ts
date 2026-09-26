@@ -72,6 +72,29 @@ export class WorkoutGone extends Error {
 }
 
 /**
+ * A REFUSAL THE DATABASE WROTE FOR A PERSON — not Postgres's own words.
+ *
+ * SQLSTATE 55000 is how every program-write function in this schema says no on
+ * purpose, and the sentence it carries was written to be read: "Your program
+ * moved on while this was being recalculated — reload and try again". Passing
+ * THAT through is right. Passing through "new row violates row-level security
+ * policy for table \"workout_sets\"" is what this whole area is being dug out
+ * of, and the two are told apart by the code and nothing else.
+ *
+ * It exists as a named function so the one legitimate `error.message` in a
+ * thrown error lives in one place with its reason beside it, instead of being
+ * inlined at each call site where the guard in `tests/unit/architecture.test.ts`
+ * cannot tell it from a leak.
+ *
+ * `null` when it is not a deliberate refusal: the caller then decides, and for
+ * a workout write that means asking the database which of four states the
+ * workout is in rather than guessing from the code.
+ */
+export function databaseRefusal(error: { code?: string; message: string }): ProgramRefused | null {
+  return error.code === "55000" ? new ProgramRefused(error.message) : null
+}
+
+/**
  * The HTTP status a thrown error deserves.
  *
  * 409 Conflict for a refusal: the request was well formed and the state of the
@@ -93,4 +116,26 @@ export function errorBody(e: unknown): { error: string; code?: string } {
   return e instanceof WorkoutGone
     ? { error: e.message, code: "workout_gone" }
     : { error: (e as Error).message }
+}
+
+/**
+ * The body AND the status, together, for a workout route.
+ *
+ * WHY BOTH FROM ONE CALL. This file's own header says "each route asks
+ * `statusFor` what number to put on it", and after the workout routes learned
+ * about `WorkoutGone` four of the five were hardcoding 400 — so the same state
+ * conflict came back as "you sent something wrong" from the sets routes and as
+ * 409 from the finish route. Splitting the body and the status between two
+ * helpers is what let them drift; a route that asks once cannot.
+ *
+ * `fallback` is what a route answers for everything that is NOT a refusal, and
+ * it stays the caller's decision: the sets routes mean 400 by it (a set the
+ * schema would not take), and that is a different thing from a 500.
+ */
+export function workoutErrorResponse(
+  e: unknown,
+  fallback = 400
+): { body: { error: string; code?: string }; status: number } {
+  const refused = e instanceof ProgramRefused || e instanceof WorkoutGone
+  return { body: errorBody(e), status: refused ? 409 : fallback }
 }

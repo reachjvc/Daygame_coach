@@ -127,6 +127,27 @@ export function ProgramsApp({
   /** The sentence for a workout already open, or null when there is none. */
   const openWorkoutDoor = openWorkoutInvitation(cardState)
 
+  /**
+   * ON EVERY VIEW THAT OFFERS TO START SOMETHING, not just the list.
+   *
+   * The first version of this put the door in the `home` branch alone, and a
+   * review pointed out the fix was narrower than the claim: `?view=programs`
+   * (the catalogue), `?view=build` (write your own week) and a catalogue
+   * program's detail page all offer a Start, all of them are refused by the
+   * `program_busy_while_workout_open` trigger while a workout is open, and none
+   * of them said so. The `today` branches carry `TodayCard`, which has its own.
+   */
+  const openWorkoutBanner = openWorkoutDoor ? (
+    <Button
+      variant="outline"
+      className="w-full"
+      data-testid="open-workout-door"
+      onClick={() => router.push(LIVE_WORKOUT)}
+    >
+      {openWorkoutDoor}
+    </Button>
+  ) : null
+
   // `edit` shares this branch: the editor is a state of the one running
   // program, not a screen of its own with its own data.
   if (
@@ -161,6 +182,7 @@ export function ProgramsApp({
         <Button variant="ghost" size="sm" onClick={() => goTo({ view: "today" })}>
           ← My programs
         </Button>
+        {openWorkoutBanner}
         <ProgramCatalog onSelect={(programId) => goTo({ view: "detail", catalog: programId })} />
         {/* THE SECOND DOOR, BESIDE THE FIRST. "Build my own" was inside Life
             Mastery, behind a mode switch, on a step most people never opened —
@@ -178,6 +200,7 @@ export function ProgramsApp({
         <Button variant="ghost" size="sm" onClick={() => goTo({ view: "today" })}>
           ← My programs
         </Button>
+        {openWorkoutBanner}
         <BuildYourWeek
           enrollments={enrollments}
           draftId={view.draftId}
@@ -192,14 +215,17 @@ export function ProgramsApp({
 
   if (view.view === "detail" && view.catalogId) {
     return (
-      <ProgramDetail
-        programId={view.catalogId}
-        onBack={() => goTo({ view: "programs" })}
-        onEnrolled={(enrollmentId) => {
-          refresh()
-          goTo({ view: "today", program: enrollmentId })
-        }}
-      />
+      <div className="space-y-4">
+        {openWorkoutBanner}
+        <ProgramDetail
+          programId={view.catalogId}
+          onBack={() => goTo({ view: "programs" })}
+          onEnrolled={(enrollmentId) => {
+            refresh()
+            goTo({ view: "today", program: enrollmentId })
+          }}
+        />
+      </div>
     )
   }
 
@@ -254,16 +280,7 @@ export function ProgramsApp({
         Wednesday: no door here, no door one click deeper, and every Start
         refused. `openWorkoutInvitation` is the same sentence the card uses.
       */}
-      {openWorkoutDoor && (
-        <Button
-          variant="outline"
-          className="w-full"
-          data-testid="open-workout-door"
-          onClick={() => router.push(LIVE_WORKOUT)}
-        >
-          {openWorkoutDoor}
-        </Button>
-      )}
+      {openWorkoutBanner}
 
       {enrollments.length > 0 && (
         <div className="flex items-center justify-between">

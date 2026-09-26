@@ -32,7 +32,8 @@ import {
   todaysSessionFor,
   updateEnrollmentSchedule,
 } from "./programRepo"
-import { ProgramRefused, WorkoutGone } from "@/src/programs/errors"
+import { databaseRefusal, WorkoutGone } from "@/src/programs/errors"
+import { isOpenWorkout } from "./workoutLifecycle"
 import { inWorkoutOrder, personalBestBaseline } from "./healthRepo"
 import { getUserTimezone } from "./settingsRepo"
 import { toDateISO, toZonedDate } from "@/src/shared/dateUtils"
@@ -427,6 +428,10 @@ async function requireLive(userId: string, workoutId: string): Promise<LiveWorko
   const fate = await fateOf(userId, workoutId)
   if (fate === "gone") throw new WorkoutGone("discarded")
   if (fate === "finished") throw new WorkoutGone("finished")
+  // `unknown` gets its OWN sentence. Falling through to "not open any more"
+  // would be a statement about a row nobody managed to read — which is the
+  // definite branch, not the uncomputable one.
+  if (fate === "unknown") throw new Error(CANNOT_TELL)
   throw new Error("That workout is not open any more — reload to see where it got to.")
 }
 
@@ -446,17 +451,32 @@ async function requireLive(userId: string, workoutId: string): Promise<LiveWorko
  */
 type WorkoutFate = "open" | "finished" | "gone" | "unknown"
 
+/**
+ * What to say when the database could not be asked. Not "it failed, try again"
+ * and not "it is gone": both are claims, and nothing was read.
+ */
+const CANNOT_TELL =
+  "Could not reach the server to check on this workout. Reload before trying that again."
+
 async function fateOf(userId: string, workoutId: string): Promise<WorkoutFate> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from("workout_logs")
-    .select("ended_at")
+    .select("started_at, ended_at")
     .eq("id", workoutId)
     .eq("user_id", userId)
     .maybeSingle()
   if (error) return "unknown"
   if (!data) return "gone"
-  return (data as { ended_at: string | null }).ended_at === null ? "open" : "finished"
+  /**
+   * THE SAME PREDICATE EVERYTHING ELSE USES. This read `ended_at === null`,
+   * which calls a session written up afterwards — no start, no end — "open".
+   * It is not open and never was, so a failed write against one answered "Tap
+   * it again", which is retry advice for a workout nobody can tick into.
+   */
+  return isOpenWorkout(data as { started_at: string | null; ended_at: string | null })
+    ? "open"
+    : "finished"
 }
 
 /**
@@ -499,6 +519,16 @@ async function refuseWrite(
   const fate = await fateOf(userId, workoutId)
   if (fate === "gone") throw new WorkoutGone("discarded")
   if (fate === "finished") throw new WorkoutGone("finished")
+  /**
+   * AND THE FOURTH STATE KEEPS ITS OWN ANSWER.
+   *
+   * The caller's fallback is retry advice — "Tap it again" — and offering that
+   * when the second question could not be asked is advice about a workout that
+   * may not exist. It was collapsed into the `open` branch, which made the
+   * fourth state decorative; a review pointed out that "unknown" and "open"
+   * were indistinguishable at every call site, and it was right.
+   */
+  if (fate === "unknown") throw new Error(CANNOT_TELL)
   throw new Error(fallback)
 }
 
@@ -838,7 +868,18 @@ export async function finishWorkout(
     .eq("user_id", userId)
     .maybeSingle()
   if (rowError) throw readRefused("that workout", rowError)
-  if (!row) throw new Error("That workout no longer exists.")
+  /**
+   * THE COMMONEST TWO-DEVICE SEQUENCE OF ALL, and it used to miss every one of
+   * the answers built for it.
+   *
+   * Discard on the laptop, press Save on the phone. This read runs BEFORE
+   * `requireLive`, so it was the first thing to notice — and it threw a bare
+   * `Error`, which carries no `code`, so the screen kept the finish sheet open
+   * over a workout that no longer exists and invited a Save that can only fail
+   * again. Every `workout_gone` branch added on 2026-09-26 sat downstream of
+   * this line and was never reached.
+   */
+  if (!row) throw new WorkoutGone("discarded")
   if ((row as { ended_at: string | null }).ended_at) {
     return await requireSummary(userId, workoutId)
   }
@@ -1083,7 +1124,8 @@ export async function finishWorkout(
      * first version of the block below swallowed it into a generic one. Caught
      * by `workoutRepoFinish.test.ts`, which exists for exactly this.
      */
-    if ((error as { code?: string }).code === "55000") throw new ProgramRefused(error.message)
+    const deliberate = databaseRefusal(error)
+    if (deliberate) throw deliberate
     /**
      * AND WHEN THERE IS NO SUMMARY, ASK WHY — because the database's guess is
      * wrong in exactly the case that matters.
@@ -1172,7 +1214,9 @@ async function keepTodaysChanges(userId: string, live: LiveWorkout): Promise<voi
  */
 async function requireSummary(userId: string, workoutId: string): Promise<WorkoutSummary> {
   const summary = await summaryFor(userId, workoutId)
-  if (!summary) throw new Error("That workout no longer exists.")
+  // Closed a moment ago and unreadable now means deleted between the two
+  // statements — which is the same news, and the screen acts on the code.
+  if (!summary) throw new WorkoutGone("discarded")
   return summary
 }
 
@@ -1500,7 +1544,8 @@ export async function reviseWorkout(
     // 55000 is how every program-write function says no on purpose — here, a
     // program that moved on while the correction was being computed. The person
     // can act on that, so it keeps its own sentence and its own status.
-    if (written.code === "55000") throw new ProgramRefused(written.message)
+    const deliberate = databaseRefusal(written)
+    if (deliberate) throw deliberate
     console.error(`revise workout ${workoutId} failed (code ${written.code}): ${written.message}`)
     throw new Error("Those sets could not be saved, so the workout was left as it was.")
   }

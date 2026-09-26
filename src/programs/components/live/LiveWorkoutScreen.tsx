@@ -33,7 +33,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { BackLink } from "@/components/BackLink"
-import { DONE, GRID_CAPTION, TRAINING_COLUMN } from "../trainingStyles"
+import { DONE, GRID_CAPTION, SET_GRID_WITH_DELETE, TRAINING_COLUMN } from "../trainingStyles"
 import { canBeUnweighted, libraryExercise } from "../../data/exerciseLibrary"
 import { SetRow } from "./SetRow"
 import { RestBar } from "./RestBar"
@@ -631,7 +631,7 @@ export function LiveWorkoutScreen({
                   rows as numbers, which is what makes a column scannable.
                 */}
                 {!isSkipped && rows.length > 0 && (
-                  <div className={`grid grid-cols-[2.75rem_4.5rem_1fr_1fr_2.75rem] items-center gap-2 px-1 pb-0.5 ${GRID_CAPTION}`}>
+                  <div className={`${SET_GRID_WITH_DELETE} items-center px-1 pb-0.5 ${GRID_CAPTION}`}>
                     <span>Set</span>
                     {/* PREVIOUS, the name every tracker lifters use gives it.
                         "Last" was shorter than the column it captioned. */}
@@ -998,10 +998,30 @@ function Elapsed({
   past: boolean
   timezone: string
 }) {
-  const [now, setNow] = useState(() => Date.now())
+  /**
+   * NULL UNTIL MOUNTED, because the server has a different clock from yours.
+   *
+   * This was `useState(() => Date.now())`, and the screen is server-rendered —
+   * so the server worked out mm:ss at render and the browser worked it out
+   * again at hydration, a few hundred milliseconds later. Whenever a second
+   * boundary fell between the two, the text differed and React threw the whole
+   * live screen away and rebuilt it.
+   *
+   * MEASURED, because once is not a measurement: 2 of 20 loads, then 1 of 25,
+   * then 3 of 30 — about one in ten, which is exactly the rate that reads as
+   * "fine" when you open the page a few times and then fails in front of
+   * somebody. An intermittent fault is absent at n=1 and absence is the one
+   * result a single sample cannot establish.
+   *
+   * The clock is blank for one frame after hydration and then correct. It is
+   * NOT seeded with 0, which would print "0:00" over a workout forty minutes
+   * old — a wrong number is worse than no number for the moment it is on screen.
+   */
+  const [now, setNow] = useState<number | null>(null)
   // useEffect, not useMemo: a memo's return value is a value, not a cleanup, so
   // that version started a new interval on every remount and cleared none.
   useEffect(() => {
+    setNow(Date.now())
     const id = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(id)
   }, [])
@@ -1013,8 +1033,10 @@ function Elapsed({
    * them. The first minute is the one where you are most likely to be looking
    * at it, checking the thing you just started actually started.
    */
-  const elapsed = Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / 1000))
-  const clock = `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, "0")}`
+  const elapsed =
+    now === null ? null : Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / 1000))
+  const clock =
+    elapsed === null ? "" : `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, "0")}`
 
   return (
     <div className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
@@ -1034,17 +1056,28 @@ function Elapsed({
           </p>
           {/* A COUNTER IS WRONG FOR A SESSION THAT ALREADY HAPPENED. A
               workout dated yesterday read "1,440 min" and climbing. */}
+          {/*
+            NEITHER HALF OF THIS IS RENDERED ON THE SERVER, and both for the
+            same reason. The counter is the browser's clock. The date is
+            formatted with the DEVICE's locale — `[]` means "whatever this
+            machine prefers" — so a phone set to Danish prints "man." where
+            Node prints "Mon", and the two disagree at hydration just as surely
+            as a second boundary does. The zone is explicit and was never the
+            problem; the locale is.
+          */}
           <p className="text-xs tabular-nums text-muted-foreground">
-            {past
-              ? `since ${new Date(startedAt).toLocaleString([], {
-                  weekday: "short",
-                  day: "numeric",
-                  month: "short",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone: timezone,
-                })}`
-              : clock}
+            {now === null
+              ? ""
+              : past
+                ? `since ${new Date(startedAt).toLocaleString([], {
+                    weekday: "short",
+                    day: "numeric",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    timeZone: timezone,
+                  })}`
+                : clock}
           </p>
         </div>
         <Button size="sm" onClick={onFinish} data-testid="finish-workout">

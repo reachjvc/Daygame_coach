@@ -23,7 +23,7 @@ import {
   SAVE_GIVEN_UP_MS,
   SAVE_QUIET_MS,
 } from "../../programsService"
-import { DONE } from "../trainingStyles"
+import { DONE, SET_GRID, SET_GRID_WITH_DELETE } from "../trainingStyles"
 import { SET_LIMITS, setLimitSentence } from "../../schemas"
 import type { LiveWorkoutSet } from "../../types"
 
@@ -251,9 +251,7 @@ export function SetRow({
          * ever done: `PHONE` is 390px and every spec on this screen calls
          * `setViewportSize(PHONE)` first.
          */
-        className={`relative grid grid-cols-[2.75rem_4.5rem_1fr_1fr_2.75rem] ${
-          onDelete ? "sm:grid-cols-[2.75rem_4.5rem_1fr_1fr_2.75rem_2.75rem]" : ""
-        } items-center gap-2 rounded-md px-1 py-1 transition-transform ${
+        className={`relative ${onDelete ? SET_GRID_WITH_DELETE : SET_GRID} items-center rounded-md px-1 py-1 transition-transform ${
           ticked ? DONE.row : "bg-card"
         }`}
       >
@@ -393,7 +391,7 @@ export function SetRow({
             data-testid={`hover-delete-${label}`}
             aria-label={`Delete set ${label}`}
             onClick={onDelete}
-            className="absolute right-1 top-1 hidden h-11 w-11 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted/50 group-hover:opacity-100 sm:flex"
+            className="hidden h-11 w-11 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted/50 focus-visible:opacity-100 group-hover:opacity-100 sm:flex"
           >
             <Trash2 className="size-4" />
           </button>

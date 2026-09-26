@@ -94,7 +94,10 @@ function fakeSupabase(opts: FakeOptions) {
       // repo tells "finished" from "thrown away".
       if (opts.open === false) {
         return Promise.resolve({
-          data: selected === "ended_at" ? { ended_at: "2026-09-18T08:30:00Z" } : null,
+          data:
+            selected === "started_at, ended_at"
+              ? { started_at: "2026-09-18T07:00:00Z", ended_at: "2026-09-18T08:30:00Z" }
+              : null,
           error: null,
         })
       }

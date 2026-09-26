@@ -39,14 +39,23 @@ const stale = (over: Partial<TrainingCardState> = {}): TrainingCardState =>
   live({ kind: "stale", startedOnWeekday: "Wednesday", setsTicked: 0, ...over } as Partial<TrainingCardState>)
 
 describe("openWorkoutInvitation", () => {
-  it("says nothing when nothing is open", () => {
+  it("says nothing for every kind that is not an open workout", () => {
+    /**
+     * ENUMERATED FROM THE TYPE, not from memory. The first version of this test
+     * asserted silence for `kind: "due"` — which does not exist. It was cast
+     * through `as unknown as` so it compiled, and it proved nothing about any
+     * real state. The union is live · stale · today · rest · done · finished ·
+     * none (`src/programs/types.ts`), and the five below are all of the ones
+     * that must stay silent.
+     */
     expect(openWorkoutInvitation(null)).toBeNull()
-    expect(
-      openWorkoutInvitation({ kind: "due", also: [] } as unknown as TrainingCardState)
-    ).toBeNull()
-    expect(
-      openWorkoutInvitation({ kind: "done", also: [] } as unknown as TrainingCardState)
-    ).toBeNull()
+    const silent = ["today", "rest", "done", "finished", "none"] as const
+    for (const kind of silent) {
+      expect(
+        openWorkoutInvitation({ kind, also: [] } as unknown as TrainingCardState),
+        `${kind} is not an open workout`
+      ).toBeNull()
+    }
   })
 
   it("tells a screen that belongs to no one program about ANY open workout", () => {

@@ -165,6 +165,48 @@ test.describe("the live workout in a window", () => {
     expect(await coveredControls(page), `at ${SMALL_LAPTOP.width}px`).toEqual([])
   })
 
+  test("the column captions stand over the columns they name, at both widths", async ({ page }) => {
+    /**
+     * THE FIX FOR THE OVERLAP BROKE THIS, AND NOTHING SAW IT.
+     *
+     * The row grew a sixth column and the caption above it kept five, so every
+     * `1fr` in the row was 1.625rem narrower than the `1fr` above it and "kg"
+     * and "Reps" no longer stood over their own inputs from 640px up. The
+     * overlap sweep cannot see it — captions are not controls and nothing was
+     * overlapping, just misaligned — so this measures the thing itself: the
+     * left edge of each caption against the left edge of what it labels.
+     */
+    await startAWorkout(page)
+
+    for (const width of [LAPTOP, SMALL_LAPTOP, { width: 390, height: 844 }]) {
+      await page.setViewportSize(width)
+      await expect(page.getByTestId("tick-1").first()).toBeVisible()
+
+      const drift = await page.evaluate(() => {
+        const row = document.querySelector('[data-testid="set-row-1"]')
+        const caption = row?.closest(".space-y-1")?.parentElement?.querySelector<HTMLElement>(
+          "div.grid"
+        )
+        if (!row || !caption || caption === row) return "could not find the caption row"
+        const cells = Array.from(caption.children) as HTMLElement[]
+        const cols = Array.from(row.children) as HTMLElement[]
+        // Column 3 is the weight box and column 4 the reps box — the two the
+        // captions actually name, and the two that move when a template drifts.
+        return [2, 3]
+          .map((i) => {
+            const a = cells[i]?.getBoundingClientRect()
+            const b = cols[i]?.getBoundingClientRect()
+            if (!a || !b) return `column ${i + 1} is missing on one side`
+            const off = Math.abs(a.left - b.left)
+            return off > 2 ? `column ${i + 1} caption is ${Math.round(off)}px off its input` : null
+          })
+          .filter(Boolean)
+      })
+
+      expect(drift, `at ${width.width}px`).toEqual([])
+    }
+  })
+
   test("hovering a row does not put the delete button over the tick", async ({ page }) => {
     await startAWorkout(page)
 

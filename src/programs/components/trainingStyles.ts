@@ -82,6 +82,27 @@ export const SECTION_HEADING = 'text-sm font-semibold'
 export const GRID_CAPTION = 'text-[11px] uppercase tracking-wider text-muted-foreground'
 
 /**
+ * THE SET GRID'S COLUMNS, IN ONE PLACE, BECAUSE TWO COPIES DRIFTED.
+ *
+ * `SetRow` draws the row and `LiveWorkoutScreen` draws the caption above it,
+ * and the two are only a grid if they agree about the template to the
+ * character. On 2026-09-26 they stopped agreeing: a sixth column was added to
+ * the row (to stop the delete button sitting on top of the ✓) and the caption
+ * kept five, so every `1fr` in the row was 1.625rem narrower than the `1fr`
+ * above it and "kg" and "Reps" no longer stood over their own inputs on any
+ * screen from 640px up. Nothing caught it — the captions are not controls, so
+ * the overlap sweep cannot see them, and nothing measures alignment.
+ *
+ * SET · PREVIOUS · weight · reps · ✓, and from `sm:` up a sixth for the delete
+ * button, which exists only where a pointer does.
+ */
+export const SET_GRID = 'grid grid-cols-[2.75rem_4.5rem_1fr_1fr_2.75rem] gap-2'
+
+/** The same grid, with the delete column. Both halves must use the same one. */
+export const SET_GRID_WITH_DELETE =
+  `${SET_GRID} sm:grid-cols-[2.75rem_4.5rem_1fr_1fr_2.75rem_2.75rem]`
+
+/**
  * GREEN MEANS DONE. Nothing else.
  *
  * This is the only place in the training screens where green exists. Orange is

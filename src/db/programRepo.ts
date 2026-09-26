@@ -28,6 +28,7 @@ import {
 } from "@/src/programs/programsService"
 import { getProgram, requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
 import { ProgramRefused } from "@/src/programs/errors"
+import { isOpenWorkout, OPEN_WORKOUT_REFUSAL } from "./workoutLifecycle"
 import {
   clampCursorDay,
   effectiveProgram,
@@ -1085,13 +1086,44 @@ export async function removeProgramSession(
   enrollmentId: string,
   logId: string
 ): Promise<ProgramEnrollment> {
+  const supabase = await createServerSupabaseClient()
+
+  /**
+   * THE SECOND DOOR ONTO THE SAME DELETE, and it had no guard.
+   *
+   * `deleteWorkoutLog` learned on 2026-09-26 to refuse a workout somebody is in
+   * the middle of. This path — DELETE /api/programs/enrollments/[id]/log/[logId]
+   * — reaches `remove_session_and_replay`, whose SQL deletes by id and
+   * enrollment with no lifecycle predicate at all, so the same deletion was
+   * still one request away. Deleting a workout out from under an open live
+   * screen is what produced the row-level-security message the owner saw.
+   *
+   * Before `replayedState`, deliberately: that replays the whole history to
+   * work out where the weights should land, which is expensive and pointless
+   * for a request that is about to be refused.
+   *
+   * THE DURABLE VERSION OF THIS IS A CHECK IN THE SQL, not here — the
+   * service-role key walks straight past anything written in TypeScript. That
+   * is a migration, and migrations are the owner's call in this repo.
+   */
+  const { data: row, error: readError } = await supabase
+    .from("workout_logs")
+    .select("started_at, ended_at")
+    .eq("id", logId)
+    .eq("user_id", userId)
+    .maybeSingle()
+  if (readError) {
+    console.error(`could not read workout ${logId} before removing it: ${readError.message}`)
+    throw new Error("Could not read that session. Reload and try again.")
+  }
+  if (isOpenWorkout(row)) throw new ProgramRefused(OPEN_WORKOUT_REFUSAL)
+
   const { enrollment, expectedSessionCount, replayEvents } = await replayedState(
     userId,
     enrollmentId,
     { withoutLogId: logId }
   )
 
-  const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase.rpc("remove_session_and_replay", {
     p_log_id: logId,
     p_enrollment_id: enrollmentId,

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { completeSet } from "@/src/db/workoutRepo"
 import { CompleteSetSchema } from "@/src/programs/schemas"
-import { errorBody } from "@/src/programs/errors"
+import { workoutErrorResponse } from "@/src/programs/errors"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -29,6 +29,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     console.error("complete set:", e)
     // The body carries `code` so the screen can stop showing a workout that no
     // longer exists, rather than only printing a sentence about it.
-    return NextResponse.json(errorBody(e), { status: 400 })
+    const answer = workoutErrorResponse(e)
+    return NextResponse.json(answer.body, { status: answer.status })
   }
 }

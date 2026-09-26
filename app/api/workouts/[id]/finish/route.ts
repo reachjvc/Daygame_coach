@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { finishWorkout } from "@/src/db/workoutRepo"
 import { FinishWorkoutSchema } from "@/src/programs/schemas"
-import { errorBody } from "@/src/programs/errors"
+import { workoutErrorResponse } from "@/src/programs/errors"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -23,12 +23,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json(await finishWorkout(auth.userId, id, parsed.data))
   } catch (e) {
     console.error("finish workout:", e)
-    const message = (e as Error).message
-    // A workout that is GONE is not a workout that was refused: the browser
-    // needs to tell "thrown away on another device" from "the server said no".
-    // `errorBody` carries the `code` the live screen acts on.
-    return NextResponse.json(errorBody(e), {
-      status: message === "That workout no longer exists." ? 404 : 409,
-    })
+    /**
+     * 409 for all of it, and the BODY says which.
+     *
+     * This used to pick 404 by matching the sentence "That workout no longer
+     * exists." — a status decided by prose, which broke the moment the sentence
+     * changed. That case is a `WorkoutGone` now, and `errorBody` gives it
+     * `code: "workout_gone"`, which is what the live screen reads. Everything
+     * else here is a refusal the person can act on ("A workout cannot end
+     * before it started", "Your program moved on"), and 409 is what a refusal
+     * is: the request was fine, the state of the account said no.
+     */
+    const answer = workoutErrorResponse(e, 409)
+    return NextResponse.json(answer.body, { status: answer.status })
   }
 }

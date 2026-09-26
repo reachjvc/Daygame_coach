@@ -15,6 +15,7 @@ import {
 } from "@/src/health/healthService"
 import { getUserTimezone } from "./settingsRepo"
 import { ProgramRefused } from "@/src/programs/errors"
+import { isOpenWorkout, OPEN_WORKOUT_REFUSAL } from "./workoutLifecycle"
 import { previousPeriodStart, toZonedDate, toDateISO, isStreakCurrent } from "../shared/dateUtils"
 import type {
   WeightLogRow,
@@ -464,12 +465,7 @@ export async function deleteWorkoutLog(
    * It is a refusal and not a failure: there IS a way to get rid of an open
    * workout, and the sentence names it.
    */
-  const open = log && log.started_at !== null && log.ended_at === null
-  if (open) {
-    throw new ProgramRefused(
-      "That workout is still open. Finish it or throw it away from the workout screen."
-    )
-  }
+  if (isOpenWorkout(log)) throw new ProgramRefused(OPEN_WORKOUT_REFUSAL)
 
   /**
    * A PROGRAM SESSION IS DELETED AND RECALCULATED TOGETHER, OR NOT AT ALL.

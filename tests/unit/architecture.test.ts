@@ -2746,12 +2746,162 @@ describe('Architecture Compliance', () => {
    * Logging the real message is right and is not counted: `console.error` is
    * read by us, not by the person. That is the whole distinction.
    */
+  /**
+   * NO REACT STATE IS SEEDED FROM SOMETHING THE SERVER CANNOT KNOW.
+   *
+   * The sharpest shape of the hydration bug, and the one that bit this repo
+   * twice in one day on one screen:
+   *
+   *   useState(() => readRest(...))        the rest clock, out of localStorage
+   *   useState(() => Date.now())           the elapsed counter
+   *
+   * A lazy initialiser runs during the FIRST render — on the server too. The
+   * server has no `localStorage` and a different instant, so the server's first
+   * render and the browser's first render disagree by construction, and React
+   * throws the whole tree away and rebuilds it. On `/programs/live` that is the
+   * screen somebody is using at a squat rack.
+   *
+   * WHY THIS RULE AND NOT A WIDER ONE. The guard above it counts
+   * `new Date().toLocaleString` anywhere outside an effect, which also catches
+   * event handlers — safe, but noisy. Widening that to every `Date.now()` would
+   * have flagged 36 calls in 14 files, most of them in handlers, and a debt
+   * table that large stops being read. A clock or a storage read INSIDE a
+   * `useState` initialiser is almost never anything but this bug: eight in the
+   * whole app, and each one below has its reason written next to it.
+   *
+   * The fix is always the same and costs one frame: start from a value the
+   * server can also produce (usually `null`), and read the real one in a mount
+   * effect.
+   */
+  describe('No state is seeded from the browser during the first render', () => {
+    /** Things that do not exist, or differ, on the server. */
+    const BROWSER_ONLY =
+      /Date\.now\(\s*\)|new Date\(\s*\)|localStorage|sessionStorage|window\.|navigator\.|matchMedia/
+
+    /**
+     * Every one that is there today, with why it is safe. An entry with no
+     * reason is a violation somebody has stopped looking at.
+     */
+    const SEEDED_STATE_DEBT: Record<string, number> = {
+      // The finish sheet's "when did it end" default. Mounted only when the
+      // sheet is opened, so it never exists during a server render.
+      'src/programs/components/live/FinishSheet.tsx': 1,
+      // The rest countdown. `RestBar` returns null when there is no clock, and
+      // since 2026-09-26 the clock itself is read in a mount effect, so the bar
+      // does not exist on the server either. Safe twice over; the initialiser
+      // is still the shape, so it stays counted.
+      'src/programs/components/live/RestBar.tsx': 1,
+      // The time tracker's running timer, its mobile test, its store, and three
+      // tracking forms. Not audited by the change that added this rule — they
+      // are recorded so they cannot grow, not blessed.
+      'src/timetrack/components/TimerBar.tsx': 1,
+      'src/timetrack/hooks/useIsMobile.ts': 1,
+      'src/timetrack/hooks/useTimetrack.ts': 1,
+      'src/tracking/components/CustomReportBuilder.tsx': 1,
+      'src/tracking/components/FieldReportPage.tsx': 1,
+      'src/tracking/components/QuickAddModal.tsx': 1,
+    }
+
+    /** `useState` initialisers that read the browser, per client file. */
+    const seededIn = (file: string): number => {
+      const source = fs
+        .readFileSync(path.join(projectRoot, file), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/[^\n]*/g, '')
+      // A server component renders once and never hydrates, so none of this
+      // can bite it.
+      if (!/^\s*['"]use client['"]/m.test(source)) return 0
+
+      /**
+       * ONE LEVEL DOWN, because the first version of this rule missed one of
+       * the two bugs it was written for.
+       *
+       * `useState(() => readRest(...))` has no `localStorage` in it — the read
+       * is inside `readRest`, four functions up the same file. Tested by
+       * putting that exact line back and watching the guard stay green, which
+       * is the only way anyone finds out. So: any function declared in this
+       * file whose own body reads the browser counts as reading the browser.
+       */
+      const indirect = [...source.matchAll(/\bfunction\s+(\w+)\s*\(/g)]
+        .map((m) => m[1])
+        .filter((name) => {
+          const body = source.slice(source.indexOf(`function ${name}`))
+          return BROWSER_ONLY.test(body.slice(0, body.indexOf('\n}') + 2))
+        })
+      const reads = (text: string) =>
+        BROWSER_ONLY.test(text) || indirect.some((n) => new RegExp(`\\b${n}\\s*\\(`).test(text))
+
+      let found = 0
+      for (const match of source.matchAll(/\buseState\s*[<(]/g)) {
+        let depth = 0
+        const open = source.indexOf('(', match.index)
+        let end = open
+        for (; end < source.length; end++) {
+          if (source[end] === '(') depth++
+          else if (source[end] === ')' && --depth === 0) break
+        }
+        if (reads(source.slice(open, end))) found += 1
+      }
+      return found
+    }
+
+    const clientFiles = (): string[] =>
+      getAllFiles(path.join(projectRoot, 'src'), /\.tsx?$/)
+        .map((f) => path.relative(projectRoot, f).replace(/\\/g, '/'))
+        .sort()
+
+    const measured = () =>
+      clientFiles().map((file) => ({
+        file,
+        now: seededIn(file),
+        allowed: SEEDED_STATE_DEBT[file] ?? 0,
+      }))
+
+    test('no NEW state is seeded from the clock or from browser storage', () => {
+      const worse = measured().filter(({ now, allowed }) => now > allowed)
+      expect(
+        worse.map((w) => `${w.file}: ${w.now} (allowed ${w.allowed})`),
+        'A `useState` initialiser runs during the server render too, where there\n' +
+          'is no localStorage and the clock is a different one — so the first client\n' +
+          'render disagrees with the HTML and React rebuilds the tree. Start from a\n' +
+          'value the server can produce and read the real one in a mount effect:\n' +
+          worse.map((w) => `${w.file}: ${w.now} (allowed ${w.allowed})`).join('\n')
+      ).toEqual([])
+    })
+
+    test('the seeded-state allowance only shrinks', () => {
+      const stale = measured()
+        .filter(({ now, allowed }) => now < allowed)
+        .map((w) => `${w.file}: ${w.now} now, SEEDED_STATE_DEBT says ${w.allowed}`)
+      expect(stale, 'Lower these in SEEDED_STATE_DEBT:\n' + stale.join('\n')).toEqual([])
+    })
+
+    test('an entry whose file is gone is removed', () => {
+      const onDisk = new Set(clientFiles())
+      const orphans = Object.keys(SEEDED_STATE_DEBT).filter((f) => !onDisk.has(f)).sort()
+      expect(orphans, 'Gone — remove from SEEDED_STATE_DEBT:\n' + orphans.join('\n')).toEqual([])
+    })
+
+    test('the live workout screen is at zero, and stays there', () => {
+      // Both of the day's instances were here, and both were found by opening
+      // the page rather than by any test.
+      expect(seededIn('src/programs/components/live/LiveWorkoutScreen.tsx')).toBe(0)
+      expect(seededIn('src/programs/hooks/useLiveWorkout.ts')).toBe(0)
+    })
+  })
+
   describe('No database message reaches a person', () => {
+    /**
+     * Measured, not remembered. The previous table was written from a LINE scan
+     * that could not see a multi-line throw or a direct `new Error(e.message)`,
+     * so six of its numbers were wrong and two whole files were missing.
+     */
     const RAW_DB_MESSAGES: Record<string, number> = {
+      'src/api_ai/apiAiRepo.ts': 7,
       'src/db/betaRepo.ts': 4,
       'src/db/dashboardRepo.ts': 3,
-      'src/db/embeddingsRepo.ts': 6,
-      'src/db/embeddingsTestRepo.ts': 5,
+      'src/db/embeddingsRepo.ts': 8,
+      'src/db/embeddingsTestRepo.ts': 7,
       'src/db/errorReportRepo.ts': 4,
       'src/db/goalRepo.ts': 33,
       'src/db/healthRepo.ts': 15,
@@ -2762,7 +2912,8 @@ describe('Architecture Compliance', () => {
       'src/db/lifePlanRepo.ts': 6,
       'src/db/paging.ts': 1,
       'src/db/profilesRepo.ts': 2,
-      'src/db/programRepo.ts': 11,
+      'src/db/programDraftRepo.ts': 5,
+      'src/db/programRepo.ts': 13,
       'src/db/scenarioRepo.ts': 1,
       'src/db/settingsRepo.ts': 17,
       'src/db/timetrackBackupRepo.ts': 2,
@@ -2771,58 +2922,91 @@ describe('Architecture Compliance', () => {
       'src/db/valueComparisonRepo.ts': 6,
       'src/db/valuesRepo.ts': 5,
       'src/db/viceRepo.ts': 3,
+      'src/goals/visionPlanService.ts': 1,
+      // The one deliberate passthrough in the codebase. SQLSTATE 55000 is how
+      // the schema's own functions say no on purpose, and the sentence they
+      // carry was written to be read. `databaseRefusal` is where that lives so
+      // it is one documented line rather than a shape nobody can tell from a
+      // leak. See src/programs/errors.ts.
+      'src/programs/errors.ts': 1,
     }
 
     /**
-     * One file's count. A line is counted when it interpolates something's
-     * `.message` INTO a throw — which is the shape that reaches a browser.
+     * How many of a file's thrown errors carry something's `.message`.
      *
-     * Deliberately crude in one direction: a doc comment is skipped by its
-     * leading `*`, so this file's own explanation of the bug does not count
-     * itself. Verified by removing the skip and watching the count rise.
+     * A WHOLE-FILE SCAN OVER BALANCED ARGUMENTS, because the first version read
+     * the file a line at a time and an adversarial review found four ways past
+     * it in one sitting:
+     *
+     *   1. a multi-line throw — `new Error(` on one line, the template on the
+     *      next — was invisible, and hid two in `embeddingsRepo` and two in
+     *      `embeddingsTestRepo`;
+     *   2. `new Error(error.message)` has no `${}`, so the simplest possible
+     *      leak did not match at all. `programDraftRepo` had five and scored 0;
+     *   3. the scan read one non-recursive directory, so `src/api_ai/` — seven
+     *      more — was outside it entirely, as any future `src/db/<subdir>/`
+     *      would have been;
+     *   4. a count taken per line moves when a line wraps, so a message growing
+     *      past the print width would have dropped the count and made the
+     *      only-shrinks half demand the ratchet be pinned lower for a reason
+     *      that had nothing to do with the code.
+     *
+     * Comments are stripped first: this file's own explanation of the bug is
+     * not the bug, and the explanations in the repos are not either.
      */
     const rawMessagesIn = (file: string): number => {
-      const interpolated = /\$\{[^}]*\.message\s*\}/g
-      const throws = /\bnew \w*(Error|Refused|Failed|Gone)\w*\(/
+      const source = fs
+        .readFileSync(path.join(projectRoot, file), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/[^\n]*/g, '')
+      const constructor = /\bnew\s+\w*(Error|Refused|Failed|Gone|Busy)\w*\s*\(/g
       let found = 0
-      for (const line of fs.readFileSync(path.join(projectRoot, file), 'utf8').split('\n')) {
-        if (line.includes('console.')) continue
-        if (line.trim().startsWith('*')) continue
-        if (!throws.test(line) && !line.includes('throw')) continue
-        found += (line.match(interpolated) ?? []).length
+      for (const match of source.matchAll(constructor)) {
+        // The balanced argument list of this constructor, so a `.message` in
+        // the NEXT statement is not counted as part of this one.
+        let depth = 0
+        let end = source.indexOf('(', match.index)
+        const open = end
+        for (; end < source.length; end++) {
+          if (source[end] === '(') depth++
+          else if (source[end] === ')' && --depth === 0) break
+        }
+        if (/\.message\b/.test(source.slice(open, end))) found += 1
       }
       return found
     }
 
-    const repoFiles = (): string[] =>
-      fs
-        .readdirSync(path.join(projectRoot, 'src', 'db'))
-        .filter((f) => f.endsWith('.ts'))
-        .map((f) => `src/db/${f}`)
+    /** Every TypeScript file under src/, at any depth. */
+    const sourceFiles = (): string[] =>
+      getAllFiles(path.join(projectRoot, 'src'), /\.tsx?$/)
+        .map((f) => path.relative(projectRoot, f).replace(/\\/g, '/'))
         .sort()
 
-    test('no file writes MORE database messages into an error than it already did', () => {
-      const worse = repoFiles()
-        .map((file) => ({ file, now: rawMessagesIn(file), allowed: RAW_DB_MESSAGES[file] ?? 0 }))
-        .filter(({ now, allowed }) => now > allowed)
+    const measured = () =>
+      sourceFiles().map((file) => ({
+        file,
+        now: rawMessagesIn(file),
+        allowed: RAW_DB_MESSAGES[file] ?? 0,
+      }))
 
+    test('no file writes MORE database messages into an error than it already did', () => {
+      const worse = measured().filter(({ now, allowed }) => now > allowed)
       expect(
         worse.map((w) => `${w.file}: ${w.now}, was ${w.allowed}`),
-        'These put the database\'s own sentence where a person will read it. A route\n' +
-          'returns a thrown message to the browser verbatim, so `${error.message}`\n' +
-          'in a repo is Postgres talking to the user. Log it with console.error and\n' +
-          'throw a sentence they can act on — see `refuseWrite` and `readRefused`\n' +
-          'in src/db/workoutRepo.ts:\n' +
+        "These put the database's own sentence where a person will read it. A route\n" +
+          'returns a thrown message to the browser verbatim, so a Postgres message in\n' +
+          'a repo is Postgres talking to the user. Log it with console.error and throw\n' +
+          'a sentence they can act on — see `refuseWrite` and `readRefused` in\n' +
+          'src/db/workoutRepo.ts. A deliberate 55000 refusal goes through\n' +
+          '`databaseRefusal` in src/programs/errors.ts:\n' +
           worse.map((w) => `${w.file}: ${w.now}, was ${w.allowed}`).join('\n')
       ).toEqual([])
     })
 
     test('a count that has gone down is written down, so it cannot come back', () => {
-      const stale = repoFiles()
-        .map((file) => ({ file, now: rawMessagesIn(file), allowed: RAW_DB_MESSAGES[file] ?? 0 }))
+      const stale = measured()
         .filter(({ now, allowed }) => now < allowed)
         .map((w) => `${w.file}: ${w.now} now, RAW_DB_MESSAGES still says ${w.allowed}`)
-
       expect(
         stale,
         'Lower these in RAW_DB_MESSAGES. A ratchet that is not tightened is a\n' +
@@ -2831,9 +3015,23 @@ describe('Architecture Compliance', () => {
       ).toEqual([])
     })
 
+    test('an entry whose file is gone is removed, so it cannot excuse a new one', () => {
+      // A key for a renamed or deleted file is a free pass waiting for the
+      // violation to come back at that path. Both tests above iterate the FILES,
+      // so neither of them can see a key with no file.
+      const onDisk = new Set(sourceFiles())
+      const orphans = Object.keys(RAW_DB_MESSAGES).filter((f) => !onDisk.has(f)).sort()
+      expect(
+        orphans,
+        'These are in RAW_DB_MESSAGES and no longer exist. Remove them:\n' + orphans.join('\n')
+      ).toEqual([])
+    })
+
     test('the live-workout repo is at zero, and stays there', () => {
       // The slice this rule was written for. Named on its own so it cannot
-      // drift back in under a table entry nobody reads.
+      // drift back in under a table entry nobody reads. It read 0 under the
+      // first detector while carrying two `new ProgramRefused(error.message)`
+      // — the headline claim measured by a metric blind to it.
       expect(rawMessagesIn('src/db/workoutRepo.ts')).toBe(0)
       expect(RAW_DB_MESSAGES['src/db/workoutRepo.ts']).toBeUndefined()
     })
