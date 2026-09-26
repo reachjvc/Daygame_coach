@@ -5,6 +5,128 @@
 Every number below was measured in this codebase on 2026-09-26, not estimated.
 Where a number is a guess it says so.
 
+## Revision 3 — 2026-09-26, after an independent review
+
+A separate agent was given this plan and told to attack it and re-measure every
+number rather than trust the prose. **It found worse than Revision 2 did, and it
+corrected Revision 2's own headline number.** Everything below was re-verified by
+hand before being written here.
+
+**The one that matters most: M4's gate could not close.** Revision 2 replaced the
+static test with a behavioural one — log in as A, try to reach B's things through
+every endpoint, expect nothing. Correct instinct, fatal ordering. That test was to
+run **before** the 68 policies are dealt with, and the integration harness turns
+row security **on**: `tests/integration/setup.ts:188` issues `SET ROLE
+authenticated` inside `asUser()`, with its own docstring explaining that without it
+"RLS is never exercised, and every denial test passes while proving nothing." So
+the test passes because *Postgres* refused the row, not because *our code*
+filtered — and that green light is what authorises deleting Postgres's refusal.
+
+It is not theoretical. `save_life_plan` is `SECURITY INVOKER` and takes ownership
+**from the caller's own payload** — `(e.value ->> 'user_id')::uuid`
+(`20260922110000_save_life_plan.sql:84`) — and its lock reads
+`FROM life_plans WHERE id = …` with **no user filter**, because the policy is
+doing that job. Delete the policies with that unchanged and one signed-in user can
+read and overwrite another's entire life plan. Nine more functions are built on the
+same principle. **Fix: M4's test runs against a throwaway copy with the policies
+already dropped. Only then does green mean our code filters.**
+
+**Revision 2's headline number was wrong, and in the flattering direction.** It
+said 12 of 26 database files have a real-database test. Measured: **3 of 22
+integration test files import repo code at all**, and their own headers say why —
+`trackingRepo.integration.test.ts:5` says "this tests the schema constraints, not
+the trackingRepo.ts business logic"; `goalRepo.integration.test.ts:7` says "They do
+**NOT** test production goalRepo.ts functions". So it is **0 of 26 repos** whose
+own functions are executed against a database, not 12. My count matched filenames,
+which is the stand-in mistake CLAUDE.md rule 1 exists to prevent.
+
+Worse, M0.4 as scoped could not have fixed it: `tests/integration/schema.sql`
+creates **52 tables, not 66** — 29 live tables are absent, including all four that
+`healthRepo` uses, and `healthRepo` was M0.4's second-largest target. And every
+repo gets its client from `createServerSupabaseClient()`, which speaks HTTP to
+Supabase and reads `next/headers`; it cannot talk to the bare Postgres container
+the harness provides. **Fix: M0.4's first job is the seam — repos receive a data
+handle instead of each making their own client — so one suite can be aimed at
+Supabase today and Drizzle tomorrow. M5 already noticed "M0 establishes no such
+interfaces" and never connected it back. That seam IS the missing interface.**
+
+**Five more that no milestone owned:**
+
+1. **Nothing will create a `profiles` row after M3.** A `SECURITY DEFINER` trigger
+   on `auth.users` does it today (`handle_new_user`,
+   `20260101000000_create_profiles.sql:134`), and **no app code inserts a profile —
+   zero `insert`/`upsert` on `profiles` anywhere.** When Better Auth owns sign-up,
+   `auth.users` and its trigger are gone, and a new account gets no profile. Every
+   access gate reads it. **The same trigger fills `profiles.timezone` at sign-up —
+   so the scheduler M1.2 builds to fix the midnight bug would roll everyone over at
+   UTC midnight instead of theirs.** M3 now owns both.
+2. **Existing accounts and their passwords have no path across.** Supabase stores
+   bcrypt; Better Auth uses scrypt and will not verify bcrypt without a custom
+   verifier. M3's test is sign-up/sign-in/reset — all of which pass with a brand-new
+   account, which is exactly what "your own account is the first test" means. M2 now
+   names it, with the choice written down: import the hashes with a verifier, or
+   force a reset for every account — and the second needs M1.3's email working
+   first, so it constrains the order.
+3. **M5's rollback loses data.** Revision 2 said "a DNS or platform switch back".
+   Every row written on the new platform between cutover and rollback lives only
+   there. Switching back does not retrieve it, it hides it, and the two databases
+   diverge. In a project with two recorded data losses. M5 now requires a stated
+   reverse path and a bounded maintenance window.
+4. **Two slices run their AI on a local Ollama.** `src/qa/config.ts:9` and
+   `src/inner-game/config.ts:244` both read
+   `process.env.OLLAMA_API_URL || "http://localhost:11434"`. On Railway that
+   address is nothing. Hosting the models is a second service with real memory, so
+   **B2's "$5–20/month" is wrong.** And `|| "http://localhost:11434"` is a silent
+   fallback, which CLAUDE.md forbids — it will present as "the AI is slow", not
+   "the AI is not configured".
+5. **No secrets inventory, and no way to know the platform is broken.** 19
+   distinct environment variables are read across the codebase and M1 names none of
+   them; `NEXT_PUBLIC_APP_URL` alone is baked into both Stripe's return URL and
+   M1.3's email links. There is no monitoring of any kind, and `/api/health/*` is
+   the health-**tracking** slice, not a liveness probe — so Railway has nothing to
+   ping. On Vercel he had someone else's monitoring for free; on Railway he has
+   none, and the plan never noticed the swap.
+
+**Also folded in:** the 10 Postgres functions become named deliverables in M4/M5
+(`claim_beta_slot` calls `auth.uid()` **inside its body**, so it breaks outright,
+not just its policy); connection pooling gets named in M5, because 280 free HTTP
+calls become 280 sockets against a default ceiling of 100 shared with the
+scheduler and staging; and Q8's rate limiting collides with convention 4 exactly
+as M7 does, since `checkRateLimit` lives in `src/timetrack/`.
+
+**Numbers corrected in Revision 3.** Every one re-measured by hand:
+
+| Was | Is |
+|---|---|
+| "12 of 26 repos have a real-database test" | **0 of 26** run repo functions against a database |
+| "`schema.sql` boots all 66 tables" | **52**; 29 live tables absent |
+| "26 repo files, 14,194 lines" | **11,272** lines in the 26 `*Repo.ts`; 14,330 is all 46 files in `src/db/` |
+| "68 policies across 56 migration files" | 68 policies, in **12** files (56 is the total migration count) |
+| rule 5's "**66** database security rules" | **68** — the plan contradicted itself on the line where approval happens |
+| "18 call sites remain" | **19**, and the ledger had 19 entries while the prose said 18 |
+| "115 data endpoints" | **116** `route.ts` files |
+| "4 scripts" (M0.3) / "8 scripts" (M1.5) | **12** reach the database — including
+  `scripts/backup-timetrack.ts` and `scripts/restore-timetrack.ts`, which are the
+  timetrack slice's own disaster recovery and die the day the database goes private |
+| "6,104 unit tests" (still at line 101) | **6,116** |
+| M8's test asserts "66 tables" | **63 live** — 66 created, 8 dropped, 5 never recreated, so the test errors on tables that no longer exist |
+| M6: "each route keeps its existing e2e spec green" | **4 of the 23 have no e2e spec at all** (`/qa`, `/preferences/archetypes`, `/test/scenario-lab`, `/test/goal-review`) |
+
+**A third spelling of the identity call was missed twice.** The M0.1 guard checked
+`getUser()`, then `getSession()`, and still missed
+`supabase.auth.admin.getUserById` at `src/api_ai/apiAiService.ts:337`. Now caught,
+and proved by planting it. Three passes to enumerate one thing correctly is the
+honest record of how hard "I have found them all" is.
+
+**What the review confirmed as sound, so nobody re-checks it:** 23 of 94 screens
+server-drawn and 71 browser-drawn — exact. 40 `references auth.users` — exact. 68
+`CREATE POLICY` — exact. 18 stray queries in 8 files, and the file list — exact.
+98 type errors and 335 lint errors — exact. `resetGoalsForPeriods` at
+`goalRepo.ts:896` and `deleteUserValues` at `valuesRepo.ts:80` — exact. **No file
+uploads, no Supabase Storage, no Realtime, no `pg_cron` anywhere** — so file
+handling is a non-problem, which is unusual and genuinely good news. And M7's
+finding that the timer already derives elapsed time from the wall clock is correct.
+
 ## Revision 2 — 2026-09-26, after a second pass over the plan
 
 The owner asked for a critical re-read. Seven things changed. Two of them were
@@ -72,7 +194,7 @@ Approve these, not the phase count. Each says what it costs if it is wrong.
    paid-for and running until the new platform has served real traffic. **If
    wrong:** a bad week becomes a lost weekend of restoring from a dump.
 
-5. **The 66 database security rules are deleted, not translated.** They exist
+5. **The 68 database security rules are deleted, not translated.** They exist
    because the database sits on the public internet; on a private network the
    wall is the network. **If wrong:** this is the one rule with real downside —
    see the security note below.
@@ -98,7 +220,7 @@ you rather than proceed.
 ## What survives, and what gets rewritten
 
 **Survives, untouched:** every screen, every component, all your business logic,
-6,104 unit tests, the whole of Life Mastery, Training, Tracking, Scenarios and
+6,116 unit tests, the whole of Life Mastery, Training, Tracking, Scenarios and
 the pipeline. This is the large majority of the codebase.
 
 **Gets rewritten:** the layer that talks to the database and the layer that knows
@@ -106,14 +228,14 @@ who you are. Measured:
 
 | What | Size today |
 |---|---|
-| Database access (`src/db/`) | 26 repo files, 14,194 lines |
+| Database access (`src/db/`) | 26 repo files, **11,272** lines (all 46 files in `src/db/` are 14,330) |
 | Files asking "who is logged in" directly | 50 files, 66 call sites |
 | Database queries outside the database layer | 8 files, 18 call sites |
-| Scripts talking to Supabase directly | 4 |
-| Security rules to delete | 68, across 56 migration files |
+| Scripts reaching the database | **12** |
+| Security rules to delete | 68, across **12** migration files (56 is the total migration count) |
 | Database links to Supabase's user table | 40 |
 | Screens the server draws (must become browser-drawn) | 23 of 94 |
-| Data endpoints that already exist | 115 |
+| Data endpoints that already exist | **116** |
 
 **The last two lines are the good news.** 71 of your 94 screens already draw
 themselves in the browser and you already have 115 data endpoints, so you have
@@ -186,7 +308,13 @@ have users, and no host provides them.
 
 ## What it costs
 
-**Revision 2 estimate: 6 to 10 weeks**, up from 4 to 7, and it is an estimate, not
+**Revision 3 estimate: 8 to 14 weeks.** Revision 1 said 4 to 7, Revision 2 said 6
+to 10. **The estimate has now moved twice, both times upward, and that is itself
+the most useful thing on this line** — it means the job keeps being bigger than the
+last look suggested, so treat any number here as a floor. Revision 3 adds the data
+seam before M0.4 (without it M0.4 buys nothing), profile creation and password
+migration in M3, hosting the AI models, secrets and monitoring in M1, and M4's
+throwaway-copy rehearsal. It is an estimate, not
 a measurement. The increase is M0.4 (the 14 missing database tests, 1–2 weeks), the
 scheduler, email and backups in M1, and Q6 if the rules are kept rather than
 deleted. **"Weeks" here means weeks of sessions like this one, not calendar weeks
@@ -341,7 +469,9 @@ not small.
 A token API is a plainer target than today's arrangement. You already have
 `checkRateLimit` (`src/timetrack/rateLimitService.ts`) and `/api/errors` uses it.
 **Recommendation: apply it to login, password reset and the AI endpoints in M3,
-and leave the rest.** Those three are where a stranger costs you money or gets in.
+and leave the rest.** **Revision 3 note: `checkRateLimit` lives in
+`src/timetrack/`, which convention 4 forbids touching — the same collision M7
+has, and it needs settling the same way.** Those three are where a stranger costs you money or gets in.
 **Cost if wrong:** someone can hammer login, or run your AI bill up.
 
 ### Q9 — Paying still does not give anybody anything. When is that fixed? NEW.
@@ -379,7 +509,7 @@ call `requirePremium()`. `AuthSuccess` gained `email` (two callers legitimately
 need it) and `optionalUserId()` is new for `/api/errors`, which serves signed-out
 callers on purpose.
 
-**18 call sites remain, deliberately, and they are not the same job:**
+**19 call sites remain, deliberately, and they are not the same job:**
 `app/page.tsx` renders a signed-out landing page instead of redirecting,
 `app/life-mastery/layout.tsx` redirects carrying a `?next=` return address,
 `app/auth/reset-password/page.tsx` runs in the browser where a server facade
@@ -448,6 +578,23 @@ The 14 without, with size, worst first:
 `workoutRepo` and `healthRepo` alone are ~2,700 lines, ~19% of everything M5
 rewrites, with nothing watching.
 
+**REVISION 3 — M0.4's FIRST JOB IS THE SEAM, or none of the rest works.** Measured:
+**0 of 26 repos have a test that executes the repo's own functions against a
+database.** Three of the 22 integration files import repo code at all, and the
+others say plainly in their headers that they test schema constraints rather than
+repo logic. Worse, they *cannot*: every repo calls `createServerSupabaseClient()`
+itself, which speaks HTTP to Supabase and reads `next/headers`, and cannot talk to
+the bare Postgres container the harness provides.
+
+So M0.4 starts by giving repos a **data handle they receive rather than create**.
+One suite then points at Supabase today and Drizzle in M5. This is the interface
+M5 complains does not exist. Two consequences worth stating: `src/db/supabase.ts`
+importing `next/headers` is also what binds the data layer to Next's request
+context, so the seam is a prerequisite for rule 1 ("the backend becomes a data
+service") being true at all; and **`tests/integration/schema.sql` creates 52
+tables, not 66** — 29 live tables are missing including all four `healthRepo`
+uses, so the mirror has to be completed before M0.4 can even seed a fixture.
+
 - These tests are written **now, against Supabase**, so they describe behaviour
   rather than implementation. The same tests then judge the Drizzle version. A
   test written after the rewrite only proves the rewrite agrees with itself.
@@ -507,6 +654,30 @@ is not already logged in.**
   called with a real address and a working link; plus one manual send to the
   owner's own inbox, because "the API returned 200" is not "the mail arrived".
 
+**M1.6 — The AI has nowhere to run. NEW in Revision 3.**
+`src/qa/config.ts:9` and `src/inner-game/config.ts:244` both read
+`process.env.OLLAMA_API_URL || "http://localhost:11434"` — a local model server.
+On Railway that address is nothing, so Ask Coach and Inner Game stop working.
+Decide: host the models as a second service (real memory, and **B2's $5–20/month
+is then wrong**) or move those two slices to a paid API. Also remove the `||`
+default: a silent fallback is forbidden by CLAUDE.md and this one will present as
+"the AI is slow" rather than "the AI is not configured".
+
+**M1.7 — Secrets, and knowing when it is broken. NEW in Revision 3.**
+19 distinct environment variables are read across the codebase and Revision 2's M1
+named none. `NEXT_PUBLIC_APP_URL` is baked into both Stripe's return URL and
+M1.3's email links, so a wrong value there sends password-reset links nowhere.
+- A secrets inventory per environment, and the app **refuses to boot** when one is
+  missing rather than degrading.
+- `/api/healthz` that actually touches the database — note `app/api/health/*` is
+  the health-**tracking** slice, not a probe, so Railway has nothing to ping today.
+- An error sink that is **not** the app's own Postgres: `/api/errors` writes into
+  the database the app depends on, so an outage takes the alarm with it. There is
+  no monitoring of any kind in this project — on Vercel that came free, on Railway
+  it does not.
+- `prune_error_reports()` (`20260906100000_error_reports.sql:76`) has no caller
+  anywhere, so `error_reports` grows without bound. M1.2's scheduler owns it.
+
 **M1.4 — Backups, and a restore that has actually been done. NEW.**
 Revision 1 mentioned backups nowhere. 66 tables, and two real data losses are
 already on record in this project.
@@ -526,8 +697,37 @@ handle that they will not connect at all.
   from the platform's CLI, or running the pipeline as a job on the platform
   itself. The second is better — the corpus build is long-running and does not
   belong on a laptop that sleeps.
+**The timetrack backup holds the key that bypasses every wall, and nothing runs
+it.** Verified 2026-09-26 after a peer raised it:
+`exportTimetrack` (`src/db/timetrackBackupRepo.ts:44`) calls
+`createAdminSupabaseClient()`, which reads `SUPABASE_SERVICE_ROLE_KEY`
+(`src/db/server.ts` → `supabase.ts:47`) — the **service-role** credential, which
+bypasses row-level security entirely and can read and overwrite every user's rows.
+`grep -rl backup-timetrack .github/ package.json scripts/` finds only the script
+itself: **no npm script, no workflow, no schedule.** So the slice's disaster
+recovery is a person remembering to run a script that holds the master key.
+
+**And its own docstring overclaims its test coverage, which is the more dangerous
+half.** `timetrackBackupRepo.ts:10` says "there is a test that runs the whole round
+trip against a real Postgres". There is not. `tests/unit/db/timetrackBackup.test.ts`
+covers `assertRestorable` — whether a file is safe to write over live data — and
+its own header is honest that the round trip "is proved by hand (the procedure is
+in docs/runbooks/timetrack.md, and it was run)". So: proved once manually,
+documented, never re-proved automatically, and a comment in the repo that tells the
+next reader a test is watching. **Fix the comment as part of this milestone** — a
+false claim of coverage is worse than no coverage, because it stops the next person
+looking. Three files are involved and nothing else imports them:
+`src/db/timetrackBackupRepo.ts`, `scripts/backup-timetrack.ts`,
+`scripts/restore-timetrack.ts`.
+
+- **It is 12 scripts, not 8** (Revision 3 re-measured). Two of them matter more
+  than the rest: **`scripts/backup-timetrack.ts` and
+  `scripts/restore-timetrack.ts`** are the timetrack slice's own disaster recovery,
+  and they stop working the day the database goes private. In a project with two
+  recorded data losses, those two are not "a script".
 - Test: `scripts/training-data/11.EXT.retrieval-smoke.ts` runs green against the
-  new database from wherever it is going to live from now on.
+  new database from wherever it is going to live from now on, **and the timetrack
+  backup/restore pair runs green from wherever it will live.**
 
 ## M2 — Schema and data
 
@@ -545,6 +745,26 @@ library choice and schema generation first, then repoint the 40 links once.**
   integrity check that fails if any `auth.users` reference survives.
 
 ## M3 — Token login (Better Auth)
+
+**REVISION 3 — two deliverables that belonged to nobody.**
+1. **Creating the profile row on sign-up, and capturing the timezone.** Today a
+   `SECURITY DEFINER` trigger on `auth.users` does it (`handle_new_user`,
+   `20260101000000_create_profiles.sql:134`) and **no app code inserts a profile —
+   zero inserts or upserts on `profiles` anywhere.** The trigger dies with
+   `auth.users`, so a new account would get no profile and hit a blank wall at
+   every access gate with no error explaining it. The same trigger fills
+   `profiles.timezone`, so **without this M1.2's scheduler rolls everyone over at
+   UTC midnight instead of their own.** M1.2's timezone test must therefore use a
+   user whose timezone arrived at sign-up, not one typed into Settings.
+2. **Existing accounts and passwords.** Supabase stores bcrypt; Better Auth uses
+   scrypt and will not verify bcrypt without a custom verifier. Decide and write
+   down which: import the hashes with a verifier, or force a reset for every
+   account — **the second needs M1.3's email working and warmed first, so it
+   constrains the order.** M3's stated test (sign-up, sign-in, reset) passes with
+   a brand-new account and cannot see this gap, and M2's stated foreign-key test
+   passes perfectly against an empty users table. **Ask the owner how many real
+   accounts exist** — `beta_invites`, `beta_testers` and `waitlist_emails` exist,
+   so it is a question, not an assumption.
 
 - Users in your own database. Tokens, not cookies, because a phone app cannot use
   the cookie (vision item 47).
@@ -569,8 +789,29 @@ rule 5 the plan then stops — or it grows an exception list. **An exception lis
 the single test standing between one user's data and another's is exactly where
 the hole would live.** Reading source is a proxy; what protects data is behaviour.
 
+**REVISION 3, AND THIS IS THE WHOLE GATE: the behavioural test must run with the
+68 policies ALREADY DROPPED, on a throwaway copy.** Run with them live — which is
+what the existing harness does, `SET ROLE authenticated` at
+`tests/integration/setup.ts:188` — the test passes because Postgres refused the
+row, not because our code filtered, and that green light is what authorises
+deleting Postgres's refusal. The harness's own docstring says it: without the role
+switch "RLS is never exercised, and every denial test passes while proving
+nothing." Order: copy the database, drop the policies on the copy, run the test
+there, and only a green run on the *unprotected* copy means anything.
+
+**And the 10 Postgres functions are named deliverables, not background.** They were
+absent from Revision 1 and 2 entirely. `save_life_plan` takes ownership from the
+caller's own payload (`(e.value ->> 'user_id')::uuid`) and locks
+`FROM life_plans WHERE id = …` with no user filter, because the policy does that
+job — its own migration says so in capitals. `claim_beta_slot` calls `auth.uid()`
+**inside its body** (`20260709_create_beta_tables.sql:41`), so it breaks outright
+rather than merely losing a wall. The full list: `save_life_plan`,
+`start_enrollment`, `end_enrollment`, `resume_enrollment`, `finish_program_workout`,
+`remove_session_and_replay`, `replace_sets_and_replay`, `log_session_and_advance`,
+`claim_beta_slot`, `match_embeddings`.
+
 **The primary proof is now behavioural:**
-- A generated integration test that, for **every one of the 115 endpoints**, calls
+- A generated integration test that, for **every one of the 116 endpoints**, calls
   it as user A using user B's ids, and asserts nothing of B's comes back and
   nothing of B's is changed. Generated from the route list so a new endpoint is
   covered the day it is added, and failing for an endpoint it cannot classify
@@ -599,6 +840,17 @@ deletion as settled. It is not.
   client, so they pass against a broken rewrite. Twelve of 26 repos had real
   coverage before M0.4; all 26 must have it before a line of this phase is
   written.
+- **REVISION 3 — connection pooling.** Today each of ~280 `.from()` call sites gets
+  a free HTTP client. Under Drizzle each becomes a real socket, and Postgres
+  defaults to 100 connections shared between the web app, M1.2's scheduler,
+  staging and any pipeline job. Name a single module-level pool with an explicit
+  ceiling; do not let each repo function open its own.
+- **REVISION 3 — the rollback as written loses data.** A DNS switch back to
+  Vercel+Supabase does not retrieve the rows written on the new platform after
+  cutover: it hides them, and the two databases diverge permanently. State the
+  reverse path (a dump of the changed tables back into Supabase) and a bounded
+  read-only window so the set of divergent writes is known. Rehearse the **data**
+  part on staging, not just the switch.
 - **Rollback, which Revision 1 did not state:** traffic moving is the one step
   users would notice. Write down before starting how it goes back — Supabase is
   still running and paid by rule 4, so the answer should be a DNS or platform
@@ -608,7 +860,11 @@ deletion as settled. It is not.
 
 - The 23 `page.tsx` files without `"use client"` become browser-drawn against the
   115 existing endpoints plus whatever is missing.
-- Test: each converted route keeps its existing e2e spec green.
+- Test: each converted route keeps its existing e2e spec green — **except that 4
+  of the 23 have no e2e spec at all** (`/qa`, `/preferences/archetypes`,
+  `/test/scenario-lab`, `/test/goal-review`), measured in Revision 3 against all
+  79 specs in `tests/e2e/`. Write them, or accept a browser check for those four
+  and say which was done.
 
 ## M7 — The real app
 
@@ -642,6 +898,10 @@ vision item 46. This must be settled before M7 starts, not during it.
 - None exists today. `deleteUserValues` (`src/db/valuesRepo.ts:80`) deletes one
   slice's rows, not an account.
 - Test: an integration test that deletes an account and finds no row of theirs in
-  any of the **66 tables** the migrations create. Counted 2026-09-26, and it
+  any of the **63 LIVE tables** — Revision 3 measured 66 `CREATE TABLE` statements
+  of which 8 were later dropped and 5 never recreated, so a test iterating "the 66
+  tables the migrations create" errors on tables that no longer exist. The
+  tempting fix is to skip the failures, which is exactly the trap the next
+  paragraph warns about. Counted 2026-09-26, and it
   matters: the figure carried in the notes was 34, so the table the test forgets
   is the one that keeps somebody's data after they asked for it to be gone.
