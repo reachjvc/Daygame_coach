@@ -145,6 +145,22 @@ test.describe.serial("training on a phone", () => {
     // clean session.
     await expect(page.getByText("Not everything was ticked")).toBeVisible({ timeout: 15000 })
     await expect(page.getByText(/Squat\s*4 of 5/)).toBeVisible()
+
+    /**
+     * EVERY TICK IS A SAVE, AND SAVE IS DISABLED UNTIL THEY LAND.
+     *
+     * `FinishSheet` disables its button while `unsaved > 0` and says why on the
+     * line above it — "Waiting for signal — N sets are not saved yet." Four
+     * ticks in a loop and then an immediate click races the last of them: on
+     * 2026-09-26 this test spent its whole 60-second budget on a button that was
+     * correctly disabled, and Playwright's log says so in one line — "element is
+     * not enabled", against a `<button disabled>` reading "Save this workout".
+     *
+     * The product was right and the test was early. So wait for the condition
+     * the button is actually gated on rather than for a length of time — the
+     * same correction the cold-open sweep needed for hydration the day before.
+     */
+    await expect(page.getByText(/not saved yet/i)).toHaveCount(0, { timeout: 20000 })
     await page.getByRole("button", { name: /save this workout/i }).click()
 
     await expect(page.getByTestId("workout-summary")).toBeVisible({ timeout: 20000 })
