@@ -468,10 +468,23 @@ not small.
 ### Q8 — Rate limiting on the new data service? NEW.
 A token API is a plainer target than today's arrangement. You already have
 `checkRateLimit` (`src/timetrack/rateLimitService.ts`) and `/api/errors` uses it.
-**Recommendation: apply it to login, password reset and the AI endpoints in M3,
-and leave the rest.** **Revision 3 note: `checkRateLimit` lives in
-`src/timetrack/`, which convention 4 forbids touching — the same collision M7
-has, and it needs settling the same way.** Those three are where a stranger costs you money or gets in.
+**Recommendation, CORRECTED: move the counter into Postgres first, then apply it to
+login, password reset and the AI endpoints.** The earlier recommendation — reuse
+`checkRateLimit` as it stands — was wrong, and the code says so itself. It is
+`const buckets = new Map<string, number[]>()`
+(`src/timetrack/rateLimitService.ts:16`): **a counter in the memory of one server
+process.** Its own docstring states the consequence — "if the app is ever run as
+more than one instance, each instance counts its own calls, so the real limit is
+the number of instances times this one … a shared limit needs a shared store
+(Postgres or Redis), which is the right change the day a second instance exists."
+
+**This move is the day a second instance exists.** Staging plus production is
+already two, and any scaling is more. So relying on that limiter to slow a login
+brute-force or cap AI spend would give a limit that quietly multiplies by the
+instance count — which for the AI endpoints means multiplying the bill. The shared
+store comes first; applying it to more endpoints second. **Revision 3 note:
+`checkRateLimit` lives in `src/timetrack/`, which convention 4 forbids touching —
+the same collision M7 has, and it needs settling the same way.** Those three are where a stranger costs you money or gets in.
 **Cost if wrong:** someone can hammer login, or run your AI bill up.
 
 ### Q9 — Paying still does not give anybody anything. When is that fixed? NEW.
@@ -711,10 +724,19 @@ recovery is a person remembering to run a script that holds the master key.
 half.** `timetrackBackupRepo.ts:10` says "there is a test that runs the whole round
 trip against a real Postgres". There is not. `tests/unit/db/timetrackBackup.test.ts`
 covers `assertRestorable` — whether a file is safe to write over live data — and
-its own header is honest that the round trip "is proved by hand (the procedure is
-in docs/runbooks/timetrack.md, and it was run)". So: proved once manually,
-documented, never re-proved automatically, and a comment in the repo that tells the
-next reader a test is watching. **Fix the comment as part of this milestone** — a
+its own header says the round trip "is proved by hand (the procedure is
+in docs/runbooks/timetrack.md, and it was run)".
+
+**That fallback pointed at nothing, until this commit.** `docs/runbooks/` was not
+on disk: the file went in `ecee9a13` (2026-09-09), "Delete 482 stale documents,
+and stop CLAUDE.md pointing at specs that no longer exist" — the purge that
+removed dangling references left this one dangling. Found by a peer, verified here,
+and **restored from `ecee9a13^` in this commit** (118 lines), because two live code
+comments cite it and it is the only written copy of the recovery procedure for a
+slice whose data lives in one browser's local storage. So the accurate statement
+is: **proved by hand once, with the written procedure deleted for 17 days, and
+never re-proved automatically** — and a comment in the repo that tells the next
+reader a test is watching. **Fix the comment as part of this milestone** — a
 false claim of coverage is worse than no coverage, because it stops the next person
 looking. Three files are involved and nothing else imports them:
 `src/db/timetrackBackupRepo.ts`, `scripts/backup-timetrack.ts`,
