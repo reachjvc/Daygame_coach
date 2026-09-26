@@ -268,7 +268,28 @@ describe("every quote is about the vice it is filed under", () => {
     const COMPOSITE = /"\s*(?:…|\[\.…\]|\.\.\.)\s*"/
     const GLUED_ATTRIBUTION = /"\s+—\s/
     const RAW_ADDRESS = /https?:\/\//
-    const THIRD = /\b(he|she|they)\s+(?:was|were|had|went|said|played|decided|stopped)\b/i
+    // THE VERB LIST WAS TOO NARROW: it ran (was|were|had|went|said|played|
+    // decided|stopped), so any present-tense or modal third-person sentence went
+    // straight through. Widened to any inflected verb plus the modals, which
+    // immediately caught `10-201` — a Trustpilot refund complaint opening
+    // "Craig Beck is extremely dishonest."
+    //
+    // AND IT IS STILL NOT WHAT CAUGHT `10-204`, WHICH IS WORTH BEING EXACT
+    // ABOUT. That entry was kaba0 recounting a hypothetical from a book: "If he
+    // refuses by saying 'I don't smoke now/I'm trying to quit', he will much
+    // more likely not be able to quit his addiction." The widened THIRD does
+    // match "he refuses" — and the check below then asks whether the first
+    // sentence contains a first-person pronoun, and it DOES, because the
+    // hypothetical smoker's own quoted speech contains "I". A first-person
+    // pronoun inside somebody else's imagined dialogue is not the author
+    // speaking, and no amount of verb-list widening can tell those apart.
+    //
+    // So the conditional below is what catches that shape, and it is clean:
+    // ZERO of the 373 real accounts in this set open a clause with "if he",
+    // "if she" or "if they". Somebody describing their own night does not
+    // hypothesise about a third party.
+    const THIRD = /\b(he|she|they)\s+(?:\w+(?:s|ed)|was|were|had|will|would|can|could|might|may|must)\b/i
+    const HYPOTHETICAL = /\bif (?:he|she|they)\b/i
     const FIRST = /\b(I|I'm|I've|my|me)\b/
     for (const t of TESTIMONIALS) {
       expect(t.quote, `${t.id} is two quotes glued together`).not.toMatch(COMPOSITE)
@@ -280,6 +301,12 @@ describe("every quote is about the vice it is filed under", () => {
         t.quote,
         `${t.id} has a raw web address inside the quote a person reads`,
       ).not.toMatch(RAW_ADDRESS)
+      expect(
+        t.quote,
+        `${t.id} hypothesises about a third person — this is an argument being ` +
+          `recounted, not somebody's account of their own night. A book's ` +
+          `reasoning belongs in techniques.ts.`,
+      ).not.toMatch(HYPOTHETICAL)
       if (THIRD.test(t.quote)) {
         expect(FIRST.test(t.quote.split(".")[0]), `${t.id} reads as a third-person summary`).toBe(true)
       }

@@ -282,16 +282,52 @@ export const TESTIMONIALS: Testimonial[] = [
   { id: "10-193", quote: "Yeah, that Allen Carr book is mediocre at best. It blows my mind why it is recommended everywhere. There are no books, no special points, no right combination of words just waiting to be perceived to alleviate this situation. Why would anyone imply there are? Idiots.", handle: "u/Dull-Mulberry8710", source: "r/stopsmoking", url: "https://www.reddit.com/r/stopsmoking/comments/1vovpqi/im_34_days_in_but_still_high_stress_and_headaches/p3t16u8/", date: "", vices: [], stages: ["lapse"] },
   { id: "10-194", quote: "managed to change from having 30/day to 3 on a Sunday evening in the pub. But if I didn't get to the pub on Sunday evening it ate me up inside", handle: "u/rahoulb", source: "Goodreads review", url: "https://www.goodreads.com/book/show/6618.The_Easy_Way_to_Stop_Smoking", date: "", vices: ["nicotine"], stages: ["deciding", "early"] },
   { id: "10-195", quote: "This is really, truly a terrible book that uses very transparent psychological trickery to convince you to stop smoking. But, it totally worked on me so it gets 5 stars.", handle: "u/rahoulb", source: "Goodreads review", url: "https://www.goodreads.com/topic/show/1495548-just-read-it-to-the-end", date: "", vices: ["nicotine"], stages: ["deciding", "early"] },
-  { id: "10-196", quote: "even though I failed with Alan the first time, the things he said are still there and that's why it was easy for me to stop when pregnant", handle: "u/microcentury", source: "Hacker News", url: "https://news.ycombinator.com/item?id=5621845", date: "2003", vices: ["nicotine"], stages: ["deciding", "early"] },
+  { id: "10-196", quote: "even though I failed with Alan the first time, the things he said are still there and that's why it was easy for me to stop when pregnant", handle: "Friendzone", source: "Mumsnet", url: "https://www.mumsnet.com/talk/am_i_being_unreasonable/2970179-To-ask-people-who-have-read-Allen-Carr-Stop-Smoking-books", date: "2017-07-03", vices: ["nicotine"], stages: ["deciding", "early"] },
   { id: "10-197", quote: "The breakthrough was the realisation that the response that says 'I want a cigarette' is a broken thought process that was learned, i.e. is not natural, and can be unlearned.", handle: "u/microcentury", source: "Goodreads review", url: "https://www.goodreads.com/book/show/9321.Easy_Way_to_Control_Alcohol", date: "", vices: ["nicotine"], stages: ["deciding", "early"] },
   { id: "10-198", quote: "This Naked Mind was the first quit-lit book I read when I quit drinking in 2022", handle: null, source: "juliefontes.substack.com", url: "https://juliefontes.substack.com/p/quit-lit-series-this-naked-mind-by", date: "", vices: ["alcohol"], stages: ["deciding", "early"] },
   { id: "10-199", quote: "I read Alan Carr's easy way to stop smoking and was absolutely fascinated by his practical and pragmatic approach.", handle: null, source: "medium.com", url: "https://medium.com/authority-magazine/social-impact-authors-how-why-author-william-porter-of-alcohol-explained-is-helping-to-change-9f336a9f9d7b", date: "", vices: ["nicotine"], stages: ["deciding", "early"] },
-  { id: "10-200", quote: "Simply life changing!...The best money I have ever spent!", handle: "Jim M, verified reviewer", source: "www.reviews.io", url: "https://www.reviews.io/company-reviews/store/stopdrinkingexpert.com", date: "", vices: ["alcohol"], stages: ["deciding", "early"] },
-  { id: "10-201", quote: "Craig Beck is extremely dishonest. He wouldn't honour his money-back guarantee even though I had done everything he required.", handle: "Matt, unverified reviewer", source: "www.trustpilot.com", url: "https://www.trustpilot.com/review/stopdrinkingexpert.com", date: "", vices: ["alcohol"], stages: ["deciding", "early"] },
+  // 10-200 AND 10-201 WERE HERE AND WERE NOT ACCOUNTS OF QUITTING ANYTHING.
+  // They were a marketing blurb off reviews.io — "Simply life changing!...The
+  // best money I have ever spent!" — and a refund dispute off Trustpilot —
+  // "Craig Beck is extremely dishonest. He wouldn't honour his money-back
+  // guarantee". Both would have rendered under "Somebody else, in the same
+  // spot", so a person mid-urge could have been handed a consumer complaint
+  // about a paid product.
+  //
+  // Both were also composites of two and three separate reviewers glued
+  // together, found on 2026-09-26 while reading all 71 untagged entries in full.
+  //
+  // WHAT THEY WERE FOR IS REAL AND BELONGS SOMEWHERE ELSE. Source file 10 is
+  // "method books", and evidence that a paid programme does not honour its
+  // refunds is a legitimate finding about that programme — it belongs in
+  // docs/research/recovery-testimonials/10-method-books.md and its SYNTHESIS,
+  // where the corpus keeps what it learned. A testimonial is one person's
+  // account of their own quitting, and neither of these is that.
+  //
+  // The third-person guard in testimonials.test.ts caught 10-201 once its verb
+  // list was widened. It was NOT loosened to let it back in: softening a rule to
+  // fit bad data is the move that put a false storage promise on screen for
+  // three days.
   { id: "10-202", quote: "Can we recognize any thought that leads us to further use as a thought made by The Beast? Can we return to our Core Self as the viewer of these thoughts and decide that we will not listen to them?", handle: null, source: "sobertostay.com", url: "https://sobertostay.com/what-is-rational-recovery-perhaps-the-world-wasnt-ready-for-it", date: "1998", vices: [], stages: ["deciding"] },
   { id: "10-203", quote: "If a thought of drinking/using comes up, I say, hello there! No thanks! And as easy as that, I go on with my day.", handle: null, source: "Goodreads review", url: "https://www.goodreads.com/en/book/show/1179391", date: "2025", vices: ["alcohol"], stages: ["deciding", "early"] },
-  { id: "10-204", quote: "If he refuses by saying 'I don't smoke now/I'm trying to quit', he will much more likely not be able to quit his addiction. But if he answers with 'I'm not a smoker', he is on a good path.", handle: null, source: "Hacker News", url: "https://news.ycombinator.com/item?id=29748792", date: "2021-12-31", vices: ["nicotine"], stages: ["deciding", "early"] },
-  { id: "10-205", quote: "I want to reduce/eliminate my alcohol consumption to become a person that doesn't rely on alcohol for social distraction or self-medication. To achieve this I have stopped keeping any alcohol in my home.", handle: null, source: "Hacker News", url: "https://news.ycombinator.com/item?id=29777894", date: "2022-01-03", vices: ["alcohol"], stages: ["deciding", "early"] },
+  // 10-204 WAS HERE AND WAS NOT TESTIMONY. Read at its real source on
+  // 2026-09-26 (news.ycombinator.com/item?id=36321913, not the id this entry
+  // carried): kaba0 is recounting a HYPOTHETICAL from a book — "The example used
+  // in the book was that of smoking. A smoker that is looking to quit goes out
+  // with a colleague for a smoke break, and the colleague offers him one." So it
+  // shipped under "Somebody else, in the same spot" as if a person were
+  // describing their own night, and nobody in it exists. That is the same class
+  // as the three third-person write-ups removed on 2026-08-20.
+  //
+  // The idea is good and is already in the product properly sourced, as the
+  // technique "Convert the decision into an identity, and make it binary". A
+  // technique is where a book's argument belongs; a testimonial is where a
+  // person's account belongs.
+  //
+  // The third-person guard in testimonials.test.ts missed it because its verb
+  // list is (was|were|had|went|said|played|decided|stopped) and this says "he
+  // refuses" and "he will". Widened there.
+  { id: "10-205", quote: "I want to reduce/eliminate my alcohol consumption to become a person that doesn't rely on alcohol for social distraction or self-medication. To achieve this I have stopped keeping any alcohol in my home.", handle: "nomadiccoder", source: "Hacker News", url: "https://news.ycombinator.com/item?id=29748792", date: "2021-12-31", vices: ["alcohol"], stages: ["deciding", "early"] },
   { id: "10-206", quote: "If you want to change a habit, it usually helps to recognize the cue ('I always want to go to a bar when I feel stressed'), deliver the expected reward ('I feel more relaxed around my friends'), but find an alternative routine ('Instead of going to the bar, I'll go to an Alcoholics Anonymous meeting'). And remember, your odds of success go up dramatically when you commit to changing as part of a group.", handle: null, source: "charlesduhigg.com", url: "https://charlesduhigg.com/wp-content/uploads/2025/01/Duhigg-Readers-Guide-to-Changing-Habits.pdf", date: "2025", vices: ["alcohol"], stages: ["deciding", "early"] },
   { id: "10-207", quote: "Now, with mindfulness training, we dropped the bit about forcing and instead focused on being curious. In fact, we even told them to smoke. What? Yeah, we said, 'Go ahead and smoke, just be really curious about what it's like when you do.'", handle: null, source: "www.ted.com", url: "https://www.ted.com/talks/judson_brewer_a_simple_way_to_break_a_bad_habit/transcript", date: "", vices: ["nicotine"], stages: ["deciding", "early"] },
   { id: "10-208", quote: "At first i didnt feel anything but then after like 2-3 drinks…starts to get a mild nausea feeling.", handle: "Dublosix88", source: "talkingsober.com", url: "https://talkingsober.com/t/trying-sinclair-method-naltrexone/64889", date: "", vices: ["alcohol"], stages: ["deciding", "early"] },

@@ -1348,3 +1348,86 @@ into a permanent excuse.
   module. The door is honest without it; it is also empty.
 - **Attribution on `10-196`, `10-204`, `10-205`**, and whether `10-200` and
   `10-201` belong at all.
+
+## M8c — THE ATTRIBUTION DOUBT, RESOLVED WHERE IT COULD BE AND NAMED WHERE IT COULD NOT
+
+M8b recorded a doubt on three entries. Chased it on 2026-09-26 by fetching the
+pages and grepping the raw HTML, which is this corpus's own rule.
+
+**All three were wrong, and each one's true source was found.**
+
+| | was | is |
+| --- | --- | --- |
+| `10-196` | `u/microcentury`, Hacker News, item 5621845, dated **2003** | **`Friendzone`, Mumsnet, 2017-07-03** |
+| `10-205` | handle null, HN item 29777894, dated 2022-01-03 | **`nomadiccoder`, HN item 29748792, 2021-12-31** |
+| `10-204` | handle null, HN item 29748792, dated 2021-12-31 | `kaba0`, HN item **36321913**, 2023-06-14 — **and removed, see below** |
+
+`10-196` had **every** provenance field wrong and only the words were real: the
+quote is verbatim on a Mumsnet thread, the Hacker News page it cited does not
+contain it, and that page's posters are `microcentury` and `swores` — so the
+handle named a real person who did not say it. The author was identified by
+reading the thread's own layout: the name precedes the post, so the speaker is
+`Friendzone` at 13:53, not `Bunbunbunny` at 13:54 whose name follows the text.
+That distinction is the module's *"substring-verifying a quote does not verify
+who said it"* rule, met rather than cited.
+
+**`10-204` was not testimony at all.** Read at its real source, `kaba0` is
+recounting a hypothetical from a book: *"The example used in the book was that
+of smoking. A smoker that is looking to quit goes out with a colleague for a
+smoke break, and the colleague offers him one."* It shipped under "Somebody
+else, in the same spot" and nobody in it exists. Removed. The idea is good and
+is already in the product, properly sourced, as the technique **"Convert the
+decision into an identity, and make it binary"** — which is where a book's
+argument belongs.
+
+**`10-200` and `10-201` removed too**, on the question M8b left open. Neither is
+an account of quitting: one is a marketing blurb off reviews.io with nothing in
+it about drinking, the other a Trustpilot refund dispute. A person mid-urge
+could have been handed a consumer complaint. What they were gathered FOR is real
+— source file 10 is "method books", and a paid programme not honouring refunds
+is a finding about that programme — and it belongs in
+`docs/research/recovery-testimonials/10-method-books.md`, not in a testimonial
+set. 373 entries now, from 376.
+
+### The verification could not be finished, and that is the finding
+
+Of 17 entries in source file 10, **4 verified at their stated url, 3 confirmed
+wrong, and 10 could not be checked from here.** The obstacles, each measured
+rather than assumed: **Goodreads serves this agent 0 bytes**; Reddit serves a
+1,569-character JavaScript shell; reviews.io, Trustpilot and sobertostay.com
+answer 403; and one source is a PDF.
+
+**So the only entries with a real verdict are the three whose pages serve plain
+HTML — and all three were wrong.** Three is a small sample and it is 100% of the
+sample. The honest reading is not "file 10 is 18% broken"; it is **"file 10's
+provenance has never been checked, and every part of it that could be checked
+failed"**. That wants a human pass with a browser, and it is recorded here
+rather than closed.
+
+*My own checker made the mistake it was written to find.* Its first version
+called a page that served **zero bytes** "NOT FOUND", which is absence of
+evidence read as evidence of absence — and it reported 10 wrong instead of 3. It
+has a third state now. Even with it, a 2,000-character threshold marks a
+legitimately short HN comment page as unchecked and a Goodreads shell full of
+navigation text as checked, so **it is not shipped as a guard**: a checker that
+cannot tell a blocked page from a missing quote would be muted within a month,
+which is the same reasoning that gave `check-helplines.mjs` three outcomes.
+
+### Two guards widened, and one claim of mine corrected
+
+**The third-person detector's verb list** ran
+`(was|were|had|went|said|played|decided|stopped)`, so any present-tense or modal
+third-person sentence passed. Widened to any inflected verb plus the modals,
+which immediately caught `10-201`.
+
+**And that widening does NOT catch `10-204`, which is worth being exact about,
+because my first version of this section said it did.** The rule asks whether
+the first sentence contains a first-person pronoun, and `10-204`'s does — inside
+the hypothetical smoker's own quoted speech (*"I don't smoke now/I'm trying to
+quit"*). A first-person pronoun inside somebody else's imagined dialogue is not
+the author speaking, and no verb list can tell those apart.
+
+What does catch it is a second tripwire: a clause opening **"if he", "if she" or
+"if they"**. Checked before adding it — **zero of the 373 real accounts contain
+one**, because somebody describing their own night does not hypothesise about a
+third party. Proved by planting `10-204` back and watching it fail by name.
