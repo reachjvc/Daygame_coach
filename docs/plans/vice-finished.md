@@ -1431,3 +1431,106 @@ What does catch it is a second tripwire: a clause opening **"if he", "if she" or
 "if they"**. Checked before adding it — **zero of the 373 real accounts contain
 one**, because somebody describing their own night does not hypothesise about a
 third party. Proved by planting `10-204` back and watching it fail by name.
+
+## M8d — THE CORPUS GAP CLOSED FOR FOUR VICES, AND A QUOTE THAT SHOWED ITS OWN MARKUP
+
+The largest remaining gap: gaming, scrolling, junk food and spending had **no
+accounts at all**, and six of nine vices had nothing at `goodStretch`. Sixteen
+verified accounts now cover them. Method, access notes and the two things that
+went wrong: `docs/research/recovery-testimonials/16-uncovered-vices.md`.
+
+| own accounts | alcohol | nicotine | weed | scrolling | gaming | porn | gambling | junk | spending |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| at the urge | 21 | 14 | 9 | 0 **→ 2** | 0 **→ 2** | 4 | 1 | 0 **→ 2** | 0 **→ 3** |
+| at the good stretch | 19 | 1 | 27 | 0 **→ 1** | 0 **→ 4** | 0 | 0 | 0 **→ 3** | 0 **→ 1** |
+
+**The debt list shrank from six to two by being a test rather than a note.** The
+staleness assertion added in M8b failed the moment those four gained accounts and
+would not pass until they were deleted from `NO_GOOD_STRETCH_ACCOUNTS`. Porn and
+gambling remain; both are covered at other stages, so it is one stage rather than
+an absent vice, and `r/pornfree` and `r/problemgambling` take the same method.
+
+**arctic-shift is the route that works, and two notes in project memory are now
+stale.** pullpush answers 429 — *"does not provide free scraping resources for
+agents… paid scraping service"* — and **old.reddit returns 0 bytes**, so the
+"old.reddit + plain Chrome UA at ~12s spacing" note is no longer true either.
+What arctic-shift gives that HTML scraping did not: `author` and `body` are
+fields of one record, so **a quote cannot be credited to the wrong person unless
+the archive itself is wrong** — which is the exact failure file 05 needed a
+second script to rule out, and the failure `10-196` turned out to be.
+
+*What could NOT be done, stated rather than skipped:* there is no independent
+confirmation of arctic-shift against Reddit itself. old.reddit is blocked and the
+Wayback Machine has no snapshot of these 2026 threads. So the verification
+standard met here is "exact substring of a raw archived record, author from the
+same record" — not "confirmed against the live page".
+
+### Two things went wrong in the harvest, and they change what the numbers mean
+
+**"Moderation" means something else in r/digitalminimalism.** The first pass
+searched `in moderation` — this module's central concept — and in a
+digital-minimalism community that phrase overwhelmingly means **moderating a
+subreddit**: *"I moderate some small subs here and it's a labor of love with
+emphasis on the labor."* Of 53 scrolling candidates, the majority were about the
+labour of running a community, and the pass produced **zero** good-stretch
+accounts for scrolling while the other three each produced several. A false
+friend, not a thin community. The second pass used the shape the behaviour takes
+— *deleted the app, was fine, reinstalled it* — and returned 106 candidates, **58
+of them from r/nosurf, which the first pass had missed entirely.**
+
+**182 candidates produced 16 quotes, and the ratio is the point.** The rest are
+advice in the second person, replies containing no account, a supplement
+promotion, an app promoted by an account that only posts about that app, and
+several off-topic entirely. Every one was read in full. Nothing was selected from
+a preview, which is how ~40% of a batch went out wrong in August.
+
+### The editorial decisions, because they are judgements and not findings
+
+**Counter-evidence is kept and kept out of one door.** Two accounts say
+moderation works for them. They are in, at `deciding` — not at `goodStretch`,
+which is shown at the exact moment somebody is telling themselves they can
+moderate. Answering that moment with a true "it worked for me" is the one place
+this module could do harm with an honest quote. **Stage is the decision; inclusion
+was never in question.**
+
+**r/BingeEatingDisorder was not used, though it is the richest source for
+`junk`.** Binge eating disorder is a clinical diagnosis; this module has no ED
+framing, no screening and no route to specialist care for it, and its safety gate
+covers alcohol and benzodiazepine withdrawal only. Quoting a clinical population
+under "somebody else, in the same spot" would imply an equivalence the product
+has not earned. `junk` comes from r/sugarfree, which is about a habit.
+**If you want ED accounts, that is a safety-framing decision first.**
+
+### And the quotes were printing their own markup
+
+Found by driving the thought door for four vices and reading the output: the
+`**` emphasis convention — which marks the key phrase so a long account has a
+readable centre — **was never rendered.** `OneVoice` interpolated the raw string,
+so a person met `**` in the middle of the sentence that was supposed to answer
+them.
+
+**Twenty-three entries use it and twenty-two are at `urge` or `goodStretch`**,
+the only two stages the live page reads. Seven of those predate this session, so
+this has been on screen through every pass over this module. **No test saw it
+because the data tests assert on the string, and the string is correct.** Only
+rendering shows it.
+
+`tests/unit/vice/voicesRendering.test.tsx` renders every account the live page
+can reach, at every rotation, and was proved against both the original fault and
+**the cheap wrong fix** — stripping the asterisks passes an asterisk check and
+silently loses the emphasis, so the second case asserts the words are still there
+and still in a `<b>`.
+
+*Its own first version failed for a good reason:* it looked for the quote by its
+text, and `Quoted` deliberately splits the quote across a `<b>` and several
+`<span>`s, so no text matcher can see it whole. The failure was evidence the fix
+was working.
+
+### A shared-tree note
+
+`MEMORY.md` blocked a commit twice by exceeding its 430-word budget, the second
+time eight words over. Rather than trim another session's just-added pointer, the
+**"Two facts that bite" section** — 35 words of content in a file whose own
+header says content belongs in the note — moved to `two-shapes-that-bite.md`
+with a one-line pointer. 417 words now, and the room is structural rather than
+borrowed.

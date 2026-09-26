@@ -58,6 +58,41 @@ function Attribution({ t }: { t: Testimonial }) {
 }
 
 /**
+ * A quote's emphasised span, rendered as emphasis rather than as asterisks.
+ *
+ * THIS FILE PRINTED `**like this**` TO USERS FOR AS LONG AS IT HAS EXISTED.
+ * Twenty-three entries in `testimonials.ts` mark their key phrase with `**`
+ * — the convention the corpus adopted so a long account has a readable centre —
+ * and **twenty-two of them sit at `urge` or `goodStretch`**, which are the two
+ * stages the live page reads. So the sentence a person met at the moment they
+ * were deciding whether to moderate had literal asterisks in the middle of it.
+ * Found on 2026-09-26 by driving the thought door for four vices and reading
+ * what came out, not by reading the data.
+ *
+ * Deliberately not a markdown parser. It splits on `**` and emphasises the odd
+ * segments, which is the whole of the convention; an unpaired `**` therefore
+ * leaves its tail plain rather than swallowing the rest of the quote. `[…]`
+ * stays visible on purpose — a marked elision is part of the quotation, not
+ * formatting.
+ */
+function Quoted({ text }: { text: string }) {
+  const parts = text.split("**")
+  return (
+    <>
+      {parts.map((part, i) =>
+        i % 2 === 1 ? (
+          <b key={i} className="font-semibold text-white">
+            {part}
+          </b>
+        ) : (
+          <span key={i}>{part}</span>
+        ),
+      )}
+    </>
+  )
+}
+
+/**
  * One account, for the ninety seconds.
  *
  * Deterministic by `rotate` rather than random: a cue that changes on every
@@ -77,7 +112,7 @@ export function OneVoice({ stage, viceId, rotate, heading }: {
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3">
       <p className="text-[11px] text-zinc-500">{heading ?? "Somebody else, in the same spot"}</p>
-      <p className="text-[13.5px] text-zinc-100 mt-1.5 leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
+      <p className="text-[13.5px] text-zinc-100 mt-1.5 leading-relaxed">&ldquo;<Quoted text={t.quote} />&rdquo;</p>
       <Attribution t={t} />
     </div>
   )
@@ -127,7 +162,7 @@ function TechniqueList({ viceId, stage }: { viceId: string | null; stage: Testim
           <p className="text-[12.5px] text-zinc-400 mt-1 leading-relaxed">{t.does}</p>
           {t.quote && (
             <p className="text-[12.5px] text-zinc-300 mt-2 leading-relaxed italic">
-              &ldquo;{t.quote}&rdquo;
+              &ldquo;<Quoted text={t.quote} />&rdquo;
               {t.quoteUrl && (
                 <>
                   {" "}
@@ -228,7 +263,7 @@ export function VoicesDialog({ viceId, onClose }: { viceId: string | null; onClo
             <ul className="space-y-2.5 mt-1">
               {shown.map((t) => (
                 <li key={t.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-3.5">
-                  <p className="text-[13.5px] text-zinc-100 leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
+                  <p className="text-[13.5px] text-zinc-100 leading-relaxed">&ldquo;<Quoted text={t.quote} />&rdquo;</p>
                   <Attribution t={t} />
                 </li>
               ))}

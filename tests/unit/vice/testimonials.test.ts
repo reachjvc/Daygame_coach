@@ -284,12 +284,18 @@ describe("every quote is about the vice it is filed under", () => {
     // pronoun inside somebody else's imagined dialogue is not the author
     // speaking, and no amount of verb-list widening can tell those apart.
     //
-    // So the conditional below is what catches that shape, and it is clean:
-    // ZERO of the 373 real accounts in this set open a clause with "if he",
-    // "if she" or "if they". Somebody describing their own night does not
-    // hypothesise about a third party.
+    // So the conditional below is what catches that shape. THE FIRST VERSION OF
+    // IT WAS `\bif (?:he|she|they)\b` AND I CLAIMED IT WAS CLEAN ON ZERO OF 373
+    // ACCOUNTS — which was true of the set as it stood and false one batch
+    // later. `16-012` says "it still somehow doesn't register in my brain **if
+    // they're** little things here and there", where "they" is a pile of small
+    // purchases and nobody is being hypothesised about.
+    //
+    // A trailing `\b` after a pronoun is satisfied by the apostrophe in a
+    // contraction, so the pattern requires a space and then an actual verb.
+    // "if he refuses" matches; "if they're little things" cannot.
     const THIRD = /\b(he|she|they)\s+(?:\w+(?:s|ed)|was|were|had|will|would|can|could|might|may|must)\b/i
-    const HYPOTHETICAL = /\bif (?:he|she|they)\b/i
+    const HYPOTHETICAL = /\bif (?:he|she|they)\s+(?:\w+s|\w+ed|was|were|had|will|would|can|could|might|may|must)\b/i
     const FIRST = /\b(I|I'm|I've|my|me)\b/
     for (const t of TESTIMONIALS) {
       expect(t.quote, `${t.id} is two quotes glued together`).not.toMatch(COMPOSITE)

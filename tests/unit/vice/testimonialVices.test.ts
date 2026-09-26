@@ -181,20 +181,26 @@ describe("no testimonial is shown to somebody quitting a different thing", () =>
    * listed here that HAS gained accounts fails, so the list cannot rot into a
    * permanent excuse the way an unchecked allowlist does.
    */
-  const NO_GOOD_STRETCH_ACCOUNTS = [
-    "scrolling",
-    "gaming",
-    "porn",
-    "gambling",
-    "junk",
-    "spending",
-    "custom",
-  ]
+  /**
+   * SHRANK FROM SIX TO TWO ON 2026-09-26. Source file 16 harvested r/StopGaming,
+   * r/sugarfree, r/ShoppingAddiction and r/nosurf, and gaming, junk, spending
+   * and scrolling came off this list — the debt-with-a-staleness-assertion
+   * design doing what it was for: the test below FAILED the moment they gained
+   * accounts and would not pass until they were removed from here.
+   *
+   * Porn and gambling are still empty at the good stretch. Both ARE covered by
+   * the corpus at other stages (files 03 and 04), so this is a gap in one stage
+   * rather than an absent vice, and the same harvest method applies to
+   * r/pornfree, r/NoFap and r/problemgambling whenever somebody does it.
+   */
+  const NO_GOOD_STRETCH_ACCOUNTS = ["porn", "gambling", "custom"]
 
   it("every vice the corpus DOES cover still has an account at the good stretch", () => {
     const covered = PRODUCT_VICES.filter((v) => !NO_GOOD_STRETCH_ACCOUNTS.includes(v))
     // Named, so that "covered" shrinking to nothing cannot pass this quietly.
-    expect(covered.sort()).toEqual(["alcohol", "nicotine", "weed"])
+    expect(covered.sort()).toEqual([
+      "alcohol", "gaming", "junk", "nicotine", "scrolling", "spending", "weed",
+    ])
     for (const viceId of covered) {
       expect(
         testimonialsFor("goodStretch", viceId).length,

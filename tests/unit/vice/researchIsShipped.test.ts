@@ -105,9 +105,17 @@ describe("the research corpus actually reaches the product", () => {
     ).toBeLessThan(0.6)
   })
 
-  it("has content for every moment a user can be in", () => {
+  it("has content for every moment a user can be in, counted across all vices", () => {
     // An empty stage means somebody reaches the exact screen this was gathered
     // for and finds nothing there.
+    //
+    // COUNTED ACROSS ALL VICES, WHICH IS NOT THE SAME CLAIM AS THE NAME MAKES.
+    // On 2026-09-26 every stage here cleared its floor while SIX of the nine
+    // vices had nothing at all at `goodStretch` — a sum over vices cannot see a
+    // vice with zero, and the untagged pool was standing in for four of them.
+    // The per-vice half is `testimonialVices.test.ts`, which carries the
+    // uncovered list as a debt with a staleness assertion. Both are needed;
+    // neither substitutes for the other.
     const stages = ["deciding", "early", "urge", "lapse", "goodStretch", "long"] as const
     for (const stage of stages) {
       const n = TESTIMONIALS.filter((t) => t.stages.includes(stage)).length
