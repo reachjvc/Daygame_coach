@@ -89,6 +89,7 @@ export default defineConfig({
         /programs-live-workout\.spec\.ts/,
         /programs-live-menus\.spec\.ts/,
         /programs-live-desktop\.spec\.ts/,
+        /programs-open-workout\.spec\.ts/,
         /programs-drafts\.spec\.ts/,
         /programs-history-progress\.spec\.ts/,
         // Measures the rendered boxes on the shared account's program.
@@ -221,6 +222,10 @@ export default defineConfig({
         // ✓ at a width where `sm:` applies, where a delete button sat on top of
         // it and took the click.
         /programs-live-desktop\.spec\.ts/,
+        // Two programs running at once, which every other file here avoids by
+        // enrolling in exactly one — and which is the state where the open
+        // workout had no door on the training screen.
+        /programs-open-workout\.spec\.ts/,
         /programs-drafts\.spec\.ts/,
         /programs-history-progress\.spec\.ts/,
         /programs-one-language\.spec\.ts/,

@@ -22,7 +22,7 @@ import { useRouter } from "next/navigation"
 import { Loader2, MoreVertical, Play } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { describeSets } from "../programsService"
+import { describeSets, openWorkoutInvitation } from "../programsService"
 import { TRAINING_CARD, TRAINING_CARD_BODY, CHIP_ON } from "./trainingStyles"
 import { UNIT_CONFIG, WEEKDAY_SHORT } from "../config"
 import { startWorkoutRequest } from "../hooks/useLiveWorkout"
@@ -133,8 +133,8 @@ export function TodayCard({
      * belongs to, exactly as the stale branch below and the Tracking card both
      * already did.
      */
-    if ((state?.kind === "live" || state?.kind === "stale") && state.enrollmentId !== enrollmentId) {
-      const stale = state.kind === "stale"
+    const elsewhere = openWorkoutInvitation(state, enrollmentId)
+    if (elsewhere) {
       return (
         <Button
           size="lg"
@@ -143,9 +143,7 @@ export function TodayCard({
           data-testid="other-workout-open"
           onClick={() => go(LIVE_WORKOUT)}
         >
-          {stale
-            ? `Finish or discard ${state.startedOnWeekday}'s workout`
-            : "Finish the workout you have open first"}
+          {elsewhere}
         </Button>
       )
     }

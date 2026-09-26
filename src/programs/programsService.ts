@@ -3255,6 +3255,40 @@ export function describeEndurance(sets: EnduranceSet[]): { blocks: string; minut
  * sentence cannot be reused by anything that words it differently — and Phase
  * 5's Today card reuses exactly this one.
  */
+/**
+ * WHAT TO SAY ABOUT A WORKOUT THAT IS ALREADY OPEN — the one owner.
+ *
+ * Only one workout may be open at a time, so an old one refuses every Start
+ * until it is dealt with. Whichever screen a person is on therefore has to
+ * name it and offer the way out, and the two screens that do so must not
+ * disagree about the advice: for a workout still running the answer is finish
+ * it, and for a stale one it is DISCARD it, because finishing a fortnight-old
+ * empty workout writes a ten-hour session into somebody's history.
+ *
+ * `null` means there is nothing open — or nothing open that this caller needs
+ * to mention, which is the `enrollmentId` case: a program's own card says
+ * "Resume" for its own workout and has no business calling it somebody else's.
+ *
+ * WHY IT IS A FUNCTION AND NOT TWO BUTTONS. It was one button, on `TodayCard`,
+ * and that card only renders when EXACTLY ONE program is running. With two —
+ * which the app allows, since enrollments only deactivate within a discipline
+ * — `/programs` showed a list of programs and said nothing at all about the
+ * workout that was open, while every Start it offered would be refused. The
+ * Tracking dashboard got it right the whole time, which is how it was found.
+ */
+export function openWorkoutInvitation(
+  state: TrainingCardState | null,
+  /** The program whose card is asking; omitted on a screen that is not one program's. */
+  enrollmentId?: string
+): string | null {
+  if (!state) return null
+  if (state.kind !== "live" && state.kind !== "stale") return null
+  if (enrollmentId !== undefined && state.enrollmentId === enrollmentId) return null
+  return state.kind === "stale"
+    ? `Finish or discard ${state.startedOnWeekday}'s workout`
+    : "Finish the workout you have open first"
+}
+
 export function trainingCardState(facts: TrainingDoorFacts, now: Date = new Date()): TrainingCardState {
   const trainedToday = facts.recentlyFinished.filter(
     (w) => getTodayInTimezone(facts.timezone, new Date(w.loggedAt)) === facts.todayDate

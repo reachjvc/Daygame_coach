@@ -22,7 +22,8 @@ import { PastPrograms } from "./PastPrograms"
 import { useActiveEnrollments, useEnrollment } from "../hooks/useEnrollment"
 import { requireProgram, enrollmentName, getProgram } from "../data/catalog"
 import { effectiveProgram } from "../customize"
-import { formatDateOnly, computePrescription } from "../programsService"
+import { formatDateOnly, computePrescription, openWorkoutInvitation } from "../programsService"
+import { LIVE_WORKOUT } from "@/src/shared/trainingRoutes"
 import { LEVEL_LABELS } from "../config"
 import type {
   EnrollmentDetail,
@@ -122,6 +123,9 @@ export function ProgramsApp({
   const looseStart = (
     <StartLooseWorkout live={live} variant={enrollments.length === 0 ? "primary" : "row"} />
   )
+
+  /** The sentence for a workout already open, or null when there is none. */
+  const openWorkoutDoor = openWorkoutInvitation(cardState)
 
   // `edit` shares this branch: the editor is a state of the one running
   // program, not a screen of its own with its own data.
@@ -239,6 +243,28 @@ export function ProgramsApp({
         you came to train, not to read an inventory — so it only appears when
         there is a choice to make.
       */}
+      {/*
+        A WORKOUT THAT IS ALREADY OPEN, ON THE SCREEN FOR TRAINING.
+        Only one may be open at a time, so an old one refuses every Start on
+        every screen — and this list is what somebody with MORE THAN ONE
+        program running lands on, because `TodayCard` renders only when there
+        is exactly one. So the page that exists to train said nothing about the
+        workout blocking it, while the Tracking dashboard said it plainly. Found
+        2026-09-26 on an account with two programs and a workout left open on
+        Wednesday: no door here, no door one click deeper, and every Start
+        refused. `openWorkoutInvitation` is the same sentence the card uses.
+      */}
+      {openWorkoutDoor && (
+        <Button
+          variant="outline"
+          className="w-full"
+          data-testid="open-workout-door"
+          onClick={() => router.push(LIVE_WORKOUT)}
+        >
+          {openWorkoutDoor}
+        </Button>
+      )}
+
       {enrollments.length > 0 && (
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-medium text-muted-foreground">Your programs</h2>
