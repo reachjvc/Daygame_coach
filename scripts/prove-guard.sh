@@ -77,7 +77,22 @@ fi
 # `page.evaluate` with messages that look exactly like real defects in the route
 # under test. This repo has lost rounds to that, and the tree is shared with
 # other sessions and with the owner's own browser on :3000.
-if pgrep -f "playwright test" >/dev/null 2>&1; then
+#
+# THE PATTERN MATCHES A RUN, NOT A MENTION OF ONE. `pgrep -f "playwright test"`
+# matches any shell whose command line contains that text — including a wait
+# loop built around `pgrep -f "playwright test"` itself, which is a shape
+# sessions in this repo write constantly (and which can never exit, because it
+# matches itself). Checked for here: a node process running the Playwright CLI,
+# excluding the long-lived `test-server` that the IDE integration keeps alive.
+if pgrep -af "playwright" 2>/dev/null |
+  grep -qE "node[^|]*playwright[^|]*\btest\b" 2>/dev/null &&
+  ! pgrep -af "playwright" 2>/dev/null |
+    grep -E "node[^|]*playwright[^|]*\btest\b" |
+    grep -qv "test-server"; then
+  : # only the IDE's test-server is up, which drives nothing on its own
+elif pgrep -af "playwright" 2>/dev/null |
+  grep -E "node[^|]*playwright[^|]*\btest\b" |
+  grep -qv "test-server"; then
   echo "refusing: a Playwright run is in progress, and reverting a file under src/" >&2
   echo "restarts the dev server underneath it. Wait for it, or use a git worktree." >&2
   exit 2
