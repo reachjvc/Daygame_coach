@@ -29,11 +29,11 @@
  * button.
  */
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react"
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { Loader2, Check } from "lucide-react"
 import type { NsPlan, NsTrackRow } from "@/src/goals/types"
-import { buildTrackInserts, pushedGoalIds, pushedRealIds, trackRows } from "@/src/goals/northStarTrackService"
+import { buildTrackInserts, linksToBackfill, pushedGoalIds, pushedRealIds, trackRows } from "@/src/goals/northStarTrackService"
 import { saveGoalLinks } from "@/src/goals/lifePlanClient"
 import { TRACK_COPY } from "@/src/goals/data/northStar"
 import { GoalsHubContent } from "@/src/goals/components/GoalsHubContent"
@@ -126,6 +126,38 @@ export function TrackTab({
   useEffect(() => {
     loadHub()
   }, [loadHub])
+
+  /**
+   * WRITE DOWN WHAT ONLY THIS BROWSER KNOWS, ONCE.
+   *
+   * The push has recorded `user_goal_id` since `48fa55b1`, but it records it AT
+   * PUSH TIME — so anybody who pushed before that has counted goals and no
+   * links, and the fix never reaches them. Measured on the owner's account on
+   * 2026-09-26: 50 tagged rows in `user_goals`, 0 of 50 plan goals linked. On
+   * this browser the tag's run still matches and everything looks right; on
+   * their phone all fifty read as never pushed and pushing again would make a
+   * second copy of every one.
+   *
+   * The tag IS the proof. It just lives in one browser's localStorage instead of
+   * on the account, so the browser that can still read it says so. One device
+   * heals every other one, with no migration and nothing deleted.
+   *
+   * Guarded by a ref rather than by a dependency: `goalLinks` is the flow's
+   * state and does not change when this writes, so keying the effect on it
+   * would send the same map every time the hub reloaded.
+   */
+  const backfilled = useRef(false)
+  useEffect(() => {
+    if (backfilled.current || auth !== "in" || hubGoals.length === 0) return
+    const missing = linksToBackfill(runId, hubGoals, goalLinks)
+    if (Object.keys(missing).length === 0) return
+    backfilled.current = true
+    /* Not awaited and not reported: nothing the person did is waiting on it, and
+       a failure costs them only what they already have — the next load tries
+       again. The push's own link write is the one that says so on screen,
+       because there a failure means a duplicate on the next device. */
+    void saveGoalLinks(missing)
+  }, [auth, hubGoals, goalLinks, runId])
 
   /**
    * The hub below shows THIS plan, not the account.

@@ -465,6 +465,44 @@ export function pushedGoalIds(
   return map
 }
 
+/**
+ * LINKS THE TAG CAN PROVE THAT THE ACCOUNT HAS NEVER RECORDED.
+ *
+ * `48fa55b1` made the push write `life_plan_goals.user_goal_id`, which is what
+ * lets a second device recognise a pushed goal. It writes it AT PUSH TIME — so
+ * anybody who pushed before that commit has counted goals and no links, and the
+ * fix does not reach them.
+ *
+ * Measured on the owner's own account on 2026-09-26, which is how this was
+ * found: **50 `ns:`-tagged rows in `user_goals`, and 0 of 50 plan goals linked.**
+ * On the browser that pushed, the tag's run still matches and everything looks
+ * right. On any other device nothing matches, all fifty read as never pushed,
+ * and pressing push makes a second copy of all of them — the exact failure M3
+ * exists to prevent, still live for the person it was written for.
+ *
+ * So the browser that CAN still read the tag writes down what it knows. One
+ * device heals the account for every other one, and it needs no migration and
+ * deletes nothing: the tag is already the proof, it is just proof that lives in
+ * one browser's localStorage instead of on the account.
+ *
+ * Returns only what is missing, so a caller can ask "is there anything to do"
+ * without diffing two maps itself.
+ */
+export function linksToBackfill(
+  runId: string,
+  rows: ReadonlyArray<{ id: string; template_id?: string | null }>,
+  links: Readonly<Record<string, string>>,
+): Record<string, string> {
+  const live = new Set(rows.map((r) => r.id))
+  const out: Record<string, string> = {}
+  for (const [localId, userGoalId] of pushedRealIds(runId, rows)) {
+    // Already recorded, and recorded at a row that still exists: nothing to do.
+    if (links[localId] && live.has(links[localId])) continue
+    out[localId] = userGoalId
+  }
+  return out
+}
+
 // ============================================================================
 // The schedule: what you will actually be doing, week by week and day by day
 // ============================================================================
