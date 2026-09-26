@@ -2,16 +2,124 @@ name: E2E Tests
 
 # Every branch, not only main and beta — the same reason as ci.yml: a branch
 # nobody checks is a branch that breaks quietly.
+#
+# WHAT RUNS WHEN, AND WHY IT IS NOT ALL OF IT EVERY TIME.
+#
+# Measured 2026-09-26 from 179 real runs on this repository: every push started
+# a 3h45m run of 1,169 browser tests, one at a time (`workers: 1` under CI, with
+# `retries: 2`), and every completed run was red. Two things follow, and they
+# cancel each other out:
+#
+#   - four hours is longer than the work it is checking. The answer arrives
+#     after twenty more commits have landed, so it cannot change what anybody
+#     does.
+#   - permanently red means a NEW breakage looks exactly like the old ones.
+#     Proven here: `quit-vice.spec.ts` was red for four days with 22 failures
+#     while three sessions reported work finished, because the red they would
+#     have had to notice was already there.
+#
+# A check that is too slow to act on and too noisy to trust is worse than none,
+# because its existence is reassuring. So the shape changed rather than the
+# coverage: the fast job below answers every push in minutes, and the two heavy
+# jobs keep every test they had — on pull requests into main and beta, on a
+# nightly schedule, and on demand.
+#
+# `schedule` only ever fires on the default branch. That is a GitHub rule, not
+# a choice, and it is why the heavy jobs also run on a push to main or beta.
 on:
   push:
     branches: ['**']
   pull_request:
     branches: [main, beta]
+  schedule:
+    # 03:00 UTC. Nightly, on the default branch only.
+    - cron: '0 3 * * *'
   workflow_dispatch:
 
 jobs:
+  # ===========================================================================
+  # THE FAST ONE. Every push, and the only browser job that runs on a push.
+  #
+  # `sweep-desktop` is the per-route sweep: it opens every address in `app/` and
+  # asks the boring universal questions — does the page answer at all, does it
+  # hydrate without throwing, is anything overflowing, is a control nested
+  # inside another control, does a junk URL parameter render "Step NaN of 5".
+  # Those are the failures that make a page useless rather than imperfect, and
+  # they are the ones a unit test cannot see.
+  #
+  # Chromium alone, one engine, no training account. The same sweep on iPhone
+  # and WebKit stays in the cross-browser job, because a second and third engine
+  # is worth minutes on a pull request and not worth them on every push.
+  # ===========================================================================
+  e2e-fast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Chromium only. The heavy jobs install three engines; this one does not
+      # need them, and the install is a measurable part of a short job.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      # `setup` is not named here on purpose: Playwright runs a project's
+      # dependencies itself, and `sweep-desktop` depends on it.
+      - name: Every route, opened cold
+        run: npx playwright test --project=sweep-desktop
+        env:
+          CI: true
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-fast
+          path: playwright-report/
+          retention-days: 7
+
   e2e-chromium:
     runs-on: ubuntu-latest
+    # WAITS FOR THE FAST JOB, and the reason is not speed.
+    #
+    # Every browser job here signs in as the same test accounts, and the specs
+    # inside them delete that account's rows mid-run. Two jobs at once means one
+    # pulls the rug from under the other, and the failures surface in unrelated
+    # tests that move between runs — which is unreadable. `e2e-cross-browser`
+    # has waited on this job for that reason since 2026-09-04.
+    #
+    # The first version of this split missed it: `e2e-fast` had no `needs` and
+    # no condition, so on a pull request or the nightly run it would have run
+    # BESIDE this job on the same accounts. Caught by `daygame-coach-28`, who
+    # also supplied the part that is easy to get wrong — `timetrack-sync` and
+    # `timetrack-sync-phone` contend over the single `next dev`, not over rows,
+    # so giving a project its own account does NOT make it safe to run beside
+    # another job. Only serialising does.
+    #
+    # `always()` so a red fast job does not SKIP this one: a skipped job reads
+    # as a check that had nothing to say.
+    #
+    # The second clause keeps it off ordinary pushes — see the note at the top.
+    needs: e2e-fast
+    if: ${{ always() && (github.event_name != 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta') }}
+    # Measured at 3h45m before the training account could sign in, and the four
+    # training projects add roughly 90 minutes now that it can. The ceiling is
+    # here so a hung run releases the machine instead of holding it for
+    # GitHub's default six hours.
+    timeout-minutes: 330
     steps:
       - uses: actions/checkout@v4
 
@@ -61,7 +169,13 @@ jobs:
     # `always()` is the other half: without it a red chromium job would skip
     # this one entirely, and a skipped check looks like a check that passed.
     needs: e2e-chromium
-    if: ${{ always() }}
+    # `always()` is load-bearing and must stay: without it a RED chromium job
+    # skips this one, and a skipped check reads as a check that passed. The
+    # second half repeats the chromium job's own condition, so an ordinary push
+    # does not run this either — `always()` alone would run it on every push
+    # after chromium had been skipped.
+    if: ${{ always() && (github.event_name != 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta') }}
+    timeout-minutes: 330
     steps:
       - uses: actions/checkout@v4
 
@@ -84,7 +198,10 @@ jobs:
       # landing before React hydrated. auth-webkit and auth-firefox need the
       # engines this job already installs.
       - name: Run cross-browser E2E tests
-        run: npx playwright test --project=smoke-firefox --project=smoke-webkit --project=smoke-iphone --project=smoke-android --project=mobile-iphone --project=mobile-pixel --project=mobile-nav --project=cross-firefox --project=cross-webkit --project=auth-webkit --project=auth-firefox --project=auth-iphone --project=auth-android --project=sweep-desktop --project=sweep-phone --project=sweep-webkit
+        # `sweep-desktop` moved to the e2e-fast job above, so the desktop sweep
+        # answers on every push. The phone and WebKit sweeps stay here: a second
+        # and third engine earns its minutes on a pull request, not on a push.
+        run: npx playwright test --project=smoke-firefox --project=smoke-webkit --project=smoke-iphone --project=smoke-android --project=mobile-iphone --project=mobile-pixel --project=mobile-nav --project=cross-firefox --project=cross-webkit --project=auth-webkit --project=auth-firefox --project=auth-iphone --project=auth-android --project=sweep-phone --project=sweep-webkit
         env:
           CI: true
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}

@@ -91,7 +91,20 @@ function projectArgs(job: string): string[] {
 }
 
 const e2eJobs = jobs(e2e)
-const browserJobs = ["e2e-chromium", "e2e-cross-browser"]
+/**
+ * Every job in `e2e.yml` that runs Playwright. `e2e-fast` joined them on
+ * 2026-09-26, when the heavy suite came off the every-push path: it runs
+ * `sweep-desktop` on every push while the other two run on pull requests into
+ * main and beta, nightly, and on demand.
+ *
+ * This list is what "run in exactly one job" is counted against, so a new
+ * browser job that is not named here makes its projects look like projects
+ * nothing runs.
+ */
+const browserJobs = ["e2e-fast", "e2e-chromium", "e2e-cross-browser"]
+
+/** The jobs that sign in as the training account, so must be given its keys. */
+const trainingJobs = browserJobs.filter((job) => /--project=training/.test(e2eJobs[job] ?? ""))
 
 describe("the browser tests that CI actually runs", () => {
   test("every Playwright project is run by exactly one CI job", () => {
@@ -129,11 +142,29 @@ describe("the browser tests that CI actually runs", () => {
     expect(e2eJobs["e2e-cross-browser"]).toMatch(/^\s*needs:\s*e2e-chromium\s*$/m)
     // Without always(), a red chromium job skips this one, and a skipped job
     // reads as a check that had nothing to say.
-    expect(e2eJobs["e2e-cross-browser"]).toMatch(/^\s*if:\s*\$\{\{\s*always\(\)\s*\}\}\s*$/m)
+    /**
+     * `always()` must APPEAR in the condition, rather than be the whole of it.
+     * It was pinned as the entire expression until 2026-09-26, when the heavy
+     * jobs came off the every-push path and this one needed a second clause —
+     * `always()` on its own would have run the cross-browser suite on every
+     * push, after the chromium job it waits for had been skipped.
+     *
+     * What matters is unchanged and still asserted: `always()` is present, so a
+     * red chromium job cannot skip this one into looking like a pass.
+     */
+    expect(e2eJobs["e2e-cross-browser"]).toMatch(/^\s*if:\s*\$\{\{.*\balways\(\)/m)
   })
 
-  test("the training account's secrets reach both browser jobs", () => {
-    for (const job of browserJobs) {
+  test("the training account's secrets reach every job that signs in as it", () => {
+    /**
+     * Scoped to the jobs that actually run a `training*` project rather than to
+     * every browser job. `e2e-fast` runs the desktop route sweep and never
+     * touches that account, and demanding its keys there would be a rule
+     * asserting something it does not need — the kind of line that gets
+     * satisfied by pasting secrets in rather than by thinking.
+     */
+    expect(trainingJobs.length, "no CI job runs the training projects at all").toBeGreaterThan(0)
+    for (const job of trainingJobs) {
       expect(e2eJobs[job], `${job} cannot sign in as the training account`).toContain("TEST_USER_TRAINING_EMAIL")
       expect(e2eJobs[job], `${job} cannot sign in as the training account`).toContain("TEST_USER_TRAINING_PASSWORD")
     }
