@@ -32,6 +32,9 @@ const WORKOUT = "w1"
 /** What the workout row looks like on the second question. */
 type Fate = "gone" | "finished" | "open" | "written-up" | "unreadable"
 
+/** The workout disappears only AFTER the write has succeeded. */
+type Vanishing = { goneAfterWrite?: boolean }
+
 const liveRow = {
   id: WORKOUT,
   user_id: USER,
@@ -58,7 +61,9 @@ const liveRow = {
  * tells its two reads apart: the live read takes `*, workout_sets(*)`, and the
  * question after a failure takes `ended_at` alone.
  */
-function fakeSupabase(opts: { writeError: { code?: string; message: string } | null; fate: Fate }) {
+function fakeSupabase(opts: { writeError: { code?: string; message: string } | null; fate: Fate } & Vanishing) {
+  /** Flipped by the first successful write, so the re-read after it finds nothing. */
+  let written = false
   /** Every select string, so a test can prove the second question was asked. */
   const selects: string[] = []
 
@@ -94,7 +99,10 @@ function fakeSupabase(opts: { writeError: { code?: string; message: string } | n
     }
 
     function resolve() {
-      if (writing) return Promise.resolve({ data: null, error: opts.writeError })
+      if (writing) {
+        if (!opts.writeError) written = true
+        return Promise.resolve({ data: null, error: opts.writeError })
+      }
       if (name === "profiles") return Promise.resolve({ data: { weight_unit: "kg" }, error: null })
       if (name !== "workout_logs") return Promise.resolve({ data: null, error: null })
 
@@ -119,7 +127,9 @@ function fakeSupabase(opts: { writeError: { code?: string; message: string } | n
           error: null,
         })
       }
-      // The live read that `requireLive` makes before any write.
+      // The live read that `requireLive` makes before any write — and the
+      // one it makes AFTER, which is where the workout can have gone.
+      if (opts.goneAfterWrite && written) return Promise.resolve({ data: null, error: null })
       return Promise.resolve({ data: liveRow, error: null })
     }
 
@@ -129,7 +139,7 @@ function fakeSupabase(opts: { writeError: { code?: string; message: string } | n
   return { client: { from: table }, selects }
 }
 
-async function repoWith(opts: { writeError: { code?: string; message: string } | null; fate: Fate }) {
+async function repoWith(opts: { writeError: { code?: string; message: string } | null; fate: Fate } & Vanishing) {
   const fake = fakeSupabase(opts)
   vi.doMock("@/src/db/supabase", () => ({ createServerSupabaseClient: async () => fake.client }))
   vi.doMock("@/src/db/settingsRepo", () => ({
@@ -255,5 +265,47 @@ describe("a set written into a workout that is no longer there", () => {
       fake.selects,
       "without this read the answer is a guess about which of three states the workout is in"
     ).toContain("workout_logs:started_at, ended_at")
+  })
+  test("a workout that disappears AFTER the write is not reported as finished", async () => {
+    /**
+     * THE SUCCESS PATH, which is where this survived the first two rounds.
+     *
+     * Every write ended `return (await getLiveWorkout(userId))!`. Discard on
+     * the laptop in the moment between the INSERT and that re-read and the
+     * `!` is a lie: the route answers 200 with a body of `null`, the browser
+     * sets its workout to null with nothing to say why, and the live screen
+     * falls through to "This workout is finished." for a workout that was
+     * thrown away. Nothing was red, because a 200 is a 200.
+     */
+    const { errorBody } = await import("@/src/programs/errors")
+    const { repo } = await repoWith({ writeError: null, fate: "gone", goneAfterWrite: true })
+    const thrown = await repo.completeSet(USER, WORKOUT, aSet).catch((e: unknown) => e)
+    expect(thrown, "it must not resolve with a null workout").toBeInstanceOf(Error)
+    expect(errorBody(thrown)).toEqual({
+      error: "This workout was thrown away somewhere else, so that change was not saved.",
+      code: "workout_gone",
+    })
+  })
+
+  test("a question that could not be asked is retryable, not a 4xx", async () => {
+    /**
+     * THE STATUS CODE IS THE WHOLE POINT, because the offline queue reads it.
+     *
+     * `useLiveWorkout`'s flush treats any 4xx as "this will never succeed on a
+     * retry": it drops the set out of `localStorage`, takes the ✓ off the
+     * screen and says "has been removed". So returning 400 for "the database
+     * could not be reached" would throw a set away on a transient blip and tell
+     * the person it had — the worst outcome in this file, introduced BY the
+     * third state, which exists to be careful.
+     */
+    const { workoutErrorResponse } = await import("@/src/programs/errors")
+    const { repo } = await repoWith({
+      writeError: { code: "08006", message: "connection failure" },
+      fate: "unreadable",
+    })
+    const thrown = await repo.completeSet(USER, WORKOUT, aSet).catch((e: unknown) => e)
+    const answer = workoutErrorResponse(thrown)
+    expect(answer.status, "4xx tells the queue to delete the set").toBe(503)
+    expect(answer.status).toBeGreaterThanOrEqual(500)
   })
 })

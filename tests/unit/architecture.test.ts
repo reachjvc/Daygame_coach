@@ -2747,6 +2747,83 @@ describe('Architecture Compliance', () => {
    * read by us, not by the person. That is the whole distinction.
    */
   /**
+   * COMMENTS AND STRING CONTENTS BLANKED, IN ONE PASS, LEFT TO RIGHT.
+   *
+   * Both scanners below match brackets by counting, and both used to strip
+   * comments with two regexes first. A review broke that in three ways in one
+   * sitting, and one of them fails the build on innocent code:
+   *
+   *   new Error("oops :-(")        an unmatched "(" inside a string sent the
+   *                                counter to end-of-file, so every later
+   *                                `.message` was attributed to it — a FALSE
+   *                                POSITIVE on a file with no leak
+   *   new Error(`a: ${e.message}`) preceded by a `https://` URL on the same
+   *                                line: `//` ate the rest of the line
+   *   throw new Error("a) b" + x)  a ")" inside a string closed the count early
+   *
+   * A scanner cannot be made safe by stripping comments alone, because whether
+   * a `//` is a comment depends on whether you are inside a string, and whether
+   * a quote opens a string depends on whether you are inside a comment. One
+   * left-to-right pass is the only thing that answers both. Lengths are
+   * preserved so every match index still lines up with the original.
+   */
+  function withoutCommentsOrStrings(source: string): string {
+    const out = source.split('')
+    let i = 0
+    const blank = (from: number, to: number) => {
+      for (let k = from; k < to && k < out.length; k++) if (out[k] !== '\n') out[k] = ' '
+    }
+    while (i < source.length) {
+      const two = source.slice(i, i + 2)
+      if (two === '//') {
+        const end = source.indexOf('\n', i)
+        blank(i, end === -1 ? source.length : end)
+        i = end === -1 ? source.length : end
+      } else if (two === '/*') {
+        const end = source.indexOf('*/', i + 2)
+        blank(i, end === -1 ? source.length : end + 2)
+        i = end === -1 ? source.length : end + 2
+      } else if (source[i] === '"' || source[i] === "'" || source[i] === '`') {
+        const quote = source[i]
+        let j = i + 1
+        /**
+         * Blanked in SEGMENTS, because a template literal is text and code
+         * alternating. Blanking from the opening quote to the closing one in
+         * one go also erases every `${error.message}` — which is the thing
+         * being counted, so every file reads zero and the ratchet silently
+         * stops protecting anything. It did exactly that on the first attempt.
+         */
+        let segment = i + 1
+        for (; j < source.length; j++) {
+          if (source[j] === '\\') {
+            j++
+            continue
+          }
+          if (quote === '`' && source.slice(j, j + 2) === '${') {
+            blank(segment, j)
+            let depth = 1
+            j += 2
+            while (j < source.length && depth > 0) {
+              if (source[j] === '{') depth++
+              else if (source[j] === '}') depth--
+              j++
+            }
+            segment = j
+            j--
+            continue
+          }
+          if (source[j] === quote) break
+        }
+        blank(segment, j)
+        i = j + 1
+      } else {
+        i++
+      }
+    }
+    return out.join('')
+  }
+
+  /**
    * NO REACT STATE IS SEEDED FROM SOMETHING THE SERVER CANNOT KNOW.
    *
    * The sharpest shape of the hydration bug, and the one that bit this repo
@@ -2786,10 +2863,14 @@ describe('Architecture Compliance', () => {
       // The finish sheet's "when did it end" default. Mounted only when the
       // sheet is opened, so it never exists during a server render.
       'src/programs/components/live/FinishSheet.tsx': 1,
-      // The rest countdown. `RestBar` returns null when there is no clock, and
-      // since 2026-09-26 the clock itself is read in a mount effect, so the bar
-      // does not exist on the server either. Safe twice over; the initialiser
-      // is still the shape, so it stays counted.
+      // The rest countdown. This note said "RestBar returns null when there is
+      // no clock, so the bar does not exist on the server" — which is wrong
+      // about the mechanism: `RestBar` is MOUNTED unconditionally by
+      // `LiveWorkoutScreen`, so its initialiser does run during the server
+      // render. What makes it safe is narrower and more fragile: `live.rest` is
+      // always null on the first render since the clock moved into a mount
+      // effect, so the component returns null before anything time-derived is
+      // printed. It stops being safe the day a rest clock is server-rendered.
       'src/programs/components/live/RestBar.tsx': 1,
       // The time tracker's running timer, its mobile test, its store, and three
       // tracking forms. Not audited by the change that added this rule — they
@@ -2804,13 +2885,12 @@ describe('Architecture Compliance', () => {
 
     /** `useState` initialisers that read the browser, per client file. */
     const seededIn = (file: string): number => {
-      const source = fs
-        .readFileSync(path.join(projectRoot, file), 'utf8')
-        .replace(/\/\*[\s\S]*?\*\//g, '')
-        .replace(/\/\/[^\n]*/g, '')
+      const raw = fs.readFileSync(path.join(projectRoot, file), 'utf8')
       // A server component renders once and never hydrates, so none of this
-      // can bite it.
-      if (!/^\s*['"]use client['"]/m.test(source)) return 0
+      // can bite it. Checked against the RAW text: the blanking below turns
+      // "use client" into a pair of empty quotes.
+      if (!/^\s*['"]use client['"]/m.test(raw)) return 0
+      const source = withoutCommentsOrStrings(raw)
 
       /**
        * ONE LEVEL DOWN, because the first version of this rule missed one of
@@ -2822,17 +2902,28 @@ describe('Architecture Compliance', () => {
        * is the only way anyone finds out. So: any function declared in this
        * file whose own body reads the browser counts as reading the browser.
        */
-      const indirect = [...source.matchAll(/\bfunction\s+(\w+)\s*\(/g)]
-        .map((m) => m[1])
-        .filter((name) => {
-          const body = source.slice(source.indexOf(`function ${name}`))
-          return BROWSER_ONLY.test(body.slice(0, body.indexOf('\n}') + 2))
-        })
+      const declared = [
+        ...source.matchAll(/\bfunction\s+(\w+)\s*\(/g),
+        // `const x = (…) => …` and `const x = function …`, which is how most
+        // helpers in this codebase are spelled. The first version collected
+        // `function` declarations only, so it covered the one spelling the bug
+        // happened to use and would have missed the same bug written the other
+        // way — which a review pointed out before it cost anything.
+        ...source.matchAll(/\b(?:const|let)\s+(\w+)\s*=\s*(?:async\s*)?(?:\([^)]*\)|\w+)\s*=>/g),
+        ...source.matchAll(/\b(?:const|let)\s+(\w+)\s*=\s*(?:async\s*)?function\b/g),
+      ].map((m) => m[1])
+      const indirect = declared.filter((name) => {
+        const at = source.search(new RegExp(`\\b(?:function|const|let)\\s+${name}\\b`))
+        if (at === -1) return false
+        const body = source.slice(at)
+        const close = body.indexOf('\n}')
+        return BROWSER_ONLY.test(close === -1 ? body : body.slice(0, close + 2))
+      })
       const reads = (text: string) =>
         BROWSER_ONLY.test(text) || indirect.some((n) => new RegExp(`\\b${n}\\s*\\(`).test(text))
 
       let found = 0
-      for (const match of source.matchAll(/\buseState\s*[<(]/g)) {
+      for (const match of source.matchAll(/\b(?:useState|useReducer)\s*[<(]/g)) {
         let depth = 0
         const open = source.indexOf('(', match.index)
         let end = open
@@ -2913,7 +3004,9 @@ describe('Architecture Compliance', () => {
       'src/db/paging.ts': 1,
       'src/db/profilesRepo.ts': 2,
       'src/db/programDraftRepo.ts': 5,
-      'src/db/programRepo.ts': 13,
+      // 12, not 13: `getEnrollmentById` was cleaned because it sits on the hot
+      // path of every workout write — see the comment there.
+      'src/db/programRepo.ts': 12,
       'src/db/scenarioRepo.ts': 1,
       'src/db/settingsRepo.ts': 17,
       'src/db/timetrackBackupRepo.ts': 2,
@@ -2955,10 +3048,9 @@ describe('Architecture Compliance', () => {
      * not the bug, and the explanations in the repos are not either.
      */
     const rawMessagesIn = (file: string): number => {
-      const source = fs
-        .readFileSync(path.join(projectRoot, file), 'utf8')
-        .replace(/\/\*[\s\S]*?\*\//g, '')
-        .replace(/\/\/[^\n]*/g, '')
+      const source = withoutCommentsOrStrings(
+        fs.readFileSync(path.join(projectRoot, file), 'utf8')
+      )
       const constructor = /\bnew\s+\w*(Error|Refused|Failed|Gone|Busy)\w*\s*\(/g
       let found = 0
       for (const match of source.matchAll(constructor)) {

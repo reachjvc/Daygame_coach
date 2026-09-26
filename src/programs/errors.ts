@@ -72,6 +72,28 @@ export class WorkoutGone extends Error {
 }
 
 /**
+ * THE QUESTION COULD NOT BE ASKED — which is not a no, and not the caller's
+ * fault.
+ *
+ * WHY IT IS A CLASS AND NOT A SENTENCE. A thrown `Error` gets the routes'
+ * fallback status, which for the set routes is 400 — and the offline queue
+ * reads 4xx as "this will never succeed on a retry", drops the set out of
+ * `localStorage`, takes the ✓ off the screen and says "has been removed". So a
+ * transient database blip on gym wifi would have thrown a set away and told the
+ * person it had. That is the worst outcome in this whole file and it was
+ * introduced BY the third state, which was added to be careful.
+ *
+ * 503 instead: the browser keeps the set, keeps the ✓, and tries again when the
+ * connection is back, which is exactly what the queue is for.
+ */
+export class CouldNotTell extends Error {
+  constructor() {
+    super("Could not reach the server to check on this workout. Reload before trying that again.")
+    this.name = "CouldNotTell"
+  }
+}
+
+/**
  * A REFUSAL THE DATABASE WROTE FOR A PERSON — not Postgres's own words.
  *
  * SQLSTATE 55000 is how every program-write function in this schema says no on
@@ -136,6 +158,11 @@ export function workoutErrorResponse(
   e: unknown,
   fallback = 400
 ): { body: { error: string; code?: string }; status: number } {
+  if (e instanceof CouldNotTell) {
+    // 503, and it matters: anything in the 400s tells the offline queue the
+    // write can never succeed, and it answers by deleting the set.
+    return { body: errorBody(e), status: 503 }
+  }
   const refused = e instanceof ProgramRefused || e instanceof WorkoutGone
   return { body: errorBody(e), status: refused ? 409 : fallback }
 }

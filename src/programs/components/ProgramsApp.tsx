@@ -137,7 +137,16 @@ export function ProgramsApp({
    * `program_busy_while_workout_open` trigger while a workout is open, and none
    * of them said so. The `today` branches carry `TodayCard`, which has its own.
    */
-  const openWorkoutBanner = openWorkoutDoor ? (
+  /**
+   * NOT WHEN `StartLooseWorkout` IS ALREADY SAYING IT.
+   *
+   * With no programs at all the home branch renders `looseStart` as a full-width
+   * primary, and that component has its own open-workout button with its own
+   * wording — so an account with no program and a workout open got two
+   * identical outline buttons, forty pixels apart, on a card whose neighbouring
+   * comment in this file complains about exactly that. One door per screen.
+   */
+  const openWorkoutBanner = openWorkoutDoor && enrollments.length > 0 ? (
     <Button
       variant="outline"
       className="w-full"

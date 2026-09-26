@@ -72,6 +72,17 @@ if ! git cat-file -e "$BEFORE:$FILE" 2>/dev/null; then
   exit 2
 fi
 
+# NOT WHILE A SUITE IS RUNNING. This overwrites a file under `src/`, which
+# restarts `next dev` — and a restart mid-run fails Playwright specs inside
+# `page.evaluate` with messages that look exactly like real defects in the route
+# under test. This repo has lost rounds to that, and the tree is shared with
+# other sessions and with the owner's own browser on :3000.
+if pgrep -f "playwright test" >/dev/null 2>&1; then
+  echo "refusing: a Playwright run is in progress, and reverting a file under src/" >&2
+  echo "restarts the dev server underneath it. Wait for it, or use a git worktree." >&2
+  exit 2
+fi
+
 SAVED="$(mktemp)"
 git show "HEAD:$FILE" > "$SAVED"
 

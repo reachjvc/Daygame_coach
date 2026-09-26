@@ -32,7 +32,7 @@ import {
   todaysSessionFor,
   updateEnrollmentSchedule,
 } from "./programRepo"
-import { databaseRefusal, WorkoutGone } from "@/src/programs/errors"
+import { CouldNotTell, databaseRefusal, WorkoutGone } from "@/src/programs/errors"
 import { isOpenWorkout } from "./workoutLifecycle"
 import { inWorkoutOrder, personalBestBaseline } from "./healthRepo"
 import { getUserTimezone } from "./settingsRepo"
@@ -431,7 +431,7 @@ async function requireLive(userId: string, workoutId: string): Promise<LiveWorko
   // `unknown` gets its OWN sentence. Falling through to "not open any more"
   // would be a statement about a row nobody managed to read — which is the
   // definite branch, not the uncomputable one.
-  if (fate === "unknown") throw new Error(CANNOT_TELL)
+  if (fate === "unknown") throw new CouldNotTell()
   throw new Error("That workout is not open any more — reload to see where it got to.")
 }
 
@@ -450,13 +450,6 @@ async function requireLive(userId: string, workoutId: string): Promise<LiveWorko
  * rather than to a claim about a row nobody managed to read.
  */
 type WorkoutFate = "open" | "finished" | "gone" | "unknown"
-
-/**
- * What to say when the database could not be asked. Not "it failed, try again"
- * and not "it is gone": both are claims, and nothing was read.
- */
-const CANNOT_TELL =
-  "Could not reach the server to check on this workout. Reload before trying that again."
 
 async function fateOf(userId: string, workoutId: string): Promise<WorkoutFate> {
   const supabase = await createServerSupabaseClient()
@@ -477,6 +470,26 @@ async function fateOf(userId: string, workoutId: string): Promise<WorkoutFate> {
   return isOpenWorkout(data as { started_at: string | null; ended_at: string | null })
     ? "open"
     : "finished"
+}
+
+/**
+ * THE WORKOUT AS IT NOW STANDS — and it may not stand at all.
+ *
+ * Every write in this file ended `return await liveAfterWriting(userId)`, and
+ * the `!` is a lie at runtime. Discard the workout on the laptop in the moment
+ * between the INSERT and this re-read and the function returns `null`, the
+ * route answers 200 with a body of `null`, and the browser sets its workout to
+ * null with nothing to say why — so the live screen falls through to "This
+ * workout is finished." for a workout that was thrown away.
+ *
+ * That is the exact sentence this whole change exists to stop it saying, and it
+ * survived the change on the SUCCESS path of all five writes. Found by a
+ * review, not by a test: every one of them returns 200, so nothing was red.
+ */
+async function liveAfterWriting(userId: string): Promise<LiveWorkout> {
+  const live = await getLiveWorkout(userId)
+  if (!live) throw new WorkoutGone("discarded")
+  return live
 }
 
 /**
@@ -528,7 +541,7 @@ async function refuseWrite(
    * fourth state decorative; a review pointed out that "unknown" and "open"
    * were indistinguishable at every call site, and it was right.
    */
-  if (fate === "unknown") throw new Error(CANNOT_TELL)
+  if (fate === "unknown") throw new CouldNotTell()
   throw new Error(fallback)
 }
 
@@ -598,7 +611,7 @@ export async function completeSet(
     ? await supabase.from("workout_sets").update(row).eq("id", existing.id).eq("log_id", workoutId)
     : await supabase.from("workout_sets").insert({ ...row, log_id: workoutId })
   if (error) await refuseWrite(userId, workoutId, error, "That set could not be saved. Tap it again.")
-  return (await getLiveWorkout(userId))!
+  return await liveAfterWriting(userId)
 }
 
 /**
@@ -648,7 +661,7 @@ export async function updateSet(
     .eq("id", setId)
     .eq("log_id", workoutId)
   if (error) await refuseWrite(userId, workoutId, error, "That set could not be changed.")
-  return (await getLiveWorkout(userId))!
+  return await liveAfterWriting(userId)
 }
 
 /** How a set kind reads in a sentence a person has to act on. */
@@ -670,7 +683,7 @@ export async function deleteSet(
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("workout_sets").delete().eq("id", setId).eq("log_id", workoutId)
   if (error) await refuseWrite(userId, workoutId, error, "That set could not be removed.")
-  return (await getLiveWorkout(userId))!
+  return await liveAfterWriting(userId)
 }
 
 /**
@@ -698,7 +711,7 @@ export async function adjustWorkout(
     .eq("id", workoutId)
     .eq("user_id", userId)
   if (error) await refuseWrite(userId, workoutId, error, "That change could not be saved.")
-  return (await getLiveWorkout(userId))!
+  return await liveAfterWriting(userId)
 }
 
 /**

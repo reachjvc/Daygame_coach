@@ -225,6 +225,16 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
    * that does not exist is a control with nothing behind it.
    */
   const workoutVanished = useCallback((workoutId: string, message: string) => {
+    /**
+     * FENCED, like every other state change here.
+     *
+     * `applyServer` only rejects an answer older than the last one APPLIED, and
+     * this cleared the workout without moving that mark — so a reply already on
+     * the wire when the workout went away would land afterwards and put it back
+     * on screen, with `vanished` still true. The one state change that opted
+     * out of the counter the rest of this file is built around.
+     */
+    applied.current = ++issued.current
     setVanished(true)
     setError(message)
     setWorkout(null)

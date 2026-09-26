@@ -207,6 +207,41 @@ test.describe("the live workout in a window", () => {
     }
   })
 
+  test("a row showing a message keeps its delete button in its own column", async ({ page }) => {
+    /**
+     * CSS Grid auto-placement, and the fix for the overlap walked straight into
+     * it. The delete button is the LAST child of the row; the "Saving…" and
+     * out-of-range messages above it span all six columns. A six-wide item
+     * cannot sit beside five, so it takes a row of its own and the cursor lands
+     * past the end of it — auto-placing the delete button to row 3, column 1,
+     * where it adds 44px of height and is nowhere near where it was. It did not
+     * move when it was `absolute`; it does the moment it is a grid child.
+     *
+     * Typing an impossible weight is the cheapest way to make a message appear
+     * without waiting 1.5 seconds for a slow save.
+     */
+    await startAWorkout(page)
+
+    const before = await page.getByTestId("hover-delete-1").first().boundingBox()
+
+    await page.getByLabel(/^Weight for set 1/).first().fill("99999")
+    await expect(page.getByText(/kg/i).filter({ hasText: /between|at most|cannot/i }).first()).toBeVisible({
+      timeout: 10000,
+    })
+
+    const after = await page.getByTestId("hover-delete-1").first().boundingBox()
+    expect(before, "the delete button has to exist at this width").not.toBeNull()
+    expect(after).not.toBeNull()
+    expect(
+      Math.abs((after?.y ?? 0) - (before?.y ?? 0)),
+      "the delete button must not drop to a row of its own when a message appears"
+    ).toBeLessThan(2)
+    expect(
+      Math.abs((after?.x ?? 0) - (before?.x ?? 0)),
+      "nor jump to the other side of the row"
+    ).toBeLessThan(2)
+  })
+
   test("hovering a row does not put the delete button over the tick", async ({ page }) => {
     await startAWorkout(page)
 

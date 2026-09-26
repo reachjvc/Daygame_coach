@@ -385,13 +385,27 @@ export function SetRow({
           hides a thing from the eye, not from the pointer, so the ✓ took no
           clicks there at all. It has its own column now; see the grid above.
         */}
+        {/*
+          PLACED, NOT AUTO-PLACED. This is the LAST child of the grid, and the
+          two message spans above it take `sm:col-span-6` — a six-wide item
+          cannot fit beside five, so it starts a new row and the cursor lands
+          past the end of it. The delete button then auto-placed to row 3,
+          column 1: type a weight out of range, or wait 1.5s on gym wifi for
+          "Saving…", and the button jumped to the bottom-left and added 44px of
+          height. It did not move before because it was `absolute`.
+
+          The comment lives out here rather than between the testid and the
+          class: `liveTouchTargets.test.ts` reads this file and looks for
+          `h-11 w-11` within 400 characters of the testid, and a doc comment in
+          between pushes it out of reach.
+        */}
         {onDelete && (
           <button
             type="button"
             data-testid={`hover-delete-${label}`}
             aria-label={`Delete set ${label}`}
             onClick={onDelete}
-            className="hidden h-11 w-11 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted/50 focus-visible:opacity-100 group-hover:opacity-100 sm:flex"
+            className="hidden h-11 w-11 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted/50 focus-visible:opacity-100 group-hover:opacity-100 sm:col-start-6 sm:row-start-1 sm:flex"
           >
             <Trash2 className="size-4" />
           </button>

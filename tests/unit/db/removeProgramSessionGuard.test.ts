@@ -39,7 +39,10 @@ const WRITTEN_UP: Row = { started_at: null, ended_at: null }
 
 function fakeSupabase(row: Row | null) {
   const rpcCalls: string[] = []
-  const table = () => {
+  /** Every table touched, in order — the only observable the fake can offer. */
+  const tables: string[] = []
+  const table = (name: string) => {
+    tables.push(name)
     const chain: Record<string, unknown> = {
       select: () => chain,
       eq: () => chain,
@@ -54,6 +57,7 @@ function fakeSupabase(row: Row | null) {
     return chain
   }
   return {
+    tables,
     client: {
       from: table,
       rpc: (name: string) => {
@@ -68,24 +72,8 @@ function fakeSupabase(row: Row | null) {
 async function repoWith(row: Row | null) {
   const fake = fakeSupabase(row)
   vi.doMock("@/src/db/supabase", () => ({ createServerSupabaseClient: async () => fake.client }))
-  /**
-   * The replay is stubbed and COUNTED. It is the expensive half of this
-   * function, and a guard that runs after it is a guard that costs a full
-   * history fold on every refused request.
-   */
-  const replays: number[] = []
-  const actual = await vi.importActual<typeof import("@/src/programs/programsService")>(
-    "@/src/programs/programsService"
-  )
-  vi.doMock("@/src/programs/programsService", () => ({
-    ...actual,
-    replayEnrollment: () => {
-      replays.push(1)
-      return { enrollment: { exerciseState: {}, cursor: {} }, changesForAdded: [] }
-    },
-  }))
   const repo = await import("@/src/db/programRepo")
-  return { repo, fake, replays }
+  return { repo, fake }
 }
 
 beforeEach(() => vi.resetModules())
@@ -111,10 +99,29 @@ describe("removeProgramSession", () => {
     expect(statusFor(thrown)).toBe(409)
   })
 
-  test("refuses before replaying the history, not after", async () => {
-    const { repo, replays } = await repoWith(OPEN)
+  test("refuses before reading the enrollment, not after", async () => {
+    /**
+     * THIS TEST USED TO PROVE NOTHING, and the way it failed is worth keeping.
+     *
+     * It counted calls to a mocked `replayEnrollment` and asserted the count
+     * was zero. Under this fake `replayedState` dies earlier than that — the
+     * workout row comes back where an enrollment is expected, and
+     * `requireProgram(undefined)` throws — so the counter was empty in all five
+     * tests whether the guard ran first, last, or not at all. An assertion that
+     * cannot fail is not a test; a review found it, not the suite.
+     *
+     * What IS observable through this fake is which tables were touched.
+     * Refusing first means the lifecycle read happens and the enrollment is
+     * never read at all, which is the ordering the guard exists for: the replay
+     * behind it folds the whole history, and paying for that on a request about
+     * to be refused is the cost this ordering avoids.
+     */
+    const { repo, fake } = await repoWith(OPEN)
     await repo.removeProgramSession(USER, ENROLLMENT, LOG).catch(() => null)
-    expect(replays, "a refused request must not pay for a full replay").toEqual([])
+    expect(fake.tables).toContain("workout_logs")
+    expect(fake.tables, "the enrollment must not be read on the way to a refusal").not.toContain(
+      "program_enrollments"
+    )
   })
 
   /**

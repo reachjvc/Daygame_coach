@@ -3232,30 +3232,6 @@ export function describeEndurance(sets: EnduranceSet[]): { blocks: string; minut
 }
 
 /**
- * WHAT THE DOOR SAYS ABOUT TRAINING RIGHT NOW.
- *
- * ORDER OF PRECEDENCE, and each step of it is a complaint that was made:
- *
- *   1. A workout in progress beats everything. Somebody standing in a gym does
- *      not need to be told what today's session is; they need the way back in.
- *   2. A workout open for hours is a different thing — almost certainly
- *      forgotten, and "Resume · 431 min" is the app pretending not to notice.
- *   3. A session already finished today. The card used to say Start, which
- *      invites a second workout on a day you have already trained.
- *   4. Then, and only then, what is due.
- *
- * WHOSE TODAY. `trainedToday` is the ONE place in the app that turns a
- * workout's instant into "today" for this card, and it does it on the
- * account's calendar — which is what makes a 23:45 Copenhagen session count as
- * Monday and a 00:10 one count as Tuesday. `now` is used for elapsed minutes
- * and nothing else.
- *
- * Pure, and formats nothing: labels, counts and instants come out, and how
- * they are worded is the card's business. A pure function that returns a
- * sentence cannot be reused by anything that words it differently — and Phase
- * 5's Today card reuses exactly this one.
- */
-/**
  * WHAT TO SAY ABOUT A WORKOUT THAT IS ALREADY OPEN — the one owner.
  *
  * Only one workout may be open at a time, so an old one refuses every Start
@@ -3289,6 +3265,30 @@ export function openWorkoutInvitation(
     : "Finish the workout you have open first"
 }
 
+/**
+ * WHAT THE DOOR SAYS ABOUT TRAINING RIGHT NOW.
+ *
+ * ORDER OF PRECEDENCE, and each step of it is a complaint that was made:
+ *
+ *   1. A workout in progress beats everything. Somebody standing in a gym does
+ *      not need to be told what today's session is; they need the way back in.
+ *   2. A workout open for hours is a different thing — almost certainly
+ *      forgotten, and "Resume · 431 min" is the app pretending not to notice.
+ *   3. A session already finished today. The card used to say Start, which
+ *      invites a second workout on a day you have already trained.
+ *   4. Then, and only then, what is due.
+ *
+ * WHOSE TODAY. `trainedToday` is the ONE place in the app that turns a
+ * workout's instant into "today" for this card, and it does it on the
+ * account's calendar — which is what makes a 23:45 Copenhagen session count as
+ * Monday and a 00:10 one count as Tuesday. `now` is used for elapsed minutes
+ * and nothing else.
+ *
+ * Pure, and formats nothing: labels, counts and instants come out, and how
+ * they are worded is the card's business. A pure function that returns a
+ * sentence cannot be reused by anything that words it differently — and Phase
+ * 5's Today card reuses exactly this one.
+ */
 export function trainingCardState(facts: TrainingDoorFacts, now: Date = new Date()): TrainingCardState {
   const trainedToday = facts.recentlyFinished.filter(
     (w) => getTodayInTimezone(facts.timezone, new Date(w.loggedAt)) === facts.todayDate

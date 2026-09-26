@@ -281,7 +281,21 @@ export async function getEnrollmentById(userId: string, id: string): Promise<Pro
     .single()
   if (error) {
     if (error.code === "PGRST116") return null
-    throw new Error(`Failed to get enrollment: ${error.message}`)
+    /**
+     * ON THE HOT PATH OF EVERY WORKOUT WRITE, which is why this one is not
+     * allowed to say what the database said.
+     *
+     * `completeSet` → `requireLive` → `getLiveWorkout` → `unitFor` → here, and
+     * every route hands a thrown message to the browser verbatim. So a
+     * statement timeout on `program_enrollments` printed "That Squat set could
+     * not be saved: Failed to get enrollment: canceling statement due to
+     * statement timeout" at a squat rack — the exact shape this whole change
+     * exists to kill, on the exact screen, through a file the per-file ratchet
+     * had blessed at 13. A ratchet counting syntax in one file is not a claim
+     * about a PATH.
+     */
+    console.error(`could not read enrollment ${id} (code ${error.code ?? "none"}): ${error.message}`)
+    throw new Error("Could not read that program. Reload and try again.")
   }
   return toDomain(data as ProgramEnrollmentRow)
 }
