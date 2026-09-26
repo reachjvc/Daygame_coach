@@ -62,6 +62,15 @@ Reports filter wall has its sheet, Manage's member table a card list, Projects a
 card list, the period arrows are re-rendered in the phone controls, and the
 shortcut overlay is keyboard-only by nature.
 
+One more was examined and deliberately left: the **calendar's zoom control**
+(`CalendarView`) is hidden below 640px and has no phone equivalent. It is not a
+dead end, because the phone does not get the desktop default and then lose the
+means to change it — `useIsMobile` forces the tallest step, with the reason in
+the code ("at 56px/hour a 20-minute block is 19px"). The control is absent
+because the choice is already made, which is the distinction between an absent
+control and a dead one. Exposing it would only buy the ability to make blocks
+*shorter*; if that is wanted it is a request, not a repair.
+
 **Five controls under this slice's own 44px floor**, none of which looked wrong:
 the favourite tile (40px), the sync badge (27px — the control that says "Tap to
 try again"), the Reports metrics picker (36px), the day-header "Select" (43×36,
