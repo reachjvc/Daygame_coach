@@ -197,6 +197,44 @@ than dismissed.
 Final state: 6070 unit, 19 on iPhone 14 and Pixel 7, 17 on desktop Safari and
 Firefox, 12 on each signed-in project, ratchets unchanged.
 
+## "I DOUBT YOURE ACTUALLY DONE", 2026-09-26 — commits `9f72c555`, `86b7ca2b`
+
+The owner said that on intuition, with no evidence, after I had reported done
+twice. An hour of looking found **twenty-nine controls** live on a phone, and the
+reason is the thing worth writing down rather than the list.
+
+**My guard was green and my guard was mine.** "No visible control on any screen is
+too small to tap" queried `button` — so every `select`, `input`, `a` and
+`[role=switch]` was invisible to it *by construction* — and visited each screen's
+DEFAULT tab only, so Settings › Automation, Manage › Team and four Reports tabs
+were never measured. A green guard is a claim about the guard's reach. I reported
+it as a claim about the app.
+
+**And I had already been burned by the second hole an hour earlier.** A 28px
+group-expand chip escaped because the chip only exists on a grouped row. I widened
+the sweep to grouped/expanded/selecting rows — *the instance* — wrote a commit
+message about the blind spot, and never asked "what other states, what other kinds
+of element". Rule 3 read backwards: fix the instance, report the class.
+
+What was live the whole time: every `<select>` in the slice at 40px (one component
+behind all of them); every text input at 32–36px across twenty call sites, each
+overriding an `Input` that is already `h-11 sm:h-9`, including **the project
+picker's own search box**, the field this work started from; the running-timer stop
+at 36px on five of six screens; seven weekday toggles at 22px; four timesheet
+actions at 28px; a 12px select-all; an add button with no accessible name at all;
+and a header that overflowed 390px by 28px whenever a timer was running — which
+the overflow test could never see, because it stops its timer before it navigates.
+
+**The rule this bought, now in memory:** any claim of the form "every X is Y" must
+carry **how X was enumerated**, written out. "Every control" beside
+`querySelectorAll('button')` on default tabs makes the gap unmissable. And where
+the enumeration is a selector or a route list, that list is the weakest link and
+gets checked before the result is reported.
+
+Verified after: 6090 unit; 20 on iPhone 14 and Pixel 7; 17 on desktop Safari and
+Firefox; 12 on each signed-in project. An independent walk — separate from the
+guard, selector stated — reports clean across 23 places with a timer running.
+
 ---
 
 # The human half
