@@ -113,6 +113,23 @@ const MAX_PAGE_HEIGHT = 1800
  */
 test.describe.serial("training on a phone", () => {
   test.beforeEach(async ({ page }) => {
+    /**
+     * THE SAME BUDGET ITS SIBLINGS TAKE, and for the same reason.
+     *
+     * `programs-live-workout` and `dashboard-training-card` both raise this to
+     * 180s in their own `beforeEach`. This file never did, so it ran the
+     * longest flow in the training suite — reset, enrol, reload, open the
+     * History dialog, fill a datetime, open the live screen, tick four sets
+     * over the network, finish, save — on the default 60 seconds, on emulated
+     * phone hardware, against a real database.
+     *
+     * Measured 2026-09-26: it timed out on the tick click at 60s from a dirty
+     * account, and passed the same test alone in 25s from a clean one. Nothing
+     * here asserts a duration; a budget that only holds when the account starts
+     * empty is measuring the account, not the product.
+     */
+    test.setTimeout(180000)
+
     // Start from nothing so the run does not depend on what a previous one left.
     await page.goto("/programs")
     await page.evaluate(async () => {
@@ -124,6 +141,43 @@ test.describe.serial("training on a phone", () => {
       }
       for (const e of await (await fetch("/api/programs/enrollments?past=1")).json()) {
         await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
+      }
+
+      /**
+       * AND THE WORKOUTS, WHICH CLEARING ENROLLMENTS DOES NOT TOUCH.
+       *
+       * This reset cleared both enrollment lists and stopped there, so a test
+       * still started with whatever workout the one before it had left. Two
+       * ways that bites, and the second is the one that cost an evening:
+       *
+       *   an OPEN workout      refuses every start in the test that follows
+       *   a FINISHED one dated today puts the card into its `done` state, which
+       *                        deliberately offers "See today's workout" and no
+       *                        Start at all
+       *
+       * `/api/workouts/{id}` only discards an OPEN workout — it answers 400,
+       * "That workout is not open any more", for a finished one — so the
+       * finished rows go through the route History uses. `recentlyFinished` is
+       * the server's own answer to "what would put the card in `done`", which
+       * makes it the right thing to ask rather than a date comparison here.
+       */
+      const live = await (await fetch("/api/workouts/live")).json()
+      if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
+      /**
+       * DRAINED, not read once. `recentlyFinished` is what the CARD needs to
+       * choose its state, so it is free to report only the latest — and a
+       * single pass over it then leaves the account in `done` with an older
+       * finished workout still there. Measured: two finished workouts planted,
+       * one pass, and the page still had no "Start a workout now" for the test
+       * after it. Ask again until the answer is empty.
+       */
+      for (let pass = 0; pass < 12; pass++) {
+        const facts = await (await fetch("/api/programs/today")).json()
+        const done = facts.recentlyFinished ?? []
+        if (done.length === 0) break
+        for (const d of done) {
+          await fetch(`/api/health/workout?id=${d.workoutId}`, { method: "DELETE" })
+        }
       }
     })
   })
@@ -205,6 +259,33 @@ test.describe.serial("training on a phone", () => {
     for (const n of [1, 2, 3, 4]) {
       await page.getByTestId(`tick-${n}`).first().click()
     }
+
+    /**
+     * WAIT FOR THE FOUR TICKS TO BE ON THE SERVER, not for four clicks to have
+     * happened. Every tick is a write, and the finish sheet below is computed
+     * from what was SAVED — so if the last one is still in flight, the sheet
+     * says "Squat 3 of 5" and the assertion looks for 4.
+     *
+     * Seen on 2026-09-26: "Not everything was ticked" appeared and
+     * `Squat 4 of 5` did not, which is exactly that shape. The test passed
+     * three times earlier the same day, which is what a race looks like from
+     * the outside.
+     *
+     * Asking the account how many sets it holds is the condition itself, rather
+     * than a proxy for it, and it does not depend on any indicator the screen
+     * happens to render.
+     */
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(async () => {
+            const live = await (await fetch("/api/workouts/live")).json()
+            return (live?.sets ?? []).length
+          }),
+        { message: "the four ticked sets never reached the account", timeout: 20000 }
+      )
+      .toBe(4)
+
     await page.getByTestId("finish-workout").click()
     // Four of the five it asked for, said plainly rather than counted as a
     // clean session.
