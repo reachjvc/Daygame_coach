@@ -611,7 +611,18 @@ export function exportRecord(record: BlackBoxRecord): string {
  * every load — with the only door back to a good import sitting on the page
  * that would no longer render. A bad file must bounce off, not brick the tool.
  */
-export function importRecord(raw: string): BlackBoxRecord | null {
+export function importRecord(
+  raw: string,
+  /**
+   * The person's own day, so a file cannot carry a run that has not happened.
+   *
+   * Defaulted rather than required because fifteen test call sites and one
+   * product call site would otherwise churn for a rule that is about the
+   * calendar; `nowInBrowser` and `todayInBrowser` in this file take their clock
+   * the same way. The page passes its own `today` explicitly.
+   */
+  today: string = todayInBrowser(),
+): BlackBoxRecord | null {
   try {
     const parsed = JSON.parse(raw) as Partial<BlackBoxRecord>
     if (!parsed || typeof parsed !== "object") return null
@@ -630,6 +641,21 @@ export function importRecord(raw: string): BlackBoxRecord | null {
     if (!parsed.attempts.every((a) => a.endedByReportId === null || rows.has(a.endedByReportId))) {
       return null
     }
+    // AND NO RUN HAPPENS IN THE FUTURE. Both doors into a run already refuse
+    // this — `AttemptStart` and `PastRun` put `max={today}` on their date
+    // inputs — and the import did not, so a hand-edited or corrupted file was
+    // the one way in. Driven on 2026-09-26: a file with `startedOn: "2099-01-01"`
+    // was accepted, and the chart then positioned a lane label at
+    // `right: calc(-1300% + 14px)` — 1300% outside its own container, because
+    // every width on that chart is a fraction of a span that now runs to the
+    // next century.
+    //
+    // A rule enforced at one door and not the other is the same fault as
+    // `revivalClashes` above, which refused two live runs on the way in and
+    // allowed them on the way back.
+    if (!parsed.attempts.every((a) => a.startedOn <= today && (a.endedOn === null || a.endedOn <= today))) {
+      return null
+    }
     return { version: 1, attempts: parsed.attempts, reports: parsed.reports }
   } catch {
     return null
@@ -642,6 +668,13 @@ function isAttempt(row: unknown): row is ViceAttempt {
   if (typeof a.id !== "string" || a.id === "") return false
   if (typeof a.startedOn !== "string" || !isCalendarDay(a.startedOn)) return false
   if (a.endedOn !== null && (typeof a.endedOn !== "string" || !isCalendarDay(a.endedOn))) return false
+  // A RUN CANNOT END BEFORE IT STARTS. `PastRun` computes exactly this as
+  // `ordered` and will not submit without it; the import accepted it, and the
+  // record then held a run of negative length that `runLanes` clamps to one day
+  // — so the screen showed "1 day ·" with no ending and the impossible row sat
+  // there permanently. Checked here rather than in `importRecord` because it
+  // needs no clock: it is a fact about the two dates on this row.
+  if (a.endedOn !== null && a.endedOn < a.startedOn) return false
   if (!Array.isArray(a.structure) || !a.structure.every((x) => typeof x === "string")) return false
   return typeof a.label === "string" && typeof a.viceId === "string"
 }

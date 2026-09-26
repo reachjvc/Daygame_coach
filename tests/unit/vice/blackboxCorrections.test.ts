@@ -255,6 +255,67 @@ describe("a mis-tap can be taken back", () => {
   })
 })
 
+describe("a file cannot carry a run that could not have happened", () => {
+  /**
+   * BOTH RULES WERE ALREADY ENFORCED AT THE FORM AND ABSENT AT THE IMPORT.
+   *
+   * `PastRun` computes `ordered = endedOn >= startedOn` and will not submit
+   * without it; both date inputs carry `max={today}`. `importRecord` checked
+   * that the dates PARSE and not that they are possible, so a hand-edited or
+   * corrupted backup was the one way in — and the import is exactly the path a
+   * person uses on a new device, where they have no other copy to compare
+   * against.
+   *
+   * Driven on 2026-09-26 before the fix: a file with `startedOn: "2099-01-01"`
+   * was accepted, and the chart then placed a lane label at
+   * `right: calc(-1300% + 14px)` — 1300% outside its own container, because
+   * every width there is a fraction of a span that now runs to the next
+   * century. A run ending before it starts was accepted too and drew as
+   * "1 day ·" with no ending, because `runLanes` clamps a negative length.
+   *
+   * Same fault as `revivalClashes`: a rule kept at one door and not the other.
+   */
+  const TODAY_HERE = "2026-09-26"
+  const file = (attempts: unknown[]) => JSON.stringify({ version: 1, attempts, reports: [] })
+  const run = (over: Record<string, unknown>) => ({
+    id: "r1", viceId: "weed", label: "Weed", startedOn: "2026-02-01",
+    startedBy: "", structure: [], endedOn: null, endedByReportId: null,
+    updatedAt: "2026-02-01T00:00:00.000Z", deletedAt: null, ...over,
+  })
+
+  it("accepts an ordinary run, so the cases below are not passing by refusing everything", () => {
+    expect(importRecord(file([run({})]), TODAY_HERE)).not.toBeNull()
+    expect(importRecord(file([run({ endedOn: "2026-03-01" })]), TODAY_HERE)).not.toBeNull()
+    // The boundary: a run that started or ended TODAY is ordinary, not future.
+    expect(importRecord(file([run({ startedOn: TODAY_HERE })]), TODAY_HERE)).not.toBeNull()
+    expect(importRecord(file([run({ endedOn: TODAY_HERE })]), TODAY_HERE)).not.toBeNull()
+    // And one that starts and ends on the same day is a real one-day run.
+    expect(
+      importRecord(file([run({ startedOn: "2026-02-01", endedOn: "2026-02-01" })]), TODAY_HERE),
+    ).not.toBeNull()
+  })
+
+  it("refuses a run that ends before it starts", () => {
+    expect(importRecord(file([run({ startedOn: "2026-05-01", endedOn: "2026-01-01" })]), TODAY_HERE)).toBeNull()
+  })
+
+  it("refuses a run that starts or ends in the future", () => {
+    expect(importRecord(file([run({ startedOn: "2099-01-01" })]), TODAY_HERE)).toBeNull()
+    expect(importRecord(file([run({ endedOn: "2099-01-01" })]), TODAY_HERE)).toBeNull()
+    // One day either side of the line, so the comparison is not off by one.
+    expect(importRecord(file([run({ startedOn: "2026-09-27" })]), TODAY_HERE)).toBeNull()
+  })
+
+  it("bounces the whole file rather than dropping the bad row quietly", () => {
+    // The same choice the orphan-report rule makes. A file that silently loses
+    // one run is worse than one that is refused with a reason on screen, which
+    // is what the page shows: "That file was not a Black Box record, so nothing
+    // was changed."
+    const mixed = file([run({ id: "ok" }), run({ id: "bad", startedOn: "2099-01-01" })])
+    expect(importRecord(mixed, TODAY_HERE)).toBeNull()
+  })
+})
+
 describe("\"is there anything here\" is one question with one answer", () => {
   /**
    * TWO PREDICATES FOR ONE QUESTION IS HOW THE FIXED FAULT CAME BACK THE SAME

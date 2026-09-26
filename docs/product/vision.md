@@ -34,6 +34,16 @@ Rules for this file:
    exactly why it is worth money.
 8. **Much later:** a forum, and the owner's own articles.
 
+46. **A REAL APP, INSTALLED ON THE PHONE — not a website that looks like one.**
+    The owner said on 2026-09-26 that he thought items 1 and 12 had already made
+    this abundantly clear. Claude had read item 12 as "works well in a phone
+    browser", which is why this is now written out in its own words. What it is
+    for, in the owner's examples: **notifications that arrive when the app is
+    closed**, and **running with the screen dark or the phone in a pocket while
+    it keeps counting** — plus whatever else only an installed app can do.
+    **No website can do any of those on any host**, so this is not a polish
+    item: it decides the shape of the backend. See item 47.
+
 ## What "finished" means
 
 9. Nothing can go wrong. Not "the happy path works".
@@ -96,6 +106,16 @@ Rules for this file:
 37. The friend also asked for CI/CD. The CI half exists (item 43). The CD half —
     migrate then deploy, staging and production — comes with the move.
 
+47. **The move in item 36 must land a data service with token login — not the
+    website on a new host.** Decided with the owner 2026-09-26, once item 46 was
+    explicit: build for the app from the start rather than rebuild login a second
+    time (item 15). Two reasons it cannot be bolted on later: a phone app cannot
+    use pages the server draws and sends, and it cannot use the browser cookie
+    that login depends on today. Measured 2026-09-26: **71 of 94 screens are
+    already drawn in the browser** and **115 API routes already exist**, so the
+    gap is the remaining **23 server-drawn screens** and the cookie login — much
+    smaller than it sounds.
+
 **Everything else the user sees**
 38. Dashboard, front page, settings and every other page need another pass until
     they are actually done — even on a plain "what does this look like" basis.
@@ -145,6 +165,19 @@ Re-check before relying on them.
     matters. What is left is smaller and nobody has asked for it: the map itself
     still has six hover states and zero touch handlers, so on a phone it is
     decoration above the list that does the work.
+
+48. **Notifications are 0% built, and nothing legal is built** (checked
+    2026-09-26). Two places pop a message — `useTimetrack.ts:289` and
+    `RestBar.tsx:91` — and both only fire **while the page is open in front of
+    you**. There is no push setup at all: no service-worker push handler, no
+    stored device registrations, no `web-push` dependency, no subscriptions
+    table. Separately, there is **no privacy policy, no terms, no cookie notice,
+    no imprint, no account-deletion path and no data-export path** anywhere in
+    the repo; `deleteUserValues` (`src/db/valuesRepo.ts:80`) deletes one slice's
+    rows, not an account. Account deletion and export are legal requirements the
+    day there are users, and they are **the same work on any host** — the move in
+    item 36 does not deliver them. "Fully legal" is not yet an item on this file;
+    the owner may want to add one.
 
 44. **Achievements: two systems, neither derived from Life Mastery.**
     `src/tracking/achievementsService.ts` computes badges from approach and

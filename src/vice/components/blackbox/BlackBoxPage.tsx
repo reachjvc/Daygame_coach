@@ -179,7 +179,7 @@ export function BlackBoxPage() {
   function upload(file: File) {
     const reader = new FileReader()
     reader.onload = () => {
-      const parsed = importRecord(String(reader.result))
+      const parsed = importRecord(String(reader.result), today)
       if (!parsed) {
         setNotice("That file was not a Black Box record, so nothing was changed.")
         return

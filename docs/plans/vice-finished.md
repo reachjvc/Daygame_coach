@@ -1606,3 +1606,73 @@ than on my own initiative, which is the part worth recording:
 
 - chromium — `blackbox` + `vice-offline` + the 71-test archive suite: **88 passed, 2 skipped, 0 failed**
 - `cross-firefox` and `cross-webkit` — `vice-cross`: **9 passed, 0 failed**
+
+## M8f — GOING LOOKING AGAIN, ON THE OWNER'S "THERE WILL BE MISTAKES"
+
+He was right, and the first place to look was a check abandoned earlier in this
+plan: `s21.mjs` tried to load corrupted backups and died at
+`setInputFiles` because the restore control did not render on an empty record.
+**That was fixed in M8, and the test was never re-run.** An abandoned check is
+worse than no check, because the plan reads as though it happened.
+
+**Eight corrupted files driven. Two were accepted.**
+
+| file | before | now |
+| --- | --- | --- |
+| not JSON, empty, non-record, orphan report, unknown ending, garbage date | refused | refused |
+| **a run ending before it starts** | **accepted** | refused |
+| **a run starting in the future** | **accepted** | refused |
+
+Both rules were already enforced at the form and absent at the import:
+`PastRun` computes `ordered = endedOn >= startedOn` and will not submit without
+it, and both date inputs carry `max={today}`. `isAttempt` checked that the dates
+*parse* and not that they are *possible*. **Same fault as `revivalClashes` —
+a rule kept at one door and not the other** — and the import is the path a person
+uses on a new device, where they have nothing to compare against.
+
+What the accepted ones did: the future-dated run put a lane label at
+`right: calc(-1300% + 14px)`, 1300% outside its own container, because every
+width on that chart is a fraction of a span that now ran to the next century. The
+reversed run drew as "1 day ·" with no ending, `runLanes` having clamped a
+negative length. Four tests, including the boundaries — today is not future, and
+a one-day run is real — and the mixed-file case, because bouncing the whole file
+is the same choice the orphan-report rule already makes.
+
+### Two of my own instruments were wrong, again
+
+**My "notice" extraction was reading the section heading.** For eight cases it
+reported the page as saying `YOUR COPY`, which had me briefly believing a refused
+file was refused *silently*. The page says **"That file was not a Black Box
+record, so nothing was changed"**, and on success **"Added 1 row from that file.
+Nothing was removed."** The product was right and my reading of it was wrong.
+
+**My "negative number on screen" check matched the hyphens in `2099-01-01`.** It
+fired on two cases; one was a date and one was the real CSS artefact. A detector
+that cannot tell a date from a negative number reports two-thirds noise, which is
+the `check-helplines.mjs` lesson for the third time in one day.
+
+### Four surfaces driven and found sound
+
+Recorded because a hunt that only reports hits is not a hunt.
+
+- **Taking back a mis-tapped report.** Filed "I did it" on a 269-day run, pressed
+  "Undo that" (72×44): run back to live, the report tombstoned rather than erased
+  — right, because a deletion has to travel to the other device — and the undo
+  offer correctly gone afterwards.
+- **"Add a run you already had"** end to end: every field present, the optional
+  ones marked optional, and the empty-structure case framed as a finding rather
+  than an omission.
+- **320px, 360px and 390px** with the four-run record: no horizontal scroll, no
+  control under 44px, nothing escaping the chart's card. M6's fix holds at the
+  narrowest width.
+
+### One for the owner's eye, because it is voice and not a defect
+
+**"I'd been drinking" is offered as an ending to somebody quitting drinking.**
+`ENDING_FAMILIES` is a fixed list with no vice awareness, so all six endings are
+shown for all nine vices. For eight of them the option is meaningful — being
+drunk is a real reason any streak breaks, which is what `sounds` says: "the
+decision was made by someone with less to lose than you". For alcohol it reads
+circularly: the thing that ended *is* the drinking. There is a defensible reading
+(the first one lowered the guard for the rest) and it is not the reading the
+label gives. One vice of nine, and it is the flagship one.
