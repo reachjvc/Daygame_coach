@@ -235,6 +235,46 @@ Verified after: 6090 unit; 20 on iPhone 14 and Pixel 7; 17 on desktop Safari and
 Firefox; 12 on each signed-in project. An independent walk — separate from the
 guard, selector stated — reports clean across 23 places with a timer running.
 
+## "I DONT BELIEVE THIS WILL FIX IT" — commit `136348f4`
+
+The owner said that about the remedy above, and was right again. The remedy was a
+widened sweep plus a memory note, and widening the sweep had *already failed
+twice*: green while twenty-nine controls were short, selector fixed, green again,
+and a by-hand re-audit then found twenty more.
+
+**A browser sweep cannot see its own reach.** It measures what it navigates to
+and what its selector names, and both are lines its author writes.
+`tests/unit/architecture/touchTargetsAtSource.test.ts` reads the source instead —
+no navigation, no selector, so every call site is in scope whether or not a test
+can reach it. It found ten more in seconds, three of which both the sweep and my
+by-hand audit had missed, including **the toast Undo button I added this session**
+at 28px and a client-name input inside a `cn()` call that no plain-string pass
+could see.
+
+Its own two bugs were found the same way and are now tested rather than described:
+it attributed child classNames to the parent (the 24px count chip inside the 44px
+expand button), so it reads backwards from each `className` to the nearest `<`;
+and it judged checkboxes, whose real target is their label, so it defers those to
+the browser sweep. Both limits are in its docstring under **WHAT IT DOES NOT
+CATCH** — because the failure that started all this was a claim made without its
+enumeration. Its allowlist is empty, and the docstring says why that is the point.
+
+**The general finding, measured across the whole ruleset rather than argued.**
+What is always loaded is about 1,850 words — CLAUDE.md 486, the memory index 417,
+the end-of-turn checklist 948. That is not too much to act on. But two behaviour
+notes are enormous and both are records of one rule failing over and over:
+
+| note | words | re-violations recorded |
+|---|---|---|
+| `shared-working-tree-no-stash.md` | 2,792 | **8** "Proven" entries in ten days, three sessions — for a rule written in bold as its own rule 3 on 2026-09-17 |
+| `stand-in-checking-failure.md` | 2,334 | **12** instances across four dates |
+
+Every other behaviour note is 615 words or fewer and records no repeat. **Length
+is the symptom; recurrence is the disease.** The number to watch for a rule is
+not how long it is but how many times it has been re-violated — and at eight or
+twelve, more prose has a demonstrated zero success rate. Those two need
+mechanical enforcement; the rest are working.
+
 ---
 
 # The human half
