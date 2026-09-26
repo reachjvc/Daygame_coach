@@ -76,6 +76,9 @@ const ALLOWED_DIRECT_GET_USER = new Set([
   'src/profile/actions.ts',
   'src/settings/actions.ts',
   'src/profile/loginDestinationService.ts',
+  // Authenticates with getSession() rather than getUser(), which is why the
+  // first version of this guard could not see it. Same job as the pages above.
+  'app/dashboard/tracking/layout.tsx',
   // Inside src/db/ already — the facade's own neighbourhood.
   'src/db/profilesRepo.ts',
 ])
@@ -2667,7 +2670,8 @@ describe('Architecture Compliance', () => {
             walk(rel)
           } else if (/\.tsx?$/.test(entry.name)) {
             if (rel === path.join('src', 'db', 'auth.ts')) continue
-            if (fs.readFileSync(path.join(projectRoot, rel), 'utf8').includes('auth.getUser()')) {
+            const src = fs.readFileSync(path.join(projectRoot, rel), 'utf8')
+            if (src.includes('auth.getUser()') || src.includes('auth.getSession()')) {
               found.push(rel.split(path.sep).join('/'))
             }
           }
@@ -2684,7 +2688,8 @@ describe('Architecture Compliance', () => {
       const violations = callers.filter((f) => !ALLOWED_DIRECT_GET_USER.has(f))
       expect(
         violations,
-        'These call supabase.auth.getUser() directly. Use the facade in\n' +
+        'These ask the identity provider directly — getUser() or getSession().\n' +
+          'Use the facade in\n' +
           'src/db/auth.ts instead — requireAuth() for an API route that must\n' +
           'reject an anonymous caller, requirePremium()/requireAccess() when it\n' +
           'also gates on what was bought, optionalUserId() when signed-out\n' +
