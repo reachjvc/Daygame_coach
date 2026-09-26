@@ -245,6 +245,19 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     setQueue(readQueue())
   }, [])
 
+  /**
+   * The workout as it stands, readable from a callback without re-creating it.
+   *
+   * `refresh` has to know whether a screen was showing a workout when the
+   * server said there is none, and it cannot close over `workout` without
+   * being rebuilt on every set — which would restart the interval that calls
+   * it.
+   */
+  const workoutRef = useRef<LiveWorkout | null>(initial)
+  useEffect(() => {
+    workoutRef.current = workout
+  }, [workout])
+
   /** Apply a server copy only if nothing newer has already been applied. */
   const applyServer = useCallback((seq: number, next: LiveWorkout | null) => {
     if (seq < applied.current) return
@@ -256,7 +269,25 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     const seq = ++issued.current
     try {
       const res = await fetch("/api/workouts/live")
-      if (res.ok) applyServer(seq, (await res.json()) as LiveWorkout | null)
+      if (!res.ok) return
+      const next = (await res.json()) as LiveWorkout | null
+      /**
+       * NOTHING OPEN, WHILE THIS SCREEN IS SHOWING SOMETHING. The server has
+       * just said the workout is not there — finished or thrown away
+       * elsewhere — and clearing it without saying so leaves the screen on
+       * "This workout is finished", which is the one thing it must not claim
+       * wrongly.
+       *
+       * Nothing calls `refresh` today; it is exported and the live screen does
+       * not use it. That is exactly why this is here rather than in a comment:
+       * the first caller would otherwise reintroduce the lie, and nothing would
+       * say so.
+       */
+      if (next === null && workoutRef.current !== null) {
+        workoutVanished(workoutRef.current.id, "This workout is no longer open.")
+        return
+      }
+      applyServer(seq, next)
     } catch {
       // Offline. What is on screen stays on screen.
     }
@@ -677,7 +708,16 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
            * moved on". It used to be answered with a guess about the
            * connection; the server's own sentence is the only honest thing to
            * show, and the sheet stays open so it can be acted on.
+           *
+           * EXCEPT WHEN THERE IS NOTHING LEFT TO ACT ON. A workout finished or
+           * thrown away on another device cannot be finished here however many
+           * times Save is pressed, so the sheet closes and the screen says what
+           * happened rather than inviting a retry that can only fail.
            */
+          if (goneFrom(body as { code?: string } | null)) {
+            workoutVanished(workout.id, (body as { error?: string })?.error ?? "This workout is no longer open.")
+            return null
+          }
           setError((body as { error?: string })?.error ?? "That workout could not be finished.")
           return null
         }
@@ -713,6 +753,20 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     try {
       const res = await fetch(`/api/workouts/${workout.id}`, { method: "DELETE" })
       if (!res.ok) {
+        /**
+         * ALREADY GONE IS NOT A FAILED DISCARD.
+         *
+         * "It is still here" is the one thing this must never say about a
+         * workout that is not. Throw it away on the laptop, tap Throw away on
+         * the phone, and the phone was told the workout survived — so the
+         * person goes looking for it. The outcome they asked for has happened;
+         * the screen just has to catch up.
+         */
+        const body = (await res.json().catch(() => null)) as { error?: string; code?: string } | null
+        if (goneFrom(body)) {
+          workoutVanished(workout.id, body?.error ?? "This workout is no longer open.")
+          return
+        }
         setError("That workout could not be thrown away. It is still here.")
         return
       }

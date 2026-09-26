@@ -460,6 +460,19 @@ async function fateOf(userId: string, workoutId: string): Promise<WorkoutFate> {
 }
 
 /**
+ * A READ THAT FAILED, IN WORDS A PERSON CAN ACT ON.
+ *
+ * No `fateOf` here, unlike `refuseWrite` below: a read that failed could not
+ * ask the database anything, so asking it a second question would be answering
+ * "is it gone?" over the same broken connection. It says what could not be read
+ * and logs the rest.
+ */
+function readRefused(what: string, error: { code?: string; message: string }): Error {
+  console.error(`could not read ${what} (code ${error.code ?? "none"}): ${error.message}`)
+  return new Error(`Could not read ${what}. Reload and try again.`)
+}
+
+/**
  * A FAILED WRITE, IN WORDS A PERSON CAN ACT ON. The database's own sentence
  * goes to the server log, which is the only place it helps anyone.
  *
@@ -473,18 +486,6 @@ async function fateOf(userId: string, workoutId: string): Promise<WorkoutFate> {
  * first attempt and as a row-level-security refusal on the ones after it —
  * same cause, two codes, and a third if the policy is ever rewritten.
  */
-/**
- * The same rule for a READ that failed.
- *
- * No `fateOf` here: a read that failed could not ask the database anything, so
- * asking it a second question would be answering "is it gone?" with the same
- * broken connection. It says what could not be read and logs the rest.
- */
-function readRefused(what: string, error: { code?: string; message: string }): Error {
-  console.error(`could not read ${what} (code ${error.code ?? "none"}): ${error.message}`)
-  return new Error(`Could not read ${what}. Reload and try again.`)
-}
-
 async function refuseWrite(
   userId: string,
   workoutId: string,
