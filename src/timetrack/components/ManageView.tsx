@@ -101,7 +101,7 @@ function ClientsPanel({
       description="Group projects under the client they are for."
       actions={
         <div className="flex w-full gap-2 sm:w-auto">
-          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="New client" className="h-9 w-full sm:h-8 sm:w-[180px]" />
+          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="New client" className="h-11 w-full sm:h-8 sm:w-[180px]" />
           <Button
             size="sm"
             onClick={() => {
@@ -175,7 +175,7 @@ function TagsPanel({
       description="Renaming a tag updates every entry using it. Deleting one removes it from those entries."
       actions={
         <div className="flex w-full gap-2 sm:w-auto">
-          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="New tag" className="h-9 w-full sm:h-8 sm:w-[160px]" />
+          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="New tag" className="h-11 w-full sm:h-8 sm:w-[160px]" />
           <Button
             size="sm"
             onClick={() => {
@@ -198,7 +198,7 @@ function TagsPanel({
               <Input
                 value={tag.name}
                 onChange={(event) => setState((current) => updateTag(current, tag.id, event.target.value))}
-                className="h-9 w-full sm:h-8 sm:w-[220px]"
+                className="h-11 w-full sm:h-8 sm:w-[220px]"
               />
               <span className="text-xs text-muted-foreground">used on {tagUsageCount(state, tag.id)} entries</span>
               <ConfirmButton size="icon-sm" onConfirm={() => setState((current) => deleteTag(current, tag.id))}>
@@ -249,13 +249,13 @@ function TeamPanel({
               value={invite.name}
               onChange={(event) => setInvite({ ...invite, name: event.target.value })}
               placeholder="Name"
-              className="h-9 w-full sm:h-8 sm:w-[130px]"
+              className="h-11 w-full sm:h-8 sm:w-[130px]"
             />
             <Input
               value={invite.email}
               onChange={(event) => setInvite({ ...invite, email: event.target.value })}
               placeholder="email@example.com"
-              className="h-9 w-full sm:h-8 sm:w-[180px]"
+              className="h-11 w-full sm:h-8 sm:w-[180px]"
             />
             <Button
               size="sm"
@@ -319,7 +319,7 @@ function TeamPanel({
                           updateMember(current, member.id, { hourlyRate: event.target.value ? Number(event.target.value) : null }),
                         )
                       }
-                      className="h-9 text-right"
+                      className="h-11 text-right sm:h-9"
                     />
                   </label>
                   <label className="space-y-1">
@@ -332,7 +332,7 @@ function TeamPanel({
                           updateMember(current, member.id, { labourCost: event.target.value ? Number(event.target.value) : null }),
                         )
                       }
-                      className="h-9 text-right"
+                      className="h-11 text-right sm:h-9"
                     />
                   </label>
                 </div>
@@ -394,7 +394,7 @@ function TeamPanel({
                             }),
                           )
                         }
-                        className="h-8 w-[90px] text-right"
+                        className="h-11 w-[90px] text-right sm:h-8"
                       />
                     </td>
                     <td className="px-2 py-2">
@@ -408,7 +408,7 @@ function TeamPanel({
                             }),
                           )
                         }
-                        className="h-8 w-[90px] text-right"
+                        className="h-11 w-[90px] text-right sm:h-8"
                       />
                     </td>
                     <td className="px-2 py-2">
@@ -541,7 +541,7 @@ function TeamPanel({
             type="date"
             value={approvalWeek}
             onChange={(event) => setApprovalWeek(weekStartOf(event.target.value, state.user.weekStart))}
-            className="h-8 w-[160px]"
+            className="h-11 w-[160px] sm:h-8"
           />
         }
       >

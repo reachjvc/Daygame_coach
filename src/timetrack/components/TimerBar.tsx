@@ -238,14 +238,14 @@ export function TimerBar({
 
           {mode === "manual" ? (
             <div className="flex w-full flex-wrap items-center gap-1 sm:w-auto">
-              <Input value={manualStart} onChange={(e) => setManualStart(e.target.value)} className="h-10 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="Start time" />
+              <Input value={manualStart} onChange={(e) => setManualStart(e.target.value)} className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="Start time" />
               <span className="text-muted-foreground">–</span>
-              <Input value={manualStop} onChange={(e) => setManualStop(e.target.value)} className="h-10 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="End time" />
+              <Input value={manualStop} onChange={(e) => setManualStop(e.target.value)} className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="End time" />
               <Input
                 type="date"
                 value={manualDay}
                 onChange={(e) => setManualDay(e.target.value)}
-                className="h-10 w-[150px] sm:h-8 sm:w-[140px]"
+                className="h-11 w-[150px] sm:h-8 sm:w-[140px]"
                 aria-label="Date"
               />
             </div>
@@ -262,7 +262,7 @@ export function TimerBar({
                 if (event.key === "Enter" && running) commitRunningDuration()
               }}
               aria-label="Duration"
-              className="h-10 w-[100px] text-center tabular-nums sm:h-8 sm:w-[92px]"
+              className="h-11 w-[100px] text-center tabular-nums sm:h-8 sm:w-[92px]"
             />
           )}
 

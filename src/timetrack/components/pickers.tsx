@@ -109,7 +109,7 @@ export function ProjectPicker({
               // matching a task or a client name is forgiveness, not a feature
               // to advertise in eleven characters of placeholder.
               placeholder="Search or add a project…"
-              className="h-8"
+              className="h-11 sm:h-8"
             />
           </div>
           <div className="max-h-72 overflow-y-auto py-1">
@@ -256,7 +256,7 @@ export function TagPicker({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search or add a tag…"
-              className="h-8"
+              className="h-11 sm:h-8"
             />
           </div>
           <div className="max-h-60 overflow-y-auto py-1">

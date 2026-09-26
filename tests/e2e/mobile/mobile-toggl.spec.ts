@@ -261,8 +261,15 @@ test.describe('time tracker on a phone', () => {
    * you hit — rather than the control's own box, which would demand a
    * comically large checkbox to pass.
    */
+  /**
+   * Text inputs are in here too, and that is not padding: this app's own `Input`
+   * is `h-11 sm:h-9`, so 44px on a phone is a decision the project already made.
+   * Thirteen call sites in this slice overrode it with a bare `h-8` or `h-9` and
+   * so were 32-36px at EVERY width — the search box in the project picker among
+   * them, which is the field this whole piece of work started from.
+   */
   const TAPPABLE =
-    'button, select, a[href], input[type=checkbox], input[type=radio], [role=button], [role=switch], summary'
+    'button, select, textarea, a[href], input, [role=button], [role=switch], summary'
 
   /** Which tabs live inside each screen, since the bar only gets you to the screen */
   const INNER_TABS: Record<string, string[]> = {
@@ -298,6 +305,7 @@ test.describe('time tracker on a phone', () => {
           const box = target.getBoundingClientRect()
           if (!box.width || !box.height) continue
           if (getComputedStyle(el).visibility === 'hidden') continue
+          if (el.getAttribute('type') === 'hidden') continue
           if (box.height >= 44 && box.width >= 44) continue
           found.push({
             what: el.tagName.toLowerCase(),
@@ -328,6 +336,13 @@ test.describe('time tracker on a phone', () => {
         expect(found, `${place} has controls under 44px: ${JSON.stringify(found)}`).toEqual([])
       }
     }
+
+    // manual mode has three inputs the timer mode does not
+    await goTo(page, 'Timer')
+    await page.locator('main').getByRole('button', { name: 'Toggle timer or manual mode' }).click()
+    await page.waitForTimeout(500)
+    const manual = await tooSmall(TAPPABLE)
+    expect(manual, `manual mode has controls under 44px: ${JSON.stringify(manual)}`).toEqual([])
   })
 
   /**

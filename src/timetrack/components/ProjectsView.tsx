@@ -111,7 +111,7 @@ export function ProjectsView({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search projects…"
-          className="h-10 w-full sm:h-9 sm:w-[220px]"
+          className="h-11 w-full sm:h-9 sm:w-[220px]"
         />
         <Segmented
           value={filter}
@@ -611,7 +611,7 @@ function ProjectDialog({
                 <Input
                   value={task.name}
                   onChange={(event) => setState((current) => updateTask(current, task.id, { name: event.target.value }))}
-                  className="h-8 w-[180px]"
+                  className="h-11 w-[180px] sm:h-8"
                 />
                 <Input
                   value={task.estimatedSeconds ? String(task.estimatedSeconds / 3600) : ""}
@@ -623,7 +623,7 @@ function ProjectDialog({
                     )
                   }
                   placeholder="Est. hours"
-                  className="h-8 w-[80px]"
+                  className="h-11 w-[80px] sm:h-8"
                 />
                 <MiniSelect
                   className="w-[140px]"
@@ -648,7 +648,7 @@ function ProjectDialog({
                 value={newTask}
                 onChange={(event) => setNewTask(event.target.value)}
                 placeholder="New task name"
-                className="h-8"
+                className="h-11 sm:h-8"
               />
               <Button
                 size="sm"

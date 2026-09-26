@@ -465,7 +465,7 @@ function AutomationPanel({
               value={rule.keyword}
               onChange={(event) => setRule({ ...rule, keyword: event.target.value })}
               placeholder="Keyword"
-              className="h-9 w-full sm:h-8 sm:w-[140px]"
+              className="h-11 w-full sm:h-8 sm:w-[140px]"
             />
             <MiniSelect
               className="w-[160px]"
@@ -746,7 +746,7 @@ export function IntegrationsPanel({
                       calendars: current.calendars.map((c) => (c.id === calendar.id ? { ...c, name: event.target.value } : c)),
                     }))
                   }
-                  className="h-9 w-full sm:h-8 sm:w-[180px]"
+                  className="h-11 w-full sm:h-8 sm:w-[180px]"
                 />
                 <span className="max-w-[260px] truncate text-xs text-muted-foreground">
                   {calendar.source === "ics_url"
@@ -863,7 +863,7 @@ export function IntegrationsPanel({
               </p>
               <div className="flex flex-wrap items-end gap-2">
                 <Field label="Name in this app" className="w-full sm:w-[160px]">
-                  <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Google Calendar" className="h-9" />
+                  <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Google Calendar" className="h-11 sm:h-9" />
                 </Field>
                 <Field label="Calendar ID" className="w-full flex-1 sm:min-w-[240px]">
                   <Input
@@ -871,10 +871,10 @@ export function IntegrationsPanel({
                     onChange={(event) => setRef(event.target.value)}
                     placeholder="you@gmail.com"
                     autoComplete="off"
-                    className="h-9"
+                    className="h-11 sm:h-9"
                   />
                 </Field>
-                <Button size="sm" className="h-9" disabled={busy || !ref.trim()} onClick={() => importFromGoogleApi(ref.trim(), name)}>
+                <Button size="sm" className="h-11 sm:h-9" disabled={busy || !ref.trim()} onClick={() => importFromGoogleApi(ref.trim(), name)}>
                   {busy ? <IconSpinner className="size-4 animate-spin" /> : <IconCalendar className="size-4" />} Import
                 </Button>
               </div>
@@ -902,7 +902,7 @@ export function IntegrationsPanel({
               </p>
               <div className="flex flex-wrap items-end gap-2">
                 <Field label="Name in this app" className="w-full sm:w-[160px]">
-                  <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Google Calendar" className="h-9" />
+                  <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Google Calendar" className="h-11 sm:h-9" />
                 </Field>
                 <Field label="Secret iCal address" className="w-full flex-1 sm:min-w-[260px]">
                   <Input
@@ -913,12 +913,12 @@ export function IntegrationsPanel({
                     placeholder="Paste it here — it stays hidden"
                     autoComplete="off"
                     spellCheck={false}
-                    className="h-9"
+                    className="h-11 sm:h-9"
                   />
                 </Field>
                 <Button
                   size="sm"
-                  className="h-9"
+                  className="h-11 sm:h-9"
                   disabled={busy || !ref.trim()}
                   onClick={() => importFromUrl(ref.trim(), name, resyncCalendarId ?? undefined)}
                 >
@@ -955,7 +955,7 @@ export function IntegrationsPanel({
         description="Toggl posts entry and project events to a URL you choose. Here they are recorded below instead of being sent anywhere."
         actions={
           <div className="flex gap-2">
-            <Input value={hookUrl} onChange={(event) => setHookUrl(event.target.value)} placeholder="https://example.com/hook" className="h-9 w-full sm:h-8 sm:w-[220px]" />
+            <Input value={hookUrl} onChange={(event) => setHookUrl(event.target.value)} placeholder="https://example.com/hook" className="h-11 w-full sm:h-8 sm:w-[220px]" />
             <Button
               size="sm"
               onClick={() => {

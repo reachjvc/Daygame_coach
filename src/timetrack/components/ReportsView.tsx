@@ -332,13 +332,13 @@ function FilterControls({
                 type="date"
                 value={filters.range.start}
                 onChange={(event) => onUpdateFilters({ range: { ...filters.range, start: event.target.value } })}
-                className="h-8"
+                className="h-11 sm:h-8"
               />
               <Input
                 type="date"
                 value={filters.range.end}
                 onChange={(event) => onUpdateFilters({ range: { ...filters.range, end: event.target.value } })}
-                className="h-8"
+                className="h-11 sm:h-8"
               />
             </div>
           </div>
@@ -393,7 +393,7 @@ function FilterControls({
         value={filters.description}
         onChange={(event) => onUpdateFilters({ description: event.target.value })}
         placeholder="Description contains…"
-        className="h-8 w-[180px]"
+        className="h-11 w-[180px] sm:h-8"
       />
       {filterCount > 0 && (
         <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs text-primary">
@@ -484,7 +484,7 @@ function FilterControls({
                 value={saveName}
                 onChange={(event) => setSaveName(event.target.value)}
                 placeholder="Report name"
-                className="h-8"
+                className="h-11 sm:h-8"
               />
               <Button
                 size="sm"
@@ -538,7 +538,7 @@ function FilterDropdown({
       {() => (
         <div>
           <div className="border-b border-border p-2">
-            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${label.toLowerCase()}…`} className="h-8" />
+            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${label.toLowerCase()}…`} className="h-11 sm:h-8" />
           </div>
           <div className="max-h-56 overflow-y-auto py-1">
             {visible.map((item) => (
