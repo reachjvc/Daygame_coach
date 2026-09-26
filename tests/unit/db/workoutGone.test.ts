@@ -33,7 +33,7 @@ const WORKOUT = "w1"
 type Fate = "gone" | "finished" | "open" | "written-up" | "unreadable"
 
 /** The workout disappears only AFTER the write has succeeded. */
-type Vanishing = { goneAfterWrite?: boolean }
+type Vanishing = { goneAfterWrite?: boolean; liveReadFails?: boolean }
 
 const liveRow = {
   id: WORKOUT,
@@ -126,6 +126,9 @@ function fakeSupabase(opts: { writeError: { code?: string; message: string } | n
           },
           error: null,
         })
+      }
+      if (opts.liveReadFails) {
+        return Promise.resolve({ data: null, error: { code: "57014", message: "statement timeout" } })
       }
       // The live read that `requireLive` makes before any write — and the
       // one it makes AFTER, which is where the workout can have gone.
@@ -307,5 +310,21 @@ describe("a set written into a workout that is no longer there", () => {
     const answer = workoutErrorResponse(thrown)
     expect(answer.status, "4xx tells the queue to delete the set").toBe(503)
     expect(answer.status).toBeGreaterThanOrEqual(500)
+  })
+
+  test("a read that failed anywhere on the write path is retryable too", async () => {
+    /**
+     * `CouldNotTell` was wired to `fateOf` alone, and the other three reads on
+     * this path — `requireLive`'s, the re-read after the write, and the unit
+     * lookup — still threw bare Errors, which the sets route answers 400. So
+     * the disaster the class was added to prevent was still live on three of
+     * four paths, and on one of them the INSERT had already committed: the set
+     * was in the database while the screen deleted it and said it could not be
+     * saved.
+     */
+    const { workoutErrorResponse } = await import("@/src/programs/errors")
+    const { repo } = await repoWith({ writeError: null, fate: "open", liveReadFails: true })
+    const thrown = await repo.completeSet(USER, WORKOUT, aSet).catch((e: unknown) => e)
+    expect(workoutErrorResponse(thrown).status, "4xx makes the queue delete the set").toBe(503)
   })
 })

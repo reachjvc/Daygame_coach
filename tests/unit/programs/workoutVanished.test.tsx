@@ -52,11 +52,18 @@ const aSet = {
 
 const GONE = "This workout was thrown away somewhere else, so that change was not saved."
 
-/** What a route sends once the workout is no longer there. */
+/**
+ * What a route sends once the workout is no longer there.
+ *
+ * 409, because that is what `workoutErrorResponse` gives a `WorkoutGone` — the
+ * fixture said 400 and both are 4xx, so the hook behaved identically and the
+ * disagreement was invisible. A fixture that does not match the server is a
+ * test of the fixture.
+ */
 const goneResponse = () =>
   ({
     ok: false,
-    status: 400,
+    status: 409,
     json: async () => ({ error: GONE, code: "workout_gone" }),
   }) as unknown as Response
 

@@ -121,32 +121,43 @@ export function ProgramsApp({
    * about to train.
    */
   const looseStart = (
-    <StartLooseWorkout live={live} variant={enrollments.length === 0 ? "primary" : "row"} />
+    <StartLooseWorkout
+      live={live}
+      cardState={cardState}
+      variant={enrollments.length === 0 ? "primary" : "row"}
+    />
   )
 
   /** The sentence for a workout already open, or null when there is none. */
   const openWorkoutDoor = openWorkoutInvitation(cardState)
 
   /**
-   * ON EVERY VIEW THAT OFFERS TO START SOMETHING, not just the list.
+   * ON EVERY VIEW THAT OFFERS TO START SOMETHING.
    *
-   * The first version of this put the door in the `home` branch alone, and a
-   * review pointed out the fix was narrower than the claim: `?view=programs`
-   * (the catalogue), `?view=build` (write your own week) and a catalogue
-   * program's detail page all offer a Start, all of them are refused by the
-   * `program_busy_while_workout_open` trigger while a workout is open, and none
-   * of them said so. The `today` branches carry `TodayCard`, which has its own.
-   */
-  /**
-   * NOT WHEN `StartLooseWorkout` IS ALREADY SAYING IT.
+   * The catalogue, the builder and a program's detail page all offer a Start,
+   * and none of them said a workout was already open. `TodayCard` carries its
+   * own sentence on the `today` branches.
    *
-   * With no programs at all the home branch renders `looseStart` as a full-width
-   * primary, and that component has its own open-workout button with its own
-   * wording — so an account with no program and a workout open got two
-   * identical outline buttons, forty pixels apart, on a card whose neighbouring
-   * comment in this file complains about exactly that. One door per screen.
+   * TWO CORRECTIONS FROM REVIEWS, both worth keeping because the second one
+   * shows the first was right for the wrong reason:
+   *
+   *   1. It was gated on `enrollments.length > 0`, to avoid doubling up with
+   *      `StartLooseWorkout`, which draws its own open-workout button. But
+   *      `looseStart` is deliberately NOT rendered in `programs`, `build` or
+   *      `detail` — so an account with no programs and a workout open got no
+   *      door on any of those three. The gate belongs where the clash is, not
+   *      on the whole component.
+   *   2. The reason written here was that those Starts "are refused by the
+   *      `program_busy_while_workout_open` trigger". They are not: that trigger
+   *      fires `BEFORE UPDATE OF is_active` on one enrollment, and enrolling is
+   *      an INSERT. What actually refuses is `enrollInProgram`'s own loop over
+   *      same-discipline enrollments — which is empty at zero enrollments, and
+   *      never fires for a LOOSE workout at any count. The door still belongs
+   *      on those screens, because one workout at a time is a rule of the
+   *      database and the Start after it will fail; the trigger was just the
+   *      wrong thing to name.
    */
-  const openWorkoutBanner = openWorkoutDoor && enrollments.length > 0 ? (
+  const openWorkoutBanner = openWorkoutDoor ? (
     <Button
       variant="outline"
       className="w-full"
@@ -156,6 +167,12 @@ export function ProgramsApp({
       {openWorkoutDoor}
     </Button>
   ) : null
+
+  /**
+   * The same door, for the home branch alone, where `StartLooseWorkout` draws
+   * its own full-width one at zero enrollments. One door per screen.
+   */
+  const homeOpenWorkoutBanner = enrollments.length > 0 ? openWorkoutBanner : null
 
   // `edit` shares this branch: the editor is a state of the one running
   // program, not a screen of its own with its own data.
@@ -289,7 +306,7 @@ export function ProgramsApp({
         Wednesday: no door here, no door one click deeper, and every Start
         refused. `openWorkoutInvitation` is the same sentence the card uses.
       */}
-      {openWorkoutBanner}
+      {homeOpenWorkoutBanner}
 
       {enrollments.length > 0 && (
         <div className="flex items-center justify-between">

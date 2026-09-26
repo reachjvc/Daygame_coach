@@ -87,8 +87,18 @@ export class WorkoutGone extends Error {
  * connection is back, which is exactly what the queue is for.
  */
 export class CouldNotTell extends Error {
-  constructor() {
-    super("Could not reach the server to check on this workout. Reload before trying that again.")
+  /**
+   * `what` names the thing that could not be read, because "could not read your
+   * past sets" is a better sentence than a generic one and the status code is
+   * what does the work here — folding both into one message would have traded
+   * the wording for the code, which is a trade nobody asked for.
+   */
+  constructor(what?: string) {
+    super(
+      what
+        ? `Could not read ${what}. Reload before trying that again.`
+        : "Could not reach the server to check on this workout. Reload before trying that again."
+    )
     this.name = "CouldNotTell"
   }
 }

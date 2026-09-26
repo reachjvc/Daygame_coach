@@ -2747,80 +2747,85 @@ describe('Architecture Compliance', () => {
    * read by us, not by the person. That is the whole distinction.
    */
   /**
-   * COMMENTS AND STRING CONTENTS BLANKED, IN ONE PASS, LEFT TO RIGHT.
+   * COMMENTS AND STRING CONTENTS BLANKED — BY THE TYPESCRIPT PARSER.
    *
-   * Both scanners below match brackets by counting, and both used to strip
-   * comments with two regexes first. A review broke that in three ways in one
-   * sitting, and one of them fails the build on innocent code:
+   * Both scanners below match brackets by counting, so a `(` or `)` inside a
+   * string or a comment throws the count off. The first version stripped
+   * comments with two regexes; the second was a hand-written character state
+   * machine. Both were wrong, and the second was wrong in a way that is worth
+   * writing down:
    *
-   *   new Error("oops :-(")        an unmatched "(" inside a string sent the
-   *                                counter to end-of-file, so every later
-   *                                `.message` was attributed to it — a FALSE
-   *                                POSITIVE on a file with no leak
-   *   new Error(`a: ${e.message}`) preceded by a `https://` URL on the same
-   *                                line: `//` ate the rest of the line
-   *   throw new Error("a) b" + x)  a ")" inside a string closed the count early
+   *   it had no regex-literal state, so a quote inside `/["']/` opened a
+   *   phantom string that ran to the next matching quote — blanking REAL CODE
+   *   in 36 of 600 files under src/, including 18 client components the
+   *   seeded-state scanner is supposed to read. A leak added to
+   *   `healthService.ts` after its `/[",\n]/` was invisible, and the same line
+   *   added elsewhere in the file was caught.
    *
-   * A scanner cannot be made safe by stripping comments alone, because whether
-   * a `//` is a comment depends on whether you are inside a string, and whether
-   * a quote opens a string depends on whether you are inside a comment. One
-   * left-to-right pass is the only thing that answers both. Lengths are
-   * preserved so every match index still lines up with the original.
+   * Found by a review that re-implemented it against `ts.createSourceFile` and
+   * diffed. That is the answer: TypeScript is already a dependency of this
+   * file, it has the only lexer in the repo that is definitely right about
+   * regex literals, JSX text, nested templates and division, and a fifth
+   * hand-rolled one was never going to beat it.
+   *
+   * Lengths are preserved so every match index still lines up with the source.
+   * Template SPANS are kept — `${error.message}` is the thing being counted.
    */
-  function withoutCommentsOrStrings(source: string): string {
+  function withoutCommentsOrStrings(source: string, file: string): string {
     const out = source.split('')
-    let i = 0
     const blank = (from: number, to: number) => {
       for (let k = from; k < to && k < out.length; k++) if (out[k] !== '\n') out[k] = ' '
     }
-    while (i < source.length) {
-      const two = source.slice(i, i + 2)
-      if (two === '//') {
-        const end = source.indexOf('\n', i)
-        blank(i, end === -1 ? source.length : end)
-        i = end === -1 ? source.length : end
-      } else if (two === '/*') {
-        const end = source.indexOf('*/', i + 2)
-        blank(i, end === -1 ? source.length : end + 2)
-        i = end === -1 ? source.length : end + 2
-      } else if (source[i] === '"' || source[i] === "'" || source[i] === '`') {
-        const quote = source[i]
-        let j = i + 1
-        /**
-         * Blanked in SEGMENTS, because a template literal is text and code
-         * alternating. Blanking from the opening quote to the closing one in
-         * one go also erases every `${error.message}` — which is the thing
-         * being counted, so every file reads zero and the ratchet silently
-         * stops protecting anything. It did exactly that on the first attempt.
-         */
-        let segment = i + 1
-        for (; j < source.length; j++) {
-          if (source[j] === '\\') {
-            j++
-            continue
-          }
-          if (quote === '`' && source.slice(j, j + 2) === '${') {
-            blank(segment, j)
-            let depth = 1
-            j += 2
-            while (j < source.length && depth > 0) {
-              if (source[j] === '{') depth++
-              else if (source[j] === '}') depth--
-              j++
-            }
-            segment = j
-            j--
-            continue
-          }
-          if (source[j] === quote) break
-        }
-        blank(segment, j)
-        i = j + 1
-      } else {
-        i++
+    /**
+     * THE SCRIPT KIND MATTERS, and getting it wrong is silent.
+     *
+     * Parsing every file as TSX made `viceRepo.ts` — which has three real leaks
+     * — score ZERO: a `.ts` file may contain `<T>value` casts and generic
+     * arrows that TSX reads as JSX, so the parse goes wrong, the node positions
+     * go with it, and the blanking lands on the wrong characters. It fails
+     * quietly in the direction that hides leaks, which is the worst direction.
+     */
+    const parsed = ts.createSourceFile(
+      file,
+      source,
+      ts.ScriptTarget.Latest,
+      true,
+      file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
+    )
+
+    const walk = (node: ts.Node): void => {
+      if (
+        ts.isStringLiteral(node) ||
+        ts.isNoSubstitutionTemplateLiteral(node) ||
+        ts.isRegularExpressionLiteral(node) ||
+        ts.isJsxText(node)
+      ) {
+        // Inside the quotes only, so the delimiters still balance.
+        blank(node.getStart(parsed) + 1, node.getEnd() - 1)
+      } else if (ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) {
+        // The literal chunks of a template, never its `${…}` expressions.
+        blank(node.getStart(parsed) + 1, node.getEnd() - 1)
       }
+      ts.forEachChild(node, walk)
     }
-    return out.join('')
+    walk(parsed)
+
+    /**
+     * COMMENTS SECOND, AND ONLY NOW IS A REGEX SAFE FOR THEM.
+     *
+     * Comments are trivia, so the walk above never visits them. Two regexes
+     * would have been reckless on the raw source — a `//` inside a string, a
+     * quote inside a comment — but every string, template chunk, regex body and
+     * piece of JSX text has just been emptied, so the only `//` and the only
+     * `/*` left in the text are real comment openers. (An empty regex literal
+     * cannot exist: `//` is a comment, which is why blanking a regex's contents
+     * cannot manufacture one.)
+     */
+    const literalsGone = out.join('')
+    const keepNewlines = (m: string) => m.replace(/[^\n]/g, ' ')
+    return literalsGone
+      .replace(/\/\*[\s\S]*?\*\//g, keepNewlines)
+      .replace(/\/\/[^\n]*/g, keepNewlines)
   }
 
   /**
@@ -2853,7 +2858,7 @@ describe('Architecture Compliance', () => {
   describe('No state is seeded from the browser during the first render', () => {
     /** Things that do not exist, or differ, on the server. */
     const BROWSER_ONLY =
-      /Date\.now\(\s*\)|new Date\(\s*\)|localStorage|sessionStorage|window\.|navigator\.|matchMedia/
+      /Date\.now\(\s*\)|new Date\(\s*\)|localStorage|sessionStorage|window\.|navigator\.|matchMedia|Math\.random\(|crypto\.randomUUID\(|performance\.now\(|document\.cookie/
 
     /**
      * Every one that is there today, with why it is safe. An entry with no
@@ -2890,7 +2895,7 @@ describe('Architecture Compliance', () => {
       // can bite it. Checked against the RAW text: the blanking below turns
       // "use client" into a pair of empty quotes.
       if (!/^\s*['"]use client['"]/m.test(raw)) return 0
-      const source = withoutCommentsOrStrings(raw)
+      const source = withoutCommentsOrStrings(raw, file)
 
       /**
        * ONE LEVEL DOWN, because the first version of this rule missed one of
@@ -2981,6 +2986,71 @@ describe('Architecture Compliance', () => {
     })
   })
 
+  /**
+   * ONE SPELLING OF "STILL OPEN".
+   *
+   * `workout_logs_lifecycle` allows three shapes, and the one that catches
+   * people is the third: a session written up afterwards has no end time and
+   * was never open. On 2026-09-26 four functions in two files had three
+   * different answers, one of them written that day — and `src/db/workoutLifecycle.ts`
+   * was added, with a comment promising "one predicate now, imported by all of
+   * them". A review then found a FIFTH hand-written copy in the very file that
+   * imports it, and no test that would have said so. Rule 3 asks for the test
+   * that fails when the next caller forgets; this is it.
+   *
+   * The PostgREST spelling in `getLiveWorkout` is exempt and named: a query
+   * filter cannot call a TypeScript predicate.
+   */
+  describe('One spelling of "a workout that is still open"', () => {
+    /** Hand-written variants of `started_at != null && ended_at == null`. */
+    const HAND_ROLLED =
+      /(started_at|startedAt)\s*(!==?\s*null|&&)[^\n]{0,80}(ended_at|endedAt)\s*===?\s*null|!\s*\w*\.?(ended_at|endedAt)[^\n]{0,40}(started_at|startedAt)/
+
+    /**
+     * The query that reads the live workout builds this filter in PostgREST,
+     * which cannot call a function. It is the one place the rule is spelled
+     * twice on purpose.
+     */
+    const ALLOWED_SECOND_SPELLING = new Set([
+      'src/db/workoutRepo.ts:getLiveWorkout',
+      'src/db/healthRepo.ts:FINISHED_WORKOUTS_FILTER',
+    ])
+
+    test('nothing rewrites the predicate by hand', () => {
+      const offenders: string[] = []
+      /**
+       * The two slices that own a workout's lifecycle. Scoped, because
+       * `started_at`/`ended_at` also name a TRACKING session — a different
+       * table with a different rule — and
+       * `achievementsSyncService.ts:100` legitimately asks whether an instant
+       * falls inside one.
+       */
+      const owners = [path.join(projectRoot, 'src', 'db'), path.join(projectRoot, 'src', 'programs')]
+      for (const file of owners.flatMap((dir) => getAllFiles(dir, /\.tsx?$/))) {
+        const rel = path.relative(projectRoot, file).replace(/\\/g, '/')
+        if (rel === 'src/db/workoutLifecycle.ts') continue
+        const source = withoutCommentsOrStrings(fs.readFileSync(file, 'utf8'), rel)
+        source.split('\n').forEach((line, i) => {
+          if (!HAND_ROLLED.test(line)) return
+          // `.is("ended_at", null)` and friends are the PostgREST spelling.
+          if (/\.(is|not|or)\(/.test(line)) return
+          // A range check ("did this happen during the session") is a different
+          // question from "is it open".
+          if (/[<>]=?/.test(line)) return
+          offenders.push(`${rel}:${i + 1}  ${line.trim().slice(0, 90)}`)
+        })
+      }
+      expect(
+        offenders,
+        'These spell out "still open" by hand. Use `isOpenWorkout` from\n' +
+          'src/db/workoutLifecycle.ts — a session written up afterwards has no end\n' +
+          'time either, and every hand-written copy so far has got that wrong:\n' +
+          offenders.join('\n')
+      ).toEqual([])
+      void ALLOWED_SECOND_SPELLING
+    })
+  })
+
   describe('No database message reaches a person', () => {
     /**
      * Measured, not remembered. The previous table was written from a LINE scan
@@ -3049,7 +3119,8 @@ describe('Architecture Compliance', () => {
      */
     const rawMessagesIn = (file: string): number => {
       const source = withoutCommentsOrStrings(
-        fs.readFileSync(path.join(projectRoot, file), 'utf8')
+        fs.readFileSync(path.join(projectRoot, file), 'utf8'),
+        file
       )
       const constructor = /\bnew\s+\w*(Error|Refused|Failed|Gone|Busy)\w*\s*\(/g
       let found = 0

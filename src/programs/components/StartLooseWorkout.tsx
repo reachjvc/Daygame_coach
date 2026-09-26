@@ -18,7 +18,8 @@ import { useRouter } from "next/navigation"
 import { Loader2, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { startWorkoutRequest } from "../hooks/useLiveWorkout"
-import type { LiveWorkout } from "../types"
+import { openWorkoutInvitation } from "../programsService"
+import type { LiveWorkout, TrainingCardState } from "../types"
 
 /**
  * TWO SHAPES, ONE BUTTON.
@@ -32,9 +33,12 @@ import type { LiveWorkout } from "../types"
 export function StartLooseWorkout({
   live,
   variant = "primary",
+  cardState = null,
 }: {
   live: LiveWorkout | null
   variant?: "primary" | "row"
+  /** What the server says today is, so the open-workout sentence is the shared one. */
+  cardState?: TrainingCardState | null
 }) {
   const router = useRouter()
   const [starting, setStarting] = useState(false)
@@ -47,9 +51,28 @@ export function StartLooseWorkout({
     // and a row that means "go to your workout" beside a button that means the
     // same thing is just two of them.
     if (variant === "row") return null
+    /**
+     * THE SHARED SENTENCE, not a third opinion.
+     *
+     * This chose between two of its own strings on `live.enrollmentId`, so a
+     * STALE loose workout — the state the owner's account was actually in — got
+     * "Back to your workout" when the right advice is "Finish or discard
+     * Wednesday's workout". Finishing a three-day-old empty workout writes a
+     * ten-hour session into History, which is why `openWorkoutInvitation` says
+     * discard and why it is the one owner of this wording.
+     *
+     * The fallback covers the case it cannot speak for: a card state that has
+     * not loaded yet, where this component still knows a workout is open.
+     */
     return (
-      <Button variant="outline" className="w-full" onClick={() => router.push("/programs/live")}>
-        {live.enrollmentId ? "Finish the workout you have open first" : "Back to your workout"}
+      <Button
+        variant="outline"
+        className="w-full"
+        data-testid="open-workout-door"
+        onClick={() => router.push("/programs/live")}
+      >
+        {openWorkoutInvitation(cardState) ??
+          (live.enrollmentId ? "Finish the workout you have open first" : "Back to your workout")}
       </Button>
     )
   }

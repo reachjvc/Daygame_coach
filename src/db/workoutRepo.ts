@@ -32,7 +32,7 @@ import {
   todaysSessionFor,
   updateEnrollmentSchedule,
 } from "./programRepo"
-import { CouldNotTell, databaseRefusal, WorkoutGone } from "@/src/programs/errors"
+import { CouldNotTell, databaseRefusal, ProgramRefused, WorkoutGone } from "@/src/programs/errors"
 import { isOpenWorkout } from "./workoutLifecycle"
 import { inWorkoutOrder, personalBestBaseline } from "./healthRepo"
 import { getUserTimezone } from "./settingsRepo"
@@ -475,7 +475,7 @@ async function fateOf(userId: string, workoutId: string): Promise<WorkoutFate> {
 /**
  * THE WORKOUT AS IT NOW STANDS — and it may not stand at all.
  *
- * Every write in this file ended `return await liveAfterWriting(userId)`, and
+ * Every write in this file ended `return await liveAfterWriting(userId, workoutId)`, and
  * the `!` is a lie at runtime. Discard the workout on the laptop in the moment
  * between the INSERT and this re-read and the function returns `null`, the
  * route answers 200 with a body of `null`, and the browser sets its workout to
@@ -486,9 +486,12 @@ async function fateOf(userId: string, workoutId: string): Promise<WorkoutFate> {
  * survived the change on the SUCCESS path of all five writes. Found by a
  * review, not by a test: every one of them returns 200, so nothing was red.
  */
-async function liveAfterWriting(userId: string): Promise<LiveWorkout> {
+async function liveAfterWriting(userId: string, workoutId: string): Promise<LiveWorkout> {
   const live = await getLiveWorkout(userId)
-  if (!live) throw new WorkoutGone("discarded")
+  // AND IT MUST BE THE SAME ONE. Finish this workout on the laptop and start
+  // another in the window after this write, and returning "whatever is open"
+  // hands the browser a different workout's sets under a 200.
+  if (!live || live.id !== workoutId) throw new WorkoutGone("discarded")
   return live
 }
 
@@ -502,7 +505,22 @@ async function liveAfterWriting(userId: string): Promise<LiveWorkout> {
  */
 function readRefused(what: string, error: { code?: string; message: string }): Error {
   console.error(`could not read ${what} (code ${error.code ?? "none"}): ${error.message}`)
-  return new Error(`Could not read ${what}. Reload and try again.`)
+  /**
+   * `CouldNotTell`, NOT a bare Error, and the difference is a lost set.
+   *
+   * A bare Error gets the sets route's fallback of 400, and the offline queue
+   * reads any 4xx as "this can never succeed": it drops the set out of
+   * `localStorage`, takes the ✓ off the screen and says it "has been removed".
+   * So a momentary blip on any of these reads threw a set away — including
+   * after the INSERT had already committed, where the set is in the database
+   * and the screen says it is not.
+   *
+   * `CouldNotTell` answers 503, so the queue keeps the set and retries. This
+   * class was added one round earlier for exactly this disaster and was wired
+   * to `fateOf` alone; the other three reads on the write path kept the old
+   * status, so only the wording had been fixed.
+   */
+  return new CouldNotTell(what)
 }
 
 /**
@@ -611,7 +629,7 @@ export async function completeSet(
     ? await supabase.from("workout_sets").update(row).eq("id", existing.id).eq("log_id", workoutId)
     : await supabase.from("workout_sets").insert({ ...row, log_id: workoutId })
   if (error) await refuseWrite(userId, workoutId, error, "That set could not be saved. Tap it again.")
-  return await liveAfterWriting(userId)
+  return await liveAfterWriting(userId, workoutId)
 }
 
 /**
@@ -661,7 +679,7 @@ export async function updateSet(
     .eq("id", setId)
     .eq("log_id", workoutId)
   if (error) await refuseWrite(userId, workoutId, error, "That set could not be changed.")
-  return await liveAfterWriting(userId)
+  return await liveAfterWriting(userId, workoutId)
 }
 
 /** How a set kind reads in a sentence a person has to act on. */
@@ -683,7 +701,7 @@ export async function deleteSet(
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("workout_sets").delete().eq("id", setId).eq("log_id", workoutId)
   if (error) await refuseWrite(userId, workoutId, error, "That set could not be removed.")
-  return await liveAfterWriting(userId)
+  return await liveAfterWriting(userId, workoutId)
 }
 
 /**
@@ -711,7 +729,7 @@ export async function adjustWorkout(
     .eq("id", workoutId)
     .eq("user_id", userId)
   if (error) await refuseWrite(userId, workoutId, error, "That change could not be saved.")
-  return await liveAfterWriting(userId)
+  return await liveAfterWriting(userId, workoutId)
 }
 
 /**
@@ -1306,7 +1324,10 @@ export async function unitFor(userId: string, enrollmentId: string | null): Prom
     .eq("id", userId)
     .maybeSingle()
   if (error) {
-    throw new Error("Could not read whether you train in kilos or pounds, so nothing was changed.")
+    // Retryable, for the same reason as `readRefused`: a 4xx here makes the
+    // offline queue delete the set rather than send it again.
+    console.error(`could not read the training unit for ${userId}: ${error.message}`)
+    throw new CouldNotTell("whether you train in kilos or pounds")
   }
   return data?.weight_unit === "lb" ? "lb" : "kg"
 }
@@ -1489,8 +1510,8 @@ export async function reviseWorkout(
     .maybeSingle()
   if (error) throw readRefused("that workout", error)
   if (!log) throw new Error("That workout no longer exists.")
-  if (log.started_at && !log.ended_at) {
-    throw new Error("That workout is still open — finish it before correcting it.")
+  if (isOpenWorkout(log as { started_at: string | null; ended_at: string | null })) {
+    throw new ProgramRefused("That workout is still open — finish it before correcting it.")
   }
 
   const rows = sets.map((set) => ({

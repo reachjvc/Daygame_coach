@@ -528,7 +528,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
           workoutVanished(workout.id, body?.error ?? "This workout is no longer open.")
           return
         }
-        setError("That set could not be removed.")
+        setError(body?.error ?? "That set could not be removed.")
       } catch {
         setError("Could not reach the server, so that set is still saved.")
       }
@@ -618,7 +618,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
           workoutVanished(workout.id, body?.error ?? "This workout is no longer open.")
           return
         }
-        setError("That change could not be saved.")
+        setError(body?.error ?? "That change could not be saved.")
       } catch {
         setError("Could not reach the server, so that change was not saved.")
       }
@@ -777,7 +777,19 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
           workoutVanished(workout.id, body?.error ?? "This workout is no longer open.")
           return
         }
-        setError("That workout could not be thrown away. It is still here.")
+        /**
+         * AND NOT "IT IS STILL HERE" WHEN NOBODY KNOWS.
+         *
+         * A 503 is `CouldNotTell`: the server could not read the workout, so
+         * whether it survived is exactly the thing it declined to answer.
+         * Claiming it did is the third state collapsed into a definite one —
+         * in the branch whose own comment three lines up says that sentence is
+         * the one thing it must never get wrong.
+         */
+        setError(
+          (body as { error?: string } | null)?.error ??
+            "That workout could not be thrown away. It is still here."
+        )
         return
       }
     } catch {
@@ -785,6 +797,10 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
       return
     }
     clearStartKey(workout.enrollmentId)
+    // FENCED, like `workoutVanished`. Tap Throw away while a tick's 200 is on
+    // the wire and `applyServer` lands afterwards, putting the workout back on
+    // a screen that has already cleared it.
+    applied.current = ++issued.current
     writeQueue([])
     setQueue([])
     // The clock goes with the workout. A rest bar counting down over the

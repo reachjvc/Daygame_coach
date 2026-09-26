@@ -276,7 +276,21 @@ export function LiveWorkoutScreen({
    * therefore rendered from `shown`, which survives the clearing, and only a
    * screen that was never finishing falls through to the empty state.
    */
-  if (finishing && shown) {
+  /**
+   * UNLESS THE WORKOUT WENT AWAY WHILE THE SHEET WAS OPEN.
+   *
+   * `shown` is `workout ?? finished`, and `finished` is the copy taken when
+   * Finish was pressed — it survives on purpose, so the receipt does not vanish
+   * in the frame it arrives. But it also kept the sheet on screen after a
+   * workout was discarded on another device: Save stayed enabled, pressing it
+   * hit `if (!workout) return null` in the hook and sent nothing at all, and
+   * the terminal sentence below never appeared. A live button that does nothing
+   * and says nothing is the worst control on the screen.
+   *
+   * The hook's own comment claimed "the sheet closes"; it did not, and the test
+   * that said so asserted the flag on the hook and never rendered the sheet.
+   */
+  if (finishing && shown && !live.vanished) {
     return (
       <div className={`${TRAINING_COLUMN} py-6`}>
         <FinishSheet

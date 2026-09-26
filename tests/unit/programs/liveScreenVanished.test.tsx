@@ -154,4 +154,46 @@ describe("the live screen when the workout went away", () => {
     // The lift is still there, so the workout is still there.
     expect(screen.getAllByTestId("tick-1").length).toBeGreaterThan(0)
   })
+
+  it("closes the finish sheet, instead of leaving a Save that does nothing", async () => {
+    /**
+     * THE SHEET USED TO STAY, AND SAVE STAYED ENABLED.
+     *
+     * `shown` is `workout ?? finished`, and `finished` survives on purpose so
+     * the receipt does not vanish in the frame it arrives — but it also kept
+     * the sheet open over a workout that had been discarded elsewhere. Save was
+     * enabled (the queue had just been cleared, so nothing was outstanding),
+     * pressing it hit `if (!workout) return null` in the hook and sent no
+     * request at all, and the terminal sentence never appeared.
+     *
+     * The hook test that claimed to cover this asserted `workout === null` on
+     * the hook and never rendered the sheet — the same stand-in the sibling
+     * test in this file was written to correct, repeated in the same commit.
+     */
+    const calls: string[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) => {
+        calls.push(String(url))
+        return Promise.resolve({
+          ok: false,
+          status: 409,
+          json: async () => ({ error: GONE, code: "workout_gone" }),
+        }) as unknown as Promise<Response>
+      })
+    )
+    renderScreen()
+
+    await userEvent.click(await screen.findByTestId("finish-workout"))
+    const save = await screen.findByRole("button", { name: /save this workout/i })
+    await userEvent.click(save)
+
+    // The sheet is gone, the reason is on screen, and there is a way out.
+    await waitFor(() => expect(screen.getByText(GONE)).toBeTruthy())
+    expect(
+      screen.queryByRole("button", { name: /save this workout/i }),
+      "a Save that cannot save must not remain"
+    ).toBeNull()
+    expect(screen.getByRole("link", { name: /back to training/i })).toBeTruthy()
+  })
 })
