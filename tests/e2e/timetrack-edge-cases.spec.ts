@@ -43,6 +43,29 @@ async function openFresh(page: Page) {
   }
 }
 
+/**
+ * Settings is a tab on a pointer device and lives behind "More" on a phone,
+ * where the section bar is four tabs plus a sheet — six at 390px meant 10px
+ * labels. This spec runs in both projects, so it has to know both ways in.
+ */
+async function goToSettings(page: Page) {
+  // Whichever bar is on screen. Only the phone bar carries `aria-label="Sections"`
+  // — the pointer-device tab row is an unnamed <nav> — and deliberately so: the
+  // product-route test in timetrack-sync asserts exactly ONE element has that
+  // label, which is how it proves two bottom bars are never stacked.
+  const tabs = page.getByRole('button', { name: 'Settings', exact: true })
+  for (let i = 0; i < (await tabs.count()); i++) {
+    if (await tabs.nth(i).isVisible().catch(() => false)) {
+      await tabs.nth(i).click()
+      await page.waitForTimeout(600)
+      return
+    }
+  }
+  await page.locator('nav[aria-label="Sections"]').getByRole('button', { name: 'More', exact: true }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Settings', exact: true }).click()
+  await page.waitForTimeout(600)
+}
+
 async function trackEntry(page: Page, description: string) {
   await page.getByPlaceholder('What are you working on?').fill(description)
   await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
@@ -110,8 +133,7 @@ test.describe('edge cases', () => {
 
   test('"Not now" is not a one-way door', async ({ page }) => {
     await openFresh(page)
-    await page.getByRole('button', { name: 'Settings' }).click()
-    await page.waitForTimeout(500)
+    await goToSettings(page)
     await page.getByRole('button', { name: 'Data', exact: true }).click()
     await expect(page.getByRole('button', { name: /Upload this browser/ })).toBeVisible({ timeout: 10000 })
   })

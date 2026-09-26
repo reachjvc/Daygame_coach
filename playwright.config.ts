@@ -248,6 +248,22 @@ export default defineConfig({
       name: 'timetrack-sync-phone',
       testMatch: [/timetrack-sync\.spec\.ts/, /timetrack-edge-cases\.spec\.ts/],
       dependencies: ['setup'],
+      /**
+       * DO NOT RUN THIS PROJECT AND `timetrack-sync` IN THE SAME INVOCATION
+       * LOCALLY. CI is safe because it pins `workers: 1`; locally `workers` is
+       * unset, and the two together fail 2-3 tests that move between runs —
+       * session expiry, deletion merge, "nothing queued is thrown away" — none
+       * of which has anything to do with the race. That misdirection is the
+       * whole reason this note exists; it cost two rounds of diagnosis.
+       *
+       * Giving this project its own account was tried and is NOT the fix: the
+       * failures survived it, because the contention is the single `next dev`
+       * process both suites are driving, not the rows they write. Run them one
+       * at a time:
+       *
+       *   npx playwright test --project=timetrack-sync
+       *   npx playwright test --project=timetrack-sync-phone
+       */
       use: { ...devices['iPhone 14'], storageState: 'tests/e2e/.auth/user.json' },
     },
 

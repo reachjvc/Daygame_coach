@@ -110,6 +110,43 @@ test.describe('time is kept on the server, not just in one browser', () => {
     expect(stored).toContain('tracked on the real page')
   })
 
+  /**
+   * THE PRODUCT ROUTE'S OWN CHROME, which nothing checked.
+   *
+   * Every other browser test in this slice runs against `/test/toggl`, and it
+   * renders the same components — so everything that DIFFERS between the lab and
+   * the product went unverified, which is exactly where the "it feels
+   * unfinished" complaints lived: the tab named the sales page, the heading
+   * named the workspace, and the way out was an unlabelled arrow.
+   *
+   * It also cannot be checked without a session, so it has to live here.
+   */
+  test('the product route is dressed as part of this app, not as a lab page', async ({ page }) => {
+    await page.goto('/dashboard/time', { waitUntil: 'domcontentloaded' })
+    await page.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 30000 })
+
+    // the browser tab, which used to inherit the root's marketing title
+    await expect.poll(() => page.title(), { timeout: 10000 }).toBe('Time')
+
+    // the way out, which used to be a 20x36px arrow with no label
+    const back = page.locator('header a').first()
+    await expect(back).toHaveAttribute('href', '/dashboard')
+    await expect(back).toContainText('Dashboard')
+    const box = await back.boundingBox()
+    expect(box!.height).toBeGreaterThanOrEqual(36)
+
+    // ONE bottom bar. The tracker draws its own six sections and the app's tab
+    // bar is deliberately not mounted here; two stacked bars on a phone would
+    // leave you guessing which one moves you where.
+    await expect(page.locator('[data-testid="mobile-tab-bar"]')).toHaveCount(0)
+    await expect(page.locator('nav[aria-label="Sections"]')).toHaveCount(1)
+
+    // nothing on the page admits to being a test page
+    const visible = await page.locator('body').innerText()
+    expect(visible).not.toContain('/test/')
+    expect(visible).not.toContain('Toggl-style')
+  })
+
   test('the endpoint refuses anyone who is not signed in', async ({ browser }) => {
     const anon = await browser.newContext({ storageState: { cookies: [], origins: [] } })
     const page = await anon.newPage()
@@ -139,8 +176,18 @@ test.describe('time is kept on the server, not just in one browser', () => {
     })
     expect(stored, 'the entry never reached the account').toContain('work that must survive')
 
-    // ...and now a completely separate browser, same account
-    const second = await browser.newContext({ storageState: 'tests/e2e/.auth/user.json' })
+    /**
+     * ...and now a completely separate browser, SAME account — whichever account
+     * this project signs in as, not a hard-coded one. It named `user.json`
+     * outright, which is what forced the phone project to share an account with
+     * the desktop one: two projects writing the same rows. Locally `workers` is
+     * unset, so a full `npm run test:e2e` ran them side by side and they fought
+     * — and the failures surfaced in unrelated tests (session expiry, deletion
+     * merge), which is the most misleading shape a race can take. CI never saw
+     * it because it pins `workers: 1`.
+     */
+    const stateFile = test.info().project.use.storageState as string
+    const second = await browser.newContext({ storageState: stateFile })
     const other = await second.newPage()
     await openEmptyBrowser(other)
     await expect(entryInList(other, 'work that must survive').first()).toBeVisible({ timeout: 25000 })
