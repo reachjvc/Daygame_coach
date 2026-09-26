@@ -1228,3 +1228,123 @@ planting the row-counting predicate back and watching both new cases fail.
 an id belonging to the other copy, so nothing was removed and it failed for a
 reason unrelated to the rule. Recorded because that is a fixture building its
 own subject twice, which is the same family as everything else in this file.
+
+## M8b — THE TESTIMONIALS, AND THE GAP THE UNTAGGED POOL WAS HIDING
+
+The last open item from M8. All 71 untagged entries were read in full — not
+sampled, not keyword-matched — because judging them by their source file is the
+error this corpus was already corrected for in August.
+
+**What the tagging found is worse than the mis-tagging.** `vices: []` is
+documented as "applies to any", and 71 entries were using it as "nobody looked".
+Tagging by content exposed what the pool had been standing in for:
+
+| | alcohol | nicotine | weed | scrolling | gaming | porn | gambling | junk | spending |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| accounts of its own, at the urge | 19 | 13 | 9 | **0** | **0** | 3 | 1 | **0** | **0** |
+| at the good stretch | 19 | 1 | 27 | **0** | **0** | **0** | **0** | **0** | **0** |
+
+**The 15-source corpus does not cover four of the nine things this product
+offers to quit**, and covers six of them not at all at the good stretch — which
+is the thought door, the module's front page. Before the tagging, those six were
+served the ONE untagged `goodStretch` entry, every time, for every report count,
+because `rotate % 1` is always 0. That entry is about thirty drinks a week.
+
+*Driven, not inferred:* a record with one run off **scrolling** and one close
+call, thought door opened, "I felt fine" picked — and under "Somebody else, at
+the same point" came *"my goal for moderation was drinking 30 drinks a week"*.
+
+**So the door now shows nothing there, and that is the better of two honest
+outcomes.** `OneVoice` returns null on an empty pool and the section is simply
+absent — verified in a browser at 390px, no error and no empty frame, and the
+urge door for the same record now serves a genuinely universal account ("the
+deepest shame is ordinary") instead. A module whose claim is that it read 2,186
+real accounts cannot answer a scroller with a drinker's number and keep it.
+
+**`opiates` is now a tag, and it reaches nobody on purpose.** There is no opioid
+option in the product and source file 06 is accounts of coming off them. Nine of
+its untagged entries name methadone, Suboxone, Vivitrol, an opioid blocker or a
+dealer and carry that tag; the other seven name nothing specific — *"The only
+person who knows is my husband"* — and stay universal. **That split is the
+August lesson applied to myself:** I first called `06-152` (the Facebook
+Marketplace account) a mis-served opiates quote because of where it came from.
+Reading it in full, its wording names nothing and it is a story about removing
+your own access and handing control to somebody — which applies to anyone, and
+is apt for spending. It stays universal. Judging it by its source file was the
+exact error, and I made it before making it.
+
+**Eight quotes had a second speaker inside the quotation marks.** Found while
+reading, not by any guard:
+
+    ...on a good path." — kaba0, 2023-06-14, <https://news.ycombinator.com/item?id=36321913>
+
+All eight from source file 10, two to three reviews glued each, several with a
+raw web address rendering inside the quote a person reads. Trimmed to the first
+verbatim segment; the speaker named where the embedded attribution was
+unambiguous (Dublosix88, langdon51, and the two review-site names).
+
+*Three carry an attribution doubt that is recorded rather than guessed at:*
+`10-196`, `10-204` and `10-205` each had an embedded address pointing at a
+**different page** from the entry's own `url`, and `10-196`'s embedded
+attribution says *Mumsnet* while its fields say *Hacker News*. The visible
+breakage is fixed; which of the two pages the quote is really from needs a
+source fetch, and inventing an answer would be this module's
+"substring-verifying a quote does not verify who said it" lesson again.
+**`10-200` and `10-201` are also worth a second look on their own merits** —
+they are marketing blurbs and product complaints off reviews.io and Trustpilot,
+not recovery accounts, and whether they belong in a testimonial set at all is a
+judgement rather than a defect.
+
+### The three guards that were already there, and why each one passed
+
+This is the clearest instance of the pattern in the whole module, because all
+three describe the exact rule that was being broken.
+
+**`"never leaks a vice-specific account to a different vice"`** — its body is
+`if (t.vices.length > 0) expect(t.vices).toContain(vice)`. That `if` skips every
+untagged entry, which is precisely the set that was wrong. **An untagged entry
+cannot fail it by construction.** It verifies that `testimonialsFor` honours a
+tag, which is worth having, and it is not a test of what a person sees. Kept,
+with the blind spot written into it.
+
+**`"has real coverage per vice rather than a token entry"`** — counted
+`t.vices.length === 0 || t.vices.includes(vice)` and asserted `> 20`. So the 71
+untagged entries **inflated every vice's count past the threshold**: a test
+named for real coverage passing *because of* the mis-tagging it should have
+caught. It also listed five vices, so the four with nothing were never asked
+about. It counts own accounts now, and the universal pool is counted separately
+with a ceiling — because a pool that grows is entries going in untagged again.
+
+**The composite detector** — `/"\s*(?:…|\[\.…\]|\.\.\.)\s*"/`. Fifteen entries
+were once glued with `" … "` and the pattern was written for those. It was
+widened once, from `" "` to the ellipsis forms, and the dash-plus-speaker glue
+was never considered. Two more patterns now, plus a raw-address check.
+
+*Each repaired guard was proved by planting the original fault back:* the
+untagged opioid quote fails naming `06-141` and the word "methadone"; the glued
+attribution fails naming `10-204`.
+
+### The new guard, and why it flags instead of tagging
+
+`tests/unit/vice/testimonialVices.test.ts`. A term list is a **tripwire, not a
+classifier**: it says "somebody read this and it names something specific, so a
+person must decide what". Auto-assigning from keywords would be the August error
+a third time — and the corpus proves why in one video, `pGoeG5aY3S0`, whose two
+entries are "free from cigarettes" and "my relationship with weed". Any
+per-video or per-keyword rule gets one of them wrong.
+
+Seven cases: unknown tags (a typo silently hides a quote), the tripwire itself,
+a breadth check so the fix cannot be "tag everything" (the shared vocabulary of
+recovery — clean, sober, withdrawal, relapse — must stay eligible for anyone),
+corpus-only tags reaching nobody, and the coverage debt with the companion
+assertion this repo requires: **a vice on the uncovered list that has gained
+accounts fails**, so the list shrinks when the research is done and cannot rot
+into a permanent excuse.
+
+### Still open after this
+
+- **The corpus has nothing for scrolling, gaming, junk or spending.** That is a
+  research pass against four vices, and it is the largest remaining gap in this
+  module. The door is honest without it; it is also empty.
+- **Attribution on `10-196`, `10-204`, `10-205`**, and whether `10-200` and
+  `10-201` belong at all.

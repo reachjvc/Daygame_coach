@@ -124,6 +124,19 @@ describe("our own words around the quotes follow the module's copy rules", () =>
 })
 
 describe("filtering", () => {
+  /**
+   * THIS CHECKS THE FILTER, NOT WHAT A PERSON SEES, AND THE `if` BELOW IS WHY.
+   *
+   * `if (t.vices.length > 0)` skips every UNTAGGED entry — which is exactly the
+   * set that was wrong. On 2026-09-25, 71 of 376 entries were untagged and
+   * therefore served for every vice, including nine opioid accounts and a quote
+   * about thirty drinks a week that the thought door showed to somebody quitting
+   * scrolling. This test passed throughout, because an untagged entry cannot
+   * fail it by construction.
+   *
+   * It is kept, because it does verify that `testimonialsFor` honours a tag.
+   * "Is the tag right in the first place" is `testimonialVices.test.ts`.
+   */
   it("never leaks a vice-specific account to a different vice", () => {
     for (const vice of ["gambling", "porn", "weed", "nicotine", "alcohol"]) {
       for (const stage of ["urge", "lapse", "early", "goodStretch", "deciding", "long"] as const) {
@@ -135,11 +148,33 @@ describe("filtering", () => {
     }
   })
 
-  it("has real coverage per vice rather than a token entry", () => {
-    for (const vice of ["alcohol", "weed", "porn", "nicotine", "gambling"]) {
-      const all = TESTIMONIALS.filter((t) => t.vices.length === 0 || t.vices.includes(vice))
-      expect(all.length, vice).toBeGreaterThan(20)
+  /**
+   * IT USED TO COUNT THE UNIVERSAL POOL, SO THE FAULT SATISFIED IT.
+   *
+   * The old body was `t.vices.length === 0 || t.vices.includes(vice)` and
+   * `> 20`. With 71 entries untagged, every vice cleared twenty on the strength
+   * of accounts that were not about it — a test named "real coverage per vice
+   * rather than a token entry" passing BECAUSE of the mis-tagging it should have
+   * found. It also listed five vices, so scrolling, gaming, junk and spending —
+   * the four the corpus does not cover at all — were never asked about.
+   *
+   * It counts accounts of the vice's OWN now. Which vices have none, and why
+   * that is recorded as a debt rather than hidden, is in
+   * `testimonialVices.test.ts`.
+   */
+  it("has real coverage of its own per covered vice, not a token entry", () => {
+    for (const vice of ["alcohol", "weed", "nicotine"]) {
+      const own = TESTIMONIALS.filter((t) => t.vices.includes(vice))
+      expect(own.length, `${vice} has only ${own.length} accounts of its own`).toBeGreaterThan(20)
     }
+    // The universal pool is a supplement, never the coverage. Counted
+    // separately so it can never again stand in for a vice having accounts.
+    const universal = TESTIMONIALS.filter((t) => t.vices.length === 0)
+    expect(universal.length, "the universal pool has gone").toBeGreaterThan(5)
+    expect(
+      universal.length,
+      "the universal pool has grown past a supplement — entries are going in untagged again",
+    ).toBeLessThan(40)
   })
 })
 
@@ -218,11 +253,33 @@ describe("every quote is about the vice it is filed under", () => {
     // Fifteen entries turned out to be two separate quotes glued together with
     // an ellipsis, and three were the research agent's own third-person
     // write-up presented as testimony. Both read as real and neither is.
+    // TWO GLUES, BECAUSE THE FIRST ONE ONLY EVER CAUGHT THE FIRST SHAPE.
+    //
+    // Fifteen entries were glued with `" … "` and this pattern was written for
+    // them. On 2026-09-25 eight more turned up glued a different way — the
+    // closing quote followed by a dash and a second speaker, sometimes with a
+    // raw URL inside the quotation marks:
+    //
+    //   ...on a good path." — kaba0, 2023-06-14, <https://news.ycombinator...>
+    //
+    // Three of those eight carried an embedded address pointing at a DIFFERENT
+    // page from the entry's own `url`, so the fields named the wrong speaker.
+    // They render as one person's words with somebody else's name inside them.
     const COMPOSITE = /"\s*(?:…|\[\.…\]|\.\.\.)\s*"/
+    const GLUED_ATTRIBUTION = /"\s+—\s/
+    const RAW_ADDRESS = /https?:\/\//
     const THIRD = /\b(he|she|they)\s+(?:was|were|had|went|said|played|decided|stopped)\b/i
     const FIRST = /\b(I|I'm|I've|my|me)\b/
     for (const t of TESTIMONIALS) {
       expect(t.quote, `${t.id} is two quotes glued together`).not.toMatch(COMPOSITE)
+      expect(
+        t.quote,
+        `${t.id} has a second speaker's attribution inside the quotation marks`,
+      ).not.toMatch(GLUED_ATTRIBUTION)
+      expect(
+        t.quote,
+        `${t.id} has a raw web address inside the quote a person reads`,
+      ).not.toMatch(RAW_ADDRESS)
       if (THIRD.test(t.quote)) {
         expect(FIRST.test(t.quote.split(".")[0]), `${t.id} reads as a third-person summary`).toBe(true)
       }
