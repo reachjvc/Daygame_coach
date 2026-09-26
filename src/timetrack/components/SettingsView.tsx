@@ -221,7 +221,10 @@ function WorkspacePanel({
               onChange={(event) => patch({ defaultHourlyRate: event.target.value ? Number(event.target.value) : null })}
             />
           </Field>
-          <Field label="Default labor cost/hour" className="w-48" hint="What an hour of work costs you. Drives the Cost and Profit figures">
+          {/* `w-full sm:w-48` to match the rate field directly above it, which had
+              it and this did not — so on a phone this one sat at half the width
+              of its pair for no reason. */}
+          <Field label="Default labor cost/hour" className="w-full sm:w-48" hint="What an hour of work costs you. Drives the Cost and Profit figures">
             <Input
               type="number"
               value={state.workspace.defaultLabourCost ?? ""}

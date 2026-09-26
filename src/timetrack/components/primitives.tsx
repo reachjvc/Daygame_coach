@@ -474,15 +474,30 @@ export function Segmented<T extends string | number>({
   onChange: (value: T) => void
   size?: "default" | "sm"
 }) {
+  /**
+   * KEEP THE SELECTED OPTION ON SCREEN.
+   *
+   * This strip scrolls when its options do not fit — five Settings tabs do not
+   * fit in 390px — and nothing brought the selected one back into view. So
+   * tapping "Data" changed the page while the only marker of WHICH tab you are
+   * on sat off the right edge, which is the one thing a tab strip is for.
+   */
+  const strip = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const active = strip.current?.querySelector<HTMLElement>("[data-active='true']")
+    active?.scrollIntoView({ block: "nearest", inline: "nearest" })
+  }, [value])
+
   return (
     // max-w-full + overflow lets a long set of options scroll rather than
     // widening the page on a phone
-    <div className="-mx-3 max-w-[calc(100%+1.5rem)] overflow-x-auto px-3 sm:mx-0 sm:max-w-full sm:px-0">
+    <div ref={strip} className="-mx-3 max-w-[calc(100%+1.5rem)] overflow-x-auto px-3 sm:mx-0 sm:max-w-full sm:px-0">
       <div className="inline-flex rounded-md border border-border bg-secondary/40 p-0.5">
         {options.map((option) => (
           <button
             key={String(option.id)}
             type="button"
+            data-active={value === option.id}
             onClick={() => onChange(option.id)}
             className={cn(
               "shrink-0 whitespace-nowrap rounded px-3 font-medium transition-colors",
