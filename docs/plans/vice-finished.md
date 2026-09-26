@@ -1534,3 +1534,75 @@ time eight words over. Rather than trim another session's just-added pointer, th
 header says content belongs in the note — moved to `two-shapes-that-bite.md`
 with a one-line pointer. 417 words now, and the room is structural rather than
 borrowed.
+
+## M8e — THE PROVENANCE FAULT HAS A MECHANISM, AND THE GROUND TRUTH WAS IN THE REPO
+
+M8c reported three entries confirmed wrong and **ten "uncheckable from here"**,
+having gone to the web for verification. That was the wrong place to look.
+
+**`docs/research/recovery-testimonials/10-method-books.md` records each quote
+WITH its attribution**, captured at collection time under that file's own
+standard ("Everything above is quoted from a URL that was fetched"). Diffing the
+shipped rows against it takes no network at all — and it names the mechanism:
+
+    doc line 365:  "…easy for me to stop when pregnant" — Mumsnet, <mumsnet url>
+    doc line 369:  "The breakthrough was the realisation…" — u/microcentury, <HN 5621845>
+
+    shipped 10-196: line 365's QUOTE + line 369's HANDLE AND URL
+
+**An off-by-one between the doc and the data**: a quote paired with a
+neighbouring bullet's provenance. It explains all of it, including why the
+handle named a real person — `u/microcentury` is real, and said the *other*
+quote.
+
+**Four more repaired, taking file 10 from three confirmed wrong to seven:**
+
+| | shipped | doc, and now shipped |
+| --- | --- | --- |
+| `10-193` | r/stopsmoking thread `1vovpqi/…/p3t16u8` | thread `1vmp2r8/…/p3bmhkv` |
+| `10-194` | a Goodreads book page | **Hacker News 5054081**, dated 2013-01-14 |
+| `10-195` | handle `u/rahoulb`, a Goodreads *topic* page | handle **null**, the Goodreads *book* page |
+| `10-197` | a Goodreads book page | **Hacker News 5621845**, dated 2013-04-28 |
+
+`10-194` and `10-197` were both **confirmed at the doc's URL by fetching it** —
+Hacker News serves plain HTML, the quotes are there, and the posters are
+`rahoulb` and `microcentury` as the doc says. `10-195`'s `u/rahoulb` was stolen
+from the bullet above it, which is the same off-by-one a second time. Every
+entry the doc pins by URL now agrees with it.
+
+**TWO OF THOSE FOUR WERE IN MY OWN "UNCHECKABLE" LIST.** M8c said Goodreads
+serves this agent zero bytes and therefore those entries could not be verified.
+True about Goodreads and false about the entries: their real source was Hacker
+News, and the doc said so. **I concluded "unverifiable" from the failure of the
+route I had chosen, rather than asking whether the repo already held the
+answer.** That is the stand-in failure in its purest form, committed while
+writing a plan section about not committing it.
+
+### What this does NOT establish, which matters more than what it does
+
+**The other fourteen corpus files cannot be diffed this way.** Only 18 attributed
+blockquotes carry a URL across the whole corpus and nearly all are in file 10;
+files 01–09 and 11–15 record their material in tables and prose instead. So
+`src/vice/data/testimonials.ts` has roughly **355 quotes whose provenance has
+never been checked against anything** — and the off-by-one is now known to have
+happened at least seven times in the one file where checking was possible.
+
+That is not evidence the rest are wrong. It is the absence of evidence either
+way, and after today it is the largest open question in this module — larger
+than the two empty stages, because a wrong attribution is a real person credited
+with words they did not say.
+
+*What would settle it:* the corpus files would each need a machine-readable
+quote→attribution form, or the shipped rows would need re-deriving from the
+source material rather than from the prose summaries. Either is a real piece of
+work and neither is a code change.
+
+### Suites re-run, because shared components had changed under them
+
+`Voices.tsx`, `Ui.tsx`'s `Chip` (imported by the archived module) and
+`vice-cross.spec.ts`'s own waiter were all edited after the last browser run, and
+the unit suite cannot see any of that. Re-run at the owner's prompting rather
+than on my own initiative, which is the part worth recording:
+
+- chromium — `blackbox` + `vice-offline` + the 71-test archive suite: **88 passed, 2 skipped, 0 failed**
+- `cross-firefox` and `cross-webkit` — `vice-cross`: **9 passed, 0 failed**
