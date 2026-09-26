@@ -2093,6 +2093,25 @@ const NOT_A_UNIT = /^(for|in|by|to|of|at|and|the|a|x)$/i
  */
 const COLOURLESS_VERB = /^(get|got|have|hit|reach|do|make|nå|få)$/i
 
+/**
+ * UNITS THAT ARE A MEASUREMENT, AND THEREFORE STOP AT ONE WORD.
+ *
+ * The difference between "36 kg dumbbells" and "3 muscle ups". In the first,
+ * "kg" is the whole unit and "dumbbells" is a separate word about the lift; in
+ * the second, "muscle ups" is one thing and cutting it in half leaves "muscle"
+ * as a unit and "ups" loose. There is no way to tell those apart from shape
+ * alone — both are a number, a word and a word — so the measurements are named.
+ *
+ * Reported from the owner's own plan: "Do 3 muscle ups" produced a unit of
+ * "muscle" and then labelled the climb "ups", the offcut of the phrase it had
+ * just split. The rungs read "ups 1 muscle".
+ *
+ * Abbreviations only. A spelled-out word like "hours" or "pages" is an ordinary
+ * noun and behaves like one — "500 hours in total" needs no help from here,
+ * because "in" stops it anyway.
+ */
+const MEASUREMENT = /^(kg|kgs|g|lb|lbs|km|m|cm|mm|mi|ml|l|%|µ|min|mins|hr|hrs|h|sec|secs|kr|dkk|usd|eur)$/i
+
 /** What cannot be the noun a climb is about, standing behind the unit. */
 const NOT_A_NOUN = /^(for|in|by|to|of|at|and|the|a|an|x|this|next|per|with|from|every|på|i|om|til|hver|og|med)$/i
 
@@ -2121,7 +2140,30 @@ export function parseGoalTarget(title: string): { value: number; unit: string; p
   const value = Number(match[1].replace(",", "."))
   if (!Number.isFinite(value)) return null
   const raw = (match[2] ?? "").trim()
-  const unit = NOT_A_UNIT.test(raw) ? "" : raw
+  let unit = NOT_A_UNIT.test(raw) ? "" : raw
+  let after = title.slice(match.index + match[0].length)
+
+  /**
+   * A UNIT CAN BE TWO WORDS, WHEN IT IS NOT A MEASUREMENT.
+   *
+   * "muscle ups", "push ups", "pull ups" — one thing, named with two words, and
+   * taking only the first leaves a unit that means nothing and a stray word
+   * behind it for the label rule below to pick up. A measurement never does
+   * this: "kg dumbbells" is a weight and then a separate noun, so `MEASUREMENT`
+   * stops there.
+   *
+   * Only a real noun is joined on. "24 books this year" keeps its unit at
+   * "books" because "this" cannot be part of it, which is what `NOT_A_NOUN` is
+   * already for.
+   */
+  if (unit && !MEASUREMENT.test(unit)) {
+    const joined = /^(\s+)(\p{L}{1,12})/u.exec(after)
+    if (joined && !NOT_A_NOUN.test(joined[2])) {
+      unit = `${unit} ${joined[2]}`
+      after = after.slice(joined[0].length)
+    }
+  }
+
   let prefix = title.slice(0, match.index).trim().replace(/[,:–-]$/, "").trim()
   if (namesAThing(prefix, unit)) return null
   /**
@@ -2137,7 +2179,10 @@ export function parseGoalTarget(title: string): { value: number; unit: string; p
    * preposition sitting there, and reading past it labels the climb "december".
    */
   if (COLOURLESS_VERB.test(prefix)) {
-    const noun = /^\s*(\p{L}+)/u.exec(title.slice(match.index + match[0].length))?.[1] ?? ""
+    // From AFTER the whole unit, so a two-word unit's second word cannot be
+    // mistaken for the noun the climb is about — which is exactly what made
+    // "Do 3 muscle ups" label its rungs "ups".
+    const noun = /^\s*(\p{L}+)/u.exec(after)?.[1] ?? ""
     if (noun && !NOT_A_NOUN.test(noun)) prefix = noun
   }
   return { value, unit, prefix }
