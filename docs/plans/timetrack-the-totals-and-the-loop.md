@@ -774,3 +774,33 @@ fix, so the fix is written against the real behaviour.
 reproduced before it was written down, and the two the critic disputed were
 re-measured rather than defended. That is the only reason its good catches could
 be told apart from its confident ones.
+
+---
+
+## One more, from a peer session, checked before it was written down
+
+A session working on the platform move pointed out that this slice's backup and
+restore scripts reach the database directly and will stop working when Postgres
+moves behind a private network. Checked rather than taken on trust, and it is
+worse than the sentence suggests:
+
+- `scripts/backup-timetrack.ts` → `exportTimetrack` → **`createAdminSupabaseClient()`**
+  (`src/db/timetrackBackupRepo.ts:15,44`) — the **service-role key**, which
+  bypasses row-level security entirely, read from `.env.local` on whatever
+  machine runs it.
+- **Nothing schedules it.** `grep -rl backup-timetrack .github/ scripts/ package.json`
+  finds the script itself and one plan document. No npm script, no workflow, no
+  cron. The repo's only scheduled job is the nightly e2e run
+  (`.github/workflows/e2e.yml:36`).
+
+So the disaster recovery for nineteen tables of somebody's tracked time is *a
+human remembering to run a script*, and the credential it needs is the one that
+can read and overwrite every user's rows. That is fine for a product with one
+user and no payments — it is not fine the moment there is a second person's time
+in there, and the platform move is when it breaks anyway.
+
+**Not in scope for these fixes, and deliberately not renamed as a milestone
+here.** It belongs to whoever owns the move. Recorded because this plan is the
+timetrack slice's, and "the backup works" is a claim this slice cannot currently
+make: it has never been run on a schedule, and no test asserts that a restore
+reproduces what was exported.
