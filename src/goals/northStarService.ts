@@ -703,6 +703,20 @@ export function normalizeNsPlan(parsed: unknown): NsPlan | null {
     ...(g.isAbstinence && !g.ladder && g.type !== "habit_ramp"
       ? { type: "habit_ramp" as const, daysPerWeek: 7 }
       : null),
+    /**
+     * A CLIMB BUILT OUT OF A NAME IS NOT A CLIMB — see `ladderIsTitleDebris`.
+     *
+     * Last, so the rules above see the goal as it was stored. This is the one
+     * place a ladder is taken away rather than kept, and it is the exact
+     * opposite case to the "Quit sugar" one they protect: there, two numbers
+     * the person had typed were being dropped on a guess; here, four rungs the
+     * APP invented out of a car's model number are being dropped because the
+     * person never typed anything. The goal falls back to a finish line, which
+     * is what the title reader answers for that title today.
+     */
+    ...(ladderIsTitleDebris(g)
+      ? { ladder: null, ...(g.type === "milestone_ladder" ? { type: "achievement" as const } : null) }
+      : null),
   }))
 
   const review: Record<string, NsAreaReview> = {}
@@ -2082,6 +2096,50 @@ function namesAThing(prefix: string, unit: string): boolean {
   if (unit) return false
   const words = prefix.trim().split(/\s+/).slice(-2)
   return words.some((w) => /^(a|an|the|en|et|den|det)$/i.test(w))
+}
+
+/**
+ * A CLIMB THE APP INVENTED OUT OF A NAME, RATHER THAN ONE ANYBODY TYPED.
+ *
+ * `shapeFromTitle` derives a goal's target from its own title, so a title
+ * carrying a model number used to become a climb towards it: "Buy a Ferrari
+ * 458" was stored as `{ start: 0, target: 458 }` and printed on the page as
+ * "0 to 458" — of what, it never said. `namesAThing` refuses that title now,
+ * but the guard only runs when a goal is CREATED, so every plan written before
+ * it still carries the ladder. The owner's did, three days after the fix.
+ *
+ * **Why this is a repair and not a deletion of somebody's work.** They typed a
+ * title. The app read the car's name as a quantity and built four rungs to it.
+ * There is nothing of theirs in those numbers to lose.
+ *
+ * **And why the guard is as narrow as it is.** This file already holds the rule
+ * that an explicit ladder beats a title reading — "Quit sugar" with a ladder
+ * from 90 to 80 lost two numbers a person had typed, and that must not happen
+ * again. Nothing recorded on a ladder says whether it was typed or inferred, so
+ * this cannot know; what it can do is match the exact signature of the bug's
+ * output and refuse everything else. All four must hold:
+ *
+ *   - no unit, because every real climb here carries one ("kg", "$", "total");
+ *   - a start of 0, the derived default;
+ *   - the parser REFUSES this title today, which happens only for a name;
+ *   - and the target is that very number, still sitting in the title.
+ *
+ * Checked against the owner's twenty laddered goals: it selects the Ferrari and
+ * nothing else. "Approach 5 in one day" also has no unit and a target of 5, and
+ * is correctly left alone, because 5 there is a count and the parser reads it.
+ */
+export function ladderIsTitleDebris(goal: {
+  title: string
+  unit?: string
+  ladder?: { start: number; target: number } | null
+}): boolean {
+  const ladder = goal.ladder
+  if (!ladder) return false
+  if (goal.unit?.trim()) return false
+  if (ladder.start !== 0) return false
+  if (parseGoalTarget(goal.title) !== null) return false
+  const first = /-?\d+(?:[.,]\d+)?/.exec(goal.title)?.[0]
+  return first != null && Number(first.replace(",", ".")) === ladder.target
 }
 
 /** Words that are never a unit. "36 dumbbells" is not 36 dumbbells. */
