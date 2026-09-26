@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/server"
+import { requireAuth } from "@/src/db/auth"
 import { getProfile } from "@/src/db/profilesRepo"
 
 /**
@@ -9,18 +9,14 @@ import { getProfile } from "@/src/db/profilesRepo"
  * (profile full_name when set) — used to prefill name fields client-side.
  */
 export async function GET() {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
 
-  if (error || !user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
-  }
-
-  const profile = await getProfile(user.id).catch(() => null)
+  const profile = await getProfile(auth.userId).catch(() => null)
 
   return NextResponse.json({
-    user_id: user.id,
-    email: user.email,
+    user_id: auth.userId,
+    email: auth.email,
     full_name: profile?.full_name ?? null,
     authenticated: true,
   })

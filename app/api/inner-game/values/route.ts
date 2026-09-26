@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-import { createServerSupabaseClient, hasPurchased } from "@/src/db/server"
+import { requirePremium } from "@/src/db/auth"
 import { getInnerGameValues, saveInnerGameValueSelection } from "@/src/inner-game"
 
 const saveSchema = z.object({
@@ -11,20 +11,8 @@ const saveSchema = z.object({
 export async function GET(req: Request) {
   try {
     // 1. Auth check
-    const supabase = await createServerSupabaseClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
-    }
-
-    // 2. Subscription gate
-    if (!(await hasPurchased(user.id))) {
-      return NextResponse.json({ error: "Premium subscription required" }, { status: 403 })
-    }
+    const auth = await requirePremium()
+    if (!auth.success) return auth.response
 
     // 3. Get optional category filter from query params
     const { searchParams } = new URL(req.url)
@@ -48,20 +36,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     // 1. Auth check
-    const supabase = await createServerSupabaseClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
-    }
-
-    // 2. Subscription gate
-    if (!(await hasPurchased(user.id))) {
-      return NextResponse.json({ error: "Premium subscription required" }, { status: 403 })
-    }
+    const auth = await requirePremium()
+    if (!auth.success) return auth.response
 
     // 3. Validate request body
     const body = await req.json()
@@ -77,7 +53,7 @@ export async function POST(req: Request) {
     const { valueIds } = parseResult.data
 
     // 4. Call service function
-    await saveInnerGameValueSelection(user.id, valueIds)
+    await saveInnerGameValueSelection(auth.userId, valueIds)
 
     return NextResponse.json({ ok: true })
   } catch (error) {

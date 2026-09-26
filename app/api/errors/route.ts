@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server"
 
-import { createServerSupabaseClient } from "@/src/db/server"
+import { optionalUserId } from "@/src/db/auth"
 import { recordErrorReports } from "@/src/db/errorReportRepo"
 import { fingerprint, scrubRoute, scrubText } from "@/src/shared/errorScrubService"
 import { checkRateLimit } from "@/src/timetrack/rateLimitService"
 
 /** Record crashes. Open to signed-out callers on purpose — see the repo comment. */
 export async function POST(request: Request) {
-  const supabase = await createServerSupabaseClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const userId = await optionalUserId()
 
-  const who = user?.id ?? request.headers.get("x-forwarded-for") ?? "anonymous"
+  const who = userId ?? request.headers.get("x-forwarded-for") ?? "anonymous"
   if (!checkRateLimit(`errors:${who}`, 20, 60_000).allowed) {
     return NextResponse.json({ error: "Too many reports" }, { status: 429 })
   }
@@ -38,7 +35,7 @@ export async function POST(request: Request) {
         userAgent: (request.headers.get("user-agent") ?? "").slice(0, 300),
         release,
         severity: r.severity === "warning" ? ("warning" as const) : ("error" as const),
-        userId: user?.id ?? null,
+        userId,
       }]
     })
 

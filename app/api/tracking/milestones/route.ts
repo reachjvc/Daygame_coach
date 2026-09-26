@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/server"
+import { requireAuth } from "@/src/db/auth"
 import { getUserMilestones } from "@/src/tracking/trackingService"
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const auth = await requireAuth()
+    if (!auth.success) return auth.response
 
     const { searchParams } = new URL(request.url)
     const limitParam = searchParams.get("limit")
     const limit = limitParam ? parseInt(limitParam, 10) : undefined
 
-    const milestones = await getUserMilestones(user.id, limit)
+    const milestones = await getUserMilestones(auth.userId, limit)
 
     return NextResponse.json(milestones)
   } catch (error) {

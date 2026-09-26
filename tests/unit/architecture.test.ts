@@ -39,7 +39,6 @@ const projectRoot = path.resolve(__dirname, '../..')
  */
 const ALLOWED_LONG_ROUTES = new Set([
   'app/api/inner-game/comparisons/route.ts',
-  'app/api/inner-game/values/route.ts',
   'app/api/test/analyze-comments/route.ts',
   'app/api/test/articles/route.ts',
   'app/api/test/generate-draft/route.ts',
@@ -49,6 +48,36 @@ const ALLOWED_LONG_ROUTES = new Set([
   'app/api/tracking/review/route.ts',
   'app/api/tracking/session/[id]/route.ts',
   'app/api/tracking/session/route.ts',
+])
+
+const ALLOWED_DIRECT_GET_USER = new Set([
+  // Server pages that redirect themselves; each needs a page-shaped facade
+  // (a redirect, not a 401 JSON body) before it can move.
+  'app/dashboard/articles/page.tsx',
+  'app/dashboard/inner-game/page.tsx',
+  'app/dashboard/qa/page.tsx',
+  'app/dashboard/settings/page.tsx',
+  'app/dashboard/time/page.tsx',
+  'app/life-mastery/layout.tsx',
+  'app/life-mastery/page.tsx',
+  'app/preferences/archetypes/page.tsx',
+  'app/preferences/page.tsx',
+  'app/test/archive/goals-hub/page.tsx',
+  // Renders a signed-out landing page instead of redirecting — wants
+  // optionalUserId(), and a browser check, because it is the front page.
+  'app/page.tsx',
+  // Runs in the browser. A server-side facade cannot serve it; leaving it here
+  // is a decision, not debt.
+  'app/auth/reset-password/page.tsx',
+  // Server components and actions, which return neither a Response nor a
+  // redirect in the shape the API facade produces.
+  'src/dashboard/components/DashboardPage.tsx',
+  'src/scenarios/components/ScenariosPage.tsx',
+  'src/profile/actions.ts',
+  'src/settings/actions.ts',
+  'src/profile/loginDestinationService.ts',
+  // Inside src/db/ already — the facade's own neighbourhood.
+  'src/db/profilesRepo.ts',
 ])
 
 const ALLOWED_TYPE_EXPORTS = new Set([
@@ -2605,6 +2634,68 @@ describe('Architecture Compliance', () => {
       expect(
         stale,
         'These are fixed or gone — lower them in NESTED_CONTROL_DEBT:\n' +
+          stale.join('\n'),
+      ).toEqual([])
+    })
+  })
+
+  /**
+   * ONE FILE ASKS "WHO IS THIS", AND THE LEDGER BELOW IS WHAT IS LEFT.
+   *
+   * `src/db/auth.ts` owns `supabase.auth.getUser()`. Every other caller goes
+   * through `requireAuth` / `requirePremium` / `requireAccess` / `optionalUserId`.
+   * That is not tidiness: the platform move replaces the identity provider, and
+   * a facade with one implementation is a one-file change where 66 scattered
+   * calls were a 50-file one. On 2026-09-26 the 48 API-route call sites were
+   * routed through it; the 18 below are what remain.
+   *
+   * The remainder are NOT all the same job, which is why they are still here:
+   * `app/page.tsx` renders a signed-out landing page rather than redirecting,
+   * `app/life-mastery/layout.tsx` redirects with a `?next=` return address, and
+   * `app/auth/reset-password/page.tsx` runs in the browser where a server
+   * facade cannot reach. Each needs a decision, not a substitution — so they are
+   * recorded rather than rewritten, and this list may only shrink.
+   */
+  describe('Auth — one file asks who the caller is', () => {
+    const directGetUserCallers = (): string[] => {
+      const found: string[] = []
+      const walk = (dir: string) => {
+        for (const entry of fs.readdirSync(path.join(projectRoot, dir), { withFileTypes: true })) {
+          const rel = path.join(dir, entry.name)
+          if (entry.isDirectory()) {
+            if (entry.name === 'node_modules' || entry.name === '.next') continue
+            walk(rel)
+          } else if (/\.tsx?$/.test(entry.name)) {
+            if (rel === path.join('src', 'db', 'auth.ts')) continue
+            if (fs.readFileSync(path.join(projectRoot, rel), 'utf8').includes('auth.getUser()')) {
+              found.push(rel.split(path.sep).join('/'))
+            }
+          }
+        }
+      }
+      walk('app')
+      walk('src')
+      return found.sort()
+    }
+
+    test('no NEW caller reaches for auth.getUser() directly', () => {
+      const callers = directGetUserCallers()
+
+      const violations = callers.filter((f) => !ALLOWED_DIRECT_GET_USER.has(f))
+      expect(
+        violations,
+        'These call supabase.auth.getUser() directly. Use the facade in\n' +
+          'src/db/auth.ts instead — requireAuth() for an API route that must\n' +
+          'reject an anonymous caller, requirePremium()/requireAccess() when it\n' +
+          'also gates on what was bought, optionalUserId() when signed-out\n' +
+          'callers are served on purpose:\n' +
+          violations.join('\n'),
+      ).toEqual([])
+
+      const stale = [...ALLOWED_DIRECT_GET_USER].filter((f) => !callers.includes(f)).sort()
+      expect(
+        stale,
+        'These are fixed or gone — remove them from ALLOWED_DIRECT_GET_USER:\n' +
           stale.join('\n'),
       ).toEqual([])
     })

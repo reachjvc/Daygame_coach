@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-import { createServerSupabaseClient, hasPurchased } from "@/src/db/server"
+import { requirePremium } from "@/src/db/auth"
 import { generateOpenerEncounter } from "@/src/scenarios"
 import { DifficultyLevelSchema } from "@/src/settings/types"
 const EnvironmentSchema = z.enum([
@@ -23,20 +23,8 @@ const RequestSchema = z.object({
 })
 
 export async function POST(req: Request) {
-  const supabase = await createServerSupabaseClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
-  const premium = await hasPurchased(user.id)
-  if (!premium) {
-    return NextResponse.json({ error: "Premium required" }, { status: 403 })
-  }
+  const auth = await requirePremium()
+  if (!auth.success) return auth.response
 
   let body: unknown
   try {
@@ -50,7 +38,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
   }
 
-  const encounter = await generateOpenerEncounter(parsed.data, user.id)
+  const encounter = await generateOpenerEncounter(parsed.data, auth.userId)
 
   return NextResponse.json({ encounter }, { status: 200 })
 }

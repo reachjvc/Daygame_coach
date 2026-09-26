@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-import { createServerSupabaseClient, hasPurchased } from "@/src/db/server"
+import { requirePremium } from "@/src/db/auth"
 import {
   saveComparison,
   getComparisons,
@@ -24,23 +24,11 @@ const saveComparisonSchema = z.object({
 export async function GET() {
   try {
     // 1. Auth check
-    const supabase = await createServerSupabaseClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
-    }
-
-    // 2. Subscription gate
-    if (!(await hasPurchased(user.id))) {
-      return NextResponse.json({ error: "Premium subscription required" }, { status: 403 })
-    }
+    const auth = await requirePremium()
+    if (!auth.success) return auth.response
 
     // 3. Get comparisons
-    const comparisons = await getComparisons(user.id)
+    const comparisons = await getComparisons(auth.userId)
 
     return NextResponse.json({ comparisons })
   } catch (error) {
@@ -57,20 +45,8 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     // 1. Auth check
-    const supabase = await createServerSupabaseClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
-    }
-
-    // 2. Subscription gate
-    if (!(await hasPurchased(user.id))) {
-      return NextResponse.json({ error: "Premium subscription required" }, { status: 403 })
-    }
+    const auth = await requirePremium()
+    if (!auth.success) return auth.response
 
     // 3. Validate request body
     const body = await req.json()
@@ -95,7 +71,7 @@ export async function POST(req: Request) {
 
     // 5. Save comparison
     const comparison = await saveComparison({
-      user_id: user.id,
+      user_id: auth.userId,
       value_a_id: valueAId,
       value_b_id: valueBId,
       chosen_value_id: chosenValueId,
@@ -118,23 +94,11 @@ export async function POST(req: Request) {
 export async function DELETE() {
   try {
     // 1. Auth check
-    const supabase = await createServerSupabaseClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
-    }
-
-    // 2. Subscription gate
-    if (!(await hasPurchased(user.id))) {
-      return NextResponse.json({ error: "Premium subscription required" }, { status: 403 })
-    }
+    const auth = await requirePremium()
+    if (!auth.success) return auth.response
 
     // 3. Delete all comparisons
-    await deleteAllComparisons(user.id)
+    await deleteAllComparisons(auth.userId)
 
     return NextResponse.json({ ok: true })
   } catch (error) {

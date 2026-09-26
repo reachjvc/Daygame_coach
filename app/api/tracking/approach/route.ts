@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/server"
+import { requireAuth } from "@/src/db/auth"
 import { createApproach, getUserApproaches } from "@/src/tracking/trackingService"
 import { CreateApproachSchema } from "@/src/tracking/schemas"
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const auth = await requireAuth()
+    if (!auth.success) return auth.response
 
     const body = await request.json()
     const parsed = CreateApproachSchema.safeParse(body)
@@ -25,7 +21,7 @@ export async function POST(request: NextRequest) {
     const { session_id, outcome, set_type, tags, mood, quality, note, latitude, longitude, timestamp, voice_note_url } = parsed.data
 
     const approach = await createApproach({
-      user_id: user.id,
+      user_id: auth.userId,
       session_id: session_id ?? undefined,
       timestamp: timestamp ?? undefined,
       outcome: outcome ?? undefined,
@@ -51,18 +47,14 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const auth = await requireAuth()
+    if (!auth.success) return auth.response
 
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get("limit") || "50", 10)
     const offset = parseInt(searchParams.get("offset") || "0", 10)
 
-    const approaches = await getUserApproaches(user.id, limit, offset)
+    const approaches = await getUserApproaches(auth.userId, limit, offset)
 
     return NextResponse.json(approaches)
   } catch (error) {

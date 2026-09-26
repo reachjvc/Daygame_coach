@@ -5,6 +5,13 @@ import { hasAccess, hasPurchased } from "./profilesRepo"
 export type AuthSuccess = {
   success: true
   userId: string
+  /**
+   * Carried because two callers need it and neither should reach for
+   * `getUser()` to get it: `/api/whoami` reports it, and the AI allowlist in
+   * `/api/test/generate-draft` gates on it. Optional because the identity
+   * provider does not guarantee one.
+   */
+  email: string | undefined
   supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>
 }
 
@@ -33,7 +40,7 @@ export async function requireAuth(): Promise<AuthResult> {
     }
   }
 
-  return { success: true, userId: user.id, supabase }
+  return { success: true, userId: user.id, email: user.email, supabase }
 }
 
 /**
@@ -71,4 +78,21 @@ export async function requireAccess(): Promise<AuthResult> {
   }
 
   return authResult
+}
+
+/**
+ * The user's id when there is one, `null` when there is not — for the routes
+ * that must serve anonymous callers rather than reject them.
+ *
+ * `/api/errors` is the reason this exists: a crash report is most valuable when
+ * the crash happened before login, so it falls back to the forwarded IP for its
+ * rate-limit key. Rejecting that caller would lose exactly the reports we most
+ * want. Anything that should reject an anonymous caller wants `requireAuth`.
+ */
+export async function optionalUserId(): Promise<string | null> {
+  const supabase = await createServerSupabaseClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  return user?.id ?? null
 }

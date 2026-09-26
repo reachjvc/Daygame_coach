@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/server"
+import { requireAuth } from "@/src/db/auth"
 import { getTrackingStatsForDisplay } from "@/src/tracking/trackingService"
 
 /**
@@ -13,14 +13,10 @@ import { getTrackingStatsForDisplay } from "@/src/tracking/trackingService"
  */
 export async function GET() {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const auth = await requireAuth()
+    if (!auth.success) return auth.response
 
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    return NextResponse.json(await getTrackingStatsForDisplay(user.id))
+    return NextResponse.json(await getTrackingStatsForDisplay(auth.userId))
   } catch (error) {
     console.error("Error getting stats:", error)
     return NextResponse.json(

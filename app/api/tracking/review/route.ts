@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/server"
+import { requireAuth } from "@/src/db/auth"
 import { createReview, getUserReviews } from "@/src/tracking/trackingService"
 import type { ReviewInsert, ReviewType } from "@/src/tracking/trackingService"
 import { CreateReviewSchema } from "@/src/tracking/schemas"
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const auth = await requireAuth()
+    if (!auth.success) return auth.response
 
     const body = await request.json()
     const parsed = CreateReviewSchema.safeParse(body)
@@ -36,7 +32,7 @@ export async function POST(request: NextRequest) {
     } = parsed.data
 
     const reviewData: ReviewInsert = {
-      user_id: user.id,
+      user_id: auth.userId,
       review_type,
       template_id: template_id ?? undefined,
       fields,
@@ -62,18 +58,14 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const auth = await requireAuth()
+    if (!auth.success) return auth.response
 
     const { searchParams } = new URL(request.url)
     const reviewType = searchParams.get("type") as ReviewType | null
     const limit = parseInt(searchParams.get("limit") || "20", 10)
 
-    const reviews = await getUserReviews(user.id, reviewType || undefined, limit)
+    const reviews = await getUserReviews(auth.userId, reviewType || undefined, limit)
 
     return NextResponse.json(reviews)
   } catch (error) {

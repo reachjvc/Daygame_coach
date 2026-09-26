@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/server"
+import { requireAuth } from "@/src/db/auth"
 import { getApproachOwner } from "@/src/db/trackingRepo"
 import { updateApproach } from "@/src/tracking/trackingService"
 import { UpdateApproachSchema } from "@/src/tracking/schemas"
@@ -9,12 +9,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const auth = await requireAuth()
+    if (!auth.success) return auth.response
 
     const { id } = await params
 
@@ -25,7 +21,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Approach not found" }, { status: 404 })
     }
 
-    if (ownerId !== user.id) {
+    if (ownerId !== auth.userId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

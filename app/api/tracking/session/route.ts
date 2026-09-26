@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/server"
+import { requireAuth } from "@/src/db/auth"
 import { createSession, getUserSessions } from "@/src/tracking/trackingService"
 import { CreateSessionSchema } from "@/src/tracking/schemas"
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const auth = await requireAuth()
+    if (!auth.success) return auth.response
 
     const body = await request.json()
     const parsed = CreateSessionSchema.safeParse(body)
@@ -33,7 +29,7 @@ export async function POST(request: NextRequest) {
     } = parsed.data
 
     const session = await createSession({
-      user_id: user.id,
+      user_id: auth.userId,
       goal: goal ?? undefined,
       primary_location: primary_location ?? undefined,
       session_focus: session_focus ?? undefined,
@@ -55,18 +51,14 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const auth = await requireAuth()
+    if (!auth.success) return auth.response
 
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get("limit") || "10", 10)
     const offset = parseInt(searchParams.get("offset") || "0", 10)
 
-    const sessions = await getUserSessions(user.id, limit, offset)
+    const sessions = await getUserSessions(auth.userId, limit, offset)
 
     return NextResponse.json(sessions)
   } catch (error) {

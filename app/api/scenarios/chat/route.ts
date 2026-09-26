@@ -1,21 +1,12 @@
 import { NextResponse } from "next/server"
 
-import { createServerSupabaseClient, hasPurchased } from "@/src/db/server"
+import { requirePremium } from "@/src/db/auth"
 import { handleChatMessage, persistScenarioAttempt } from "@/src/scenarios"
 import { ChatRequestSchema } from "@/src/scenarios/schemas"
 
 export async function POST(req: Request) {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
-  const premium = await hasPurchased(user.id)
-  if (!premium) {
-    return NextResponse.json({ error: "Premium required" }, { status: 403 })
-  }
+  const auth = await requirePremium()
+  if (!auth.success) return auth.response
 
   let body: unknown
   try {
@@ -29,13 +20,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
   }
 
-  const response = await handleChatMessage(parsed.data, user.id)
+  const response = await handleChatMessage(parsed.data, auth.userId)
 
   // Fire-and-forget: persist on milestone evaluations only (every 5th turn).
   // This counts "sessions" not "turns" — one row per meaningful checkpoint.
   if (response.milestoneEvaluation) {
     void persistScenarioAttempt(
-      user.id,
+      auth.userId,
       parsed.data.scenario_type,
       parsed.data.message,
       null,

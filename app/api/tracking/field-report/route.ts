@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/server"
+import { requireAuth } from "@/src/db/auth"
 import { createFieldReport, getUserFieldReports, getDraftFieldReports } from "@/src/tracking/trackingService"
 import type { FieldReportInsert } from "@/src/tracking/trackingService"
 import { CreateFieldReportSchema } from "@/src/tracking/schemas"
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const auth = await requireAuth()
+    if (!auth.success) return auth.response
 
     const body = await request.json()
     const parsed = CreateFieldReportSchema.safeParse(body)
@@ -41,7 +37,7 @@ export async function POST(request: NextRequest) {
     } = parsed.data
 
     const reportData: FieldReportInsert = {
-      user_id: user.id,
+      user_id: auth.userId,
       template_id,
       system_template_slug,
       session_id,
@@ -68,12 +64,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const auth = await requireAuth()
+    if (!auth.success) return auth.response
 
     const { searchParams } = new URL(request.url)
     const drafts = searchParams.get("drafts") === "true"
@@ -81,11 +73,11 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0", 10)
 
     if (drafts) {
-      const reports = await getDraftFieldReports(user.id, limit)
+      const reports = await getDraftFieldReports(auth.userId, limit)
       return NextResponse.json(reports)
     }
 
-    const reports = await getUserFieldReports(user.id, limit, offset)
+    const reports = await getUserFieldReports(auth.userId, limit, offset)
     return NextResponse.json(reports)
   } catch (error) {
     console.error("Error getting field reports:", error)

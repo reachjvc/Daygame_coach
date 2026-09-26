@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { readFile, writeFile, mkdir, readdir } from "fs/promises"
 import path from "path"
 import { generateRevisedDraft } from "@/src/articles/articlesService"
-import { createServerSupabaseClient } from "@/src/db/server"
+import { requireAuth } from "@/src/db/auth"
 import type { ArticleFeedbackFlag, ArticleSection } from "@/src/articles/types"
 
 // Only these emails can use AI-powered endpoints
@@ -26,10 +26,10 @@ export async function POST(request: Request) {
   }
 
   // Check user is allowed to use AI endpoints
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
 
-  if (!user?.email || !ALLOWED_AI_EMAILS.includes(user.email)) {
+  if (!auth.email || !ALLOWED_AI_EMAILS.includes(auth.email)) {
     return NextResponse.json(
       { error: "Your account is not authorized to use AI features" },
       { status: 403 }

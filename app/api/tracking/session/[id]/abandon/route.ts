@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/server"
+import { requireAuth } from "@/src/db/auth"
 import { getSession, abandonSession } from "@/src/tracking/trackingService"
 
 export async function POST(
@@ -7,12 +7,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const auth = await requireAuth()
+    if (!auth.success) return auth.response
 
     const { id } = await params
     const session = await getSession(id)
@@ -21,7 +17,7 @@ export async function POST(
       return NextResponse.json({ error: "Session not found" }, { status: 404 })
     }
 
-    if (session.user_id !== user.id) {
+    if (session.user_id !== auth.userId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

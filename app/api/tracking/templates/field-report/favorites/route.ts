@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/server"
+import { requireAuth } from "@/src/db/auth"
 import { getFavoriteTemplateIds, addFavoriteTemplate, removeFavoriteTemplate } from "@/src/tracking/trackingService"
 import { FavoriteActionSchema } from "@/src/tracking/schemas"
 
 export async function GET() {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const auth = await requireAuth()
+    if (!auth.success) return auth.response
 
-    const favoriteIds = await getFavoriteTemplateIds(user.id)
+    const favoriteIds = await getFavoriteTemplateIds(auth.userId)
     return NextResponse.json({ favoriteIds })
   } catch (error) {
     console.error("Error getting favorite templates:", error)
@@ -19,9 +18,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const auth = await requireAuth()
+    if (!auth.success) return auth.response
 
     const body = await request.json()
     const parsed = FavoriteActionSchema.safeParse(body)
@@ -31,8 +29,8 @@ export async function POST(request: NextRequest) {
 
     const { templateId, action } = parsed.data
     const favoriteIds = action === "add"
-      ? await addFavoriteTemplate(user.id, templateId)
-      : await removeFavoriteTemplate(user.id, templateId)
+      ? await addFavoriteTemplate(auth.userId, templateId)
+      : await removeFavoriteTemplate(auth.userId, templateId)
 
     return NextResponse.json({ favoriteIds })
   } catch (error) {
