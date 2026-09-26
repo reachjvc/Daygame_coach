@@ -414,7 +414,9 @@ function AutomationPanel({
                   }))
                 }
                 className={cn(
-                  "rounded-full border px-2 py-0.5 text-xs",
+                  // seven of these in a row, 22px tall before this: the row
+                  // wraps on a phone rather than making each one unhittable
+                  "flex min-h-11 min-w-11 items-center justify-center rounded-full border px-2 text-xs sm:min-h-0 sm:min-w-0 sm:py-0.5",
                   active ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground",
                 )}
               >

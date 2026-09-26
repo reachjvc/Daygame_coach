@@ -464,9 +464,14 @@ function TeamPanel({
           title="Groups"
           actions={
             <div className="flex w-full gap-2 sm:w-auto">
-              <Input value={groupName} onChange={(event) => setGroupName(event.target.value)} placeholder="Group name" className="h-8 w-[140px]" />
+              <Input value={groupName} onChange={(event) => setGroupName(event.target.value)} placeholder="Group name" className="h-11 w-[140px] sm:h-8" />
               <Button
                 size="sm"
+                /* It was an unlabelled plus: a screen reader heard "button", and
+                   a thumb got 40px. The only icon-only control in this file
+                   without a name. */
+                aria-label="Add group"
+                className="min-w-11 sm:min-w-0"
                 onClick={() => {
                   if (!groupName.trim()) return
                   setState((current) => createGroup(current, groupName.trim(), new Date().toISOString()))
@@ -569,7 +574,8 @@ function TeamPanel({
                       key={action.status}
                       size="sm"
                       variant="ghost"
-                      className="h-7"
+                      // four of these in a row at 28px before this
+                      className="min-h-11 sm:h-7 sm:min-h-0"
                       disabled={status === action.status}
                       onClick={() =>
                         setState((current) =>

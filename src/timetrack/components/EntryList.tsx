@@ -126,7 +126,10 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry }: E
             {formatDuration(weekSeconds, state.user.durationFormat)}
           </span>
         </p>
-        <label className="flex min-h-9 items-center gap-2 text-xs text-muted-foreground">
+        <label className="flex min-h-11 items-center gap-2 text-xs text-muted-foreground sm:min-h-9">
+          {/* 16px. A checkbox is not exempt from the floor just because the
+              label beside it is also clickable — the <label> wrapper is what
+              carries the target, so the box can stay the size it looks. */}
           <input
             type="checkbox"
             className="size-4"
@@ -154,12 +157,17 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry }: E
           <header className="flex items-center justify-between gap-2 border-b border-border bg-secondary/30 px-3 py-2">
             <div className="flex items-center gap-2">
               {selectionMode && (
-                <input
-                  type="checkbox"
-                  aria-label={`Select all entries on ${group.date}`}
-                  checked={group.rows.flatMap((r) => r.entries.map((e) => e.id)).every((id) => selected.includes(id))}
-                  onChange={() => toggleSelect(group.rows.flatMap((r) => r.entries.map((e) => e.id)))}
-                />
+                /* The default 12px box, wrapped so a thumb has something to
+                   hit — the same shape the entry rows' own checkbox uses. */
+                <label className="-ml-1 flex min-h-11 min-w-11 items-center justify-center sm:min-h-0 sm:min-w-0">
+                  <input
+                    type="checkbox"
+                    className="size-4"
+                    aria-label={`Select all entries on ${group.date}`}
+                    checked={group.rows.flatMap((r) => r.entries.map((e) => e.id)).every((id) => selected.includes(id))}
+                    onChange={() => toggleSelect(group.rows.flatMap((r) => r.entries.map((e) => e.id)))}
+                  />
+                </label>
               )}
               <h3 className="text-sm font-semibold">{formatDayHeader(group.date, todayKey)}</h3>
             </div>

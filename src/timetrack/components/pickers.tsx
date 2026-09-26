@@ -563,7 +563,11 @@ export function MiniSelect({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-10 w-full appearance-none rounded-md border border-border bg-transparent pl-2 pr-7 text-base outline-none sm:h-8 sm:text-sm"
+        // Every <select> in this slice is this component — there is exactly one —
+        // so 40px here was 40px on the Reports grouping, the Settings formats,
+        // the rounding, the reminder project and the member role. The sweep never
+        // saw any of them, because it only queried <button>.
+        className="h-11 w-full appearance-none rounded-md border border-border bg-transparent pl-2 pr-7 text-base outline-none sm:h-8 sm:text-sm"
       >
         {options.map((option) => (
           <option key={option.id} value={option.id} className="bg-card">
@@ -571,7 +575,7 @@ export function MiniSelect({
           </option>
         ))}
       </select>
-      <IconDown className="pointer-events-none absolute right-2 top-3.5 size-3 text-muted-foreground sm:top-2.5" />
+      <IconDown className="pointer-events-none absolute right-2 top-4 size-3 text-muted-foreground sm:top-2.5" />
     </div>
   )
 }

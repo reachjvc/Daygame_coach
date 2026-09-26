@@ -92,6 +92,34 @@ test.describe('time tracker on a phone', () => {
     }
   })
 
+  /**
+   * THE SAME SCREENS, WITH A TIMER RUNNING, which is the state the test above
+   * never sees: it stops its timer inside `trackEntry` before it navigates.
+   *
+   * The running pill only renders in the header on the five screens that are not
+   * Timer, so it was never on screen while anything measured width — and it
+   * pushed the alerts bell 28px off a 390px viewport whenever the sync badge was
+   * also keeping its words, which it does whenever there is something to say:
+   * offline, not saved, signed out, or never signed in at all.
+   */
+  test('every screen still fits while a timer is running', async ({ page }) => {
+    await openFreshSandbox(page)
+
+    await page.getByPlaceholder('What are you working on?').fill('a timer left running')
+    await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
+    await page.waitForTimeout(700)
+
+    for (const screen of ['Timer', 'Calendar', 'Reports', 'Projects', 'Manage', 'Settings']) {
+      if (screen !== 'Timer') await goTo(page, screen)
+      // the pill is what makes this different from the test above
+      if (screen !== 'Timer') {
+        await expect(page.locator('header').getByRole('button', { name: 'Stop the running timer' })).toBeVisible()
+      }
+      const { scrollWidth, innerWidth } = await pageOverflow(page)
+      expect(scrollWidth, `${screen} overflows horizontally with a timer running`).toBeLessThanOrEqual(innerWidth + 1)
+    }
+  })
+
   test('the bottom tab bar is present, reachable and switches screens', async ({ page }) => {
     await openFreshSandbox(page)
 
@@ -216,63 +244,89 @@ test.describe('time tracker on a phone', () => {
   })
 
   /**
-   * THE CLASS GUARD, not a spot check.
+   * THE CLASS GUARD — and the two blind spots it shipped with, which are the
+   * reason it is written this way now.
    *
-   * The slice sets its own floor — `touchTarget` is 44px on a phone, 32 with a
-   * mouse — and then three controls quietly sat under it: the favourites tile at
-   * 40px, the sync badge at 27px on the one control whose whole point is being
-   * tappable when it says "Not saved. Tap to try again", and the Reports metrics
-   * picker at 36px. Each was found by measuring, none by looking.
+   * The first version queried `button` and nothing else, and visited only the
+   * default state of each screen. Both holes were mine, both were predictable,
+   * and between them they hid: every `<select>` in the slice at 40px (there is
+   * exactly one component behind all of them), the running-timer stop button at
+   * 36px on five of the six screens, seven reminder weekday toggles at 22px,
+   * four timesheet actions at 28px, the project card's own name at 36px, and the
+   * group-similar label at 36px. The guard reported all clear the whole time.
    *
-   * Every visible button on every screen, so the next one that lands short is
-   * caught by the sweep rather than by somebody's thumb. Buttons with no box are
-   * skipped: a layout the other viewport owns is not this test's business.
+   * So: every kind of thing a thumb can hit, in every tab of every screen, with
+   * the row in the states it can be in. And the target measured is the EFFECTIVE
+   * one — a 16px checkbox inside a 44px label is fine, because the label is what
+   * you hit — rather than the control's own box, which would demand a
+   * comically large checkbox to pass.
    */
-  test('no visible control on any screen is too small to tap', async ({ page }) => {
+  const TAPPABLE =
+    'button, select, a[href], input[type=checkbox], input[type=radio], [role=button], [role=switch], summary'
+
+  /** Which tabs live inside each screen, since the bar only gets you to the screen */
+  const INNER_TABS: Record<string, string[]> = {
+    Timer: [],
+    Calendar: [],
+    Reports: ['Summary', 'Detailed', 'Workload', 'Profitability', 'My reports'],
+    Projects: ['Active', 'Archived', 'Templates'],
+    Manage: ['Clients', 'Tags', 'Team'],
+    Settings: ['Profile', 'Workspace', 'Automation', 'Integrations', 'Data'],
+  }
+
+  test('no visible control on any screen or tab is too small to tap', async ({ page }) => {
     await openFreshSandbox(page)
 
-    /**
-     * THE STATES A ROW CAN BE IN, not just the plain one.
-     *
-     * The first version of this tracked a single entry, so it never saw the
-     * group-expand chip — which only exists on a grouped row and was 28px wide,
-     * on the only control that reaches the other entries in a group. A sweep
-     * that only visits the default state is a sweep with a blind spot, and this
-     * is the one it had.
-     */
+    // a grouped row, expanded, with selection on: the states the first version
+    // of this never saw, which is how a 28px group chip survived it
     await trackEntry(page, 'a row to measure')
-    await trackEntry(page, 'a row to measure') // identical: the two collapse into a group
-
+    await trackEntry(page, 'a row to measure')
     const expand = page.getByRole('button', { name: /Expand group/ })
     await expect(expand, 'the fixture did not produce a grouped row').toBeVisible()
     await expand.click()
     await page.waitForTimeout(400)
-
-    // selection mode adds a checkbox column to every row
     await page.locator('main').getByRole('button', { name: 'Select', exact: true }).first().click()
     await page.waitForTimeout(400)
 
-    const tooSmall = () =>
-      page.evaluate(() => {
-        const found: { label: string; w: number; h: number }[] = []
-        for (const button of document.querySelectorAll('button')) {
-          const box = button.getBoundingClientRect()
+    const tooSmall = (selector: string) =>
+      page.evaluate((sel) => {
+        const found: { what: string; label: string; size: string }[] = []
+        for (const el of document.querySelectorAll(sel)) {
+          // a form control's target is its label when it has one
+          const target =
+            el.tagName === 'INPUT' ? ((el.closest('label') as HTMLElement | null) ?? el) : (el as HTMLElement)
+          const box = target.getBoundingClientRect()
           if (!box.width || !box.height) continue
-          if (getComputedStyle(button).visibility === 'hidden') continue
+          if (getComputedStyle(el).visibility === 'hidden') continue
           if (box.height >= 44 && box.width >= 44) continue
           found.push({
-            label: (button.getAttribute('aria-label') ?? button.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 50),
-            w: Math.round(box.width),
-            h: Math.round(box.height),
+            what: el.tagName.toLowerCase(),
+            label: (el.getAttribute('aria-label') ?? el.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 40),
+            size: `${Math.round(box.width)}x${Math.round(box.height)}`,
           })
         }
         return found
-      })
+      }, selector)
+
+    const openInnerTab = (label: string) =>
+      page.evaluate((t) => {
+        const button = [...document.querySelectorAll('main button')].find((b) => (b as HTMLElement).innerText.trim() === t)
+        if (button) (button as HTMLElement).click()
+        return Boolean(button)
+      }, label)
 
     for (const screen of ['Timer', 'Calendar', 'Reports', 'Projects', 'Manage', 'Settings']) {
       if (screen !== 'Timer') await goTo(page, screen)
-      const found = await tooSmall()
-      expect(found, `${screen} has controls under 44px: ${JSON.stringify(found)}`).toEqual([])
+
+      const places = [`${screen} (as opened)`, ...INNER_TABS[screen].map((t) => `${screen} › ${t}`)]
+      for (const place of places) {
+        const tab = place.includes(' › ') ? place.split(' › ')[1] : null
+        if (tab && !(await openInnerTab(tab))) continue
+        if (tab) await page.waitForTimeout(600)
+
+        const found = await tooSmall(TAPPABLE)
+        expect(found, `${place} has controls under 44px: ${JSON.stringify(found)}`).toEqual([])
+      }
     }
   })
 

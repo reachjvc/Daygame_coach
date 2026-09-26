@@ -355,7 +355,14 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
           <h1 className="shrink-0 text-sm font-semibold">Time</h1>
           <span className="hidden truncate text-xs text-muted-foreground sm:inline">{state.workspace.name}</span>
 
-          <div className="ml-auto flex items-center gap-1 sm:gap-2">
+          {/* min-w-0, because this group holds three things that all want their
+              full width: the sync badge with its sentence, the running pill with
+              its clock, and the bell. With a timer running and the badge in a
+              state that keeps its words — offline, not saved, signed out — they
+              pushed the bell 28px off the right edge of a 390px screen. Nothing
+              caught it: the overflow test stops its timer before it navigates,
+              so it never visits another screen with the pill on screen. */}
+          <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
             <SyncBadge status={sync.status} pending={sync.pendingCount} onRetry={sync.syncNow} />
             {pomodoro.phase !== "idle" && (
               <span className="hidden items-center gap-1 rounded-full border border-border px-2 py-1 text-xs sm:flex">
@@ -807,7 +814,7 @@ function SyncBadge({
         // 27px tall until this was changed, on a control whose whole point is
         // being tappable in the one state that matters: "Not saved. Tap to try
         // again." The header has 57px to give, so this costs nothing.
-        "flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] sm:min-h-0",
+        "flex min-h-11 min-w-0 shrink items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] sm:min-h-0",
         tone,
         settled && "border-transparent sm:border-border",
       )}
@@ -824,7 +831,7 @@ function SyncBadge({
       />
       {/* the word is always there for a screen reader; on a phone only the
           states that need attention spend space on it */}
-      <span className={cn(settled && "sr-only sm:not-sr-only")}>{label[status]}</span>
+      <span className={cn("truncate", settled && "sr-only sm:not-sr-only")}>{label[status]}</span>
     </button>
   )
 }

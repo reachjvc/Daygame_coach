@@ -413,17 +413,20 @@ export function RunningPill({
   if (!running) return null
   const project = state.projects.find((p) => p.id === running.projectId)
   return (
-    <div className="flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-2 py-1 text-xs sm:px-3">
+    <div className="flex min-w-0 shrink items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-2 py-1 text-xs sm:px-3">
       <span className="size-2 animate-pulse rounded-full bg-primary" />
       {/* the description would crowd out the workspace name on a phone */}
       <span className="hidden max-w-[160px] truncate sm:inline">{running.description || "(no description)"}</span>
       {project && <ColorDot color={project.color} />}
       <span className="tabular-nums">{formatClock(entrySeconds(running, nowSec))}</span>
-      {/* A 12px icon is not a clickable target; give it a real hit area */}
+      {/* A 12px icon is not a clickable target; give it a real hit area.
+          It was given 36px, which is not the real hit area either — this slice's
+          floor is 44 and this is the only way to stop a timer from five of the
+          six screens. */}
       <button
         type="button"
         onClick={onStop}
-        className="-mr-1 flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground sm:size-6"
+        className="-mr-1 flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground sm:size-6"
         aria-label="Stop the running timer"
         title="Stop the running timer"
       >

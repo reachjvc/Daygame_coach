@@ -147,7 +147,8 @@ export function ProjectsView({
                   <button
                     type="button"
                     onClick={() => onFocusProject(project.id)}
-                    className="min-h-9 min-w-0 flex-1 truncate text-left text-sm font-medium"
+                    // the whole point of the card: it opens the project
+                    className="min-h-11 min-w-0 flex-1 truncate text-left text-sm font-medium sm:min-h-9"
                   >
                     {project.name}
                   </button>
