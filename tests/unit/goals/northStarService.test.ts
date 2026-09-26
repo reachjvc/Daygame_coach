@@ -810,7 +810,19 @@ describe("planAsText", () => {
     expect(text).toContain("100 to 140 kg")
     expect(text).toContain("By 31 December 2026")
     expect(text).toContain("What could stop me: Work eats my mornings")
-    expect(text).toContain("Health: 6/10 over the last two weeks")
+    /**
+     * "over the last two weeks" WAS HERE, and it went on 2026-09-26.
+     *
+     * The dialog asks exactly that question, so the number is a looking-back
+     * score and the label was true the moment it was given. Nothing records
+     * WHEN, so the claim never expired: the owner's twelve areas printed it for
+     * numbers given on 2026-08-11 and were still printing it forty-six days
+     * later, while `dailyAverage` — which has a real window — correctly printed
+     * nothing at all beside them. Only the number that can keep a period says
+     * one now.
+     */
+    expect(text).toContain("Health: 6/10")
+    expect(text, "a period nothing can date must not be claimed").not.toContain("over the last two weeks")
     expect(text).toContain("A 10 here: Strong and light")
   })
 })

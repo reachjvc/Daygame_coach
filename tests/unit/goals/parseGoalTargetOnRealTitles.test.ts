@@ -25,6 +25,12 @@
 import { describe, it, expect } from "vitest"
 import { parseGoalTarget } from "@/src/goals/northStarService"
 
+/**
+ * The unit a title yields, or "" — so a case can say "this word is not a
+ * measurement" by showing the unit GREW past it.
+ */
+const parseGoalTargetUnitOf = (title: string) => parseGoalTarget(title)?.unit ?? ""
+
 describe("titles the parser gets right", () => {
   /** A measurement with the lift in front of it: the shape it was built for. */
   it("reads a lift with its weight and keeps the lift as the label", () => {
@@ -109,6 +115,38 @@ describe("a unit of two words survives, because not every unit is a measurement"
    */
   it("still takes the noun behind a measurement when the verb says nothing", () => {
     expect(parseGoalTarget("Get 28 kg bench 3 sets 8 reps by april")?.prefix).toBe("bench")
+  })
+})
+
+/**
+ * THE EXEMPTION LIST HAS TO STAY NARROW, or it silently changes other shapes.
+ *
+ * `MEASUREMENT` decides which units may NOT take a second word. Add a
+ * spelled-out noun to it and "500 hours in total" stops being able to grow, and
+ * nothing anywhere fails — the list would simply mean something wider than it
+ * says. The neighbouring session lost an afternoon to exactly this: a dialog
+ * exemption keyed on the word "Close" swallowed the control it was checking for
+ * the moment a second control used the same word. What saved it in the end was
+ * not the fix but the assertion that the exemption stays narrow.
+ */
+describe("the measurement list stays a list of abbreviations", () => {
+  it("holds no spelled-out noun, because those are ordinary units", () => {
+    for (const noun of ["hours", "books", "pages", "reps", "sets", "days", "weeks", "months", "muscle", "push"]) {
+      expect(
+        parseGoalTargetUnitOf(`Do 5 ${noun} more`),
+        `"${noun}" must not be a MEASUREMENT, or a unit naming it can no longer take a second word`,
+      ).not.toBe(noun)
+    }
+  })
+
+  /**
+   * Said the other way round as well, because the case above passes if the
+   * parser stops finding units at all: an abbreviation must still stop at one
+   * word.
+   */
+  it("and still stops an abbreviation at one word", () => {
+    expect(parseGoalTarget("Bench 36 kg dumbbells")?.unit).toBe("kg")
+    expect(parseGoalTarget("Run 5 km every morning")?.unit).toBe("km")
   })
 })
 

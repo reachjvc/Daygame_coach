@@ -4079,7 +4079,25 @@ export function planAsText(plan: NsPlan, today = todayISO()): string {
       `WHERE I AM\n${reviewed
         .map(({ a, r }) => {
           const avg = dailyAverage(plan, a.id, today)
-          const lines = [`${a.label}${r.fortnight != null ? `: ${r.fortnight}/10 over the last two weeks` : ""}${avg != null ? ` (daily average ${avg})` : ""}`]
+          /**
+           * NO PERIOD ON A NUMBER THAT CARRIES NO DATE.
+           *
+           * This said "over the last two weeks", and it was true the moment it
+           * was typed — the dialog asks exactly that question. Nothing records
+           * WHEN, so the claim never expires: the owner's twelve areas printed
+           * "over the last two weeks" for numbers given on 2026-08-11, still
+           * saying it forty-six days later, while the genuinely windowed figure
+           * beside it — `dailyAverage`, which has a real fourteen-day window —
+           * correctly printed nothing at all because their newest rating was
+           * thirty-eight days old. One of the two numbers knew it was stale and
+           * the other could not.
+           *
+           * So the looking-back score prints as a score, and the only thing on
+           * this line that asserts a period is the one that can keep it. The
+           * richer fix is to store the day the rating was given and print it;
+           * that needs a column, and a migration is the owner's call.
+           */
+          const lines = [`${a.label}${r.fortnight != null ? `: ${r.fortnight}/10` : ""}${avg != null ? ` (daily average ${avg}, last ${NS_DAILY_WINDOW} days)` : ""}`]
           if (r.ten.trim()) lines.push(`  A 10 here: ${r.ten.trim()}`)
           if (r.purpose.trim()) lines.push(`  Why it matters: ${r.purpose.trim()}`)
           if (r.snapshot.trim()) lines.push(`  Right now: ${r.snapshot.trim()}`)
