@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { finishWorkout } from "@/src/db/workoutRepo"
 import { FinishWorkoutSchema } from "@/src/programs/schemas"
+import { errorBody } from "@/src/programs/errors"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -25,6 +26,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const message = (e as Error).message
     // A workout that is GONE is not a workout that was refused: the browser
     // needs to tell "thrown away on another device" from "the server said no".
-    return err(message, message === "That workout no longer exists." ? 404 : 409)
+    // `errorBody` carries the `code` the live screen acts on.
+    return NextResponse.json(errorBody(e), {
+      status: message === "That workout no longer exists." ? 404 : 409,
+    })
   }
 }

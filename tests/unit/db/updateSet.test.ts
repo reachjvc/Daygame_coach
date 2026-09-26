@@ -184,10 +184,21 @@ describe("updateSet", () => {
     )
   })
 
-  test("says so in a sentence when the write itself fails", async () => {
+  /**
+   * THIS USED TO ASSERT THE OPPOSITE, and it was wrong.
+   *
+   * It required the database's own words — "connection lost" — to be in the
+   * sentence, on the reasoning that a specific message beats a vague one. It
+   * does, for us; the person reading it is standing at a squat rack, and every
+   * route hands a thrown message to the browser verbatim. On 2026-09-26 that is
+   * how the owner came to be shown "new row violates row-level security policy
+   * for table workout_sets" for a workout that had simply been discarded on
+   * another device. The raw text now goes to `console.error`.
+   */
+  test("says so in a sentence when the write itself fails, in words a person can act on", async () => {
     const { repo } = await repoWith({ sets: [setRow()], updateError: { message: "connection lost" } })
-    await expect(repo.updateSet(USER, WORKOUT, "s1", { rpe: 8 })).rejects.toThrow(
-      /Could not change that set: connection lost/
-    )
+    const thrown = await repo.updateSet(USER, WORKOUT, "s1", { rpe: 8 }).catch((e: Error) => e)
+    expect((thrown as Error).message).toMatch(/That set could not be changed/)
+    expect((thrown as Error).message).not.toMatch(/connection lost/)
   })
 })

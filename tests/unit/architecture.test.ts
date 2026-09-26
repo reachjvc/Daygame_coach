@@ -79,7 +79,13 @@ const ALLOWED_DIRECT_GET_USER = new Set([
   // Authenticates with getSession() rather than getUser(), which is why the
   // first version of this guard could not see it. Same job as the pages above.
   'app/dashboard/tracking/layout.tsx',
-  // Inside src/db/ already — the facade's own neighbourhood.
+  // Reads the provider's own user table by id via the ADMIN api
+  // (`auth.admin.getUserById`) — a third spelling, found by an independent review
+  // on 2026-09-26 after two versions of this guard missed it. It breaks outright
+  // when the provider changes, so it is part of the port, not an exception to it.
+  'src/api_ai/apiAiService.ts',
+  // Inside src/db/ already — the facade's own neighbourhood. Note this makes
+  // "swapping the provider is a ONE-file change" a TWO-file change.
   'src/db/profilesRepo.ts',
 ])
 
@@ -2671,7 +2677,11 @@ describe('Architecture Compliance', () => {
           } else if (/\.tsx?$/.test(entry.name)) {
             if (rel === path.join('src', 'db', 'auth.ts')) continue
             const src = fs.readFileSync(path.join(projectRoot, rel), 'utf8')
-            if (src.includes('auth.getUser()') || src.includes('auth.getSession()')) {
+            if (
+              src.includes('auth.getUser()') ||
+              src.includes('auth.getSession()') ||
+              src.includes('auth.admin.')
+            ) {
               found.push(rel.split(path.sep).join('/'))
             }
           }
@@ -2688,7 +2698,8 @@ describe('Architecture Compliance', () => {
       const violations = callers.filter((f) => !ALLOWED_DIRECT_GET_USER.has(f))
       expect(
         violations,
-        'These ask the identity provider directly — getUser() or getSession().\n' +
+        'These ask the identity provider directly — getUser(), getSession() or\n' +
+          'the admin api.\n' +
           'Use the facade in\n' +
           'src/db/auth.ts instead — requireAuth() for an API route that must\n' +
           'reject an anonymous caller, requirePremium()/requireAccess() when it\n' +
@@ -2703,6 +2714,128 @@ describe('Architecture Compliance', () => {
         'These are fixed or gone — remove them from ALLOWED_DIRECT_GET_USER:\n' +
           stale.join('\n'),
       ).toEqual([])
+    })
+  })
+
+  /**
+   * The database's own words never reach a person.
+   *
+   * WHAT THIS IS FOR. On 2026-09-26 the owner, mid-workout, was shown:
+   *
+   *     That Squat set could not be saved: new row violates row-level security
+   *     policy for table "workout_sets"
+   *
+   * Nothing was wrong with their permissions. A set row has no user of its own,
+   * so its policy asks whether the PARENT workout exists and is yours — which
+   * makes "policy violation" how Postgres says "there is no such workout". The
+   * workout had been discarded on a second device while ticks were in flight.
+   * Reproduced on demand: 18 refusals in 40 tries.
+   *
+   * Every workout route hands a thrown message straight to the browser, so the
+   * instant a repo writes `${error.message}` into an Error, Postgres is talking
+   * to a person standing at a squat rack. Fixing the one line would have left
+   * two hundred more of exactly the same shape.
+   *
+   * A COUNT PER FILE, WHICH MAY ONLY GO DOWN — the same shape this file already
+   * uses for unpaged reads and nested controls. A hard ban would mean rewriting
+   * twenty-three repositories in one commit, which nobody would review; a
+   * ratchet locks in the slice that has been cleaned and stops the next one
+   * getting worse. `workoutRepo.ts` is absent because it is at zero, and its
+   * absence is asserted below rather than assumed.
+   *
+   * Logging the real message is right and is not counted: `console.error` is
+   * read by us, not by the person. That is the whole distinction.
+   */
+  describe('No database message reaches a person', () => {
+    const RAW_DB_MESSAGES: Record<string, number> = {
+      'src/db/betaRepo.ts': 4,
+      'src/db/dashboardRepo.ts': 3,
+      'src/db/embeddingsRepo.ts': 6,
+      'src/db/embeddingsTestRepo.ts': 5,
+      'src/db/errorReportRepo.ts': 4,
+      'src/db/goalRepo.ts': 33,
+      'src/db/healthRepo.ts': 15,
+      'src/db/innerGameProgressRepo.ts': 6,
+      'src/db/lifeAnswerRepo.ts': 2,
+      'src/db/lifeChapterRepo.ts': 3,
+      'src/db/lifePlanDayRepo.ts': 7,
+      'src/db/lifePlanRepo.ts': 6,
+      'src/db/paging.ts': 1,
+      'src/db/profilesRepo.ts': 2,
+      'src/db/programRepo.ts': 11,
+      'src/db/scenarioRepo.ts': 1,
+      'src/db/settingsRepo.ts': 17,
+      'src/db/timetrackBackupRepo.ts': 2,
+      'src/db/timetrackRepo.ts': 5,
+      'src/db/trackingRepo.ts': 54,
+      'src/db/valueComparisonRepo.ts': 6,
+      'src/db/valuesRepo.ts': 5,
+      'src/db/viceRepo.ts': 3,
+    }
+
+    /**
+     * One file's count. A line is counted when it interpolates something's
+     * `.message` INTO a throw — which is the shape that reaches a browser.
+     *
+     * Deliberately crude in one direction: a doc comment is skipped by its
+     * leading `*`, so this file's own explanation of the bug does not count
+     * itself. Verified by removing the skip and watching the count rise.
+     */
+    const rawMessagesIn = (file: string): number => {
+      const interpolated = /\$\{[^}]*\.message\s*\}/g
+      const throws = /\bnew \w*(Error|Refused|Failed|Gone)\w*\(/
+      let found = 0
+      for (const line of fs.readFileSync(path.join(projectRoot, file), 'utf8').split('\n')) {
+        if (line.includes('console.')) continue
+        if (line.trim().startsWith('*')) continue
+        if (!throws.test(line) && !line.includes('throw')) continue
+        found += (line.match(interpolated) ?? []).length
+      }
+      return found
+    }
+
+    const repoFiles = (): string[] =>
+      fs
+        .readdirSync(path.join(projectRoot, 'src', 'db'))
+        .filter((f) => f.endsWith('.ts'))
+        .map((f) => `src/db/${f}`)
+        .sort()
+
+    test('no file writes MORE database messages into an error than it already did', () => {
+      const worse = repoFiles()
+        .map((file) => ({ file, now: rawMessagesIn(file), allowed: RAW_DB_MESSAGES[file] ?? 0 }))
+        .filter(({ now, allowed }) => now > allowed)
+
+      expect(
+        worse.map((w) => `${w.file}: ${w.now}, was ${w.allowed}`),
+        'These put the database\'s own sentence where a person will read it. A route\n' +
+          'returns a thrown message to the browser verbatim, so `${error.message}`\n' +
+          'in a repo is Postgres talking to the user. Log it with console.error and\n' +
+          'throw a sentence they can act on — see `refuseWrite` and `readRefused`\n' +
+          'in src/db/workoutRepo.ts:\n' +
+          worse.map((w) => `${w.file}: ${w.now}, was ${w.allowed}`).join('\n')
+      ).toEqual([])
+    })
+
+    test('a count that has gone down is written down, so it cannot come back', () => {
+      const stale = repoFiles()
+        .map((file) => ({ file, now: rawMessagesIn(file), allowed: RAW_DB_MESSAGES[file] ?? 0 }))
+        .filter(({ now, allowed }) => now < allowed)
+        .map((w) => `${w.file}: ${w.now} now, RAW_DB_MESSAGES still says ${w.allowed}`)
+
+      expect(
+        stale,
+        'Lower these in RAW_DB_MESSAGES. A ratchet that is not tightened is a\n' +
+          'ratchet that lets the work be undone silently:\n' +
+          stale.join('\n')
+      ).toEqual([])
+    })
+
+    test('the live-workout repo is at zero, and stays there', () => {
+      // The slice this rule was written for. Named on its own so it cannot
+      // drift back in under a table entry nobody reads.
+      expect(rawMessagesIn('src/db/workoutRepo.ts')).toBe(0)
+      expect(RAW_DB_MESSAGES['src/db/workoutRepo.ts']).toBeUndefined()
     })
   })
 

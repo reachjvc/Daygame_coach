@@ -3,6 +3,7 @@ import { requireAuth } from "@/src/db/auth"
 import { adjustWorkout, discardWorkout } from "@/src/db/workoutRepo"
 import { getWorkoutSets } from "@/src/db/healthRepo"
 import { AdjustWorkoutSchema } from "@/src/programs/schemas"
+import { errorBody } from "@/src/programs/errors"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -24,7 +25,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const parsed = AdjustWorkoutSchema.safeParse(await request.json())
     if (!parsed.success) return err("Could not save that change", 400)
     return NextResponse.json(await adjustWorkout(auth.userId, id, parsed.data))
-  } catch (e) { console.error("adjust workout:", e); return err((e as Error).message, 400) }
+  } catch (e) { console.error("adjust workout:", e); return NextResponse.json(errorBody(e), { status: 400 }) }
 }
 
 /** Throw it away. Nothing is recorded. */
@@ -35,5 +36,5 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     const { id } = await params
     await discardWorkout(auth.userId, id)
     return NextResponse.json({ discarded: true })
-  } catch (e) { console.error("discard workout:", e); return err((e as Error).message, 400) }
+  } catch (e) { console.error("discard workout:", e); return NextResponse.json(errorBody(e), { status: 400 }) }
 }

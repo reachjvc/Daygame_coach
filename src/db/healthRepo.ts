@@ -14,6 +14,7 @@ import {
   liftBests,
 } from "@/src/health/healthService"
 import { getUserTimezone } from "./settingsRepo"
+import { ProgramRefused } from "@/src/programs/errors"
 import { previousPeriodStart, toZonedDate, toDateISO, isStreakCurrent } from "../shared/dateUtils"
 import type {
   WeightLogRow,
@@ -199,6 +200,23 @@ export function finishedWorkouts<T extends { or: (f: string) => T }>(query: T): 
   return query.or(FINISHED_WORKOUTS_FILTER)
 }
 
+/**
+ * A READ THAT FAILED, IN WORDS A PERSON CAN ACT ON.
+ *
+ * Every workout read here used to end `${error.message}`, and every route hands
+ * a thrown message straight to the browser — so Postgres was talking to the
+ * person, and saying things like "new row violates row-level security policy".
+ * The database's own sentence goes to the log, which is where it helps.
+ *
+ * The weight, sleep and nutrition reads in this file still do the old thing.
+ * They are counted in `RAW_DB_MESSAGES` in `tests/unit/architecture.test.ts`,
+ * which may only go down.
+ */
+function workoutReadFailed(what: string, error: { code?: string; message: string }): Error {
+  console.error(`could not read ${what} (code ${error.code ?? "none"}): ${error.message}`)
+  return new Error(`Could not read ${what}. Reload and try again.`)
+}
+
 
 /**
  * `createWorkoutLog` was here: one insert that wrote a finished workout and
@@ -335,7 +353,7 @@ export async function getWorkoutSets(userId: string, logId: string): Promise<Wor
     .eq("id", logId)
     .eq("user_id", userId)
     .maybeSingle()
-  if (logError) throw new Error(`Failed to get workout: ${logError.message}`)
+  if (logError) throw workoutReadFailed("that workout", logError)
   if (!log) throw new Error("That workout could not be found.")
 
   const rows = await readAllRows<WorkoutSetRow>("workout sets", (from, to) =>
@@ -375,7 +393,7 @@ export async function getWorkoutWeeklyCount(userId: string, timezone: string): P
     .in("session_type", GYM_SESSION_TYPES)
     .gte("logged_at", weekStart)
   )
-  if (error) throw new Error(`Failed to count weekly workouts: ${error.message}`)
+  if (error) throw workoutReadFailed("this week's workouts", error)
   return count ?? 0
 }
 
@@ -389,7 +407,7 @@ export async function getWorkoutCumulativeCount(userId: string): Promise<number>
     // Same list as the weekly count above, for the same reason.
     .in("session_type", GYM_SESSION_TYPES)
   )
-  if (error) throw new Error(`Failed to count total workouts: ${error.message}`)
+  if (error) throw workoutReadFailed("your workout count", error)
   return count ?? 0
 }
 
@@ -420,11 +438,38 @@ export async function deleteWorkoutLog(
 
   const { data: log, error: readError } = await supabase
     .from("workout_logs")
-    .select("enrollment_id")
+    .select("enrollment_id, started_at, ended_at")
     .eq("id", logId)
     .eq("user_id", userId)
     .maybeSingle()
-  if (readError) throw new Error(`Failed to read that workout: ${readError.message}`)
+  if (readError) {
+    console.error(`could not read workout ${logId} before deleting it: ${readError.message}`)
+    throw new Error("Could not read that workout. Reload and try again.")
+  }
+
+  /**
+   * A WORKOUT YOU ARE IN THE MIDDLE OF IS NOT DELETED FROM HERE.
+   *
+   * `discardWorkout` — the Throw away button on the live screen — deliberately
+   * refuses anything that is not still running. This route is History's, and it
+   * had no matching guard at either end: hand it the id of an OPEN workout and
+   * it deleted it, sets and all, while another device was still ticking into
+   * it. That is how the owner came to see, on 2026-09-26,
+   *
+   *     new row violates row-level security policy for table "workout_sets"
+   *
+   * — the parent row had gone between the set write checking it and writing.
+   * Reproduced on demand, 18 times in 40.
+   *
+   * It is a refusal and not a failure: there IS a way to get rid of an open
+   * workout, and the sentence names it.
+   */
+  const open = log && log.started_at !== null && log.ended_at === null
+  if (open) {
+    throw new ProgramRefused(
+      "That workout is still open. Finish it or throw it away from the workout screen."
+    )
+  }
 
   /**
    * A PROGRAM SESSION IS DELETED AND RECALCULATED TOGETHER, OR NOT AT ALL.
@@ -447,7 +492,10 @@ export async function deleteWorkoutLog(
     .delete()
     .eq("id", logId)
     .eq("user_id", userId)
-  if (error) throw new Error(`Failed to delete workout log: ${error.message}`)
+  if (error) {
+    console.error(`could not delete workout ${logId} (code ${error.code ?? "none"}): ${error.message}`)
+    throw new Error("That workout could not be deleted. Nothing was removed.")
+  }
 
   return { recalculated: false }
 }
@@ -527,7 +575,7 @@ export async function getCardioWeeklyCount(userId: string, timezone: string): Pr
     .eq("session_type", "cardio")
     .gte("logged_at", weekStart)
   )
-  if (error) throw new Error(`Failed to count cardio sessions: ${error.message}`)
+  if (error) throw workoutReadFailed("your cardio sessions", error)
   return count ?? 0
 }
 
@@ -942,7 +990,7 @@ export async function getMobilitySessionsWeekly(userId: string, timezone: string
     .eq("session_type", "mobility")
     .gte("logged_at", weekStart)
   )
-  if (error) throw new Error(`Failed to count mobility sessions: ${error.message}`)
+  if (error) throw workoutReadFailed("your mobility sessions", error)
   return count ?? 0
 }
 
@@ -958,7 +1006,7 @@ export async function getYogaSessionsWeekly(userId: string, timezone: string): P
     .eq("session_type", "yoga")
     .gte("logged_at", weekStart)
   )
-  if (error) throw new Error(`Failed to count yoga sessions: ${error.message}`)
+  if (error) throw workoutReadFailed("your yoga sessions", error)
   return count ?? 0
 }
 
@@ -994,7 +1042,7 @@ export async function getRunningSessionsWeekly(userId: string, timezone: string)
     .eq("session_type", "running")
     .gte("logged_at", weekStart)
   )
-  if (error) throw new Error(`Failed to count running sessions: ${error.message}`)
+  if (error) throw workoutReadFailed("your runs", error)
   return count ?? 0
 }
 
@@ -1027,7 +1075,7 @@ export async function getLongestRunKm(userId: string): Promise<number> {
     .order("distance_km", { ascending: false })
     .limit(1)
   )
-  if (error) throw new Error(`Failed to get longest run: ${error.message}`)
+  if (error) throw workoutReadFailed("your longest run", error)
   if (!data || data.length === 0) return 0
   return data[0].distance_km ?? 0
 }
@@ -1148,7 +1196,7 @@ export async function readHistoryMonths(
             .order("id", { ascending: false })
             .limit(1)
         ).maybeSingle()
-    if (answer.error) throw new Error(`Your history could not be read: ${answer.error.message}`)
+    if (answer.error) throw workoutReadFailed("your history", answer.error)
     return (answer.data as { id: string; logged_at: string } | null) ?? null
   }
 

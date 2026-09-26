@@ -251,9 +251,20 @@ describe("finishing a workout", () => {
   test("a finish the program genuinely refuses keeps its own sentence", async () => {
     // The workout is still open afterwards, so this is a real refusal and the
     // person needs the server's own words, not a summary.
+    //
+    // `code: "55000"` WAS MISSING HERE, and the omission mattered. Both of the
+    // finish function's refusals raise `USING ERRCODE = '55000'`
+    // (20260919100000_finish_workout_times_and_kind.sql:73 and :85), so a
+    // codeless refusal is a shape the database never sends — and this test was
+    // therefore passing on a fixture rather than on the behaviour it names. It
+    // went red on 2026-09-26 the moment the repo started telling deliberate
+    // refusals apart from failures, which is the right thing for it to do.
     const { repo } = await repoWith({
       row: open,
-      rpcError: { message: "Your program moved on while this workout was open — reload and finish it again" },
+      rpcError: {
+        message: "Your program moved on while this workout was open — reload and finish it again",
+        code: "55000",
+      },
       closedAfterRpc: false,
     })
     await expect(repo.finishWorkout(USER, WORKOUT, { intensity: 4 })).rejects.toThrow(

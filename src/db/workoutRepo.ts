@@ -32,7 +32,7 @@ import {
   todaysSessionFor,
   updateEnrollmentSchedule,
 } from "./programRepo"
-import { ProgramRefused } from "@/src/programs/errors"
+import { ProgramRefused, WorkoutGone } from "@/src/programs/errors"
 import { inWorkoutOrder, personalBestBaseline } from "./healthRepo"
 import { getUserTimezone } from "./settingsRepo"
 import { toDateISO, toZonedDate } from "@/src/shared/dateUtils"
@@ -400,7 +400,7 @@ export async function getLiveWorkout(userId: string): Promise<LiveWorkout | null
     .is("ended_at", null)
     .not("started_at", "is", null)
     .maybeSingle()
-  if (error) throw new Error(`Could not read the workout: ${error.message}`)
+  if (error) throw readRefused("the workout you have open", error)
   if (!data) return null
   const row = data as LiveRow
   return toLive(row, await unitFor(userId, row.enrollment_id))
@@ -413,6 +413,77 @@ async function requireLive(userId: string, workoutId: string): Promise<LiveWorko
     throw new Error("That workout is not open any more — reload to see where it got to.")
   }
   return live
+}
+
+/**
+ * WHICH OF FOUR A WORKOUT IS IN — asked, never inferred from an error code.
+ *
+ * "Zero rows came back" is not a fact about the workout; it is the shape of
+ * four different facts, and every one of them used to be reported as whichever
+ * one the caller happened to have guessed. The finish function in the database
+ * still says it in its own comment — "Zero rows means somebody (or some retry)
+ * already finished it" — and that is how a workout DELETED on another device
+ * came back to the screen as "That workout has already been finished".
+ *
+ * `unknown` is the fourth and it is the point of the type: a question that
+ * could not be asked is not a "no". It sends the caller to its own sentence
+ * rather than to a claim about a row nobody managed to read.
+ */
+type WorkoutFate = "open" | "finished" | "gone" | "unknown"
+
+async function fateOf(userId: string, workoutId: string): Promise<WorkoutFate> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("workout_logs")
+    .select("ended_at")
+    .eq("id", workoutId)
+    .eq("user_id", userId)
+    .maybeSingle()
+  if (error) return "unknown"
+  if (!data) return "gone"
+  return (data as { ended_at: string | null }).ended_at === null ? "open" : "finished"
+}
+
+/**
+ * A FAILED WRITE, IN WORDS A PERSON CAN ACT ON. The database's own sentence
+ * goes to the server log, which is the only place it helps anyone.
+ *
+ * Every write in this file used to end `throw new Error(\`… ${error.message}\`)`
+ * and every workout route hands a thrown message straight to the browser, so
+ * Postgres was talking to a person standing at a squat rack. See `WorkoutGone`
+ * for the sentence the owner actually saw.
+ *
+ * It ASKS rather than reading the error code, because the code cannot tell the
+ * cases apart: a missing parent row surfaces as a foreign-key violation on the
+ * first attempt and as a row-level-security refusal on the ones after it —
+ * same cause, two codes, and a third if the policy is ever rewritten.
+ */
+/**
+ * The same rule for a READ that failed.
+ *
+ * No `fateOf` here: a read that failed could not ask the database anything, so
+ * asking it a second question would be answering "is it gone?" with the same
+ * broken connection. It says what could not be read and logs the rest.
+ */
+function readRefused(what: string, error: { code?: string; message: string }): Error {
+  console.error(`could not read ${what} (code ${error.code ?? "none"}): ${error.message}`)
+  return new Error(`Could not read ${what}. Reload and try again.`)
+}
+
+async function refuseWrite(
+  userId: string,
+  workoutId: string,
+  error: { code?: string; message: string },
+  /** What to say when the workout is fine and the write itself failed. */
+  fallback: string
+): Promise<never> {
+  console.error(
+    `workout write refused (workout ${workoutId}, code ${error.code ?? "none"}): ${error.message}`
+  )
+  const fate = await fateOf(userId, workoutId)
+  if (fate === "gone") throw new WorkoutGone("discarded")
+  if (fate === "finished") throw new WorkoutGone("finished")
+  throw new Error(fallback)
 }
 
 /**
@@ -480,7 +551,7 @@ export async function completeSet(
   const { error } = existing
     ? await supabase.from("workout_sets").update(row).eq("id", existing.id).eq("log_id", workoutId)
     : await supabase.from("workout_sets").insert({ ...row, log_id: workoutId })
-  if (error) throw new Error(`Could not save that set: ${error.message}`)
+  if (error) await refuseWrite(userId, workoutId, error, "That set could not be saved. Tap it again.")
   return (await getLiveWorkout(userId))!
 }
 
@@ -530,7 +601,7 @@ export async function updateSet(
     .update(row)
     .eq("id", setId)
     .eq("log_id", workoutId)
-  if (error) throw new Error(`Could not change that set: ${error.message}`)
+  if (error) await refuseWrite(userId, workoutId, error, "That set could not be changed.")
   return (await getLiveWorkout(userId))!
 }
 
@@ -552,7 +623,7 @@ export async function deleteSet(
   await requireLive(userId, workoutId)
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("workout_sets").delete().eq("id", setId).eq("log_id", workoutId)
-  if (error) throw new Error(`Could not remove that set: ${error.message}`)
+  if (error) await refuseWrite(userId, workoutId, error, "That set could not be removed.")
   return (await getLiveWorkout(userId))!
 }
 
@@ -580,7 +651,7 @@ export async function adjustWorkout(
     })
     .eq("id", workoutId)
     .eq("user_id", userId)
-  if (error) throw new Error(`Could not save that change: ${error.message}`)
+  if (error) await refuseWrite(userId, workoutId, error, "That change could not be saved.")
   return (await getLiveWorkout(userId))!
 }
 
@@ -611,7 +682,7 @@ export async function summaryFor(userId: string, workoutId: string): Promise<Wor
     .eq("user_id", userId)
     .not("ended_at", "is", null)
     .maybeSingle()
-  if (error) throw new Error(`Could not read that workout: ${error.message}`)
+  if (error) throw readRefused("that workout", error)
   if (!data) return null
   const row = data as {
     id: string
@@ -750,7 +821,7 @@ export async function finishWorkout(
     .eq("id", workoutId)
     .eq("user_id", userId)
     .maybeSingle()
-  if (rowError) throw new Error(`Could not read that workout: ${rowError.message}`)
+  if (rowError) throw readRefused("that workout", rowError)
   if (!row) throw new Error("That workout no longer exists.")
   if ((row as { ended_at: string | null }).ended_at) {
     return await requireSummary(userId, workoutId)
@@ -987,7 +1058,30 @@ export async function finishWorkout(
      */
     const closed = await summaryFor(userId, workoutId)
     if (closed) return closed
-    throw new Error(error.message)
+    /**
+     * A REFUSAL THE PERSON CAN ACT ON KEEPS ITS OWN WORDS.
+     *
+     * 55000 is how every program-write function in the database says no on
+     * purpose — here, "Your program moved on while this was being recalculated
+     * — reload and try again". That sentence was written to be read, and the
+     * first version of the block below swallowed it into a generic one. Caught
+     * by `workoutRepoFinish.test.ts`, which exists for exactly this.
+     */
+    if ((error as { code?: string }).code === "55000") throw new ProgramRefused(error.message)
+    /**
+     * AND WHEN THERE IS NO SUMMARY, ASK WHY — because the database's guess is
+     * wrong in exactly the case that matters.
+     *
+     * `finish_program_workout` locks the row with
+     * `WHERE id = … AND started_at IS NOT NULL AND ended_at IS NULL` and, on
+     * zero rows, raises "That workout has already been finished". Its own
+     * comment says "Zero rows means somebody (or some retry) already finished
+     * it" — which is an assumption, and a workout DELETED on another device
+     * satisfies that WHERE clause just as emptily. The training suite hit it on
+     * 2026-09-26: a seeded workout vanished mid-flight and the run reported a
+     * finish that had never happened as one that had happened twice.
+     */
+    await refuseWrite(userId, workoutId, error, "That workout could not be finished.")
   }
 
   /**
@@ -1071,7 +1165,7 @@ export async function discardWorkout(userId: string, workoutId: string): Promise
   await requireLive(userId, workoutId)
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("workout_logs").delete().eq("id", workoutId).eq("user_id", userId)
-  if (error) throw new Error(`Could not discard the workout: ${error.message}`)
+  if (error) await refuseWrite(userId, workoutId, error, "That workout could not be thrown away.")
 }
 
 // ---------------------------------------------------------------------------
@@ -1184,7 +1278,7 @@ export async function lastSetsForLifts(
     // "last time" does not change between two reads of the same data.
     .order("id")
     .limit(100)
-  if (error) throw new Error(`Your past sets could not be read: ${error.message}`)
+  if (error) throw readRefused("your past sets", error)
 
   const workouts = ((data ?? []) as WorkoutLogSetsRow[]).map((log) => ({
     at: log.logged_at,
@@ -1320,7 +1414,7 @@ export async function reviseWorkout(
     .eq("id", workoutId)
     .eq("user_id", userId)
     .maybeSingle()
-  if (error) throw new Error(`Could not read that workout: ${error.message}`)
+  if (error) throw readRefused("that workout", error)
   if (!log) throw new Error("That workout no longer exists.")
   if (log.started_at && !log.ended_at) {
     throw new Error("That workout is still open — finish it before correcting it.")
@@ -1390,9 +1484,9 @@ export async function reviseWorkout(
     // 55000 is how every program-write function says no on purpose — here, a
     // program that moved on while the correction was being computed. The person
     // can act on that, so it keeps its own sentence and its own status.
-    throw written.code === "55000"
-      ? new ProgramRefused(written.message)
-      : new Error(`Those sets could not be saved, so the workout was left as it was: ${written.message}`)
+    if (written.code === "55000") throw new ProgramRefused(written.message)
+    console.error(`revise workout ${workoutId} failed (code ${written.code}): ${written.message}`)
+    throw new Error("Those sets could not be saved, so the workout was left as it was.")
   }
 
   return { recalculated: log.enrollment_id != null }

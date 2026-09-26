@@ -330,9 +330,21 @@ export function LiveWorkoutScreen({
   }
 
   if (!workout) {
+    /**
+     * TWO WAYS TO HAVE NO WORKOUT, AND THEY ARE NOT THE SAME NEWS.
+     *
+     * "Finished" is what this said in both cases. It is right after a finish
+     * and wrong after the workout was thrown away on another device — which
+     * tells somebody their session was saved when it was deleted, and is the
+     * one thing this screen must never get backwards.
+     */
     return (
       <div className={`${TRAINING_COLUMN} py-10 text-center`}>
-        <p className="text-sm text-muted-foreground">This workout is finished.</p>
+        <p className="text-sm text-muted-foreground">
+          {live.vanished
+            ? (live.error ?? "This workout is no longer open.")
+            : "This workout is finished."}
+        </p>
         <Button asChild className="mt-3">
           <Link href="/programs">Back to training</Link>
         </Button>

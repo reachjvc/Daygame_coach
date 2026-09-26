@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { deleteSet, updateSet } from "@/src/db/workoutRepo"
 import { UpdateSetSchema } from "@/src/programs/schemas"
+import { errorBody } from "@/src/programs/errors"
 
 /** Did three, not four. */
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string; setId: string }> }) {
@@ -12,7 +13,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json(await deleteSet(auth.userId, id, setId))
   } catch (e) {
     console.error("delete set:", e)
-    return NextResponse.json({ error: (e as Error).message }, { status: 400 })
+    return NextResponse.json(errorBody(e), { status: 400 })
   }
 }
 
@@ -39,6 +40,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json(await updateSet(auth.userId, id, setId, parsed.data))
   } catch (e) {
     console.error("update set:", e)
-    return NextResponse.json({ error: (e as Error).message }, { status: 400 })
+    return NextResponse.json(errorBody(e), { status: 400 })
   }
 }

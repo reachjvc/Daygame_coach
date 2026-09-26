@@ -124,9 +124,13 @@ describe("lastSetsForLifts", () => {
 
   test("throws when the read fails, rather than answering 'never done'", async () => {
     const { repo } = await readWith(null, { message: "connection lost" })
-    await expect(
-      repo.lastSetsForLifts(USER, [{ key: "squat", name: "Squat" }], "kg")
-    ).rejects.toThrow(/could not be read/i)
+    const thrown = await repo
+      .lastSetsForLifts(USER, [{ key: "squat", name: "Squat" }], "kg")
+      .catch((e: Error) => e)
+    expect((thrown as Error).message).toMatch(/could not read your past sets/i)
+    // And in the app's words, not the database's: a thrown message is handed to
+    // the browser verbatim by every workout route.
+    expect((thrown as Error).message).not.toMatch(/connection lost/)
   })
 
   test("asks for finished workouts only, newest first, with a tie-break and a bound", async () => {

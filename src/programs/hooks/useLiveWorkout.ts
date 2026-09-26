@@ -169,6 +169,19 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
   const inFlight = useRef(0)
   const [saving, setSaving] = useState(0)
   /**
+   * The workout stopped existing while this screen was showing it.
+   *
+   * Two devices and one account is ordinary — discard it on the laptop, and the
+   * phone in your hand is holding a workout that is not there. The phone used
+   * to find out one set at a time, printing the database's own complaint
+   * against each tick, and if it ever did clear the screen it said "This
+   * workout is finished", which is a different thing and not true.
+   *
+   * Separate from `workout === null` because null is also what a NORMAL finish
+   * leaves behind, and those two states owe the person different sentences.
+   */
+  const [vanished, setVanished] = useState(false)
+  /**
    * A COUNTER SO A SLOW ANSWER CANNOT UNDO A FAST ONE.
    *
    * Every response replaced the whole workout unconditionally. Tick set 1, tick
@@ -183,6 +196,33 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     inFlight.current = Math.max(0, inFlight.current + delta)
     setSaving(inFlight.current)
   }, [])
+
+  /**
+   * THE SERVER SAYS THIS WORKOUT NO LONGER EXISTS. Take it off the screen once,
+   * rather than letting every later tick discover it again.
+   *
+   * The queue goes with it, and only the part of the queue that belonged to
+   * this workout: a set whose workout is gone has nowhere to land, so leaving
+   * it waiting for signal would keep Finish disabled for ever on a workout that
+   * cannot be finished. The rest clock goes too — a countdown over a workout
+   * that does not exist is a control with nothing behind it.
+   */
+  const workoutVanished = useCallback((workoutId: string, message: string) => {
+    setVanished(true)
+    setError(message)
+    setWorkout(null)
+    const left = readQueue().filter((q) => q.workoutId !== workoutId)
+    writeQueue(left)
+    setQueue(left)
+    writeRest(null)
+    setRestState(null)
+  }, [])
+
+  /**
+   * Is this refusal "the workout is gone"? The routes send `code`, because
+   * matching on the sentence would break the moment the sentence is reworded.
+   */
+  const goneFrom = (body: { code?: string } | null): boolean => body?.code === "workout_gone"
 
   useEffect(() => {
     setQueue(readQueue())
@@ -237,6 +277,16 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
           // A 4xx will never succeed on a retry, so it is dropped and said out
           // loud rather than jamming the queue for ever.
           if (res.status >= 400 && res.status < 500) {
+            /**
+             * A QUEUE FLUSHED INTO A WORKOUT THAT IS GONE. Every item would be
+             * refused for the same reason, so the loop stops and says it once
+             * instead of naming each lift in turn.
+             */
+            const body = (await res.json().catch(() => null)) as { error?: string; code?: string } | null
+            if (goneFrom(body)) {
+              workoutVanished(item.workoutId, body?.error ?? "This workout is no longer open.")
+              return
+            }
             left.shift()
             sent.add(slotOf(item))
             // AND TAKE IT OFF THE SCREEN. It used to stay green and ticked, so
@@ -351,7 +401,17 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
            * optimistic ✓ comes off NOW and the reason is named, rather than the
            * set sitting green and "waiting for signal" until the queue drops it.
            */
-          const body = (await res.json().catch(() => null)) as { error?: string } | null
+          const body = (await res.json().catch(() => null)) as { error?: string; code?: string } | null
+          /**
+           * THE WHOLE WORKOUT IS GONE, NOT JUST THIS SET. Saying "that Squat set
+           * could not be saved" would be true and useless: every remaining tick
+           * would say the same thing, and the screen would keep offering a
+           * workout that cannot take another set.
+           */
+          if (goneFrom(body)) {
+            workoutVanished(item.workoutId, body?.error ?? "This workout is no longer open.")
+            return "refused"
+          }
           setWorkout((prev) =>
             prev ? { ...prev, sets: prev.sets.filter((x) => slotOf(x) !== slotOf(item)) } : prev
           )
@@ -401,8 +461,16 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
       const seq = ++issued.current
       try {
         const res = await fetch(`/api/workouts/${workout.id}/sets/${setId}`, { method: "DELETE" })
-        if (res.ok) applyServer(seq, (await res.json()) as LiveWorkout)
-        else setError("That set could not be removed.")
+        if (res.ok) {
+          applyServer(seq, (await res.json()) as LiveWorkout)
+          return
+        }
+        const body = (await res.json().catch(() => null)) as { error?: string; code?: string } | null
+        if (goneFrom(body)) {
+          workoutVanished(workout.id, body?.error ?? "This workout is no longer open.")
+          return
+        }
+        setError("That set could not be removed.")
       } catch {
         setError("Could not reach the server, so that set is still saved.")
       }
@@ -449,7 +517,11 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
           return
         }
         // The server's own sentence: it names the set that is in the way.
-        const body = (await res.json().catch(() => null)) as { error?: string } | null
+        const body = (await res.json().catch(() => null)) as { error?: string; code?: string } | null
+        if (goneFrom(body)) {
+          workoutVanished(workout.id, body?.error ?? "This workout is no longer open.")
+          return
+        }
         setError(body?.error ?? "That set could not be changed.")
       } catch {
         setError("Could not reach the server, so that set is unchanged.")
@@ -479,8 +551,16 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(patch),
         })
-        if (res.ok) applyServer(seq, (await res.json()) as LiveWorkout)
-        else setError("That change could not be saved.")
+        if (res.ok) {
+          applyServer(seq, (await res.json()) as LiveWorkout)
+          return
+        }
+        const body = (await res.json().catch(() => null)) as { error?: string; code?: string } | null
+        if (goneFrom(body)) {
+          workoutVanished(workout.id, body?.error ?? "This workout is no longer open.")
+          return
+        }
+        setError("That change could not be saved.")
       } catch {
         setError("Could not reach the server, so that change was not saved.")
       }
@@ -707,6 +787,11 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     /** Sets whose write is on the wire right now. Finishing waits for these. */
     saving,
     error,
+    /**
+     * The workout was thrown away or finished somewhere else while this screen
+     * had it open. The screen owes a different sentence than a normal finish.
+     */
+    vanished,
     busy,
     tick,
     removeSet,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { completeSet } from "@/src/db/workoutRepo"
 import { CompleteSetSchema } from "@/src/programs/schemas"
+import { errorBody } from "@/src/programs/errors"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -24,5 +25,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return err(parsed.error.issues[0]?.message ?? "Could not save that set", 400)
     }
     return NextResponse.json(await completeSet(auth.userId, id, parsed.data))
-  } catch (e) { console.error("complete set:", e); return err((e as Error).message, 400) }
+  } catch (e) {
+    console.error("complete set:", e)
+    // The body carries `code` so the screen can stop showing a workout that no
+    // longer exists, rather than only printing a sentence about it.
+    return NextResponse.json(errorBody(e), { status: 400 })
+  }
 }
