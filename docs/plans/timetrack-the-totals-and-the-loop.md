@@ -799,8 +799,34 @@ can read and overwrite every user's rows. That is fine for a product with one
 user and no payments — it is not fine the moment there is a second person's time
 in there, and the platform move is when it breaks anyway.
 
+**And the coverage claim around it is false — corrected twice before it was
+right.** My first version of this section said "no test asserts that a restore
+reproduces an export". A peer corrected it: there *is* a test
+(`tests/unit/db/timetrackBackup.test.ts`). Reading both files settles it, and
+the truth is worse than either sentence:
+
+- The test is real and worth having, but it executes **`assertRestorable`
+  only** — the validator that decides whether a file is safe to restore.
+  `exportTimetrack` and `restoreTimetrack` are imported **nowhere but the two
+  scripts**; no test anywhere runs either half.
+- `timetrackBackupRepo.ts:10-12` states: *"there is a test that runs the whole
+  round trip against a real Postgres."* **There is not.** A comment that claims
+  coverage it does not have is worse than no comment, because it stops the next
+  person looking — it stopped two of us today, in opposite directions.
+- The test's own header is honest and says the round trip was *"proved by hand
+  (the procedure is in `docs/runbooks/timetrack.md`, and it was run)"*. **That
+  runbook does not exist.** It went in `ecee9a13`, "Delete 482 stale documents,
+  and stop CLAUDE.md pointing at specs that no longer exist" — the commit that
+  removed dangling references left this one, pointing at itself.
+
+So: the restore half has never been executed by an automated test, it was proved
+by hand once, and the written procedure for reproducing that proof was deleted.
+One claim of coverage is false and the other is dangling, nine lines apart in
+the same slice.
+
 **Not in scope for these fixes, and deliberately not renamed as a milestone
-here.** It belongs to whoever owns the move. Recorded because this plan is the
-timetrack slice's, and "the backup works" is a claim this slice cannot currently
-make: it has never been run on a schedule, and no test asserts that a restore
-reproduces what was exported.
+here** — the platform move owns it. What belongs in *this* slice's plan is the
+smallest honest correction: **delete the false sentence from
+`timetrackBackupRepo.ts:10-12`**, and let the test header's own wording stand,
+with the dead runbook link removed or the runbook restored from `ecee9a13`.
+Five minutes, and it stops the comment lying to the next person.
