@@ -17,7 +17,11 @@
 import { describe, it, expect } from "vitest"
 import * as fs from "fs"
 import * as path from "path"
-import { LIFE_MASTERY, QUIT_VICE } from "../../../src/shared/lifeMasteryRoutes"
+import {
+  LIFE_MASTERY,
+  QUIT_VICE,
+  SUPERSEDED_LIFE_MASTERY_PATHS,
+} from "../../../src/shared/lifeMasteryRoutes"
 import { QUIT_VICE_ARCHIVE, viceArchiveStep } from "../../../app/test/archive/quit-vice/routes"
 
 const root = path.resolve(__dirname, "../../..")
@@ -49,6 +53,29 @@ function code(src: string): string {
   return src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")
 }
 
+/**
+ * DOES THIS FILE WRITE THIS EXACT PATH AS A LINK?
+ *
+ * One matcher for both rules below, and the boundary is the whole point. A bare
+ * prefix check reported `app/test/page.tsx` for linking `/test/life-mastery-v1`
+ * when the path being looked for was `/test/life-mastery` — a real, separate
+ * page (`app/test/life-mastery-v1/page.tsx`), and a false accusation that would
+ * have taught the next person to distrust this file. `/life-mastery` sits one
+ * rename away from the same collision with `/life-mastery-v1`.
+ *
+ * So a hit must END where the path ends: at the closing quote, or at a `/`, `?`
+ * or `#` that starts a segment, query or fragment BELOW it, which is a link to
+ * the same page and equally wrong to write by hand.
+ *
+ * Every quote, not just the double one — a path inside a template literal is
+ * exactly how a link carrying a query gets written, and checking only `"` walks
+ * straight past it.
+ */
+function writesPath(src: string, target: string): boolean {
+  const escaped = target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  return new RegExp(`["'\`]${escaped}(?=["'\`?#/]|\\$\\{)`).test(src)
+}
+
 describe("Life Mastery's address", () => {
   it("is not written out by hand anywhere in the product", () => {
     // The route folder under app/ is the one legitimate copy: the framework
@@ -57,10 +84,7 @@ describe("Life Mastery's address", () => {
     const offenders = productFiles()
       .filter((f) => !f.startsWith(routeFolder))
       .filter((f) => f !== path.join(root, "src/shared/lifeMasteryRoutes.ts"))
-      // Every quote, not just the double one. A path written inside a template
-      // literal is the exact shape a link that carries a query gets written in,
-      // and a check for the double quote alone would walk straight past it.
-      .filter((f) => new RegExp(`["'\`]${LIFE_MASTERY}`).test(code(fs.readFileSync(f, "utf-8"))))
+      .filter((f) => writesPath(code(fs.readFileSync(f, "utf-8")), LIFE_MASTERY))
       .map((f) => path.relative(root, f))
 
     expect(
@@ -178,5 +202,47 @@ describe("Life Mastery's address", () => {
     const shim = fs.readFileSync(path.join(root, "app/dashboard/goals/plan/page.tsx"), "utf-8")
     expect(shim).toMatch(/redirect\(/)
     expect(shim).toMatch(/LIFE_MASTERY/)
+  })
+
+  /**
+   * AND NOBODY LINKS TO THE OLD ADDRESS ON PURPOSE.
+   *
+   * The first test in this file forbids hand-writing the CURRENT path. That is
+   * half the rule, and on 2026-09-26 the missing half cost a real regression:
+   * merging `main` restored `<Link href="/dashboard/goals/plan">` in
+   * `src/inner-game/components/GoalsTab.tsx`. `main` carries no
+   * `app/life-mastery/` at all, so it had hardcoded the old address in order to
+   * build, and the merge brought that back as a clean auto-merge — no conflict
+   * to look at, and all 6,103 unit tests green, because every guard here greps
+   * for the literal `LIFE_MASTERY` and this is a different string.
+   *
+   * The redirect means it still works, which is exactly why nothing caught it.
+   * A test that only fires when the screen breaks is not the guard; it becomes
+   * a dead link the day the redirect is retired, and the compiler will not say
+   * a word about it then either.
+   */
+  it("is not reached through an address it has already left", () => {
+    // The route folder that IS the old path owns it — the framework reads that
+    // one off the filesystem — and so does the list itself.
+    const owners = SUPERSEDED_LIFE_MASTERY_PATHS.map((p) => path.join(root, "app", p.slice(1)))
+    const offenders: string[] = []
+
+    for (const file of productFiles()) {
+      if (owners.some((dir) => file.startsWith(dir))) continue
+      if (file === path.join(root, "src/shared/lifeMasteryRoutes.ts")) continue
+      const src = code(fs.readFileSync(file, "utf-8"))
+      for (const stale of SUPERSEDED_LIFE_MASTERY_PATHS) {
+        if (writesPath(src, stale)) {
+          offenders.push(`${path.relative(root, file)} -> ${stale}`)
+        }
+      }
+    }
+
+    expect(
+      offenders,
+      `These link to an address Life Mastery has already left. It still answers,\n` +
+        `as a redirect kept for old bookmarks, so nothing looks broken — import\n` +
+        `LIFE_MASTERY from src/shared/lifeMasteryRoutes instead:\n${offenders.join("\n")}`
+    ).toEqual([])
   })
 })

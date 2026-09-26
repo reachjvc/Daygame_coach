@@ -64,3 +64,30 @@ export const QUIT_VICE = `${LIFE_MASTERY}/quit-vice`
  * meaning: a name that still resolves but no longer means what it says is worse
  * than no name, because nothing breaks at the compiler.
  */
+
+/**
+ * THE ADDRESSES LIFE MASTERY HAS ALREADY LEFT.
+ *
+ * Writing the CURRENT path by hand is caught by
+ * `tests/unit/navigation/lifeMasteryRoutes.test.ts`. Writing a SUPERSEDED one
+ * was not, and on 2026-09-26 that gap let a real regression in: merging `main`
+ * brought back `<Link href="/dashboard/goals/plan">` in
+ * `src/inner-game/components/GoalsTab.tsx`, because `main` has no
+ * `app/life-mastery/` and had to hardcode the old address to build at all. The
+ * whole unit suite stayed green — 6,103 tests — because the guard only ever
+ * grepped for the literal `LIFE_MASTERY`, and the old address is a different
+ * string.
+ *
+ * It is the same mistake wearing a different path, and it fails the same way:
+ * the next move leaves a link nobody greps for. `/dashboard/goals/plan` still
+ * answers, as a redirect kept deliberately for old bookmarks, so a hardcoded
+ * link to it costs a needless extra hop today and becomes a dead link the day
+ * the redirect goes — and nothing breaks at the compiler either way.
+ *
+ * Add to this list whenever Life Mastery moves again. The redirect page itself
+ * is exempt by living under the route folder that IS that path.
+ */
+export const SUPERSEDED_LIFE_MASTERY_PATHS = [
+  "/dashboard/goals/plan",
+  "/test/life-mastery",
+] as const
