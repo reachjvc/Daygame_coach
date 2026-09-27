@@ -443,13 +443,32 @@ export function stopTimer(
   const running = runningEntry(state)
   if (!running) return { state, stopped: null }
 
-  const stoppedEntry: TimeEntry = {
-    ...running,
+  /**
+   * STOPPING MEANS NOTHING IS RUNNING AFTERWARDS.
+   *
+   * This used to stop exactly one — `runningEntry` returns the first match in
+   * array order — so when two were running, one press stopped one of them and
+   * the button still said Stop. Two can appear whenever two devices each start
+   * one; `reconcileRunningEntries` only tidies that up on a pull, and in
+   * between, the button lied about what it would do.
+   *
+   * The one the caller is told about is still the one the screen was showing,
+   * because that is the entry a toast or an undo is about.
+   */
+  const stopOne = (entry: TimeEntry): TimeEntry => ({
+    ...entry,
     stop: nowIso,
-    duration: Math.max(0, epochSeconds(nowIso) - epochSeconds(running.start)),
+    duration: Math.max(0, epochSeconds(nowIso) - epochSeconds(entry.start)),
     at: nowIso,
+  })
+
+  const stoppedEntry = stopOne(running)
+  let next = {
+    ...state,
+    entries: state.entries.map((entry) =>
+      isRunning(entry) && !entry.serverDeletedAt ? (entry.id === running.id ? stoppedEntry : stopOne(entry)) : entry,
+    ),
   }
-  let next = { ...state, entries: replaceById(state.entries, running.id, stoppedEntry) }
   next = queueWebhook(next, "time_entry.updated", stoppedEntry, nowIso)
   return { state: next, stopped: stoppedEntry }
 }

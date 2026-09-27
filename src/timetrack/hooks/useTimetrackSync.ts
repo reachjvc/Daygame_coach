@@ -174,6 +174,21 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
    * to get wrong.
    */
   const localWrites = useRef(new Map<string, number>())
+  /**
+   * Which pull is the current one.
+   *
+   * Nothing stopped two from being in flight at once — the tab-focus handler,
+   * the sixty-second interval and coming back online can all ask, and a slow
+   * answer outlives the next request. Two answers then applied in arrival
+   * order, so the one computed FIRST could land LAST and put back what the
+   * second had just replaced. Reproduced with two overlapping pulls: another
+   * device's change was reverted by an answer written before it existed.
+   *
+   * A later request's answer is at least as fresh as an earlier one's, because
+   * the cursor only moves when an answer is applied. So the newest request
+   * wins and older answers are dropped unread.
+   */
+  const pullSeq = useRef(0)
 
   latestState.current = state
 
@@ -566,6 +581,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     // Everything this device writes from here on beats whatever comes back:
     // the answer was decided before those writes existed.
     const askedAt = Date.now()
+    const mine = ++pullSeq.current
     try {
       const response = await fetch(`/api/timetrack/sync?since=${encodeURIComponent(cursor.current)}`)
       if (response.status === 401) {
@@ -574,7 +590,13 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       }
       if (!response.ok) return
       const body = (await response.json()) as { rows: TimetrackRows; cursor: string }
-      cursor.current = body.cursor
+      // A newer request has gone out while this one was in the air. Its answer
+      // covers everything this one would have said, and applying this one
+      // afterwards would undo it.
+      if (mine !== pullSeq.current) return
+      // and the cursor only ever moves forward, so a late answer cannot rewind
+      // what the next request will ask for
+      if (!cursor.current || body.cursor > cursor.current) cursor.current = body.cursor
       if (countRows(body.rows) === 0) return
 
       const dirty = keysIn(pending.current)

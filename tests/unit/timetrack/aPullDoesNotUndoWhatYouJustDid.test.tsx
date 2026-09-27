@@ -54,6 +54,29 @@ interface Server {
   pullAsked: () => boolean
 }
 
+/** A server whose pulls are answered by hand, in whatever order the test wants. */
+function stubSlowPulls(adoptionRows: unknown, answers: unknown[]) {
+  const gates: Array<() => void> = []
+  let asked = 0
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string, init?: { method?: string }) => {
+      if (init?.method === "POST") return { ok: true, status: 200, json: async () => ({}) }
+      if (String(url).includes("since=")) {
+        const mine = asked++
+        await new Promise<void>((resolve) => gates.push(resolve))
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ rows: answers[Math.min(mine, answers.length - 1)], cursor: `2026-08-10T12:00:0${mine}.000Z` }),
+        }
+      }
+      return { ok: true, status: 200, json: async () => ({ rows: adoptionRows, cursor: NOW_ISO, empty: false, userId: USER }) }
+    }),
+  )
+  return { answer: (i: number) => gates[i]?.(), asked: () => asked }
+}
+
 function stubServer(adoptionRows: unknown, staleRows: unknown): Server {
   let release: (() => void) | null = null
   let asked = false
@@ -176,5 +199,60 @@ describe("a pull that brings nothing new", () => {
     })
 
     expect(replaced, "the workspace was redrawn for rows it already had").not.toHaveBeenCalled()
+  })
+})
+
+describe("two pulls in flight at once", () => {
+  test("the older answer does not overwrite the newer one", async () => {
+    /**
+     * `pull` had no guard against being asked twice over — and the tab-focus
+     * handler, the sixty-second interval and coming back online can all ask.
+     * Two answers then applied in whatever order they arrived, so the one
+     * computed FIRST could land LAST and undo what the second one carried.
+     * Same family as the stale answer above, one device further out: this is
+     * another device's change being reverted rather than your own.
+     */
+    const held = baseState({ entries: [entry(1, "2026-08-09", "09:00", "10:00", { description: "as it was" })] })
+    const older = stateToRows(held, USER)
+    const newer = stateToRows(
+      baseState({ entries: [entry(1, "2026-08-09", "09:00", "10:00", { description: "changed on the other device" })] }),
+      USER,
+    )
+    // pull 1 will answer with the OLD text, pull 2 with the NEW text
+    const server = stubSlowPulls(older, [older, newer])
+
+    let latest: TimetrackState = held
+    render(<Harness initial={held} onState={(s) => (latest = s)} />)
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50))
+    })
+
+    // two pulls go out before either answers
+    await act(async () => {
+      document.dispatchEvent(new Event("visibilitychange"))
+      await new Promise((r) => setTimeout(r, 10))
+      document.dispatchEvent(new Event("visibilitychange"))
+      await new Promise((r) => setTimeout(r, 10))
+    })
+    expect(server.asked(), "only one pull went out, so this test proves nothing").toBeGreaterThan(1)
+
+    // The NEWER one answers first and is allowed to COMMIT — separate `act`
+    // blocks on purpose, because inside one block React batches both answers
+    // into a single render and the second one compares against a state that
+    // has not happened yet. That batching is a property of the test harness,
+    // not of a browser, and it hid this bug on the first attempt.
+    await act(async () => {
+      server.answer(1)
+      await new Promise((r) => setTimeout(r, 150))
+    })
+    await act(async () => {
+      server.answer(0)
+      await new Promise((r) => setTimeout(r, 250))
+    })
+
+    expect(
+      latest.entries[0].description,
+      "an answer computed earlier overwrote a later one",
+    ).toBe("changed on the other device")
   })
 })

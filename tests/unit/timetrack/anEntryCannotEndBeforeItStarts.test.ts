@@ -35,6 +35,7 @@ import {
   isRunning,
   setRunningElapsed,
   startTimer,
+  stopTimer,
   undoDisplacement,
   updateEntry,
   validateEntry,
@@ -198,5 +199,38 @@ describe("the client's rule and the database's rule are the same rule", () => {
     expect(sql).toContain(
       "constraint timetrack_entries_stop_after_start check (stopped_at is null or stopped_at >= started_at)",
     )
+  })
+})
+
+describe("stopping means nothing is running afterwards", () => {
+  test("one press stops every running entry, not just the first one found", () => {
+    /**
+     * `stopTimer` stopped exactly one — `runningEntry` returns the first match
+     * in array order. Two running entries can appear when two devices each
+     * start one, and `reconcileRunningEntries` only tidies that on a pull. In
+     * between, pressing Stop stopped one of them and the bar still said Stop,
+     * which is "I had to press Stop twice" from the other direction.
+     */
+    const state = baseState({
+      entries: [
+        { ...entry(1, "2026-08-10", "09:00", "10:00", { description: "started on the laptop" }), stop: null, duration: -1 },
+        { ...entry(2, "2026-08-10", "09:30", "10:00", { description: "started on the phone" }), stop: null, duration: -2 },
+      ],
+    })
+    expect(state.entries.filter(isRunning)).toHaveLength(2)
+
+    const result = stopTimer(state, NOW_ISO)
+
+    expect(result.state.entries.filter(isRunning), "a timer was still running after Stop").toHaveLength(0)
+    expect(result.stopped, "the caller was told nothing was stopped").not.toBeNull()
+  })
+
+  test("stopping when nothing runs changes nothing and says so", () => {
+    const state = baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00")] })
+
+    const result = stopTimer(state, NOW_ISO)
+
+    expect(result.stopped).toBeNull()
+    expect(result.state).toBe(state)
   })
 })

@@ -351,4 +351,48 @@ test.describe('time is kept on the server, not just in one browser', () => {
     })
     expect(arrived, 'the queue never drained after the network came back').toBe(true)
   })
+
+  /**
+   * PRESSING STOP ONCE IS ENOUGH.
+   *
+   * The owner pressed Stop and had to press it again. A pull asks what changed
+   * since a cursor; the server answers with the rows as it read them; the merge
+   * took the server's version of anything not still queued, comparing nothing.
+   * So the answer to a question asked before the press put the running row
+   * back — and the same in reverse, a start that un-started.
+   *
+   * The unit tests next door pin the merge rule. This pins the gesture, on the
+   * route the owner actually uses, because that is where it was found.
+   */
+  test('a timer stopped once stays stopped, even if a pull was already in flight', async ({ page }) => {
+    await page.goto('/dashboard/time', { waitUntil: 'domcontentloaded' })
+    await page.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 30000 })
+    await page.waitForTimeout(2500)
+
+    const isRunning = () =>
+      page.evaluate(() => {
+        const raw = window.localStorage.getItem('toggl-clone:v1')
+        if (!raw) return false
+        const state = JSON.parse(raw) as { entries: { stop: string | null; duration: number; deletedAt?: string | null }[] }
+        return state.entries.some((e) => (e.stop === null || e.duration < 0) && !e.deletedAt)
+      })
+
+    await page.getByPlaceholder('What are you working on?').fill('stopped exactly once')
+    await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
+    await page.locator('main').getByRole('button', { name: 'Stop timer' }).waitFor({ timeout: 15000 })
+    await page.waitForTimeout(800)
+
+    // a pull goes out, and the press happens while its answer is still coming
+    await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+    await page.waitForTimeout(120)
+    await page.locator('main').getByRole('button', { name: 'Stop timer' }).click()
+
+    await page.waitForTimeout(400)
+    expect(await isRunning(), 'the press did not stop the timer at all').toBe(false)
+
+    // long enough for an answer computed before the press to land
+    await page.waitForTimeout(3000)
+    expect(await isRunning(), 'the timer came back after being stopped — press twice again').toBe(false)
+    await expect(page.locator('main').getByRole('button', { name: 'Start timer' })).toBeVisible()
+  })
 })
