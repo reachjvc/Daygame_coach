@@ -135,26 +135,42 @@ describe("the stale-read guard on a workout that held no sets", () => {
   }
 
   test("an empty read is still a read, and a set added elsewhere refuses it", async () => {
-    const fake = fakeSupabase(finished)
-    // One set now exists, where the editor loaded none.
+    /**
+     * THE FAKE HAS TO BE ABLE TO SUCCEED, or the red proves nothing.
+     *
+     * The first version of this left `update` off the client. With the bug put
+     * back by `scripts/prove-guard.sh` the guard was skipped, the write ran,
+     * and the test went red on "supabase.from(...).update is not a function" —
+     * red for a hole in the fake rather than for a write that should never
+     * have happened. A guard proved by an incidental crash is not proved.
+     *
+     * So the write path here works end to end. With the guard gone the call
+     * RESOLVES and the rejection assertion is what fails, which is the claim.
+     */
+    const rpcCalls: string[] = []
+    /** One set exists now, where the editor loaded none. */
     const rows = [{ id: "s1" }]
+    const chainFor = (name: string) => {
+      const chain: Record<string, unknown> = {
+        select: () => chain,
+        update: () => chain,
+        eq: () => chain,
+        order: () => chain,
+        range: () => chain,
+        maybeSingle: () =>
+          Promise.resolve({ data: name === "workout_logs" ? finished : null, error: null }),
+        single: () =>
+          Promise.resolve({ data: name === "workout_logs" ? finished : null, error: null }),
+        then: (done: (v: unknown) => unknown) =>
+          Promise.resolve({ data: name === "workout_sets" ? rows : [], error: null }).then(done),
+      }
+      return chain
+    }
     const client = {
-      ...fake.client,
-      from: (name: string) => {
-        const chain: Record<string, unknown> = {
-          select: () => chain,
-          eq: () => chain,
-          order: () => chain,
-          range: () => chain,
-          maybeSingle: () =>
-            Promise.resolve({ data: name === "workout_logs" ? finished : null, error: null }),
-          then: (done: (v: unknown) => unknown) =>
-            Promise.resolve({
-              data: name === "workout_sets" ? rows : [],
-              error: null,
-            }).then(done),
-        }
-        return chain
+      from: chainFor,
+      rpc: (n: string) => {
+        rpcCalls.push(n)
+        return Promise.resolve({ data: null, error: null })
       },
     }
     vi.doMock("@/src/db/supabase", () => ({ createServerSupabaseClient: async () => client }))
@@ -166,5 +182,6 @@ describe("the stale-read guard on a workout that held no sets", () => {
     await expect(repo.reviseWorkout(USER, WORKOUT, [aSet], [])).rejects.toThrow(
       /changed on another device/i
     )
+    expect(rpcCalls, "and the sets were not replaced on the way to the refusal").toEqual([])
   })
 })
