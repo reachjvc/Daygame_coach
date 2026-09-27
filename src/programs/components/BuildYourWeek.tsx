@@ -221,8 +221,17 @@ export function BuildYourWeek({ enrollments, draftId = null, onStarted }: Props)
 
     setBusy(false)
     if (!out.ok) {
-      setNaming(null)
-      setFailure(out.error)
+      /**
+       * THE DIALOG STAYS, AND SO DOES THE NAME.
+       *
+       * It called `setNaming(null)` first and reported the refusal at page
+       * level BEHIND itself — so "You already have a week saved under that
+       * name" arrived with the dialog shut and the name gone, and you had to
+       * reopen it and retype a name you could no longer see. The refusal is
+       * about the thing you just typed, and the dialog already has a slot for
+       * exactly that (`naming.problem`, used for the empty-name case).
+       */
+      setNaming({ ...naming, problem: out.error })
       return
     }
     setNaming(null)

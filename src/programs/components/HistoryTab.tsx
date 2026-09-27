@@ -21,7 +21,7 @@
  * total a lie — "September: 4 sessions" with the fifth on the next page.
  */
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import Link from "next/link"
 import { AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -64,6 +64,31 @@ interface HistoryPage {
 const liftsIn = (months: HistoryMonth[]): string[] =>
   [...new Set(months.flatMap((m) => m.logs.flatMap((l) => (l.sets ?? []).map((s) => s.exercise))))].sort()
 
+/**
+ * THE FILTER'S OPTIONS ARE REMEMBERED, because filtering removes them.
+ *
+ * `liftsIn` reads the months that are LOADED, and once a lift is chosen the
+ * server has already filtered those months to that lift — so the list went
+ * from "All lifts, Bench Press, Deadlift, Pull-up, Squat" to "All lifts,
+ * Squat" the moment Squat was picked. Comparing one lift with another meant
+ * going back to All lifts, waiting for a refetch, and picking again; the
+ * control's own list of your lifts vanished while you were using it.
+ *
+ * Kept in a ref rather than state: it is a union that only grows, and it must
+ * not cause a render of its own.
+ */
+/**
+ * A plain function taking the ref, NOT a hook: the one place that needs it sits
+ * below an early return (the "the filter has changed but the data has not
+ * arrived" skeleton), and a hook there changes the hook order between renders.
+ * React says so out loud — "Rendered more hooks than during the previous
+ * render" — and three history tests went red on it.
+ */
+function rememberedLifts(seen: Set<string>, loaded: string[]): string[] {
+  for (const lift of loaded) seen.add(lift)
+  return [...seen].sort()
+}
+
 export function HistoryTab({
   unit,
   enrollments = [],
@@ -81,6 +106,8 @@ export function HistoryTab({
   const [older, setOlder] = useState<HistoryMonth[]>([])
   const [olderBefore, setOlderBefore] = useState<string | null | undefined>(undefined)
   const [loadingMore, setLoadingMore] = useState(false)
+  /** Every lift this tab has ever seen, so filtering cannot shorten the list. */
+  const liftsEverSeen = useRef<Set<string>>(new Set())
   const [moreFailed, setMoreFailed] = useState(false)
 
   /**
@@ -141,7 +168,7 @@ export function HistoryTab({
   // `undefined` means nothing has been paged yet, so the first page's answer
   // stands; `null` means the server has looked and there is nothing older.
   const nextBefore = olderBefore === undefined ? loaded.data.nextBefore : olderBefore
-  const lifts = liftsIn(months)
+  const lifts = rememberedLifts(liftsEverSeen.current, liftsIn(months))
 
   async function loadOlder() {
     if (!nextBefore) return
