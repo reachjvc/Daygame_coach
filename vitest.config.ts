@@ -21,6 +21,17 @@ export default defineConfig({
    */
   root: path.resolve(__dirname),
   test: {
+    /**
+     * A PINNED ZONE, BECAUSE SOME OF THESE TESTS ARE ABOUT CLOCKS.
+     *
+     * The calendar's day totals are built from local midnights, and one test
+     * covers the 25-hour day at the end of European summer time. With no `TZ`
+     * the suite inherits the machine's: it passes here, where the owner is, and
+     * in a UTC CI that date becomes an ordinary 24-hour day, so the test still
+     * passes while testing nothing at all. Pinned to the zone the product is
+     * used in, so the assertion means the same thing everywhere.
+     */
+    env: { TZ: 'Europe/Copenhagen' },
     environment: 'jsdom',
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
     // tests/manual/** talks to the REAL project database and creates and deletes

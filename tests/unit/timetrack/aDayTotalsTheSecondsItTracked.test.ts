@@ -95,10 +95,21 @@ describe("a day totals what was tracked in it", () => {
 
   test("the day the clocks change is still a real day", () => {
     /**
-     * Europe/Copenhagen, which is what this runner is on: 2026-10-25 has
-     * twenty-five hours. Anything built on `start + 86400` gets this wrong;
-     * local midnights do not.
+     * 2026-10-25 has twenty-five hours in Europe/Copenhagen, the zone
+     * `vitest.config.ts` pins. Anything built on `start + 86400` gets that
+     * wrong; local midnights do not.
+     *
+     * The premise is checked first, because a pin that failed to apply would
+     * leave this passing in a zone with no clock change — testing nothing,
+     * silently, which is exactly how it would rot.
      */
+    const midnight = new Date(2026, 9, 25).getTime()
+    const nextMidnight = new Date(2026, 9, 26).getTime()
+    expect(
+      (nextMidnight - midnight) / 3600_000,
+      "this zone has no clock change on 2026-10-25, so this test asserts nothing — is TZ pinned?",
+    ).toBe(25)
+
     const acrossTheChange = at("2026-10-25", "02:00", 2 * 3600, "dst")
 
     expect(dayColumnSeconds([acrossTheChange], "2026-10-25", NOW_SEC)).toBe(entrySeconds(acrossTheChange, NOW_SEC))
@@ -151,5 +162,31 @@ describe("dragging a block moves it without rewriting how long it was", () => {
     const running: TimeEntry = { ...at(DAY, "09:00", 0, "r"), stop: null, duration: -1 }
 
     expect(shiftEntryBy(running, 10).stop).toBeNull()
+  })
+})
+
+describe("a row with no stop but a stored length", () => {
+  test("is not counted once per day it touches", () => {
+    /**
+     * `isRunning` is true for a null stop OR a negative duration, so a row with
+     * no stop and a POSITIVE stored duration counts as running. The clamp that
+     * handled it used to sit inside the per-day slice and compared against the
+     * entry's whole length, so a row spanning two days was clamped to the total
+     * on each of them: an hour became two. No live code produces this shape —
+     * the mapper writes a negative duration whenever `stopped_at` is null — but
+     * a pulled row from another client could, and the arithmetic should not
+     * depend on that.
+     */
+    const malformed: TimeEntry = {
+      ...at("2026-08-10", "23:30", 3600, "no-stop"),
+      stop: null,
+      duration: 3600,
+    }
+    const nowSec = Math.floor(new Date(2026, 7, 11, 12, 0, 0).getTime() / 1000)
+
+    const first = dayColumnSeconds([malformed], "2026-08-10", nowSec)
+    const second = dayColumnSeconds([malformed], "2026-08-11", nowSec)
+
+    expect(first + second, "the hour was counted on both days").toBe(3600)
   })
 })

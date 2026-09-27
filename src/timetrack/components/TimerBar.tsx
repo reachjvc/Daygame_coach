@@ -172,8 +172,11 @@ export function TimerBar({
       return
     }
     let stopIso = stop
-    if (new Date(stopIso).getTime() <= new Date(start).getTime()) {
-      // Treat an end before the start as crossing midnight
+    if (new Date(stopIso).getTime() < new Date(start).getTime()) {
+      // An end BEFORE the start means the entry crossed midnight. An end EQUAL
+      // to the start is a zero-length entry, which this app makes by other
+      // routes and which the save rules allow — turning it into twenty-four
+      // hours because of a `<=` was a silent, enormous edit.
       const shifted = new Date(stopIso)
       shifted.setDate(shifted.getDate() + 1)
       stopIso = shifted.toISOString()

@@ -19,6 +19,7 @@ import {
   roundSeconds,
   toLocalInputValue,
   weekStartOf,
+  plural,
 } from "@/src/timetrack/timetrackFormatService"
 
 describe("duration formatting", () => {
@@ -209,5 +210,18 @@ describe("compact date ranges", () => {
 
   test("a single day is not written twice", () => {
     expect(formatRangeShort("2026-08-24", "2026-08-24")).toBe("24 Aug")
+  })
+})
+
+describe("plural", () => {
+  test("one is singular and everything else is not", () => {
+    expect(plural(1, "project")).toBe("1 project")
+    expect(plural(0, "project")).toBe("0 projects")
+    expect(plural(2, "project")).toBe("2 projects")
+  })
+
+  test("takes an irregular plural when adding an s is wrong", () => {
+    expect(plural(1, "entry", "entries")).toBe("1 entry")
+    expect(plural(7, "entry", "entries")).toBe("7 entries")
   })
 })

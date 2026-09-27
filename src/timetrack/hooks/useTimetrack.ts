@@ -391,7 +391,20 @@ export function useTimetrack() {
        * untrue — the worst shape a message can have, because the one thing the
        * user now believes is the thing that did not occur.
        */
-      const trimmed = updateEntry(state, entry.id, { stop: prompt.idleSinceIso }, nowIso)
+      /**
+       * Never trim to before the entry began.
+       *
+       * `idleSinceIso` is the last real interaction, and an entry can start
+       * AFTER that: Pomodoro's auto-continue begins one with nobody touching
+       * anything. The trim was then refused — correctly, an entry cannot end
+       * before it starts — but the prompt had already been dismissed, so
+       * nothing was trimmed, the timer kept running, and there was no way back
+       * to the question. Clamping gives a zero-length entry, which the rule
+       * allows on purpose.
+       */
+      const trimTo =
+        epochSeconds(prompt.idleSinceIso) < epochSeconds(entry.start) ? entry.start : prompt.idleSinceIso
+      const trimmed = updateEntry(state, entry.id, { stop: trimTo }, nowIso)
       if (trimmed.violations.length > 0) {
         pushToast(trimmed.violations[0].message, "error")
         return

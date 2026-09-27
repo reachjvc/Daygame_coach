@@ -440,8 +440,20 @@ export function stopTimer(
   state: TimetrackState,
   nowIso: IsoDateTime,
 ): { state: TimetrackState; stopped: TimeEntry | null } {
-  const running = runningEntry(state)
+  /**
+   * TWO TIMERS ARE AN INCONSISTENCY, NOT TWO PIECES OF WORK.
+   *
+   * Stopping them both at `now` counted the overlap twice: timers started at
+   * 09:00 and 09:30 and stopped at 12:00 totalled five and a half hours for
+   * three hours of clock. `reconcileRunningEntries` already states the rule for
+   * this exact situation — the older one ends where the newer one began, the
+   * moment attention moved — so apply it first and then stop the one that is
+   * left.
+   */
+  const reconciled = reconcileRunningEntries(state)
+  const running = runningEntry(reconciled.state)
   if (!running) return { state, stopped: null }
+  state = reconciled.state
 
   /**
    * STOPPING MEANS NOTHING IS RUNNING AFTERWARDS.
@@ -455,12 +467,23 @@ export function stopTimer(
    * The one the caller is told about is still the one the screen was showing,
    * because that is the entry a toast or an undo is about.
    */
-  const stopOne = (entry: TimeEntry): TimeEntry => ({
-    ...entry,
-    stop: nowIso,
-    duration: Math.max(0, epochSeconds(nowIso) - epochSeconds(entry.start)),
-    at: nowIso,
-  })
+  /**
+   * Never before it started. `stopTimer` writes a time without going through
+   * `validateEntry`, and a running entry's start stays editable — a future
+   * start is not a violation while there is no stop — so pressing Stop used to
+   * store `start 15:00 / stop 12:00`, the exact row the database refuses and
+   * the upload queue jams on. Clamping gives a zero-length entry, which the
+   * rule allows on purpose.
+   */
+  const stopOne = (entry: TimeEntry): TimeEntry => {
+    const stop = epochSeconds(nowIso) < epochSeconds(entry.start) ? entry.start : nowIso
+    return {
+      ...entry,
+      stop,
+      duration: Math.max(0, epochSeconds(stop) - epochSeconds(entry.start)),
+      at: nowIso,
+    }
+  }
 
   const stoppedEntry = stopOne(running)
   let next = {

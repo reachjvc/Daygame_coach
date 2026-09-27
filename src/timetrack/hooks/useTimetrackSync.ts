@@ -730,11 +730,33 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         held !== null &&
         diffRows(stateToRows(held, userId.current), stateToRows(settled.state, userId.current), new Date().toISOString())
           .count === 0
-      if (nothingNew && settled.stopped.length === 0) return
+
+      /**
+       * THE BASELINE IS THE ROUND TRIP, NOT WHAT THE SERVER SENT.
+       *
+       * Adoption is careful about this and says why: a row as the server stores
+       * it carries columns the mapper never emits — `created_at` on the tag
+       * links, `running_device_id` on an entry — so keeping the server's shape
+       * as "what we believe the server has" makes every one of those read as a
+       * local change on the very next tick. The effects were real: every tag
+       * link in the account re-uploaded about once a minute, another device's
+       * running timer rewritten to this device and back for as long as it ran,
+       * and orphaned project-rate history tombstoned by a diff that could not
+       * see it.
+       *
+       * `pull` was setting the raw rows. It now does what adoption does: hand
+       * the state over and let the change-watcher establish the baseline from
+       * the state it actually adopted.
+       */
+      if (nothingNew && settled.stopped.length === 0) {
+        serverRows.current = stateToRows(settled.state, userId.current)
+        return
+      }
 
       if (settled.stopped.length > 0) {
         pushToast("Another device had a timer running too. The older one was stopped where this one started.")
       }
+      awaitingState.current = settled.state
       replaceState(settled.state)
     } catch {
       // a failed pull is not worth interrupting anyone: the next one will run
@@ -872,6 +894,21 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   }, [state, savePending, flush, pushToast])
 
   const declineImport = useCallback(() => {
+    /**
+     * "LEFT ALONE" HAS TO MEAN LEFT ALONE.
+     *
+     * Declining only cleared the offer. The baseline stayed `null`, which
+     * `diffRows` reads as "the server has nothing, so everything is new" — so
+     * the very next edit queued and uploaded the entire workspace, which is
+     * precisely what the person had just declined. It also left `safeToSend`'s
+     * mass-delete guard with nothing to compare against.
+     *
+     * Treating what is here as the baseline keeps the promise: this copy stays
+     * put, and only what changes from now on goes up.
+     */
+    if (latestState.current && userId.current) {
+      serverRows.current = stateToRows(latestState.current, userId.current)
+    }
     setImportOffer(null)
     pushToast("Left alone. This browser's time stays here until you ask again.")
   }, [pushToast])

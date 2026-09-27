@@ -316,3 +316,87 @@ describe("a pull issued AFTER the press but answered after the upload", () => {
     ).toBe(false)
   })
 })
+
+describe("what a pull leaves behind as the baseline", () => {
+  test("does not make the next edit re-upload rows the server already has", async () => {
+    /**
+     * A row as the server stores it carries columns the mapper never emits —
+     * `created_at` on the tag links, `running_device_id` on an entry. Keeping
+     * the server's shape as "what we believe the server has" makes every one
+     * of those read as a local change on the very next tick, so an ordinary
+     * edit dragged the whole tag-link table up with it, about once a minute,
+     * for ever. Adoption already round-trips its baseline and says why; the
+     * pull did not.
+     */
+    // the entry carries a TAG, or there are no links for this test to be about
+    const held = baseState({
+      entries: [entry(1, "2026-08-09", "09:00", "10:00", { description: "as it was", tagIds: ["50"] })],
+    })
+    const fromServer = stateToRows(
+      baseState({
+        entries: [entry(1, "2026-08-09", "09:00", "10:00", { description: "changed elsewhere", tagIds: ["50"] })],
+      }),
+      USER,
+    ) as unknown as Record<string, Record<string, unknown>[]>
+    expect(fromServer.timetrack_entry_tags.length, "the fixture has no tag links, so this would assert nothing").toBeGreaterThan(0)
+    // the shape a real row has and the mapper does not produce
+    fromServer.timetrack_entries = fromServer.timetrack_entries.map((row) => ({
+      ...row,
+      running_device_id: "some-other-device",
+      created_at: "2026-08-01T00:00:00.000Z",
+    }))
+    fromServer.timetrack_entry_tags = fromServer.timetrack_entry_tags.map((row) => ({
+      ...row,
+      created_at: "2026-08-01T00:00:00.000Z",
+    }))
+
+    const posted: string[][] = []
+    let release: (() => void) | null = null
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init?: { method?: string; body?: string }) => {
+        if (init?.method === "POST") {
+          const body = JSON.parse(init.body ?? "{}") as { rows?: Record<string, unknown[]> }
+          posted.push(Object.keys(body.rows ?? {}))
+          return { ok: true, status: 200, json: async () => ({}) }
+        }
+        if (String(url).includes("since=")) {
+          await new Promise<void>((resolve) => (release = resolve))
+          return { ok: true, status: 200, json: async () => ({ rows: fromServer, cursor: NOW_ISO }) }
+        }
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ rows: stateToRows(held, USER), cursor: NOW_ISO, empty: false, userId: USER }),
+        }
+      }),
+    )
+
+    const view = render(<Harness initial={held} onState={() => {}} />)
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 60))
+    })
+
+    await act(async () => {
+      document.dispatchEvent(new Event("visibilitychange"))
+      await new Promise((r) => setTimeout(r, 20))
+    })
+    await act(async () => {
+      release?.()
+      await new Promise((r) => setTimeout(r, 300))
+    })
+
+    // one small, unrelated edit
+    posted.length = 0
+    await act(async () => {
+      view.getByTestId("stop").click()
+      await new Promise((r) => setTimeout(r, 1500))
+    })
+
+    const tablesSent = posted.flat()
+    expect(
+      tablesSent.includes("timetrack_entry_tags"),
+      `an edit dragged the whole tag-link table with it: ${JSON.stringify(posted)}`,
+    ).toBe(false)
+  })
+})

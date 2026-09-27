@@ -576,15 +576,20 @@ export function snapMinutes(minutes: number, snap = CALENDAR_SNAP_MINUTES): numb
  * correctly; `start + 86400` would not.
  */
 export function entryDaySeconds(entry: TimeEntry, day: IsoDate, nowSec: number): number {
+  /**
+   * The entry's effective end, worked out ONCE rather than clamped per day.
+   *
+   * The clamp used to sit inside the per-day slice: `Math.min(visible,
+   * entrySeconds(...))`, which is the entry's WHOLE length, so a row spanning
+   * two days could have each day clamped to the total and be counted twice.
+   * Deriving the end from the elapsed time instead is correct for every shape,
+   * including the one the old clamp existed for — no stop, but a stored
+   * duration, which `isRunning` still calls running.
+   */
+  const end = entry.stop ? epochSeconds(entry.stop) : epochSeconds(entry.start) + entrySeconds(entry, nowSec)
   const from = Math.max(epochSeconds(startOfDayIso(day)), epochSeconds(entry.start))
-  const to = Math.min(
-    epochSeconds(startOfDayIso(addDays(day, 1))),
-    entry.stop ? epochSeconds(entry.stop) : nowSec,
-  )
-  const visible = Math.max(0, to - from)
-  // `isRunning` is true for a null stop OR a negative duration, so a row with
-  // no stop but a stored duration must not be counted from start to now.
-  return isRunning(entry) ? Math.min(visible, entrySeconds(entry, nowSec)) : visible
+  const to = Math.min(epochSeconds(startOfDayIso(addDays(day, 1))), end)
+  return Math.max(0, to - from)
 }
 
 /** Total tracked seconds shown in a calendar day column. */

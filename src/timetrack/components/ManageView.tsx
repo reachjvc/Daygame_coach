@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { AUDIT_BUCKETS } from "../config"
 import { IconAdd, IconArchive, IconDelete } from "../icons"
-import { addDays, dateKey, formatDate, formatDuration, weekStartOf } from "../timetrackFormatService"
+import { addDays, dateKey, formatDate, formatDuration, plural, weekStartOf } from "../timetrackFormatService"
 import {
   approvalFor,
   auditMembers,
@@ -491,7 +491,7 @@ function TeamPanel({
                 <li key={group.id} className="flex items-center justify-between py-2 text-sm">
                   <span>{group.name}</span>
                   <span className="text-xs text-muted-foreground">
-                    {state.members.filter((m) => m.groupIds.includes(group.id)).length} members
+                    {plural(state.members.filter((m) => m.groupIds.includes(group.id)).length, "member")}
                   </span>
                   <ConfirmButton size="icon-sm" onConfirm={() => setState((current) => deleteGroup(current, group.id))}>
                     <IconDelete className="size-4" />

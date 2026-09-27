@@ -57,6 +57,7 @@ import {
   formatDuration,
   formatMoney,
   formatTimeOfDay,
+  plural,
 } from "../timetrackFormatService"
 import type {
   GroupingDimension,
@@ -888,7 +889,7 @@ function DetailedTab({
           </li>
         ))}
         <li className="rounded-lg border border-border bg-secondary/30 px-3 py-2 text-sm font-medium">
-          {rows.length} entries · {formatDuration(totalSeconds, state.user.durationFormat)} ·{" "}
+          {plural(rows.length, "entry", "entries")} · {formatDuration(totalSeconds, state.user.durationFormat)} ·{" "}
           {formatMoney(totalAmount, currency)}
         </li>
       </ul>
@@ -946,7 +947,7 @@ function DetailedTab({
         <tfoot className="border-t border-border bg-secondary/30 font-medium">
           <tr>
             <td className="px-3 py-2" colSpan={6}>
-              {rows.length} entries
+              {plural(rows.length, "entry", "entries")}
             </td>
             <td className="px-3 py-2 text-right tabular-nums">{formatDuration(totalSeconds, state.user.durationFormat)}</td>
             <td className="px-3 py-2 text-right tabular-nums">{formatMoney(totalAmount, currency)}</td>

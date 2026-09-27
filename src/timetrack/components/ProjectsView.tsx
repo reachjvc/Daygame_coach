@@ -23,6 +23,7 @@ import {
   formatDuration,
   formatMoney,
   parseDurationInput,
+  plural,
 } from "../timetrackFormatService"
 import {
   createProject,
@@ -236,7 +237,7 @@ export function ProjectsView({
                       {project.billable && project.rate != null ? formatMoney(project.rate, project.currency) : "—"}
                     </td>
                     <td className="px-3 py-2 text-xs text-muted-foreground">
-                      {project.isPrivate ? "Private" : "Workspace"} · {project.memberIds.length} member
+                      {project.isPrivate ? "Private" : "Workspace"} · {plural(project.memberIds.length, "member")}
                       {project.memberIds.length === 1 ? "" : "s"}
                     </td>
                     <td className="px-3 py-2">

@@ -981,7 +981,7 @@ export function IntegrationsPanel({
             {state.webhooks.map((hook) => (
               <li key={hook.id} className="flex items-center gap-2 py-2 text-sm">
                 <code className="flex-1 truncate text-xs">{hook.url}</code>
-                <span className="text-xs text-muted-foreground">{hook.events.length} events</span>
+                <span className="text-xs text-muted-foreground">{plural(hook.events.length, "event")}</span>
                 <ConfirmButton size="icon-sm" onConfirm={() => setState((current) => deleteWebhook(current, hook.id))}>
                   <IconDelete className="size-4" />
                 </ConfirmButton>

@@ -226,6 +226,60 @@ describe("stopping means nothing is running afterwards", () => {
     expect(result.stopped, "the caller was told nothing was stopped").not.toBeNull()
   })
 
+  test("two overlapping timers are not both counted to the end", () => {
+    /**
+     * The first version stopped every running entry at `now`, so timers started
+     * at 09:00 and 09:30 and stopped at 12:00 totalled 3h + 2.5h = 5.5h for
+     * three hours of clock. `reconcileRunningEntries` states the rule for this
+     * exact situation one screen away — the older one ends where the newer one
+     * began, "the moment attention moved" — so one press should reconcile and
+     * then stop the survivor, not double-count the overlap.
+     */
+    const state = baseState({
+      entries: [
+        { ...entry(1, "2026-08-10", "09:00", "10:00", { description: "laptop" }), stop: null, duration: -1 },
+        { ...entry(2, "2026-08-10", "09:30", "10:00", { description: "phone" }), stop: null, duration: -2 },
+      ],
+    })
+    const stopAt = entry(3, "2026-08-10", "12:00", "12:00").start
+
+    const result = stopTimer(state, stopAt)
+
+    expect(result.state.entries.filter(isRunning)).toHaveLength(0)
+    const total = result.state.entries.reduce((sum, e) => sum + e.duration, 0)
+    expect(total, "the overlap was counted twice").toBe(3 * 3600)
+  })
+
+  test("a timer whose start was moved into the future still stops cleanly", () => {
+    /**
+     * `stopTimer` writes a time and does not go through `validateEntry`, and a
+     * running entry's START stays editable (only its End is disabled while it
+     * runs) — and a future start is not a violation while `stop` is null. So:
+     * start a timer, set its start three hours ahead, press Stop, and the old
+     * code stored `start 15:00 / stop 12:00 · 0:00` — the very row the database
+     * refuses and the queue jams on.
+     *
+     * Clamping to the start gives a zero-length entry, which this rule allows
+     * on purpose and which the app already creates by other routes.
+     */
+    const started = startTimer(
+      baseState(),
+      { description: "future start", projectId: null, taskId: null, tagIds: [], billable: false },
+      NOW_ISO,
+    )
+    const threeHoursOn = new Date(new Date(NOW_ISO).getTime() + 3 * 3600_000).toISOString()
+    const moved = updateEntry(started.state, started.entry.id, { start: threeHoursOn }, NOW_ISO)
+    expect(moved.violations, "moving a running entry's start ahead is not itself refused").toEqual([])
+
+    const result = stopTimer(moved.state, NOW_ISO)
+
+    const stopped = result.state.entries.find((e) => e.id === started.entry.id)!
+    expect(new Date(stopped.stop!).getTime(), "stopped before it started").toBeGreaterThanOrEqual(
+      new Date(stopped.start).getTime(),
+    )
+    expect(stopped.duration).toBe(0)
+  })
+
   test("stopping when nothing runs changes nothing and says so", () => {
     const state = baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00")] })
 
