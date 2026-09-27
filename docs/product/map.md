@@ -253,8 +253,8 @@ the truthful record of what exists.
 - **Branch `training-rebuild`**, well ahead of main — a set-by-set rebuild of
   the gym.
 - **Leaving Vercel and Supabase for Hetzner** — decided 2026-09-17, provider
-  settled 2026-09-27 on the friend's recommendation and not reopened. Read the
-  DECISION section of `docs/plans/own-platform-and-app.md` and the memory note
+  settled 2026-09-27 on the friend's recommendation and not reopened. Read D1 in
+  `docs/plans/own-platform-and-app.md`'s DECISIONS table and the memory note
   before any hosting, database or auth work.
 - **Life Mastery persistence** — the plan and the day half are both on the
   account as of 2026-09-23, and the dashboard tells the truth as of 2026-09-24

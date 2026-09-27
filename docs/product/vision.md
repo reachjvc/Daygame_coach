@@ -105,8 +105,8 @@ Rules for this file:
     recommended it. That reason is sufficient on its own and the choice is not
     reopened.** It replaces the earlier "a managed platform" wording here and in
     the memory note: Hetzner sells servers, so backups, TLS, patching and the
-    deploy pipeline are ours. The owning document is the DECISION section of
-    `docs/plans/own-platform-and-app.md`; sequence, what survives and what is
+    deploy pipeline are ours. The owning document is `docs/plans/own-platform-and-app.md` —
+    its DECISIONS table, row D1; sequence, what survives and what is
     rewritten are in the memory note `leave-vercel-supabase-decision`. Do not
     re-litigate any of it.
 37. The friend also asked for CI/CD. The CI half exists (item 43). The CD half —

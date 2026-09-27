@@ -7,7 +7,7 @@ attacked by an adversarial pass on 2026-09-17, and the attack's findings are fol
 **Superseded on the provider question, 2026-09-27: it is Hetzner**, because the programmer
 friend recommended it, and that is not reopened. Ignore the candidate list below (Railway,
 Fly, Render, "keep Vercel with Postgres elsewhere") and Q3 — both are dead. The live plan is
-`docs/plans/own-platform-and-app.md`; its DECISION section owns this.
+`docs/plans/own-platform-and-app.md`; D1 in its DECISIONS table owns this.
 
 **What this plan is for.** The owner assesses the product at 5–15% built and wants the
 foundation that the remaining 85–95% can stand on. Time and effort are not constraints; the
