@@ -1,6 +1,7 @@
 import { requireAuth } from "@/src/db/auth"
 import { getWorkoutLogsWithSets } from "@/src/db/healthRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
+import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import { workoutsToCsv } from "@/src/health/healthService"
 
 /**
@@ -19,7 +20,17 @@ export async function GET() {
       getWorkoutLogsWithSets(auth.userId, "all"),
       getUserTimezone(auth.userId),
     ])
-    const today = new Date().toISOString().slice(0, 10)
+    /**
+     * DATED IN THE ACCOUNT'S CALENDAR, like every row inside the file.
+     *
+     * This was `new Date().toISOString().slice(0, 10)` — the server's clock,
+     * which is UTC — while `workoutsToCsv` dates the rows in `timezone`. So a
+     * Copenhagen lifter exporting at 00:30 got `training-2026-09-27.csv` with
+     * the 28th inside it. The same shape as `toISOString().split("T")[0]`,
+     * which this codebase has a guard for; the guard knew one spelling and
+     * never looked in `app/`.
+     */
+    const today = getTodayInTimezone(timezone)
     return new Response(workoutsToCsv(logs, timezone), {
       headers: {
         "Content-Type": "text/csv;charset=utf-8",

@@ -85,6 +85,8 @@ import { clampCursorDay, effectiveProgram, scheduleDays, scheduleDaysOrNone } fr
  */
 import { toKg, fromKg, MAX_WEIGHT_KG } from "@/src/shared/weight"
 import {
+  dateKeyLabel,
+  daysBetweenDateKeys,
   getTodayInTimezone,
   isoWeekdayInTimezone,
   periodStartInTimezone,
@@ -252,6 +254,54 @@ export function weekSoFar(
  */
 export function weekdayNameIn(iso: string, timezone: string): string {
   return WEEKDAY_SHORT[isoWeekdayInTimezone(timezone, new Date(iso))]
+}
+
+/**
+ * THE HEADING ON A WORKOUT SOMEBODY HAS COME BACK TO.
+ *
+ * "Tue's workout", for every workout ever finished. The receipt page is
+ * reached two ways — from the card saying you trained today, and from History,
+ * which lists everything there has ever been — and it named a day without
+ * saying which one, so a session from March and one from last week read
+ * identically. The delete dialog further down the same page already said
+ * "Delete the workout from Tue, Aug 24?", so the page disagreed with itself.
+ *
+ * `today` IS A PARAMETER, and that is the rule rather than a preference: a day
+ * taken from the running process's clock is UTC on the server, which is what
+ * `architecture.test.ts` bans by shape. A Copenhagen lifter's 00:30 Tuesday
+ * session would otherwise be headed "Yesterday's workout" by the very function
+ * written to name the day.
+ *
+ * Inside a week a weekday names one day and no other. At seven days it names
+ * today as well, which is where it stops being an answer.
+ */
+export function receiptHeading(
+  /** The day the workout started, in the account's calendar. */
+  startedOn: string | null,
+  /** Today, in the same calendar. */
+  today: string
+): string {
+  // A session written up after the fact has no start. Naming a day for it
+  // would be inventing one.
+  if (!startedOn) return "That workout"
+  const ago = daysBetweenDateKeys(startedOn, today)
+  if (ago === 0) return "Today's workout"
+  if (ago === 1) return "Yesterday's workout"
+  if (ago > 1 && ago < 7) return `${dateKeyLabel(startedOn, { weekday: "long" })}'s workout`
+  /**
+   * The year only when it is not this one — it is noise on every recent row,
+   * and a bare "Sun, Aug 24" repeats every year without it. `ago` is NEGATIVE
+   * for a date ahead of today (two devices whose clocks disagree, or a session
+   * written up with tomorrow's date) and lands here, which is the honest
+   * answer: a date, not "Yesterday".
+   */
+  const thisYear = startedOn.slice(0, 4) === today.slice(0, 4)
+  return `Workout on ${dateKeyLabel(startedOn, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    ...(thisYear ? {} : { year: "numeric" }),
+  })}`
 }
 
 /**

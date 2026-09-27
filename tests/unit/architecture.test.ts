@@ -471,23 +471,74 @@ describe('Architecture Compliance', () => {
      * could go red for it — it sat there waiting for the next caller to forget.
      * No allowlist: there is no correct use of it.
      */
-    test('no day is taken from the server clock', () => {
-      const offenders: string[] = []
-      for (const file of sourceFiles()) {
+    /**
+     * THREE SPELLINGS, AND IT KNEW ONE. `toDateISO(new Date())` was the only
+     * shape checked, so `new Date().toISOString().slice(0, 10)` — the same
+     * thing, one call lower down — went unseen. And `sourceFiles()` is `src`
+     * only, while the route test two blocks below scans `['src', 'app',
+     * 'components']`: the CSV export, which had the bug and already held the
+     * account's timezone, sat in `app/` where no date guard has ever looked.
+     */
+    const TODAY_FROM_A_CLOCK = [
+      /toDateISO\(\s*new Date\(\s*\)\s*\)/,
+      /new Date\(\s*\)\.toISOString\(\)\.slice\(\s*0,\s*10\s*\)/,
+      /new Date\(\s*\)\.toISOString\(\)\.split\("T"\)\[0\]/,
+      /new Date\(\s*\)\.toISOString\(\)\.substring\(\s*0,\s*10\s*\)/,
+    ]
+
+    /**
+     * Sites still taking today from a clock and converting it through UTC.
+     * All three are BROWSER clocks, which is the milder half of the fault —
+     * `new Date()` there is the person's own time and only `toISOString()`
+     * shifts it — and all three belong to other slices. They may SHRINK.
+     */
+    const CLOCK_DAY_ALLOWED = new Set([
+      'src/exercising/exercisingService.ts',
+      'src/goals/components/change-your-life/RepLadder.tsx',
+      'src/timetrack/components/SettingsView.tsx',
+    ])
+
+    /** Every file a date rule applies to: the same three roots as the routes. */
+    function datedFiles(): string[] {
+      return ['src', 'app', 'components'].flatMap((root) =>
+        getAllFiles(path.join(projectRoot, root), /\.tsx?$/).filter((f) => !f.endsWith('.d.ts'))
+      )
+    }
+
+    /** One scan, so the enforcement and the only-shrinks half cannot disagree. */
+    function takingTodayFromAClock(): Set<string> {
+      const found = new Set<string>()
+      for (const file of datedFiles()) {
         const rel = path.relative(projectRoot, file).replace(/\\/g, '/')
         if (rel === 'src/shared/dateUtils.ts') continue // documents the pattern
         const src = fs
           .readFileSync(file, 'utf-8')
           .replace(/\/\*[\s\S]*?\*\//g, '')
           .replace(/\/\/[^\n]*/g, '')
-        if (/toDateISO\(\s*new Date\(\s*\)\s*\)/.test(src)) offenders.push(rel)
+        if (TODAY_FROM_A_CLOCK.some((shape) => shape.test(src))) found.add(rel)
       }
+      return found
+    }
+
+    test('no day is taken from the server clock', () => {
+      const offenders = [...takingTodayFromAClock()].filter((f) => !CLOCK_DAY_ALLOWED.has(f)).sort()
       expect(
         offenders,
-        'toDateISO(new Date()) is the SERVER\'s calendar day, which is UTC. Take the\n' +
-          'account\'s timezone (getUserTimezone) and use toDateISO(toZonedDate(d, tz)),\n' +
-          'or take the day as a parameter:\n' +
+        'Taking today from the running process\'s clock and converting it through\n' +
+          'UTC. On the server that clock IS UTC; in a browser toISOString() shifts\n' +
+          'the person\'s own evening into tomorrow. Take the account\'s timezone\n' +
+          '(getUserTimezone) and use getTodayInTimezone(tz), or take the day as a\n' +
+          'parameter:\n' +
           offenders.join('\n'),
+      ).toEqual([])
+    })
+
+    test('the clock-day allowlist only shrinks', () => {
+      const stillOffending = takingTodayFromAClock()
+      const cleaned = [...CLOCK_DAY_ALLOWED].filter((f) => !stillOffending.has(f)).sort()
+      expect(
+        cleaned,
+        `These are fixed or gone — remove them from CLOCK_DAY_ALLOWED:\n${cleaned.join('\n')}`,
       ).toEqual([])
     })
 

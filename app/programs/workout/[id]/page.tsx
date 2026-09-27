@@ -18,6 +18,8 @@ import { requireAuth } from "@/src/db/auth"
 import { summaryFor } from "@/src/db/workoutRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { WorkoutReceipt } from "@/src/programs/components/WorkoutReceipt"
+import { receiptHeading } from "@/src/programs/programsService"
+import { getTodayInTimezone, toDateISO, toZonedDate } from "@/src/shared/dateUtils"
 import { WorkoutActions } from "@/src/programs/components/WorkoutActions"
 
 export default async function WorkoutReceiptPage({ params }: { params: Promise<{ id: string }> }) {
@@ -38,6 +40,17 @@ export default async function WorkoutReceiptPage({ params }: { params: Promise<{
   const timezone = await getUserTimezone(auth.userId)
 
   /**
+   * THE DAY, DECIDED HERE, because this is where the account's zone is.
+   *
+   * The heading used to be `weekdayNameIn(startedAt)` inside the component —
+   * "Tue's workout" for a session from March as much as for one from
+   * Tuesday. Reached from History that named a day without saying which.
+   */
+  const startedOn = summary.startedAt
+    ? toDateISO(toZonedDate(new Date(summary.startedAt), timezone))
+    : null
+
+  /**
    * CORRECT THIS AND DELETE LIVE HERE NOW, not in the History list.
    *
    * A destructive control does not belong beside the row you tap to open a
@@ -48,7 +61,7 @@ export default async function WorkoutReceiptPage({ params }: { params: Promise<{
   return (
     <WorkoutReceipt
       summary={summary}
-      timezone={timezone}
+      heading={receiptHeading(startedOn, getTodayInTimezone(timezone))}
       actions={
         <WorkoutActions
           workoutId={summary.workoutId}

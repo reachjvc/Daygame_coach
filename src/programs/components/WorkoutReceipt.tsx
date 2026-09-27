@@ -16,7 +16,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { BackLink } from "@/components/BackLink"
 import { DEFAULT_SESSION_TYPE, UNIT_CONFIG } from "../config"
 import { TRAINING_COLUMN, TRAINING_CARD, TRAINING_CARD_BODY } from "./trainingStyles"
-import { describeLoggedSet, weekdayNameIn } from "../programsService"
+import { describeLoggedSet } from "../programsService"
 import { collapseSets, describeSessionRow } from "@/src/health/healthService"
 import { PROGRAMS } from "@/src/shared/trainingRoutes"
 import type { ReactNode } from "react"
@@ -250,12 +250,17 @@ export function ReceiptBody({ summary }: { summary: WorkoutSummary }) {
 
 export function WorkoutReceipt({
   summary,
-  timezone,
+  heading,
   actions,
 }: {
   summary: WorkoutSummary
-  /** The account's zone — the only clock allowed to name a day here. */
-  timezone: string
+  /**
+   * The heading, already decided. Built by the PAGE, which is a server
+   * component and holds the account's timezone: naming the day here would
+   * mean this component knowing what "today" is, and the only clock it could
+   * ask is the wrong one.
+   */
+  heading: string
   /**
    * Correct this / Delete, for a receipt somebody has come back to.
    *
@@ -266,8 +271,6 @@ export function WorkoutReceipt({
    */
   actions?: ReactNode
 }) {
-  const day = summary.startedAt ? weekdayNameIn(summary.startedAt, timezone) : null
-
   return (
     <div className="min-h-screen bg-background">
       {/* The column width every training screen shares, so the page does not
@@ -283,9 +286,7 @@ export function WorkoutReceipt({
           className="mb-2 inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         />
 
-        <h1 className="mb-3 text-base font-semibold">
-          {day ? `${day}'s workout` : "That workout"}
-        </h1>
+        <h1 className="mb-3 text-base font-semibold">{heading}</h1>
 
         <Card className={TRAINING_CARD} data-testid="workout-receipt">
           <CardContent className={TRAINING_CARD_BODY}>
