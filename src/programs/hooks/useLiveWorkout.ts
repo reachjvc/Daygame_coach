@@ -148,6 +148,35 @@ function writeRest(rest: RestClock | null): void {
   }
 }
 
+/**
+ * IS THIS 4xx REALLY PERMANENT? Not all of them are, and the cost of guessing
+ * wrong is a set the person did and the app deleted.
+ *
+ * The rule here was "any 4xx will never succeed on a retry", which was written
+ * about the refusals `workoutRepo` raises — a set the schema will not take, a
+ * workout that is gone. It is false for the statuses that mean "not now":
+ *
+ *   401  the access token expired mid-session. `requireAuth` answers 401 and
+ *        `proxy.ts`'s matcher does not cover `/api/workouts/*`, so a live
+ *        screen open for a whole gym session refreshes only through the route
+ *        handlers themselves. One failed refresh used to delete every queued
+ *        set, each with "has been removed".
+ *   408  the request timed out on the way. Nothing was decided.
+ *   425  too early — the server is asking for the retry itself.
+ *   429  rate limited. This is a retry instruction with a number on it.
+ *
+ * `errors.ts` calls deleting a set the person did "the worst outcome in this
+ * whole file", and the one already fixed (`CouldNotTell` → 503) was the same
+ * mistake in the 5xx direction. Anything not listed here stays permanent:
+ * 403 on these routes means the row is not yours, and 400 means the schema
+ * refused it, and both are true however many times you ask.
+ */
+const RETRYABLE_REFUSALS = new Set([401, 408, 425, 429])
+
+/** A 4xx the caller must not treat as "this can never be saved". */
+const permanentlyRefused = (status: number): boolean =>
+  status >= 400 && status < 500 && !RETRYABLE_REFUSALS.has(status)
+
 export function useLiveWorkout(initial: LiveWorkout | null) {
   const [workout, setWorkout] = useState<LiveWorkout | null>(initial)
   const [queue, setQueue] = useState<QueuedSet[]>([])
@@ -365,7 +394,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
         if (!res.ok) {
           // A 4xx will never succeed on a retry, so it is dropped and said out
           // loud rather than jamming the queue for ever.
-          if (res.status >= 400 && res.status < 500) {
+          if (permanentlyRefused(res.status)) {
             /**
              * A QUEUE FLUSHED INTO A WORKOUT THAT IS GONE. Every item would be
              * refused for the same reason, so the loop stops and says it once
@@ -484,7 +513,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(item),
         })
-        if (res.status >= 400 && res.status < 500) {
+        if (permanentlyRefused(res.status)) {
           /**
            * A REFUSAL WILL NEVER SUCCEED ON A RETRY, so it is not queued. The
            * optimistic ✓ comes off NOW and the reason is named, rather than the
