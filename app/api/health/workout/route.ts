@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { getWorkoutLogs, getWorkoutLogsWithSets, deleteWorkoutLog } from "@/src/db/healthRepo"
-import { statusFor } from "@/src/programs/errors"
+import { workoutErrorResponse } from "@/src/programs/errors"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -44,5 +44,17 @@ export async function DELETE(request: Request) {
     // server's own sentence.
     const result = await deleteWorkoutLog(auth.userId, id)
     return NextResponse.json({ success: true, ...result })
-  } catch (e) { console.error("Error deleting workout log:", e); return err((e as Error).message, statusFor(e)) }
+  } catch (e) {
+    console.error("Error deleting workout log:", e)
+    /**
+     * THROUGH THE SHARED HELPER, like every other route that can refuse a
+     * workout. This asked `statusFor` for the number and wrote its own body,
+     * so it never sent `code: "workout_gone"` — and it is one of the TWO
+     * routes that delete a workout, the pair named in
+     * `src/db/workoutLifecycle.ts`'s own comment. The guard written to stop
+     * this drift scanned `app/api/workouts` and could not see either of them.
+     */
+    const answer = workoutErrorResponse(e, 500)
+    return NextResponse.json(answer.body, { status: answer.status })
+  }
 }

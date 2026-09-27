@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { reviseSessionLog } from "@/src/db/programRepo"
-import { statusFor } from "@/src/programs/errors"
+import { workoutErrorResponse } from "@/src/programs/errors"
 
 /**
  * PATCH IS GONE, DELETE STAYS.
@@ -26,5 +26,12 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   try {
     const { id, logId } = await params
     return NextResponse.json(await reviseSessionLog(auth.userId, id, logId))
-  } catch (e) { console.error("delete session:", e); return err((e as Error).message, statusFor(e)) }
+  } catch (e) {
+    console.error("delete session:", e)
+    // The other of the two routes that delete a workout. `removeProgramSession`
+    // refuses an OPEN one with `OPEN_WORKOUT_REFUSAL`, and that refusal was
+    // reaching the screen without the code the screen acts on.
+    const answer = workoutErrorResponse(e, 500)
+    return NextResponse.json(answer.body, { status: answer.status })
+  }
 }

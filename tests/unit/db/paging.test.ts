@@ -19,6 +19,7 @@
  * are decided entirely by what the page callback returns.
  */
 
+import { CouldNotTell, statusFor } from "@/src/programs/errors"
 import { describe, it, expect, vi } from "vitest"
 import { PAGE_SIZE, chunkIds, readAllRows, ID_CHUNK } from "@/src/db/paging"
 
@@ -104,7 +105,15 @@ describe("reading every row rather than the first thousand", () => {
 describe("when a page fails", () => {
   it("throws, and names the read so the failure says which one broke", async () => {
     const page = vi.fn(async () => ({ data: null, error: { message: "connection reset" } }))
-    await expect(readAllRows("your days", page)).rejects.toThrow("Failed to read your days: connection reset")
+    // The NAME of the read reaches the person; the database's sentence does
+    // not. This asserted `Failed to read your days: connection reset` — a
+    // bare Error, so a 500 with Postgres's words in it on every screen that
+    // reads a page of anything, including the correction screen.
+    const thrown = await readAllRows("your days", page).catch((e: unknown) => e)
+    expect(thrown).toBeInstanceOf(CouldNotTell)
+    expect((thrown as Error).message).toContain("your days")
+    expect((thrown as Error).message).not.toContain("connection reset")
+    expect(statusFor(thrown), "a read that could not be asked is retryable").toBe(503)
   })
 
   /**
@@ -120,7 +129,7 @@ describe("when a page fails", () => {
         ? { data: Array.from({ length: PAGE_SIZE }, (_, i) => ({ id: i })), error: null }
         : { data: null, error: { message: "gone" } }
     }
-    await expect(readAllRows("rows", page)).rejects.toThrow("Failed to read rows: gone")
+    await expect(readAllRows("rows", page)).rejects.toBeInstanceOf(CouldNotTell)
   })
 
   it("treats a null payload with no error as the end, not as a crash", async () => {

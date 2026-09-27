@@ -16,6 +16,8 @@
  * refuses new unpaged reads, and this is what they are supposed to use instead.
  */
 
+import { CouldNotTell } from "@/src/programs/errors"
+
 /**
  * Rows per request.
  *
@@ -58,7 +60,29 @@ export async function readAllRows<T>(
   const all: T[] = []
   for (let from = 0; ; from += PAGE_SIZE) {
     const { data, error } = await page(from, from + PAGE_SIZE - 1)
-    if (error) throw new Error(`Failed to read ${what}: ${error.message}`)
+    if (error) {
+      /**
+       * THE DATABASE'S OWN WORDS GO TO THE LOG, NOT TO A PERSON — and this was
+       * the last door in the workout slice they came through.
+       *
+       * `workoutRepo` wraps every read of its own in `readRefused`, and
+       * `architecture.test.ts` pins that file at zero raw messages. Both were
+       * true of the FILE and false of the PATH: the stale-read guard added to
+       * `reviseWorkout` calls this function, which threw
+       * `Failed to read that workout's sets: <postgres>` as a bare Error —
+       * a 500 carrying Postgres's sentence to the correction screen, which is
+       * the exact fault the whole round was dug out of, one call away, inside
+       * the guard written to stop it. `getWorkoutSets` reached it too.
+       *
+       * `CouldNotTell` and not a bare Error, for the reason `errors.ts` gives:
+       * a read that could not be asked is a 503, and anything in the 400s
+       * tells the offline queue the write can never succeed, so it deletes the
+       * set. `what` is already a phrase written for a person — that is what
+       * the parameter has always been for.
+       */
+      console.error(`could not read ${what}: ${error.message}`)
+      throw new CouldNotTell(what)
+    }
     const rows = data ?? []
     all.push(...rows)
     if (rows.length < PAGE_SIZE) return all

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { startWorkout, StartRefused } from "@/src/db/workoutRepo"
 import { StartWorkoutSchema } from "@/src/programs/schemas"
+import { workoutErrorResponse } from "@/src/programs/errors"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -29,6 +30,29 @@ export async function POST(request: Request) {
       )
     }
     console.error("start workout:", e)
-    return err("Could not start the workout.", 500)
+    /**
+     * AND EVERYTHING ELSE THROUGH THE SHARED HELPER.
+     *
+     * `startWorkout` reads the open workout first, and that read answers
+     * `CouldNotTell` — a 503, because it may work on a retry. This flattened
+     * every non-`StartRefused` error to a flat 500 "Could not start the
+     * workout", so the one state that says "try again in a moment" arrived as
+     * "we are broken". The exemption this route used to hold in the
+     * architecture guard is what kept it quiet; there is no exemption now.
+     */
+    const answer = workoutErrorResponse(e, 500)
+    /**
+     * A 500 KEEPS THE FIXED SENTENCE. The helper hands back `e.message` for
+     * anything it does not recognise, and this route's fallback has always
+     * been a written line — handing the browser whatever was thrown would be
+     * a step back towards the thing this whole area is being dug out of, for
+     * the one case where nobody has written a sentence.
+     *
+     * 409 and 503 DO carry theirs: those are `errors.ts` classes whose
+     * messages exist to be read.
+     */
+    return answer.status === 500
+      ? err("Could not start the workout.", 500)
+      : NextResponse.json(answer.body, { status: answer.status })
   }
 }

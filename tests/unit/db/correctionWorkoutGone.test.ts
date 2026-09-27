@@ -194,3 +194,73 @@ describe("the stale-read guard on a workout that held no sets", () => {
     expect(rpcCalls, "and the sets were not replaced on the way to the refusal").toEqual([])
   })
 })
+
+describe("the stale-read guard's own read failing", () => {
+  /**
+   * THE LAST DOOR POSTGRES CAME THROUGH, and it was inside the guard written
+   * to shut them.
+   *
+   * `reviseWorkout` wraps its workout read in `readRefused`. The `basedOn`
+   * comparison added a SECOND read — `readAllRows` — which threw
+   * `Failed to read that workout's sets: <postgres>` as a bare Error. That is
+   * `statusFor` → 500, and `WorkoutCorrection` renders `answer.error`
+   * verbatim, so a statement timeout on that read put the database's own
+   * sentence on the correction screen.
+   *
+   * `architecture.test.ts` said `workoutRepo.ts` was at zero raw messages and
+   * it was — of the FILE. The leak was one function call away in
+   * `src/db/paging.ts`, which the table grandfathered at 1. A GREEN guard is
+   * a claim about the guard's reach.
+   */
+  test("says what could not be read, and never what the database said", async () => {
+    const { CouldNotTell, statusFor } = await import("@/src/programs/errors")
+    const finished = {
+      id: WORKOUT,
+      enrollment_id: null,
+      started_at: "2026-09-27T08:00:00Z",
+      ended_at: "2026-09-27T09:00:00Z",
+      adjustments: {},
+    }
+    const dbSentence = 'canceling statement due to statement timeout; policy for table "workout_sets"'
+    const client = {
+      from: (name: string) => {
+        const chain: Record<string, unknown> = {
+          select: () => chain,
+          update: () => chain,
+          eq: () => chain,
+          order: () => chain,
+          range: () => chain,
+          maybeSingle: () =>
+            Promise.resolve({ data: name === "workout_logs" ? finished : null, error: null }),
+          then: (done: (v: unknown) => unknown) =>
+            Promise.resolve(
+              name === "workout_sets"
+                ? { data: null, error: { code: "57014", message: dbSentence } }
+                : { data: [], error: null }
+            ).then(done),
+        }
+        return chain
+      },
+      rpc: () => Promise.resolve({ data: null, error: null }),
+    }
+    vi.doMock("@/src/db/supabase", () => ({ createServerSupabaseClient: async () => client }))
+    vi.doMock("@/src/db/settingsRepo", () => ({
+      getUserTimezone: async () => "Europe/Copenhagen",
+      getTrainingSettings: async () => ({ barWeightKg: 20, smallestPlateKg: 1.25 }),
+    }))
+    const repo = await import("@/src/db/workoutRepo")
+
+    const thrown = await repo
+      .reviseWorkout(USER, WORKOUT, [aSet], ["s1"])
+      .catch((e: unknown) => e)
+
+    expect(thrown).toBeInstanceOf(CouldNotTell)
+    expect((thrown as Error).message).toContain("that workout's sets")
+    expect((thrown as Error).message, "Postgres talking to a person").not.toMatch(
+      /statement timeout|policy for table|workout_sets"/
+    )
+    // 503, not 500 and not 400: the read may work on a retry, and anything in
+    // the 400s makes the offline queue destroy the set it is holding.
+    expect(statusFor(thrown)).toBe(503)
+  })
+})

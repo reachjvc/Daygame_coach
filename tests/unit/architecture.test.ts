@@ -633,84 +633,128 @@ describe('Architecture Compliance', () => {
     })
 
     /**
-     * EVERY WORKOUT WRITE ANSWERS THROUGH ONE HELPER.
+     * EVERY ROUTE THAT CAN REFUSE A WORKOUT ANSWERS THROUGH ONE HELPER.
      *
      * `src/programs/errors.ts` says why in its own header: "the alternative is
      * each route deciding for itself whether to pass a `code` — and the screen
      * then acts on the workout being gone in the three routes that remembered
-     * and not in the two that did not."
+     * and not in the two that did not." It happened, and then the guard
+     * written to stop it happening had the same fault as the thing it guarded.
      *
-     * It then happened. Four of the five workout write routes answered through
-     * `workoutErrorResponse`; `/api/workouts/[id]/revise` asked `statusFor` for
-     * a number and wrote its own body. So a correction saved against a workout
-     * deleted on another device came back a bare 500 with no code, while the
-     * identical race on a set came back 409 `workout_gone` and the live screen
-     * acted on it. One cause, two answers, and nothing was red — every test on
-     * that route used a workout that was still there.
+     * THE FIRST VERSION SCANNED `app/api/workouts`. Its title said "every
+     * workout write route" and its scan said "one directory" — so it could not
+     * see `DELETE /api/health/workout` or `DELETE /api/programs/enrollments/
+     * [id]/log/[logId]`, which are the OTHER TWO routes that delete a workout
+     * and are named as a pair in `src/db/workoutLifecycle.ts`'s own comment.
+     * Both did exactly what the guard bans. A reviewer found it by re-running
+     * the guard's own scan with the root widened by one level.
      *
-     * WRITES ONLY. A GET has no offline queue reading its status and no
-     * `workout_gone` for a screen to act on.
+     * SO THE SET IS DERIVED, NOT LISTED. Any exported repo function whose body
+     * raises a workout refusal is one, and so is anything that calls one —
+     * `reviseSessionLog` only delegates to `removeProgramSession`, which is
+     * why a one-hop scan still missed its route. A route that names any of
+     * them and exports a write verb must answer through `workoutErrorResponse`.
+     *
+     * There is no allowlist. `POST /api/workouts` looked like it needed one —
+     * it hands back the workout already open, which no shared helper can
+     * express — but it keeps its `StartRefused` branch and uses the helper for
+     * everything else, which is how its `CouldNotTell` stopped being a 500.
      */
-    const OWNS_ITS_REFUSAL = new Set([
-      // Start hands back the workout that is ALREADY OPEN, which no shared
-      // helper can express: `StartRefused` carries the status, the code and
-      // the workout itself, so the card can offer to go there instead of only
-      // saying no.
-      'app/api/workouts/route.ts',
-    ])
+    const REFUSAL_REPOS = ['src/db/workoutRepo.ts', 'src/db/healthRepo.ts', 'src/db/programRepo.ts']
 
-    /** Workout routes that write, and what each one answers a failure with. */
-    function workoutWriteRoutes(): { rel: string; src: string }[] {
-      return getAllFiles(path.join(projectRoot, 'app/api/workouts'), /route\.ts$/)
+    /** A refusal raised about a workout, however it is spelled. */
+    const RAISES_A_REFUSAL = [
+      /WorkoutGone\(/,
+      /OPEN_WORKOUT_REFUSAL/,
+      /refuseWrite\(/,
+      /requireLive\(/,
+      /liveAfterWriting\(/,
+    ]
+
+    /** Exported repo functions that can refuse a workout, and their callers. */
+    function functionsThatRefuseAWorkout(): Set<string> {
+      const bodies = new Map<string, string>()
+      for (const rel of REFUSAL_REPOS) {
+        const src = fs.readFileSync(path.join(projectRoot, rel), 'utf-8')
+        const found: [string, number][] = []
+        for (const m of src.matchAll(/export (?:async )?function (\w+)/g)) {
+          found.push([m[1], m.index ?? 0])
+        }
+        found.forEach(([name, at], i) => {
+          bodies.set(name, src.slice(at, i + 1 < found.length ? found[i + 1][1] : src.length))
+        })
+      }
+      const refusing = new Set(
+        [...bodies].filter(([, body]) => RAISES_A_REFUSAL.some((r) => r.test(body))).map(([n]) => n)
+      )
+      // Transitively: a function that CALLS one can refuse too. Without this
+      // the scan missed `reviseSessionLog`, whose whole body is one delegation.
+      for (let pass = 0; pass < 8; pass++) {
+        const before = refusing.size
+        for (const [name, body] of bodies) {
+          if (refusing.has(name)) continue
+          if ([...refusing].some((t) => new RegExp(`\\b${t}\\(`).test(body))) refusing.add(name)
+        }
+        if (refusing.size === before) break
+      }
+      return refusing
+    }
+
+    /** Every API route that writes and can produce a workout refusal. */
+    function routesThatCanRefuseAWorkout(): { rel: string; src: string; via: string[] }[] {
+      const refusing = [...functionsThatRefuseAWorkout()]
+      return getAllFiles(path.join(projectRoot, 'app/api'), /(^|[\\/])route\.ts$/)
         .map((file) => ({
           rel: path.relative(projectRoot, file).replace(/\\/g, '/'),
           src: fs.readFileSync(file, 'utf-8'),
         }))
         .filter(({ src }) => /export async function (POST|PATCH|PUT|DELETE)\b/.test(src))
+        .map((r) => ({ ...r, via: refusing.filter((n) => new RegExp(`\\b${n}\\b`).test(r.src)) }))
+        .filter(({ via }) => via.length > 0)
     }
 
-    test('every workout write route answers a refusal through one helper', () => {
-      const routes = workoutWriteRoutes()
-      // The scan has to be finding routes at all. Rename the folder and an
-      // empty list would pass this for ever.
-      expect(routes.length, 'no workout write routes found — the scan is broken').toBeGreaterThan(4)
+    test('the scan finds the routes it is about', () => {
+      // An empty scan passes every assertion below it for ever. The three
+      // under `app/api/workouts` plus the two outside it that delete a workout.
+      const routes = routesThatCanRefuseAWorkout()
+      expect(routes.length, 'the scan found nothing — it is broken').toBeGreaterThanOrEqual(5)
+      const paths = routes.map((r) => r.rel)
+      for (const outsider of [
+        'app/api/health/workout/route.ts',
+        'app/api/programs/enrollments/[id]/log/[logId]/route.ts',
+      ]) {
+        expect(paths, `${outsider} deletes a workout and must be in scope`).toContain(outsider)
+      }
+    })
 
-      const offenders = routes
-        .filter(({ rel, src }) => !OWNS_ITS_REFUSAL.has(rel) && !src.includes('workoutErrorResponse'))
-        .map(({ rel }) => rel)
+    test('every route that can refuse a workout answers through one helper', () => {
+      const offenders = routesThatCanRefuseAWorkout()
+        .filter(({ src }) => !src.includes('workoutErrorResponse'))
+        .map(({ rel, via }) => `${rel} (via ${via.join(', ')})`)
         .sort()
       expect(
         offenders,
-        'A workout write must answer through workoutErrorResponse, which gives the\n' +
-          'body and the status together. Asking statusFor for the number and writing\n' +
-          'the body by hand is what dropped `code: "workout_gone"` from /revise:\n' +
+        'These can throw a workout refusal and answer it themselves.\n' +
+          'workoutErrorResponse gives the body AND the status together; asking\n' +
+          'statusFor for the number and writing the body by hand is what dropped\n' +
+          '`code: "workout_gone"` from /revise and flattened CouldNotTell to 500\n' +
+          'on /api/workouts:\n' +
           offenders.join('\n'),
       ).toEqual([])
     })
 
-    test('and none of them splits the status from the body', () => {
-      // The other half: a route may not call `statusFor` alone. That is the
-      // exact split `errors.ts` says lets the two drift.
-      const offenders = workoutWriteRoutes()
-        .filter(({ src }) => src.includes('statusFor(') && !src.includes('workoutErrorResponse'))
+    test('and none of them also splits the status from the body by hand', () => {
+      // `statusFor` alone leaves the body to the route. Comments are blanked:
+      // the revise route's docblock NAMES `statusFor` while explaining why it
+      // stopped using it, and a guard that reads its own explanation as a
+      // violation is the failure this file has had twice.
+      const offenders = routesThatCanRefuseAWorkout()
+        .filter(({ rel, src }) => withoutCommentsOrStrings(src, rel).includes('statusFor('))
         .map(({ rel }) => rel)
         .sort()
       expect(
         offenders,
         `statusFor alone leaves the body to the route. Use workoutErrorResponse:\n${offenders.join('\n')}`,
-      ).toEqual([])
-    })
-
-    test('the refusal-of-its-own list only shrinks', () => {
-      // Same scan as the enforcement half. An entry whose route no longer
-      // names its own refusal class is a free pass waiting to be used.
-      const byPath = new Map(workoutWriteRoutes().map(({ rel, src }) => [rel, src]))
-      const stale = [...OWNS_ITS_REFUSAL]
-        .filter((rel) => !byPath.get(rel)?.includes('Refused'))
-        .sort()
-      expect(
-        stale,
-        `These no longer name a refusal class of their own — remove them from OWNS_ITS_REFUSAL:\n${stale.join('\n')}`,
       ).toEqual([])
     })
   })
@@ -3240,7 +3284,6 @@ describe('Architecture Compliance', () => {
       'src/db/lifeChapterRepo.ts': 3,
       'src/db/lifePlanDayRepo.ts': 7,
       'src/db/lifePlanRepo.ts': 6,
-      'src/db/paging.ts': 1,
       'src/db/profilesRepo.ts': 2,
       'src/db/programDraftRepo.ts': 5,
       // 12, not 13: `getEnrollmentById` was cleaned because it sits on the hot
@@ -3359,13 +3402,27 @@ describe('Architecture Compliance', () => {
       ).toEqual([])
     })
 
-    test('the live-workout repo is at zero, and stays there', () => {
-      // The slice this rule was written for. Named on its own so it cannot
-      // drift back in under a table entry nobody reads. It read 0 under the
-      // first detector while carrying two `new ProgramRefused(error.message)`
-      // — the headline claim measured by a metric blind to it.
-      expect(rawMessagesIn('src/db/workoutRepo.ts')).toBe(0)
-      expect(RAW_DB_MESSAGES['src/db/workoutRepo.ts']).toBeUndefined()
+    test('the whole workout WRITE PATH is at zero, not just its own file', () => {
+      /**
+       * NAMED AS A PATH, because naming the file was not enough twice over.
+       *
+       * It read 0 under the first detector while carrying two
+       * `new ProgramRefused(error.message)` — the headline claim measured by a
+       * metric blind to it. Then it read 0 honestly, and Postgres still
+       * reached the correction screen: the `basedOn` guard calls
+       * `readAllRows`, and `src/db/paging.ts` was grandfathered at 1. A
+       * statement timeout on that read printed
+       * `Failed to read that workout's sets: canceling statement …` under a
+       * 500, through the guard written to stop exactly that.
+       *
+       * So the pin covers every file the write path passes through. A raw
+       * message anywhere along it is a raw message on somebody's screen,
+       * whichever file it is spelled in.
+       */
+      for (const file of ['src/db/workoutRepo.ts', 'src/db/paging.ts', 'src/db/workoutLifecycle.ts']) {
+        expect(rawMessagesIn(file), `${file} is on the workout write path`).toBe(0)
+        expect(RAW_DB_MESSAGES[file], `${file} may not be grandfathered`).toBeUndefined()
+      }
     })
   })
 
