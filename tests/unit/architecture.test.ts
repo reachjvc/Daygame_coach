@@ -3084,7 +3084,28 @@ describe('Architecture Compliance', () => {
    * Lengths are preserved so every match index still lines up with the source.
    * Template SPANS are kept — `${error.message}` is the thing being counted.
    */
+  /**
+   * ONE PARSE PER FILE PER RUN, BECAUSE THIS IS THE WHOLE FILE'S COST.
+   *
+   * `ts.createSourceFile` below runs the real TypeScript parser, and the scans
+   * that call this walk all 1,060 `.ts`/`.tsx` files under `src`, `app` and
+   * `components` — several of them twice, because an enforcement test and its
+   * only-shrinks twin each call the same scan function. Measured 2026-09-27:
+   * the two runtime-locale tests took **13.4s and 12.3s** against this suite's
+   * **20s** per-test ceiling, so under load the shared pre-commit hook started
+   * timing out and blocking whichever session happened to be committing.
+   *
+   * The result is a pure function of (file, source), so it is cached on both.
+   * This does NOT raise the ceiling or hide growth: every file is still parsed,
+   * still scanned, and a new offender still fails the test. It is only the
+   * re-parsing of bytes already parsed in this process that goes away.
+   */
+  const strippedSources = new Map<string, { source: string; stripped: string }>()
+
   function withoutCommentsOrStrings(source: string, file: string): string {
+    const cached = strippedSources.get(file)
+    if (cached && cached.source === source) return cached.stripped
+
     const out = source.split('')
     const blank = (from: number, to: number) => {
       for (let k = from; k < to && k < out.length; k++) if (out[k] !== '\n') out[k] = ' '
@@ -3151,9 +3172,11 @@ describe('Architecture Compliance', () => {
      */
     const literalsGone = out.join('')
     const keepNewlines = (m: string) => m.replace(/[^\n]/g, ' ')
-    return literalsGone
+    const stripped = literalsGone
       .replace(/\/\*[\s\S]*?\*\//g, keepNewlines)
       .replace(/\/\/[^\n]*/g, keepNewlines)
+    strippedSources.set(file, { source, stripped })
+    return stripped
   }
 
   /**
