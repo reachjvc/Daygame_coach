@@ -96,6 +96,35 @@ test.beforeEach(async ({ page }) => {
   await reset(page)
 })
 
+/**
+ * EVERY WORKOUT THIS FILE WRITES, REMOVED — which `reset()` does not do.
+ *
+ * `reset` clears enrolments and starts a fresh one; it has never deleted
+ * finished workouts. Three tests here seed one, and all three left it on the
+ * shared account. A 2-set, 60-minute session dated today puts the Tracking
+ * card into its "Trained today" state, which is exactly how the width test
+ * added on 2026-09-27 turned `dashboard-training-card` red — "names today's
+ * session and its lifts" got "Trained today · Workout · 60 min · 2 sets" —
+ * and left the account broken for every run afterwards until it was cleared
+ * by hand.
+ *
+ * Not `deleteWorkoutsNamed`: one of the three seeds a RUN, which has no sets,
+ * so no exercise prefix can find it. By date, which catches all of them.
+ *
+ * In `afterEach` rather than at the end of each test, because a test that
+ * fails half way through must still leave the account as it found it — one
+ * red test making the next three red is how a single defect reads as a
+ * collapse.
+ */
+test.afterEach(async ({ page }) => {
+  await page
+    .evaluate(async () => {
+      const logs = (await (await fetch("/api/health/workout?days=3")).json()) as { id: string }[]
+      for (const l of logs) await fetch(`/api/health/workout?id=${l.id}`, { method: "DELETE" })
+    })
+    .catch(() => {})
+})
+
 test("History opens the live screen at the time you choose, and it knows it is the past", async ({
   page,
 }) => {
