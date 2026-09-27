@@ -125,10 +125,18 @@ export function TrainingSettingsCard({
             about which should win, left for the owner. This is the half that
             is not a decision: the screen must not imply it did something it
             did not.
+
+            THE SENTENCE WAS WRONG WITHIN THE HOUR, in the one state
+            `accountWideUnit` had just been written for: with two programs
+            running in different units there is no program-level answer, so
+            History and Progress fall back to THIS setting. "A program you are
+            already running keeps the unit" was false exactly there. Two fixes
+            forty minutes apart, each correct, contradicting each other.
           */}
           <p className="mt-1.5 text-xs text-muted-foreground">
             Everything you have already logged stays as it was — this changes how it is shown. A
-            program you are already running keeps the unit you started it in.
+            running program keeps the unit you started it in; this decides when none is running,
+            or when two disagree.
           </p>
         </div>
 

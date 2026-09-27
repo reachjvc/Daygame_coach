@@ -82,13 +82,21 @@ export function SavedWeeksSection({
     setBusy(draft.id)
     setFailure(null)
     const out = await drafts.startDraft(draft.id)
-    setBusy(null)
     if (!out.ok) {
       // The server names the day that is still empty; saving is permissive and
       // starting is not, and that refusal is the useful half.
+      setBusy(null)
       setFailure(out.error)
       return
     }
+    /**
+     * STILL BUSY UNTIL THE SCREEN MOVES. `setBusy(null)` ran before
+     * `onStarted` navigated — the same shape fixed in `ProgramDetail` the
+     * same afternoon, and starting a saved week DISPLACES the running
+     * program, so a second press costs somebody the block they were weeks
+     * into. Less reachable here because the sheet closes on press, which is
+     * why it survived the first pass; the same class one component short.
+     */
     onStarted(out.value.enrollment.id)
   }
 
