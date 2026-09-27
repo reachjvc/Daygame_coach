@@ -99,10 +99,16 @@ Rules for this file:
 35. May need to be integrated further with the rest of the app.
 
 **Infrastructure**
-36. Leaving Vercel and Supabase for a managed platform with Postgres on a private
+36. Leaving Vercel and Supabase for **Hetzner**, with Postgres on a private
     network and the app's own auth — decided 2026-09-17 on a programmer friend's
-    advice. Sequence, what survives and what is rewritten are in the memory note
-    `leave-vercel-supabase-decision`. Do not re-litigate it.
+    advice, and **the provider settled as Hetzner on 2026-09-27 because he
+    recommended it. That reason is sufficient on its own and the choice is not
+    reopened.** It replaces the earlier "a managed platform" wording here and in
+    the memory note: Hetzner sells servers, so backups, TLS, patching and the
+    deploy pipeline are ours. The owning document is the DECISION section of
+    `docs/plans/own-platform-and-app.md`; sequence, what survives and what is
+    rewritten are in the memory note `leave-vercel-supabase-decision`. Do not
+    re-litigate any of it.
 37. The friend also asked for CI/CD. The CI half exists (item 43). The CD half —
     migrate then deploy, staging and production — comes with the move.
 
