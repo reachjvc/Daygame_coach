@@ -107,6 +107,21 @@ interface Props {
   onChange: (schedule: ProgramSchedule) => void
   /** Starting weights for lifts the level does not seed, keyed by exercise id. */
   workingWeights: Record<string, string>
+  /**
+   * WEIGHTS THE PROGRAM ALREADY HAS, separate from the ones being typed now.
+   *
+   * `workingWeights` is the edit session's own state and starts EMPTY, so on
+   * a running program this screen reported every lift as needing a starting
+   * weight — including a self-built week, where the catalogue seeds nothing
+   * by design, so it was every lift for ever. Three inches below the notice
+   * the same screen listed those weights.
+   *
+   * Kept apart rather than merged into `workingWeights`, because that record
+   * is what gets SUBMITTED: seeding it would write every weight back on every
+   * save, and the editor's own line says doing that "clears any misses
+   * against that lift".
+   */
+  existingWeights?: Record<string, { workingWeight?: number } | undefined>
   onWorkingWeight: (exerciseId: string, raw: string) => void
   /** Put the catalog program back. Offered only when something has changed. */
   onReset: () => void
@@ -149,6 +164,7 @@ export function ProgramEditor({
   unit,
   onChange,
   workingWeights,
+  existingWeights,
   onWorkingWeight,
   onReset,
 }: Props) {
@@ -173,7 +189,14 @@ export function ProgramEditor({
   const days = scheduleDays(schedule)
   const modified = isModified(program, schedule)
   const loadProgram = schedule.kind === "linear_rotation" || schedule.kind === "weekly_waved"
-  const missing = missingWorkingWeights(program, schedule, level, unit)
+  // The typed boxes, before the program starts. Without this, filling one in
+  // did not clear its own warning.
+  // What is typed now, over what the program already has. A lift with a
+  // weight from either is not missing one.
+  const missing = missingWorkingWeights(program, schedule, level, unit, {
+    ...(existingWeights ?? {}),
+    ...workingWeights,
+  })
 
   /** Every edit funnels through here so a refusal becomes a message, not a crash. */
   function apply(fn: () => ProgramSchedule) {

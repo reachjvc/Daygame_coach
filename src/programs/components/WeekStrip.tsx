@@ -40,6 +40,22 @@ interface Props {
 }
 
 export function WeekStrip({ week, labels, onPickDay }: Props) {
+  /**
+   * DOES THIS PROGRAM PIN WEEKDAYS AT ALL?
+   *
+   * `labels ? … : …` was the first attempt and it was INERT: `weekdayLabels`
+   * returns `{}` when nothing is pinned, and `{}` is truthy, so the
+   * "no set day" arm was unreachable. No program in `src/programs/data/`
+   * sets a `weekday` — zero, checked — so `{}` is the universal case and
+   * every catalogue program still read "nothing planned" on all seven days
+   * while the card below offered a session.
+   *
+   * A condition was changed without checking that the value it tests could
+   * ever take the other branch. The fix for an enumeration failure, with the
+   * same enumeration failure in it.
+   */
+  const pinsWeekdays = labels != null && Object.keys(labels).length > 0
+
   return (
     /*
       gap-0.5, NOT gap-1. Seven cells inside the card's own px-4 leaves 326px
@@ -70,9 +86,9 @@ export function WeekStrip({ week, labels, onPickDay }: Props) {
           ? "trained"
           : label
             ? label
-            : labels
-              ? "nothing planned"
-              : "no set day on this program"
+            : pinsWeekdays
+            ? "nothing planned"
+            : "no set day on this program"
         /**
          * A DAY WITH A SESSION ON IT LOOKS DIFFERENT FROM AN EMPTY ONE.
          *

@@ -95,7 +95,17 @@ export function EditActiveProgram({
   }
 
   const modified = schedule ? isModified(program, schedule) : false
-  const missing = schedule ? missingWorkingWeights(program, schedule, enrollment.level, enrollment.unitSystem) : []
+  // The enrolment's own per-lift state: a running program's weights are in
+  // `exerciseState`, and a lift that has one is not missing one.
+  const missing = schedule
+    ? missingWorkingWeights(
+        program,
+        schedule,
+        enrollment.level,
+        enrollment.unitSystem,
+        enrollment.exerciseState
+      )
+    : []
   // Only the lifts that are NEW to this enrollment need a number; anything the
   // enrollment already has state for keeps the weight it has ratcheted to.
   const needing = missing.filter((m) => !enrollment.exerciseState[m.exerciseId])
@@ -164,6 +174,7 @@ export function EditActiveProgram({
           unit={enrollment.unitSystem}
           onChange={setSchedule}
           workingWeights={weights}
+          existingWeights={enrollment.exerciseState}
           onWorkingWeight={(id, raw) => setWeights((w) => ({ ...w, [id]: raw }))}
           onReset={() => {
             setSchedule(editableSchedule(program, null))

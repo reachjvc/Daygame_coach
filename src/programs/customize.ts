@@ -513,7 +513,32 @@ export function missingWorkingWeights(
   program: ProgramDefinition,
   schedule: ProgramSchedule,
   level: LevelId,
-  unit: UnitSystem
+  unit: UnitSystem,
+  /**
+   * WEIGHTS THAT ALREADY EXIST, which this used to know nothing about.
+   *
+   * "Missing" was decided from the CATALOGUE's seed table alone, and
+   * `customProgram.ts` seeds nothing on purpose — "THE SHELL DELIBERATELY
+   * SEEDS NOTHING". So for a week somebody built themselves, every lift was
+   * reported missing for ever, on a screen that also displayed their real
+   * weights three inches lower:
+   *
+   *   "4 lifts need a starting weight before this can begin"
+   *   Back Squat  3×5 · needs a starting weight
+   *   Your weights → Back Squat 60
+   *
+   * Opening the lift offered an EMPTY box and "A starting point would be
+   * 90 kg", against a real 60 — and the editor's own line says "Changing a
+   * weight here sets it from your next session on". A 50% jump on squat,
+   * suggested by the app, to somebody following its instruction.
+   *
+   * "before this can begin" was false as well: the program had begun.
+   *
+   * Pass what is already known — the enrolment's per-lift state when it is
+   * running, the typed boxes before it starts. A lift with a weight is not
+   * missing one.
+   */
+  known: Record<string, { workingWeight?: number } | string | undefined> = {}
 ): Array<{ exerciseId: string; name: string; suggested: number }> {
   if (schedule.kind !== "linear_rotation" && schedule.kind !== "weekly_waved") return []
   const seeds = program.levels.find((l) => l.id === level)?.seedWorkingWeightKg ?? {}
@@ -525,6 +550,10 @@ export function missingWorkingWeights(
       seen.add(ex.id)
       if (ex.progression.kind === "percentage_tm") continue // asks for a 1RM instead
       if (seeds[ex.id] != null) continue
+      const had = known[ex.id]
+      const hasWeight =
+        typeof had === "string" ? had.trim() !== "" : had?.workingWeight != null
+      if (hasWeight) continue
       out.push({
         exerciseId: ex.id,
         name: ex.name,
