@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { workoutErrorResponse } from "@/src/programs/errors"
 import { requireAuth } from "@/src/db/auth"
 import { updateEnrollmentSchedule } from "@/src/db/programRepo"
 import { UpdateScheduleSchema } from "@/src/programs/schemas"
@@ -19,6 +20,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     )
   } catch (e) {
     console.error("update program schedule:", e)
-    return err((e as Error).message)
+    /**
+     * A REFUSAL IS NOT A 500. This answered a hard 500 for everything, so a
+     * `ProgramRefused` ("your program moved on — reload") and a
+     * `CouldNotTell` (a read that could not be asked, which is retryable)
+     * both arrived as "we are broken". The same bare-Error-is-a-500 shape
+     * fixed one function away in `deleteProgramPermanently`; the class pass
+     * did not reach this route because no guard looked at it.
+     */
+    const answer = workoutErrorResponse(e, 500)
+    return NextResponse.json(answer.body, { status: answer.status })
   }
 }

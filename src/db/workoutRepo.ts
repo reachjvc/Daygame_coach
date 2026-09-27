@@ -640,7 +640,6 @@ export async function completeSet(
     set_number: set.setNumber,
     set_kind: kind,
     prescribed_index: set.prescribedIndex ?? null,
-    completed_at: new Date().toISOString(),
     side,
     rpe: set.rpe ?? null,
   }
@@ -659,9 +658,28 @@ export async function completeSet(
   const key = setSlot({ exerciseId: set.exerciseId, exercise: set.exercise, kind, setNumber: set.setNumber, side })
   const existing = live.sets.find((s) => setSlot(s) === key)
 
+  /**
+   * A CORRECTION KEEPS THE TIME THE SET WAS DONE.
+   *
+   * `row` carries `completed_at: now`, and the update path sent the whole of
+   * it — so re-tapping a set to fix its weight, which this function's own
+   * comment calls "how a person fixes a number", rewrote WHEN it happened.
+   * Harmless while `inWorkoutOrder` sorted on `set_number`; the moment it
+   * started sorting on `completed_at` (2026-09-27) the corrected set jumped
+   * to the end of the workout on the receipt, in History and in the
+   * correction editor:
+   *
+   *   Squat 1 | Squat 3 | Bench 1 | Bench 2 | Bench 3 | Squat 2
+   *
+   * The same applies to a set queued offline and flushed after a later one
+   * landed. `completed_at` is when the set was performed; only an INSERT
+   * knows that, and only an insert sets it.
+   */
   const { error } = existing
     ? await supabase.from("workout_sets").update(row).eq("id", existing.id).eq("log_id", workoutId)
-    : await supabase.from("workout_sets").insert({ ...row, log_id: workoutId })
+    : await supabase
+        .from("workout_sets")
+        .insert({ ...row, log_id: workoutId, completed_at: new Date().toISOString() })
   if (error) await refuseWrite(userId, workoutId, error, "That set could not be saved. Tap it again.")
   return await liveAfterWriting(userId, workoutId)
 }

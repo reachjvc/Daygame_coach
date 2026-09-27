@@ -262,6 +262,16 @@ describe("a program with a workout open on it", () => {
     const { repo } = await repoWith({ writeFails: true })
     const thrown = await repo.unenroll(USER, "e1").catch((e: unknown) => e)
     expect(thrown).not.toBeInstanceOf(repo.ProgramBusy)
-    expect((thrown as Error).message).toContain("Failed to end program")
+    /**
+     * A SENTENCE, NOT THE DATABASE'S. This asserted "Failed to end program",
+     * which was `Failed to end program: ${error.message}` — Postgres's own
+     * words with a prefix, on the screen. `refusalFrom` writes the sentence
+     * now; what this test is actually about is that a transport failure is
+     * not a refusal, which is the line above.
+     */
+    expect((thrown as Error).message).toBe("That program could not be ended. Reload and try again.")
+    expect((thrown as Error).message, "the connection error never reaches a person").not.toMatch(
+      /connection to server/i
+    )
   })
 })

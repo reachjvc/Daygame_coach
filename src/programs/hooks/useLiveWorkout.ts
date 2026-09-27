@@ -177,6 +177,32 @@ const RETRYABLE_REFUSALS = new Set([401, 408, 425, 429])
 const permanentlyRefused = (status: number): boolean =>
   status >= 400 && status < 500 && !RETRYABLE_REFUSALS.has(status)
 
+/**
+ * AND IT HAS TO SAY SOMETHING, or the fix trades one silent failure for
+ * another.
+ *
+ * Keeping the set was right; keeping it with no message was not. A dead
+ * session answers 401 to every retry, so the footer read "waiting for signal"
+ * for the rest of the workout, Finish stayed disabled on `unsaved > 0`, and
+ * nothing anywhere said "you are signed out". Before the retryable statuses
+ * were exempted the sets were destroyed and the workout could at least be
+ * finished; after, it could not be finished at all. A reviewer caught the
+ * trade within the hour.
+ *
+ * `null` for the rest — a genuinely offline tick has no status at all and the
+ * "not saved yet" footer is the right and only thing to say there.
+ */
+function retryableRefusalMessage(status: number): string | null {
+  if (status === 401) {
+    return "You have been signed out. Your sets are kept — reload, sign in, and they will be sent."
+  }
+  if (status === 429) return "The server is busy. Your sets are kept and will be sent shortly."
+  if (status === 408 || status === 425) {
+    return "That did not get through in time. Your sets are kept and will be sent again."
+  }
+  return null
+}
+
 export function useLiveWorkout(initial: LiveWorkout | null) {
   const [workout, setWorkout] = useState<LiveWorkout | null>(initial)
   const [queue, setQueue] = useState<QueuedSet[]>([])
@@ -416,6 +442,10 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
             setError(`That ${item.exercise} set could not be saved and has been removed.`)
             continue
           }
+          // A retryable refusal keeps the queue AND names itself. A 5xx or a
+          // dropped connection says nothing: the footer's "not saved yet" is
+          // already the right sentence for that.
+          setError(retryableRefusalMessage(res.status))
           break
         }
         left.shift()
@@ -538,7 +568,13 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
           )
           return "refused"
         }
-        if (!res.ok) throw new Error(String(res.status))
+        if (!res.ok) {
+          // Queued by the catch below, and named here — `retryableRefusalMessage`
+          // returns null for a 5xx, which leaves the footer to speak.
+          const why = retryableRefusalMessage(res.status)
+          if (why) setError(why)
+          throw new Error(String(res.status))
+        }
         applyServer(seq, (await res.json()) as LiveWorkout)
         setError(null)
         return "saved"
@@ -1096,9 +1132,21 @@ export async function startWorkoutRequest(input: {
       }
       return { kind: "already-open", workout: body.workout }
     }
-    if (res.status >= 400 && res.status < 500) {
+    if (permanentlyRefused(res.status)) {
       clearStartKey(bucket)
       return { kind: "refused", message: body?.error ?? "Could not start that workout." }
+    }
+    /**
+     * A RETRYABLE 4xx KEEPS THE KEY, like a 5xx. This read the raw range, so
+     * a 401 or a 429 on Start threw away the idempotency key and reported a
+     * permanent refusal — the third of the three status checks in this file,
+     * and the one the fix for the other two did not reach.
+     */
+    if (res.status >= 400 && res.status < 500) {
+      return {
+        kind: "refused",
+        message: retryableRefusalMessage(res.status) ?? "Could not start that workout.",
+      }
     }
     // 5xx: the row may well exist — the insert can succeed and a later read
     // fail. Keeping the key means the next tap is handed that same workout.

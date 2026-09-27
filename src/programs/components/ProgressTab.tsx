@@ -28,7 +28,7 @@ import { useLoad } from "@/src/shared/useLoad"
 // "lbs" and this slice spells it "lb". Two spellings of one unit is how a
 // number ends up converted twice or not at all.
 import { describeLoggedSet, fromKg } from "../programsService"
-import { dateKeyLabel } from "@/src/shared/dateUtils"
+import { DISPLAY_LOCALE, dateKeyLabel } from "@/src/shared/dateUtils"
 import { UNIT_CONFIG } from "../config"
 import type { UnitSystem } from "../types"
 import type { ProgressSnapshot } from "@/src/health/healthService"
@@ -119,7 +119,7 @@ export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
    * Grouped, because these run to five figures. "25293 kg" is a number you have
    * to count the digits of; "25,293 kg" is one you read.
    */
-  const show = (kg: number) => Math.round(fromKg(kg, unit)).toLocaleString()
+  const show = (kg: number) => Math.round(fromKg(kg, unit)).toLocaleString(DISPLAY_LOCALE)
   const peak = Math.max(1, ...volume.map((v) => v.volumeKg))
 
   return (

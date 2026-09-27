@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { workoutErrorResponse } from "@/src/programs/errors"
 import { requireAuth } from "@/src/db/auth"
 import { startDraft } from "@/src/db/programDraftRepo"
 import { StartDraftSchema } from "@/src/programs/schemas"
@@ -22,6 +23,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json(result, { status: 201 })
   } catch (e) {
     console.error("start draft:", e)
-    return err((e as Error).message, 422)
+    /**
+     * 422 FOR EVERYTHING was as wrong in the other direction: starting a
+     * saved week while a workout is open raises `OPEN_WORKOUT_REFUSAL`,
+     * which is a 409 the screen can act on, and a failed read is a 503 the
+     * browser should retry. 422 said "what you sent is unprocessable" for
+     * both.
+     */
+    const answer = workoutErrorResponse(e, 422)
+    return NextResponse.json(answer.body, { status: answer.status })
   }
 }

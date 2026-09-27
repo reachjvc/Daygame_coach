@@ -92,6 +92,16 @@ describe("a 4xx that means 'not now'", () => {
         result.current.error ?? "",
         `a ${status} must not tell somebody their set was removed`
       ).not.toMatch(/has been removed|could not be saved/i)
+      /**
+       * AND IT SAYS WHY. Keeping the set silently traded one failure for
+       * another: a dead session answers 401 to every retry, so the footer
+       * read "waiting for signal" for the rest of the workout and Finish
+       * stayed disabled with nothing saying "you are signed out".
+       */
+      await waitFor(() => expect(result.current.error ?? "").not.toBe(""))
+      expect(result.current.error, `a ${status} must explain itself`).toMatch(
+        /signed out|busy|did not get through/i
+      )
     })
   }
 
@@ -165,6 +175,8 @@ describe("the queue, which is where the headline scenario actually happens", () 
     // The mount effect flushes. Give it a turn and then assert the set stayed.
     await waitFor(() => expect(result.current.unsaved).toBe(1))
     expect(result.current.error ?? "").not.toMatch(/has been removed/i)
+    // The flush path has to speak too — it is the one that empties the queue.
+    await waitFor(() => expect(result.current.error ?? "").toMatch(/signed out/i))
   })
 
   it("still drops a queued set the schema will never take", async () => {

@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { resumeEnrollment } from "@/src/db/programRepo"
-import { statusFor } from "@/src/programs/errors"
-
-const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
+import { workoutErrorResponse } from "@/src/programs/errors"
 
 /** Pick a finished program back up, keeping the weights it was left at. */
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -17,6 +15,15 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     // 409: nothing about the request was wrong — there is a workout to finish
     // on the program this one would push aside, or the program has left the
     // catalogue. Either way it is not a fault on our side.
-    return err((e as Error).message, statusFor(e))
+    /**
+     * THROUGH THE SHARED HELPER, like every other route that can raise a
+     * workout refusal. `statusFor` alone gives the number and leaves the body
+     * to the route, which is the split `errors.ts` says lets the two drift —
+     * and these three were only correct by luck: they happened to want the
+     * same numbers. The guard could not see them until its seed list learned
+     * about `CouldNotTell` and `readAllRows`.
+     */
+    const answer = workoutErrorResponse(e, 500)
+    return NextResponse.json(answer.body, { status: answer.status })
   }
 }

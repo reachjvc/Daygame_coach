@@ -105,3 +105,48 @@ describe("inWorkoutOrder", () => {
     expect(once).toEqual(["a", "c", "b", "d"])
   })
 })
+
+describe("a set re-ticked to fix a number", () => {
+  /**
+   * `completeSet` UPDATEs the existing row when you tap the same set again —
+   * "how a person fixes a number", says its own comment — and the payload
+   * carried `completed_at: now`, so the correction rewrote WHEN the set
+   * happened. Harmless while this comparator sorted on `set_number`; the
+   * moment it started sorting on `completed_at` the corrected set jumped to
+   * the end of the workout on the receipt, in History and in the editor:
+   *
+   *   Squat 1 | Squat 3 | Bench 1 | Bench 2 | Bench 3 | Squat 2
+   *
+   * Only an INSERT stamps the time now. This is the ordering half of that;
+   * the write half is that `completeSet`'s update payload no longer contains
+   * the column at all.
+   */
+  test("stays where it was done, not where it was last edited", async () => {
+    const done = [
+      row({ id: "s1", exercise: "Squat", set_number: 1, completed_at: at(0) }),
+      row({ id: "s2", exercise: "Squat", set_number: 2, completed_at: at(6) }),
+      row({ id: "s3", exercise: "Squat", set_number: 3, completed_at: at(9) }),
+      row({ id: "b1", exercise: "Bench", set_number: 1, completed_at: at(12) }),
+    ]
+    // s2 corrected at 10:31. Its `completed_at` must be untouched, so the
+    // order is unchanged.
+    expect([...done].sort(inWorkoutOrder).map((s) => s.id)).toEqual(["s1", "s2", "s3", "b1"])
+  })
+})
+
+describe("ISO instants compare as text, not under a collator", () => {
+  test("a sub-second timestamp sorts after the whole second it follows", () => {
+    /**
+     * `localeCompare` ranks "+" after "." in ICU, so
+     * "…T10:00:00+00:00".localeCompare("…T10:00:00.5+00:00") is 1 — the
+     * wrong way round. Only bites the row whose millisecond is 0, which is
+     * about one in a thousand, which is exactly the kind of thing that
+     * surfaces once and is never reproduced.
+     */
+    const sets = [
+      row({ id: "later", completed_at: "2026-09-27T10:00:00.500+00:00", set_number: 1 }),
+      row({ id: "earlier", completed_at: "2026-09-27T10:00:00+00:00", set_number: 2 }),
+    ]
+    expect([...sets].sort(inWorkoutOrder).map((s) => s.id)).toEqual(["earlier", "later"])
+  })
+})

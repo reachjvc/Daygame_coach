@@ -277,16 +277,14 @@ export async function getWorkoutLogs(
 }
 
 /**
- * The order the sets of one workout are read back in.
- *
- * Set numbers repeat inside a workout — a warm-up and the first working set are
- * both "set 1" — so sorting on the number alone leaves those two free to swap
- * places between one page load and the next. That is visible: the row you
- * clicked to edit is not the row you get. Warm-ups first, then the order they
- * were actually done in, and `id` last so the answer is never arbitrary.
- */
-/**
  * THE ORDER THE SETS HAPPENED IN, when the rows say when.
+ *
+ * (The docblock this replaced described the comparator as "warm-ups first,
+ * then the order they were actually done in". It was left stacked above the
+ * new one, describing code that no longer existed — two block comments, only
+ * the second attaching to anything. Set numbers do still repeat inside a
+ * workout, a warm-up and the first working set are both "set 1", and `id`
+ * last is still what stops the answer being arbitrary.)
  *
  * `set_number` was the first key, so a workout of five squats then five
  * benches then four rows listed as Squat 1, Bench 1, Row 1, Squat 2, Bench 2,
@@ -309,9 +307,15 @@ export async function getWorkoutLogs(
  * pairwise test would not be transitive, and `Array.sort` answers that with
  * an arbitrary order rather than an error.
  */
+/** Plain lexicographic order, which is the right one for ISO-8601 text. */
+const compareText = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0)
+
 export const inWorkoutOrder = (a: WorkoutSetRow, b: WorkoutSetRow): number =>
   Number(!a.completed_at) - Number(!b.completed_at) ||
-  (a.completed_at ?? "").localeCompare(b.completed_at ?? "") ||
+  // `<`, not `localeCompare`: ICU ranks "+" after ".", so
+  // "…T10:00:00+00:00".localeCompare("…T10:00:00.5+00:00") is 1 — backwards.
+  // These are ISO-8601 instants, which sort correctly as plain strings.
+  compareText(a.completed_at ?? "", b.completed_at ?? "") ||
   a.set_number - b.set_number ||
   Number(a.set_kind !== "warmup") - Number(b.set_kind !== "warmup") ||
   a.id.localeCompare(b.id)

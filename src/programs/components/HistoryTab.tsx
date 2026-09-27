@@ -125,7 +125,7 @@ export function HistoryTab({
   )
 
   const label = UNIT_CONFIG[unit].label
-  const showTotal = (kg: number) => Math.round(fromKg(kg, unit)).toLocaleString()
+  const showTotal = (kg: number) => Math.round(fromKg(kg, unit)).toLocaleString(DISPLAY_LOCALE)
 
   if (loaded.state === "failed") {
     return (

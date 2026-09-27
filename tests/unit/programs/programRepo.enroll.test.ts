@@ -199,7 +199,9 @@ describe("ending a program", () => {
 
     const thrown = await unenroll(USER, "e1").catch((e) => e)
     expect(thrown).not.toBeInstanceOf(ProgramRefused)
-    expect((thrown as Error).message).toContain("Failed to end program")
+    // Its own sentence, not `Failed to end program: connection lost`.
+    expect((thrown as Error).message).toBe("That program could not be ended. Reload and try again.")
+    expect((thrown as Error).message).not.toMatch(/connection lost/i)
   })
 })
 

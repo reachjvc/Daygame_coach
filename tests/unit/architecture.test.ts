@@ -561,17 +561,46 @@ describe('Architecture Compliance', () => {
      * The allowlist is the slices not yet converted. It may SHRINK.
      */
     const RUNTIME_LOCALE_ALLOWED = new Set([
+      // WIDENED 2026-09-27 from 11 to 34, because the regex above was widened
+      // to see a BARE `toLocaleDateString()`. These are not new faults; they
+      // are the ones the first version of this guard could not see. The
+      // training slice is at zero and stays there — everything below is
+      // tracking, goals, admin and the /test pages, and the list may only
+      // shrink.
+      'app/admin/ai-usage/page.tsx',
       'app/dashboard/tracking/history/page.tsx',
+      'app/test/articles/page.tsx',
+      'app/test/curve-customization/_components/CurveSVG.tsx',
+      'app/test/curve-customization/_components/VariantCyberpunk.tsx',
+      'app/test/curve-customization/_components/VariantFrost.tsx',
+      'app/test/curve-customization/_components/VariantGold.tsx',
+      'app/test/curve-customization/_components/VariantNeon.tsx',
+      'app/test/curve-customization/_components/VariantZen.tsx',
+      'app/test/goals/variant-c/GoalDetailPanel.tsx',
+      'app/test/goalsv2/variant-h/MomentumComplete.tsx',
       'src/goals/components/DailyActionView.tsx',
+      'src/goals/components/GoalCard.tsx',
+      'src/goals/components/HabitRampEditor.tsx',
+      'src/goals/components/MilestoneCurveEditor.tsx',
       'src/goals/components/PeriodRollupRow.tsx',
+      'src/goals/components/change-your-life/DeepDiveView.tsx',
+      'src/goals/components/change-your-life/shared.tsx',
+      'src/goals/components/new-goals/GoalsConfigStep.tsx',
+      'src/health/components/NutritionTracker.tsx',
+      'src/health/components/SleepTracker.tsx',
+      'src/health/components/WeightTracker.tsx',
+      'src/settings/components/SettingsPage.tsx',
       'src/tracking/components/DailyReviewPage.tsx',
       'src/tracking/components/FieldReportPage.tsx',
       'src/tracking/components/SessionDetailPage.tsx',
       'src/tracking/components/SessionTrackerPage.tsx',
       'src/tracking/components/WeeklyReviewPage.tsx',
+      'src/tracking/components/dashboard/AchievementsModal.tsx',
       'src/tracking/components/dashboard/RecentFieldReportsCard.tsx',
+      'src/tracking/components/dashboard/RecentMilestonesCard.tsx',
       'src/tracking/components/dashboard/RecentSessionsCard.tsx',
       'src/tracking/components/dashboard/WeeklyReviewsCard.tsx',
+      'src/tracking/metricsService.ts',
     ])
 
     /** One scan, so enforcement and only-shrinks cannot disagree. */
@@ -583,7 +612,17 @@ describe('Architecture Compliance', () => {
         // this exact rule in prose, and a guard that fires on its own
         // explanation is a fault this file has had twice already.
         const src = withoutCommentsOrStrings(fs.readFileSync(file, 'utf-8'), rel)
-        if (/toLocale(Date|Time)?String\(\s*(undefined|\[\])\s*,/.test(src)) found.add(rel)
+        /**
+         * THREE SPELLINGS, AND THE FIRST VERSION KNEW TWO. It required an
+         * explicit first argument and a comma, so the BARE call — the same
+         * bug with less typing — was invisible to it. Four live sites walked
+         * straight past it on the day it was written: two `toLocaleString()`
+         * for the volume figure, on the very screens the receipt had just
+         * been reconciled with, and two `toLocaleDateString()` in
+         * `ProgressionView`. A guard's regex is its enumeration, and an
+         * enumeration is the first thing to check, not the last.
+         */
+        if (/toLocale(Date|Time)?String\(\s*(\)|(undefined|\[\])\s*,)/.test(src)) found.add(rel)
       }
       return found
     }
@@ -728,15 +767,37 @@ describe('Architecture Compliance', () => {
      * express — but it keeps its `StartRefused` branch and uses the helper for
      * everything else, which is how its `CouldNotTell` stopped being a 500.
      */
-    const REFUSAL_REPOS = ['src/db/workoutRepo.ts', 'src/db/healthRepo.ts', 'src/db/programRepo.ts']
+    const REFUSAL_REPOS = [
+      'src/db/workoutRepo.ts',
+      'src/db/healthRepo.ts',
+      'src/db/programRepo.ts',
+      // Saved weeks start a program, which is the same refusal.
+      'src/db/programDraftRepo.ts',
+    ]
 
-    /** A refusal raised about a workout, however it is spelled. */
+    /**
+     * A refusal or an unanswerable read, however it is spelled.
+     *
+     * `CouldNotTell(` and `readAllRows(` were missing. Since `readAllRows`
+     * started raising `CouldNotTell`, EVERY paged read can produce a 503 —
+     * so the set of routes that must answer through the shared helper is
+     * much larger than the five workout shapes this listed, and the guard
+     * was blind to exactly the routes that turned out to be wrong:
+     * `PATCH …/enrollments/[id]/schedule` answered a hard 500 for
+     * everything, and `POST …/drafts/[id]/start` a hard 422.
+     *
+     * A guard's seed list is its enumeration, and an enumeration is the
+     * first thing to check. This is the third one in this file to be found
+     * too narrow in two days.
+     */
     const RAISES_A_REFUSAL = [
       /WorkoutGone\(/,
       /OPEN_WORKOUT_REFUSAL/,
       /refuseWrite\(/,
       /requireLive\(/,
       /liveAfterWriting\(/,
+      /CouldNotTell\(/,
+      /readAllRows\(/,
     ]
 
     /** Exported repo functions that can refuse a workout, and their callers. */
@@ -2044,7 +2105,11 @@ describe('Architecture Compliance', () => {
       // this file draws dated bars, so a new `new Date()` here is the thing to
       // catch.
       'components/ProgressTab.tsx': 0,
-      'components/ProgressionView.tsx': 3,
+      // 3 → 0 on 2026-09-27: its two session dates and its chart label were
+      // bare `toLocaleDateString()` — no locale AND no zone — which a review
+      // found only after the guard's regex was widened to see a bare call.
+      // Kept at 0 rather than deleted: this file prints dates.
+      'components/ProgressionView.tsx': 0,
       // Zero since the card stopped naming a stale workout's day itself
       // (2026-09-20) — the state carries it, computed where the account's
       // zone is known. Kept at 0: this file prints a weekday.
@@ -2055,7 +2120,10 @@ describe('Architecture Compliance', () => {
       'components/live/FinishSheet.tsx': 0,
       // The converter itself, and the engine's one caller of it.
       'config.ts': 1,
-      'programsService.ts': 1,
+      // 1 → 0 on 2026-09-27: `lastTimePerLift`'s bare `toLocaleDateString()`.
+      // Kept at 0 rather than deleted: this file is the engine and prints
+      // plenty of dates.
+      'programsService.ts': 0,
     }
 
     const BROWSER_CLOCK =
@@ -3354,10 +3422,15 @@ describe('Architecture Compliance', () => {
       'src/db/lifePlanRepo.ts': 6,
       'src/db/profilesRepo.ts': 2,
       'src/db/programDraftRepo.ts': 5,
-      // 11, not 13: `getEnrollmentById` was cleaned because it sits on the hot
-      // path of every workout write, and `deleteProgramPermanently` because it
-      // answered a deliberate refusal with a 500 carrying Postgres's sentence.
-      'src/db/programRepo.ts': 11,
+      // 7, not 13. `getEnrollmentById` was cleaned because it sits on the hot
+      // path of every workout write; `deleteProgramPermanently` because it
+      // answered a deliberate refusal with a 500 carrying Postgres's
+      // sentence; and four more when `refusalFrom` learned to write its own.
+      // This file holds `removeProgramSession`, which is one of the two
+      // routes that delete a workout — it should have been on the raw-message
+      // PATH pin from the start, and was still grandfathered at 11 while that
+      // pin was being written.
+      'src/db/programRepo.ts': 7,
       'src/db/scenarioRepo.ts': 1,
       'src/db/settingsRepo.ts': 17,
       'src/db/timetrackBackupRepo.ts': 2,

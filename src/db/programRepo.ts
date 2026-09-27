@@ -419,10 +419,7 @@ export async function enrollInProgram(
     },
     p_displace: sameDiscipline.map((e) => e.id),
   })
-  if (error) {
-    const refusal = refusalFrom(error)
-    throw refusal instanceof ProgramRefused ? refusal : new Error(`Failed to enroll: ${error.message}`)
-  }
+  if (error) throw refusalFrom(error, "That program could not be started. Reload and try again.")
 
   const enrollment = toDomain(data as ProgramEnrollmentRow)
   return { enrollment, prescription: computePrescription(program, enrollment), displaced: sameDiscipline }
@@ -489,12 +486,7 @@ export async function unenroll(userId: string, id: string): Promise<void> {
   await assertNoOpenWorkoutOn(userId, id)
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.rpc("end_enrollment", { p_id: id })
-  if (error) {
-    const refusal = refusalFrom(error)
-    throw refusal instanceof ProgramRefused
-      ? refusal
-      : new Error(`Failed to end program: ${error.message}`)
-  }
+  if (error) throw refusalFrom(error, "That program could not be ended. Reload and try again.")
 }
 
 /**
@@ -525,8 +517,30 @@ export class ProgramBusy extends ProgramRefused {
  * one the screens already recognise, and because it is the refusal three routes
  * were written against before this existed.
  */
-function refusalFrom(error: { code?: string; message: string }): Error {
-  if (error.code !== "55000") return new Error(error.message)
+function refusalFrom(
+  error: { code?: string; message: string },
+  /**
+   * What to say when it is NOT a deliberate refusal.
+   *
+   * This returned `new Error(error.message)` — Postgres's own sentence — and
+   * three of the four callers threw it away only to build
+   * `Failed to X: ${error.message}` themselves, which is the same leak with a
+   * prefix. The fourth, `removeProgramSession`, threw it as it came: a
+   * statement timeout on "Delete this session" printed
+   * "canceling statement due to statement timeout" at the person.
+   *
+   * The raw-message path pin added the same day covered `workoutRepo`,
+   * `paging` and `workoutLifecycle` — and this file, which holds one of the
+   * two routes that delete a workout, was still grandfathered at 11. The
+   * route set and the path pin were widened to different widths in one
+   * commit.
+   */
+  fallback = "That could not be saved. Reload and try again."
+): Error {
+  if (error.code !== "55000") {
+    console.error(`program write failed (code ${error.code ?? "none"}): ${error.message}`)
+    return new Error(fallback)
+  }
   return error.message.includes("Finish or throw away the open workout first")
     ? new ProgramBusy()
     : new ProgramRefused(error.message)
@@ -663,12 +677,7 @@ export async function resumeEnrollment(
     p_id: id,
     p_displace: sameDiscipline.map((e) => e.id),
   })
-  if (error) {
-    const refusal = refusalFrom(error)
-    throw refusal instanceof ProgramRefused
-      ? refusal
-      : new Error(`Failed to restart the program: ${error.message}`)
-  }
+  if (error) throw refusalFrom(error, "That program could not be restarted. Reload and try again.")
   return { enrollment: toDomain(data as ProgramEnrollmentRow), displaced: sameDiscipline }
 }
 
@@ -1173,7 +1182,7 @@ export async function removeProgramSession(
     p_replay_events: replayEvents ?? null,
     p_expected_session_count: expectedSessionCount,
   })
-  if (error) throw refusalFrom(error)
+  if (error) throw refusalFrom(error, "That session could not be removed. Reload and try again.")
   return toDomain(data as ProgramEnrollmentRow)
 }
 

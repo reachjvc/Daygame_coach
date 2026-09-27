@@ -1,5 +1,6 @@
 "use client"
 
+import { DISPLAY_LOCALE } from "@/src/shared/dateUtils"
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { History, ChevronDown, ChevronUp } from "lucide-react"
@@ -173,7 +174,7 @@ export function ProgressionView({ logs, enrollment }: Props) {
                         <span className="min-w-0 flex-1 truncate">{l.name}</span>
                         <Sparkline
                           points={l.points}
-                          label={`${l.name}: ${formatLoad(l.first)} to ${formatLoad(l.latest)} ${unitLabel} over ${l.sessions} sessions, ${new Date(l.firstAt).toLocaleDateString()} to ${new Date(l.latestAt).toLocaleDateString()}`}
+                          label={`${l.name}: ${formatLoad(l.first)} to ${formatLoad(l.latest)} ${unitLabel} over ${l.sessions} sessions, ${new Date(l.firstAt).toLocaleDateString(DISPLAY_LOCALE)} to ${new Date(l.latestAt).toLocaleDateString(DISPLAY_LOCALE)}`}
                         />
                         <span className="shrink-0 text-muted-foreground">
                           {l.first === l.latest ? (
@@ -217,7 +218,7 @@ export function ProgressionView({ logs, enrollment }: Props) {
                       </span>
                     </span>
                     <span className="shrink-0 text-muted-foreground">
-                      {new Date(l.logged_at).toLocaleDateString()}
+                      {new Date(l.logged_at).toLocaleDateString(DISPLAY_LOCALE)}
                     </span>
                     {/*
                       NO BIN HERE ANY MORE.

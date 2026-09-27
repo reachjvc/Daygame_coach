@@ -2657,7 +2657,7 @@ export function lastTimePerLift(
       const body = sameReps && sameWeight
         ? `${entry.sets.length} × ${reps[0]} @ ${formatLoad(weights[0])} ${unitLabel}`
         : entry.sets.map((s) => `${formatLoad(s.weight)}×${s.reps}`).join(", ")
-      out[entry.exerciseId] = `${body} · ${new Date(log.logged_at).toLocaleDateString()}`
+      out[entry.exerciseId] = `${body} · ${new Date(log.logged_at).toLocaleDateString(DISPLAY_LOCALE)}`
     }
   }
   return out
@@ -3323,7 +3323,23 @@ export function fromKmToDisplay(km: number, unit: UnitSystem): number {
 export function describeEndurance(sets: EnduranceSet[]): { blocks: string; minutes: number } {
   const blocks = sets
     .map((set) => {
-      const inner = set.blocks.map((b) => b.label).join(" / ")
+      /**
+       * THE FOURTH RENDERER. The commit that introduced
+       * `describeEnduranceBlock` said "One formatter owns all three screens
+       * now" and there were four — this one, 1,500 lines from the other
+       * three in the same file, still printing the label alone.
+       *
+       * It feeds `trainingCardState().endurance` → `TrainingCard`, which is
+       * on the tracking dashboard AND in Life Mastery: the app's most-seen
+       * entry point read "Brisk walk · 8 × Jog / Walk · Walk · about 30 min"
+       * with no duration anywhere, and on the triathlon plans it degraded to
+       * "Endurance swim". This function's own docstring two lines up says it
+       * exists so that "how long, and what the intervals are" is on the card.
+       *
+       * Rule 3 is "fix the class", and the class is every place that turns a
+       * block into words. Counting the places is the part I got wrong.
+       */
+      const inner = set.blocks.map(describeEnduranceBlock).join(" / ")
       return set.repeat > 1 ? `${set.repeat} × ${inner}` : inner
     })
     .join(" · ")
