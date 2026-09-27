@@ -22,6 +22,7 @@ import {
   eventToDraft,
   eventsForDay,
   layoutBlocks,
+  shiftEntryBy,
   snapMinutes,
 } from "../calendarService"
 import {
@@ -180,14 +181,19 @@ export function CalendarView({
          * workspace that requires a project — or with a locked date — the block
          * slid under the cursor, snapped back, and the app said nothing.
          */
-        const result = updateEntry(
-          state,
-          drag.entryId,
-          { start: isoAtMinutes(day, newStart), stop: isoAtMinutes(day, newStart + drag.durationMinutes) },
-          nowIso(),
-        )
-        if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
-        else setState(() => result.state)
+        /**
+         * The whole entry shifts by how far the block was dragged. Setting an
+         * absolute start and an end of `start + heightMinutes` wrote the
+         * layout's one-minute floor into the data and rounded the seconds away
+         * — and, for an entry dragged by its second-day fragment, put both ends
+         * on that fragment's day and destroyed the first half.
+         */
+        const moving = state.entries.find((e) => e.id === drag.entryId)
+        const result = moving
+          ? updateEntry(state, drag.entryId, shiftEntryBy(moving, newStart - drag.startMinutes), nowIso())
+          : null
+        if (result && result.violations.length > 0) pushToast(result.violations[0].message, "error")
+        else if (result) setState(() => result.state)
       }
     } else if (mode === "resize" && drag.entryId) {
       const end = Math.max(drag.startMinutes + 5, drag.currentMinutes)

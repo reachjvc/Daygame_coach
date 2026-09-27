@@ -16,6 +16,7 @@ import {
 } from "./config"
 import {
   addDays,
+  startOfDayIso,
   dateKey,
   dateKeyToDate,
   epochSeconds,
@@ -526,6 +527,16 @@ export function layoutBlocks<T>(items: T[], toInterval: (item: T) => Interval): 
   return result
 }
 
+/**
+ * GEOMETRY, NOT ARITHMETIC. Nothing may be totalled from this.
+ *
+ * The one-minute floor below exists so a ten-second block is still wide enough
+ * to see and to grab. It is a drawing decision. When it was also used to add up
+ * a day, every entry shorter than a minute counted as sixty seconds, and the
+ * calendar reported 12:02 for a day the rest of the app put at 6:41. Day totals
+ * come from `entryDaySeconds`; a dragged block's new times come from
+ * `shiftEntryBy`.
+ */
 export function entryInterval(entry: TimeEntry, day: IsoDate, nowSec: number): Interval {
   const startMin = dateKey(entry.start) === day ? minutesIntoDay(entry.start) : 0
   const endIso = entry.stop ?? new Date(nowSec * 1000).toISOString()
@@ -555,11 +566,47 @@ export function snapMinutes(minutes: number, snap = CALENDAR_SNAP_MINUTES): numb
   return Math.max(0, Math.min(24 * 60, Math.round(minutes / snap) * snap))
 }
 
-/** Total tracked seconds shown in a calendar day column */
+/**
+ * The real tracked seconds of `entry` that fall inside `day`.
+ *
+ * The bounds are local midnights — this day's, and the next one's — rather than
+ * `endOfDayIso`, which is 23:59:59.999 and, with `epochSeconds` flooring, would
+ * lose a second at every midnight and look exactly like the bug this replaces.
+ * Local midnights also mean the 23- and 25-hour days at a clock change total
+ * correctly; `start + 86400` would not.
+ */
+export function entryDaySeconds(entry: TimeEntry, day: IsoDate, nowSec: number): number {
+  const from = Math.max(epochSeconds(startOfDayIso(day)), epochSeconds(entry.start))
+  const to = Math.min(
+    epochSeconds(startOfDayIso(addDays(day, 1))),
+    entry.stop ? epochSeconds(entry.stop) : nowSec,
+  )
+  const visible = Math.max(0, to - from)
+  // `isRunning` is true for a null stop OR a negative duration, so a row with
+  // no stop but a stored duration must not be counted from start to now.
+  return isRunning(entry) ? Math.min(visible, entrySeconds(entry, nowSec)) : visible
+}
+
+/** Total tracked seconds shown in a calendar day column. */
 export function dayColumnSeconds(entries: TimeEntry[], day: IsoDate, nowSec: number): number {
-  return entriesForDay(entries, day, nowSec).reduce((sum, entry) => {
-    const { startMin, endMin } = entryInterval(entry, day, nowSec)
-    const clamped = (endMin - startMin) * 60
-    return sum + (isRunning(entry) ? Math.min(clamped, entrySeconds(entry, nowSec)) : clamped)
-  }, 0)
+  return entriesForDay(entries, day, nowSec).reduce((sum, entry) => sum + entryDaySeconds(entry, day, nowSec), 0)
+}
+
+/**
+ * Where an entry lands when its block is dragged `deltaMinutes`.
+ *
+ * Both ends move by the same amount, so the duration — seconds included —
+ * survives the drag. The old path took the new end from `block.heightMinutes`,
+ * which carries `entryInterval`'s one-minute floor, so moving a twenty-second
+ * entry wrote a minute into the data and every drag rounded away the seconds.
+ * It also wrote both ends onto the dragged fragment's own day, which turned a
+ * 23:00 → 01:00 entry dragged by its second-day half into a one-hour entry on
+ * day two, first half gone.
+ */
+export function shiftEntryBy(entry: TimeEntry, deltaMinutes: number): { start: IsoDateTime; stop: IsoDateTime | null } {
+  const deltaMs = deltaMinutes * 60_000
+  return {
+    start: new Date(new Date(entry.start).getTime() + deltaMs).toISOString(),
+    stop: entry.stop ? new Date(new Date(entry.stop).getTime() + deltaMs).toISOString() : null,
+  }
 }
