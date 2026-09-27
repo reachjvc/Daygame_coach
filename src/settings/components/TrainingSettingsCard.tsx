@@ -108,8 +108,27 @@ export function TrainingSettingsCard({
               </button>
             ))}
           </div>
+          {/*
+            THE SECOND SENTENCE, because the first one on its own was a lie
+            whenever a program was running.
+
+            `unitForDisplay` asks the ENROLMENT first and the account second,
+            deliberately — without it, ending your last program silently
+            converted History and Progress to kilograms. The cost is that with
+            a program running, switching this says "Saved." and nothing on any
+            screen moves: History, Progress, the receipt and the Today card
+            all keep the program's unit. Measured on 2026-09-27, switching to
+            Pounds and re-walking every screen: all still kg.
+
+            Saying so is not the whole answer — there is still no way to move
+            a running program from kg to lb, and that is a product decision
+            about which should win, left for the owner. This is the half that
+            is not a decision: the screen must not imply it did something it
+            did not.
+          */}
           <p className="mt-1.5 text-xs text-muted-foreground">
-            Everything you have already logged stays as it was — this changes how it is shown.
+            Everything you have already logged stays as it was — this changes how it is shown. A
+            program you are already running keeps the unit you started it in.
           </p>
         </div>
 
