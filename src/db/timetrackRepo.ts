@@ -14,12 +14,14 @@
  */
 
 import { createServerSupabaseClient } from "./server"
-import { emptyRows, TIMETRACK_TABLES, type TimetrackRows } from "./timetrackTypes"
+import { emptyRows, rowKeyColumns, rowKeyOf, TIMETRACK_TABLES, type TimetrackRows } from "./timetrackTypes"
 
-/** Tables whose rows are identified by something other than a single `id` */
-const COMPOSITE_KEYS: Partial<Record<keyof TimetrackRows, string>> = {
-  timetrack_entry_tags: "entry_id,tag_id",
-  timetrack_settings: "user_id",
+/**
+ * The conflict target for an upsert, derived from the one definition of a row's
+ * identity rather than written out again here. It was a third copy of that rule.
+ */
+function conflictTarget(table: keyof TimetrackRows): string {
+  return rowKeyColumns(table).join(",")
 }
 
 /**
@@ -258,7 +260,7 @@ export async function pushTimetrackRows(userId: string, rows: Partial<TimetrackR
       if (!NO_UPDATED_AT.has(table)) withOwner.updated_at = writtenAt
       return withOwner
     })
-    const onConflict = COMPOSITE_KEYS[table] ?? "id"
+    const onConflict = conflictTarget(table)
 
     /**
      * TWO ROWS WITH ONE KEY IN A SINGLE UPSERT IS A DEAD END, SO SAY SO.
@@ -279,9 +281,9 @@ export async function pushTimetrackRows(userId: string, rows: Partial<TimetrackR
      * without telling anyone which one lost.
      */
     const seen = new Map<string, number>()
-    const keyColumns = onConflict.split(",")
     for (const row of owned) {
-      const key = keyColumns.map((column) => String(row[column])).join(",")
+      // reported as a ROW KEY, which is what the browser matches its queue on
+      const key = rowKeyOf(table, row)
       seen.set(key, (seen.get(key) ?? 0) + 1)
     }
     const duplicated = [...seen].filter(([, count]) => count > 1).map(([key]) => key)
@@ -303,7 +305,11 @@ export async function pushTimetrackRows(userId: string, rows: Partial<TimetrackR
       })
       throw new TimetrackWriteRefused(
         table,
-        refused.map((row) => String((row as { id?: unknown }).id ?? "")).filter(Boolean),
+        // ROW KEYS, not `row.id`. Three tables have no `id` column, so reporting
+        // ids meant a refusal in any of them named nothing, the browser's drop
+        // branch was skipped, and the row stayed queued for ever — which is how
+        // one mistyped end time on a tagged entry stopped an account saving.
+        refused.map((row) => rowKeyOf(table, row as Record<string, unknown>)).filter((key) => key.replace(/:/g, "") !== ""),
         `Could not write ${table}: ${error.message}`,
       )
     }

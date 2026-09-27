@@ -23,16 +23,22 @@
  * again.
  */
 
-import { emptyRows, TIMETRACK_TABLES, type TimetrackRows } from "@/src/db/timetrackTypes"
+import { emptyRows, rowKeyOf, TIMETRACK_TABLES, type TimetrackRows } from "@/src/db/timetrackTypes"
 
 type TableName = keyof TimetrackRows
 type AnyRow = Record<string, unknown>
 
-/** How a row is identified in the table it belongs to */
+/**
+ * How a row is identified in the table it belongs to.
+ *
+ * The rule itself lives in `src/db/timetrackTypes.ts`, beside the tables, because
+ * the server has to produce the same string: it reports which rows it refused, and
+ * the browser has to find them in its queue. When the two disagreed, a refusal in
+ * any table not keyed by `id` named nothing at all, and the row stayed queued for
+ * ever behind a badge promising it would be sent.
+ */
 export function rowKey(table: TableName, row: AnyRow): string {
-  if (table === "timetrack_entry_tags") return `${String(row.entry_id)}:${String(row.tag_id)}`
-  if (table === "timetrack_settings") return String(row.user_id)
-  return String(row.id)
+  return rowKeyOf(table, row)
 }
 
 /**

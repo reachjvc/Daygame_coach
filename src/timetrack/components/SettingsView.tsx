@@ -29,7 +29,7 @@ import {
 import { googleEventsToEvents, icsToEvents } from "../calendarService"
 import { IconAdd, IconAlert, IconCalendar, IconDelete, IconExport, IconImport, IconSpinner } from "../icons"
 import { addDays, dateKey, endOfDayIso, formatDate, formatDuration, formatTimeOfDay, plural, startOfDayIso } from "../timetrackFormatService"
-import { downloadFile, exportStateJson, importEntriesCsv, importStateJson } from "../importExportService"
+import { downloadFile, exportStateJson, importEntriesCsv, importStateJson, restoreIntoWorkspace } from "../importExportService"
 import {
   addAutotracker,
   addWebhook,
@@ -1178,7 +1178,8 @@ function DataPanel({
                 variant="destructive"
                 confirmLabel="Yes, replace everything"
                 onConfirm={() => {
-                  replaceState(pendingRestore.next)
+                  // into the workspace they are signed into, not the backup's own
+                  replaceState(restoreIntoWorkspace(pendingRestore.next, state.workspace.id))
                   setPendingRestore(null)
                   pushToast("Workspace restored from backup")
                 }}

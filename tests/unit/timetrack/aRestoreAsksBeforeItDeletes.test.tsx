@@ -21,7 +21,9 @@ import { cleanup, fireEvent, render, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vitest"
 
 import { SettingsView } from "@/src/timetrack/components/SettingsView"
-import { exportStateJson } from "@/src/timetrack/importExportService"
+import { exportStateJson, restoreIntoWorkspace } from "@/src/timetrack/importExportService"
+import { diffRows, safeToSend } from "@/src/timetrack/syncService"
+import { stateToRows } from "@/src/timetrack/timetrackMapperService"
 import type { TimetrackState } from "@/src/timetrack/types"
 
 import { baseState, entry } from "./helpers"
@@ -122,5 +124,58 @@ describe("choosing a backup file", () => {
 
     expect(replaceState).toHaveBeenCalledTimes(1)
     expect(replaceState.mock.calls[0][0].entries).toHaveLength(1)
+  })
+})
+
+describe("a backup taken in another browser", () => {
+  /**
+   * The Backup card offers this journey in so many words: "Export a copy to keep
+   * outside this app, or to move it to another browser." On 2026-09-27 the new
+   * mass-deletion guard started refusing it, because a live workspace row the
+   * server has never seen, beside deletions for everything it does have, is also
+   * the signature of the bad-read incident the guard exists to stop.
+   *
+   * Measured before the fix: restoring a 20-entry backup into a 3-entry account
+   * was refused as "a change that would delete 13 of your saved items" — a
+   * restore that GREW the account. And the refusal's own advice is what finished
+   * it off: the toast says to reload, a reload runs first contact, finds the
+   * server's copy differs and installs it.
+   *
+   * So the guard is asserted here, not just the reattachment: this test's job is
+   * to fail if the two ever disagree again.
+   */
+  test("is restored into this account's workspace, and the guard lets it through", () => {
+    const here = now()
+    const elsewhere = restoreIntoWorkspace(lastMonth(), "a-completely-different-workspace")
+    expect(elsewhere.workspace.id, "the fixture must start from a foreign workspace or this asserts nothing").toBe(
+      "a-completely-different-workspace",
+    )
+
+    const adopted = restoreIntoWorkspace(elsewhere, here.workspace.id)
+    expect(adopted.workspace.id).toBe(here.workspace.id)
+    expect(adopted.entries.every((e) => e.workspaceId === here.workspace.id), "children still point at the backup's workspace").toBe(true)
+
+    const serverRows = stateToRows(here, "u1")
+    const { changed } = diffRows(serverRows, stateToRows(adopted, "u1"), "2026-09-27T00:00:00.000Z")
+    expect(safeToSend(changed, serverRows, true).ok, "the guard refused a restore the product offers").toBe(true)
+  })
+
+  test("keeps what the backup's workspace actually carried", () => {
+    /**
+     * Only the identity is this account's. Losing the settings would make a
+     * restore a partial restore, silently.
+     */
+    const backup = {
+      ...lastMonth(),
+      workspace: { ...lastMonth().workspace, id: "other", name: "Kept name", rounding: { enabled: true, mode: "up" as const, minutes: 30 } },
+    }
+    const adopted = restoreIntoWorkspace(backup, "mine")
+    expect(adopted.workspace.name).toBe("Kept name")
+    expect(adopted.workspace.rounding).toEqual({ enabled: true, mode: "up", minutes: 30 })
+  })
+
+  test("and a backup from this same workspace is handed back untouched", () => {
+    const backup = lastMonth()
+    expect(restoreIntoWorkspace(backup, backup.workspace.id)).toBe(backup)
   })
 })

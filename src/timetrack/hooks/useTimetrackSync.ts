@@ -32,6 +32,7 @@ import {
   keysIn,
   mergeChangeSets,
   mergeIncoming,
+  rowKey,
   safeToSend,
   splitIntoBatches,
 } from "../syncService"
@@ -339,8 +340,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
              * sentence about `timetrack_entries_stop_after_start` that nobody
              * can act on.
              */
-            const named = (failure.ids ?? [])
-              .map((id) => latestState.current?.entries.find((e) => e.id === id))
+            const named = (failure.table === "timetrack_entries" ? (failure.ids ?? []) : [])
+              .map((key) => latestState.current?.entries.find((e) => e.id === key))
               .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
               .map((entry) => `“${entry.description.trim() || "(no description)"}”`)
             pushToast(
@@ -368,24 +369,52 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
              * queueing it again until it does change.
              */
             const refusedTable = failure.table as keyof TimetrackRows | undefined
-            const refusedIds = new Set(failure.ids ?? [])
-            if (refusedTable && refusedIds.size > 0) {
-              const queuedHere = (pending.current[refusedTable] ?? []) as { id?: unknown }[]
-              const refusedRows = queuedHere.filter((row) => refusedIds.has(String(row.id)))
-              pending.current = {
-                ...pending.current,
-                [refusedTable]: queuedHere.filter((row) => !refusedIds.has(String(row.id))),
-              } as Partial<TimetrackRows>
-              savePending()
-              serverRows.current = mergeIncoming(
-                serverRows.current ?? emptyRows(),
-                { [refusedTable]: refusedRows } as Partial<TimetrackRows>,
-                new Set(),
-              )
-              // and send what is left NOW rather than at the next edit — the
-              // rest of the queue did nothing wrong
-              if (countRows(pending.current) > 0) setTimeout(() => void flushRef.current?.(), 0)
+            const refusedKeys = new Set(failure.ids ?? [])
+            if (refusedTable && refusedKeys.size > 0) {
+              /**
+               * MATCHED ON A ROW KEY, WHICH IS WHAT THE SERVER NOW REPORTS.
+               *
+               * This matched `String(row.id)`, and three tables have no `id`
+               * column — the tag links are keyed by their pair, settings by the
+               * person. So a refusal in any of them matched nothing: the filter
+               * removed nothing, the row stayed queued, and the immediate
+               * re-flush below fired anyway into the same refusal. Measured at
+               * 4,201 POSTs in five simulated seconds.
+               */
+              const queuedHere = (pending.current[refusedTable] ?? []) as unknown as Record<string, unknown>[]
+              const isRefused = (row: Record<string, unknown>) => refusedKeys.has(rowKey(refusedTable, row))
+              const refusedRows = queuedHere.filter(isRefused)
+              const keptRows = queuedHere.filter((row) => !isRefused(row))
+
+              if (refusedRows.length > 0) {
+                pending.current = { ...pending.current, [refusedTable]: keptRows } as Partial<TimetrackRows>
+                savePending()
+                serverRows.current = mergeIncoming(
+                  serverRows.current ?? emptyRows(),
+                  { [refusedTable]: refusedRows } as Partial<TimetrackRows>,
+                  new Set(),
+                )
+                // and send what is left NOW rather than at the next edit — the
+                // rest of the queue did nothing wrong
+                if (countRows(pending.current) > 0) setTimeout(() => void flushRef.current?.(), 0)
+                return
+              }
             }
+
+            /**
+             * NOTHING WAS IDENTIFIED, SO NOTHING IS RE-SENT IMMEDIATELY.
+             *
+             * The old code re-armed the flush whenever the server named anything
+             * at all, whether or not a row was actually dropped — so a name the
+             * browser could not match became a request per round trip, for ever,
+             * with an error toast each time. The queue is unchanged here, so
+             * sending it again this instant can only produce the same refusal.
+             *
+             * The work is not lost: it stays in `pending`, on disk, and goes up on
+             * the next edit, on `online`, or when the tab is looked at again. The
+             * badge and the toast above say what happened. Not retrying is the
+             * whole point of a 4xx.
+             */
             return
           }
           throw new Error(message)
@@ -750,17 +779,56 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
        * now between what we hold and what we believe the server has is ours,
        * and an answer computed before it cannot speak for it.
        */
+      let unsent: Partial<TimetrackRows> = {}
       if (latestState.current) {
-        const unsent = diffRows(
+        unsent = diffRows(
           serverRows.current,
           stateToRows(latestState.current, userId.current),
           new Date().toISOString(),
         ).changed
         for (const key of keysIn(unsent)) dirty.add(key)
       }
+
+      /**
+       * KEEPING THE SERVER'S ROW OUT IS NOT THE SAME AS KEEPING YOURS IN.
+       *
+       * THE STOP THAT HAD TO BE PRESSED TWICE, third and last variant, and this
+       * one needs nothing slow and nothing offline. Press Stop; 400ms later the
+       * once-a-minute pull answers, still inside the 800ms upload debounce; the
+       * timer starts running again about twenty seconds later and the queue reads
+       * empty. Reproduced with fake timers against this hook and the real
+       * `stopTimer`, with an answer carrying only rows both sides already agree
+       * about.
+       *
+       * The `dirty` set above stops the SERVER's copy of a locally-changed row
+       * from entering `merged`. But `merged` is seeded from `serverRows` — "the
+       * rows we believe the server has" — and an edit that has not been sent
+       * lives in `state` and in `pending`, never in `serverRows`. So skipping the
+       * incoming row leaves the PRE-EDIT row in place, `rowsToState` rebuilds the
+       * workspace as it was before the stop, and the `replaceState` below writes
+       * that over what the person is looking at.
+       *
+       * Then it was recorded as the truth: `awaitingState` made the change-watcher
+       * set the baseline to the state it had just adopted, so the stop was gone
+       * from the queue as well as from the screen. `pending` read 0.
+       *
+       * The pattern was already in this file, 200 lines up: adoption lays the
+       * local unsent diff back on top with `mergeIncoming(body.rows,
+       * sinceOpening.changed, new Set())`. `unsent` is that same diff, and it was
+       * being computed here and used only as a set of keys.
+       *
+       * TWO BASELINES, AND THAT IS THE POINT. What we believe the server has is
+       * the merge WITHOUT our unsent rows; what the person sees is the merge WITH
+       * them. Recording the second as the first is how a change becomes invisible
+       * rather than late — the change-watcher then finds nothing to send, for ever.
+       */
       const merged = mergeIncoming(serverRows.current ?? emptyRows(), body.rows, dirty)
-      serverRows.current = merged
-      const settled = reconcileRunningEntries(rowsToState(merged, new Date().toISOString()))
+      // round-tripped, for the reason the baseline below is: a row as the server
+      // stores it carries columns the mapper never emits, and those must not read
+      // as local changes on the next tick
+      serverRows.current = stateToRows(rowsToState(merged, new Date().toISOString()), userId.current)
+      const withLocal = mergeIncoming(merged, unsent, new Set())
+      const settled = reconcileRunningEntries(rowsToState(withLocal, new Date().toISOString()))
 
       /**
        * DO NOT REDRAW FOR AN ECHO OF YOUR OWN WRITES.
@@ -799,14 +867,33 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
        * the state it actually adopted.
        */
       if (nothingNew && settled.stopped.length === 0) {
-        serverRows.current = stateToRows(settled.state, userId.current)
+        // the baseline is already the round-tripped server belief, set above
         return
       }
 
       if (settled.stopped.length > 0) {
         pushToast("Another device had a timer running too. The older one was stopped where this one started.")
       }
-      awaitingState.current = settled.state
+
+      /**
+       * NO `awaitingState` HERE, AND THE BASELINE IS WHY.
+       *
+       * It existed to stop the change-watcher re-uploading the very rows the
+       * server had just sent, by setting the baseline to the state that was
+       * adopted. That is correct only when the adopted state is entirely the
+       * server's — and it is not: `settled.state` now carries this device's
+       * unsent edits, and `reconcileRunningEntries` may have stopped a timer that
+       * another device left running, which is a change of ours too.
+       *
+       * The baseline above already holds the server's version and nothing else,
+       * so the watcher's next diff is exactly "what is ours and not yet sent" —
+       * which is the thing that should be queued. The echo of the server's own
+       * rows is not in that diff, so nothing is re-uploaded either way.
+       *
+       * That also closes a quieter one: a reconciliation stop was previously
+       * written into the baseline and so was never uploaded at all, leaving the
+       * other device's timer running on the server for ever.
+       */
       replaceState(settled.state)
     } catch {
       // a failed pull is not worth interrupting anyone: the next one will run

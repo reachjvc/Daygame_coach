@@ -256,3 +256,57 @@ export function emptyRows(): TimetrackRows {
     timetrack_settings: [],
   }
 }
+
+/**
+ * HOW A ROW IS IDENTIFIED, IN ONE PLACE, BECAUSE BOTH SIDES HAVE TO AGREE.
+ *
+ * Three tables are not keyed by `id`: the tag links by the pair they join, and
+ * settings by the person. That fact used to be written down three times — the
+ * client's `rowKey`, the repo's `COMPOSITE_KEYS`, and the repo's `ORDER_KEY` —
+ * and the two sides disagreed in exactly the way that matters.
+ *
+ * WHAT IT COST. A refused row is reported so the browser can take it out of the
+ * queue; the repo reported `String(row.id ?? "")`, which is EMPTY for those three
+ * tables. So:
+ *
+ *   - a refusal in one of them named nothing, the browser's drop branch was
+ *     skipped entirely, and the row stayed queued while the status went to error
+ *     with no retry armed. Every later edit went into the same all-or-nothing
+ *     batch and was refused with it. One mistyped end time on a TAGGED entry
+ *     therefore stopped the account saving for good: the entry itself was
+ *     isolated and dropped, and the orphan `(entry_id, tag_id)` link behind it
+ *     then failed its foreign key for ever. A reload does not help — the queue is
+ *     read back from `localStorage` — and "Reload to resync" is the only thing the
+ *     person is told.
+ *   - when a name WAS reported but in a shape the browser could not match, the
+ *     drop removed nothing and the immediate re-flush fired anyway: measured at
+ *     4,201 POSTs in five simulated seconds, the third occurrence of that flood
+ *     in this file.
+ *
+ * So the key is defined once, here, next to the tables themselves, and both the
+ * client and the repo ask this function.
+ */
+const ROW_KEY_COLUMNS: Partial<Record<keyof TimetrackRows, readonly string[]>> = {
+  timetrack_entry_tags: ["entry_id", "tag_id"],
+  timetrack_settings: ["user_id"],
+}
+
+/** The columns that identify a row in this table. `["id"]` unless stated above. */
+export function rowKeyColumns(table: keyof TimetrackRows): readonly string[] {
+  return ROW_KEY_COLUMNS[table] ?? ["id"]
+}
+
+/**
+ * The identity of one row, as a string both sides produce identically.
+ *
+ * A missing column yields an empty part rather than "undefined", so a malformed
+ * row cannot collide with a real one whose value happens to be that word.
+ */
+export function rowKeyOf(table: keyof TimetrackRows, row: Record<string, unknown>): string {
+  return rowKeyColumns(table)
+    .map((column) => {
+      const value = row[column]
+      return value === undefined || value === null ? "" : String(value)
+    })
+    .join(":")
+}

@@ -43,6 +43,44 @@ export function importStateJson(text: string): { state: TimetrackState | null; e
 // ---------------------------------------------------------------------------
 
 /** RFC 4180-ish CSV row splitter (handles quoted fields and escaped quotes) */
+/**
+ * A RESTORE PUTS A BACKUP'S CONTENTS INTO **YOUR** WORKSPACE.
+ *
+ * It used to install the backup's own workspace record, id and all. The Backup
+ * card offers exactly that journey — "Export a copy to keep outside this app, or
+ * to move it to another browser" — and on 2026-09-27 the mass-deletion guard
+ * started refusing it, because a live workspace row the server has never seen
+ * beside deletions for everything it does have is also the signature of the
+ * bad-read incident the guard exists to stop. Measured: restoring a 20-entry
+ * backup into a 3-entry account was refused as "a change that would delete 13 of
+ * your saved items" — a restore that GREW the account.
+ *
+ * And the refusal's advice made it worse. The toast says to reload; a reload runs
+ * first contact, finds the server's copy differs, and installs it — so following
+ * the only instruction on screen is what destroys the restore.
+ *
+ * Keeping this account's workspace id is also the truthful reading of the act: the
+ * person is restoring their time into the workspace they are signed into, not
+ * adopting a second workspace. Everything the backup's workspace record actually
+ * carries — its name, currency, rounding, required fields, the lock date — is
+ * kept. Only the identity is this account's.
+ */
+export function restoreIntoWorkspace(backup: TimetrackState, workspaceId: Id): TimetrackState {
+  if (backup.workspace.id === workspaceId) return backup
+  const reattach = <T extends { workspaceId: Id }>(rows: T[]): T[] => rows.map((row) => ({ ...row, workspaceId }))
+  return {
+    ...backup,
+    workspace: { ...backup.workspace, id: workspaceId },
+    members: reattach(backup.members),
+    groups: reattach(backup.groups),
+    clients: reattach(backup.clients),
+    projects: reattach(backup.projects),
+    tasks: reattach(backup.tasks),
+    tags: reattach(backup.tags),
+    entries: reattach(backup.entries),
+  }
+}
+
 export function parseCsvRows(text: string): string[][] {
   const rows: string[][] = []
   let row: string[] = []
