@@ -14,11 +14,24 @@
 --   before: Squat 1 completed_at 2026-09-27T02:44:38.187Z, Press 1 …:52.9Z, …
 --   after:  every row completed_at NULL
 --
--- `inWorkoutOrder` (src/db/healthRepo.ts:288) sorts on set_number, then
--- warm-up-ness, then `completed_at`. With the tiebreaker gone the order falls
+-- `inWorkoutOrder` (src/db/healthRepo.ts) sorted on set_number, then
+-- warm-up-ness, then `completed_at`. With the tiebreaker gone the order fell
 -- back to a uuid, and the receipt's "What you did" reordered from
 -- `Squat, Overhead Press, Deadlift` to `Overhead Press, Squat, Deadlift`. It
 -- is not recoverable: the instants are gone.
+--
+-- UPDATED 2026-09-27, LATER THE SAME DAY, and the case is now stronger rather
+-- than weaker. That comparator was itself wrong — `set_number` first meant a
+-- workout of five squats then five benches listed round-robin even when its
+-- timestamps were intact — and it now sorts by `completed_at` FIRST, with
+-- rows that have none LAST.
+--
+-- So the two tiers are visibly different. A workout you have not corrected
+-- reads in the order you did it. Correct it once and every row loses its
+-- timestamp, drops to the bottom tier, and the workout goes back to reading
+-- by slot — permanently, because the instants are gone. Before today that
+-- difference was invisible; now it is the difference between the screen
+-- telling the truth and not.
 --
 -- `prescribed_index` going null turns every corrected program set into one the
 -- app reads as "added on the day".
