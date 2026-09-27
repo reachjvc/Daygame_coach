@@ -5,6 +5,128 @@
 Every number below was measured in this codebase on 2026-09-26, not estimated.
 Where a number is a guess it says so.
 
+## Revision 4 — 2026-09-27, round four of review-until-clean
+
+Round 4's security reviewer found the largest hole in four rounds, and it
+invalidates three numbers the plan rests on. Every claim below re-verified by hand
+before being written here.
+
+### The migrations folder cannot build this database, and the project already knew
+
+**M2's entire deliverable is "port 56 migrations". It cannot run.** Measured:
+
+    # tables the code actually queries
+    grep -rhoE '\.from\("[a-z_]+"\)' src/ app/ scripts/ | sed 's/.*"\(.*\)".*/\1/' | sort -u   → 46
+    # tables any migration creates
+    grep -rhoiE "create table( if not exists)? +[a-z_.\"]+" supabase/migrations/*.sql | … | sort -u → 66
+    # queried but created by NO migration
+    comm -23 → 19
+
+The 19: `ai_usage_logs`, `approaches`, `daily_goal_snapshots`, `embeddings`,
+`field_report_templates`, `field_reports`, `inner_game_progress`, `milestones`,
+`purchases`, `review_templates`, `reviews`, `scenarios`, `sessions`,
+`sticking_points`, `user_goals`, `user_tracking_stats`, `user_values`,
+`value_comparisons`, `values`. **That is goals, field reports, approaches,
+sessions, reviews, scenarios, purchases, values and the corpus** — the most
+personal tables in the product. They exist only inside the live Supabase project,
+made through its console or an older project.
+
+**It already fails, and the runbook restored yesterday says so.**
+`docs/runbooks/timetrack.md:37-39`: *"The repo's migration history cannot be
+replayed from scratch — an older migration references `user_goals`, which no
+migration creates — so `supabase db reset` fails."* Confirmed:
+`20260225_add_goal_enum_check_constraints.sql:7` runs `ALTER TABLE user_goals`,
+and no migration creates that table. That file sorts second.
+
+**`match_embeddings` — the search over the corpus — has no source in this repo.**
+Of the 10 functions the app calls by name it is the only one with no
+`create function` anywhere. `schemaMirror.test.ts:169` excuses it as "pgvector-only",
+so nothing ever noticed. M4 lists it as a deliverable and nobody here has its
+definition.
+
+**Three stated numbers are therefore wrong in the flattering direction**, because
+each was a grep of that folder: M8's "63 live tables" excludes `field_reports`,
+`approaches`, `sessions`, `reviews`, `user_values`, `sticking_points`, `milestones`
+and `purchases`, so the account-deletion test would iterate a list that never
+mentions them; M2's "40 `references auth.users`" misses ~16 more on the orphan
+tables; and M2's acceptance ("a row count per table") reports clean on a database
+missing a third of the app.
+
+**Change:** B4 becomes a **hard blocker for a `pg_dump --schema-only` as well as
+the data**, and **that dump, not `supabase/migrations/`, is M2's source of truth.**
+Add one test, runnable today on the current stack: every table the code queries and
+every function it calls by name exists in the dump. It is the cheapest thing in
+this plan and it would have caught this in Revision 1.
+
+### The 68 rules the owner is asked to approve are about 140
+
+`grep -rhoi "create policy" | wc -l` → 68. But **4 of those 68 are strings inside
+`execute format(...)` in a loop over 19 tables** —
+`20260903120000_timetrack.sql:407-432`, array verified as 19 `timetrack_*` tables.
+So those 4 lines are **76** policies. Total **64 + 76 = 140**. The project measured
+it by hand once and agrees: `docs/runbooks/timetrack.md:46` — *"18 tables, 72
+policies."* The same loop also runs `enable row level security` per table, so 19
+tables' row security is invisible to any static count too.
+
+**And 76 of the 140 are on `timetrack_*` tables, which convention 4 forbids
+touching.** That is the **third** convention-4 collision after M7 and Q8, and the
+largest. Q6's "call it a week" was priced against 68.
+
+**Change:** every policy count comes from
+`select count(*) from pg_policies where schemaname = 'public'` against the live
+database, never a grep. Settle the timetrack ownership before M4.
+
+### There is a second kind of wall, and it is the one stopping a paywall bypass
+
+The plan inventories "68 policies" and "10 functions" and **no permissions at
+all.** `20260828140001_profiles_rls_hardening.sql:35-45` does
+`revoke update on public.profiles from authenticated` and then grants update on 27
+named columns — **`has_purchased` is deliberately not among them.** Its header
+records the bypass it closed: *"any signed-in user could PATCH their own row with
+`{"has_purchased": true}` and grant themselves premium… Postgres row policies
+cannot restrict which column changed."*
+
+The app does not replicate that list: `src/db/types.ts` still types
+`has_purchased?: boolean` on `ProfileUpdate` and `profilesRepo.ts:45` does
+`.update(updates)` on whatever it is handed. Nothing is exploitable today only
+because one caller has its own key allow-list. **After the move there is one role
+and no column grants, and M4's test cannot see this** — raising your own paid flag
+on your own row is not a cross-user action.
+
+**Change:** M4's deliverable becomes "the database's permission model", enumerated
+from `information_schema.table_privileges` and `column_privileges` before anything
+is deleted, with each survivor carried into application code — specifically a
+column allow-list in `updateProfile` and a test that a payload containing
+`has_purchased` is refused. M4's generated test gains a self-escalation case.
+
+### Triggers enforce cross-user rules that are not among the policies
+
+`workout_logs_enrollment_is_own_trg` (`20260907100000_one_workout_record.sql:141`)
+exists because *"a row policy sees the row you WROTE, never the row you point at,
+so without this a signed-in person could attach their own workout to somebody
+else's program."* That is a cross-user rule M4's inventory misses entirely.
+`life_answers_no_update` and `life_chapters_no_update` make two tables append-only,
+and both headers record the data loss that caused them. 17 more `*_touch` triggers
+are created inside another loop, invisible to a static read.
+`schemaMirror.test.ts` compares policies, functions and CHECKs — `grep` for
+`foreign|references|on delete` in it returns nothing, so foreign keys, delete
+behaviour and triggers are unguarded.
+
+**Change:** M2's acceptance asserts the set of triggers, CHECK constraints, unique
+indexes and foreign keys in the new database equals the set in the schema-only
+dump, name for name. Same dump, no extra cost.
+
+### What round 4 confirmed as sound
+
+The 18 stray `.from()` call sites — the thing most likely to repeat the
+`save_life_plan` bug — are **clean**: all five `profiles` reads and both in
+`ScenariosPage` carry `.eq("id", user.id)`, and the four unfiltered reads in
+`apiAiRepo.ts` are reachable only behind an `X-Admin-Key` gate that fails closed
+when the secret is unset. Only 3 `SECURITY DEFINER` functions exist and all three
+were already named. 38 of 40 user links are `ON DELETE CASCADE` and the one
+`SET NULL` is de-identified by design, so there is no orphan class. The reviewer
+also disproved one of its own findings rather than report it.
+
 ## Revision 3 — 2026-09-26, after an independent review
 
 A separate agent was given this plan and told to attack it and re-measure every
