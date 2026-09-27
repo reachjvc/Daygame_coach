@@ -690,6 +690,118 @@ test.describe("live workout", () => {
     await page.waitForURL("**/programs/live", { timeout: 20000 })
     await expect(page.locator("body")).not.toContainText("duplicate key")
   })
+  /**
+   * THROWN AWAY ON THE LAPTOP, WHILE THE PHONE IS STILL TICKING.
+   *
+   * The sentence the owner saw, mid-workout, verbatim:
+   *
+   *     That Squat set could not be saved: new row violates row-level
+   *     security policy for table "workout_sets"
+   *
+   * `completeSet` checks the workout is open and then inserts. Discard it on
+   * another device in the window between those two and the insert lands on the
+   * database's own complaint — a foreign-key violation on the first set of a
+   * burst and a row-level-security refusal on the ones after it, one cause and
+   * two codes — and every workout route handed a thrown message straight to
+   * the browser. Reproduced 18 times in 40 through the ordinary Discard
+   * button before the guard existed.
+   *
+   * WHICH HALF THIS DRIVES, EXACTLY, because the docblock above describes a
+   * race and this test does not land one. `completeSet` refuses a workout
+   * that is ALREADY gone before it inserts anything, so discard-then-tick
+   * never reaches Postgres. Proved: reverting `workoutRepo` to before the fix
+   * turns this red on the SENTENCE — "That workout is not open any more"
+   * instead of "thrown away somewhere else" — and on the status, 400 where it
+   * must be 409. The leak assertions never fired in that red run, so they are
+   * a backstop here and not the proved part.
+   *
+   * The narrow window between the check and the insert is where 42501 and
+   * 23503 really come from, and no browser test can land it on demand. That
+   * half is driven deterministically in `tests/unit/db/workoutGone.test.ts`,
+   * which feeds `refuseWrite` those exact codes and asserts the wording never
+   * carries them.
+   *
+   * WHY IT IS IN THIS FILE AND NOT ITS OWN. This file runs in all four
+   * training projects — desktop Chromium, iPhone Safari, Android Chrome,
+   * Firefox — and a phone is the device this happens on. Nothing in a browser
+   * had ever driven any of it, so the reported bug's only guard was a unit
+   * test of the layer underneath the screen that showed it.
+   */
+  test("thrown away on another device, and the screen says so in its own words", async ({
+    page,
+    browser,
+  }) => {
+    await page.reload({ waitUntil: "networkidle" })
+    await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
+    await page.getByTestId("start-workout").click()
+    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await expect(page.getByTestId("set-row-1").first()).toBeVisible({ timeout: 20000 })
+
+    // One set in before the workout goes, so the screen has something to lose.
+    const firstSaved = page.waitForResponse(
+      (r) => r.url().includes("/sets") && r.request().method() === "POST"
+    )
+    await page.getByTestId("tick-1").first().click()
+    expect((await firstSaved).ok(), "the set before the discard should land").toBe(true)
+
+    /**
+     * The other device. `TRAINING_STATE` and not `.auth/user.json`: the same
+     * ACCOUNT on a second browser is the claim, and a different person's
+     * browser would prove nothing about a phone and a laptop.
+     */
+    const other = await browser.newContext({ storageState: TRAINING_STATE })
+    const otherPage = await other.newPage()
+    await otherPage.goto("/programs")
+    const thrownAway = await otherPage.evaluate(async () => {
+      const live = await (await fetch("/api/workouts/live")).json()
+      if (!live) return 0
+      return (await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })).status
+    })
+    expect(thrownAway, "the other device should have thrown the workout away").toBe(200)
+    await other.close()
+
+    /**
+     * This device does not know yet — nothing polls the workout, the 20-second
+     * timer only flushes a queue that is empty. So the next ✓ IS the discovery,
+     * which is exactly the race the owner hit.
+     */
+    const refused = page.waitForResponse(
+      (r) => r.url().includes("/sets") && r.request().method() === "POST"
+    )
+    await page.getByTestId("tick-2").first().click()
+    const answer = await refused
+
+    /**
+     * THE WORDS FIRST, because they are what the owner actually saw, and
+     * because the order decides what a red run proves.
+     *
+     * The status was asserted first to begin with. Reverting `workoutRepo` to
+     * before the fix turned this test red on "Expected 409, Received 400" and
+     * stopped there — so the run never reached the sentence on the screen, and
+     * the test's headline claim had still never been observed failing. A
+     * guard proved only on its second assertion is proved only for that one.
+     */
+    for (const leak of [/row-level security/i, /violates/i, /constraint/i, /workout_sets/i]) {
+      await expect(
+        page.locator("body"),
+        `the database's own words reached a person standing at a squat rack: ${leak}`
+      ).not.toContainText(leak, { timeout: 5000 })
+    }
+    await expect(page.locator("body")).toContainText(/thrown away somewhere else/i, {
+      timeout: 15000,
+    })
+
+    /**
+     * And the status, which decides whether the set SURVIVES. Anything in the
+     * 400s tells the offline queue the write can never succeed, so it drops
+     * the set out of localStorage and takes the ✓ off the screen. Before the
+     * fix this was a 400.
+     */
+    expect(
+      answer.status(),
+      "a workout that is gone is the state saying no — 409, not a 500 and not a 400"
+    ).toBe(409)
+  })
 
   /**
    * TWO TAPS IN THE SAME INSTANT.

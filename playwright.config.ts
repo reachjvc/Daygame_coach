@@ -358,6 +358,13 @@ export default defineConfig({
         /mobile\/mobile-training\.spec\.ts/,
         /programs-live-workout\.spec\.ts/,
         /programs-offline\.spec\.ts/,
+        // A SECOND ENGINE AT DESKTOP WIDTH. The fault this file owns was pure
+        // layout — an absolutely positioned delete button sitting on the ✓
+        // from 640px up — and layout is exactly what differs between engines,
+        // so verifying the fix on Chromium alone verified it on one grid
+        // implementation. The file sets its own viewport per test, so the
+        // 390px default above does not apply to it.
+        /programs-live-desktop\.spec\.ts/,
       ],
       fullyParallel: false,
       workers: 1,
