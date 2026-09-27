@@ -117,6 +117,20 @@ export function ReceiptBody({ summary }: { summary: WorkoutSummary }) {
       </div>
 
       {/*
+        WHAT YOU WROTE, given back to you. "Anything worth remembering?" is
+        asked at the end of every session and was shown on no screen in the
+        app — not here, not in History, not in the correction editor, not in
+        the CSV. An open question at the most loaded moment of the session,
+        and the answer swallowed.
+      */}
+      {summary.notes?.trim() ? (
+        <div data-testid="receipt-note">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">What you noted</p>
+          <p className="mt-1 whitespace-pre-line text-sm">{summary.notes.trim()}</p>
+        </div>
+      ) : null}
+
+      {/*
         WHAT THE SESSION WAS, set by set.
         The receipt carried the totals and what the program does next, and not
         the sets — survivable while the History row unfolded the session in

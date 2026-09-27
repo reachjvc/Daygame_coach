@@ -499,7 +499,7 @@ export function workoutsToCsv(logs: WorkoutLogWithSets[], timezone: string): str
    * the thing that makes it cardio. Progress bills this file as "every
    * program and every loose workout together".
    */
-  const header = ["date", "session_type", "duration_min", "distance_km", "exercise", "set", "reps", "weight_kg", "set_kind"]
+  const header = ["date", "session_type", "duration_min", "distance_km", "notes", "exercise", "set", "reps", "weight_kg", "set_kind"]
   const cell = (v: string | number | boolean | null): string => {
     if (v === null) return ""
     const str = String(v)
@@ -514,12 +514,12 @@ export function workoutsToCsv(logs: WorkoutLogWithSets[], timezone: string): str
     // A cardio session has no sets and still belongs in the file — leaving it
     // out would make the export disagree with the session count on screen.
     if (!log.sets || log.sets.length === 0) {
-      rows.push([date, log.session_type, log.duration_min, log.distance_km ?? null, "", "", "", "", ""].map(cell).join(","))
+      rows.push([date, log.session_type, log.duration_min, log.distance_km ?? null, log.notes ?? null, "", "", "", "", ""].map(cell).join(","))
       continue
     }
     for (const s of log.sets) {
       rows.push(
-        [date, log.session_type, log.duration_min, log.distance_km ?? null, s.exercise, s.set_number, s.reps, s.weight_kg, s.set_kind]
+        [date, log.session_type, log.duration_min, log.distance_km ?? null, log.notes ?? null, s.exercise, s.set_number, s.reps, s.weight_kg, s.set_kind]
           .map(cell)
           .join(",")
       )

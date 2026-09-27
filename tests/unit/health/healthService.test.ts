@@ -264,7 +264,7 @@ describe("workoutsToCsv", () => {
 
   it("has a header even with nothing to export", () => {
     expect(workoutsToCsv([], TZ).split("\n")).toEqual([
-      "date,session_type,duration_min,distance_km,exercise,set,reps,weight_kg,set_kind",
+      "date,session_type,duration_min,distance_km,notes,exercise,set,reps,weight_kg,set_kind",
     ])
   })
 
@@ -285,6 +285,24 @@ describe("workoutsToCsv", () => {
     const columns = lines[0].split(",")
     const values = lines[1].split(",")
     expect(values[columns.indexOf("distance_km")]).toBe("3.2")
+  })
+
+  it("is in the file, because it is in no other screen either", () => {
+    /**
+     * "Anything worth remembering?" was asked at the end of every session,
+     * stored on `workout_logs.notes`, and shown nowhere: not the receipt you
+     * land on, not the one you come back to, not History, not the correction
+     * editor, and not here — in the export whose own docblock bills it as the
+     * answer to "I lost years of data".
+     */
+    const lift = {
+      ...workout("2026-03-01T10:00:00", [set("Squat", 100, 5)]),
+      notes: "Left knee felt tight on the third set.",
+    }
+    const lines = workoutsToCsv([lift], TZ).split("\n")
+    const columns = lines[0].split(",")
+    expect(columns).toContain("notes")
+    expect(lines[1]).toContain("Left knee felt tight on the third set.")
   })
 
   it("leaves it empty rather than zero when there is no distance", () => {

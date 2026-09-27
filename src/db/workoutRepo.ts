@@ -823,7 +823,7 @@ export async function summaryFor(userId: string, workoutId: string): Promise<Wor
   const { data, error } = await supabase
     .from("workout_logs")
     .select(
-      "id, enrollment_id, started_at, ended_at, duration_min, session_type, distance_km, progression_changes, personal_records"
+      "id, enrollment_id, started_at, ended_at, duration_min, session_type, distance_km, notes, progression_changes, personal_records"
     )
     .eq("id", workoutId)
     .eq("user_id", userId)
@@ -848,6 +848,8 @@ export async function summaryFor(userId: string, workoutId: string): Promise<Wor
      */
     session_type: string | null
     distance_km: number | null
+    /** "Anything worth remembering?", which nothing has ever read back. */
+    notes: string | null
     progression_changes: ProgressionChange[] | null
     personal_records: StoredRecords | null
   }
@@ -887,6 +889,15 @@ export async function summaryFor(userId: string, workoutId: string): Promise<Wor
     distanceKm: row.distance_km,
     durationMin: Math.min(599, Math.max(1, row.duration_min ?? derived)),
     sets: working.length,
+    /**
+     * WHAT YOU WROTE, given back to you. "Anything worth remembering?" was
+     * asked at the end of every session, stored on the row, and shown on no
+     * screen in the app — not the receipt you land on, not the receipt you
+     * come back to, not History, not the correction editor, not the CSV. The
+     * app asked an open question at the most loaded moment of the session and
+     * swallowed the answer.
+     */
+    notes: row.notes ?? null,
     /**
      * Every set, in the order they were done, so the receipt can show what the
      * session WAS. Warm-ups included and marked as such: a session of five

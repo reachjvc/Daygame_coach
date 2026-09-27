@@ -134,8 +134,22 @@ export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
           <div className="flex gap-1.5" data-testid="week-dots">
             {week.days.map((d, i) => (
               <div key={d.date} className="flex flex-1 flex-col items-center gap-1">
+                {/*
+                  SAID, NOT ONLY COLOURED. Done / not done / still to come was
+                  carried entirely by `bg-primary` vs `bg-muted` vs a dashed
+                  border, and the only non-visual attribute was `title`, an
+                  ISO date that says nothing about whether you trained — so
+                  the whole strip read as "M T W T F S S" to a screen reader.
+                  The Today tab's `WeekStrip` was given exactly these labels
+                  in an earlier round; this is the same component one screen
+                  over. Colour alone also fails WCAG 1.4.1.
+                */}
                 <span
                   title={d.date}
+                  role="img"
+                  aria-label={`${WEEKDAYS[i]} ${d.date}: ${
+                    d.done ? "trained" : d.future ? "still to come" : "not trained"
+                  }`}
                   className={`h-7 w-full rounded ${
                     d.done
                       ? "bg-primary"

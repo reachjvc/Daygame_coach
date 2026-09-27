@@ -870,6 +870,14 @@ export interface StoredSet {
 export interface WorkoutSummary {
   workoutId: string
   /**
+   * The note typed into "Anything worth remembering?" at the finish.
+   *
+   * It was stored on `workout_logs.notes` and read by nothing — this type had
+   * no field for it, so the receipt could not render it however much it
+   * wanted to.
+   */
+  notes?: string | null
+  /**
    * WHAT YOU ACTUALLY DID, set by set — the receipt's own record.
    *
    * It carried the totals and what the program would do next, and not the
