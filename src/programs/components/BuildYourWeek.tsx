@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/dialog"
 import { useProgramDrafts } from "../hooks/useProgramDrafts"
 import { BUILDER_STORAGE_KEY, formatProgramText, parseProgramText } from "../programText"
-import { numericWeights } from "../builder"
+import { convertTyped, numericWeights } from "../builder"
 import { sameWeek } from "../customize"
 import { CUSTOM_PROGRAM_ID } from "../data/customProgram"
 import { CHIP_ON } from "./trainingStyles"
@@ -96,6 +96,41 @@ function readAutosave(): Autosave | null {
     // box starts empty rather than the screen failing to render.
     return null
   }
+}
+
+
+/**
+ * SWITCHING kg↔lb CONVERTS WHAT YOU TYPED. It used to change the label and
+ * leave the numbers, so `Back Squat 5x5 @60` written in kilograms became a
+ * 60 lb — 27 kg — squat the moment the chip was tapped, with the textarea and
+ * the read-back line byte-identical before and after. The program then
+ * started at that weight and nothing anywhere said so.
+ *
+ * `convertTyped` in `src/programs/builder.ts` was written for exactly this and
+ * its docblock names this bug — "The builder's own unit button did the
+ * opposite wrong thing: it kept the numbers and changed the label, so 60 kg
+ * silently became 60 lb". It had ZERO call sites. The fix existed and was
+ * never wired up, which is the one kind of bug a grep for the fix will not
+ * find.
+ *
+ * ON THE TEXT, not through `formatProgramText`. Regenerating the week from
+ * the parsed schedule would convert the numbers and rewrite everything else
+ * somebody typed — their spacing, their day names, their order. This replaces
+ * the weights where they stand and leaves the rest of the text alone.
+ *
+ * "free", NOT barbell, for the reason `ProgramDetail.changeUnit` gives at
+ * length: `roundToLoadable`'s barbell path floors at the bar, so a 6 kg
+ * lateral raise would be dragged up to a 45 lb bar. These are numbers
+ * somebody typed, not prescriptions.
+ *
+ * `@bw` is not a weight and is left exactly as it is.
+ */
+export function convertWeightsInText(text: string, from: UnitSystem, to: UnitSystem): string {
+  if (from === to) return text
+  return text.replace(/@\s*(\d+(?:\.\d+)?)/g, (whole, typed: string) => {
+    const converted = convertTyped({ w: typed }, from, to, () => "free").w
+    return converted === typed ? whole : `@${converted}`
+  })
 }
 
 export function BuildYourWeek({ enrollments, draftId = null, onStarted }: Props) {
@@ -285,7 +320,10 @@ export function BuildYourWeek({ enrollments, draftId = null, onStarted }: Props)
             variant="outline"
             aria-pressed={unit === u}
             className={unit === u ? CHIP_ON : undefined}
-            onClick={() => setUnit(u)}
+            onClick={() => {
+              setText((was) => convertWeightsInText(was, unit, u))
+              setUnit(u)
+            }}
           >
             {u}
           </Button>

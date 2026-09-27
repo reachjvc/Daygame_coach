@@ -137,7 +137,41 @@ function parseLift(
   let repMin: number | null = null
   let repMax: number | null = null
   if (sr) {
-    rest = rest.replace(SETS_REPS, "").trim()
+    /**
+     * WHAT FOLLOWS THE REPS IS NOT PART OF THE LIFT'S NAME.
+     *
+     * This was `rest.replace(SETS_REPS, "")`, so the leftovers CLOSED UP
+     * around the hole and "whatever is left is the name" swept them in:
+     *
+     *   Plank 3x30s              -> a lift called "Plank s"
+     *   Plank 3x30 sec           -> "Plank sec"
+     *   Farmer Carry 3x40m       -> "Farmer Carry m"
+     *   Bench Press 3x8 to failure -> "Bench Press to failure"
+     *   Back Squat 5x5 @-60      -> "Back Squat @-60"
+     *
+     * All five parsed with no problem reported and an enabled Start. This
+     * file's own header says "NOTHING IS SILENTLY DROPPED … the failure mode
+     * this avoids is the one where you paste a program, the app keeps four
+     * lines out of five, and you find out in the gym" — and gluing the
+     * leftovers onto the name is worse than dropping them. "Bench Press to
+     * failure" is not the library's Bench Press: it loses barbell rounding
+     * and its progression rule, and because `workout_sets.exercise` stores
+     * the NAME it joins with nothing in History, Progress or "your bests".
+     * "Plank s" gets double progression at +2.5 kg a session, on a plank.
+     *
+     * `DROPS` above was added for one instance of exactly this and says so.
+     * This is the rule it was an instance of: the weight and the drop-set
+     * marker are already gone by here, so anything still standing after the
+     * sets×reps is text nobody could read.
+     */
+    const at = sr.index ?? 0
+    const after = rest.slice(at + sr[0].length).trim()
+    if (after) {
+      return {
+        error: `"${after}" could not be read — a line is the lift's name, then 3x8, then @60`,
+      }
+    }
+    rest = rest.slice(0, at).trim()
     sets = Number(sr[1])
     repMin = Number(sr[2])
     repMax = sr[3] ? Number(sr[3]) : null
