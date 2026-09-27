@@ -1,7 +1,9 @@
 # Off Vercel and Supabase, onto your own platform, aimed at a real app
 
-**Rewritten 2026-09-27**, replacing five stacked revision banners that had stopped
-agreeing with the milestones beneath them. Serves vision items 36, 37, 46, 47.
+**Rewritten 2026-09-27**, replacing four stacked revision banners that had stopped
+agreeing with the milestones beneath them. (Round 5's own 20 findings never reached a
+committed banner — they went from the reviewers straight into this rewrite, so they
+cannot be audited from git. An audit corrected the "five" claim.) Serves vision items 36, 37, 46, 47.
 
 **How to read this.** Every number in this plan lives in **THE NUMBERS** and
 nowhere else — if a milestone needs a figure it names the row, so a correction
@@ -40,9 +42,12 @@ start.
 
 ## What it costs
 
-**$40–60 a month for the platform. $115–140 if the AI models are hosted on it.**
-See the cost rows in THE NUMBERS. The old plan said $5–20, which was wrong by
-enough to matter.
+**≈ €20–30 a month for the server (N41). ≈ €40–90 on top if the AI models are hosted
+(N42).** The AI choice is the largest single line, so Q-AI-HOST matters more to the
+bill than everything else combined. **Do not read N36–N38: they priced a managed
+platform and D1 superseded them.** The original plan said $5–20, wrong by enough to
+matter. **The saving against a managed platform is paid for in operations work, not
+conjured** — that work is M1.1 and M1.7.
 
 **Time: unknown, and I will not give you a single number again.** It was 4–7 weeks,
 then 6–10, then 8–14, and each was produced by a review that then found more work.
@@ -204,6 +209,8 @@ Hetzner raised cloud prices on 15 June 2026 and the CPX line rose steeply:**
 | N41 · **Platform total, self-hosted** | **≈ €20–30/month** — materially below N36. The saving is paid for in operations work, not conjured |
 | N42 · If the AI models are hosted (Q-AI-HOST) | **+€40–90/month** for a box holding ~8 GB resident. Still the largest single line |
 | N43 · If the corpus inputs move (D5, N32) | **≈ €5/month** of volume — a fraction of N38, which is what makes D5 a choice again |
+| N44 · **Build-time** variables, inlined into the bundle by `next build` | **4** — `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_BUILD_ID`, `NEXT_PUBLIC_APP_URL`. **A runtime boot check can never catch these**, and one build cannot serve two environments |
+| N45 · RAM and disk floor per box | **unset — B2 orders hardware against a price (N39) with no floor stated.** Derive it from Postgres + data + WAL + kept images + logs before ordering |
 
 Confirm N39–N43 on the order page before B2 is acted on.
 
@@ -333,7 +340,7 @@ the new platform has served real traffic** (rule 4).
 ### B6 — A real phone, locked, receiving a notification. **Needs you. Gates M7's
 acceptance.** Nothing here can test it.
 
-### B-PATHS — Convention 4 must be renegotiated before M0.4. **Gates M0.4, M1b.2,
+### B-PATHS — Convention 4 must be renegotiated before M0.4. **Gates M0.4, M1b.4,
 M7, M1.6 and Q-POLICIES.**
 The old plan said "do not touch `src/timetrack/**` or `src/vice/**`" and then
 required those paths in **five** places: M0.4's tests for `timetrackRepo`,
@@ -361,14 +368,16 @@ first data load. Anything with no owner here is out of scope, explicitly.
 | The data seam (Q-SEAM) | **M0.4**, its first deliverable |
 | Completing the test mirror to the live schema | **M0.4** |
 | The API base-URL indirection (D8) | **M0.5** |
+| **The box itself — provisioning, supervision, the build artifact** | **M1.1** |
 | The app builds and boots on the platform | **M1.1** |
+| Postgres major version and its configuration | **M2** |
 | Secrets, healthcheck, monitoring | **M1.7** |
 | Scheduler | **M1b.2** |
 | Email | **M1b.3** |
 | Backups with a restore actually performed | **M1b.4** |
 | Pipeline ingest tail route (D5) | **M1b.5** |
 | AI hosting decision executed (D4, Q-AI-HOST) | **M1.6** |
-| Rate-limit counter moved to a shared store | **M1.6** |
+| Rate-limit counter moved to a shared store **and applied to login, reset and AI** | **M1.6** |
 | pgvector, the `embeddings` table, `match_embeddings` | **M2** |
 | Supabase roles / the 19 GRANTs (N14) | **M2** |
 | Users table, id type (D3), password migration | **M3** |
@@ -453,7 +462,10 @@ disaster recovery**, which reach it through `timetrackBackupRepo`.
    functions. Giving one a seam while its callees build their own client buys
    nothing.
 - Acceptance: `npm run test:integration` executes repo functions for 26 of 26, and
-  the mirror contains every table in B1's dump. **Prerequisite for the test to be
+  the mirror contains every table in B1's dump. **Plus the cheapest test in this plan,
+  whose second half the rewrite dropped: every table the code queries AND every
+  function it calls by name exists in the dump.** The function half is what catches
+  N15's `match_embeddings` being absent. **Prerequisite for the test to be
   runnable at all:** B1 and step 2.
 - **Not covered:** this does not port anything. It builds the net M5 falls into.
 
@@ -466,11 +478,11 @@ configured address.
 
 ### M0.6 — Your development connection (rule 5)
 A way for your `localhost:3000` to reach a database once the real one is private:
-the platform CLI's tunnel, or a local Postgres loaded from B1's dump.
+an SSH tunnel to the box — there is no platform CLI under D1 — or a local Postgres loaded from B1's dump.
 - **This exists before M1 finishes**, because M1.6, M1.7 and M5 each break your daily
   use without it. M1.6 makes an environment variable mandatory on your laptop the
   moment it lands; M1.7's "refuse to boot when a variable is missing" applies to your
-  machine too, and there are 21 of them; M5 rewrites 21 of 26 repos to talk to a
+  machine too, and there are 21 of them; M5 rewrites N1 to talk to a
   database your laptop cannot reach.
 
 **M0 acceptance:** N17 still passes, N19 reports "none new", `npm run test:integration`
@@ -503,12 +515,43 @@ this" was me reading the workflow file instead of what the workflow does.
   **Turbopack-only** key while the build command passes `--webpack`. Three client
   components import `@huggingface/transformers` dynamically, so it may be benign —
   it is the one place the two engines are configured differently.
-- Acceptance: a deployed URL that serves the app and answers M1.7's healthcheck.
+**Under D1 this milestone also owns the box, which nothing owned before.** There is
+no Dockerfile, compose file, Caddyfile, Ansible or Terraform in this repo, and
+`next.config.mjs` sets no `output` key — so today the recipe for the server would
+exist only in whoever typed the commands.
+
+1. **One checked-in provisioning artifact** — an `infra/` directory with the script or
+   playbook, the compose file or systemd units, the reverse-proxy config, and M2's
+   `postgresql.conf` fragment. **One stated rule: nothing exists on either box that
+   this artifact did not put there, except the secrets file and Postgres's data
+   directory.** That rule is what makes M1b.4's restore real — a restored database
+   needs an identical machine before it is worth anything, so **the backup plan is only
+   as good as the machine plan.** It is also what makes "staging and production are the
+   same shape" mean the same shape rather than the same price.
+2. **A real build job producing a deployable artifact.** CI builds this app today only
+   *inside Playwright's web server* (`playwright.config.ts:696`) and throws the result
+   away — no build job, no artifact, no registry. Choose the shape:
+   `output: "standalone"` (it does **not** copy `public/` or `.next/static` — you copy
+   them), a Docker image, or shipped `node_modules` whose native binaries must match the
+   box's architecture and libc. Name the registry and its retention.
+3. **Supervision.** What runs the app, restarts it on crash, starts it on boot. Compose
+   does this only if the restart policy is set and Docker is enabled at boot, neither of
+   which is currently stated. systemd is familiar territory — `build.sh:65`.
+4. **Build-time variables are a separate class (N44), owned here:** the build fails when
+   any is missing, and **there is one build per environment.** The same image cannot be
+   promoted from staging to production — it would bill and email against the wrong URL.
+5. **`deploymentId`** from the same git sha as the build id, one line, so a tab left open
+   across a deploy reloads instead of 404-ing on chunks the box no longer has.
+- Acceptance: **reboot the staging box from the Hetzner console and, without logging in,
+  the app answers `/api/healthz` — and Postgres came back first.** A hand-typed
+  `npm start` in an SSH session passes a weaker test and dies with the terminal. Plus:
+  the provisioning artifact built both boxes from a fresh image, and running it twice
+  changes nothing.
 
 ### M1.7 — Secrets, healthcheck, monitoring
 **21** distinct environment variables are read across the codebase. `NEXT_PUBLIC_APP_URL`
 is baked into both Stripe's return URL and M1b.3's email links.
-- `NEXT_PUBLIC_BUILD_ID` is required and wired to the platform's commit variable, and
+- `NEXT_PUBLIC_BUILD_ID` is required and set from the git sha **in CI** — under D1 there is no provider commit variable to read — and
   **the build fails rather than resolving to `"unknown"`** — the workflow sets it
   from `github.sha`, since under D1 there is no provider commit variable at all.
   `OfflineShell` refuses to register the service worker without a build id, so a
@@ -521,7 +564,13 @@ is baked into both Stripe's return URL and M1b.3's email links.
   database it would need to report on.
 - `prune_error_reports()` has no caller anywhere, so `error_reports` grows without
   bound. M1b.2 owns it.
-- A fourth place secrets live: `e2e.yml` hardcodes five Supabase values in `env:`.
+- A fourth place secrets live: **GitHub Actions.** `e2e.yml` passes five Supabase
+  values, and the heavy jobs nine — **as `${{ secrets.* }}` references, not
+  hardcoded.** An earlier draft of this plan said "hardcodes", which was wrong and
+  would send someone hunting a leaked key to rotate. There is no key in the file.
+  **Under D1 a fifth joins them and it is the most valuable secret in the project: a
+  deploy key that can log into production.** Dedicated non-root user, restricted to
+  the deploy command, and `deploy.yml` must not run on any event a fork can trigger.
 - **On Hetzner there is no platform secret store**, so they are a file on the box with
   file permissions as the only wall, readable by anything that gets a shell. Say where
   it lives, who may read it, and that it never reaches the repo or a backup that
@@ -532,10 +581,45 @@ is baked into both Stripe's return URL and M1b.3's email links.
   on the server cannot report that the server is down. This project has no monitoring
   of any kind today and Vercel supplied it for free, so this is a new job, not a
   ported one.
-- Acceptance: the app refuses to boot with a variable missing, loudly; a certificate
-  renews without being touched; and the uptime check has fired once, on purpose, into
-  something you actually read. **Prerequisite: M0.6, or this locks you out of your own
-  dev server.**
+**The new internet-facing surface, which one clause did not cover.** Vercel and
+Supabase absorbed all of this:
+- **The app must not face the internet.** `next start` listens on every interface unless
+  told otherwise, and Next's own self-hosting guide says put a reverse proxy in front —
+  the proxy absorbs malformed requests, slow-connection attacks, payload limits and rate
+  limiting. So the app binds `127.0.0.1` only, and the **Hetzner Cloud Firewall**
+  (outside the box, so a mistake in `ufw` cannot expose anything) default-denies inbound
+  with 80, 443 and a restricted 22 open.
+- **sshd:** `PasswordAuthentication no`, `PermitRootLogin no`, a non-root deploy user,
+  fail2ban or a source restriction on 22. An unhardened sshd on a Hetzner IP meets
+  credential-stuffing within hours.
+- **Who owns 80/443 and renewal.** Caddy renews itself; nginx + certbot needs its own
+  timer. ACME's HTTP-01 challenge needs port 80 open — a constraint on the rule above.
+- **If Q-AI-HOST says host: Ollama has no authentication at all.** Private network only,
+  never the public IP, and **never the app box** — resident weights would evict
+  Postgres's cache and make every query slow.
+- **The "private network is loopback" claim is conditional** on Postgres living on the
+  app box, which B7 leaves open. On its own box you need a private network plus
+  `listen_addresses` and `pg_hba.conf`.
+
+**Two alerts, at the standard this milestone already sets.** The disk is the single
+point of failure on one box, and **the backup system M1b.4 adds is the likeliest thing
+to fill it**: WAL archiving keeps each segment until the archive command succeeds, so
+expired credentials or a long network drop grow `pg_wal` until the disk is full — and a
+full disk stops Postgres accepting writes and takes the app with it. An uptime check
+reports that *after* the outage, by definition.
+- **Disk free under 25% and under 10%.** Also cap journald/Docker logs and prune old
+  images: every deploy leaves ~1GB behind and Docker's default logging has no size cap.
+- **The age of the last successful WAL archive**, once M1b.4 exists.
+
+- Acceptance: the app refuses to boot with a **runtime** variable missing, loudly —
+  N44's four are build-time and M1.1 owns them. **Scan the public IP from outside: only
+  80, 443 and 22 answer; 3000, 5432 and 11434 answer nothing.** A forced certificate
+  renewal performed and observed once, **plus an alert when the served certificate has
+  under 14 days left** — "it renews without being touched" cannot be tested for 60 days,
+  and silent failure means an untrusted site for every browser and, after M7, every
+  phone app at once. The uptime check and both disk alerts each fired once, on purpose,
+  into something you actually read. **Prerequisite: M0.6, or this locks you out of your
+  own dev server.**
 
 ### M1.8 — Deploy pipeline
 Migrate, then deploy. Staging on push to `training-rebuild`, production on `main`.
@@ -562,7 +646,10 @@ for 60 seconds, which was invisible on Vercel and freezes every other user on on
 always-on container.
 - Remove the `|| "http://localhost:11434"` default — a silent fallback CLAUDE.md
   forbids, which presents as "the AI is slow" rather than "not configured".
-- **The rate-limit counter moves to Postgres here**, before it is relied on. It is an
+- **The rate-limit counter moves to Postgres here, AND is applied.** Moving it without
+  applying it protects nothing: **login, password reset and the AI endpoints are where a
+  stranger either gets in or spends your money**, and M3 builds a token login on a
+  public API. The rewrite kept the move and dropped the application; this restores it. It is an
   in-memory map per process, so with staging plus production the real limit is
   already twice the stated one — and for the AI endpoints that multiplies the bill.
   It lives in `src/timetrack/`, so it needs B-PATHS.
@@ -589,6 +676,8 @@ N12 twice.
   onto a server you administer. A scheduled `pg_dump` to storage that is not this
   server is enough to start; M1b.4 upgrades it to point-in-time recovery. **M2 does
   not load production data until that dump has been restored into staging once.**
+- **Repoint N12's user links to our own users table.** A deliverable in the original
+  plan that the rewrite lost, keeping only the rationale. Largest mechanical change here.
 - The Supabase roles (N14): state whether they are recreated or the 19 grants
   rewritten. On a fresh Postgres those roles do not exist and the replay stops there.
 - The embeddings table **records its model name**, and retrieval **refuses to answer**
@@ -600,7 +689,11 @@ N12 twice.
   later, so a stale dump passes a dump-to-copy comparison while every goal, approach
   and field report you recorded in between exists only in Supabase. Plus the set of
   triggers, CHECK constraints, unique indexes and foreign keys matching the dump name
-  for name — nothing currently guards those.
+  for name — nothing currently guards those. **One deliberate exception, and stating it is
+  the point: the user links must NOT match the dump.** The dump's point at `auth.users`;
+  ours must point at our users table, and **a test that fails if any `auth.users`
+  reference survives** is the other half. A name-for-name assertion with no exception
+  would assert the very thing that must change.
 
 ## M3 — Token login
 
@@ -626,7 +719,7 @@ N12 twice.
 
 ## M1b — The always-on parts (after M3)
 
-**Depends on:** M2, M3. Moved here because each of these named a test that needed a
+**Depends on:** M2, M3, **B-PATHS** (M1b.4 touches `timetrackBackupRepo`). Moved here because each named a test that needed a
 schema and real users.
 
 - **M1b.2 Scheduler.** No scheduling tool exists in this project. `resetGoalsForPeriods`
@@ -681,7 +774,11 @@ the test cannot pass.**
   `profilesRepo.ts` updates whatever it is handed.
 - **A self-escalation case**, because raising your own paid flag on your own row is
   not a cross-user action and form (a) and (b) both miss it.
-- **The 11 Postgres functions** (N15): decide each one's fate. `save_life_plan` takes
+- **The 11 Postgres functions** (N15), named because "decide each one's fate" with no
+  list is the stand-in failure this plan is otherwise careful about: `save_life_plan`,
+  `start_enrollment`, `end_enrollment`, `resume_enrollment`, `finish_program_workout`,
+  `remove_session_and_replay`, `replace_sets_and_replay`, `log_session_and_advance`,
+  `claim_beta_slot`, `match_embeddings`, `match_embeddings_test`. Decide each fate. `save_life_plan` takes
   ownership from the caller's payload; `claim_beta_slot` calls `auth.uid()` inside its
   body and breaks outright. **Triggers too** — one exists purely so nobody can attach
   their own workout to someone else's program, and it is not a policy.
@@ -730,6 +827,9 @@ the test cannot pass.**
 - **Verify before building:** service workers may not run under Capacitor's scheme on
   iOS. If so, M1.7's build-id fix protects an offline shell the app does not have, and
   M7's offline story needs a different mechanism.
+- **The push handler lives in `public/sw.js`, whose offline list another session owns —
+  message them before editing.** The rewrite dropped that warning and it matters on a
+  shared checkout; same for `playwright.config.ts` and `components/BottomSheet.tsx`.
 - Acceptance: B6 — you, holding your phone, with it closed.
 
 ## M8 — The legal minimum
