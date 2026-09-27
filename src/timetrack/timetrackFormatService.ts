@@ -229,6 +229,17 @@ export function formatRangeLabel(start: IsoDate, end: IsoDate, format: DateForma
   return `${formatDate(start, format)} – ${formatDate(end, format)}`
 }
 
+/**
+ * "1 project", not "1 projects".
+ *
+ * The workspace summary in Settings › Data counted eight things and got every
+ * singular wrong. English plurals are irregular enough that the caller should
+ * pass the plural when it is not just an "s".
+ */
+export function plural(count: number, one: string, many = `${one}s`): string {
+  return `${count} ${count === 1 ? one : many}`
+}
+
 export function formatMoney(amount: number, currency: string): string {
   const rounded = Math.round(amount * 100) / 100
   return `${currency} ${rounded.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`

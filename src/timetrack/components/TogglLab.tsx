@@ -87,6 +87,18 @@ const NAV: NavItem[] = [...PHONE_TABS, ...MORE_SECTIONS]
 const SCREENS = new Set<string>(NAV.map((item) => item.id))
 
 /**
+ * The sections worth returning to.
+ *
+ * Settings and Manage are places you go on purpose and leave; they are not
+ * where a time tracker should open. Remembering them meant the product's own
+ * "Time" tab landed on a date-format form with no timer in sight — twice in one
+ * walkthrough, including the first load of the day. The filter is applied when
+ * the screen is SAVED as well as when it is read, because a read-side filter
+ * alone still lets a visit to Settings overwrite the Reports you wanted back.
+ */
+const WORTH_RETURNING_TO = new Set<string>(PHONE_TABS.map((item) => item.id))
+
+/**
  * The section you were last on, so opening the tracker puts you back where you
  * were instead of on Timer every time.
  *
@@ -98,7 +110,7 @@ function rememberedScreen(): Screen {
   if (typeof window === "undefined") return "timer"
   try {
     const saved = window.localStorage.getItem(SCREEN_KEY)
-    return saved && SCREENS.has(saved) ? (saved as Screen) : "timer"
+    return saved && SCREENS.has(saved) && WORTH_RETURNING_TO.has(saved) ? (saved as Screen) : "timer"
   } catch {
     // Storage blocked. Not worth a word to the user: the cost is opening on
     // Timer, which is where it opened before any of this existed.
@@ -182,6 +194,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
   const [screen, setScreen] = useState<Screen>(rememberedScreen)
 
   useEffect(() => {
+    if (!WORTH_RETURNING_TO.has(screen)) return
     try {
       window.localStorage.setItem(SCREEN_KEY, screen)
     } catch {

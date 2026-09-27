@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { MIN_SPLIT_SECONDS } from "../config"
 import { useDebouncedCommit } from "../hooks/useDebouncedCommit"
+import { useStagedEdit } from "../hooks/useStagedEdit"
 import { useIsMobile } from "../hooks/useIsMobile"
 import {
   IconDelete,
@@ -27,8 +28,10 @@ import {
 import {
   dateKey,
   formatClock,
+  formatDate,
   formatDayHeader,
   formatDuration,
+  formatTimeOfDay,
   fromLocalInputValue,
   parseDurationInput,
   parseTimeInput,
@@ -961,15 +964,25 @@ export function EntryDetailModalBody({
       setStop(storedStop)
       return
     }
-    if (stopIso && new Date(stopIso) <= new Date(startIso)) {
-      pushToast("End must be after start", "error")
-      return
-    }
+    /**
+     * No ordering check here any more. It used to live in this function — and
+     * only here, so the inline row and the calendar could write a reversed pair
+     * that the database then refused, which blocked the upload queue for
+     * everything behind it. The rule is in `validateEntry` now, so `commit`
+     * below returns false and says why, wherever the time was typed.
+     */
     if (!commit({ start: startIso, stop: stopIso })) {
       setStart(storedStart)
       setStop(storedStop)
     }
   }
+
+  /**
+   * On blur, and on the way out. Escape closes this sheet without firing blur,
+   * and a time typed then abandoned used to be lost in silence while the
+   * description beside it was kept.
+   */
+  const stagedTimes = useStagedEdit(commitTimes)
 
   return (
     <div className="space-y-3">
@@ -995,11 +1008,11 @@ export function EntryDetailModalBody({
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <label className="space-y-1 text-xs text-muted-foreground">
           Start
-          <Input type="datetime-local" value={start} onChange={(event) => setStart(event.target.value)} onBlur={commitTimes} />
+          <Input type="datetime-local" value={start} onChange={(event) => setStart(event.target.value)} onBlur={stagedTimes.flush} />
         </label>
         <label className="space-y-1 text-xs text-muted-foreground">
           End
-          <Input type="datetime-local" value={stop} onChange={(event) => setStop(event.target.value)} onBlur={commitTimes} disabled={isRunning(entry)} />
+          <Input type="datetime-local" value={stop} onChange={(event) => setStop(event.target.value)} onBlur={stagedTimes.flush} disabled={isRunning(entry)} />
         </label>
       </div>
       {/* the box stays 16px; the label is the target, as everywhere else here */}
@@ -1042,7 +1055,7 @@ export function EntryDetailModalBody({
       </div>
       <p className="text-[11px] text-muted-foreground">
         Created with {entry.createdWith}
-        {entry.sourceEventId ? " · imported from a calendar event" : ""} · last updated {new Date(entry.at).toLocaleString()}
+        {entry.sourceEventId ? " · imported from a calendar event" : ""} · last updated {formatDate(dateKey(entry.at), state.user.dateFormat)} {formatTimeOfDay(entry.at, state.user.timeFormat)}
       </p>
     </div>
   )

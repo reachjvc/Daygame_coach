@@ -40,6 +40,21 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  /**
+   * THE DEV BUBBLE SAT ON A TAB PEOPLE TAP.
+   *
+   * At 390px `elementFromPoint` over the time tracker's "Timer" tab returned
+   * the Next.js dev-tools circle, not the button — and this machine's
+   * localhost:3000 is where the product is actually used, so that tab was
+   * unreachable with a thumb. Every corner collides with something at that
+   * width: top-left is "← Dashboard", top-right the bell and the sync badge,
+   * bottom the tab bar itself.
+   *
+   * Turning it off costs the route-type indicator and nothing else — compile
+   * and runtime errors still surface. Set it back to `{ position: "top-right" }`
+   * if that indicator is ever wanted on a wide screen.
+   */
+  devIndicators: false,
   turbopack: {
     resolveAlias: {
       // Prevent Node.js-only ONNX runtime from being bundled (used by @huggingface/transformers)

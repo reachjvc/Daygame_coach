@@ -28,7 +28,7 @@ import {
 } from "../config"
 import { googleEventsToEvents, icsToEvents } from "../calendarService"
 import { IconAdd, IconAlert, IconCalendar, IconDelete, IconExport, IconImport, IconSpinner } from "../icons"
-import { addDays, dateKey, endOfDayIso, formatDuration, startOfDayIso } from "../timetrackFormatService"
+import { addDays, dateKey, endOfDayIso, formatDate, formatDuration, formatTimeOfDay, plural, startOfDayIso } from "../timetrackFormatService"
 import { downloadFile, exportStateJson, importEntriesCsv, importStateJson } from "../importExportService"
 import {
   addAutotracker,
@@ -571,7 +571,7 @@ function AutomationPanel({
           </ul>
         )}
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Current clock: {new Date(nowSec * 1000).toLocaleTimeString()}
+          Current clock: {formatTimeOfDay(new Date(nowSec * 1000).toISOString(), state.user.timeFormat)}
         </p>
       </SectionCard>
     </div>
@@ -760,7 +760,9 @@ export function IntegrationsPanel({
                       ? "uploaded file"
                       : "Google Calendar API"}{" "}
                   · {calendar.eventCount} events
-                  {calendar.lastSyncedAt ? ` · synced ${new Date(calendar.lastSyncedAt).toLocaleString()}` : ""}
+                  {calendar.lastSyncedAt
+                  ? ` · synced ${formatDate(dateKey(calendar.lastSyncedAt), state.user.dateFormat)} ${formatTimeOfDay(calendar.lastSyncedAt, state.user.timeFormat)}`
+                  : ""}
                 </span>
                 <div className="ml-auto flex items-center gap-2">
                   <ToggleRow
@@ -991,7 +993,7 @@ export function IntegrationsPanel({
           <div className="mt-3 max-h-48 overflow-y-auto rounded border border-border bg-secondary/20 p-2 text-[11px]">
             {state.webhookLog.slice(0, 30).map((entry) => (
               <p key={entry.id} className="truncate">
-                <span className="text-muted-foreground">{new Date(entry.at).toLocaleTimeString()}</span> {entry.event} →{" "}
+                <span className="text-muted-foreground">{formatTimeOfDay(entry.at, state.user.timeFormat)}</span> {entry.event} →{" "}
                 {entry.url}
               </p>
             ))}
@@ -1124,14 +1126,14 @@ function DataPanel({
         description="What this workspace holds right now. Everything here is yours — this page ships with no sample data."
       >
         <ul className="grid gap-1 text-sm sm:grid-cols-2">
-          <li>{state.entries.length} time entries</li>
-          <li>{state.projects.length} projects</li>
-          <li>{state.clients.length} clients</li>
-          <li>{state.tasks.length} tasks</li>
-          <li>{state.tags.length} tags</li>
-          <li>{state.members.length} members</li>
-          <li>{state.events.length} calendar events</li>
-          <li>{state.savedReports.length} saved reports</li>
+          <li>{plural(state.entries.length, "time entry", "time entries")}</li>
+          <li>{plural(state.projects.length, "project")}</li>
+          <li>{plural(state.clients.length, "client")}</li>
+          <li>{plural(state.tasks.length, "task")}</li>
+          <li>{plural(state.tags.length, "tag")}</li>
+          <li>{plural(state.members.length, "member")}</li>
+          <li>{plural(state.events.length, "calendar event")}</li>
+          <li>{plural(state.savedReports.length, "saved report")}</li>
         </ul>
         <div className="mt-3">
           <ConfirmButton variant="outline" confirmLabel="Yes, delete everything" onConfirm={resetWorkspace}>

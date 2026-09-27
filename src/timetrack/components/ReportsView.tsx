@@ -344,7 +344,11 @@ function FilterControls({
           </div>
         )}
       </Dropdown>
-      <Button variant="ghost" size="icon-sm" onClick={() => shiftRange(1)} aria-label="Next period">
+      {/* `hidden sm:inline-flex` to match its partner above: these two are the
+          DESKTOP pair. On a phone both arrows live in the row outside the
+          sheet, and this one, guarded by nobody, was rendering inside it as a
+          lone unlabelled ">" under the date field. */}
+      <Button variant="ghost" size="icon-sm" className="hidden sm:inline-flex" onClick={() => shiftRange(1)} aria-label="Next period">
         <IconNext className="size-4" />
       </Button>
 
