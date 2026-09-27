@@ -22,7 +22,13 @@ import { describe, expect, test } from "vitest"
 import { detectPersonalRecords, firstTimeLifts, liftBests } from "@/src/health/healthService"
 import type { WorkoutSetRow, WorkoutLogWithSets } from "@/src/health/types"
 
-const set = (over: Partial<WorkoutSetRow>): WorkoutSetRow =>
+/**
+ * `logged_at` is on it because `detectPersonalRecords` and `firstTimeLifts`
+ * take `WorkoutSetRow & { logged_at: string }`. The first version omitted it
+ * and the tests PASSED — the value is never read on these paths — while the
+ * typecheck ratchet caught the lie in the signature.
+ */
+const set = (over: Partial<WorkoutSetRow> = {}): WorkoutSetRow & { logged_at: string } =>
   ({
     id: `s-${Math.random()}`,
     log_id: "l1",
@@ -39,8 +45,9 @@ const set = (over: Partial<WorkoutSetRow>): WorkoutSetRow =>
     completed_at: null,
     rpe: null,
     side: null,
+    logged_at: "2026-09-27T10:00:00.000Z",
     ...over,
-  }) as WorkoutSetRow
+  }) as WorkoutSetRow & { logged_at: string }
 
 /** The same barbell under the two names the app really produces. */
 const asBackSquat = (kg: number) => set({ exercise: "Back Squat", weight_kg: kg })

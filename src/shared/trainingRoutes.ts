@@ -14,6 +14,13 @@
 export const TRACKING = "/dashboard/tracking"
 export const PROGRAMS = "/programs"
 export const LIVE_WORKOUT = "/programs/live"
+/**
+ * History, as a destination worth returning to. A receipt opened from here
+ * used to send its back arrow to the Today tab, so somebody who had scrolled
+ * five months back lost their place — and in the installed app
+ * (`display: "standalone"`) that arrow is the only back there is.
+ */
+export const TRAINING_HISTORY = "/programs?tab=history"
 
 /** The one request the Tracking card makes. */
 export const TRAINING_DOOR_API = "/api/programs/today"

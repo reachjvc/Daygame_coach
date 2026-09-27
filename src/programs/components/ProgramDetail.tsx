@@ -339,7 +339,7 @@ export function ProgramDetail({ programId, enrollments, onBack, onEnrolled }: Pr
           {/* Level */}
           <div>
             <Label className="mb-1.5 block">Starting level</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {program.levels.map((l) => (
                 <Button
                   key={l.id}
@@ -387,7 +387,7 @@ export function ProgramDetail({ programId, enrollments, onBack, onEnrolled }: Pr
           {(exercises.length > 0 || asksDistance) && (
           <div>
             <Label className="mb-1.5 block">{exercises.length > 0 ? "Units" : "Distances"}</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {(["kg", "lb"] as UnitSystem[]).map((u) => (
                 <Button
                   key={u}
@@ -445,7 +445,7 @@ export function ProgramDetail({ programId, enrollments, onBack, onEnrolled }: Pr
           {alreadyRunning ? (
             /* Not a second Start — see `alreadyRunning`. The way in, not a
                way to lose the weeks already on it. */
-            <Button asChild data-testid="program-already-running">
+            <Button asChild className="h-auto whitespace-normal py-2 text-center" data-testid="program-already-running">
               <Link href={`/programs?program=${alreadyRunning.id}`}>
                 Already running — go to today&apos;s session
               </Link>

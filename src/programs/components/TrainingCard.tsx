@@ -109,6 +109,15 @@ function AlsoLine({ also }: { also: AlsoRunning[] }) {
 }
 
 /** The words for each state. Nothing here decides anything. */
+/**
+ * "1 sets". Four of them on this one card, in the two states I drove live —
+ * "Workout · 1 min · 1 sets" and "1 sets ticked" — while every sibling guards
+ * it: `TodayCard`, `HistoryTab` and `LiveWorkoutScreen` all write
+ * `count === 1 ? "set" : "sets"`. This card is shared with Life Mastery, so
+ * it is on two of the app's most-seen screens.
+ */
+const plural = (n: number, word: string): string => (n === 1 ? word : `${word}s`)
+
 /** What to call a session when its schedule cannot name the day. */
 const SESSION_TYPE_WORDS: Record<string, string> = {
   running: "Run",
@@ -132,7 +141,7 @@ function wordsFor(state: TrainingCardState, timezone: string): { headline: strin
         : state.lifts.join(" · ")
       const last = state.lastTime
         ? `Last time ${weekdayIn(state.lastTime.loggedAt, timezone)} · ${
-            state.lastTime.complete ? `all ${state.lastTime.setsDone} sets` : `${state.lastTime.setsDone} sets`
+            state.lastTime.complete ? `all ${state.lastTime.setsDone} ${plural(state.lastTime.setsDone, "set")}` : `${state.lastTime.setsDone} ${plural(state.lastTime.setsDone, "set")}`
           }`
         : null
       return { headline: state.dayLabel, context: what || null, second: last }
@@ -166,7 +175,7 @@ function wordsFor(state: TrainingCardState, timezone: string): { headline: strin
         state.distanceKm != null && state.distanceKm > 0
           ? `${Math.round(state.distanceKm * 10) / 10} km`
           : state.sets != null && state.sets > 0
-            ? `${state.sets} sets`
+            ? `${state.sets} ${plural(state.sets, "set")}`
             : null,
       ].filter(Boolean)
       return {
@@ -182,8 +191,8 @@ function wordsFor(state: TrainingCardState, timezone: string): { headline: strin
         headline: `${state.dayLabel ?? "Workout"} in progress · ${minutesSince(state.startedAt)} min`,
         context:
           state.setsAsked != null
-            ? `${state.setsTicked} of ${state.setsAsked} sets ticked`
-            : `${state.setsTicked} sets ticked`,
+            ? `${state.setsTicked} of ${state.setsAsked} ${plural(state.setsAsked, "set")} ticked`
+            : `${state.setsTicked} ${plural(state.setsTicked, "set")} ticked`,
         second: null,
       }
     case "stale":
@@ -409,8 +418,16 @@ function Action({
         </TheButton>
       )
     case "done":
+      /**
+       * `withFrom`, like `live()` two cases above. `BackLink` reads `?from=`
+       * and names the destination — "There were thirteen of these … so a
+       * screen sent you to the same place however you arrived" — and this
+       * call had `from` in hand and did not pass it, so the receipt's only
+       * back arrow took somebody out of Tracking entirely. In the installed
+       * app (`display: "standalone"`) that arrow is the only back there is.
+       */
       return (
-        <TheButton onClick={() => router.push(workoutReceipt(state.workoutId))} testId="training-card-see">
+        <TheButton onClick={() => router.push(withFrom(workoutReceipt(state.workoutId), from))} testId="training-card-see">
           See today&apos;s workout
         </TheButton>
       )

@@ -37,7 +37,7 @@ import { describeSessionRow, isWorkingSet, workingVolumeKg } from "@/src/health/
 import { describeLoggedSet, fromKg } from "../programsService"
 import { DISPLAY_LOCALE, dateKeyLabel } from "@/src/shared/dateUtils"
 import { DEFAULT_SESSION_TYPE, UNIT_CONFIG } from "../config"
-import { workoutReceipt } from "@/src/shared/trainingRoutes"
+import { TRAINING_HISTORY, withFrom, workoutReceipt } from "@/src/shared/trainingRoutes"
 import { LogPastWorkoutDialog } from "./LogPastWorkoutDialog"
 import type { ProgramEnrollment, UnitSystem } from "../types"
 import type { WorkoutLogRow, WorkoutSetRow } from "@/src/health/types"
@@ -323,7 +323,14 @@ export function HistoryTab({
                       page it goes to asks for one.
                     */}
                     <Link
-                      href={workoutReceipt(log.id)}
+                      /*
+                        WHERE THIS CAME FROM, so the receipt's back arrow
+                        returns to History rather than the Today tab. Somebody
+                        scrolls back to April, taps a session, taps the only
+                        back arrow on screen — and loses their place in a list
+                        they had scrolled through five months of.
+                      */
+                      href={withFrom(workoutReceipt(log.id), TRAINING_HISTORY)}
                       data-testid={`history-row-${log.id}`}
                       className="flex min-h-14 items-start justify-between gap-3 py-2 text-left"
                     >
