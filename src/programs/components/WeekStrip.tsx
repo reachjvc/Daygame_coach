@@ -53,16 +53,36 @@ export function WeekStrip({ week, labels, onPickDay }: Props) {
         const trained = week.trainedWeekdays.includes(weekday)
         const label = labels?.[weekday]
         const what = trained ? "trained" : label ? label : "nothing planned"
+        /**
+         * A DAY WITH A SESSION ON IT LOOKS DIFFERENT FROM AN EMPTY ONE.
+         *
+         * The dot encoded only `trained` and `isToday`, and the day's label
+         * went into `aria-label` alone — so assigning Workout B to Monday
+         * changed the strip by exactly nothing: Monday's dot stayed
+         * `bg-muted-foreground/30`, identical to "nothing planned". A sighted
+         * person had no confirmation the write happened and no way to read
+         * their own week off the strip, which is the strip's whole job.
+         *
+         * A ring for a day that has a session waiting, filled for one already
+         * trained; today keeps its own ring on the label above.
+         */
+        const planned = Boolean(label) && !trained
         const body = (
           <>
-            <span className="text-xs uppercase text-muted-foreground">{short}</span>
+            <span
+              className={`text-xs uppercase ${
+                isToday ? "font-semibold text-foreground" : "text-muted-foreground"
+              }`}
+            >
+              {short}
+            </span>
             <span
               aria-hidden
               className={`size-2 rounded-full ${
                 trained
                   ? DONE.dot
-                  : isToday
-                    ? "ring-1 ring-primary"
+                  : planned
+                    ? "ring-1 ring-muted-foreground/70"
                     : "bg-muted-foreground/30"
               }`}
             />

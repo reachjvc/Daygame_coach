@@ -169,24 +169,43 @@ export function ProgressTab({ plannedPerWeek, unit, timezone }: Props) {
       */}
       <section className="space-y-2 border-t border-border/60 pt-4">
           <div className="flex items-baseline justify-between gap-2">
-            <h3 className="text-sm font-medium">Weight moved, per week</h3>
+            <h3 className="text-sm font-medium">Weight moved, per week ({label})</h3>
             <span className="text-xs text-muted-foreground">working sets only</span>
           </div>
           {volume.every((v) => v.volumeKg === 0) ? (
             <p className="text-sm text-muted-foreground">Nothing logged in the last eight weeks.</p>
           ) : (
             <div className="flex gap-2">
-              {/* The value axis: the peak and the halfway mark, with the unit on
-                  them. Two ticks is enough to read a bar off and does not crowd
-                  a 390px screen. */}
-              <div
-                className="flex w-14 shrink-0 flex-col justify-between py-0 text-right text-xs tabular-nums text-muted-foreground"
-                style={{ height: "72px" }}
-                aria-hidden
-              >
-                <span>{show(peak)} {label}</span>
-                <span>{show(peak / 2)}</span>
-                <span>0</span>
+              {/*
+                THE TICKS SIT ON THE LINES THEY NAME.
+                `justify-between` puts the FIRST tick's top edge at the top of
+                the column and the LAST tick's bottom edge at the bottom — so
+                every label's centre was half a line-height off the gridline it
+                belonged to, in opposite directions. Measured with a 53,925 kg
+                peak: the 50% tick's centre sat 8px below its gridline, 11% of
+                full scale, on a chart whose stated purpose is "A CHART YOU CAN
+                READ A NUMBER OFF".
+                Absolute, each centred on its own line with `-translate-y-1/2`.
+
+                AND THE UNIT GOES IN THE HEADING, not on the top tick. At five
+                figures "53,925 kg" wrapped onto a second line inside a 56px
+                column, which is what made the peak label taller than its own
+                row in the first place.
+              */}
+              <div className="relative w-16 shrink-0 text-right text-xs tabular-nums text-muted-foreground" style={{ height: "72px" }} aria-hidden>
+                {[
+                  { at: 0, text: show(peak) },
+                  { at: 50, text: show(peak / 2) },
+                  { at: 100, text: "0" },
+                ].map((tick) => (
+                  <span
+                    key={tick.at}
+                    className="absolute right-0 -translate-y-1/2 whitespace-nowrap"
+                    style={{ top: `${tick.at}%` }}
+                  >
+                    {tick.text}
+                  </span>
+                ))}
               </div>
               {/*
                 THE BARS AND THE LABELS ARE TWO ROWS, NOT EIGHT COLUMNS.

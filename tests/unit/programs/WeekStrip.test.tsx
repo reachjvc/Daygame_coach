@@ -87,4 +87,24 @@ describe("the week strip", () => {
     rerender(<WeekStrip week={week()} onPickDay={onPickDay} />)
     expect(screen.getAllByRole("button")).toHaveLength(7)
   })
+
+  it("a day with a session on it does not look like an empty one", () => {
+    /**
+     * The dot encoded only `trained` and `isToday`, and the day's label lived
+     * in `aria-label` alone — so assigning Workout B to Monday changed the
+     * rendered strip by nothing at all. Measured in a browser: Monday's dot
+     * stayed `bg-muted-foreground/30`, pixel-identical to "nothing planned".
+     * A control whose effect is invisible is a control nobody can trust.
+     */
+    render(<WeekStrip week={week()} labels={{ 1: "Workout B" }} />)
+
+    const dot = (weekday: number) =>
+      document
+        .querySelector(`[data-testid="week-day-${weekday}"]`)
+        ?.querySelector("span[aria-hidden]")?.className ?? ""
+
+    expect(dot(1), "Monday has a session waiting").not.toEqual(dot(2))
+    expect(dot(2), "Tuesday has nothing").toContain("bg-muted-foreground/30")
+  })
+
 })

@@ -103,8 +103,23 @@ export function WorkoutCorrection({
     (set) => typedNumber(set.weight) === null || typedNumber(set.reps) === null
   )
 
+  /**
+   * TWO ROWS IN ONE SLOT, NAMED BEFORE THE SAVE.
+   *
+   * `uq_workout_sets_slot` is (lift, kind, set number, side), so re-tagging a
+   * set into a slot another already holds lands on Postgres's complaint about
+   * a unique index and a 500 — which is neither actionable nor true about what
+   * the person did. `updateSet` refuses the same collision on the live screen
+   * with a sentence naming both sets; this is that rule, on this screen.
+   */
+  const slotOf = (set: EditableSet) =>
+    `${set.exerciseId ?? set.exercise}|${set.kind}|${set.setNumber}|${set.side ?? ""}`
+  const collision = draft.find(
+    (set, i) => draft.findIndex((other) => slotOf(other) === slotOf(set)) !== i
+  )
+
   async function save() {
-    if (blank) return
+    if (blank || collision) return
     setSaving(true)
     setError(null)
     const answer = await saveCorrection(
@@ -184,9 +199,39 @@ export function WorkoutCorrection({
             }
             className="h-11 w-14 px-1.5"
           />
-          {set.kind !== "working" && (
-            <span className="shrink-0 text-xs uppercase text-muted-foreground">{set.kind}</span>
-          )}
+          {/*
+            THE KIND IS EDITABLE, because the header promises it: "a warm-up
+            went in as a working set". It was a static tag, so the only way to
+            correct one was to delete the set and tick it again on the live
+            screen — which loses the time it happened at, and is impossible
+            once the workout is finished. A working set that is really a
+            warm-up drags the lift's average down and counts towards whether
+            the program's session was completed.
+          */}
+          <select
+            aria-label={`Kind of ${setLabel(set)}`}
+            value={set.kind}
+            onChange={(e) =>
+              setDraft((d) =>
+                d.map((x, j) =>
+                  j === i ? { ...x, kind: e.target.value as EditableSet["kind"] } : x
+                )
+              )
+            }
+            /**
+             * 16px, NOT 12. Anything under 16 makes iOS Safari zoom the whole
+             * page when the box is tapped — `tests/unit/architecture.test.ts`
+             * holds the line and caught this one before it shipped. A select
+             * counts: it is a typed box as far as Safari is concerned.
+             */
+            className="h-11 shrink-0 rounded-md border border-border bg-background px-1 text-base"
+          >
+            <option value="working">working</option>
+            <option value="warmup">warm-up</option>
+            <option value="amrap">all-out</option>
+            <option value="backoff">back-off</option>
+            <option value="drop">drop</option>
+          </select>
           <Button
             variant="ghost"
             size="icon"
@@ -199,6 +244,70 @@ export function WorkoutCorrection({
         </div>
       ))}
 
+      {/*
+        THE SET YOU FORGOT TO TICK. The header's first example — "you forgot to
+        tick the fifth set" — had no control at all: the editor could change a
+        number and delete a row, and that was the whole of it. One button per
+        lift already in the workout, because a lift that is not there is a
+        different job (the live screen's Add a lift) and this screen is about
+        correcting what was recorded.
+      */}
+      {[...new Map(draft.map((set) => [set.exerciseId ?? set.exercise, set])).values()].map(
+        (lift) => (
+          <Button
+            key={lift.exerciseId ?? lift.exercise}
+            variant="outline"
+            size="sm"
+            className="min-h-11"
+            data-testid={`correction-add-set-${lift.exerciseId ?? lift.exercise}`}
+            onClick={() =>
+              setDraft((d) => {
+                const same = d.filter(
+                  (x) => (x.exerciseId ?? x.exercise) === (lift.exerciseId ?? lift.exercise)
+                )
+                const working = same.filter((x) => x.kind === "working")
+                /**
+                 * THE NEXT FREE SLOT, not a count.
+                 *
+                 * `uq_workout_sets_slot` is (lift, kind, number), and counting
+                 * gives the wrong number the moment anything has been removed
+                 * or re-tagged: re-tag set 1 as a warm-up and the count of
+                 * working sets is 1, so the new set is numbered 2 — which set
+                 * 2 already is. The save then dies on a unique index and the
+                 * screen gets a 500. Found by doing exactly that.
+                 */
+                const nextNumber =
+                  working.reduce((highest, x) => Math.max(highest, x.setNumber), 0) + 1
+                return [
+                  ...d,
+                  {
+                    id: null,
+                    // A set nobody ticked has no instant, and inventing one
+                    // would put it in the wrong place in the order.
+                    completedAt: null,
+                    prescribedIndex: null,
+                    exercise: lift.exercise,
+                    exerciseId: lift.exerciseId,
+                    // Seeded from the last working set of the same lift, which
+                    // is what a forgotten set almost always was.
+                    weight: working[working.length - 1]?.weight ?? "",
+                    reps: working[working.length - 1]?.reps ?? "",
+                    setNumber: nextNumber,
+                    kind: "working" as const,
+                    side: null,
+                    notes: null,
+                    exerciseNotes: null,
+                    rpe: null,
+                  },
+                ]
+              })
+            }
+          >
+            + Add a {lift.exercise} set
+          </Button>
+        )
+      )}
+
       {draft.length === 0 && (
         <p className="text-xs text-muted-foreground">
           Every set removed. Saving leaves the workout with nothing in it.
@@ -207,6 +316,12 @@ export function WorkoutCorrection({
 
       {/* Named, so it is a row you can go and fill in rather than a disabled
           button with no reason beside it. */}
+      {collision && (
+        <p className="text-xs text-amber-600 dark:text-amber-400" data-testid="correction-collision">
+          Two rows are both {setLabel(collision)}. Renumber or re-tag one of them before saving.
+        </p>
+      )}
+
       {blank && (
         <p className="text-xs text-amber-600 dark:text-amber-400" data-testid="correction-blank">
           {setLabel(blank)} has an empty box. A blank is not a zero, so nothing is saved until it
@@ -218,7 +333,7 @@ export function WorkoutCorrection({
       <div className="flex items-center gap-2 pt-1">
         <Button
           size="sm"
-          disabled={saving || blank !== undefined}
+          disabled={saving || blank !== undefined || collision !== undefined}
           onClick={() => void save()}
           data-testid="correction-save"
         >
