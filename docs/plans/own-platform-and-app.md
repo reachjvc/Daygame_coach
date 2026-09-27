@@ -190,6 +190,16 @@ peer is editing — treat each as a floor.
 | N38 · Volume cost if the 107 GB moves | **+$15.45/month** |
 
 **N36–N38 were priced against a managed platform and are not Hetzner's numbers.**
+Hetzner's own, from its pricing 2026-09-27 — **confirm on the order page, because
+Hetzner raised cloud prices on 15 June 2026 and the CPX line rose steeply:**
+
+| Row | Figure |
+|---|---|
+| N39 · Two small servers (staging + production, same shape) | **€11–16/month** — CX23 from €5.49, CPX22 €5.99 |
+| N40 · Postgres data volume + an object-storage bucket for WAL and backups | **€6–12/month** |
+| N41 · **Platform total, self-hosted** | **≈ €20–30/month** — materially below N36. The saving is paid for in operations work, not conjured |
+| N42 · If the AI models are hosted (Q-AI-HOST) | **+€40–90/month** for a box holding ~8 GB resident. Still the largest single line |
+| N43 · If the corpus inputs move (D5, N32) | **≈ €5/month** of volume — a fraction of N38, which is what makes D5 a choice again |
 D1 changed the provider on 2026-09-27; these are the only figures in this plan that
 a decision has invalidated. Re-price before acting on B2, and do not quote them at
 the owner in the meantime.
@@ -228,7 +238,7 @@ exactly as written below.
 | D2 | **The backend is a separate data service with token login**, not the website rehosted. | A phone app cannot use server-drawn pages or the browser cookie. Building it later means building login twice. |
 | D3 | **The users table's primary key is `uuid`, and every imported account keeps the uuid Supabase gave it.** | N13: 61 `user_id uuid` columns point at it. Better Auth defaults to a **text** id — if that default is taken, M2 stops being a repoint and becomes a type migration across every user-owned table. **Verify Better Auth can be overridden this way before committing to it.** |
 | D4 | **The Claude CLI must become the Anthropic API** in the 3 product features (N31). | It is a desktop binary pinned to a path in your home folder; no host can run it. The code deliberately deletes `ANTHROPIC_API_KEY` for its child process, so adding a key does not rescue it. Its own header says "Switch to API for production." Cost: a code change in 3 files, a real per-call bill, and re-enabling the budget check that path skips. |
-| D5 | **The corpus build stays on your machine, deliberately and in writing.** Only stages 09/10/11 — the ingest tail, N29 — move to the platform. | Stages 02–05 need a GPU (a Cloud VPS has none); stages using the CLI (N30) need an interactive login. Its output crosses the wall, not the pipeline. Moving the build is a separate project with its own budget. |
+| D5 | **The corpus build stays on your machine for now — but Hetzner reopens this, so it is a choice rather than a constraint.** Hetzner rents dedicated and GPU machines by the month, which the managed platform did not, and N43 makes the storage trivial. **Revisit after M1 is up; do not fold it into this plan.** Only stages 09/10/11 — the ingest tail, N29 — move to the platform. | Stages 02–05 need a GPU (a Cloud VPS has none); stages using the CLI (N30) need an interactive login. Its output crosses the wall, not the pipeline. Moving the build is a separate project with its own budget. |
 | D6 | **The embedding model may not change.** The chat model may move to a paid API freely. | One hardcoded constant both stores and queries the vectors. A different 768-dimension model means comparing two unrelated vector spaces: Ask Coach returns confident answers built from irrelevant excerpts, and **no test in this project could tell**. Changing it means re-embedding the whole corpus. |
 | D7 | **Sell subscriptions on the web; the app only signs in.** | The stores take 15–30%, turning $1.99 into about $1.40. |
 | D8 | **Capacitor, with bundled assets and one configured API base URL.** | The alternative — a shell pointing at the remote URL — is what Apple's guideline 4.2 rejects. Cost, which the old plan hid by saying Capacitor "wraps the code you already have": N25 must route through one indirection, plus the 3 auth redirects built from `window.location.origin` that would resolve to `capacitor://localhost`. **Done as M0 preparation, where it is cheap and useful either way.** |
@@ -509,6 +519,10 @@ is baked into both Stripe's return URL and M1b.3's email links.
 - `prune_error_reports()` has no caller anywhere, so `error_reports` grows without
   bound. M1b.2 owns it.
 - A fourth place secrets live: `e2e.yml` hardcodes five Supabase values in `env:`.
+- **On Hetzner there is no platform secret store**, so they are a file on the box with
+  file permissions as the only wall, readable by anything that gets a shell. Say where
+  it lives, who may read it, and that it never reaches the repo or a backup that
+  leaves the box. New work the managed platform had done for us.
 - **Three jobs D1 hands us that no provider now does:** TLS certificates (Caddy or
   Traefik in front of the app, renewing on their own), unattended security upgrades
   on the box, and an **external** uptime check — external because a monitor running
@@ -619,13 +633,21 @@ schema and real users.
   **using users whose timezone arrived at sign-up** (M3), not typed into Settings.
 - **M1b.3 Email** (B3). Acceptance: a reset link that works, plus one real send to
   your own inbox, because "the API returned 200" is not "the mail arrived".
-- **M1b.4 Backups.** Point-in-time recovery — under D1 this is pgBackRest or WAL-G
-  shipping WAL off the box, not a toggle in a dashboard — and **a restore performed
+- **M1b.4 Backups. The milestone two prior data losses argue for.** Point-in-time
+  recovery — under D1 this is pgBackRest or WAL-G shipping WAL off the box, not a
+  toggle in a dashboard. **Its destination is the object-storage bucket in N40, on a
+  different machine: a backup on the same box is a copy, not a backup.** And
+  **restoring is now a procedure you own**, so it is written down beside the timetrack
+  runbook rather than living in whoever set it up — and **a restore performed
   into staging with real data in it** — a restore of an empty database is the "setting, not a
   fact" this plan warns about. Also: `timetrackBackupRepo` uses the service-role key
-  that bypasses every wall, nothing schedules it, and **its docstring falsely claims
-  a round-trip test exists.** Delete that sentence; the round trip was proved by hand
-  once, per `docs/runbooks/timetrack.md`.
+  that bypasses every wall, and nothing schedules it. **The docstring that falsely
+  claimed a round-trip test exists is already fixed** (`7af55e3c`, by the session
+  that owns the slice) — it now states what is covered: `assertRestorable` only,
+  with `exportTimetrack`/`restoreTimetrack` called by nothing but the two scripts,
+  and the round trip proved by hand once per `docs/runbooks/timetrack.md`, which is
+  on disk. So the substance left for this milestone is the service-role key, the
+  missing schedule, and the absent automated round trip — not the comment.
 - **M1b.5 The pipeline's ingest tail** (D5). Only stages 09/10/11 move.
   **Security: the tempting fix is to open the database to the internet so the old
   scripts work. That undoes the only reason for the move.** Acceptance:
