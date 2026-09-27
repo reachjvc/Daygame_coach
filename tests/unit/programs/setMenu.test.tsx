@@ -251,8 +251,13 @@ describe("the menu behind the set number", () => {
     renderScreen({ sets: [tickedSet({ id: "w-1", kind: "warmup", weight: 40 })] })
     // Four rows: W1 ticked, and the two working sets the program asked for.
     expect(screen.getByTestId("set-row-W1")).toBeTruthy()
-    expect(screen.getByLabelText("Save set 1")).toBeTruthy()
-    expect(screen.getByLabelText("Undo set W1")).toBeTruthy()
+    /**
+     * Named by set AND lift. Every control in a row used to be "Save set 1", so
+     * a three-lift day gave a screen reader five names for fifteen controls on
+     * the one screen whose job is telling rows apart.
+     */
+    expect(screen.getByLabelText("Save set 1 of Squat")).toBeTruthy()
+    expect(screen.getByLabelText("Undo set W1 of Squat")).toBeTruthy()
   })
 })
 

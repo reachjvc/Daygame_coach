@@ -191,9 +191,28 @@ export function FinishSheet({
    */
   const started = startedAt ? new Date(wallClockToInstant(startedAt, timezone)) : null
   const endedInstant = endedAt ? new Date(wallClockToInstant(endedAt, timezone)) : null
+  /**
+   * MEASURED FROM THE SAME INSTANT THE SERVER WILL USE, or the receipt
+   * contradicts the number somebody just agreed to.
+   *
+   * The Started box is a `datetime-local` and has no seconds, so reading the
+   * duration out of it truncates the start to the minute — while the server
+   * measures from the stored `started_at`, seconds and all, and this screen
+   * deliberately does NOT send `startedAt` unless it was edited. So for any
+   * workout that began at 30 seconds past or later — half of them — the sheet
+   * promised 8 minutes and the receipt recorded 7.
+   *
+   * Two facts about one session, stored apart and shown a second apart, which
+   * is the shape `docs/known-failures.md` names. The unedited case uses the
+   * real instant; once the field is edited, the typed value IS the fact.
+   */
+  const startedForCount =
+    startedAt === instantToWallClock(workout.startedAt, timezone)
+      ? new Date(workout.startedAt)
+      : started
   const minutes =
-    endedInstant && started
-      ? Math.max(1, Math.round((endedInstant.getTime() - started.getTime()) / 60000))
+    endedInstant && startedForCount
+      ? Math.max(1, Math.round((endedInstant.getTime() - startedForCount.getTime()) / 60000))
       : 0
   // In past mode the open row IS the message; the note would repeat it.
   const longGap = !past && started !== null && Date.now() - started.getTime() > 4 * 60 * 60 * 1000

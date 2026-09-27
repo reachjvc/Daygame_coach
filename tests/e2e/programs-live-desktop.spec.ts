@@ -253,6 +253,53 @@ test.describe("the live workout in a window", () => {
     expect(await coveredControls(page), "while the row is hovered").toEqual([])
   })
 
+  test("no two controls on the screen share a name", async ({ page }) => {
+    /**
+     * A screen reader announces the accessible name and nothing else, so
+     * fifteen controls called "Save set 1", "Save set 1", "Save set 1" are
+     * fifteen controls a person cannot tell apart — on the screen whose whole
+     * job is telling rows apart. Every control in a `SetRow` was named by its
+     * set number alone, so five names covered three lifts.
+     *
+     * Enumerated the same way as the overlap check, and deliberately including
+     * inputs: the weight and reps boxes had the same collision.
+     */
+    await startAWorkout(page)
+
+    const seen = await page.evaluate((selector) => {
+      const byName = new Map<string, number>()
+      let counted = 0
+      for (const el of Array.from(document.querySelectorAll(selector))) {
+        const box = el.getBoundingClientRect()
+        if (box.width === 0 || box.height === 0) continue
+        const name =
+          el.getAttribute("aria-label") ?? (el.textContent ?? "").trim().replace(/\s+/g, " ")
+        // Unnamed is a different defect, and not this test's.
+        if (!name) continue
+        counted += 1
+        byName.set(name, (byName.get(name) ?? 0) + 1)
+      }
+      return {
+        counted,
+        clashes: [...byName.entries()].filter(([, n]) => n > 1).map(([name, n]) => `${n}× "${name}"`),
+      }
+    }, CONTROLS)
+
+    /**
+     * THE ENUMERATION IS THE WEAKEST LINK, so it is asserted first.
+     *
+     * The first version of this scoped to `main button, main input` — and this
+     * app renders no `<main>` at all, so it matched zero elements and passed
+     * against the very bug it was written for. Removing the fix left it green.
+     * A count makes that impossible to repeat quietly.
+     */
+    expect(seen.counted, "this must actually be looking at the screen").toBeGreaterThan(20)
+    expect(
+      seen.clashes,
+      "two controls with one name are one control to a screen reader"
+    ).toEqual([])
+  })
+
   test("opens cold with no console error and no hydration failure", async ({ page }) => {
     const errors: string[] = []
     page.on("pageerror", (e) => errors.push(`pageerror: ${e.message.split("\n")[0]}`))

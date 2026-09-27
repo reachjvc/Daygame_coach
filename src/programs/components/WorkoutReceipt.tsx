@@ -217,9 +217,28 @@ export function ReceiptBody({ summary }: { summary: WorkoutSummary }) {
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Next time</p>
           <ul className="mt-1 space-y-0.5 text-sm">
             {summary.changes.map((c) => (
-              <li key={c.exerciseId} className="flex justify-between gap-3">
-                <span className="min-w-0 truncate">{c.name}</span>
-                <span className="shrink-0 text-muted-foreground">{c.reason}</span>
+              /**
+               * THE LIFT'S NAME IS THE POINT OF THE ROW, and it was being
+               * squeezed to nothing.
+               *
+               * `justify-between` with a `shrink-0` reason and a `min-w-0
+               * truncate` name means the reason takes what it wants and the
+               * name takes the rest — and the reasons here are whole sentences
+               * ("Only 1 of 5 sets → same weight next time"). Measured at 390px
+               * on Chromium, Firefox and WebKit: the name rendered 0px wide and
+               * the page scrolled 219px sideways, on the screen somebody reads
+               * straight after training. Three bare reasons and no way to tell
+               * which lift each belonged to.
+               *
+               * Stacked below `sm:`, side by side above it, and the reason may
+               * wrap instead of pushing the page.
+               */
+              <li
+                key={c.exerciseId}
+                className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3"
+              >
+                <span className="font-medium">{c.name}</span>
+                <span className="min-w-0 text-muted-foreground sm:text-right">{c.reason}</span>
               </li>
             ))}
           </ul>

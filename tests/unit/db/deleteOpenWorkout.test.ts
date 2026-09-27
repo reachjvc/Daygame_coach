@@ -100,7 +100,7 @@ describe("deleteWorkoutLog", () => {
 
   test("still deletes a finished workout — History's actual job", async () => {
     const { repo, fake } = await repoWith(FINISHED)
-    await expect(repo.deleteWorkoutLog(USER, WORKOUT)).resolves.toEqual({ recalculated: false })
+    await expect(repo.deleteWorkoutLog(USER, WORKOUT)).resolves.toEqual({ recalculated: false, deleted: true })
     expect(fake.didDelete()).toBe(true)
   })
 
@@ -108,7 +108,7 @@ describe("deleteWorkoutLog", () => {
     // `started_at` null is a session typed in later. It is not open and never
     // was, so a guard keyed on "no end time" alone would have stranded it.
     const { repo, fake } = await repoWith(WRITTEN_UP)
-    await expect(repo.deleteWorkoutLog(USER, WORKOUT)).resolves.toEqual({ recalculated: false })
+    await expect(repo.deleteWorkoutLog(USER, WORKOUT)).resolves.toEqual({ recalculated: false, deleted: true })
     expect(fake.didDelete()).toBe(true)
   })
 

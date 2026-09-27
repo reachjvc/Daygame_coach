@@ -355,9 +355,7 @@ export function LiveWorkoutScreen({
     return (
       <div className={`${TRAINING_COLUMN} py-10 text-center`}>
         <p className="text-sm text-muted-foreground">
-          {live.vanished
-            ? (live.error ?? "This workout is no longer open.")
-            : "This workout is finished."}
+          {live.endedMessage ?? "This workout is finished."}
         </p>
         <Button asChild className="mt-3">
           <Link href="/programs">Back to training</Link>
@@ -683,6 +681,7 @@ export function LiveWorkoutScreen({
                       */
                       <div key={`${row.slot}|${row.kind}`}>
                         <SetRow
+                          exercise={ex.name}
                           setNumber={row.setNumber}
                           kind={row.kind}
                           prescribed={{
@@ -886,6 +885,9 @@ export function LiveWorkoutScreen({
                   <button
                     type="button"
                     data-testid={`add-set-${ex.exerciseId}`}
+                    /* One per lift, so the visible words alone are three
+                       controls with one name to a screen reader. */
+                    aria-label={`Add a set to ${ex.name}`}
                     onClick={() =>
                       setExtraRows((r) => ({ ...r, [ex.exerciseId]: (r[ex.exerciseId] ?? 0) + 1 }))
                     }

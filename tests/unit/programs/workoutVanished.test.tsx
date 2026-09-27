@@ -242,4 +242,30 @@ describe("the workout is gone", () => {
     await waitFor(() => expect(result.current.rest).toBeNull())
     expect(window.localStorage.getItem("live-workout-rest-v1")).toBeNull()
   })
+
+  it("names the sets that were lost with it, not just that something was", async () => {
+    /**
+     * Three ticks offline, the workout finished on the other device, and the
+     * queue is emptied with one singular sentence naming neither the count nor
+     * the lifts. They cannot be saved — which is precisely why the person needs
+     * to know which ones they were.
+     */
+    vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("offline"))))
+    const { result } = renderHook(() => useLiveWorkout(workout))
+    for (const n of [1, 2, 3]) {
+      await act(async () => {
+        await result.current.tick({ ...aSet, setNumber: n })
+      })
+    }
+    await waitFor(() => expect(result.current.unsaved).toBe(3))
+
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(goneResponse())))
+    await act(async () => {
+      await result.current.flush()
+    })
+
+    await waitFor(() => expect(result.current.vanished).toBe(true))
+    expect(result.current.error).toMatch(/3 sets/)
+    expect(result.current.error).toMatch(/Squat/)
+  })
 })

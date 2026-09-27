@@ -434,7 +434,7 @@ export async function getWorkoutCumulativeCount(userId: string): Promise<number>
 export async function deleteWorkoutLog(
   userId: string,
   logId: string
-): Promise<{ recalculated: boolean; deleted?: boolean }> {
+): Promise<{ recalculated: boolean; deleted: boolean }> {
   const supabase = await createServerSupabaseClient()
 
   const { data: log, error: readError } = await supabase
@@ -489,7 +489,7 @@ export async function deleteWorkoutLog(
   if (log?.enrollment_id) {
     const { removeProgramSession } = await import("./programRepo")
     await removeProgramSession(userId, log.enrollment_id, logId)
-    return { recalculated: true }
+    return { recalculated: true, deleted: true }
   }
 
   // Sets cascade delete via FK
@@ -503,7 +503,7 @@ export async function deleteWorkoutLog(
     throw new Error("That workout could not be deleted. Nothing was removed.")
   }
 
-  return { recalculated: false }
+  return { recalculated: false, deleted: true }
 }
 
 // ============================================

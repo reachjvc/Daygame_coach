@@ -227,7 +227,7 @@ describe("a set written into a workout that is no longer there", () => {
     await expect(repo.completeSet(USER, WORKOUT, aSet)).rejects.toThrow(/finished somewhere else/i)
   })
 
-  test("a workout that is still open owns its failure, and does not claim to be gone", async () => {
+  test("a workout that is still open is never described as gone", async () => {
     // The write really failed and the workout is fine. Saying "thrown away on
     // another device" here would be a fabrication, which is the failure mode of
     // guessing from an error code instead of asking.
@@ -236,9 +236,11 @@ describe("a set written into a workout that is no longer there", () => {
       fate: "open",
     })
     const thrown = await repo.completeSet(USER, WORKOUT, aSet).catch((e: Error) => e)
-    expect((thrown as Error).message).toMatch(/That set could not be saved/i)
+    // A dropped connection is transient, so the answer is "try again" and NOT
+    // a claim about the workout — which is still open and still fine.
     expect((thrown as Error).message).not.toMatch(/thrown away|finished/i)
     expect((thrown as Error).message).not.toMatch(/connection failure/)
+    expect((thrown as Error).message).toMatch(/could not reach the server/i)
   })
 
   test("a session written up afterwards is not 'open', so it is not told to tap again", async () => {
@@ -369,5 +371,36 @@ describe("a set written into a workout that is no longer there", () => {
     const thrown = await repo.completeSet(USER, WORKOUT, aSet).catch((e: unknown) => e)
     expect(workoutErrorResponse(thrown).status).toBe(503)
     expect((thrown as Error).message).toMatch(/kilos or pounds/i)
+  })
+
+  test("a transient write failure on an OPEN workout is retryable, not a 4xx", async () => {
+    /**
+     * The fourth instance of one class, and the one the three previous fixes
+     * walked past: they made the READS retryable and left the write's own
+     * failure at 400 — which is what makes the offline queue delete the set and
+     * say "has been removed".
+     */
+    const { workoutErrorResponse } = await import("@/src/programs/errors")
+    const { repo } = await repoWith({
+      writeError: { code: "40P01", message: "deadlock detected" },
+      fate: "open",
+    })
+    const thrown = await repo.completeSet(USER, WORKOUT, aSet).catch((e: unknown) => e)
+    expect(workoutErrorResponse(thrown).status, "a deadlock is worth retrying").toBe(503)
+  })
+
+  test("but a constraint violation is permanent, and says so", async () => {
+    // 23xxx is Postgres's integrity-violation class. Retrying a check or a
+    // unique-index failure cannot succeed, so keeping it queued for ever would
+    // jam Finish — the opposite mistake.
+    const { workoutErrorResponse } = await import("@/src/programs/errors")
+    const { repo } = await repoWith({
+      writeError: { code: "23514", message: 'violates check constraint "workout_sets_reps_check"' },
+      fate: "open",
+    })
+    const thrown = await repo.completeSet(USER, WORKOUT, aSet).catch((e: unknown) => e)
+    expect(workoutErrorResponse(thrown).status).toBe(400)
+    expect((thrown as Error).message).toMatch(/That set could not be saved/i)
+    expect((thrown as Error).message).not.toMatch(/check constraint/i)
   })
 })

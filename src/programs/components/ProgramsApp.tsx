@@ -209,6 +209,16 @@ export function ProgramsApp({
             goTo({ view: "programs" })
           }}
         />
+        {/*
+          AND HERE, WHICH IS THE COMMONEST SCREEN OF ALL.
+          `TodayCard` normally carries this sentence — but only when the card
+          state loaded. When it did not, this branch showed "Today's session
+          could not be loaded" and no way to the workout that is open, while
+          every Start elsewhere was refused. The `live` fallback added for that
+          case was wired into the other four branches and not this one, so the
+          hole stayed exactly where most people are: one program running.
+        */}
+        {cardState === null ? openWorkoutBanner : null}
         {looseStart}
       </div>
     )

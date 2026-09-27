@@ -29,6 +29,15 @@ import type { LiveWorkoutSet } from "../../types"
 
 export interface SetRowProps {
   setNumber: number
+  /**
+   * WHICH LIFT THIS ROW BELONGS TO, for the labels only.
+   *
+   * Every control here was named by its set number alone, so a screen reader on
+   * a three-lift day heard "Save set 1", "Save set 1", "Save set 1" — fifteen
+   * controls sharing five names, on a screen whose whole job is telling rows
+   * apart. It is not shown; the lift's name is already on screen above them.
+   */
+  exercise?: string
   /** What the program asks for. Pre-filled, and yours to change. */
   prescribed: { weight: number; reps: number; repRangeMax?: number; amrap?: boolean }
   /** What you did the last time this lift came round, if ever. */
@@ -74,6 +83,7 @@ export interface SetRowProps {
 
 export function SetRow({
   setNumber,
+  exercise,
   prescribed,
   previous,
   done,
@@ -125,6 +135,8 @@ export function SetRow({
 
   const ticked = Boolean(done)
   const label = setLabel(kind, setNumber)
+  /** "set 1 of Squat" — the same suffix on every control in the row. */
+  const of = exercise ? `${label} of ${exercise}` : label
   const range = prescribed.repRangeMax ? `${prescribed.reps}–${prescribed.repRangeMax}` : null
 
   /**
@@ -203,7 +215,7 @@ export function SetRow({
         <button
           type="button"
           data-testid={`swipe-delete-${label}`}
-          aria-label={`Delete set ${label}`}
+          aria-label={`Delete set ${of}`}
           onClick={() => {
             setDragX(0)
             onDelete()
@@ -266,7 +278,7 @@ export function SetRow({
         <button
           type="button"
           data-testid={`set-menu-${label}`}
-          aria-label={`Set ${label} type`}
+          aria-label={`Set ${of} type`}
           onClick={onOpenMenu}
           className="flex h-11 w-11 items-center justify-center rounded-md text-sm tabular-nums text-muted-foreground transition-colors hover:bg-muted/50"
         >
@@ -318,7 +330,7 @@ export function SetRow({
           min={0}
           max={SET_LIMITS.weightMax}
           step="any"
-          aria-label={`Weight for set ${label} in ${unitLabel}`}
+          aria-label={`Weight for set ${of} in ${unitLabel}`}
           /**
            * "+kg" on a lift you can do unweighted, because an empty box there
            * means "nothing added" rather than "not filled in yet".
@@ -338,7 +350,7 @@ export function SetRow({
         min={0}
         max={SET_LIMITS.repsMax}
         step={1}
-        aria-label={`${repWord} for set ${label}`}
+        aria-label={`${repWord} for set ${of}`}
         placeholder={prescribed.amrap ? "max" : (range ?? (prescribed.reps ? String(prescribed.reps) : "reps"))}
         className="h-11 w-full sm:h-9"
         value={reps}
@@ -348,7 +360,7 @@ export function SetRow({
       <button
         type="button"
         data-testid={`tick-${label}`}
-        aria-label={ticked ? `Undo set ${label}` : `Save set ${label}`}
+        aria-label={ticked ? `Undo set ${of}` : `Save set ${of}`}
         aria-pressed={ticked}
         disabled={!ticked && problem !== null}
         onClick={() => (ticked && onUndo ? onUndo() : onTick(entry.weight, entry.reps))}
@@ -403,7 +415,7 @@ export function SetRow({
           <button
             type="button"
             data-testid={`hover-delete-${label}`}
-            aria-label={`Delete set ${label}`}
+            aria-label={`Delete set ${of}`}
             onClick={onDelete}
             className="hidden h-11 w-11 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted/50 focus-visible:opacity-100 group-hover:opacity-100 sm:col-start-6 sm:row-start-1 sm:flex"
           >

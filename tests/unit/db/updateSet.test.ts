@@ -44,7 +44,7 @@ interface FakeOptions {
   sets: Record<string, unknown>[]
   /** Null means no workout is open, which is what a finished one looks like. */
   open?: boolean
-  updateError?: { message: string } | null
+  updateError?: { code?: string; message: string } | null
 }
 
 function fakeSupabase(opts: FakeOptions) {
@@ -219,9 +219,24 @@ describe("updateSet", () => {
    * another device. The raw text now goes to `console.error`.
    */
   test("says so in a sentence when the write itself fails, in words a person can act on", async () => {
+    /**
+     * A write that failed with no code is treated as transient, because the
+     * default has to be "keep the set": a 4xx tells the offline queue to delete
+     * it, and a lost set is not recoverable while a needless retry is.
+     */
     const { repo } = await repoWith({ sets: [setRow()], updateError: { message: "connection lost" } })
     const thrown = await repo.updateSet(USER, WORKOUT, "s1", { rpe: 8 }).catch((e: Error) => e)
-    expect((thrown as Error).message).toMatch(/That set could not be changed/)
+    expect((thrown as Error).message).toMatch(/could not reach the server/i)
     expect((thrown as Error).message).not.toMatch(/connection lost/)
+  })
+
+  test("a constraint violation keeps its own sentence, because a retry cannot fix it", async () => {
+    const { repo } = await repoWith({
+      sets: [setRow()],
+      updateError: { code: "23514", message: 'violates check constraint "x"' },
+    })
+    const thrown = await repo.updateSet(USER, WORKOUT, "s1", { rpe: 8 }).catch((e: Error) => e)
+    expect((thrown as Error).message).toMatch(/That set could not be changed/)
+    expect((thrown as Error).message).not.toMatch(/check constraint/)
   })
 })

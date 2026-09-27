@@ -199,6 +199,24 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
    */
   const [vanished, setVanished] = useState(false)
   /**
+   * WHY THIS SCREEN HAS NO WORKOUT ANY MORE, in words.
+   *
+   * There are three ways to get here and they are not the same news:
+   *
+   *   finished    "This workout is finished."
+   *   discarded   nothing was recorded, and that was the point
+   *   gone        it went away somewhere else — the server's own sentence
+   *
+   * `null` means the first. The screen used to infer all three from
+   * `workout === null` and say "finished" for every one, so tapping Throw away
+   * — and confirming a dialog that correctly said "2 sets will be thrown away.
+   * This cannot be undone." — answered "This workout is finished." The file's
+   * own comment calls that "the one thing this screen must never get
+   * backwards", and the two-device case was fixed twice while the ordinary
+   * local one went on saying it.
+   */
+  const [endedMessage, setEndedMessage] = useState<string | null>(null)
+  /**
    * A COUNTER SO A SLOW ANSWER CANNOT UNDO A FAST ONE.
    *
    * Every response replaced the whole workout unconditionally. Tick set 1, tick
@@ -226,6 +244,19 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
    */
   const workoutVanished = useCallback((workoutId: string, message: string) => {
     /**
+     * AND SAY HOW MANY WENT WITH IT. Three sets ticked offline, the workout
+     * finished on the other device, and the queue is emptied with one singular
+     * sentence — "so that change was not saved" — naming neither the count nor
+     * the lifts. They cannot be saved, which is exactly why the person needs to
+     * know what they were.
+     */
+    const stranded = readQueue().filter((q) => q.workoutId === workoutId)
+    const lost =
+      stranded.length > 0
+        ? ` ${stranded.length} ${stranded.length === 1 ? "set that had not" : "sets that had not"} reached the server ${stranded.length === 1 ? "was" : "were"} lost: ${[...new Set(stranded.map((q) => q.exercise))].join(", ")}.`
+        : ""
+    setEndedMessage(`${message}${lost}`)
+    /**
      * FENCED, like every other state change here.
      *
      * `applyServer` only rejects an answer older than the last one APPLIED, and
@@ -236,7 +267,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
      */
     applied.current = ++issued.current
     setVanished(true)
-    setError(message)
+    setError(`${message}${lost}`)
     setWorkout(null)
     const left = readQueue().filter((q) => q.workoutId !== workoutId)
     writeQueue(left)
@@ -771,6 +802,8 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
 
   const discard = useCallback(async () => {
     if (!workout) return
+    /** Counted before the row goes, so the sentence can name what was lost. */
+    const setsTickedNow = workout.sets.filter((set) => set.completedAt).length
     try {
       const res = await fetch(`/api/workouts/${workout.id}`, { method: "DELETE" })
       if (!res.ok) {
@@ -818,6 +851,13 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
       return
     }
     clearStartKey(workout.enrollmentId)
+    // What the screen says next. Not "finished": nothing was recorded, which is
+    // exactly what the person asked for and the opposite of what it said.
+    setEndedMessage(
+      setsTickedNow > 0
+        ? `Thrown away. ${setsTickedNow} ${setsTickedNow === 1 ? "set was" : "sets were"} deleted and nothing was recorded.`
+        : "Thrown away. Nothing was recorded."
+    )
     // FENCED, like `workoutVanished`. Tap Throw away while a tick's 200 is on
     // the wire and `applyServer` lands afterwards, putting the workout back on
     // a screen that has already cleared it.
@@ -910,6 +950,8 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
      * had it open. The screen owes a different sentence than a normal finish.
      */
     vanished,
+    /** Why there is no workout: null means an ordinary finish. */
+    endedMessage,
     busy,
     tick,
     removeSet,

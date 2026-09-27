@@ -68,11 +68,23 @@ export function saveCorrection(workoutId: string, sets: CorrectedSet[]): Promise
   )
 }
 
-/** Deletes it, and with it every set it holds. */
-export function deleteWorkout(workoutId: string): Promise<ActionResult> {
-  return call(
+/**
+ * Deletes it, and with it every set it holds.
+ *
+ * A DELETE THAT REMOVED NOTHING IS NOT A DELETE. The route answers 200 with
+ * `deleted: false` for an id that is not there — a wrong one, or a workout
+ * another device removed a moment ago — and this used to report that as
+ * success, so the screen navigated away as though it had done something. The
+ * repo grew a `deleted` flag for exactly this and nothing read it.
+ */
+export async function deleteWorkout(workoutId: string): Promise<ActionResult> {
+  const answer = await call<{ deleted?: boolean }>(
     `/api/health/workout?id=${workoutId}`,
     { method: "DELETE" },
     "That workout could not be deleted."
   )
+  if (!answer.ok) return answer
+  return answer.data?.deleted === false
+    ? { ok: false, error: "That workout was already gone — nothing was deleted." }
+    : answer
 }

@@ -163,7 +163,23 @@ async function recentlyFinished(
       .order("logged_at", { ascending: false })
       .limit(RECENT_LIMIT)
   )
-  if (error || !data) return []
+  /**
+   * A READ THAT FAILED IS NOT "YOU HAVE NOT TRAINED".
+   *
+   * This collapsed both into `[]`, and `trainingCardState` reads an empty
+   * `recentlyFinished` as "nothing finished today" — so a failed query offers
+   * **Start workout** on a day already trained, which the card's own comment
+   * says "invites a second workout for the same session". `docs/known-failures.md`:
+   * a value that could not be computed is a THIRD state, never zero.
+   *
+   * Thrown rather than guessed: the caller already handles a failure by saying
+   * the door could not be loaded, which is the honest answer.
+   */
+  if (error) {
+    console.error(`could not read recently finished workouts: ${error.message}`)
+    throw new Error("Could not read your recent workouts. Reload and try again.")
+  }
+  if (!data) return []
 
   /** The day's name, from the enrollment's own schedule. */
   const labelFor = (enrollmentId: string | null, dayId: string | null): string | null => {

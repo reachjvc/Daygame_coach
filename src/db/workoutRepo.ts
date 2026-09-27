@@ -572,7 +572,24 @@ async function refuseWrite(
    * were indistinguishable at every call site, and it was right.
    */
   if (fate === "unknown") throw new CouldNotTell()
-  throw new Error(fallback)
+  /**
+   * THE WORKOUT IS FINE AND THE WRITE FAILED — and whether that set survives
+   * depends entirely on the status this produces.
+   *
+   * A bare `Error` becomes 400, and the offline queue reads any 4xx as "this
+   * can never succeed": it drops the set out of `localStorage`, takes the ✓ off
+   * the screen and says it "has been removed". Three rounds of this change
+   * fixed the READS on this path for exactly that reason and left the write's
+   * own failure answering 400 — the fourth instance of one class.
+   *
+   * So the error is classified rather than assumed, and the DEFAULT IS RETRY:
+   * keeping a set that cannot be written is recoverable, deleting one is not.
+   * Only Postgres's integrity-violation class (23xxx — a check, a unique index,
+   * a foreign key) is permanent, and a retry of those genuinely cannot succeed.
+   */
+  const code = error.code ?? ""
+  if (code.startsWith("23")) throw new Error(fallback)
+  throw new CouldNotTell()
 }
 
 /**
