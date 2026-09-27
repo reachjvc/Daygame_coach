@@ -295,4 +295,60 @@ test.describe('time is kept on the server, not just in one browser', () => {
     // did not.
     await expect(entryInList(page, 'to be deleted')).toHaveCount(0)
   })
+
+  /**
+   * WHAT IT DOES WHILE IT CANNOT REACH THE SERVER, MEASURED WHERE IT HAPPENS.
+   *
+   * On 2026-09-26 this was 25 POSTs in 20 seconds, gaps flat at ~850ms, with a
+   * backoff in the code that says 2s doubling to 60s. Every flush set `status`,
+   * three effects depended on `status`, and the change-watcher re-armed an
+   * 800ms timer after each failure — so the backoff never scheduled anything.
+   *
+   * THIS ASSERTION LIVES IN A BROWSER ON PURPOSE. The unit harness next door
+   * (`syncRetry.test.tsx`) cannot see this: with fake timers inside `act()`
+   * React batches the re-renders that drive the loop, and the harness reported
+   * four sends where the product made twenty-five. The loop is made of real
+   * renders interleaved with real promises, so it takes a real browser.
+   */
+  test('a server it cannot reach is not asked once a second', async ({ page, context }) => {
+    /**
+     * ON THE PRODUCT ROUTE, not `/test/toggl` like its neighbours. The first
+     * version of this test ran on the lab page and passed with the defect
+     * deliberately put back — the loop is driven by re-renders, and the
+     * dashboard shell around the tracker produces ones the bare lab page does
+     * not. A guard that cannot see the bug it was written for is a decoration.
+     */
+    await page.goto('/dashboard/time', { waitUntil: 'domcontentloaded' })
+    await page.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 30000 })
+    await page.waitForTimeout(2500)
+
+    let posts = 0
+    await page.route('**/api/timetrack/sync', async (route) => {
+      if (route.request().method() === 'POST') posts += 1
+      await route.continue()
+    })
+
+    await context.setOffline(true)
+    try {
+      await trackEntry(page, 'tracked with no connection')
+      posts = 0
+      await page.waitForTimeout(12000)
+    } finally {
+      await context.setOffline(false)
+    }
+
+    // 2s, 4s, 8s in twelve seconds is three attempts; the old loop made fourteen
+    expect(posts, `the upload was retried ${posts} times in 12s — the backoff is not scheduling them`).toBeLessThanOrEqual(5)
+
+    // and the work is not lost by backing off: it goes up when the network does
+    await page.waitForTimeout(4000)
+    const arrived = await page.evaluate(async () => {
+      const response = await fetch('/api/timetrack/sync')
+      const body = await response.json()
+      return (body.rows.timetrack_entries as { description: string }[]).some(
+        (e) => e.description === 'tracked with no connection',
+      )
+    })
+    expect(arrived, 'the queue never drained after the network came back').toBe(true)
+  })
 })

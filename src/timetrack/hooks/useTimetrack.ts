@@ -11,7 +11,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { DEFAULT_IDLE, LEGACY_IDLE_DEFAULT, STATE_VERSION, STORAGE_KEY } from "../config"
+import { reportError } from "@/src/shared/errorReportService"
+
+import { DEFAULT_IDLE, LEGACY_IDLE_DEFAULT, STATE_VERSION, STORAGE_KEY, WORKSPACE_SIZE_TRIPWIRE } from "../config"
 import { newId } from "../idService"
 import { migrateStateToV3 } from "../stateMigrationService"
 import { createEmptyWorkspace } from "../data/emptyWorkspace"
@@ -249,6 +251,25 @@ export function useTimetrack() {
       window.removeEventListener("storage", onStorage)
     }
   }, [pushToast])
+
+  /**
+   * The size tripwire. Reported once per session, to the error channel rather
+   * than to the person: a workspace this big is not their problem yet, it is a
+   * signal that this slice's one-blob design has a horizon. See
+   * `WORKSPACE_SIZE_TRIPWIRE`.
+   */
+  const sizeReported = useRef(false)
+  useEffect(() => {
+    if (!state || sizeReported.current) return
+    if (state.entries.length < WORKSPACE_SIZE_TRIPWIRE) return
+    sizeReported.current = true
+    reportError(
+      new Error(
+        `timetrack workspace has ${state.entries.length} entries, past the ${WORKSPACE_SIZE_TRIPWIRE} tripwire: one localStorage blob, whole-account diff on every change`,
+      ),
+      { severity: "warning" },
+    )
+  }, [state])
 
   // --- persist on every change --------------------------------------------
   useEffect(() => {

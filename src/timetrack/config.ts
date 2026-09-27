@@ -43,6 +43,28 @@ export const SEED_CREATED_WITH = "daygame-coach /test/toggl (demo data)"
 /** Warn about a timer left running longer than this (hours) */
 export const FORGOTTEN_TIMER_HOURS = 12
 
+/**
+ * WHEN THIS WORKSPACE IS BIG ENOUGH THAT ITS DESIGN NEEDS REVISITING.
+ *
+ * The whole account lives in one localStorage key. Measured on a real account
+ * on 2026-09-26: **496 bytes per entry**, so roughly **10,500 entries fills the
+ * 5MB origin budget** — which this slice shares with every other slice's keys.
+ * The quota failure is handled honestly (a toast saying to export a backup),
+ * but "handled" means local persistence stops.
+ *
+ * The same measurement, on the same day: mapping plus diffing the whole account
+ * on every change takes 12ms at 700 entries, 54ms at 3,650 and 145ms at 10,000
+ * — on a desktop, in Node. A phone is slower by some multiple nobody here has
+ * measured.
+ *
+ * So this number is a third of the wall, and it is a REPORT, not a warning to
+ * the user: at one user and no payments the right move is to know, not to
+ * rebuild. When it fires, the work it buys is entries paged by month, the diff
+ * off the main thread, and a cold open that fetches a window rather than a
+ * history.
+ */
+export const WORKSPACE_SIZE_TRIPWIRE = 4_000
+
 /** Toggl's 15 project colors (toggl) */
 export const PROJECT_COLORS = [
   "#0b83d9",
