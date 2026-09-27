@@ -22,7 +22,7 @@ import {
   epochSeconds,
   minutesIntoDay,
 } from "./timetrackFormatService"
-import { entrySeconds, isRunning } from "./timetrackService"
+import { entrySeconds } from "./timetrackService"
 import type {
   CalendarEvent,
   EntryDraft,
