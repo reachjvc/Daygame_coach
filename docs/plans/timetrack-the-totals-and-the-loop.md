@@ -830,3 +830,56 @@ smallest honest correction: **delete the false sentence from
 `timetrackBackupRepo.ts:10-12`**, and let the test header's own wording stand,
 with the dead runbook link removed or the runbook restored from `ecee9a13`.
 Five minutes, and it stops the comment lying to the next person.
+
+---
+
+# BUILT, 2026-09-27
+
+Every item above, in the order the critic's pass argued for. Each was verified in
+the product on `/dashboard/time`, signed in, not only in a test.
+
+| what | before | after |
+|---|---|---|
+| 0. reversed / cleared end times | 24 tracked minutes became `21:36 – 20:00 · 0:00`, and the account stopped saving | refused with a message wherever the time is typed; the rule is in `validateEntry` |
+| 0. twelve silent refusals | controls that did nothing and said nothing | all twelve speak; a source scan keeps it that way |
+| 1. calendar day totals | 12:02 where three other screens said 6:41 | calendar 7:19 / 6:45, Reports 7h19m / 6h45m |
+| 1. dragging a block | wrote the one-minute floor and zeroed the seconds; an overnight drag destroyed half the entry | both ends shift together, duration kept to the millisecond |
+| 2. offline retry | 25 POSTs in 20.0s, gaps flat ~850ms | 4 POSTs, gaps 2043 / 4042 / 8033ms, one more the moment the network returns |
+| 2. signed-out retry | 23 POSTs in 20s | 1 |
+| 2. the starved pull | 0 pulls in 80s of editing | 2 |
+| 2. a hung request | held the queue for ever; only a reload recovered | a 20-second deadline turns it into an ordinary failure |
+| 2. a refused row | retried for ever behind a constraint name | named to the person, retry stopped, 0 requests in the next 12s |
+| 3. a time typed then Escaped | lost in silence | kept — on blur and on unmount |
+| 4. the product's Time tab | opened on Settings › Profile | opens on the timer |
+| 5. phone Filters sheet | a lone unlabelled `>` | no arrows inside, both still outside |
+| 6. dates and times | "9/26/2026, 9:39:19 PM" against a YYYY-MM-DD profile | "2026-09-27 09:13" |
+| 7. workspace counts | "1 projects" | "1 project" |
+| 8. dev bubble at 390px | sat on the Timer tab | gone; the tab hits itself |
+
+**Checks run:** 6,242 unit tests; lint and typecheck ratchets unchanged (335,
+98); `toggl-iphone-safari` 20, `toggl-android` 20, `toggl-webkit` 17,
+`toggl-firefox` 17, and the `timetrack-sync` project including the new cadence
+guard. `toggl-webkit`'s first run stopped a serial describe after 9 of 17 with
+nothing in the output; the re-run was clean at 17. Recorded as unidentified
+rather than dismissed — this suite did the same thing once on 2026-09-26.
+
+**Two things the work changed about the plan itself:**
+
+1. **The unit harness could not see the loop it was written for.** With fake
+   timers inside `act()` React batches the re-renders the loop is made of, so
+   the harness reported four sends where the product made twenty-five. The
+   cadence assertion moved to a browser test — and the first version of *that*
+   passed with the defect deliberately restored, because it ran on `/test/toggl`
+   where the dashboard shell's re-renders are absent. It now runs on the product
+   route, fails at 13 sends with the bug in, and passes at 3 with it out.
+2. **My own fix shipped a landmine and a test caught it in the same hour.** The
+   first drain-again read the status ref after a 401 — a ref written during
+   render, when the return happens long before — and re-entered immediately:
+   19,201 POSTs in a twenty-second test. It keys off whether the send actually
+   succeeded now.
+
+**Not built, deliberately:** the discriminated union that would make a dropped
+violation a compile error. The behaviour is fixed at all twelve sites and a
+source scan holds the line; the union is a day across ~44 call sites and buys
+the same property with the compiler instead of a test. Worth doing the next time
+this file is open for another reason.
