@@ -661,3 +661,76 @@ test("today's session survives an action that re-reads it", async ({ page }) => 
   await expect(card).toBeVisible()
   await expect(page.getByText(/loading session/i)).toHaveCount(0)
 })
+
+/**
+ * THE CORRECTION SCREEN'S NUMBERS ARE ON THE SCREEN.
+ *
+ * Every other child of the correction row is `shrink-0`, so the two `<Input>`s
+ * were the only flex items that could absorb the overflow and they absorbed
+ * all of it. Measured at 390px on 2026-09-27: weight 14px, reps 14px — the
+ * padding and the border, and ZERO pixels of content. The DOM held
+ * `value="100"` and `value="5"`; neither digit was visible, on the one screen
+ * whose whole job is editing those two numbers.
+ *
+ * It reached its designed width only at 640px and up, which is why every
+ * review that looked at this screen on a laptop called it fine, and why the
+ * kind `<select>` and the add-set button — both added to this row the same
+ * afternoon, both `shrink-0` — went in without anyone noticing they had taken
+ * the last of the space.
+ *
+ * MEASURED, NOT LOOKED AT. "The editor opens and I can type in it" is true at
+ * 14px wide. The assertion is a number.
+ */
+test("the correction screen's weight and reps are wide enough to read, on a phone", async ({
+  page,
+}) => {
+  const id = await seedFinishedWorkout(page, {
+    startedAt: new Date(Date.now() - 3 * 3600_000).toISOString(),
+    endedAt: new Date(Date.now() - 2 * 3600_000).toISOString(),
+    // A long lift name, because the name column is what the row gives up
+    // first and a short one would hide the squeeze.
+    sets: [
+      { exercise: "Bulgarian Split Squat", weightKg: 100, reps: 5, setNumber: 1 },
+      { exercise: "Bulgarian Split Squat", weightKg: 100, reps: 5, setNumber: 2 },
+    ],
+  })
+  await page.goto(`/programs/workout/${id}`)
+  await page.getByTestId("workout-correct").click()
+  await page.getByTestId("workout-correction").waitFor()
+
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 })
+
+    const boxes = page.getByLabel(/^(Weight|Reps) for /)
+    const count = await boxes.count()
+    // THE ENUMERATION. A locator that matches nothing passes every assertion
+    // under it, which is how this class of test fails silently.
+    expect(count, `no weight/reps boxes found at ${width}px — the locator is wrong`).toBeGreaterThan(1)
+
+    for (let i = 0; i < count; i++) {
+      const name = await boxes.nth(i).getAttribute("aria-label")
+      // POLLED, NOT SLEPT. A fixed wait for the reflow is what
+      // `e2e-isolation`'s ratchet exists to stop, and it is the wrong tool
+      // anyway: this retries until the laid-out width settles.
+      // 14px is padding and border with nothing between them; two digits
+      // need about 34.
+      await expect
+        .poll(async () => Math.round((await boxes.nth(i).boundingBox())?.width ?? 0), {
+          message: `${name} is too narrow to read at ${width}px`,
+        })
+        .toBeGreaterThanOrEqual(40)
+    }
+
+    // And the panel itself stays inside the screen, which the same collapse
+    // broke: at 320px the row ran to 386 and carried ✕ Remove off the edge.
+    await expect
+      .poll(
+        async () =>
+          await page.evaluate(
+            () => document.documentElement.scrollWidth > window.innerWidth + 1
+          ),
+        { message: `the correction screen scrolls sideways at ${width}px` }
+      )
+      .toBe(false)
+  }
+})

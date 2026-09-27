@@ -532,7 +532,16 @@ export function FinishSheet({
       )}
       {error && <p className="text-xs text-destructive">{error}</p>}
 
-      <div className="flex gap-2">
+      {/*
+        WRAPS, for the same reason the correction screen's pair does. Both of
+        these are `whitespace-nowrap`, and the primary's opening label on a
+        loose workout — "Say what kind of session it was" — is 271px wide, so
+        "Keep going" began at 295 and ran to 412. At 320px it sat 92px off the
+        edge; at 390 it was visibly sheared. Only the sheet's OPENING state
+        hits it, because the later labels are shorter, which is why driving
+        the happy path never showed it.
+      */}
+      <div className="flex flex-wrap gap-2">
         <Button
           className="flex-1"
           // Saving before the last set lands would report a workout that did

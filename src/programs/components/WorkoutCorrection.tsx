@@ -173,7 +173,32 @@ export function WorkoutCorrection({
       )}
 
       {draft.map((set, i) => (
-        <div key={`${set.exercise}-${set.kind}-${set.setNumber}-${i}`} className="flex items-center gap-2">
+        /*
+          WRAPS, AND THE INPUTS DO NOT SHRINK — measured, not guessed.
+
+          Every other child of this row was `shrink-0`, so the two `<Input>`s
+          were the only flex items that could absorb the overflow, and they
+          absorbed all of it. Measured at 390px: weight 14px, reps 14px —
+          `px-1.5` padding plus a border and ZERO pixels of content. The DOM
+          held value="100" and value="5" and neither digit was on screen, on
+          the one screen whose entire job is editing those two numbers. Below
+          386px the row also pushed the page sideways and carried ✕ Remove
+          66px off the edge at 320px.
+
+             320  360  390  430  500  640
+          wt   14   14   14   20   58   64
+          reps 14   14   14   19   51   56
+
+          It reached its designed size only at 640px and up, which is why it
+          reviewed clean on a laptop and why this round's changes to this row
+          — a kind select and an add-set button, both `shrink-0` — went in
+          without anyone noticing they had taken the last of the space.
+
+          `flex-wrap` plus `shrink-0` on both inputs: the kind and the ✕ drop
+          to a second line on a phone rather than the numbers vanishing.
+          `programs-past-workout.spec.ts` measures them now.
+        */
+        <div key={`${set.exercise}-${set.kind}-${set.setNumber}-${i}`} className="flex flex-wrap items-center gap-2">
           <span className="w-24 shrink-0 truncate text-xs">{set.exercise}</span>
           <span className="w-4 shrink-0 text-xs tabular-nums text-muted-foreground">
             {set.setNumber}
@@ -186,7 +211,7 @@ export function WorkoutCorrection({
             onChange={(e) =>
               setDraft((d) => d.map((x, j) => (j === i ? { ...x, weight: e.target.value } : x)))
             }
-            className="h-11 w-16 px-1.5"
+            className="h-11 w-16 shrink-0 px-1.5"
           />
           <span className="shrink-0 text-xs text-muted-foreground">{label} ×</span>
           <Input
@@ -197,7 +222,7 @@ export function WorkoutCorrection({
             onChange={(e) =>
               setDraft((d) => d.map((x, j) => (j === i ? { ...x, reps: e.target.value } : x)))
             }
-            className="h-11 w-14 px-1.5"
+            className="h-11 w-14 shrink-0 px-1.5"
           />
           {/*
             THE KIND IS EDITABLE, because the header promises it: "a warm-up
@@ -330,7 +355,14 @@ export function WorkoutCorrection({
       )}
       {error && <p className="text-xs text-destructive">{error}</p>}
 
-      <div className="flex items-center gap-2 pt-1">
+      {/*
+        WRAPS. Both buttons are `whitespace-nowrap` (the Button base class is),
+        so at 320px "Leave it as it is" ran to 348 and took the page sideways
+        with it — the same shape as the finish sheet's "Keep going", found in
+        the same review. A pair of nowrap buttons in a fixed-direction flex row
+        is the shape; this is the second instance of it in this slice.
+      */}
+      <div className="flex flex-wrap items-center gap-2 pt-1">
         <Button
           size="sm"
           disabled={saving || blank !== undefined || collision !== undefined}
