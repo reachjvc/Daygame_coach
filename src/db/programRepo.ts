@@ -28,6 +28,7 @@ import {
 } from "@/src/programs/programsService"
 import { getProgram, requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
 import { ProgramRefused } from "@/src/programs/errors"
+import { CouldNotTell } from "@/src/programs/errors"
 import { isOpenWorkout, OPEN_WORKOUT_REFUSAL } from "./workoutLifecycle"
 import {
   clampCursorDay,
@@ -295,7 +296,18 @@ export async function getEnrollmentById(userId: string, id: string): Promise<Pro
      * about a PATH.
      */
     console.error(`could not read enrollment ${id} (code ${error.code ?? "none"}): ${error.message}`)
-    throw new Error("Could not read that program. Reload and try again.")
+    /**
+     * `CouldNotTell`, because the STATUS is what decides whether a set lives.
+     *
+     * The previous round fixed the wording here and left the class, so the
+     * route still answered 400 — and the offline queue reads any 4xx as
+     * permanent and deletes the set. Then the round after that fixed
+     * `unitFor`'s PROFILES fallback, which only runs for a loose workout, and
+     * left this one: the majority case, every program workout, still lost the
+     * set on a statement timeout. Third time for the same class in the same
+     * arc, each time one function short of the path that matters.
+     */
+    throw new CouldNotTell("that program")
   }
   return toDomain(data as ProgramEnrollmentRow)
 }

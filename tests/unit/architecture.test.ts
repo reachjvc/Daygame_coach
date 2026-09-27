@@ -2793,18 +2793,33 @@ describe('Architecture Compliance', () => {
       file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
     )
 
+    /**
+     * THE OFFSETS ARE PER KIND, because "+1 to end-1" is only right for a
+     * literal with one delimiter at each end.
+     *
+     * A review measured what the blanket version left behind: JSX text has NO
+     * delimiters, so its first and last characters survived and 19 .tsx files
+     * ended up carrying an unmatched `(` or `)` in the blanked source — which
+     * both scanners then count. `<li>Kiss Closes (milestone: 1 → 25)</li>` is a
+     * real one. A regex keeps its flags (`/_/g` became `/  g`), and a template
+     * head lost the `$` of its own `${`.
+     *
+     * None of it moved a verdict today. All of it is a miscount waiting for the
+     * wrong file.
+     */
     const walk = (node: ts.Node): void => {
-      if (
-        ts.isStringLiteral(node) ||
-        ts.isNoSubstitutionTemplateLiteral(node) ||
-        ts.isRegularExpressionLiteral(node) ||
-        ts.isJsxText(node)
-      ) {
-        // Inside the quotes only, so the delimiters still balance.
-        blank(node.getStart(parsed) + 1, node.getEnd() - 1)
-      } else if (ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) {
-        // The literal chunks of a template, never its `${…}` expressions.
-        blank(node.getStart(parsed) + 1, node.getEnd() - 1)
+      const from = node.getStart(parsed)
+      const to = node.getEnd()
+      if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+        blank(from + 1, to - 1)                       // "…"  '…'  `…`
+      } else if (ts.isRegularExpressionLiteral(node)) {
+        blank(from + 1, to)                           // /…/flags — flags too
+      } else if (ts.isJsxText(node)) {
+        blank(from, to)                               // no delimiters at all
+      } else if (ts.isTemplateHead(node) || ts.isTemplateMiddle(node)) {
+        blank(from + 1, to - 2)                       // `…${   or   }…${
+      } else if (ts.isTemplateTail(node)) {
+        blank(from + 1, to - 1)                       // }…`
       }
       ts.forEachChild(node, walk)
     }
@@ -3002,42 +3017,64 @@ describe('Architecture Compliance', () => {
    * filter cannot call a TypeScript predicate.
    */
   describe('One spelling of "a workout that is still open"', () => {
-    /** Hand-written variants of `started_at != null && ended_at == null`. */
-    const HAND_ROLLED =
-      /(started_at|startedAt)\s*(!==?\s*null|&&)[^\n]{0,80}(ended_at|endedAt)\s*===?\s*null|!\s*\w*\.?(ended_at|endedAt)[^\n]{0,40}(started_at|startedAt)/
-
     /**
-     * The query that reads the live workout builds this filter in PostgREST,
-     * which cannot call a function. It is the one place the rule is spelled
-     * twice on purpose.
+     * Hand-written variants of "has a start and no end".
+     *
+     * THE FIRST VERSION DID NOT MATCH THE COPY IT WAS WRITTEN FOR. The line
+     * this rule exists because of is
+     *
+     *     if (log.started_at && !log.ended_at) {
+     *
+     * and the old regex needed an explicit `ended_at === null`, so it matched
+     * neither that nor `Boolean(x.started_at) && x.ended_at === null` nor the
+     * reversed order. It also excluded any line containing `[<>]=?` — which
+     * matches the `>` in `=>`, exempting every arrow function in the codebase —
+     * to spare a range check that lives in `src/tracking`, outside the scanned
+     * directories, so the exclusion paid for a line the scan cannot reach.
+     *
+     * Now: the two column names in either order, within one statement, where
+     * one is negated or compared to null and the other is not. Statements, not
+     * lines, so a predicate wrapped across two lines still counts.
      */
-    const ALLOWED_SECOND_SPELLING = new Set([
-      'src/db/workoutRepo.ts:getLiveWorkout',
-      'src/db/healthRepo.ts:FINISHED_WORKOUTS_FILTER',
-    ])
+    const START = /(?:started_at|startedAt)/
+    const END = /(?:ended_at|endedAt)/
+    const NEGATED_END = new RegExp(`!\\s*\\w*\\??\\.?${END.source}\\b|${END.source}\\s*===?\\s*null`)
+    const POSITIVE_START = new RegExp(
+      `${START.source}\\s*!==?\\s*null|Boolean\\(\\s*\\w*\\??\\.?${START.source}|\\w*\\??\\.?${START.source}\\s*&&`
+    )
 
     test('nothing rewrites the predicate by hand', () => {
       const offenders: string[] = []
       /**
        * The two slices that own a workout's lifecycle. Scoped, because
        * `started_at`/`ended_at` also name a TRACKING session — a different
-       * table with a different rule — and
-       * `achievementsSyncService.ts:100` legitimately asks whether an instant
-       * falls inside one.
+       * table with a different rule.
        */
       const owners = [path.join(projectRoot, 'src', 'db'), path.join(projectRoot, 'src', 'programs')]
       for (const file of owners.flatMap((dir) => getAllFiles(dir, /\.tsx?$/))) {
         const rel = path.relative(projectRoot, file).replace(/\\/g, '/')
         if (rel === 'src/db/workoutLifecycle.ts') continue
         const source = withoutCommentsOrStrings(fs.readFileSync(file, 'utf8'), rel)
-        source.split('\n').forEach((line, i) => {
-          if (!HAND_ROLLED.test(line)) return
-          // `.is("ended_at", null)` and friends are the PostgREST spelling.
-          if (/\.(is|not|or)\(/.test(line)) return
-          // A range check ("did this happen during the session") is a different
-          // question from "is it open".
-          if (/[<>]=?/.test(line)) return
-          offenders.push(`${rel}:${i + 1}  ${line.trim().slice(0, 90)}`)
+        /**
+         * A LINE, AND A LINE PLUS THE NEXT ONE — never a `;`-split "statement".
+         *
+         * Splitting on `[;{}]` looked more principled and was useless here:
+         * this codebase writes no semicolons, so the chunks were whole function
+         * bodies, and the PostgREST exclusion below then matched a `.eq(` from
+         * an unrelated query twenty lines away and suppressed the whole block.
+         * All three real spellings walked past it. Two lines is enough for a
+         * predicate that wraps, and keeps the exclusion next to what it excuses.
+         */
+        const lines = source.split('\n')
+        lines.forEach((line, i) => {
+          for (const text of [line, `${line} ${lines[i + 1] ?? ''}`]) {
+            if (!NEGATED_END.test(text) || !POSITIVE_START.test(text)) continue
+            // `.is("ended_at", null)` and friends are the PostgREST spelling,
+            // and a query filter cannot call a TypeScript predicate.
+            if (/\.(is|not|or|eq)\(/.test(text)) continue
+            offenders.push(`${rel}:${i + 1}  ${text.trim().replace(/\s+/g, ' ').slice(0, 90)}`)
+            return
+          }
         })
       }
       expect(
@@ -3047,7 +3084,6 @@ describe('Architecture Compliance', () => {
           'time either, and every hand-written copy so far has got that wrong:\n' +
           offenders.join('\n')
       ).toEqual([])
-      void ALLOWED_SECOND_SPELLING
     })
   })
 

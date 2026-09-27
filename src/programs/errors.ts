@@ -60,11 +60,26 @@ export class ProgramRefused extends Error {
 export class WorkoutGone extends Error {
   readonly fate: "discarded" | "finished"
 
-  constructor(fate: "discarded" | "finished") {
-    super(
+  /**
+   * `changeSaved` IS NOT A DETAIL. When this is thrown from the re-read AFTER a
+   * write, the write has already committed — so telling somebody "that change
+   * was not saved" is false, and it is false in the direction that makes them
+   * do it again. A workout that was DISCARDED took the set with it (the rows
+   * cascade), so there the sentence is true; a workout finished on another
+   * device kept it.
+   *
+   * Both halves of the old sentence were wrong in that case: not thrown away,
+   * and not unsaved.
+   */
+  constructor(fate: "discarded" | "finished", changeSaved = false) {
+    const what =
       fate === "discarded"
-        ? "This workout was thrown away somewhere else, so that change was not saved."
-        : "This workout was already finished somewhere else, so that change was not saved."
+        ? "This workout was thrown away somewhere else"
+        : "This workout was finished somewhere else"
+    super(
+      changeSaved
+        ? `${what}. Your change was saved to it — reload to see where it got to.`
+        : `${what}, so that change was not saved.`
     )
     this.name = "WorkoutGone"
     this.fate = fate
@@ -134,6 +149,11 @@ export function databaseRefusal(error: { code?: string; message: string }): Prog
  * different from a 400 (you sent something wrong) and a 500 (we broke).
  */
 export function statusFor(e: unknown): number {
+  // 503 here too. This file's own header says splitting body and status between
+  // two helpers is what lets them drift, and `workoutErrorResponse` knew about
+  // `CouldNotTell` while this did not — so `/api/workouts/[id]/revise`, which
+  // asks this one, answered 500 for the same error the sets routes call 503.
+  if (e instanceof CouldNotTell) return 503
   return e instanceof ProgramRefused || e instanceof WorkoutGone ? 409 : 500
 }
 

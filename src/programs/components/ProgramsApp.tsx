@@ -128,8 +128,20 @@ export function ProgramsApp({
     />
   )
 
-  /** The sentence for a workout already open, or null when there is none. */
-  const openWorkoutDoor = openWorkoutInvitation(cardState)
+  /**
+   * The sentence for a workout already open, or null when there is none.
+   *
+   * `live` IS THE FALLBACK, because `cardState === null` does not mean "no
+   * workout open" — it means the server did not manage to compute the card.
+   * `app/programs/page.tsx` assigns `live` early and `cardState` last, after
+   * three more reads, so any of those failing leaves a page that knows a
+   * workout is open and shows no door to it. `StartLooseWorkout` four lines
+   * away already plans for that; this did not, which is the same "absence read
+   * as a no" the rest of this change is about.
+   */
+  const openWorkoutDoor =
+    openWorkoutInvitation(cardState) ??
+    (live ? "Finish the workout you have open first" : null)
 
   /**
    * ON EVERY VIEW THAT OFFERS TO START SOMETHING.

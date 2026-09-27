@@ -434,7 +434,7 @@ export async function getWorkoutCumulativeCount(userId: string): Promise<number>
 export async function deleteWorkoutLog(
   userId: string,
   logId: string
-): Promise<{ recalculated: boolean }> {
+): Promise<{ recalculated: boolean; deleted?: boolean }> {
   const supabase = await createServerSupabaseClient()
 
   const { data: log, error: readError } = await supabase
@@ -466,6 +466,16 @@ export async function deleteWorkoutLog(
    * workout, and the sentence names it.
    */
   if (isOpenWorkout(log)) throw new ProgramRefused(OPEN_WORKOUT_REFUSAL)
+
+  /**
+   * NOTHING THERE IS NOT A SUCCESSFUL DELETE.
+   *
+   * A wrong id, or another account's, read as `null`, fell past every branch,
+   * matched no rows, and the route answered `{ success: true }`. "Never add a
+   * silent fallback" — and a caller that asked for something to be gone was
+   * told it had done something it had not.
+   */
+  if (!log) return { recalculated: false, deleted: false }
 
   /**
    * A PROGRAM SESSION IS DELETED AND RECALCULATED TOGETHER, OR NOT AT ALL.

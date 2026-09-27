@@ -96,7 +96,11 @@ running_suite() {
       *sh|*bash|*zsh|*pgrep|*grep) continue ;;   # a mention, not a run
     esac
     case "$argv" in
-      *test-server*) continue ;;                 # the IDE's, drives nothing
+      # NOT SKIPPED ANY MORE. This was waved through as "the IDE's, drives
+      # nothing on its own" — but `playwright test-server` is the RPC server the
+      # VS Code extension RUNS TESTS THROUGH, and its workers are its children.
+      # So the one case where the owner runs specs from the editor was the one
+      # case this let us restart the dev server underneath. If it is up, wait.
       *playwright*\ test\ *|*playwright*\ test) return 0 ;;
     esac
   done
@@ -106,6 +110,15 @@ running_suite() {
 if running_suite; then
   echo "refusing: a Playwright run is in progress, and reverting a file under src/" >&2
   echo "restarts the dev server underneath it. Wait for it, or use a git worktree." >&2
+  exit 2
+fi
+
+# AND THE FILE MUST EXIST AT HEAD, or `restore` writes an empty one over it.
+# There is a check for `$BEFORE:$FILE` above; a file present at $BEFORE, deleted
+# at HEAD and sitting untracked on disk would be truncated to zero bytes on the
+# way out — by the cleanup, silently, after the check had passed.
+if ! git cat-file -e "HEAD:$FILE" 2>/dev/null; then
+  echo "refusing: $FILE is not at HEAD, so there is nothing to restore it from." >&2
   exit 2
 fi
 

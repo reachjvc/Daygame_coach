@@ -491,8 +491,20 @@ async function liveAfterWriting(userId: string, workoutId: string): Promise<Live
   // AND IT MUST BE THE SAME ONE. Finish this workout on the laptop and start
   // another in the window after this write, and returning "whatever is open"
   // hands the browser a different workout's sets under a 200.
-  if (!live || live.id !== workoutId) throw new WorkoutGone("discarded")
-  return live
+  if (live && live.id === workoutId) return live
+  /**
+   * WHICH OF THE TWO, ASKED — and the write already went through.
+   *
+   * This had one branch and called every case "discarded". The branch above it
+   * fires precisely when this workout was FINISHED and another was started, so
+   * the commonest way to reach it produced the one sentence `errors.ts` calls
+   * the thing the screen must never get backwards: not thrown away, and the set
+   * was in fact saved. `changeSaved` is true here by construction — the INSERT
+   * committed before this read.
+   */
+  const fate = await fateOf(userId, workoutId)
+  if (fate === "unknown") throw new CouldNotTell("this workout")
+  throw new WorkoutGone(fate === "finished" ? "finished" : "discarded", fate === "finished")
 }
 
 /**

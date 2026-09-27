@@ -660,8 +660,19 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
         const res = await fetch(`/api/workouts/${finished.id}/summary`)
         if (res.ok) return (await res.json()) as WorkoutSummary
         if (res.status === 404) {
-          // The row is gone. Not "saved with no totals" — deleted somewhere
-          // else, and there is nothing to show for it.
+          /**
+           * The row is gone. Not "saved with no totals" — deleted somewhere
+           * else, and there is nothing to show for it.
+           *
+           * AND `vanished`, not just a sentence. The finish sheet is rendered
+           * while `shown` is truthy, and `shown` is `workout ?? finished` — so
+           * clearing the workout here without the flag left the sheet on screen
+           * with Save enabled and nothing behind it: pressing it hits
+           * `if (!workout) return null` and sends no request at all. That is
+           * the dead control the previous round fixed on the OTHER path into
+           * this state, one function away.
+           */
+          setVanished(true)
           setError("This workout was thrown away on another device.")
           return null
         }
@@ -793,7 +804,17 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
         return
       }
     } catch {
-      setError("Could not reach the server, so nothing was thrown away.")
+      /**
+       * A LOST REPLY IS NOT A REQUEST THAT NEVER ARRIVED, and this said it was.
+       *
+       * The DELETE may well have committed; the answer is what went missing. So
+       * "nothing was thrown away" is a claim about the one thing nobody knows,
+       * and it sends somebody back to a workout that is gone. `finish` has
+       * `checkWhetherItLanded` for exactly this shape — ask, do not guess.
+       */
+      setError(
+        "Could not tell whether that went through. Reload to see whether the workout is still here."
+      )
       return
     }
     clearStartKey(workout.enrollmentId)

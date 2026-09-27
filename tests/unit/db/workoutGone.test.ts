@@ -33,7 +33,12 @@ const WORKOUT = "w1"
 type Fate = "gone" | "finished" | "open" | "written-up" | "unreadable"
 
 /** The workout disappears only AFTER the write has succeeded. */
-type Vanishing = { goneAfterWrite?: boolean; liveReadFails?: boolean }
+type Vanishing = {
+  goneAfterWrite?: boolean
+  liveReadFails?: boolean
+  /** The unit lookup fails — the read on the majority path, every program workout. */
+  unitReadFails?: boolean
+}
 
 const liveRow = {
   id: WORKOUT,
@@ -103,7 +108,12 @@ function fakeSupabase(opts: { writeError: { code?: string; message: string } | n
         if (!opts.writeError) written = true
         return Promise.resolve({ data: null, error: opts.writeError })
       }
-      if (name === "profiles") return Promise.resolve({ data: { weight_unit: "kg" }, error: null })
+      if (name === "profiles") {
+        if (opts.unitReadFails) {
+          return Promise.resolve({ data: null, error: { code: "57014", message: "statement timeout" } })
+        }
+        return Promise.resolve({ data: { weight_unit: "kg" }, error: null })
+      }
       if (name !== "workout_logs") return Promise.resolve({ data: null, error: null })
 
       // The second question: is it gone, finished, or still open? It asks for
@@ -214,7 +224,7 @@ describe("a set written into a workout that is no longer there", () => {
 
   test("finished on the other device is a different sentence from thrown away", async () => {
     const { repo } = await repoWith({ writeError: RLS, fate: "finished" })
-    await expect(repo.completeSet(USER, WORKOUT, aSet)).rejects.toThrow(/already finished somewhere else/i)
+    await expect(repo.completeSet(USER, WORKOUT, aSet)).rejects.toThrow(/finished somewhere else/i)
   })
 
   test("a workout that is still open owns its failure, and does not claim to be gone", async () => {
@@ -242,7 +252,7 @@ describe("a set written into a workout that is no longer there", () => {
     const { repo } = await repoWith({ writeError: RLS, fate: "written-up" })
     const thrown = await repo.completeSet(USER, WORKOUT, aSet).catch((e: Error) => e)
     expect((thrown as Error).message).not.toMatch(/Tap it again/i)
-    expect((thrown as Error).message).toMatch(/already finished somewhere else/i)
+    expect((thrown as Error).message).toMatch(/finished somewhere else/i)
   })
 
   test("a question that could not be asked is not answered as a 'no'", async () => {
@@ -326,5 +336,38 @@ describe("a set written into a workout that is no longer there", () => {
     const { repo } = await repoWith({ writeError: null, fate: "open", liveReadFails: true })
     const thrown = await repo.completeSet(USER, WORKOUT, aSet).catch((e: unknown) => e)
     expect(workoutErrorResponse(thrown).status, "4xx makes the queue delete the set").toBe(503)
+  })
+
+  test("a set that WAS saved is not reported as unsaved when the workout closes", async () => {
+    /**
+     * The re-read after a committed write. `liveAfterWriting` had one branch
+     * and called every case "discarded", so finishing on the other device
+     * produced: "This workout was thrown away somewhere else, so that change
+     * was not saved." Both halves false — it was finished, and the set is in
+     * the database. The branch that fires most often here is exactly that one,
+     * because finishing frees the account to start another workout.
+     */
+    const { repo } = await repoWith({ writeError: null, fate: "finished", goneAfterWrite: true })
+    const thrown = await repo.completeSet(USER, WORKOUT, aSet).catch((e: Error) => e)
+    const said = (thrown as Error).message
+    expect(said).toMatch(/finished somewhere else/i)
+    expect(said, "the INSERT committed before this read").not.toMatch(/was not saved/i)
+    expect(said).toMatch(/saved to it/i)
+  })
+
+  test("the unit lookup failing is retryable too — it is on every write", async () => {
+    /**
+     * EVERY fixture in this repository answers `profiles` successfully, so
+     * `unitFor`'s failure branch had no test at all — and it was wrong twice.
+     * First it threw a bare Error (400, so the queue deletes the set); then a
+     * round fixed the PROFILES fallback and left `getEnrollmentById`, which is
+     * the branch that actually runs for a program workout. Both are covered
+     * here and in `programRepoRetryable.test.ts`.
+     */
+    const { workoutErrorResponse } = await import("@/src/programs/errors")
+    const { repo } = await repoWith({ writeError: null, fate: "open", unitReadFails: true })
+    const thrown = await repo.completeSet(USER, WORKOUT, aSet).catch((e: unknown) => e)
+    expect(workoutErrorResponse(thrown).status).toBe(503)
+    expect((thrown as Error).message).toMatch(/kilos or pounds/i)
   })
 })

@@ -113,4 +113,26 @@ test.describe("a workout left open, with more than one program running", () => {
     await page.reload()
     await expect(page.getByTestId("open-workout-door")).toHaveCount(0)
   })
+
+  test("and on the catalogue and the builder, which also offer a Start", async ({ page }) => {
+    /**
+     * THE CLAIM WAS "every view that offers to start something" AND THE TEST
+     * WAS ONE VIEW.
+     *
+     * `?view=programs` (the catalogue) and `?view=build` (write your own week)
+     * both offer a Start that cannot succeed while a workout is open, and
+     * neither renders `StartLooseWorkout`, so neither had a door of its own.
+     * They were added in response to one review and left untested until the
+     * next one pointed out that deleting all three lines kept the suite green.
+     */
+    await leaveAWorkoutOpen(page)
+
+    for (const view of ["programs", "build"]) {
+      await page.goto(`/programs?view=${view}`)
+      await expect(
+        page.getByTestId("open-workout-door"),
+        `?view=${view} offers a Start, so it has to say a workout is already open`
+      ).toBeVisible({ timeout: 30000 })
+    }
+  })
 })

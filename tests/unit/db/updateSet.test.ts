@@ -196,7 +196,7 @@ describe("updateSet", () => {
     // news, and this used to assert the one sentence that covered neither.
     const { repo } = await repoWith({ sets: [setRow()], open: false })
     await expect(repo.updateSet(USER, WORKOUT, "s1", { kind: "warmup" })).rejects.toThrow(
-      /already finished somewhere else/i
+      /finished somewhere else/i
     )
   })
 

@@ -112,8 +112,19 @@ describe("deleteWorkoutLog", () => {
     expect(fake.didDelete()).toBe(true)
   })
 
-  test("a workout that is not there is not an open workout", async () => {
-    const { repo } = await repoWith(null)
-    await expect(repo.deleteWorkoutLog(USER, WORKOUT)).resolves.toEqual({ recalculated: false })
+  test("a workout that is not there says so, rather than reporting a success", async () => {
+    /**
+     * It used to answer `{ recalculated: false }`, which the route turns into
+     * `{ success: true }` — for a wrong id, or somebody else's. The caller
+     * asked for a row to be gone and was told it had happened. "Never add a
+     * silent fallback": `deleted` is how the answer now differs from a real
+     * delete.
+     */
+    const { repo, fake } = await repoWith(null)
+    await expect(repo.deleteWorkoutLog(USER, WORKOUT)).resolves.toEqual({
+      recalculated: false,
+      deleted: false,
+    })
+    expect(fake.didDelete(), "and nothing was sent").toBe(false)
   })
 })

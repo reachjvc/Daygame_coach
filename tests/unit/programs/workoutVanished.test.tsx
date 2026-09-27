@@ -185,7 +185,7 @@ describe("the workout is gone", () => {
             ok: false,
             status: 409,
             json: async () => ({
-              error: "This workout was already finished somewhere else, so that change was not saved.",
+              error: "This workout was finished somewhere else, so that change was not saved.",
               code: "workout_gone",
             }),
           }) as unknown as Promise<Response>
@@ -201,7 +201,7 @@ describe("the workout is gone", () => {
     expect(summary).toBeNull()
     await waitFor(() => expect(result.current.workout).toBeNull())
     expect(result.current.vanished).toBe(true)
-    expect(result.current.error).toMatch(/already finished somewhere else/i)
+    expect(result.current.error).toMatch(/finished somewhere else/i)
   })
 
   it("a refresh that finds nothing open says so, rather than clearing the screen quietly", async () => {
