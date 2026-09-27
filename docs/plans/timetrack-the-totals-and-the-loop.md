@@ -813,11 +813,20 @@ the truth is worse than either sentence:
   round trip against a real Postgres."* **There is not.** A comment that claims
   coverage it does not have is worse than no comment, because it stops the next
   person looking — it stopped two of us today, in opposite directions.
-- The test's own header is honest and says the round trip was *"proved by hand
-  (the procedure is in `docs/runbooks/timetrack.md`, and it was run)"*. **That
-  runbook does not exist.** It went in `ecee9a13`, "Delete 482 stale documents,
-  and stop CLAUDE.md pointing at specs that no longer exist" — the commit that
-  removed dangling references left this one, pointing at itself.
+- The test's own header says the round trip was *"proved by hand (the procedure
+  is in `docs/runbooks/timetrack.md`, and it was run)"*. **That citation was
+  dead for seventeen days and is now live again** — deleted in `ecee9a13`
+  ("Delete 482 stale documents, and stop CLAUDE.md pointing at specs that no
+  longer exist", the commit that removed dangling references and left this one
+  pointing at itself), restored in `e92d6a02`.
+
+  **Corrected 2026-09-27, and the timing is the lesson.** This section was
+  committed at 23:02:43 saying the runbook did not exist. It was true when
+  written and false at 23:06:55, when another session restored it — four
+  minutes later, acting on the same finding. A peer caught the stale sentence
+  here. Nothing was wrong with the check; what was wrong was writing a fact
+  about a shared tree and not re-reading it before publishing, while three
+  other sessions were editing that tree.
 
 So: the restore half has never been executed by an automated test, it was proved
 by hand once, and the written procedure for reproducing that proof was deleted.
@@ -825,11 +834,15 @@ One claim of coverage is false and the other is dangling, nine lines apart in
 the same slice.
 
 **Not in scope for these fixes, and deliberately not renamed as a milestone
-here** — the platform move owns it. What belongs in *this* slice's plan is the
-smallest honest correction: **delete the false sentence from
-`timetrackBackupRepo.ts:10-12`**, and let the test header's own wording stand,
-with the dead runbook link removed or the runbook restored from `ecee9a13`.
-Five minutes, and it stops the comment lying to the next person.
+here** — the platform move owns the backup itself, and its plan already names
+the service-role key, the absent schedule and this docstring under M1b.4.
+
+**Done here, 2026-09-27:** the false sentence in `timetrackBackupRepo.ts` is
+gone, replaced by what is actually covered — `assertRestorable` only, with
+`exportTimetrack` and `restoreTimetrack` imported by nothing but the two
+scripts, and the round trip proved by hand once with the procedure in the
+runbook. Five minutes, and it stops the comment lying to the next person, which
+it had already done to two of us in one afternoon.
 
 ---
 

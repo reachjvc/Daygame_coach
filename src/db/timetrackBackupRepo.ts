@@ -8,8 +8,21 @@
  * warning on it, and why nothing in the app imports it. Scripts only.
  *
  * A BACKUP NOBODY HAS RESTORED FROM IS A BELIEF, NOT A BACKUP. The restore
- * half is here for that reason, and there is a test that runs the whole round
- * trip against a real Postgres.
+ * half is here for that reason.
+ *
+ * WHAT IS ACTUALLY COVERED, because this comment used to claim more than it
+ * had: `tests/unit/db/timetrackBackup.test.ts` exercises `assertRestorable`,
+ * the check that stands between a half-written file and live data. Nothing
+ * automated calls `exportTimetrack` or `restoreTimetrack` — they are imported
+ * only by the two scripts. The round trip was proved BY HAND once, and the
+ * procedure for redoing it is in `docs/runbooks/timetrack.md`.
+ *
+ * The sentence that used to be here said "there is a test that runs the whole
+ * round trip against a real Postgres". There is not, and on 2026-09-26 that
+ * claim sent two sessions in opposite directions in one afternoon — one read it
+ * and concluded the coverage existed, the other read past it and concluded
+ * there was none. A comment that overstates coverage is worse than no comment,
+ * because it stops the next person looking.
  */
 
 import { createAdminSupabaseClient } from "./server"
